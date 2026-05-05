@@ -97,6 +97,23 @@ describe('WinnersLosersIncomeDecileSubPage', () => {
 });
 
 describe('WinnersLosersWealthDecileSubPage', () => {
+  test('given chart then Tooltip has z-index to prevent bars covering it', () => {
+    const output = {
+      intra_wealth_decile: (MOCK_WINNERS_LOSERS_OUTPUT as any).intra_decile,
+    } as any;
+
+    render(<WinnersLosersWealthDecileSubPage output={output} />);
+
+    const tooltipCalls = vi.mocked(Tooltip).mock.calls;
+    expect(tooltipCalls.length).toBeGreaterThan(0);
+    tooltipCalls.forEach((call) => {
+      const props = call[0] as Record<string, unknown>;
+      const wrapperStyle = props.wrapperStyle as Record<string, unknown> | undefined;
+      expect(wrapperStyle).toBeDefined();
+      expect(wrapperStyle?.zIndex).toBe(1000);
+    });
+  });
+
   test('given chart then Tooltip uses a fixed in-chart position so edge deciles stay visible', () => {
     const output = {
       intra_wealth_decile: (MOCK_WINNERS_LOSERS_OUTPUT as any).intra_decile,

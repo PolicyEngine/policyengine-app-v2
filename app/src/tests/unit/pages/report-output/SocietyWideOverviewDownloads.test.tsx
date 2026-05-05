@@ -1,4 +1,4 @@
-import { render } from '@test-utils';
+import { fireEvent, render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SocietyWideOverview from '@/pages/report-output/SocietyWideOverview';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -15,6 +15,7 @@ vi.mock('@/components/report/DashboardCard', () => ({
       <section>
         {props.shrunkenHeader}
         {props.shrunkenBody}
+        {props.expandedControls}
       </section>
     );
   }),
@@ -23,6 +24,36 @@ vi.mock('@/components/report/DashboardCard', () => ({
 vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
   useCongressionalDistrictData: mockUseCongressionalDistrictData,
 }));
+
+vi.mock('@/components/ui', async () => {
+  const actual = await vi.importActual<typeof import('@/components/ui')>('@/components/ui');
+  return {
+    ...actual,
+    SegmentedControl: vi.fn(
+      ({
+        options,
+        onValueChange,
+      }: {
+        options: Array<{ label: string; value: string; disabled?: boolean }>;
+        onValueChange: (value: string) => void;
+      }) => (
+        <div>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              role="tab"
+              type="button"
+              disabled={option.disabled}
+              onClick={() => onValueChange(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )
+    ),
+  };
+});
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
@@ -71,16 +102,60 @@ describe('SocietyWideOverview chart downloads', () => {
     vi.clearAllMocks();
   });
 
-  test('given winners and losers overview card then expanded toolbar has CSV export data', () => {
-    const output = createMockSocietyWideOutput();
+  function latestCardProps(filename: string) {
+    for (let index = dashboardCardProps.length - 1; index >= 0; index -= 1) {
+      if (dashboardCardProps[index].downloadFilename === filename) {
+        return dashboardCardProps[index];
+      }
+    }
+    return undefined;
+  }
 
+  const output = createMockSocietyWideOutput({
+    poverty_by_gender: {
+      poverty: {
+        male: { baseline: 0.1, reform: 0.09 },
+        female: { baseline: 0.2, reform: 0.18 },
+      },
+      deep_poverty: {
+        male: { baseline: 0.03, reform: 0.027 },
+        female: { baseline: 0.04, reform: 0.036 },
+      },
+    },
+    poverty_by_race: {
+      poverty: {
+        white: { baseline: 0.1, reform: 0.09 },
+        black: { baseline: 0.2, reform: 0.18 },
+        hispanic: { baseline: 0.3, reform: 0.24 },
+        other: { baseline: 0.4, reform: 0.36 },
+      },
+    },
+  });
+
+  test('given overview cards then expanded toolbars include default CSV export data', () => {
     render(<SocietyWideOverview output={output} />);
 
-    const winnersCardProps = dashboardCardProps.find(
-      (props) => props.downloadFilename === 'winners-losers-income-decile.svg'
-    );
+    expect(latestCardProps('budgetary-impact.svg')).toMatchObject({
+      csvFilename: 'budgetary-impact.csv',
+      csvData: expect.arrayContaining([
+        ['Category', 'Budgetary impact (billions)'],
+        ['Net impact', 0.001],
+      ]),
+    });
+    expect(latestCardProps('distributional-impact-income-average.svg')).toMatchObject({
+      csvFilename: 'distributional-impact-income-average.csv',
+      csvData: expect.arrayContaining([['Income decile', 'Average change']]),
+    });
+    expect(latestCardProps('poverty-impact-by-age.svg')).toMatchObject({
+      csvFilename: 'poverty-impact-by-age.csv',
+      csvData: expect.arrayContaining([['Age group', 'Baseline', 'Reform', 'Change']]),
+    });
+    expect(latestCardProps('inequality-impact.svg')).toMatchObject({
+      csvFilename: 'inequality-impact.csv',
+      csvData: expect.arrayContaining([['Metric', 'Baseline', 'Reform', 'Change']]),
+    });
 
-    expect(winnersCardProps).toMatchObject({
+    expect(latestCardProps('winners-losers-income-decile.svg')).toMatchObject({
       csvFilename: 'winners-losers-income-decile.csv',
       csvData: expect.arrayContaining([
         [
@@ -93,6 +168,40 @@ describe('SocietyWideOverview chart downloads', () => {
         ],
         ['All', 0.2, 0.1, 0.6, 0.05, 0.05],
       ]),
+    });
+  });
+
+  test('given decile mode changes then overview card CSV follows selected mode', () => {
+    render(<SocietyWideOverview output={output} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Relative' }));
+
+    expect(latestCardProps('distributional-impact-income-relative.svg')).toMatchObject({
+      csvFilename: 'distributional-impact-income-relative.csv',
+      csvData: expect.arrayContaining([['Income decile', 'Relative change']]),
+    });
+  });
+
+  test('given poverty controls change then overview card CSV follows selected breakdown', () => {
+    render(<SocietyWideOverview output={output} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'By gender' }));
+    expect(latestCardProps('poverty-impact-by-gender.svg')).toMatchObject({
+      csvFilename: 'poverty-impact-by-gender.csv',
+      csvData: expect.arrayContaining([['Sex', 'Baseline', 'Reform', 'Change']]),
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Deep poverty' }));
+    expect(latestCardProps('deep-poverty-impact-by-gender.svg')).toMatchObject({
+      csvFilename: 'deep-poverty-impact-by-gender.csv',
+      csvData: expect.arrayContaining([['Sex', 'Baseline', 'Reform', 'Change']]),
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Regular poverty' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'By race' }));
+    expect(latestCardProps('poverty-impact-by-race.svg')).toMatchObject({
+      csvFilename: 'poverty-impact-by-race.csv',
+      csvData: expect.arrayContaining([['Race', 'Baseline', 'Reform', 'Change']]),
     });
   });
 });
