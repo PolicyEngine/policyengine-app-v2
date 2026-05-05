@@ -1,7 +1,9 @@
 import { render } from '@test-utils';
 import { Tooltip, YAxis } from 'recharts';
 import { describe, expect, test, vi } from 'vitest';
-import WinnersLosersIncomeDecileSubPage from '@/pages/report-output/distributional-impact/WinnersLosersIncomeDecileSubPage';
+import WinnersLosersIncomeDecileSubPage, {
+  getWinnersLosersCsvRows,
+} from '@/pages/report-output/distributional-impact/WinnersLosersIncomeDecileSubPage';
 import { MOCK_WINNERS_LOSERS_OUTPUT } from '@/tests/fixtures/pages/report-output/distributional-impact/WinnersLosersDecileMocks';
 
 // Mock Recharts — capture props via vi.fn()
@@ -59,5 +61,35 @@ describe('WinnersLosersIncomeDecileSubPage', () => {
       expect(wrapperStyle).toBeDefined();
       expect(wrapperStyle?.zIndex).toBe(1000);
     });
+  });
+
+  test('given chart then Tooltip uses a fixed in-chart position so edge deciles stay visible', () => {
+    // When
+    render(<WinnersLosersIncomeDecileSubPage output={MOCK_WINNERS_LOSERS_OUTPUT} />);
+
+    // Then
+    const tooltipCalls = vi.mocked(Tooltip).mock.calls;
+    tooltipCalls.forEach((call) => {
+      const props = call[0] as Record<string, unknown>;
+      expect(props.position).toEqual({ x: 72, y: 0 });
+    });
+  });
+
+  test('given output then CSV rows include All and each income decile', () => {
+    // When
+    const rows = getWinnersLosersCsvRows(MOCK_WINNERS_LOSERS_OUTPUT);
+
+    // Then
+    expect(rows[0]).toEqual([
+      'Income decile',
+      'Gain more than 5%',
+      'Gain less than 5%',
+      'No change',
+      'Lose less than 5%',
+      'Lose more than 5%',
+    ]);
+    expect(rows).toHaveLength(12);
+    expect(rows[1][0]).toBe('All');
+    expect(rows[11][0]).toBe('10');
   });
 });

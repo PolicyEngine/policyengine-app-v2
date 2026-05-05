@@ -44,6 +44,9 @@ export class ReportAdapter {
       simulationIds,
       status: this.mapApiStatusToReportStatus(metadata.status),
       output: convertJsonToReportOutput(metadata.output) as any, // Can be economy or household output
+      ...(metadata.requested_at ? { requestedAt: metadata.requested_at } : {}),
+      ...(metadata.started_at ? { startedAt: metadata.started_at } : {}),
+      ...(metadata.finished_at ? { finishedAt: metadata.finished_at } : {}),
     };
   }
 

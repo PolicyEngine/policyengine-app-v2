@@ -11,13 +11,17 @@ import {
 } from '@/components/ui';
 import { typography } from '@/designTokens';
 import { trackChartCsvDownloaded } from '@/utils/analytics';
-import { downloadChartAsSvg } from '@/utils/chartUtils';
+import { downloadChartAsSvg, downloadCsv } from '@/utils/chartUtils';
 
 interface ChartContainerProps {
   children: ReactNode;
   title: string;
   /** When set, renders a download button that exports the chart as SVG */
   downloadFilename?: string;
+  /** CSV rows to export when the CSV download button is used */
+  csvData?: string[][];
+  /** When set with csvData, renders a download button that exports chart data as CSV */
+  csvFilename?: string;
 }
 
 /**
@@ -28,8 +32,15 @@ interface ChartContainerProps {
  * @param downloadFilename - SVG filename (enables download button when set)
  * @param children - Main content (description and chart) displayed inside the white card
  */
-export function ChartContainer({ children, title, downloadFilename }: ChartContainerProps) {
+export function ChartContainer({
+  children,
+  title,
+  downloadFilename,
+  csvData,
+  csvFilename,
+}: ChartContainerProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const hasCsvDownload = !!csvFilename && !!csvData;
 
   return (
     <Stack gap="sm">
@@ -37,29 +48,51 @@ export function ChartContainer({ children, title, downloadFilename }: ChartConta
         <Text size="lg" fw={typography.fontWeight.medium} className="tw:flex-1 tw:break-words">
           {title}
         </Text>
-        {downloadFilename && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="tw:shrink-0"
-                onClick={() => {
-                  trackChartCsvDownloaded();
-                  if (contentRef.current) {
-                    downloadChartAsSvg(contentRef.current, {
-                      title,
-                      filename: downloadFilename,
-                    });
-                  }
-                }}
-                aria-label="Download as SVG"
-              >
-                <IconDownload size={18} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Download as SVG</TooltipContent>
-          </Tooltip>
+        {(downloadFilename || hasCsvDownload) && (
+          <Group gap="xs" wrap="nowrap" className="tw:shrink-0">
+            {hasCsvDownload && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="tw:shrink-0"
+                    onClick={() => {
+                      trackChartCsvDownloaded();
+                      downloadCsv(csvData!, csvFilename!);
+                    }}
+                    aria-label="Download CSV"
+                  >
+                    <IconDownload size={18} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Download CSV</TooltipContent>
+              </Tooltip>
+            )}
+            {downloadFilename && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="tw:shrink-0"
+                    onClick={() => {
+                      if (contentRef.current) {
+                        downloadChartAsSvg(contentRef.current, {
+                          title,
+                          filename: downloadFilename,
+                        });
+                      }
+                    }}
+                    aria-label="Download as SVG"
+                  >
+                    <IconDownload size={18} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Download as SVG</TooltipContent>
+              </Tooltip>
+            )}
+          </Group>
         )}
       </Group>
 

@@ -88,6 +88,28 @@ describe('ReportAdapter', () => {
       expect(result.status).toBe(errorStatus);
       expect(result.output).toBe(nullOutput);
     });
+
+    it('given API run timestamps then maps them onto the report domain model', () => {
+      const metadata = {
+        id: 123,
+        country_id: 'us',
+        simulation_1_id: '456',
+        simulation_2_id: null,
+        year: '2026',
+        api_version: 'v1',
+        status: 'complete',
+        output: null,
+        requested_at: '2026-05-04T12:00:00Z',
+        started_at: '2026-05-04T12:01:00Z',
+        finished_at: '2026-05-04T12:02:00Z',
+      } as const;
+
+      const result = ReportAdapter.fromMetadata(metadata);
+
+      expect(result.requestedAt).toBe('2026-05-04T12:00:00Z');
+      expect(result.startedAt).toBe('2026-05-04T12:01:00Z');
+      expect(result.finishedAt).toBe('2026-05-04T12:02:00Z');
+    });
   });
 
   describe('toCreationPayload', () => {
