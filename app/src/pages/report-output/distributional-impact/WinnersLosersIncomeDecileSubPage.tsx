@@ -45,6 +45,29 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 };
 
 const BAR_SIZE = 18;
+const TOOLTIP_POSITION = { x: 72, y: 0 };
+const TOOLTIP_WRAPPER_STYLE = {
+  zIndex: 1000,
+  pointerEvents: 'none' as const,
+  maxWidth: 'min(280px, calc(100vw - 32px))',
+};
+
+function formatCsvValue(value: number | null | undefined): string {
+  return value === null || value === undefined ? '' : String(value);
+}
+
+export function getWinnersLosersCsvRows(output: SocietyWideReportOutput): string[][] {
+  const deciles = output.intra_decile.deciles;
+  const all = output.intra_decile.all;
+  const header = ['Income decile', ...CATEGORIES];
+  const allRow = ['All', ...CATEGORIES.map((cat) => formatCsvValue(all[cat]))];
+  const decileRows = Array.from({ length: 10 }, (_, index) => [
+    String(index + 1),
+    ...CATEGORIES.map((cat) => formatCsvValue(deciles[cat]?.[index])),
+  ]);
+
+  return [header, allRow, ...decileRows];
+}
 
 function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
@@ -158,7 +181,8 @@ export default function WinnersLosersIncomeDecileSubPage({
           content={<WinnersLosersTooltip />}
           allowEscapeViewBox={{ x: true, y: true }}
           offset={20}
-          wrapperStyle={{ zIndex: 1000 }}
+          position={TOOLTIP_POSITION}
+          wrapperStyle={TOOLTIP_WRAPPER_STYLE}
         />
         {CATEGORIES.map((cat) => (
           <Bar
@@ -215,7 +239,8 @@ export default function WinnersLosersIncomeDecileSubPage({
           content={<WinnersLosersTooltip />}
           allowEscapeViewBox={{ x: true, y: true }}
           offset={20}
-          wrapperStyle={{ zIndex: 1000 }}
+          position={TOOLTIP_POSITION}
+          wrapperStyle={TOOLTIP_WRAPPER_STYLE}
         />
         {CATEGORIES.map((cat) => (
           <Bar
@@ -285,7 +310,12 @@ export default function WinnersLosersIncomeDecileSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="winners-losers-income-decile.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="winners-losers-income-decile.svg"
+      csvFilename="winners-losers-income-decile.csv"
+      csvData={getWinnersLosersCsvRows(output)}
+    >
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

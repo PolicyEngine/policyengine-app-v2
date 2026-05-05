@@ -20,6 +20,9 @@ export interface Report {
   apiVersion: string | null;
   simulationIds: string[];
   status: 'pending' | 'complete' | 'error';
+  requestedAt?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
   outputType?: 'household' | 'economy'; // Discriminator for output type
   output?: EconomyOutput | HouseholdReportOutput | null; // Economy or household output
 }

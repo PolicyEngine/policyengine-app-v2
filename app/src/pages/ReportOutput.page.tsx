@@ -9,6 +9,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
@@ -140,9 +141,10 @@ export default function ReportOutputPage({
   const activeTab = resolveDefaultReportOutputSubpage(outputType, subpage);
   const activeView = view || '';
   const versionMetadata = extractReportVersionMetadata(report?.output);
+  useHydrateCalculationCache({ report, outputType });
 
-  // Format the report creation timestamp using the current country's locale
-  const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
+  const reportRunTimestamp = report?.finishedAt ?? userReport?.updatedAt ?? userReport?.createdAt;
+  const timestamp = formatReportTimestamp(reportRunTimestamp, countryId);
 
   // Hook for saving shared reports with all ingredients
   const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
