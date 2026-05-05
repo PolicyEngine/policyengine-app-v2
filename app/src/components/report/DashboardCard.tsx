@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { colors, spacing } from '@/designTokens';
 import { typography } from '@/designTokens/typography';
 import { trackChartCsvDownloaded } from '@/utils/analytics';
-import { downloadChartAsSvg } from '@/utils/chartUtils';
+import { downloadChartAsSvg, downloadCsv } from '@/utils/chartUtils';
 
 const FADE_MS = 150;
 const RESIZE_S = 0.35;
@@ -42,6 +42,10 @@ interface DashboardCardProps {
   expandedTitle?: string;
   /** SVG download filename — renders a download button in the expanded toolbar */
   downloadFilename?: string;
+  /** CSV rows to export from the expanded toolbar */
+  csvData?: string[][];
+  /** CSV download filename — renders a CSV download button when csvData is provided */
+  csvFilename?: string;
 
   // Style overrides (apply only when shrunken/idle)
   shrunkenBackground?: string;
@@ -84,6 +88,8 @@ export default function DashboardCard({
   expandedControls,
   expandedTitle,
   downloadFilename,
+  csvData,
+  csvFilename,
   shrunkenBackground,
   shrunkenBorderColor,
   padding: paddingProp,
@@ -192,6 +198,7 @@ export default function DashboardCard({
   const shrunkenContentOpacity = phase === 'idle' ? 1 : 0;
   const mountExpanded = phase === 'expanded' || phase === 'pre-collapse';
   const expandedContentOpacity = phase === 'expanded' && expandedVisible ? 1 : 0;
+  const hasCsvDownload = !!csvFilename && !!csvData;
 
   // Animate target: cell size when shrinking, expanded size when growing
   const getAnimateTarget = (): { width: number; height: number } | undefined => {
@@ -377,7 +384,7 @@ export default function DashboardCard({
                     flexShrink: 0,
                   }}
                 >
-                  {downloadFilename && (
+                  {hasCsvDownload && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -386,6 +393,24 @@ export default function DashboardCard({
                           onClick={(e) => {
                             e.stopPropagation();
                             trackChartCsvDownloaded();
+                            downloadCsv(csvData!, csvFilename!);
+                          }}
+                          aria-label="Download CSV"
+                        >
+                          <IconDownload size={16} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Download CSV</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {downloadFilename && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (expandedContentRef.current) {
                               downloadChartAsSvg(expandedContentRef.current, {
                                 title: expandedTitle,

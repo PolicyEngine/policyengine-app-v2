@@ -35,7 +35,9 @@ import {
 } from './distributional-impact/distributionalChartUtils';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
-import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
+import WinnersLosersIncomeDecileSubPage, {
+  getWinnersLosersCsvRows,
+} from './distributional-impact/WinnersLosersIncomeDecileSubPage';
 import { getInequalityTitle } from './inequality-impact/inequalityChartUtils';
 import InequalityImpactSubPage from './inequality-impact/InequalityImpactSubPage';
 import DeepPovertyImpactByAgeSubPage from './poverty-impact/DeepPovertyImpactByAgeSubPage';
@@ -1417,6 +1419,8 @@ export default function SocietyWideOverview({
         }
         expandedTitle={getWinnersLosersTitle(output, countryId, metadata)}
         downloadFilename="winners-losers-income-decile.svg"
+        csvFilename="winners-losers-income-decile.csv"
+        csvData={getWinnersLosersCsvRows(output)}
         expandedContent={<WinnersLosersIncomeDecileSubPage output={output} fillHeight />}
         onToggleMode={() => toggle('winners')}
       />

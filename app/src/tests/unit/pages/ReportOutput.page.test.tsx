@@ -125,7 +125,36 @@ describe('ReportOutputPage', () => {
     expect(screen.getByRole('heading', { name: 'Test Report' })).toBeInTheDocument();
   });
 
-  test('given user report has updatedAt then header timestamp uses updatedAt over createdAt', () => {
+  test('given report has finishedAt then header timestamp uses finishedAt over association timestamps', () => {
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: {
+        ...MOCK_USER_REPORT,
+        createdAt: '2024-01-01T12:00:00.000Z',
+        updatedAt: '2024-04-30T12:00:00.000Z',
+      },
+      report: {
+        ...MOCK_REPORT_WITH_YEAR,
+        finishedAt: '2024-05-02T12:00:00.000Z',
+      },
+      simulations: [MOCK_SIMULATION_GEOGRAPHY],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [],
+      userHouseholds: [],
+      geographies: [],
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    expect(screen.getByText(/Ran May 2, 2024 at/)).toBeInTheDocument();
+    expect(screen.queryByText(/Apr 30, 2024/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Jan 1, 2024/)).not.toBeInTheDocument();
+  });
+
+  test('given backend run timestamp is absent then header timestamp does not use association updatedAt', () => {
     vi.mocked(useUserReportById).mockReturnValue({
       userReport: {
         ...MOCK_USER_REPORT,
@@ -146,8 +175,8 @@ describe('ReportOutputPage', () => {
 
     render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
-    expect(screen.getByText(/Ran Apr 30, 2024 at/)).toBeInTheDocument();
-    expect(screen.queryByText(/Jan 1, 2024/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Ran Jan 1, 2024 at/)).toBeInTheDocument();
+    expect(screen.queryByText(/Apr 30, 2024/)).not.toBeInTheDocument();
   });
 
   test('given report has persisted output then calculation cache is hydrated from that output', () => {

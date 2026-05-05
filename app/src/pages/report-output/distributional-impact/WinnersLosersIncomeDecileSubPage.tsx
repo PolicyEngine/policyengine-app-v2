@@ -57,8 +57,8 @@ function formatCsvValue(value: number | null | undefined): string {
 }
 
 export function getWinnersLosersCsvRows(output: SocietyWideReportOutput): string[][] {
-  const deciles = output.intra_decile.deciles;
-  const all = output.intra_decile.all;
+  const deciles = output.intra_decile.deciles ?? {};
+  const all = output.intra_decile.all ?? {};
   const header = ['Income decile', ...CATEGORIES];
   const allRow = ['All', ...CATEGORIES.map((cat) => formatCsvValue(all[cat]))];
   const decileRows = Array.from({ length: 10 }, (_, index) => [

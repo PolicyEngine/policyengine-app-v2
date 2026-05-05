@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { calculationKeys, simulationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
@@ -46,7 +46,7 @@ export function useHydrateCalculationCache({
   const queryClient = useQueryClient();
   const hydratedRef = useRef<string>(''); // Track which report we've hydrated
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const currentReportId = report?.id || '';
 
     // Only hydrate once per report ID

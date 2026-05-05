@@ -143,7 +143,7 @@ export default function ReportOutputPage({
   const versionMetadata = extractReportVersionMetadata(report?.output);
   useHydrateCalculationCache({ report, outputType });
 
-  const reportRunTimestamp = report?.finishedAt ?? userReport?.updatedAt ?? userReport?.createdAt;
+  const reportRunTimestamp = report?.finishedAt ?? report?.requestedAt ?? userReport?.createdAt;
   const timestamp = formatReportTimestamp(reportRunTimestamp, countryId);
 
   // Hook for saving shared reports with all ingredients
