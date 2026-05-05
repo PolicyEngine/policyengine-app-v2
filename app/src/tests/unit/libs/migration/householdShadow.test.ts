@@ -234,10 +234,14 @@ describe('householdShadow', () => {
 
     await shadowUpdateUserHouseholdAssociation(v1Association);
 
-    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-      label: 'My household',
-      householdId: TEST_V2_HOUSEHOLD_ID,
-    });
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+      TEST_V2_ASSOC_ID,
+      TEST_V2_USER_ID,
+      {
+        label: 'My household',
+        householdId: TEST_V2_HOUSEHOLD_ID,
+      }
+    );
     expect(logMigrationComparison).toHaveBeenCalledWith(
       'UserHouseholdMigration',
       'UPDATE',
@@ -263,10 +267,14 @@ describe('householdShadow', () => {
       TEST_V2_HOUSEHOLD_ID
     );
     expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
-    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-      label: 'My household',
-      householdId: TEST_V2_HOUSEHOLD_ID,
-    });
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+      TEST_V2_ASSOC_ID,
+      TEST_V2_USER_ID,
+      {
+        label: 'My household',
+        householdId: TEST_V2_HOUSEHOLD_ID,
+      }
+    );
   });
 
   test('given missing association mapping but stored target mapping then it recovers without API lookup', async () => {
@@ -282,10 +290,14 @@ describe('householdShadow', () => {
 
     expect(fetchUserHouseholdAssociationByIdV2).not.toHaveBeenCalled();
     expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
-    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-      label: 'My household',
-      householdId: TEST_V2_HOUSEHOLD_ID,
-    });
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+      TEST_V2_ASSOC_ID,
+      TEST_V2_USER_ID,
+      {
+        label: 'My household',
+        householdId: TEST_V2_HOUSEHOLD_ID,
+      }
+    );
   });
 
   test('given missing association mapping and no existing v2 association then it recreates the v2 association', async () => {
@@ -326,10 +338,14 @@ describe('householdShadow', () => {
       TEST_V2_USER_ID,
       TEST_OLD_V2_HOUSEHOLD_ID
     );
-    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-      label: 'My household',
-      householdId: TEST_V2_HOUSEHOLD_ID,
-    });
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+      TEST_V2_ASSOC_ID,
+      TEST_V2_USER_ID,
+      {
+        label: 'My household',
+        householdId: TEST_V2_HOUSEHOLD_ID,
+      }
+    );
     expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
   });
 
@@ -349,10 +365,14 @@ describe('householdShadow', () => {
     });
 
     expect(fetchUserHouseholdAssociationByIdV2).not.toHaveBeenCalled();
-    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-      label: 'My household',
-      householdId: TEST_V2_HOUSEHOLD_ID,
-    });
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+      TEST_V2_ASSOC_ID,
+      TEST_V2_USER_ID,
+      {
+        label: 'My household',
+        householdId: TEST_V2_HOUSEHOLD_ID,
+      }
+    );
     expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
   });
 

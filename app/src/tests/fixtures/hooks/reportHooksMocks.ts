@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import { Household } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserReport } from '@/types/ingredients/UserReport';
@@ -50,7 +50,7 @@ export const setupConsoleMocks = () => {
 };
 
 // Mock Household
-export const mockHousehold: Household = {
+export const mockHousehold = Household.fromAppInput({
   id: 'household-123',
   countryId: 'us',
   householdData: {
@@ -61,7 +61,7 @@ export const mockHousehold: Household = {
     households: {},
     maritalUnits: {},
   },
-};
+});
 
 // Mock Geography - National
 export const mockNationalGeography: Geography = {

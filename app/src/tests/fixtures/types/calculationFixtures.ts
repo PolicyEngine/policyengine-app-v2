@@ -1,6 +1,6 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import { CalcError, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 
 /**
  * Mock CalcError for testing
@@ -84,7 +84,7 @@ export const mockSocietyWideResult = (): SocietyWideReportOutput =>
 /**
  * Mock household calculation result
  */
-export const mockHouseholdResult = (): HouseholdData => ({
+export const mockHouseholdResult = (): HouseholdCalculationData => ({
   people: {
     person1: {
       age: { '2024': 30 },

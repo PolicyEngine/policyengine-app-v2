@@ -31,6 +31,7 @@ import { CountryMapIcon } from './shared';
 export function IngredientSectionFull({
   type,
   currentId,
+  currentPopulation,
   countryId = 'us',
   onQuickSelectPolicy: _onQuickSelectPolicy,
   onSelectSavedPolicy: _onSelectSavedPolicy,
@@ -48,6 +49,7 @@ export function IngredientSectionFull({
   currentLabel,
   isReadOnly,
   onViewPolicy,
+  onViewPopulation,
 }: IngredientSectionProps) {
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const colorConfig = INGREDIENT_COLORS[type];
@@ -101,10 +103,27 @@ export function IngredientSectionFull({
         populationType: recent.type,
       };
     }
+
+    if (currentPopulation?.household) {
+      return {
+        label: currentLabel || `Household #${currentId}`,
+        description: 'Household',
+        populationType: 'household',
+      };
+    }
+
+    if (currentPopulation?.geography) {
+      return {
+        label: currentLabel || currentPopulation.geography.name || `Geography #${currentId}`,
+        description: 'Geography',
+        populationType: 'geography',
+      };
+    }
+
     return {
-      label: currentLabel || `Population #${currentId}`,
+      label: currentLabel || `Household #${currentId}`,
       description: '',
-      populationType: 'geography',
+      populationType: 'household',
     };
   })();
 
@@ -133,6 +152,11 @@ export function IngredientSectionFull({
   // Show policy details action for non-current-law policies.
   const showViewPolicyButton =
     type === 'policy' && !isCurrentLaw(currentId) && !!currentId && onViewPolicy;
+  const showViewPopulationButton =
+    type === 'population' &&
+    selectedPopulationLabel?.populationType === 'household' &&
+    !!currentId &&
+    onViewPopulation;
 
   return (
     <div
@@ -256,15 +280,19 @@ export function IngredientSectionFull({
               flexShrink: 0,
             }}
           >
-            {/* Policy details gear */}
-            {showViewPolicyButton && (
+            {/* Policy / household details gear */}
+            {(showViewPolicyButton || showViewPopulationButton) && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
-                      onViewPolicy();
+                      if (showViewPolicyButton) {
+                        onViewPolicy?.();
+                      } else {
+                        onViewPopulation?.();
+                      }
                     }}
                     style={{
                       background: colors.white,
@@ -283,7 +311,13 @@ export function IngredientSectionFull({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {isReadOnly ? 'View policy' : 'View/edit policy'}
+                  {showViewPolicyButton
+                    ? isReadOnly
+                      ? 'View policy'
+                      : 'View/edit policy'
+                    : isReadOnly
+                      ? 'View household'
+                      : 'View/edit household'}
                 </TooltipContent>
               </Tooltip>
             )}

@@ -1,11 +1,11 @@
 import { useSelector } from 'react-redux';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import VariableArithmetic from './VariableArithmetic';
 
 interface HouseholdBreakdownProps {
-  baseline: Household;
-  reform: Household | null;
+  baseline: HouseholdCalculationOutput;
+  reform: HouseholdCalculationOutput | null;
   borderColor: string;
 }
 

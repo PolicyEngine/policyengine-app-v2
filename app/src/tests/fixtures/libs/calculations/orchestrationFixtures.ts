@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import { Household } from '@/models/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import type { CalcStartConfig } from '@/types/calculation';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -37,15 +38,16 @@ export const mockSimulation = (overrides?: Partial<Simulation>): Simulation => (
 /**
  * Mock Household
  */
-export const mockHousehold = (overrides?: Partial<Household>): Household => ({
-  id: ORCHESTRATION_TEST_CONSTANTS.TEST_HOUSEHOLD_ID,
-  countryId: 'us',
-  householdData: {
-    people: {},
-    households: {},
-  },
-  ...overrides,
-});
+export const mockHousehold = (overrides?: Partial<AppHouseholdInputEnvelope>): Household =>
+  Household.fromAppInput({
+    id: ORCHESTRATION_TEST_CONSTANTS.TEST_HOUSEHOLD_ID,
+    countryId: 'us',
+    householdData: {
+      people: {},
+      households: {},
+    },
+    ...overrides,
+  });
 
 /**
  * Mock Geography

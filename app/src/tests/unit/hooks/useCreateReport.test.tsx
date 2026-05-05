@@ -100,6 +100,16 @@ describe('useCreateReport', () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
+  const createDeferred = <T,>() => {
+    let resolve!: (value: T | PromiseLike<T>) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+
   describe('successful report creation', () => {
     test('given valid data when creating report then creates report with association', async () => {
       // When
@@ -456,6 +466,78 @@ describe('useCreateReport', () => {
       await waitFor(() => {
         expect(result.current.error).toEqual(error);
       });
+    });
+  });
+
+  describe('timing behavior', () => {
+    test('given delayed society-wide calc startup then per-call onSuccess waits for it', async () => {
+      const delayedStart = createDeferred<void>();
+      const perCallSuccess = vi.fn();
+      mockStartCalculation.mockImplementation(() => delayedStart.promise);
+
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      const createPromise = (result.current.createReport as any)(
+        {
+          countryId: TEST_COUNTRY_ID,
+          payload: mockReportCreationPayload,
+          simulations: {
+            simulation1: mockSocietyWideSimulation,
+            simulation2: { ...mockSocietyWideSimulation, policyId: 'policy-3' },
+          },
+          populations: {
+            geography1: mockNationalGeography,
+          },
+        },
+        { onSuccess: perCallSuccess }
+      );
+
+      await waitFor(() => {
+        expect(mockStartCalculation).toHaveBeenCalledTimes(1);
+      });
+
+      expect(perCallSuccess).not.toHaveBeenCalled();
+
+      delayedStart.resolve();
+      await createPromise;
+
+      await waitFor(() => {
+        expect(perCallSuccess).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    test('given delayed household calc startup then per-call onSuccess does not wait for it', async () => {
+      const delayedStart = createDeferred<void>();
+      const perCallSuccess = vi.fn();
+      mockStartCalculation.mockImplementation(() => delayedStart.promise);
+
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      const createPromise = (result.current.createReport as any)(
+        {
+          countryId: TEST_COUNTRY_ID,
+          payload: mockReportCreationPayload,
+          simulations: {
+            simulation1: mockHouseholdSimulation,
+            simulation2: { ...mockHouseholdSimulation, policyId: 'policy-2', id: 'sim-2' },
+          },
+          populations: {
+            household1: mockHousehold,
+          },
+        },
+        { onSuccess: perCallSuccess }
+      );
+
+      await waitFor(() => {
+        expect(mockStartCalculation).toHaveBeenCalledTimes(2);
+      });
+
+      await waitFor(() => {
+        expect(perCallSuccess).toHaveBeenCalledTimes(1);
+      });
+
+      delayedStart.resolve();
+      await createPromise;
     });
   });
 });

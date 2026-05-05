@@ -1,3 +1,4 @@
+import { Household } from '@/models/Household';
 import { SimulationStateProps } from '@/types/pathwayState';
 
 export const TEST_SIMULATION_LABEL = 'Test Simulation';
@@ -42,13 +43,13 @@ export const mockSimulationStateConfigured: SimulationStateProps = {
   population: {
     label: 'My Household',
     type: 'household',
-    household: {
+    household: Household.fromAppInput({
       id: '789',
       countryId: 'us',
       householdData: {
         people: {},
       },
-    },
+    }),
     geography: null,
   },
   apiVersion: '0.1.0',
@@ -69,13 +70,13 @@ export const mockSimulationStateWithPopulation: SimulationStateProps = {
   population: {
     label: 'My Household',
     type: 'household',
-    household: {
+    household: Household.fromAppInput({
       id: '789',
       countryId: 'us',
       householdData: {
         people: {},
       },
-    },
+    }),
     geography: null,
   },
 };

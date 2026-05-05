@@ -2,6 +2,8 @@
  * Fixtures for HouseholdReproducibility and PolicyReproducibility component tests
  */
 
+import { Household } from '@/models/Household';
+import type { V1HouseholdData } from '@/models/household/v1Types';
 import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
 
 /**
@@ -29,7 +31,7 @@ export const MOCK_EMPTY_POLICY_V1 = {
 /**
  * Mock household input for testing
  */
-export const MOCK_HOUSEHOLD_INPUT = {
+export const MOCK_HOUSEHOLD_INPUT: V1HouseholdData = {
   people: {
     you: {
       age: { 2024: 35 },
@@ -64,13 +66,29 @@ export const MOCK_HOUSEHOLD_INPUT = {
   },
 };
 
+export const MOCK_HOUSEHOLD = Household.fromV1CreationPayload(
+  {
+    country_id: TEST_COUNTRIES.US,
+    data: MOCK_HOUSEHOLD_INPUT,
+  },
+  { id: 'mock-household' }
+);
+
+export const MOCK_UK_HOUSEHOLD = Household.fromV1CreationPayload(
+  {
+    country_id: TEST_COUNTRIES.UK,
+    data: MOCK_HOUSEHOLD_INPUT,
+  },
+  { id: 'mock-uk-household' }
+);
+
 /**
  * Default props for HouseholdReproducibility component
  */
 export const DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS = {
   countryId: TEST_COUNTRIES.US,
   policy: MOCK_POLICY_V1,
-  householdInput: MOCK_HOUSEHOLD_INPUT,
+  household: MOCK_HOUSEHOLD,
   region: TEST_COUNTRIES.US,
   dataset: null,
   policyengineVersion: null,
@@ -94,7 +112,7 @@ export const DEFAULT_POLICY_REPRODUCIBILITY_PROPS = {
 export const UK_HOUSEHOLD_REPRODUCIBILITY_PROPS = {
   countryId: TEST_COUNTRIES.UK,
   policy: MOCK_POLICY_V1,
-  householdInput: MOCK_HOUSEHOLD_INPUT,
+  household: MOCK_UK_HOUSEHOLD,
   region: TEST_COUNTRIES.UK,
   dataset: null,
   policyengineVersion: null,

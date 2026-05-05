@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import { PopulationStateProps } from '@/types/pathwayState';
 
@@ -17,7 +17,7 @@ export function reconstructPopulationFromHousehold(
   label: string | null
 ): PopulationStateProps {
   return {
-    household: { ...household, id: householdId },
+    household: household.withId(householdId).withLabel(label ?? household.label ?? null),
     geography: null,
     label,
     type: 'household',

@@ -292,12 +292,25 @@ function buildV2PeopleFromAppInput(args: {
     });
   }
 
-  return personNames.map((personName, personIndex) => ({
-    name: personName,
-    person_id: personIndex,
-    ...personAssignments.get(personName),
-    ...flattenEntityValues(args.householdData.people[personName], args.year),
-  }));
+  const personMetaKeys = [
+    'name',
+    'person_id',
+    ...getV2GroupDefinitions(args.countryId).map((definition) => definition.personLinkKey),
+  ];
+
+  return personNames.map((personName, personIndex) => {
+    const personValues = omitRecordKeys(
+      args.householdData.people[personName] as Record<string, unknown>,
+      personMetaKeys
+    ) as Record<string, HouseholdFieldValue>;
+
+    return {
+      ...flattenEntityValues(personValues, args.year),
+      name: personName,
+      person_id: personIndex,
+      ...personAssignments.get(personName),
+    };
+  });
 }
 
 function buildV2GroupRowsFromAppInput(args: {
@@ -313,11 +326,14 @@ function buildV2GroupRowsFromAppInput(args: {
   return Object.entries(args.groupMap)
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([, group], groupIndex) => {
-      const groupValues = omitRecordKeys(group, ['members']) as Record<string, HouseholdFieldValue>;
+      const groupValues = omitRecordKeys(group, ['members', args.definition.groupIdKey]) as Record<
+        string,
+        HouseholdFieldValue
+      >;
 
       return {
-        [args.definition.groupIdKey]: groupIndex,
         ...flattenEntityValues(groupValues, args.year),
+        [args.definition.groupIdKey]: groupIndex,
       };
     });
 }

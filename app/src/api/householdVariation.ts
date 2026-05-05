@@ -1,8 +1,9 @@
 import { BASE_URL } from '@/constants';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 
 export interface HouseholdVariationResponse {
   status: 'ok' | 'error';
-  result: any;
+  result: HouseholdCalculationData | null;
   error?: string;
 }
 
@@ -19,7 +20,7 @@ export async function fetchHouseholdVariation(
   countryId: string,
   householdWithAxes: any,
   policyData: any
-): Promise<any> {
+): Promise<HouseholdCalculationData> {
   const requestUrl = `${BASE_URL}/${countryId}/calculate-full`;
 
   const controller = new AbortController();

@@ -5,8 +5,8 @@ import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import MetricCard from '@/components/report/MetricCard';
 import { Group, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import { calculateVariableComparison } from '@/utils/householdComparison';
@@ -15,7 +15,7 @@ import EarningsVariationSubPage from './earnings-variation/EarningsVariationSubP
 import MarginalTaxRatesSubPage from './marginal-tax-rates/MarginalTaxRatesSubPage';
 
 interface HouseholdOverviewProps {
-  outputs: Household[];
+  outputs: HouseholdCalculationOutput[];
   policyLabels?: string[];
   simulations?: Simulation[];
   policies?: Policy[];
@@ -131,6 +131,20 @@ export default function HouseholdOverview({
   const [hasOpenedMtr, setHasOpenedMtr] = useState(activeView === 'marginal-tax-rates');
   const metadata = useSelector((state: RootState) => state.metadata);
 
+  useEffect(() => {
+    if (activeView === 'net-income') {
+      setBreakdownOpen(true);
+    }
+    if (activeView === 'earnings-variation') {
+      setEarningsOpen(true);
+      setHasOpenedEarnings(true);
+    }
+    if (activeView === 'marginal-tax-rates') {
+      setMtrOpen(true);
+      setHasOpenedMtr(true);
+    }
+  }, [activeView]);
+
   const rootVariable = metadata.variables.household_net_income;
   if (!rootVariable) {
     return (
@@ -194,20 +208,6 @@ export default function HouseholdOverview({
     : colors.primary[700];
 
   const hasAnalysisInputs = !!simulations?.length && !!policies?.length;
-
-  useEffect(() => {
-    if (activeView === 'net-income') {
-      setBreakdownOpen(true);
-    }
-    if (activeView === 'earnings-variation') {
-      setEarningsOpen(true);
-      setHasOpenedEarnings(true);
-    }
-    if (activeView === 'marginal-tax-rates') {
-      setMtrOpen(true);
-      setHasOpenedMtr(true);
-    }
-  }, [activeView]);
 
   const toggleEarnings = () => {
     setEarningsOpen((previous) => {

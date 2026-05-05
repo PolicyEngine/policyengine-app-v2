@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { countryIds } from '@/libs/countries';
+import { Household } from '@/models/Household';
 import type { Population } from '@/types/ingredients/Population';
 
 // Test constants for current law integration tests
@@ -76,13 +77,13 @@ export const expectedCurrentLawPolicyUK = {
 export const mockPopulation: Population = {
   label: 'Test Population',
   isCreated: true,
-  household: {
+  household: Household.fromAppInput({
     id: 'household-123',
     countryId: 'us' as (typeof countryIds)[number],
     householdData: {
       people: {},
     },
-  },
+  }),
   geography: null,
 };
 

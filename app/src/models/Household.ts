@@ -8,16 +8,462 @@ import {
 import type {
   AppHouseholdInputData,
   AppHouseholdInputEnvelope,
+  AppHouseholdInputGroup,
+  AppHouseholdInputGroupMap,
+  AppHouseholdInputPerson,
   ComparableHousehold,
+  HouseholdFieldValue,
   HouseholdModelData,
+  HouseholdScalar,
 } from './household/appTypes';
 import { buildComparableHousehold } from './household/comparable';
-import { cloneValue, deepEqual, inferYearFromData, normalizeCountryId } from './household/utils';
+import { buildPythonPackageHouseholdDataFromAppInput } from './household/pythonPackageCodec';
+import type { PythonPackageHouseholdData } from './household/pythonPackageTypes';
+import {
+  buildGeneratedGroupName,
+  getGroupDefinitionByAppKey,
+  getHouseholdDefaultEntityKeys,
+  getHouseholdGroupDefinitions,
+  getHouseholdHeadGroupKeys,
+  GROUP_META_KEYS,
+  isHouseholdGroupEntityConfigured,
+  normalizeHouseholdGroupAppKey,
+  PERSON_META_KEYS,
+  type HouseholdGroupAppKey,
+} from './household/schema';
+import {
+  cloneValue,
+  deepEqual,
+  inferYearFromData,
+  isYearValueMap,
+  normalizeCountryId,
+} from './household/utils';
 import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
 import { buildV2CreateEnvelope, parseV2HouseholdEnvelope } from './household/v2Codec';
 import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './household/v2Types';
 
 export type { ComparableHousehold, HouseholdModelData } from './household/appTypes';
+
+export type HouseholdBuilderMaritalStatus = 'single' | 'married';
+
+export interface HouseholdBuilderComposition {
+  people: string[];
+  primaryPersonKey: string | null;
+  partnerKey: string | null;
+  childKeys: string[];
+  maritalStatus: HouseholdBuilderMaritalStatus;
+  numChildren: number;
+}
+
+const BUILDER_DEFAULT_ADULT_AGE = 30;
+const BUILDER_DEFAULT_CHILD_AGE = 10;
+const BUILDER_DEFAULT_EMPLOYMENT_INCOME = 0;
+const BUILDER_PRIMARY_PERSON_NAME = 'you';
+const BUILDER_DEFAULT_PARTNER_NAME = 'your partner';
+const BUILDER_DEPENDENT_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth'];
+
+export interface PersonWithName extends AppHouseholdInputPerson {
+  name: string;
+}
+
+export interface HouseholdGroupSummary {
+  key: string;
+  members: string[];
+}
+
+export interface HouseholdVariableEntry {
+  name: string;
+  value: HouseholdFieldValue;
+}
+
+export interface HouseholdGroupVariableReference extends HouseholdVariableEntry {
+  entity: HouseholdGroupAppKey;
+  entityName: string;
+}
+
+export interface HouseholdGroupVariableCollection {
+  entityName: HouseholdGroupAppKey;
+  groupName: string;
+  members: string[];
+  variables: HouseholdVariableEntry[];
+}
+
+export interface HouseholdInputVariableEntry {
+  entity: 'people' | HouseholdGroupAppKey;
+  entityName: string;
+  name: string;
+  value: HouseholdScalar;
+}
+
+function normalizeYear(year: string | number): string {
+  const normalized = String(year);
+  if (!/^\d{4}$/.test(normalized)) {
+    throw new Error('Household year must be a four-digit year');
+  }
+
+  return normalized;
+}
+
+function expandVariables(
+  variables: Record<string, unknown> | undefined,
+  year: string
+): Record<string, HouseholdFieldValue> {
+  if (!variables) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(variables).map(([key, value]) => [
+      key,
+      typeof value === 'object' && value !== null && !Array.isArray(value)
+        ? (cloneValue(value) as HouseholdFieldValue)
+        : { [year]: value as HouseholdScalar },
+    ])
+  );
+}
+
+function normalizeBuilderFieldValue(value: HouseholdFieldValue, year: string): HouseholdFieldValue {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    return cloneValue(value) as HouseholdFieldValue;
+  }
+
+  return { [year]: value as HouseholdScalar };
+}
+
+function resolveRequiredYear(year: number | null, householdData: AppHouseholdInputData): string {
+  const resolvedYear = year ?? inferYearFromData(householdData);
+  if (resolvedYear === null) {
+    throw new Error('Household requires a year for builder operations');
+  }
+
+  return normalizeYear(resolvedYear);
+}
+
+function ensureGroupCollection(
+  householdData: AppHouseholdInputData,
+  entityName: HouseholdGroupAppKey
+): Record<string, AppHouseholdInputGroup> {
+  if (!householdData[entityName]) {
+    householdData[entityName] = {};
+  }
+
+  return householdData[entityName] as Record<string, AppHouseholdInputGroup>;
+}
+
+function addPersonToFirstGroup(
+  groupMap: Record<string, AppHouseholdInputGroup>,
+  defaultGroupName: string,
+  personKey: string
+): void {
+  if (Object.keys(groupMap).length === 0) {
+    groupMap[defaultGroupName] = { members: [] };
+  }
+
+  const firstGroup = Object.values(groupMap)[0];
+  if (!firstGroup.members.includes(personKey)) {
+    firstGroup.members.push(personKey);
+  }
+}
+
+function addPersonToNamedGroup(
+  groupMap: Record<string, AppHouseholdInputGroup>,
+  groupName: string,
+  personKey: string
+): void {
+  if (!groupMap[groupName]) {
+    groupMap[groupName] = { members: [] };
+  }
+
+  if (!groupMap[groupName].members.includes(personKey)) {
+    groupMap[groupName].members.push(personKey);
+  }
+}
+
+function getAllGroupCollections(
+  householdData: AppHouseholdInputData
+): Array<Record<string, AppHouseholdInputGroup>> {
+  return [
+    householdData.households,
+    householdData.families,
+    householdData.taxUnits,
+    householdData.spmUnits,
+    householdData.maritalUnits,
+    householdData.benunits,
+  ].filter((groups): groups is Record<string, AppHouseholdInputGroup> => Boolean(groups));
+}
+
+function getGroupCollectionFromData(
+  householdData: AppHouseholdInputData,
+  entityName: string
+): AppHouseholdInputGroupMap | undefined {
+  const entityKey = normalizeHouseholdGroupAppKey(entityName);
+  if (!entityKey) {
+    return undefined;
+  }
+
+  return householdData[entityKey];
+}
+
+function normalizeGroupKeyOrThrow(entityName: string): HouseholdGroupAppKey {
+  const entityKey = normalizeHouseholdGroupAppKey(entityName);
+  if (!entityKey) {
+    throw new Error(`Unsupported household entity group "${entityName}"`);
+  }
+
+  return entityKey;
+}
+
+function normalizeConfiguredGroupKeyOrThrow(
+  countryId: CountryId,
+  entityName: string
+): HouseholdGroupAppKey {
+  const entityKey = normalizeGroupKeyOrThrow(entityName);
+  if (!isHouseholdGroupEntityConfigured(countryId, entityKey)) {
+    throw new Error(
+      `Group entity "${entityName}" is not configured for ${countryId.toUpperCase()} households`
+    );
+  }
+
+  return entityKey;
+}
+
+function getPreferredGroupNameFromData(
+  householdData: AppHouseholdInputData,
+  entityName: string
+): string | undefined {
+  const groups = getGroupCollectionFromData(householdData, entityName);
+  if (!groups) {
+    return undefined;
+  }
+
+  const groupNames = Object.keys(groups);
+  if (groupNames.length === 0) {
+    return undefined;
+  }
+
+  return [...groupNames].sort((left, right) => left.localeCompare(right))[0];
+}
+
+function getYearValue(
+  value: AppHouseholdInputPerson[string] | AppHouseholdInputGroup[string] | undefined,
+  year: string
+): HouseholdScalar | undefined {
+  if (!isYearValueMap(value)) {
+    return undefined;
+  }
+
+  return value[year];
+}
+
+function getBuilderPersonAge(
+  person: AppHouseholdInputPerson | undefined,
+  year: string
+): number | null {
+  const age = getYearValue(person?.age, year);
+  return typeof age === 'number' ? age : null;
+}
+
+function isManagedBuilderChild(person: AppHouseholdInputPerson | undefined, year: string): boolean {
+  if (!person) {
+    return false;
+  }
+
+  const age = getBuilderPersonAge(person, year);
+  if (age !== null) {
+    return age < 18;
+  }
+
+  return getYearValue(person.is_tax_unit_dependent, year) === true;
+}
+
+function getFirstScalarFieldValue(
+  value: HouseholdFieldValue | string[] | undefined
+): HouseholdScalar | undefined {
+  if (value === undefined || Array.isArray(value)) {
+    return undefined;
+  }
+
+  if (isYearValueMap(value)) {
+    return Object.values(value)[0];
+  }
+
+  return value;
+}
+
+function getFirstAdultOrMemberFromData(
+  members: string[] | undefined,
+  people: Record<string, AppHouseholdInputPerson>,
+  year: string | null
+): string | null {
+  if (!Array.isArray(members) || members.length === 0) {
+    return null;
+  }
+
+  const existingMembers = members.filter((member) => member in people);
+  if (existingMembers.length === 0) {
+    return null;
+  }
+
+  const firstAdult = year
+    ? existingMembers.find((member) => {
+        const age = getBuilderPersonAge(people[member], year);
+        return age !== null && age >= 18;
+      })
+    : undefined;
+
+  return firstAdult ?? existingMembers[0];
+}
+
+function sortBuilderPersonKeys(peopleKeys: string[]): string[] {
+  return [...peopleKeys].sort((left, right) => {
+    if (left === BUILDER_PRIMARY_PERSON_NAME) {
+      return -1;
+    }
+    if (right === BUILDER_PRIMARY_PERSON_NAME) {
+      return 1;
+    }
+
+    if (left === BUILDER_DEFAULT_PARTNER_NAME) {
+      return -1;
+    }
+    if (right === BUILDER_DEFAULT_PARTNER_NAME) {
+      return 1;
+    }
+
+    const leftOrdinalIndex = BUILDER_DEPENDENT_ORDINALS.findIndex((ordinal) =>
+      left.includes(ordinal)
+    );
+    const rightOrdinalIndex = BUILDER_DEPENDENT_ORDINALS.findIndex((ordinal) =>
+      right.includes(ordinal)
+    );
+    if (leftOrdinalIndex !== -1 && rightOrdinalIndex !== -1) {
+      return leftOrdinalIndex - rightOrdinalIndex;
+    }
+    if (leftOrdinalIndex !== -1) {
+      return -1;
+    }
+    if (rightOrdinalIndex !== -1) {
+      return 1;
+    }
+
+    return left.localeCompare(right);
+  });
+}
+
+function getBuilderDependentName(index: number): string {
+  return `your ${BUILDER_DEPENDENT_ORDINALS[index] || `${index + 1}th`} dependent`;
+}
+
+function getUniqueBuilderPersonName(existingKeys: Set<string>, preferredName: string): string {
+  if (!existingKeys.has(preferredName)) {
+    return preferredName;
+  }
+
+  let suffix = 2;
+  let candidate = `${preferredName} ${suffix}`;
+  while (existingKeys.has(candidate)) {
+    suffix += 1;
+    candidate = `${preferredName} ${suffix}`;
+  }
+
+  return candidate;
+}
+
+function setYearValue(
+  target: Record<string, HouseholdFieldValue | string[]>,
+  variableName: string,
+  year: string,
+  value: HouseholdScalar
+): void {
+  const existing = target[variableName];
+  target[variableName] = {
+    ...(isYearValueMap(existing) ? existing : {}),
+    [year]: value,
+  };
+}
+
+function removeVariableFromEntityData(
+  entityData: Record<string, HouseholdFieldValue | string[]> | undefined,
+  variableName: string
+): void {
+  if (entityData) {
+    delete entityData[variableName];
+  }
+}
+
+function applyDefaultHouseholdGroups(
+  householdData: AppHouseholdInputData,
+  personKey: string
+): void {
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'households'),
+    'your household',
+    personKey
+  );
+}
+
+function applyUSDefaultGroups(
+  householdData: AppHouseholdInputData,
+  personKey: string,
+  personType: 'adult' | 'child'
+): void {
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'taxUnits'),
+    'your tax unit',
+    personKey
+  );
+  addPersonToFirstGroup(ensureGroupCollection(householdData, 'families'), 'your family', personKey);
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'spmUnits'),
+    'your household',
+    personKey
+  );
+
+  const maritalUnits = ensureGroupCollection(householdData, 'maritalUnits');
+  const maritalUnitKey =
+    personType === 'adult' ? 'your marital unit' : `${personKey}'s marital unit`;
+  addPersonToNamedGroup(maritalUnits, maritalUnitKey, personKey);
+
+  applyDefaultHouseholdGroups(householdData, personKey);
+}
+
+function applyUKDefaultGroups(householdData: AppHouseholdInputData, personKey: string): void {
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'benunits'),
+    'your benefit unit',
+    personKey
+  );
+  applyDefaultHouseholdGroups(householdData, personKey);
+}
+
+interface HouseholdCountryStrategy {
+  applyPersonDefaults: (
+    householdData: AppHouseholdInputData,
+    personKey: string,
+    personType: 'adult' | 'child'
+  ) => void;
+}
+
+const DEFAULT_COUNTRY_STRATEGY: HouseholdCountryStrategy = {
+  applyPersonDefaults: (householdData, personKey) =>
+    applyDefaultHouseholdGroups(householdData, personKey),
+};
+
+const HOUSEHOLD_COUNTRY_STRATEGIES: Partial<Record<CountryId, HouseholdCountryStrategy>> = {
+  us: {
+    applyPersonDefaults: applyUSDefaultGroups,
+  },
+  uk: {
+    applyPersonDefaults: applyUKDefaultGroups,
+  },
+  ca: DEFAULT_COUNTRY_STRATEGY,
+  ng: DEFAULT_COUNTRY_STRATEGY,
+  il: DEFAULT_COUNTRY_STRATEGY,
+};
+
+function getHouseholdCountryStrategy(countryId: CountryId): HouseholdCountryStrategy {
+  return HOUSEHOLD_COUNTRY_STRATEGIES[normalizeCountryId(countryId)] ?? DEFAULT_COUNTRY_STRATEGY;
+}
 
 export class Household extends BaseModel<HouseholdModelData> {
   readonly id: string;
@@ -78,6 +524,438 @@ export class Household extends BaseModel<HouseholdModelData> {
     return Object.keys(this.appInputData.people);
   }
 
+  getSortedPersonNames(): string[] {
+    return sortBuilderPersonKeys(Object.keys(this.appInputData.people));
+  }
+
+  getHouseholdUnitCount(): number {
+    return this.getGroupCount('households');
+  }
+
+  getAllPeople(): PersonWithName[] {
+    return Object.entries(this.appInputData.people).map(([name, person]) => ({
+      name,
+      ...cloneValue(person),
+    }));
+  }
+
+  getAdults(year: string): PersonWithName[] {
+    return this.getAllPeople().filter((person) => {
+      const age = getYearValue(person.age, year);
+      return typeof age === 'number' && age >= 18;
+    });
+  }
+
+  getChildren(year: string): PersonWithName[] {
+    return this.getAllPeople().filter((person) => {
+      const age = getYearValue(person.age, year);
+      return typeof age === 'number' && age < 18;
+    });
+  }
+
+  getAdultCount(year: string): number {
+    return this.getAdults(year).length;
+  }
+
+  getChildCount(year: string): number {
+    return this.getChildren(year).length;
+  }
+
+  isEmpty(): boolean {
+    return this.personCount === 0;
+  }
+
+  getPersonVariableAtYear(
+    personName: string,
+    variableName: string,
+    year: string
+  ): HouseholdScalar | undefined {
+    return getYearValue(this.appInputData.people[personName]?.[variableName], year);
+  }
+
+  getPersonVariableEntries(personName: string): HouseholdVariableEntry[] {
+    const person = this.appInputData.people[personName];
+    if (!person) {
+      return [];
+    }
+
+    return Object.entries(person)
+      .filter(([variableName, value]) => !PERSON_META_KEYS.has(variableName) && value !== undefined)
+      .map(([name, value]) => ({
+        name,
+        value: cloneValue(value) as HouseholdFieldValue,
+      }));
+  }
+
+  getPersonLevelVariables(personName: string): string[] {
+    return this.getPersonVariableEntries(personName).map(({ name }) => name);
+  }
+
+  getGroupVariableAtYear(
+    entityName: string,
+    groupKey: string,
+    variableName: string,
+    year: string
+  ): HouseholdScalar | undefined {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    return getYearValue(groups?.[groupKey]?.[variableName], year);
+  }
+
+  getEntityVariableAtYear(
+    entityName: string,
+    entityKey: string,
+    variableName: string,
+    year: string
+  ): HouseholdScalar | undefined {
+    if (entityName === 'people') {
+      return this.getPersonVariableAtYear(entityKey, variableName, year);
+    }
+
+    return this.getGroupVariableAtYear(entityName, entityKey, variableName, year);
+  }
+
+  getGroupCollection(entityName: string): AppHouseholdInputGroupMap | undefined {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    return groups ? cloneValue(groups) : undefined;
+  }
+
+  hasGroupCollection(entityName: string): boolean {
+    return getGroupCollectionFromData(this.appInputData, entityName) !== undefined;
+  }
+
+  getGroupCount(entityName: string): number {
+    return Object.keys(getGroupCollectionFromData(this.appInputData, entityName) ?? {}).length;
+  }
+
+  isConfiguredGroupEntity(entityName: string): boolean {
+    return isHouseholdGroupEntityConfigured(this.countryId, entityName);
+  }
+
+  getPreferredGroupName(entityName: string): string | undefined {
+    return getPreferredGroupNameFromData(this.appInputData, entityName);
+  }
+
+  getGroupMembers(entityName: string, groupKey: string): string[] {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    return cloneValue(groups?.[groupKey]?.members ?? []);
+  }
+
+  getGroups(entityName: string): HouseholdGroupSummary[] {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    if (!groups) {
+      return [];
+    }
+
+    return Object.entries(groups).map(([key, group]) => ({
+      key,
+      members: cloneValue(group.members),
+    }));
+  }
+
+  getPeopleNotInGroupCollection(entityName: string): string[] {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    if (!groups) {
+      return [];
+    }
+
+    const groupedPeople = new Set(Object.values(groups).flatMap((group) => group.members));
+    return this.personNames.filter((personName) => !groupedPeople.has(personName));
+  }
+
+  getGroupsWithMemberCountOutside(
+    entityName: string,
+    minMembers: number,
+    maxMembers = Number.POSITIVE_INFINITY
+  ): HouseholdGroupSummary[] {
+    return this.getGroups(entityName).filter(
+      (group) => group.members.length < minMembers || group.members.length > maxMembers
+    );
+  }
+
+  getAllGroupCollections(): Array<{
+    entityName: HouseholdGroupAppKey;
+    groups: AppHouseholdInputGroupMap;
+  }> {
+    return [
+      ['households', this.appInputData.households],
+      ['families', this.appInputData.families],
+      ['taxUnits', this.appInputData.taxUnits],
+      ['spmUnits', this.appInputData.spmUnits],
+      ['maritalUnits', this.appInputData.maritalUnits],
+      ['benunits', this.appInputData.benunits],
+    ]
+      .filter((entry): entry is [HouseholdGroupAppKey, AppHouseholdInputGroupMap] =>
+        Boolean(entry[1])
+      )
+      .map(([entityName, groups]) => ({ entityName, groups: cloneValue(groups) }));
+  }
+
+  getConfiguredGroupCollections(countryId: CountryId = this.countryId): Array<{
+    entityName: HouseholdGroupAppKey;
+    groups: AppHouseholdInputGroupMap;
+  }> {
+    return getHouseholdGroupDefinitions(countryId)
+      .map((definition) => [definition.appKey, this.appInputData[definition.appKey]] as const)
+      .filter((entry): entry is readonly [HouseholdGroupAppKey, AppHouseholdInputGroupMap] =>
+        Boolean(entry[1])
+      )
+      .map(([entityName, groups]) => ({ entityName, groups: cloneValue(groups) }));
+  }
+
+  getUnexpectedGroupCollections(countryId: CountryId = this.countryId): HouseholdGroupAppKey[] {
+    const allowedEntityNames = new Set(
+      getHouseholdGroupDefinitions(countryId).map((definition) => definition.appKey)
+    );
+
+    return this.getAllGroupCollections()
+      .map(({ entityName }) => entityName)
+      .filter((entityName) => !allowedEntityNames.has(entityName));
+  }
+
+  getGroupVariableEntries(entityName: string, groupKey: string): HouseholdVariableEntry[] {
+    const group = getGroupCollectionFromData(this.appInputData, entityName)?.[groupKey];
+    if (!group) {
+      return [];
+    }
+
+    return Object.entries(group)
+      .filter(([variableName, value]) => {
+        if (GROUP_META_KEYS.has(variableName) || value === undefined || Array.isArray(value)) {
+          return false;
+        }
+
+        return true;
+      })
+      .map(([name, value]) => ({
+        name,
+        value: cloneValue(value) as HouseholdFieldValue,
+      }));
+  }
+
+  getHouseholdLevelVariables(): HouseholdGroupVariableReference[] {
+    const variables: HouseholdGroupVariableReference[] = [];
+
+    for (const { entityName, groups } of this.getConfiguredGroupCollections()) {
+      for (const groupName of Object.keys(groups)) {
+        for (const variable of this.getGroupVariableEntries(entityName, groupName)) {
+          variables.push({
+            ...variable,
+            entity: entityName,
+            entityName: groupName,
+          });
+        }
+      }
+    }
+
+    return variables;
+  }
+
+  getConfiguredGroupsWithVariables(): HouseholdGroupVariableCollection[] {
+    const groupsWithVariables: HouseholdGroupVariableCollection[] = [];
+
+    for (const { entityName, groups } of this.getConfiguredGroupCollections()) {
+      for (const [groupName, group] of Object.entries(groups)) {
+        const variables = this.getGroupVariableEntries(entityName, groupName);
+        if (variables.length === 0) {
+          continue;
+        }
+
+        groupsWithVariables.push({
+          entityName,
+          groupName,
+          members: cloneValue(group.members),
+          variables,
+        });
+      }
+    }
+
+    return groupsWithVariables;
+  }
+
+  getHouseholdInputVariableEntries(): HouseholdInputVariableEntry[] {
+    const entries: HouseholdInputVariableEntry[] = [];
+
+    for (const personName of this.personNames) {
+      for (const variable of this.getPersonVariableEntries(personName)) {
+        const value = getFirstScalarFieldValue(variable.value);
+        if (value === undefined) {
+          continue;
+        }
+
+        entries.push({
+          entity: 'people',
+          entityName: personName,
+          name: variable.name,
+          value,
+        });
+      }
+    }
+
+    for (const groupName of Object.keys(
+      getGroupCollectionFromData(this.appInputData, 'households') ?? {}
+    )) {
+      for (const variable of this.getGroupVariableEntries('households', groupName)) {
+        const value = getFirstScalarFieldValue(variable.value);
+        if (value === undefined) {
+          continue;
+        }
+
+        entries.push({
+          entity: 'households',
+          entityName: groupName,
+          name: variable.name,
+          value,
+        });
+      }
+    }
+
+    return entries;
+  }
+
+  getEntityInstanceNames(entityName: string): string[] {
+    if (entityName === 'people') {
+      return Object.keys(this.appInputData.people);
+    }
+
+    return Object.keys(getGroupCollectionFromData(this.appInputData, entityName) ?? {});
+  }
+
+  hasEntityInstance(entityName: string, entityKey: string): boolean {
+    if (entityName === 'people') {
+      return entityKey in this.appInputData.people;
+    }
+
+    return entityKey in (getGroupCollectionFromData(this.appInputData, entityName) ?? {});
+  }
+
+  getBuilderPrimaryPersonKey(year: string): string | null {
+    const people = this.getSortedPersonNames();
+
+    if (people.includes(BUILDER_PRIMARY_PERSON_NAME)) {
+      return BUILDER_PRIMARY_PERSON_NAME;
+    }
+
+    const adults = this.getAdults(year).map((person) => person.name);
+    if (adults.length > 0) {
+      return adults[0];
+    }
+
+    return people[0] ?? null;
+  }
+
+  getBuilderPartnerKey(year: string, primaryPersonKey?: string | null): string | null {
+    const resolvedPrimaryPersonKey = primaryPersonKey ?? this.getBuilderPrimaryPersonKey(year);
+    if (!resolvedPrimaryPersonKey) {
+      return null;
+    }
+
+    if (this.isConfiguredGroupEntity('maritalUnits')) {
+      const maritalUnits = getGroupCollectionFromData(this.appInputData, 'maritalUnits') ?? {};
+      for (const unit of Object.values(maritalUnits)) {
+        if (!unit.members.includes(resolvedPrimaryPersonKey)) {
+          continue;
+        }
+
+        const partnerKey =
+          unit.members.find((member) => member !== resolvedPrimaryPersonKey) ?? null;
+        if (partnerKey) {
+          return partnerKey;
+        }
+      }
+    }
+
+    const people = Object.keys(this.appInputData.people);
+    if (
+      people.includes(BUILDER_DEFAULT_PARTNER_NAME) &&
+      BUILDER_DEFAULT_PARTNER_NAME !== resolvedPrimaryPersonKey
+    ) {
+      return BUILDER_DEFAULT_PARTNER_NAME;
+    }
+
+    const adults = this.getAdults(year).map((person) => person.name);
+    return adults.find((personKey) => personKey !== resolvedPrimaryPersonKey) ?? null;
+  }
+
+  getBuilderChildKeys(
+    year: string,
+    primaryPersonKey?: string | null,
+    partnerKey?: string | null
+  ): string[] {
+    const resolvedPrimaryPersonKey = primaryPersonKey ?? this.getBuilderPrimaryPersonKey(year);
+    const resolvedPartnerKey =
+      partnerKey ?? this.getBuilderPartnerKey(year, resolvedPrimaryPersonKey);
+
+    return Household.sortPersonNames(
+      Object.entries(this.appInputData.people)
+        .filter(([personKey, person]) => {
+          if (personKey === resolvedPrimaryPersonKey || personKey === resolvedPartnerKey) {
+            return false;
+          }
+
+          return isManagedBuilderChild(person, year);
+        })
+        .map(([personKey]) => personKey)
+    );
+  }
+
+  deriveBuilderComposition(year: string): HouseholdBuilderComposition {
+    const people = this.getSortedPersonNames();
+    const primaryPersonKey = this.getBuilderPrimaryPersonKey(year);
+    const partnerKey = this.getBuilderPartnerKey(year, primaryPersonKey);
+    const childKeys = this.getBuilderChildKeys(year, primaryPersonKey, partnerKey);
+
+    return {
+      people,
+      primaryPersonKey,
+      partnerKey,
+      childKeys,
+      maritalStatus: partnerKey ? 'married' : 'single',
+      numChildren: childKeys.length,
+    };
+  }
+
+  getHeadPersonName(year: string | null | undefined): string | null {
+    const people = this.appInputData.people;
+    const orderedPeople = this.getSortedPersonNames();
+    const normalizedYear = year ? String(year) : null;
+
+    if (orderedPeople.length === 0) {
+      return null;
+    }
+
+    if (orderedPeople.includes(BUILDER_PRIMARY_PERSON_NAME)) {
+      return BUILDER_PRIMARY_PERSON_NAME;
+    }
+
+    for (const groupName of getHouseholdHeadGroupKeys(this.countryId)) {
+      const groups = getGroupCollectionFromData(this.appInputData, groupName);
+      if (!groups) {
+        continue;
+      }
+
+      const orderedGroupKeys = Object.keys(groups).sort((left, right) => left.localeCompare(right));
+      for (const groupKey of orderedGroupKeys) {
+        const match = getFirstAdultOrMemberFromData(
+          groups[groupKey]?.members,
+          people,
+          normalizedYear
+        );
+        if (match) {
+          return match;
+        }
+      }
+    }
+
+    const firstAdult = normalizedYear
+      ? orderedPeople.find((personName) => {
+          const age = getBuilderPersonAge(people[personName], normalizedYear);
+          return age !== null && age >= 18;
+        })
+      : undefined;
+
+    return firstAdult ?? orderedPeople[0];
+  }
+
   static fromAppInput(input: AppHouseholdInputEnvelope): Household {
     const appInputData = cloneAppHouseholdInputData(input.householdData);
     const year = input.year ?? inferYearFromData(appInputData);
@@ -105,6 +983,40 @@ export class Household extends BaseModel<HouseholdModelData> {
       label: args.label,
       year: args.year,
     });
+  }
+
+  static empty(countryId: CountryId, year: string | number): Household {
+    const householdData: AppHouseholdInputData = {
+      people: {},
+    };
+
+    for (const entity of getHouseholdDefaultEntityKeys(countryId)) {
+      if (entity !== 'people') {
+        householdData[entity] = {};
+      }
+    }
+
+    return new Household({
+      id: 'draft-household',
+      countryId,
+      label: null,
+      year: Number(normalizeYear(year)),
+      appInputData: householdData,
+    });
+  }
+
+  static starter(countryId: CountryId, year: string | number): Household {
+    return Household.empty(countryId, year).addAdult(
+      BUILDER_PRIMARY_PERSON_NAME,
+      BUILDER_DEFAULT_ADULT_AGE,
+      {
+        employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,
+      }
+    );
+  }
+
+  static sortPersonNames(personNames: string[]): string[] {
+    return sortBuilderPersonKeys(personNames);
   }
 
   static fromV1Metadata(metadata: V1HouseholdMetadataEnvelope): Household {
@@ -173,6 +1085,334 @@ export class Household extends BaseModel<HouseholdModelData> {
     });
   }
 
+  addAdult(name: string, age: number, variables?: Record<string, unknown>): Household {
+    const year = resolveRequiredYear(this.year, this.appInputData);
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+
+    nextData.people[name] = {
+      age: { [year]: age },
+      ...expandVariables(variables, year),
+    };
+
+    return this.withHouseholdData(this.applyCountryDefaults(nextData, name, 'adult'));
+  }
+
+  addChild(
+    name: string,
+    age: number,
+    _parentIds: string[] = [],
+    variables?: Record<string, unknown>
+  ): Household {
+    const year = resolveRequiredYear(this.year, this.appInputData);
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+
+    nextData.people[name] = {
+      age: { [year]: age },
+      ...(this.countryId === 'us' ? { is_tax_unit_dependent: { [year]: true } } : {}),
+      ...expandVariables(variables, year),
+    };
+
+    return this.withHouseholdData(this.applyCountryDefaults(nextData, name, 'child'));
+  }
+
+  addChildren(
+    baseName: string,
+    count: number,
+    age: number,
+    parentIds: string[] = [],
+    variables?: Record<string, unknown>
+  ): Household {
+    let nextHousehold = this.withHouseholdData(this.appInputData);
+
+    for (let index = 0; index < count; index += 1) {
+      const name = count === 1 ? baseName : `${baseName} ${index + 1}`;
+      nextHousehold = nextHousehold.addChild(name, age, parentIds, variables);
+    }
+
+    return nextHousehold;
+  }
+
+  withBuilderMaritalStatus(year: string, newStatus: HouseholdBuilderMaritalStatus): Household {
+    const composition = this.deriveBuilderComposition(year);
+
+    if (!composition.primaryPersonKey) {
+      return this;
+    }
+
+    if (newStatus === 'married' && !composition.partnerKey) {
+      const existingKeys = new Set(Object.keys(this.appInputData.people));
+      const partnerKey = getUniqueBuilderPersonName(existingKeys, BUILDER_DEFAULT_PARTNER_NAME);
+
+      return this.addAdult(partnerKey, BUILDER_DEFAULT_ADULT_AGE, {
+        employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,
+      }).setMaritalStatus(composition.primaryPersonKey, partnerKey);
+    }
+
+    if (newStatus === 'single' && composition.partnerKey) {
+      return this.removePerson(composition.partnerKey);
+    }
+
+    return this;
+  }
+
+  withBuilderChildCount(year: string, newCount: number): Household {
+    const composition = this.deriveBuilderComposition(year);
+    let nextHousehold = this.withHouseholdData(this.appInputData);
+
+    if (newCount < composition.childKeys.length) {
+      for (const childKey of composition.childKeys.slice(newCount)) {
+        nextHousehold = nextHousehold.removePerson(childKey);
+      }
+    }
+
+    if (newCount > composition.childKeys.length) {
+      const existingKeys = new Set(Object.keys(this.appInputData.people));
+      const parentIds = [composition.primaryPersonKey, composition.partnerKey].filter(
+        Boolean
+      ) as string[];
+
+      for (let index = composition.childKeys.length; index < newCount; index += 1) {
+        const childKey = getUniqueBuilderPersonName(existingKeys, getBuilderDependentName(index));
+        existingKeys.add(childKey);
+        nextHousehold = nextHousehold.addChild(childKey, BUILDER_DEFAULT_CHILD_AGE, parentIds, {
+          employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,
+        });
+      }
+    }
+
+    return nextHousehold;
+  }
+
+  removePerson(personKey: string): Household {
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    delete nextData.people[personKey];
+
+    for (const groups of getAllGroupCollections(nextData)) {
+      for (const [groupKey, group] of Object.entries(groups)) {
+        group.members = group.members.filter((member) => member !== personKey);
+
+        if (group.members.length === 0) {
+          delete groups[groupKey];
+        }
+      }
+    }
+
+    return this.withHouseholdData(nextData);
+  }
+
+  setMaritalStatus(person1Key: string, person2Key: string): Household {
+    if (!this.isConfiguredGroupEntity('maritalUnits')) {
+      return this;
+    }
+
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const maritalUnits = ensureGroupCollection(nextData, 'maritalUnits');
+    maritalUnits['your marital unit'] = {
+      members: [person1Key, person2Key],
+    };
+
+    return this.withHouseholdData(nextData);
+  }
+
+  assignToGroupEntity(
+    personKey: string,
+    entityName: HouseholdGroupAppKey,
+    groupKey: string
+  ): Household {
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const groups = ensureGroupCollection(nextData, entityKey);
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = { members: [] };
+    }
+
+    if (!groups[groupKey].members.includes(personKey)) {
+      groups[groupKey].members.push(personKey);
+    }
+
+    return this.withHouseholdData(nextData);
+  }
+
+  setPersonVariable(
+    personKey: string,
+    variableName: string,
+    value: HouseholdFieldValue
+  ): Household {
+    const year = resolveRequiredYear(this.year, this.appInputData);
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const person = nextData.people[personKey];
+
+    if (!person) {
+      throw new Error(`Person ${personKey} not found`);
+    }
+
+    person[variableName] = normalizeBuilderFieldValue(value, year);
+
+    return this.withHouseholdData(nextData);
+  }
+
+  setPersonVariableAtYear(
+    personKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const person = nextData.people[personKey];
+
+    if (!person) {
+      throw new Error(`Person ${personKey} not found`);
+    }
+
+    setYearValue(person, variableName, normalizeYear(year), value);
+
+    return this.withHouseholdData(nextData);
+  }
+
+  setGroupVariable(
+    entityName: HouseholdGroupAppKey,
+    groupKey: string,
+    variableName: string,
+    value: HouseholdFieldValue
+  ): Household {
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    const year = resolveRequiredYear(this.year, this.appInputData);
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const groups = ensureGroupCollection(nextData, entityKey);
+
+    if (!groups[groupKey]) {
+      throw new Error(`Group ${groupKey} not found in ${String(entityKey)}`);
+    }
+
+    groups[groupKey][variableName] = normalizeBuilderFieldValue(value, year);
+
+    return this.withHouseholdData(nextData);
+  }
+
+  setGroupVariableAtYear(
+    entityName: string,
+    groupKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    const groups = ensureGroupCollection(nextData, entityKey);
+
+    if (!groups[groupKey]) {
+      throw new Error(`Group ${groupKey} not found in ${String(entityKey)}`);
+    }
+
+    setYearValue(groups[groupKey], variableName, normalizeYear(year), value);
+
+    return this.withHouseholdData(nextData);
+  }
+
+  setEntityVariableAtYear(
+    entityName: string,
+    entityKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    if (entityName === 'people') {
+      return this.setPersonVariableAtYear(entityKey, variableName, year, value);
+    }
+
+    return this.setGroupVariableAtYear(entityName, entityKey, variableName, year, value);
+  }
+
+  addEntityVariableIfMissingAtYear(
+    entityName: string,
+    entityKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    if (entityName === 'people') {
+      if (this.getEntityVariableAtYear(entityName, entityKey, variableName, year) !== undefined) {
+        return this;
+      }
+      if (this.hasEntityInstance(entityName, entityKey)) {
+        return this.setPersonVariableAtYear(entityKey, variableName, year, value);
+      }
+
+      const nextData = cloneAppHouseholdInputData(this.appInputData);
+      nextData.people[entityKey] = {};
+      return this.withHouseholdData(nextData).setPersonVariableAtYear(
+        entityKey,
+        variableName,
+        year,
+        value
+      );
+    }
+
+    const entityGroupKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    if (this.getGroupVariableAtYear(entityGroupKey, entityKey, variableName, year) !== undefined) {
+      return this;
+    }
+
+    if (!this.hasEntityInstance(entityGroupKey, entityKey)) {
+      const nextData = cloneAppHouseholdInputData(this.appInputData);
+      ensureGroupCollection(nextData, entityGroupKey)[entityKey] = { members: [] };
+      return this.withHouseholdData(nextData).setGroupVariableAtYear(
+        entityGroupKey,
+        entityKey,
+        variableName,
+        year,
+        value
+      );
+    }
+
+    return this.setGroupVariableAtYear(entityGroupKey, entityKey, variableName, year, value);
+  }
+
+  removeEntityVariable(entityName: string, entityKey: string, variableName: string): Household {
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+
+    if (entityName === 'people') {
+      removeVariableFromEntityData(nextData.people[entityKey], variableName);
+      return this.withHouseholdData(nextData);
+    }
+
+    const entityGroupKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    const groups = getGroupCollectionFromData(nextData, entityGroupKey);
+    removeVariableFromEntityData(groups?.[entityKey], variableName);
+
+    return this.withHouseholdData(nextData);
+  }
+
+  ensureGroupInstance(entityName: string): { household: Household; groupKey: string } {
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    const existingName = getPreferredGroupNameFromData(this.appInputData, entityKey);
+    if (existingName) {
+      return { household: this, groupKey: existingName };
+    }
+
+    const groupDefinition = getGroupDefinitionByAppKey(entityKey);
+    if (!groupDefinition) {
+      throw new Error(`Unsupported household entity group "${entityName}"`);
+    }
+
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const groupCollection = ensureGroupCollection(nextData, entityKey);
+    let nextIndex = 0;
+    let nextName = buildGeneratedGroupName(groupDefinition.generatedKeyPrefix, nextIndex);
+
+    while (nextName in groupCollection) {
+      nextIndex += 1;
+      nextName = buildGeneratedGroupName(groupDefinition.generatedKeyPrefix, nextIndex);
+    }
+
+    groupCollection[nextName] = {
+      members: Object.keys(nextData.people).sort((left, right) => left.localeCompare(right)),
+    };
+
+    return { household: this.withHouseholdData(nextData), groupKey: nextName };
+  }
+
   toAppInput(): AppHouseholdInputEnvelope {
     return {
       id: this.id,
@@ -188,6 +1428,14 @@ export class Household extends BaseModel<HouseholdModelData> {
       countryId: this.countryId,
       householdData: this.appInputData,
       label: this.label,
+      year: this.year ?? inferYearFromData(this.appInputData),
+    });
+  }
+
+  toPythonPackage(): PythonPackageHouseholdData {
+    return buildPythonPackageHouseholdDataFromAppInput({
+      countryId: this.countryId,
+      householdData: this.appInputData,
       year: this.year ?? inferYearFromData(this.appInputData),
     });
   }
@@ -217,5 +1465,29 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   isEqual(other: Household): boolean {
     return deepEqual(this.toJSON(), other.toJSON());
+  }
+
+  private withHouseholdData(appInputData: AppHouseholdInputData): Household {
+    return new Household({
+      id: this.id,
+      countryId: this.countryId,
+      label: this.label,
+      year: this.year,
+      appInputData,
+    });
+  }
+
+  private applyCountryDefaults(
+    householdData: AppHouseholdInputData,
+    personKey: string,
+    personType: 'adult' | 'child'
+  ): AppHouseholdInputData {
+    getHouseholdCountryStrategy(this.countryId).applyPersonDefaults(
+      householdData,
+      personKey,
+      personType
+    );
+
+    return householdData;
   }
 }

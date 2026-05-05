@@ -3,20 +3,27 @@
  */
 
 import React from 'react';
-import { Group, Stack, Text } from '@/components/ui';
+import { IconTrash } from '@tabler/icons-react';
+import { Badge, Button, Group, Stack, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
-import { FONT_SIZES } from '../../constants';
 import { ChangesCardProps } from './types';
 
 export function ChangesCard({
   modifiedParams,
-  modificationCount,
-  selectedParamName,
-  onSelectParam,
+  isReadOnly = false,
+  onRemoveChange,
 }: ChangesCardProps) {
   if (modifiedParams.length === 0) {
     return null;
   }
+
+  const canRemoveChanges = !isReadOnly && Boolean(onRemoveChange);
+  const changes = modifiedParams.flatMap((param) =>
+    param.changes.map((change) => ({
+      ...change,
+      paramName: param.paramName,
+    }))
+  );
 
   return (
     <div
@@ -24,57 +31,46 @@ export function ChangesCard({
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.feature,
-        padding: spacing.md,
+        padding: spacing.lg,
       }}
     >
       <Group justify="space-between" style={{ marginBottom: spacing.sm }}>
         <Text size="sm" fw={600} style={{ color: colors.gray[700] }}>
           Changes for this parameter
         </Text>
-        <div
-          style={{
-            background: colors.primary[50],
-            color: colors.primary[700],
-            padding: `2px ${spacing.sm}`,
-            borderRadius: spacing.radius.element,
-            fontSize: FONT_SIZES.small,
-            fontWeight: 500,
-          }}
-        >
-          {modificationCount}
-        </div>
+        <Badge variant="secondary">{changes.length}</Badge>
       </Group>
       <Stack gap="xs">
-        {modifiedParams.map((param) => (
-          <button
-            type="button"
-            key={param.paramName}
-            onClick={() => onSelectParam(param.paramName)}
+        {changes.map((change) => (
+          <Group
+            key={`${change.paramName}-${change.index}`}
+            justify="space-between"
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
               padding: spacing.sm,
-              background:
-                selectedParamName === param.paramName ? colors.primary[50] : colors.gray[50],
+              background: colors.gray[50],
               borderRadius: spacing.radius.element,
-              width: '100%',
-              cursor: 'pointer',
-              border: 'none',
-              font: 'inherit',
             }}
           >
-            <Text size="xs" style={{ color: colors.gray[600], flex: 1 }}>
-              {param.label}
+            <Text size="xs" style={{ color: colors.gray[600] }}>
+              {change.period}
             </Text>
-            <Stack gap="xs" align="end" style={{ gap: 2 }}>
-              {param.changes.map((change, idx) => (
-                <Text key={idx} size="xs" fw={600} style={{ color: colors.primary[700] }}>
-                  {change.period}: {change.value}
-                </Text>
-              ))}
-            </Stack>
-          </button>
+            <Group gap="xs">
+              <Text size="xs" fw={600} style={{ color: colors.primary[700] }}>
+                {change.value}
+              </Text>
+              {canRemoveChanges && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Remove ${change.period} change`}
+                  onClick={() => onRemoveChange?.(change.paramName, change.index)}
+                >
+                  <IconTrash size={12} />
+                </Button>
+              )}
+            </Group>
+          </Group>
         ))}
       </Stack>
     </div>

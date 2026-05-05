@@ -3,3 +3,4 @@ export { IngredientPickerModal } from './IngredientPickerModal';
 export { PolicyBrowseModal } from './PolicyBrowseModal';
 export { PopulationBrowseModal } from './PopulationBrowseModal';
 export { PolicyCreationModal } from './PolicyCreationModal';
+export { HouseholdCreationModal } from './HouseholdCreationModal';

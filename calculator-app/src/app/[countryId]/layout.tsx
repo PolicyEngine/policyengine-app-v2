@@ -2,6 +2,7 @@
 
 import { use, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { CalculatorProviders } from "./providers";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
@@ -13,6 +14,9 @@ import { countryIds, type CountryId } from "@/libs/countries";
  * so shared components work identically in both router contexts.
  * This comment exists to force calculator-next redeploys when needed.
  * This line is a no-op touch for the calculator-app Vercel project.
+ * This additional comment exists only to retrigger calculator-next deployment.
+ * This comment-only change is here to keep calculator-next preview deploys in sync.
+ * This extra no-op comment is another forced touch for calculator-next previews.
  */
 export default function CountryLayout({
   children,
@@ -57,7 +61,9 @@ export default function CountryLayout({
   return (
     <CountryProvider value={countryId as CountryId}>
       <NavigationProvider value={navValue}>
-        <LocationProvider value={locationValue}>{children}</LocationProvider>
+        <LocationProvider value={locationValue}>
+          <CalculatorProviders>{children}</CalculatorProviders>
+        </LocationProvider>
       </NavigationProvider>
     </CountryProvider>
   );

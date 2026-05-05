@@ -12,7 +12,7 @@ import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useRegions } from '@/hooks/useRegions';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import { StandalonePopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { createPopulationCallbacks } from '@/utils/pathwayCallbacks';
@@ -58,7 +58,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     StandalonePopulationViewMode.LABEL, // labelMode
     {
       // Custom navigation for standalone pathway: exit to households list
-      onHouseholdComplete: (_householdId: string, _household: AppHouseholdInputEnvelope) => {
+      onHouseholdComplete: (_householdId: string, _household: Household) => {
         nav.push(`/${countryId}/households`);
         onComplete?.();
       },

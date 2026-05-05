@@ -2,8 +2,11 @@ import type { QueryClient } from '@tanstack/react-query';
 import { markReportCompleted, markReportError as persistReportError } from '@/api/report';
 import { markSimulationError, updateSimulationOutput } from '@/api/simulation';
 import { reportKeys, simulationKeys } from '@/libs/queryKeys';
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
-import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
+import type {
+  HouseholdCalculationData,
+  HouseholdReportConfig,
+  SimulationConfig,
+} from '@/types/calculation/household';
 import type { Report } from '@/types/ingredients/Report';
 import { cacheMonitor } from '@/utils/cacheMonitor';
 import { HouseholdProgressCoordinator } from './HouseholdProgressCoordinator';
@@ -30,7 +33,7 @@ export class HouseholdReportOrchestrator {
 
   private queryClient: QueryClient;
   private activeCalculations: Set<string>; // Track which simulations are running
-  private simulationResults: Map<string, Map<string, HouseholdData>>; // reportId -> (simId -> result)
+  private simulationResults: Map<string, Map<string, HouseholdCalculationData>>; // reportId -> (simId -> result)
   private progressCoordinators: Map<
     string,
     { coordinator: HouseholdProgressCoordinator; timer: NodeJS.Timeout }

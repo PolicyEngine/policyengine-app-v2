@@ -28,7 +28,6 @@ export default function PoliciesPage() {
 
   // Policy editor modal state
   const [editingPolicy, setEditingPolicy] = useState<PolicyStateProps | null>(null);
-  const [editingAssociationId, setEditingAssociationId] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [editorOpened, { open: openEditor, close: closeEditor }] = useDisclosure(false);
   const updateAssociation = useUpdatePolicyAssociation();
@@ -74,7 +73,6 @@ export default function PoliciesPage() {
         label: item.association.label || `Policy #${item.association.policyId}`,
         parameters: item.policy?.parameters || [],
       });
-      setEditingAssociationId(recordId);
       setEditorMode(mode);
       openEditor();
     }
@@ -168,18 +166,15 @@ export default function PoliciesPage() {
         onClose={() => {
           closeEditor();
           setEditingPolicy(null);
-          setEditingAssociationId(null);
         }}
         onPolicyCreated={() => {
           closeEditor();
           setEditingPolicy(null);
-          setEditingAssociationId(null);
         }}
         simulationIndex={0}
         reportYear={CURRENT_YEAR}
         initialPolicy={editingPolicy ?? undefined}
         initialEditorMode={editorMode}
-        initialAssociationId={editingAssociationId ?? undefined}
       />
 
       <RenameIngredientModal

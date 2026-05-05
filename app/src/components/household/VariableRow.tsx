@@ -4,17 +4,17 @@
 
 import { IconX } from '@tabler/icons-react';
 import { Button, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import { VariableInfo } from '@/utils/VariableResolver';
 import VariableInput from './VariableInput';
 
 export interface VariableRowProps {
   variable: VariableInfo;
-  household: AppHouseholdInputEnvelope;
+  household: Household;
   metadata: any;
   year: string;
   entityName?: string;
-  onChange: (household: AppHouseholdInputEnvelope) => void;
+  onChange: (household: Household) => void;
   onRemove?: () => void;
   disabled?: boolean;
   /** Reserve space for remove button column (for alignment with removable rows) */

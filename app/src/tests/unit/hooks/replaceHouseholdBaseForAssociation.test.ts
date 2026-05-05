@@ -5,6 +5,7 @@ import {
   shadowCreateHousehold,
   shadowUpdateUserHouseholdAssociation,
 } from '@/libs/migration/householdShadow';
+import { Household } from '@/models/Household';
 import { createMockHouseholdData } from '@/tests/fixtures/models/shared';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
@@ -32,14 +33,14 @@ const association: UserHouseholdPopulation = {
   isCreated: true,
 };
 
-const nextHousehold = {
+const nextHousehold = Household.fromAppInput({
   countryId: TEST_COUNTRY_ID,
   householdData: createMockHouseholdData({
     id: 'draft-replacement',
     countryId: TEST_COUNTRY_ID,
     label: association.label,
   }).data,
-};
+});
 
 describe('replaceHouseholdBaseForAssociation', () => {
   test('given v1 association update fails after create then it surfaces the orphaned household id and skips shadow writes', async () => {

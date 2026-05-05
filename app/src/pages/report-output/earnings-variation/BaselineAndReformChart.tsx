@@ -21,8 +21,8 @@ import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import {
   getClampedChartHeight,
   getNiceTicks,
@@ -40,11 +40,11 @@ import {
 } from '@/utils/householdVariationAxes';
 
 interface Props {
-  baseline: Household;
-  baselineVariation: Household;
+  baseline: HouseholdCalculationOutput;
+  baselineVariation: HouseholdCalculationOutput;
   focusPersonName?: string | null;
-  reform: Household;
-  reformVariation: Household;
+  reform: HouseholdCalculationOutput;
+  reformVariation: HouseholdCalculationOutput;
   variableName: string;
   year: string;
 }

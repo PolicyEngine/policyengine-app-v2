@@ -1,28 +1,33 @@
+import { Household } from '@/models/Household';
+import { getHouseholdHeadGroupKeys } from '@/models/household/schema';
 import type {
-  AppHouseholdInputEnvelope,
-  AppHouseholdInputGroupMap,
-  AppHouseholdInputPerson,
-} from '@/models/household/appTypes';
-import { getHouseholdGroupCollection, getHouseholdYearValue } from './householdDataAccess';
+  HouseholdCalculationOutput,
+  HouseholdCalculationPerson,
+} from '@/types/calculation/household';
+import {
+  getHouseholdCalculationGroupCollection,
+  getHouseholdCalculationYearValue,
+} from './householdCalculationOutput';
 import { sortPeopleKeys } from './householdIndividuals';
 
-const GROUP_CANDIDATES = ['taxUnits', 'households', 'families', 'benunits'] as const;
+type HouseholdHeadInput = Pick<HouseholdCalculationOutput, 'countryId' | 'householdData'>;
+type HouseholdHeadPerson = HouseholdCalculationPerson;
 
 function isAdult(
-  person: AppHouseholdInputPerson | undefined,
+  person: HouseholdHeadPerson | undefined,
   year: string | null | undefined
 ): boolean {
   if (!person || !year) {
     return false;
   }
 
-  const age = getHouseholdYearValue(person.age, year);
+  const age = getHouseholdCalculationYearValue(person.age, year);
   return typeof age === 'number' && age >= 18;
 }
 
 function getFirstAdultOrMember(
   members: string[] | undefined,
-  people: Record<string, AppHouseholdInputPerson>,
+  people: Record<string, HouseholdHeadPerson>,
   year: string | null | undefined
 ): string | null {
   if (!Array.isArray(members) || members.length === 0) {
@@ -39,16 +44,14 @@ function getFirstAdultOrMember(
 }
 
 function getPersonFromGroups(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdHeadInput,
   year: string | null | undefined
 ): string | null {
   const householdData = household.householdData ?? {};
   const people = householdData.people ?? {};
 
-  for (const groupName of GROUP_CANDIDATES) {
-    const groups = getHouseholdGroupCollection(householdData, groupName) as
-      | AppHouseholdInputGroupMap
-      | undefined;
+  for (const groupName of getHouseholdHeadGroupKeys(household.countryId)) {
+    const groups = getHouseholdCalculationGroupCollection(householdData, groupName);
     if (!groups) {
       continue;
     }
@@ -66,9 +69,13 @@ function getPersonFromGroups(
 }
 
 export function getHeadOfHouseholdPersonName(
-  household: AppHouseholdInputEnvelope,
+  household: Household | HouseholdHeadInput,
   year: string | null | undefined
 ): string | null {
+  if (household instanceof Household) {
+    return household.getHeadPersonName(year);
+  }
+
   const people = household.householdData?.people ?? {};
   const orderedPeople = sortPeopleKeys(Object.keys(people));
 

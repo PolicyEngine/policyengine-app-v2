@@ -48,6 +48,7 @@ export interface UserPolicyAssociationV2CreateRequest {
  * API request format for updating associations - matches backend UserPolicyUpdate
  */
 export interface UserPolicyAssociationV2UpdateRequest {
+  policy_id?: string;
   label?: string | null;
 }
 

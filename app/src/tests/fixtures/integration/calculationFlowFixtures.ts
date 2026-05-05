@@ -1,3 +1,4 @@
+import { Household } from '@/models/Household';
 import { CalcStartConfig, CalcStatus } from '@/types/calculation';
 
 /**
@@ -46,7 +47,7 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
     simulation2: null,
   },
   populations: {
-    household1: {
+    household1: Household.fromAppInput({
       id: INTEGRATION_TEST_CONSTANTS.HOUSEHOLD_IDS.HOUSEHOLD_1,
       countryId: 'us',
       householdData: {
@@ -61,7 +62,7 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
           },
         },
       } as any,
-    },
+    }),
     household2: null,
     geography1: null,
     geography2: null,

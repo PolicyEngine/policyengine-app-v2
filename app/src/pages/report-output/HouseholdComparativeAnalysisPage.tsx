@@ -1,16 +1,16 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import HouseholdOverview from './HouseholdOverview';
 
 interface Props {
-  baseline: Household;
-  reform: Household | null;
+  baseline: HouseholdCalculationOutput;
+  reform: HouseholdCalculationOutput | null;
   simulations: Simulation[];
   policies?: Policy[];
   userPolicies?: UserPolicy[];
-  households?: Household[];
+  households?: HouseholdCalculationOutput[];
   view?: string;
 }
 

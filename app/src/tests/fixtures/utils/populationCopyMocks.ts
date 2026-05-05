@@ -1,3 +1,4 @@
+import { Household } from '@/models/Household';
 import { Population } from '@/types/ingredients/Population';
 
 /**
@@ -8,7 +9,7 @@ export function mockPopulationWithComplexHousehold(): Population {
   return {
     label: 'Test Household',
     isCreated: true,
-    household: {
+    household: Household.fromAppInput({
       id: '12345',
       countryId: 'us',
       householdData: {
@@ -40,7 +41,7 @@ export function mockPopulationWithComplexHousehold(): Population {
           },
         },
       },
-    },
+    }),
     geography: null,
   };
 }

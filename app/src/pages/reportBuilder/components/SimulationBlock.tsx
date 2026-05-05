@@ -5,38 +5,11 @@
 import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { Button, Group, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors } from '@/designTokens';
-import type { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
-import type { RecentPopulation, SavedPolicy } from '../types';
+import type { SimulationBlockProps } from '../types';
 import { EditableLabel } from './EditableLabel';
 import { IngredientSection } from './IngredientSection';
-
-export interface SimulationBlockProps {
-  simulation: SimulationStateProps;
-  index: number;
-  countryId: 'us' | 'uk';
-  onLabelChange: (label: string) => void;
-  onQuickSelectPolicy: () => void;
-  onSelectSavedPolicy: (id: string, label: string, paramCount: number) => void;
-  onQuickSelectPopulation: (populationType: 'nationwide') => void;
-  onSelectRecentPopulation: (population: PopulationStateProps) => void;
-  onDeselectPolicy: () => void;
-  onDeselectPopulation: () => void;
-  onEditPolicy: () => void;
-  onViewPolicy: () => void;
-  onCreateCustomPolicy: () => void;
-  onBrowseMorePolicies: () => void;
-  onBrowseMorePopulations: () => void;
-  onRemove?: () => void;
-  canRemove: boolean;
-  isRequired?: boolean;
-  populationInherited?: boolean;
-  inheritedPopulation?: PopulationStateProps | null;
-  savedPolicies: SavedPolicy[];
-  recentPopulations: RecentPopulation[];
-  isReadOnly?: boolean;
-}
 
 export function SimulationBlock({
   simulation,
@@ -49,6 +22,7 @@ export function SimulationBlock({
   onSelectRecentPopulation,
   onEditPolicy,
   onViewPolicy: _onViewPolicy,
+  onViewPopulation: _onViewPopulation,
   onDeselectPolicy,
   onDeselectPopulation,
   onBrowseMorePolicies,
@@ -174,6 +148,7 @@ export function SimulationBlock({
       <IngredientSection
         type="population"
         currentId={currentPopulationId}
+        currentPopulation={effectivePopulation}
         countryId={countryId}
         onQuickSelectPopulation={onQuickSelectPopulation}
         onSelectRecentPopulation={onSelectRecentPopulation}

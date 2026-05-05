@@ -36,6 +36,7 @@ import {
 import { getSamplePopulations } from '../constants';
 import { createCurrentLawPolicy } from '../currentLaw';
 import type {
+  HouseholdEditorState,
   IngredientPickerState,
   IngredientType,
   PolicyBrowseState,
@@ -111,6 +112,10 @@ export function useSimulationCanvas({
   });
 
   const [populationBrowseState, setPopulationBrowseState] = useState<PolicyBrowseState>({
+    isOpen: false,
+    simulationIndex: 0,
+  });
+  const [householdEditorState, setHouseholdEditorState] = useState<HouseholdEditorState>({
     isOpen: false,
     simulationIndex: 0,
   });
@@ -344,6 +349,28 @@ export function useSimulationCanvas({
     [updatePolicy]
   );
 
+  const resolvePolicyForEditor = useCallback(
+    (policy: PolicyStateProps) => {
+      let resolvedPolicy = policy;
+
+      if (policy.id) {
+        const fullPolicy = policies?.find((p) => p.association.policyId.toString() === policy.id);
+        if (fullPolicy) {
+          const hasRealParams = policy.parameters.length > 0 && !!policy.parameters[0]?.name;
+          if (!hasRealParams && fullPolicy.policy?.parameters) {
+            resolvedPolicy = {
+              ...policy,
+              parameters: fullPolicy.policy.parameters,
+            };
+          }
+        }
+      }
+
+      return resolvedPolicy;
+    },
+    [policies]
+  );
+
   const handleEditPolicy = useCallback(
     (simulationIndex: number) => {
       const currentPolicy = reportState.simulations[simulationIndex]?.policy;
@@ -351,30 +378,17 @@ export function useSimulationCanvas({
         return;
       }
 
-      // Resolve full parameters: in-session policies have real params,
-      // saved policies have placeholder Array(n).fill({})
-      let resolvedPolicy = currentPolicy;
-      const hasRealParams =
-        currentPolicy.parameters.length > 0 && !!currentPolicy.parameters[0]?.name;
-      if (!hasRealParams && currentPolicy.id) {
-        const fullPolicy = policies?.find(
-          (p) => p.association.policyId.toString() === currentPolicy.id
-        );
-        if (fullPolicy?.policy?.parameters) {
-          resolvedPolicy = {
-            ...currentPolicy,
-            parameters: fullPolicy.policy.parameters,
-          };
-        }
-      }
+      const resolvedPolicy = resolvePolicyForEditor(currentPolicy);
 
       setPolicyCreationState({
         isOpen: true,
         simulationIndex,
         initialPolicy: resolvedPolicy,
+        initialEditorMode: 'edit',
+        returnToBrowseOnBack: false,
       });
     },
-    [reportState.simulations, policies]
+    [reportState.simulations, resolvePolicyForEditor]
   );
 
   const handleViewPolicy = useCallback(
@@ -384,30 +398,41 @@ export function useSimulationCanvas({
         return;
       }
 
-      // Resolve full parameters (same as handleEditPolicy)
-      let resolvedPolicy = currentPolicy;
-      const hasRealParams =
-        currentPolicy.parameters.length > 0 && !!currentPolicy.parameters[0]?.name;
-      if (!hasRealParams && currentPolicy.id) {
-        const fullPolicy = policies?.find(
-          (p) => p.association.policyId.toString() === currentPolicy.id
-        );
-        if (fullPolicy?.policy?.parameters) {
-          resolvedPolicy = {
-            ...currentPolicy,
-            parameters: fullPolicy.policy.parameters,
-          };
-        }
-      }
+      const resolvedPolicy = resolvePolicyForEditor(currentPolicy);
 
       setPolicyCreationState({
         isOpen: true,
         simulationIndex,
         initialPolicy: resolvedPolicy,
         initialEditorMode: 'display',
+        returnToBrowseOnBack: false,
       });
     },
-    [reportState.simulations, policies]
+    [reportState.simulations, resolvePolicyForEditor]
+  );
+
+  const handleCreatePolicyFromBrowse = useCallback(() => {
+    setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }));
+    setPolicyCreationState({
+      isOpen: true,
+      simulationIndex: policyBrowseState.simulationIndex,
+      initialEditorMode: 'create',
+      returnToBrowseOnBack: true,
+    });
+  }, [policyBrowseState.simulationIndex]);
+
+  const handleEditPolicyFromBrowse = useCallback(
+    (policy: PolicyStateProps) => {
+      setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }));
+      setPolicyCreationState({
+        isOpen: true,
+        simulationIndex: policyBrowseState.simulationIndex,
+        initialPolicy: policy,
+        initialEditorMode: 'edit',
+        returnToBrowseOnBack: true,
+      });
+    },
+    [policyBrowseState.simulationIndex]
   );
 
   // ---------------------------------------------------------------------------
@@ -458,6 +483,53 @@ export function useSimulationCanvas({
     [populationBrowseState.simulationIndex, updatePopulationWithInheritance]
   );
 
+  const handleHouseholdSaved = useCallback(
+    (population: PopulationStateProps) => {
+      updatePopulationWithInheritance(householdEditorState.simulationIndex, population);
+    },
+    [householdEditorState.simulationIndex, updatePopulationWithInheritance]
+  );
+
+  const handleViewPopulation = useCallback(
+    (simulationIndex: number) => {
+      const currentPopulation = reportState.simulations[simulationIndex]?.population;
+      const householdId = currentPopulation?.household?.id;
+
+      if (!householdId || !currentPopulation?.household) {
+        return;
+      }
+
+      setHouseholdEditorState({
+        isOpen: true,
+        simulationIndex,
+        initialPopulation: currentPopulation,
+        initialEditorMode: 'display',
+        returnToBrowseOnBack: false,
+      });
+    },
+    [reportState.simulations]
+  );
+
+  const handleEditPopulation = useCallback(
+    (simulationIndex: number) => {
+      const currentPopulation = reportState.simulations[simulationIndex]?.population;
+      const householdId = currentPopulation?.household?.id;
+
+      if (!householdId || !currentPopulation?.household) {
+        return;
+      }
+
+      setHouseholdEditorState({
+        isOpen: true,
+        simulationIndex,
+        initialPopulation: currentPopulation,
+        initialEditorMode: 'edit',
+        returnToBrowseOnBack: false,
+      });
+    },
+    [reportState.simulations]
+  );
+
   // ---------------------------------------------------------------------------
   // Ingredient picker / create-custom actions
   // ---------------------------------------------------------------------------
@@ -479,10 +551,15 @@ export function useSimulationCanvas({
       if (ingredientType === 'policy') {
         setPolicyCreationState({ isOpen: true, simulationIndex });
       } else if (ingredientType === 'population') {
-        window.location.href = `/${countryId}/households/create`;
+        setHouseholdEditorState({
+          isOpen: true,
+          simulationIndex,
+          initialEditorMode: 'create',
+          returnToBrowseOnBack: true,
+        });
       }
     },
-    [countryId]
+    []
   );
 
   // ---------------------------------------------------------------------------
@@ -503,6 +580,24 @@ export function useSimulationCanvas({
     () => setPopulationBrowseState((prev) => ({ ...prev, isOpen: false })),
     []
   );
+  const closeHouseholdEditor = useCallback(
+    () => setHouseholdEditorState((prev) => ({ ...prev, isOpen: false })),
+    []
+  );
+  const returnToPolicyBrowse = useCallback(() => {
+    setPolicyCreationState((prev) => ({ ...prev, isOpen: false }));
+    setPolicyBrowseState({
+      isOpen: true,
+      simulationIndex: policyCreationState.simulationIndex,
+    });
+  }, [policyCreationState.simulationIndex]);
+  const returnToPopulationBrowse = useCallback(() => {
+    setHouseholdEditorState((prev) => ({ ...prev, isOpen: false }));
+    setPopulationBrowseState({
+      isOpen: true,
+      simulationIndex: householdEditorState.simulationIndex,
+    });
+  }, [householdEditorState.simulationIndex]);
 
   const closeIngredientPicker = useCallback(
     () => setPickerState((prev) => ({ ...prev, isOpen: false })),
@@ -536,6 +631,8 @@ export function useSimulationCanvas({
     handleBrowseMorePolicies,
     handlePolicySelectFromBrowse,
     handlePolicyCreated,
+    handleCreatePolicyFromBrowse,
+    handleEditPolicyFromBrowse,
 
     // Population actions
     handleQuickSelectPopulation,
@@ -543,6 +640,9 @@ export function useSimulationCanvas({
     handleDeselectPopulation,
     handleBrowseMorePopulations,
     handlePopulationSelectFromBrowse,
+    handleHouseholdSaved,
+    handleEditPopulation,
+    handleViewPopulation,
 
     // Ingredient picker / custom
     handleIngredientSelect,
@@ -553,9 +653,13 @@ export function useSimulationCanvas({
     policyBrowseState,
     policyCreationState,
     populationBrowseState,
+    householdEditorState,
     closePolicyBrowse,
     closePolicyCreation,
     closePopulationBrowse,
+    closeHouseholdEditor,
+    returnToPolicyBrowse,
+    returnToPopulationBrowse,
     closeIngredientPicker,
   };
 }

@@ -495,16 +495,14 @@ describe('PopulationsPage', () => {
 
     test('given household with no people then displays zero count', () => {
       // Given
+      const householdWithNoPeople = userHouseholdsData[0].household.personNames.reduce(
+        (household, personName) => household.removePerson(personName),
+        userHouseholdsData[0].household
+      );
       const dataWithNoPeople = [
         {
           ...userHouseholdsData[0],
-          household: {
-            ...userHouseholdsData[0].household,
-            householdData: {
-              people: {},
-              families: {},
-            },
-          },
+          household: householdWithNoPeople,
         },
       ];
 

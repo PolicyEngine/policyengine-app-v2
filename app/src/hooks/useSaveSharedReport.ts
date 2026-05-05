@@ -23,7 +23,6 @@ import {
   shadowCreateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
 import { Household } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -37,7 +36,7 @@ import { useCreateReportAssociation, useUserReportStore } from './useUserReportA
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export type SaveResult = 'success' | 'partial' | 'already_saved' | null;
-type SharedSaveHouseholdDetails = AppHouseholdInputEnvelope | Household;
+type SharedSaveHouseholdDetails = Household;
 
 function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: Policy): void {
   const mappedV2PolicyId = getV2Id('Policy', association.policyId);
@@ -110,16 +109,9 @@ function shadowSavedHouseholdAssociation(
     return;
   }
 
-  const v1Household =
-    householdDetails instanceof Household
-      ? householdDetails
-          .withId(association.householdId)
-          .withLabel(association.label ?? householdDetails.label ?? null)
-      : Household.fromAppInput({
-          ...householdDetails,
-          id: association.householdId,
-          label: association.label ?? householdDetails.label ?? null,
-        });
+  const v1Household = householdDetails
+    .withId(association.householdId)
+    .withLabel(association.label ?? householdDetails.label ?? null);
 
   void shadowCreateHouseholdAndAssociation({
     v1HouseholdId: association.householdId,

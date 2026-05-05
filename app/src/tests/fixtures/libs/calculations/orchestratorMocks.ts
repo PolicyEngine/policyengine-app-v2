@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import { Household } from '@/models/Household';
 import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 import type { CalcStartConfig, CalcStatus } from '@/types/calculation';
 
@@ -71,11 +72,11 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
     },
   },
   populations: {
-    household1: {
+    household1: Household.fromAppInput({
       id: TEST_POPULATION_IDS.HOUSEHOLD_1,
       countryId: TEST_COUNTRIES.US,
       householdData: {} as any,
-    },
+    }),
   },
   ...overrides,
 });

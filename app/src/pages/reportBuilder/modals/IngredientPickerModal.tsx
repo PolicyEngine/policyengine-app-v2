@@ -19,11 +19,12 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
@@ -92,11 +93,11 @@ export function IngredientPickerModal({
     onClose();
   };
 
-  const handleSelectHousehold = (householdId: string, label: string) => {
+  const handleSelectHousehold = (household: HouseholdModel, label: string) => {
     onSelect({
       label,
       type: 'household',
-      household: { id: householdId, countryId, householdData: { people: {} } },
+      household,
       geography: null,
     });
     onClose();
@@ -555,11 +556,19 @@ export function IngredientPickerModal({
                     border: `1px solid ${colors.border.light}`,
                     cursor: 'pointer',
                   }}
-                  onClick={() => handleSelectHousehold('sample-household', 'Sample household')}
+                  onClick={() =>
+                    handleSelectHousehold(
+                      HouseholdModel.empty(countryId, CURRENT_YEAR).withId('sample-household'),
+                      'Sample household'
+                    )
+                  }
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      handleSelectHousehold('sample-household', 'Sample household');
+                      handleSelectHousehold(
+                        HouseholdModel.empty(countryId, CURRENT_YEAR).withId('sample-household'),
+                        'Sample household'
+                      );
                     }
                   }}
                 >
@@ -617,11 +626,13 @@ export function IngredientPickerModal({
                               border: `1px solid ${colors.border.light}`,
                               cursor: 'pointer',
                             }}
-                            onClick={() => handleSelectHousehold(householdId, label)}
+                            onClick={() => h.household && handleSelectHousehold(h.household, label)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
-                                handleSelectHousehold(householdId, label);
+                                if (h.household) {
+                                  handleSelectHousehold(h.household, label);
+                                }
                               }
                             }}
                           >

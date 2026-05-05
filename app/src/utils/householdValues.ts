@@ -1,146 +1,10 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { MetadataState } from '@/types/metadata';
-import { getHouseholdGroupCollection, isHouseholdYearMap } from './householdDataAccess';
+import { getValueFromHouseholdCalculationOutput } from './householdCalculationOutput';
+import { normalizeVariableValueType } from './variableMetadata';
 
-/**
- * Extracts a value from household data for a specific variable
- * Based on the v1 app's getValueFromHousehold function
- *
- * @param variableName - The name of the variable to extract
- * @param timePeriod - Specific time period (e.g., "2025"), or null to aggregate all periods
- * @param entityName - Specific entity name (e.g., "your household"), or null to aggregate all entities
- * @param household - The household data structure
- * @param metadata - The metadata containing variable definitions
- * @param valueFromFirstOnly - If true, only returns value from first entity (no aggregation)
- * @returns The extracted value (number or array)
- */
-export function getValueFromHousehold(
-  variableName: string,
-  timePeriod: string | null,
-  entityName: string | null,
-  household: Household,
-  metadata: MetadataState,
-  valueFromFirstOnly = false
-): number | number[] {
-  const variable = metadata.variables[variableName];
-  if (!variable) {
-    console.warn(`Variable ${variableName} not found in metadata`);
-    return 0;
-  }
-
-  // Get the entity type (e.g., "person", "household", "tax_unit")
-  const entity = variable.entity;
-  const entityPlural = metadata.entities[entity]?.plural;
-
-  if (!entityPlural) {
-    console.warn(`Entity ${entity} not found in metadata`);
-    return 0;
-  }
-
-  const householdData = household.householdData;
-  const entityGroup =
-    entityPlural === 'people'
-      ? householdData.people
-      : getHouseholdGroupCollection(householdData, entityPlural);
-
-  if (!entityGroup) {
-    console.warn(`Entity group ${entityPlural} not found in household data`);
-    return 0;
-  }
-
-  // If no entityName specified, aggregate across all entities
-  if (!entityName) {
-    const possibleEntities = Object.keys(entityGroup);
-
-    if (possibleEntities.length === 0) {
-      return 0;
-    }
-
-    if (possibleEntities.length === 1 || valueFromFirstOnly) {
-      return getValueFromHousehold(
-        variableName,
-        timePeriod,
-        possibleEntities[0],
-        household,
-        metadata,
-        valueFromFirstOnly
-      );
-    }
-
-    // Aggregate across all entities
-    let total: number | number[] = 0;
-    for (const entity of possibleEntities) {
-      const entityData = getValueFromHousehold(
-        variableName,
-        timePeriod,
-        entity,
-        household,
-        metadata,
-        valueFromFirstOnly
-      );
-
-      // Handle arrays
-      if (Array.isArray(entityData)) {
-        if (!Array.isArray(total)) {
-          total = Array(entityData.length).fill(0);
-        }
-        for (let i = 0; i < entityData.length; i++) {
-          (total as number[])[i] += entityData[i];
-        }
-      } else if (Array.isArray(total)) {
-        console.warn('Mixed array and scalar values in aggregation');
-      } else {
-        total += entityData;
-      }
-    }
-    return total;
-  }
-
-  // Get the specific entity
-  const entityData = entityGroup[entityName];
-  if (!entityData) {
-    console.warn(`Entity ${entityName} not found in ${entityPlural}`);
-    return 0;
-  }
-
-  // Get the variable data for this entity
-  const variableData = entityData[variableName];
-  if (!variableData) {
-    // Variable might not exist for this entity - return 0
-    return 0;
-  }
-
-  // If no timePeriod specified, aggregate across all time periods
-  if (!timePeriod) {
-    if (!isHouseholdYearMap(variableData)) {
-      return 0;
-    }
-    const possibleTimePeriods = Object.keys(variableData);
-    let total = 0;
-    for (const period of possibleTimePeriods) {
-      const periodValue = getValueFromHousehold(
-        variableName,
-        period,
-        entityName,
-        household,
-        metadata,
-        valueFromFirstOnly
-      );
-      if (typeof periodValue === 'number') {
-        total += periodValue;
-      }
-    }
-    return total;
-  }
-
-  // Return the specific value
-  if (!isHouseholdYearMap(variableData)) {
-    return 0;
-  }
-
-  const value = variableData[timePeriod];
-  return typeof value === 'number' ? value : 0;
-}
+export const getValueFromHousehold = getValueFromHouseholdCalculationOutput;
+export { getValueFromHouseholdCalculationOutput };
 
 /**
  * Gets input formatting properties for a variable based on its metadata
@@ -156,6 +20,10 @@ export function getInputFormattingProps(variable: any): {
   thousandSeparator: string;
   decimalScale?: number;
 } {
+  const valueType = normalizeVariableValueType(
+    variable?.valueType ?? variable?.value_type ?? variable?.data_type
+  );
+  const unit = variable?.unit ?? variable?.variable_unit ?? null;
   const currencyMap: Record<string, string> = {
     'currency-USD': '$',
     'currency-GBP': '£',
@@ -164,13 +32,13 @@ export function getInputFormattingProps(variable: any): {
 
   // Determine decimal scale based on valueType
   let decimalScale: number | undefined;
-  if (variable.valueType === 'int' || variable.valueType === 'Enum') {
+  if (valueType === 'int' || valueType === 'Enum') {
     decimalScale = 0;
-  } else if (variable.valueType === 'float') {
+  } else if (valueType === 'float') {
     // For currency, use 2 decimals; for percentages use 2; otherwise use 0 for simplicity
-    if (variable.unit && currencyMap[variable.unit]) {
+    if (unit && currencyMap[unit]) {
       decimalScale = 2;
-    } else if (variable.unit === '/1') {
+    } else if (unit === '/1') {
       decimalScale = 2;
     } else {
       decimalScale = 0;
@@ -178,16 +46,16 @@ export function getInputFormattingProps(variable: any): {
   }
 
   // Currency formatting
-  if (variable.unit && currencyMap[variable.unit]) {
+  if (unit && currencyMap[unit]) {
     return {
-      prefix: currencyMap[variable.unit],
+      prefix: currencyMap[unit],
       thousandSeparator: ',',
       decimalScale,
     };
   }
 
   // Percentage formatting
-  if (variable.unit === '/1') {
+  if (unit === '/1') {
     return {
       suffix: '%',
       thousandSeparator: ',',
@@ -286,8 +154,8 @@ export function getParameterAtInstant(parameter: any, instant: string): any {
  */
 export function shouldShowVariable(
   variableName: string,
-  householdBaseline: Household,
-  householdReform: Household | null,
+  householdBaseline: HouseholdCalculationOutput,
+  householdReform: HouseholdCalculationOutput | null,
   metadata: MetadataState,
   forceShow = false
 ): boolean {

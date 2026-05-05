@@ -5,9 +5,9 @@
  * Uses VariableResolver for entity-aware value getting/setting.
  */
 
+import { useEffect, useState } from 'react';
 import {
   Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -17,17 +17,19 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import { Household as HouseholdModel } from '@/models/Household';
+import { getInputFormattingProps } from '@/utils/householdValues';
 import { coerceByValueType } from '@/utils/valueCoercion';
+import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
 import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
 
 export interface VariableInputProps {
   variable: VariableInfo;
-  household: AppHouseholdInputEnvelope;
+  household: HouseholdModel;
   metadata: any;
   year: string;
   entityName?: string; // Required for person-level variables
-  onChange: (newHousehold: AppHouseholdInputEnvelope) => void;
+  onChange: (newHousehold: HouseholdModel) => void;
   disabled?: boolean;
 }
 
@@ -40,15 +42,98 @@ export default function VariableInput({
   onChange,
   disabled = false,
 }: VariableInputProps) {
-  const currentValue = getValue(household, variable.name, metadata, year, entityName);
+  const resolvedVariable = {
+    ...variable,
+    ...getNormalizedVariableMetadata(metadata?.variables?.[variable.name]),
+    label:
+      variable.label !== undefined
+        ? variable.label
+        : metadata?.variables?.[variable.name]?.label || '',
+  };
+  const currentValue = getValue(household, resolvedVariable.name, metadata, year, entityName);
+  const numericFormatting = getInputFormattingProps(resolvedVariable);
+  const isPercentage = resolvedVariable.unit === '/1';
+  const rawNumericValue =
+    typeof currentValue === 'number'
+      ? currentValue
+      : typeof resolvedVariable.defaultValue === 'number'
+        ? resolvedVariable.defaultValue
+        : 0;
+  const textValue = currentValue?.toString() || '';
+  const editableNumericValue = isPercentage ? rawNumericValue * 100 : rawNumericValue;
+  const [isEditingNumericValue, setIsEditingNumericValue] = useState(false);
+  const [numericInputValue, setNumericInputValue] = useState('');
+  const [isEditingTextValue, setIsEditingTextValue] = useState(false);
+  const [textInputValue, setTextInputValue] = useState(textValue);
 
   const handleChange = (value: any) => {
     const newHousehold = setValue(household, variable.name, value, metadata, year, entityName);
     onChange(newHousehold);
   };
 
+  useEffect(() => {
+    if (resolvedVariable.valueType !== 'float' && resolvedVariable.valueType !== 'int') {
+      return;
+    }
+
+    if (!isEditingNumericValue) {
+      setNumericInputValue(formatNumericDisplay(editableNumericValue, numericFormatting));
+    }
+  }, [editableNumericValue, isEditingNumericValue, numericFormatting, resolvedVariable.valueType]);
+
+  useEffect(() => {
+    if (resolvedVariable.valueType === 'float' || resolvedVariable.valueType === 'int') {
+      return;
+    }
+
+    if (!isEditingTextValue) {
+      setTextInputValue(textValue);
+    }
+  }, [isEditingTextValue, resolvedVariable.valueType, textValue]);
+
+  const handleNumericInputChange = (nextValue: string) => {
+    setNumericInputValue(nextValue);
+  };
+
+  const commitNumericInputValue = () => {
+    const cleanedNumericInput = numericInputValue.replace(/,/g, '').trim();
+    const isClearedNumericInput = cleanedNumericInput === '';
+    const parsedValue = isClearedNumericInput ? 0 : parseNumericInput(numericInputValue);
+    if (parsedValue === null) {
+      setIsEditingNumericValue(false);
+      setNumericInputValue(formatNumericDisplay(editableNumericValue, numericFormatting));
+      return;
+    }
+
+    const normalizedValue = isPercentage ? parsedValue / 100 : parsedValue;
+    const coercedValue = coerceByValueType(normalizedValue, resolvedVariable.valueType);
+
+    setIsEditingNumericValue(false);
+    setNumericInputValue(formatNumericDisplay(parsedValue, numericFormatting));
+
+    if (isClearedNumericInput && currentValue === 0) {
+      return;
+    }
+
+    if (!isClearedNumericInput && coercedValue === rawNumericValue) {
+      return;
+    }
+
+    handleChange(coercedValue);
+  };
+
+  const commitTextInputValue = () => {
+    setIsEditingTextValue(false);
+
+    if (textInputValue === textValue) {
+      return;
+    }
+
+    handleChange(textInputValue);
+  };
+
   // Render based on valueType
-  switch (variable.valueType) {
+  switch (resolvedVariable.valueType) {
     // Note: Same pattern in ValueInputBox.tsx - extract to shared component if reused again
     case 'bool': {
       const isChecked = Boolean(currentValue);
@@ -82,20 +167,19 @@ export default function VariableInput({
     }
 
     case 'Enum':
-      if (variable.possibleValues && variable.possibleValues.length > 0) {
+      if (resolvedVariable.possibleValues && resolvedVariable.possibleValues.length > 0) {
         return (
           <div>
-            {variable.label && <Label>{variable.label}</Label>}
             <Select
               value={currentValue?.toString() || ''}
               onValueChange={(val) => handleChange(val)}
               disabled={disabled}
             >
               <SelectTrigger>
-                <SelectValue placeholder={`Select ${variable.label}`} />
+                <SelectValue placeholder={`Select ${resolvedVariable.label}`} />
               </SelectTrigger>
               <SelectContent>
-                {variable.possibleValues.map((pv) => (
+                {resolvedVariable.possibleValues.map((pv: { value: string; label: string }) => (
                   <SelectItem key={pv.value} value={pv.value}>
                     {pv.label}
                   </SelectItem>
@@ -108,11 +192,10 @@ export default function VariableInput({
       // Fall through to text input if no possibleValues
       return (
         <div>
-          {variable.label && <Label>{variable.label}</Label>}
           <Input
             value={currentValue?.toString() || ''}
             onChange={(e) => handleChange(e.currentTarget.value)}
-            placeholder={`Enter ${variable.label}`}
+            placeholder={`Enter ${resolvedVariable.label}`}
             disabled={disabled}
           />
         </div>
@@ -122,17 +205,49 @@ export default function VariableInput({
     case 'int':
       return (
         <div>
-          {variable.label && <Label>{variable.label}</Label>}
-          <Input
-            type="number"
-            value={currentValue ?? variable.defaultValue ?? 0}
-            onChange={(e) =>
-              handleChange(coerceByValueType(e.target.valueAsNumber || 0, variable.valueType))
-            }
-            placeholder={`Enter ${variable.label}`}
-            disabled={disabled}
-            step={variable.valueType === 'int' ? 1 : 'any'}
-          />
+          <div className="tw:relative">
+            {numericFormatting.prefix && (
+              <span
+                className="tw:absolute tw:left-3 tw:top-1/2 tw:-translate-y-1/2 tw:text-sm tw:text-gray-500"
+                aria-hidden="true"
+              >
+                {numericFormatting.prefix}
+              </span>
+            )}
+            <Input
+              type="text"
+              inputMode={resolvedVariable.valueType === 'int' ? 'numeric' : 'decimal'}
+              value={numericInputValue}
+              onFocus={() => {
+                setIsEditingNumericValue(true);
+                setNumericInputValue(toEditableNumericString(editableNumericValue));
+              }}
+              onBlur={commitNumericInputValue}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                }
+              }}
+              onChange={(e) => handleNumericInputChange(e.currentTarget.value)}
+              placeholder={`Enter ${resolvedVariable.label}`}
+              disabled={disabled}
+              className={[
+                numericFormatting.prefix ? 'tw:pl-8' : '',
+                numericFormatting.suffix ? 'tw:pr-10' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            />
+            {numericFormatting.suffix && (
+              <span
+                className="tw:absolute tw:right-3 tw:top-1/2 tw:-translate-y-1/2 tw:text-sm tw:text-gray-500"
+                aria-hidden="true"
+              >
+                {numericFormatting.suffix}
+              </span>
+            )}
+          </div>
         </div>
       );
 
@@ -140,14 +255,55 @@ export default function VariableInput({
     default:
       return (
         <div>
-          {variable.label && <Label>{variable.label}</Label>}
           <Input
-            value={currentValue?.toString() || ''}
-            onChange={(e) => handleChange(e.currentTarget.value)}
-            placeholder={`Enter ${variable.label}`}
+            value={textInputValue}
+            onFocus={() => setIsEditingTextValue(true)}
+            onBlur={commitTextInputValue}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.currentTarget.blur();
+              }
+            }}
+            onChange={(e) => setTextInputValue(e.currentTarget.value)}
+            placeholder={`Enter ${resolvedVariable.label}`}
             disabled={disabled}
           />
         </div>
       );
   }
+}
+
+function parseNumericInput(value: string): number | null {
+  const cleanedValue = value.replace(/,/g, '').trim();
+
+  if (!cleanedValue || cleanedValue === '-' || cleanedValue === '.' || cleanedValue === '-.') {
+    return null;
+  }
+
+  const parsedValue = Number(cleanedValue);
+  return Number.isNaN(parsedValue) ? null : parsedValue;
+}
+
+function toEditableNumericString(value: number): string {
+  if (!Number.isFinite(value)) {
+    return '0';
+  }
+
+  return value.toString();
+}
+
+function formatNumericDisplay(
+  value: number,
+  formatting: ReturnType<typeof getInputFormattingProps>
+): string {
+  if (!Number.isFinite(value)) {
+    return '0';
+  }
+
+  return new Intl.NumberFormat(undefined, {
+    useGrouping: true,
+    minimumFractionDigits: formatting.decimalScale ?? 0,
+    maximumFractionDigits: formatting.decimalScale ?? 2,
+  }).format(value);
 }

@@ -152,12 +152,10 @@ export default function PopulationsPage() {
   // Helper function to get household configuration details
   const getHouseholdDetails = (household: Household | undefined) => {
     const peopleCount = household?.personCount ?? 0;
-    const families =
-      (household?.householdData?.families as Record<string, unknown> | undefined) ?? {};
-    const familiesCount = Object.keys(families).length;
+    const householdCount = household?.getHouseholdUnitCount() ?? 0;
     return [
       { text: `${peopleCount} person${peopleCount !== 1 ? 's' : ''}`, badge: '' },
-      { text: `${familiesCount} household${familiesCount !== 1 ? 's' : ''}`, badge: '' },
+      { text: `${householdCount} household${householdCount !== 1 ? 's' : ''}`, badge: '' },
     ];
   };
 

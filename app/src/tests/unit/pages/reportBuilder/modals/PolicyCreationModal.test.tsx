@@ -1,7 +1,13 @@
-import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import type { PolicyStateProps } from '@/types/pathwayState';
+
+const mockCreatePolicyWithLabel = vi.hoisted(() => vi.fn());
+const mockCreatePolicyApi = vi.hoisted(() => vi.fn());
+const mockUpdatePolicyAssociation = vi.hoisted(() => vi.fn());
+const mockPolicyAssociationRefetch = vi.hoisted(() => vi.fn());
+const MODAL_TEST_TIMEOUT_MS = 20_000;
 
 const mockReduxState = {
   metadata: {
@@ -28,15 +34,23 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 
 vi.mock('@/hooks/useCreatePolicy', () => ({
   useCreatePolicy: () => ({
-    createPolicy: vi.fn(),
+    createPolicyWithLabel: mockCreatePolicyWithLabel,
     isPending: false,
   }),
 }));
 
 vi.mock('@/hooks/useUserPolicy', () => ({
-  useUpdatePolicyAssociation: () => ({
-    mutateAsync: vi.fn(),
+  usePolicyAssociation: () => ({
+    data: null,
+    refetch: mockPolicyAssociationRefetch,
   }),
+  useUpdatePolicyAssociation: () => ({
+    mutateAsync: mockUpdatePolicyAssociation,
+  }),
+}));
+
+vi.mock('@/api/policy', () => ({
+  createPolicy: mockCreatePolicyApi,
 }));
 
 vi.mock('@/pages/reportBuilder/modals/policyCreation', () => ({
@@ -55,41 +69,184 @@ const initialPolicy: PolicyStateProps = {
   parameters: [],
 };
 
+const modifiedPolicy: PolicyStateProps = {
+  id: 'pol-123',
+  label: 'Test policy',
+  parameters: [
+    {
+      name: 'gov.test.parameter',
+      values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 1 }],
+    },
+  ],
+};
+
 describe('PolicyCreationModal', () => {
-  test('given forceReadOnly then does not render edit transition actions', () => {
-    render(
-      <PolicyCreationModal
-        isOpen
-        onClose={vi.fn()}
-        onPolicyCreated={vi.fn()}
-        reportYear="2024"
-        simulationIndex={0}
-        initialPolicy={initialPolicy}
-        initialEditorMode="display"
-        forceReadOnly
-      />
-    );
-
-    expect(screen.queryByRole('button', { name: /edit this policy/i })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /update existing policy/i })
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /save as new policy/i })).not.toBeInTheDocument();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCreatePolicyWithLabel.mockResolvedValue({ result: { policy_id: 'pol-new' } });
+    mockCreatePolicyApi.mockResolvedValue({ result: { policy_id: 'pol-replacement' } });
+    mockUpdatePolicyAssociation.mockResolvedValue({
+      id: 'sup-123',
+      userId: 'user-1',
+      policyId: 'pol-replacement',
+      countryId: 'us',
+      label: 'Test policy',
+    });
+    mockPolicyAssociationRefetch.mockResolvedValue({
+      data: {
+        id: 'sup-123',
+        userId: 'user-1',
+        policyId: 'pol-123',
+        countryId: 'us',
+        label: 'Test policy',
+      },
+    });
   });
 
-  test('given display mode without forceReadOnly then renders edit transition action', () => {
-    render(
-      <PolicyCreationModal
-        isOpen
-        onClose={vi.fn()}
-        onPolicyCreated={vi.fn()}
-        reportYear="2024"
-        simulationIndex={0}
-        initialPolicy={initialPolicy}
-        initialEditorMode="display"
-      />
-    );
+  test(
+    'given forceReadOnly then does not render edit transition actions',
+    () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={initialPolicy}
+          initialEditorMode="display"
+          forceReadOnly
+        />
+      );
 
-    expect(screen.getByRole('button', { name: /edit this policy/i })).toBeInTheDocument();
-  });
+      expect(screen.queryByRole('button', { name: /edit this policy/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /update existing policy/i })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /save as new policy/i })).not.toBeInTheDocument();
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given display mode without forceReadOnly then renders edit transition action',
+    () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={initialPolicy}
+          initialEditorMode="display"
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /edit this policy/i })).toBeInTheDocument();
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given save as new policy then asks for a new name before creating',
+    async () => {
+      const onPolicyCreated = vi.fn();
+
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={onPolicyCreated}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={modifiedPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /save as new policy/i }));
+
+      expect(screen.getByRole('heading', { name: /save as new policy/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /keep same name/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+
+      const nameInput = screen.getByRole('textbox', { name: /new policy name/i });
+      fireEvent.change(nameInput, { target: { value: 'Renamed policy' } });
+      fireEvent.click(screen.getByRole('button', { name: /save with new name/i }));
+
+      await waitFor(() => {
+        expect(mockCreatePolicyWithLabel).toHaveBeenCalledWith(
+          expect.any(Object),
+          'Renamed policy'
+        );
+      });
+      expect(onPolicyCreated).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'pol-new', label: 'Renamed policy' })
+      );
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given update existing policy then resolves saved association by policy id',
+    async () => {
+      const onPolicyCreated = vi.fn();
+
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={onPolicyCreated}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={modifiedPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /update existing policy/i }));
+
+      await waitFor(() => {
+        expect(mockPolicyAssociationRefetch).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(mockUpdatePolicyAssociation).toHaveBeenCalledWith({
+          userPolicyId: 'sup-123',
+          updates: { policyId: 'pol-replacement', label: 'Test policy' },
+          replacementPolicyCountryId: 'us',
+          replacementPolicyPayload: expect.any(Object),
+        });
+      });
+      expect(onPolicyCreated).toHaveBeenCalledWith(
+        expect.not.objectContaining({ associationId: expect.anything() })
+      );
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given keep same name from save as new policy then creates with current name',
+    async () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={modifiedPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /save as new policy/i }));
+      fireEvent.click(screen.getByRole('button', { name: /keep same name/i }));
+
+      await waitFor(() => {
+        expect(mockCreatePolicyWithLabel).toHaveBeenCalledWith(expect.any(Object), 'Test policy');
+      });
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
 });

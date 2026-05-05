@@ -86,4 +86,48 @@ describe('useSimulationCanvas', () => {
     });
     expect(result.current.isInitialLoading).toBe(false);
   });
+
+  test('given a selected policy then edit mode opens from policy state without association metadata', () => {
+    const reportStateWithPolicy: ReportBuilderState = {
+      ...reportState,
+      simulations: [
+        {
+          ...initializeSimulationState(),
+          policy: {
+            id: 'policy-replacement',
+            label: 'Editable policy',
+            parameters: [
+              {
+                name: 'gov.test.parameter',
+                values: [],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    mockUseUserPolicies.mockReturnValue({ data: [], isLoading: false });
+
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState: reportStateWithPolicy,
+        setReportState,
+        pickerState,
+        setPickerState,
+      })
+    );
+
+    act(() => {
+      result.current.handleEditPolicy(0);
+    });
+
+    expect(result.current.policyCreationState).toMatchObject({
+      isOpen: true,
+      simulationIndex: 0,
+      initialPolicy: {
+        id: 'policy-replacement',
+      },
+    });
+  });
 });

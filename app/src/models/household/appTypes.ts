@@ -33,41 +33,6 @@ export interface AppHouseholdInputData {
   benunits?: AppHouseholdInputGroupMap;
 }
 
-export interface AppUSHouseholdInputData {
-  people: Record<string, AppHouseholdInputPerson>;
-  households?: AppHouseholdInputGroupMap;
-  families?: AppHouseholdInputGroupMap;
-  taxUnits?: AppHouseholdInputGroupMap;
-  spmUnits?: AppHouseholdInputGroupMap;
-  maritalUnits?: AppHouseholdInputGroupMap;
-}
-
-export interface AppUKHouseholdInputData {
-  people: Record<string, AppHouseholdInputPerson>;
-  households?: AppHouseholdInputGroupMap;
-  benunits?: AppHouseholdInputGroupMap;
-}
-
-export interface AppUSHouseholdInputEnvelope {
-  id?: string;
-  countryId: 'us';
-  householdData: AppUSHouseholdInputData;
-  label?: string | null;
-  year?: number | null;
-}
-
-export interface AppUKHouseholdInputEnvelope {
-  id?: string;
-  countryId: 'uk';
-  householdData: AppUKHouseholdInputData;
-  label?: string | null;
-  year?: number | null;
-}
-
-export type SupportedV2AppHouseholdInputEnvelope =
-  | AppUSHouseholdInputEnvelope
-  | AppUKHouseholdInputEnvelope;
-
 export interface HouseholdModelData {
   id: string;
   countryId: CountryId;

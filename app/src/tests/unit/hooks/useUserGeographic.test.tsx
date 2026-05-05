@@ -4,7 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
-import { useApiRegions } from '@/hooks/useApiRegions';
+import { useRegions } from '@/hooks/useRegions';
 import {
   useCreateGeographicAssociation,
   useGeographicAssociation,
@@ -32,8 +32,8 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
 }));
 
-vi.mock('@/hooks/useApiRegions', () => ({
-  useApiRegions: vi.fn(() => ({
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
     data: [
       {
         id: 'region-state-ca',
@@ -117,7 +117,7 @@ describe('useUserGeographic hooks', () => {
     queryClient = createMockQueryClient();
     mockShadowResolveRegionTarget.mockResolvedValue(null);
     ENTITY_MIGRATION_MODE.saved_geographies = defaultSavedGeographyMigrationMode;
-    vi.mocked(useApiRegions).mockReturnValue({
+    vi.mocked(useRegions).mockReturnValue({
       data: [
         {
           id: 'region-state-ca',
@@ -150,7 +150,7 @@ describe('useUserGeographic hooks', () => {
       ],
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useApiRegions>);
+    } as ReturnType<typeof useRegions>);
 
     // Get the mock store instance
     const mockStore =
@@ -589,11 +589,11 @@ describe('useUserGeographic hooks', () => {
     });
 
     test('given regions lookup fails then it still returns reconstructed geographies without surfacing an error', async () => {
-      vi.mocked(useApiRegions).mockReturnValue({
+      vi.mocked(useRegions).mockReturnValue({
         data: undefined,
         isLoading: false,
         error: new Error('regions unavailable'),
-      } as ReturnType<typeof useApiRegions>);
+      } as ReturnType<typeof useRegions>);
 
       const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
 

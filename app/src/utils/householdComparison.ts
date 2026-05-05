@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { MetadataState } from '@/types/metadata';
 import { getValueFromHousehold } from './householdValues';
 
@@ -26,8 +26,8 @@ export interface VariableComparison {
  */
 export function calculateVariableComparison(
   variableName: string,
-  baseline: Household,
-  reform: Household | null,
+  baseline: HouseholdCalculationOutput,
+  reform: HouseholdCalculationOutput | null,
   metadata: MetadataState
 ): VariableComparison {
   const baselineValue = getValueFromHousehold(variableName, null, null, baseline, metadata);

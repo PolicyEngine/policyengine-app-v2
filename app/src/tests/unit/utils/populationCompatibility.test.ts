@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Household } from '@/models/Household';
 import {
   mockPopulationEmpty,
   mockPopulationWithGeography,
@@ -131,11 +132,11 @@ describe('populationCompatibility', () => {
     it('given population with label prioritizes label over household ID', () => {
       // Given
       const population = mockPopulationWithLabel('Custom Label');
-      population.household = {
+      population.household = Household.fromAppInput({
         id: TEST_POPULATION_IDS.HOUSEHOLD_1,
         countryId: 'us',
         householdData: { people: {} },
-      };
+      });
 
       // When
       const result = getPopulationLabel(population);

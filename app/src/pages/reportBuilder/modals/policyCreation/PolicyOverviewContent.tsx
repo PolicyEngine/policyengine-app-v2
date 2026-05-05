@@ -16,6 +16,7 @@ interface PolicyOverviewContentProps {
   policyLabel: string;
   onLabelChange: (label: string) => void;
   isReadOnly: boolean;
+  showNamingCard?: boolean;
   modificationCount: number;
   modifiedParams: ModifiedParam[];
   hoveredParamName: string | null;
@@ -29,6 +30,7 @@ export function PolicyOverviewContent({
   policyLabel,
   onLabelChange,
   isReadOnly,
+  showNamingCard = true,
   modificationCount,
   modifiedParams,
   hoveredParamName,
@@ -37,52 +39,53 @@ export function PolicyOverviewContent({
 }: PolicyOverviewContentProps) {
   return (
     <Stack gap="lg">
-      {/* Naming card */}
-      <div
-        style={{
-          background: colors.white,
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderRadius: spacing.radius.feature,
-          border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
-          boxShadow:
-            modificationCount > 0
-              ? `0 4px 20px ${colorConfig.border}40`
-              : `0 2px 8px ${colors.shadow.light}`,
-          padding: `${spacing.sm} ${spacing.lg}`,
-          transition: 'all 0.3s ease',
-        }}
-      >
-        <Group gap="md" align="center" wrap="nowrap">
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: spacing.radius.container,
-              background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
-              border: `1px solid ${colorConfig.border}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <IconScale size={18} color={colorConfig.icon} />
-          </div>
-          {isReadOnly ? (
-            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-              {policyLabel || 'Untitled policy'}
-            </Text>
-          ) : (
-            <EditableLabel
-              value={policyLabel}
-              onChange={onLabelChange}
-              placeholder="Enter policy name..."
-              emptyStateText="Click to name your policy..."
-            />
-          )}
-        </Group>
-      </div>
+      {showNamingCard && (
+        <div
+          style={{
+            background: colors.white,
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            borderRadius: spacing.radius.feature,
+            border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
+            boxShadow:
+              modificationCount > 0
+                ? `0 4px 20px ${colorConfig.border}40`
+                : `0 2px 8px ${colors.shadow.light}`,
+            padding: `${spacing.sm} ${spacing.lg}`,
+            transition: 'all 0.3s ease',
+          }}
+        >
+          <Group gap="md" align="center" wrap="nowrap">
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: spacing.radius.container,
+                background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                border: `1px solid ${colorConfig.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <IconScale size={18} color={colorConfig.icon} />
+            </div>
+            {isReadOnly ? (
+              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                {policyLabel || 'Untitled policy'}
+              </Text>
+            ) : (
+              <EditableLabel
+                value={policyLabel}
+                onChange={onLabelChange}
+                placeholder="Enter policy name..."
+                emptyStateText="Click to name your policy..."
+              />
+            )}
+          </Group>
+        </div>
+      )}
 
       {/* Parameter / Period / Value grid */}
       {modifiedParams.length === 0 ? (

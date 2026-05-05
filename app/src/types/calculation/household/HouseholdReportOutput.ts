@@ -1,4 +1,4 @@
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
+import type { HouseholdCalculationData } from './HouseholdCalculationOutput';
 
 /**
  * Household report output structure
@@ -6,5 +6,5 @@ import type { AppHouseholdInputData as HouseholdData } from '@/models/household/
  * Simulation IDs are sorted alphabetically
  */
 export interface HouseholdReportOutput {
-  [simulationId: string]: HouseholdData;
+  [simulationId: string]: HouseholdCalculationData;
 }

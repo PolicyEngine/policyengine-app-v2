@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { HouseholdCalculationResponse } from '@/api/householdCalculation';
 import { CURRENT_YEAR } from '@/constants';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 
 // Test IDs and constants
 export const TEST_COUNTRIES = {
@@ -51,7 +51,7 @@ export const mockErrorResponse = (status: number) => ({
 });
 
 // Mock household result
-export const mockHouseholdResult: Household = {
+export const mockHouseholdResult: HouseholdCalculationOutput = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
   countryId: 'us',
   householdData: {
@@ -89,7 +89,7 @@ export const mockHouseholdResult: Household = {
 };
 
 // UK variant for testing different countries
-export const mockHouseholdResultUK: Household = {
+export const mockHouseholdResultUK: HouseholdCalculationOutput = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
   countryId: 'uk',
   householdData: {
@@ -117,7 +117,7 @@ export const mockHouseholdResultUK: Household = {
 };
 
 // Large household for testing complex scenarios
-export const mockLargeHouseholdResult: Household = {
+export const mockLargeHouseholdResult: HouseholdCalculationOutput = {
   id: TEST_HOUSEHOLD_IDS.LARGE_HOUSEHOLD,
   countryId: 'us',
   householdData: {

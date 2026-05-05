@@ -1,6 +1,6 @@
 /**
- * VariableSearchDropdown - Search input with dropdown results for adding variables
- * Uses Popover + custom list for canonical dropdown behavior
+ * VariableSearchDropdown - Search input with inline results for adding variables
+ * Renders the results list in normal document flow so parent layouts can expand.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -133,8 +133,8 @@ export default function VariableSearchDropdown({
   }, []);
 
   return (
-    <div className="tw:flex tw:items-center tw:gap-xs tw:flex-nowrap">
-      <div className="tw:flex-1 tw:relative">
+    <div className="tw:flex tw:items-start tw:gap-xs tw:flex-nowrap">
+      <div className="tw:flex-1 tw:min-w-0">
         <div className="tw:relative">
           <IconSearch
             size={16}
@@ -174,7 +174,7 @@ export default function VariableSearchDropdown({
         {isOpen && (
           <div
             ref={listRef}
-            className="tw:absolute tw:z-50 tw:w-full tw:mt-1 tw:bg-white tw:border tw:border-gray-200 tw:rounded-element tw:shadow-lg tw:max-h-[200px] tw:overflow-y-auto"
+            className="tw:mt-1 tw:w-full tw:bg-white tw:border tw:border-gray-200 tw:rounded-element tw:shadow-lg tw:max-h-[200px] tw:overflow-y-auto"
           >
             {loading ? (
               <div className="tw:flex tw:items-center tw:justify-center tw:p-md">
@@ -235,7 +235,7 @@ export default function VariableSearchDropdown({
         )}
       </div>
       {onClose && (
-        <div style={{ width: CLOSE_COLUMN_WIDTH, height: CLOSE_COLUMN_WIDTH }}>
+        <div className="tw:flex tw:items-center" style={{ width: CLOSE_COLUMN_WIDTH, height: 36 }}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

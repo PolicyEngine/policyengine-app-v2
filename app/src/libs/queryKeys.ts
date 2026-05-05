@@ -5,8 +5,17 @@ export const policyAssociationKeys = {
       ? ([...policyAssociationKeys.all, 'user_id', userId, 'country', countryId] as const)
       : ([...policyAssociationKeys.all, 'user_id', userId] as const),
   byPolicy: (policyId: string) => [...policyAssociationKeys.all, 'policy_id', policyId] as const,
-  specific: (userId: string, policyId: string) =>
-    [...policyAssociationKeys.all, 'specific', userId, policyId] as const,
+  specific: (userId: string, policyId: string, countryId?: string) =>
+    countryId
+      ? ([
+          ...policyAssociationKeys.all,
+          'specific',
+          userId,
+          policyId,
+          'country',
+          countryId,
+        ] as const)
+      : ([...policyAssociationKeys.all, 'specific', userId, policyId] as const),
 };
 
 export const householdAssociationKeys = {
@@ -17,8 +26,17 @@ export const householdAssociationKeys = {
       : ([...householdAssociationKeys.all, 'user_id', userId] as const),
   byHousehold: (householdId: string) =>
     [...householdAssociationKeys.all, 'household_id', householdId] as const,
-  specific: (userId: string, householdId: string) =>
-    [...householdAssociationKeys.all, 'specific', userId, householdId] as const,
+  specific: (userId: string, householdId: string, countryId?: string) =>
+    countryId
+      ? ([
+          ...householdAssociationKeys.all,
+          'specific',
+          userId,
+          householdId,
+          'country',
+          countryId,
+        ] as const)
+      : ([...householdAssociationKeys.all, 'specific', userId, householdId] as const),
 };
 
 export const simulationAssociationKeys = {

@@ -1,4 +1,4 @@
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 import { ProgressInfo } from './strategies/types';
 
 /**
@@ -8,7 +8,7 @@ interface ActiveCalc {
   /**
    * The promise for the ongoing calculation
    */
-  promise: Promise<HouseholdData>;
+  promise: Promise<HouseholdCalculationData>;
 
   /**
    * When the calculation started (milliseconds since epoch)
@@ -28,7 +28,7 @@ interface ActiveCalc {
   /**
    * Result if successfully completed
    */
-  result?: HouseholdData;
+  result?: HouseholdCalculationData;
 
   /**
    * Error if failed
@@ -49,7 +49,11 @@ export class ProgressTracker {
    * @param promise - The promise representing the calculation
    * @param estimatedDuration - Estimated time to completion in milliseconds (default: 60000)
    */
-  register(calcId: string, promise: Promise<HouseholdData>, estimatedDuration = 60000): void {
+  register(
+    calcId: string,
+    promise: Promise<HouseholdCalculationData>,
+    estimatedDuration = 60000
+  ): void {
     const tracking: ActiveCalc = {
       promise,
       startTime: Date.now(),
@@ -110,7 +114,7 @@ export class ProgressTracker {
    * @param calcId - The calculation ID
    * @param result - The calculation result
    */
-  complete(calcId: string, result: HouseholdData): void {
+  complete(calcId: string, result: HouseholdCalculationData): void {
     const tracking = this.active.get(calcId);
     if (tracking) {
       tracking.completed = true;

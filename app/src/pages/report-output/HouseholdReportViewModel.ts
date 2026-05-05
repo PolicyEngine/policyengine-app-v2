@@ -1,9 +1,10 @@
 import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
 import type {
-  AppHouseholdInputEnvelope as Household,
-  AppHouseholdInputData as HouseholdData,
-} from '@/models/household/appTypes';
-import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
+  HouseholdCalculationData,
+  HouseholdCalculationOutput,
+  HouseholdReportConfig,
+  SimulationConfig,
+} from '@/types/calculation/household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -113,7 +114,7 @@ export class HouseholdReportViewModel {
   /**
    * Extract household outputs from completed simulations
    */
-  getHouseholdOutputs(): Household[] {
+  getHouseholdOutputs(): HouseholdCalculationOutput[] {
     if (!this.report || !this.simulations) {
       return [];
     }
@@ -124,7 +125,7 @@ export class HouseholdReportViewModel {
         householdData: this.getHouseholdData(sim.output),
       }))
       .filter(
-        (entry): entry is { simulation: Simulation; householdData: HouseholdData } =>
+        (entry): entry is { simulation: Simulation; householdData: HouseholdCalculationData } =>
           !!entry.householdData
       )
       .map(({ simulation, householdData }) => ({
@@ -163,17 +164,17 @@ export class HouseholdReportViewModel {
     return null;
   }
 
-  private getHouseholdData(output: unknown): HouseholdData | null {
+  private getHouseholdData(output: unknown): HouseholdCalculationData | null {
     if (!output || typeof output !== 'object') {
       return null;
     }
 
     if ('result' in output && output.result && typeof output.result === 'object') {
-      return output.result as HouseholdData;
+      return output.result as HouseholdCalculationData;
     }
 
     if ('people' in output && output.people && typeof output.people === 'object') {
-      return output as HouseholdData;
+      return output as HouseholdCalculationData;
     }
 
     return null;
@@ -199,7 +200,7 @@ export class HouseholdReportViewModel {
    * Format household outputs for OverviewSubPage
    * Returns single household for single-sim reports, array for comparisons
    */
-  getFormattedOutput(): Household | Household[] | null {
+  getFormattedOutput(): HouseholdCalculationOutput | HouseholdCalculationOutput[] | null {
     const outputs = this.getHouseholdOutputs();
 
     if (outputs.length === 0) {

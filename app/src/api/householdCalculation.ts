@@ -1,16 +1,16 @@
 import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 
 export interface HouseholdCalculationResponse {
   status: 'ok' | 'error';
-  result: HouseholdData | null;
+  result: HouseholdCalculationData | null;
   error?: string;
   policyengine_bundle?: PolicyEngineBundle | null;
 }
 
 export interface HouseholdCalculationResult {
-  result: HouseholdData;
+  result: HouseholdCalculationData;
   policyengine_bundle?: PolicyEngineBundle | null;
 }
 
@@ -64,7 +64,7 @@ export async function fetchHouseholdCalculation(
   countryId: string,
   householdId: string,
   policyId: string
-): Promise<HouseholdData> {
+): Promise<HouseholdCalculationData> {
   const data = await fetchHouseholdCalculationWithBundle(countryId, householdId, policyId);
   return data.result;
 }

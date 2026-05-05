@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import metadataReducer from '@/reducers/metadataReducer';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { MetadataState } from '@/types/metadata';
 
 const TEST_METADATA: MetadataState = {
@@ -80,7 +80,7 @@ const TEST_METADATA: MetadataState = {
   parameterTree: null,
 };
 
-const TEST_HOUSEHOLD: Household = {
+const TEST_HOUSEHOLD: HouseholdCalculationOutput = {
   id: 'household-1',
   countryId: 'us',
   householdData: {

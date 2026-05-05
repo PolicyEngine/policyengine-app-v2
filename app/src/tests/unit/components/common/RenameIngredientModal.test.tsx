@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@test-utils';
+import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import {
@@ -277,8 +277,7 @@ describe('RenameIngredientModal', () => {
       const exactly100Chars = 'a'.repeat(100);
 
       // When
-      await user.clear(input);
-      await user.type(input, exactly100Chars);
+      fireEvent.change(input, { target: { value: exactly100Chars } });
       await user.click(screen.getByRole('button', { name: /^rename$/i }));
 
       // Then

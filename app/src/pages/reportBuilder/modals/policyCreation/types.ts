@@ -22,6 +22,7 @@ export interface ModifiedParam {
   paramName: string;
   label: string;
   changes: Array<{
+    index: number;
     period: string;
     value: string;
   }>;
@@ -91,9 +92,8 @@ export interface ValueSetterCardProps {
  */
 export interface ChangesCardProps {
   modifiedParams: ModifiedParam[];
-  modificationCount: number;
-  selectedParamName?: string;
-  onSelectParam: (paramName: string) => void;
+  isReadOnly?: boolean;
+  onRemoveChange?: (paramName: string, changeIndex: number) => void;
 }
 
 /**

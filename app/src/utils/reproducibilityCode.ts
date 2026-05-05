@@ -7,9 +7,17 @@
  */
 
 import { CURRENT_YEAR } from '@/constants';
+import type { Household } from '@/models/Household';
+import {
+  addVariationAxesToPythonPackageHouseholdData,
+  cleanPythonPackageHouseholdNullValuesForYear,
+} from '@/models/household/pythonPackageCodec';
+import type { PythonPackageHouseholdSituation } from '@/models/household/pythonPackageTypes';
 
 // Default year fallback - use the app's current year constant
 const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
+
+type PolicyData = { baseline: { data: any }; reform: { data: any } };
 
 // Maps region prefixes (from metadata) to HuggingFace subfolder names.
 // Note: place/ is NOT included — places use the parent state's dataset + filtering.
@@ -185,10 +193,7 @@ function getBaselineCode(
 /**
  * Generate reform policy code
  */
-function getReformCode(
-  policy: { baseline: { data: any }; reform: { data: any } },
-  countryId: string
-): string[] {
+function getReformCode(policy: PolicyData, countryId: string): string[] {
   if (!policy?.baseline?.data || Object.keys(policy.reform.data).length === 0) {
     return [];
   }
@@ -200,44 +205,40 @@ function getReformCode(
   return lines;
 }
 
+function buildHouseholdSituation(
+  household: Household | null,
+  countryId: string,
+  year: number,
+  earningVariation: boolean
+): PythonPackageHouseholdSituation {
+  const householdInput = household?.toPythonPackage() ?? { people: {} };
+  const situation = cleanPythonPackageHouseholdNullValuesForYear(householdInput, year);
+
+  if (earningVariation && Object.keys(situation.people).length > 0) {
+    return addVariationAxesToPythonPackageHouseholdData(situation, String(year), countryId);
+  }
+
+  return situation;
+}
+
 /**
  * Generate situation code for household simulation
  */
 function getSituationCode(
   type: 'household' | 'policy',
-  policy: { baseline: { data: any }; reform: { data: any } },
+  policy: PolicyData,
+  countryId: string,
   year: number,
-  householdInput: any,
+  household: Household | null,
   earningVariation: boolean
 ): string[] {
   if (type !== 'household') {
     return [];
   }
 
-  // Deep copy the household input
-  const householdInputCopy = JSON.parse(JSON.stringify(householdInput));
+  const householdSituation = buildHouseholdSituation(household, countryId, year, earningVariation);
 
-  // Clean up null values and handle earning variation
-  for (const entityPlural of Object.keys(householdInputCopy)) {
-    for (const entity of Object.keys(householdInputCopy[entityPlural])) {
-      for (const variable of Object.keys(householdInputCopy[entityPlural][entity])) {
-        if (variable !== 'members') {
-          if (householdInputCopy[entityPlural][entity][variable][year] === null) {
-            delete householdInputCopy[entityPlural][entity][variable];
-          }
-        }
-        if (earningVariation && variable === 'employment_income') {
-          delete householdInputCopy[entityPlural][entity][variable];
-        }
-      }
-    }
-  }
-
-  if (earningVariation) {
-    householdInputCopy.axes = [[{ name: 'employment_income', count: 200, min: 0, max: 200_000 }]];
-  }
-
-  let householdJson = JSON.stringify(householdInputCopy, null, 2);
+  let householdJson = JSON.stringify(householdSituation, null, 2);
   householdJson = sanitizeStringToPython(householdJson);
 
   const lines: string[] = ['', '', `situation = ${householdJson}`, '', 'simulation = Simulation('];
@@ -364,11 +365,11 @@ function getPlaceImplementationCode(
 export function getReproducibilityCodeBlock(
   type: 'household' | 'policy',
   countryId: string,
-  policy: { baseline: { data: any }; reform: { data: any } },
+  policy: PolicyData,
   region: string,
   year: number,
   dataset: string | null = null,
-  householdInput: any = null,
+  household: Household | null = null,
   earningVariation: boolean = false,
   isDefaultDataset: boolean = true,
   policyengineVersion: string | null = null
@@ -377,7 +378,7 @@ export function getReproducibilityCodeBlock(
     ...getHeaderCode(type, countryId, policy, region, policyengineVersion),
     ...getBaselineCode(policy, countryId),
     ...getReformCode(policy, countryId),
-    ...getSituationCode(type, policy, year, householdInput, earningVariation),
+    ...getSituationCode(type, policy, countryId, year, household, earningVariation),
     ...getImplementationCode(type, region, countryId, year, policy, dataset, isDefaultDataset),
   ];
 }

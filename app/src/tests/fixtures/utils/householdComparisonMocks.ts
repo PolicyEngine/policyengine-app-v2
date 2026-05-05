@@ -1,7 +1,7 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { MetadataState } from '@/types/metadata';
 
-export const mockHousehold = (_netIncome: number = 50000): Household => ({
+export const mockHousehold = (_netIncome: number = 50000): HouseholdCalculationOutput => ({
   id: 'household-1',
   countryId: 'us',
   householdData: {

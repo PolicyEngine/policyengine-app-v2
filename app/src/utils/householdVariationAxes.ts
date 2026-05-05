@@ -1,10 +1,23 @@
-export const HOUSEHOLD_VARIATION_POINT_COUNT = 401;
+import type { Household } from '@/models/Household';
+import {
+  addVariationAxesToPythonPackageHouseholdData,
+  getPythonPackageHouseholdVariationMaxEarnings,
+  PYTHON_PACKAGE_HOUSEHOLD_VARIATION_POINT_COUNT,
+} from '@/models/household/pythonPackageCodec';
+import type {
+  PythonPackageHouseholdData,
+  PythonPackageHouseholdVariationAxis,
+  PythonPackageHouseholdWithAxes,
+} from '@/models/household/pythonPackageTypes';
+
+export const HOUSEHOLD_VARIATION_POINT_COUNT = PYTHON_PACKAGE_HOUSEHOLD_VARIATION_POINT_COUNT;
+export type HouseholdVariationAxis = PythonPackageHouseholdVariationAxis;
 
 export function getHouseholdVariationMaxEarnings(
   currentEarnings: number,
   countryId: string
 ): number {
-  return Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
+  return getPythonPackageHouseholdVariationMaxEarnings(currentEarnings, countryId);
 }
 
 export function buildHouseholdVariationEarningsAxis(maxEarnings: number): number[] {
@@ -26,69 +39,33 @@ export function getHouseholdVariationIndexForEarnings(
   return Math.round((clampedEarnings / maxEarnings) * (HOUSEHOLD_VARIATION_POINT_COUNT - 1));
 }
 
+export function addHouseholdVariationAxesToPythonPackageData(
+  householdInput: PythonPackageHouseholdData,
+  year: string,
+  countryId: string,
+  personName?: string | null
+): PythonPackageHouseholdWithAxes {
+  return addVariationAxesToPythonPackageHouseholdData(householdInput, year, countryId, personName);
+}
+
 /**
  * Builds axes configuration for household variation calculations
  * Sets employment_income to null for the selected person and adds axes array
  *
- * @param householdInput - Raw household data structure (from API)
+ * @param household - Native household model
  * @param year - The year to vary employment income for
- * @param countryId - Country code (affects max earnings calculation)
  * @param personName - Person whose earnings should vary
  * @returns Household data with axes configuration for calculate-full endpoint
  */
 export function buildHouseholdVariationAxes(
-  householdInput: any,
+  household: Household,
   year: string,
-  countryId: string,
   personName?: string | null
-): any {
-  // Validate household has people
-  if (!householdInput?.people || Object.keys(householdInput.people).length === 0) {
-    throw new Error('Household has no people defined');
-  }
-
-  const fallbackPersonKey = Object.keys(householdInput.people)[0];
-  const targetPersonKey =
-    personName && householdInput.people[personName] ? personName : fallbackPersonKey;
-  const targetPerson = householdInput.people[targetPersonKey];
-
-  // Get current earnings for max calculation
-  const currentEarnings = (targetPerson?.employment_income?.[year] as number) || 0;
-
-  // Calculate max earnings based on country
-  const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
-
-  // Preserve existing employment_income values for other years
-  const existingEmploymentIncome = householdInput.people[targetPersonKey].employment_income || {};
-
-  // Build household data with variation
-  const householdDataWithVariation = {
-    ...householdInput,
-    people: {
-      ...householdInput.people,
-      [targetPersonKey]: {
-        ...householdInput.people[targetPersonKey],
-        employment_income: {
-          ...existingEmploymentIncome,
-          [year]: null, // Null = vary this for the specific year only
-        },
-      },
-    },
-  };
-
-  // Add axes configuration (already in API snake_case format)
-  return {
-    ...householdDataWithVariation,
-    axes: [
-      [
-        {
-          name: 'employment_income',
-          period: year,
-          min: 0,
-          max: maxEarnings,
-          count: HOUSEHOLD_VARIATION_POINT_COUNT,
-        },
-      ],
-    ],
-  };
+): PythonPackageHouseholdWithAxes {
+  return addHouseholdVariationAxesToPythonPackageData(
+    household.toPythonPackage(),
+    year,
+    household.countryId,
+    personName
+  );
 }

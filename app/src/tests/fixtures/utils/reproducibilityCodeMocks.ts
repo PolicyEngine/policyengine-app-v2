@@ -2,6 +2,8 @@
  * Fixtures for reproducibilityCode utility tests
  */
 
+import { Household } from '@/models/Household';
+import type { V1HouseholdData } from '@/models/household/v1Types';
 import { TEST_COUNTRIES } from '../constants';
 
 /**
@@ -97,7 +99,7 @@ export const POLICY_WITH_NEGATIVE_INFINITY: PolicyV1Format = {
 /**
  * Simple household input for testing
  */
-export const SIMPLE_HOUSEHOLD_INPUT = {
+export const SIMPLE_HOUSEHOLD_INPUT: V1HouseholdData = {
   people: {
     you: {
       age: { 2024: 35 },
@@ -135,7 +137,7 @@ export const SIMPLE_HOUSEHOLD_INPUT = {
 /**
  * Household input with null values (tests cleanup)
  */
-export const HOUSEHOLD_INPUT_WITH_NULLS = {
+export const HOUSEHOLD_INPUT_WITH_NULLS: V1HouseholdData = {
   people: {
     you: {
       age: { 2024: 35 },
@@ -174,7 +176,7 @@ export const HOUSEHOLD_INPUT_WITH_NULLS = {
 /**
  * Complex household input with multiple people
  */
-export const COMPLEX_HOUSEHOLD_INPUT = {
+export const COMPLEX_HOUSEHOLD_INPUT: V1HouseholdData = {
   people: {
     you: {
       age: { 2024: 35 },
@@ -218,6 +220,38 @@ export const COMPLEX_HOUSEHOLD_INPUT = {
     },
   },
 };
+
+export const SIMPLE_HOUSEHOLD = Household.fromV1CreationPayload(
+  {
+    country_id: TEST_COUNTRIES.US,
+    data: SIMPLE_HOUSEHOLD_INPUT,
+  },
+  { id: 'simple-household' }
+);
+
+export const UK_SIMPLE_HOUSEHOLD = Household.fromV1CreationPayload(
+  {
+    country_id: TEST_COUNTRIES.UK,
+    data: SIMPLE_HOUSEHOLD_INPUT,
+  },
+  { id: 'uk-simple-household' }
+);
+
+export const HOUSEHOLD_WITH_NULLS = Household.fromV1CreationPayload(
+  {
+    country_id: TEST_COUNTRIES.US,
+    data: HOUSEHOLD_INPUT_WITH_NULLS,
+  },
+  { id: 'household-with-nulls' }
+);
+
+export const COMPLEX_HOUSEHOLD = Household.fromV1CreationPayload(
+  {
+    country_id: TEST_COUNTRIES.US,
+    data: COMPLEX_HOUSEHOLD_INPUT,
+  },
+  { id: 'complex-household' }
+);
 
 /**
  * v2 Policy format (array of policies from DB)

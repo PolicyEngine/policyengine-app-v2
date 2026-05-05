@@ -2,13 +2,13 @@ import { useSelector } from 'react-redux';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
 import { Stack, Text, Title } from '@/components/ui';
 import { useReportYear } from '@/hooks/useReportYear';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { formatVariableValue, getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
-  baseline: Household;
-  reform: Household | null;
+  baseline: HouseholdCalculationOutput;
+  reform: HouseholdCalculationOutput | null;
 }
 
 /**

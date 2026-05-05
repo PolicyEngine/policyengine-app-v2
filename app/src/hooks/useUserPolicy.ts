@@ -13,6 +13,7 @@ import {
   shadowUpdateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
 import { Policy } from '@/types/ingredients/Policy';
+import type { PolicyCreationPayload } from '@/types/payloads';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
@@ -28,6 +29,17 @@ type PolicyAssociationStoreSelection = {
 
 type PolicyWriteConfigOptions = {
   skipDuplicateV2AssociationShadow?: boolean;
+};
+
+type PolicyAssociationQueryOptions = {
+  enabled?: boolean;
+};
+
+type UpdatePolicyAssociationVariables = {
+  userPolicyId: string;
+  updates: Partial<UserPolicy>;
+  replacementPolicyPayload?: PolicyCreationPayload;
+  replacementPolicyCountryId?: string;
 };
 
 export function getPolicyWriteConfig(
@@ -66,12 +78,21 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   });
 };
 
-export const usePolicyAssociation = (userId: string, policyId: string) => {
+export const usePolicyAssociation = (
+  userId: string,
+  policyId: string,
+  options?: PolicyAssociationQueryOptions
+) => {
   const { store, config } = usePolicyAssociationStoreForMode();
+  const countryId = useCurrentCountry();
 
   return useQuery({
-    queryKey: policyAssociationKeys.specific(userId, policyId),
-    queryFn: () => store.findById(userId, policyId),
+    queryKey: policyAssociationKeys.specific(userId, policyId, countryId),
+    queryFn: async () => {
+      const association = await store.findById(userId, policyId);
+      return association?.countryId === countryId ? association : null;
+    },
+    enabled: options?.enabled ?? true,
     ...config,
   });
 };
@@ -99,7 +120,8 @@ export const useCreatePolicyAssociation = (options?: PolicyWriteConfigOptions) =
       queryClient.setQueryData(
         policyAssociationKeys.specific(
           newAssociation.userId.toString(),
-          newAssociation.policyId.toString()
+          newAssociation.policyId.toString(),
+          newAssociation.countryId
         ),
         newAssociation
       );
@@ -117,15 +139,10 @@ export const useUpdatePolicyAssociation = () => {
   const { shouldShadowV2 } = getPolicyWriteConfig('useUpdatePolicyAssociation');
 
   return useMutation({
-    mutationFn: ({
-      userPolicyId,
-      updates,
-    }: {
-      userPolicyId: string;
-      updates: Partial<UserPolicy>;
-    }) => store.update(userPolicyId, updates),
+    mutationFn: ({ userPolicyId, updates }: UpdatePolicyAssociationVariables) =>
+      store.update(userPolicyId, updates),
 
-    onSuccess: (updatedAssociation) => {
+    onSuccess: (updatedAssociation, variables) => {
       // Invalidate all related queries to trigger refetch
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byUser(
@@ -140,12 +157,19 @@ export const useUpdatePolicyAssociation = () => {
 
       // Optimistically update caches
       queryClient.setQueryData(
-        policyAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.policyId),
+        policyAssociationKeys.specific(
+          updatedAssociation.userId,
+          updatedAssociation.policyId,
+          updatedAssociation.countryId
+        ),
         updatedAssociation
       );
 
       if (shouldShadowV2) {
-        void shadowUpdateUserPolicyAssociation(updatedAssociation);
+        void shadowUpdateUserPolicyAssociation(updatedAssociation, {
+          countryId: variables.replacementPolicyCountryId,
+          v1PolicyPayload: variables.replacementPolicyPayload,
+        });
       }
     },
   });

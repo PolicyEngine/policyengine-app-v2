@@ -3,7 +3,8 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchHouseholdVariation } from '@/api/householdVariation';
 import { countryIds } from '@/libs/countries';
 import { householdVariationKeys } from '@/libs/queryKeys';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import { Household } from '@/models/Household';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { buildHouseholdVariationAxes } from '@/utils/householdVariationAxes';
 
 interface UseHouseholdVariationParams {
@@ -52,24 +53,22 @@ export function useHouseholdVariation({
       personName ?? ''
     ),
     queryFn: async () => {
-      // Step 1: Fetch household input structure from API
+      // Step 1: Fetch API metadata and hydrate the native household model.
       const householdMetadata = await fetchHouseholdById(countryId, householdId);
-      const householdInput = householdMetadata.household_json;
+      const household = Household.fromV1Metadata(householdMetadata);
 
       // Step 2: Build axes configuration
-      const householdWithAxes = buildHouseholdVariationAxes(
-        householdInput,
-        year,
-        countryId,
-        personName
-      );
+      const householdWithAxes = buildHouseholdVariationAxes(household, year, personName);
 
       // Step 3: Call calculate-full API
-      const resultData = await fetchHouseholdVariation(countryId, householdWithAxes, policyData);
+      const resultData = await fetchHouseholdVariation(
+        household.countryId,
+        householdWithAxes,
+        policyData
+      );
 
-      // Step 4: Wrap the result in a Household object for compatibility with getValueFromHousehold
-      // The API returns raw HouseholdData, but our utility functions expect a Household wrapper
-      const result: Household = {
+      // Step 4: Wrap raw calculation data with the metadata report utilities need.
+      const result: HouseholdCalculationOutput = {
         id: householdId,
         countryId: countryId as (typeof countryIds)[number],
         householdData: resultData,

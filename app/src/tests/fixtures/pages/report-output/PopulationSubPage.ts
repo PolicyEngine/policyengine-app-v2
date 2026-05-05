@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import { Household } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
@@ -27,7 +27,7 @@ export const TEST_SIMULATION_IDS = {
 export const TEST_USER_ID = 'user-xyz-789';
 
 // Mock Households
-export const mockHouseholdFamilyOfFour: Household = {
+export const mockHouseholdFamilyOfFour = Household.fromAppInput({
   id: TEST_HOUSEHOLD_IDS.FAMILY_OF_FOUR,
   countryId: 'us',
   householdData: {
@@ -58,9 +58,9 @@ export const mockHouseholdFamilyOfFour: Household = {
       },
     },
   },
-};
+});
 
-export const mockHouseholdSinglePerson: Household = {
+export const mockHouseholdSinglePerson = Household.fromAppInput({
   id: TEST_HOUSEHOLD_IDS.SINGLE_PERSON,
   countryId: 'us',
   householdData: {
@@ -87,7 +87,7 @@ export const mockHouseholdSinglePerson: Household = {
       },
     },
   },
-};
+});
 
 // Mock Geographies
 export const mockGeographyCalifornia: Geography = {

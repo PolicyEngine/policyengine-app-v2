@@ -158,6 +158,7 @@ export interface BrowseMoreChipProps {
 export interface IngredientSectionProps {
   type: IngredientType;
   currentId?: string;
+  currentPopulation?: PopulationStateProps;
   countryId?: 'us' | 'uk';
   onQuickSelectPolicy?: () => void;
   onSelectSavedPolicy?: (id: string, label: string, paramCount: number) => void;
@@ -176,6 +177,7 @@ export interface IngredientSectionProps {
   currentLabel?: string;
   isReadOnly?: boolean;
   onViewPolicy?: () => void;
+  onViewPopulation?: () => void;
 }
 
 export interface SimulationBlockProps {
@@ -191,6 +193,7 @@ export interface SimulationBlockProps {
   onDeselectPopulation: () => void;
   onEditPolicy: () => void;
   onViewPolicy: () => void;
+  onViewPopulation: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
   onBrowseMorePopulations: () => void;
@@ -226,6 +229,15 @@ export interface PolicyBrowseState {
   simulationIndex: number;
   initialPolicy?: import('@/types/pathwayState').PolicyStateProps;
   initialEditorMode?: 'create' | 'display' | 'edit';
+  returnToBrowseOnBack?: boolean;
+}
+
+export interface HouseholdEditorState {
+  isOpen: boolean;
+  simulationIndex: number;
+  initialPopulation?: PopulationStateProps;
+  initialEditorMode?: 'create' | 'display' | 'edit';
+  returnToBrowseOnBack?: boolean;
 }
 
 export interface PolicyBrowseModalProps {
@@ -240,6 +252,7 @@ export interface PopulationBrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (population: PopulationStateProps) => void;
+  reportYear: string;
   onCreateNew?: () => void;
 }
 

@@ -1,3 +1,4 @@
+import { Household } from '@/models/Household';
 import { Population } from '@/types/ingredients/Population';
 import { Simulation } from '@/types/ingredients/Simulation';
 
@@ -22,13 +23,13 @@ export function mockPopulationCreated(): Population {
   return {
     label: 'Test Population',
     isCreated: true,
-    household: {
+    household: Household.fromAppInput({
       id: 'household-123',
       countryId: 'us',
       householdData: {
         people: {},
       },
-    },
+    }),
     geography: null,
   };
 }

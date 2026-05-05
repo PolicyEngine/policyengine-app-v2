@@ -241,7 +241,7 @@ export async function shadowUpdateUserHouseholdAssociation(
       }
     }
 
-    const v2Result = await updateUserHouseholdAssociationV2(v2UserHouseholdId, {
+    const v2Result = await updateUserHouseholdAssociationV2(v2UserHouseholdId, v2UserId, {
       label: v1Association.label ?? null,
       householdId: resolvedV2HouseholdId,
     });

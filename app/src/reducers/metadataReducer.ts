@@ -53,6 +53,10 @@ const metadataSlice = createSlice({
   initialState,
   reducers: {
     setCurrentCountry(state, action: PayloadAction<string>) {
+      if (state.currentCountry === action.payload) {
+        return;
+      }
+
       state.currentCountry = action.payload;
       // Optionally clear existing metadata when country changes
       // This prevents showing stale data from previous country

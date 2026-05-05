@@ -5,15 +5,8 @@
  * getters/setters that access the correct location in household data.
  */
 
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
-import {
-  cloneHousehold,
-  ensureHouseholdGroupCollection,
-  ensureHouseholdGroupInstance,
-  getHouseholdGroupCollection,
-  getPreferredHouseholdGroupName,
-  isHouseholdYearMap,
-} from './householdDataAccess';
+import { Household as HouseholdModel } from '@/models/Household';
+import { getNormalizedVariableMetadata } from './variableMetadata';
 
 export interface EntityInfo {
   entity: string; // e.g., "person", "tax_unit", "spm_unit"
@@ -86,55 +79,35 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
     return null;
   }
 
+  const normalizedVariable = getNormalizedVariableMetadata(variable);
+
   return {
-    name: variable.name,
-    label: variable.label,
-    entity: variable.entity,
-    valueType: variable.valueType,
-    unit: variable.unit,
-    defaultValue: variable.defaultValue,
-    isInputVariable: variable.isInputVariable,
-    hiddenInput: variable.hidden_input,
-    moduleName: variable.moduleName,
-    possibleValues: variable.possibleValues,
-    documentation: variable.documentation || variable.description,
+    name: normalizedVariable.name,
+    label: normalizedVariable.label,
+    entity: normalizedVariable.entity,
+    valueType: normalizedVariable.valueType,
+    unit: normalizedVariable.unit,
+    defaultValue: normalizedVariable.defaultValue,
+    isInputVariable: normalizedVariable.isInputVariable,
+    hiddenInput: normalizedVariable.hiddenInput,
+    moduleName: normalizedVariable.moduleName,
+    possibleValues: normalizedVariable.possibleValues,
+    documentation: normalizedVariable.documentation,
   };
 }
 
-/**
- * Get the entity data object from household based on plural name
- */
-function getEntityData(
-  household: AppHouseholdInputEnvelope,
-  entityPlural: string
-): Record<string, any> | null {
-  const householdData = household.householdData;
-
-  if (entityPlural === 'people') {
-    return householdData.people;
-  }
-
-  return getHouseholdGroupCollection(householdData, entityPlural) ?? null;
-}
-
-function ensureEntityData(
-  household: AppHouseholdInputEnvelope,
-  entityPlural: string
-): Record<string, any> | null {
-  const householdData = household.householdData;
-
-  if (entityPlural === 'people') {
-    return householdData.people;
-  }
-
-  return ensureHouseholdGroupCollection(householdData, entityPlural);
-}
-
 function resolveEntityInstanceName(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   entityInfo: EntityInfo,
   entityName?: string
 ): string | null {
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
+    console.warn(
+      `[VariableResolver] Entity ${entityInfo.plural} is not configured for ${household.countryId} households`
+    );
+    return null;
+  }
+
   if (entityName) {
     return entityName;
   }
@@ -144,7 +117,7 @@ function resolveEntityInstanceName(
     return null;
   }
 
-  const resolvedName = getPreferredHouseholdGroupName(household.householdData, entityInfo.plural);
+  const resolvedName = household.getPreferredGroupName(entityInfo.plural);
   if (!resolvedName) {
     console.warn(`[VariableResolver] Entity ${entityInfo.plural} not found in household`);
     return null;
@@ -164,7 +137,7 @@ function resolveEntityInstanceName(
  *                     Required for person-level variables, optional for others
  */
 export function getValue(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   year: string,
@@ -176,31 +149,13 @@ export function getValue(
     return null;
   }
 
-  const entityData = getEntityData(household, entityInfo.plural);
-  if (!entityData) {
-    return null;
-  }
-
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
   const instanceName = resolveEntityInstanceName(household, entityInfo, entityName);
   if (!instanceName) {
     return null;
   }
 
-  const instance = entityData[instanceName];
-  if (!instance) {
-    return null;
-  }
-
-  const variableData = instance[variableName];
-  if (!variableData) {
-    return null;
-  }
-
-  if (!isHouseholdYearMap(variableData)) {
-    return null;
-  }
-
-  return variableData[year] ?? null;
+  return household.getEntityVariableAtYear(entityType, instanceName, variableName, year) ?? null;
 }
 
 /**
@@ -215,48 +170,31 @@ export function getValue(
  * @param entityName - Specific entity instance name (required for person-level)
  */
 export function setValue(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   value: any,
   metadata: any,
   year: string,
   entityName?: string
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
     console.warn(`[VariableResolver] Unknown variable: ${variableName}`);
     return household;
   }
 
-  // Deep clone to maintain immutability
-  const newHousehold = cloneHousehold(household);
-  const entityData = ensureEntityData(newHousehold, entityInfo.plural);
-
-  if (!entityData) {
-    console.warn(`[VariableResolver] Entity ${entityInfo.plural} not found in household`);
-    return household;
-  }
-
-  const instanceName = resolveEntityInstanceName(newHousehold, entityInfo, entityName);
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  const instanceName = resolveEntityInstanceName(household, entityInfo, entityName);
   if (!instanceName) {
     return household;
   }
 
-  // Ensure instance exists
-  if (!entityData[instanceName]) {
+  if (!household.hasEntityInstance(entityType, instanceName)) {
     console.warn(`[VariableResolver] Entity instance ${instanceName} not found`);
     return household;
   }
 
-  // Ensure variable object exists
-  if (!entityData[instanceName][variableName]) {
-    entityData[instanceName][variableName] = {};
-  }
-
-  // Set the value
-  entityData[instanceName][variableName][year] = value;
-
-  return newHousehold;
+  return household.setEntityVariableAtYear(entityType, instanceName, variableName, year, value);
 }
 
 /**
@@ -264,11 +202,11 @@ export function setValue(
  * Note: Currently unused. Kept for potential future use if we add "Add variable to all members" functionality
  */
 export function addVariable(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   year: string
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
 
@@ -276,37 +214,34 @@ export function addVariable(
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = ensureEntityData(newHousehold, entityInfo.plural);
-
-  if (!entityData) {
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
     return household;
   }
 
-  const instanceNames = Object.keys(entityData);
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  let nextHousehold = household;
+  const instanceNames = nextHousehold.getEntityInstanceNames(entityType);
   if (instanceNames.length === 0) {
-    const instanceName = entityInfo.isPerson
-      ? resolveEntityInstanceName(newHousehold, entityInfo)
-      : ensureHouseholdGroupInstance(newHousehold.householdData, entityInfo.plural);
-    if (!instanceName) {
+    if (entityInfo.isPerson) {
       return household;
     }
-    if (!entityData[instanceName]) {
-      entityData[instanceName] = entityInfo.isPerson ? {} : { members: [] };
-    }
-    instanceNames.push(instanceName);
+
+    const ensured = nextHousehold.ensureGroupInstance(entityInfo.plural);
+    nextHousehold = ensured.household;
+    instanceNames.push(ensured.groupKey);
   }
 
-  // Add variable to all instances of this entity type
   for (const instanceName of instanceNames) {
-    if (!entityData[instanceName][variableName]) {
-      entityData[instanceName][variableName] = {
-        [year]: variableInfo.defaultValue,
-      };
-    }
+    nextHousehold = nextHousehold.addEntityVariableIfMissingAtYear(
+      entityType,
+      instanceName,
+      variableName,
+      year,
+      variableInfo.defaultValue
+    );
   }
 
-  return newHousehold;
+  return nextHousehold;
 }
 
 /**
@@ -314,12 +249,12 @@ export function addVariable(
  * Use this for per-person variable assignment
  */
 export function addVariableToEntity(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   year: string,
-  entityName: string
-): AppHouseholdInputEnvelope {
+  entityName?: string
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
 
@@ -327,63 +262,61 @@ export function addVariableToEntity(
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = ensureEntityData(newHousehold, entityInfo.plural);
-
-  if (!entityData) {
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
     return household;
   }
 
-  const resolvedEntityName = entityData[entityName]
-    ? entityName
-    : entityInfo.isPerson
-      ? resolveEntityInstanceName(newHousehold, entityInfo, entityName)
-      : ensureHouseholdGroupInstance(newHousehold.householdData, entityInfo.plural);
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  let nextHousehold = household;
+  const resolvedEntityName =
+    entityName && nextHousehold.hasEntityInstance(entityType, entityName)
+      ? entityName
+      : entityInfo.isPerson
+        ? resolveEntityInstanceName(nextHousehold, entityInfo, entityName)
+        : (() => {
+            const ensured = nextHousehold.ensureGroupInstance(entityInfo.plural);
+            nextHousehold = ensured.household;
+            return ensured.groupKey;
+          })();
   if (!resolvedEntityName) {
     return household;
   }
 
-  // Add variable only to the specified entity instance
-  if (!entityData[resolvedEntityName]) {
-    entityData[resolvedEntityName] = entityInfo.isPerson ? {} : { members: [] };
-  }
-
-  if (!entityData[resolvedEntityName][variableName]) {
-    entityData[resolvedEntityName][variableName] = {
-      [year]: variableInfo.defaultValue,
-    };
-  }
-
-  return newHousehold;
+  return nextHousehold.addEntityVariableIfMissingAtYear(
+    entityType,
+    resolvedEntityName,
+    variableName,
+    year,
+    variableInfo.defaultValue
+  );
 }
 
 /**
  * Remove a variable from all entity instances
  */
 export function removeVariable(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
 
   if (!entityInfo) {
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
-
-  if (!entityData) {
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
     return household;
   }
 
-  // Remove variable from all instances
-  for (const instanceName of Object.keys(entityData)) {
-    delete entityData[instanceName][variableName];
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  let nextHousehold = household;
+
+  for (const instanceName of nextHousehold.getEntityInstanceNames(entityType)) {
+    nextHousehold = nextHousehold.removeEntityVariable(entityType, instanceName, variableName);
   }
 
-  return newHousehold;
+  return nextHousehold;
 }
 
 /**
@@ -391,27 +324,27 @@ export function removeVariable(
  * Used for per-person variable removal in the household builder.
  */
 export function removeVariableFromEntity(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   entityName: string
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
 
   if (!entityInfo) {
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
-
-  if (!entityData || !entityData[entityName]) {
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
     return household;
   }
 
-  delete entityData[entityName][variableName];
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  if (!household.hasEntityInstance(entityType, entityName)) {
+    return household;
+  }
 
-  return newHousehold;
+  return household.removeEntityVariable(entityType, entityName, variableName);
 }
 
 /**
@@ -423,18 +356,6 @@ export function getInputVariables(metadata: any): VariableInfo[] {
   }
 
   return Object.values(metadata.variables)
-    .filter((v: any) => v.isInputVariable && !v.hidden_input)
-    .map((v: any) => ({
-      name: v.name,
-      label: v.label,
-      entity: v.entity,
-      valueType: v.valueType,
-      unit: v.unit,
-      defaultValue: v.defaultValue,
-      isInputVariable: v.isInputVariable,
-      hiddenInput: v.hidden_input,
-      moduleName: v.moduleName,
-      possibleValues: v.possibleValues,
-      documentation: v.documentation || v.description,
-    }));
+    .map((v: any) => getNormalizedVariableMetadata(v))
+    .filter((v: any) => v.isInputVariable && !v.hiddenInput);
 }
