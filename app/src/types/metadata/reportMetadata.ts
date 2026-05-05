@@ -7,6 +7,9 @@ export interface ReportMetadata {
   simulation_2_id: string | null;
   year: string; // Report calculation year (e.g., '2025')
   api_version: string;
-  status: 'pending' | 'complete' | 'error';
+  status: 'pending' | 'running' | 'complete' | 'error';
   output: string | null; // JSON-stringified object or null
+  requested_at?: string | null; // Base report execution timestamp from API v1 report run
+  started_at?: string | null; // Base report execution timestamp from API v1 report run
+  finished_at?: string | null; // Base report execution timestamp from API v1 report run
 }

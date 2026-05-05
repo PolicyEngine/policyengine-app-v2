@@ -134,6 +134,29 @@ describe('ReportOutputPage', () => {
     ).toBeInTheDocument();
   });
 
+  test('given report execution timestamp then it is displayed instead of association creation time', () => {
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: MOCK_USER_REPORT,
+      report: {
+        ...MOCK_REPORT_WITH_YEAR,
+        finishedAt: '2026-02-03T15:02:00Z',
+      },
+      simulations: [MOCK_SIMULATION_GEOGRAPHY],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [],
+      userHouseholds: [],
+      geographies: [],
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    expect(screen.getByText(/Ran Feb 3, 2026 at/)).toBeInTheDocument();
+  });
+
   test('given society-wide report with complete calculation then renders without error', () => {
     // Given
     render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);

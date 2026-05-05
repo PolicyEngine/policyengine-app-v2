@@ -88,6 +88,32 @@ describe('ReportAdapter', () => {
       expect(result.status).toBe(errorStatus);
       expect(result.output).toBe(nullOutput);
     });
+
+    test('given metadata with running status then maps to pending report status', () => {
+      const metadata = {
+        ...mockReportMetadata,
+        status: 'running' as const,
+      };
+
+      const result = ReportAdapter.fromMetadata(metadata);
+
+      expect(result.status).toBe('pending');
+    });
+
+    test('given metadata with run timestamps then maps them as base report execution metadata', () => {
+      const metadata = {
+        ...mockReportMetadata,
+        requested_at: '2026-02-03T15:00:00Z',
+        started_at: '2026-02-03T15:01:00Z',
+        finished_at: '2026-02-03T15:02:00Z',
+      };
+
+      const result = ReportAdapter.fromMetadata(metadata);
+
+      expect(result.requestedAt).toBe(metadata.requested_at);
+      expect(result.startedAt).toBe(metadata.started_at);
+      expect(result.finishedAt).toBe(metadata.finished_at);
+    });
   });
 
   describe('toCreationPayload', () => {

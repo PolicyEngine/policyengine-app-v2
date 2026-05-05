@@ -20,6 +20,9 @@ export interface Report {
   apiVersion: string | null;
   simulationIds: string[];
   status: 'pending' | 'complete' | 'error';
+  requestedAt?: string | null; // Base report execution timestamp, not user-specific last run
+  startedAt?: string | null; // Base report execution timestamp, not user-specific last run
+  finishedAt?: string | null; // Base report execution timestamp, not user-specific last run
   outputType?: 'household' | 'economy'; // Discriminator for output type
   output?: EconomyOutput | HouseholdReportOutput | null; // Economy or household output
 }
