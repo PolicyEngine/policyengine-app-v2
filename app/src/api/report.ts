@@ -6,6 +6,7 @@ import { Report } from '@/types/ingredients/Report';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload, ReportSetOutputPayload } from '@/types/payloads';
+import type { RunMetadata } from '@/types/runMetadata';
 
 export type CountryId = (typeof countryIds)[number];
 
@@ -105,9 +106,10 @@ async function updateReport(
 export async function markReportCompleted(
   countryId: (typeof countryIds)[number],
   reportId: string,
-  report: Report
+  report: Report,
+  runMetadata?: RunMetadata
 ): Promise<ReportMetadata> {
-  const data = ReportAdapter.toCompletedReportPayload(report);
+  const data = ReportAdapter.toCompletedReportPayload(report, runMetadata);
   return updateReport(countryId, reportId, data);
 }
 
@@ -115,9 +117,14 @@ export async function markReportError(
   countryId: (typeof countryIds)[number],
   reportId: string,
   report: Report,
-  errorMessage?: string
+  errorMessage?: string,
+  runMetadata?: RunMetadata
 ): Promise<ReportMetadata> {
-  const data = ReportAdapter.toErrorReportPayload(report, errorMessage);
+  const data = ReportAdapter.toErrorReportPayload(
+    report,
+    errorMessage,
+    runMetadata
+  );
   return updateReport(countryId, reportId, data);
 }
 

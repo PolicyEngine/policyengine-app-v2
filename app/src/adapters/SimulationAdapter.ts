@@ -1,6 +1,7 @@
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/payloads';
+import type { RunMetadata } from '@/types/runMetadata';
 
 /**
  * Adapter for converting between Simulation and API formats
@@ -111,12 +112,14 @@ export class SimulationAdapter {
   static toUpdatePayload(
     id: number,
     output: unknown,
-    status: 'pending' | 'complete' | 'error'
+    status: 'pending' | 'complete' | 'error',
+    runMetadata?: RunMetadata
   ): SimulationSetOutputPayload {
     return {
       id,
       output: typeof output === 'string' ? output : output ? JSON.stringify(output) : null,
       status,
+      ...runMetadata,
     };
   }
 
@@ -124,22 +127,32 @@ export class SimulationAdapter {
    * Creates payload for marking a simulation as completed with output
    * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
    */
-  static toCompletedPayload(id: number, output: unknown): SimulationSetOutputPayload {
+  static toCompletedPayload(
+    id: number,
+    output: unknown,
+    runMetadata?: RunMetadata
+  ): SimulationSetOutputPayload {
     return {
       id,
       output: typeof output === 'string' ? output : JSON.stringify(output),
       status: 'complete',
+      ...runMetadata,
     };
   }
 
   /**
    * Creates payload for marking a simulation as errored
    */
-  static toErrorPayload(id: number, errorMessage?: string): SimulationSetOutputPayload {
+  static toErrorPayload(
+    id: number,
+    errorMessage?: string,
+    runMetadata?: RunMetadata
+  ): SimulationSetOutputPayload {
     const payload: SimulationSetOutputPayload = {
       id,
       output: null,
       status: 'error',
+      ...runMetadata,
     };
     if (errorMessage) {
       payload.error_message = errorMessage;

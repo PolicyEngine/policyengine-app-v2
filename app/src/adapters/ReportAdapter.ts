@@ -2,6 +2,7 @@ import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload } from '@/types/payloads/ReportCreationPayload';
 import { ReportSetOutputPayload } from '@/types/payloads/ReportSetOutputPayload';
+import type { RunMetadata } from '@/types/runMetadata';
 import { convertJsonToReportOutput, convertReportOutputToJson } from './conversionHelpers';
 
 /**
@@ -65,7 +66,10 @@ export class ReportAdapter {
   /**
    * Creates payload for marking a report as completed with output
    */
-  static toCompletedReportPayload(report: Report): ReportSetOutputPayload {
+  static toCompletedReportPayload(
+    report: Report,
+    runMetadata?: RunMetadata
+  ): ReportSetOutputPayload {
     if (!report.id) {
       throw new Error('Report ID is required to create completed report payload');
     }
@@ -73,13 +77,18 @@ export class ReportAdapter {
       id: parseInt(report.id, 10),
       status: 'complete',
       output: report.output ? convertReportOutputToJson(report.output as any) : null,
+      ...runMetadata,
     };
   }
 
   /**
    * Creates payload for marking a report as errored
    */
-  static toErrorReportPayload(report: Report, errorMessage?: string): ReportSetOutputPayload {
+  static toErrorReportPayload(
+    report: Report,
+    errorMessage?: string,
+    runMetadata?: RunMetadata
+  ): ReportSetOutputPayload {
     if (!report.id) {
       throw new Error('Report ID is required to create error report payload');
     }
@@ -87,6 +96,7 @@ export class ReportAdapter {
       id: parseInt(report.id, 10),
       status: 'error',
       output: null,
+      ...runMetadata,
     };
     if (errorMessage) {
       payload.error_message = errorMessage;

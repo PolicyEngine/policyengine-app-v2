@@ -3,6 +3,7 @@ import {
   fetchHouseholdCalculationWithBundle,
   type HouseholdCalculationResult,
 } from '@/api/householdCalculation';
+import { buildRunMetadataFromPolicyEngineBundle } from '@/libs/calculations/runMetadata';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 
@@ -79,6 +80,9 @@ export class HouseholdSimCalculator {
           startedAt: initialStatus.metadata.startedAt,
           reportId: this.reportId,
         },
+        runMetadata: buildRunMetadataFromPolicyEngineBundle(
+          calculation.policyengine_bundle ?? null
+        ),
       };
 
       this.queryClient.setQueryData(calcKey, completeStatus);

@@ -4,6 +4,7 @@ import {
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
+import { buildRunMetadataFromSocietyWideOutput } from '@/libs/calculations/runMetadata';
 import { getDurationForCountry } from '@/constants/calculationDurations';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
@@ -105,6 +106,7 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
         status: 'complete',
         result: response.result,
         metadata,
+        runMetadata: buildRunMetadataFromSocietyWideOutput(response.result),
       };
     }
 

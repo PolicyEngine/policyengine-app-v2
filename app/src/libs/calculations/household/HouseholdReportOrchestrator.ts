@@ -1,8 +1,12 @@
 import type { QueryClient } from '@tanstack/react-query';
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
 import { markReportCompleted, markReportError as persistReportError } from '@/api/report';
 import { markSimulationError, updateSimulationOutput } from '@/api/simulation';
+import {
+  buildRunMetadataFromPolicyEngineBundle,
+  mergeConsistentRunMetadata,
+} from '@/libs/calculations/runMetadata';
 import { reportKeys, simulationKeys } from '@/libs/queryKeys';
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
 import type { Report } from '@/types/ingredients/Report';
 import { cacheMonitor } from '@/utils/cacheMonitor';
@@ -30,7 +34,7 @@ export class HouseholdReportOrchestrator {
 
   private queryClient: QueryClient;
   private activeCalculations: Set<string>; // Track which simulations are running
-  private simulationResults: Map<string, Map<string, HouseholdData>>; // reportId -> (simId -> result)
+  private simulationResults: Map<string, Map<string, HouseholdCalculationResult>>; // reportId -> (simId -> result)
   private progressCoordinators: Map<
     string,
     { coordinator: HouseholdProgressCoordinator; timer: NodeJS.Timeout }
@@ -193,10 +197,15 @@ export class HouseholdReportOrchestrator {
   private async persistSimulation(
     countryId: string,
     simulationId: string,
-    result: any
+    calculation: HouseholdCalculationResult
   ): Promise<void> {
     // Persist output — this is the critical step. If it fails, throw.
-    await updateSimulationOutput(countryId as any, simulationId, result);
+    await updateSimulationOutput(
+      countryId as any,
+      simulationId,
+      calculation.result,
+      buildRunMetadataFromPolicyEngineBundle(calculation.policyengine_bundle ?? null)
+    );
 
     // Cache warming — best effort only. Failure here should NOT
     // cascade into markSimulationError since the output is already persisted.
@@ -237,7 +246,19 @@ export class HouseholdReportOrchestrator {
     }
 
     // Build aggregated output: object mapping sim IDs (alphabetically sorted) to their outputs
-    const householdReportOutput = buildHouseholdReportOutput(reportResults);
+    const householdReportOutput = buildHouseholdReportOutput(
+      new Map(
+        Array.from(reportResults.entries()).map(([simulationId, calculation]) => [
+          simulationId,
+          calculation.result,
+        ])
+      )
+    );
+    const runMetadata = mergeConsistentRunMetadata(
+      Array.from(reportResults.values()).map((calculation) =>
+        buildRunMetadataFromPolicyEngineBundle(calculation.policyengine_bundle ?? null)
+      )
+    );
 
     const completedReport: Report = {
       ...report,
@@ -247,7 +268,12 @@ export class HouseholdReportOrchestrator {
     };
 
     try {
-      await markReportCompleted(countryId as any, report.id!, completedReport);
+      await markReportCompleted(
+        countryId as any,
+        report.id!,
+        completedReport,
+        runMetadata
+      );
 
       // Invalidate report cache to refetch with new status
       this.queryClient.invalidateQueries({

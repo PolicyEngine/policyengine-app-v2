@@ -1,4 +1,5 @@
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import { fetchHouseholdCalculationWithBundle } from '@/api/householdCalculation';
+import { buildRunMetadataFromPolicyEngineBundle } from '@/libs/calculations/runMetadata';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from './types';
 
@@ -26,7 +27,7 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
 
     try {
       // Call API once and await the full result
-      const result = await fetchHouseholdCalculation(
+      const calculation = await fetchHouseholdCalculationWithBundle(
         params.countryId,
         params.populationId,
         policyId
@@ -35,8 +36,11 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
       // Return complete status with result and PROVIDED metadata (includes reportId!)
       return {
         status: 'complete',
-        result,
+        result: calculation.result,
         metadata, // Use the metadata passed in, which has reportId for household sim-level calcs
+        runMetadata: buildRunMetadataFromPolicyEngineBundle(
+          calculation.policyengine_bundle ?? null
+        ),
       };
     } catch (error) {
       console.error('[HouseholdCalcStrategy.execute] Calculation failed:', error);

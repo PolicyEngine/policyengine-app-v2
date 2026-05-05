@@ -2,6 +2,7 @@ import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import { CalcError } from './CalcError';
 import { CalcMetadata } from './CalcMetadata';
+import type { RunMetadata } from '@/types/runMetadata';
 
 /**
  * Union type for all possible calculation results
@@ -94,4 +95,10 @@ export interface CalcStatus {
    * Metadata about this calculation
    */
   metadata: CalcMetadata;
+
+  /**
+   * Optional run metadata captured from the calculation runtime.
+   * This is persisted into API v1 run rows during the stage 6 bridge.
+   */
+  runMetadata?: RunMetadata;
 }

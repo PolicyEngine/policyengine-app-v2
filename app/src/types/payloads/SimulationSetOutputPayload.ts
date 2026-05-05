@@ -1,9 +1,11 @@
+import type { RunMetadata } from '@/types/runMetadata';
+
 /**
  * Payload format for updating a simulation's output via the API
  * Note: Simulation PATCH takes id in body, not URL
  * Note: Now accepts status field (matching report PATCH format)
  */
-export interface SimulationSetOutputPayload {
+export interface SimulationSetOutputPayload extends RunMetadata {
   id: number;
   status: 'pending' | 'complete' | 'error';
   output?: string | null; // JSON-stringified output or null
