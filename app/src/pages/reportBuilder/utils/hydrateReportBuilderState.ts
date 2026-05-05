@@ -48,7 +48,6 @@ export function hydrateReportBuilderState({
 
     const policyState = {
       id: resolvedPolicyId,
-      associationId: userPolicy?.id,
       label: isCurrentLaw(resolvedPolicyId)
         ? CURRENT_LAW_LABEL
         : userPolicy?.label || policy?.label || null,

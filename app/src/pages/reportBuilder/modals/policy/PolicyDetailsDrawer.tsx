@@ -20,7 +20,6 @@ import { PolicyOverviewContent } from '../policyCreation';
 interface PolicyDetailsDrawerProps {
   policy: {
     id: string;
-    associationId?: string;
     label: string;
     paramCount: number;
     parameters: Parameter[];

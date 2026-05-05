@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { hydrateReportBuilderState } from '@/pages/reportBuilder/utils/hydrateReportBuilderState';
 
 describe('hydrateReportBuilderState', () => {
-  test('given a user policy association then hydrates policy association id', () => {
+  test('given a user policy association then hydrates policy label without persistence metadata', () => {
     const result = hydrateReportBuilderState({
       userReport: {
         id: 'sur-1',
@@ -63,8 +63,8 @@ describe('hydrateReportBuilderState', () => {
 
     expect(result.simulations[0].policy).toMatchObject({
       id: 'policy-1',
-      associationId: 'sup-1',
       label: 'Editable policy',
     });
+    expect(result.simulations[0].policy).not.toHaveProperty('associationId');
   });
 });

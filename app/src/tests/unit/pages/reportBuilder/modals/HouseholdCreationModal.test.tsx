@@ -5,6 +5,8 @@ import { HouseholdCreationModal } from '@/pages/reportBuilder/modals/HouseholdCr
 import type { PopulationStateProps } from '@/types/pathwayState';
 
 const mockCreateHouseholdWithLabel = vi.hoisted(() => vi.fn());
+const mockUpdateHouseholdAssociation = vi.hoisted(() => vi.fn());
+const mockHouseholdAssociationRefetch = vi.hoisted(() => vi.fn());
 const MODAL_TEST_TIMEOUT_MS = 20_000;
 
 const mockReduxState = {
@@ -35,8 +37,12 @@ vi.mock('@/hooks/useCreateHousehold', () => ({
 }));
 
 vi.mock('@/hooks/useUserHousehold', () => ({
+  useHouseholdAssociation: () => ({
+    data: null,
+    refetch: mockHouseholdAssociationRefetch,
+  }),
   useUpdateHouseholdAssociation: () => ({
-    mutateAsync: vi.fn(),
+    mutateAsync: mockUpdateHouseholdAssociation,
   }),
 }));
 
@@ -68,6 +74,24 @@ describe('HouseholdCreationModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateHouseholdWithLabel.mockResolvedValue({ result: { household_id: 'hh-new' } });
+    mockUpdateHouseholdAssociation.mockResolvedValue({
+      id: 'uhh-123',
+      type: 'household',
+      userId: 'user-1',
+      householdId: 'hh-replacement',
+      countryId: 'us',
+      label: 'Changed household',
+    });
+    mockHouseholdAssociationRefetch.mockResolvedValue({
+      data: {
+        id: 'uhh-123',
+        type: 'household',
+        userId: 'user-1',
+        householdId: 'hh-123',
+        countryId: 'us',
+        label: 'Test household',
+      },
+    });
   });
 
   test(
@@ -82,14 +106,6 @@ describe('HouseholdCreationModal', () => {
           onHouseholdSaved={onHouseholdSaved}
           reportYear="2024"
           initialPopulation={initialPopulation}
-          initialAssociation={{
-            id: 'uhh-123',
-            type: 'household',
-            userId: 'user-1',
-            householdId: 'hh-123',
-            countryId: 'us',
-            label: 'Test household',
-          }}
           initialEditorMode="edit"
         />
       );
@@ -134,14 +150,6 @@ describe('HouseholdCreationModal', () => {
           onHouseholdSaved={vi.fn()}
           reportYear="2024"
           initialPopulation={initialPopulation}
-          initialAssociation={{
-            id: 'uhh-123',
-            type: 'household',
-            userId: 'user-1',
-            householdId: 'hh-123',
-            countryId: 'us',
-            label: 'Test household',
-          }}
           initialEditorMode="edit"
         />
       );
@@ -159,6 +167,52 @@ describe('HouseholdCreationModal', () => {
           'Changed household'
         );
       });
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given update existing household then resolves saved association by household id',
+    async () => {
+      const onHouseholdSaved = vi.fn();
+
+      render(
+        <HouseholdCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onHouseholdSaved={onHouseholdSaved}
+          reportYear="2024"
+          initialPopulation={initialPopulation}
+          initialEditorMode="edit"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /make household change/i }));
+
+      const updateButton = screen.getByRole('button', { name: /update existing household/i });
+      await waitFor(() => expect(updateButton).not.toBeDisabled());
+      fireEvent.click(updateButton);
+
+      await waitFor(() => {
+        expect(mockHouseholdAssociationRefetch).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(mockUpdateHouseholdAssociation).toHaveBeenCalledWith({
+          userHouseholdId: 'uhh-123',
+          updates: {},
+          association: expect.objectContaining({
+            id: 'uhh-123',
+            householdId: 'hh-123',
+          }),
+          nextHousehold: expect.any(Household),
+        });
+      });
+      expect(onHouseholdSaved).toHaveBeenCalledWith(
+        expect.objectContaining({
+          label: 'Changed household',
+          type: 'household',
+        })
+      );
     },
     MODAL_TEST_TIMEOUT_MS
   );

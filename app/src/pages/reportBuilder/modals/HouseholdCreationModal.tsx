@@ -7,15 +7,15 @@ import { Group } from '@/components/ui/Group';
 import { Spinner } from '@/components/ui/Spinner';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
+import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
+import { useHouseholdAssociation, useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { RootState } from '@/store';
-import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
@@ -32,7 +32,6 @@ interface HouseholdCreationModalProps {
   onHouseholdSaved: (population: PopulationStateProps) => void;
   reportYear: string;
   initialPopulation?: PopulationStateProps;
-  initialAssociation?: UserHouseholdPopulation;
   initialEditorMode?: HouseholdEditorMode;
   forceReadOnly?: boolean;
 }
@@ -44,11 +43,11 @@ export function HouseholdCreationModal({
   onHouseholdSaved,
   reportYear,
   initialPopulation,
-  initialAssociation,
   initialEditorMode,
   forceReadOnly = false,
 }: HouseholdCreationModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
+  const userId = MOCK_USER_ID.toString();
   const metadata = useSelector((state: RootState) => state.metadata);
   const basicInputFields = useSelector(getBasicInputFields);
   const updateHouseholdAssociation = useUpdateHouseholdAssociation();
@@ -76,6 +75,11 @@ export function HouseholdCreationModal({
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
   const [saveAsNewNamePromptOpen, setSaveAsNewNamePromptOpen] = useState(false);
+  const [associationLookupError, setAssociationLookupError] = useState<string | null>(null);
+  const { data: householdAssociation, refetch: refetchHouseholdAssociation } =
+    useHouseholdAssociation(userId, household?.id ?? '', {
+      enabled: isOpen && effectiveEditorMode === 'edit' && !!household?.id,
+    });
 
   useEffect(() => {
     if (!isOpen) {
@@ -85,6 +89,7 @@ export function HouseholdCreationModal({
     setEditorMode(resolvedInitialEditorMode);
     setPendingUnnamedAction(null);
     setSaveAsNewNamePromptOpen(false);
+    setAssociationLookupError(null);
     setValidation(null);
     setHousehold(normalizedInitialHousehold ?? HouseholdModel.starter(countryId, reportYear));
   }, [countryId, isOpen, normalizedInitialHousehold, reportYear, resolvedInitialEditorMode]);
@@ -221,8 +226,21 @@ export function HouseholdCreationModal({
     [countryId, createHouseholdWithLabel, household, persistCreatedHousehold, reportYear]
   );
 
+  const resolveInitialHouseholdAssociation = useCallback(async () => {
+    if (!household?.id) {
+      return null;
+    }
+
+    if (householdAssociation?.id) {
+      return householdAssociation;
+    }
+
+    const refreshedAssociation = await refetchHouseholdAssociation();
+    return refreshedAssociation.data ?? null;
+  }, [household?.id, householdAssociation, refetchHouseholdAssociation]);
+
   const handleUpdateExistingHousehold = useCallback(async () => {
-    if (!household || !initialAssociation?.id) {
+    if (!household?.id) {
       return;
     }
 
@@ -237,18 +255,29 @@ export function HouseholdCreationModal({
     }
 
     setIsUpdating(true);
+    setAssociationLookupError(null);
     try {
+      const association = await resolveInitialHouseholdAssociation();
+
+      if (!association?.id) {
+        setAssociationLookupError(
+          'This household is not saved yet, so it cannot be updated in place.'
+        );
+        setIsUpdating(false);
+        return;
+      }
+
       let updatedAssociation = await updateHouseholdAssociation.mutateAsync({
-        userHouseholdId: initialAssociation.id,
+        userHouseholdId: association.id,
         updates: {},
-        association: initialAssociation,
+        association,
         nextHousehold: household,
       });
 
       const desiredLabel = household.label ?? undefined;
       if ((updatedAssociation.label ?? undefined) !== desiredLabel) {
         updatedAssociation = await updateHouseholdAssociation.mutateAsync({
-          userHouseholdId: initialAssociation.id,
+          userHouseholdId: association.id,
           updates: { label: desiredLabel },
         });
       }
@@ -265,7 +294,7 @@ export function HouseholdCreationModal({
     }
   }, [
     household,
-    initialAssociation,
+    resolveInitialHouseholdAssociation,
     persistCreatedHousehold,
     countryId,
     reportYear,
@@ -464,7 +493,13 @@ export function HouseholdCreationModal({
                   Cancel
                 </Button>
               </Group>
-              <div />
+              <div>
+                {associationLookupError && (
+                  <Text size="sm" c="red">
+                    {associationLookupError}
+                  </Text>
+                )}
+              </div>
               <Group gap="sm" justify="end">
                 {!forceReadOnly && effectiveEditorMode === 'display' && (
                   <Button variant="outline" onClick={() => setEditorMode('edit')}>
@@ -486,10 +521,7 @@ export function HouseholdCreationModal({
                       variant="outline"
                       onClick={() => requestSaveAction('update-existing')}
                       disabled={
-                        footerLoading ||
-                        isValidationBlocking ||
-                        !hasChanges ||
-                        !initialAssociation?.id
+                        footerLoading || isValidationBlocking || !hasChanges || !household?.id
                       }
                     >
                       {isUpdating && <Spinner size="sm" />}

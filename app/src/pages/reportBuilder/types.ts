@@ -2,7 +2,6 @@
  * Type definitions for ReportBuilder components
  */
 import { ReactNode } from 'react';
-import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 
 // ============================================================================
@@ -41,7 +40,6 @@ export interface IngredientColorConfig {
 
 export interface SavedPolicy {
   id: string;
-  associationId?: string;
   label: string;
   paramCount: number;
   createdAt?: string;
@@ -163,12 +161,7 @@ export interface IngredientSectionProps {
   currentPopulation?: PopulationStateProps;
   countryId?: 'us' | 'uk';
   onQuickSelectPolicy?: () => void;
-  onSelectSavedPolicy?: (
-    id: string,
-    label: string,
-    paramCount: number,
-    associationId?: string
-  ) => void;
+  onSelectSavedPolicy?: (id: string, label: string, paramCount: number) => void;
   onQuickSelectPopulation?: (type: 'nationwide') => void;
   onSelectRecentPopulation?: (population: PopulationStateProps) => void;
   onDeselectPopulation?: () => void;
@@ -193,12 +186,7 @@ export interface SimulationBlockProps {
   countryId: 'us' | 'uk';
   onLabelChange: (label: string) => void;
   onQuickSelectPolicy: () => void;
-  onSelectSavedPolicy: (
-    id: string,
-    label: string,
-    paramCount: number,
-    associationId?: string
-  ) => void;
+  onSelectSavedPolicy: (id: string, label: string, paramCount: number) => void;
   onQuickSelectPopulation: () => void;
   onSelectRecentPopulation: (population: PopulationStateProps) => void;
   onDeselectPolicy: () => void;
@@ -241,7 +229,6 @@ export interface PolicyBrowseState {
   simulationIndex: number;
   initialPolicy?: import('@/types/pathwayState').PolicyStateProps;
   initialEditorMode?: 'create' | 'display' | 'edit';
-  initialAssociationId?: string;
   returnToBrowseOnBack?: boolean;
 }
 
@@ -249,7 +236,6 @@ export interface HouseholdEditorState {
   isOpen: boolean;
   simulationIndex: number;
   initialPopulation?: PopulationStateProps;
-  initialAssociation?: UserHouseholdPopulation;
   initialEditorMode?: 'create' | 'display' | 'edit';
   returnToBrowseOnBack?: boolean;
 }

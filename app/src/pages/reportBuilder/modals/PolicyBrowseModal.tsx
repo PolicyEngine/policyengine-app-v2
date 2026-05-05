@@ -28,7 +28,7 @@ interface PolicyBrowseModalProps {
   onSelect: (policy: PolicyStateProps) => void;
   reportYear: string;
   onCreateNew: () => void;
-  onEditPolicy: (policy: PolicyStateProps, associationId?: string) => void;
+  onEditPolicy: (policy: PolicyStateProps) => void;
 }
 
 export function PolicyBrowseModal({
@@ -66,7 +66,7 @@ export function PolicyBrowseModal({
         const policyId = p.association.policyId.toString();
         return {
           id: policyId,
-          associationId: p.association.id,
+          userPolicyAssociationId: p.association.id,
           label: p.association.label || `Policy #${policyId}`,
           paramCount: countPolicyModifications(p.policy),
           parameters: p.policy?.parameters || [],
@@ -118,18 +118,17 @@ export function PolicyBrowseModal({
     id: string;
     label: string;
     paramCount: number;
-    associationId?: string;
+    userPolicyAssociationId?: string;
   }) => {
-    if (policy.associationId) {
+    if (policy.userPolicyAssociationId) {
       updatePolicyAssociation.mutate({
-        userPolicyId: policy.associationId,
+        userPolicyId: policy.userPolicyAssociationId,
         updates: {},
       });
     }
 
     onSelect({
       id: policy.id,
-      associationId: policy.associationId,
       label: policy.label,
       parameters: Array(policy.paramCount).fill({}),
     });
@@ -265,15 +264,11 @@ export function PolicyBrowseModal({
             }
 
             setDrawerPolicyId(null);
-            onEditPolicy(
-              {
-                id: drawerPolicy.id,
-                associationId: drawerPolicy.associationId,
-                label: drawerPolicy.label,
-                parameters: drawerPolicy.parameters,
-              },
-              drawerPolicy.associationId
-            );
+            onEditPolicy({
+              id: drawerPolicy.id,
+              label: drawerPolicy.label,
+              parameters: drawerPolicy.parameters,
+            });
           }}
         />
       </>

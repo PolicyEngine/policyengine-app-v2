@@ -125,12 +125,7 @@ export function IngredientSection({
                   if (currentId === policy.id && onDeselectPolicy) {
                     onDeselectPolicy();
                   } else {
-                    onSelectSavedPolicy?.(
-                      policy.id,
-                      policy.label,
-                      policy.paramCount,
-                      policy.associationId
-                    );
+                    onSelectSavedPolicy?.(policy.id, policy.label, policy.paramCount);
                   }
                 }}
                 colorConfig={colorConfig}

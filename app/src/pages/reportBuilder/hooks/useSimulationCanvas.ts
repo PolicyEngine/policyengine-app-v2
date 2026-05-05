@@ -130,7 +130,6 @@ export function useSimulationCanvas({
         const policyId = p.association.policyId.toString();
         return {
           id: policyId,
-          associationId: p.association.id,
           label: p.association.label || `Policy #${policyId}`,
           paramCount: countPolicyModifications(p.policy),
           createdAt: p.association.createdAt,
@@ -311,16 +310,9 @@ export function useSimulationCanvas({
   );
 
   const handleSelectSavedPolicy = useCallback(
-    (
-      simulationIndex: number,
-      policyId: string,
-      label: string,
-      paramCount: number,
-      associationId?: string
-    ) => {
+    (simulationIndex: number, policyId: string, label: string, paramCount: number) => {
       updatePolicy(simulationIndex, {
         id: policyId,
-        associationId,
         label,
         parameters: Array(paramCount).fill({}),
       });
@@ -350,7 +342,6 @@ export function useSimulationCanvas({
     (simulationIndex: number, policy: PolicyStateProps) => {
       updatePolicy(simulationIndex, {
         id: policy.id,
-        associationId: policy.associationId,
         label: policy.label,
         parameters: policy.parameters,
       });
@@ -361,13 +352,10 @@ export function useSimulationCanvas({
   const resolvePolicyForEditor = useCallback(
     (policy: PolicyStateProps) => {
       let resolvedPolicy = policy;
-      let initialAssociationId = policy.associationId;
 
       if (policy.id) {
         const fullPolicy = policies?.find((p) => p.association.policyId.toString() === policy.id);
         if (fullPolicy) {
-          initialAssociationId ??= fullPolicy.association.id;
-
           const hasRealParams = policy.parameters.length > 0 && !!policy.parameters[0]?.name;
           if (!hasRealParams && fullPolicy.policy?.parameters) {
             resolvedPolicy = {
@@ -378,7 +366,7 @@ export function useSimulationCanvas({
         }
       }
 
-      return { resolvedPolicy, initialAssociationId };
+      return resolvedPolicy;
     },
     [policies]
   );
@@ -390,13 +378,12 @@ export function useSimulationCanvas({
         return;
       }
 
-      const { resolvedPolicy, initialAssociationId } = resolvePolicyForEditor(currentPolicy);
+      const resolvedPolicy = resolvePolicyForEditor(currentPolicy);
 
       setPolicyCreationState({
         isOpen: true,
         simulationIndex,
         initialPolicy: resolvedPolicy,
-        initialAssociationId,
         initialEditorMode: 'edit',
         returnToBrowseOnBack: false,
       });
@@ -411,13 +398,12 @@ export function useSimulationCanvas({
         return;
       }
 
-      const { resolvedPolicy, initialAssociationId } = resolvePolicyForEditor(currentPolicy);
+      const resolvedPolicy = resolvePolicyForEditor(currentPolicy);
 
       setPolicyCreationState({
         isOpen: true,
         simulationIndex,
         initialPolicy: resolvedPolicy,
-        initialAssociationId,
         initialEditorMode: 'display',
         returnToBrowseOnBack: false,
       });
@@ -436,13 +422,12 @@ export function useSimulationCanvas({
   }, [policyBrowseState.simulationIndex]);
 
   const handleEditPolicyFromBrowse = useCallback(
-    (policy: PolicyStateProps, initialAssociationId?: string) => {
+    (policy: PolicyStateProps) => {
       setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }));
       setPolicyCreationState({
         isOpen: true,
         simulationIndex: policyBrowseState.simulationIndex,
         initialPolicy: policy,
-        initialAssociationId,
         initialEditorMode: 'edit',
         returnToBrowseOnBack: true,
       });
@@ -514,20 +499,15 @@ export function useSimulationCanvas({
         return;
       }
 
-      const initialAssociation = households?.find(
-        (item) => String(item.association.householdId) === householdId
-      )?.association;
-
       setHouseholdEditorState({
         isOpen: true,
         simulationIndex,
         initialPopulation: currentPopulation,
-        initialAssociation,
         initialEditorMode: 'display',
         returnToBrowseOnBack: false,
       });
     },
-    [households, reportState.simulations]
+    [reportState.simulations]
   );
 
   const handleEditPopulation = useCallback(
@@ -539,20 +519,15 @@ export function useSimulationCanvas({
         return;
       }
 
-      const initialAssociation = households?.find(
-        (item) => String(item.association.householdId) === householdId
-      )?.association;
-
       setHouseholdEditorState({
         isOpen: true,
         simulationIndex,
         initialPopulation: currentPopulation,
-        initialAssociation,
         initialEditorMode: 'edit',
         returnToBrowseOnBack: false,
       });
     },
-    [households, reportState.simulations]
+    [reportState.simulations]
   );
 
   // ---------------------------------------------------------------------------

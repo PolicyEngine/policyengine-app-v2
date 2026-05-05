@@ -24,10 +24,11 @@ import { Group } from '@/components/ui/Group';
 import { Spinner } from '@/components/ui/Spinner';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
+import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
+import { usePolicyAssociation, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
 import { getDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
@@ -71,7 +72,6 @@ interface PolicyCreationModalProps {
   simulationIndex: number;
   initialPolicy?: PolicyStateProps;
   initialEditorMode?: EditorMode;
-  initialAssociationId?: string;
   forceReadOnly?: boolean;
 }
 
@@ -86,10 +86,10 @@ export function PolicyCreationModal({
   simulationIndex,
   initialPolicy,
   initialEditorMode,
-  initialAssociationId,
   forceReadOnly = false,
 }: PolicyCreationModalProps) {
   const countryId = useCurrentCountry();
+  const userId = MOCK_USER_ID.toString();
 
   // Get metadata from Redux state
   const {
@@ -131,6 +131,7 @@ export function PolicyCreationModal({
   );
   const updatePolicyAssociation = useUpdatePolicyAssociation();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [associationLookupError, setAssociationLookupError] = useState<string | null>(null);
 
   // Suppress unused variable warning
   void simulationIndex;
@@ -149,6 +150,10 @@ export function PolicyCreationModal({
       : effectiveEditorMode === 'edit'
         ? 'Edit policy'
         : 'Create new policy';
+  const { data: initialPolicyAssociation, refetch: refetchInitialPolicyAssociation } =
+    usePolicyAssociation(userId, initialPolicy?.id ?? '', {
+      enabled: isOpen && effectiveEditorMode === 'edit' && !!initialPolicy?.id,
+    });
 
   // Reset state when modal opens; pre-populate from initialPolicy when editing
   useEffect(() => {
@@ -163,6 +168,7 @@ export function PolicyCreationModal({
       setStartDate(defaultStartDate);
       setEndDate(defaultEndDate);
       setParameterSearch('');
+      setAssociationLookupError(null);
     }
   }, [isOpen, initialPolicy, resolvedInitialEditorMode, defaultStartDate, defaultEndDate]);
 
@@ -338,23 +344,45 @@ export function PolicyCreationModal({
     setSaveAsNewNamePromptOpen(true);
   }, []);
 
+  const resolveInitialPolicyAssociation = useCallback(async () => {
+    if (!initialPolicy?.id) {
+      return null;
+    }
+
+    if (initialPolicyAssociation?.id) {
+      return initialPolicyAssociation;
+    }
+
+    const refreshedAssociation = await refetchInitialPolicyAssociation();
+    return refreshedAssociation.data ?? null;
+  }, [initialPolicy?.id, initialPolicyAssociation, refetchInitialPolicyAssociation]);
+
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!initialAssociationId) {
+    if (!initialPolicy?.id) {
       return;
     }
     setIsUpdating(true);
+    setAssociationLookupError(null);
 
     const policyData: Partial<Policy> = { parameters: policyParameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
 
     try {
+      const association = await resolveInitialPolicyAssociation();
+
+      if (!association?.id) {
+        setAssociationLookupError('This policy is not saved yet, so it cannot be updated in place.');
+        setIsUpdating(false);
+        return;
+      }
+
       const result = await createPolicyApi(countryId, payload);
       const newPolicyId = result.result.policy_id;
       const desiredLabel = normalizedPolicyLabel || undefined;
 
       await updatePolicyAssociation.mutateAsync({
-        userPolicyId: initialAssociationId,
+        userPolicyId: association.id,
         updates: { policyId: newPolicyId, label: desiredLabel },
         replacementPolicyCountryId: countryId,
         replacementPolicyPayload: payload,
@@ -362,7 +390,6 @@ export function PolicyCreationModal({
 
       onPolicyCreated({
         id: newPolicyId,
-        associationId: initialAssociationId,
         label: desiredLabel ?? null,
         parameters: policyParameters,
       });
@@ -374,7 +401,8 @@ export function PolicyCreationModal({
   }, [
     normalizedPolicyLabel,
     policyParameters,
-    initialAssociationId,
+    initialPolicy?.id,
+    resolveInitialPolicyAssociation,
     countryId,
     updatePolicyAssociation,
     onPolicyCreated,
@@ -673,7 +701,13 @@ export function PolicyCreationModal({
                 Cancel
               </Button>
             </Group>
-            <div />
+            <div>
+              {associationLookupError && (
+                <Text size="sm" c="red">
+                  {associationLookupError}
+                </Text>
+              )}
+            </div>
             <Group gap="sm" justify="end">
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button

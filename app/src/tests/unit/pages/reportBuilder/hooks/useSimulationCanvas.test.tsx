@@ -87,7 +87,7 @@ describe('useSimulationCanvas', () => {
     expect(result.current.isInitialLoading).toBe(false);
   });
 
-  test('given a selected policy has an association id then edit mode does not depend on stale saved policies', () => {
+  test('given a selected policy then edit mode opens from policy state without association metadata', () => {
     const reportStateWithPolicy: ReportBuilderState = {
       ...reportState,
       simulations: [
@@ -95,7 +95,6 @@ describe('useSimulationCanvas', () => {
           ...initializeSimulationState(),
           policy: {
             id: 'policy-replacement',
-            associationId: 'user-policy-123',
             label: 'Editable policy',
             parameters: [
               {
@@ -126,10 +125,8 @@ describe('useSimulationCanvas', () => {
     expect(result.current.policyCreationState).toMatchObject({
       isOpen: true,
       simulationIndex: 0,
-      initialAssociationId: 'user-policy-123',
       initialPolicy: {
         id: 'policy-replacement',
-        associationId: 'user-policy-123',
       },
     });
   });

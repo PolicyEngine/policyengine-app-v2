@@ -65,8 +65,8 @@ export function SimulationCanvas({
             countryId={canvas.countryId}
             onLabelChange={(label) => canvas.handleSimulationLabelChange(0, label)}
             onQuickSelectPolicy={() => canvas.handleQuickSelectPolicy(0)}
-            onSelectSavedPolicy={(id, label, paramCount, associationId) =>
-              canvas.handleSelectSavedPolicy(0, id, label, paramCount, associationId)
+            onSelectSavedPolicy={(id, label, paramCount) =>
+              canvas.handleSelectSavedPolicy(0, id, label, paramCount)
             }
             onQuickSelectPopulation={() => canvas.handleQuickSelectPopulation(0, 'nationwide')}
             onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(0, pop)}
@@ -97,8 +97,8 @@ export function SimulationCanvas({
               countryId={canvas.countryId}
               onLabelChange={(label) => canvas.handleSimulationLabelChange(1, label)}
               onQuickSelectPolicy={() => canvas.handleQuickSelectPolicy(1)}
-              onSelectSavedPolicy={(id, label, paramCount, associationId) =>
-                canvas.handleSelectSavedPolicy(1, id, label, paramCount, associationId)
+              onSelectSavedPolicy={(id, label, paramCount) =>
+                canvas.handleSelectSavedPolicy(1, id, label, paramCount)
               }
               onQuickSelectPopulation={() => canvas.handleQuickSelectPopulation(1, 'nationwide')}
               onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(1, pop)}
@@ -176,7 +176,6 @@ export function SimulationCanvas({
         onHouseholdSaved={canvas.handleHouseholdSaved}
         reportYear={reportYear}
         initialPopulation={canvas.householdEditorState.initialPopulation}
-        initialAssociation={canvas.householdEditorState.initialAssociation}
         initialEditorMode={canvas.householdEditorState.initialEditorMode}
         forceReadOnly={isViewOnly}
       />
@@ -191,7 +190,6 @@ export function SimulationCanvas({
         simulationIndex={canvas.policyCreationState.simulationIndex}
         initialPolicy={canvas.policyCreationState.initialPolicy}
         initialEditorMode={canvas.policyCreationState.initialEditorMode}
-        initialAssociationId={canvas.policyCreationState.initialAssociationId}
         reportYear={reportYear}
         forceReadOnly={isViewOnly}
       />

@@ -4,6 +4,9 @@ import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreation
 import type { PolicyStateProps } from '@/types/pathwayState';
 
 const mockCreatePolicyWithLabel = vi.hoisted(() => vi.fn());
+const mockCreatePolicyApi = vi.hoisted(() => vi.fn());
+const mockUpdatePolicyAssociation = vi.hoisted(() => vi.fn());
+const mockPolicyAssociationRefetch = vi.hoisted(() => vi.fn());
 const MODAL_TEST_TIMEOUT_MS = 20_000;
 
 const mockReduxState = {
@@ -37,9 +40,17 @@ vi.mock('@/hooks/useCreatePolicy', () => ({
 }));
 
 vi.mock('@/hooks/useUserPolicy', () => ({
-  useUpdatePolicyAssociation: () => ({
-    mutateAsync: vi.fn(),
+  usePolicyAssociation: () => ({
+    data: null,
+    refetch: mockPolicyAssociationRefetch,
   }),
+  useUpdatePolicyAssociation: () => ({
+    mutateAsync: mockUpdatePolicyAssociation,
+  }),
+}));
+
+vi.mock('@/api/policy', () => ({
+  createPolicy: mockCreatePolicyApi,
 }));
 
 vi.mock('@/pages/reportBuilder/modals/policyCreation', () => ({
@@ -73,6 +84,23 @@ describe('PolicyCreationModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreatePolicyWithLabel.mockResolvedValue({ result: { policy_id: 'pol-new' } });
+    mockCreatePolicyApi.mockResolvedValue({ result: { policy_id: 'pol-replacement' } });
+    mockUpdatePolicyAssociation.mockResolvedValue({
+      id: 'sup-123',
+      userId: 'user-1',
+      policyId: 'pol-replacement',
+      countryId: 'us',
+      label: 'Test policy',
+    });
+    mockPolicyAssociationRefetch.mockResolvedValue({
+      data: {
+        id: 'sup-123',
+        userId: 'user-1',
+        policyId: 'pol-123',
+        countryId: 'us',
+        label: 'Test policy',
+      },
+    });
   });
 
   test(
@@ -155,6 +183,43 @@ describe('PolicyCreationModal', () => {
       });
       expect(onPolicyCreated).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'pol-new', label: 'Renamed policy' })
+      );
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given update existing policy then resolves saved association by policy id',
+    async () => {
+      const onPolicyCreated = vi.fn();
+
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={onPolicyCreated}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={modifiedPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /update existing policy/i }));
+
+      await waitFor(() => {
+        expect(mockPolicyAssociationRefetch).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(mockUpdatePolicyAssociation).toHaveBeenCalledWith({
+          userPolicyId: 'sup-123',
+          updates: { policyId: 'pol-replacement', label: 'Test policy' },
+          replacementPolicyCountryId: 'us',
+          replacementPolicyPayload: expect.any(Object),
+        });
+      });
+      expect(onPolicyCreated).toHaveBeenCalledWith(
+        expect.not.objectContaining({ associationId: expect.anything() })
       );
     },
     MODAL_TEST_TIMEOUT_MS

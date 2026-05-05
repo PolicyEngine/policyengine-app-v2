@@ -21,7 +21,7 @@ import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
 interface PolicyItem {
   id: string;
-  associationId?: string;
+  userPolicyAssociationId?: string;
   label: string;
   paramCount: number;
   createdAt?: string;

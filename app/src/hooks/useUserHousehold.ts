@@ -31,6 +31,10 @@ type HouseholdWriteConfigOptions = {
   skipDuplicateV2AssociationShadow?: boolean;
 };
 
+type HouseholdAssociationQueryOptions = {
+  enabled?: boolean;
+};
+
 export function getHouseholdWriteConfig(
   context: string,
   options?: HouseholdWriteConfigOptions
@@ -67,12 +71,21 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   });
 };
 
-export const useHouseholdAssociation = (userId: string, householdId: string) => {
+export const useHouseholdAssociation = (
+  userId: string,
+  householdId: string,
+  options?: HouseholdAssociationQueryOptions
+) => {
   const { store, config } = useHouseholdAssociationStoreForMode();
+  const countryId = useCurrentCountry();
 
   return useQuery({
-    queryKey: householdAssociationKeys.specific(userId, householdId),
-    queryFn: () => store.findById(userId, householdId),
+    queryKey: householdAssociationKeys.specific(userId, householdId, countryId),
+    queryFn: async () => {
+      const association = await store.findById(userId, householdId);
+      return association?.countryId === countryId ? association : null;
+    },
+    enabled: options?.enabled ?? true,
     ...config,
   });
 };
@@ -97,7 +110,11 @@ export const useCreateHouseholdAssociation = (options?: HouseholdWriteConfigOpti
 
       // Update specific query cache
       queryClient.setQueryData(
-        householdAssociationKeys.specific(newAssociation.userId, newAssociation.householdId),
+        householdAssociationKeys.specific(
+          newAssociation.userId,
+          newAssociation.householdId,
+          newAssociation.countryId
+        ),
         newAssociation
       );
 
@@ -178,7 +195,8 @@ export const useUpdateHouseholdAssociation = () => {
       queryClient.setQueryData(
         householdAssociationKeys.specific(
           updatedAssociation.userId,
-          updatedAssociation.householdId
+          updatedAssociation.householdId,
+          updatedAssociation.countryId
         ),
         updatedAssociation
       );
@@ -187,7 +205,8 @@ export const useUpdateHouseholdAssociation = () => {
         queryClient.removeQueries({
           queryKey: householdAssociationKeys.specific(
             updatedAssociation.userId,
-            previousHouseholdId
+            previousHouseholdId,
+            updatedAssociation.countryId
           ),
           exact: true,
         });

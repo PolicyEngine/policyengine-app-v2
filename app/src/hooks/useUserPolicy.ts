@@ -31,6 +31,10 @@ type PolicyWriteConfigOptions = {
   skipDuplicateV2AssociationShadow?: boolean;
 };
 
+type PolicyAssociationQueryOptions = {
+  enabled?: boolean;
+};
+
 type UpdatePolicyAssociationVariables = {
   userPolicyId: string;
   updates: Partial<UserPolicy>;
@@ -74,12 +78,21 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   });
 };
 
-export const usePolicyAssociation = (userId: string, policyId: string) => {
+export const usePolicyAssociation = (
+  userId: string,
+  policyId: string,
+  options?: PolicyAssociationQueryOptions
+) => {
   const { store, config } = usePolicyAssociationStoreForMode();
+  const countryId = useCurrentCountry();
 
   return useQuery({
-    queryKey: policyAssociationKeys.specific(userId, policyId),
-    queryFn: () => store.findById(userId, policyId),
+    queryKey: policyAssociationKeys.specific(userId, policyId, countryId),
+    queryFn: async () => {
+      const association = await store.findById(userId, policyId);
+      return association?.countryId === countryId ? association : null;
+    },
+    enabled: options?.enabled ?? true,
     ...config,
   });
 };
@@ -107,7 +120,8 @@ export const useCreatePolicyAssociation = (options?: PolicyWriteConfigOptions) =
       queryClient.setQueryData(
         policyAssociationKeys.specific(
           newAssociation.userId.toString(),
-          newAssociation.policyId.toString()
+          newAssociation.policyId.toString(),
+          newAssociation.countryId
         ),
         newAssociation
       );
@@ -143,7 +157,11 @@ export const useUpdatePolicyAssociation = () => {
 
       // Optimistically update caches
       queryClient.setQueryData(
-        policyAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.policyId),
+        policyAssociationKeys.specific(
+          updatedAssociation.userId,
+          updatedAssociation.policyId,
+          updatedAssociation.countryId
+        ),
         updatedAssociation
       );
 
