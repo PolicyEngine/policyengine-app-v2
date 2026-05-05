@@ -372,7 +372,9 @@ export function PolicyCreationModal({
       const association = await resolveInitialPolicyAssociation();
 
       if (!association?.id) {
-        setAssociationLookupError('This policy is not saved yet, so it cannot be updated in place.');
+        setAssociationLookupError(
+          'This policy is not saved yet, so it cannot be updated in place.'
+        );
         setIsUpdating(false);
         return;
       }
