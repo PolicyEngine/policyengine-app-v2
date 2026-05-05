@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { ChartContainer } from '@/components/ChartContainer';
+import { trackChartCsvDownloaded, trackChartSvgDownload } from '@/utils/analytics';
 import { downloadChartAsSvg, downloadCsv } from '@/utils/chartUtils';
 
 vi.mock('@/utils/chartUtils', async () => {
@@ -14,6 +15,7 @@ vi.mock('@/utils/chartUtils', async () => {
 
 vi.mock('@/utils/analytics', () => ({
   trackChartCsvDownloaded: vi.fn(),
+  trackChartSvgDownload: vi.fn(),
 }));
 
 describe('ChartContainer', () => {
@@ -50,6 +52,8 @@ describe('ChartContainer', () => {
     fireEvent.click(screen.getByRole('button', { name: /download csv/i }));
 
     expect(downloadChartAsSvg).toHaveBeenCalled();
+    expect(trackChartSvgDownload).toHaveBeenCalled();
     expect(downloadCsv).toHaveBeenCalledWith([['Header'], ['Value']], 'winners-losers.csv');
+    expect(trackChartCsvDownloaded).toHaveBeenCalled();
   });
 });

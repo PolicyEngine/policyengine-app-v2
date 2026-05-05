@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { colors, spacing } from '@/designTokens';
 import { typography } from '@/designTokens/typography';
-import { trackChartCsvDownloaded } from '@/utils/analytics';
+import { trackChartCsvDownloaded, trackChartSvgDownload } from '@/utils/analytics';
 import { downloadChartAsSvg, downloadCsv } from '@/utils/chartUtils';
 
 const FADE_MS = 150;
@@ -412,6 +412,7 @@ export default function DashboardCard({
                           onClick={(e) => {
                             e.stopPropagation();
                             if (expandedContentRef.current) {
+                              trackChartSvgDownload();
                               downloadChartAsSvg(expandedContentRef.current, {
                                 title: expandedTitle,
                                 filename: downloadFilename,

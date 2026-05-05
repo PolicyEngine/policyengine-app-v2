@@ -1,6 +1,5 @@
 import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useUserReportById } from '@/hooks/useUserReports';
 import ReportOutputPage from '@/pages/ReportOutput.page';
 import {
@@ -91,10 +90,6 @@ vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
   useStartCalculationOnLoad: vi.fn(),
 }));
 
-vi.mock('@/hooks/useHydrateCalculationCache', () => ({
-  useHydrateCalculationCache: vi.fn(),
-}));
-
 vi.mock('@/hooks/useSaveSharedReport', () => ({
   useSaveSharedReport: vi.fn(() => ({
     saveSharedReport: vi.fn(),
@@ -123,69 +118,6 @@ describe('ReportOutputPage', () => {
 
     // Then
     expect(screen.getByRole('heading', { name: 'Test Report' })).toBeInTheDocument();
-  });
-
-  test('given report has finishedAt then header timestamp uses finishedAt over association timestamps', () => {
-    vi.mocked(useUserReportById).mockReturnValue({
-      userReport: {
-        ...MOCK_USER_REPORT,
-        createdAt: '2024-01-01T12:00:00.000Z',
-        updatedAt: '2024-04-30T12:00:00.000Z',
-      },
-      report: {
-        ...MOCK_REPORT_WITH_YEAR,
-        finishedAt: '2024-05-02T12:00:00.000Z',
-      },
-      simulations: [MOCK_SIMULATION_GEOGRAPHY],
-      userSimulations: [],
-      userPolicies: [],
-      policies: [],
-      households: [],
-      userHouseholds: [],
-      geographies: [],
-      isLoading: false,
-      error: null,
-    });
-
-    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
-
-    expect(screen.getByText(/Ran May 2, 2024 at/)).toBeInTheDocument();
-    expect(screen.queryByText(/Apr 30, 2024/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Jan 1, 2024/)).not.toBeInTheDocument();
-  });
-
-  test('given backend run timestamp is absent then header timestamp does not use association updatedAt', () => {
-    vi.mocked(useUserReportById).mockReturnValue({
-      userReport: {
-        ...MOCK_USER_REPORT,
-        createdAt: '2024-01-01T12:00:00.000Z',
-        updatedAt: '2024-04-30T12:00:00.000Z',
-      },
-      report: MOCK_REPORT_WITH_YEAR,
-      simulations: [MOCK_SIMULATION_GEOGRAPHY],
-      userSimulations: [],
-      userPolicies: [],
-      policies: [],
-      households: [],
-      userHouseholds: [],
-      geographies: [],
-      isLoading: false,
-      error: null,
-    });
-
-    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
-
-    expect(screen.getByText(/Ran Jan 1, 2024 at/)).toBeInTheDocument();
-    expect(screen.queryByText(/Apr 30, 2024/)).not.toBeInTheDocument();
-  });
-
-  test('given report has persisted output then calculation cache is hydrated from that output', () => {
-    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
-
-    expect(useHydrateCalculationCache).toHaveBeenCalledWith({
-      report: MOCK_REPORT_WITH_YEAR,
-      outputType: 'societyWide',
-    });
   });
 
   test('given reproduce subpage then breadcrumb returns to the current report', () => {

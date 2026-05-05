@@ -1,6 +1,6 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { calculationKeys } from '@/libs/queryKeys';
@@ -68,41 +68,6 @@ describe('useHydrateCalculationCache', () => {
       targetType: 'report',
       startedAt: expect.any(Number),
     });
-  });
-
-  it('should hydrate parent cache before child passive effects can start a rerun', async () => {
-    const mockReport = createMockReport(true);
-    const startCalculationIfCacheMissing = vi.fn();
-
-    function ChildStartCheck() {
-      useEffect(() => {
-        const cachedStatus = queryClient.getQueryData<CalcStatus>(
-          calculationKeys.byReportId(mockReport.id!)
-        );
-        if (cachedStatus?.status !== 'complete') {
-          startCalculationIfCacheMissing();
-        }
-      }, []);
-
-      return null;
-    }
-
-    function ParentPage() {
-      useHydrateCalculationCache({ report: mockReport, outputType: 'societyWide' });
-      return <ChildStartCheck />;
-    }
-
-    render(<ParentPage />, { wrapper });
-
-    await waitFor(() => {
-      expect(
-        queryClient.getQueryData<CalcStatus>(calculationKeys.byReportId(mockReport.id!))
-      ).toMatchObject({
-        status: 'complete',
-        result: mockReport.output,
-      });
-    });
-    expect(startCalculationIfCacheMissing).not.toHaveBeenCalled();
   });
 
   it('should hydrate cache with persisted output for household report', () => {

@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui';
 import { typography } from '@/designTokens';
-import { trackChartCsvDownloaded } from '@/utils/analytics';
+import { trackChartCsvDownloaded, trackChartSvgDownload } from '@/utils/analytics';
 import { downloadChartAsSvg, downloadCsv } from '@/utils/chartUtils';
 
 interface ChartContainerProps {
@@ -78,6 +78,7 @@ export function ChartContainer({
                     className="tw:shrink-0"
                     onClick={() => {
                       if (contentRef.current) {
+                        trackChartSvgDownload();
                         downloadChartAsSvg(contentRef.current, {
                           title,
                           filename: downloadFilename,

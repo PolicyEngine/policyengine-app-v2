@@ -43,6 +43,12 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 };
 
 const BAR_SIZE = 18;
+const TOOLTIP_POSITION = { x: 72, y: 0 };
+const TOOLTIP_WRAPPER_STYLE = {
+  zIndex: 1000,
+  pointerEvents: 'none' as const,
+  maxWidth: 'min(280px, calc(100vw - 32px))',
+};
 
 function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
@@ -157,7 +163,8 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
                     content={<WinnersLosersTooltip />}
                     allowEscapeViewBox={{ x: true, y: true }}
                     offset={20}
-                    wrapperStyle={{ zIndex: 1000 }}
+                    position={TOOLTIP_POSITION}
+                    wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                   />
                   {CATEGORIES.map((cat) => (
                     <Bar
@@ -216,7 +223,8 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
                     content={<WinnersLosersTooltip />}
                     allowEscapeViewBox={{ x: true, y: true }}
                     offset={20}
-                    wrapperStyle={{ zIndex: 1000 }}
+                    position={TOOLTIP_POSITION}
+                    wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                   />
                   {CATEGORIES.map((cat) => (
                     <Bar

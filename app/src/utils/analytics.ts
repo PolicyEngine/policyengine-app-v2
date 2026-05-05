@@ -60,6 +60,11 @@ export function trackChartCsvDownloaded() {
   trackEvent('chart_csv_downloaded');
 }
 
+/** Fires when user downloads an SVG image of a chart */
+export function trackChartSvgDownload() {
+  trackEvent('chart_svg_downloaded');
+}
+
 /** Fires when user copies Python reproduction code */
 export function trackPythonCodeCopied() {
   trackEvent('python_code_copied');
