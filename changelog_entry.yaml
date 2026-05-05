@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Add Utah 2026 tax changes calculator at /us/utah-2026-tax-changes
+      - Add West Virginia SB 392 income tax cut calculator at /us/wv-sb392-tax-cut
