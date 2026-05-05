@@ -20,6 +20,7 @@ import {
   BudgetWaterfallTooltip,
   formatBillions,
   getBudgetChartTitle,
+  getBudgetCsvRows,
   getBudgetFillColor,
   makeBudgetTickFormatter,
 } from './budgetChartUtils';
@@ -134,6 +135,8 @@ export default function BudgetaryImpactSubPage({
     <ChartContainer
       title={getBudgetChartTitle(budgetaryImpact, countryId, metadata)}
       downloadFilename="budgetary-impact.svg"
+      csvFilename="budgetary-impact.csv"
+      csvData={getBudgetCsvRows(output, countryId)}
     >
       <WaterfallChart {...waterfallProps} height={chartHeight} />
     </ChartContainer>

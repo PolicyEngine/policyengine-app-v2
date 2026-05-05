@@ -24,6 +24,7 @@ import { relativeChangeMessage } from '@/utils/chartMessages';
 import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import { getDecileRelativeCsvRows } from './distributionalChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -92,6 +93,8 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-wealth-relative.svg"
+      csvFilename="distributional-impact-wealth-relative.csv"
+      csvData={getDecileRelativeCsvRows(output, 'wealth')}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

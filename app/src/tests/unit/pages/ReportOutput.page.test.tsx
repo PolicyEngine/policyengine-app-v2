@@ -102,6 +102,19 @@ vi.mock('@/hooks/useSaveSharedReport', () => ({
 describe('ReportOutputPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: MOCK_USER_REPORT,
+      report: MOCK_REPORT_WITH_YEAR,
+      simulations: [MOCK_SIMULATION_GEOGRAPHY],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [],
+      userHouseholds: [],
+      geographies: [],
+      isLoading: false,
+      error: null,
+    });
   });
 
   test('given report with year then year is passed to layout', () => {
@@ -132,6 +145,81 @@ describe('ReportOutputPage', () => {
     expect(
       screen.getByText(`Model version: ${MOCK_MODEL_VERSION} • Data version: ${MOCK_DATA_VERSION}`)
     ).toBeInTheDocument();
+  });
+
+  test('given report execution timestamp then it is displayed instead of association creation time', () => {
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: MOCK_USER_REPORT,
+      report: {
+        ...MOCK_REPORT_WITH_YEAR,
+        finishedAt: '2026-02-03T15:02:00Z',
+      },
+      simulations: [MOCK_SIMULATION_GEOGRAPHY],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [],
+      userHouseholds: [],
+      geographies: [],
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    expect(screen.getByText(/Ran Feb 3, 2026 at/)).toBeInTheDocument();
+  });
+
+  test('given report has only started timestamp then it is displayed', () => {
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: MOCK_USER_REPORT,
+      report: {
+        ...MOCK_REPORT_WITH_YEAR,
+        startedAt: '2026-02-02T15:01:00Z',
+      },
+      simulations: [MOCK_SIMULATION_GEOGRAPHY],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [],
+      userHouseholds: [],
+      geographies: [],
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    expect(screen.getByText(/Ran Feb 2, 2026 at/)).toBeInTheDocument();
+  });
+
+  test('given report has only requested timestamp then it is displayed', () => {
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: MOCK_USER_REPORT,
+      report: {
+        ...MOCK_REPORT_WITH_YEAR,
+        requestedAt: '2026-02-01T15:00:00Z',
+      },
+      simulations: [MOCK_SIMULATION_GEOGRAPHY],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [],
+      userHouseholds: [],
+      geographies: [],
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    expect(screen.getByText(/Ran Feb 1, 2026 at/)).toBeInTheDocument();
+  });
+
+  test('given report has no execution timestamp then association creation time remains fallback', () => {
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    expect(screen.getByText(/Ran Jan 1, 2024 at/)).toBeInTheDocument();
   });
 
   test('given society-wide report with complete calculation then renders without error', () => {

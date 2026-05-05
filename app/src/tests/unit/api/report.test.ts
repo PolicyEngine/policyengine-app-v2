@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ReportAdapter } from '@/adapters/ReportAdapter';
 import {
   createReport,
   createReportAndAssociateWithUser,
@@ -53,6 +54,58 @@ describe('report API', () => {
         },
       });
       expect(result).toEqual(mockReportMetadata);
+    });
+
+    test('given API response includes run timestamps then preserves them on metadata', async () => {
+      // Given
+      const countryId = 'us';
+      const reportId = 'report-123';
+      const metadataWithRunTimestamps = {
+        ...mockReportMetadata,
+        requested_at: '2026-02-03T15:00:00Z',
+        started_at: '2026-02-03T15:01:00Z',
+        finished_at: '2026-02-03T15:02:00Z',
+      };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({ status: 'ok', result: metadataWithRunTimestamps }),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await fetchReportById(countryId, reportId);
+
+      // Then
+      expect(result).toMatchObject({
+        requested_at: metadataWithRunTimestamps.requested_at,
+        started_at: metadataWithRunTimestamps.started_at,
+        finished_at: metadataWithRunTimestamps.finished_at,
+      });
+    });
+
+    test('given API response includes snake_case run timestamps then adapter exposes report timestamps', async () => {
+      const countryId = 'us';
+      const reportId = 'report-123';
+      const metadataWithRunTimestamps = {
+        ...mockReportMetadata,
+        requested_at: '2026-02-03T15:00:00Z',
+        started_at: '2026-02-03T15:01:00Z',
+        finished_at: '2026-02-03T15:02:00Z',
+      };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({ status: 'ok', result: metadataWithRunTimestamps }),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      const metadata = await fetchReportById(countryId, reportId);
+      const report = ReportAdapter.fromMetadata(metadata);
+
+      expect(report).toMatchObject({
+        requestedAt: metadataWithRunTimestamps.requested_at,
+        startedAt: metadataWithRunTimestamps.started_at,
+        finishedAt: metadataWithRunTimestamps.finished_at,
+      });
     });
 
     test('given API error then throws error', async () => {

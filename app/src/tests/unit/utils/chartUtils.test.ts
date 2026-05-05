@@ -15,7 +15,12 @@ import {
   SAMPLE_POLICY_LABEL_EMPTY_STRING,
   SAMPLE_POLICY_LABEL_SHORT,
 } from '@/tests/fixtures/utils/chartUtilsMocks';
-import { getChartLogoImage, getNiceTicks, getReformPolicyLabel } from '@/utils/chartUtils';
+import {
+  buildCsvContent,
+  getChartLogoImage,
+  getNiceTicks,
+  getReformPolicyLabel,
+} from '@/utils/chartUtils';
 
 describe('chartUtils', () => {
   describe('getReformPolicyLabel', () => {
@@ -128,6 +133,18 @@ describe('chartUtils', () => {
         // Then
         expect(result).toBe(EXPECTED_LABEL_DEFAULT);
       });
+    });
+  });
+
+  describe('buildCsvContent', () => {
+    it('given numeric, empty, and quoted cells then writes escaped CSV content', () => {
+      expect(
+        buildCsvContent([
+          ['Label', 'Value'],
+          ['Federal "tax" revenues', 1.25],
+          ['Empty', null],
+        ])
+      ).toBe('"Label","Value"\r\n"Federal ""tax"" revenues","1.25"\r\n"Empty",""');
     });
   });
 

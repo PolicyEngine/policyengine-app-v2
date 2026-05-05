@@ -30,6 +30,7 @@ import {
 } from '@/utils/chartUtils';
 import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import { getPovertyByGenderCsvRows } from './povertyChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -193,7 +194,12 @@ export default function DeepPovertyImpactByGenderSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="deep-poverty-impact-by-gender.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="deep-poverty-impact-by-gender.svg"
+      csvFilename="deep-poverty-impact-by-gender.csv"
+      csvData={getPovertyByGenderCsvRows(output, 'deep_poverty')}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

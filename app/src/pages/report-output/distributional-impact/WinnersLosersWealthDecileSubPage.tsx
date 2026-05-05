@@ -12,19 +12,14 @@ import type { RootState } from '@/store';
 import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import {
+  WINNERS_LOSERS_CATEGORIES as CATEGORIES,
+  getWinnersLosersCsvRows,
+} from './distributionalChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
 }
-
-// Category definitions and styling
-const CATEGORIES = [
-  'Gain more than 5%',
-  'Gain less than 5%',
-  'No change',
-  'Lose less than 5%',
-  'Lose more than 5%',
-] as const;
 
 const COLOR_MAP: Record<string, string> = {
   'Gain more than 5%': colors.primary[700],
@@ -43,6 +38,12 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 };
 
 const BAR_SIZE = 18;
+const TOOLTIP_POSITION = { x: 72, y: 0 };
+const TOOLTIP_WRAPPER_STYLE = {
+  zIndex: 1000,
+  pointerEvents: 'none' as const,
+  maxWidth: 'min(280px, calc(100vw - 32px))',
+};
 
 function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
@@ -129,7 +130,12 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   };
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="winners-losers-wealth-decile.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="winners-losers-wealth-decile.svg"
+      csvFilename="winners-losers-wealth-decile.csv"
+      csvData={getWinnersLosersCsvRows(output, 'wealth')}
+    >
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
           {/* Chart area */}
@@ -157,7 +163,8 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
                     content={<WinnersLosersTooltip />}
                     allowEscapeViewBox={{ x: true, y: true }}
                     offset={20}
-                    wrapperStyle={{ zIndex: 1000 }}
+                    position={TOOLTIP_POSITION}
+                    wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                   />
                   {CATEGORIES.map((cat) => (
                     <Bar
@@ -216,7 +223,8 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
                     content={<WinnersLosersTooltip />}
                     allowEscapeViewBox={{ x: true, y: true }}
                     offset={20}
-                    wrapperStyle={{ zIndex: 1000 }}
+                    position={TOOLTIP_POSITION}
+                    wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                   />
                   {CATEGORIES.map((cat) => (
                     <Bar

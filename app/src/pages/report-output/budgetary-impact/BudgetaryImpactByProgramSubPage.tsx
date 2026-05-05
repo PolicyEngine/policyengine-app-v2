@@ -21,6 +21,7 @@ import {
   formatBillions,
   getBudgetChartTitle,
   getBudgetFillColor,
+  getDetailedBudgetCsvRows,
   makeBudgetTickFormatter,
 } from './budgetChartUtils';
 
@@ -111,6 +112,8 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
     <ChartContainer
       title={getBudgetChartTitle(budgetaryImpact, countryId, metadata)}
       downloadFilename="budgetary-impact-by-program.svg"
+      csvFilename="budgetary-impact-by-program.csv"
+      csvData={getDetailedBudgetCsvRows(output, metadata)}
     >
       <WaterfallChart
         data={dataWithHover}

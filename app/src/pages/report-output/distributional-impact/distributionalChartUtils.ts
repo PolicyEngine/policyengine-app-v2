@@ -5,8 +5,24 @@
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CountryId } from '@/libs/countries';
 import type { MetadataState } from '@/types/metadata';
+import type { CsvData } from '@/utils/chartUtils';
 import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+
+export const WINNERS_LOSERS_CATEGORIES = [
+  'Gain more than 5%',
+  'Gain less than 5%',
+  'No change',
+  'Lose less than 5%',
+  'Lose more than 5%',
+] as const;
+
+type DecileBreakdown = 'income' | 'wealth';
+type WinnersLosersCategory = (typeof WINNERS_LOSERS_CATEGORIES)[number];
+
+function sortedDecileEntries(values: Record<string, number> | null | undefined) {
+  return Object.entries(values ?? {}).sort(([left], [right]) => Number(left) - Number(right));
+}
 
 export function getDistributionalAverageTitle(
   output: SocietyWideReportOutput,
@@ -75,4 +91,48 @@ export function getWinnersLosersTitle(
     return `This reform would decrease ${objectTerm} for ${totalBehindTerm} of the population${regionPhrase}`;
   }
   return `This reform would have no effect on ${objectTerm} for the population${regionPhrase}`;
+}
+
+export function getDecileAverageCsvRows(
+  output: SocietyWideReportOutput,
+  breakdown: DecileBreakdown = 'income'
+): CsvData {
+  const deciles = breakdown === 'income' ? output.decile.average : output.wealth_decile?.average;
+  const label = breakdown === 'income' ? 'Income decile' : 'Wealth decile';
+
+  return [
+    [label, 'Average change'],
+    ...sortedDecileEntries(deciles).map(([key, value]) => [key, value]),
+  ];
+}
+
+export function getDecileRelativeCsvRows(
+  output: SocietyWideReportOutput,
+  breakdown: DecileBreakdown = 'income'
+): CsvData {
+  const deciles = breakdown === 'income' ? output.decile.relative : output.wealth_decile?.relative;
+  const label = breakdown === 'income' ? 'Income decile' : 'Wealth decile';
+
+  return [
+    [label, 'Relative change'],
+    ...sortedDecileEntries(deciles).map(([key, value]) => [key, value]),
+  ];
+}
+
+export function getWinnersLosersCsvRows(
+  output: SocietyWideReportOutput,
+  breakdown: DecileBreakdown = 'income'
+): CsvData {
+  const intraDecile =
+    breakdown === 'income' ? output.intra_decile : (output.intra_wealth_decile ?? null);
+  const deciles = (intraDecile?.deciles ?? {}) as Partial<Record<WinnersLosersCategory, number[]>>;
+  const all = (intraDecile?.all ?? {}) as Partial<Record<WinnersLosersCategory, number>>;
+  const label = breakdown === 'income' ? 'Income decile' : 'Wealth decile';
+  const decileRows = Array.from({ length: 10 }, (_, index) => [
+    String(index + 1),
+    ...WINNERS_LOSERS_CATEGORIES.map((category) => deciles[category]?.[index]),
+  ]);
+  const allRow = ['All', ...WINNERS_LOSERS_CATEGORIES.map((category) => all[category])];
+
+  return [[label, ...WINNERS_LOSERS_CATEGORIES], ...decileRows, allRow];
 }

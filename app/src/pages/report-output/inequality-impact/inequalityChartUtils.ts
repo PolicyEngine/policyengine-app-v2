@@ -4,6 +4,7 @@
 
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { MetadataState } from '@/types/metadata';
+import type { CsvData } from '@/utils/chartUtils';
 import { regionName } from '@/utils/impactChartUtils';
 
 export function getInequalityTitle(
@@ -29,4 +30,22 @@ export function getInequalityTitle(
   const region = regionName(metadata);
   const regionPhrase = region ? ` in ${region}` : '';
   return `This reform would ${signTerm} income inequality${regionPhrase}`;
+}
+
+export function getInequalityCsvRows(output: SocietyWideReportOutput): CsvData {
+  const metrics = [
+    ['Gini index', output.inequality.gini],
+    ['Top 10% share', output.inequality.top_10_pct_share],
+    ['Top 1% share', output.inequality.top_1_pct_share],
+  ] as const;
+
+  return [
+    ['Metric', 'Baseline', 'Reform', 'Change'],
+    ...metrics.map(([label, impact]) => [
+      label,
+      impact.baseline,
+      impact.reform,
+      impact.baseline === 0 ? null : impact.reform / impact.baseline - 1,
+    ]),
+  ];
 }

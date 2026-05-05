@@ -1,7 +1,10 @@
 import { render } from '@test-utils';
 import { Tooltip, YAxis } from 'recharts';
 import { describe, expect, test, vi } from 'vitest';
-import WinnersLosersIncomeDecileSubPage from '@/pages/report-output/distributional-impact/WinnersLosersIncomeDecileSubPage';
+import WinnersLosersIncomeDecileSubPage, {
+  getWinnersLosersCsvRows,
+} from '@/pages/report-output/distributional-impact/WinnersLosersIncomeDecileSubPage';
+import WinnersLosersWealthDecileSubPage from '@/pages/report-output/distributional-impact/WinnersLosersWealthDecileSubPage';
 import { MOCK_WINNERS_LOSERS_OUTPUT } from '@/tests/fixtures/pages/report-output/distributional-impact/WinnersLosersDecileMocks';
 
 // Mock Recharts — capture props via vi.fn()
@@ -58,6 +61,70 @@ describe('WinnersLosersIncomeDecileSubPage', () => {
       const wrapperStyle = props.wrapperStyle as Record<string, unknown> | undefined;
       expect(wrapperStyle).toBeDefined();
       expect(wrapperStyle?.zIndex).toBe(1000);
+    });
+  });
+
+  test('given chart then Tooltip uses a fixed in-chart position so edge deciles stay visible', () => {
+    // When
+    render(<WinnersLosersIncomeDecileSubPage output={MOCK_WINNERS_LOSERS_OUTPUT} />);
+
+    // Then
+    const tooltipCalls = vi.mocked(Tooltip).mock.calls;
+    tooltipCalls.forEach((call) => {
+      const props = call[0] as Record<string, unknown>;
+      expect(props.position).toEqual({ x: 72, y: 0 });
+    });
+  });
+
+  test('given output then CSV rows include each income decile and All', () => {
+    // When
+    const rows = getWinnersLosersCsvRows(MOCK_WINNERS_LOSERS_OUTPUT);
+
+    // Then
+    expect(rows[0]).toEqual([
+      'Income decile',
+      'Gain more than 5%',
+      'Gain less than 5%',
+      'No change',
+      'Lose less than 5%',
+      'Lose more than 5%',
+    ]);
+    expect(rows).toHaveLength(12);
+    expect(rows[1][0]).toBe('1');
+    expect(rows[10][0]).toBe('10');
+    expect(rows[11][0]).toBe('All');
+  });
+});
+
+describe('WinnersLosersWealthDecileSubPage', () => {
+  test('given chart then Tooltip has z-index to prevent bars covering it', () => {
+    const output = {
+      intra_wealth_decile: (MOCK_WINNERS_LOSERS_OUTPUT as any).intra_decile,
+    } as any;
+
+    render(<WinnersLosersWealthDecileSubPage output={output} />);
+
+    const tooltipCalls = vi.mocked(Tooltip).mock.calls;
+    expect(tooltipCalls.length).toBeGreaterThan(0);
+    tooltipCalls.forEach((call) => {
+      const props = call[0] as Record<string, unknown>;
+      const wrapperStyle = props.wrapperStyle as Record<string, unknown> | undefined;
+      expect(wrapperStyle).toBeDefined();
+      expect(wrapperStyle?.zIndex).toBe(1000);
+    });
+  });
+
+  test('given chart then Tooltip uses a fixed in-chart position so edge deciles stay visible', () => {
+    const output = {
+      intra_wealth_decile: (MOCK_WINNERS_LOSERS_OUTPUT as any).intra_decile,
+    } as any;
+
+    render(<WinnersLosersWealthDecileSubPage output={output} />);
+
+    const tooltipCalls = vi.mocked(Tooltip).mock.calls;
+    tooltipCalls.forEach((call) => {
+      const props = call[0] as Record<string, unknown>;
+      expect(props.position).toEqual({ x: 72, y: 0 });
     });
   });
 });
