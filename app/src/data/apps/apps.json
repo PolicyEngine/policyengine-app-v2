@@ -216,6 +216,19 @@
   },
   {
     "type": "iframe",
+    "slug": "coverage-compass",
+    "title": "Coverage Compass",
+    "description": "Model how life events — moving, income changes, pregnancy — affect a household's healthcare coverage and out-of-pocket costs across Medicaid, CHIP, and the ACA marketplace",
+    "source": "https://coverage-compass-policy-engine.vercel.app/",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "coverage-compass.png",
+    "date": "2026-05-06 12:00:00",
+    "authors": ["daphne-hansell"]
+  },
+  {
+    "type": "iframe",
     "slug": "cliff-watch",
     "title": "Cliff Watch",
     "description": "Interactive calculator showing how benefits, refundable tax credits, taxes, and net income change for US households as earnings rise",
