@@ -77,7 +77,9 @@ export const colors = {
     title: "#000000",
     link: "#2C7A7B",
     linkHover: "#285E61",
-    warning: "#d9480f", // Mantine orange.9 - WCAG AA compliant (~4.8:1 contrast)
+    warning: "#d9480f", // Mantine orange.9 — WCAG AA compliant (~4.8:1 contrast)
+    error: "#B91C1C", // Tailwind red-700 — WCAG AA compliant on white (5.94:1) and on a 12% --pe-color-error tint
+    success: "#285E61", // primary[700] — WCAG AA compliant on white (7.07:1) and on the success-soft tint
   },
 
   // Teal alias (for convenience)

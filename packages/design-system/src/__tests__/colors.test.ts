@@ -84,6 +84,9 @@ describe("colors", () => {
       expect(colors.text.inverse).toBe("#FFFFFF");
       expect(colors.text.link).toBe("#2C7A7B");
       expect(colors.text.linkHover).toBe("#285E61");
+      expect(colors.text.warning).toBe("#d9480f");
+      expect(colors.text.error).toBe("#B91C1C");
+      expect(colors.text.success).toBe("#285E61");
     });
 
     it("should export text colors for givecalc compatibility", () => {
