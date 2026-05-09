@@ -8,7 +8,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "../../../app/src/designTokens";
 import { getPostsSorted } from "@/data/posts/postTransformers";
 import type { BlogPost } from "@/types/blog";
 

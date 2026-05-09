@@ -8,7 +8,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "../../../app/src/designTokens";
 
 export const blogColors = {
   primary: colors.primary[600],

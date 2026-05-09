@@ -1,4 +1,4 @@
-import { colors } from "@policyengine/design-system/tokens";
+import { colors } from "../../../app/src/designTokens";
 
 export interface HeroSectionProps {
   title: string;

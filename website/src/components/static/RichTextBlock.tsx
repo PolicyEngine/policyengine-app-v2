@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { colors } from "@policyengine/design-system/tokens";
+import { colors } from "../../../app/src/designTokens";
 
 import "@/styles/stylesheets/RichTextBlock.css";
 

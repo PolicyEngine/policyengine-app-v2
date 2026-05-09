@@ -6,7 +6,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "../../../app/src/designTokens";
 import HeroCTA from "./HeroCTA";
 import HouseholdGraph, {
   generateGraph,

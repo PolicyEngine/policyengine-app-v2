@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { colors } from "@policyengine/design-system/tokens";
+import { colors } from "../../../app/src/designTokens";
 
 /**
  * Lazy-loaded Plotly chart component.

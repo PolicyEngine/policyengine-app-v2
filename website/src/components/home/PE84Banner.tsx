@@ -1,4 +1,4 @@
-import { colors, typography } from "@policyengine/design-system/tokens";
+import { colors, typography } from "../../../app/src/designTokens";
 
 export default function PE84Banner() {
   return (

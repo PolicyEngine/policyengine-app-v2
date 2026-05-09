@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { spacing } from "@policyengine/design-system/tokens";
+import { spacing } from "../../../app/src/designTokens";
 import DevToolsPage from "../../app/[countryId]/dev-tools/page";
 import ApiStatusPage from "../../app/[countryId]/dev-tools/api-status/page";
 

@@ -4,7 +4,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "../../../app/src/designTokens";
 
 type ReleasePageProps = {
   params: Promise<{ version: string }>;

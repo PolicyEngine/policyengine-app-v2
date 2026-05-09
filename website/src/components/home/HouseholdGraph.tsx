@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { colors } from "@policyengine/design-system/tokens";
+import { colors } from "../../../app/src/designTokens";
 import { UK_CENTERS, US_CENTERS } from "./populationCenters";
 
 const NODE_COUNT = 10000;

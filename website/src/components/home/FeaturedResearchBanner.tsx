@@ -6,7 +6,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "../../../app/src/designTokens";
 
 const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 
