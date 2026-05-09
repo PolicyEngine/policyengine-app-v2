@@ -33,7 +33,11 @@ const UK_PROMPTS: PromptData[] = [
     winnerPct: 0,
     loserPct: 0.88,
   },
-  { text: "revenue from a 50p additional rate", winnerPct: 0, loserPct: 0.02 },
+  {
+    text: "revenue from a 50p additional rate",
+    winnerPct: 0,
+    loserPct: 0.02,
+  },
   {
     text: "how removing the benefit cap affects single parents",
     winnerPct: 0.009,
@@ -45,7 +49,7 @@ const UK_PROMPTS: PromptData[] = [
     loserPct: 0.19,
   },
   {
-    text: "how reducing the UC taper rate to 45% helps workers",
+    text: "how reducing the UC taper rate to 45% affects workers",
     winnerPct: 0.09,
     loserPct: 0,
   },
@@ -60,7 +64,7 @@ const UK_PROMPTS: PromptData[] = [
     loserPct: 0,
   },
   {
-    text: "how doubling the UC work allowance helps workers",
+    text: "who gains from doubling the UC work allowance",
     winnerPct: 0.07,
     loserPct: 0,
   },
@@ -105,7 +109,7 @@ const US_PROMPTS: PromptData[] = [
   {
     text: "the poverty impact of expanding the Child Tax Credit",
     winnerPct: 0.14,
-    loserPct: 0.001,
+    loserPct: 0,
   },
   {
     text: "the distributional impact of expanding the EITC",
@@ -113,9 +117,9 @@ const US_PROMPTS: PromptData[] = [
     loserPct: 0,
   },
   {
-    text: "the impact of removing the SALT cap on high earners",
+    text: "the distributional impact of removing the SALT cap",
     winnerPct: 0.02,
-    loserPct: 0.001,
+    loserPct: 0,
   },
   {
     text: "the cost of making the Child Tax Credit fully refundable",
@@ -140,7 +144,7 @@ const US_PROMPTS: PromptData[] = [
   {
     text: "how raising the top rate to 45% affects revenue",
     winnerPct: 0,
-    loserPct: 0.02,
+    loserPct: 0.008,
   },
   {
     text: "who benefits from doubling the Child and Dependent Care Credit",
@@ -154,7 +158,7 @@ const US_PROMPTS: PromptData[] = [
   },
   {
     text: "the revenue from lowering the SALT cap to $10,000",
-    winnerPct: 0.001,
+    winnerPct: 0,
     loserPct: 0.06,
   },
   {
