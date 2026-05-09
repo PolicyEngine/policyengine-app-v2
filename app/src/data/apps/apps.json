@@ -451,7 +451,7 @@
     "slug": "obbba-household-explorer",
     "title": "OBBBA household impact explorer",
     "description": "Interactive scatter plot to explore household-level impacts of the One Big Beautiful Bill Act",
-    "source": "https://policyengine.github.io/obbba-household-by-household",
+    "source": "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
     "tags": ["us", "featured", "policy", "reconciliation"],
     "countryId": "us"
   },
@@ -495,7 +495,7 @@
     "slug": "obbba-household-by-household",
     "title": "The One Big Beautiful Bill Act, household by household",
     "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
-    "source": "https://policyengine.github.io/obbba-household-by-household",
+    "source": "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
     "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,

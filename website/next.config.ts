@@ -20,6 +20,16 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/research",
         permanent: true,
       },
+      {
+        source: "/us/obbba-household-by-household",
+        destination: "/us/obbba-household-explorer",
+        permanent: true,
+      },
+      {
+        source: "/us/obbba-household-by-household/:path*",
+        destination: "/us/obbba-household-explorer/:path*",
+        permanent: true,
+      },
     ];
   },
 
@@ -62,6 +72,9 @@ const nextConfig: NextConfig = {
         // West Virginia SB 392 income tax cut calculator (Vercel)
         { source: "/us/wv-sb392-tax-cut", destination: "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut" },
         { source: "/us/wv-sb392-tax-cut/:path*", destination: "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut/:path*" },
+        // OBBBA household impact explorer (Vercel)
+        { source: "/us/obbba-household-explorer", destination: "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer" },
+        { source: "/us/obbba-household-explorer/:path*", destination: "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer/:path*" },
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
         { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
