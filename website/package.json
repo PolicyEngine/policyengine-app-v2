@@ -15,7 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@policyengine/design-system": "*",
+    "@policyengine/ui-kit": "^0.4.0",
     "@tabler/icons-react": "^3.31.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
