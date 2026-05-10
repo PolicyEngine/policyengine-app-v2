@@ -8,7 +8,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 import { getPostsSorted } from "@/data/posts/postTransformers";
 import type { BlogPost } from "@/types/blog";
 

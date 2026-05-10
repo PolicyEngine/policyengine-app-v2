@@ -7,7 +7,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 const ctaVariant = {
   hidden: { opacity: 0, y: 20 },

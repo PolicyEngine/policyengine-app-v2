@@ -1,9 +1,33 @@
 /**
- * Typography tokens - use CSS variables instead
- * Font sizes available as var(--text-xs), var(--text-sm), etc.
+ * PolicyEngine typography system.
+ *
+ * Keep this runtime object in sync with @policyengine/ui-kit/theme.css while
+ * existing inline styles are migrated to CSS utilities.
  */
 
+const INTER = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
 export const typography = {
+  fontFamily: {
+    primary: INTER,
+    secondary: INTER,
+    body: INTER,
+    chart: INTER,
+    prose: INTER,
+    mono: 'JetBrains Mono, "Fira Code", Consolas, monospace',
+  },
+
+  fontWeight: {
+    thin: 100,
+    light: 300,
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+    extrabold: 800,
+    black: 900,
+  },
+
   fontSize: {
     xs: '12px',
     sm: '14px',
@@ -14,4 +38,56 @@ export const typography = {
     '3xl': '28px',
     '4xl': '32px',
   },
+
+  lineHeight: {
+    none: '1',
+    tight: '1.25',
+    snug: '1.375',
+    normal: '1.5',
+    relaxed: '1.625',
+    loose: '2',
+    '20': '20px',
+    '22': '22px',
+    '24': '24px',
+  },
+
+  textStyles: {
+    'sm-medium': {
+      fontFamily: 'Inter',
+      fontSize: '14px',
+      fontWeight: 500,
+      lineHeight: '20px',
+    },
+    'sm-semibold': {
+      fontFamily: 'Inter',
+      fontSize: '14px',
+      fontWeight: 600,
+      lineHeight: '20px',
+    },
+    'md-normal': {
+      fontFamily: 'Inter',
+      fontSize: '16px',
+      fontWeight: 400,
+      lineHeight: '24px',
+    },
+    'body-regular': {
+      fontFamily: 'Inter',
+      fontSize: '14px',
+      fontWeight: 400,
+      lineHeight: '22px',
+    },
+    'h5-regular': {
+      fontFamily: 'Inter',
+      fontSize: '16px',
+      fontWeight: 400,
+      lineHeight: '24px',
+    },
+  },
 } as const;
+
+export const FONT_UI = typography.fontFamily.primary;
+export const FONT_CHART = typography.fontFamily.chart;
+export const FONT_PROSE = typography.fontFamily.prose;
+export const FONT_MONO = typography.fontFamily.mono;
+
+export type Typography = typeof typography;

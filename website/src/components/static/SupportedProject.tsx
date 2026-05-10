@@ -1,4 +1,4 @@
-import { colors, spacing, typography } from '../../../app/src/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 export interface SupportedProject {
   title: string;

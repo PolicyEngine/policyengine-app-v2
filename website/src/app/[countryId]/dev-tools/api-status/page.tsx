@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import HeroSection from "@/components/static/HeroSection";
-import { colors, spacing } from "../../../app/src/designTokens";
+import { colors, spacing } from "@/designTokens";
 import ApiStatusClient from "./ApiStatusClient";
 
 export const metadata: Metadata = {

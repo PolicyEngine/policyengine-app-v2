@@ -1,4 +1,4 @@
-import { colors, typography } from "../../../app/src/designTokens";
+import { colors, typography } from "@/designTokens";
 
 export default function PE84Banner() {
   return (

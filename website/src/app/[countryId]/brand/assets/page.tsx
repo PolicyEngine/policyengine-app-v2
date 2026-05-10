@@ -6,7 +6,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 export const metadata: Metadata = {
   title: "Assets",

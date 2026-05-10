@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import HeroSection from "@/components/static/HeroSection";
 import { Text, Title } from "@/components/ui";
-import { colors, spacing, typography } from "../../../app/src/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 interface DevToolCardProps {
   href: string;

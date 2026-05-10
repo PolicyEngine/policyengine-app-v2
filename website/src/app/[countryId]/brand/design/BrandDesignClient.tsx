@@ -19,7 +19,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 const colorTokens = [
   {
@@ -340,7 +340,7 @@ export default function BrandDesignClient() {
               style={{ color: colors.secondary[300] }}
             >
               {`// Import design tokens
-import { colors, spacing, typography } from '../../../app/src/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 // Use in styles
 <div

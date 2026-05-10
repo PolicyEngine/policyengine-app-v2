@@ -3,7 +3,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 import TeamMemberCard, { TeamMember } from "./TeamMemberCard";
 
 export interface TeamSectionProps {

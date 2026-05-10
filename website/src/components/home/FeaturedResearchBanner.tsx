@@ -6,7 +6,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 

@@ -1,5 +1,5 @@
 import { Container, Title } from '@/components/ui';
-import { colors, spacing, typography } from '../../../app/src/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 export interface LegalSection {
   heading: string;

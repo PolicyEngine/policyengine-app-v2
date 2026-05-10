@@ -26,9 +26,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build design system
-        run: bun run design-system:build
-
       - name: Run Chromatic
         working-directory: ./app
         run: >-

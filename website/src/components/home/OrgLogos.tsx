@@ -12,7 +12,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 const LOGO_WIDTH = 140;
 const LOGO_GAP = 64;

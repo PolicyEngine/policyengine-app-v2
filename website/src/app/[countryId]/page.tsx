@@ -3,7 +3,7 @@ import HomeBlogPreview from "@/components/home/HomeBlogPreview";
 import HomeTrackerPreview from "@/components/home/HomeTrackerPreview";
 import OrgLogos from "@/components/home/OrgLogos";
 import FeaturedResearchBanner from "@/components/home/FeaturedResearchBanner";
-import { typography } from "../../../app/src/designTokens";
+import { typography } from "@/designTokens";
 
 export default async function HomePage({
   params,

@@ -28,6 +28,43 @@ class ResizeObserver {
 
 window.ResizeObserver = ResizeObserver;
 
+function createLocalStorageMock() {
+  const store = new Map();
+
+  return {
+    get length() {
+      return store.size;
+    },
+    key(index) {
+      return Array.from(store.keys())[index] ?? null;
+    },
+    getItem(key) {
+      return store.get(String(key)) ?? null;
+    },
+    setItem(key, value) {
+      store.set(String(key), String(value));
+    },
+    removeItem(key) {
+      store.delete(String(key));
+    },
+    clear() {
+      store.clear();
+    },
+  };
+}
+
+const localStorageMock = createLocalStorageMock();
+Object.defineProperty(window, 'localStorage', {
+  configurable: true,
+  writable: true,
+  value: localStorageMock,
+});
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  writable: true,
+  value: localStorageMock,
+});
+
 // Add these missing browser APIs for Plotly.js
 Object.defineProperty(window.URL, 'createObjectURL', {
   writable: true,

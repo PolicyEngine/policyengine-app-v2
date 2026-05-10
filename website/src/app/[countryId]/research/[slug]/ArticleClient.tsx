@@ -29,7 +29,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 const authors = authorsData as AuthorsCollection;
 

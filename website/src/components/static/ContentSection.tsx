@@ -4,7 +4,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 export interface ContentSectionProps {
   title?: string;

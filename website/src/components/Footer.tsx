@@ -13,7 +13,7 @@ import {
 import jsonp from 'jsonp';
 import OptimisedImage from '@/components/ui/OptimisedImage';
 import { Button, Container, Input, Spinner, Stack } from '@/components/ui';
-import { colors, spacing, typography } from '../../../app/src/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
 import { useCountryId } from '@/hooks/useCountryId';
 

@@ -1,4 +1,4 @@
-import { colors } from "../../../app/src/designTokens";
+import { colors } from "@/designTokens";
 
 export interface HeroSectionProps {
   title: string;

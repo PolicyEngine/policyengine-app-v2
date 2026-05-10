@@ -5,7 +5,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 export default function HomeTrackerPreview({
   countryId,

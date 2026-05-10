@@ -86,9 +86,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build design system
-        run: bun run design-system:build
-
       - name: Check formatting with Prettier
         working-directory: ./app
         run: bun run prettier
@@ -110,9 +107,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Build design system
-        run: bun run design-system:build
 
       - name: Run TypeScript type checks (app)
         working-directory: ./app
@@ -139,12 +133,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Build design system
-        run: bun run design-system:build
-
-      - name: Run design system tests
-        run: bun run test --filter=@policyengine/design-system
 
       - name: Run app tests
         working-directory: ./app
@@ -212,9 +200,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Build design system
-        run: bun run design-system:build
 
       - name: Build application
         working-directory: ./app

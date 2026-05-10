@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { colors } from "../../../app/src/designTokens";
+import { colors } from "@/designTokens";
 
 /**
  * Lazy-loaded Plotly chart component.

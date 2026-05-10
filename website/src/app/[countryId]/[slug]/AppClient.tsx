@@ -8,7 +8,7 @@ declare global {
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { colors, spacing, typography } from "../../../app/src/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 interface AppClientProps {
   app: {

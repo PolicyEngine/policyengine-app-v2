@@ -1,6 +1,8 @@
 /**
- * Spacing tokens - use CSS variables instead where possible
- * Base spacing available as var(--spacing-xs), var(--spacing-sm), etc.
+ * PolicyEngine spacing system.
+ *
+ * Keep this runtime object in sync with @policyengine/ui-kit/theme.css while
+ * existing inline styles are migrated to CSS utilities.
  */
 
 export const spacing = {
@@ -15,8 +17,77 @@ export const spacing = {
   '5xl': '64px',
 
   component: {
+    button: {
+      padding: '8px 14px',
+      height: '36px',
+    },
     input: {
+      padding: '8px 12px',
       height: '40px',
+      compactWidth: '120px',
+    },
+    badge: {
+      padding: '4px 12px',
+    },
+    menu: {
+      itemPadding: '6px 24px',
+      itemHeight: '40px',
+    },
+    tab: {
+      padding: '12px 16px',
     },
   },
+
+  layout: {
+    sidebar: '79px',
+    sidebarWidth: '280px',
+    header: '58px',
+    content: '1361px',
+    container: '976px',
+    sideGutter: '200px',
+  },
+
+  appShell: {
+    header: {
+      height: '58px',
+      padding: '8px 16px',
+    },
+    navbar: {
+      width: '300px',
+      padding: '0px',
+      breakpoint: 'sm',
+    },
+    aside: {
+      width: '300px',
+      padding: '16px',
+      breakpoint: 'md',
+    },
+    footer: {
+      height: '60px',
+      padding: '12px 24px',
+    },
+    main: {
+      padding: '24px',
+      minHeight: '100dvh',
+    },
+  },
+
+  container: {
+    xs: '16px',
+    sm: '24px',
+    md: '32px',
+    lg: '48px',
+    xl: '64px',
+    '2xl': '80px',
+  },
+
+  radius: {
+    none: '0px',
+    chip: '2px',
+    element: '4px',
+    container: '8px',
+    feature: '12px',
+  },
 } as const;
+
+export type Spacing = typeof spacing;

@@ -8,7 +8,7 @@ import {
   colors,
   spacing,
   typography,
-} from "../../../app/src/designTokens";
+} from "@/designTokens";
 
 export const blogColors = {
   primary: colors.primary[600],
