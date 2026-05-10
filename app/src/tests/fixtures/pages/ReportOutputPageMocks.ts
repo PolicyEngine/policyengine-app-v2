@@ -14,7 +14,7 @@ export const MOCK_USER_REPORT = {
   label: 'Test Report',
   reportId: MOCK_REPORT_ID,
   countryId: 'us' as const,
-  createdAt: '2024-01-01T00:00:00Z',
+  createdAt: '2024-01-01T12:00:00Z',
 };
 
 export const MOCK_USER_REPORT_UK = {
@@ -23,7 +23,7 @@ export const MOCK_USER_REPORT_UK = {
   label: 'Test UK Report',
   reportId: MOCK_REPORT_ID,
   countryId: 'uk' as const,
-  createdAt: '2024-01-01T00:00:00Z',
+  createdAt: '2024-01-01T12:00:00Z',
 };
 
 export const MOCK_MODEL_VERSION = '1.0.0';

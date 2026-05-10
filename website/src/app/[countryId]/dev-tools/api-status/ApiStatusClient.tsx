@@ -7,7 +7,7 @@ import {
   IconCircleX,
 } from "@tabler/icons-react";
 import { Alert, AlertDescription, AlertTitle, Spinner, Text } from "@/components/ui";
-import { colors, spacing, typography } from "@policyengine/design-system/tokens";
+import { colors, spacing, typography } from "@/designTokens";
 import type {
   DayRecord,
   MonitorData,

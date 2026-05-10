@@ -3,7 +3,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "@/designTokens";
 import TeamMemberCard, { TeamMember } from "./TeamMemberCard";
 
 export interface TeamSectionProps {

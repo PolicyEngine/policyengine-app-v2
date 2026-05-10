@@ -1,5 +1,3 @@
-import { QueryClient } from '@tanstack/react-query';
-
 /**
  * Cache Monitor Utility
  *
@@ -15,6 +13,13 @@ interface CacheMonitorConfig {
   logCacheState: boolean;
 }
 
+interface QueryClientLike {
+  getQueryCache: () => {
+    subscribe: (callback: (event: any) => void) => () => void;
+    getAll: () => any[];
+  };
+}
+
 const defaultConfig: CacheMonitorConfig = {
   enabled: import.meta.env.DEV,
   logFetches: true,
@@ -25,7 +30,7 @@ const defaultConfig: CacheMonitorConfig = {
 
 class CacheMonitor {
   private config: CacheMonitorConfig;
-  private queryClient: QueryClient | null = null;
+  private queryClient: QueryClientLike | null = null;
   private activeQueries = new Map<string, { startTime: number; key: any[] }>();
 
   constructor(config: Partial<CacheMonitorConfig> = {}) {
@@ -36,7 +41,7 @@ class CacheMonitor {
    * Initialize the cache monitor with a QueryClient
    * Sets up event listeners to track cache operations
    */
-  init(queryClient: QueryClient) {
+  init(queryClient: QueryClientLike) {
     if (!this.config.enabled) {
       return;
     }

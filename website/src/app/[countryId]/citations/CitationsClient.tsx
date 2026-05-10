@@ -10,7 +10,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "@/designTokens";
 
 interface Citation {
   /** Headline or title of the citing article */

@@ -6,7 +6,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "@/designTokens";
 
 export interface ActionButtonProps {
   text: string;

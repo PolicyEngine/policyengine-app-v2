@@ -1,5 +1,5 @@
 @import 'tailwindcss' prefix(tw);
-@import "@policyengine/design-system/tokens.css";
+@import "@policyengine/ui-kit/styles.css";
 
 @theme {
   /* Primary brand colors - teal */

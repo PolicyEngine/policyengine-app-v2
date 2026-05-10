@@ -13,7 +13,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "@/designTokens";
 import OptimisedImage from "@/components/ui/OptimisedImage";
 import { useCountryId } from "@/hooks/useCountryId";
 

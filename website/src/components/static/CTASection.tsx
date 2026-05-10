@@ -4,7 +4,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "@/designTokens";
 import ActionButton, { ActionButtonProps } from "./ActionButton";
 
 export interface CTASectionProps {

@@ -8,7 +8,7 @@
  *
  * Ported from app/src/pages/Research.page.tsx with minimal changes:
  *   - react-router Link -> next/link
- *   - @/designTokens -> @policyengine/design-system/tokens
+ *   - design tokens -> website token alias
  *   - useCurrentCountry() -> countryId prop
  *   - useSearchParams from react-router -> from next/navigation
  *   - Uses shadcn Input, Checkbox, Button from @/components/ui
@@ -29,7 +29,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "@/designTokens";
 import {
   Button,
   Checkbox,

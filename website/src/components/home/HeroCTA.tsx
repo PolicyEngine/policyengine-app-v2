@@ -7,7 +7,7 @@ import {
   colors,
   spacing,
   typography,
-} from "@policyengine/design-system/tokens";
+} from "@/designTokens";
 
 const ctaVariant = {
   hidden: { opacity: 0, y: 20 },

@@ -8,15 +8,14 @@
     "calculator-app"
   ],
   "scripts": {
-    "dev": "bun run design-system:build && node scripts/dev-server-next.mjs",
-    "dev:legacy": "bun run design-system:build && bun run --filter=policyengine-app-v2 dev",
+    "dev": "node scripts/dev-server-next.mjs",
+    "dev:legacy": "bun run --filter=policyengine-app-v2 dev",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "typecheck": "turbo run typecheck",
     "check-markdown-drift": "bunx tsx scripts/check-markdown-drift.ts",
-    "design-system:build": "bun run --filter=@policyengine/design-system build",
     "calculator:dev": "bun run --filter=@policyengine/calculator dev",
     "website:dev": "bun run --filter=@policyengine/website dev"
   },
@@ -29,7 +28,7 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
-    "@policyengine/design-system": "^0.1.0",
+    "@policyengine/ui-kit": "^0.4.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^1.3.1",
     "concurrently": "^9.2.1"

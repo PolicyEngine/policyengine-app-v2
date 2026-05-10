@@ -13,7 +13,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.9.3",
-    "@policyengine/design-system": "workspace:*",
+    "@policyengine/ui-kit": "^0.4.0",
     "@normy/react-query": "^0.20.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@tabler/icons-react": "^3.34.0",
