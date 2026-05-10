@@ -56,6 +56,16 @@ const nextConfig: NextConfig = {
         destination: "/us/obbba-household-explorer",
         permanent: true,
       },
+      {
+        source: "/us/california-wealth-tax/embed",
+        destination: "/us/california-wealth-tax",
+        permanent: true,
+      },
+      {
+        source: "/us/california-wealth-tax/embed/:path*",
+        destination: "/us/california-wealth-tax/:path*",
+        permanent: true,
+      },
     ];
   },
 
@@ -98,9 +108,6 @@ const nextConfig: NextConfig = {
         // Model documentation (Vercel)
         { source: "/:countryId/model", destination: "https://policyengine-model-phi.vercel.app/?country=:countryId" },
         { source: "/:countryId/model/:path*", destination: "https://policyengine-model-phi.vercel.app/:path*?country=:countryId" },
-        // California wealth tax calculator embed (Vercel)
-        { source: "/us/california-wealth-tax/embed", destination: "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed" },
-        { source: "/us/california-wealth-tax/embed/:path*", destination: "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed/:path*" },
       ],
     };
   },
