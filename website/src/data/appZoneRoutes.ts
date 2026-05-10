@@ -79,9 +79,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   {
     source: "/us/california-wealth-tax",
     destination:
-      "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed",
-    deepDestination:
-      "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed/:path*",
+      "https://california-wealth-tax.vercel.app/us/california-wealth-tax",
   },
   {
     source: "/uk/uk-land-value-tax",
