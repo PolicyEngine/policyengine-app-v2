@@ -28,4 +28,6 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run app-zone shell audit
+        env:
+          APP_ZONE_ALLOW_DESTINATION_FALLBACK: ${{ github.event_name == 'pull_request' && '1' || '0' }}
         run: node .github/scripts/audit-app-zone-shell.mjs
