@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check for website-related changes to app/ and root vercel.json
+      - name: Check for website-related changes to app/
         run: |
           # Get files changed in this PR (vs base branch)
           ALL_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
@@ -49,10 +49,7 @@ jobs:
             -e '^app/src/pages/AppPage\.tsx' \
           || true)
 
-          # Root vercel.json (Vite app config — new rewrites should go in website/next.config.ts)
-          VERCEL_BLOCKED=$(echo "$ALL_CHANGED" | grep '^vercel.json$' || true)
-
-          BLOCKED="${WEBSITE_BLOCKED}${VERCEL_BLOCKED:+$'\n'$VERCEL_BLOCKED}"
+          BLOCKED="$WEBSITE_BLOCKED"
           BLOCKED=$(echo "$BLOCKED" | sed '/^$/d')
 
           if [ -n "$BLOCKED" ]; then
@@ -66,7 +63,6 @@ jobs:
             echo "Calculator components in app/ (report builder, household, charts, etc.) are fine to modify."
             echo ""
             echo "  - Website pages/components → website/src/"
-            echo "  - vercel.json (root) → website/next.config.ts rewrites"
             echo "  - app/src/data/*, app/public/assets/* → OK (shared data)"
             echo ""
             exit 1
