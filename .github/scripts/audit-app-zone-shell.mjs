@@ -8,7 +8,7 @@
  * opt into destination fallback for newly added rewrites that are not live yet.
  */
 import { readFileSync } from "node:fs";
-import { chromium } from "playwright";
+import { fileURLToPath } from "node:url";
 
 const DEFAULT_BASE_URL = "https://policyengine.org";
 const DEFAULT_ROUTES_FILE = "website/src/data/appZoneRoutes.ts";
@@ -32,9 +32,11 @@ const ERROR_PATTERNS = [
   /Internal Server Error/i,
 ];
 
-const REQUIRED_NAV_LABELS = ["Research", "Model", "API", "Donate"];
+export const REQUIRED_NAV_LABELS = ["Research", "Model", "API", "Donate"];
+const TOP_SHELL_SELECTOR =
+  'header, nav, [data-testid*="header" i], [data-testid*="site-header" i], a, button, img, [aria-label]';
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const options = {};
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -81,7 +83,7 @@ function normalizeSource(source) {
   return resolved;
 }
 
-function extractRoutes(source) {
+export function extractRoutes(source) {
   const routeRegex =
     /\{\s*source:\s*"([^"]+)"[\s\S]*?destination:\s*"([^"]+)"[\s\S]*?\}/g;
   const routes = new Map();
@@ -116,7 +118,7 @@ function isSameOrNestedPath(path, basePath) {
   return path === base || path.startsWith(`${base}/`);
 }
 
-function sourcePathFromSitemapLoc(loc, route, baseUrl) {
+export function sourcePathFromSitemapLoc(loc, route, baseUrl) {
   let locUrl;
   try {
     locUrl = new URL(loc.replaceAll("&amp;", "&"));
@@ -149,20 +151,22 @@ function sourcePathFromSitemapLoc(loc, route, baseUrl) {
   return null;
 }
 
-function resolveDestinationForSource(route, sourcePath, baseUrl) {
+export function resolveDestinationForSource(route, sourcePath, baseUrl) {
   const destinationUrl = new URL(resolveUrl(baseUrl, route.destination));
-  const sourcePathOnly = sourcePath.split(/[?#]/)[0];
+  const sourceUrl = new URL(resolveUrl(baseUrl, sourcePath));
   const routeSourceBase = trimTrailingPath(route.source);
   const suffix =
     routeSourceBase === "/"
-      ? sourcePathOnly
-      : sourcePathOnly.slice(routeSourceBase.length);
+      ? sourceUrl.pathname
+      : sourceUrl.pathname.slice(routeSourceBase.length);
 
   destinationUrl.pathname = joinPaths(destinationUrl.pathname, suffix);
+  destinationUrl.search = sourceUrl.search;
+  destinationUrl.hash = sourceUrl.hash;
   return destinationUrl.toString();
 }
 
-function extractSitemapLocs(xml) {
+export function extractSitemapLocs(xml) {
   const locs = [];
   const locRegex = /<loc>\s*([^<]+?)\s*<\/loc>/gi;
   let match;
@@ -266,45 +270,66 @@ function hasErrorText(bodyText) {
   return ERROR_PATTERNS.find((pattern) => pattern.test(bodyText));
 }
 
-async function inspectTopShell(page) {
-  return page.evaluate((requiredNavLabels) => {
-    const topLimit = 140;
-    const parts = [];
-    const candidates = Array.from(
-      document.querySelectorAll(
-        'header, nav, [data-testid*="header" i], [data-testid*="site-header" i], a, button, img, [aria-label]',
-      ),
-    );
+export function inspectTopShellData(
+  elements,
+  requiredNavLabels = REQUIRED_NAV_LABELS,
+  topLimit = 140,
+) {
+  const parts = [];
 
-    for (const element of candidates) {
+  for (const element of elements) {
+    const { rect, style } = element;
+
+    if (
+      rect.width <= 0 ||
+      rect.height <= 0 ||
+      rect.bottom < 0 ||
+      rect.top > topLimit ||
+      style.display === "none" ||
+      style.visibility === "hidden" ||
+      style.opacity === "0"
+    ) {
+      continue;
+    }
+
+    parts.push(element.textContent ?? "", element.ariaLabel ?? "", element.alt ?? "");
+  }
+
+  const text = parts.join("\n").replace(/\s+/g, " ").trim();
+  return {
+    hasBrand: /\bPolicyEngine\b/i.test(text),
+    navHits: requiredNavLabels.filter((label) => text.includes(label)),
+  };
+}
+
+async function inspectTopShell(page) {
+  const elements = await page.evaluate((selector) => {
+    const candidates = Array.from(document.querySelectorAll(selector));
+
+    return candidates.map((element) => {
       const rect = element.getBoundingClientRect();
       const style = window.getComputedStyle(element);
 
-      if (
-        rect.width <= 0 ||
-        rect.height <= 0 ||
-        rect.bottom < 0 ||
-        rect.top > topLimit ||
-        style.display === "none" ||
-        style.visibility === "hidden" ||
-        style.opacity === "0"
-      ) {
-        continue;
-      }
+      return {
+        textContent: element.textContent ?? "",
+        ariaLabel: element.getAttribute("aria-label") ?? "",
+        alt: element.getAttribute("alt") ?? "",
+        rect: {
+          width: rect.width,
+          height: rect.height,
+          top: rect.top,
+          bottom: rect.bottom,
+        },
+        style: {
+          display: style.display,
+          visibility: style.visibility,
+          opacity: style.opacity,
+        },
+      };
+    });
+  }, TOP_SHELL_SELECTOR);
 
-      parts.push(
-        element.textContent ?? "",
-        element.getAttribute("aria-label") ?? "",
-        element.getAttribute("alt") ?? "",
-      );
-    }
-
-    const text = parts.join("\n").replace(/\s+/g, " ").trim();
-    return {
-      hasBrand: /\bPolicyEngine\b/i.test(text),
-      navHits: requiredNavLabels.filter((label) => text.includes(label)),
-    };
-  }, REQUIRED_NAV_LABELS);
+  return inspectTopShellData(elements);
 }
 
 async function inspectShell(page, url, timeout) {
@@ -410,84 +435,104 @@ async function runWithConcurrency(items, concurrency, worker) {
   return results;
 }
 
-const args = parseArgs(process.argv.slice(2));
-const routesFile = args["routes-file"] ?? DEFAULT_ROUTES_FILE;
-const baseUrl =
-  args["base-url"] ?? process.env.APP_ZONE_SHELL_AUDIT_BASE_URL ?? DEFAULT_BASE_URL;
-const concurrency = Number(args.concurrency ?? DEFAULT_CONCURRENCY);
-const timeout = Number(args.timeout ?? DEFAULT_TIMEOUT_MS);
-const maxSitemapRoutes = Number(
-  args["max-sitemap-routes"] ?? DEFAULT_MAX_SITEMAP_ROUTES,
-);
-const allowDestinationFallback =
-  args["allow-destination-fallback"] === true ||
-  process.env.APP_ZONE_ALLOW_DESTINATION_FALLBACK === "1" ||
-  process.env.GITHUB_EVENT_NAME === "pull_request";
-
-const routeSource = readFileSync(routesFile, "utf8");
-const baseRoutes = extractRoutes(routeSource);
-
-if (baseRoutes.length === 0) {
-  console.log(`No app-zone routes found in ${routesFile}`);
-  process.exit(0);
-}
-
-const routes = await expandRoutesWithSitemaps(
-  baseRoutes,
-  baseUrl,
-  timeout,
-  concurrency,
-  allowDestinationFallback,
-  maxSitemapRoutes,
-);
-
-console.log(`Auditing ${routes.length} app-zone route(s) for PolicyEngine shell.`);
-console.log(`Base URL: ${baseUrl}\n`);
-if (routes.length > baseRoutes.length) {
-  console.log(
-    `Expanded ${baseRoutes.length} configured route(s) with ${routes.length - baseRoutes.length} sitemap subroute(s).\n`,
+export function shouldAllowDestinationFallback(args, env = process.env) {
+  return (
+    args["allow-destination-fallback"] === true ||
+    env.APP_ZONE_ALLOW_DESTINATION_FALLBACK === "1" ||
+    env.GITHUB_EVENT_NAME === "pull_request"
   );
 }
 
-const browser = await chromium.launch();
-const results = await runWithConcurrency(routes, concurrency, async (route) => {
-  const result = await auditRoute(
-    browser,
-    route,
+export async function main(argv = process.argv.slice(2), env = process.env) {
+  const args = parseArgs(argv);
+  const routesFile = args["routes-file"] ?? DEFAULT_ROUTES_FILE;
+  const baseUrl =
+    args["base-url"] ?? env.APP_ZONE_SHELL_AUDIT_BASE_URL ?? DEFAULT_BASE_URL;
+  const concurrency = Number(args.concurrency ?? DEFAULT_CONCURRENCY);
+  const timeout = Number(args.timeout ?? DEFAULT_TIMEOUT_MS);
+  const maxSitemapRoutes = Number(
+    args["max-sitemap-routes"] ?? DEFAULT_MAX_SITEMAP_ROUTES,
+  );
+  const allowDestinationFallback = shouldAllowDestinationFallback(args, env);
+
+  const routeSource = readFileSync(routesFile, "utf8");
+  const baseRoutes = extractRoutes(routeSource);
+
+  if (baseRoutes.length === 0) {
+    console.log(`No app-zone routes found in ${routesFile}`);
+    return 0;
+  }
+
+  const routes = await expandRoutesWithSitemaps(
+    baseRoutes,
     baseUrl,
     timeout,
+    concurrency,
     allowDestinationFallback,
+    maxSitemapRoutes,
   );
-  const mark = result.ok ? "OK" : "FAIL";
-  console.log(`${mark} ${result.source}`);
-  console.log(`    ${result.reason}`);
-  if (result.usedFallback) {
-    console.log("    tested destination directly because source returned 404");
-  }
-  if (result.discoveredFromSitemap) {
-    console.log(`    discovered from ${result.discoveredFromSitemap}`);
-  }
-  if (result.testedUrl !== result.sourceUrl) {
-    console.log(`    tested ${result.testedUrl}`);
-  }
-  return result;
-});
-await browser.close();
 
-const failures = results.filter((result) => !result.ok);
-console.log(`\n${results.length - failures.length}/${results.length} app-zone routes have the PolicyEngine shell.`);
-
-if (failures.length > 0) {
-  console.error("\nRoutes missing the PolicyEngine shell:");
-  for (const failure of failures) {
-    console.error(`  - ${failure.source}: ${failure.reason}`);
-    console.error(`    source: ${failure.sourceUrl}`);
-    console.error(`    destination: ${failure.destination}`);
+  console.log(`Auditing ${routes.length} app-zone route(s) for PolicyEngine shell.`);
+  console.log(`Base URL: ${baseUrl}\n`);
+  if (routes.length > baseRoutes.length) {
+    console.log(
+      `Expanded ${baseRoutes.length} configured route(s) with ${routes.length - baseRoutes.length} sitemap subroute(s).\n`,
+    );
   }
-  console.error("\nChild apps served through policyengine.org should render the");
-  console.error("PolicyEngine header/nav themselves. Multizone rewrites do not");
-  console.error("inject the parent app shell into the child response.");
-  process.exit(1);
+
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch();
+  const results = await runWithConcurrency(routes, concurrency, async (route) => {
+    const result = await auditRoute(
+      browser,
+      route,
+      baseUrl,
+      timeout,
+      allowDestinationFallback,
+    );
+    const mark = result.ok ? "OK" : "FAIL";
+    console.log(`${mark} ${result.source}`);
+    console.log(`    ${result.reason}`);
+    if (result.usedFallback) {
+      console.log("    tested destination directly because source returned 404");
+    }
+    if (result.discoveredFromSitemap) {
+      console.log(`    discovered from ${result.discoveredFromSitemap}`);
+    }
+    if (result.testedUrl !== result.sourceUrl) {
+      console.log(`    tested ${result.testedUrl}`);
+    }
+    return result;
+  });
+  await browser.close();
+
+  const failures = results.filter((result) => !result.ok);
+  console.log(`\n${results.length - failures.length}/${results.length} app-zone routes have the PolicyEngine shell.`);
+
+  if (failures.length > 0) {
+    console.error("\nRoutes missing the PolicyEngine shell:");
+    for (const failure of failures) {
+      console.error(`  - ${failure.source}: ${failure.reason}`);
+      console.error(`    source: ${failure.sourceUrl}`);
+      console.error(`    destination: ${failure.destination}`);
+    }
+    console.error("\nChild apps served through policyengine.org should render the");
+    console.error("PolicyEngine header/nav themselves. Multizone rewrites do not");
+    console.error("inject the parent app shell into the child response.");
+    return 1;
+  }
+
+  console.log("\nAll audited app-zone routes render the PolicyEngine shell.");
+  return 0;
 }
 
-console.log("\nAll audited app-zone routes render the PolicyEngine shell.");
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main()
+    .then((exitCode) => {
+      process.exitCode = exitCode;
+    })
+    .catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+}

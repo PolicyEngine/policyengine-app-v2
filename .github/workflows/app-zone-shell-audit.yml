@@ -5,6 +5,7 @@ on:
     paths:
       - "website/src/data/appZoneRoutes.ts"
       - ".github/scripts/audit-app-zone-shell.mjs"
+      - ".github/scripts/audit-app-zone-shell.test.mjs"
       - ".github/workflows/app-zone-shell-audit.yml"
   workflow_dispatch:
   schedule:
@@ -20,6 +21,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Run app-zone audit unit tests
+        run: node --test .github/scripts/audit-app-zone-shell.test.mjs
 
       - name: Install Playwright
         run: npm install --no-save playwright
