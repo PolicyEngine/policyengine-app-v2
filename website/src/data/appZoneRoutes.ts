@@ -186,7 +186,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   {
     source: "/us/2024-election-calculator",
     destination:
-      "https://2024-election-dashboard.vercel.app/us/2024-election-calculator",
+      "https://2024-election-dashboard-omega.vercel.app/us/2024-election-calculator",
   },
   {
     source: "/us/obbba-household-explorer",
