@@ -90,8 +90,12 @@ export function extractRoutes(source) {
   let match;
 
   while ((match = routeRegex.exec(source)) !== null) {
+    const routeBlock = match[0];
     const sourcePath = normalizeSource(match[1]);
     const destination = match[2];
+    const deepDestination = routeBlock.match(
+      /deepDestination:\s*"([^"]+)"/,
+    )?.[1];
     if (!sourcePath) continue;
     if (SKIP_IF_DESTINATION_CONTAINS.some((part) => destination.includes(part))) {
       continue;
@@ -100,6 +104,7 @@ export function extractRoutes(source) {
     routes.set(sourcePath, {
       source: sourcePath,
       destination,
+      ...(deepDestination ? { deepDestination } : {}),
     });
   }
 
@@ -118,6 +123,52 @@ function isSameOrNestedPath(path, basePath) {
   return path === base || path.startsWith(`${base}/`);
 }
 
+function templateBasePath(pathname) {
+  const markerIndex = pathname.indexOf("/:path*");
+  if (markerIndex === -1) return trimTrailingPath(pathname);
+  return trimTrailingPath(pathname.slice(0, markerIndex));
+}
+
+function pathSuffix(path, basePath) {
+  const base = trimTrailingPath(basePath);
+  if (base === "/") return path;
+  return path.slice(base.length);
+}
+
+function searchWithoutTemplateParams(locUrl, templateUrl) {
+  const searchParams = new URLSearchParams(locUrl.search);
+
+  for (const [key, value] of templateUrl.searchParams) {
+    const values = searchParams.getAll(key);
+    let removedTemplateValue = false;
+    searchParams.delete(key);
+
+    for (const candidate of values) {
+      if (!removedTemplateValue && candidate === value) {
+        removedTemplateValue = true;
+        continue;
+      }
+      searchParams.append(key, candidate);
+    }
+  }
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : "";
+}
+
+function sourcePathFromDestinationUrl(locUrl, destinationUrl, route, basePath) {
+  if (
+    locUrl.origin !== destinationUrl.origin ||
+    !isSameOrNestedPath(locUrl.pathname, basePath)
+  ) {
+    return null;
+  }
+
+  const suffix = pathSuffix(locUrl.pathname, basePath);
+  const search = searchWithoutTemplateParams(locUrl, destinationUrl);
+  return `${trimTrailingPath(route.source)}${suffix}${search}${locUrl.hash}`;
+}
+
 export function sourcePathFromSitemapLoc(loc, route, baseUrl) {
   let locUrl;
   try {
@@ -128,6 +179,9 @@ export function sourcePathFromSitemapLoc(loc, route, baseUrl) {
 
   const sourceUrl = new URL(resolveUrl(baseUrl, route.source));
   const destinationUrl = new URL(resolveUrl(baseUrl, route.destination));
+  const deepDestinationUrl = route.deepDestination
+    ? new URL(resolveUrl(baseUrl, route.deepDestination))
+    : null;
 
   if (
     locUrl.origin === sourceUrl.origin &&
@@ -136,32 +190,57 @@ export function sourcePathFromSitemapLoc(loc, route, baseUrl) {
     return `${locUrl.pathname}${locUrl.search}${locUrl.hash}`;
   }
 
-  if (
-    locUrl.origin === destinationUrl.origin &&
-    isSameOrNestedPath(locUrl.pathname, destinationUrl.pathname)
-  ) {
-    const destinationBasePath = trimTrailingPath(destinationUrl.pathname);
-    const suffix =
-      destinationBasePath === "/"
-        ? locUrl.pathname
-        : locUrl.pathname.slice(destinationBasePath.length);
-    return `${trimTrailingPath(route.source)}${suffix}${locUrl.search}${locUrl.hash}`;
+  const sourceFromBaseDestination = sourcePathFromDestinationUrl(
+    locUrl,
+    destinationUrl,
+    route,
+    trimTrailingPath(destinationUrl.pathname),
+  );
+  if (sourceFromBaseDestination) return sourceFromBaseDestination;
+
+  if (deepDestinationUrl) {
+    const sourceFromDeepDestination = sourcePathFromDestinationUrl(
+      locUrl,
+      deepDestinationUrl,
+      route,
+      templateBasePath(deepDestinationUrl.pathname),
+    );
+    if (sourceFromDeepDestination) return sourceFromDeepDestination;
   }
 
   return null;
 }
 
+function mergeSourceSearch(destinationUrl, sourceUrl) {
+  for (const [key, value] of sourceUrl.searchParams) {
+    destinationUrl.searchParams.append(key, value);
+  }
+}
+
 export function resolveDestinationForSource(route, sourcePath, baseUrl) {
-  const destinationUrl = new URL(resolveUrl(baseUrl, route.destination));
   const sourceUrl = new URL(resolveUrl(baseUrl, sourcePath));
   const routeSourceBase = trimTrailingPath(route.source);
   const suffix =
     routeSourceBase === "/"
       ? sourceUrl.pathname
-      : sourceUrl.pathname.slice(routeSourceBase.length);
+      : pathSuffix(sourceUrl.pathname, routeSourceBase);
 
-  destinationUrl.pathname = joinPaths(destinationUrl.pathname, suffix);
-  destinationUrl.search = sourceUrl.search;
+  const destinationTemplate =
+    suffix && route.deepDestination ? route.deepDestination : route.destination;
+  const destinationUrl = new URL(resolveUrl(baseUrl, destinationTemplate));
+
+  if (suffix) {
+    if (destinationUrl.pathname.includes("/:path*")) {
+      destinationUrl.pathname = destinationUrl.pathname.replace(
+        ":path*",
+        suffix.replace(/^\/+/, ""),
+      );
+    } else {
+      destinationUrl.pathname = joinPaths(destinationUrl.pathname, suffix);
+    }
+  }
+
+  mergeSourceSearch(destinationUrl, sourceUrl);
   destinationUrl.hash = sourceUrl.hash;
   return destinationUrl.toString();
 }
