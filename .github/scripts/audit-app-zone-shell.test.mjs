@@ -34,6 +34,11 @@ describe("extractRoutes", () => {
       { source: "/:countryId/marriage", destination: "https://marriage.example.com" },
       { source: "/us/salternative", destination: "https://salt.example.com/us/salternative" },
       { source: "/us/salternative", destination: "https://new-salt.example.com/us/salternative" },
+      {
+        source: "/us/pe84",
+        destination: "https://pe84.example.com/us/pe84/calculator",
+        deepDestination: "https://pe84.example.com/us/pe84/:path*",
+      },
       { source: "/api/:path*", destination: "https://api.example.com/:path*" },
       { source: "/us/_zones/foo", destination: "https://example.com/_zones/foo" },
       { source: "/us/:slug", destination: "https://example.com/:slug" },
@@ -43,6 +48,11 @@ describe("extractRoutes", () => {
       {
         source: "/us/marriage",
         destination: "https://marriage.example.com",
+      },
+      {
+        source: "/us/pe84",
+        destination: "https://pe84.example.com/us/pe84/calculator",
+        deepDestination: "https://pe84.example.com/us/pe84/:path*",
       },
       {
         source: "/us/salternative",
@@ -99,6 +109,65 @@ describe("sitemap route mapping", () => {
         "https://policyengine.org",
       ),
       "https://wptra.vercel.app/us/working-parents-tax-relief-act/calculator?tab=policy#aggregate",
+    );
+  });
+
+  test("uses custom deepDestination templates for PR fallback URLs", () => {
+    const pe84Route = {
+      source: "/us/pe84",
+      destination: "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
+      deepDestination: "https://april-fools-2026-two.vercel.app/us/pe84/:path*",
+    };
+
+    assert.equal(
+      sourcePathFromSitemapLoc(
+        "https://april-fools-2026-two.vercel.app/us/pe84/savings?view=chart#result",
+        pe84Route,
+        "https://policyengine.org",
+      ),
+      "/us/pe84/savings?view=chart#result",
+    );
+    assert.equal(
+      resolveDestinationForSource(
+        pe84Route,
+        "/us/pe84/savings?view=chart#result",
+        "https://policyengine.org",
+      ),
+      "https://april-fools-2026-two.vercel.app/us/pe84/savings?view=chart#result",
+    );
+    assert.equal(
+      resolveDestinationForSource(
+        pe84Route,
+        "/us/pe84",
+        "https://policyengine.org",
+      ),
+      "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
+    );
+  });
+
+  test("preserves static destination query params without leaking them into source paths", () => {
+    const ukMarriageRoute = {
+      source: "/uk/marriage",
+      destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
+      deepDestination:
+        "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
+    };
+
+    assert.equal(
+      sourcePathFromSitemapLoc(
+        "https://marriage-zeta-beryl.vercel.app/us/marriage/couples?country=uk&tab=chart#summary",
+        ukMarriageRoute,
+        "https://policyengine.org",
+      ),
+      "/uk/marriage/couples?tab=chart#summary",
+    );
+    assert.equal(
+      resolveDestinationForSource(
+        ukMarriageRoute,
+        "/uk/marriage/couples?tab=chart#summary",
+        "https://policyengine.org",
+      ),
+      "https://marriage-zeta-beryl.vercel.app/us/marriage/couples?country=uk&tab=chart#summary",
     );
   });
 });
