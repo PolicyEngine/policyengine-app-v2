@@ -1,9 +1,4 @@
-import {
-  IconBookmark,
-  IconCode,
-  IconMessageCircle,
-  IconSettings,
-} from '@tabler/icons-react';
+import { IconBookmark, IconCode, IconMessageCircle, IconSettings } from '@tabler/icons-react';
 import { Group } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

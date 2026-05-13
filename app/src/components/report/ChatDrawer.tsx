@@ -17,7 +17,7 @@ interface ChatDrawerProps {
 }
 
 const CHAT_ORIGIN =
-  import.meta.env.VITE_UK_CHAT_ORIGIN || 'https://policyengine-uk-chat.vercel.app';
+  process.env.NEXT_PUBLIC_UK_CHAT_ORIGIN || 'https://policyengine-uk-chat.vercel.app';
 
 function buildChatUrl(scenarioContext: string): string {
   const params = new URLSearchParams({ scenario_context: scenarioContext });
