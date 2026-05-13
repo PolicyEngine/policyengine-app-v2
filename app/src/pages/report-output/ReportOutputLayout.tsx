@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { IconCalendar, IconClock } from '@tabler/icons-react';
 import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
+import { ChatDrawer } from '@/components/report/ChatDrawer';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { Container, Group, Stack, Text, Title } from '@/components/ui';
@@ -19,6 +21,10 @@ interface ReportOutputLayoutProps {
   onSave?: () => void;
   onView?: () => void;
   onReproduce?: () => void;
+  /** Plain-English summary of the scenario and headline figures shown in
+   *  this report. When provided, an "Ask a follow-up" button opens a chat
+   *  drawer seeded with this context. Omit to hide the button entirely. */
+  chatScenarioContext?: string;
   children: React.ReactNode;
 }
 
@@ -46,8 +52,10 @@ export default function ReportOutputLayout({
   onSave,
   onView,
   onReproduce,
+  chatScenarioContext,
   children,
 }: ReportOutputLayoutProps) {
+  const [chatOpen, setChatOpen] = useState(false);
   return (
     <Container size="xl" className="tw:px-xl">
       <Stack className="tw:gap-xl">
@@ -85,6 +93,7 @@ export default function ReportOutputLayout({
               onSave={onSave}
               onView={onView}
               onReproduce={onReproduce}
+              onAskFollowUp={chatScenarioContext ? () => setChatOpen(true) : undefined}
             />
           </Group>
 
@@ -116,6 +125,13 @@ export default function ReportOutputLayout({
         {/* Content */}
         {children}
       </Stack>
+      {chatScenarioContext && (
+        <ChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          scenarioContext={chatScenarioContext}
+        />
+      )}
     </Container>
   );
 }
