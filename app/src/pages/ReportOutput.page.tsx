@@ -301,6 +301,26 @@ export default function ReportOutputPage({
     (window as any).__journeyProfiler?.markEvent('report-output-ready', 'render');
   }
 
+  // Compose the scenario context the chat drawer will pass to uk-chat. Only
+  // built for UK reports since the chat backend doesn't model US policy.
+  // Kept lean for v1 — just the identifying facts. Headline numbers are not
+  // included yet; the chat re-computes on demand.
+  const chatScenarioContext =
+    countryId === 'uk' && report
+      ? [
+          'The user is viewing a PolicyEngine report.',
+          `Country: UK`,
+          report.year ? `Year: ${report.year}` : null,
+          displayLabel ? `Report label: ${displayLabel}` : null,
+          versionMetadata?.modelVersion ? `Model version: ${versionMetadata.modelVersion}` : null,
+          versionMetadata?.dataVersion ? `Data version: ${versionMetadata.dataVersion}` : null,
+          '',
+          "Use this as background for the user's follow-up question. If they ask about figures already shown in the report, quote them; otherwise run a fresh simulation against the same year and country.",
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : undefined;
+
   return (
     <ReportYearProvider year={report?.year ?? null}>
       {saveResult && (
@@ -330,6 +350,7 @@ export default function ReportOutputPage({
         onSave={handleSave}
         onView={handleView}
         onReproduce={handleReproduce}
+        chatScenarioContext={chatScenarioContext}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (
