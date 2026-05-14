@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Add West Virginia SB 392 income tax cut calculator at /us/wv-sb392-tax-cut
+      - Add Missouri income tax elimination calculator at /us/missouri-income-tax-elimination
