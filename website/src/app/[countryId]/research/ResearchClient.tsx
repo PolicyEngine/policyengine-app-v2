@@ -419,6 +419,13 @@ function FilterSection({
         backgroundColor: isExpanded ? "rgba(230, 255, 250, 0.3)" : colors.white,
         transition: "border-color 0.2s ease, background-color 0.2s ease",
         overflow: "hidden",
+        // Collapsed sections must keep their full header height when a sibling
+        // section expands — the parent flex column has `maxHeight: availableHeight;
+        // overflow: hidden`, and the default `flex-shrink: 1` would otherwise
+        // squish the headers down (visible bug: clicking "Author" shrinks the
+        // "Type" / "Topic" / "Location" headers because the expanded Author panel
+        // takes most of the available column height).
+        flexShrink: 0,
       }}
     >
       <button
