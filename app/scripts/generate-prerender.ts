@@ -343,6 +343,7 @@ function generateHtmlPage(
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${safeTitle} | PolicyEngine</title>
   <meta name="description" content="${safeDescription}" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="canonical" href="${canonicalUrl}" />
 
   <!-- Open Graph -->

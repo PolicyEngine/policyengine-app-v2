@@ -66,7 +66,7 @@ The reform will increase Universal Credit or Child Tax Credit payments for affec
       {
         "sizex": 0.15,
         "sizey": 0.15,
-        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
+        "source": "/assets/logos/policyengine/teal.png",
         "x": 1.1,
         "xanchor": "right",
         "xref": "paper",
@@ -157,7 +157,7 @@ By income decile, removing the two-child limit will provide the largest relative
     }],
     "images": [
       {
-        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
+        "source": "/assets/logos/policyengine/teal.png",
         "x": 1,
         "y": -0.15,
         "xref": "paper",
@@ -272,7 +272,7 @@ Figure 3 shows the absolute change in household income (in £ per year) by incom
     }],
     "images": [
       {
-        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
+        "source": "/assets/logos/policyengine/teal.png",
         "x": 1,
         "y": -0.15,
         "xref": "paper",
@@ -443,7 +443,7 @@ Figure 4 [shows](https://gist.github.com/vahid-ahmadi/0a9613b9857d03a50c71bbb8c1
     }],
     "images": [
       {
-        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
+        "source": "/assets/logos/policyengine/teal.png",
         "x": 1,
         "y": -0.22,
         "xref": "paper",
