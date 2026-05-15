@@ -34,7 +34,14 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
 
   return (
     <Wrapper {...(wrapperProps as any)} className="tw:no-underline tw:text-inherit tw:group">
-      <div className="tw:flex tw:flex-col tw:h-full tw:rounded-xl tw:overflow-hidden tw:bg-white tw:transition-all tw:duration-300 tw:ease-out tw:border tw:border-gray-200 tw:hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] tw:hover:border-gray-300 tw:hover:-translate-y-0.5">
+      <div
+        className="tw:flex tw:flex-col tw:h-full tw:rounded-xl tw:overflow-hidden tw:transition-all tw:duration-300 tw:ease-out tw:hover:shadow-lg tw:hover:-translate-y-0.5"
+        style={{
+          backgroundColor: colors.background.elevated,
+          border: `1px solid ${colors.border.light}`,
+          boxShadow: `0 1px 2px ${colors.shadow.light}`,
+        }}
+      >
         {/* Image */}
         <div className="tw:relative tw:h-[260px] tw:overflow-hidden tw:bg-gray-100">
           {item.image && (
@@ -81,7 +88,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
               fontSize: '11px',
               fontFamily: typography.fontFamily.primary,
               fontWeight: typography.fontWeight.medium,
-              color: colors.gray[500],
+              color: colors.text.tertiary,
               letterSpacing: '0.03em',
               textTransform: 'uppercase',
             }}
@@ -91,7 +98,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
                 <span key={tag} style={{ display: 'inline-flex', alignItems: 'center' }}>
                   {tag}
                   {i < displayTags.length - 1 && (
-                    <span style={{ margin: '0 8px', color: colors.gray[400], fontSize: '9px' }}>
+                    <span style={{ margin: '0 8px', color: colors.border.medium, fontSize: '9px' }}>
                       ●
                     </span>
                   )}
@@ -107,7 +114,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
               fontWeight: typography.fontWeight.semibold,
               fontSize: '15.5px',
               lineHeight: '1.4',
-              color: colors.secondary[900],
+              color: colors.text.primary,
               marginBottom: '8px',
               fontFamily: typography.fontFamily.primary,
               display: '-webkit-box',
@@ -144,7 +151,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
               justifyContent: 'flex-end',
               gap: '4px',
               marginTop: '12px',
-              color: colors.primary[600],
+              color: colors.text.link,
               fontFamily: typography.fontFamily.primary,
               fontWeight: typography.fontWeight.medium,
               fontSize: '13.5px',

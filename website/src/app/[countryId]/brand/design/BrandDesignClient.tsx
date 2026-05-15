@@ -14,12 +14,13 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui";
 import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui";
+import { colors, spacing, typography } from "@/designTokens";
 
 const colorTokens = [
   {
@@ -93,34 +94,34 @@ function ColorSwatch({
 
   return (
     <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="tw:bg-transparent tw:border tw:border-border-light tw:rounded-container tw:overflow-hidden tw:cursor-pointer tw:p-0 tw:transition-all tw:duration-150 tw:hover:-translate-y-0.5 tw:hover:shadow-md"
-        >
-          <div
-            className="tw:h-20"
-            style={{
-              background: value,
-              borderBottom: isLight
-                ? `1px solid ${colors.border.light}`
-                : "none",
-            }}
-          />
-          <div className="tw:p-md tw:text-left">
-            <p className="tw:font-mono tw:text-sm tw:text-text-primary tw:mb-xs">
-              {label}
-            </p>
-            <p className="tw:font-mono tw:text-xs tw:text-text-tertiary">
-              {value}
-            </p>
-          </div>
-        </button>
-      </TooltipTrigger>
-      <TooltipContent>{copied ? "Copied!" : "Click to copy"}</TooltipContent>
-    </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="tw:bg-transparent tw:border tw:border-border-light tw:rounded-container tw:overflow-hidden tw:cursor-pointer tw:p-0 tw:transition-all tw:duration-150 tw:hover:-translate-y-0.5 tw:hover:shadow-md"
+          >
+            <div
+              className="tw:h-20"
+              style={{
+                background: value,
+                borderBottom: isLight
+                  ? `1px solid ${colors.border.light}`
+                  : "none",
+              }}
+            />
+            <div className="tw:p-md tw:text-left">
+              <p className="tw:font-mono tw:text-sm tw:text-text-primary tw:mb-xs">
+                {label}
+              </p>
+              <p className="tw:font-mono tw:text-xs tw:text-text-tertiary">
+                {value}
+              </p>
+            </div>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{copied ? "Copied!" : "Click to copy"}</TooltipContent>
+      </Tooltip>
     </TooltipProvider>
   );
 }
@@ -153,7 +154,7 @@ export default function BrandDesignClient() {
       <div
         className="tw:py-4xl tw:border-b tw:border-border-dark"
         style={{
-          backgroundColor: colors.primary[50],
+          backgroundColor: colors.background.accent,
           paddingLeft: "6.125%",
           paddingRight: "6.125%",
         }}
@@ -296,9 +297,7 @@ export default function BrandDesignClient() {
               Tabler Icons
             </a>
             . Import from{" "}
-            <code className="tw:font-mono tw:text-sm">
-              @tabler/icons-react
-            </code>
+            <code className="tw:font-mono tw:text-sm">@tabler/icons-react</code>
             .
           </p>
 

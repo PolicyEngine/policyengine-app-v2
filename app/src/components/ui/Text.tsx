@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 // Mantine color aliases — "dimmed" was the most common
 const COLOR_ALIASES: Record<string, string> = {
-  dimmed: '#9CA3AF',
+  dimmed: 'var(--tw-color-text-tertiary)',
 };
 
 const textVariants = cva('', {

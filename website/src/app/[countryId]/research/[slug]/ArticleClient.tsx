@@ -25,11 +25,7 @@ import {
 } from "@/data/posts/postTransformers";
 import { extractMarkdownFromNotebook } from "@/lib/notebookUtils";
 import authorsData from "@/data/posts/authors.json";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 const authors = authorsData as AuthorsCollection;
 
@@ -90,7 +86,7 @@ export default function ArticleClient({
   return (
     <>
       {/* Header section */}
-      <div style={{ backgroundColor: colors.gray[50] }}>
+      <div style={{ backgroundColor: colors.background.secondary }}>
         <Container
           size="xl"
           style={{
@@ -166,7 +162,7 @@ function PostHeading({
           <Text
             size="md"
             className="tw:uppercase"
-            style={{ letterSpacing: "0.05em", color: colors.gray[500] }}
+            style={{ letterSpacing: "0.05em", color: colors.text.tertiary }}
           >
             {readingTime}
           </Text>
@@ -193,7 +189,7 @@ function PostHeading({
             style={{
               marginTop: spacing["3xl"],
               fontSize: typography.fontSize.xl,
-              color: colors.gray[500],
+              color: colors.text.secondary,
             }}
           >
             {post.description}
@@ -239,7 +235,7 @@ function PostHeading({
       <Text
         size="lg"
         className="tw:mb-lg"
-        style={{ color: colors.gray[500] }}
+        style={{ color: colors.text.secondary }}
       >
         {post.description}
       </Text>
@@ -265,7 +261,7 @@ function PostHeading({
         <Text
           size="md"
           className="tw:uppercase"
-          style={{ letterSpacing: "0.05em", color: colors.gray[500] }}
+          style={{ letterSpacing: "0.05em", color: colors.text.tertiary }}
         >
           {readingTime}
         </Text>
@@ -327,7 +323,7 @@ function PostBody({
               size="sm"
               fw={typography.fontWeight.semibold}
               className="tw:uppercase tw:mb-xs"
-              style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+              style={{ letterSpacing: "0.1em", color: colors.text.link }}
             >
               Contents
             </Text>
@@ -362,7 +358,7 @@ function PostBody({
               size="sm"
               fw={typography.fontWeight.semibold}
               className="tw:uppercase tw:mb-xs"
-              style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+              style={{ letterSpacing: "0.1em", color: colors.text.link }}
             >
               Contents
             </Text>
@@ -387,7 +383,7 @@ function PostBody({
           size="sm"
           fw={typography.fontWeight.semibold}
           className="tw:uppercase tw:mb-xs"
-          style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+          style={{ letterSpacing: "0.1em", color: colors.text.link }}
         >
           Contents
         </Text>
@@ -418,7 +414,7 @@ function Authorship({
       <Link
         href={`/${countryId}/research?authors=${id}`}
         style={{
-          color: colors.primary[600],
+          color: colors.text.link,
           textDecoration: "none",
         }}
       >
@@ -511,14 +507,14 @@ function AuthorSection({
                 <Link
                   href={`/${countryId}/research?authors=${authorId}`}
                   style={{
-                    color: colors.primary[600],
+                    color: colors.text.link,
                     textDecoration: "none",
                   }}
                 >
                   {formatAuthorName(authorId)}
                 </Link>
               </Text>
-              <Text size="xs" style={{ color: colors.gray[500] }}>
+              <Text size="xs" style={{ color: colors.text.tertiary }}>
                 {author.title}
               </Text>
             </div>
@@ -547,7 +543,7 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
           <Link
             href={`/${countryId}/research?${isLocation ? "locations" : "topics"}=${tag}`}
             style={{
-              color: colors.gray[700],
+              color: colors.text.secondary,
               textDecoration: "none",
               fontSize: typography.fontSize.base,
               transition: "color 0.2s ease",
@@ -555,10 +551,10 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
               padding: "2px 0",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = colors.primary[600];
+              e.currentTarget.style.color = colors.text.link;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = colors.gray[700];
+              e.currentTarget.style.color = colors.text.secondary;
             }}
           >
             {label}
@@ -575,7 +571,7 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
         size="sm"
         fw={typography.fontWeight.semibold}
         className="tw:uppercase tw:mb-xs"
-        style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+        style={{ letterSpacing: "0.1em", color: colors.text.link }}
       >
         More on
       </Text>
@@ -591,8 +587,7 @@ function ShareLinks({
   post: BlogPost;
   displayCategory: string;
 }) {
-  const currentUrl =
-    typeof window !== "undefined" ? window.location.href : "";
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
   const desktop = displayCategory === "desktop";
 
   const links = [
@@ -646,7 +641,7 @@ function ShareLinks({
             display: "flex",
             alignItems: "center",
             gap: spacing.sm,
-            color: colors.gray[600],
+            color: colors.text.secondary,
             textDecoration: "none",
             fontSize: typography.fontSize.xs,
           }}
@@ -659,11 +654,9 @@ function ShareLinks({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: desktop ? colors.gray[500] : "transparent",
-              color: desktop ? colors.white : colors.gray[600],
-              border: desktop
-                ? "none"
-                : `1px solid ${colors.gray[400]}`,
+              backgroundColor: desktop ? colors.primary[500] : "transparent",
+              color: desktop ? colors.text.inverse : colors.text.secondary,
+              border: desktop ? "none" : `1px solid ${colors.border.medium}`,
               fontSize: typography.fontSize.xs,
               fontWeight: typography.fontWeight.semibold,
             }}
@@ -708,7 +701,7 @@ function LeftContents({ markdown }: { markdown: string }) {
             cursor: "pointer",
             paddingLeft: 8 * (level - 2),
             padding: "2px 0",
-            color: colors.gray[700],
+            color: colors.text.secondary,
             transition: "color 0.2s ease",
           }}
           onClick={() => {
@@ -723,10 +716,10 @@ function LeftContents({ markdown }: { markdown: string }) {
             }
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = colors.primary[600];
+            e.currentTarget.style.color = colors.text.link;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = colors.gray[700];
+            e.currentTarget.style.color = colors.text.secondary;
           }}
         >
           {text}

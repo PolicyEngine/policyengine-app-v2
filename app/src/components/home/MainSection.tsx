@@ -1,4 +1,5 @@
 import { Container } from '@/components/ui';
+import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function MainSection() {
@@ -11,7 +12,10 @@ export default function MainSection() {
           Start simulating
         </h1>
 
-        <p className="tw:text-2xl tw:text-center tw:leading-normal tw:text-[#132F46]">
+        <p
+          className="tw:text-2xl tw:text-center tw:leading-normal"
+          style={{ color: colors.text.primary }}
+        >
           Free, open-source tax and benefit analysis.
           <br />
           {countryId === 'uk'

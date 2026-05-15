@@ -106,7 +106,7 @@ export default function BrandDesignPage() {
       <div
         className="tw:py-4xl tw:border-b tw:border-border-dark"
         style={{
-          backgroundColor: colors.primary[50],
+          backgroundColor: colors.background.accent,
           paddingLeft: '6.125%',
           paddingRight: '6.125%',
         }}

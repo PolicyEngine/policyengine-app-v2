@@ -17,7 +17,7 @@ const Plot = dynamic(() => import("react-plotly.js"), {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: colors.gray[400],
+        color: colors.text.tertiary,
       }}
     >
       Loading chart…

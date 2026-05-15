@@ -88,7 +88,7 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: colors.gray[50],
+            backgroundColor: colors.background.secondary,
             zIndex: 1,
           }}
         >
@@ -97,14 +97,14 @@ export default function IframeContent({
               style={{
                 width: '48px',
                 height: '48px',
-                border: `4px solid ${colors.gray[200]}`,
+                border: `4px solid ${colors.border.light}`,
                 borderTop: `4px solid ${colors.primary[600]}`,
                 borderRadius: '50%',
                 margin: `0 auto ${spacing.lg}`,
                 animation: 'spin 1s linear infinite',
               }}
             />
-            <p style={{ color: colors.gray[500], fontSize: typography.fontSize.sm }}>
+            <p style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
               Loading calculator...
             </p>
           </div>
@@ -121,7 +121,7 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: colors.gray[50],
+            backgroundColor: colors.background.secondary,
             zIndex: 1,
           }}
         >
@@ -132,10 +132,10 @@ export default function IframeContent({
               maxWidth: '500px',
             }}
           >
-            <h2 style={{ color: colors.gray[900], marginBottom: spacing.lg }}>
+            <h2 style={{ color: colors.text.primary, marginBottom: spacing.lg }}>
               Unable to load calculator
             </h2>
-            <p style={{ color: colors.gray[500], marginBottom: spacing.lg }}>
+            <p style={{ color: colors.text.secondary, marginBottom: spacing.lg }}>
               The embedded calculator could not be loaded. You can try opening it directly:
             </p>
             <a
@@ -146,7 +146,7 @@ export default function IframeContent({
                 display: 'inline-block',
                 padding: `${spacing.sm} ${spacing.lg}`,
                 backgroundColor: colors.primary[600],
-                color: colors.white,
+                color: colors.text.inverse,
                 textDecoration: 'none',
                 borderRadius: spacing.radius.element,
               }}

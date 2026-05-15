@@ -18,7 +18,7 @@ function BrandCard({ to, title, description, meta }: BrandCardProps) {
       className="tw:block tw:no-underline tw:transition-all tw:duration-200 tw:hover:-translate-y-0.5"
       style={{
         padding: spacing['2xl'],
-        background: colors.white,
+        background: colors.background.elevated,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
       }}

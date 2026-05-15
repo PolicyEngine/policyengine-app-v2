@@ -76,7 +76,7 @@ function FilterSection({
       style={{
         borderRadius: '12px',
         border: `1px solid ${isExpanded ? colors.primary[200] : colors.border.light}`,
-        backgroundColor: isExpanded ? 'rgba(230, 255, 250, 0.3)' : colors.white,
+        backgroundColor: isExpanded ? colors.background.accent : colors.background.elevated,
         transition: 'border-color 0.2s ease, background-color 0.2s ease',
         overflow: 'hidden',
       }}
@@ -87,7 +87,7 @@ function FilterSection({
         onClick={onToggle}
         onMouseEnter={(e) => {
           if (!isExpanded) {
-            e.currentTarget.style.backgroundColor = colors.gray[50];
+            e.currentTarget.style.backgroundColor = colors.background.hover;
           }
         }}
         onMouseLeave={(e) => {
@@ -100,7 +100,7 @@ function FilterSection({
           <Text
             fw={typography.fontWeight.semibold}
             size="sm"
-            style={{ color: isExpanded ? colors.primary[700] : colors.secondary[800] }}
+            style={{ color: isExpanded ? colors.text.link : colors.text.primary }}
           >
             {label}
           </Text>
@@ -114,7 +114,7 @@ function FilterSection({
                 height: '20px',
                 borderRadius: '10px',
                 backgroundColor: colors.primary[500],
-                color: colors.white,
+                color: colors.text.inverse,
                 fontSize: '11px',
                 fontWeight: typography.fontWeight.bold,
                 fontFamily: typography.fontFamily.primary,
@@ -127,7 +127,7 @@ function FilterSection({
         </div>
         <IconChevronDown
           size={16}
-          color={isExpanded ? colors.primary[600] : colors.text.tertiary}
+          color={isExpanded ? colors.text.link : colors.text.tertiary}
           style={{
             transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -184,7 +184,7 @@ function CheckboxRow({
         textAlign: 'left',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = colors.gray[50];
+        e.currentTarget.style.backgroundColor = colors.background.hover;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.backgroundColor = 'transparent';
@@ -201,7 +201,7 @@ function CheckboxRow({
         style={{
           fontSize: '13.5px',
           fontFamily: typography.fontFamily.primary,
-          color: checked ? colors.primary[700] : colors.secondary[700],
+          color: checked ? colors.text.link : colors.text.secondary,
           fontWeight: checked ? typography.fontWeight.semibold : typography.fontWeight.normal,
           transition: 'color 0.1s ease',
           flex: 1,
@@ -409,12 +409,12 @@ export function ResearchFilters({
                           padding: '4px 8px',
                           borderRadius: '6px',
                           fontSize: '12px',
-                          color: colors.primary[600],
+                          color: colors.text.link,
                           fontWeight: typography.fontWeight.medium,
                           transition: 'background-color 0.1s ease',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = colors.primary[50];
+                          e.currentTarget.style.backgroundColor = colors.background.accent;
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = 'transparent';

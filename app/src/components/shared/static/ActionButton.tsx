@@ -35,15 +35,15 @@ export default function ActionButton({
     },
     secondary: {
       backgroundColor: colors.primary[500],
-      color: colors.white,
+      color: colors.text.inverse,
       border: `2px solid ${colors.primary[500]}`,
       hoverBackground: colors.primary[600],
       hoverBorder: colors.primary[600],
     },
     inverted: {
-      backgroundColor: colors.white,
+      backgroundColor: colors.background.elevated,
       color: colors.text.primary,
-      border: `2px solid ${colors.white}`,
+      border: `2px solid ${colors.border.light}`,
       hoverBackground: colors.background.hover,
       hoverBorder: colors.black,
     },

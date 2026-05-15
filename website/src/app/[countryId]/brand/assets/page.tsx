@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { Button, Text, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export const metadata: Metadata = {
   title: "Assets",
@@ -41,7 +37,7 @@ function LogoCard({
   return (
     <div
       style={{
-        background: colors.white,
+        background: colors.background.elevated,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
         overflow: "hidden",
@@ -81,13 +77,7 @@ function LogoCard({
   );
 }
 
-function UsageCard({
-  type,
-  items,
-}: {
-  type: "do" | "dont";
-  items: string[];
-}) {
+function UsageCard({ type, items }: { type: "do" | "dont"; items: string[] }) {
   const isDo = type === "do";
   return (
     <div
@@ -138,7 +128,10 @@ function ColorSwatch({ name, value }: { name: string; value: string }) {
       }}
     >
       <div style={{ height: 60, background: value }} />
-      <div className="tw:p-sm" style={{ background: colors.white }}>
+      <div
+        className="tw:p-sm"
+        style={{ background: colors.background.elevated }}
+      >
         <Text
           style={{
             fontSize: typography.fontSize.sm,
@@ -170,8 +163,8 @@ export default function BrandAssetsPage() {
         style={{
           paddingTop: spacing["4xl"],
           paddingBottom: spacing["4xl"],
-          backgroundColor: colors.primary[50],
-          borderBottom: `1px solid ${colors.border.dark}`,
+          backgroundColor: colors.background.accent,
+          borderBottom: `1px solid ${colors.border.light}`,
           paddingLeft: "6.125%",
           paddingRight: "6.125%",
         }}
@@ -303,7 +296,7 @@ export default function BrandAssetsPage() {
           <div
             className="tw:flex tw:justify-center tw:p-xl tw:mb-md"
             style={{
-              background: colors.white,
+              background: colors.background.elevated,
               border: `1px solid ${colors.border.light}`,
               borderRadius: spacing.radius.container,
             }}

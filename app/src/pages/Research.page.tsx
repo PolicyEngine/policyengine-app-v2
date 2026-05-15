@@ -227,7 +227,7 @@ export default function ResearchPage() {
 
           {/* Results */}
           <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <Text size="sm" className="tw:mb-md" style={{ color: colors.gray[500] }}>
+            <Text size="sm" className="tw:mb-md" style={{ color: colors.text.tertiary }}>
               {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'}
             </Text>
 
@@ -251,11 +251,11 @@ export default function ResearchPage() {
                 className="tw:text-center"
                 style={{
                   padding: spacing['3xl'],
-                  backgroundColor: colors.gray[50],
+                  backgroundColor: colors.background.secondary,
                   borderRadius: spacing.radius.container,
                 }}
               >
-                <Text style={{ color: colors.gray[500] }}>
+                <Text style={{ color: colors.text.secondary }}>
                   No results found. Try adjusting your filters.
                 </Text>
               </div>
