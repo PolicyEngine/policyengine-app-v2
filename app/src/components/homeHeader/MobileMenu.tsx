@@ -1,4 +1,5 @@
 import { IconMenu2 } from '@tabler/icons-react';
+import ThemeToggle from '@/components/ThemeToggle';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import CountrySelector from './CountrySelector';
@@ -16,6 +17,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
     <>
       {/* Mobile Burger Menu with Country Selector */}
       <div className="tw:flex tw:lg:hidden tw:items-center" style={{ gap: spacing.md }}>
+        <ThemeToggle />
         <CountrySelector />
         <button
           type="button"
@@ -35,7 +37,10 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
           style={{ backgroundColor: colors.primary[600] }}
         >
           <SheetHeader>
-            <SheetTitle className="tw:text-white">Menu</SheetTitle>
+            <div className="tw:flex tw:items-center tw:justify-between">
+              <SheetTitle className="tw:text-white">Menu</SheetTitle>
+              <ThemeToggle />
+            </div>
           </SheetHeader>
           <div className="tw:flex tw:flex-col" style={{ gap: spacing.lg, padding: spacing.lg }}>
             {navItems.map((item) =>

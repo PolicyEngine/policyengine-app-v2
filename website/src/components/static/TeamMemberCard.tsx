@@ -1,5 +1,5 @@
-import OptimisedImage from '@/components/ui/OptimisedImage';
-import { cn } from '@/lib/utils';
+import OptimisedImage from "@/components/ui/OptimisedImage";
+import { cn } from "@/lib/utils";
 
 export interface TeamMember {
   name: string;
@@ -9,11 +9,14 @@ export interface TeamMember {
 
 export interface TeamMemberCardProps {
   member: TeamMember;
-  variant?: 'default' | 'inverted';
+  variant?: "default" | "inverted";
 }
 
-export default function TeamMemberCard({ member, variant = 'default' }: TeamMemberCardProps) {
-  const isInverted = variant === 'inverted';
+export default function TeamMemberCard({
+  member,
+  variant = "default",
+}: TeamMemberCardProps) {
+  const isInverted = variant === "inverted";
 
   return (
     <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[auto_1fr] tw:items-stretch tw:gap-[5vw] tw:mt-[50px]">
@@ -27,19 +30,22 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
 
       <div
         className={cn(
-          'tw:h-full tw:pb-[50px] tw:border-b',
-          isInverted ? 'tw:border-white' : 'tw:border-black'
+          "tw:h-full tw:pb-[50px] tw:border-b",
+          isInverted ? "tw:border-white" : "tw:border-border-dark",
         )}
       >
         <p
           className={cn(
-            'tw:text-base tw:leading-relaxed',
-            isInverted ? 'tw:text-text-inverse' : 'tw:text-text-primary'
+            "tw:text-base tw:leading-relaxed",
+            isInverted ? "tw:text-text-inverse" : "tw:text-text-primary",
           )}
         >
-          <span className="tw:font-semibold tw:uppercase" style={{ letterSpacing: '0.05em' }}>
+          <span
+            className="tw:font-semibold tw:uppercase"
+            style={{ letterSpacing: "0.05em" }}
+          >
             {member.name}
-          </span>{' '}
+          </span>{" "}
           {member.bio}
         </p>
       </div>

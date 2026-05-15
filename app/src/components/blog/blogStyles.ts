@@ -14,48 +14,48 @@ import { colors, spacing, typography } from '@/designTokens';
 export const blogColors = {
   // Primary brand colors
   primary: colors.primary[600],
-  primaryLight: colors.primary[100],
+  primaryLight: colors.background.accent,
   primaryHover: colors.primary[700],
 
   // Text colors (semantic naming)
-  textPrimary: colors.gray[800], // Main body text
-  textSecondary: colors.gray[600], // Muted text, quotes
-  textTertiary: colors.gray[500], // Very muted (code labels)
-  textHeading: colors.gray[900], // Headings (darkest)
-  textHeading2: colors.gray[800], // H2 headings
-  textHeading3: colors.gray[700], // H3 headings
-  textHeading4: colors.gray[600], // H4 headings
+  textPrimary: colors.text.primary, // Main body text
+  textSecondary: colors.text.secondary, // Muted text, quotes
+  textTertiary: colors.text.tertiary, // Very muted (code labels)
+  textHeading: colors.text.title, // Headings (darkest)
+  textHeading2: colors.text.title, // H2 headings
+  textHeading3: colors.text.primary, // H3 headings
+  textHeading4: colors.text.secondary, // H4 headings
 
   // Background colors (semantic naming)
-  backgroundPrimary: colors.white, // Main content background
-  backgroundSecondary: colors.gray[50], // Light panels (quotes, footnotes)
-  backgroundCode: colors.gray[100], // Code blocks
-  backgroundCodeLabel: colors.gray[100], // Code language label
-  backgroundTable: colors.gray[100], // Alternate table rows
+  backgroundPrimary: colors.background.primary, // Main content background
+  backgroundSecondary: colors.background.secondary, // Light panels (quotes, footnotes)
+  backgroundCode: colors.background.tertiary, // Code blocks
+  backgroundCodeLabel: colors.background.tertiary, // Code language label
+  backgroundTable: colors.background.secondary, // Alternate table rows
 
   // Border colors
-  borderLight: colors.gray[100], // Very light borders (h2)
-  borderMedium: colors.gray[200], // Medium borders (code blocks)
-  borderDark: colors.gray[300], // Darker borders (footnotes, labels)
+  borderLight: colors.border.light, // Very light borders (h2)
+  borderMedium: colors.border.medium, // Medium borders (code blocks)
+  borderDark: colors.border.dark, // Darker borders (footnotes, labels)
 
   // Link colors
   link: colors.primary[600],
   linkHover: colors.primary[700],
 
   // Anchor link colors (heading permalinks)
-  anchorLink: colors.gray[400], // Subtle anchor links
+  anchorLink: colors.text.tertiary, // Subtle anchor links
 
   // Legacy color mappings (from old app - DEPRECATED, use semantic names above)
   /** @deprecated Use textHeading instead */
   blue: colors.primary[600],
   /** @deprecated Use textPrimary instead */
-  darkGray: colors.gray[800],
+  darkGray: colors.text.primary,
   /** @deprecated Use textSecondary instead */
-  gray: colors.gray[600],
+  gray: colors.text.secondary,
   /** @deprecated Use backgroundCode or backgroundSecondary instead */
-  lightGray: colors.gray[100],
+  lightGray: colors.background.tertiary,
   /** @deprecated Use anchorLink instead */
-  mediumLightGray: colors.gray[400],
+  mediumLightGray: colors.text.tertiary,
 } as const;
 
 /**

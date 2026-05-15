@@ -6,6 +6,7 @@ import { AppProvider } from '../src/contexts/AppContext';
 import { CountryProvider } from '../src/contexts/CountryContext';
 import { LocationProvider } from '../src/contexts/LocationContext';
 import { NavigationProvider } from '../src/contexts/NavigationContext';
+import { ThemeProvider } from '../src/contexts/ThemeContext';
 import { store } from '../src/store';
 
 function RouterContextBridge({ children }: { children: React.ReactNode }) {
@@ -30,15 +31,17 @@ export function render(ui: React.ReactNode, countryId: string = 'us') {
   return testingLibraryRender(ui, {
     wrapper: ({ children }: { children: React.ReactNode }) => (
       <AppProvider mode="website">
-        <ReduxProvider store={store}>
-          <MemoryRouter>
-            <CountryProvider value={countryId as any}>
-              <RouterContextBridge>
-                <TooltipProvider>{children}</TooltipProvider>
-              </RouterContextBridge>
-            </CountryProvider>
-          </MemoryRouter>
-        </ReduxProvider>
+        <ThemeProvider>
+          <ReduxProvider store={store}>
+            <MemoryRouter>
+              <CountryProvider value={countryId as any}>
+                <RouterContextBridge>
+                  <TooltipProvider>{children}</TooltipProvider>
+                </RouterContextBridge>
+              </CountryProvider>
+            </MemoryRouter>
+          </ReduxProvider>
+        </ThemeProvider>
       </AppProvider>
     ),
   });

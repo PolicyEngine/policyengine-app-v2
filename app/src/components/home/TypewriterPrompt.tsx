@@ -184,7 +184,7 @@ export default function TypewriterPrompt({
       <div
         style={{
           display: 'inline-block',
-          background: `${colors.white}e6`,
+          background: colors.background.overlay,
           backdropFilter: 'blur(8px)',
           borderRadius: spacing.radius.container,
           padding: `${spacing['2xl']} ${spacing['3xl']}`,

@@ -19,8 +19,8 @@ export default function CTASection({
   caption,
 }: CTASectionProps) {
   const backgrounds = {
-    primary: colors.white,
-    secondary: colors.gray[100],
+    primary: colors.background.primary,
+    secondary: colors.background.secondary,
     accent: colors.primary[700],
   };
 

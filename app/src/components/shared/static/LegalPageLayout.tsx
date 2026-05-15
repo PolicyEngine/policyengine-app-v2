@@ -19,7 +19,7 @@ export default function LegalPageLayout({ title, sections }: LegalPageLayoutProp
         style={{
           paddingTop: spacing['4xl'],
           paddingBottom: spacing['4xl'],
-          backgroundColor: colors.white,
+          backgroundColor: colors.background.primary,
           paddingLeft: '6.125%',
           paddingRight: '6.125%',
         }}

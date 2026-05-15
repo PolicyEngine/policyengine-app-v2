@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export default function HomeTrackerPreview({
   countryId,
@@ -17,7 +13,7 @@ export default function HomeTrackerPreview({
   return (
     <div
       style={{
-        backgroundColor: colors.primary[50],
+        backgroundColor: colors.background.accent,
         paddingTop: spacing["5xl"],
         paddingBottom: spacing["5xl"],
       }}
@@ -42,7 +38,7 @@ export default function HomeTrackerPreview({
             style={{
               fontWeight: typography.fontWeight.bold,
               fontSize: typography.fontSize["3xl"],
-              color: colors.primary[800],
+              color: colors.text.title,
               fontFamily: typography.fontFamily.primary,
               lineHeight: typography.lineHeight.tight,
               margin: 0,
@@ -73,7 +69,7 @@ export default function HomeTrackerPreview({
             style={{
               borderRadius: spacing.radius.feature,
               overflow: "hidden",
-              backgroundColor: colors.white,
+              backgroundColor: colors.background.elevated,
               border: `1px solid ${colors.border.light}`,
               transition: "box-shadow 0.25s ease, transform 0.25s ease",
               cursor: "pointer",
@@ -139,7 +135,7 @@ export default function HomeTrackerPreview({
                     fontSize: typography.fontSize["2xl"],
                     lineHeight: typography.lineHeight.tight,
                     fontFamily: typography.fontFamily.primary,
-                    color: colors.gray[900],
+                    color: colors.text.title,
                     marginBottom: spacing.md,
                   }}
                 >

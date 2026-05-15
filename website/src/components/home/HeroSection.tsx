@@ -2,11 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 import HeroCTA from "./HeroCTA";
 import HouseholdGraph, {
   generateGraph,
@@ -93,7 +89,7 @@ export default function HeroSection({ countryId }: { countryId: string }) {
         justifyContent: "center",
         gap: spacing["2xl"],
         padding: `${spacing["5xl"]} ${spacing.xl}`,
-        background: colors.white,
+        background: colors.background.primary,
         overflow: "hidden",
       }}
     >
@@ -152,7 +148,7 @@ export default function HeroSection({ countryId }: { countryId: string }) {
           left: 0,
           right: 0,
           height: 80,
-          background: `linear-gradient(to bottom, transparent, ${colors.white})`,
+          background: `linear-gradient(to bottom, transparent, ${colors.background.primary})`,
           pointerEvents: "none",
           zIndex: 2,
         }}

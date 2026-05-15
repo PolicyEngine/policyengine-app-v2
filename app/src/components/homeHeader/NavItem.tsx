@@ -128,11 +128,11 @@ function AppleDropdown({
           transition:
             'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           borderRadius: '14px',
-          background: `linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,249,255,0.95))`,
+          background: colors.background.overlay,
           backdropFilter: 'blur(24px) saturate(200%)',
           WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-          boxShadow:
-            '0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.6)',
+          border: `1px solid ${colors.border.light}`,
+          boxShadow: `0 20px 60px ${colors.shadow.medium}, 0 4px 16px ${colors.shadow.light}`,
           zIndex: 1001,
         }}
       >
@@ -155,7 +155,7 @@ function AppleDropdown({
                 fontSize: '14px',
                 fontFamily: typography.fontFamily.primary,
                 fontWeight: typography.fontWeight.semibold,
-                color: colors.primary[800],
+                color: colors.text.primary,
                 transition: 'background-color 0.12s ease, color 0.12s ease, opacity 0.3s ease',
                 transitionDelay: visible ? `${i * 50}ms` : '0ms',
                 opacity: visible ? 1 : 0,
@@ -168,7 +168,7 @@ function AppleDropdown({
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = colors.primary[800];
+                e.currentTarget.style.color = colors.text.primary;
               }}
             >
               {item.label}

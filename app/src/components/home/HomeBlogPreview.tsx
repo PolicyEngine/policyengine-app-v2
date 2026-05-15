@@ -34,7 +34,7 @@ export default function HomeBlogPreview() {
   return (
     <div
       style={{
-        backgroundColor: colors.gray[50],
+        backgroundColor: colors.background.secondary,
         paddingTop: spacing['5xl'],
         paddingBottom: spacing['5xl'],
       }}
@@ -46,7 +46,7 @@ export default function HomeBlogPreview() {
             fw={typography.fontWeight.bold}
             style={{
               fontSize: typography.fontSize['3xl'],
-              color: colors.primary[800],
+              color: colors.text.title,
               fontFamily: typography.fontFamily.primary,
               lineHeight: typography.lineHeight.tight,
             }}

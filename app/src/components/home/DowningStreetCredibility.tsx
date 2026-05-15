@@ -13,7 +13,7 @@ export default function DowningStreetCredibility() {
     <Container size="xl" style={{ paddingTop: spacing.xl, paddingBottom: spacing.xl }}>
       <div
         style={{
-          backgroundColor: colors.primary[50],
+          backgroundColor: colors.background.accent,
           borderRadius: spacing.radius.container,
           padding: `${spacing.lg} ${spacing.xl}`,
           border: `1px solid ${colors.primary[100]}`,
@@ -27,7 +27,7 @@ export default function DowningStreetCredibility() {
             aria-hidden="true"
           />
           <Text
-            c={colors.gray[700]}
+            c={colors.text.primary}
             style={{
               fontSize: typography.fontSize.base,
               textAlign: 'center',

@@ -6,6 +6,7 @@ import { AppMode, AppProvider } from '../src/contexts/AppContext';
 import { CountryProvider } from '../src/contexts/CountryContext';
 import { LocationProvider } from '../src/contexts/LocationContext';
 import { NavigationProvider } from '../src/contexts/NavigationContext';
+import { ThemeProvider } from '../src/contexts/ThemeContext';
 import { store } from '../src/store';
 
 function RouterContextBridge({ children }: { children: React.ReactNode }) {
@@ -35,20 +36,22 @@ export function renderWithCountry(
   return testingLibraryRender(ui, {
     wrapper: ({ children }: { children: React.ReactNode }) => (
       <AppProvider mode={appMode}>
-        <ReduxProvider store={store}>
-          <MemoryRouter initialEntries={[path]}>
-            <CountryProvider value={countryId as any}>
-              <RouterContextBridge>
-                <TooltipProvider>
-                  <Routes>
-                    <Route path="/:countryId" element={children} />
-                    <Route path="/:countryId/*" element={children} />
-                  </Routes>
-                </TooltipProvider>
-              </RouterContextBridge>
-            </CountryProvider>
-          </MemoryRouter>
-        </ReduxProvider>
+        <ThemeProvider>
+          <ReduxProvider store={store}>
+            <MemoryRouter initialEntries={[path]}>
+              <CountryProvider value={countryId as any}>
+                <RouterContextBridge>
+                  <TooltipProvider>
+                    <Routes>
+                      <Route path="/:countryId" element={children} />
+                      <Route path="/:countryId/*" element={children} />
+                    </Routes>
+                  </TooltipProvider>
+                </RouterContextBridge>
+              </CountryProvider>
+            </MemoryRouter>
+          </ReduxProvider>
+        </ThemeProvider>
       </AppProvider>
     ),
   });

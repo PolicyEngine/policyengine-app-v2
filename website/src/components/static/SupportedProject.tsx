@@ -1,10 +1,10 @@
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from "@/designTokens";
 
 export interface SupportedProject {
   title: string;
   projectUrl?: string;
   amount: number;
-  currency: 'USD' | 'GBP';
+  currency: "USD" | "GBP";
   awardDate: string; // Format: YYYY-MM
   description: string;
   supporterId: string;
@@ -19,19 +19,19 @@ export interface SupportedProjectProps {
 
 // Utility to format YYYY-MM date to "Month YYYY"
 function formatDate(dateStr: string): string {
-  const [year, month] = dateStr.split('-');
+  const [year, month] = dateStr.split("-");
   const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1);
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
 export default function SupportedProject({ project }: SupportedProjectProps) {
   return (
     <div
       style={{
-        margin: '16px 0',
-        padding: '16px',
+        margin: "16px 0",
+        padding: "16px",
         borderLeft: `4px solid ${colors.primary[500]}`,
-        backgroundColor: colors.gray[50],
+        backgroundColor: colors.background.secondary,
       }}
     >
       <h3
@@ -50,7 +50,7 @@ export default function SupportedProject({ project }: SupportedProjectProps) {
             rel="noopener noreferrer"
             style={{
               color: colors.text.link,
-              textDecoration: 'none',
+              textDecoration: "none",
             }}
           >
             {project.title}
@@ -73,8 +73,8 @@ export default function SupportedProject({ project }: SupportedProjectProps) {
             fontFamily: typography.fontFamily.body,
           }}
         >
-          <strong>Award:</strong> {project.currency === 'GBP' ? '\u00a3' : '$'}
-          {project.amount.toLocaleString('en-US')}
+          <strong>Award:</strong> {project.currency === "GBP" ? "\u00a3" : "$"}
+          {project.amount.toLocaleString("en-US")}
         </span>
         <span
           style={{

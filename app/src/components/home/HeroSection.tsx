@@ -84,7 +84,7 @@ export default function HeroSection() {
         justifyContent: 'center',
         gap: spacing['2xl'],
         padding: `${spacing['5xl']} ${spacing.xl}`,
-        background: colors.white,
+        background: colors.background.primary,
         overflow: 'hidden',
       }}
     >
@@ -143,7 +143,7 @@ export default function HeroSection() {
           left: 0,
           right: 0,
           height: 80,
-          background: `linear-gradient(to bottom, transparent, ${colors.white})`,
+          background: `linear-gradient(to bottom, transparent, ${colors.background.primary})`,
           pointerEvents: 'none',
           zIndex: 2,
         }}
