@@ -98,7 +98,7 @@ function TermItem({ term, definition }: { term: string; definition: string }) {
     <div
       className="tw:flex tw:items-center tw:p-md tw:gap-lg"
       style={{
-        background: colors.background.elevated,
+        background: colors.white,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
       }}
@@ -167,8 +167,8 @@ export default function BrandWritingPage() {
         style={{
           paddingTop: spacing['4xl'],
           paddingBottom: spacing['4xl'],
-          backgroundColor: colors.background.accent,
-          borderBottom: `1px solid ${colors.border.light}`,
+          backgroundColor: colors.primary[50],
+          borderBottom: `1px solid ${colors.border.dark}`,
           paddingLeft: '6.125%',
           paddingRight: '6.125%',
         }}

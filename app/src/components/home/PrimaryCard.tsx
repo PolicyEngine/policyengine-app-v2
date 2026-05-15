@@ -23,14 +23,14 @@ export default function PrimaryCard({ post, countryId, flex }: PrimaryCardProps)
       <div
         className={cn(
           'tw:flex tw:flex-col tw:h-full',
-          'tw:rounded-feature tw:overflow-hidden tw:bg-card tw:border tw:border-border-light',
+          'tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light',
           'tw:transition-all tw:duration-300 tw:ease-out',
           'tw:hover:shadow-[0_8px_30px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5',
           'tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none'
         )}
       >
         {imageUrl && (
-          <div className="tw:min-h-[200px] tw:flex-1 tw:overflow-hidden tw:bg-muted">
+          <div className="tw:min-h-[200px] tw:flex-1 tw:overflow-hidden tw:bg-gray-100">
             <OptimisedImage
               src={imageUrl}
               alt={post.title}
@@ -48,7 +48,7 @@ export default function PrimaryCard({ post, countryId, flex }: PrimaryCardProps)
             {date}
           </p>
 
-          <p className="tw:text-2xl tw:font-bold tw:leading-tight tw:text-card-foreground tw:mb-md">
+          <p className="tw:text-2xl tw:font-bold tw:leading-tight tw:text-gray-900 tw:mb-md">
             {post.title}
           </p>
 

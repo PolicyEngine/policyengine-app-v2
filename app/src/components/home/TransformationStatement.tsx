@@ -1,5 +1,4 @@
 import { Container } from '@/components/ui';
-import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function TransformationStatement() {
@@ -12,12 +11,7 @@ export default function TransformationStatement() {
 
   return (
     <Container size="xl" className="tw:py-4xl tw:mt-2xl">
-      <p
-        className="tw:text-xl tw:font-semibold tw:text-center"
-        style={{ color: colors.text.primary }}
-      >
-        {statement}
-      </p>
+      <p className="tw:text-xl tw:font-semibold tw:text-center tw:text-[#132F46]">{statement}</p>
     </Container>
   );
 }

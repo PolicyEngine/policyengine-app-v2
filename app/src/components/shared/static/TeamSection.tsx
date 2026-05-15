@@ -10,8 +10,8 @@ export interface TeamSectionProps {
 
 export default function TeamSection({ title, members, variant = 'primary' }: TeamSectionProps) {
   const backgrounds = {
-    primary: colors.background.primary,
-    secondary: colors.background.secondary,
+    primary: colors.white,
+    secondary: colors.gray[100],
     accent: colors.primary[700],
   };
 

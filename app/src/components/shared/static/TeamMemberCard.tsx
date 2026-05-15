@@ -28,7 +28,7 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
       <div
         className={cn(
           'tw:h-full tw:pb-[50px] tw:border-b',
-          isInverted ? 'tw:border-white' : 'tw:border-border-dark'
+          isInverted ? 'tw:border-white' : 'tw:border-black'
         )}
       >
         <p

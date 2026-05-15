@@ -16,8 +16,8 @@ export default function ContentSection({
   centerTitle = false,
 }: ContentSectionProps) {
   const backgrounds = {
-    primary: colors.background.primary,
-    secondary: colors.background.secondary,
+    primary: colors.white,
+    secondary: colors.gray[100],
     accent: colors.primary[700],
   };
 

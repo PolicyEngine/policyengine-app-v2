@@ -21,14 +21,14 @@ export default function SecondaryCard({ post, countryId }: SecondaryCardProps) {
       <div
         className={cn(
           'tw:flex tw:flex-col tw:h-full',
-          'tw:rounded-feature tw:overflow-hidden tw:bg-card tw:border tw:border-border-light',
+          'tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light',
           'tw:transition-all tw:duration-300 tw:ease-out',
           'tw:hover:shadow-[0_6px_24px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5',
           'tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none'
         )}
       >
         {imageUrl && (
-          <div className="tw:h-[180px] tw:overflow-hidden tw:bg-muted tw:shrink-0">
+          <div className="tw:h-[180px] tw:overflow-hidden tw:bg-gray-100 tw:shrink-0">
             <OptimisedImage
               src={imageUrl}
               alt={post.title}
@@ -46,7 +46,7 @@ export default function SecondaryCard({ post, countryId }: SecondaryCardProps) {
             {date}
           </p>
 
-          <p className="tw:text-base tw:font-semibold tw:leading-snug tw:text-card-foreground tw:line-clamp-2 tw:mb-sm">
+          <p className="tw:text-base tw:font-semibold tw:leading-snug tw:text-gray-900 tw:line-clamp-2 tw:mb-sm">
             {post.title}
           </p>
 

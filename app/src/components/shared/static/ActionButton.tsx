@@ -27,24 +27,24 @@ export default function ActionButton({
   }, [text, multiline]);
   const styles = {
     primary: {
-      backgroundColor: colors.background.elevated,
+      backgroundColor: colors.white,
       color: colors.text.primary,
       border: `2px solid ${colors.border.light}`,
-      hoverBackground: colors.background.hover,
+      hoverBackground: colors.gray[50],
       hoverBorder: colors.black,
     },
     secondary: {
       backgroundColor: colors.primary[500],
-      color: colors.text.inverse,
+      color: colors.white,
       border: `2px solid ${colors.primary[500]}`,
       hoverBackground: colors.primary[600],
       hoverBorder: colors.primary[600],
     },
     inverted: {
-      backgroundColor: colors.background.elevated,
+      backgroundColor: colors.white,
       color: colors.text.primary,
-      border: `2px solid ${colors.border.light}`,
-      hoverBackground: colors.background.hover,
+      border: `2px solid ${colors.white}`,
+      hoverBackground: colors.gray[50],
       hoverBorder: colors.black,
     },
   };

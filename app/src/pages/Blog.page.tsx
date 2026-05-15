@@ -141,7 +141,7 @@ export default function BlogPage() {
   return (
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
-      <div style={{ backgroundColor: colors.background.secondary }}>
+      <div style={{ backgroundColor: colors.gray[50] }}>
         <Container
           size="xl"
           style={{
@@ -223,7 +223,7 @@ function PostHeadingSection({
           <Text
             size="md"
             className="tw:uppercase"
-            style={{ letterSpacing: '0.05em', color: colors.text.tertiary }}
+            style={{ letterSpacing: '0.05em', color: colors.gray[500] }}
           >
             {readingTime}
           </Text>
@@ -250,7 +250,7 @@ function PostHeadingSection({
             style={{
               marginTop: spacing['3xl'],
               fontSize: typography.fontSize.xl,
-              color: colors.text.secondary,
+              color: colors.gray[500],
             }}
           >
             {post.description}
@@ -291,7 +291,7 @@ function PostHeadingSection({
       >
         {post.title}
       </Text>
-      <Text size="lg" className="tw:mb-lg" style={{ color: colors.text.secondary }}>
+      <Text size="lg" className="tw:mb-lg" style={{ color: colors.gray[500] }}>
         {post.description}
       </Text>
       <div
@@ -316,7 +316,7 @@ function PostHeadingSection({
         <Text
           size="md"
           className="tw:uppercase"
-          style={{ letterSpacing: '0.05em', color: colors.text.tertiary }}
+          style={{ letterSpacing: '0.05em', color: colors.gray[500] }}
         >
           {readingTime}
         </Text>
@@ -552,7 +552,7 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
                     .join(' ')}
                 </Link>
               </Text>
-              <Text size="xs" style={{ color: colors.text.tertiary }}>
+              <Text size="xs" style={{ color: colors.gray[500] }}>
                 {author.title}
               </Text>
             </div>
@@ -579,7 +579,7 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
           <Link
             to={`/${countryId}/research?${isLocation ? 'locations' : 'topics'}=${tag}`}
             style={{
-              color: colors.text.secondary,
+              color: colors.gray[700],
               textDecoration: 'none',
               fontSize: typography.fontSize.base,
               transition: 'color 0.2s ease',
@@ -590,7 +590,7 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
               e.currentTarget.style.color = colors.primary[600];
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = colors.text.secondary;
+              e.currentTarget.style.color = colors.gray[700];
             }}
           >
             {label}
@@ -674,7 +674,7 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
             display: 'flex',
             alignItems: 'center',
             gap: spacing.sm,
-            color: colors.text.secondary,
+            color: colors.gray[600],
             textDecoration: 'none',
             fontSize: typography.fontSize.xs,
           }}
@@ -687,9 +687,9 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: desktop ? colors.primary[500] : 'transparent',
-              color: desktop ? colors.text.inverse : colors.text.secondary,
-              border: desktop ? 'none' : `1px solid ${colors.border.medium}`,
+              backgroundColor: desktop ? colors.gray[500] : 'transparent',
+              color: desktop ? colors.white : colors.gray[600],
+              border: desktop ? 'none' : `1px solid ${colors.gray[400]}`,
               fontSize: typography.fontSize.xs,
               fontWeight: typography.fontWeight.semibold,
             }}
@@ -741,7 +741,7 @@ function LeftContents({ markdown }: { markdown: string }) {
             cursor: 'pointer',
             paddingLeft: 8 * (level - 2),
             padding: '2px 0',
-            color: colors.text.secondary,
+            color: colors.gray[700],
             transition: 'color 0.2s ease',
           }}
           onClick={() => {
@@ -758,7 +758,7 @@ function LeftContents({ markdown }: { markdown: string }) {
             e.currentTarget.style.color = colors.primary[600];
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = colors.text.secondary;
+            e.currentTarget.style.color = colors.gray[700];
           }}
         >
           {text}
