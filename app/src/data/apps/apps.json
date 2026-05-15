@@ -138,6 +138,19 @@
   },
   {
     "type": "iframe",
+    "slug": "missouri-income-tax-elimination",
+    "title": "Missouri income tax elimination calculator",
+    "description": "Explore paths to eliminating Missouri's individual income tax under HJR 173 and 174, modeling household and state revenue impacts across four reform approaches",
+    "source": "https://missouri-income-tax-elimination.vercel.app/us/missouri-income-tax-elimination",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "mo-income-tax-elimination.png",
+    "date": "2026-05-14 12:00:00",
+    "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
     "slug": "wv-sb392-tax-cut",
     "title": "West Virginia SB 392 income tax cut calculator",
     "description": "Estimate the household and statewide impact of West Virginia Senate Bill 392, which reduces personal income tax rates by approximately 5% starting in 2026",

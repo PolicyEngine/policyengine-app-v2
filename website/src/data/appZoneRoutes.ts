@@ -73,6 +73,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut",
   },
   {
+    source: "/us/missouri-income-tax-elimination",
+    destination:
+      "https://missouri-income-tax-elimination.vercel.app/us/missouri-income-tax-elimination",
+  },
+  {
     source: "/us/watca",
     destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
   },
