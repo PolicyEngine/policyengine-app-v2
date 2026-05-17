@@ -1,5 +1,4 @@
-import type { USHouseholdDraft } from 'policyengine-household-wizard';
-import { toV1HouseholdPayload } from 'policyengine-household-wizard';
+import { toV1HouseholdPayload, type USHouseholdDraft } from 'policyengine-household-wizard';
 import { Household } from '../Household';
 
 export interface FromUSDraftOptions {
