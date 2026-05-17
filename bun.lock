@@ -36,6 +36,7 @@
         "html-to-image": "^1.11.13",
         "jsonp": "^0.2.1",
         "lucide-react": "^0.575.0",
+        "policyengine-household-wizard": "^0.1.0",
         "radix-ui": "^1.4.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
@@ -2165,6 +2166,8 @@
     "point-in-polygon": ["point-in-polygon@1.1.0", "", {}, "sha512-3ojrFwjnnw8Q9242TzgXuTD+eKiutbzyslcq1ydfu82Db2y+Ogbmyrkpv0Hgj31qwT3lbS9+QAAO/pIQM35XRw=="],
 
     "policyengine-app-v2": ["policyengine-app-v2@workspace:app"],
+
+    "policyengine-household-wizard": ["policyengine-household-wizard@0.1.0", "", { "peerDependencies": { "react": ">=19", "react-dom": ">=19" } }, "sha512-VHQIdZsZq4eWMZa+xgLrW0wZvClV3MXPE/TcMnZGP+QHOBGQZbEiFmHhL/roWIpZMEB8d7IB3Fl+W+DZsuRUug=="],
 
     "polished": ["polished@4.3.1", "", { "dependencies": { "@babel/runtime": "^7.17.8" } }, "sha512-OBatVyC/N7SCW/FaDHrSd+vn0o5cS855TOmYi4OkdWUMSJCET/xip//ch8xGUvtr3i44X9LVyWwQlRMTN3pwSA=="],
 
