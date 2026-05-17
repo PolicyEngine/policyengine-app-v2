@@ -1,0 +1,20 @@
+{
+  "name": "disabled adult with SSI and SSDI in WV",
+  "draft": {
+    "state": "WV",
+    "county": null,
+    "zip": null,
+    "maritalStatus": "single",
+    "year": 2026,
+    "people": [
+      {
+        "id": "adult-1",
+        "kind": "adult",
+        "age": 45,
+        "isDisabled": true,
+        "ssiAmount": 9432,
+        "ssdiAmount": 18000
+      }
+    ]
+  }
+}
