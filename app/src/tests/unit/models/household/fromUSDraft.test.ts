@@ -1,13 +1,12 @@
-import { describe, expect, it } from 'vitest';
 import type { USHouseholdDraft } from 'policyengine-household-wizard';
-import singleAdult from '../../../fixtures/usHouseholdDrafts/single-adult.json' with { type: 'json' };
-import marriedAdults from '../../../fixtures/usHouseholdDrafts/married-adults.json' with { type: 'json' };
-import adultWithChild from '../../../fixtures/usHouseholdDrafts/adult-with-child.json' with { type: 'json' };
-import disabledPerson from '../../../fixtures/usHouseholdDrafts/disabled-person.json' with { type: 'json' };
-import student from '../../../fixtures/usHouseholdDrafts/student.json' with { type: 'json' };
-import countyCase from '../../../fixtures/usHouseholdDrafts/county-case.json' with { type: 'json' };
-
+import { describe, expect, it } from 'vitest';
 import { householdFromUSDraft } from '@/models/household/fromUSDraft';
+import adultWithChild from '../../../fixtures/usHouseholdDrafts/adult-with-child.json' with { type: 'json' };
+import countyCase from '../../../fixtures/usHouseholdDrafts/county-case.json' with { type: 'json' };
+import disabledPerson from '../../../fixtures/usHouseholdDrafts/disabled-person.json' with { type: 'json' };
+import marriedAdults from '../../../fixtures/usHouseholdDrafts/married-adults.json' with { type: 'json' };
+import singleAdult from '../../../fixtures/usHouseholdDrafts/single-adult.json' with { type: 'json' };
+import student from '../../../fixtures/usHouseholdDrafts/student.json' with { type: 'json' };
 
 interface Fixture {
   name: string;
@@ -31,7 +30,7 @@ describe('householdFromUSDraft', () => {
       expect(household.countryId).toBe('us');
       expect(household.year).toBe(draft.year);
       expect(household.personCount).toBe(draft.people.length);
-    },
+    }
   );
 
   it.each(FIXTURES)(
@@ -41,15 +40,11 @@ describe('householdFromUSDraft', () => {
       const year = String(draft.year);
       // app-v2 partitions people by age (>=18 is an adult); the wizard's
       // `kind` is a UI hint, not a tax-unit role. Use age to compare.
-      const expectedAdults = draft.people.filter(
-        (person) => (person.age ?? 0) >= 18,
-      ).length;
-      const expectedChildren = draft.people.filter(
-        (person) => (person.age ?? 0) < 18,
-      ).length;
+      const expectedAdults = draft.people.filter((person) => (person.age ?? 0) >= 18).length;
+      const expectedChildren = draft.people.filter((person) => (person.age ?? 0) < 18).length;
       expect(household.getAdultCount(year)).toBe(expectedAdults);
       expect(household.getChildCount(year)).toBe(expectedChildren);
-    },
+    }
   );
 
   it.each(FIXTURES)('$name: configures the household group with state and county', ({ draft }) => {
@@ -58,11 +53,11 @@ describe('householdFromUSDraft', () => {
     const householdGroupName = household.getPreferredGroupName('households');
     expect(householdGroupName).toBeDefined();
     expect(
-      household.getGroupVariableAtYear('households', householdGroupName!, 'state_name', year),
+      household.getGroupVariableAtYear('households', householdGroupName!, 'state_name', year)
     ).toBe(draft.state);
     if (draft.county) {
       expect(
-        household.getGroupVariableAtYear('households', householdGroupName!, 'county', year),
+        household.getGroupVariableAtYear('households', householdGroupName!, 'county', year)
       ).toBe(draft.county);
     }
   });
@@ -81,7 +76,7 @@ describe('householdFromUSDraft', () => {
       householdFromUSDraft({
         ...(singleAdult as Fixture).draft,
         state: null,
-      }),
+      })
     ).toThrowError(/state/);
   });
 
@@ -90,7 +85,7 @@ describe('householdFromUSDraft', () => {
       householdFromUSDraft({
         ...(singleAdult as Fixture).draft,
         people: [],
-      }),
+      })
     ).toThrowError(/at least one person/);
   });
 

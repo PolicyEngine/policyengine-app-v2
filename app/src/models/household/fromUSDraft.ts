@@ -20,7 +20,7 @@ export interface FromUSDraftOptions {
  */
 export function householdFromUSDraft(
   draft: USHouseholdDraft,
-  options: FromUSDraftOptions = {},
+  options: FromUSDraftOptions = {}
 ): Household {
   if (draft.state === null) {
     throw new Error('USHouseholdDraft requires a state before conversion to Household.');
@@ -40,6 +40,6 @@ export function householdFromUSDraft(
       data: envelope.data,
       label: options.label ?? envelope.label ?? undefined,
     },
-    { id: options.id, label: options.label ?? null },
+    { id: options.id, label: options.label ?? null }
   );
 }
