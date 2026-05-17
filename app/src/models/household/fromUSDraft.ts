@@ -1,5 +1,5 @@
-import type { USHouseholdDraft } from '@policyengine/household-wizard';
-import { toV1HouseholdPayload } from '@policyengine/household-wizard';
+import type { USHouseholdDraft } from 'policyengine-household-wizard';
+import { toV1HouseholdPayload } from 'policyengine-household-wizard';
 import { Household } from '../Household';
 
 export interface FromUSDraftOptions {
@@ -9,7 +9,7 @@ export interface FromUSDraftOptions {
 
 /**
  * Build an app-v2 `Household` from a `USHouseholdDraft` produced by
- * `@policyengine/household-wizard`. The wizard's V1 envelope is the contract
+ * `policyengine-household-wizard`. The wizard's V1 envelope is the contract
  * we share with the package: this adapter pipes that envelope through
  * `Household.fromV1CreationPayload` so the household model only learns one
  * external schema.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { USHouseholdDraft } from '@policyengine/household-wizard';
+import type { USHouseholdDraft } from 'policyengine-household-wizard';
 import singleAdult from '../../../fixtures/usHouseholdDrafts/single-adult.json' with { type: 'json' };
 import marriedAdults from '../../../fixtures/usHouseholdDrafts/married-adults.json' with { type: 'json' };
 import adultWithChild from '../../../fixtures/usHouseholdDrafts/adult-with-child.json' with { type: 'json' };
