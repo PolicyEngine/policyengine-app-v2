@@ -35,6 +35,34 @@
       "destination": "/sitemap.xml"
     },
     {
+      "source": "/favicon.ico",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/(.*)/favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/(.*)/favicon.ico",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/icon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/(.*)/icon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/policyengine-logo.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/(.*)/policyengine-logo.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
       "source": "/_tracker/:path*",
       "destination": "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*"
     },
