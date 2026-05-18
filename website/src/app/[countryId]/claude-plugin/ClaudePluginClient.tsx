@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 /* ─── animation hook ─── */
 
@@ -438,7 +434,7 @@ export default function ClaudePluginClient({
         style={{
           paddingTop: 80,
           paddingBottom: 80,
-          backgroundColor: colors.white,
+          backgroundColor: colors.background.primary,
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
           overflow: "hidden",
@@ -478,7 +474,7 @@ export default function ClaudePluginClient({
                     fontSize: "clamp(32px, 4.5vw, 48px)",
                     fontWeight: typography.fontWeight.bold,
                     fontFamily: typography.fontFamily.primary,
-                    color: colors.gray[900],
+                    color: colors.text.primary,
                     lineHeight: 1.08,
                     letterSpacing: "-0.03em",
                     marginBottom: spacing.lg,
@@ -512,7 +508,7 @@ export default function ClaudePluginClient({
                   style={{
                     display: "inline-block",
                     backgroundColor: colors.primary[500],
-                    color: colors.white,
+                    color: colors.text.inverse,
                     fontFamily: typography.fontFamily.primary,
                     fontWeight: typography.fontWeight.semibold,
                     fontSize: typography.fontSize.sm,
@@ -586,7 +582,7 @@ export default function ClaudePluginClient({
         style={{
           paddingTop: spacing["4xl"],
           paddingBottom: spacing["4xl"],
-          backgroundColor: colors.gray[50],
+          backgroundColor: colors.background.secondary,
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
         }}
@@ -619,7 +615,7 @@ export default function ClaudePluginClient({
                     border: `1px solid ${colors.border.light}`,
                     borderRadius: spacing.md,
                     padding: spacing.xl,
-                    backgroundColor: colors.white,
+                    backgroundColor: colors.background.elevated,
                     display: "flex",
                     flexDirection: "column",
                     height: "100%",
@@ -663,7 +659,7 @@ export default function ClaudePluginClient({
         style={{
           paddingTop: spacing["4xl"],
           paddingBottom: spacing["4xl"],
-          backgroundColor: colors.white,
+          backgroundColor: colors.background.primary,
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
         }}
@@ -704,7 +700,7 @@ export default function ClaudePluginClient({
                   width: "100%",
                   borderRadius: "12px",
                   overflow: "hidden",
-                  boxShadow: "0 8px 32px -4px rgba(0,0,0,0.12)",
+                  boxShadow: `0 8px 32px -4px ${colors.shadow.medium}`,
                 }}
               >
                 <video
@@ -750,7 +746,7 @@ export default function ClaudePluginClient({
         style={{
           paddingTop: spacing["4xl"],
           paddingBottom: spacing["4xl"],
-          backgroundColor: colors.white,
+          backgroundColor: colors.background.primary,
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
         }}
@@ -862,7 +858,7 @@ export default function ClaudePluginClient({
                 fontFamily: typography.fontFamily.primary,
                 fontWeight: typography.fontWeight.bold,
                 fontSize: typography.fontSize["3xl"],
-                color: colors.white,
+                color: colors.text.inverse,
                 textAlign: "center",
                 marginBottom: spacing["3xl"],
               }}
@@ -912,7 +908,7 @@ export default function ClaudePluginClient({
                       fontWeight: typography.fontWeight.semibold,
                       fontFamily: typography.fontFamily.primary,
                       fontSize: typography.fontSize.sm,
-                      color: colors.white,
+                      color: colors.text.inverse,
                       marginBottom: 4,
                     }}
                   >

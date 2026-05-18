@@ -8,7 +8,7 @@ export default function NotFoundPage() {
   return (
     <Container>
       <Title order={2}>Page not found</Title>
-      <Text className="tw:mb-sm" style={{ color: colors.gray[500] }}>
+      <Text className="tw:mb-sm" style={{ color: colors.text.secondary }}>
         The page you're looking for doesn't exist or has been moved.
       </Text>
       <hr className="tw:border-border-light tw:my-sm" />
@@ -21,7 +21,7 @@ export default function NotFoundPage() {
         >
           404
         </Text>
-        <Text size="sm" className="tw:mt-md" style={{ color: colors.gray[500] }}>
+        <Text size="sm" className="tw:mt-md" style={{ color: colors.text.secondary }}>
           Check the URL or head back to your reports.
         </Text>
         <Button className="tw:mt-md" asChild>

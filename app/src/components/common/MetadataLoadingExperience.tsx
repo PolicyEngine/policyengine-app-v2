@@ -18,14 +18,14 @@ export function MetadataLoadingExperience({ countryId }: MetadataLoadingExperien
   return (
     <Container>
       <Title order={2}>Loading</Title>
-      <Text className="tw:mb-sm" style={{ color: colors.gray[600] }}>
+      <Text className="tw:mb-sm" style={{ color: colors.text.secondary }}>
         Fetching {countryName} policy data
       </Text>
       <hr className="tw:border-border-light tw:my-sm" />
 
       <Stack className="tw:items-center tw:justify-center tw:py-20">
         <Spinner size="lg" />
-        <Text size="sm" className="tw:mt-md" style={{ color: colors.gray[600] }}>
+        <Text size="sm" className="tw:mt-md" style={{ color: colors.text.secondary }}>
           This may take a moment for first-time loads
         </Text>
       </Stack>

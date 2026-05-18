@@ -67,11 +67,11 @@ export default function StreamlitEmbed({
             left: 0,
             right: 0,
             zIndex: 1000,
-            backgroundColor: colors.gray[100],
-            borderBottom: `1px solid ${colors.gray[300]}`,
+            backgroundColor: colors.background.secondary,
+            borderBottom: `1px solid ${colors.border.light}`,
             padding: `${spacing.sm} ${spacing.lg}`,
             fontSize: typography.fontSize.sm,
-            color: colors.gray[600],
+            color: colors.text.secondary,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -92,12 +92,12 @@ export default function StreamlitEmbed({
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                backgroundColor: colors.white,
-                border: `1px solid ${colors.gray[300]}`,
+                backgroundColor: colors.background.elevated,
+                border: `1px solid ${colors.border.light}`,
                 borderRadius: spacing.radius.element,
                 padding: `2px ${spacing.md}`,
                 fontSize: typography.fontSize.xs,
-                color: colors.gray[600],
+                color: colors.text.secondary,
                 textDecoration: 'none',
                 display: 'inline-block',
                 transition: 'all 0.2s',
@@ -107,8 +107,8 @@ export default function StreamlitEmbed({
                 e.currentTarget.style.color = colors.primary[500];
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = colors.gray[300];
-                e.currentTarget.style.color = colors.gray[600];
+                e.currentTarget.style.borderColor = colors.border.light;
+                e.currentTarget.style.color = colors.text.secondary;
               }}
             >
               Wake it up
@@ -120,7 +120,7 @@ export default function StreamlitEmbed({
             style={{
               background: 'none',
               border: 'none',
-              color: colors.gray[500],
+              color: colors.text.tertiary,
               cursor: 'pointer',
               fontSize: '16px',
               padding: `0 ${spacing.xs}`,

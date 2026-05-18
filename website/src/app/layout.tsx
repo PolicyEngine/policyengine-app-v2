@@ -2,9 +2,26 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-2YHG89FY0N";
+const THEME_INIT_SCRIPT = `
+(function() {
+  try {
+    var storedPreference = window.localStorage.getItem('policyengine-theme');
+    var preference = storedPreference === 'light' || storedPreference === 'dark'
+      ? storedPreference
+      : 'system';
+    var theme = preference === 'system'
+      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : preference;
+
+    document.documentElement.dataset.peTheme = theme;
+    document.documentElement.style.colorScheme = theme;
+  } catch (error) {}
+})();
+`;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.policyengine.org"),
@@ -25,8 +42,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="color-scheme" content="light dark" />
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
@@ -52,9 +75,11 @@ export default function RootLayout({
           margin: 0,
         }}
       >
-        {children}
-        <Analytics />
-        <SpeedInsights />
+        <ThemeProvider>
+          {children}
+          <Analytics />
+          <SpeedInsights />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,9 +1,5 @@
 import { Container, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 import TeamMemberCard, { TeamMember } from "./TeamMemberCard";
 
 export interface TeamSectionProps {
@@ -18,8 +14,8 @@ export default function TeamSection({
   variant = "primary",
 }: TeamSectionProps) {
   const backgrounds = {
-    primary: colors.white,
-    secondary: colors.gray[100],
+    primary: colors.background.primary,
+    secondary: colors.background.secondary,
     accent: colors.primary[700],
   };
 

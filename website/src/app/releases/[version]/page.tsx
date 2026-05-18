@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 type ReleasePageProps = {
   params: Promise<{ version: string }>;
@@ -67,7 +63,7 @@ function ExternalLink({
         style={{
           fontSize: typography.fontSize.lg,
           fontWeight: typography.fontWeight.semibold,
-          color: colors.primary[700],
+          color: colors.text.link,
         }}
       >
         {label}
@@ -94,7 +90,7 @@ export default async function ReleasePage({ params }: ReleasePageProps) {
     <main
       style={{
         minHeight: "100vh",
-        backgroundColor: colors.gray[50],
+        backgroundColor: colors.background.tertiary,
         color: colors.text.primary,
         fontFamily: typography.fontFamily.primary,
       }}
@@ -108,7 +104,7 @@ export default async function ReleasePage({ params }: ReleasePageProps) {
         <Link
           href="/us"
           style={{
-            color: colors.white,
+            color: colors.text.inverse,
             fontWeight: typography.fontWeight.semibold,
             textDecoration: "none",
             letterSpacing: "0.01em",
@@ -122,7 +118,7 @@ export default async function ReleasePage({ params }: ReleasePageProps) {
         style={{
           padding: `${spacing["4xl"]} 6.125%`,
           borderBottom: `1px solid ${colors.border.light}`,
-          backgroundColor: colors.white,
+          backgroundColor: colors.background.elevated,
         }}
       >
         <p
@@ -145,7 +141,7 @@ export default async function ReleasePage({ params }: ReleasePageProps) {
             fontSize: "clamp(2.5rem, 7vw, 5.5rem)",
             lineHeight: 0.95,
             letterSpacing: "-0.06em",
-            color: colors.primary[800],
+            color: colors.text.primary,
           }}
         >
           PolicyEngine v{normalizedVersion}
@@ -205,7 +201,7 @@ export default async function ReleasePage({ params }: ReleasePageProps) {
           style={{
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.container,
-            backgroundColor: colors.white,
+            backgroundColor: colors.background.elevated,
             overflow: "hidden",
             boxShadow: `0 12px 30px ${colors.shadow.light}`,
           }}

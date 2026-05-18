@@ -6,11 +6,7 @@ import OptimisedImage from "@/components/ui/OptimisedImage";
 import { Container } from "@/components/ui/Container";
 import { Text } from "@/components/ui/Text";
 import citationsData from "@/data/citations.json";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 interface Citation {
   /** Headline or title of the citing article */
@@ -72,7 +68,7 @@ function CitationCard({
           border: `1px solid ${colors.border.light}`,
           transition: "box-shadow 0.2s ease, transform 0.2s ease",
           cursor: "pointer",
-          backgroundColor: colors.white,
+          backgroundColor: colors.background.elevated,
           height: "100%",
           display: "flex",
           flexDirection: "column",
@@ -85,7 +81,7 @@ function CitationCard({
             flex: large ? "1 1 0" : undefined,
             aspectRatio: large ? undefined : "16 / 9",
             minHeight: large ? "200px" : undefined,
-            backgroundColor: colors.gray[100],
+            backgroundColor: colors.background.secondary,
             overflow: "hidden",
           }}
         >
@@ -106,7 +102,7 @@ function CitationCard({
                 parent.style.alignItems = "center";
                 parent.style.justifyContent = "center";
                 parent.style.padding = "24px";
-                parent.innerHTML = `<span style="color: ${colors.gray[400]}; font-family: ${typography.fontFamily.primary}; font-size: 18px; font-weight: 600; text-align: center;">${citation.outlet}</span>`;
+                parent.innerHTML = `<span style="color: ${colors.text.tertiary}; font-family: ${typography.fontFamily.primary}; font-size: 18px; font-weight: 600; text-align: center;">${citation.outlet}</span>`;
               }
             }}
           />
@@ -127,7 +123,7 @@ function CitationCard({
           <Text
             size={large ? "md" : "sm"}
             style={{
-              color: colors.gray[800],
+              color: colors.text.primary,
               fontWeight: large ? 600 : 500,
               lineHeight: 1.4,
               marginBottom: spacing.sm,
@@ -139,7 +135,7 @@ function CitationCard({
           >
             {citation.title}
           </Text>
-          <Text size="xs" style={{ color: colors.gray[400] }}>
+          <Text size="xs" style={{ color: colors.text.tertiary }}>
             {formatDate(citation.date)}
           </Text>
         </div>
@@ -176,8 +172,10 @@ function LocationFilter({
               padding: `${spacing.xs} ${spacing.md}`,
               borderRadius: "999px",
               border: `1px solid ${isActive ? colors.primary[500] : colors.border.light}`,
-              backgroundColor: isActive ? colors.primary[500] : colors.white,
-              color: isActive ? colors.white : colors.gray[600],
+              backgroundColor: isActive
+                ? colors.primary[500]
+                : colors.background.elevated,
+              color: isActive ? colors.text.inverse : colors.text.secondary,
               fontSize: "14px",
               fontFamily: typography.fontFamily.primary,
               fontWeight: isActive ? 600 : 400,
@@ -302,11 +300,13 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
             className="tw:text-center"
             style={{
               padding: spacing["3xl"],
-              backgroundColor: colors.gray[50],
+              backgroundColor: colors.background.secondary,
               borderRadius: spacing.radius.container,
             }}
           >
-            <Text style={{ color: colors.gray[500] }}>No citations yet.</Text>
+            <Text style={{ color: colors.text.secondary }}>
+              No citations yet.
+            </Text>
           </div>
         ) : (
           <>
@@ -317,7 +317,7 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
                   size="lg"
                   style={{
                     fontWeight: 600,
-                    color: colors.gray[800],
+                    color: colors.text.primary,
                     marginBottom: spacing.xl,
                   }}
                 >
@@ -334,7 +334,7 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
                   size="lg"
                   style={{
                     fontWeight: 600,
-                    color: colors.gray[800],
+                    color: colors.text.primary,
                     marginBottom: spacing.xl,
                   }}
                 >

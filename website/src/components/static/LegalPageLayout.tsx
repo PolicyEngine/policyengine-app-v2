@@ -1,5 +1,5 @@
-import { Container, Title } from '@/components/ui';
-import { colors, spacing, typography } from '@/designTokens';
+import { Container, Title } from "@/components/ui";
+import { colors, spacing, typography } from "@/designTokens";
 
 export interface LegalSection {
   heading: string;
@@ -11,37 +11,40 @@ export interface LegalPageLayoutProps {
   sections: LegalSection[];
 }
 
-export default function LegalPageLayout({ title, sections }: LegalPageLayoutProps) {
+export default function LegalPageLayout({
+  title,
+  sections,
+}: LegalPageLayoutProps) {
   return (
     <div
       style={{
-        paddingTop: spacing['4xl'],
-        paddingBottom: spacing['4xl'],
-        backgroundColor: colors.white,
-        paddingLeft: '6.125%',
-        paddingRight: '6.125%',
+        paddingTop: spacing["4xl"],
+        paddingBottom: spacing["4xl"],
+        backgroundColor: colors.background.primary,
+        paddingLeft: "6.125%",
+        paddingRight: "6.125%",
       }}
     >
       <Container size="md" className="tw:px-0">
         <Title
           order={1}
           style={{
-            fontSize: typography.fontSize['4xl'],
+            fontSize: typography.fontSize["4xl"],
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,
             color: colors.text.primary,
-            marginBottom: spacing['3xl'],
+            marginBottom: spacing["3xl"],
           }}
         >
           {title}
         </Title>
 
         {sections.map((section, index) => (
-          <div key={index} style={{ marginBottom: spacing['2xl'] }}>
+          <div key={index} style={{ marginBottom: spacing["2xl"] }}>
             <Title
               order={2}
               style={{
-                fontSize: typography.fontSize['2xl'],
+                fontSize: typography.fontSize["2xl"],
                 fontWeight: typography.fontWeight.semibold,
                 fontFamily: typography.fontFamily.primary,
                 color: colors.text.primary,

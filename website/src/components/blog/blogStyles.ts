@@ -4,38 +4,34 @@
  * for markdown rendering in blog posts.
  */
 
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export const blogColors = {
   primary: colors.primary[600],
-  primaryLight: colors.primary[100],
+  primaryLight: colors.background.accent,
   primaryHover: colors.primary[700],
 
-  textPrimary: colors.gray[800],
-  textSecondary: colors.gray[600],
-  textTertiary: colors.gray[500],
-  textHeading: colors.gray[900],
-  textHeading2: colors.gray[800],
-  textHeading3: colors.gray[700],
-  textHeading4: colors.gray[600],
+  textPrimary: colors.text.primary,
+  textSecondary: colors.text.secondary,
+  textTertiary: colors.text.tertiary,
+  textHeading: colors.text.title,
+  textHeading2: colors.text.title,
+  textHeading3: colors.text.primary,
+  textHeading4: colors.text.secondary,
 
-  backgroundPrimary: colors.white,
-  backgroundSecondary: colors.gray[50],
-  backgroundCode: colors.gray[100],
-  backgroundCodeLabel: colors.gray[100],
-  backgroundTable: colors.gray[100],
+  backgroundPrimary: colors.background.primary,
+  backgroundSecondary: colors.background.secondary,
+  backgroundCode: colors.background.tertiary,
+  backgroundCodeLabel: colors.background.tertiary,
+  backgroundTable: colors.background.secondary,
 
-  borderLight: colors.gray[100],
-  borderMedium: colors.gray[200],
-  borderDark: colors.gray[300],
+  borderLight: colors.border.light,
+  borderMedium: colors.border.medium,
+  borderDark: colors.border.dark,
 
   link: colors.primary[600],
   linkHover: colors.primary[700],
-  anchorLink: colors.gray[400],
+  anchorLink: colors.text.tertiary,
 } as const;
 
 export const blogTypography = {

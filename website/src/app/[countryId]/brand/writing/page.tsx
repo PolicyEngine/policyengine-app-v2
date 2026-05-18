@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { Text, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export const metadata: Metadata = {
   title: "Writing guide",
@@ -74,9 +70,7 @@ function ExampleBox({
     <div
       className="tw:p-md"
       style={{
-        background: isGood
-          ? `${colors.primary[500]}10`
-          : `${colors.error}10`,
+        background: isGood ? `${colors.primary[500]}10` : `${colors.error}10`,
         border: `1px solid ${isGood ? colors.primary[500] : colors.error}30`,
         borderRadius: spacing.radius.container,
       }}
@@ -109,18 +103,12 @@ function ExampleBox({
   );
 }
 
-function TermItem({
-  term,
-  definition,
-}: {
-  term: string;
-  definition: string;
-}) {
+function TermItem({ term, definition }: { term: string; definition: string }) {
   return (
     <div
       className="tw:flex tw:items-center tw:p-md tw:gap-lg"
       style={{
-        background: colors.white,
+        background: colors.background.elevated,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
       }}
@@ -189,8 +177,8 @@ export default function BrandWritingPage() {
         style={{
           paddingTop: spacing["4xl"],
           paddingBottom: spacing["4xl"],
-          backgroundColor: colors.primary[50],
-          borderBottom: `1px solid ${colors.border.dark}`,
+          backgroundColor: colors.background.accent,
+          borderBottom: `1px solid ${colors.border.light}`,
           paddingLeft: "6.125%",
           paddingRight: "6.125%",
         }}
@@ -229,8 +217,8 @@ export default function BrandWritingPage() {
             maxWidth: 600,
           }}
         >
-          How PolicyEngine communicates. Voice, tone, and content guidelines
-          for research-oriented writing.
+          How PolicyEngine communicates. Voice, tone, and content guidelines for
+          research-oriented writing.
         </Text>
       </div>
 
@@ -255,16 +243,16 @@ export default function BrandWritingPage() {
               lineHeight: typography.lineHeight.relaxed,
             }}
           >
-            Always use sentence case for headings, not title case. This
-            follows the modern standard used by Apple, Google, Slack, Notion,
-            and GOV.UK.
+            Always use sentence case for headings, not title case. This follows
+            the modern standard used by Apple, Google, Slack, Notion, and
+            GOV.UK.
           </Text>
 
           <div className="tw:mb-xl">
             <RuleTitle>The rule</RuleTitle>
             <RuleDescription>
-              Capitalize only the first word of a heading and any proper
-              nouns. Everything else stays lowercase.
+              Capitalize only the first word of a heading and any proper nouns.
+              Everything else stays lowercase.
             </RuleDescription>
             <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
@@ -295,8 +283,7 @@ export default function BrandWritingPage() {
           <div className="tw:mb-xl">
             <RuleTitle>Proper nouns stay capitalized</RuleTitle>
             <RuleDescription>
-              Brand names, acronyms, and proper nouns keep their
-              capitalization.
+              Brand names, acronyms, and proper nouns keep their capitalization.
             </RuleDescription>
             <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
@@ -342,9 +329,7 @@ export default function BrandWritingPage() {
               <li style={{ marginBottom: spacing.xs }}>Navigation labels</li>
               <li style={{ marginBottom: spacing.xs }}>Button text</li>
               <li style={{ marginBottom: spacing.xs }}>Form labels</li>
-              <li style={{ marginBottom: spacing.xs }}>
-                Documentation titles
-              </li>
+              <li style={{ marginBottom: spacing.xs }}>Documentation titles</li>
               <li style={{ marginBottom: spacing.xs }}>Blog post titles</li>
               <li style={{ marginBottom: spacing.xs }}>Error messages</li>
             </ul>
@@ -371,8 +356,8 @@ export default function BrandWritingPage() {
           <div className="tw:mb-xl">
             <RuleTitle>Use active voice</RuleTitle>
             <RuleDescription>
-              Write in active voice. The subject should perform the action,
-              not receive it.
+              Write in active voice. The subject should perform the action, not
+              receive it.
             </RuleDescription>
             <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
@@ -438,9 +423,9 @@ export default function BrandWritingPage() {
           <div className="tw:mb-xl">
             <RuleTitle>Present numbers dispassionately</RuleTitle>
             <RuleDescription>
-              When presenting results from PolicyEngine, let the data speak
-              for itself. Avoid adjectives or adverbs that aren&apos;t backed
-              by the numbers themselves.
+              When presenting results from PolicyEngine, let the data speak for
+              itself. Avoid adjectives or adverbs that aren&apos;t backed by the
+              numbers themselves.
             </RuleDescription>
             <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
@@ -454,13 +439,11 @@ export default function BrandWritingPage() {
               </div>
               <div className="tw:flex-1">
                 <ExampleBox type="bad">
-                  The policy dramatically slashes poverty by an impressive
-                  15%.
+                  The policy dramatically slashes poverty by an impressive 15%.
                   <br />
                   Benefits skyrocket by a remarkable $2,400/year.
                   <br />
-                  The reform has a surprisingly modest cost of just $80
-                  billion.
+                  The reform has a surprisingly modest cost of just $80 billion.
                 </ExampleBox>
               </div>
             </div>

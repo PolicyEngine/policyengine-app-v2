@@ -11,12 +11,12 @@ interface TwoColumnViewProps {
 function TwoColumnView({ title, leftColumn, rightColumn, backgroundColor }: TwoColumnViewProps) {
   function getBackgroundColor(): string {
     if (backgroundColor === 'primary') {
-      return colors.primary[100];
+      return colors.background.accent;
     }
     if (backgroundColor === 'secondary') {
-      return colors.secondary[100];
+      return colors.background.secondary;
     }
-    return colors.white;
+    return colors.background.elevated;
   }
 
   return (

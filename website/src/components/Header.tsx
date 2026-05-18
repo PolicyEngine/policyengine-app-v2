@@ -9,12 +9,9 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 import OptimisedImage from "@/components/ui/OptimisedImage";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useCountryId } from "@/hooks/useCountryId";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
@@ -114,12 +111,11 @@ function DropdownPanel({
           transition:
             "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           borderRadius: "14px",
-          background:
-            "linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,249,255,0.95))",
+          background: colors.background.overlay,
           backdropFilter: "blur(24px) saturate(200%)",
           WebkitBackdropFilter: "blur(24px) saturate(200%)",
-          boxShadow:
-            "0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.6)",
+          border: `1px solid ${colors.border.light}`,
+          boxShadow: `0 20px 60px ${colors.shadow.medium}, 0 4px 16px ${colors.shadow.light}`,
           zIndex: 1001,
         }}
       >
@@ -140,7 +136,7 @@ function DropdownPanel({
                 fontSize: "14px",
                 fontFamily: typography.fontFamily.primary,
                 fontWeight: typography.fontWeight.semibold,
-                color: colors.primary[800],
+                color: colors.text.primary,
                 transition:
                   "background-color 0.12s ease, color 0.12s ease, opacity 0.3s ease",
                 transitionDelay: visible ? `${i * 50}ms` : "0ms",
@@ -154,7 +150,7 @@ function DropdownPanel({
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = colors.primary[800];
+                e.currentTarget.style.color = colors.text.primary;
               }}
             >
               {item.label}
@@ -349,12 +345,11 @@ function CountrySelector() {
               transition:
                 "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               borderRadius: "14px",
-              background:
-                "linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,249,255,0.95))",
+              background: colors.background.overlay,
               backdropFilter: "blur(24px) saturate(200%)",
               WebkitBackdropFilter: "blur(24px) saturate(200%)",
-              boxShadow:
-                "0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.6)",
+              border: `1px solid ${colors.border.light}`,
+              boxShadow: `0 20px 60px ${colors.shadow.medium}, 0 4px 16px ${colors.shadow.light}`,
               zIndex: 1001,
             }}
           >
@@ -380,7 +375,7 @@ function CountrySelector() {
                       countryId === country.id
                         ? typography.fontWeight.bold
                         : typography.fontWeight.semibold,
-                    color: colors.primary[800],
+                    color: colors.text.primary,
                     transition:
                       "background-color 0.12s ease, color 0.12s ease, opacity 0.3s ease",
                     transitionDelay: visible ? `${i * 50}ms` : "0ms",
@@ -394,7 +389,7 @@ function CountrySelector() {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = colors.primary[800];
+                    e.currentTarget.style.color = colors.text.primary;
                   }}
                 >
                   {country.label}
@@ -430,7 +425,13 @@ const mobileNavLinkStyle: React.CSSProperties = {
   display: "block",
 };
 
-function MobileNavLink({ item, onClose }: { item: NavItemSetup; onClose: () => void }) {
+function MobileNavLink({
+  item,
+  onClose,
+}: {
+  item: NavItemSetup;
+  onClose: () => void;
+}) {
   const Tag = item.external ? "a" : Link;
   return (
     <Tag href={item.href || "#"} onClick={onClose} style={mobileNavLinkStyle}>
@@ -504,19 +505,24 @@ function MobileMenu({
           >
             Menu
           </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close menu"
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-            }}
+          <div
+            style={{ display: "flex", alignItems: "center", gap: spacing.sm }}
           >
-            <IconX size={20} color={colors.text.inverse} />
-          </button>
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close menu"
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+              }}
+            >
+              <IconX size={20} color={colors.text.inverse} />
+            </button>
+          </div>
         </div>
 
         <div
@@ -585,9 +591,24 @@ export default function Header() {
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
-    { label: "Model", href: `/${countryId}/model`, hasDropdown: false, external: true },
-    { label: "API", href: `/${countryId}/api`, hasDropdown: false, external: true },
-    { label: "Python", href: `/${countryId}/python`, hasDropdown: false, external: true },
+    {
+      label: "Model",
+      href: `/${countryId}/model`,
+      hasDropdown: false,
+      external: true,
+    },
+    {
+      label: "API",
+      href: `/${countryId}/api`,
+      hasDropdown: false,
+      external: true,
+    },
+    {
+      label: "Python",
+      href: `/${countryId}/python`,
+      hasDropdown: false,
+      external: true,
+    },
     {
       label: "About",
       hasDropdown: true,
@@ -660,7 +681,11 @@ export default function Header() {
         </div>
 
         {/* Right: country selector (desktop) */}
-        <div className="tw:hidden tw:lg:flex" style={{ alignItems: "center" }}>
+        <div
+          className="tw:hidden tw:lg:flex"
+          style={{ alignItems: "center", gap: spacing.sm }}
+        >
+          <ThemeToggle />
           <CountrySelector />
         </div>
 
@@ -670,6 +695,7 @@ export default function Header() {
           className="tw:flex tw:lg:hidden"
           style={{ alignItems: "center", gap: spacing.md }}
         >
+          <ThemeToggle />
           <CountrySelector />
           <button
             type="button"

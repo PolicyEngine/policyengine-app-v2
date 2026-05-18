@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Text } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export interface ActionButtonProps {
   text: string;
@@ -33,24 +29,24 @@ export default function ActionButton({
   }, [text, multiline]);
   const styles = {
     primary: {
-      backgroundColor: colors.white,
+      backgroundColor: colors.background.elevated,
       color: colors.text.primary,
       border: `2px solid ${colors.border.light}`,
-      hoverBackground: colors.gray[50],
+      hoverBackground: colors.background.hover,
       hoverBorder: colors.black,
     },
     secondary: {
       backgroundColor: colors.primary[500],
-      color: colors.white,
+      color: colors.text.inverse,
       border: `2px solid ${colors.primary[500]}`,
       hoverBackground: colors.primary[600],
       hoverBorder: colors.primary[600],
     },
     inverted: {
-      backgroundColor: colors.white,
+      backgroundColor: colors.background.elevated,
       color: colors.text.primary,
-      border: `2px solid ${colors.white}`,
-      hoverBackground: colors.gray[50],
+      border: `2px solid ${colors.border.light}`,
+      hoverBackground: colors.background.hover,
       hoverBorder: colors.black,
     },
   };

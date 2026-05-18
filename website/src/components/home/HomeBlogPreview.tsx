@@ -4,11 +4,7 @@ import Link from "next/link";
 import { Container, Group, Text } from "@/components/ui";
 import OptimisedImage from "@/components/ui/OptimisedImage";
 import { cn } from "@/lib/utils";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 import { getPostsSorted } from "@/data/posts/postTransformers";
 import type { BlogPost } from "@/types/blog";
 
@@ -65,14 +61,14 @@ function PrimaryCard({ post, countryId, flex }: PrimaryCardProps) {
       <div
         className={cn(
           "tw:flex tw:flex-col tw:h-full",
-          "tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light",
+          "tw:rounded-feature tw:overflow-hidden tw:bg-card tw:border tw:border-border-light",
           "tw:transition-all tw:duration-300 tw:ease-out",
           "tw:hover:shadow-[0_8px_30px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5",
           "tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none",
         )}
       >
         {imageUrl && (
-          <div className="tw:min-h-[200px] tw:flex-1 tw:overflow-hidden tw:bg-gray-100">
+          <div className="tw:min-h-[200px] tw:flex-1 tw:overflow-hidden tw:bg-muted">
             <OptimisedImage
               src={imageUrl}
               alt={post.title}
@@ -90,7 +86,7 @@ function PrimaryCard({ post, countryId, flex }: PrimaryCardProps) {
             {date}
           </p>
 
-          <p className="tw:text-2xl tw:font-bold tw:leading-tight tw:text-gray-900 tw:mb-md">
+          <p className="tw:text-2xl tw:font-bold tw:leading-tight tw:text-card-foreground tw:mb-md">
             {post.title}
           </p>
 
@@ -128,14 +124,14 @@ function SecondaryCard({ post, countryId }: SecondaryCardProps) {
       <div
         className={cn(
           "tw:flex tw:flex-col tw:h-full",
-          "tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light",
+          "tw:rounded-feature tw:overflow-hidden tw:bg-card tw:border tw:border-border-light",
           "tw:transition-all tw:duration-300 tw:ease-out",
           "tw:hover:shadow-[0_6px_24px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5",
           "tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none",
         )}
       >
         {imageUrl && (
-          <div className="tw:h-[180px] tw:overflow-hidden tw:bg-gray-100 tw:shrink-0">
+          <div className="tw:h-[180px] tw:overflow-hidden tw:bg-muted tw:shrink-0">
             <OptimisedImage
               src={imageUrl}
               alt={post.title}
@@ -153,7 +149,7 @@ function SecondaryCard({ post, countryId }: SecondaryCardProps) {
             {date}
           </p>
 
-          <p className="tw:text-base tw:font-semibold tw:leading-snug tw:text-gray-900 tw:line-clamp-2 tw:mb-sm">
+          <p className="tw:text-base tw:font-semibold tw:leading-snug tw:text-card-foreground tw:line-clamp-2 tw:mb-sm">
             {post.title}
           </p>
 
@@ -174,11 +170,7 @@ function SecondaryCard({ post, countryId }: SecondaryCardProps) {
 /*  HomeBlogPreview                                                    */
 /* ------------------------------------------------------------------ */
 
-export default function HomeBlogPreview({
-  countryId,
-}: {
-  countryId: string;
-}) {
+export default function HomeBlogPreview({ countryId }: { countryId: string }) {
   // getPostsSorted() returns posts sorted newest-first with slugs pre-computed
   const relevantPosts = getPostsSorted()
     .filter(
@@ -197,7 +189,7 @@ export default function HomeBlogPreview({
   return (
     <div
       style={{
-        backgroundColor: colors.gray[50],
+        backgroundColor: colors.background.secondary,
         paddingTop: spacing["5xl"],
         paddingBottom: spacing["5xl"],
       }}
@@ -213,7 +205,7 @@ export default function HomeBlogPreview({
             fw={typography.fontWeight.bold}
             style={{
               fontSize: typography.fontSize["3xl"],
-              color: colors.primary[800],
+              color: colors.text.title,
               fontFamily: typography.fontFamily.primary,
               lineHeight: typography.lineHeight.tight,
             }}
@@ -241,10 +233,7 @@ export default function HomeBlogPreview({
           style={{ gap: spacing["2xl"] }}
         >
           {/* Left column: 2 posts stacked, filling equal height */}
-          <div
-            className="tw:flex tw:flex-col"
-            style={{ gap: spacing["2xl"] }}
-          >
+          <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
             {leftPosts.map((post: BlogPost) => (
               <PrimaryCard
                 key={post.slug}
@@ -256,10 +245,7 @@ export default function HomeBlogPreview({
           </div>
 
           {/* Right column: 3 smaller posts stacked */}
-          <div
-            className="tw:flex tw:flex-col"
-            style={{ gap: spacing["2xl"] }}
-          >
+          <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
             {rightPosts.map((post: BlogPost) => (
               <SecondaryCard
                 key={post.slug}

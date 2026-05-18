@@ -1,10 +1,6 @@
 import { ReactNode } from "react";
 import { Container, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export interface ContentSectionProps {
   title?: string;
@@ -20,8 +16,8 @@ export default function ContentSection({
   centerTitle = false,
 }: ContentSectionProps) {
   const backgrounds = {
-    primary: colors.white,
-    secondary: colors.gray[100],
+    primary: colors.background.primary,
+    secondary: colors.background.secondary,
     accent: colors.primary[700],
   };
 

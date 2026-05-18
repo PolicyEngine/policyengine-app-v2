@@ -11,12 +11,12 @@ export interface ColorScale {
 
 /**
  * Diverging color scale for positive/negative values
- * Gray (negative) → Subtle background (neutral) → Teal (positive)
+ * Gray (negative) → Light gray (neutral) → Teal (positive)
  *
  * Uses design tokens from the primary brand palette:
  * - Dark gray (#344054) for most negative values
  * - Medium gray (#9CA3AF) for moderately negative values
- * - Light background (#F1F5F9) for neutral/near-zero values
+ * - Light gray (#F2F4F7) for neutral/near-zero values
  * - Light teal (#81E6D9) for moderately positive values
  * - Teal (#2C7A7B) for most positive values
  */
@@ -25,7 +25,7 @@ export const DIVERGING_GRAY_BLUE: ColorScale = {
   colors: [
     colors.gray[700],
     colors.gray[400],
-    colors.background.tertiary,
+    colors.gray[100],
     colors.primary[200],
     colors.primary[600],
   ],
@@ -34,7 +34,7 @@ export const DIVERGING_GRAY_BLUE: ColorScale = {
 
 /**
  * Diverging color scale for positive/negative values using teal primary
- * Gray (negative) → White (neutral) → Teal (positive)
+ * Gray (negative) → Light gray (neutral) → Teal (positive)
  *
  * Uses design tokens from the primary teal color palette
  */
@@ -43,7 +43,7 @@ export const DIVERGING_GRAY_TEAL: ColorScale = {
   colors: [
     colors.gray[700], // Dark gray (most negative)
     colors.gray[400], // Medium gray
-    colors.background.tertiary,
+    colors.gray[100],
     colors.primary[200], // Light teal
     colors.primary[600], // Teal (most positive)
   ],

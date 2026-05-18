@@ -1,3 +1,5 @@
+const cssVar = (name: string) => `var(${name})`;
+
 /**
  * PolicyEngine color palette.
  *
@@ -58,20 +60,24 @@ export const colors = {
   },
 
   background: {
-    primary: '#FFFFFF',
-    secondary: '#F5F9FF',
-    tertiary: '#F1F5F9',
-    sider: '#FFFFFF',
+    primary: cssVar('--tw-color-bg-primary'),
+    secondary: cssVar('--tw-color-bg-secondary'),
+    tertiary: cssVar('--tw-color-bg-tertiary'),
+    sider: cssVar('--tw-color-bg-primary'),
+    elevated: cssVar('--tw-color-card'),
+    accent: cssVar('--pe-color-surface-accent'),
+    overlay: cssVar('--pe-color-surface-overlay'),
+    hover: cssVar('--pe-color-surface-hover'),
   },
 
   text: {
-    primary: '#000000',
-    secondary: '#5A5A5A',
-    tertiary: '#9CA3AF',
+    primary: cssVar('--tw-color-text-primary'),
+    secondary: cssVar('--tw-color-text-secondary'),
+    tertiary: cssVar('--tw-color-text-tertiary'),
     inverse: '#FFFFFF',
-    title: '#000000',
-    link: '#2C7A7B',
-    linkHover: '#285E61',
+    title: cssVar('--tw-color-text-primary'),
+    link: cssVar('--tw-color-text-link'),
+    linkHover: cssVar('--tw-color-text-link-hover'),
     warning: '#d9480f',
   },
 
@@ -80,15 +86,15 @@ export const colors = {
   },
 
   border: {
-    light: '#E2E8F0',
-    medium: '#CBD5E1',
-    dark: '#94A3B8',
+    light: cssVar('--tw-color-border-light'),
+    medium: cssVar('--tw-color-border-medium'),
+    dark: cssVar('--tw-color-border-dark'),
   },
 
   shadow: {
-    light: 'rgba(16, 24, 40, 0.05)',
-    medium: 'rgba(16, 24, 40, 0.1)',
-    dark: 'rgba(16, 24, 40, 0.2)',
+    light: cssVar('--pe-shadow-light'),
+    medium: cssVar('--pe-shadow-medium'),
+    dark: cssVar('--pe-shadow-dark'),
   },
 } as const;
 

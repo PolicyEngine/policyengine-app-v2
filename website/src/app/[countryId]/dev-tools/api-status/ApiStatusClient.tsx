@@ -6,7 +6,13 @@ import {
   IconCircleCheck,
   IconCircleX,
 } from "@tabler/icons-react";
-import { Alert, AlertDescription, AlertTitle, Spinner, Text } from "@/components/ui";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Spinner,
+  Text,
+} from "@/components/ui";
 import { colors, spacing, typography } from "@/designTokens";
 import type {
   DayRecord,
@@ -42,24 +48,33 @@ function getAggregateStatus(monitors: MonitorData[]): AggregateStatus {
 
 const STATUS_CONFIG: Record<
   AggregateStatus,
-  { label: string; bg: string; text: string; icon: typeof IconCircleCheck }
+  {
+    label: string;
+    bg: string;
+    text: string;
+    border: string;
+    icon: typeof IconCircleCheck;
+  }
 > = {
   operational: {
     label: "All systems operational",
-    bg: colors.primary[50],
-    text: colors.primary[700],
+    bg: colors.background.accent,
+    text: colors.text.link,
+    border: colors.border.light,
     icon: IconCircleCheck,
   },
   degraded: {
     label: "Some systems experiencing issues",
-    bg: "#FEF9E7",
-    text: "#92400E",
+    bg: colors.background.elevated,
+    text: colors.warning,
+    border: colors.warning,
     icon: IconAlertTriangle,
   },
   down: {
     label: "System outage detected",
-    bg: "#FEF2F2",
-    text: "#991B1B",
+    bg: colors.background.elevated,
+    text: colors.error,
+    border: colors.error,
     icon: IconCircleX,
   },
 };
@@ -96,7 +111,7 @@ const COLOR_STOPS: RGB[] = [
   hexToRgb(colors.error),
 ];
 
-const NO_DATA_COLOR = colors.gray[200];
+const NO_DATA_COLOR = colors.border.medium;
 
 function colorForDay(day: DayRecord): string {
   if (day.status === "no-data") {
@@ -149,9 +164,7 @@ function formatDowntime(minutes: number): string {
 
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = Math.round(minutes % 60);
-  return remainingMinutes > 0
-    ? `${hours}h ${remainingMinutes}m`
-    : `${hours}h`;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
 
 function formatDate(dateStr: string): string {
@@ -175,9 +188,10 @@ function formatLastUpdated(timestamp: string): string {
   });
 }
 
-function formatMonitorStatus(
-  status: MonitorStatus,
-): { label: string; color: string } {
+function formatMonitorStatus(status: MonitorStatus): {
+  label: string;
+  color: string;
+} {
   if (status === "up") {
     return { label: "Operational", color: colors.primary[500] };
   }
@@ -215,7 +229,7 @@ function AggregateStatusBanner({ monitors }: { monitors: MonitorData[] }) {
       style={{
         backgroundColor: config.bg,
         padding: spacing["2xl"],
-        border: `1px solid ${colors.border.light}`,
+        border: `1px solid ${config.border}`,
         borderRadius: spacing.radius.container,
       }}
     >
@@ -268,12 +282,11 @@ function DayBar({ day }: { day: DayRecord }) {
             bottom: "calc(100% + 8px)",
             left: "50%",
             transform: "translateX(-50%)",
-            background: colors.white,
-            border: `1px solid ${colors.gray[200]}`,
+            background: colors.background.elevated,
+            border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.element,
             padding: `${spacing.sm} ${spacing.md}`,
-            boxShadow:
-              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
+            boxShadow: `0 8px 20px ${colors.shadow.medium}`,
             zIndex: 50,
             whiteSpace: "nowrap",
             pointerEvents: "none",
@@ -385,7 +398,7 @@ function MonitorRow({ monitor }: { monitor: MonitorData }) {
   return (
     <div
       style={{
-        backgroundColor: colors.white,
+        backgroundColor: colors.background.elevated,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
         padding: spacing["2xl"],
@@ -457,7 +470,9 @@ function useStatusData(): {
         const response = await fetch(
           `/api/betterstack?monitors=${MONITOR_IDS.join(",")}`,
         );
-        const data = (await response.json()) as StatusPageData | { error: string };
+        const data = (await response.json()) as
+          | StatusPageData
+          | { error: string };
 
         if (!response.ok) {
           throw new Error(
