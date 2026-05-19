@@ -151,6 +151,19 @@
   },
   {
     "type": "iframe",
+    "slug": "south-carolina-2026-tax-changes",
+    "title": "South Carolina 2026 tax changes calculator",
+    "description": "Estimate the household and statewide impact of South Carolina H.4216 (Act 110), which consolidates income tax brackets, replaces federal deductions with the state-specific SCIAD, and caps the nonrefundable state EITC at $200",
+    "source": "https://south-carolina-2026-tax-changes.vercel.app/us/south-carolina-2026-tax-changes",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "south-carolina-2026-tax-changes.png",
+    "date": "2026-05-19 12:00:00",
+    "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
     "slug": "wv-sb392-tax-cut",
     "title": "West Virginia SB 392 income tax cut calculator",
     "description": "Estimate the household and statewide impact of West Virginia Senate Bill 392, which reduces personal income tax rates by approximately 5% starting in 2026",
