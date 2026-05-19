@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Add Missouri income tax elimination calculator at /us/missouri-income-tax-elimination
+      - Add gradient-background logo variants (wide and square) to brand assets
