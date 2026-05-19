@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { Button, Text, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export const metadata: Metadata = {
   title: "Assets",
@@ -81,13 +77,7 @@ function LogoCard({
   );
 }
 
-function UsageCard({
-  type,
-  items,
-}: {
-  type: "do" | "dont";
-  items: string[];
-}) {
+function UsageCard({ type, items }: { type: "do" | "dont"; items: string[] }) {
   const isDo = type === "do";
   return (
     <div
@@ -260,6 +250,11 @@ export default function BrandAssetsPage() {
               background={colors.primary[700]}
               logoSrc="/assets/logos/policyengine/white.png"
             />
+            <LogoCard
+              variant="White on gradient"
+              background={colors.white}
+              logoSrc="/assets/logos/policyengine/gradient.png"
+            />
           </div>
 
           <Text
@@ -282,6 +277,11 @@ export default function BrandAssetsPage() {
               variant="Teal square (transparent)"
               background={colors.gray[100]}
               logoSrc="/assets/logos/policyengine/teal-square-transparent.png"
+            />
+            <LogoCard
+              variant="White square on gradient"
+              background={colors.white}
+              logoSrc="/assets/logos/policyengine/gradient-square.png"
             />
           </div>
         </div>
