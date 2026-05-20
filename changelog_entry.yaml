@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Add South Carolina 2026 tax changes calculator at /us/south-carolina-2026-tax-changes
+      - Add QBI deduction calculator multizone at /us/qbi-calculator

@@ -101,40 +101,34 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
 ## Embedded sites
 
-### Vercel rewrites (server-side proxy)
+### Next.js multizones (default for all new tools)
 
-Some external apps are served via Vercel rewrites in `vercel.json`, not iframes. This is required for Next.js apps (CSR/SSR) because they render blank in cross-origin iframes.
+External PolicyEngine Next.js apps are stitched into `policyengine.org` as **Next.js multizones**. The website host (`website/next.config.ts`) proxies a public path to the zone's standalone Vercel deployment via `rewrites()`; the zone itself sets a matching `basePath` (or `assetPrefix` for root-served zones) so its `_next/*` assets resolve through the same proxy.
 
-| Route        | Destination                                  | Source repo             |
-| ------------ | -------------------------------------------- | ----------------------- |
-| `/slides/*`  | `policyengine-slides.vercel.app/slides/*`    | `policyengine-slides`   |
-| `/_tracker/*`| `policyengine--state-legislative-tracker...`  | state legislative tracker |
-| `/us/api/*`  | `household-api-docs-policy-engine.vercel.app/us/api/*` | `household-api-docs` |
+**To add a new zone embed, edit two files — and *not* `vercel.json`:**
 
-**Important**: Rewrite rules in `vercel.json` must appear before the SPA catch-all (`{ "source": "/(.*)", "destination": "/website.html" }`), otherwise the catch-all intercepts first.
+1. `website/src/data/appZoneRoutes.ts` — add a `{ source, destination }` entry. `appZoneRewrites` flattens this into the deep-path rewrite pair and feeds `beforeFiles` in `website/next.config.ts`.
+2. The zone repo — set `basePath: '/us/<slug>'` (path-mounted) or `assetPrefix: '/_zones/<slug>'` (root-served). See the `policyengine-interactive-tools` skill / `complete:audit-multizone` for the full rule set.
 
-### GitHub Pages iframes
+`changelog_entry.yaml` gets the user-facing line.
 
-Simple static sites (GitHub Pages) can be embedded via iframes in `app/src/pages/`:
+Why not `vercel.json`? The root `vercel.json` still hosts a few legacy zone rewrites and host-only routes (favicons, SPA catch-all), but multizone is the source of truth going forward — new entries in `vercel.json` will collide with the website's own `beforeFiles` ordering and bypass the multizone audit CI. Adding to `appZoneRoutes.ts` is the only path that gets validated by `app-zone-shell-audit` and `multizone-tracking-audit`. The `guard-vercel-zone-rewrites` workflow fails the PR if a new country-prefixed `*.vercel.app` rewrite slips into `vercel.json`.
+
+Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/PolicyEngine/policyengine-app-v2/pull/1047), [#1027 multizone apps registry](https://github.com/PolicyEngine/policyengine-app-v2/pull/1027).
+
+### GitHub Pages iframes (legacy)
+
+A few static GitHub Pages sites are still embedded via iframes in `app/src/pages/`. Do not add new ones — use multizones.
 
 | Route                             | Component                   | Embed source                                 |
 | --------------------------------- | --------------------------- | -------------------------------------------- |
-| `/:countryId/ai-inequality`       | `AIGrowthResearch.page.tsx` | `policyengine.github.io/ai-inequality`       |
 | `/:countryId/2025-year-in-review` | `YearInReview.page.tsx`     | `policyengine.github.io/2025-year-in-review` |
-
-When renaming an embedded repo:
-
-1. Update the iframe `src` URL in the page component
-2. Update `PUBLIC_URL` in the embedded repo's CI workflow
-3. Search the org for other references: `gh api search/code?q=org:PolicyEngine+OLD_NAME`
 
 CI automatically checks these embed URLs on every push and PR (the `check-embeds` job in `pr.yaml` and `push.yaml`).
 
-### Choosing iframe vs Vercel rewrite
+### Host-only `vercel.json` rewrites
 
-- **Static sites (GitHub Pages)** → iframe works fine
-- **Next.js / CSR apps** → must use Vercel rewrite (Next.js `BAILOUT_TO_CLIENT_SIDE_RENDERING` renders blank in cross-origin iframes)
-- Vercel rewrites don't need React Router routes — the rewrite handles everything server-side
+The root `vercel.json` is still used for host-internal rewrites (favicons, the SPA catch-all, a handful of pre-multizone external proxies). Treat any `/us/*` → `*.vercel.app` shape there as legacy — do not add to it.
 
 ## Before committing
 

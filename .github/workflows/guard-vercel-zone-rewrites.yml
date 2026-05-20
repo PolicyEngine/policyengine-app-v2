@@ -1,0 +1,33 @@
+name: Guard vercel.json zone rewrites
+
+on:
+  pull_request:
+    paths:
+      - "vercel.json"
+      - ".github/scripts/guard-vercel-zone-rewrites.mjs"
+      - ".github/scripts/guard-vercel-zone-rewrites.test.mjs"
+      - ".github/workflows/guard-vercel-zone-rewrites.yml"
+  push:
+    branches: [main]
+    paths:
+      - "vercel.json"
+      - ".github/scripts/guard-vercel-zone-rewrites.mjs"
+      - ".github/scripts/guard-vercel-zone-rewrites.test.mjs"
+      - ".github/workflows/guard-vercel-zone-rewrites.yml"
+
+jobs:
+  guard:
+    name: Guard vercel.json zone rewrites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run guard unit tests
+        run: node --test .github/scripts/guard-vercel-zone-rewrites.test.mjs
+
+      - name: Check vercel.json for unauthorized zone-shaped rewrites
+        run: node .github/scripts/guard-vercel-zone-rewrites.mjs
