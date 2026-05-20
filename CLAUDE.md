@@ -112,7 +112,7 @@ External PolicyEngine Next.js apps are stitched into `policyengine.org` as **Nex
 
 `changelog_entry.yaml` gets the user-facing line.
 
-Why not `vercel.json`? The root `vercel.json` still hosts a few legacy zone rewrites and host-only routes (favicons, SPA catch-all), but multizone is the source of truth going forward — new entries in `vercel.json` will collide with the website's own `beforeFiles` ordering and bypass the multizone audit CI. Adding to `appZoneRoutes.ts` is the only path that gets validated by `app-zone-shell-audit` and `multizone-tracking-audit`.
+Why not `vercel.json`? The root `vercel.json` still hosts a few legacy zone rewrites and host-only routes (favicons, SPA catch-all), but multizone is the source of truth going forward — new entries in `vercel.json` will collide with the website's own `beforeFiles` ordering and bypass the multizone audit CI. Adding to `appZoneRoutes.ts` is the only path that gets validated by `app-zone-shell-audit` and `multizone-tracking-audit`. The `guard-vercel-zone-rewrites` workflow fails the PR if a new country-prefixed `*.vercel.app` rewrite slips into `vercel.json`.
 
 Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/PolicyEngine/policyengine-app-v2/pull/1047), [#1027 multizone apps registry](https://github.com/PolicyEngine/policyengine-app-v2/pull/1027).
 
