@@ -83,6 +83,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://south-carolina-2026-tax-changes.vercel.app/us/south-carolina-2026-tax-changes",
   },
   {
+    source: "/us/qbi-calculator",
+    destination:
+      "https://qbi-visualizer.vercel.app/us/qbi-calculator",
+  },
+  {
     source: "/us/watca",
     destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
   },
