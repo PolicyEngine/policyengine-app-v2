@@ -1,6 +1,44 @@
 import type { NextConfig } from "next";
 import { appZoneRewrites } from "./src/data/appZoneRoutes";
 
+const tealSquareLogoPath = "/assets/logos/policyengine/teal-square.png";
+
+const policyEngineIconRewrites = [
+  { source: "/favicon.ico", destination: tealSquareLogoPath },
+  { source: "/apple-touch-icon.png", destination: tealSquareLogoPath },
+  { source: "/logo192.png", destination: tealSquareLogoPath },
+  { source: "/logo512.png", destination: tealSquareLogoPath },
+  { source: "/policyengine-logo.png", destination: tealSquareLogoPath },
+  { source: "/icon.svg", destination: "/favicon.svg" },
+  { source: "/policyengine-favicon.svg", destination: "/favicon.svg" },
+  {
+    source: "/:countryId/:appSlug/favicon.ico",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/apple-touch-icon.png",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/logo192.png",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/logo512.png",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/policyengine-logo.png",
+    destination: tealSquareLogoPath,
+  },
+  { source: "/:countryId/:appSlug/favicon.svg", destination: "/favicon.svg" },
+  { source: "/:countryId/:appSlug/icon.svg", destination: "/favicon.svg" },
+  {
+    source: "/:countryId/:appSlug/policyengine-favicon.svg",
+    destination: "/favicon.svg",
+  },
+];
+
 const nextConfig: NextConfig = {
   async redirects() {
     return [
@@ -75,6 +113,7 @@ const nextConfig: NextConfig = {
       // External Next.js apps that serve full pages must go here
       // so they take priority over the dynamic [slug] route.
       beforeFiles: [
+        ...policyEngineIconRewrites,
         ...appZoneRewrites,
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
