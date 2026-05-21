@@ -66,6 +66,17 @@ const nextConfig: NextConfig = {
         destination: "/us/california-wealth-tax/:path*",
         permanent: true,
       },
+      // CliffWatch renamed from cliff-watch → cliffwatch
+      {
+        source: "/:countryId/cliff-watch",
+        destination: "/:countryId/cliffwatch",
+        permanent: true,
+      },
+      {
+        source: "/:countryId/cliff-watch/:path*",
+        destination: "/:countryId/cliffwatch/:path*",
+        permanent: true,
+      },
     ];
   },
 
