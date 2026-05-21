@@ -255,8 +255,8 @@
   },
   {
     "type": "iframe",
-    "slug": "cliff-watch",
-    "title": "Cliff Watch",
+    "slug": "cliffwatch",
+    "title": "CliffWatch",
     "description": "Interactive calculator showing how benefits, refundable tax credits, taxes, and net income change for US households as earnings rise",
     "source": "https://cliff-watch.vercel.app/",
     "tags": ["us", "featured", "policy", "interactives"],

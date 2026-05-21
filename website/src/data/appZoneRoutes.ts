@@ -115,9 +115,14 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://coverage-compass-policy-engine.vercel.app/us/coverage-compass",
   },
   {
-    source: "/us/cliff-watch",
+    source: "/us/cliffwatch",
     destination: "https://cliff-watch.vercel.app/",
     deepDestination: "https://cliff-watch.vercel.app/:path*",
+  },
+  {
+    source: "/uk/cliffwatch",
+    destination: "https://cliff-watch.vercel.app/?country=uk",
+    deepDestination: "https://cliff-watch.vercel.app/:path*?country=uk",
   },
   {
     source: "/us/marriage",
