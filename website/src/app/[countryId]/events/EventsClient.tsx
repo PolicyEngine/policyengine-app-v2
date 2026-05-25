@@ -33,6 +33,8 @@ interface PolicyEngineEvent {
   recordingUrl?: string;
   /** URL to slides (PDF or deck) */
   slidesUrl?: string;
+  /** Registration URL for upcoming events (Zoom, Eventbrite, etc.) */
+  registrationUrl?: string;
   /** Generic event page URL (used if no recording/slides) */
   url?: string;
   /** Image filename in public/assets/events/ */
@@ -643,15 +645,28 @@ function EventGrid({ events }: { events: PolicyEngineEvent[] }) {
 }
 
 function FeaturedHero({ event }: { event: PolicyEngineEvent }) {
+  // Registration takes priority for upcoming events; fall back to whatever
+  // other link is most actionable.
   const primaryHref =
-    event.url || event.recordingUrl || event.slidesUrl || undefined;
-  const ctaLabel = event.url
-    ? "Open tool"
-    : event.recordingUrl
-      ? "Watch live"
-      : event.slidesUrl
-        ? "View slides"
-        : "Learn more";
+    event.registrationUrl ||
+    event.url ||
+    event.recordingUrl ||
+    event.slidesUrl ||
+    undefined;
+  const primaryLabel = event.registrationUrl
+    ? "Register"
+    : event.url
+      ? "Open tool"
+      : event.recordingUrl
+        ? "Watch live"
+        : event.slidesUrl
+          ? "View slides"
+          : "Learn more";
+  // Secondary CTA: show the tool/page link alongside the register button when
+  // both exist, so users who can't attend can still explore the artifact.
+  const secondaryHref =
+    event.registrationUrl && event.url ? event.url : undefined;
+  const secondaryLabel = secondaryHref ? "Open tool" : undefined;
 
   const dateObj = new Date(`${event.date}T00:00:00`);
   const monthShort = dateObj.toLocaleDateString("en-US", { month: "short" });
@@ -748,23 +763,50 @@ function FeaturedHero({ event }: { event: PolicyEngineEvent }) {
             {event.host} · {event.location}
           </Text>
           {primaryHref ? (
-            <span
+            <div
               style={{
                 marginTop: spacing.sm,
-                alignSelf: "flex-start",
-                padding: `${spacing.sm} ${spacing.xl}`,
-                borderRadius: "999px",
-                backgroundColor: colors.white,
-                color: colors.primary[700],
-                fontWeight: 600,
-                fontSize: "15px",
-                fontFamily: typography.fontFamily.primary,
-                textDecoration: "none",
-                transition: "transform 0.15s ease",
+                display: "flex",
+                gap: spacing.lg,
+                alignItems: "center",
+                flexWrap: "wrap",
               }}
             >
-              {ctaLabel} →
-            </span>
+              <span
+                style={{
+                  padding: `${spacing.sm} ${spacing.xl}`,
+                  borderRadius: "999px",
+                  backgroundColor: colors.white,
+                  color: colors.primary[700],
+                  fontWeight: 600,
+                  fontSize: "15px",
+                  fontFamily: typography.fontFamily.primary,
+                  textDecoration: "none",
+                  transition: "transform 0.15s ease",
+                }}
+              >
+                {primaryLabel} →
+              </span>
+              {secondaryHref && secondaryLabel ? (
+                <a
+                  href={secondaryHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    color: colors.white,
+                    fontWeight: 500,
+                    fontSize: "14px",
+                    fontFamily: typography.fontFamily.primary,
+                    textDecoration: "none",
+                    opacity: 0.85,
+                  }}
+                  className="tw:hover:underline"
+                >
+                  {secondaryLabel} →
+                </a>
+              ) : null}
+            </div>
           ) : null}
         </div>
 

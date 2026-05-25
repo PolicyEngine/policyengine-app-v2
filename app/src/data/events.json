@@ -6,6 +6,7 @@
     "location": "Virtual",
     "host": "PolicyEngine",
     "description": "Daphne Hansell and Max Ghenis demo PolicyEngine's CliffWatch tool — mapping benefit cliffs across all 50 states and DC.",
+    "registrationUrl": "https://us06web.zoom.us/meeting/register/nEmrV3a4SvS7kOqkwR_c4Q#/registration",
     "url": "https://policyengine.org/us/cliffwatch",
     "tags": ["us"],
     "featured": true
