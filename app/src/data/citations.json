@@ -476,5 +476,69 @@
     "url": "https://dcgicoalition.org/one-page-primer-child-tax-credit/",
     "image": "dcgi-ctc.webp",
     "tags": ["us", "policy"]
+  },
+  {
+    "title": "What's behind declining birth rates in the U.S.?",
+    "outlet": "Federal Reserve Bank of Atlanta",
+    "date": "2026-05-13",
+    "url": "https://www.atlantafed.org/-/media/Project/Atlanta/FRBA/Documents/research/publication/working-paper/2026/05/13/05-whats-behind-declining-birth-rates-in-the-us.pdf",
+    "image": "atlanta-fed-declining-birth-rates.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Bill seeks Earned Income Tax Credit boost per child for working parents",
+    "outlet": "Thomson Reuters Tax & Accounting",
+    "date": "2026-04-20",
+    "url": "https://tax.thomsonreuters.com/news/bill-seeks-earned-income-tax-credit-boost-per-child-for-working-parents/",
+    "image": "thomson-reuters-eitc-boost-per-child.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Testimony in support of HJR-7127 and S-2823: Rhode Island Child Tax Credit",
+    "outlet": "Economic Progress Institute",
+    "date": "2026-04-07",
+    "url": "https://nmd.nyc3.cdn.digitaloceanspaces.com/epi/documents/testimonies/EPI-HJR7127-S2823-CTC-Senate-Finance-Committee.pdf",
+    "image": "epi-ctc-senate-finance-testimony.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Democratic presidential contenders have a new idea: tax cuts",
+    "outlet": "The American Prospect",
+    "date": "2026-03-16",
+    "url": "https://prospect.org/2026/03/16/democratic-presidential-contenders-new-idea-tax-cuts-van-hollen-booker/",
+    "image": "prospect-van-hollen-booker-tax-cuts.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Newborn needs: the case for an American baby bonus",
+    "outlet": "Niskanen Center",
+    "date": "2025-04-22",
+    "url": "https://www.niskanencenter.org/newborn-needs-the-case-for-an-american-baby-bonus/",
+    "image": "niskanen-american-baby-bonus.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Gold Bars, Private Jets and Racehorses: new report from Sen. Gounardes identifies tax loopholes and carve-outs",
+    "outlet": "Senator Andrew Gounardes (New York State Senate)",
+    "date": "2025-01-24",
+    "url": "https://www.senatorgounardes.nyc/tax-report-release",
+    "image": "gounardes-tax-report-release.jpg",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Making every dollar count: benefits protection strategies in Illinois guaranteed income pilots",
+    "outlet": "University of Chicago Inclusive Economy Lab",
+    "date": "2024-07-30",
+    "url": "https://urbanlabs.uchicago.edu/attachments/fc728a5fe2d51ac58e8d2500275a5c1ebcefa0a1/store/343b09a7a87c07b637df12c393a105dad2a448901a9e0c0a57064b2cb900/Benefits+Case+Study_Final.pdf",
+    "image": "uchicago-urban-labs-benefits-case-study.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Basic income and AI-induced unemployment",
+    "outlet": "Adam Smith Institute",
+    "date": "2024-05-03",
+    "url": "https://www.adamsmith.org/blog/basic-income-and-ai-induced-unemployment",
+    "image": "adam-smith-basic-income-ai-unemployment.jpg",
+    "tags": ["uk", "policy"]
   }
 ]
