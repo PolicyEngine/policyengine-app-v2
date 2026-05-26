@@ -18,6 +18,11 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 interface DropdownItem {
   label: string;
   href: string;
+  /** Use a plain <a> instead of next/link — required for paths that resolve
+   *  via a Vercel rewrite to a separate zone (e.g. Model sub-pages). */
+  external?: boolean;
+  /** Nested children rendered indented under this item. One level deep only. */
+  children?: DropdownItem[];
 }
 
 interface NavItemSetup {
@@ -33,28 +38,118 @@ const COUNTRIES = [
   { id: "uk", label: "United Kingdom" },
 ];
 
+const NAV_ITEM_PADDING_X = 14;
+const NAV_UNDERLINE_INSET = 10; // how far in from each side the underline starts
+const DROPDOWN_GAP = 10; // visual gap between trigger and panel — bridged for hover
+
 const navItemStyle: React.CSSProperties = {
   color: colors.text.inverse,
   fontWeight: typography.fontWeight.medium,
   fontSize: "15px",
   fontFamily: typography.fontFamily.primary,
   textDecoration: "none",
-  padding: "6px 14px",
-  borderRadius: "6px",
-  transition: "background-color 0.15s ease",
+  padding: `8px ${NAV_ITEM_PADDING_X}px`,
   letterSpacing: "0.01em",
+  position: "relative",
 };
 
-const hoverHandlers = {
-  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
-    e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.12)";
-  },
-  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
-    e.currentTarget.style.backgroundColor = "transparent";
-  },
-};
+function NavUnderline({ visible }: { visible: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        left: `${NAV_UNDERLINE_INSET}px`,
+        right: `${NAV_UNDERLINE_INSET}px`,
+        bottom: "2px",
+        height: "2px",
+        borderRadius: "2px",
+        backgroundColor: colors.text.inverse,
+        transform: visible ? "scaleX(1)" : "scaleX(0)",
+        transformOrigin: "center",
+        transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
+function isItemActive(item: NavItemSetup, pathname: string): boolean {
+  const matches = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+  if (item.hasDropdown && item.dropdownItems) {
+    return item.dropdownItems.some((child) => matches(child.href));
+  }
+  if (item.href) {
+    return matches(item.href);
+  }
+  return false;
+}
 
 // --- Dropdown panel ---
+
+function DropdownRow({
+  item,
+  depth,
+  index,
+  visible,
+  onClose,
+}: {
+  item: DropdownItem;
+  depth: number;
+  index: number;
+  visible: boolean;
+  onClose: () => void;
+}) {
+  // External rewrite routes (Model sub-pages) need <a> so the browser
+  // actually crosses zones — Next.js Link would try a client-side
+  // transition that the website zone can't fulfil.
+  const Tag = item.external ? "a" : Link;
+  const isChild = depth > 0;
+  return (
+    <Tag
+      href={item.href}
+      onClick={onClose}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+        textAlign: "left",
+        padding: `${isChild ? 8 : 11}px 16px ${isChild ? 8 : 11}px ${
+          16 + depth * 16
+        }px`,
+        borderRadius: "10px",
+        textDecoration: "none",
+        fontSize: isChild ? "13px" : "14px",
+        fontFamily: typography.fontFamily.primary,
+        fontWeight: isChild
+          ? typography.fontWeight.medium
+          : typography.fontWeight.semibold,
+        color: isChild ? colors.primary[700] : colors.primary[800],
+        // Per-property delays: hover (background-color, color) should be
+        // instant; the entry reveal (opacity) is the only thing that staggers.
+        transition: `background-color 0.12s ease 0ms, color 0.12s ease 0ms, opacity 0.3s ease ${
+          visible ? index * 30 : 0
+        }ms`,
+        opacity: visible ? 1 : 0,
+        lineHeight: "1.3",
+        letterSpacing: "-0.01em",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = colors.primary[500];
+        e.currentTarget.style.color = colors.text.inverse;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "transparent";
+        e.currentTarget.style.color = isChild
+          ? colors.primary[700]
+          : colors.primary[800];
+      }}
+    >
+      {item.label}
+    </Tag>
+  );
+}
 
 function DropdownPanel({
   items,
@@ -83,26 +178,22 @@ function DropdownPanel({
   if (!open && contentHeight === 0) return null;
 
   return (
-    <>
-      {/* Click-away layer */}
+    <div
+      // Wrapper sits flush against the trigger and uses paddingTop as a
+      // transparent hover bridge across the visual gap — so the parent's
+      // onMouseLeave doesn't fire while the cursor travels to the panel.
+      style={{
+        position: "absolute",
+        top: "100%",
+        left: "50%",
+        transform: "translateX(-50%)",
+        paddingTop: `${DROPDOWN_GAP}px`,
+        zIndex: 1001,
+      }}
+    >
       <div
-        onClick={onClose}
         style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 999,
-          cursor: "default",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: "100%",
-          left: "50%",
-          transform: visible
-            ? "translateX(-50%) translateY(0)"
-            : "translateX(-50%) translateY(-8px)",
-          marginTop: "10px",
+          transform: visible ? "translateY(0)" : "translateY(-8px)",
           minWidth: "220px",
           overflow: "hidden",
           maxHeight: visible ? `${contentHeight}px` : "0px",
@@ -116,59 +207,65 @@ function DropdownPanel({
           WebkitBackdropFilter: "blur(24px) saturate(200%)",
           boxShadow:
             "0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.6)",
-          zIndex: 1001,
         }}
       >
         <div ref={contentRef} style={{ padding: "8px" }}>
-          {items.map((item, i) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={onClose}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                width: "100%",
-                textAlign: "left",
-                padding: "11px 16px",
-                borderRadius: "10px",
-                textDecoration: "none",
-                fontSize: "14px",
-                fontFamily: typography.fontFamily.primary,
-                fontWeight: typography.fontWeight.semibold,
-                color: colors.primary[800],
-                transition:
-                  "background-color 0.12s ease, color 0.12s ease, opacity 0.3s ease",
-                transitionDelay: visible ? `${i * 50}ms` : "0ms",
-                opacity: visible ? 1 : 0,
-                lineHeight: "1.3",
-                letterSpacing: "-0.01em",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primary[500];
-                e.currentTarget.style.color = colors.text.inverse;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = colors.primary[800];
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {(() => {
+            // Flatten one level of children so the cascading reveal animation
+            // (transitionDelay scaled by index) treats every row uniformly.
+            const rows: Array<{ item: DropdownItem; depth: number }> = [];
+            for (const item of items) {
+              rows.push({ item, depth: 0 });
+              if (item.children) {
+                for (const child of item.children) {
+                  rows.push({ item: child, depth: 1 });
+                }
+              }
+            }
+            return rows.map(({ item, depth }, i) => (
+              <DropdownRow
+                key={`${item.label}-${item.href}`}
+                item={item}
+                depth={depth}
+                index={i}
+                visible={visible}
+                onClose={onClose}
+              />
+            ));
+          })()}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
 // --- NavItem ---
 
-function NavItem({ setup }: { setup: NavItemSetup }) {
+const HOVER_OPEN_DELAY_MS = 100;
+const HOVER_CLOSE_DELAY_MS = 200;
+
+function NavItem({ setup, active }: { setup: NavItemSetup; active: boolean }) {
   const { label, href, hasDropdown, dropdownItems } = setup;
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const clearTimers = useCallback(() => {
+    if (openTimerRef.current) {
+      clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => clearTimers, [clearTimers]);
+
+  // Click-outside + Escape close (only relevant when dropdown is open)
   useEffect(() => {
     if (!dropdownOpen) return;
     function handleClick(e: MouseEvent) {
@@ -190,12 +287,43 @@ function NavItem({ setup }: { setup: NavItemSetup }) {
     };
   }, [dropdownOpen]);
 
+  const handleMouseEnter = () => {
+    setHovered(true);
+    if (!hasDropdown) return;
+    clearTimers();
+    openTimerRef.current = setTimeout(
+      () => setDropdownOpen(true),
+      HOVER_OPEN_DELAY_MS,
+    );
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(false);
+    if (!hasDropdown) return;
+    clearTimers();
+    closeTimerRef.current = setTimeout(
+      () => setDropdownOpen(false),
+      HOVER_CLOSE_DELAY_MS,
+    );
+  };
+
+  const underlineVisible = active || hovered || dropdownOpen;
+
   if (hasDropdown && dropdownItems) {
     return (
-      <div ref={containerRef} style={{ position: "relative" }}>
+      <div
+        ref={containerRef}
+        style={{ position: "relative" }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <button
           type="button"
           onClick={() => setDropdownOpen((prev) => !prev)}
+          onFocus={() => setHovered(true)}
+          onBlur={() => setHovered(false)}
+          aria-expanded={dropdownOpen}
+          aria-haspopup="true"
           style={{
             ...navItemStyle,
             background: "transparent",
@@ -205,7 +333,6 @@ function NavItem({ setup }: { setup: NavItemSetup }) {
             alignItems: "center",
             gap: "4px",
           }}
-          {...hoverHandlers}
         >
           <span>{label}</span>
           <IconChevronDown
@@ -217,6 +344,7 @@ function NavItem({ setup }: { setup: NavItemSetup }) {
               transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
             }}
           />
+          <NavUnderline visible={underlineVisible} />
         </button>
         <DropdownPanel
           items={dropdownItems}
@@ -231,8 +359,17 @@ function NavItem({ setup }: { setup: NavItemSetup }) {
     // External rewrite routes (Model, API) use <a> to avoid Next.js RSC prefetch 404s
     const Tag = setup.external ? "a" : Link;
     return (
-      <Tag href={href} style={navItemStyle} {...hoverHandlers}>
+      <Tag
+        href={href}
+        style={navItemStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={() => setHovered(true)}
+        onBlur={() => setHovered(false)}
+        aria-current={active ? "page" : undefined}
+      >
         {label}
+        <NavUnderline visible={underlineVisible} />
       </Tag>
     );
   }
@@ -315,7 +452,12 @@ function CountrySelector() {
           display: "flex",
           alignItems: "center",
         }}
-        {...hoverHandlers}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.12)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+        }}
       >
         <IconWorld size={18} color={colors.text.inverse} />
       </button>
@@ -377,9 +519,9 @@ function CountrySelector() {
                         ? typography.fontWeight.bold
                         : typography.fontWeight.semibold,
                     color: colors.primary[800],
-                    transition:
-                      "background-color 0.12s ease, color 0.12s ease, opacity 0.3s ease",
-                    transitionDelay: visible ? `${i * 50}ms` : "0ms",
+                    transition: `background-color 0.12s ease 0ms, color 0.12s ease 0ms, opacity 0.3s ease ${
+                      visible ? i * 50 : 0
+                    }ms`,
                     opacity: visible ? 1 : 0,
                     lineHeight: "1.3",
                     letterSpacing: "-0.01em",
@@ -436,6 +578,35 @@ function MobileNavLink({
   const Tag = item.external ? "a" : Link;
   return (
     <Tag href={item.href || "#"} onClick={onClose} style={mobileNavLinkStyle}>
+      {item.label}
+    </Tag>
+  );
+}
+
+function MobileDropdownLink({
+  item,
+  depth,
+  onClose,
+}: {
+  item: DropdownItem;
+  depth: number;
+  onClose: () => void;
+}) {
+  const Tag = item.external ? "a" : Link;
+  return (
+    <Tag
+      href={item.href}
+      onClick={onClose}
+      style={{
+        color: colors.text.inverse,
+        textDecoration: "none",
+        fontWeight: typography.fontWeight.normal,
+        fontSize: typography.fontSize.sm,
+        fontFamily: typography.fontFamily.primary,
+        paddingLeft: `${depth * 14}px`,
+        opacity: depth > 0 ? 0.85 : 1,
+      }}
+    >
       {item.label}
     </Tag>
   );
@@ -551,22 +722,22 @@ function MobileMenu({
                     paddingLeft: spacing.md,
                   }}
                 >
-                  {item.dropdownItems.map((dropdownItem) => (
-                    <Link
+                  {item.dropdownItems.flatMap((dropdownItem) => [
+                    <MobileDropdownLink
                       key={dropdownItem.label}
-                      href={dropdownItem.href}
-                      onClick={onClose}
-                      style={{
-                        color: colors.text.inverse,
-                        textDecoration: "none",
-                        fontWeight: typography.fontWeight.normal,
-                        fontSize: typography.fontSize.sm,
-                        fontFamily: typography.fontFamily.primary,
-                      }}
-                    >
-                      {dropdownItem.label}
-                    </Link>
-                  ))}
+                      item={dropdownItem}
+                      depth={0}
+                      onClose={onClose}
+                    />,
+                    ...(dropdownItem.children ?? []).map((grandchild) => (
+                      <MobileDropdownLink
+                        key={`${dropdownItem.label}-${grandchild.label}`}
+                        item={grandchild}
+                        depth={1}
+                        onClose={onClose}
+                      />
+                    )),
+                  ])}
                 </div>
               </div>
             ) : (
@@ -583,15 +754,65 @@ function MobileMenu({
 
 export default function Header() {
   const countryId = useCountryId();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
     {
       label: "Model",
-      href: `/${countryId}/model`,
-      hasDropdown: false,
-      external: true,
+      hasDropdown: true,
+      dropdownItems: [
+        {
+          label: "Rules",
+          href: `/${countryId}/model/rules`,
+          external: true,
+          children: [
+            {
+              label: "Coverage",
+              href: `/${countryId}/model/rules/coverage`,
+              external: true,
+            },
+            {
+              label: "Parameters",
+              href: `/${countryId}/model/rules/parameters`,
+              external: true,
+            },
+            {
+              label: "Variables",
+              href: `/${countryId}/model/rules/variables`,
+              external: true,
+            },
+          ],
+        },
+        {
+          label: "Data",
+          href: `/${countryId}/model/data`,
+          external: true,
+          children: [
+            {
+              label: "Pipeline",
+              href: `/${countryId}/model/data/pipeline`,
+              external: true,
+            },
+            {
+              label: "Calibration",
+              href: `/${countryId}/model/data/calibration`,
+              external: true,
+            },
+            {
+              label: "Validation",
+              href: `/${countryId}/model/data/validation`,
+              external: true,
+            },
+          ],
+        },
+        {
+          label: "Behavioral responses",
+          href: `/${countryId}/model/behavioral`,
+          external: true,
+        },
+      ],
     },
     {
       label: "API",
@@ -652,7 +873,9 @@ export default function Header() {
               display: "flex",
               alignItems: "center",
               cursor: "pointer",
-              marginRight: spacing.md,
+              // Wider gap than the 24px between nav items so the logo reads
+              // as a distinct anchor rather than another menu entry.
+              marginRight: "40px",
             }}
           >
             <OptimisedImage
@@ -672,7 +895,11 @@ export default function Header() {
             className="tw:hidden tw:lg:flex"
           >
             {navItems.map((item) => (
-              <NavItem key={item.label} setup={item} />
+              <NavItem
+                key={item.label}
+                setup={item}
+                active={isItemActive(item, pathname)}
+              />
             ))}
           </div>
         </div>
