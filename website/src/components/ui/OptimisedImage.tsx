@@ -1,4 +1,4 @@
-import type { ImgHTMLAttributes } from 'react';
+import type { ImgHTMLAttributes } from "react";
 
 /**
  * Wraps an <img> to serve images through Vercel's edge image optimisation.
@@ -17,7 +17,10 @@ interface StaticImageData {
   width: number;
 }
 
-interface OptimisedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
+interface OptimisedImageProps extends Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  "src"
+> {
   /** Desired display width in pixels — used for resizing on the edge. */
   width?: number;
   /** Image quality 1–100 (default 80). */
@@ -39,36 +42,22 @@ function snapWidth(w: number): number {
   return ALLOWED_WIDTHS[ALLOWED_WIDTHS.length - 1];
 }
 
-function optimisedSrc(src: string, width?: number, quality = 80): string {
-  // Only optimise local paths served from the same origin
-  if (!src.startsWith('/')) {
-    return src;
-  }
+/**
+ * True when the asset should bypass Vercel's image optimiser (external URLs,
+ * already-optimised Next.js static chunks, SVGs, local dev, or missing width).
+ */
+function shouldSkipOptimisation(src: string, width?: number): boolean {
+  if (!src.startsWith("/")) return true;
+  if (src.startsWith("/_next/")) return true;
+  if (src.endsWith(".svg")) return true;
+  if (process.env.NODE_ENV === "development") return true;
+  if (!width) return true;
+  return false;
+}
 
-  // Skip _next/static paths — already optimized at build time by Next.js
-  if (src.startsWith('/_next/')) {
-    return src;
-  }
-
-  // Skip SVGs — vector images can't be raster-optimized
-  if (src.endsWith('.svg')) {
-    return src;
-  }
-
-  // Skip in dev — Vercel image API isn't available locally
-  if (process.env.NODE_ENV === 'development') {
-    return src;
-  }
-
-  // Vercel's image endpoint requires an explicit width.
-  // Fall back to the original asset path when callers omit one.
-  if (!width) {
-    return src;
-  }
-
-  const dpr = 1;
+function optimisedSrc(src: string, width: number, quality = 80): string {
   const params = new URLSearchParams({ url: src, q: String(quality) });
-  params.set('w', String(snapWidth(Math.round(width * dpr))));
+  params.set("w", String(snapWidth(Math.round(width))));
   return `/_vercel/image?${params}`;
 }
 
@@ -76,12 +65,42 @@ export default function OptimisedImage({
   src,
   width,
   quality = 80,
-  alt = '',
+  alt = "",
   ...rest
 }: OptimisedImageProps) {
   // Resolve Next.js static imports (StaticImageData) to their .src string
-  const rawSrc = typeof src === 'object' && src !== null && 'src' in src ? src.src : src;
-  const resolvedSrc = typeof rawSrc === 'string' ? optimisedSrc(rawSrc, width, quality) : undefined;
+  const rawSrc =
+    typeof src === "object" && src !== null && "src" in src ? src.src : src;
 
-  return <img {...rest} src={resolvedSrc} width={width} loading="lazy" alt={alt} />;
+  if (typeof rawSrc !== "string") {
+    return (
+      <img {...rest} src={undefined} width={width} loading="lazy" alt={alt} />
+    );
+  }
+
+  if (shouldSkipOptimisation(rawSrc, width)) {
+    return (
+      <img {...rest} src={rawSrc} width={width} loading="lazy" alt={alt} />
+    );
+  }
+
+  // width is guaranteed by shouldSkipOptimisation above
+  const w = width!;
+  const src1x = optimisedSrc(rawSrc, w, quality);
+  const src2x = optimisedSrc(rawSrc, w * 2, quality);
+
+  // If 1x and 2x snap to the same allowed width, the browser would download
+  // the same file twice via srcset — skip the descriptor in that case.
+  const srcSet = src1x === src2x ? undefined : `${src1x} 1x, ${src2x} 2x`;
+
+  return (
+    <img
+      {...rest}
+      src={src1x}
+      srcSet={srcSet}
+      width={w}
+      loading="lazy"
+      alt={alt}
+    />
+  );
 }
