@@ -172,7 +172,7 @@ function SecondaryCard({ item, countryId }: SecondaryCardProps) {
             <OptimisedImage
               src={imageUrl}
               alt={item.title}
-              width={384}
+              width={640}
               className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
