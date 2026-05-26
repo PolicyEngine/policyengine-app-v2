@@ -129,15 +129,14 @@ function EventLink({ href, label }: { href: string; label: string }) {
 const SLIDE_VIRTUAL_WIDTH = 1280;
 const SLIDE_VIRTUAL_HEIGHT = 720;
 
-function NavArrow({ direction }: { direction: "left" | "right" }) {
-  const isLeft = direction === "left";
+function NavArrow({ direction }: { direction: "right" }) {
   return (
     <div
       aria-hidden="true"
       style={{
         position: "absolute",
         top: "50%",
-        [isLeft ? "left" : "right"]: "10px",
+        [direction]: "10px",
         transform: "translateY(-50%)",
         width: "32px",
         height: "32px",
@@ -156,7 +155,7 @@ function NavArrow({ direction }: { direction: "left" | "right" }) {
         userSelect: "none",
       }}
     >
-      {isLeft ? "‹" : "›"}
+      ›
     </div>
   );
 }
@@ -231,8 +230,10 @@ function SlidesPreview({
           animation: "pe-events-shimmer 1.4s linear infinite",
         }}
       />
-      {/* Nav arrow hints — only visible when interactive (hovered).
-          pointer-events: none so they don't block clicks on the iframe. */}
+      {/* Forward arrow hint — only visible when interactive (hovered).
+          Google Slides advances on click anywhere in the embed, so a single
+          forward arrow accurately telegraphs that behavior. pointer-events:
+          none lets the click pass through to the iframe. */}
       <div
         style={{
           position: "absolute",
@@ -242,7 +243,6 @@ function SlidesPreview({
           pointerEvents: "none",
         }}
       >
-        <NavArrow direction="left" />
         <NavArrow direction="right" />
       </div>
     </div>
