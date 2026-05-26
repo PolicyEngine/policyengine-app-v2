@@ -166,7 +166,7 @@
     "type": "iframe",
     "slug": "uc-rebalancing",
     "title": "UK Universal Credit rebalancing analysis dashboard",
-    "description": "PolicyEngine UK validates the Universal Credit Act 2025 rebalancing package: an above-inflation uplift to the standard allowance and a fixed monthly health element for new claimants from April 2026",
+    "description": "PolicyEngine analysed the household and fiscal impact of the Universal Credit Act 2025 rebalancing package: an above-inflation uplift to the standard allowance and a fixed monthly health element for new claimants from April 2026",
     "source": "https://uc-rebalancing.vercel.app/uk/uc-rebalancing",
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
