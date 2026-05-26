@@ -4,34 +4,27 @@ import Link from "next/link";
 import { Container, Group, Text } from "@/components/ui";
 import OptimisedImage from "@/components/ui/OptimisedImage";
 import { cn } from "@/lib/utils";
+import { colors, spacing, typography } from "@/designTokens";
 import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
-import { getPostsSorted } from "@/data/posts/postTransformers";
-import type { BlogPost } from "@/types/blog";
+  getResearchItems,
+  type ResearchItem,
+} from "@/data/posts/postTransformers";
 
-/**
- * Number of posts shown in the blog preview on the home page.
- * 2 on the left (primary cards), 3 on the right (secondary cards).
- */
 const LEFT_COUNT = 2;
 const RIGHT_COUNT = 3;
-const TOTAL_POSTS = LEFT_COUNT + RIGHT_COUNT;
+const TOTAL_ITEMS = LEFT_COUNT + RIGHT_COUNT;
 
-function getPostImageUrl(post: BlogPost): string {
-  if (!post.image) {
+function getItemImageUrl(item: ResearchItem): string {
+  if (!item.image) {
     return "";
   }
-  if (post.image.startsWith("http")) {
-    return post.image;
+  if (item.image.startsWith("http")) {
+    return item.image;
   }
-  return `/assets/posts/${post.image}`;
+  return `/assets/posts/${item.image}`;
 }
 
-function formatPostDate(dateStr: string): string {
-  // Append T12:00:00 to date-only strings to avoid UTC midnight timezone shift
+function formatItemDate(dateStr: string): string {
   const normalized = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
     ? `${dateStr}T12:00:00`
     : dateStr;
@@ -42,23 +35,61 @@ function formatPostDate(dateStr: string): string {
   });
 }
 
+function getItemHref(item: ResearchItem, countryId: string): string {
+  return item.isApp
+    ? `/${item.countryId}/${item.slug}`
+    : `/${countryId}/research/${item.slug}`;
+}
+
+// Apps are served via Vercel rewrites (reverse proxy), so they need a full
+// document request — Next.js client navigation would hit a 404.
+function CardLink({
+  item,
+  countryId,
+  className,
+  style,
+  children,
+}: {
+  item: ResearchItem;
+  countryId: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  const href = getItemHref(item, countryId);
+  if (item.isApp) {
+    return (
+      <a href={href} className={className} style={style}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className} style={style}>
+      {children}
+    </Link>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  PrimaryCard                                                        */
 /* ------------------------------------------------------------------ */
 
 interface PrimaryCardProps {
-  post: BlogPost;
+  item: ResearchItem;
   countryId: string;
   flex?: number;
 }
 
-function PrimaryCard({ post, countryId, flex }: PrimaryCardProps) {
-  const imageUrl = getPostImageUrl(post);
-  const date = formatPostDate(post.date);
+function PrimaryCard({ item, countryId, flex }: PrimaryCardProps) {
+  const imageUrl = getItemImageUrl(item);
+  const date = formatItemDate(item.date);
+  const cta = item.isApp ? "Open" : "Read more";
 
   return (
-    <Link
-      href={`/${countryId}/research/${post.slug}`}
+    <CardLink
+      item={item}
+      countryId={countryId}
       className="tw:block tw:no-underline tw:text-inherit tw:group"
       style={{ flex: flex ?? "none" }}
     >
@@ -75,7 +106,7 @@ function PrimaryCard({ post, countryId, flex }: PrimaryCardProps) {
           <div className="tw:min-h-[200px] tw:flex-1 tw:overflow-hidden tw:bg-gray-100">
             <OptimisedImage
               src={imageUrl}
-              alt={post.title}
+              alt={item.title}
               width={640}
               className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
               onError={(e) => {
@@ -91,19 +122,19 @@ function PrimaryCard({ post, countryId, flex }: PrimaryCardProps) {
           </p>
 
           <p className="tw:text-2xl tw:font-bold tw:leading-tight tw:text-gray-900 tw:mb-md">
-            {post.title}
+            {item.title}
           </p>
 
           <p className="tw:text-sm tw:text-text-secondary tw:leading-relaxed tw:line-clamp-3">
-            {post.description}
+            {item.description}
           </p>
 
           <p className="tw:text-sm tw:font-semibold tw:text-primary-600 tw:mt-lg tw:transition-transform tw:duration-200 tw:group-hover:translate-x-1">
-            Read more &rarr;
+            {cta} &rarr;
           </p>
         </div>
       </div>
-    </Link>
+    </CardLink>
   );
 }
 
@@ -112,17 +143,19 @@ function PrimaryCard({ post, countryId, flex }: PrimaryCardProps) {
 /* ------------------------------------------------------------------ */
 
 interface SecondaryCardProps {
-  post: BlogPost;
+  item: ResearchItem;
   countryId: string;
 }
 
-function SecondaryCard({ post, countryId }: SecondaryCardProps) {
-  const imageUrl = getPostImageUrl(post);
-  const date = formatPostDate(post.date);
+function SecondaryCard({ item, countryId }: SecondaryCardProps) {
+  const imageUrl = getItemImageUrl(item);
+  const date = formatItemDate(item.date);
+  const cta = item.isApp ? "Open" : "Read";
 
   return (
-    <Link
-      href={`/${countryId}/research/${post.slug}`}
+    <CardLink
+      item={item}
+      countryId={countryId}
       className="tw:block tw:no-underline tw:text-inherit tw:h-full tw:group"
     >
       <div
@@ -138,7 +171,7 @@ function SecondaryCard({ post, countryId }: SecondaryCardProps) {
           <div className="tw:h-[180px] tw:overflow-hidden tw:bg-gray-100 tw:shrink-0">
             <OptimisedImage
               src={imageUrl}
-              alt={post.title}
+              alt={item.title}
               width={384}
               className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
               onError={(e) => {
@@ -154,19 +187,19 @@ function SecondaryCard({ post, countryId }: SecondaryCardProps) {
           </p>
 
           <p className="tw:text-base tw:font-semibold tw:leading-snug tw:text-gray-900 tw:line-clamp-2 tw:mb-sm">
-            {post.title}
+            {item.title}
           </p>
 
           <p className="tw:text-sm tw:text-text-secondary tw:leading-normal tw:line-clamp-2 tw:flex-1">
-            {post.description}
+            {item.description}
           </p>
 
           <p className="tw:text-sm tw:font-semibold tw:text-primary-600 tw:mt-md tw:transition-transform tw:duration-200 tw:group-hover:translate-x-1">
-            Read &rarr;
+            {cta} &rarr;
           </p>
         </div>
       </div>
-    </Link>
+    </CardLink>
   );
 }
 
@@ -174,25 +207,21 @@ function SecondaryCard({ post, countryId }: SecondaryCardProps) {
 /*  HomeBlogPreview                                                    */
 /* ------------------------------------------------------------------ */
 
-export default function HomeBlogPreview({
-  countryId,
-}: {
-  countryId: string;
-}) {
-  // getPostsSorted() returns posts sorted newest-first with slugs pre-computed
-  const relevantPosts = getPostsSorted()
+export default function HomeBlogPreview({ countryId }: { countryId: string }) {
+  // Merged research feed: posts + apps with displayWithResearch, newest-first.
+  // Filter by country tag so /us shows US-relevant items and /uk shows UK.
+  const relevantItems = getResearchItems()
     .filter(
-      (post: BlogPost) =>
-        post.tags.includes(countryId) || post.tags.includes("global"),
+      (item) => item.tags.includes(countryId) || item.tags.includes("global"),
     )
-    .slice(0, TOTAL_POSTS);
+    .slice(0, TOTAL_ITEMS);
 
-  if (relevantPosts.length === 0) {
+  if (relevantItems.length === 0) {
     return null;
   }
 
-  const leftPosts = relevantPosts.slice(0, LEFT_COUNT);
-  const rightPosts = relevantPosts.slice(LEFT_COUNT, TOTAL_POSTS);
+  const leftItems = relevantItems.slice(0, LEFT_COUNT);
+  const rightItems = relevantItems.slice(LEFT_COUNT, TOTAL_ITEMS);
 
   return (
     <div
@@ -240,30 +269,24 @@ export default function HomeBlogPreview({
           className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2"
           style={{ gap: spacing["2xl"] }}
         >
-          {/* Left column: 2 posts stacked, filling equal height */}
-          <div
-            className="tw:flex tw:flex-col"
-            style={{ gap: spacing["2xl"] }}
-          >
-            {leftPosts.map((post: BlogPost) => (
+          {/* Left column: 2 items stacked, filling equal height */}
+          <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
+            {leftItems.map((item) => (
               <PrimaryCard
-                key={post.slug}
-                post={post}
+                key={`${item.isApp ? "app" : "post"}-${item.slug}`}
+                item={item}
                 countryId={countryId}
                 flex={1}
               />
             ))}
           </div>
 
-          {/* Right column: 3 smaller posts stacked */}
-          <div
-            className="tw:flex tw:flex-col"
-            style={{ gap: spacing["2xl"] }}
-          >
-            {rightPosts.map((post: BlogPost) => (
+          {/* Right column: 3 smaller items stacked */}
+          <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
+            {rightItems.map((item) => (
               <SecondaryCard
-                key={post.slug}
-                post={post}
+                key={`${item.isApp ? "app" : "post"}-${item.slug}`}
+                item={item}
                 countryId={countryId}
               />
             ))}
