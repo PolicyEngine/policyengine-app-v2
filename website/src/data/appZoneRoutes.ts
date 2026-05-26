@@ -60,8 +60,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/working-parents-tax-relief-act",
-    destination:
-      "https://wptra.vercel.app/us/working-parents-tax-relief-act",
+    destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act",
   },
   {
     source: "/us/utah-2026-tax-changes",
@@ -84,12 +83,12 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/qbi-calculator",
-    destination:
-      "https://qbi-visualizer.vercel.app/us/qbi-calculator",
+    destination: "https://qbi-visualizer.vercel.app/us/qbi-calculator",
   },
   {
     source: "/us/watca",
-    destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
+    destination:
+      "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
   },
   {
     source: "/us/california-wealth-tax",
@@ -130,7 +129,8 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/uk/marriage",
-    destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
+    destination:
+      "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
     deepDestination:
       "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
   },
@@ -176,6 +176,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://uk-public-services-imputation.vercel.app/uk/public-services-spending",
   },
   {
+    source: "/uk/uc-rebalancing",
+    destination: "https://uc-rebalancing.vercel.app/uk/uc-rebalancing",
+  },
+  {
     source: "/us/aca-calc",
     destination: "https://aca-calc.vercel.app/us/aca-calc",
   },
@@ -200,8 +204,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/state-eitcs-ctcs",
-    destination:
-      "https://us-state-eitcs-ctcs.vercel.app/us/state-eitcs-ctcs",
+    destination: "https://us-state-eitcs-ctcs.vercel.app/us/state-eitcs-ctcs",
   },
   {
     source: "/us/2024-election-calculator",
@@ -233,7 +236,8 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/ads-dashboard",
-    destination: "https://policyengine-ads-dashboard.vercel.app/us/ads-dashboard",
+    destination:
+      "https://policyengine-ads-dashboard.vercel.app/us/ads-dashboard",
   },
   {
     source: "/us/ai-inequality",
