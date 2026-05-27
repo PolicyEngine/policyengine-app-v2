@@ -5,6 +5,7 @@
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useParams } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
+import ChatPage from './pages/Chat.page';
 import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -118,6 +119,11 @@ const router = createBrowserRouter(
                 {
                   path: 'reports',
                   element: <ReportsPage />,
+                },
+                {
+                  // UK-only chat surface; the CTA that points here is UK-gated.
+                  path: 'chat',
+                  element: <ChatPage />,
                 },
                 {
                   path: 'simulations',

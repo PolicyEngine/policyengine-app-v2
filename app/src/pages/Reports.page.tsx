@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import { AskChatCta } from '@/components/chat/AskChatCta';
 import {
   BulletsValue,
   ColumnConfig,
@@ -50,6 +51,10 @@ export default function ReportsPage() {
   const handleBuildReport = () => {
     const targetPath = `/${countryId}/reports/create`;
     nav.push(targetPath);
+  };
+
+  const handleOpenChat = () => {
+    nav.push(`/${countryId}/chat`);
   };
 
   const handleCloseRename = () => {
@@ -209,6 +214,7 @@ export default function ReportsPage() {
   return (
     <>
       <Stack gap="md">
+        {countryId === 'uk' && <AskChatCta onClick={handleOpenChat} />}
         <IngredientReadView
           ingredient="report"
           title="Your saved reports"
