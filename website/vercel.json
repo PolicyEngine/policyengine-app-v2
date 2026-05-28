@@ -30,6 +30,66 @@
       "destination": "/sitemap.xml"
     },
     {
+      "source": "/favicon.ico",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/logo192.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/logo512.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/policyengine-logo.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/icon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/policyengine-favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/:countryId/:appSlug/favicon.ico",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/:countryId/:appSlug/apple-touch-icon.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/:countryId/:appSlug/logo192.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/:countryId/:appSlug/logo512.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/:countryId/:appSlug/policyengine-logo.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/:countryId/:appSlug/favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/:countryId/:appSlug/icon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/:countryId/:appSlug/policyengine-favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
       "source": "/_tracker/:path*",
       "destination": "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*"
     },
