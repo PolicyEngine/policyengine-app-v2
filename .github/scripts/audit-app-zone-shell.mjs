@@ -36,6 +36,29 @@ export const REQUIRED_NAV_LABELS = ["Research", "Model", "API", "Donate"];
 const TOP_SHELL_SELECTOR =
   'header, nav, [data-testid*="header" i], [data-testid*="site-header" i], a, button, img, [aria-label]';
 
+// Routes intentionally served WITHOUT a child-rendered PolicyEngine header.
+// These tools are embedded under policyengine.org, which already provides the
+// site header/nav, so the maintainers chose not to duplicate the PolicyEngine
+// shell inside the child app. These routes are still audited for liveness
+// (HTTP status, runtime errors, blank pages) — only the top-shell brand/nav
+// assertion is skipped. Remove an entry to re-enforce the full shell on it.
+//   /uk/scotland-income-tax-reform — PolicyEngine/scotland-income-tax-reform#8
+//   /uk/student-loan-visualisation — PolicyEngine/student-loan-visualisation#3
+//   /us/obbba-household-explorer    — PolicyEngine/obbba-household-by-household#240
+//   /uk/uc-rebalancing              — PolicyEngine/uc-rebalancing
+export const SHELL_BRAND_EXEMPT_SOURCES = [
+  "/uk/scotland-income-tax-reform",
+  "/uk/student-loan-visualisation",
+  "/us/obbba-household-explorer",
+  "/uk/uc-rebalancing",
+];
+
+export function isShellBrandExempt(source) {
+  return SHELL_BRAND_EXEMPT_SOURCES.some(
+    (base) => source === base || source.startsWith(`${base}/`),
+  );
+}
+
 export function parseArgs(argv) {
   const options = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -411,7 +434,7 @@ async function inspectTopShell(page) {
   return inspectTopShellData(elements);
 }
 
-async function inspectShell(page, url, timeout) {
+async function inspectShell(page, url, timeout, enforceShell = true) {
   let response;
 
   try {
@@ -446,6 +469,15 @@ async function inspectShell(page, url, timeout) {
     };
   }
 
+  if (!enforceShell) {
+    return {
+      ok: true,
+      status,
+      reason: "loaded — exempt from PolicyEngine shell brand/nav check",
+      exempt: true,
+    };
+  }
+
   const { hasBrand, navHits } = await inspectTopShell(page);
 
   if (!hasBrand) {
@@ -474,14 +506,20 @@ async function auditRoute(browser, route, baseUrl, timeout, allowDestinationFall
     viewport: { width: 1440, height: 1000 },
     userAgent: "policyengine-app-zone-shell-audit/1.0",
   });
+  const enforceShell = !isShellBrandExempt(route.source);
   const sourceUrl = resolveUrl(baseUrl, route.source);
-  let result = await inspectShell(page, sourceUrl, timeout);
+  let result = await inspectShell(page, sourceUrl, timeout, enforceShell);
   let testedUrl = sourceUrl;
   let usedFallback = false;
 
   if (!result.ok && result.status === 404 && allowDestinationFallback) {
     const destinationUrl = resolveUrl(baseUrl, route.destination);
-    const fallbackResult = await inspectShell(page, destinationUrl, timeout);
+    const fallbackResult = await inspectShell(
+      page,
+      destinationUrl,
+      timeout,
+      enforceShell,
+    );
     if (fallbackResult.ok || fallbackResult.status !== 404) {
       result = fallbackResult;
       testedUrl = destinationUrl;
@@ -569,7 +607,7 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
       timeout,
       allowDestinationFallback,
     );
-    const mark = result.ok ? "OK" : "FAIL";
+    const mark = result.ok ? (result.exempt ? "SKIP" : "OK") : "FAIL";
     console.log(`${mark} ${result.source}`);
     console.log(`    ${result.reason}`);
     if (result.usedFallback) {
@@ -586,7 +624,16 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
   await browser.close();
 
   const failures = results.filter((result) => !result.ok);
-  console.log(`\n${results.length - failures.length}/${results.length} app-zone routes have the PolicyEngine shell.`);
+  const exempt = results.filter((result) => result.exempt);
+  const enforced = results.length - exempt.length;
+  console.log(`\n${enforced - failures.length}/${enforced} enforced app-zone routes have the PolicyEngine shell.`);
+
+  if (exempt.length > 0) {
+    console.log(`\n${exempt.length} route(s) skipped the PolicyEngine shell brand/nav check (loaded OK, header intentionally omitted):`);
+    for (const route of exempt) {
+      console.log(`  - ${route.source}`);
+    }
+  }
 
   if (failures.length > 0) {
     console.error("\nRoutes missing the PolicyEngine shell:");
