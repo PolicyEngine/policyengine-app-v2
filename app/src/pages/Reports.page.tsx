@@ -14,7 +14,7 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { Stack } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
+import { MOCK_USER_ID, WEBSITE_URL } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
@@ -54,7 +54,12 @@ export default function ReportsPage() {
   };
 
   const handleOpenChat = () => {
-    nav.push(`/${countryId}/chat`);
+    // Chat is served as a multizone child on the website host (policyengine.org/uk/chat)
+    // via a Vercel rewrite, not within the calculator app. Use a real cross-origin
+    // navigation rather than the calculator app's router.
+    if (typeof window !== 'undefined') {
+      window.location.href = `${WEBSITE_URL}/${countryId}/chat`;
+    }
   };
 
   const handleCloseRename = () => {
