@@ -60,8 +60,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/working-parents-tax-relief-act",
-    destination:
-      "https://wptra.vercel.app/us/working-parents-tax-relief-act",
+    destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act",
   },
   {
     source: "/us/utah-2026-tax-changes",
@@ -89,7 +88,8 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/watca",
-    destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
+    destination:
+      "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
   },
   {
     source: "/us/california-wealth-tax",
@@ -130,7 +130,8 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/uk/marriage",
-    destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
+    destination:
+      "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
     deepDestination:
       "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
   },
@@ -200,8 +201,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/state-eitcs-ctcs",
-    destination:
-      "https://us-state-eitcs-ctcs.vercel.app/us/state-eitcs-ctcs",
+    destination: "https://us-state-eitcs-ctcs.vercel.app/us/state-eitcs-ctcs",
   },
   {
     source: "/us/2024-election-calculator",
@@ -233,7 +233,8 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/ads-dashboard",
-    destination: "https://policyengine-ads-dashboard.vercel.app/us/ads-dashboard",
+    destination:
+      "https://policyengine-ads-dashboard.vercel.app/us/ads-dashboard",
   },
   {
     source: "/us/ai-inequality",
@@ -245,6 +246,15 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://ai-inequality-theta.vercel.app/us/ai-inequality?country=uk",
     deepDestination:
       "https://ai-inequality-theta.vercel.app/us/ai-inequality/:path*?country=uk",
+  },
+  {
+    // UK chat assistant — served as a multizone child so the chat lives at
+    // policyengine.org/uk/chat without an iframe. The chat app itself does
+    // not yet render the PolicyEngine site shell, so the shell audit skips
+    // this destination until the chat repo ships its own shell.
+    source: "/uk/chat",
+    destination: "https://policyengine-uk-chat.vercel.app/",
+    deepDestination: "https://policyengine-uk-chat.vercel.app/:path*",
   },
 ];
 

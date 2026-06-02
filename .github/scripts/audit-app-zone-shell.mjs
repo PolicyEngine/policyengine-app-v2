@@ -22,6 +22,9 @@ const SKIP_IF_DESTINATION_CONTAINS = [
   "/api/",
   "/robots.txt",
   "/sitemap.xml",
+  // UK chat assistant — the chat app does not yet render the PolicyEngine
+  // site shell. Skip until the chat repo ships its own shell-compliant header.
+  "policyengine-uk-chat.vercel.app",
 ];
 
 const ERROR_PATTERNS = [
@@ -97,7 +100,9 @@ export function extractRoutes(source) {
       /deepDestination:\s*"([^"]+)"/,
     )?.[1];
     if (!sourcePath) continue;
-    if (SKIP_IF_DESTINATION_CONTAINS.some((part) => destination.includes(part))) {
+    if (
+      SKIP_IF_DESTINATION_CONTAINS.some((part) => destination.includes(part))
+    ) {
       continue;
     }
 
@@ -284,9 +289,13 @@ async function discoverSitemapRoutes(
   allowDestinationFallback,
   maxSitemapRoutes,
 ) {
-  const sitemapUrls = [appendPath(resolveUrl(baseUrl, route.source), "/sitemap.xml")];
+  const sitemapUrls = [
+    appendPath(resolveUrl(baseUrl, route.source), "/sitemap.xml"),
+  ];
   if (allowDestinationFallback) {
-    sitemapUrls.push(appendPath(resolveUrl(baseUrl, route.destination), "/sitemap.xml"));
+    sitemapUrls.push(
+      appendPath(resolveUrl(baseUrl, route.destination), "/sitemap.xml"),
+    );
   }
 
   const discovered = new Map();
@@ -297,7 +306,8 @@ async function discoverSitemapRoutes(
 
     for (const loc of extractSitemapLocs(xml)) {
       const source = sourcePathFromSitemapLoc(loc, route, baseUrl);
-      if (!source || source === route.source || discovered.has(source)) continue;
+      if (!source || source === route.source || discovered.has(source))
+        continue;
 
       discovered.set(source, {
         source,
@@ -371,7 +381,11 @@ export function inspectTopShellData(
       continue;
     }
 
-    parts.push(element.textContent ?? "", element.ariaLabel ?? "", element.alt ?? "");
+    parts.push(
+      element.textContent ?? "",
+      element.ariaLabel ?? "",
+      element.alt ?? "",
+    );
   }
 
   const text = parts.join("\n").replace(/\s+/g, " ").trim();
@@ -419,10 +433,16 @@ async function inspectShell(page, url, timeout) {
       waitUntil: "domcontentloaded",
       timeout,
     });
-    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+    await page
+      .waitForLoadState("networkidle", { timeout: 10000 })
+      .catch(() => {});
     await page.waitForTimeout(500);
   } catch (error) {
-    return { ok: false, status: null, reason: `navigation failed: ${error.message}` };
+    return {
+      ok: false,
+      status: null,
+      reason: `navigation failed: ${error.message}`,
+    };
   }
 
   const status = response?.status() ?? null;
@@ -430,9 +450,10 @@ async function inspectShell(page, url, timeout) {
     return { ok: false, status, reason: `HTTP ${status}` };
   }
 
-  const bodyText = await page.locator("body").innerText({ timeout: 5000 }).catch(
-    () => "",
-  );
+  const bodyText = await page
+    .locator("body")
+    .innerText({ timeout: 5000 })
+    .catch(() => "");
   if (bodyText.trim().length < 50) {
     return { ok: false, status, reason: "empty or nearly empty page" };
   }
@@ -469,7 +490,13 @@ async function inspectShell(page, url, timeout) {
   return { ok: true, status, reason: "PolicyEngine shell present" };
 }
 
-async function auditRoute(browser, route, baseUrl, timeout, allowDestinationFallback) {
+async function auditRoute(
+  browser,
+  route,
+  baseUrl,
+  timeout,
+  allowDestinationFallback,
+) {
   const page = await browser.newPage({
     viewport: { width: 1440, height: 1000 },
     userAgent: "policyengine-app-zone-shell-audit/1.0",
@@ -506,9 +533,8 @@ async function runWithConcurrency(items, concurrency, worker) {
   }
 
   await Promise.all(
-    Array.from(
-      { length: Math.min(concurrency, items.length) },
-      () => runWorker(),
+    Array.from({ length: Math.min(concurrency, items.length) }, () =>
+      runWorker(),
     ),
   );
   return results;
@@ -551,7 +577,9 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     maxSitemapRoutes,
   );
 
-  console.log(`Auditing ${routes.length} app-zone route(s) for PolicyEngine shell.`);
+  console.log(
+    `Auditing ${routes.length} app-zone route(s) for PolicyEngine shell.`,
+  );
   console.log(`Base URL: ${baseUrl}\n`);
   if (routes.length > baseRoutes.length) {
     console.log(
@@ -561,32 +589,40 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
 
   const { chromium } = await import("playwright");
   const browser = await chromium.launch();
-  const results = await runWithConcurrency(routes, concurrency, async (route) => {
-    const result = await auditRoute(
-      browser,
-      route,
-      baseUrl,
-      timeout,
-      allowDestinationFallback,
-    );
-    const mark = result.ok ? "OK" : "FAIL";
-    console.log(`${mark} ${result.source}`);
-    console.log(`    ${result.reason}`);
-    if (result.usedFallback) {
-      console.log("    tested destination directly because source returned 404");
-    }
-    if (result.discoveredFromSitemap) {
-      console.log(`    discovered from ${result.discoveredFromSitemap}`);
-    }
-    if (result.testedUrl !== result.sourceUrl) {
-      console.log(`    tested ${result.testedUrl}`);
-    }
-    return result;
-  });
+  const results = await runWithConcurrency(
+    routes,
+    concurrency,
+    async (route) => {
+      const result = await auditRoute(
+        browser,
+        route,
+        baseUrl,
+        timeout,
+        allowDestinationFallback,
+      );
+      const mark = result.ok ? "OK" : "FAIL";
+      console.log(`${mark} ${result.source}`);
+      console.log(`    ${result.reason}`);
+      if (result.usedFallback) {
+        console.log(
+          "    tested destination directly because source returned 404",
+        );
+      }
+      if (result.discoveredFromSitemap) {
+        console.log(`    discovered from ${result.discoveredFromSitemap}`);
+      }
+      if (result.testedUrl !== result.sourceUrl) {
+        console.log(`    tested ${result.testedUrl}`);
+      }
+      return result;
+    },
+  );
   await browser.close();
 
   const failures = results.filter((result) => !result.ok);
-  console.log(`\n${results.length - failures.length}/${results.length} app-zone routes have the PolicyEngine shell.`);
+  console.log(
+    `\n${results.length - failures.length}/${results.length} app-zone routes have the PolicyEngine shell.`,
+  );
 
   if (failures.length > 0) {
     console.error("\nRoutes missing the PolicyEngine shell:");
@@ -595,8 +631,12 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
       console.error(`    source: ${failure.sourceUrl}`);
       console.error(`    destination: ${failure.destination}`);
     }
-    console.error("\nChild apps served through policyengine.org should render the");
-    console.error("PolicyEngine header/nav themselves. Multizone rewrites do not");
+    console.error(
+      "\nChild apps served through policyengine.org should render the",
+    );
+    console.error(
+      "PolicyEngine header/nav themselves. Multizone rewrites do not",
+    );
     console.error("inject the parent app shell into the child response.");
     return 1;
   }
