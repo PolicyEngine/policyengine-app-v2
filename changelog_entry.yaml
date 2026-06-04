@@ -2,3 +2,4 @@
   changes:
     added:
       - Add UK Universal Credit rebalancing analysis dashboard at /uk/uc-rebalancing
+      - Add UK fuel duty rise cancellation analysis dashboard at /uk/cancelling-fuel-duty-rise
