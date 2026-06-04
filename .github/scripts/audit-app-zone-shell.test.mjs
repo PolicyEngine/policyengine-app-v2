@@ -5,6 +5,7 @@ import {
   extractRoutes,
   extractSitemapLocs,
   inspectTopShellData,
+  isShellBrandExempt,
   resolveDestinationForSource,
   shouldAllowDestinationFallback,
   sourcePathFromSitemapLoc,
@@ -235,5 +236,22 @@ describe("shouldAllowDestinationFallback", () => {
       shouldAllowDestinationFallback({}, { GITHUB_EVENT_NAME: "pull_request" }),
       true,
     );
+  });
+});
+
+describe("isShellBrandExempt", () => {
+  test("exempts configured routes and their subpaths", () => {
+    assert.equal(isShellBrandExempt("/uk/scotland-income-tax-reform"), true);
+    assert.equal(
+      isShellBrandExempt("/uk/student-loan-visualisation/budget-impact"),
+      true,
+    );
+    assert.equal(isShellBrandExempt("/uk/uc-rebalancing"), true);
+    assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), true);
+  });
+
+  test("does not exempt other routes or partial-name collisions", () => {
+    assert.equal(isShellBrandExempt("/uk/marriage"), false);
+    assert.equal(isShellBrandExempt("/uk/uc-rebalancing-extended"), false);
   });
 });

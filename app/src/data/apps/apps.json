@@ -164,6 +164,19 @@
   },
   {
     "type": "iframe",
+    "slug": "uc-rebalancing",
+    "title": "UK Universal Credit rebalancing analysis dashboard",
+    "description": "PolicyEngine analysed the household and fiscal impact of the Universal Credit Act 2025 rebalancing package: an above-inflation uplift to the standard allowance and a fixed monthly health element",
+    "source": "https://uc-rebalancing.vercel.app/uk/uc-rebalancing",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uc-rebalancing.avif",
+    "date": "2026-06-01 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "wv-sb392-tax-cut",
     "title": "West Virginia SB 392 income tax cut calculator",
     "description": "Estimate the household and statewide impact of West Virginia Senate Bill 392, which reduces personal income tax rates by approximately 5% starting in 2026",

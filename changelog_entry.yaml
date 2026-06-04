@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Add QBI deduction calculator multizone at /us/qbi-calculator
+      - Add UK Universal Credit rebalancing analysis dashboard at /uk/uc-rebalancing
