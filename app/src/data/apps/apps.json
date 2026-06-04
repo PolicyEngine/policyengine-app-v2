@@ -177,6 +177,19 @@
   },
   {
     "type": "iframe",
+    "slug": "cancelling-fuel-duty-rise",
+    "title": "UK fuel duty rise cancellation analysis dashboard",
+    "description": "PolicyEngine estimated the fiscal cost and household impact of cancelling the Autumn Budget 2025 fuel-duty rise — the staged unwinding of the 5p cut and the April 2027 RPI uprating",
+    "source": "https://cancelling-fuel-duty-rise.vercel.app/uk/cancelling-fuel-duty-rise",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "cancelling-fuel-duty-rise.webp",
+    "date": "2026-06-01 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "wv-sb392-tax-cut",
     "title": "West Virginia SB 392 income tax cut calculator",
     "description": "Estimate the household and statewide impact of West Virginia Senate Bill 392, which reduces personal income tax rates by approximately 5% starting in 2026",
