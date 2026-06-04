@@ -180,6 +180,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://uc-rebalancing.vercel.app/uk/uc-rebalancing",
   },
   {
+    source: "/uk/cancelling-fuel-duty-rise",
+    destination:
+      "https://cancelling-fuel-duty-rise.vercel.app/uk/cancelling-fuel-duty-rise",
+  },
+  {
     source: "/us/aca-calc",
     destination: "https://aca-calc.vercel.app/us/aca-calc",
   },
