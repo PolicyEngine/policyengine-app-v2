@@ -5,3 +5,4 @@
       - Add UK fuel duty rise cancellation analysis dashboard at /uk/cancelling-fuel-duty-rise
     changed:
       - Proxy UK Python package docs at /uk/python and UK API docs at /uk/api so the country-parameterized "Python" and "API" nav links work on UK pages
+      - Align the calculator app header (e.g. /us/reports) with the main website header — hover-open dropdowns, per-item underline, Model dropdown with sub-items, Python link, and Events under About
