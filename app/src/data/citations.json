@@ -1,5 +1,14 @@
 [
   {
+    "title": "ITV Peston covers the fuel duty analysis",
+    "outlet": "ITV (Peston)",
+    "date": "2026-05-20",
+    "url": "https://www.itv.com/watch/peston/2a4458/2a4458a0390",
+    "image": "itv-peston-fuel-duty.jpg",
+    "tags": ["uk", "tax"],
+    "featured": true
+  },
+  {
     "title": "How replacing council tax with a flat land value tax would affect households in the UK",
     "outlet": "Progress and Poverty",
     "date": "2026-06-04",
