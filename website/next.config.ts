@@ -137,6 +137,16 @@ const nextConfig: NextConfig = {
           destination:
             "https://household-api-docs-policy-engine.vercel.app/us/api/:path*",
         },
+        {
+          source: "/uk/api",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/api/",
+        },
+        {
+          source: "/uk/api/:path*",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*",
+        },
         // Python client docs — same household-api-docs deployment, served at top-level /us/python
         {
           source: "/us/python",
@@ -147,6 +157,16 @@ const nextConfig: NextConfig = {
           source: "/us/python/:path*",
           destination:
             "https://household-api-docs-policy-engine.vercel.app/us/python/:path*",
+        },
+        {
+          source: "/uk/python",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/python",
+        },
+        {
+          source: "/uk/python/:path*",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/python/:path*",
         },
         // Zone asset proxy — API docs uses assetPrefix: '/_zones/household-api-docs'
         {
