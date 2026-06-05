@@ -1,5 +1,31 @@
 [
   {
+    "title": "ITV Peston covers the fuel duty analysis",
+    "outlet": "ITV (Peston)",
+    "date": "2026-05-20",
+    "url": "https://www.itv.com/watch/peston/2a4458/2a4458a0390",
+    "image": "itv-peston-fuel-duty.jpg",
+    "tags": ["uk", "tax"],
+    "featured": true
+  },
+  {
+    "title": "How replacing council tax with a flat land value tax would affect households in the UK",
+    "outlet": "Progress and Poverty",
+    "date": "2026-06-04",
+    "url": "https://progressandpoverty.substack.com/p/how-replacing-council-tax-with-a",
+    "image": "progress-poverty-council-tax-lvt.jpg",
+    "tags": ["uk", "tax"],
+    "featured": true
+  },
+  {
+    "title": "Providing a model for citizen deliberation over economic trade-offs",
+    "outlet": "Societal Impacts (Elsevier)",
+    "date": "2026-06-01",
+    "url": "https://doi.org/10.1016/j.socimp.2026.100172",
+    "image": "societal-impacts-citizen-deliberation.jpg",
+    "tags": ["uk", "policy"]
+  },
+  {
     "title": "Congresswoman McDonald Rivet introduces game-changing tax cut for working families",
     "outlet": "U.S. House (McDonald Rivet)",
     "date": "2026-04-22",
