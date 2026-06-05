@@ -3,3 +3,5 @@
     added:
       - Add UK Universal Credit rebalancing analysis dashboard at /uk/uc-rebalancing
       - Add UK fuel duty rise cancellation analysis dashboard at /uk/cancelling-fuel-duty-rise
+    changed:
+      - Proxy UK Python package docs at /uk/python and UK API docs at /uk/api so the country-parameterized "Python" and "API" nav links work on UK pages
