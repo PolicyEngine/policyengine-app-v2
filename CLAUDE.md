@@ -5,7 +5,8 @@
 The `app/` directory contains the legacy Vite build. Some parts have been ported to Next.js, others are still active.
 
 **Ported to website/ (do NOT modify in app/):**
-- Website components: `home/`, `shared/static/`, `homeHeader/`, `Footer.tsx`, `FooterSubscribe.tsx`, `blog/BlogPostCard.tsx`, `blog/BlogPostGrid.tsx`, `blog/ResearchFilters.tsx`
+- Website components: `home/`, `shared/static/`, `Footer.tsx`, `FooterSubscribe.tsx`, `blog/BlogPostCard.tsx`, `blog/BlogPostGrid.tsx`, `blog/ResearchFilters.tsx`
+  - Note: `homeHeader/` and `shared/HomeHeader.tsx` were also ported to `website/src/components/Header.tsx`, but the calculator-app still renders `HomeHeader` via `StandardLayout`, so these remain editable in `app/`. Keep the calculator header in sync with the website header when the website one changes.
 - Website pages: `Home`, `Research`, `Blog`, `Team`, `Supporters`, `Donate`, `Privacy`, `Terms`, `Brand*`, `Citations`, `AppPage`
 - `vercel.json` (root) — new rewrites go in `website/next.config.ts`
 
