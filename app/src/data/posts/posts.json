@@ -1725,5 +1725,14 @@
     "authors": ["vahid-ahmadi"],
     "filename": "multi-agent-workflows-policy-research.md",
     "image": "multi-agent-workflows-policy-research.webp"
+  },
+  {
+    "title": "Pinning every result: TRACE transparent research objects",
+    "description": "PolicyEngine now emits TRACE provenance certificates for certified releases, microdata builds, and individual simulation runs, with a one-command verifier and Zenodo preservation mirroring.",
+    "date": "2026-06-12",
+    "tags": ["us", "uk", "technology"],
+    "authors": ["max-ghenis"],
+    "filename": "trace-transparent-research-objects.md",
+    "image": "trace-transparent-research-objects.webp"
   }
 ]
