@@ -1,5 +1,14 @@
 [
   {
+    "title": "Introducing PolicyBench: how accurately can AI compute taxes and benefits?",
+    "description": "We tested 13 frontier language models on 100 representative US households, with no tools, scored against PolicyEngine. GPT-5.5 leads, getting 80.3% exactly right.",
+    "date": "2026-06-16",
+    "tags": ["us", "ai", "featured"],
+    "authors": ["max-ghenis"],
+    "filename": "introducing-policybench.md",
+    "image": "introducing-policybench.webp"
+  },
+  {
     "title": "The Keep Your Pay Act's AMT interaction",
     "description": "Senator Booker's proposed standard deduction increase triggers AMT for some high earners, clawing back over half of tax savings compared to a simple bracket calculation.",
     "date": "2026-03-10",
