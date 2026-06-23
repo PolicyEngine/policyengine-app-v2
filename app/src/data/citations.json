@@ -1,5 +1,14 @@
 [
   {
+    "title": "Distribution of Personal Income",
+    "outlet": "U.S. Bureau of Economic Analysis",
+    "date": "2026-06-16",
+    "url": "https://www.bea.gov/data/special-topics/distribution-of-personal-income",
+    "image": "bea-distribution-personal-income.webp",
+    "tags": ["us", "technical"],
+    "featured": true
+  },
+  {
     "title": "ITV Peston covers the fuel duty analysis",
     "outlet": "ITV (Peston)",
     "date": "2026-05-20",
