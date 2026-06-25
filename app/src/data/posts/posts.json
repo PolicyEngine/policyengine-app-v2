@@ -1725,5 +1725,14 @@
     "authors": ["vahid-ahmadi"],
     "filename": "multi-agent-workflows-policy-research.md",
     "image": "multi-agent-workflows-policy-research.webp"
+  },
+  {
+    "title": "Bringing AI to policymaking: a chat interface to PolicyEngine UK",
+    "description": "Every figure comes from our microsimulation engine, not from the language model's memory.",
+    "date": "2026-06-25",
+    "tags": ["uk", "featured", "technology", "ai"],
+    "authors": ["vahid-ahmadi", "anthony-volk"],
+    "filename": "uk-chat-cant-make-up-numbers.md",
+    "image": "uk-chat-cant-make-up-numbers.webp"
   }
 ]
