@@ -1,4 +1,4 @@
-[PolicyEngine UK Chat](https://policyengine.org/uk) is an AI-powered chat interface to PolicyEngine UK. It answers UK tax-and-benefit questions in a conversation and runs our microsimulation engine for every calculation. When a question needs a number, the chat calls a tool that computes the result, rather than producing the number from the language model's memory. We built it for policymaking, where the figure is often the point, and where a number a model produces from memory can read like an answer without having been computed. This follows our earlier work on [multi-agent AI workflows for policy research](https://policyengine.org/uk/research/multi-agent-workflows-policy-research), and it sits on the same engine we use elsewhere, for example in [how PolicyEngine estimates the effects of UK carbon taxes](https://policyengine.org/uk/research/how-policyengine-estimates-the-effects-of-uk-carbon-taxes) and our [carbon tax and dividend analysis](https://policyengine.org/uk/research/uk-carbon-tax-dividend).
+AI is moving quickly into policymaking. Analysts, advisers, and journalists increasingly ask language models how a tax or benefit change would play out, because a model can read an ambiguous question and answer it in plain language in seconds. The difficulty is that a language model produces numbers from memory, and in policy work the number is usually the point: a figure that reads like an answer but was never computed is worse than no figure at all. [PolicyEngine UK Chat](https://policyengine.org/uk) is built for exactly this gap. It is an AI chat interface to PolicyEngine UK that answers UK tax-and-benefit questions in a conversation and runs our microsimulation engine for every calculation. When a question needs a number, the chat calls a tool that computes the result, rather than producing the number from the language model's memory, so the figure comes from the rules rather than from recall.
 
 ## Why the calculation is separate from the model
 
@@ -69,27 +69,7 @@ A request runs in a fixed order. The server validates it and checks the account'
 
 The streaming API returns content as a sequence of blocks. The chat watches for tool-use blocks as they arrive, each naming a tool and carrying a JSON input. It resolves the name against a dispatch table, runs the handler, and appends the result to the conversation as a tool-result turn before streaming the next one. Independent tools requested in the same turn run concurrently.
 
-Two controls keep the loop bounded. An iteration cap, `MAX_ITERATIONS = 30`, limits how many tool rounds a single request can take. A repeated-call check tracks the most recent tool calls; three identical calls in a row means the model is stuck, and the loop stops with an error rather than continue. If the cap is reached before the model finishes, the chat returns a message naming the tools it attempted and the last error, then a terminal event stamped `stop_reason="iteration_cap"`, so the client always receives a clean ending.
-
-```python
-for i in range(MAX_ITERATIONS):
-    blocks = await stream_assistant_turn(conversation)
-    tool_uses = [b for b in blocks if b.type == "tool_use"]
-    if not tool_uses:
-        break  # model is done — final prose turn
-
-    sig = signature(tool_uses)
-    recent.append(sig)
-    if recent[-3:].count(sig) == 3:
-        yield error("identical tool call repeated 3x"); break
-
-    results = await run_tools(tool_uses)   # independent tools run concurrently
-    conversation.append(tool_result_turn(results))
-else:
-    # cap reached without convergence — summarise and stop cleanly
-    yield message(summarise(attempted_tools, last_error))
-    yield done(stop_reason="iteration_cap")
-```
+Two controls keep the loop bounded. An iteration cap limits how many tool rounds a single request can take. A repeated-call check tracks the most recent tool calls; three identical calls in a row means the model is stuck, and the loop stops with an error rather than continue. If the cap is reached before the model finishes, the chat returns a message naming the tools it attempted and the last error, then a clean terminal event, so the client always receives a proper ending.
 
 ## What the model decides and what the code decides
 

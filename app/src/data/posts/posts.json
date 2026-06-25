@@ -1728,7 +1728,7 @@
   },
   {
     "title": "Bringing AI to policymaking: a chat interface to PolicyEngine UK",
-    "description": "Every figure comes from our microsimulation engine, not from the language model's memory.",
+    "description": "An AI chat interface to PolicyEngine UK that answers tax and benefit questions by running the microsimulation engine for every figure.",
     "date": "2026-06-25",
     "tags": ["uk", "featured", "technology", "ai"],
     "authors": ["vahid-ahmadi", "anthony-volk"],
