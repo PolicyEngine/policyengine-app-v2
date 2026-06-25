@@ -1,10 +1,10 @@
-AI is moving quickly into policymaking. Analysts, advisers, and journalists increasingly ask language models how a tax or benefit change would play out, because a model can read an ambiguous question and answer it in plain language in seconds. The difficulty is that a language model produces numbers from memory, and in policy work the number is usually the point: a figure that reads like an answer but was never computed is worse than no figure at all. [PolicyEngine UK Chat](https://policyengine.org/uk) is built for exactly this gap. It is an AI chat interface to PolicyEngine UK that answers UK tax-and-benefit questions in a conversation and runs our microsimulation engine for every calculation. When a question needs a number, the chat calls a tool that computes the result, rather than producing the number from the language model's memory, so the figure comes from the rules rather than from recall.
+Language models are increasingly used to ask how a tax or benefit change would work, because a model can read a loosely worded question and answer it in plain language. The difficulty is that a language model produces its numbers from memory, and in policy work the number is often the point. [PolicyEngine UK Chat](https://policyengine.org/uk) is an AI chat interface to PolicyEngine UK that answers UK tax-and-benefit questions in a conversation and runs our microsimulation engine for every calculation. When a question needs a number, the chat calls a tool that computes the result, rather than producing it from the language model's memory, so the figure comes from the rules rather than from recall.
 
-## Why the calculation is separate from the model
+## Why calculation is separate
 
 A language model generates text by predicting continuations, not by applying tax and benefit rules. Ask one what Universal Credit a lone parent receives and it returns a number without running the taper, the work allowance, or the benefit rates. The wording reads the same whether the number is right or wrong.
 
-Prompting does not change this. Instructing a model to state only real figures does not give it the rules; it changes the wording around the same guess. For policy work the number is often the point, so a wrong figure presented as an answer is worse than no figure.
+Prompting does not change this. Instructing a model to state only real figures does not give it the rules; it changes the wording around the same guess. For policy work the number is often the point, and a figure that is wrong but reads as an answer can be harder to catch than no figure at all.
 
 This matters when results feed decisions. A researcher, a charity adviser, or a journalist comparing two reforms needs figures that come from a stated model, not from a model's recollection of figures it has seen. The same applies to a household trying to work out how a threshold change affects its own income: the figure has to come from the rules, with the assumptions written down, so it can be reproduced.
 
@@ -12,7 +12,7 @@ This matters when results feed decisions. A researcher, a charity adviser, or a 
 
 A [Claude model](https://claude.com/claude) reads the question, works out what is being asked, and selects a tool. The system prompt requires every number to come from a tool result, and the tools, not the model, perform the calculation. Most numbers come from typed calculation tools that call the [PolicyEngine UK microsimulation engine](https://github.com/PolicyEngine/policyengine-uk); some come from reproducible PolicyEngine Python when a question falls outside those tools. Either way the number comes from a computation, not from the model's memory.
 
-The model does the part it is suited to: turning an ambiguous question into a calculation, choosing a tool, and reporting the result it gets back. The engine applies the rules. The engine is open source, so anyone can check how a number is produced, and the same rules sit behind our web app and Python package, which keeps the chat's answers consistent with the rest of PolicyEngine. If a household-level answer in the chat looks off, the same scenario can be run in the web app or the package and the two should agree.
+The model does the part it is suited to: turning an ambiguous question into a calculation, choosing a tool, and reporting the result it gets back. The engine applies the rules. The engine is open source, so anyone can check how a number is produced, and the same rules sit behind our web app and Python package, which keeps the chat's answers consistent with the rest of PolicyEngine. If a household-level answer in the chat seems wrong, the same scenario can be run in the web app or the package and the two should agree.
 
 ## What it can answer
 
@@ -56,14 +56,14 @@ A request runs in a fixed order. The server validates it and checks the account'
   <text x="225" y="314" text-anchor="middle" fill="#9FB6D0" font-size="11">policyengine-uk-compiled · real data</text>
   <line x1="430" y1="259" x2="364" y2="259" stroke="#2C6496" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
   <path d="M225,226 C225,150 360,150 426,170" stroke="#0F766E" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#arrowL)"/>
-  <text x="250" y="160" fill="#0F766E" font-size="11">result → back into model</text>
+  <text x="288" y="145" fill="#0F766E" font-size="11">result → back into model</text>
   <rect x="295" y="392" width="200" height="54" rx="8" fill="#EAF1F8" stroke="#2C6496" stroke-width="1.5"/>
   <text x="395" y="416" text-anchor="middle" fill="#13233A" font-size="13">SSE events → client</text>
   <text x="395" y="434" text-anchor="middle" fill="#62707E" font-size="11">chunk · tool_* · done</text>
   <path d="M530,284 C530,360 495,360 460,392" stroke="#2C6496" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
 </svg>
 
-*The model proposes and the deterministic layer disposes. Every iteration of the loop reaches the client as a server-sent event.*
+*The model requests tools; the code runs them and feeds the results back. Each iteration of the loop reaches the client as a server-sent event.*
 
 ## The tool-use loop
 
@@ -71,7 +71,7 @@ The streaming API returns content as a sequence of blocks. The chat watches for 
 
 Two controls keep the loop bounded. An iteration cap limits how many tool rounds a single request can take. A repeated-call check tracks the most recent tool calls; three identical calls in a row means the model is stuck, and the loop stops with an error rather than continue. If the cap is reached before the model finishes, the chat returns a message naming the tools it attempted and the last error, then a clean terminal event, so the client always receives a proper ending.
 
-## What the model decides and what the code decides
+## What the model and code decide
 
 The boundary between the model and the code is written down and treated as a contract. The model handles the parts that are open-ended: interpreting the question, planning, selecting tools, writing prose, and suggesting follow-ups. The code handles everything that affects a number or a displayed result: request validation, tool dispatch, the typed tools themselves — including Python execution and chart construction — result truncation and summarisation, billing, and database writes.
 
@@ -92,7 +92,7 @@ The tools are defined in one place, with shared schema fragments — the year, r
 | `run_python` | Sandboxed Python over engine outputs |
 | `generate_chart` | Builds chart JSON deterministically |
 
-## A reference generated from the engine
+## The engine reference
 
 The model also needs to know what the engine can actually compute, and that surface changes every time `policyengine-uk-compiled` is updated. At deploy time, a build step snapshots the installed engine into a reference document: its reported capabilities, the public API signatures and docstrings, and the full parameter schema. That document is loaded into the system prompt and stamped with the engine version. Because it is generated from the engine rather than written by hand, the model's account of what the engine covers cannot drift from what the engine actually does.
 
