@@ -476,6 +476,8 @@ export function MarkdownFormatter({
     ul: ({ children }) => (
       <ul
         style={{
+          listStyleType: 'disc',
+          listStylePosition: 'outside',
           paddingLeft: blogSpacing.lg,
           marginBottom: blogSpacing.marginBottom.list,
           marginTop: blogSpacing.marginTop.list,
@@ -493,6 +495,8 @@ export function MarkdownFormatter({
     ol: ({ children }) => (
       <ol
         style={{
+          listStyleType: 'decimal',
+          listStylePosition: 'outside',
           paddingLeft: blogSpacing.lg,
           marginBottom: blogSpacing.marginBottom.list,
           marginTop: blogSpacing.marginTop.list,
