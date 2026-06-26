@@ -1727,7 +1727,7 @@
     "image": "multi-agent-workflows-policy-research.webp"
   },
   {
-    "title": "Bringing AI to policymaking: a chat interface to PolicyEngine UK",
+    "title": "AI chatbot for policymaking",
     "description": "An AI chat interface to PolicyEngine UK that answers tax and benefit questions by running the microsimulation engine for every figure.",
     "date": "2026-06-25",
     "tags": ["uk", "featured", "technology", "ai"],

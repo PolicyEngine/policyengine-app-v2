@@ -1,26 +1,26 @@
-Most AI chatbots answer a tax-or-benefit question by guessing the number from memory. [PolicyEngine UK Chat](https://policyengine.org/uk) instead computes every number from the actual rules, by running our microsimulation engine. When a question needs a figure, the chat calls a tool that runs the calculation rather than letting the model supply it.
+Most AI chatbots answer a tax-or-benefit question by guessing the number from memory. [PolicyEngine UK Chat](https://policyengine.org/uk) instead **computes every number from the actual rules**, by running our microsimulation engine. When a question needs a figure, the chat calls a tool that runs the calculation rather than letting the model supply it.
 
 Language models are increasingly used to ask how a tax or benefit change would work, because a model can read a loosely worded question and answer it in plain language. The difficulty is that a language model [produces its numbers from memory](https://www.gov.uk/government/publications/ai-playbook-for-the-uk-government/artificial-intelligence-playbook-for-the-uk-government-html#:~:text=large%20language%20models%20%28LLMs%29,may%20actually%20be%20factually%20incorrect), and in policy work the figure is usually what matters. PolicyEngine UK Chat is an AI chat interface to PolicyEngine UK that answers UK tax-and-benefit questions in a conversation and runs the engine for every calculation.
 
 ## Separating calculation
 
-A language model generates text by [predicting continuations](https://en.wikipedia.org/wiki/Large_language_model#:~:text=Autoregressive%20models,how%20a%20sequence%20continues), not by applying tax and benefit rules. Ask one what Universal Credit a lone parent receives and it returns a number without running the taper, the work allowance, or the benefit rates.
+A language model generates text by [predicting continuations](https://en.wikipedia.org/wiki/Large_language_model#:~:text=Autoregressive%20models,how%20a%20sequence%20continues), **not by applying tax and benefit rules**. Ask one what Universal Credit a lone parent receives and it returns a number without running the taper, the work allowance, or the benefit rates.
 
-Prompting does not change this. Instructing a model to state only real figures does not give it the rules; it changes the wording around the same guess. A model can recite the correct taper rate and still get the arithmetic wrong, and the output reads identically whether the figure is right or wrong, so you cannot tell from the answer which it is. A figure that is wrong but reads as an answer can be [harder to catch than no figure at all](https://post.parliament.uk/research-briefings/post-pn-0708/#:~:text=Some%20stakeholders%20have%20indicated,challenge%20AI%20decision-making).
+Prompting does not change this. Instructing a model to state only real figures does not give it the rules; it changes the wording around the same guess. A model can recite the correct taper rate and still get the arithmetic wrong, and the output reads identically whether the figure is right or wrong, so **you cannot tell from the answer which it is**. A figure that is wrong but reads as an answer can be [harder to catch than no figure at all](https://post.parliament.uk/research-briefings/post-pn-0708/#:~:text=Some%20stakeholders%20have%20indicated,challenge%20AI%20decision-making).
 
 [This matters when results feed decisions](https://www.nao.org.uk/reports/use-of-artificial-intelligence-in-government/#:~:text=Our%20survey%20of%20government%20bodies%20found,piloting%20and%20planning%20AI%20use%20cases). Anyone comparing two reforms needs figures that come from a stated model, not from a model's recollection of figures it has seen. The same applies to a household trying to work out how a threshold change affects its own income: the figure has to come from the rules, with the assumptions written down, so it can be reproduced.
 
 ## The model plans, the tools calculate
 
-AI tools like Claude or ChatGPT read the question, work out what is being asked, and select a tool. The system prompt requires every number to come from a tool result, and the tools, not the model, perform the calculation. Most numbers come from typed calculation tools that call the [PolicyEngine UK microsimulation engine](https://github.com/PolicyEngine/policyengine-uk); some come from sandboxed Python over the same engine when a question falls outside those tools.
+AI tools like Claude or ChatGPT read the question, work out what is being asked, and select a tool. The system prompt requires every number to come from a tool result, and **the tools, not the model, perform the calculation**. Most numbers come from typed calculation tools that call the [PolicyEngine UK microsimulation engine](https://github.com/PolicyEngine/policyengine-uk); some come from sandboxed Python over the same engine when a question falls outside those tools.
 
-This split is the central design principle: anything that affects a number or an artefact is handled by code, so it can be audited rather than trusted, while the open-ended work — reading the question, planning, choosing a tool, and writing the answer — is left to the model.
+This split is the central design principle: **anything that affects a number or an artefact is handled by code, so it can be audited rather than trusted**, while the open-ended work — reading the question, planning, choosing a tool, and writing the answer — is left to the model.
 
-The engine applies the rules, and it is open source, so anyone can check how a number is produced. The same rules sit behind our web app and Python package, which keeps the chat's answers consistent with the rest of PolicyEngine.
+The engine applies the rules, and **it is open source, so anyone can check how a number is produced**. The same rules sit behind our web app and Python package, which keeps the chat's answers consistent with the rest of PolicyEngine.
 
 ## The tools
 
-The diagram below groups the six tools into the three that run calculations on the engine (top row) and the three that support them (bottom row). Every figure they return comes from a computation, not from the model.
+The diagram below groups the six tools into the three that run calculations on the engine (top row) and the three that support them (bottom row). **Every figure they return comes from a computation, not from the model.**
 
 <svg viewBox="0 0 760 330" role="img" aria-label="PolicyEngine UK Chat's six tools, grouped into three Calculate tools (calculate_household, run_economy_simulation, analyse_microdata) and three Support tools (generate_chart, run_python, validate_reform)." xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;display:block;margin:24px auto;font-family:system-ui,-apple-system,sans-serif">
   <text x="380" y="22" text-anchor="middle" fill="#2C6496" font-size="11" font-weight="700" letter-spacing="1.5">CALCULATE</text>
@@ -134,7 +134,7 @@ The boundary between the model and the code is written down and treated as a con
 
 Some of these could be left to the model and deliberately are not. If the model chose which rows of a large table to show, that choice would be a sampling decision, and a sampling decision the reader cannot see is one the reader cannot check. A deterministic helper makes it instead, so the choice can be inspected rather than taken on trust.
 
-Plan mode follows the same logic. It lets the model talk through an approach before running anything. Telling the model "do not call tools" in the prompt is a request it can ignore, so the chat does not rely on that: in plan mode the list of tools is left out of the request entirely, and a model cannot call a tool it was never offered.
+Plan mode follows the same logic. It lets the model talk through an approach before running anything. Telling the model "do not call tools" in the prompt is a request it can ignore, so the chat does not rely on that: in plan mode the list of tools is left out of the request entirely, and **a model cannot call a tool it was never offered**.
 
 ### The engine reference
 
@@ -142,11 +142,11 @@ The model also needs to know what the engine can actually compute, and that surf
 
 ## Limitations
 
-The chat is a modelling tool, not advice. It reports what the model calculates under stated assumptions, and it is not a substitute for professional guidance on an individual's circumstances.
+The chat is a **modelling tool, not advice**. It reports what the model calculates under stated assumptions, and it is not a substitute for professional guidance on an individual's circumstances.
 
 `run_economy_simulation` handles parametric reforms, meaning changes to existing rates, thresholds, and parameters. Reforms that introduce new mechanisms fall back to `run_python`, which we review, or sit outside the standard tools. Only the major UK tax and benefit programmes are modelled, so questions about minor or unmodelled provisions may not be answerable.
 
-Results depend on the dataset, the year, and the modelling assumptions, and the chat states these dependencies rather than presenting figures as universal. The aim is that every path either produces a number you can check or says plainly that it cannot. It is free to try, and its answers can be cited and reproduced: because the figures come from the same open engine that powers the rest of PolicyEngine, they can be checked against independent estimates, such as those from the IFS, the Resolution Foundation, or the OBR.
+Results depend on the dataset, the year, and the modelling assumptions, and the chat states these dependencies rather than presenting figures as universal. The aim is that **every path either produces a number you can check or says plainly that it cannot**. It is free to try, and its answers can be cited and reproduced: because the figures come from the same open engine that powers the rest of PolicyEngine, they can be checked against independent estimates, such as those from the IFS, the Resolution Foundation, or the OBR.
 
 ## Next steps
 
