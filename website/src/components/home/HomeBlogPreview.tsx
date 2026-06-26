@@ -214,6 +214,9 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
     .filter(
       (item) => item.tags.includes(countryId) || item.tags.includes("global"),
     )
+    // Exclude the chatbot launch post — it is a product announcement, not a
+    // policy-analysis piece, so it does not belong in "Expert policy analysis".
+    .filter((item) => item.slug !== "uk-chat-cant-make-up-numbers")
     .slice(0, TOTAL_ITEMS);
 
   if (relevantItems.length === 0) {
