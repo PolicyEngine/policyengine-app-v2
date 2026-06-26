@@ -18,9 +18,12 @@ const TOTAL_POSTS = LEFT_COUNT + RIGHT_COUNT;
 export default function HomeBlogPreview() {
   const countryId = useCurrentCountry();
 
-  // Get posts relevant to this country (or global), newest first
+  // Get posts relevant to this country (or global), newest first.
+  // Exclude the chatbot launch post — it is a product announcement, not a
+  // policy-analysis piece, so it does not belong in "Expert policy analysis".
   const relevantPosts = getPosts()
     .filter((post: BlogPost) => post.tags.includes(countryId) || post.tags.includes('global'))
+    .filter((post: BlogPost) => post.slug !== 'uk-chat-cant-make-up-numbers')
     .sort((a: BlogPost, b: BlogPost) => b.date.localeCompare(a.date))
     .slice(0, TOTAL_POSTS);
 

@@ -1737,8 +1737,8 @@
   },
   {
     "title": "AI chatbot for policymaking",
-    "description": "An AI chat interface to PolicyEngine UK that answers tax and benefit questions by running the microsimulation engine for every figure.",
-    "date": "2026-06-25",
+    "description": "Launching the beta version of PolicyEngine UK Chat — an AI chat interface that answers UK tax and benefit questions by running the microsimulation engine for every figure.",
+    "date": "2026-06-27",
     "tags": ["uk", "featured", "technology", "ai"],
     "authors": ["vahid-ahmadi", "anthony-volk"],
     "filename": "uk-chat-cant-make-up-numbers.md",
