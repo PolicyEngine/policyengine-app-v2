@@ -29,24 +29,24 @@ export default function FeaturedResearchBanner() {
 
   const cards = [
     {
-      href: '/uk/spring-statement-2026',
-      title: 'Spring Statement 2026 analysis',
-      desc: 'New OBR forecast and its effects on UK living standards',
+      href: '/uk/uk-cliff-watch',
+      title: 'UK CliffWatch',
+      desc: 'Where benefit withdrawal and taxes create cliffs and high marginal rates as earnings rise',
     },
     {
-      href: '/uk/research/uk-two-child-limit-reintroduction',
-      title: 'Two-child limit reintroduction',
-      desc: 'Budgetary, distributional, poverty, and inequality impacts across the UK',
+      href: '/uk/cancelling-fuel-duty-rise',
+      title: 'Fuel duty rise cancellation',
+      desc: 'Fiscal cost and household impact of cancelling the Autumn Budget 2025 fuel-duty rise',
     },
     {
-      href: '/uk/uk-salary-sacrifice-tool',
-      title: 'Salary sacrifice cap analysis tool',
-      desc: 'Revenue and distributional impacts of capping pension salary sacrifice',
+      href: '/uk/uc-rebalancing',
+      title: 'Universal Credit rebalancing',
+      desc: 'Household and fiscal impact of the Universal Credit Act 2025 rebalancing package',
     },
     {
-      href: '/uk/uk-student-loan-calculator',
-      title: 'Student loan deductions calculator',
-      desc: 'Repayments, marginal tax rates, and lifetime costs for UK graduates',
+      href: '/uk/energy-price-shock',
+      title: 'Energy price shock',
+      desc: 'Distributional impact of energy price shocks, with five modelled policy responses',
     },
   ];
 
