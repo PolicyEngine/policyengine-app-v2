@@ -30,7 +30,7 @@ export default function FeaturedResearchBanner() {
   const cards = [
     {
       href: '/uk/uk-cliff-watch',
-      title: 'UK CliffWatch',
+      title: 'UK CliffWatch tool',
       desc: 'Where benefit withdrawal and taxes create cliffs and high marginal rates as earnings rise',
     },
     {

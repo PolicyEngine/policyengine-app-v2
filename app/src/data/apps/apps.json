@@ -11,7 +11,7 @@
   {
     "type": "iframe",
     "slug": "uk-cliff-watch",
-    "title": "UK CliffWatch",
+    "title": "UK CliffWatch tool",
     "description": "See where benefit withdrawal and taxes create cliffs and high marginal rates as a UK household's earnings rise, modelled with PolicyEngine UK.",
     "source": "https://uk-cliff-watch.vercel.app/",
     "tags": ["uk", "featured", "policy", "interactives"],
