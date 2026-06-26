@@ -62,21 +62,23 @@ export default function HeroCTA({ countryId }: { countryId: string }) {
         Enter PolicyEngine
       </motion.a>
 
-      <motion.a
-        href={CHAT_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.98 }}
-        style={{
-          ...buttonBase,
-          background: colors.secondary[800],
-          color: colors.white,
-          boxShadow: `0 2px 12px ${colors.shadow.medium}`,
-        }}
-      >
-        Try the AI chatbot
-      </motion.a>
+      {countryId === "uk" && (
+        <motion.a
+          href={CHAT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.98 }}
+          style={{
+            ...buttonBase,
+            background: colors.secondary[800],
+            color: colors.white,
+            boxShadow: `0 2px 12px ${colors.shadow.medium}`,
+          }}
+        >
+          Try the AI chatbot
+        </motion.a>
+      )}
     </motion.div>
   );
 }
