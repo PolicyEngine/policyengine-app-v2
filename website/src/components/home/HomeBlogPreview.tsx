@@ -216,7 +216,7 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
     )
     // Exclude the chatbot launch post — it is a product announcement, not a
     // policy-analysis piece, so it does not belong in "Expert policy analysis".
-    .filter((item) => item.slug !== "uk-chat-cant-make-up-numbers")
+    .filter((item) => item.slug !== "introducing-policyengine-uk-chat")
     .slice(0, TOTAL_ITEMS);
 
   if (relevantItems.length === 0) {
