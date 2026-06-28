@@ -32,11 +32,6 @@
       "source": "/:countryId/blog",
       "destination": "/:countryId/research",
       "permanent": true
-    },
-    {
-      "source": "/tutorial",
-      "destination": "/tutorial/",
-      "permanent": false
     }
   ],
   "rewrites": [
@@ -121,8 +116,12 @@
       "destination": "https://policyengine-slides.vercel.app/slides/:path*"
     },
     {
+      "source": "/tutorial",
+      "destination": "https://policyengine-tutorial.vercel.app/tutorial"
+    },
+    {
       "source": "/tutorial/:path*",
-      "destination": "https://policyengine-tutorial.vercel.app/:path*"
+      "destination": "https://policyengine-tutorial.vercel.app/tutorial/:path*"
     },
     {
       "source": "/plugin-blog",
