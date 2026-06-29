@@ -1,8 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "images": {
-    "sizes": [128, 256, 384, 512, 640, 750, 828, 1080, 1200, 1920],
-    "formats": ["image/avif", "image/webp"],
+    "sizes": [
+      128,
+      256,
+      384,
+      512,
+      640,
+      750,
+      828,
+      1080,
+      1200,
+      1920
+    ],
+    "formats": [
+      "image/avif",
+      "image/webp"
+    ],
     "minimumCacheTTL": 86400
   },
   "installCommand": "cd .. && bun install --frozen-lockfile",
@@ -100,6 +114,14 @@
     {
       "source": "/slides/:path*",
       "destination": "https://policyengine-slides.vercel.app/slides/:path*"
+    },
+    {
+      "source": "/tutorial",
+      "destination": "https://policyengine-tutorial.vercel.app/tutorial"
+    },
+    {
+      "source": "/tutorial/:path*",
+      "destination": "https://policyengine-tutorial.vercel.app/tutorial/:path*"
     },
     {
       "source": "/plugin-blog",
