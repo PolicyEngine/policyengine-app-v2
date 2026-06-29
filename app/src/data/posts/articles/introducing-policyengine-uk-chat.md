@@ -41,9 +41,9 @@ PolicyEngine UK Chat lets users ask UK tax and benefit questions in plain Englis
 
 ## Why this needs more than a language model
 
-PolicyEngine has been measuring this problem directly. In [PolicyBench](https://policyengine.org/us/research/introducing-policybench), we evaluated how accurately AI models compute taxes and benefits from household prompts without tools or lookups, scoring their answers against deterministic PolicyEngine outputs.
+PolicyEngine has been measuring this problem directly. In [PolicyBench](https://policyengine.org/us/research/introducing-policybench) — an evaluation built on the US tax and benefit system — we measured how accurately AI models compute taxes and benefits from household prompts without tools or lookups, scoring their answers against deterministic PolicyEngine outputs.
 
-The result is clear: unaided predictive AI is not yet accurate enough to calculate taxes and benefits without a deterministic model behind it. In the launch results, the top model — OpenAI's GPT-5.5 — matched PolicyEngine exactly on only 80.3% of its scored outputs. Computed amounts were the hardest cases: federal and state income tax before credits scored far lower than eligibility flags, because they require sequencing income concepts, thresholds, exclusions, and credits correctly.
+The result is clear: unaided predictive AI is not yet accurate enough to calculate taxes and benefits without a deterministic model behind it. In the launch results, the top model — OpenAI's GPT-5.5 — matched PolicyEngine exactly on only 80.3% of its scored outputs. Computed amounts were the hardest cases: federal and state income tax before credits scored far lower than eligibility flags, because they require sequencing income concepts, thresholds, exclusions, and credits correctly. The benchmark covers US policy, but the lesson carries directly to the UK: the harder the computation, the less a language model can be trusted to do it unaided.
 
 PolicyEngine UK Chat addresses this finding by placing the deterministic PolicyEngine UK model at its heart. The AI interprets the user's question, but the tax and benefit figures come from PolicyEngine calculations, model parameters, and clearly stated assumptions.
 
@@ -67,4 +67,4 @@ PolicyEngine UK Chat is in **beta**. It is a modelling tool, not professional ad
 
 PolicyEngine UK Chat is available now in beta. Try it with a tax or benefit question, a household scenario, or a reform you want to understand.
 
-When an answer looks wrong, incomplete, or confusing, use the **Report issue** button in the chat. It opens a prefilled GitHub issue with the shared thread and your note, so we can inspect the question, the tools used, the calculated outputs, and the final explanation.
+If an answer looks wrong, incomplete, or confusing, use the **Report issue** button in the chat. It opens a prefilled GitHub issue with the shared thread and your note, so we can inspect the question, the tools used, the calculated outputs, and the final explanation.
