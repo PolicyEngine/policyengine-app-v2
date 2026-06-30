@@ -30,7 +30,6 @@ import {
   getUKCountries,
   getUKLocalAuthorities,
   getUSCongressionalDistricts,
-  getUSPlaces,
   getUSStates,
   RegionOption,
 } from '@/utils/regionStrategies';
@@ -97,7 +96,6 @@ export function PopulationBrowseModal({
     }
     const usStates = getUSStates(regions);
     const usDistricts = getUSCongressionalDistricts(regions);
-    const usPlaces = getUSPlaces(regions);
     return [
       {
         id: 'states' as const,
@@ -111,12 +109,17 @@ export function PopulationBrowseModal({
         count: usDistricts.length,
         regions: usDistricts,
       },
+      // Populace does not yet support place-level simulations. Re-enable this
+      // before launching the simulation API on policyengine.py 4.18.6+ once
+      // place computation is supported.
+      /*
       {
         id: 'places' as const,
         label: 'Cities',
         count: usPlaces.length,
         regions: usPlaces,
       },
+      */
     ];
   }, [countryId, regions]);
 
