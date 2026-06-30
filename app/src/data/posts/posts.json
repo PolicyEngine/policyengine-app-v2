@@ -1734,5 +1734,14 @@
     "authors": ["vahid-ahmadi"],
     "filename": "multi-agent-workflows-policy-research.md",
     "image": "multi-agent-workflows-policy-research.webp"
+  },
+  {
+    "title": "PolicyEngine UK Chat: AI tax and benefit answers grounded in the PolicyEngine model",
+    "description": "Announcing the beta of PolicyEngine UK Chat — a conversational interface that grounds AI answers to UK tax and benefit questions in PolicyEngine's microsimulation model.",
+    "date": "2026-06-30",
+    "tags": ["uk", "featured", "technology", "ai"],
+    "authors": ["vahid-ahmadi", "anthony-volk"],
+    "filename": "introducing-policyengine-uk-chat.md",
+    "image": "introducing-policyengine-uk-chat.webp"
   }
 ]
