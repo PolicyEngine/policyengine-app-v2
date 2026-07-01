@@ -538,7 +538,7 @@ describe('reproducibilityCode', () => {
         expect(code).toContain(`dataset="${datasetUrl}"`);
       });
 
-      test('given default place region then uses Populace region scoping', () => {
+      test('given place region then uses state dataset with place_fips filtering', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -550,16 +550,17 @@ describe('reproducibilityCode', () => {
         );
         const code = lines.join('\n');
 
-        // Then - uses the single national Populace dataset plus region scoping.
-        expect(code).toContain('import policyengine as pe');
-        expect(code).toContain('from policyengine.core import Simulation');
-        expect(code).toContain('datasets = pe.us.ensure_datasets');
-        expect(code).toContain('region = pe.us.model.region_registry.get("place/NJ-57000")');
-        expect(code).toContain('scoping_strategy=region.scoping_strategy');
-        expect(code).not.toContain('states/NJ.h5');
-        expect(code).not.toContain('place_fips');
-        expect(code).not.toContain('subset_df');
-        expect(code).not.toContain('import pandas as pd');
+        // Then - uses parent state's dataset, not a city-specific one
+        expect(code).toContain('states/NJ.h5');
+        expect(code).not.toContain('cities/');
+        // Filters by place_fips
+        expect(code).toContain('place_fips');
+        expect(code).toContain('57000');
+        // Creates filtered dataframe for simulations
+        expect(code).toContain('subset_df');
+        expect(code).toContain('Microsimulation(dataset=subset_df');
+        // Includes pandas import for filtering
+        expect(code).toContain('import pandas as pd');
       });
 
       test('given pinned place dataset url then uses it verbatim for filtering', () => {

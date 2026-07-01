@@ -19,8 +19,8 @@ const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
 
 type PolicyData = { baseline: { data: any }; reform: { data: any } };
 
-// Maps legacy explicit region prefixes to HuggingFace subfolder names.
-// Default Populace-backed US regions use policyengine.py scoping instead.
+// Maps region prefixes (from metadata) to HuggingFace subfolder names.
+// Note: place/ is NOT included — places use the parent state's dataset + filtering.
 const US_REGION_PREFIX_TO_FOLDER: Record<string, string> = {
   'state/': 'states',
   'congressional_district/': 'districts',
@@ -82,9 +82,7 @@ function isDefaultUsScopedRegion(
     dataset.includes('policyengine/populace-us');
   return (
     countryId === 'us' &&
-    (region.startsWith('state/') ||
-      region.startsWith('congressional_district/') ||
-      region.startsWith('place/')) &&
+    (region.startsWith('state/') || region.startsWith('congressional_district/')) &&
     (!dataset || isDefaultDataset || isResolvedPopulaceDefault)
   );
 }
@@ -193,8 +191,8 @@ function getHeaderCode(
     lines.push('import numpy as np');
   }
 
-  // Historical explicit place-file filtering requires pandas.
-  if (type === 'policy' && region.startsWith('place/') && !usesScopedRegion) {
+  // Place-level filtering requires pandas
+  if (type === 'policy' && region.startsWith('place/')) {
     lines.push('import pandas as pd');
   }
 
@@ -326,8 +324,7 @@ function getImplementationCode(
     return getScopedUsRegionImplementationCode(region, year, hasBaseline, hasReform);
   }
 
-  // Explicit non-default place datasets use the historical state-file path.
-  // Default Populace-backed places are handled above with region scoping.
+  // Place regions use state dataset + place_fips filtering
   if (countryId === 'us' && region.startsWith('place/')) {
     return getPlaceImplementationCode(region, year, hasBaseline, hasReform, resolvedDatasetUrl);
   }
