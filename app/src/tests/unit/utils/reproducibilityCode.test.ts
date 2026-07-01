@@ -437,7 +437,7 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('Microsimulation(reform=reform');
       });
 
-      test('given US state region then uses state-specific dataset', () => {
+      test('given default US state region then uses Populace region scoping', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -450,10 +450,15 @@ describe('reproducibilityCode', () => {
         const code = lines.join('\n');
 
         // Then
-        expect(code).toContain('states/CA.h5');
+        expect(code).toContain('import policyengine as pe');
+        expect(code).toContain('from policyengine.core import Simulation');
+        expect(code).toContain('datasets = pe.us.ensure_datasets');
+        expect(code).toContain('region = pe.us.model.region_registry.get("state/ca")');
+        expect(code).toContain('scoping_strategy=region.scoping_strategy');
+        expect(code).not.toContain('states/CA.h5');
       });
 
-      test('given congressional district region then uses district-specific dataset', () => {
+      test('given default congressional district region then uses Populace region scoping', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -466,7 +471,53 @@ describe('reproducibilityCode', () => {
         const code = lines.join('\n');
 
         // Then
-        expect(code).toContain('districts/CA-01.h5');
+        expect(code).toContain('import policyengine as pe');
+        expect(code).toContain('from policyengine.core import Simulation');
+        expect(code).toContain(
+          'region = pe.us.model.region_registry.get("congressional_district/CA-01")'
+        );
+        expect(code).toContain('scoping_strategy=region.scoping_strategy');
+        expect(code).not.toContain('districts/CA-01.h5');
+      });
+
+      test('given default US state region with reform then passes policy dict to scoped simulation', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          REFORM_ONLY_POLICY,
+          TEST_REGIONS.CA_STATE,
+          TEST_YEARS.DEFAULT,
+          null
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).toContain('reform_policy = {');
+        expect(code).toContain('policy=reform_policy');
+        expect(code).not.toContain('from policyengine_core.reforms import Reform');
+        expect(code).not.toContain('reform = Reform.from_dict(');
+      });
+
+      test('given resolved Populace default dataset for state region then still uses region scoping', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.CA_STATE,
+          TEST_YEARS.DEFAULT,
+          'hf://policyengine/populace-us/populace_us_2024.h5@populace-us-2024-sparse-l0-refit',
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).toContain('region = pe.us.model.region_registry.get("state/ca")');
+        expect(code).toContain('scoping_strategy=region.scoping_strategy');
+        expect(code).not.toContain('dataset="hf://policyengine/populace-us');
       });
 
       test('given pinned state dataset url then uses it verbatim instead of floating state path', () => {

@@ -70,6 +70,23 @@ function getSubnationalDatasetUrl(region: string): string | null {
   return null;
 }
 
+function isDefaultUsScopedRegion(
+  countryId: string,
+  region: string,
+  dataset: string | null,
+  isDefaultDataset: boolean
+): boolean {
+  const isResolvedPopulaceDefault =
+    countryId === 'us' &&
+    typeof dataset === 'string' &&
+    dataset.includes('policyengine/populace-us');
+  return (
+    countryId === 'us' &&
+    (region.startsWith('state/') || region.startsWith('congressional_district/')) &&
+    (!dataset || isDefaultDataset || isResolvedPopulaceDefault)
+  );
+}
+
 /**
  * For place/ regions, get the parent state's dataset URL.
  * "place/NJ-57000" → states/NJ.h5
@@ -136,11 +153,15 @@ function getHeaderCode(
   countryId: string,
   policy: { baseline: { data: any }; reform: { data: any } },
   region: string,
+  dataset: string | null,
+  isDefaultDataset: boolean,
   policyengineVersion: string | null
 ): string[] {
   const lines: string[] = [];
   const packageName = countryId === 'uk' ? 'policyengine_uk' : 'policyengine_us';
   const policyengineExtra = countryId === 'uk' ? 'uk' : 'us';
+  const usesScopedRegion =
+    type === 'policy' && isDefaultUsScopedRegion(countryId, region, dataset, isDefaultDataset);
 
   if (policyengineVersion) {
     lines.push(`%pip install "policyengine[${policyengineExtra}]==${policyengineVersion}"`, '');
@@ -149,12 +170,18 @@ function getHeaderCode(
   // Add lines depending upon type of block
   if (type === 'household') {
     lines.push(`from ${packageName} import Simulation`);
+  } else if (usesScopedRegion) {
+    lines.push('import policyengine as pe');
+    lines.push('from policyengine.core import Simulation');
   } else {
     lines.push(`from ${packageName} import Microsimulation`);
   }
 
   // If either baseline or reform is custom, add the following Python imports
-  if (Object.keys(policy.reform.data).length > 0 || Object.keys(policy.baseline.data).length > 0) {
+  if (
+    !usesScopedRegion &&
+    (Object.keys(policy.reform.data).length > 0 || Object.keys(policy.baseline.data).length > 0)
+  ) {
     lines.push('from policyengine_core.reforms import Reform');
   }
 
@@ -202,6 +229,17 @@ function getReformCode(policy: PolicyData, countryId: string): string[] {
   const lines = [''].concat(jsonStr.split('\n'));
   lines[1] = `reform = Reform.from_dict(${lines[1]}`;
   lines[lines.length - 1] = `${lines[lines.length - 1]}, country_id="${countryId}")`;
+  return lines;
+}
+
+function getPolicyDictCode(policyData: Record<string, any>, variableName: string): string[] {
+  if (Object.keys(policyData).length === 0) {
+    return [];
+  }
+  let jsonStr = JSON.stringify(policyData, null, 2);
+  jsonStr = sanitizeStringToPython(jsonStr);
+  const lines = [''].concat(jsonStr.split('\n'));
+  lines[1] = `${variableName} = ${lines[1]}`;
   return lines;
 }
 
@@ -282,6 +320,10 @@ function getImplementationCode(
   const resolvedDatasetUrl =
     dataset && !isDefaultDataset ? getDatasetUrl(countryId, dataset, year) : null;
 
+  if (isDefaultUsScopedRegion(countryId, region, dataset, isDefaultDataset)) {
+    return getScopedUsRegionImplementationCode(region, year, hasBaseline, hasReform);
+  }
+
   // Place regions use state dataset + place_fips filtering
   if (countryId === 'us' && region.startsWith('place/')) {
     return getPlaceImplementationCode(region, year, hasBaseline, hasReform, resolvedDatasetUrl);
@@ -315,6 +357,42 @@ function getImplementationCode(
     `reformed_income = reformed.calculate("household_net_income", period=${year})`,
     'difference_income = reformed_income - baseline_income',
   ];
+}
+
+function getScopedUsRegionImplementationCode(
+  region: string,
+  year: number,
+  hasBaseline: boolean,
+  hasReform: boolean
+): string[] {
+  const baselinePolicyArg = hasBaseline ? '    policy=baseline_policy,' : '';
+  const reformPolicyArg = hasReform ? '    policy=reform_policy,' : '';
+
+  return [
+    '',
+    '',
+    `datasets = pe.us.ensure_datasets(years=[${year}])`,
+    'dataset = next(iter(datasets.values()))',
+    `region = pe.us.model.region_registry.get("${region}")`,
+    '',
+    'baseline = Simulation(',
+    '    dataset=dataset,',
+    '    tax_benefit_model_version=pe.us.model,',
+    baselinePolicyArg,
+    '    scoping_strategy=region.scoping_strategy,',
+    ')',
+    'reformed = Simulation(',
+    '    dataset=dataset,',
+    '    tax_benefit_model_version=pe.us.model,',
+    reformPolicyArg,
+    '    scoping_strategy=region.scoping_strategy,',
+    ')',
+    'baseline.ensure()',
+    'reformed.ensure()',
+    'baseline_income = baseline.output_dataset.data.household["household_net_income"]',
+    'reformed_income = reformed.output_dataset.data.household["household_net_income"]',
+    'difference_income = reformed_income - baseline_income',
+  ].filter((line) => line !== '');
 }
 
 /**
@@ -374,10 +452,24 @@ export function getReproducibilityCodeBlock(
   isDefaultDataset: boolean = true,
   policyengineVersion: string | null = null
 ): string[] {
+  const usesScopedRegion =
+    type === 'policy' && isDefaultUsScopedRegion(countryId, region, dataset, isDefaultDataset);
   return [
-    ...getHeaderCode(type, countryId, policy, region, policyengineVersion),
-    ...getBaselineCode(policy, countryId),
-    ...getReformCode(policy, countryId),
+    ...getHeaderCode(
+      type,
+      countryId,
+      policy,
+      region,
+      dataset,
+      isDefaultDataset,
+      policyengineVersion
+    ),
+    ...(usesScopedRegion
+      ? getPolicyDictCode(policy.baseline.data, 'baseline_policy')
+      : getBaselineCode(policy, countryId)),
+    ...(usesScopedRegion
+      ? getPolicyDictCode(policy.reform.data, 'reform_policy')
+      : getReformCode(policy, countryId)),
     ...getSituationCode(type, policy, countryId, year, household, earningVariation),
     ...getImplementationCode(type, region, countryId, year, policy, dataset, isDefaultDataset),
   ];
