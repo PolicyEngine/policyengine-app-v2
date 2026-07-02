@@ -9,7 +9,6 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
-import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { Geography } from '@/types/ingredients/Geography';
@@ -99,8 +98,9 @@ const DISTRIBUTIONAL_MODE_OPTIONS = [
 
 export default function MigrationSubPage({
   output,
-  report,
-  simulations,
+  // `report` and `simulations` are currently unused because the congressional
+  // district impact map (which needed them) is disabled below; kept on the
+  // props interface so re-enabling that map doesn't change this component's API.
   geographies,
 }: MigrationSubPageProps) {
   const countryId = useCurrentCountry();
@@ -110,13 +110,12 @@ export default function MigrationSubPage({
   const hasLocalLevelGeography = geographies?.some((g) => isUKLocalLevelGeography(g));
   const showUKGeographySections = countryId === 'uk' && !hasLocalLevelGeography;
 
-  // Congressional district provider props
-  const reformPolicyId = simulations?.[1]?.policyId;
-  const baselinePolicyId = simulations?.[0]?.policyId;
-  const year = report?.year;
-  const region = simulations?.[0]?.populationId;
-  const canShowCongressional =
-    countryId === 'us' && !!reformPolicyId && !!baselinePolicyId && !!year;
+  // Congressional district impact map is disabled for now. It rendered on every
+  // US report (recomputed live via CongressionalDistrictDataProvider); existing
+  // reports remain fully viewable without it. To re-enable, restore the provider
+  // wrapper in the return and the CongressionalDistrictDataProvider import, and
+  // derive this from countryId === 'us' && reform && baseline && year.
+  const canShowCongressional = false;
 
   const stackChildren = (
     <>
@@ -165,20 +164,5 @@ export default function MigrationSubPage({
     </>
   );
 
-  return (
-    <Stack gap="xl">
-      {canShowCongressional ? (
-        <CongressionalDistrictDataProvider
-          reformPolicyId={reformPolicyId}
-          baselinePolicyId={baselinePolicyId}
-          year={year}
-          region={region}
-        >
-          {stackChildren}
-        </CongressionalDistrictDataProvider>
-      ) : (
-        stackChildren
-      )}
-    </Stack>
-  );
+  return <Stack gap="xl">{stackChildren}</Stack>;
 }
