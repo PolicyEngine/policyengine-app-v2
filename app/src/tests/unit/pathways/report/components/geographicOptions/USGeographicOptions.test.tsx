@@ -46,7 +46,9 @@ describe('USGeographicOptions', () => {
     expect(
       screen.getByLabelText('All households in a state or federal district')
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('All households in a congressional district')).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('All households in a congressional district')
+    ).not.toBeInTheDocument();
     expect(screen.queryByLabelText('All households in a city')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Custom household')).toBeInTheDocument();
   });
@@ -117,7 +119,7 @@ describe('USGeographicOptions', () => {
     expect(screen.queryByText('Select state')).not.toBeInTheDocument();
   });
 
-  test('given congressional_district scope then shows district selector', () => {
+  test('given congressional_district scope then does not show district selector (hidden)', () => {
     // Given
     const onScopeChange = vi.fn();
     const onRegionChange = vi.fn();
@@ -134,8 +136,8 @@ describe('USGeographicOptions', () => {
       />
     );
 
-    // Then - text is now sentence case
-    expect(screen.getByText('Select congressional district')).toBeInTheDocument();
+    // Then - the congressional district option is temporarily hidden
+    expect(screen.queryByText('Select congressional district')).not.toBeInTheDocument();
   });
 
   test('given user clicks state option then calls onScopeChange and clears region', async () => {
@@ -162,9 +164,8 @@ describe('USGeographicOptions', () => {
     expect(onScopeChange).toHaveBeenCalledWith(US_REGION_TYPES.STATE);
   });
 
-  test('given user clicks congressional district option then calls onScopeChange and clears region', async () => {
+  test('given component then does not render congressional district option (hidden)', () => {
     // Given
-    const user = userEvent.setup();
     const onScopeChange = vi.fn();
     const onRegionChange = vi.fn();
     render(
@@ -178,12 +179,10 @@ describe('USGeographicOptions', () => {
       />
     );
 
-    // When
-    await user.click(screen.getByLabelText('All households in a congressional district'));
-
-    // Then
-    expect(onRegionChange).toHaveBeenCalledWith('');
-    expect(onScopeChange).toHaveBeenCalledWith(US_REGION_TYPES.CONGRESSIONAL_DISTRICT);
+    // Then - the congressional district option is temporarily hidden
+    expect(
+      screen.queryByLabelText('All households in a congressional district')
+    ).not.toBeInTheDocument();
   });
 
   test('given user clicks household option then calls onScopeChange with household', async () => {

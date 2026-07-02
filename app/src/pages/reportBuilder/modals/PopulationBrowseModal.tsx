@@ -351,10 +351,9 @@ export function PopulationBrowseModal({
       );
     }
 
-    const allDistricts =
-      countryId === 'us'
-        ? geographyCategories.find((c) => c.id === 'districts')?.regions
-        : undefined;
+    // Congressional district selection is disabled, so there is no district
+    // drill-down data to pass to the browse content.
+    const allDistricts = undefined;
 
     return (
       <PopulationBrowseContent
