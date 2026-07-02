@@ -29,7 +29,6 @@ import {
   getUKConstituencies,
   getUKCountries,
   getUKLocalAuthorities,
-  getUSCongressionalDistricts,
   getUSStates,
   RegionOption,
 } from '@/utils/regionStrategies';
@@ -95,7 +94,6 @@ export function PopulationBrowseModal({
       ];
     }
     const usStates = getUSStates(regions);
-    const usDistricts = getUSCongressionalDistricts(regions);
     return [
       {
         id: 'states' as const,
@@ -103,12 +101,18 @@ export function PopulationBrowseModal({
         count: usStates.length,
         regions: usStates,
       },
+      // Congressional district selection is disabled for now. Previously created
+      // district-based reports remain viewable; this only hides the option when
+      // creating a new report. Re-enable by restoring the import, the
+      // getUSCongressionalDistricts() call, and this entry.
+      /*
       {
         id: 'districts' as const,
         label: 'Congressional districts',
         count: usDistricts.length,
         regions: usDistricts,
       },
+      */
       // Populace does not yet support place-level simulations. Re-enable this
       // before launching the simulation API on policyengine.py 4.18.6+ once
       // place computation is supported.

@@ -1,7 +1,6 @@
 import { Label, RadioGroup, RadioGroupItem } from '@/components/ui';
 import { USScopeType } from '@/types/regionTypes';
 import { RegionOption, US_REGION_TYPES } from '@/utils/regionStrategies';
-import USDistrictSelector from './USDistrictSelector';
 import USStateSelector from './USStateSelector';
 
 interface USGeographicOptionsProps {
@@ -17,7 +16,6 @@ export default function USGeographicOptions({
   scope,
   selectedRegion,
   stateOptions,
-  districtOptions,
   onScopeChange,
   onRegionChange,
 }: USGeographicOptionsProps) {
@@ -52,7 +50,10 @@ export default function USGeographicOptions({
         )}
       </div>
 
-      {/* Congressional District option */}
+      {/* Congressional district selection is disabled for now. Previously
+      created district-based reports remain viewable; this only hides the option
+      when creating a new report. Re-enable by restoring the USDistrictSelector
+      import, the districtOptions prop, and this block.
       <div>
         <div className="tw:flex tw:items-center tw:gap-2">
           <RadioGroupItem value={US_REGION_TYPES.CONGRESSIONAL_DISTRICT} id="scope-district" />
@@ -68,6 +69,7 @@ export default function USGeographicOptions({
           </div>
         )}
       </div>
+      */}
 
       {/* Populace does not yet support place-level simulations. Re-enable this
       before launching the simulation API on policyengine.py 4.18.6+ once place
