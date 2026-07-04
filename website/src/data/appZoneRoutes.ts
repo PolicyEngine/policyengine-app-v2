@@ -32,6 +32,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://scotland-income-tax-reform.vercel.app/uk/scotland-income-tax-reform",
   },
   {
+    source: "/uk/uk-cliff-watch",
+    destination:
+      "https://uk-cliff-watch.vercel.app/uk/uk-cliff-watch",
+  },
+  {
     source: "/us/pe84",
     destination: "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
     deepDestination: "https://april-fools-2026-two.vercel.app/us/pe84/:path*",
