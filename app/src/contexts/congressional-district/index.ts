@@ -1,8 +1,7 @@
 /**
  * Congressional District Data Context
  *
- * Provides centralized management of congressional district data fetching
- * for both national and state-level reports.
+ * Provides congressional district label lookup and an optional manual fetch path.
  */
 
 export {
