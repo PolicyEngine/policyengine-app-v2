@@ -23,6 +23,16 @@
       "source": "/pe84",
       "destination": "/us/pe84",
       "permanent": false
+    },
+    {
+      "source": "/policybench",
+      "destination": "https://policybench.org",
+      "permanent": false
+    },
+    {
+      "source": "/:countryId/policybench",
+      "destination": "https://policybench.org",
+      "permanent": false
     }
   ],
   "rewrites": [
