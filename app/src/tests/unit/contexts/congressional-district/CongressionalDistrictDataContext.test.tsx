@@ -128,12 +128,7 @@ describe('CongressionalDistrictDataContext', () => {
     });
 
     test('given state-level report then isStateLevelReport is true', () => {
-      // Given - mock API to prevent auto-fetch from failing
-      vi.mocked(societyWideApi.fetchSocietyWideCalculation).mockResolvedValue({
-        status: 'ok',
-        result: { congressional_district_impact: { districts: [] } } as any,
-      });
-
+      // Given
       const store = createMockStore(MOCK_REGIONS);
       const wrapper = createWrapper(store, {
         reformPolicyId: '123',
@@ -148,6 +143,7 @@ describe('CongressionalDistrictDataContext', () => {
       // Then
       expect(result.current.isStateLevelReport).toBe(true);
       expect(result.current.stateCode).toBe('ca');
+      expect(societyWideApi.fetchSocietyWideCalculation).not.toHaveBeenCalled();
     });
   });
 
@@ -220,8 +216,8 @@ describe('CongressionalDistrictDataContext', () => {
     });
   });
 
-  describe('state-level auto-fetch', () => {
-    test('given state-level report then auto-starts fetching', async () => {
+  describe('state-level reports', () => {
+    test('given state-level report then does not auto-start fetching', () => {
       // Given
       const mockFetch = vi.mocked(societyWideApi.fetchSocietyWideCalculation);
       mockFetch.mockResolvedValue({
@@ -244,10 +240,9 @@ describe('CongressionalDistrictDataContext', () => {
       // When
       const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
 
-      // Then - should auto-start for state-level reports
-      await waitFor(() => {
-        expect(result.current.hasStarted).toBe(true);
-      });
+      // Then
+      expect(result.current.hasStarted).toBe(false);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 
@@ -274,6 +269,9 @@ describe('CongressionalDistrictDataContext', () => {
 
       // When
       const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
+      act(() => {
+        result.current.startFetch();
+      });
 
       // Then
       await waitFor(() => {
@@ -304,6 +302,9 @@ describe('CongressionalDistrictDataContext', () => {
 
       // When
       const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
+      act(() => {
+        result.current.startFetch();
+      });
 
       // Then
       await waitFor(() => {
@@ -332,6 +333,9 @@ describe('CongressionalDistrictDataContext', () => {
 
       // When
       const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
+      act(() => {
+        result.current.startFetch();
+      });
 
       // Then
       await waitFor(() => {
@@ -366,6 +370,9 @@ describe('CongressionalDistrictDataContext', () => {
 
       // When
       const { result } = renderHook(() => useCongressionalDistrictData(), { wrapper });
+      act(() => {
+        result.current.startFetch();
+      });
 
       // Then
       await waitFor(() => {

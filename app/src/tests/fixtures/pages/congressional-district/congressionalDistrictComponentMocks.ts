@@ -61,6 +61,7 @@ export const MOCK_US_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
         winner_percentage: 0.58,
         loser_percentage: 0.27,
         no_change_percentage: 0.15,
+        population: 710000,
       },
       {
         district: 'AL-02',
@@ -69,6 +70,7 @@ export const MOCK_US_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
         winner_percentage: 0.34,
         loser_percentage: 0.49,
         no_change_percentage: 0.17,
+        population: 705000,
       },
       {
         district: 'CA-52',
@@ -77,6 +79,7 @@ export const MOCK_US_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
         winner_percentage: 0.71,
         loser_percentage: 0.18,
         no_change_percentage: 0.11,
+        population: 760000,
       },
       {
         district: 'NY-14',
@@ -85,6 +88,7 @@ export const MOCK_US_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
         winner_percentage: 0.29,
         loser_percentage: 0.56,
         no_change_percentage: 0.15,
+        population: 720000,
       },
       {
         district: 'TX-35',
@@ -93,6 +97,7 @@ export const MOCK_US_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
         winner_percentage: 0.12,
         loser_percentage: 0.13,
         no_change_percentage: 0.75,
+        population: 735000,
       },
     ],
   },
