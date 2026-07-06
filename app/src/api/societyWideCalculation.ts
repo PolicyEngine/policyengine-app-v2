@@ -13,7 +13,7 @@ export interface PolicyEngineBundle {
 
 // NOTE: Need to add other params at later point
 export interface SocietyWideCalculationParams {
-  region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
+  region: string; // "us" for US nationwide, "state/ca" for US states, or another API v1 region code
   time_period: string; // Four-digit year
   dataset?: string; // Optional dataset parameter; defaults to API's default dataset
 }

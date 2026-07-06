@@ -28,6 +28,9 @@ export interface USCongressionalDistrictBreakdownItem {
 
   /** Share of people in the district with effectively no income change, as a decimal */
   no_change_percentage?: number;
+
+  /** Population represented by the district result */
+  population?: number;
 }
 
 /**
