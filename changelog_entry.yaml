@@ -3,6 +3,7 @@
     added:
       - Add SMF citation on AI and junior hiring, which cites PolicyEngine UK's estimate for extending the employer NI exemption to age 25
       - Add the Introducing PolicyBench research post
+      - Add the "How we used Claude Code to apply for the Public Benefit Innovation Fund" research post
       - Add UK Universal Credit rebalancing analysis dashboard at /uk/uc-rebalancing
       - Add UK fuel duty rise cancellation analysis dashboard at /uk/cancelling-fuel-duty-rise
     changed:
