@@ -6,7 +6,7 @@
  * https://github.com/PolicyEngine/policyengine-app/blob/main/src/data/reformDefinitionCode.js
  */
 
-import { CURRENT_YEAR } from '@/constants';
+import { CURRENT_YEAR, POPULACE_US_DEFAULT_DATASET_URI } from '@/constants';
 import type { Household } from '@/models/Household';
 import {
   addVariationAxesToPythonPackageHouseholdData,
@@ -38,15 +38,21 @@ function normalizeDatasetUrlForReproducibility(countryId: string, datasetName: s
 
 /**
  * Build a HuggingFace dataset URL for a US national-level dataset.
- * Dataset files follow the pattern: {name}_{year}.h5
+ *
+ * A fully-qualified URI (e.g. the exact `hf://...` the backend ran against) is
+ * returned verbatim. For a bare US national dataset name, emit the certified
+ * `populace-us` URI rather than a legacy `policyengine-us-data/{name}_{year}.h5`
+ * path: that repo is deprecated/archived and policyengine.py no longer resolves
+ * it as the default, so a copied snippet must point at the certified dataset.
+ * Ported from policyengine-app v1 PR #2846.
  */
-function getDatasetUrl(countryId: string, datasetName: string, year: number): string | null {
+function getDatasetUrl(countryId: string, datasetName: string): string | null {
   if (datasetName.includes('://')) {
     return normalizeDatasetUrlForReproducibility(countryId, datasetName);
   }
 
   if (countryId === 'us') {
-    return `hf://policyengine/policyengine-us-data/${datasetName}_${year}.h5`;
+    return POPULACE_US_DEFAULT_DATASET_URI;
   }
   return null;
 }
@@ -57,6 +63,12 @@ function getDatasetUrl(countryId: string, datasetName: string, year: number): st
  *   - "state/ca" → states/CA.h5
  *   - "congressional_district/CA-01" → districts/CA-01.h5
  * Note: place/ regions are handled separately via getPlaceStateDatasetUrl.
+ *
+ * These `policyengine-us-data/{states,districts}/*.h5` paths are the geography-
+ * scoped fallback used only when a non-default subnational dataset is selected.
+ * They intentionally still reference the legacy repo pending Populace geo scoping;
+ * see policyengine-app-v2#1079. Default state/CD runs already use national Populace
+ * scoping via getScopedUsRegionImplementationCode, so they do not hit this path.
  */
 function getSubnationalDatasetUrl(region: string): string | null {
   for (const [prefix, folder] of Object.entries(US_REGION_PREFIX_TO_FOLDER)) {
@@ -90,6 +102,11 @@ function isDefaultUsScopedRegion(
 /**
  * For place/ regions, get the parent state's dataset URL.
  * "place/NJ-57000" → states/NJ.h5
+ *
+ * Places load the parent state's `policyengine-us-data` H5 and filter by
+ * place_fips because the certified Populace export does not yet carry place
+ * geography. This legacy reference is deliberately retained pending Populace
+ * place scoping; see policyengine-app-v2#1079.
  */
 function getPlaceStateDatasetUrl(region: string): string | null {
   if (!region.startsWith('place/')) {
@@ -318,7 +335,7 @@ function getImplementationCode(
   const isNational = region === countryId;
   const year = timePeriod || DEFAULT_YEAR;
   const resolvedDatasetUrl =
-    dataset && !isDefaultDataset ? getDatasetUrl(countryId, dataset, year) : null;
+    dataset && !isDefaultDataset ? getDatasetUrl(countryId, dataset) : null;
 
   if (isDefaultUsScopedRegion(countryId, region, dataset, isDefaultDataset)) {
     return getScopedUsRegionImplementationCode(region, year, hasBaseline, hasReform);
