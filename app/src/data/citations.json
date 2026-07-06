@@ -1,13 +1,5 @@
 [
   {
-    "title": "AI looks set to squeeze junior hiring. The fix already exists in law",
-    "outlet": "Social Market Foundation",
-    "date": "2026-07-03",
-    "url": "https://www.smf.co.uk/commentary_podcasts/ai-looks-set-to-squeeze-junior-hiring-the-fix-already-exists-in-law/",
-    "image": "smf-ai-junior-hiring-ni.jpg",
-    "tags": ["uk", "tax"]
-  },
-  {
     "title": "Distribution of Personal Income",
     "outlet": "U.S. Bureau of Economic Analysis",
     "date": "2026-06-16",
@@ -22,6 +14,15 @@
     "date": "2026-05-20",
     "url": "https://www.itv.com/watch/peston/2a4458/2a4458a0390",
     "image": "itv-peston-fuel-duty.jpg",
+    "tags": ["uk", "tax"],
+    "featured": true
+  },
+  {
+    "title": "AI looks set to squeeze junior hiring. The fix already exists in law",
+    "outlet": "Social Market Foundation",
+    "date": "2026-07-03",
+    "url": "https://www.smf.co.uk/commentary_podcasts/ai-looks-set-to-squeeze-junior-hiring-the-fix-already-exists-in-law/",
+    "image": "smf-ai-junior-hiring-ni.jpg",
     "tags": ["uk", "tax"],
     "featured": true
   },
