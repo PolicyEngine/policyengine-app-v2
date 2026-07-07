@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { POPULACE_US_DEFAULT_DATASET_URI } from '@/constants';
 import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
 import {
   BASELINE_AND_REFORM_POLICY,
@@ -596,9 +597,10 @@ describe('reproducibilityCode', () => {
         );
         const code = lines.join('\n');
 
-        // Then
-        expect(code).toContain('enhanced_cps_2024.h5');
-        expect(code).toContain('dataset=');
+        // Then - a bare US national dataset name resolves to the certified
+        // populace-us URI, never the deprecated policyengine-us-data repo.
+        expect(code).toContain(`dataset="${POPULACE_US_DEFAULT_DATASET_URI}"`);
+        expect(code).not.toContain('policyengine-us-data');
       });
 
       test('given full dataset url then uses it verbatim', () => {
