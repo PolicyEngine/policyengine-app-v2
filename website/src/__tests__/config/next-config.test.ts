@@ -53,6 +53,14 @@ async function getBeforeFileRewrites() {
   return rewrites.beforeFiles ?? [];
 }
 
+async function getRedirects() {
+  if (!nextConfig.redirects) {
+    throw new Error("Expected Next config to define redirects.");
+  }
+
+  return nextConfig.redirects();
+}
+
 describe("nextConfig rewrites", () => {
   test("serves PolicyEngine icon fallbacks before app-zone proxies", async () => {
     const beforeFiles = await getBeforeFileRewrites();
@@ -66,5 +74,27 @@ describe("nextConfig rewrites", () => {
         (rewrite) => rewrite.source === "/us/tanf-calculator",
       ),
     ).toBeGreaterThan(expectedPolicyEngineIconRewrites.length - 1);
+  });
+});
+
+describe("nextConfig redirects", () => {
+  test("redirects the bare /policybench vanity path to policybench.org", async () => {
+    const redirects = await getRedirects();
+
+    expect(redirects).toContainEqual({
+      source: "/policybench",
+      destination: "https://policybench.org",
+      permanent: false,
+    });
+  });
+
+  test("redirects the country-prefixed /policybench vanity path to policybench.org", async () => {
+    const redirects = await getRedirects();
+
+    expect(redirects).toContainEqual({
+      source: "/:countryId/policybench",
+      destination: "https://policybench.org",
+      permanent: false,
+    });
   });
 });

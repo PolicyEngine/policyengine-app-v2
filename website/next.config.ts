@@ -84,6 +84,19 @@ const nextConfig: NextConfig = {
         destination: "/us/pe84",
         permanent: true,
       },
+      // Vanity redirects to the standalone PolicyBench site (external).
+      // policybench.org is country-agnostic, so both the bare and
+      // country-prefixed paths land on its root.
+      {
+        source: "/policybench",
+        destination: "https://policybench.org",
+        permanent: false,
+      },
+      {
+        source: "/:countryId/policybench",
+        destination: "https://policybench.org",
+        permanent: false,
+      },
       {
         source: "/uk/ads-dashboard",
         destination: "/us/ads-dashboard",
