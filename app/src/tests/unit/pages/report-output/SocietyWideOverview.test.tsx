@@ -368,7 +368,7 @@ describe('SocietyWideOverview', () => {
     ).toBe(false);
   });
 
-  test('saved districts without outcome shares trigger a same-payload refresh', () => {
+  test('saved districts without outcome shares do not trigger a refresh', () => {
     const startFetch = vi.fn();
     mockUseCongressionalDistrictData.mockReturnValue(
       createCongressionalDistrictContextMock({ startFetch })
@@ -388,7 +388,7 @@ describe('SocietyWideOverview', () => {
 
     render(<SocietyWideOverview output={output as any} showCongressionalCard />);
 
-    expect(startFetch).toHaveBeenCalledTimes(1);
+    expect(startFetch).not.toHaveBeenCalled();
   });
 
   test('saved districts with outcome shares do not trigger a refresh', () => {
@@ -416,7 +416,7 @@ describe('SocietyWideOverview', () => {
     expect(startFetch).not.toHaveBeenCalled();
   });
 
-  test('saved districts with complete winner shares but missing loser shares still trigger a refresh', () => {
+  test('saved districts with complete winner shares but missing loser shares do not trigger a refresh', () => {
     const startFetch = vi.fn();
     mockUseCongressionalDistrictData.mockReturnValue(
       createCongressionalDistrictContextMock({
@@ -449,10 +449,10 @@ describe('SocietyWideOverview', () => {
 
     render(<SocietyWideOverview output={output as any} showCongressionalCard />);
 
-    expect(startFetch).toHaveBeenCalledTimes(1);
+    expect(startFetch).not.toHaveBeenCalled();
   });
 
-  test('truncated saved districts trigger a same-payload refresh', () => {
+  test('truncated saved districts do not trigger a refresh', () => {
     const startFetch = vi.fn();
     mockUseCongressionalDistrictData.mockReturnValue(
       createCongressionalDistrictContextMock({
@@ -480,6 +480,6 @@ describe('SocietyWideOverview', () => {
 
     render(<SocietyWideOverview output={output as any} showCongressionalCard />);
 
-    expect(startFetch).toHaveBeenCalledTimes(1);
+    expect(startFetch).not.toHaveBeenCalled();
   });
 });

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
-import { Group, Progress, Stack, Text, Title } from '@/components/ui';
+import { Group, Stack, Text, Title } from '@/components/ui';
 import {
   MapTypeToggle,
   USDistrictChoroplethMap,
@@ -23,27 +23,16 @@ interface RelativeChangeByDistrictProps {
  * Displays a geographic choropleth map showing the relative (percentage) household
  * income change for each US congressional district.
  *
- * Uses shared CongressionalDistrictDataContext for data fetching so that
- * switching between absolute and relative views doesn't trigger re-fetching.
+ * Uses district data included in the report output.
  */
 export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictProps) {
   // Map visualization type state (default to geographic)
   const [mapType, setMapType] = useState<MapVisualizationType>('geographic');
   const mapRef = useRef<HTMLDivElement>(null);
 
-  // Get shared district data from context
-  const {
-    stateResponses,
-    completedCount,
-    totalStates,
-    isLoading,
-    hasStarted,
-    labelLookup,
-    stateCode,
-    startFetch,
-  } = useCongressionalDistrictData();
+  const { labelLookup, stateCode } = useCongressionalDistrictData();
 
-  // Check if output already has district data (from nationwide calculation)
+  // Check if output has district data from the report calculation.
   const existingMapData = useMemo(() => {
     if (!('congressional_district_impact' in output)) {
       return [];
@@ -62,39 +51,9 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
     });
   }, [output, labelLookup]);
 
-  // Transform context data to choropleth format (relative change)
-  const contextMapData = useMemo(() => {
-    if (stateResponses.size === 0) {
-      return [];
-    }
-    const points: Array<{ geoId: string; label: string; value: number }> = [];
-    stateResponses.forEach((stateData) => {
-      stateData.districts.forEach((district) => {
-        points.push({
-          geoId: district.district,
-          label: labelLookup.get(district.district) ?? `District ${district.district}`,
-          value: district.relative_household_income_change,
-        });
-      });
-    });
-    return points;
-  }, [stateResponses, labelLookup]);
+  const mapData = existingMapData;
 
-  // Use existing data if available, otherwise use context data
-  const mapData = existingMapData.length > 0 ? existingMapData : contextMapData;
-
-  // Auto-start fetch when component mounts if no existing data
-  useEffect(() => {
-    if (existingMapData.length === 0 && !hasStarted) {
-      startFetch();
-    }
-  }, [existingMapData.length, hasStarted, startFetch]);
-
-  // Calculate progress percentage
-  const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
-
-  // No data and not loading
-  if (!mapData.length && !isLoading && !hasStarted) {
+  if (!mapData.length) {
     return (
       <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">No congressional district data available</Text>
@@ -116,10 +75,6 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
         </Group>
       </Group>
 
-      {/* Show progress while loading */}
-      {isLoading && <Progress value={progressPercent} />}
-
-      {/* Show map if we have any data */}
       {mapData.length > 0 && (
         <USDistrictChoroplethMap
           data={mapData}

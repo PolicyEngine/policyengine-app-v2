@@ -97,6 +97,31 @@ const DISTRIBUTIONAL_MODE_OPTIONS = [
   { label: 'Intra-decile impacts', value: 'intra-decile' as DistributionalMode },
 ];
 
+export function canShowCongressionalDistrictImpactCard({
+  countryId,
+  reformPolicyId,
+  baselinePolicyId,
+  year,
+  region,
+}: {
+  countryId: string;
+  reformPolicyId?: string | null;
+  baselinePolicyId?: string | null;
+  year?: string | null;
+  region?: string | null;
+}): boolean {
+  if (countryId !== 'us' || !reformPolicyId || !baselinePolicyId || !year) {
+    return false;
+  }
+
+  if (!region) {
+    return true;
+  }
+
+  const normalizedRegion = region.toLowerCase();
+  return normalizedRegion === 'us' || normalizedRegion.startsWith('state/');
+}
+
 export default function MigrationSubPage({
   output,
   report,
@@ -115,8 +140,13 @@ export default function MigrationSubPage({
   const baselinePolicyId = simulations?.[0]?.policyId;
   const year = report?.year;
   const region = simulations?.[0]?.populationId;
-  const canShowCongressional =
-    countryId === 'us' && !!reformPolicyId && !!baselinePolicyId && !!year;
+  const canShowCongressional = canShowCongressionalDistrictImpactCard({
+    countryId,
+    reformPolicyId,
+    baselinePolicyId,
+    year,
+    region,
+  });
 
   const stackChildren = (
     <>
@@ -169,9 +199,9 @@ export default function MigrationSubPage({
     <Stack gap="xl">
       {canShowCongressional ? (
         <CongressionalDistrictDataProvider
-          reformPolicyId={reformPolicyId}
-          baselinePolicyId={baselinePolicyId}
-          year={year}
+          reformPolicyId={reformPolicyId ?? ''}
+          baselinePolicyId={baselinePolicyId ?? ''}
+          year={year ?? ''}
           region={region}
         >
           {stackChildren}

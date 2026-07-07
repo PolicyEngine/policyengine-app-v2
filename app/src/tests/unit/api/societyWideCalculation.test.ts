@@ -306,6 +306,30 @@ describe('societyWide API', () => {
       );
     });
 
+    test('given US state-level params then omits deprecated district breakdown query', async () => {
+      // Given
+      const countryId = TEST_COUNTRIES.US;
+      const reformPolicyId = TEST_POLICY_IDS.REFORM;
+      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
+      const params = { region: 'state/ca', time_period: CURRENT_YEAR };
+      const mockResponse = mockSuccessResponse(mockCompletedResponse);
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=state%2Fca&time_period=${CURRENT_YEAR}`,
+        expect.objectContaining({
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      );
+      expect((global.fetch as any).mock.calls[0][0]).not.toContain('include_district_breakdowns');
+    });
+
     test('given explicit dataset parameter then includes it in URL', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;

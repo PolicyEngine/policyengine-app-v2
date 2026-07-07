@@ -42,18 +42,18 @@ describe('AbsoluteChangeByDistrict', () => {
     ).toBeInTheDocument();
   });
 
-  test('given no district data in output but context started then shows title', () => {
-    // Given - output has no district data, but context mock has hasStarted: true
-    // so component will show title (loading or complete state, not "no data" message)
+  test('given no district data in output then shows unavailable state', () => {
+    // Given
     const output = MOCK_US_REPORT_OUTPUT_NO_DISTRICT;
 
     // When
     render(<AbsoluteChangeByDistrict output={output} />);
 
-    // Then - shows title since context has started (would show progress or map)
+    // Then
+    expect(screen.getByText('No congressional district data available')).toBeInTheDocument();
     expect(
-      screen.getByText('Absolute household income change by congressional district')
-    ).toBeInTheDocument();
+      screen.queryByText('Absolute household income change by congressional district')
+    ).not.toBeInTheDocument();
   });
 
   test('given district data then renders choropleth map', () => {

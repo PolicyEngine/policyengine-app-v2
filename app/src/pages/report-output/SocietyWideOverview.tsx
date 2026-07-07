@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   IconChartBar,
   IconCoin,
@@ -13,7 +13,7 @@ import { normalizeDistrictId } from '@/adapters/congressional-district/congressi
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
-import { Group, Progress, SegmentedControl, Stack, Text } from '@/components/ui';
+import { Group, SegmentedControl, Stack, Text } from '@/components/ui';
 import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
 import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
@@ -441,8 +441,7 @@ function DistrictListColumn({
 
 /**
  * Congressional district card content — must be rendered inside a
- * CongressionalDistrictDataProvider. Starts fetching once the report
- * output is available and no pre-computed district data exists.
+ * CongressionalDistrictDataProvider for district labels and focus metadata.
  */
 function CongressionalDistrictCard({
   output,
@@ -459,17 +458,7 @@ function CongressionalDistrictCard({
   header: React.ReactNode;
   onToggleMode: () => void;
 }) {
-  const {
-    stateResponses,
-    completedCount,
-    totalStates,
-    hasStarted,
-    isLoading,
-    labelLookup,
-    stateCode,
-    startFetch,
-    erroredStates,
-  } = useCongressionalDistrictData();
+  const { labelLookup, stateCode } = useCongressionalDistrictData();
   const [congressionalMode, setCongressionalMode] = useState<CongressionalMode>('absolute');
   const [mapVisualizationType, setMapVisualizationType] =
     useState<MapVisualizationType>('geographic');
@@ -499,76 +488,28 @@ function CongressionalDistrictCard({
         : null,
     [labelLookup, savedDistricts, stateCode]
   );
-  const hasSavedChangeData = savedDistrictAvailability?.hasCompleteCoverage ?? false;
-  const hasSavedWinnerData = savedDistrictAvailability?.hasCompleteWinnerData ?? false;
-  const hasSavedLoserData = savedDistrictAvailability?.hasCompleteLoserData ?? false;
-  const hasSavedOutcomeData = hasSavedWinnerData && hasSavedLoserData;
-  const hasSavedActiveOutcomeData =
-    outcomeMetric === 'winner' ? hasSavedWinnerData : hasSavedLoserData;
-  const needsSavedPayloadRefresh = !savedDistricts || !hasSavedChangeData || !hasSavedOutcomeData;
-
-  // Auto-start fetch when the saved payload is missing districts or missing
-  // either outcome metric, but still let the active mode use any complete
-  // metric-specific saved data that is already available.
-  useEffect(() => {
-    if (needsSavedPayloadRefresh && !hasStarted) {
-      startFetch();
-    }
-  }, [hasStarted, needsSavedPayloadRefresh, startFetch]);
-
-  // Build map data from context (progressive fill as states complete)
-  const changeContextMapData = useMemo(() => {
-    if (stateResponses.size === 0) {
+  const changeMapData = useMemo(() => {
+    if (!savedDistricts) {
       return [];
     }
-    const points: Array<{ geoId: string; label: string; value: number }> = [];
-    stateResponses.forEach((stateData) => {
-      stateData.districts.forEach((district) => {
-        points.push({
-          geoId: district.district,
-          label: labelLookup.get(district.district) ?? `District ${district.district}`,
-          value:
-            changeMetric === 'absolute'
-              ? district.average_household_income_change
-              : district.relative_household_income_change,
-        });
-      });
-    });
-    return points;
-  }, [changeMetric, labelLookup, stateResponses]);
 
-  // Use pre-computed data if available, otherwise progressive context data
-  const changeMapData = useMemo(() => {
-    if (savedDistricts && hasSavedChangeData) {
-      return savedDistricts.map((item) => ({
-        geoId: item.district,
-        label: labelLookup.get(item.district) ?? `District ${item.district}`,
-        value:
-          changeMetric === 'absolute'
-            ? item.average_household_income_change
-            : item.relative_household_income_change,
-      }));
-    }
-    return changeContextMapData;
-  }, [changeContextMapData, changeMetric, hasSavedChangeData, labelLookup, savedDistricts]);
+    return savedDistricts.map((item) => ({
+      geoId: item.district,
+      label: labelLookup.get(item.district) ?? `District ${item.district}`,
+      value:
+        changeMetric === 'absolute'
+          ? item.average_household_income_change
+          : item.relative_household_income_change,
+    }));
+  }, [changeMetric, labelLookup, savedDistricts]);
 
   const payloadOutcomeData = useMemo(() => {
-    if (savedDistricts && hasSavedActiveOutcomeData) {
-      return buildOutcomeMapData(savedDistricts, outcomeMetric, labelLookup);
-    }
-
-    if (stateResponses.size === 0) {
+    if (!savedDistricts) {
       return { points: [], missingCount: 0 };
     }
 
-    const districts: DistrictOutcomePayload[] = [];
-    stateResponses.forEach((stateData) => {
-      stateData.districts.forEach((district) => {
-        districts.push(district);
-      });
-    });
-    return buildOutcomeMapData(districts, outcomeMetric, labelLookup);
-  }, [hasSavedActiveOutcomeData, labelLookup, outcomeMetric, savedDistricts, stateResponses]);
+    return buildOutcomeMapData(savedDistricts, outcomeMetric, labelLookup);
+  }, [labelLookup, outcomeMetric, savedDistricts]);
 
   const mapData = isOutcomeMode ? payloadOutcomeData.points : changeMapData;
   const outcomeDisplayData = payloadOutcomeData.points;
@@ -629,7 +570,7 @@ function CongressionalDistrictCard({
           value: district.value,
         });
       }
-    } else if (savedDistricts && hasSavedChangeData) {
+    } else if (savedDistricts) {
       for (const d of savedDistricts) {
         all.push({
           id: d.district,
@@ -640,31 +581,10 @@ function CongressionalDistrictCard({
               : d.relative_household_income_change,
         });
       }
-    } else {
-      stateResponses.forEach((stateData) => {
-        for (const d of stateData.districts) {
-          all.push({
-            id: d.district,
-            label: toShortLabel(d.district),
-            value:
-              changeMetric === 'absolute'
-                ? d.average_household_income_change
-                : d.relative_household_income_change,
-          });
-        }
-      });
     }
     all.sort((a, b) => b.value - a.value);
     return all;
-  }, [
-    changeMetric,
-    hasSavedChangeData,
-    isOutcomeMode,
-    labelLookup,
-    outcomeDisplayData,
-    savedDistricts,
-    stateResponses,
-  ]);
+  }, [changeMetric, isOutcomeMode, labelLookup, outcomeDisplayData, savedDistricts]);
 
   const top5 = sortedDistricts.slice(0, 5);
   const bottom5 = sortedDistricts.slice(-5).reverse();
@@ -703,9 +623,7 @@ function CongressionalDistrictCard({
     [congressionalMode]
   );
 
-  // Detect errored districts from either source:
-  // 1. Saved report output: districts in labelLookup but missing from savedDistricts
-  // 2. Refreshed state payloads: districts belonging to states in erroredStates
+  // Detect districts that are expected from metadata but missing from the saved report output.
   const savedErrorSummary = useMemo(() => {
     if (!savedDistricts) {
       return { errorDistrictCount: 0, errorStateAbbrs: [] as string[] };
@@ -726,47 +644,9 @@ function CongressionalDistrictCard({
     return { errorDistrictCount: count, errorStateAbbrs: Array.from(missingStates) };
   }, [labelLookup, savedDistrictAvailability, savedDistricts, stateCode]);
 
-  const fetchedErrorSummary = useMemo(() => {
-    const abbrs = Array.from(erroredStates).map((code) =>
-      code.replace(/^state\//, '').toUpperCase()
-    );
-    if (abbrs.length === 0) {
-      return { errorDistrictCount: 0, errorStateAbbrs: abbrs };
-    }
-    const errorSet = new Set(abbrs);
-    let count = 0;
-    labelLookup.forEach((_label, districtId) => {
-      if (errorSet.has(districtId.split('-')[0])) {
-        count++;
-      }
-    });
-    return { errorDistrictCount: count, errorStateAbbrs: abbrs };
-  }, [erroredStates, labelLookup]);
-
-  const activeErrorSummary = useMemo(() => {
-    if (isOutcomeMode) {
-      return hasSavedActiveOutcomeData ? savedErrorSummary : fetchedErrorSummary;
-    }
-
-    return hasSavedChangeData ? savedErrorSummary : fetchedErrorSummary;
-  }, [
-    fetchedErrorSummary,
-    hasSavedActiveOutcomeData,
-    hasSavedChangeData,
-    isOutcomeMode,
-    savedErrorSummary,
-  ]);
-
-  const changeDataReady = Boolean(hasSavedChangeData || (!isLoading && hasStarted));
-  const outcomeDataReady = Boolean(hasSavedActiveOutcomeData || (!isLoading && hasStarted));
-  const dataReady = isOutcomeMode ? outcomeDataReady : changeDataReady;
-  const progressCount = completedCount;
-  const totalCount = totalStates;
-  const progressLabel = 'states';
-  const progressPercent = totalCount > 0 ? Math.round((progressCount / totalCount) * 100) : 0;
   const visibleErrorCount =
-    activeErrorSummary.errorDistrictCount + (isOutcomeMode ? payloadOutcomeData.missingCount : 0);
-  const mapErrorStates = activeErrorSummary.errorStateAbbrs;
+    savedErrorSummary.errorDistrictCount + (isOutcomeMode ? payloadOutcomeData.missingCount : 0);
+  const mapErrorStates = savedErrorSummary.errorStateAbbrs;
 
   return (
     <DashboardCard
@@ -779,21 +659,7 @@ function CongressionalDistrictCard({
       expandedRows={3}
       shrunkenHeader={header}
       shrunkenBody={
-        !dataReady ? (
-          <Stack gap="sm">
-            <Text size="sm" c={colors.text.secondary}>
-              Loading ({progressCount} of {totalCount} {progressLabel})...
-            </Text>
-            <Progress value={progressPercent} />
-            {visibleErrorCount > 0 && (
-              <MetricCard
-                label="Districts with errors"
-                value={visibleErrorCount.toString()}
-                trend="error"
-              />
-            )}
-          </Stack>
-        ) : mapData.length === 0 ? (
+        mapData.length === 0 ? (
           <Stack gap="sm" align="center" justify="center" style={{ height: '100%' }}>
             <Text size="sm" c={colors.text.secondary}>
               No congressional district data available
@@ -914,11 +780,9 @@ function CongressionalDistrictCard({
           ) : (
             <Stack align="center" justify="center" style={{ height: CONGRESSIONAL_MAP_H }}>
               <Text c={colors.text.secondary}>
-                {!dataReady
-                  ? 'Loading congressional district data...'
-                  : isOutcomeMode
-                    ? 'No congressional district outcome data available'
-                    : 'No congressional district data available'}
+                {isOutcomeMode
+                  ? 'No congressional district outcome data available'
+                  : 'No congressional district data available'}
               </Text>
             </Stack>
           )}
