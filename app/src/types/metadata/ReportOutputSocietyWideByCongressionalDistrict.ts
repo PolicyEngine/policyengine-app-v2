@@ -36,8 +36,9 @@ export interface USCongressionalDistrictBreakdownItem {
 /**
  * Complete congressional district-level breakdown for US economy-wide reports
  *
- * Contains impact data for all 436 congressional districts (435 voting + DC).
- * This is returned as part of US society-wide report output.
+ * Contains impact data for every congressional district in the report scope.
+ * Nationwide reports contain all 436 congressional districts (435 voting + DC);
+ * state-level reports contain the selected state's districts.
  *
  * @example
  * ```typescript
@@ -45,12 +46,12 @@ export interface USCongressionalDistrictBreakdownItem {
  *   districts: [
  *     { district: 'AL-01', average_household_income_change: 312.45, relative_household_income_change: 0.0187 },
  *     { district: 'AL-02', average_household_income_change: -45.30, relative_household_income_change: -0.0028 },
- *     // ... 436 total
+ *     // ... additional districts in the requested report scope
  *   ]
  * };
  * ```
  */
 export interface USCongressionalDistrictBreakdown {
-  /** Array of impact data for all congressional districts */
+  /** Array of impact data for congressional districts in the report scope */
   districts: USCongressionalDistrictBreakdownItem[];
 }
