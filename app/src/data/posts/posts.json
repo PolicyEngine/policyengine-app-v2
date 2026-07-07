@@ -9,6 +9,15 @@
     "image": "policyengine-atlas-demo.png"
   },
   {
+    "title": "Expansion of free childcare hours",
+    "description": "PolicyEngine estimates the impacts of the 2023 expansion to the extended childcare entitlement.",
+    "date": "2025-05-17",
+    "tags": ["uk", "policy", "featured"],
+    "authors": ["nikhil-woodruff"],
+    "filename": "childcare-expansion-2023.md",
+    "image": "uk_childcare_report.webp"
+  },
+  {
     "title": "Introducing PolicyBench: how accurately can AI compute taxes and benefits?",
     "description": "We tested 13 frontier language models on 100 representative US households, with no tools, scored against PolicyEngine. GPT-5.5 leads, getting 80.3% exactly right.",
     "date": "2026-06-16",
