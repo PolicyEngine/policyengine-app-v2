@@ -47,14 +47,12 @@ const TOP_SHELL_SELECTOR =
 //   /us/obbba-household-explorer    — PolicyEngine/obbba-household-by-household#240
 //   /uk/uc-rebalancing              — PolicyEngine/uc-rebalancing
 //   /uk/cancelling-fuel-duty-rise   — PolicyEngine/cancelling-fuel-duty-rise
-//   /ai-beliefs                     — PolicyEngine/llm-econ-beliefs
 export const SHELL_BRAND_EXEMPT_SOURCES = [
   "/uk/scotland-income-tax-reform",
   "/uk/student-loan-visualisation",
   "/us/obbba-household-explorer",
   "/uk/uc-rebalancing",
   "/uk/cancelling-fuel-duty-rise",
-  "/ai-beliefs",
 ];
 
 export function isShellBrandExempt(source) {
