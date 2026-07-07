@@ -33,8 +33,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/uk/uk-cliff-watch",
-    destination:
-      "https://uk-cliff-watch.vercel.app/uk/uk-cliff-watch",
+    destination: "https://uk-cliff-watch.vercel.app/uk/uk-cliff-watch",
   },
   {
     source: "/us/pe84",
@@ -112,6 +111,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
   {
     source: "/us/tanf-calculator",
     destination: "https://tanf-calculator.vercel.app/us/tanf-calculator",
+  },
+  {
+    source: "/ai-beliefs",
+    destination: "https://ai-beliefs.vercel.app/ai-beliefs",
   },
   {
     source: "/us/coverage-compass",
