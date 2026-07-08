@@ -1,4 +1,3 @@
-import type { V2RegionMetadata } from '@/api/v2/regions';
 import type { CountryId } from '@/libs/countries';
 import type { MetadataRegionEntry } from '@/types/metadata';
 
@@ -36,17 +35,17 @@ export interface ResolvedRegionTarget {
   filterStrategy: RegionFilterStrategy;
 }
 
-type V2RegionSource = Pick<
-  V2RegionMetadata,
-  | 'id'
-  | 'code'
-  | 'label'
-  | 'region_type'
-  | 'parent_code'
-  | 'filter_field'
-  | 'filter_value'
-  | 'requires_filter'
-> & {
+// Shape of a region as returned by the region API (previously the v2 alpha
+// service). Kept as the input contract for fromV2RegionMetadata/toRegionRecord.
+type V2RegionSource = {
+  id: string;
+  code: string;
+  label: string;
+  region_type: string;
+  parent_code: string | null;
+  filter_field: string | null;
+  filter_value: string | null;
+  requires_filter: boolean;
   filter_strategy?: RegionFilterStrategy;
   state_code?: string | null;
   state_name?: string | null;

@@ -4,16 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchRegions } from '@/api/v2/regions';
 import { REGION_SURFACE_SOURCE } from '@/config/regionSource';
 import { useRegions } from '@/hooks/useRegions';
 import metadataReducer from '@/reducers/metadataReducer';
-import { createMockRegionResponse } from '@/tests/fixtures/api/v2/shared';
 import { US_REGION_TYPES } from '@/types/regionTypes';
-
-vi.mock('@/api/v2/regions', () => ({
-  fetchRegions: vi.fn(),
-}));
 
 describe('useRegions', () => {
   let queryClient: QueryClient;
@@ -73,17 +67,6 @@ describe('useRegions', () => {
   );
 
   test('surfaces metadata-backed regions by default without loading api regions', async () => {
-    vi.mocked(fetchRegions).mockResolvedValue([
-      createMockRegionResponse(),
-      {
-        ...createMockRegionResponse(),
-        id: 'region-2',
-        code: 'congressional_district/CA-01',
-        label: "California's 1st congressional district",
-        region_type: 'congressional_district',
-      },
-    ]);
-
     const { result } = renderHook(() => useRegions('us'), { wrapper });
 
     await waitFor(() => {
@@ -111,8 +94,7 @@ describe('useRegions', () => {
       }),
     ]);
     expect(result.current.metadataData).toEqual(result.current.data);
-    // regions is v1_only, so the v2 API region shadow is not loaded
-    expect(fetchRegions).not.toHaveBeenCalled();
+    // regions are surfaced from v1 metadata only; there is no v2 api data
     expect(result.current.apiData).toBeUndefined();
   });
 });
