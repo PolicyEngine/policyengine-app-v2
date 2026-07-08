@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
-import { assertSupportedMode, getSupportedMigrationModes } from '@/config/migrationMode';
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
@@ -43,7 +42,6 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
 // to the v1 API, which cannot run reports as subsets of simulations. This should be simplified
 // with the creation of API v2, where we can merely pass simulation IDs to create a report.
 export function useCreateReport(reportLabel?: string) {
-  assertSupportedMode('reports', getSupportedMigrationModes('reports'), 'useCreateReport');
   const queryClient = useQueryClient();
   const manager = useCalcOrchestratorManager();
 

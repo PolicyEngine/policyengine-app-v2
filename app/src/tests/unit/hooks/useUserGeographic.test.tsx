@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
-import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import { useRegions } from '@/hooks/useRegions';
 import {
   useCreateGeographicAssociation,
@@ -104,12 +103,10 @@ vi.mock('@/libs/queryKeys', () => ({
 
 describe('useUserGeographic hooks', () => {
   let queryClient: QueryClient;
-  const defaultSavedGeographyMigrationMode = ENTITY_MIGRATION_MODE.saved_geographies;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
-    ENTITY_MIGRATION_MODE.saved_geographies = defaultSavedGeographyMigrationMode;
     vi.mocked(useRegions).mockReturnValue({
       data: [
         {
@@ -414,14 +411,6 @@ describe('useUserGeographic hooks', () => {
       expect(queryClient.setQueryData).not.toHaveBeenCalled();
     });
 
-    test('given unsupported saved geography mode then create hook fails fast', () => {
-      ENTITY_MIGRATION_MODE.saved_geographies = 'v1_primary_v2_shadow';
-
-      expect(() => renderHook(() => useCreateGeographicAssociation(), { wrapper })).toThrow(
-        '[MigrationMode] Unsupported mode "v1_primary_v2_shadow" for saved_geographies in useCreateGeographicAssociation. Supported modes: v1_only'
-      );
-    });
-
     test('given multiple associations created then each updates cache independently', async () => {
       // Given
       const { result } = renderHook(() => useCreateGeographicAssociation(), { wrapper });
@@ -489,13 +478,6 @@ describe('useUserGeographic hooks', () => {
       });
     });
 
-    test('given unsupported saved geography mode then update hook fails fast', () => {
-      ENTITY_MIGRATION_MODE.saved_geographies = 'v2_only';
-
-      expect(() => renderHook(() => useUpdateGeographicAssociation(), { wrapper })).toThrow(
-        '[MigrationMode] Unsupported mode "v2_only" for saved_geographies in useUpdateGeographicAssociation. Supported modes: v1_only'
-      );
-    });
   });
 
   describe('query configuration', () => {

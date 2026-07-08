@@ -7,7 +7,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchHouseholdById } from '@/api/household';
 import { LocalStorageHouseholdStore } from '@/api/householdAssociation';
-import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import { CountryProvider } from '@/contexts/CountryContext';
 import {
   useCreateHouseholdAssociation,
@@ -80,13 +79,11 @@ describe('useUserHousehold hooks', () => {
   let queryClient: QueryClient;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
   let store: any;
-  const defaultHouseholdMigrationMode = ENTITY_MIGRATION_MODE.households;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     consoleMocks = setupMockConsole();
-    ENTITY_MIGRATION_MODE.households = defaultHouseholdMigrationMode;
 
     // Create Redux store for useUserHouseholds
     store = configureStore({
