@@ -1,7 +1,5 @@
-import type { V2PolicyResponse, V2PolicyResponseParameterValue } from '@/api/policy';
 import type { CountryId } from '@/libs/countries';
 import type { AppHouseholdInputData } from '@/models/household/appTypes';
-import type { V2USStoredHouseholdEnvelope } from '@/models/household/v2Types';
 
 // ============================================================================
 // Test constants
@@ -122,112 +120,6 @@ export const createMockEmptyHouseholdData = (
 ): HouseholdDataShape =>
   createMockHouseholdData({
     data: { people: {} },
-    ...overrides,
-  });
-
-// ============================================================================
-// V2PolicyResponse factory
-// ============================================================================
-
-const createMockParameterValue = (
-  overrides?: Partial<V2PolicyResponseParameterValue>
-): V2PolicyResponseParameterValue => ({
-  id: 'pv-001',
-  parameter_id: 'param-001',
-  parameter_name: TEST_PARAMETER_NAMES.INCOME_TAX_RATE,
-  value_json: 0.25,
-  start_date: '2026-01-01',
-  end_date: '2026-12-31',
-  policy_id: TEST_POLICY_IDS.POLICY_A,
-  dynamic_id: null,
-  created_at: TEST_TIMESTAMP,
-  ...overrides,
-});
-
-export const createMockV2PolicyResponse = (
-  overrides?: Partial<V2PolicyResponse>
-): V2PolicyResponse => ({
-  id: TEST_POLICY_IDS.POLICY_A,
-  name: 'Reform policy',
-  description: 'A test reform policy',
-  tax_benefit_model_id: 'us',
-  created_at: TEST_TIMESTAMP,
-  updated_at: TEST_UPDATED_TIMESTAMP,
-  parameter_values: [
-    createMockParameterValue(),
-    createMockParameterValue({
-      id: 'pv-002',
-      parameter_id: 'param-002',
-      parameter_name: TEST_PARAMETER_NAMES.STANDARD_DEDUCTION,
-      value_json: 15000,
-      start_date: '2026-01-01',
-      end_date: null,
-    }),
-  ],
-  ...overrides,
-});
-
-export const createMockV2PolicyResponseNoParams = (
-  overrides?: Partial<V2PolicyResponse>
-): V2PolicyResponse =>
-  createMockV2PolicyResponse({
-    parameter_values: [],
-    ...overrides,
-  });
-
-// ============================================================================
-// HouseholdV2Response factory
-// ============================================================================
-
-export const createMockHouseholdV2Response = (
-  overrides?: Partial<V2USStoredHouseholdEnvelope>
-): V2USStoredHouseholdEnvelope => ({
-  id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_A,
-  country_id: 'us',
-  year: 2026,
-  label: 'My v2 household',
-  people: [
-    {
-      name: 'adult',
-      person_id: 0,
-      person_household_id: 0,
-      person_tax_unit_id: 0,
-      person_family_id: 0,
-      person_spm_unit_id: 0,
-      person_marital_unit_id: 0,
-      age: 35,
-      employment_income: 50000,
-    },
-    {
-      name: 'child',
-      person_id: 1,
-      person_household_id: 0,
-      person_tax_unit_id: 0,
-      person_family_id: 0,
-      person_spm_unit_id: 0,
-      age: 8,
-    },
-  ],
-  tax_unit: [{ tax_unit_id: 0 }],
-  family: [{ family_id: 0 }],
-  spm_unit: [{ spm_unit_id: 0 }],
-  marital_unit: [{ marital_unit_id: 0 }],
-  household: [{ household_id: 0 }],
-  created_at: TEST_TIMESTAMP,
-  updated_at: TEST_UPDATED_TIMESTAMP,
-  ...overrides,
-});
-
-export const createMockHouseholdV2ResponseMinimal = (
-  overrides?: Partial<V2USStoredHouseholdEnvelope>
-): V2USStoredHouseholdEnvelope =>
-  createMockHouseholdV2Response({
-    people: [{ name: 'single_adult', age: 30 }],
-    tax_unit: [],
-    family: [],
-    spm_unit: [],
-    marital_unit: [],
-    household: [],
     ...overrides,
   });
 

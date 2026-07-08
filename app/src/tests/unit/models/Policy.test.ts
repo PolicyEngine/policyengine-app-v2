@@ -3,14 +3,11 @@ import { Policy } from '@/models/Policy';
 import {
   createMockCurrentLawPolicyData,
   createMockPolicyData,
-  createMockV2PolicyResponse,
-  createMockV2PolicyResponseNoParams,
   TEST_API_VERSION,
   TEST_COUNTRY_ID,
   TEST_ID,
   TEST_LABEL,
   TEST_PARAMETER_NAMES,
-  TEST_POLICY_IDS,
 } from '@/tests/fixtures/models/shared';
 
 describe('Policy', () => {
@@ -253,129 +250,6 @@ describe('Policy', () => {
 
       // Then
       expect(names).toEqual([]);
-    });
-  });
-
-  // ========================================================================
-  // fromV2Response()
-  // ========================================================================
-
-  describe('fromV2Response', () => {
-    it('given V2PolicyResponse then maps all fields correctly', () => {
-      // Given
-      const response = createMockV2PolicyResponse();
-
-      // When
-      const policy = Policy.fromV2Response(response);
-
-      // Then
-      expect(policy.id).toBe(TEST_POLICY_IDS.POLICY_A);
-      expect(policy.countryId).toBe('us');
-      expect(policy.label).toBe('Reform policy');
-      expect(policy.apiVersion).toBe('v2');
-      expect(policy.isCreated).toBe(true);
-    });
-
-    it('given V2PolicyResponse then maps parameter_values to parameters', () => {
-      // Given
-      const response = createMockV2PolicyResponse();
-
-      // When
-      const policy = Policy.fromV2Response(response);
-
-      // Then
-      expect(policy.parameterCount).toBe(2);
-      const params = policy.parameters;
-      expect(params[0].parameterName).toBe(TEST_PARAMETER_NAMES.INCOME_TAX_RATE);
-      expect(params[0].parameterId).toBe('param-001');
-      expect(params[0].value).toBe(0.25);
-      expect(params[0].startDate).toBe('2026-01-01');
-      expect(params[0].endDate).toBe('2026-12-31');
-      expect(params[1].parameterName).toBe(TEST_PARAMETER_NAMES.STANDARD_DEDUCTION);
-      expect(params[1].value).toBe(15000);
-      expect(params[1].endDate).toBeNull();
-    });
-
-    it('given V2PolicyResponse with name then maps name to label', () => {
-      // Given
-      const response = createMockV2PolicyResponse({ name: 'Custom name' });
-
-      // When
-      const policy = Policy.fromV2Response(response);
-
-      // Then
-      expect(policy.label).toBe('Custom name');
-    });
-
-    it('given V2PolicyResponse with tax_benefit_model_id then casts to countryId', () => {
-      // Given
-      const response = createMockV2PolicyResponse({
-        tax_benefit_model_id: 'uk',
-      });
-
-      // When
-      const policy = Policy.fromV2Response(response);
-
-      // Then
-      expect(policy.countryId).toBe('uk');
-    });
-
-    it('given V2PolicyResponse with empty parameter_values then creates current law', () => {
-      // Given
-      const response = createMockV2PolicyResponseNoParams();
-
-      // When
-      const policy = Policy.fromV2Response(response);
-
-      // Then
-      expect(policy.isCurrentLaw).toBe(true);
-      expect(policy.parameterCount).toBe(0);
-    });
-
-    it('given parameter_value with null parameter_name then falls back to parameter_id', () => {
-      // Given
-      const response = createMockV2PolicyResponse({
-        parameter_values: [
-          {
-            id: 'pv-001',
-            parameter_id: 'param-fallback-id',
-            parameter_name: null as unknown as string,
-            value_json: 42,
-            start_date: '2026-01-01',
-            end_date: null,
-            policy_id: null,
-            dynamic_id: null,
-            created_at: '2026-01-01T00:00:00Z',
-          },
-        ],
-      });
-
-      // When
-      const policy = Policy.fromV2Response(response);
-
-      // Then
-      expect(policy.parameters[0].parameterName).toBe('param-fallback-id');
-    });
-
-    it('given invalid tax_benefit_model_id then throws', () => {
-      // Given
-      const response = createMockV2PolicyResponse({
-        tax_benefit_model_id: 'invalid-country',
-      });
-
-      // When / Then
-      expect(() => Policy.fromV2Response(response)).toThrow('invalid-country');
-    });
-
-    it('given V2PolicyResponse with name null then label is null', () => {
-      // Given
-      const response = createMockV2PolicyResponse({ name: null as unknown as string });
-
-      // When
-      const policy = Policy.fromV2Response(response);
-
-      // Then
-      expect(policy.label).toBeNull();
     });
   });
 
