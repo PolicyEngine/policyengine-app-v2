@@ -38,9 +38,8 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
   };
 }
 
-// Note: Much of this code's complexity is due to mapping v2 concepts (simulations, populations)
-// to the v1 API, which cannot run reports as subsets of simulations. This should be simplified
-// with the creation of API v2, where we can merely pass simulation IDs to create a report.
+// Note: Much of this code's complexity is due to mapping simulations and populations onto the
+// v1 API, which cannot run reports as subsets of simulations.
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
   const manager = useCalcOrchestratorManager();

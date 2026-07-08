@@ -3,7 +3,7 @@ import type { MetadataRegionEntry } from '@/types/metadata';
 
 export type RegionCode = string;
 export type RegionFilterStrategy = 'row_filter' | 'weight_replacement' | null;
-export type RegionSource = 'v1_metadata' | 'v2_api';
+export type RegionSource = 'v1_metadata';
 
 export interface Region {
   id: string;
@@ -34,22 +34,6 @@ export interface ResolvedRegionTarget {
   filterValue: string | null;
   filterStrategy: RegionFilterStrategy;
 }
-
-// Shape of a region as returned by the region API (previously the v2 alpha
-// service). Kept as the input contract for fromV2RegionMetadata/toRegionRecord.
-type V2RegionSource = {
-  id: string;
-  code: string;
-  label: string;
-  region_type: string;
-  parent_code: string | null;
-  filter_field: string | null;
-  filter_value: string | null;
-  requires_filter: boolean;
-  filter_strategy?: RegionFilterStrategy;
-  state_code?: string | null;
-  state_name?: string | null;
-};
 
 const US_STATE_CODE_RE = /^[a-z]{2}$/i;
 const US_DISTRICT_CODE_RE = /^[a-z]{2}-\d{1,2}$/i;
@@ -145,34 +129,6 @@ export function fromMetadataRegionEntry(
     sourceId: null,
   };
 }
-
-export function fromV2RegionMetadata(countryId: CountryId, region: V2RegionSource): RegionRecord {
-  const normalizedCode = normalizeRegionCode(countryId, region.code);
-  const normalizedFilterValue =
-    countryId === 'us' && region.region_type === 'congressional_district' && region.filter_value
-      ? normalizeUSDistrictId(region.filter_value)
-      : region.filter_value;
-
-  return {
-    id: region.id,
-    countryId,
-    code: normalizedCode,
-    label: region.label,
-    regionType: region.region_type,
-    parentCode: region.parent_code,
-    filterField: region.filter_field,
-    filterValue: normalizedFilterValue,
-    filterStrategy: region.filter_strategy ?? null,
-    requiresFilter: region.requires_filter,
-    stateCode: region.state_code ?? null,
-    stateName: region.state_name ?? null,
-    source: 'v2_api',
-    sourceId: region.id,
-  };
-}
-
-// Compatibility alias for existing v2 callers while the Region refactor lands.
-export const toRegionRecord = fromV2RegionMetadata;
 
 export function createResolvedRegionTarget(args: {
   region: RegionRecord;

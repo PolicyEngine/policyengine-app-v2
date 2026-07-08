@@ -25,7 +25,7 @@ export function useCreateHousehold(householdLabel?: string) {
 
         await createAssociation.mutateAsync({
           userId,
-          householdId: data.result.household_id, // This is from the API response structure; may be modified in API v2
+          householdId: data.result.household_id,
           countryId: payload.country_id as (typeof countryIds)[number], // Use the country from the creation payload
           label: resolvedLabel,
         });

@@ -3,7 +3,7 @@ import {
   buildGeographiesFromSimulations,
   expandUserAssociations,
 } from '@/hooks/utils/useFetchReportIngredients';
-import { toRegionRecord } from '@/models/region';
+import type { RegionRecord } from '@/models/region';
 import {
   createExpectedExpandedSocietyWide,
   createExpectedExpandedWithoutId,
@@ -131,19 +131,23 @@ describe('useFetchReportIngredients', () => {
         },
       ];
 
-      const regions = [
-        toRegionRecord('us', {
+      const regions: RegionRecord[] = [
+        {
           id: 'region-state-ca',
+          countryId: 'us',
           code: 'state/ca',
           label: 'California',
-          region_type: 'state',
-          parent_code: 'us',
-          filter_field: null,
-          filter_value: null,
-          requires_filter: false,
-          state_code: 'CA',
-          state_name: 'California',
-        }),
+          regionType: 'state',
+          parentCode: 'us',
+          filterField: null,
+          filterValue: null,
+          filterStrategy: null,
+          requiresFilter: false,
+          stateCode: 'CA',
+          stateName: 'California',
+          source: 'v1_metadata',
+          sourceId: null,
+        },
       ];
 
       expect(buildGeographiesFromSimulations(simulations as any, regions)).toEqual([

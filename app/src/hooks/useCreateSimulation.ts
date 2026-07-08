@@ -19,7 +19,7 @@ export function useCreateSimulation(simulationLabel?: string) {
 
         await createAssociation.mutateAsync({
           userId,
-          simulationId: data.result.simulation_id, // This is from the API response structure; may be modified in API v2
+          simulationId: data.result.simulation_id,
           countryId: country,
           label: simulationLabel,
           isCreated: true,
