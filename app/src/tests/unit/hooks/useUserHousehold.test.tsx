@@ -32,11 +32,6 @@ import {
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
 
-vi.mock('@/libs/migration/householdShadow', () => ({
-  shadowCreateUserHouseholdAssociation: vi.fn(),
-  shadowUpdateUserHouseholdAssociation: vi.fn(),
-}));
-
 // Mock the stores first
 vi.mock('@/api/householdAssociation', () => {
   const mockStore = {

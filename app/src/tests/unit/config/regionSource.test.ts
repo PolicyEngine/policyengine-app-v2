@@ -10,10 +10,10 @@ import {
 
 describe('regionSource', () => {
   describe('derived defaults', () => {
-    test('given the current region migration mode then metadata stays surfaced and api shadow stays enabled', () => {
-      expect(REGION_MIGRATION_MODE).toBe('v1_primary_v2_shadow');
+    test('given the current region migration mode then metadata is surfaced and the api shadow is disabled', () => {
+      expect(REGION_MIGRATION_MODE).toBe('v1_only');
       expect(REGION_SURFACE_SOURCE).toBe('metadata');
-      expect(LOAD_API_REGION_SHADOW).toBe(true);
+      expect(LOAD_API_REGION_SHADOW).toBe(false);
     });
   });
 

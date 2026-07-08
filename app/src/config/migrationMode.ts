@@ -32,9 +32,9 @@ export const ENTITY_SUPPORTED_MODES: Record<MigrationEntity, readonly MigrationM
 };
 
 export const ENTITY_MIGRATION_MODE: Record<MigrationEntity, MigrationMode> = {
-  policies: 'v1_primary_v2_shadow',
-  households: 'v1_primary_v2_shadow',
-  regions: 'v1_primary_v2_shadow',
+  policies: 'v1_only',
+  households: 'v1_only',
+  regions: 'v1_only',
   saved_geographies: 'v1_only',
   simulations: 'v1_only',
   reports: 'v1_only',

@@ -72,7 +72,7 @@ describe('useRegions', () => {
     </Provider>
   );
 
-  test('surfaces metadata-backed regions by default while still loading api regions', async () => {
+  test('surfaces metadata-backed regions by default without loading api regions', async () => {
     vi.mocked(fetchRegions).mockResolvedValue([
       createMockRegionResponse(),
       {
@@ -88,10 +88,6 @@ describe('useRegions', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
-
-    await waitFor(() => {
-      expect(fetchRegions).toHaveBeenCalledWith('us');
     });
 
     expect(REGION_SURFACE_SOURCE).toBe('metadata');
@@ -115,15 +111,8 @@ describe('useRegions', () => {
       }),
     ]);
     expect(result.current.metadataData).toEqual(result.current.data);
-    expect(result.current.apiData).toEqual([
-      expect.objectContaining({
-        code: 'state/ca',
-        source: 'v2_api',
-      }),
-      expect.objectContaining({
-        code: 'congressional_district/CA-01',
-        source: 'v2_api',
-      }),
-    ]);
+    // regions is v1_only, so the v2 API region shadow is not loaded
+    expect(fetchRegions).not.toHaveBeenCalled();
+    expect(result.current.apiData).toBeUndefined();
   });
 });

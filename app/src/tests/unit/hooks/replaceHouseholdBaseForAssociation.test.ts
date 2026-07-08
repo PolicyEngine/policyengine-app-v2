@@ -1,21 +1,12 @@
 import { describe, expect, test, vi } from 'vitest';
 import { createHousehold } from '@/api/household';
 import { replaceHouseholdBaseForAssociation } from '@/hooks/household/replaceHouseholdBaseForAssociation';
-import {
-  shadowCreateHousehold,
-  shadowUpdateUserHouseholdAssociation,
-} from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
 import { createMockHouseholdData } from '@/tests/fixtures/models/shared';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 vi.mock('@/api/household', () => ({
   createHousehold: vi.fn(),
-}));
-
-vi.mock('@/libs/migration/householdShadow', () => ({
-  shadowCreateHousehold: vi.fn(),
-  shadowUpdateUserHouseholdAssociation: vi.fn(),
 }));
 
 const TEST_COUNTRY_ID = 'us' as const;
@@ -43,7 +34,7 @@ const nextHousehold = Household.fromAppInput({
 });
 
 describe('replaceHouseholdBaseForAssociation', () => {
-  test('given v1 association update fails after create then it surfaces the orphaned household id and skips shadow writes', async () => {
+  test('given v1 association update fails after create then it surfaces the orphaned household id', async () => {
     vi.mocked(createHousehold).mockResolvedValue({
       result: { household_id: TEST_CREATED_HOUSEHOLD_ID },
     });
@@ -65,11 +56,9 @@ describe('replaceHouseholdBaseForAssociation', () => {
     expect(store.update).toHaveBeenCalledWith(TEST_ASSOCIATION_ID, {
       householdId: TEST_CREATED_HOUSEHOLD_ID,
     });
-    expect(shadowCreateHousehold).not.toHaveBeenCalled();
-    expect(shadowUpdateUserHouseholdAssociation).not.toHaveBeenCalled();
   });
 
-  test('given shadowing disabled then replacement updates v1 state without any v2 shadow work', async () => {
+  test('given a valid replacement then it updates v1 state and returns the updated association', async () => {
     vi.mocked(createHousehold).mockResolvedValue({
       result: { household_id: TEST_CREATED_HOUSEHOLD_ID },
     });
@@ -84,7 +73,6 @@ describe('replaceHouseholdBaseForAssociation', () => {
       association,
       nextHousehold,
       store,
-      shouldShadowV2: false,
     });
 
     expect(updatedAssociation).toEqual(
@@ -92,7 +80,5 @@ describe('replaceHouseholdBaseForAssociation', () => {
         householdId: TEST_CREATED_HOUSEHOLD_ID,
       })
     );
-    expect(shadowCreateHousehold).not.toHaveBeenCalled();
-    expect(shadowUpdateUserHouseholdAssociation).not.toHaveBeenCalled();
   });
 });

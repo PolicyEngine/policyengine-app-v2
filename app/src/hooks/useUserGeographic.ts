@@ -1,10 +1,9 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import { assertSupportedMode, getSupportedMigrationModes } from '@/config/migrationMode';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
-import { shadowResolveRegionTarget } from '@/libs/migration/regionShadow';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
 import { buildCanonicalGeography } from '@/models/geography';
@@ -184,22 +183,6 @@ export const useUserGeographics = (userId: string) => {
       }),
     [populations, regions]
   );
-
-  useEffect(() => {
-    if (!geographicsWithAssociations?.length) {
-      return;
-    }
-
-    void Promise.allSettled(
-      geographicsWithAssociations.map(({ association, geography }) =>
-        shadowResolveRegionTarget({
-          countryId: association.countryId,
-          regionCode: geography?.geographyId ?? association.geographyId,
-          selectedLabel: association.label ?? geography?.name ?? null,
-        })
-      )
-    );
-  }, [geographicsWithAssociations]);
 
   return {
     data: geographicsWithAssociations,

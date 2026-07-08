@@ -8,117 +8,21 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
-import {
-  shadowCreateHouseholdAndAssociation,
-  shadowCreateUserHouseholdAssociation,
-} from '@/libs/migration/householdShadow';
-import { getV2Id } from '@/libs/migration/idMapping';
-import { logMigrationConsole } from '@/libs/migration/migrationLogRuntime';
-import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
-import {
-  shadowCreatePolicyAndAssociation,
-  shadowCreateUserPolicyAssociation,
-} from '@/libs/migration/policyShadow';
 import { Household } from '@/models/Household';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
-import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { getShareDataUserReportId } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
-import { getHouseholdWriteConfig, useCreateHouseholdAssociation } from './useUserHousehold';
-import { getPolicyWriteConfig, useCreatePolicyAssociation } from './useUserPolicy';
+import { useCreateHouseholdAssociation } from './useUserHousehold';
+import { useCreatePolicyAssociation } from './useUserPolicy';
 import { useCreateReportAssociation, useUserReportStore } from './useUserReportAssociations';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export type SaveResult = 'success' | 'partial' | 'already_saved' | null;
 type SharedSaveHouseholdDetails = Household;
-
-function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: Policy): void {
-  const mappedV2PolicyId = getV2Id('Policy', association.policyId);
-
-  if (mappedV2PolicyId) {
-    void shadowCreateUserPolicyAssociation(association, mappedV2PolicyId);
-    return;
-  }
-
-  if (!policyDetails) {
-    logMigrationConsole(
-      '[PolicyMigration] Shared save missing policy details; skipping shadow v2 policy create:',
-      association.policyId
-    );
-    sendMigrationLog({
-      kind: 'event',
-      prefix: 'PolicyMigration',
-      operation: 'CREATE',
-      status: 'SKIPPED',
-      message: 'Shared save missing policy details; skipping shadow v2 policy create',
-      metadata: {
-        policyId: association.policyId,
-        countryId: association.countryId,
-      },
-      ts: new Date().toISOString(),
-    });
-    return;
-  }
-
-  void shadowCreatePolicyAndAssociation({
-    countryId: association.countryId,
-    label: association.label,
-    v1PolicyId: association.policyId,
-    v1PolicyPayload: PolicyAdapter.toCreationPayload({
-      ...policyDetails,
-      label: association.label ?? policyDetails.label ?? null,
-    }),
-    v1Association: association,
-  });
-}
-
-function shadowSavedHouseholdAssociation(
-  association: UserHouseholdPopulation,
-  householdDetails?: SharedSaveHouseholdDetails
-): void {
-  const mappedV2HouseholdId = getV2Id('Household', association.householdId);
-
-  if (mappedV2HouseholdId) {
-    void shadowCreateUserHouseholdAssociation(association, mappedV2HouseholdId);
-    return;
-  }
-
-  if (!householdDetails) {
-    logMigrationConsole(
-      '[HouseholdMigration] Shared save missing household details; skipping shadow v2 household create:',
-      association.householdId
-    );
-    sendMigrationLog({
-      kind: 'event',
-      prefix: 'HouseholdMigration',
-      operation: 'CREATE',
-      status: 'SKIPPED',
-      message: 'Shared save missing household details; skipping shadow v2 household create',
-      metadata: {
-        householdId: association.householdId,
-        countryId: association.countryId,
-      },
-      ts: new Date().toISOString(),
-    });
-    return;
-  }
-
-  const v1Household = householdDetails
-    .withId(association.householdId)
-    .withLabel(association.label ?? householdDetails.label ?? null);
-
-  void shadowCreateHouseholdAndAssociation({
-    v1HouseholdId: association.householdId,
-    v1Household,
-    v1Association: association,
-  });
-}
 
 /**
  * Hook for saving a shared report and all its user associations to localStorage
@@ -132,16 +36,10 @@ function shadowSavedHouseholdAssociation(
  * - Skips current law policies (they're pre-defined, not user-created)
  */
 export function useSaveSharedReport() {
-  const { shouldShadowV2: shouldShadowPolicies } = getPolicyWriteConfig('useSaveSharedReport');
-  const { shouldShadowV2: shouldShadowHouseholds } = getHouseholdWriteConfig('useSaveSharedReport');
   const createReportAssociation = useCreateReportAssociation();
   const createSimulationAssociation = useCreateSimulationAssociation();
-  const createPolicyAssociation = useCreatePolicyAssociation({
-    skipDuplicateV2AssociationShadow: true,
-  });
-  const createHouseholdAssociation = useCreateHouseholdAssociation({
-    skipDuplicateV2AssociationShadow: true,
-  });
+  const createPolicyAssociation = useCreatePolicyAssociation();
+  const createHouseholdAssociation = useCreateHouseholdAssociation();
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
 
@@ -162,15 +60,11 @@ export function useSaveSharedReport() {
 
   const saveSharedReport = async (
     shareData: ReportIngredientsInput,
-    policies: Policy[] = [],
-    households: SharedSaveHouseholdDetails[] = []
+    _policies: Policy[] = [],
+    _households: SharedSaveHouseholdDetails[] = []
   ): Promise<UserReport> => {
     const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);
-    const policiesById = new Map(policies.map((policy) => [String(policy.id), policy]));
-    const householdsById = new Map(
-      households.map((household) => [String(household.id), household])
-    );
 
     // Idempotency check: see if this report is already saved
     const existingReport = await reportStore.findByUserReportId(userReportId);
@@ -192,34 +86,24 @@ export function useSaveSharedReport() {
     // Save policies (skip current law - it's pre-defined)
     const policyPromises = shareData.userPolicies
       .filter((p) => String(p.policyId) !== String(currentLawId))
-      .map(async (policy) => {
-        const association = await createPolicyAssociation.mutateAsync({
+      .map((policy) =>
+        createPolicyAssociation.mutateAsync({
           userId,
           policyId: policy.policyId,
           countryId: policy.countryId as CountryId,
           label: policy.label ?? undefined,
-        });
-
-        if (shouldShadowPolicies) {
-          shadowSavedPolicyAssociation(association, policiesById.get(String(policy.policyId)));
-        }
-        return association;
-      });
+        })
+      );
 
     // Save households
-    const householdPromises = shareData.userHouseholds.map(async (hh) => {
-      const association = await createHouseholdAssociation.mutateAsync({
+    const householdPromises = shareData.userHouseholds.map((hh) =>
+      createHouseholdAssociation.mutateAsync({
         userId,
         householdId: hh.householdId,
         countryId: hh.countryId as CountryId,
         label: hh.label ?? undefined,
-      });
-
-      if (shouldShadowHouseholds) {
-        shadowSavedHouseholdAssociation(association, householdsById.get(String(hh.householdId)));
-      }
-      return association;
-    });
+      })
+    );
 
     // Save geographies
     const geographyPromises = shareData.userGeographies.map((geo) =>

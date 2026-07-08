@@ -2,17 +2,8 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchHouseholdById } from '@/api/household';
 import type { UserHouseholdStore } from '@/api/householdAssociation';
-import {
-  assertSupportedMode,
-  getSupportedMigrationModes,
-  usesV2ShadowMode,
-} from '@/config/migrationMode';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import {
-  shadowCreateUserHouseholdAssociation,
-  shadowUpdateUserHouseholdAssociation,
-} from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
@@ -27,24 +18,9 @@ type HouseholdAssociationStoreSelection = {
   config: typeof queryConfig.api | typeof queryConfig.localStorage;
 };
 
-type HouseholdWriteConfigOptions = {
-  skipDuplicateV2AssociationShadow?: boolean;
-};
-
 type HouseholdAssociationQueryOptions = {
   enabled?: boolean;
 };
-
-export function getHouseholdWriteConfig(
-  context: string,
-  options?: HouseholdWriteConfigOptions
-): { shouldShadowV2: boolean } {
-  const mode = assertSupportedMode('households', getSupportedMigrationModes('households'), context);
-
-  return {
-    shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipDuplicateV2AssociationShadow,
-  };
-}
 
 export const useUserHouseholdStore = () => {
   return useHouseholdAssociationStoreForMode().store;
@@ -90,10 +66,9 @@ export const useHouseholdAssociation = (
   });
 };
 
-export const useCreateHouseholdAssociation = (options?: HouseholdWriteConfigOptions) => {
+export const useCreateHouseholdAssociation = () => {
   const { store } = useHouseholdAssociationStoreForMode();
   const queryClient = useQueryClient();
-  const { shouldShadowV2 } = getHouseholdWriteConfig('useCreateHouseholdAssociation', options);
 
   return useMutation({
     mutationFn: (household: Omit<UserHouseholdPopulation, 'createdAt' | 'type'>) => {
@@ -117,10 +92,6 @@ export const useCreateHouseholdAssociation = (options?: HouseholdWriteConfigOpti
         ),
         newAssociation
       );
-
-      if (shouldShadowV2) {
-        void shadowCreateUserHouseholdAssociation(newAssociation);
-      }
     },
   });
 };
@@ -129,7 +100,6 @@ export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
   nextHousehold: Household;
   store?: Pick<UserHouseholdStore, 'update'>;
-  shouldShadowV2?: boolean;
 }): Promise<UserHouseholdPopulation> {
   return replaceHouseholdBaseForAssociationAction({
     ...args,
@@ -140,7 +110,6 @@ export async function replaceHouseholdBaseForAssociation(args: {
 export const useUpdateHouseholdAssociation = () => {
   const { store } = useHouseholdAssociationStoreForMode();
   const queryClient = useQueryClient();
-  const { shouldShadowV2 } = getHouseholdWriteConfig('useUpdateHouseholdAssociation');
 
   return useMutation({
     mutationFn: async ({
@@ -163,7 +132,6 @@ export const useUpdateHouseholdAssociation = () => {
           association,
           nextHousehold,
           store,
-          shouldShadowV2,
         });
       }
 
@@ -210,10 +178,6 @@ export const useUpdateHouseholdAssociation = () => {
           ),
           exact: true,
         });
-      }
-
-      if (!variables.nextHousehold && shouldShadowV2) {
-        void shadowUpdateUserHouseholdAssociation(updatedAssociation);
       }
     },
   });

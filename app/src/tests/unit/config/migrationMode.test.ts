@@ -38,9 +38,9 @@ describe('migrationMode', () => {
       ]);
 
       expect(ENTITY_MIGRATION_MODE).toEqual({
-        policies: 'v1_primary_v2_shadow',
-        households: 'v1_primary_v2_shadow',
-        regions: 'v1_primary_v2_shadow',
+        policies: 'v1_only',
+        households: 'v1_only',
+        regions: 'v1_only',
         saved_geographies: 'v1_only',
         simulations: 'v1_only',
         reports: 'v1_only',
@@ -48,9 +48,9 @@ describe('migrationMode', () => {
     });
 
     test('given an entity then getMigrationMode returns its configured mode', () => {
-      expect(getMigrationMode('policies')).toBe('v1_primary_v2_shadow');
-      expect(getMigrationMode('households')).toBe('v1_primary_v2_shadow');
-      expect(getMigrationMode('regions')).toBe('v1_primary_v2_shadow');
+      expect(getMigrationMode('policies')).toBe('v1_only');
+      expect(getMigrationMode('households')).toBe('v1_only');
+      expect(getMigrationMode('regions')).toBe('v1_only');
       expect(getMigrationMode('saved_geographies')).toBe('v1_only');
       expect(getMigrationMode('simulations')).toBe('v1_only');
       expect(getMigrationMode('reports')).toBe('v1_only');
@@ -121,20 +121,19 @@ describe('migrationMode', () => {
   });
 
   describe('entity helpers', () => {
-    test('given default entity config then v1-only entities are saved geographies simulations and reports', () => {
+    test('given default entity config then every entity is v1-only', () => {
       expect(MIGRATION_ENTITIES.filter(isV1Only)).toEqual([
+        'policies',
+        'households',
+        'regions',
         'saved_geographies',
         'simulations',
         'reports',
       ]);
     });
 
-    test('given default entity config then v1-primary-v2-shadow entities are policies households and regions', () => {
-      expect(MIGRATION_ENTITIES.filter(isV1PrimaryV2Shadow)).toEqual([
-        'policies',
-        'households',
-        'regions',
-      ]);
+    test('given default entity config then no entity is v1-primary-v2-shadow', () => {
+      expect(MIGRATION_ENTITIES.filter(isV1PrimaryV2Shadow)).toEqual([]);
     });
 
     test('given default entity config then no entity is v2-primary yet', () => {
@@ -143,12 +142,8 @@ describe('migrationMode', () => {
       expect(MIGRATION_ENTITIES.filter(usesV1Shadow)).toEqual([]);
     });
 
-    test('given default entity config then only policy household and region use v2 shadow', () => {
-      expect(MIGRATION_ENTITIES.filter(usesV2Shadow)).toEqual([
-        'policies',
-        'households',
-        'regions',
-      ]);
+    test('given default entity config then no entity uses v2 shadow', () => {
+      expect(MIGRATION_ENTITIES.filter(usesV2Shadow)).toEqual([]);
     });
 
     test('given the support matrix then only regions govern canonical region sourcing', () => {
@@ -168,9 +163,7 @@ describe('migrationMode', () => {
 
   describe('assertSupportedMode', () => {
     test('given a supported mode then it returns the configured mode', () => {
-      expect(assertSupportedMode('regions', ['v1_primary_v2_shadow', 'v1_only'])).toBe(
-        'v1_primary_v2_shadow'
-      );
+      expect(assertSupportedMode('regions', ['v1_primary_v2_shadow', 'v1_only'])).toBe('v1_only');
     });
 
     test('given an unsupported mode then it throws a clear error', () => {
