@@ -477,7 +477,6 @@ describe('useUserGeographic hooks', () => {
         ),
       });
     });
-
   });
 
   describe('query configuration', () => {

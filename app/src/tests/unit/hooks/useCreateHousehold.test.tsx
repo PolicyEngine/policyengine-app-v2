@@ -137,7 +137,6 @@ describe('useCreateHousehold', () => {
         label: customLabel,
       });
     });
-
   });
 
   describe('error handling', () => {

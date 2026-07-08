@@ -181,7 +181,6 @@ describe('useCreateReport', () => {
         expect(cachedReport).toEqual(mockReport);
       });
     });
-
   });
 
   describe('error handling', () => {

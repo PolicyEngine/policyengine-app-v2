@@ -178,7 +178,6 @@ describe('useCreateSimulation', () => {
         countryId: 'us',
       });
     });
-
   });
 
   describe('country selection', () => {
