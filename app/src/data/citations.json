@@ -32,7 +32,8 @@
     "date": "2026-07-08",
     "url": "https://www.cityam.com/if-burnham-wants-firms-to-hire-young-people-he-needs-to-get-out-of-their-way/",
     "image": "cityam-burnham-junior-hiring-ni.jpg",
-    "tags": ["uk", "tax"]
+    "tags": ["uk", "tax"],
+    "featured": true
   },
   {
     "title": "How replacing council tax with a flat land value tax would affect households in the UK",
