@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "young-worker-nics",
+    "title": "Employer NICs exemption for young workers",
+    "description": "Estimate the fiscal cost and employment effects of extending the employer NICs zero rate to young workers, either all 18 to 24-year-olds or only recent NEETs, modelled with PolicyEngine UK.",
+    "source": "https://young-worker-nics.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "young-worker-nics.jpg",
+    "date": "2026-07-09 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "taxation-of-benefits-reforms",
     "title": "Social Security taxation reform dashboard",
     "description": "Explore policy options for reforming the taxation of Social Security benefits, with budgetary impacts through 2100 using PolicyEngine microsimulation. Analysis commissioned by the Committee for a Responsible Federal Budget.",
