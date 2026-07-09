@@ -294,14 +294,12 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
     [countryCitations],
   );
 
-  // Non-featured citations sorted by date descending
+  // "All citations" lists every citation (including featured) sorted by date descending
   const restCitations = useMemo(
     () =>
-      countryCitations
-        .filter((c) => !c.featured)
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-        ),
+      [...countryCitations].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
     [countryCitations],
   );
 
