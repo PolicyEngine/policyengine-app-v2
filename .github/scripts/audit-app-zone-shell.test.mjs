@@ -248,6 +248,7 @@ describe("isShellBrandExempt", () => {
     );
     assert.equal(isShellBrandExempt("/uk/uc-rebalancing"), true);
     assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), true);
+    assert.equal(isShellBrandExempt("/uk/young-worker-nics"), true);
   });
 
   test("does not exempt other routes or partial-name collisions", () => {
