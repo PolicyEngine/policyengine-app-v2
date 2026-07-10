@@ -131,6 +131,7 @@ export function useCreateReport(reportLabel?: string) {
               .startCalculation({
                 calcId: sim.id, // Each simulation uses its own ID
                 targetType: 'simulation', // Simulation-level calculation
+                reportId: reportIdStr,
                 countryId: report.countryId,
                 year: report.year,
                 simulations: {

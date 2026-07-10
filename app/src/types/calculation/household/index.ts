@@ -1,4 +1,3 @@
-export type { HouseholdReportConfig, SimulationConfig } from './HouseholdCalcConfig';
 export type {
   HouseholdCalculationArray,
   HouseholdCalculationData,

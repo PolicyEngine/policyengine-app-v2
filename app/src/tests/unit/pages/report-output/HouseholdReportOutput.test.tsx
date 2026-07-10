@@ -1,11 +1,15 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useFinalizeHouseholdReportOnLoad } from '@/hooks/household';
+import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { Household } from '@/models/Household';
 import { HouseholdReportOutput } from '@/pages/report-output/HouseholdReportOutput';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 
 vi.mock('@/hooks/household', () => ({
+  useFinalizeHouseholdReportOnLoad: vi.fn(),
   useSimulationProgressDisplay: () => ({
     displayProgress: 0,
     hasCalcStatus: false,
@@ -13,8 +17,8 @@ vi.mock('@/hooks/household', () => ({
   }),
 }));
 
-vi.mock('@/pages/report-output/useHouseholdCalculations', () => ({
-  useHouseholdCalculations: () => ({ orchestrator: null }),
+vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
+  useStartCalculationOnLoad: vi.fn(),
 }));
 
 vi.mock('@/pages/report-output/reproduce-in-python/HouseholdReproducibility', () => ({
@@ -79,6 +83,60 @@ function makeHousehold(id: string): Household {
 }
 
 describe('HouseholdReportOutput', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useFinalizeHouseholdReportOnLoad).mockReturnValue({
+      finalizationError: null,
+      retryFinalization: vi.fn(),
+    });
+    vi.mocked(useStartCalculationOnLoad).mockReturnValue({
+      persistenceError: null,
+      retryFailedPersistence: vi.fn(),
+    });
+  });
+
+  test('given pending simulations then delegates execution to the managed orchestrator', () => {
+    // Given
+    const pendingReport = { ...report, status: 'pending' as const };
+    const pendingSimulations = [baselineSimulation, reformSimulation].map((simulation) => ({
+      ...simulation,
+      status: 'pending' as const,
+      output: null,
+    }));
+
+    // When
+    render(
+      <HouseholdReportOutput
+        report={pendingReport}
+        simulations={pendingSimulations}
+        households={[makeHousehold('household-reform'), makeHousehold('household-baseline')]}
+        subpage="overview"
+        isLoading={false}
+        error={null}
+      />
+    );
+
+    // Then
+    expect(vi.mocked(useStartCalculationOnLoad)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: true,
+        isComplete: false,
+        configs: [
+          expect.objectContaining({
+            calcId: 'simulation-baseline',
+            reportId: 'report-1',
+            targetType: 'simulation',
+          }),
+          expect.objectContaining({
+            calcId: 'simulation-reform',
+            reportId: 'report-1',
+            targetType: 'simulation',
+          }),
+        ],
+      })
+    );
+  });
+
   test('given reproduce tab then passes the baseline simulation household by population ID', () => {
     render(
       <HouseholdReportOutput
@@ -92,5 +150,94 @@ describe('HouseholdReportOutput', () => {
     );
 
     expect(screen.getByTestId('repro-household-id')).toHaveTextContent('household-baseline');
+  });
+
+  test('test__given_all_outputs_are_durable_on_load__then_report_finalizes_without_recalculation', () => {
+    // Given
+    const pendingReport = { ...report, status: 'pending' as const };
+    const durableSimulations = [baselineSimulation, reformSimulation].map((simulation) => ({
+      ...simulation,
+      output: { people: { adult: { income_tax: { '2026': 100 } } } },
+    }));
+
+    // When
+    render(
+      <HouseholdReportOutput
+        report={pendingReport}
+        simulations={durableSimulations}
+        subpage="policy"
+        isLoading={false}
+        error={null}
+      />
+    );
+
+    // Then
+    expect(vi.mocked(useFinalizeHouseholdReportOnLoad)).toHaveBeenCalledWith({
+      report: pendingReport,
+      simulations: durableSimulations,
+    });
+    expect(vi.mocked(useStartCalculationOnLoad)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: false,
+        configs: [],
+        isComplete: true,
+      })
+    );
+  });
+
+  test('test__given_result_save_failed__then_user_can_retry_without_recalculating', async () => {
+    // Given
+    const user = userEvent.setup();
+    const retryFailedPersistence = vi.fn();
+    vi.mocked(useStartCalculationOnLoad).mockReturnValue({
+      persistenceError: new Error('Database unavailable'),
+      retryFailedPersistence,
+    });
+    const pendingReport = { ...report, status: 'pending' as const };
+    const pendingSimulations = [baselineSimulation, reformSimulation].map((simulation) => ({
+      ...simulation,
+      status: 'pending' as const,
+      output: null,
+    }));
+
+    // When
+    render(
+      <HouseholdReportOutput
+        report={pendingReport}
+        simulations={pendingSimulations}
+        subpage="overview"
+        isLoading={false}
+        error={null}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: 'Retry saving results' }));
+
+    // Then
+    expect(retryFailedPersistence).toHaveBeenCalledOnce();
+  });
+
+  test('test__given_report_finalization_failed__then_user_can_retry_the_report_save', async () => {
+    // Given
+    const user = userEvent.setup();
+    const retryFinalization = vi.fn();
+    vi.mocked(useFinalizeHouseholdReportOnLoad).mockReturnValue({
+      finalizationError: new Error('Report save failed'),
+      retryFinalization,
+    });
+
+    // When
+    render(
+      <HouseholdReportOutput
+        report={{ ...report, status: 'pending' }}
+        simulations={[baselineSimulation, reformSimulation]}
+        subpage="overview"
+        isLoading={false}
+        error={null}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: 'Retry saving report' }));
+
+    // Then
+    expect(retryFinalization).toHaveBeenCalledOnce();
   });
 });

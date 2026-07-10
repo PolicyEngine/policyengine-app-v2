@@ -66,6 +66,27 @@ export class CalcOrchestrator {
         ? calculationQueries.forReport(config.calcId, metadata, params)
         : calculationQueries.forSimulation(config.calcId, metadata, params);
 
+    // A completed cache entry must never trigger the expensive calculation a
+    // second time. If only persistence failed, replay that save from the
+    // retained result; otherwise the entry is already durable (for example,
+    // because it was hydrated from the API).
+    const cachedStatus = this.queryClient.getQueryData<CalcStatus>(queryOptions.queryKey);
+    if (cachedStatus?.status === 'complete') {
+      if (cachedStatus.result && cachedStatus.persistenceStatus === 'failed') {
+        await this.persistCompletedStatus(
+          queryOptions.queryKey,
+          cachedStatus,
+          config.countryId,
+          config.year,
+          config.calcId
+        );
+      } else if (this.manager) {
+        this.manager.cleanup(config.calcId);
+      }
+
+      return;
+    }
+
     // For household calculations: Set 'computing' status BEFORE API call
     // WHY: Household API calls take 30-45s. By setting 'computing' status in cache
     // immediately, the UI can show synthetic progress during the long-running call.
@@ -89,9 +110,20 @@ export class CalcOrchestrator {
     if (initialStatus.status === 'complete') {
       // HOUSEHOLD CASE: Calculation completed synchronously
       trackSimulationCompleted({ calcType: metadata.calcType, countryId: config.countryId });
-      await this.resultPersister.persist(initialStatus, config.countryId, config.year);
+      await this.persistCompletedStatus(
+        queryOptions.queryKey,
+        initialStatus,
+        config.countryId,
+        config.year,
+        config.calcId
+      );
 
-      // Notify manager to cleanup this orchestrator
+      return;
+    }
+
+    if (initialStatus.status === 'error') {
+      await this.resultPersister.persistError(initialStatus, config.countryId, config.year);
+
       if (this.manager) {
         this.manager.cleanup(config.calcId);
       }
@@ -158,20 +190,11 @@ export class CalcOrchestrator {
       // Handle completion
       if (status.status === 'complete' && status.result) {
         trackSimulationCompleted({ calcType: _metadata.calcType, countryId });
-        this.resultPersister
-          .persist(status, countryId, year)
-          .catch((error) => {
-            console.error('[CalcOrchestrator] Failed to persist:', error);
-          })
-          .finally(() => {
-            unsubscribe();
-            this.currentUnsubscribe = null;
-
-            // Notify manager to remove this orchestrator
-            if (this.manager) {
-              this.manager.cleanup(calcId);
-            }
-          });
+        unsubscribe();
+        this.currentUnsubscribe = null;
+        this.persistCompletedStatus(queryKey, status, countryId, year, calcId).catch((error) => {
+          console.error('[CalcOrchestrator] Failed to persist:', error);
+        });
 
         return;
       }
@@ -182,16 +205,59 @@ export class CalcOrchestrator {
 
         unsubscribe();
         this.currentUnsubscribe = null;
-
-        // Notify manager to remove this orchestrator
-        if (this.manager) {
-          this.manager.cleanup(calcId);
-        }
+        this.resultPersister
+          .persistError(status, countryId, year)
+          .catch((error) => {
+            console.error('[CalcOrchestrator] Failed to persist calculation error:', error);
+          })
+          .finally(() => {
+            if (this.manager) {
+              this.manager.cleanup(calcId);
+            }
+          });
       }
     });
 
     // Store unsubscribe function for manual cleanup
     this.currentUnsubscribe = unsubscribe;
+  }
+
+  /**
+   * Persist a completed result while retaining enough cache state to retry a
+   * failed save without re-running the calculation.
+   */
+  private async persistCompletedStatus(
+    queryKey: readonly unknown[],
+    status: CalcStatus,
+    countryId: string,
+    year: string,
+    calcId: string
+  ): Promise<void> {
+    const persistingStatus: CalcStatus = {
+      ...status,
+      persistenceStatus: 'persisting',
+      persistenceError: undefined,
+    };
+    this.queryClient.setQueryData(queryKey, persistingStatus);
+
+    try {
+      await this.resultPersister.persist(persistingStatus, countryId, year);
+      this.queryClient.setQueryData<CalcStatus>(queryKey, {
+        ...persistingStatus,
+        persistenceStatus: 'persisted',
+      });
+    } catch (error) {
+      this.queryClient.setQueryData<CalcStatus>(queryKey, {
+        ...persistingStatus,
+        persistenceStatus: 'failed',
+        persistenceError: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    } finally {
+      if (this.manager) {
+        this.manager.cleanup(calcId);
+      }
+    }
   }
 
   /**

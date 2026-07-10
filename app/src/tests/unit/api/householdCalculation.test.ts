@@ -69,6 +69,7 @@ describe('household_calculation API', () => {
       expect(result).toEqual({
         result: mockSuccessfulCalculationResponse.result,
         policyengine_bundle: mockSuccessfulCalculationResponse.policyengine_bundle,
+        execution_receipt: mockSuccessfulCalculationResponse.execution_receipt,
       });
     });
 

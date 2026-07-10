@@ -42,6 +42,43 @@ describe('CalcOrchestrator', () => {
   });
 
   describe('household calculations', () => {
+    it('given household calculation error then persists the terminal error without polling', async () => {
+      // Given
+      const config = mockHouseholdCalcConfigWithReport();
+      const errorStatus = {
+        status: 'error' as const,
+        error: {
+          code: 'HOUSEHOLD_CALC_FAILED',
+          message: 'Calculation failed',
+          retryable: true,
+        },
+        metadata: {
+          calcId: TEST_CALC_IDS.SIM_1,
+          calcType: 'household' as const,
+          targetType: 'simulation' as const,
+          reportId: TEST_CALC_IDS.REPORT_123,
+          startedAt: Date.now(),
+        },
+      };
+      const mockQueryFn = vi.fn().mockResolvedValue(errorStatus);
+      (calculationQueries.forSimulation as any).mockReturnValue(
+        mockHouseholdQueryOptions(TEST_CALC_IDS.SIM_1, mockQueryFn)
+      );
+      (mockResultPersister.persistError as any).mockResolvedValue(undefined);
+
+      // When
+      await orchestrator.startCalculation(config);
+
+      // Then
+      expect(mockResultPersister.persistError).toHaveBeenCalledWith(
+        errorStatus,
+        TEST_COUNTRIES.US,
+        TEST_YEARS.DEFAULT
+      );
+      expect(mockResultPersister.persist).not.toHaveBeenCalled();
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
+    });
+
     it('given household calculation then returns complete immediately', async () => {
       // Given
       const config = mockHouseholdCalcConfig();
@@ -59,7 +96,10 @@ describe('CalcOrchestrator', () => {
       // Then
       expect(mockQueryFn).toHaveBeenCalledTimes(1);
       expect(mockResultPersister.persist).toHaveBeenCalledWith(
-        completeStatus,
+        expect.objectContaining({
+          ...completeStatus,
+          persistenceStatus: 'persisting',
+        }),
         TEST_COUNTRIES.US,
         TEST_YEARS.DEFAULT
       );
@@ -109,6 +149,59 @@ describe('CalcOrchestrator', () => {
 
       // Then - Should cleanup immediately, not start polling
       expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
+    });
+
+    it('test__given_result_persistence_fails__then_result_is_retained_for_retry', async () => {
+      // Given
+      const config = mockHouseholdCalcConfig();
+      const completeStatus = mockCompleteHouseholdStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
+      (calculationQueries.forSimulation as any).mockReturnValue(
+        mockHouseholdQueryOptions(TEST_CALC_IDS.SIM_1, mockQueryFn)
+      );
+      (mockResultPersister.persist as any).mockRejectedValue(new Error('Database unavailable'));
+
+      // When
+      await expect(orchestrator.startCalculation(config)).rejects.toThrow('Database unavailable');
+
+      // Then
+      expect(queryClient.getQueryData(['calculation', TEST_CALC_IDS.SIM_1])).toEqual(
+        expect.objectContaining({
+          status: 'complete',
+          result: completeStatus.result,
+          persistenceStatus: 'failed',
+          persistenceError: 'Database unavailable',
+        })
+      );
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
+    });
+
+    it('test__given_failed_persistence_in_cache__then_retry_saves_without_recalculating', async () => {
+      // Given
+      const config = mockHouseholdCalcConfig();
+      const failedStatus = mockCompleteHouseholdStatus({
+        persistenceStatus: 'failed',
+        persistenceError: 'Database unavailable',
+      });
+      const mockQueryFn = vi.fn();
+      const queryOptions = mockHouseholdQueryOptions(TEST_CALC_IDS.SIM_1, mockQueryFn);
+      (calculationQueries.forSimulation as any).mockReturnValue(queryOptions);
+      queryClient.setQueryData(queryOptions.queryKey, failedStatus);
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
+
+      // When
+      await orchestrator.startCalculation(config);
+
+      // Then
+      expect(mockQueryFn).not.toHaveBeenCalled();
+      expect(mockResultPersister.persist).toHaveBeenCalledOnce();
+      expect(queryClient.getQueryData(queryOptions.queryKey)).toEqual(
+        expect.objectContaining({
+          status: 'complete',
+          result: failedStatus.result,
+          persistenceStatus: 'persisted',
+        })
+      );
     });
   });
 

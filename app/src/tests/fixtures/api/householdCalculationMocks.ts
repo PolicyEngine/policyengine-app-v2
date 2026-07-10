@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { HouseholdCalculationResponse } from '@/api/householdCalculation';
 import { CURRENT_YEAR } from '@/constants';
+import { mockExecutionReceipt } from '@/tests/fixtures/types/executionReceiptFixtures';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 
 // Test IDs and constants
@@ -31,7 +32,7 @@ export const HTTP_STATUS = {
 
 export const ERROR_MESSAGES = {
   CALCULATION_FAILED: (statusText: string) => `Household calculation failed: ${statusText}`,
-  TIMEOUT: 'Household calculation timed out after 50 seconds (client-side timeout)',
+  TIMEOUT: 'Household calculation timed out after 4 minutes (client-side timeout)',
   API_ERROR: 'Household calculation failed',
   NETWORK_ERROR: 'Network error',
   INVALID_PARAMETERS: 'Invalid parameters provided for household calculation',
@@ -159,6 +160,7 @@ export const mockSuccessfulCalculationResponse: HouseholdCalculationResponse = {
     data_version: null,
     dataset: null,
   },
+  execution_receipt: mockExecutionReceipt(),
 };
 
 export const mockErrorCalculationResponse: HouseholdCalculationResponse = {

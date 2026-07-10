@@ -229,6 +229,7 @@ describe('useCreateReport', () => {
           expect.objectContaining({
             calcId: mockHouseholdSimulation.id, // Uses simulation's own ID
             targetType: 'simulation',
+            reportId: TEST_REPORT_ID_STRING,
             countryId: TEST_COUNTRY_ID,
             simulations: {
               simulation1: mockHouseholdSimulation,
@@ -249,6 +250,7 @@ describe('useCreateReport', () => {
           expect.objectContaining({
             calcId: 'sim-2', // Uses simulation2's ID
             targetType: 'simulation',
+            reportId: TEST_REPORT_ID_STRING,
             countryId: TEST_COUNTRY_ID,
             simulations: {
               simulation1: expect.objectContaining({ policyId: 'policy-2' }),

@@ -87,7 +87,10 @@ vi.mock('@/hooks/useReportProgressDisplay', () => ({
 }));
 
 vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
-  useStartCalculationOnLoad: vi.fn(),
+  useStartCalculationOnLoad: vi.fn(() => ({
+    persistenceError: null,
+    retryFailedPersistence: vi.fn(),
+  })),
 }));
 
 vi.mock('@/hooks/useSaveSharedReport', () => ({

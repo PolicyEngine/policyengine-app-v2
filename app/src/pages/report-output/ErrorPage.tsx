@@ -4,12 +4,14 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 
 interface ErrorPageProps {
   error?: any;
+  onRetry?: () => void;
+  retryLabel?: string;
 }
 
 /**
  * Error page component displayed when report calculation fails
  */
-export default function ErrorPage({ error }: ErrorPageProps) {
+export default function ErrorPage({ error, onRetry, retryLabel = 'Retry' }: ErrorPageProps) {
   const nav = useAppNavigate();
 
   return (
@@ -23,6 +25,12 @@ export default function ErrorPage({ error }: ErrorPageProps) {
             : error?.message || 'An unexpected error occurred during calculation.'}
         </AlertDescription>
       </Alert>
+
+      {onRetry && (
+        <Button onClick={onRetry} className="tw:w-full">
+          {retryLabel}
+        </Button>
+      )}
 
       <Button variant="outline" onClick={() => nav.back()} className="tw:w-full">
         Go back

@@ -5,18 +5,19 @@ import { mockHouseholdCalcParams } from '@/tests/fixtures/types/calculationFixtu
 
 // Mock the household API
 vi.mock('@/api/householdCalculation', () => ({
-  fetchHouseholdCalculation: vi.fn(),
+  fetchHouseholdCalculationWithBundle: vi.fn(),
 }));
 
 describe('HouseholdCalcStrategy', () => {
   let strategy: HouseholdCalcStrategy;
-  let mockFetchHouseholdCalculation: any;
+  let mockFetchHouseholdCalculationWithBundle: any;
 
   beforeEach(async () => {
     strategy = new HouseholdCalcStrategy();
 
     const householdModule = await import('@/api/householdCalculation');
-    mockFetchHouseholdCalculation = householdModule.fetchHouseholdCalculation as any;
+    mockFetchHouseholdCalculationWithBundle =
+      householdModule.fetchHouseholdCalculationWithBundle as any;
 
     vi.clearAllMocks();
   });
@@ -25,7 +26,7 @@ describe('HouseholdCalcStrategy', () => {
     it('given valid params then calls API with correct parameters', async () => {
       // Given
       const params = mockHouseholdCalcParams();
-      mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
+      mockFetchHouseholdCalculationWithBundle.mockResolvedValue(mockHouseholdSuccessResponse());
 
       // When
       await strategy.execute(params, {
@@ -36,7 +37,7 @@ describe('HouseholdCalcStrategy', () => {
       });
 
       // Then
-      expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith(
+      expect(mockFetchHouseholdCalculationWithBundle).toHaveBeenCalledWith(
         params.countryId,
         params.populationId,
         params.policyIds.baseline
@@ -47,7 +48,7 @@ describe('HouseholdCalcStrategy', () => {
       // Given
       const params = mockHouseholdCalcParams();
       const mockResult = mockHouseholdSuccessResponse();
-      mockFetchHouseholdCalculation.mockResolvedValue(mockResult);
+      mockFetchHouseholdCalculationWithBundle.mockResolvedValue(mockResult);
 
       // When
       const result = await strategy.execute(params, {
@@ -68,7 +69,7 @@ describe('HouseholdCalcStrategy', () => {
       // Given
       const params = mockHouseholdCalcParams();
       const mockError = new Error('API request failed');
-      mockFetchHouseholdCalculation.mockRejectedValue(mockError);
+      mockFetchHouseholdCalculationWithBundle.mockRejectedValue(mockError);
 
       // When
       const result = await strategy.execute(params, {
@@ -93,7 +94,7 @@ describe('HouseholdCalcStrategy', () => {
       const params = mockHouseholdCalcParams({
         policyIds: { baseline: '1', reform: '2' },
       });
-      mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
+      mockFetchHouseholdCalculationWithBundle.mockResolvedValue(mockHouseholdSuccessResponse());
 
       // When
       await strategy.execute(params, {
@@ -104,7 +105,7 @@ describe('HouseholdCalcStrategy', () => {
       });
 
       // Then
-      expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith(
+      expect(mockFetchHouseholdCalculationWithBundle).toHaveBeenCalledWith(
         params.countryId,
         params.populationId,
         '2' // reform policy
@@ -114,7 +115,7 @@ describe('HouseholdCalcStrategy', () => {
     it('given non-Error rejection then wraps in CalcError', async () => {
       // Given
       const params = mockHouseholdCalcParams();
-      mockFetchHouseholdCalculation.mockRejectedValue('String error');
+      mockFetchHouseholdCalculationWithBundle.mockRejectedValue('String error');
 
       // When
       const result = await strategy.execute(params, {

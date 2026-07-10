@@ -1,12 +1,13 @@
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { CalcOrchestratorProvider } from '@/contexts/CalcOrchestratorContext';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
+import { calculationKeys } from '@/libs/queryKeys';
 import { CACHE_HYDRATION_TEST_CONSTANTS } from '@/tests/fixtures/hooks/cacheHydrationFixtures';
-import { CalcStartConfig } from '@/types/calculation';
+import { CalcStartConfig, CalcStatus } from '@/types/calculation';
 
 // Mock CalcOrchestrator
 vi.mock('@/libs/calculations/CalcOrchestrator');
@@ -332,6 +333,49 @@ describe('useStartCalculationOnLoad', () => {
     // Should start now
     await waitFor(() => {
       expect(mockStartCalculation).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('test__given_failed_persistence__then_retry_reuses_cached_result', async () => {
+    // Given
+    const config = createMockConfig();
+    const failedStatus: CalcStatus = {
+      status: 'complete',
+      result: {} as CalcStatus['result'],
+      persistenceStatus: 'failed',
+      persistenceError: 'Database unavailable',
+      metadata: {
+        calcId: config.calcId,
+        targetType: 'report',
+        calcType: 'societyWide',
+        startedAt: Date.now(),
+      },
+    };
+    queryClient.setQueryData(calculationKeys.byReportId(config.calcId), failedStatus);
+
+    // When
+    const { result } = renderHook(
+      () =>
+        useStartCalculationOnLoad({
+          enabled: true,
+          configs: [config],
+          isComplete: false,
+        }),
+      { wrapper }
+    );
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.persistenceError?.message).toBe('Database unavailable');
+    });
+    expect(mockStartCalculation).not.toHaveBeenCalled();
+
+    // When
+    act(() => result.current.retryFailedPersistence());
+
+    // Then
+    await waitFor(() => {
+      expect(mockStartCalculation).toHaveBeenCalledWith(config);
     });
   });
 });

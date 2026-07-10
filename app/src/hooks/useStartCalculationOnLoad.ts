@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { calculationKeys } from '@/libs/queryKeys';
 import { CalcStartConfig, CalcStatus } from '@/types/calculation';
@@ -19,6 +19,11 @@ interface UseStartCalculationOnLoadParams {
    * Whether calculation is already complete
    */
   isComplete: boolean;
+}
+
+interface StartCalculationOnLoadResult {
+  persistenceError: Error | null;
+  retryFailedPersistence: () => void;
 }
 
 /**
@@ -61,7 +66,7 @@ export function useStartCalculationOnLoad({
   enabled,
   configs,
   isComplete,
-}: UseStartCalculationOnLoadParams): void {
+}: UseStartCalculationOnLoadParams): StartCalculationOnLoadResult {
   const manager = useCalcOrchestratorManager();
   const queryClient = useQueryClient();
 
@@ -71,6 +76,22 @@ export function useStartCalculationOnLoad({
   const configKey = useMemo(() => {
     return configs.map((c) => `${c.calcId}:${c.targetType}`).join('|');
   }, [configs]);
+
+  const cachedStatusQueries = useQueries({
+    queries: configs.map((config) => ({
+      queryKey:
+        config.targetType === 'report'
+          ? calculationKeys.byReportId(config.calcId)
+          : calculationKeys.bySimulationId(config.calcId),
+      queryFn: async (): Promise<CalcStatus | undefined> => undefined,
+      enabled: false,
+      staleTime: Infinity,
+    })),
+  });
+
+  const failedPersistenceStatus = cachedStatusQueries
+    .map((query) => query.data as CalcStatus | undefined)
+    .find((status) => status?.status === 'complete' && status.persistenceStatus === 'failed');
 
   // Update ref when configKey changes (meaning actual IDs changed)
   useEffect(() => {
@@ -114,4 +135,36 @@ export function useStartCalculationOnLoad({
   }, [enabled, configKey, isComplete, manager, queryClient]);
   // NOTE: Using configKey instead of configs to prevent infinite loop
   // configKey is a stable string that only changes when calcIds change
+
+  const retryFailedPersistence = useCallback(() => {
+    for (const config of configsRef.current) {
+      const queryKey =
+        config.targetType === 'report'
+          ? calculationKeys.byReportId(config.calcId)
+          : calculationKeys.bySimulationId(config.calcId);
+      const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
+
+      if (
+        cachedStatus?.status !== 'complete' ||
+        cachedStatus.persistenceStatus !== 'failed' ||
+        manager.isRunning(config.calcId)
+      ) {
+        continue;
+      }
+
+      manager.startCalculation(config).catch((error) => {
+        console.error(
+          `[useStartCalculationOnLoad] Failed to retry persistence for ${config.calcId}:`,
+          error
+        );
+      });
+    }
+  }, [configKey, manager, queryClient]);
+
+  return {
+    persistenceError: failedPersistenceStatus
+      ? new Error(failedPersistenceStatus.persistenceError || 'Failed to save calculation results')
+      : null,
+    retryFailedPersistence,
+  };
 }
