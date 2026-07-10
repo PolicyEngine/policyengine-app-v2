@@ -1,9 +1,6 @@
-import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
 import type {
   HouseholdCalculationData,
   HouseholdCalculationOutput,
-  HouseholdReportConfig,
-  SimulationConfig,
 } from '@/types/calculation/household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -40,62 +37,15 @@ export class HouseholdReportViewModel {
       return { isPending: false, isComplete: false, isError: false };
     }
 
-    const isSimulationComplete = (simulation: Simulation): boolean =>
-      simulation.status === 'complete' ||
-      (simulation.output !== null && simulation.output !== undefined);
-
-    const isSimulationError = (simulation: Simulation): boolean =>
-      simulation.status === 'error' && simulation.output === null;
-
     return {
       // Treat any non-error simulation without persisted output as pending.
       // This prevents valid legacy household results from falling through to NotFound.
       isPending: this.simulations.some(
-        (simulation) => !isSimulationComplete(simulation) && !isSimulationError(simulation)
+        (simulation) => !this.hasDurableOutput(simulation) && simulation.status !== 'error'
       ),
-      isComplete: this.simulations.every(isSimulationComplete),
-      isError: this.simulations.some(isSimulationError),
+      isComplete: this.simulations.every((simulation) => this.hasDurableOutput(simulation)),
+      isError: this.simulations.some((simulation) => simulation.status === 'error'),
     };
-  }
-
-  /**
-   * Build calculation config for orchestrator
-   */
-  buildCalculationConfig(): HouseholdReportConfig | null {
-    if (!this.report?.id) {
-      return null;
-    }
-
-    const configs: SimulationConfig[] = (this.simulations || [])
-      .filter((sim) => sim.id && sim.populationId && sim.policyId)
-      .map((sim) => ({
-        simulationId: sim.id!,
-        populationId: sim.populationId!,
-        policyId: sim.policyId!,
-      }));
-
-    return {
-      reportId: this.report.id,
-      report: this.report,
-      simulationConfigs: configs,
-      countryId: this.report.countryId,
-    };
-  }
-
-  /**
-   * Determine if calculations should be started
-   */
-  shouldStartCalculations(orchestrator: HouseholdReportOrchestrator): boolean {
-    if (!this.report?.id || !this.simulations || this.simulations.length === 0) {
-      return false;
-    }
-
-    if (!this.simulationStates.isPending) {
-      return false;
-    }
-
-    // Don't start if any simulation is already calculating
-    return !this.simulations.some((sim) => orchestrator.isCalculating(sim.id!));
   }
 
   /**
@@ -120,6 +70,7 @@ export class HouseholdReportViewModel {
     }
 
     return this.simulations
+      .filter((simulation) => this.hasDurableOutput(simulation))
       .map((sim) => ({
         simulation: sim,
         householdData: this.getHouseholdData(sim.output),
@@ -137,7 +88,44 @@ export class HouseholdReportViewModel {
 
   getResolvedPolicyengineVersion(): string | null {
     for (const simulation of this.simulations || []) {
+      if (!this.hasDurableOutput(simulation)) {
+        continue;
+      }
       const output = simulation.output;
+      if (
+        output &&
+        typeof output === 'object' &&
+        'execution_receipt' in output &&
+        output.execution_receipt &&
+        typeof output.execution_receipt === 'object' &&
+        'resolved' in output.execution_receipt &&
+        output.execution_receipt.resolved &&
+        typeof output.execution_receipt.resolved === 'object'
+      ) {
+        const resolved = output.execution_receipt.resolved;
+        if (
+          'certified_release' in resolved &&
+          resolved.certified_release &&
+          typeof resolved.certified_release === 'object' &&
+          'policyengine_version' in resolved.certified_release &&
+          typeof resolved.certified_release.policyengine_version === 'string'
+        ) {
+          return resolved.certified_release.policyengine_version;
+        }
+
+        if (
+          'runtime' in resolved &&
+          resolved.runtime &&
+          typeof resolved.runtime === 'object' &&
+          'name' in resolved.runtime &&
+          resolved.runtime.name === 'policyengine' &&
+          'version' in resolved.runtime &&
+          typeof resolved.runtime.version === 'string'
+        ) {
+          return resolved.runtime.version;
+        }
+      }
+
       if (
         output &&
         typeof output === 'object' &&
@@ -208,5 +196,10 @@ export class HouseholdReportViewModel {
     }
 
     return outputs.length > 1 ? outputs : outputs[0];
+  }
+
+  private hasDurableOutput(simulation: Simulation): boolean {
+    const hasOutput = simulation.output !== null && simulation.output !== undefined;
+    return simulation.status === 'complete' || (simulation.status == null && hasOutput);
   }
 }

@@ -13,6 +13,7 @@ import {
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/societyWideMocks';
+import { mockExecutionReceipt } from '@/tests/fixtures/types/executionReceiptFixtures';
 
 global.fetch = vi.fn();
 
@@ -168,6 +169,28 @@ describe('societyWide API', () => {
       expect(result.result?.dataset).toBe(
         'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0'
       );
+    });
+
+    test('given an execution receipt then preserves it with the durable result', async () => {
+      // Given
+      const executionReceipt = mockExecutionReceipt();
+      const mockResponse = mockSuccessResponse({
+        ...mockCompletedResponse,
+        execution_receipt: executionReceipt,
+      });
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.US,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: 'us', time_period: CURRENT_YEAR }
+      );
+
+      // Then
+      expect(result.execution_receipt).toEqual(executionReceipt);
+      expect(result.result?.execution_receipt).toEqual(executionReceipt);
     });
 
     test('given error status then returns error message with null result', async () => {

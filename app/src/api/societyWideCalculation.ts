@@ -1,15 +1,16 @@
 import { BASE_URL } from '@/constants';
+import type {
+  ExecutionProvenance,
+  ExecutionReceipt,
+  PolicyEngineBundle,
+} from '@/types/calculation/ExecutionReceipt';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
-export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
+export type SocietyWideReportOutput = (ReportOutputSocietyWideUS | ReportOutputSocietyWideUK) &
+  ExecutionProvenance;
 
-export interface PolicyEngineBundle {
-  model_version?: string | null;
-  policyengine_version?: string | null;
-  data_version?: string | null;
-  dataset?: string | null;
-}
+export type { PolicyEngineBundle } from '@/types/calculation/ExecutionReceipt';
 
 // NOTE: Need to add other params at later point
 export interface SocietyWideCalculationParams {
@@ -25,26 +26,34 @@ export interface SocietyWideCalculationResponse {
   result: SocietyWideReportOutput | null;
   error?: string;
   policyengine_bundle?: PolicyEngineBundle | null;
+  execution_receipt?: ExecutionReceipt | null;
 }
 
-function mergePolicyEngineBundle(
+function mergeExecutionProvenance(
   response: SocietyWideCalculationResponse
 ): SocietyWideCalculationResponse {
-  if (!response.result || !response.policyengine_bundle) {
+  if (!response.result) {
     return response;
   }
 
-  const { policyengine_bundle: bundle } = response;
+  const bundle = response.policyengine_bundle ?? response.result.policyengine_bundle ?? null;
+  const executionReceipt = response.execution_receipt ?? response.result.execution_receipt ?? null;
+
+  if (!bundle && !executionReceipt) {
+    return response;
+  }
 
   return {
     ...response,
     result: {
       ...response.result,
-      model_version: bundle.model_version ?? response.result.model_version,
+      policyengine_bundle: bundle,
+      execution_receipt: executionReceipt,
+      model_version: bundle?.model_version ?? response.result.model_version,
       policyengine_version:
-        bundle.policyengine_version ?? response.result.policyengine_version ?? null,
-      data_version: bundle.data_version ?? response.result.data_version,
-      dataset: bundle.dataset ?? response.result.dataset ?? null,
+        bundle?.policyengine_version ?? response.result.policyengine_version ?? null,
+      data_version: bundle?.data_version ?? response.result.data_version,
+      dataset: bundle?.dataset ?? response.result.dataset ?? null,
     },
   };
 }
@@ -90,5 +99,5 @@ export async function fetchSocietyWideCalculation(
   }
 
   const data: SocietyWideCalculationResponse = await response.json();
-  return mergePolicyEngineBundle(data);
+  return mergeExecutionProvenance(data);
 }

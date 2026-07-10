@@ -1,5 +1,9 @@
-import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
+import type {
+  ExecutionProvenance,
+  ExecutionReceipt,
+  PolicyEngineBundle,
+} from '@/types/calculation/ExecutionReceipt';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
 
 export interface HouseholdCalculationResponse {
@@ -7,11 +11,11 @@ export interface HouseholdCalculationResponse {
   result: HouseholdCalculationData | null;
   error?: string;
   policyengine_bundle?: PolicyEngineBundle | null;
+  execution_receipt?: ExecutionReceipt | null;
 }
 
-export interface HouseholdCalculationResult {
+export interface HouseholdCalculationResult extends ExecutionProvenance {
   result: HouseholdCalculationData;
-  policyengine_bundle?: PolicyEngineBundle | null;
 }
 
 export async function fetchHouseholdCalculationWithBundle(
@@ -47,13 +51,14 @@ export async function fetchHouseholdCalculationWithBundle(
     return {
       result: data.result,
       policyengine_bundle: data.policyengine_bundle ?? null,
+      execution_receipt: data.execution_receipt ?? null,
     };
   } catch (error) {
     clearTimeout(timeoutId);
 
     // Check if it's a timeout error
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Household calculation timed out after 50 seconds (client-side timeout)');
+      throw new Error('Household calculation timed out after 4 minutes (client-side timeout)');
     }
 
     throw error;

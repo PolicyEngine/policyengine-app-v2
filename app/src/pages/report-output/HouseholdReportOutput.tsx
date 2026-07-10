@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useSimulationProgressDisplay } from '@/hooks/household';
+import { useFinalizeHouseholdReportOnLoad, useSimulationProgressDisplay } from '@/hooks/household';
+import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import type { Household } from '@/models/Household';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
@@ -13,6 +14,7 @@ import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
+import { buildHouseholdCalculationConfigs } from './householdCalculationConfigs';
 import { HouseholdReportViewModel } from './HouseholdReportViewModel';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
@@ -20,7 +22,6 @@ import OverviewSubPage from './OverviewSubPage';
 import PolicySubPage from './PolicySubPage';
 import PopulationSubPage from './PopulationSubPage';
 import HouseholdReproducibility from './reproduce-in-python/HouseholdReproducibility';
-import { useHouseholdCalculations } from './useHouseholdCalculations';
 
 /**
  * Props available to input-only tabs (don't need calculation output)
@@ -139,8 +140,27 @@ export function HouseholdReportOutput({
     [report, simulations, userSimulations, userPolicies]
   );
 
-  // Handle calculation orchestration
-  useHouseholdCalculations(viewModel);
+  const calcConfigs = useMemo(
+    () => buildHouseholdCalculationConfigs(report, simulations, households),
+    [report, simulations, households]
+  );
+
+  const { isPending, isComplete, isError } = viewModel.simulationStates;
+
+  // A prior session can finish every simulation but close before the parent
+  // report PATCH succeeds. Finalize that durable state without recalculating.
+  const { finalizationError, retryFinalization } = useFinalizeHouseholdReportOnLoad({
+    report,
+    simulations,
+  });
+
+  // The managed orchestrator is the sole household execution owner. This also
+  // resumes pending direct-link loads without racing the creation flow.
+  const { persistenceError, retryFailedPersistence } = useStartCalculationOnLoad({
+    enabled: !!report && calcConfigs.length > 0 && isPending,
+    configs: calcConfigs,
+    isComplete,
+  });
 
   // Get real-time progress display (for UI enhancement only)
   const {
@@ -148,9 +168,6 @@ export function HouseholdReportOutput({
     hasCalcStatus,
     message: progressMessage,
   } = useSimulationProgressDisplay(viewModel.simulationIds);
-
-  // Extract states from view model
-  const { isPending, isComplete, isError } = viewModel.simulationStates;
 
   // ============================================================
   // RENDER FLOW: Linear progression through data availability
@@ -202,6 +219,28 @@ export function HouseholdReportOutput({
   // 4. Show error if any simulation has error status
   if (isError) {
     return <ErrorPage error={new Error(viewModel.getErrorMessage())} />;
+  }
+
+  // The calculation result is retained when only its durable save failed, so
+  // retrying here replays persistence without calling the calculation API.
+  if (persistenceError) {
+    return (
+      <ErrorPage
+        error={persistenceError}
+        onRetry={retryFailedPersistence}
+        retryLabel="Retry saving results"
+      />
+    );
+  }
+
+  if (finalizationError) {
+    return (
+      <ErrorPage
+        error={finalizationError}
+        onRetry={retryFinalization}
+        retryLabel="Retry saving report"
+      />
+    );
   }
 
   // 5. Show loading if calculation is pending (for output-dependent tabs)

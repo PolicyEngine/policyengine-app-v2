@@ -216,7 +216,7 @@ export function SocietyWideReportOutput({
   }, [report, simulations]);
 
   // Auto-start calculation if needed (direct URL loads)
-  useStartCalculationOnLoad({
+  const { persistenceError, retryFailedPersistence } = useStartCalculationOnLoad({
     enabled: !!report && !!calcConfigs,
     configs: calcConfigs || [],
     isComplete: calcStatus.isComplete,
@@ -257,6 +257,16 @@ export function SocietyWideReportOutput({
   if (calcStatus.isError) {
     const errorMessage = calcStatus.error?.message || 'Calculation failed';
     return <ErrorPage error={new Error(errorMessage)} />;
+  }
+
+  if (persistenceError) {
+    return (
+      <ErrorPage
+        error={persistenceError}
+        onRetry={retryFailedPersistence}
+        retryLabel="Retry saving results"
+      />
+    );
   }
 
   // 5. Show loading page if calculation is still running

@@ -1,4 +1,4 @@
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import { fetchHouseholdCalculationWithBundle } from '@/api/householdCalculation';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from './types';
 
@@ -26,7 +26,7 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
 
     try {
       // Call API once and await the full result
-      const result = await fetchHouseholdCalculation(
+      const result = await fetchHouseholdCalculationWithBundle(
         params.countryId,
         params.populationId,
         policyId

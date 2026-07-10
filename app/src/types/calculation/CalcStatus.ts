@@ -1,12 +1,16 @@
-import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { CalcError } from './CalcError';
 import { CalcMetadata } from './CalcMetadata';
+import type { ExecutionProvenance } from './ExecutionReceipt';
 import type { HouseholdCalculationData } from './household';
 
 /**
  * Union type for all possible calculation results
  */
-export type CalcResult = SocietyWideReportOutput | HouseholdCalculationData;
+export type CalcResult =
+  | SocietyWideReportOutput
+  | HouseholdCalculationData
+  | ({ result: HouseholdCalculationData } & ExecutionProvenance);
 
 /**
  * Calculation status values
@@ -53,6 +57,12 @@ export type CalcResult = SocietyWideReportOutput | HouseholdCalculationData;
 export type CalcStatusValue = 'initializing' | 'idle' | 'pending' | 'complete' | 'error';
 
 /**
+ * Persistence is tracked separately from calculation completion so a computed
+ * result can be retried without executing the calculation again.
+ */
+export type CalcPersistenceStatus = 'persisting' | 'persisted' | 'failed';
+
+/**
  * Unified calculation status interface
  * Works for both economy and household calculations
  */
@@ -84,6 +94,17 @@ export interface CalcStatus {
    * The calculation result (only present when status is 'complete')
    */
   result?: CalcResult;
+
+  /**
+   * Durable-save lifecycle for a completed result. Older hydrated statuses do
+   * not set this because their result already came from durable storage.
+   */
+  persistenceStatus?: CalcPersistenceStatus;
+
+  /**
+   * Human-readable persistence failure retained alongside the computed result.
+   */
+  persistenceError?: string;
 
   /**
    * Error information (only present when status is 'error')

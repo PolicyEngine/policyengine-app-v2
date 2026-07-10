@@ -1,4 +1,5 @@
 import { render, screen } from '@test-utils';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
@@ -32,9 +33,26 @@ vi.mock('@/pages/report-output/LoadingPage', () => ({
 }));
 
 vi.mock('@/pages/report-output/ErrorPage', () => ({
-  default: vi.fn(({ error }: { error?: Error }) => (
-    <div data-testid="error-page">{error?.message || 'Unknown error'}</div>
-  )),
+  default: vi.fn(
+    ({
+      error,
+      onRetry,
+      retryLabel,
+    }: {
+      error?: Error;
+      onRetry?: () => void;
+      retryLabel?: string;
+    }) => (
+      <div data-testid="error-page">
+        {error?.message || 'Unknown error'}
+        {onRetry && (
+          <button type="button" onClick={onRetry}>
+            {retryLabel}
+          </button>
+        )}
+      </div>
+    )
+  ),
 }));
 
 vi.mock('@/pages/report-output/NotFoundSubPage', () => ({
@@ -73,7 +91,10 @@ describe('SocietyWideReportOutput', () => {
       hasCalcStatus: false,
       message: undefined,
     });
-    mockUseStartCalculationOnLoad.mockReturnValue(undefined);
+    mockUseStartCalculationOnLoad.mockReturnValue({
+      persistenceError: null,
+      retryFailedPersistence: vi.fn(),
+    });
   });
 
   test('given no report then shows error message', () => {
@@ -147,6 +168,30 @@ describe('SocietyWideReportOutput', () => {
     // Then
     expect(screen.getByTestId('error-page')).toBeInTheDocument();
     expect(screen.getByText('Calculation failed')).toBeInTheDocument();
+  });
+
+  test('test__given_report_save_failed__then_user_can_retry_persistence', async () => {
+    // Given
+    const user = userEvent.setup();
+    const retryFailedPersistence = vi.fn();
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
+    mockUseStartCalculationOnLoad.mockReturnValue({
+      persistenceError: new Error('Database unavailable'),
+      retryFailedPersistence,
+    });
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: 'Retry saving results' }));
+
+    // Then
+    expect(retryFailedPersistence).toHaveBeenCalledOnce();
   });
 
   test('given calculation complete then shows migration subpage with output', () => {
