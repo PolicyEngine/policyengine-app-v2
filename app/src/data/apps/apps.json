@@ -570,6 +570,15 @@
   },
   {
     "type": "iframe",
+    "slug": "nj-ctc-increase",
+    "title": "NJ Child Tax Credit increase calculator",
+    "description": "See the impact of New Jersey's enacted 25% Child Tax Credit increase (P.L.2026, c.26) on New Jersey households, statewide and by congressional district",
+    "source": "https://nj-ctc-increase.vercel.app/us/nj-ctc-increase",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
     "slug": "obbba-household-by-household",
     "title": "The One Big Beautiful Bill Act, household by household",
     "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
