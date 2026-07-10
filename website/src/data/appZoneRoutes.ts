@@ -248,6 +248,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://ri-ctc-calculator-policy-engine.vercel.app/us/rhode-island-ctc-calculator",
   },
   {
+    source: "/us/nj-ctc-increase",
+    destination: "https://nj-ctc-increase.vercel.app/us/nj-ctc-increase",
+  },
+  {
     source: "/us/snap-district-map",
     destination: "https://snap-district-map.vercel.app/us/snap-district-map",
   },
