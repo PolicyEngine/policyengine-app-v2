@@ -128,6 +128,18 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/cliffwatch/:path*",
         permanent: true,
       },
+      // Bill tracker renamed from state-legislative-tracker → bill-tracker
+      // (it now covers federal bills too); /us/bill-tracker is canonical
+      {
+        source: "/:countryId/state-legislative-tracker",
+        destination: "/:countryId/bill-tracker",
+        permanent: true,
+      },
+      {
+        source: "/:countryId/state-legislative-tracker/:path*",
+        destination: "/:countryId/bill-tracker/:path*",
+        permanent: true,
+      },
     ];
   },
 

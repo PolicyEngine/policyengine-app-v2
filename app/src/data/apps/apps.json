@@ -346,7 +346,7 @@
   },
   {
     "type": "iframe",
-    "slug": "state-legislative-tracker",
+    "slug": "bill-tracker",
     "title": "2026 state legislative tracker",
     "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",
     "source": "https://policyengine--state-legislative-tracker.modal.run/",
