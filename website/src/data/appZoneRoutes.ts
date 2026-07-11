@@ -147,7 +147,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
   },
   {
-    source: "/:countryId/state-legislative-tracker",
+    source: "/:countryId/bill-tracker",
     destination: "https://policyengine--state-legislative-tracker.modal.run/",
     deepDestination:
       "https://policyengine--state-legislative-tracker.modal.run/:path*",
