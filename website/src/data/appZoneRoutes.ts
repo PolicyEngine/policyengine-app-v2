@@ -40,6 +40,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://young-worker-nics.vercel.app/uk/young-worker-nics",
   },
   {
+    source: "/uk/nics-exemption-inactive-employees",
+    destination:
+      "https://nics-exemption-inactive-employees.vercel.app/uk/nics-exemption-inactive-employees",
+  },
+  {
     source: "/us/pe84",
     destination: "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
     deepDestination: "https://april-fools-2026-two.vercel.app/us/pe84/:path*",

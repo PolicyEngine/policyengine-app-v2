@@ -48,6 +48,7 @@ const TOP_SHELL_SELECTOR =
 //   /uk/uc-rebalancing              — PolicyEngine/uc-rebalancing
 //   /uk/cancelling-fuel-duty-rise   — PolicyEngine/cancelling-fuel-duty-rise
 //   /uk/young-worker-nics           — PolicyEngine/young-worker-nics
+//   /uk/nics-exemption-inactive-employees — PolicyEngine/nics-exemption-inactive-employees
 export const SHELL_BRAND_EXEMPT_SOURCES = [
   "/uk/scotland-income-tax-reform",
   "/uk/student-loan-visualisation",
@@ -55,6 +56,7 @@ export const SHELL_BRAND_EXEMPT_SOURCES = [
   "/uk/uc-rebalancing",
   "/uk/cancelling-fuel-duty-rise",
   "/uk/young-worker-nics",
+  "/uk/nics-exemption-inactive-employees",
 ];
 
 export function isShellBrandExempt(source) {

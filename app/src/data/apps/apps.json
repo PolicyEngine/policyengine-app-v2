@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "nics-exemption-inactive-employees",
+    "title": "NICs exemption for recently-inactive employees",
+    "description": "Estimate the cost, employment effects, and poverty impact of exempting employers from NICs on employees who recently moved from economic inactivity into work, modelled with PolicyEngine UK.",
+    "source": "https://nics-exemption-inactive-employees.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "nics-exemption-inactive-employees.jpg",
+    "date": "2026-07-13 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "young-worker-nics",
     "title": "Employer NICs exemption for young workers",
     "description": "Estimate the fiscal cost and employment effects of extending the employer NICs zero rate to young workers, either all 18 to 24-year-olds or only recent NEETs, modelled with PolicyEngine UK.",
