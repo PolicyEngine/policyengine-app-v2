@@ -588,7 +588,11 @@
     "description": "See the impact of New Jersey's enacted 25% Child Tax Credit increase (P.L.2026, c.26) on New Jersey households, statewide and by congressional district",
     "source": "https://nj-ctc-increase.vercel.app/us/nj-ctc-increase",
     "tags": ["us", "policy", "interactives"],
-    "countryId": "us"
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "nj-ctc-increase-calculator.png",
+    "date": "2026-07-13 12:00:00",
+    "authors": ["david-trimmer"]
   },
   {
     "type": "iframe",
