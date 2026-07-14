@@ -199,6 +199,23 @@ const nextConfig: NextConfig = {
           destination:
             "https://household-api-docs-policy-engine.vercel.app/_zones/household-api-docs/:path*",
         },
+        // No tax on Social Security dashboard (HR 904) — path-mounted static-export zone
+        {
+          source: "/us/no-tax-on-social-security-dashboard",
+          destination:
+            "https://no-tax-on-social-security-dashboard-policy-engine.vercel.app/us/no-tax-on-social-security-dashboard",
+        },
+        {
+          source: "/us/no-tax-on-social-security-dashboard/:path*",
+          destination:
+            "https://no-tax-on-social-security-dashboard-policy-engine.vercel.app/us/no-tax-on-social-security-dashboard/:path*",
+        },
+        // Zone asset proxy — assetPrefix: '/_zones/no-tax-on-social-security-dashboard'
+        {
+          source: "/_zones/no-tax-on-social-security-dashboard/:path*",
+          destination:
+            "https://no-tax-on-social-security-dashboard-policy-engine.vercel.app/_zones/no-tax-on-social-security-dashboard/:path*",
+        },
       ],
       // afterFiles: checked after pages/public files but before dynamic routes.
       afterFiles: [
