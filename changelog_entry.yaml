@@ -11,6 +11,7 @@
       - Redirect the /policybench and /:countryId/policybench vanity paths to policybench.org
       - Proxy the AI beliefs research dashboard (elicited LLM beliefs about economic elasticities across 17 models) at /ai-beliefs
       - Add the NJ Child Tax Credit increase calculator zone route at /us/nj-ctc-increase
+      - Publish the NJ Child Tax Credit increase calculator on /us/research with cover image and authorship
       - Add the NICs exemption for recently-inactive employees dashboard at /uk/nics-exemption-inactive-employees
     changed:
       - Move the bill tracker to /us/bill-tracker (canonical URL); /us/state-legislative-tracker now permanently redirects there
