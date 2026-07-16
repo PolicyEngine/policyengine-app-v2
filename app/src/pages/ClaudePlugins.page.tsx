@@ -150,7 +150,7 @@ const usUseCases: UseCase[] = [
     description: 'Budgetary and distributional impacts from plain English.',
     terminal: [
       { type: 'prompt', text: 'What if we raised the standard deduction to $20,000?' },
-      { type: 'output', text: 'Running microsimulation on 2024 Enhanced CPS...' },
+      { type: 'output', text: 'Running microsimulation on the Populace dataset...' },
       { type: 'success', text: 'Cost: $80B · Winners: 62% · Gini: -0.001' },
     ],
   },
@@ -282,11 +282,13 @@ const ukMicrosimFeatures: MicrosimFeature[] = [
   { title: 'Regional', desc: 'Country and region breakdowns' },
 ];
 
+// Superseded by website/src/app/[countryId]/claude-plugin/ (which reads
+// pluginStats.json); keep these in sync if this legacy page is ever revived.
 const stats = [
-  { value: '24', label: 'Skills' },
-  { value: '21', label: 'Agents' },
-  { value: '4', label: 'Commands' },
-  { value: '7', label: 'Bundles' },
+  { value: '23', label: 'Skills' },
+  { value: '33', label: 'Agents' },
+  { value: '23', label: 'Commands' },
+  { value: '8', label: 'Bundles' },
 ];
 
 /* ─── shared section padding ─── */
