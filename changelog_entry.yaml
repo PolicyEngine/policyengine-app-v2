@@ -14,6 +14,7 @@
       - Publish the NJ Child Tax Credit increase calculator on /us/research with cover image and authorship
       - Add the NICs exemption for recently-inactive employees dashboard at /uk/nics-exemption-inactive-employees
     changed:
+      - Correct the Claude plugin page stats (they were frozen at 24 skills / 21 agents / 4 commands / 7 bundles) and read them from a checked-in pluginStats.json regenerated from policyengine-skills, so the page tracks the rebuilt catalog
       - Move the bill tracker to /us/bill-tracker (canonical URL); /us/state-legislative-tracker now permanently redirects there
       - Stop mirroring policy, household, and region writes to the deprecated API v2 alpha service; the app now uses the v1 API exclusively
       - Proxy UK Python package docs at /uk/python and UK API docs at /uk/api so the country-parameterized "Python" and "API" nav links work on UK pages

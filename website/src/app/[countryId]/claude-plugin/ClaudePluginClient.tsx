@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
+import pluginStats from "./pluginStats.json";
 
 /* ─── animation hook ─── */
 
@@ -196,7 +193,7 @@ const usUseCases: UseCase[] = [
       },
       {
         type: "output",
-        text: "Running microsimulation on 2024 Enhanced CPS...",
+        text: "Running microsimulation on the Populace dataset...",
       },
       {
         type: "success",
@@ -398,11 +395,13 @@ const ukMicrosimFeatures: MicrosimFeature[] = [
   { title: "Regional", desc: "Country and region breakdowns" },
 ];
 
+// Counts come from PolicyEngine/policyengine-skills — regenerate pluginStats.json
+// with `python3 scripts/export_site_stats.py` there whenever the catalog changes.
 const stats = [
-  { value: "24", label: "Skills" },
-  { value: "21", label: "Agents" },
-  { value: "4", label: "Commands" },
-  { value: "7", label: "Bundles" },
+  { value: String(pluginStats.skills), label: "Skills" },
+  { value: String(pluginStats.agents), label: "Agents" },
+  { value: String(pluginStats.commands), label: "Commands" },
+  { value: String(pluginStats.bundles), label: "Bundles" },
 ];
 
 /* ─── shared section padding ─── */
