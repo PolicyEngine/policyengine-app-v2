@@ -286,7 +286,7 @@ const ukMicrosimFeatures: MicrosimFeature[] = [
 // pluginStats.json); keep these in sync if this legacy page is ever revived.
 const stats = [
   { value: '23', label: 'Skills' },
-  { value: '33', label: 'Agents' },
+  { value: '34', label: 'Agents' },
   { value: '23', label: 'Commands' },
   { value: '8', label: 'Bundles' },
 ];
