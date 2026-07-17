@@ -21,3 +21,4 @@
       - Align the calculator app header (e.g. /us/reports) with the main website header — hover-open dropdowns, per-item underline, Model dropdown with sub-items, Python link, and Events under About
     fixed:
       - Point "Reproduce in Python" snippets for a US national run at the certified populace-us dataset instead of the deprecated policyengine-us-data repo
+      - Add a callout on society-wide results explaining why every output reads "No change" when a reform changes nothing in effect in the simulated year (for example a credit that has sunset), so users can tell a genuine no-op from a start-date or sunset mismatch

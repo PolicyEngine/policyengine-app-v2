@@ -20,11 +20,13 @@ import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictCh
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
+import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import { getBudgetChartTitle, getBudgetCsvRows } from './budgetary-impact/budgetChartUtils';
@@ -41,6 +43,7 @@ import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/D
 import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
 import { getInequalityCsvRows, getInequalityTitle } from './inequality-impact/inequalityChartUtils';
 import InequalityImpactSubPage from './inequality-impact/InequalityImpactSubPage';
+import NoOpReportCallout from './NoOpReportCallout';
 import DeepPovertyImpactByAgeSubPage from './poverty-impact/DeepPovertyImpactByAgeSubPage';
 import DeepPovertyImpactByGenderSubPage from './poverty-impact/DeepPovertyImpactByGenderSubPage';
 import {
@@ -800,6 +803,8 @@ export default function SocietyWideOverview({
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const symbol = currencySymbol(countryId);
+  const reportYear = useReportYear();
+  const isNoOp = isSocietyWideReportNoOp(output);
   const [expandedCard, setExpandedCard] = useState<CardKey | null>(null);
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
   const [povertyDepth, setPovertyDepth] = useState<PovertyDepth>('regular');
@@ -1047,387 +1052,390 @@ export default function SocietyWideOverview({
   );
 
   return (
-    <div className="tw:grid tw:grid-cols-2" style={{ gap: GRID_GAP }}>
-      {/* Budgetary Impact — full width hero */}
-      <DashboardCard
-        mode={modeOf('budget')}
-        zIndex={zOf('budget')}
-        expandDirection="down-right"
-        gridGap={GRID_GAP}
-        colSpan={2}
-        shrunkenBackground={`linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`}
-        shrunkenBorderColor={colors.primary[100]}
-        padding={spacing.xl}
-        shrunkenHeader={cardHeader(IconCoin, 'Budgetary impact', true)}
-        shrunkenBody={
-          <div
-            style={{
-              display: 'flex',
-              gap: spacing.xl,
-              alignItems: 'flex-start',
-              paddingLeft: '4%',
-              paddingRight: '2%',
-            }}
-          >
-            <div style={{ flex: '0 0 auto' }}>
-              <MetricCard
-                value={budgetValue}
-                subtext={budgetSubtext}
-                trend={
-                  budgetaryImpact === 0 ? 'neutral' : budgetIsPositive ? 'positive' : 'negative'
-                }
-                hero
-              />
-            </div>
-            {/* Spacer pushes chart toward right half */}
-            <div style={{ flex: '1 1 10%' }} />
-            <div style={{ flex: '0 1 55%', minWidth: 0 }}>
-              <Plot
-                data={
-                  [
-                    {
-                      x: budgetMiniLabels,
-                      y: budgetMiniValues,
-                      type: 'waterfall',
-                      orientation: 'v',
-                      measure:
-                        budgetMiniValues.length > 1
-                          ? Array(budgetMiniValues.length - 1)
-                              .fill('relative')
-                              .concat(['total'])
-                          : undefined,
-                      text: budgetMiniValues.map((v) =>
-                        formatCurrencyAbbr(v * budgetMagnitude.divisor, countryId, {
-                          maximumFractionDigits: 1,
-                        })
-                      ),
-                      textposition: 'inside',
-                      increasing: { marker: { color: colors.primary[500] } },
-                      decreasing: { marker: { color: colors.gray[600] } },
-                      totals: {
-                        marker: {
-                          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[700],
-                        },
-                      },
-                      connector: {
-                        line: { color: colors.gray[400], width: 1, dash: 'dot' },
-                      },
-                    },
-                  ] as any
-                }
-                layout={
-                  {
-                    margin: { t: 5, b: 50, l: 55, r: 15 },
-                    showlegend: false,
-                    paper_bgcolor: 'transparent',
-                    plot_bgcolor: 'transparent',
-                    xaxis: {
-                      fixedrange: true,
-                      tickfont: { size: 9, color: colors.text.secondary },
-                    },
-                    yaxis: {
-                      fixedrange: true,
-                      title: {
-                        text: budgetMagnitude.label,
-                        font: { size: 10, color: colors.text.secondary },
-                        standoff: 5,
-                      },
-                      ...currencyTicks(budgetMiniValues, symbol, 1),
-                      tickfont: { color: colors.text.secondary },
-                    },
-                    uniformtext: { mode: 'hide', minsize: 8 },
-                  } as any
-                }
-                config={MINI_CHART_CONFIG}
-                style={{ width: '100%', height: 120 }}
-              />
-            </div>
-          </div>
-        }
-        expandedTitle={getBudgetChartTitle(output.budget.budgetary_impact, countryId, metadata)}
-        downloadFilename="budgetary-impact.svg"
-        csvFilename="budgetary-impact.csv"
-        csvData={getBudgetCsvRows(output, countryId)}
-        expandedContent={<BudgetaryImpactSubPage output={output} fillHeight />}
-        onToggleMode={() => toggle('budget')}
-      />
-
-      {/* Decile Impacts */}
-      <DashboardCard
-        mode={modeOf('decile')}
-        zIndex={zOf('decile')}
-        expandDirection="down-right"
-        gridGap={GRID_GAP}
-        shrunkenHeader={cardHeader(IconChartBar, 'Decile impacts')}
-        shrunkenBody={
-          <div>
-            <Plot
-              data={[
-                {
-                  x: decileKeys,
-                  y: decileAbsValues,
-                  type: 'bar' as const,
-                  marker: {
-                    color: decileAbsValues.map((v) =>
-                      v >= 0 ? colors.primary[500] : colors.gray[600]
-                    ),
-                  },
-                },
-              ]}
-              layout={{
-                margin: { t: 5, b: 20, l: 50, r: 5 },
-                showlegend: false,
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                xaxis: {
-                  fixedrange: true,
-                  tickvals: decileKeys,
-                  ticktext: decileKeys,
-                  dtick: 1,
-                  tickfont: { color: colors.text.secondary },
-                },
-                yaxis: {
-                  fixedrange: true,
-                  ...currencyTicks(decileAbsValues, symbol),
-                  tickfont: { color: colors.text.secondary },
-                },
-              }}
-              config={MINI_CHART_CONFIG}
-              style={{ width: '100%', height: MINI_CHART_HEIGHT }}
-            />
-          </div>
-        }
-        expandedControls={
-          <SegmentedControl
-            value={decileMode}
-            onValueChange={(value) => setDecileMode(value as DecileMode)}
-            size="xs"
-            options={DECILE_MODE_OPTIONS}
-          />
-        }
-        expandedTitle={
-          decileMode === 'absolute'
-            ? getDistributionalAverageTitle(output, countryId, metadata)
-            : getDistributionalRelativeTitle(output, countryId, metadata)
-        }
-        downloadFilename={
-          decileMode === 'absolute'
-            ? 'distributional-impact-income-average.svg'
-            : 'distributional-impact-income-relative.svg'
-        }
-        csvFilename={decileCsvFilename}
-        csvData={decileCsvData}
-        expandedContent={
-          decileMode === 'absolute' ? (
-            <DistributionalImpactIncomeAverageSubPage output={output} fillHeight />
-          ) : (
-            <DistributionalImpactIncomeRelativeSubPage output={output} fillHeight />
-          )
-        }
-        onToggleMode={() => toggle('decile')}
-      />
-
-      {/* Winners and Losers */}
-      <DashboardCard
-        mode={modeOf('winners')}
-        zIndex={zOf('winners')}
-        expandDirection="down-left"
-        gridGap={GRID_GAP}
-        shrunkenHeader={cardHeader(IconUsers, 'Winners and losers')}
-        shrunkenBody={
-          <div>
-            {/* Distribution Bar */}
+    <Stack gap="lg">
+      {isNoOp && <NoOpReportCallout year={reportYear} />}
+      <div className="tw:grid tw:grid-cols-2" style={{ gap: GRID_GAP }}>
+        {/* Budgetary Impact — full width hero */}
+        <DashboardCard
+          mode={modeOf('budget')}
+          zIndex={zOf('budget')}
+          expandDirection="down-right"
+          gridGap={GRID_GAP}
+          colSpan={2}
+          shrunkenBackground={`linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`}
+          shrunkenBorderColor={colors.primary[100]}
+          padding={spacing.xl}
+          shrunkenHeader={cardHeader(IconCoin, 'Budgetary impact', true)}
+          shrunkenBody={
             <div
               style={{
                 display: 'flex',
-                height: 8,
-                borderRadius: 4,
-                overflow: 'hidden',
-                backgroundColor: colors.gray[200],
+                gap: spacing.xl,
+                alignItems: 'flex-start',
+                paddingLeft: '4%',
+                paddingRight: '2%',
               }}
             >
-              <div
-                style={{
-                  width: `${winnersPercent * 100}%`,
-                  height: '100%',
-                  backgroundColor: colors.primary[500],
-                  transition: 'width 0.3s ease',
+              <div style={{ flex: '0 0 auto' }}>
+                <MetricCard
+                  value={budgetValue}
+                  subtext={budgetSubtext}
+                  trend={
+                    budgetaryImpact === 0 ? 'neutral' : budgetIsPositive ? 'positive' : 'negative'
+                  }
+                  hero
+                />
+              </div>
+              {/* Spacer pushes chart toward right half */}
+              <div style={{ flex: '1 1 10%' }} />
+              <div style={{ flex: '0 1 55%', minWidth: 0 }}>
+                <Plot
+                  data={
+                    [
+                      {
+                        x: budgetMiniLabels,
+                        y: budgetMiniValues,
+                        type: 'waterfall',
+                        orientation: 'v',
+                        measure:
+                          budgetMiniValues.length > 1
+                            ? Array(budgetMiniValues.length - 1)
+                                .fill('relative')
+                                .concat(['total'])
+                            : undefined,
+                        text: budgetMiniValues.map((v) =>
+                          formatCurrencyAbbr(v * budgetMagnitude.divisor, countryId, {
+                            maximumFractionDigits: 1,
+                          })
+                        ),
+                        textposition: 'inside',
+                        increasing: { marker: { color: colors.primary[500] } },
+                        decreasing: { marker: { color: colors.gray[600] } },
+                        totals: {
+                          marker: {
+                            color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[700],
+                          },
+                        },
+                        connector: {
+                          line: { color: colors.gray[400], width: 1, dash: 'dot' },
+                        },
+                      },
+                    ] as any
+                  }
+                  layout={
+                    {
+                      margin: { t: 5, b: 50, l: 55, r: 15 },
+                      showlegend: false,
+                      paper_bgcolor: 'transparent',
+                      plot_bgcolor: 'transparent',
+                      xaxis: {
+                        fixedrange: true,
+                        tickfont: { size: 9, color: colors.text.secondary },
+                      },
+                      yaxis: {
+                        fixedrange: true,
+                        title: {
+                          text: budgetMagnitude.label,
+                          font: { size: 10, color: colors.text.secondary },
+                          standoff: 5,
+                        },
+                        ...currencyTicks(budgetMiniValues, symbol, 1),
+                        tickfont: { color: colors.text.secondary },
+                      },
+                      uniformtext: { mode: 'hide', minsize: 8 },
+                    } as any
+                  }
+                  config={MINI_CHART_CONFIG}
+                  style={{ width: '100%', height: 120 }}
+                />
+              </div>
+            </div>
+          }
+          expandedTitle={getBudgetChartTitle(output.budget.budgetary_impact, countryId, metadata)}
+          downloadFilename="budgetary-impact.svg"
+          csvFilename="budgetary-impact.csv"
+          csvData={getBudgetCsvRows(output, countryId)}
+          expandedContent={<BudgetaryImpactSubPage output={output} fillHeight />}
+          onToggleMode={() => toggle('budget')}
+        />
+
+        {/* Decile Impacts */}
+        <DashboardCard
+          mode={modeOf('decile')}
+          zIndex={zOf('decile')}
+          expandDirection="down-right"
+          gridGap={GRID_GAP}
+          shrunkenHeader={cardHeader(IconChartBar, 'Decile impacts')}
+          shrunkenBody={
+            <div>
+              <Plot
+                data={[
+                  {
+                    x: decileKeys,
+                    y: decileAbsValues,
+                    type: 'bar' as const,
+                    marker: {
+                      color: decileAbsValues.map((v) =>
+                        v >= 0 ? colors.primary[500] : colors.gray[600]
+                      ),
+                    },
+                  },
+                ]}
+                layout={{
+                  margin: { t: 5, b: 20, l: 50, r: 5 },
+                  showlegend: false,
+                  paper_bgcolor: 'transparent',
+                  plot_bgcolor: 'transparent',
+                  xaxis: {
+                    fixedrange: true,
+                    tickvals: decileKeys,
+                    ticktext: decileKeys,
+                    dtick: 1,
+                    tickfont: { color: colors.text.secondary },
+                  },
+                  yaxis: {
+                    fixedrange: true,
+                    ...currencyTicks(decileAbsValues, symbol),
+                    tickfont: { color: colors.text.secondary },
+                  },
                 }}
-              />
-              <div
-                style={{
-                  width: `${unchangedPercent * 100}%`,
-                  height: '100%',
-                  backgroundColor: colors.gray[300],
-                  transition: 'width 0.3s ease',
-                }}
-              />
-              <div
-                style={{
-                  width: `${losersPercent * 100}%`,
-                  height: '100%',
-                  backgroundColor: colors.gray[500],
-                  transition: 'width 0.3s ease',
-                }}
+                config={MINI_CHART_CONFIG}
+                style={{ width: '100%', height: MINI_CHART_HEIGHT }}
               />
             </div>
-
-            {/* Legend */}
-            <Group gap="lg" wrap="wrap" style={{ marginTop: spacing.sm }}>
-              <Group gap="xs">
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    backgroundColor: colors.primary[500],
-                    flexShrink: 0,
-                  }}
-                />
-                <Text size="xs" c={colors.text.secondary}>
-                  Gain: {(winnersPercent * 100).toFixed(1)}%
-                </Text>
-              </Group>
-              <Group gap="xs">
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    backgroundColor: colors.gray[300],
-                    flexShrink: 0,
-                  }}
-                />
-                <Text size="xs" c={colors.text.secondary}>
-                  No change: {(unchangedPercent * 100).toFixed(1)}%
-                </Text>
-              </Group>
-              <Group gap="xs">
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    backgroundColor: colors.gray[500],
-                    flexShrink: 0,
-                  }}
-                />
-                <Text size="xs" c={colors.text.secondary}>
-                  Lose: {(losersPercent * 100).toFixed(1)}%
-                </Text>
-              </Group>
-            </Group>
-          </div>
-        }
-        expandedTitle={getWinnersLosersTitle(output, countryId, metadata)}
-        downloadFilename="winners-losers-income-decile.svg"
-        csvFilename="winners-losers-income-decile.csv"
-        csvData={getWinnersLosersCsvRows(output)}
-        expandedContent={<WinnersLosersIncomeDecileSubPage output={output} fillHeight />}
-        onToggleMode={() => toggle('winners')}
-      />
-
-      {/* Poverty Impact */}
-      <DashboardCard
-        mode={modeOf('poverty')}
-        zIndex={zOf('poverty')}
-        expandDirection="down-right"
-        gridGap={GRID_GAP}
-        shrunkenHeader={cardHeader(IconHome, 'Poverty impact')}
-        shrunkenBody={
-          <Group gap="sm" grow>
-            <MetricCard
-              label="Overall"
-              value={povertyValue}
-              subtext={povertySubtext}
-              trend={povertyTrend as 'positive' | 'negative' | 'neutral'}
-              invertArrow
-              centered
-            />
-            <MetricCard
-              label="Child"
-              value={childPovertyValue}
-              subtext={childPovertySubtext}
-              trend={childPovertyTrend}
-              invertArrow
-              centered
-            />
-          </Group>
-        }
-        expandedControls={
-          <>
+          }
+          expandedControls={
             <SegmentedControl
-              value={povertyDepth}
-              onValueChange={handleDepthChange}
+              value={decileMode}
+              onValueChange={(value) => setDecileMode(value as DecileMode)}
               size="xs"
-              options={POVERTY_DEPTH_OPTIONS}
+              options={DECILE_MODE_OPTIONS}
             />
-            <SegmentedControl
-              value={povertyBreakdown}
-              onValueChange={(value) => setPovertyBreakdown(value as PovertyBreakdown)}
-              size="xs"
-              options={breakdownOptions}
-            />
-          </>
-        }
-        expandedTitle={
-          povertyDepth === 'regular'
-            ? getPovertyTitle(output, countryId, metadata)
-            : getDeepPovertyTitle(output, countryId, metadata)
-        }
-        downloadFilename={povertyDownloadFilename}
-        csvFilename={povertyCsvFilename}
-        csvData={povertyCsvData}
-        expandedContent={povertyChart}
-        onToggleMode={() => toggle('poverty')}
-      />
-
-      {/* Inequality Impact */}
-      <DashboardCard
-        mode={modeOf('inequality')}
-        zIndex={zOf('inequality')}
-        expandDirection="down-left"
-        gridGap={GRID_GAP}
-        shrunkenHeader={cardHeader(IconScale, 'Inequality impact')}
-        shrunkenBody={
-          <Group gap="sm" grow>
-            <MetricCard
-              label="Gini index"
-              value={giniValue}
-              subtext={giniSubtext}
-              trend={giniTrend}
-              invertArrow
-              centered
-            />
-            <MetricCard
-              label="Top 1% share"
-              value={top1Value}
-              subtext={top1Subtext}
-              trend={top1Trend}
-              invertArrow
-              centered
-            />
-          </Group>
-        }
-        expandedTitle={getInequalityTitle(output, metadata)}
-        downloadFilename="inequality-impact.svg"
-        csvFilename="inequality-impact.csv"
-        csvData={getInequalityCsvRows(output)}
-        expandedContent={<InequalityImpactSubPage output={output} fillHeight />}
-        onToggleMode={() => toggle('inequality')}
-      />
-
-      {/* Congressional District Impact — US only, full width */}
-      {showCongressionalCard && (
-        <CongressionalDistrictCard
-          output={output}
-          mode={modeOf('congressional')}
-          zIndex={zOf('congressional')}
-          gridGap={GRID_GAP}
-          header={cardHeader(IconMap, 'Congressional district impact')}
-          onToggleMode={() => toggle('congressional')}
+          }
+          expandedTitle={
+            decileMode === 'absolute'
+              ? getDistributionalAverageTitle(output, countryId, metadata)
+              : getDistributionalRelativeTitle(output, countryId, metadata)
+          }
+          downloadFilename={
+            decileMode === 'absolute'
+              ? 'distributional-impact-income-average.svg'
+              : 'distributional-impact-income-relative.svg'
+          }
+          csvFilename={decileCsvFilename}
+          csvData={decileCsvData}
+          expandedContent={
+            decileMode === 'absolute' ? (
+              <DistributionalImpactIncomeAverageSubPage output={output} fillHeight />
+            ) : (
+              <DistributionalImpactIncomeRelativeSubPage output={output} fillHeight />
+            )
+          }
+          onToggleMode={() => toggle('decile')}
         />
-      )}
-    </div>
+
+        {/* Winners and Losers */}
+        <DashboardCard
+          mode={modeOf('winners')}
+          zIndex={zOf('winners')}
+          expandDirection="down-left"
+          gridGap={GRID_GAP}
+          shrunkenHeader={cardHeader(IconUsers, 'Winners and losers')}
+          shrunkenBody={
+            <div>
+              {/* Distribution Bar */}
+              <div
+                style={{
+                  display: 'flex',
+                  height: 8,
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  backgroundColor: colors.gray[200],
+                }}
+              >
+                <div
+                  style={{
+                    width: `${winnersPercent * 100}%`,
+                    height: '100%',
+                    backgroundColor: colors.primary[500],
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+                <div
+                  style={{
+                    width: `${unchangedPercent * 100}%`,
+                    height: '100%',
+                    backgroundColor: colors.gray[300],
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+                <div
+                  style={{
+                    width: `${losersPercent * 100}%`,
+                    height: '100%',
+                    backgroundColor: colors.gray[500],
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+              </div>
+
+              {/* Legend */}
+              <Group gap="lg" wrap="wrap" style={{ marginTop: spacing.sm }}>
+                <Group gap="xs">
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 2,
+                      backgroundColor: colors.primary[500],
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Text size="xs" c={colors.text.secondary}>
+                    Gain: {(winnersPercent * 100).toFixed(1)}%
+                  </Text>
+                </Group>
+                <Group gap="xs">
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 2,
+                      backgroundColor: colors.gray[300],
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Text size="xs" c={colors.text.secondary}>
+                    No change: {(unchangedPercent * 100).toFixed(1)}%
+                  </Text>
+                </Group>
+                <Group gap="xs">
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 2,
+                      backgroundColor: colors.gray[500],
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Text size="xs" c={colors.text.secondary}>
+                    Lose: {(losersPercent * 100).toFixed(1)}%
+                  </Text>
+                </Group>
+              </Group>
+            </div>
+          }
+          expandedTitle={getWinnersLosersTitle(output, countryId, metadata)}
+          downloadFilename="winners-losers-income-decile.svg"
+          csvFilename="winners-losers-income-decile.csv"
+          csvData={getWinnersLosersCsvRows(output)}
+          expandedContent={<WinnersLosersIncomeDecileSubPage output={output} fillHeight />}
+          onToggleMode={() => toggle('winners')}
+        />
+
+        {/* Poverty Impact */}
+        <DashboardCard
+          mode={modeOf('poverty')}
+          zIndex={zOf('poverty')}
+          expandDirection="down-right"
+          gridGap={GRID_GAP}
+          shrunkenHeader={cardHeader(IconHome, 'Poverty impact')}
+          shrunkenBody={
+            <Group gap="sm" grow>
+              <MetricCard
+                label="Overall"
+                value={povertyValue}
+                subtext={povertySubtext}
+                trend={povertyTrend as 'positive' | 'negative' | 'neutral'}
+                invertArrow
+                centered
+              />
+              <MetricCard
+                label="Child"
+                value={childPovertyValue}
+                subtext={childPovertySubtext}
+                trend={childPovertyTrend}
+                invertArrow
+                centered
+              />
+            </Group>
+          }
+          expandedControls={
+            <>
+              <SegmentedControl
+                value={povertyDepth}
+                onValueChange={handleDepthChange}
+                size="xs"
+                options={POVERTY_DEPTH_OPTIONS}
+              />
+              <SegmentedControl
+                value={povertyBreakdown}
+                onValueChange={(value) => setPovertyBreakdown(value as PovertyBreakdown)}
+                size="xs"
+                options={breakdownOptions}
+              />
+            </>
+          }
+          expandedTitle={
+            povertyDepth === 'regular'
+              ? getPovertyTitle(output, countryId, metadata)
+              : getDeepPovertyTitle(output, countryId, metadata)
+          }
+          downloadFilename={povertyDownloadFilename}
+          csvFilename={povertyCsvFilename}
+          csvData={povertyCsvData}
+          expandedContent={povertyChart}
+          onToggleMode={() => toggle('poverty')}
+        />
+
+        {/* Inequality Impact */}
+        <DashboardCard
+          mode={modeOf('inequality')}
+          zIndex={zOf('inequality')}
+          expandDirection="down-left"
+          gridGap={GRID_GAP}
+          shrunkenHeader={cardHeader(IconScale, 'Inequality impact')}
+          shrunkenBody={
+            <Group gap="sm" grow>
+              <MetricCard
+                label="Gini index"
+                value={giniValue}
+                subtext={giniSubtext}
+                trend={giniTrend}
+                invertArrow
+                centered
+              />
+              <MetricCard
+                label="Top 1% share"
+                value={top1Value}
+                subtext={top1Subtext}
+                trend={top1Trend}
+                invertArrow
+                centered
+              />
+            </Group>
+          }
+          expandedTitle={getInequalityTitle(output, metadata)}
+          downloadFilename="inequality-impact.svg"
+          csvFilename="inequality-impact.csv"
+          csvData={getInequalityCsvRows(output)}
+          expandedContent={<InequalityImpactSubPage output={output} fillHeight />}
+          onToggleMode={() => toggle('inequality')}
+        />
+
+        {/* Congressional District Impact — US only, full width */}
+        {showCongressionalCard && (
+          <CongressionalDistrictCard
+            output={output}
+            mode={modeOf('congressional')}
+            zIndex={zOf('congressional')}
+            gridGap={GRID_GAP}
+            header={cardHeader(IconMap, 'Congressional district impact')}
+            onToggleMode={() => toggle('congressional')}
+          />
+        )}
+      </div>
+    </Stack>
   );
 }
