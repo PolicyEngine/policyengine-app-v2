@@ -4,7 +4,7 @@ import DonatePage from "../../app/[countryId]/donate/page";
 import PrivacyPage from "../../app/[countryId]/privacy/page";
 import TermsPage from "../../app/[countryId]/terms/page";
 import ResearchPage from "../../app/[countryId]/research/page";
-import ClaudePluginPage from "../../app/[countryId]/claude-plugin/page";
+import ClaudePluginPage from "../../app/[countryId]/ai-agents/page";
 
 describe("static pages", () => {
   test("Donate page renders heading", async () => {
