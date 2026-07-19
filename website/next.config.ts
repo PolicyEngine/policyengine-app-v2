@@ -48,6 +48,12 @@ const nextConfig: NextConfig = {
         destination: "/us",
         permanent: false,
       },
+      // Claude-branded skills page → runtime-agnostic AI agents page
+      {
+        source: "/:countryId/claude-plugin",
+        destination: "/:countryId/ai-agents",
+        permanent: true,
+      },
       // Legacy /blog → /research
       {
         source: "/:countryId/blog/:slug",

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ClaudePluginClient from "./ClaudePluginClient";
 
 export const metadata: Metadata = {
-  title: "Claude plugin",
+  title: "AI agent skills",
   description: "AI-powered policy analysis with Claude Code and PolicyEngine.",
 };
 

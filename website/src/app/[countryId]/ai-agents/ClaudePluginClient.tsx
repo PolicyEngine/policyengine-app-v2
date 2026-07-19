@@ -467,7 +467,7 @@ export default function ClaudePluginClient({
                     marginBottom: 20,
                   }}
                 >
-                  Claude Code Plugin
+                  AI agent skills
                 </span>
               </FadeInSection>
 
@@ -570,6 +570,12 @@ export default function ClaudePluginClient({
                 <TerminalLine
                   type="command"
                   text="claude plugins add PolicyEngine/policyengine-claude"
+                />
+                <div style={{ marginTop: 6 }} />
+                <div style={{ marginTop: 6 }} />
+                <TerminalLine
+                  type="comment"
+                  text="# (Codex: see install_codex.sh in PolicyEngine/policyengine-skills)"
                 />
                 <div style={{ marginTop: 6 }} />
                 <TerminalLine type="comment" text="# 3. Analyze" />
