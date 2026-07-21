@@ -1,13 +1,13 @@
 /**
  * Shared URL builder for embedding policyengine-uk-chat.
  *
- * Used by both the supplement surface (ChatDrawer on a report page) and the
- * alternative surface (the standalone /chat page). Centralising it here means
- * one place to swap the preview URL, add params, or change the bypass flow.
+ * Used by the report-page ChatDrawer. The standalone chat is served through
+ * the /uk/chat multizone route instead of an iframe.
  */
 
 const CHAT_ORIGIN =
   process.env.NEXT_PUBLIC_UK_CHAT_ORIGIN || 'https://policyengine-uk-chat.vercel.app';
+const CHAT_BASE_URL = `${CHAT_ORIGIN.replace(/\/$/, '')}/uk/chat`;
 
 // Vercel "Protection Bypass for Automation" secret — only needed when the
 // iframe targets a protected preview deployment. Production chat is public,
@@ -34,7 +34,7 @@ export function buildChatUrl({ scenarioContext }: BuildChatUrlOptions = {}): str
     // cross-origin iframe requests in modern browsers (Lax/Strict won't be).
     params.set('x-vercel-set-bypass-cookie', 'samesitenone');
   }
-  return `${CHAT_ORIGIN}/?${params.toString()}`;
+  return `${CHAT_BASE_URL.replace(/\/$/, '')}?${params.toString()}`;
 }
 
 /** Permissions the iframe needs to match the chat's standalone behaviour. */

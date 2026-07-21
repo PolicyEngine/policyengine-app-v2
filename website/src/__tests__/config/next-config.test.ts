@@ -85,8 +85,7 @@ describe("nextConfig rewrites", () => {
     });
     expect(beforeFiles).toContainEqual({
       source: "/uk/chat/:path*",
-      destination:
-        "https://policyengine-uk-chat.vercel.app/uk/chat/:path*",
+      destination: "https://policyengine-uk-chat.vercel.app/uk/chat/:path*",
     });
   });
 });
