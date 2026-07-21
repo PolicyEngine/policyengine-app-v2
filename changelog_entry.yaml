@@ -15,6 +15,7 @@
       - Add the NICs exemption for recently-inactive employees dashboard at /uk/nics-exemption-inactive-employees
       - Add the temporary VAT cut on domestic electricity dashboard at /uk/electricity-vat-cut
     changed:
+      - Remove Ben Ogorek from the team page
       - Move the Claude plugin page to /:countryId/ai-agents (runtime-agnostic — the skills catalog serves Claude Code and Codex) with a permanent redirect from /:countryId/claude-plugin; refresh the hero eyebrow and add the Codex install path
       - Correct the Claude plugin page stats (they were frozen at 24 skills / 21 agents / 4 commands / 7 bundles) and read them from a checked-in pluginStats.json regenerated from policyengine-skills, so the page tracks the rebuilt catalog
       - Move the bill tracker to /us/bill-tracker (canonical URL); /us/state-legislative-tracker now permanently redirects there
