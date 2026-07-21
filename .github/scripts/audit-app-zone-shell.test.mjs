@@ -263,6 +263,7 @@ describe("isShellBrandExempt", () => {
       isShellBrandExempt("/uk/nics-exemption-inactive-employees"),
       true,
     );
+    assert.equal(isShellBrandExempt("/uk/electricity-vat-cut"), true);
   });
 
   test("does not exempt other routes or partial-name collisions", () => {

@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "electricity-vat-cut",
+    "title": "Temporary VAT cut on domestic electricity",
+    "description": "Estimate the fiscal cost and distributional impact of cutting VAT on domestic electricity from 5% to 0% for six months from October 2026, modelled with PolicyEngine UK.",
+    "source": "https://electricity-vat-cut.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "electricity-vat-cut.jpg",
+    "date": "2026-07-21 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "nics-exemption-inactive-employees",
     "title": "NICs exemption for recently-inactive employees",
     "description": "Estimate the cost, employment effects, and poverty impact of exempting employers from NICs on employees who recently moved from economic inactivity into work, modelled with PolicyEngine UK.",
