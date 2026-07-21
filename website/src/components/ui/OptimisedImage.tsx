@@ -29,8 +29,13 @@ interface OptimisedImageProps extends Omit<
   src?: string | StaticImageData;
 }
 
-// Must match the "sizes" array in vercel.json
-const ALLOWED_WIDTHS = [128, 256, 384, 512, 640, 750, 828, 1080, 1200, 1920];
+// Must be a subset of imageSizes ∪ deviceSizes in next.config.ts — that config
+// is what Vercel's optimiser actually enforces for Next.js projects (the
+// "images" block in vercel.json is ignored). Kept in sync by
+// src/__tests__/config/next-config.test.ts.
+export const ALLOWED_WIDTHS = [
+  128, 256, 384, 512, 640, 750, 828, 1080, 1200, 1920,
+];
 
 /** Snap to the smallest allowed width that is >= the requested width. */
 function snapWidth(w: number): number {

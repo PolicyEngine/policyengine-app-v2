@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import nextConfig from "../../../next.config";
+import { ALLOWED_WIDTHS } from "../../components/ui/OptimisedImage";
 
 const tealSquareLogoPath = "/assets/logos/policyengine/teal-square.png";
 
@@ -74,6 +75,33 @@ describe("nextConfig rewrites", () => {
         (rewrite) => rewrite.source === "/us/tanf-calculator",
       ),
     ).toBeGreaterThan(expectedPolicyEngineIconRewrites.length - 1);
+  });
+});
+
+describe("nextConfig images", () => {
+  // Vercel's optimiser only serves widths in imageSizes ∪ deviceSizes; any
+  // width OptimisedImage can emit but the config doesn't allow becomes a 400
+  // (broken image) in production — e.g. the w=512 2x variant of the 250px
+  // team headshots before this config existed.
+  test("allows every width OptimisedImage can request", () => {
+    const { imageSizes, deviceSizes } = nextConfig.images ?? {};
+    const allowed = new Set([...(imageSizes ?? []), ...(deviceSizes ?? [])]);
+
+    for (const width of ALLOWED_WIDTHS) {
+      expect(allowed).toContain(width);
+    }
+  });
+
+  test("keeps imageSizes below the smallest deviceSize, as Next requires", () => {
+    const { imageSizes, deviceSizes } = nextConfig.images ?? {};
+
+    expect(imageSizes?.length).toBeGreaterThan(0);
+    expect(deviceSizes?.length).toBeGreaterThan(0);
+
+    const smallestDeviceSize = Math.min(...(deviceSizes ?? []));
+    for (const size of imageSizes ?? []) {
+      expect(size).toBeLessThan(smallestDeviceSize);
+    }
   });
 });
 

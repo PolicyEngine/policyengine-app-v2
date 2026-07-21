@@ -40,6 +40,21 @@ const policyEngineIconRewrites = [
 ];
 
 const nextConfig: NextConfig = {
+  // Vercel's image optimiser (/_vercel/image) only accepts widths from this
+  // allowlist (imageSizes ∪ deviceSizes). For Next.js projects this config is
+  // the source of truth — the `images` block in vercel.json is ignored — and
+  // without it Next's defaults apply, which lack 512, so OptimisedImage's 2x
+  // srcSet variant for width≤256 images (team headshots, supporter logos)
+  // returned 400 on retina displays.
+  // Must stay a superset of ALLOWED_WIDTHS in src/components/ui/OptimisedImage.tsx
+  // (enforced by src/__tests__/config/next-config.test.ts).
+  images: {
+    imageSizes: [128, 256, 384, 512],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+  },
+
   async redirects() {
     return [
       // Root → /us (temporary — will be replaced with geolocation)

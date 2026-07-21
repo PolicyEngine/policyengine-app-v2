@@ -24,3 +24,4 @@
     fixed:
       - Point "Reproduce in Python" snippets for a US national run at the certified populace-us dataset instead of the deprecated policyengine-us-data repo
       - Add a callout on society-wide results explaining why every output reads "No change" when a reform changes nothing in effect in the simulated year (for example a credit that has sunset), so users can tell a genuine no-op from a start-date or sunset mismatch
+      - Declare the image optimiser width allowlist in website/next.config.ts (the vercel.json images block is ignored for Next.js projects), fixing team headshots and supporter logos that returned 400 on retina displays because their 2x srcSet width of 512 was not allowed
