@@ -39,10 +39,10 @@ const SKIP_IF_CONTAINS = [
   "policyengine-slides.vercel.app",      // Internal slides, not in ads
 ];
 
-// File extensions that indicate a static-asset proxy rather than a
-// page. Static SVGs / images / fonts don't have a root layout to
-// install gtag into.
-const STATIC_ASSET_EXTS = [".svg", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".woff", ".woff2", ".ttf", ".css", ".js"];
+// File extensions that indicate a static-asset / data proxy rather
+// than a page. Static SVGs / images / fonts / data files don't have a
+// root layout to install gtag into.
+const STATIC_ASSET_EXTS = [".svg", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".woff", ".woff2", ".ttf", ".css", ".js", ".json"];
 
 // Pages that serve reference / documentation content where firing
 // tool_engaged would inflate conversion counts. Allowed to have gtag

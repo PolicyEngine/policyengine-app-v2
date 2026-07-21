@@ -1,6 +1,44 @@
 import type { NextConfig } from "next";
 import { appZoneRewrites } from "./src/data/appZoneRoutes";
 
+const tealSquareLogoPath = "/assets/logos/policyengine/teal-square.png";
+
+const policyEngineIconRewrites = [
+  { source: "/favicon.ico", destination: tealSquareLogoPath },
+  { source: "/apple-touch-icon.png", destination: tealSquareLogoPath },
+  { source: "/logo192.png", destination: tealSquareLogoPath },
+  { source: "/logo512.png", destination: tealSquareLogoPath },
+  { source: "/policyengine-logo.png", destination: tealSquareLogoPath },
+  { source: "/icon.svg", destination: "/favicon.svg" },
+  { source: "/policyengine-favicon.svg", destination: "/favicon.svg" },
+  {
+    source: "/:countryId/:appSlug/favicon.ico",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/apple-touch-icon.png",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/logo192.png",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/logo512.png",
+    destination: tealSquareLogoPath,
+  },
+  {
+    source: "/:countryId/:appSlug/policyengine-logo.png",
+    destination: tealSquareLogoPath,
+  },
+  { source: "/:countryId/:appSlug/favicon.svg", destination: "/favicon.svg" },
+  { source: "/:countryId/:appSlug/icon.svg", destination: "/favicon.svg" },
+  {
+    source: "/:countryId/:appSlug/policyengine-favicon.svg",
+    destination: "/favicon.svg",
+  },
+];
+
 const nextConfig: NextConfig = {
   async redirects() {
     return [
@@ -9,6 +47,12 @@ const nextConfig: NextConfig = {
         source: "/",
         destination: "/us",
         permanent: false,
+      },
+      // Claude-branded skills page → runtime-agnostic AI agents page
+      {
+        source: "/:countryId/claude-plugin",
+        destination: "/:countryId/ai-agents",
+        permanent: true,
       },
       // Legacy /blog → /research
       {
@@ -46,6 +90,19 @@ const nextConfig: NextConfig = {
         destination: "/us/pe84",
         permanent: true,
       },
+      // Vanity redirects to the standalone PolicyBench site (external).
+      // policybench.org is country-agnostic, so both the bare and
+      // country-prefixed paths land on its root.
+      {
+        source: "/policybench",
+        destination: "https://policybench.org",
+        permanent: false,
+      },
+      {
+        source: "/:countryId/policybench",
+        destination: "https://policybench.org",
+        permanent: false,
+      },
       {
         source: "/uk/ads-dashboard",
         destination: "/us/ads-dashboard",
@@ -66,6 +123,29 @@ const nextConfig: NextConfig = {
         destination: "/us/california-wealth-tax/:path*",
         permanent: true,
       },
+      // CliffWatch renamed from cliff-watch → cliffwatch
+      {
+        source: "/:countryId/cliff-watch",
+        destination: "/:countryId/cliffwatch",
+        permanent: true,
+      },
+      {
+        source: "/:countryId/cliff-watch/:path*",
+        destination: "/:countryId/cliffwatch/:path*",
+        permanent: true,
+      },
+      // Bill tracker renamed from state-legislative-tracker → bill-tracker
+      // (it now covers federal bills too); /us/bill-tracker is canonical
+      {
+        source: "/:countryId/state-legislative-tracker",
+        destination: "/:countryId/bill-tracker",
+        permanent: true,
+      },
+      {
+        source: "/:countryId/state-legislative-tracker/:path*",
+        destination: "/:countryId/bill-tracker/:path*",
+        permanent: true,
+      },
     ];
   },
 
@@ -75,39 +155,135 @@ const nextConfig: NextConfig = {
       // External Next.js apps that serve full pages must go here
       // so they take priority over the dynamic [slug] route.
       beforeFiles: [
+        ...policyEngineIconRewrites,
         ...appZoneRewrites,
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
-        { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
-        { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
+        {
+          source: "/us/api",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/us/api/",
+        },
+        {
+          source: "/us/api/:path*",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/us/api/:path*",
+        },
+        {
+          source: "/uk/api",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/api/",
+        },
+        {
+          source: "/uk/api/:path*",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*",
+        },
         // Python client docs — same household-api-docs deployment, served at top-level /us/python
-        { source: "/us/python", destination: "https://household-api-docs-policy-engine.vercel.app/us/python" },
-        { source: "/us/python/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/python/:path*" },
+        {
+          source: "/us/python",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/us/python",
+        },
+        {
+          source: "/us/python/:path*",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/us/python/:path*",
+        },
+        {
+          source: "/uk/python",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/python",
+        },
+        {
+          source: "/uk/python/:path*",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/uk/python/:path*",
+        },
         // Zone asset proxy — API docs uses assetPrefix: '/_zones/household-api-docs'
-        { source: "/_zones/household-api-docs/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/_zones/household-api-docs/:path*" },
+        {
+          source: "/_zones/household-api-docs/:path*",
+          destination:
+            "https://household-api-docs-policy-engine.vercel.app/_zones/household-api-docs/:path*",
+        },
       ],
       // afterFiles: checked after pages/public files but before dynamic routes.
       afterFiles: [
+        // Student loan visualisation: the source HTML at student-loan-visualisation.vercel.app
+        // does `fetch('./data.json')`. Under the multizone rewrite at /uk/student-loan-visualisation
+        // (no trailing slash), the relative URL resolves to /uk/data.json. Proxy it so the
+        // figures and table render. Remove once the source repo uses an absolute path or basePath.
+        {
+          source: "/uk/data.json",
+          destination:
+            "https://student-loan-visualisation.vercel.app/data.json",
+        },
         // PostHog analytics proxy — first-party path bypasses ad blockers that
         // filter *.i.posthog.com. Static rule must come first.
-        { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
-        { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
+        {
+          source: "/ingest/static/:path*",
+          destination: "https://us-assets.i.posthog.com/static/:path*",
+        },
+        {
+          source: "/ingest/:path*",
+          destination: "https://us.i.posthog.com/:path*",
+        },
         // State legislative tracker (Modal)
-        { source: "/_tracker/:path*", destination: "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*" },
+        {
+          source: "/_tracker/:path*",
+          destination:
+            "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*",
+        },
         // Tracker assets at root paths — temporary until tracker repo updates to use absolute URLs
-        { source: "/policyengine-favicon.svg", destination: "https://policyengine--state-legislative-tracker.modal.run/policyengine-favicon.svg" },
-        { source: "/policyengine-logo.svg", destination: "https://policyengine--state-legislative-tracker.modal.run/policyengine-logo.svg" },
+        {
+          source: "/policyengine-favicon.svg",
+          destination:
+            "https://policyengine--state-legislative-tracker.modal.run/policyengine-favicon.svg",
+        },
+        {
+          source: "/policyengine-logo.svg",
+          destination:
+            "https://policyengine--state-legislative-tracker.modal.run/policyengine-logo.svg",
+        },
         // Slides (Vercel)
-        { source: "/slides", destination: "https://policyengine-slides.vercel.app/slides" },
-        { source: "/slides/:path*", destination: "https://policyengine-slides.vercel.app/slides/:path*" },
+        {
+          source: "/slides",
+          destination: "https://policyengine-slides.vercel.app/slides",
+        },
+        {
+          source: "/slides/:path*",
+          destination: "https://policyengine-slides.vercel.app/slides/:path*",
+        },
         // Plugin blog (GitHub Pages)
-        { source: "/plugin-blog", destination: "https://policyengine.github.io/plugin-blog/" },
-        { source: "/plugin-blog/:path*", destination: "https://policyengine.github.io/plugin-blog/:path*" },
+        {
+          source: "/plugin-blog",
+          destination: "https://policyengine.github.io/plugin-blog/",
+        },
+        {
+          source: "/plugin-blog/:path*",
+          destination: "https://policyengine.github.io/plugin-blog/:path*",
+        },
         // TAXSIM (Vercel)
-        { source: "/us/taxsim", destination: "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim" },
-        { source: "/us/taxsim/:path*", destination: "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*" },
+        {
+          source: "/us/taxsim",
+          destination:
+            "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim",
+        },
+        {
+          source: "/us/taxsim/:path*",
+          destination:
+            "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*",
+        },
         // Model documentation (Vercel)
-        { source: "/:countryId/model", destination: "https://policyengine-model-phi.vercel.app/?country=:countryId" },
-        { source: "/:countryId/model/:path*", destination: "https://policyengine-model-phi.vercel.app/:path*?country=:countryId" },
+        {
+          source: "/:countryId/model",
+          destination:
+            "https://policyengine-model-phi.vercel.app/?country=:countryId",
+        },
+        {
+          source: "/:countryId/model/:path*",
+          destination:
+            "https://policyengine-model-phi.vercel.app/:path*?country=:countryId",
+        },
       ],
     };
   },

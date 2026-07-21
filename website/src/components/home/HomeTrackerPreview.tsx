@@ -66,7 +66,7 @@ export default function HomeTrackerPreview({
 
         {/* Tracker card */}
         <Link
-          href={`/${countryId}/state-legislative-tracker`}
+          href={`/${countryId}/bill-tracker`}
           style={{ textDecoration: "none", color: "inherit", display: "block" }}
         >
           <div

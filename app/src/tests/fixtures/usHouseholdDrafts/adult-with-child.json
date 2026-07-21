@@ -1,0 +1,23 @@
+{
+  "name": "single adult with one child dependent in TX",
+  "draft": {
+    "state": "TX",
+    "county": null,
+    "zip": null,
+    "maritalStatus": "single",
+    "year": 2026,
+    "people": [
+      {
+        "id": "adult-1",
+        "kind": "adult",
+        "age": 28,
+        "employmentIncome": 32000
+      },
+      {
+        "id": "dependent-1",
+        "kind": "dependent",
+        "age": 6
+      }
+    ]
+  }
+}

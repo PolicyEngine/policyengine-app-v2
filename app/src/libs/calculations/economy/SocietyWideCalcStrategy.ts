@@ -21,7 +21,7 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
     try {
       // Pass the region value AS-IS to the API (NO prefix stripping)
       // For UK: includes prefix like "constituency/Sheffield Central" or "country/england"
-      // For US: just state code like "ca" or "ny"
+      // For US: includes prefix like "state/ca" for state-level reports
       // For National: just country code like "uk" or "us"
       const apiRegion = params.region || params.countryId;
 

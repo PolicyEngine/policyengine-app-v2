@@ -80,7 +80,7 @@ export function isLLMBot(userAgent: string | null): boolean {
   return LLM_USER_AGENTS_LOWER.some((bot) => lower.includes(bot));
 }
 
-export const TRACKER_PREFIX = "/us/state-legislative-tracker";
+export const TRACKER_PREFIX = "/us/bill-tracker";
 export const TRACKER_MODAL_ORIGIN =
   "https://policyengine--state-legislative-tracker.modal.run";
 
@@ -218,6 +218,7 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${safeTitle} | ${siteName}</title>
   <meta name="description" content="${safeDescription}" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="canonical" href="${url}" />
 
   <!-- Open Graph -->
@@ -409,9 +410,7 @@ function pickAllowedContentType(raw: string | null): string {
   // Content-Type may include charset or boundary parameters; compare the
   // media type portion only.
   const mediaType = raw.split(";")[0].trim().toLowerCase();
-  if (
-    TRACKER_ALLOWED_CONTENT_TYPES.some((allowed) => allowed === mediaType)
-  ) {
+  if (TRACKER_ALLOWED_CONTENT_TYPES.some((allowed) => allowed === mediaType)) {
     return raw;
   }
   return "text/html";

@@ -64,6 +64,31 @@ describe('IframeContent', () => {
     expect(iframe?.getAttribute('allow')).toBe('clipboard-write');
   });
 
+  test('preserves default iframe query params when forwarding parent query params', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/us/salternative?income=100000']}>
+        <Routes>
+          <Route
+            path="/:countryId/:slug"
+            element={
+              <IframeContent
+                url="https://salt-amt-calculator.vercel.app/us/salternative?embedded=true"
+                title="SALTernative"
+              />
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const iframe = container.querySelector('iframe');
+    const src = iframe?.getAttribute('src') ?? '';
+
+    expect(src).toContain('https://salt-amt-calculator.vercel.app/us/salternative?');
+    expect(src).toContain('embedded=true');
+    expect(src).toContain('income=100000');
+  });
+
   test('syncs iframe query param updates back to the parent URL', () => {
     const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
 

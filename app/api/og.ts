@@ -91,6 +91,7 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${safeTitle} | ${siteName}</title>
   <meta name="description" content="${safeDescription}" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:title" content="${safeTitle}" />
   <meta property="og:description" content="${safeDescription}" />
   <meta property="og:image" content="${safeImage}" />

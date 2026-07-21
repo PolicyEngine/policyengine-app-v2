@@ -6,33 +6,41 @@ import {
   getCountryDisplayName,
   getGeographyRegionTypeLabel,
 } from '@/models/geography';
-import { toRegionRecord } from '@/models/region';
+import type { RegionRecord } from '@/models/region';
 
-const usRegions = [
-  toRegionRecord('us', {
+const usRegions: RegionRecord[] = [
+  {
     id: 'region-state-ca',
+    countryId: 'us',
     code: 'state/ca',
     label: 'California',
-    region_type: 'state',
-    parent_code: 'us',
-    filter_field: null,
-    filter_value: null,
-    requires_filter: false,
-    state_code: 'CA',
-    state_name: 'California',
-  }),
-  toRegionRecord('us', {
+    regionType: 'state',
+    parentCode: 'us',
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: 'CA',
+    stateName: 'California',
+    source: 'v1_metadata',
+    sourceId: null,
+  },
+  {
     id: 'region-place-la',
+    countryId: 'us',
     code: 'place/CA-44000',
     label: 'Los Angeles',
-    region_type: 'place',
-    parent_code: 'state/ca',
-    filter_field: 'place_fips',
-    filter_value: '44000',
-    requires_filter: true,
-    state_code: 'CA',
-    state_name: 'California',
-  }),
+    regionType: 'place',
+    parentCode: 'state/ca',
+    filterField: 'place_fips',
+    filterValue: '44000',
+    filterStrategy: null,
+    requiresFilter: true,
+    stateCode: 'CA',
+    stateName: 'California',
+    source: 'v1_metadata',
+    sourceId: null,
+  },
 ];
 
 describe('geography model helpers', () => {

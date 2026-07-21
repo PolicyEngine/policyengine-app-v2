@@ -23,6 +23,16 @@
       "source": "/pe84",
       "destination": "/us/pe84",
       "permanent": false
+    },
+    {
+      "source": "/policybench",
+      "destination": "https://policybench.org",
+      "permanent": false
+    },
+    {
+      "source": "/:countryId/policybench",
+      "destination": "https://policybench.org",
+      "permanent": false
     }
   ],
   "rewrites": [
@@ -33,6 +43,34 @@
     {
       "source": "/sitemap.xml",
       "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/(.*)/favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/(.*)/favicon.ico",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/icon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/(.*)/icon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "source": "/policyengine-logo.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
+    },
+    {
+      "source": "/(.*)/policyengine-logo.png",
+      "destination": "/assets/logos/policyengine/teal-square.png"
     },
     {
       "source": "/_tracker/:path*",

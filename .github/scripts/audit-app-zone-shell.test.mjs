@@ -5,6 +5,7 @@ import {
   extractRoutes,
   extractSitemapLocs,
   inspectTopShellData,
+  isShellBrandExempt,
   resolveDestinationForSource,
   shouldAllowDestinationFallback,
   sourcePathFromSitemapLoc,
@@ -148,7 +149,8 @@ describe("sitemap route mapping", () => {
   test("preserves static destination query params without leaking them into source paths", () => {
     const ukMarriageRoute = {
       source: "/uk/marriage",
-      destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
+      destination:
+        "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
       deepDestination:
         "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
     };
@@ -226,14 +228,48 @@ describe("shouldAllowDestinationFallback", () => {
   });
 
   test("enables fallback for explicit flag, env override, or pull request runs", () => {
-    assert.equal(shouldAllowDestinationFallback({ "allow-destination-fallback": true }, {}), true);
     assert.equal(
-      shouldAllowDestinationFallback({}, { APP_ZONE_ALLOW_DESTINATION_FALLBACK: "1" }),
+      shouldAllowDestinationFallback(
+        { "allow-destination-fallback": true },
+        {},
+      ),
+      true,
+    );
+    assert.equal(
+      shouldAllowDestinationFallback(
+        {},
+        { APP_ZONE_ALLOW_DESTINATION_FALLBACK: "1" },
+      ),
       true,
     );
     assert.equal(
       shouldAllowDestinationFallback({}, { GITHUB_EVENT_NAME: "pull_request" }),
       true,
     );
+  });
+});
+
+describe("isShellBrandExempt", () => {
+  test("exempts configured routes and their subpaths", () => {
+    assert.equal(isShellBrandExempt("/uk/scotland-income-tax-reform"), true);
+    assert.equal(
+      isShellBrandExempt("/uk/student-loan-visualisation/budget-impact"),
+      true,
+    );
+    assert.equal(isShellBrandExempt("/uk/uc-rebalancing"), true);
+    assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), true);
+    assert.equal(isShellBrandExempt("/uk/young-worker-nics"), true);
+    assert.equal(
+      isShellBrandExempt("/uk/nics-exemption-inactive-employees"),
+      true,
+    );
+    assert.equal(isShellBrandExempt("/uk/electricity-vat-cut"), true);
+    assert.equal(isShellBrandExempt("/uk/chat"), true);
+    assert.equal(isShellBrandExempt("/uk/chat/s/example-token"), true);
+  });
+
+  test("does not exempt other routes or partial-name collisions", () => {
+    assert.equal(isShellBrandExempt("/uk/marriage"), false);
+    assert.equal(isShellBrandExempt("/uk/uc-rebalancing-extended"), false);
   });
 });

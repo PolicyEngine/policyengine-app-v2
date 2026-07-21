@@ -32,6 +32,24 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://scotland-income-tax-reform.vercel.app/uk/scotland-income-tax-reform",
   },
   {
+    source: "/uk/uk-cliff-watch",
+    destination: "https://uk-cliff-watch.vercel.app/uk/uk-cliff-watch",
+  },
+  {
+    source: "/uk/young-worker-nics",
+    destination: "https://young-worker-nics.vercel.app/uk/young-worker-nics",
+  },
+  {
+    source: "/uk/nics-exemption-inactive-employees",
+    destination:
+      "https://nics-exemption-inactive-employees.vercel.app/uk/nics-exemption-inactive-employees",
+  },
+  {
+    source: "/uk/electricity-vat-cut",
+    destination:
+      "https://electricity-vat-cut.vercel.app/uk/electricity-vat-cut",
+  },
+  {
     source: "/us/pe84",
     destination: "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
     deepDestination: "https://april-fools-2026-two.vercel.app/us/pe84/:path*",
@@ -72,6 +90,20 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut",
   },
   {
+    source: "/us/missouri-income-tax-elimination",
+    destination:
+      "https://missouri-income-tax-elimination.vercel.app/us/missouri-income-tax-elimination",
+  },
+  {
+    source: "/us/south-carolina-2026-tax-changes",
+    destination:
+      "https://south-carolina-2026-tax-changes.vercel.app/us/south-carolina-2026-tax-changes",
+  },
+  {
+    source: "/us/qbi-calculator",
+    destination: "https://qbi-visualizer.vercel.app/us/qbi-calculator",
+  },
+  {
     source: "/us/watca",
     destination:
       "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
@@ -95,14 +127,23 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://tanf-calculator.vercel.app/us/tanf-calculator",
   },
   {
+    source: "/ai-beliefs",
+    destination: "https://ai-beliefs.vercel.app/ai-beliefs",
+  },
+  {
     source: "/us/coverage-compass",
     destination:
       "https://coverage-compass-policy-engine.vercel.app/us/coverage-compass",
   },
   {
-    source: "/us/cliff-watch",
+    source: "/us/cliffwatch",
     destination: "https://cliff-watch.vercel.app/",
     deepDestination: "https://cliff-watch.vercel.app/:path*",
+  },
+  {
+    source: "/uk/cliffwatch",
+    destination: "https://cliff-watch.vercel.app/?country=uk",
+    deepDestination: "https://cliff-watch.vercel.app/:path*?country=uk",
   },
   {
     source: "/us/marriage",
@@ -116,7 +157,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
   },
   {
-    source: "/:countryId/state-legislative-tracker",
+    source: "/:countryId/bill-tracker",
     destination: "https://policyengine--state-legislative-tracker.modal.run/",
     deepDestination:
       "https://policyengine--state-legislative-tracker.modal.run/:path*",
@@ -155,6 +196,15 @@ export const appZoneRoutes: AppZoneRoute[] = [
     source: "/uk/public-services-spending",
     destination:
       "https://uk-public-services-imputation.vercel.app/uk/public-services-spending",
+  },
+  {
+    source: "/uk/uc-rebalancing",
+    destination: "https://uc-rebalancing.vercel.app/uk/uc-rebalancing",
+  },
+  {
+    source: "/uk/cancelling-fuel-duty-rise",
+    destination:
+      "https://cancelling-fuel-duty-rise.vercel.app/uk/cancelling-fuel-duty-rise",
   },
   {
     source: "/us/aca-calc",
@@ -208,6 +258,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://ri-ctc-calculator-policy-engine.vercel.app/us/rhode-island-ctc-calculator",
   },
   {
+    source: "/us/nj-ctc-increase",
+    destination: "https://nj-ctc-increase.vercel.app/us/nj-ctc-increase",
+  },
+  {
     source: "/us/snap-district-map",
     destination: "https://snap-district-map.vercel.app/us/snap-district-map",
   },
@@ -233,8 +287,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
     // not yet render the PolicyEngine site shell, so the shell audit skips
     // this destination until the chat repo ships its own shell.
     source: "/uk/chat",
-    destination: "https://policyengine-uk-chat.vercel.app/",
-    deepDestination: "https://policyengine-uk-chat.vercel.app/:path*",
+    destination: "https://policyengine-uk-chat.vercel.app/uk/chat",
   },
 ];
 

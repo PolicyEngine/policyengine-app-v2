@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { CountryProvider } from '@/contexts/CountryContext';
+import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import SocietyWideOverview from './SocietyWideOverview';
 
@@ -186,4 +188,31 @@ export const Neutral: Story = {
       noChange: 0.94,
     }),
   },
+};
+
+// Complete no-op: every output is identical to current law (for example a
+// reform that only edits a program which has sunset by the simulated year).
+// The overview shows an informational callout above the cards.
+export const CompleteNoOp: Story = {
+  args: {
+    output: buildMockOutput({
+      budgetaryImpact: 0,
+      povertyBaseline: 0.112,
+      povertyReform: 0.112,
+      winnersGainMore: 0,
+      winnersGainLess: 0,
+      losersLoseMore: 0,
+      losersLoseLess: 0,
+      noChange: 1,
+    }),
+  },
+  decorators: [
+    (StoryComponent) => (
+      <CountryProvider value="us">
+        <ReportYearProvider year="2029">
+          <StoryComponent />
+        </ReportYearProvider>
+      </CountryProvider>
+    ),
+  ],
 };

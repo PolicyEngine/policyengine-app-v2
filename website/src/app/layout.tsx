@@ -5,6 +5,14 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-2YHG89FY0N";
+const SITE_DESCRIPTION =
+  "Free, open-source tools to understand tax and benefit policies. Calculate your taxes and benefits, or analyze policy reforms.";
+const SOCIAL_PREVIEW_IMAGE = {
+  url: "/assets/policyengine-social-preview.png",
+  width: 1200,
+  height: 630,
+  alt: "PolicyEngine",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.policyengine.org"),
@@ -12,10 +20,28 @@ export const metadata: Metadata = {
     template: "%s | PolicyEngine",
     default: "PolicyEngine",
   },
-  description:
-    "Free, open-source tools to understand tax and benefit policies. Calculate your taxes and benefits, or analyze policy reforms.",
+  description: SITE_DESCRIPTION,
   icons: {
     icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "PolicyEngine",
+    description: SITE_DESCRIPTION,
+    siteName: "PolicyEngine",
+    type: "website",
+    images: [SOCIAL_PREVIEW_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@ThePolicyEngine",
+    title: "PolicyEngine",
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: SOCIAL_PREVIEW_IMAGE.url,
+        alt: SOCIAL_PREVIEW_IMAGE.alt,
+      },
+    ],
   },
 };
 

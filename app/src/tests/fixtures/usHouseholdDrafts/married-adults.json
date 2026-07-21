@@ -1,0 +1,24 @@
+{
+  "name": "married adults in NY",
+  "draft": {
+    "state": "NY",
+    "county": null,
+    "zip": null,
+    "maritalStatus": "married",
+    "year": 2026,
+    "people": [
+      {
+        "id": "adult-1",
+        "kind": "adult",
+        "age": 35,
+        "employmentIncome": 80000
+      },
+      {
+        "id": "adult-2",
+        "kind": "adult",
+        "age": 33,
+        "employmentIncome": 60000
+      }
+    ]
+  }
+}

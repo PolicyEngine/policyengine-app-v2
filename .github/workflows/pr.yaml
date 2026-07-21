@@ -25,11 +25,13 @@ jobs:
           # and should no longer be modified in app/.
           # Calculator components (report builder, household, charts, etc.) are
           # still legitimately modified in app/ since calculator-app/ imports from there.
+          # Note: HomeHeader.tsx and homeHeader/ were ported to website but
+          # are still actively used by the calculator-app (StandardLayout →
+          # HomeHeader). They are now de facto calculator components, so
+          # they're intentionally NOT in this guard list.
           WEBSITE_BLOCKED=$(echo "$ALL_CHANGED" | grep -E \
             -e '^app/src/components/home/' \
             -e '^app/src/components/shared/static/' \
-            -e '^app/src/components/shared/HomeHeader\.tsx' \
-            -e '^app/src/components/homeHeader/' \
             -e '^app/src/components/Footer\.tsx' \
             -e '^app/src/components/FooterSubscribe\.tsx' \
             -e '^app/src/components/blog/BlogPostCard\.tsx' \

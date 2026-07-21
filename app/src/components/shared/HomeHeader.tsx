@@ -14,6 +14,11 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
   const [opened, { open, close }] = useDisclosure(false);
   const { getWebsitePath, countryId } = useWebsitePath();
 
+  // The model explorer, API docs, and Python docs are separate apps served via
+  // Vercel rewrites — use absolute URLs so the browser performs a full
+  // navigation across zones rather than routing client-side.
+  const modelBase = `${WEBSITE_URL}/${countryId}/model`;
+
   const navItems: NavItemSetup[] = [
     {
       label: 'Research',
@@ -22,16 +27,40 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
     },
     {
       label: 'Model',
-      // Always use an absolute URL — the model explorer is a separate app served
-      // via Vercel rewrite, so React Router must not intercept this link.
-      href: `${WEBSITE_URL}/${countryId}/model`,
-      hasDropdown: false,
+      hasDropdown: true,
+      dropdownItems: [
+        {
+          label: 'Rules',
+          href: `${modelBase}/rules`,
+          children: [
+            { label: 'Coverage', href: `${modelBase}/rules/coverage` },
+            { label: 'Parameters', href: `${modelBase}/rules/parameters` },
+            { label: 'Variables', href: `${modelBase}/rules/variables` },
+          ],
+        },
+        {
+          label: 'Data',
+          href: `${modelBase}/data`,
+          children: [
+            { label: 'Pipeline', href: `${modelBase}/data/pipeline` },
+            { label: 'Calibration', href: `${modelBase}/data/calibration` },
+            { label: 'Validation', href: `${modelBase}/data/validation` },
+          ],
+        },
+        {
+          label: 'Behavioral responses',
+          href: `${modelBase}/behavioral`,
+        },
+      ],
     },
     {
       label: 'API',
-      // Always use an absolute URL — the API docs are a separate app served
-      // via Vercel rewrite, so React Router must not intercept this link.
       href: `${WEBSITE_URL}/${countryId}/api`,
+      hasDropdown: false,
+    },
+    {
+      label: 'Python',
+      href: `${WEBSITE_URL}/${countryId}/python`,
       hasDropdown: false,
     },
     {
@@ -41,6 +70,7 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
         { label: 'Team', href: getWebsitePath('/team') },
         { label: 'Supporters', href: getWebsitePath('/supporters') },
         { label: 'Citations', href: getWebsitePath('/citations') },
+        { label: 'Events', href: getWebsitePath('/events') },
       ],
     },
     {

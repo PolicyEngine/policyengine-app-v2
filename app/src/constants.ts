@@ -2,6 +2,19 @@ export const FOREVER = '2100-12-31';
 export const BASE_URL = 'https://api.policyengine.org';
 export const CURRENT_YEAR = '2026';
 
+// Certified default US microdata dataset URI, pinned to the revision that
+// policyengine.py's bundle manifest resolves as data_releases.us.default_dataset_uri.
+// The legacy `policyengine-us-data` Hugging Face repo is deprecated/archived, so any
+// generated "Reproduce in Python" snippet for a US national run must point here rather
+// than at a `policyengine-us-data` path. Pinned (rather than tracking a floating branch)
+// so a copied snippet reproduces the exact certified dataset the app ran against.
+// Ported from policyengine-app v1 (POPULACE_US_DEFAULT_DATASET_URI, PR #2846).
+// NOTE: subnational (state/CD) and place fallbacks still reference `policyengine-us-data`
+// pending Populace place/geo scoping — tracked in policyengine-app-v2#1079 — and are
+// intentionally NOT switched to this national URI here.
+export const POPULACE_US_DEFAULT_DATASET_URI =
+  'hf://policyengine/populace-us/populace_us_2024.h5@populace-us-2024-sparse-l0-refit-57k-71a0887-national-only-20260701';
+
 // App URLs for the split website/calculator architecture
 // In dev mode, these are set via VITE_* env vars to localhost URLs
 // In production, they fall back to the prod URLs

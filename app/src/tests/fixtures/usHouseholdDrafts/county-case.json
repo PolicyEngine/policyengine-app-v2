@@ -1,0 +1,34 @@
+{
+  "name": "household in Alameda County, CA with explicit county",
+  "draft": {
+    "state": "CA",
+    "county": "ALAMEDA_COUNTY_CA",
+    "zip": "94703",
+    "maritalStatus": "married",
+    "year": 2026,
+    "people": [
+      {
+        "id": "adult-1",
+        "kind": "adult",
+        "age": 35,
+        "employmentIncome": 110000
+      },
+      {
+        "id": "adult-2",
+        "kind": "adult",
+        "age": 34,
+        "employmentIncome": 0
+      },
+      {
+        "id": "dependent-1",
+        "kind": "dependent",
+        "age": 4
+      },
+      {
+        "id": "dependent-2",
+        "kind": "dependent",
+        "age": 1
+      }
+    ]
+  }
+}

@@ -39,7 +39,10 @@ export default function IframeContent({
   const iframeUrl = useMemo(() => {
     try {
       const resolved = new URL(url, window.location.origin);
-      resolved.search = location.search;
+      const parentSearchParams = new URLSearchParams(location.search);
+      parentSearchParams.forEach((value, key) => {
+        resolved.searchParams.set(key, value);
+      });
       return resolved.toString();
     } catch {
       return url;

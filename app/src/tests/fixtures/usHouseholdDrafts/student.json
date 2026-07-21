@@ -1,0 +1,24 @@
+{
+  "name": "single full-time student dependent in MA",
+  "draft": {
+    "state": "MA",
+    "county": null,
+    "zip": null,
+    "maritalStatus": "single",
+    "year": 2026,
+    "people": [
+      {
+        "id": "adult-1",
+        "kind": "adult",
+        "age": 48,
+        "employmentIncome": 95000
+      },
+      {
+        "id": "dependent-1",
+        "kind": "dependent",
+        "age": 19,
+        "isFullTimeStudent": true
+      }
+    ]
+  }
+}

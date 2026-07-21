@@ -1,11 +1,31 @@
 import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import SocietyWideOverview, {
   buildOutcomeMapData,
   getDistrictPayloadAvailability,
   hasCompleteDistrictOutcomePayload,
 } from '@/pages/report-output/SocietyWideOverview';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
+
+// Budget with every component exactly zero (an exact no-op). The mock's shallow
+// merge replaces `budget` wholesale, so the full object is provided here.
+const ALL_ZERO_BUDGET = {
+  baseline_net_income: 12_000_000_000_000,
+  benefit_spending_impact: 0,
+  budgetary_impact: 0,
+  households: 130_000_000,
+  state_tax_revenue_impact: 0,
+  tax_revenue_impact: 0,
+};
+
+const ALL_NO_CHANGE = {
+  'Gain more than 5%': 0,
+  'Gain less than 5%': 0,
+  'Lose more than 5%': 0,
+  'Lose less than 5%': 0,
+  'No change': 1,
+};
 
 const { mockUseCongressionalDistrictData } = vi.hoisted(() => ({
   mockUseCongressionalDistrictData: vi.fn(),
@@ -273,6 +293,76 @@ describe('SocietyWideOverview', () => {
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
   });
 
+  describe('no-op callout', () => {
+    test('given a complete no-op report then shows the informational callout with the simulated year', () => {
+      // Given - every budget component is zero and 100% of the population is unchanged
+      const output = createMockSocietyWideOutput({
+        budget: { ...ALL_ZERO_BUDGET },
+        intra_decile: { all: { ...ALL_NO_CHANGE } },
+      });
+
+      // When
+      render(
+        <ReportYearProvider year="2029">
+          <SocietyWideOverview output={output} />
+        </ReportYearProvider>
+      );
+
+      // Then
+      expect(screen.getByText("This reform doesn't change any policy in 2029")).toBeInTheDocument();
+      expect(screen.getByText(/Every output is identical to current law/)).toBeInTheDocument();
+    });
+
+    test('given no report year context then the callout falls back to a generic year phrase', () => {
+      // Given
+      const output = createMockSocietyWideOutput({
+        budget: { ...ALL_ZERO_BUDGET },
+        intra_decile: { all: { ...ALL_NO_CHANGE } },
+      });
+
+      // When - rendered without a ReportYearProvider
+      render(<SocietyWideOverview output={output} />);
+
+      // Then
+      expect(
+        screen.getByText("This reform doesn't change any policy in the simulated year")
+      ).toBeInTheDocument();
+    });
+
+    test('given a report with real impacts then the callout is absent', () => {
+      // Given - the default mock has a nonzero budget and only 60% no change
+      const output = createMockSocietyWideOutput();
+
+      // When
+      render(<SocietyWideOverview output={output} />);
+
+      // Then
+      expect(screen.queryByText(/doesn't change any policy/)).not.toBeInTheDocument();
+    });
+
+    test('given a revenue-neutral reform with winners and losers then the callout is absent', () => {
+      // Given - budget nets to zero but only 60% of the population is unchanged
+      const output = createMockSocietyWideOutput({
+        budget: { ...ALL_ZERO_BUDGET },
+        intra_decile: {
+          all: {
+            'Gain more than 5%': 0.1,
+            'Gain less than 5%': 0.15,
+            'Lose more than 5%': 0.05,
+            'Lose less than 5%': 0.1,
+            'No change': 0.6,
+          },
+        },
+      });
+
+      // When
+      render(<SocietyWideOverview output={output} />);
+
+      // Then
+      expect(screen.queryByText(/doesn't change any policy/)).not.toBeInTheDocument();
+    });
+  });
+
   test('buildOutcomeMapData reads winner shares from the district payload and tracks gaps', () => {
     const labelLookup = new Map([
       ['AL-01', "Alabama's 1st congressional district"],
@@ -368,7 +458,7 @@ describe('SocietyWideOverview', () => {
     ).toBe(false);
   });
 
-  test('saved districts without outcome shares trigger a same-payload refresh', () => {
+  test('saved districts without outcome shares do not trigger a refresh', () => {
     const startFetch = vi.fn();
     mockUseCongressionalDistrictData.mockReturnValue(
       createCongressionalDistrictContextMock({ startFetch })
@@ -388,7 +478,7 @@ describe('SocietyWideOverview', () => {
 
     render(<SocietyWideOverview output={output as any} showCongressionalCard />);
 
-    expect(startFetch).toHaveBeenCalledTimes(1);
+    expect(startFetch).not.toHaveBeenCalled();
   });
 
   test('saved districts with outcome shares do not trigger a refresh', () => {
@@ -416,7 +506,7 @@ describe('SocietyWideOverview', () => {
     expect(startFetch).not.toHaveBeenCalled();
   });
 
-  test('saved districts with complete winner shares but missing loser shares still trigger a refresh', () => {
+  test('saved districts with complete winner shares but missing loser shares do not trigger a refresh', () => {
     const startFetch = vi.fn();
     mockUseCongressionalDistrictData.mockReturnValue(
       createCongressionalDistrictContextMock({
@@ -449,10 +539,10 @@ describe('SocietyWideOverview', () => {
 
     render(<SocietyWideOverview output={output as any} showCongressionalCard />);
 
-    expect(startFetch).toHaveBeenCalledTimes(1);
+    expect(startFetch).not.toHaveBeenCalled();
   });
 
-  test('truncated saved districts trigger a same-payload refresh', () => {
+  test('truncated saved districts do not trigger a refresh', () => {
     const startFetch = vi.fn();
     mockUseCongressionalDistrictData.mockReturnValue(
       createCongressionalDistrictContextMock({
@@ -480,6 +570,6 @@ describe('SocietyWideOverview', () => {
 
     render(<SocietyWideOverview output={output as any} showCongressionalCard />);
 
-    expect(startFetch).toHaveBeenCalledTimes(1);
+    expect(startFetch).not.toHaveBeenCalled();
   });
 });

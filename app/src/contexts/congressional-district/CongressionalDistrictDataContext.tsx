@@ -1,20 +1,10 @@
 /**
  * Congressional District Data Context
  *
- * Provides centralized management of congressional district data fetching.
- * For national reports: Fetches data from all 51 states in parallel on-demand.
- * For state-level reports: Fetches only that state's data automatically on mount.
+ * Provides congressional district label lookup and an optional manual fetch path.
  */
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-} from 'react';
+import { createContext, useCallback, useContext, useMemo, useReducer, useRef } from 'react';
 import {
   buildDistrictLabelLookup,
   normalizeDistrictId,
@@ -47,12 +37,12 @@ const CongressionalDistrictDataContext =
   createContext<CongressionalDistrictDataContextValue | null>(null);
 
 /**
- * Provider that manages congressional district data fetching.
+ * Provider that manages congressional district label metadata.
  *
- * For national reports: Fetches data from all 51 states in parallel on-demand.
- * For state-level reports: Fetches only that state's data automatically on mount.
+ * For current report output, district data is expected to be included in the
+ * report payload for US national and state-level reports.
  *
- * Stores the raw district data which can be used by multiple visualization components.
+ * Stores manual-fetch district data only when startFetch is explicitly invoked.
  */
 export function CongressionalDistrictDataProvider({
   children,
@@ -182,13 +172,6 @@ export function CongressionalDistrictDataProvider({
       pollState(stateCode, abortController.signal);
     });
   }, [state.hasStarted, stateCodes, pollState]);
-
-  // Auto-start fetching for state-level reports
-  useEffect(() => {
-    if (isStateLevelReport && !state.hasStarted && stateCodes.length > 0) {
-      startFetch();
-    }
-  }, [isStateLevelReport, state.hasStarted, stateCodes.length, startFetch]);
 
   // Compute derived values
   const { completedCount, loadingCount, errorCount, isLoading, isComplete } =

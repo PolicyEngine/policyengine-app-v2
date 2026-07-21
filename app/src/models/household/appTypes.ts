@@ -40,11 +40,3 @@ export interface HouseholdModelData {
   year: number | null;
   householdData: AppHouseholdInputData;
 }
-
-export interface ComparableHousehold {
-  id: string;
-  countryId: CountryId;
-  year: number | null;
-  label: string | null;
-  data: Record<string, unknown>;
-}

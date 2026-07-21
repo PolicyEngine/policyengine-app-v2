@@ -6,11 +6,7 @@ import OptimisedImage from "@/components/ui/OptimisedImage";
 import { Container } from "@/components/ui/Container";
 import { Text } from "@/components/ui/Text";
 import citationsData from "@/data/citations.json";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 interface Citation {
   /** Headline or title of the citing article */
@@ -203,33 +199,61 @@ function FeaturedLayout({ citations }: { citations: Citation[] }) {
     return <CitationCard citation={hero} large />;
   }
 
+  const topSide = side.slice(0, 2);
+  const overflow = side.slice(2);
+
   return (
     <div
-      style={{
-        display: "flex",
-        gap: spacing["2xl"],
-      }}
-      className="tw:max-md:flex-col"
+      style={{ display: "flex", flexDirection: "column", gap: spacing["2xl"] }}
     >
-      {/* Large card on the left — takes 2/3 width */}
-      <div style={{ flex: "2 1 0", minWidth: 0 }}>
-        <CitationCard citation={hero} large />
-      </div>
-
-      {/* Two smaller cards stacked on the right — takes 1/3 width */}
       <div
         style={{
-          flex: "1 1 0",
-          minWidth: 0,
           display: "flex",
-          flexDirection: "column",
           gap: spacing["2xl"],
         }}
+        className="tw:max-md:flex-col"
       >
-        {side.slice(0, 2).map((citation, i) => (
-          <CitationCard key={`side-${citation.url}-${i}`} citation={citation} />
-        ))}
+        {/* Large card on the left — takes 2/3 width */}
+        <div style={{ flex: "2 1 0", minWidth: 0 }}>
+          <CitationCard citation={hero} large />
+        </div>
+
+        {/* Two smaller cards stacked on the right — takes 1/3 width */}
+        <div
+          style={{
+            flex: "1 1 0",
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing["2xl"],
+          }}
+        >
+          {topSide.map((citation, i) => (
+            <CitationCard
+              key={`side-${citation.url}-${i}`}
+              citation={citation}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* Any remaining featured citations flow into a grid below */}
+      {overflow.length > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: spacing["2xl"],
+          }}
+        >
+          {overflow.map((citation, i) => (
+            <CitationCard
+              key={`overflow-${citation.url}-${i}`}
+              citation={citation}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -270,14 +294,12 @@ export default function CitationsClient({ countryId }: { countryId: string }) {
     [countryCitations],
   );
 
-  // Non-featured citations sorted by date descending
+  // "All citations" lists every citation (including featured) sorted by date descending
   const restCitations = useMemo(
     () =>
-      countryCitations
-        .filter((c) => !c.featured)
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-        ),
+      [...countryCitations].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
     [countryCitations],
   );
 

@@ -52,16 +52,18 @@ import {
   type ResearchItem,
 } from "@/data/posts/postTransformers";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import authorsData from "@/data/posts/authors.json";
 
 /* ─── Constants ─── */
 
-const mockAuthors = [
-  { key: "max-ghenis", name: "Max Ghenis" },
-  { key: "nikhil-woodruff", name: "Nikhil Woodruff" },
-  { key: "pavel-makarchuk", name: "Pavel Makarchuk" },
-  { key: "vahid-ahmadi", name: "Vahid Ahmadi" },
-  { key: "ben-ogorek", name: "Ben Ogorek" },
-];
+// All authors from authors.json, sorted alphabetically by display name. The
+// dropdown previously hardcoded a 5-name subset; pulling from authors.json
+// keeps it in sync as authors are added without a code edit.
+const allAuthors = Object.entries(
+  authorsData as Record<string, { name: string }>,
+)
+  .map(([key, value]) => ({ key, name: value.name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
 
 const typeOptions = [
   { value: "article", label: "Article" },
@@ -417,6 +419,13 @@ function FilterSection({
         backgroundColor: isExpanded ? "rgba(230, 255, 250, 0.3)" : colors.white,
         transition: "border-color 0.2s ease, background-color 0.2s ease",
         overflow: "hidden",
+        // Collapsed sections must keep their full header height when a sibling
+        // section expands — the parent flex column has `maxHeight: availableHeight;
+        // overflow: hidden`, and the default `flex-shrink: 1` would otherwise
+        // squish the headers down (visible bug: clicking "Author" shrinks the
+        // "Type" / "Topic" / "Location" headers because the expanded Author panel
+        // takes most of the available column height).
+        flexShrink: 0,
       }}
     >
       <button
@@ -1034,7 +1043,7 @@ export default function ResearchClient({
               onLocationsChange={setSelectedLocations}
               selectedAuthors={selectedAuthors}
               onAuthorsChange={setSelectedAuthors}
-              availableAuthors={mockAuthors}
+              availableAuthors={allAuthors}
               countryId={countryId}
             />
           </div>
