@@ -76,6 +76,19 @@ describe("nextConfig rewrites", () => {
       ),
     ).toBeGreaterThan(expectedPolicyEngineIconRewrites.length - 1);
   });
+
+  test("preserves the UK chat base path for pages, assets, and API routes", async () => {
+    const beforeFiles = await getBeforeFileRewrites();
+
+    expect(beforeFiles).toContainEqual({
+      source: "/uk/chat",
+      destination: "https://policyengine-uk-chat.vercel.app/uk/chat",
+    });
+    expect(beforeFiles).toContainEqual({
+      source: "/uk/chat/:path*",
+      destination: "https://policyengine-uk-chat.vercel.app/uk/chat/:path*",
+    });
+  });
 });
 
 describe("nextConfig images", () => {

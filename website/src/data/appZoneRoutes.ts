@@ -281,6 +281,14 @@ export const appZoneRoutes: AppZoneRoute[] = [
     deepDestination:
       "https://ai-inequality-theta.vercel.app/us/ai-inequality/:path*?country=uk",
   },
+  {
+    // UK chat assistant — served as a multizone child so the chat lives at
+    // policyengine.org/uk/chat without an iframe. The chat app itself does
+    // not yet render the PolicyEngine site shell, so the shell audit checks
+    // liveness but exempts its brand/nav assertion.
+    source: "/uk/chat",
+    destination: "https://policyengine-uk-chat.vercel.app/uk/chat",
+  },
 ];
 
 export const appZoneAssetRoutes: AppZoneRoute[] = [

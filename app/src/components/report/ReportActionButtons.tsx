@@ -1,4 +1,4 @@
-import { IconBookmark, IconCode, IconSettings } from '@tabler/icons-react';
+import { IconBookmark, IconCode, IconMessageCircle, IconSettings } from '@tabler/icons-react';
 import { Group } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,6 +10,7 @@ interface ReportActionButtonsProps {
   onSave?: () => void;
   onView?: () => void;
   onReproduce?: () => void;
+  onAskFollowUp?: () => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export function ReportActionButtons({
   onSave,
   onView,
   onReproduce,
+  onAskFollowUp,
 }: ReportActionButtonsProps) {
   return (
     <Group gap="xs" className="tw:ml-1.5">
@@ -66,6 +68,21 @@ export function ReportActionButtons({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">Reproduce in Python</TooltipContent>
+        </Tooltip>
+      )}
+      {onAskFollowUp && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Ask a follow-up about this report"
+              onClick={onAskFollowUp}
+            >
+              <IconMessageCircle size={18} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Ask a follow-up</TooltipContent>
         </Tooltip>
       )}
       <ReportShareButton shareUrl={shareUrl} />

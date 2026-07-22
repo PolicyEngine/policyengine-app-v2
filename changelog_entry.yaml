@@ -1,6 +1,7 @@
 - bump: patch
   changes:
     added:
+      - Add the PolicyEngine UK chat assistant at /uk/chat
       - Add SMF citation on AI and junior hiring, which cites PolicyEngine UK's estimate for extending the employer NI exemption to age 25
       - Add City AM citation on Burnham and junior hiring, which cites PolicyEngine UK's estimate for extending the NI contribution exemption to 21-24-year-old NEETs
       - Add the Introducing PolicyBench research post
