@@ -15,6 +15,7 @@
       - Add the NICs exemption for recently-inactive employees dashboard at /uk/nics-exemption-inactive-employees
       - Add the temporary VAT cut on domestic electricity dashboard at /uk/electricity-vat-cut
     changed:
+      - Remove Ben Ogorek from the team page
       - Move the Claude plugin page to /:countryId/ai-agents (runtime-agnostic — the skills catalog serves Claude Code and Codex) with a permanent redirect from /:countryId/claude-plugin; refresh the hero eyebrow and add the Codex install path
       - Correct the Claude plugin page stats (they were frozen at 24 skills / 21 agents / 4 commands / 7 bundles) and read them from a checked-in pluginStats.json regenerated from policyengine-skills, so the page tracks the rebuilt catalog
       - Move the bill tracker to /us/bill-tracker (canonical URL); /us/state-legislative-tracker now permanently redirects there
@@ -24,3 +25,4 @@
     fixed:
       - Point "Reproduce in Python" snippets for a US national run at the certified populace-us dataset instead of the deprecated policyengine-us-data repo
       - Add a callout on society-wide results explaining why every output reads "No change" when a reform changes nothing in effect in the simulated year (for example a credit that has sunset), so users can tell a genuine no-op from a start-date or sunset mismatch
+      - Declare the image optimiser width allowlist in website/next.config.ts (the vercel.json images block is ignored for Next.js projects), fixing team headshots and supporter logos that returned 400 on retina displays because their 2x srcSet width of 512 was not allowed
