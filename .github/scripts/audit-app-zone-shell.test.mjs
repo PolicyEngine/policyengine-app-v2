@@ -264,6 +264,7 @@ describe("isShellBrandExempt", () => {
       true,
     );
     assert.equal(isShellBrandExempt("/uk/electricity-vat-cut"), true);
+    assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), true);
   });
 
   test("does not exempt other routes or partial-name collisions", () => {

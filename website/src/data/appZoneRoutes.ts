@@ -50,6 +50,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://electricity-vat-cut.vercel.app/uk/electricity-vat-cut",
   },
   {
+    source: "/uk/bus-fare-cap",
+    destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
+  },
+  {
     source: "/us/pe84",
     destination: "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
     deepDestination: "https://april-fools-2026-two.vercel.app/us/pe84/:path*",
