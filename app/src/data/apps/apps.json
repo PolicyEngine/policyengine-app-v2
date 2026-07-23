@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "bus-fare-cap",
+    "title": "£2 bus fare cap analysis",
+    "description": "Estimate the cost and household impact of capping single bus fares at £2 in England outside London for calendar 2027, modelled with PolicyEngine UK.",
+    "source": "https://bus-fare-cap.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "bus-fare-cap.jpg",
+    "date": "2026-07-23 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "electricity-vat-cut",
     "title": "Temporary VAT cut on domestic electricity",
     "description": "Estimate the fiscal cost and distributional impact of cutting VAT on domestic electricity from 5% to 0% for six months from October 2026, modelled with PolicyEngine UK.",
