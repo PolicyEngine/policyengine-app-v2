@@ -36,7 +36,7 @@ export const staff: TeamMember[] = [
   },
   {
     name: "David Trimmer",
-    bio: "is a policy research fellow at PolicyEngine. He is also a contributor at the People's Policy Project. Previously, he was a social policy intern at the Niskanen Center and a staff writer for Policy Perspectives. David holds an MPA from The George Washington University and a B.S. in Political Science from The Rochester Institute of Technology.",
+    bio: "is a research analyst at PolicyEngine. Previously, he was a contributor at the People's Policy Project and a social policy intern at the Niskanen Center. David holds an MPA from The George Washington University and a B.S. in Political Science from The Rochester Institute of Technology.",
     image: "/assets/team/david-trimmer.webp",
   },
   {
