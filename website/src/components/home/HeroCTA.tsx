@@ -1,14 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { colors, spacing, typography } from "@/designTokens";
+
 const CALCULATOR_URL =
   process.env.NEXT_PUBLIC_CALCULATOR_URL || "https://app.policyengine.org";
-const CHAT_URL = "https://policyengine-uk-chat.vercel.app/";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+const CHAT_URL = process.env.NEXT_PUBLIC_CHAT_URL || "/uk/chat";
 
 const ctaVariant = {
   hidden: { opacity: 0, y: 20 },
