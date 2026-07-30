@@ -27,6 +27,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://crfb-tob-impacts.vercel.app/us/taxation-of-benefits-reforms",
   },
   {
+    source: "/us/refundable-credit-conversion",
+    destination:
+      "https://refundable-credit-conversion.vercel.app/us/refundable-credit-conversion",
+  },
+  {
     source: "/uk/scotland-income-tax-reform",
     destination:
       "https://scotland-income-tax-reform.vercel.app/uk/scotland-income-tax-reform",
