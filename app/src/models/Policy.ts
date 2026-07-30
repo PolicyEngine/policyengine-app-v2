@@ -1,5 +1,4 @@
-import type { V2PolicyResponse } from '@/api/policy';
-import { countryIds, type CountryId } from '@/libs/countries';
+import type { CountryId } from '@/libs/countries';
 import { BaseModel } from './BaseModel';
 
 interface PolicyParameter {
@@ -68,38 +67,6 @@ export class Policy extends BaseModel<PolicyData> {
 
   set label(value: string | null) {
     this._label = value;
-  }
-
-  // --- Factories ---
-
-  /**
-   * Create from v2 API response.
-   */
-  static fromV2Response(response: V2PolicyResponse): Policy {
-    const modelId = response.tax_benefit_model_id;
-    if (!countryIds.includes(modelId as CountryId)) {
-      throw new Error(
-        `Unknown tax_benefit_model_id "${modelId}". Expected one of: ${countryIds.join(', ')}`
-      );
-    }
-    const countryId = modelId as CountryId;
-
-    const parameters: PolicyParameter[] = (response.parameter_values ?? []).map((pv) => ({
-      parameterName: pv.parameter_name ?? pv.parameter_id,
-      parameterId: pv.parameter_id,
-      value: pv.value_json,
-      startDate: pv.start_date,
-      endDate: pv.end_date,
-    }));
-
-    return new Policy({
-      id: response.id,
-      countryId,
-      label: response.name ?? null,
-      apiVersion: 'v2',
-      isCreated: true,
-      parameters,
-    });
   }
 
   // --- Serialization ---

@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
-import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import { useRegions } from '@/hooks/useRegions';
 import {
   useCreateGeographicAssociation,
@@ -24,8 +23,6 @@ import {
   TEST_IDS,
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
-
-const mockShadowResolveRegionTarget = vi.fn().mockResolvedValue(null);
 
 // Mock useCurrentCountry hook
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -67,10 +64,6 @@ vi.mock('@/hooks/useRegions', () => ({
   })),
 }));
 
-vi.mock('@/libs/migration/regionShadow', () => ({
-  shadowResolveRegionTarget: (...args: unknown[]) => mockShadowResolveRegionTarget(...args),
-}));
-
 // Mock the stores first
 vi.mock('@/api/geographicAssociation', () => {
   const mockStore = {
@@ -110,13 +103,10 @@ vi.mock('@/libs/queryKeys', () => ({
 
 describe('useUserGeographic hooks', () => {
   let queryClient: QueryClient;
-  const defaultSavedGeographyMigrationMode = ENTITY_MIGRATION_MODE.saved_geographies;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
-    mockShadowResolveRegionTarget.mockResolvedValue(null);
-    ENTITY_MIGRATION_MODE.saved_geographies = defaultSavedGeographyMigrationMode;
     vi.mocked(useRegions).mockReturnValue({
       data: [
         {
@@ -421,14 +411,6 @@ describe('useUserGeographic hooks', () => {
       expect(queryClient.setQueryData).not.toHaveBeenCalled();
     });
 
-    test('given unsupported saved geography mode then create hook fails fast', () => {
-      ENTITY_MIGRATION_MODE.saved_geographies = 'v1_primary_v2_shadow';
-
-      expect(() => renderHook(() => useCreateGeographicAssociation(), { wrapper })).toThrow(
-        '[MigrationMode] Unsupported mode "v1_primary_v2_shadow" for saved_geographies in useCreateGeographicAssociation. Supported modes: v1_only'
-      );
-    });
-
     test('given multiple associations created then each updates cache independently', async () => {
       // Given
       const { result } = renderHook(() => useCreateGeographicAssociation(), { wrapper });
@@ -495,14 +477,6 @@ describe('useUserGeographic hooks', () => {
         ),
       });
     });
-
-    test('given unsupported saved geography mode then update hook fails fast', () => {
-      ENTITY_MIGRATION_MODE.saved_geographies = 'v2_only';
-
-      expect(() => renderHook(() => useUpdateGeographicAssociation(), { wrapper })).toThrow(
-        '[MigrationMode] Unsupported mode "v2_only" for saved_geographies in useUpdateGeographicAssociation. Supported modes: v1_only'
-      );
-    });
   });
 
   describe('query configuration', () => {
@@ -567,25 +541,6 @@ describe('useUserGeographic hooks', () => {
         name: 'California',
       });
       expect(result.current.data?.[1].geography?.name).toBe('New York');
-    });
-
-    test('given canonical geography records then it resolves region targets in the background', async () => {
-      renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
-
-      await waitFor(() => {
-        expect(mockShadowResolveRegionTarget).toHaveBeenCalledTimes(2);
-      });
-
-      expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
-        countryId: 'us',
-        regionCode: 'state/ca',
-        selectedLabel: TEST_LABELS.GEOGRAPHY,
-      });
-      expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
-        countryId: 'us',
-        regionCode: 'state/ny',
-        selectedLabel: TEST_LABELS.GEOGRAPHY_2,
-      });
     });
 
     test('given regions lookup fails then it still returns reconstructed geographies without surfacing an error', async () => {

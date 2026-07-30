@@ -1,6 +1,58 @@
 [
   {
     "type": "iframe",
+    "slug": "bus-fare-cap",
+    "title": "£2 bus fare cap analysis",
+    "description": "Estimate the cost and household impact of capping single bus fares at £2 in England outside London for calendar 2027, modelled with PolicyEngine UK.",
+    "source": "https://bus-fare-cap.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "bus-fare-cap.jpg",
+    "date": "2026-07-23 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "electricity-vat-cut",
+    "title": "Temporary VAT cut on domestic electricity",
+    "description": "Estimate the fiscal cost and distributional impact of cutting VAT on domestic electricity from 5% to 0% for six months from October 2026, modelled with PolicyEngine UK.",
+    "source": "https://electricity-vat-cut.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "electricity-vat-cut.jpg",
+    "date": "2026-07-21 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "nics-exemption-inactive-employees",
+    "title": "NICs exemption for recently-inactive employees",
+    "description": "Estimate the cost, employment effects, and poverty impact of exempting employers from NICs on employees who recently moved from economic inactivity into work, modelled with PolicyEngine UK.",
+    "source": "https://nics-exemption-inactive-employees.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "nics-exemption-inactive-employees.jpg",
+    "date": "2026-07-13 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "young-worker-nics",
+    "title": "Employer NICs exemption for young workers",
+    "description": "Estimate the fiscal cost and employment effects of extending the employer NICs zero rate to young workers, either all 18 to 24-year-olds or only recent NEETs, modelled with PolicyEngine UK.",
+    "source": "https://young-worker-nics.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "young-worker-nics.jpg",
+    "date": "2026-07-09 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "taxation-of-benefits-reforms",
     "title": "Social Security taxation reform dashboard",
     "description": "Explore policy options for reforming the taxation of Social Security benefits, with budgetary impacts through 2100 using PolicyEngine microsimulation. Analysis commissioned by the Committee for a Responsible Federal Budget.",
@@ -333,7 +385,7 @@
   },
   {
     "type": "iframe",
-    "slug": "state-legislative-tracker",
+    "slug": "bill-tracker",
     "title": "2026 state legislative tracker",
     "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",
     "source": "https://policyengine--state-legislative-tracker.modal.run/",
@@ -554,6 +606,19 @@
     "source": "https://ri-ctc-calculator-policy-engine.vercel.app/",
     "tags": ["us", "policy"],
     "countryId": "us"
+  },
+  {
+    "type": "iframe",
+    "slug": "nj-ctc-increase",
+    "title": "NJ Child Tax Credit increase calculator",
+    "description": "See the impact of New Jersey's enacted 25% Child Tax Credit increase (P.L.2026, c.26) on New Jersey households, statewide and by congressional district",
+    "source": "https://nj-ctc-increase.vercel.app/us/nj-ctc-increase",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "nj-ctc-increase-calculator.png",
+    "date": "2026-07-13 12:00:00",
+    "authors": ["david-trimmer"]
   },
   {
     "type": "iframe",

@@ -122,8 +122,16 @@ function generateSitemap(): string {
     }
   }
 
+  // Bill tracker (updates daily, so listed explicitly instead of via the
+  // apps.json loop below — seeded into `seen` to avoid a duplicate entry)
+  const seen = new Set<string>(['us/bill-tracker']);
+  entries.push({
+    url: `${BASE_URL}/us/bill-tracker`,
+    changefreq: 'daily',
+    priority: '0.8',
+  });
+
   // Interactive tools/apps (deduplicate by slug+country)
-  const seen = new Set<string>();
   for (const app of apps) {
     const key = `${app.countryId}/${app.slug}`;
     if (seen.has(key)) {
@@ -138,13 +146,6 @@ function generateSitemap(): string {
       priority: '0.8',
     });
   }
-
-  // State legislative tracker
-  entries.push({
-    url: `${BASE_URL}/us/state-legislative-tracker`,
-    changefreq: 'daily',
-    priority: '0.8',
-  });
 
   // TAXSIM emulator (US-only, served via Vercel rewrite)
   entries.push({

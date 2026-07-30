@@ -40,6 +40,21 @@ const policyEngineIconRewrites = [
 ];
 
 const nextConfig: NextConfig = {
+  // Vercel's image optimiser (/_vercel/image) only accepts widths from this
+  // allowlist (imageSizes ∪ deviceSizes). For Next.js projects this config is
+  // the source of truth — the `images` block in vercel.json is ignored — and
+  // without it Next's defaults apply, which lack 512, so OptimisedImage's 2x
+  // srcSet variant for width≤256 images (team headshots, supporter logos)
+  // returned 400 on retina displays.
+  // Must stay a superset of ALLOWED_WIDTHS in src/components/ui/OptimisedImage.tsx
+  // (enforced by src/__tests__/config/next-config.test.ts).
+  images: {
+    imageSizes: [128, 256, 384, 512],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+  },
+
   async redirects() {
     return [
       // Root → /us (temporary — will be replaced with geolocation)
@@ -47,6 +62,12 @@ const nextConfig: NextConfig = {
         source: "/",
         destination: "/us",
         permanent: false,
+      },
+      // Claude-branded skills page → runtime-agnostic AI agents page
+      {
+        source: "/:countryId/claude-plugin",
+        destination: "/:countryId/ai-agents",
+        permanent: true,
       },
       // Legacy /blog → /research
       {
@@ -84,6 +105,19 @@ const nextConfig: NextConfig = {
         destination: "/us/pe84",
         permanent: true,
       },
+      // Vanity redirects to the standalone PolicyBench site (external).
+      // policybench.org is country-agnostic, so both the bare and
+      // country-prefixed paths land on its root.
+      {
+        source: "/policybench",
+        destination: "https://policybench.org",
+        permanent: false,
+      },
+      {
+        source: "/:countryId/policybench",
+        destination: "https://policybench.org",
+        permanent: false,
+      },
       {
         source: "/uk/ads-dashboard",
         destination: "/us/ads-dashboard",
@@ -113,6 +147,18 @@ const nextConfig: NextConfig = {
       {
         source: "/:countryId/cliff-watch/:path*",
         destination: "/:countryId/cliffwatch/:path*",
+        permanent: true,
+      },
+      // Bill tracker renamed from state-legislative-tracker → bill-tracker
+      // (it now covers federal bills too); /us/bill-tracker is canonical
+      {
+        source: "/:countryId/state-legislative-tracker",
+        destination: "/:countryId/bill-tracker",
+        permanent: true,
+      },
+      {
+        source: "/:countryId/state-legislative-tracker/:path*",
+        destination: "/:countryId/bill-tracker/:path*",
         permanent: true,
       },
     ];

@@ -23,13 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }
 
   // Static pages
-  const staticPages = [
-    "research",
-    "team",
-    "donate",
-    "supporters",
-    "claude-plugin",
-  ];
+  const staticPages = ["research", "team", "donate", "supporters", "ai-agents"];
   for (const country of ["us", "uk"]) {
     for (const page of staticPages) {
       entries.push({

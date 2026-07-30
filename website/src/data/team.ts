@@ -36,7 +36,7 @@ export const staff: TeamMember[] = [
   },
   {
     name: "David Trimmer",
-    bio: "is a policy research fellow at PolicyEngine. He is also a contributor at the People's Policy Project. Previously, he was a social policy intern at the Niskanen Center and a staff writer for Policy Perspectives. David holds an MPA from The George Washington University and a B.S. in Political Science from The Rochester Institute of Technology.",
+    bio: "is a research analyst at PolicyEngine. Previously, he was a contributor at the People's Policy Project and a social policy intern at the Niskanen Center. David holds an MPA from The George Washington University and a B.S. in Political Science from The Rochester Institute of Technology.",
     image: "/assets/team/david-trimmer.webp",
   },
   {
@@ -48,10 +48,5 @@ export const staff: TeamMember[] = [
     name: "Ziming Hua",
     bio: "is a policy modeling fellow at PolicyEngine. He focuses on implementing and analyzing tax and benefit systems. He develops simulation models to evaluate the impacts of policy reforms. Ziming holds a bachelor's degree in mathematical finance from the University of California, Irvine, and a master's degree in business analytics from Boston University.",
     image: "/assets/team/ziming-hua.webp",
-  },
-  {
-    name: "Ben Ogorek",
-    bio: "is a data scientist at PolicyEngine. He co-founded Google's People Analytics Data Science team and previously held data science leadership positions at Spencer Health Solutions and Nationwide Insurance. Ben holds a PhD in Statistics from North Carolina State University.",
-    image: "/assets/team/ben-ogorek.webp",
   },
 ];

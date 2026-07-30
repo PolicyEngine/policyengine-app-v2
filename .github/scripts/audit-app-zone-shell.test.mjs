@@ -149,7 +149,8 @@ describe("sitemap route mapping", () => {
   test("preserves static destination query params without leaking them into source paths", () => {
     const ukMarriageRoute = {
       source: "/uk/marriage",
-      destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
+      destination:
+        "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
       deepDestination:
         "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
     };
@@ -227,9 +228,18 @@ describe("shouldAllowDestinationFallback", () => {
   });
 
   test("enables fallback for explicit flag, env override, or pull request runs", () => {
-    assert.equal(shouldAllowDestinationFallback({ "allow-destination-fallback": true }, {}), true);
     assert.equal(
-      shouldAllowDestinationFallback({}, { APP_ZONE_ALLOW_DESTINATION_FALLBACK: "1" }),
+      shouldAllowDestinationFallback(
+        { "allow-destination-fallback": true },
+        {},
+      ),
+      true,
+    );
+    assert.equal(
+      shouldAllowDestinationFallback(
+        {},
+        { APP_ZONE_ALLOW_DESTINATION_FALLBACK: "1" },
+      ),
       true,
     );
     assert.equal(
@@ -248,6 +258,13 @@ describe("isShellBrandExempt", () => {
     );
     assert.equal(isShellBrandExempt("/uk/uc-rebalancing"), true);
     assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), true);
+    assert.equal(isShellBrandExempt("/uk/young-worker-nics"), true);
+    assert.equal(
+      isShellBrandExempt("/uk/nics-exemption-inactive-employees"),
+      true,
+    );
+    assert.equal(isShellBrandExempt("/uk/electricity-vat-cut"), true);
+    assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), true);
   });
 
   test("does not exempt other routes or partial-name collisions", () => {

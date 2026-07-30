@@ -11,12 +11,10 @@ import type {
   AppHouseholdInputGroup,
   AppHouseholdInputGroupMap,
   AppHouseholdInputPerson,
-  ComparableHousehold,
   HouseholdFieldValue,
   HouseholdModelData,
   HouseholdScalar,
 } from './household/appTypes';
-import { buildComparableHousehold } from './household/comparable';
 import { buildPythonPackageHouseholdDataFromAppInput } from './household/pythonPackageCodec';
 import type { PythonPackageHouseholdData } from './household/pythonPackageTypes';
 import {
@@ -39,10 +37,8 @@ import {
   normalizeCountryId,
 } from './household/utils';
 import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
-import { buildV2CreateEnvelope, parseV2HouseholdEnvelope } from './household/v2Codec';
-import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './household/v2Types';
 
-export type { ComparableHousehold, HouseholdModelData } from './household/appTypes';
+export type { HouseholdModelData } from './household/appTypes';
 
 export type HouseholdBuilderMaritalStatus = 'single' | 'married';
 
@@ -1051,20 +1047,6 @@ export class Household extends BaseModel<HouseholdModelData> {
     });
   }
 
-  static fromV2Response(response: V2StoredHouseholdEnvelope): Household {
-    return Household.fromAppInput({
-      id: response.id,
-      ...parseV2HouseholdEnvelope(response),
-    });
-  }
-
-  static fromV2CreateEnvelope(envelope: V2CreateHouseholdEnvelope): Household {
-    return Household.fromAppInput({
-      id: 'draft-household',
-      ...parseV2HouseholdEnvelope(envelope),
-    });
-  }
-
   withId(id: string): Household {
     return new Household({
       id,
@@ -1438,19 +1420,6 @@ export class Household extends BaseModel<HouseholdModelData> {
       householdData: this.appInputData,
       year: this.year ?? inferYearFromData(this.appInputData),
     });
-  }
-
-  toV2CreateEnvelope(): V2CreateHouseholdEnvelope {
-    return buildV2CreateEnvelope({
-      countryId: this.countryId,
-      label: this.label,
-      year: this.year,
-      householdData: this.appInputData,
-    });
-  }
-
-  toComparable(): ComparableHousehold {
-    return buildComparableHousehold({ id: this.id, envelope: this.toV2CreateEnvelope() });
   }
 
   toJSON(): HouseholdModelData {

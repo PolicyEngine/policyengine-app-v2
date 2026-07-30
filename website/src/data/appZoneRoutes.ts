@@ -32,6 +32,28 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://scotland-income-tax-reform.vercel.app/uk/scotland-income-tax-reform",
   },
   {
+    source: "/uk/uk-cliff-watch",
+    destination: "https://uk-cliff-watch.vercel.app/uk/uk-cliff-watch",
+  },
+  {
+    source: "/uk/young-worker-nics",
+    destination: "https://young-worker-nics.vercel.app/uk/young-worker-nics",
+  },
+  {
+    source: "/uk/nics-exemption-inactive-employees",
+    destination:
+      "https://nics-exemption-inactive-employees.vercel.app/uk/nics-exemption-inactive-employees",
+  },
+  {
+    source: "/uk/electricity-vat-cut",
+    destination:
+      "https://electricity-vat-cut.vercel.app/uk/electricity-vat-cut",
+  },
+  {
+    source: "/uk/bus-fare-cap",
+    destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
+  },
+  {
     source: "/us/pe84",
     destination: "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
     deepDestination: "https://april-fools-2026-two.vercel.app/us/pe84/:path*",
@@ -109,6 +131,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://tanf-calculator.vercel.app/us/tanf-calculator",
   },
   {
+    source: "/ai-beliefs",
+    destination: "https://ai-beliefs.vercel.app/ai-beliefs",
+  },
+  {
     source: "/us/coverage-compass",
     destination:
       "https://coverage-compass-policy-engine.vercel.app/us/coverage-compass",
@@ -135,7 +161,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk",
   },
   {
-    source: "/:countryId/state-legislative-tracker",
+    source: "/:countryId/bill-tracker",
     destination: "https://policyengine--state-legislative-tracker.modal.run/",
     deepDestination:
       "https://policyengine--state-legislative-tracker.modal.run/:path*",
@@ -234,6 +260,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
     source: "/us/rhode-island-ctc-calculator",
     destination:
       "https://ri-ctc-calculator-policy-engine.vercel.app/us/rhode-island-ctc-calculator",
+  },
+  {
+    source: "/us/nj-ctc-increase",
+    destination: "https://nj-ctc-increase.vercel.app/us/nj-ctc-increase",
   },
   {
     source: "/us/snap-district-map",

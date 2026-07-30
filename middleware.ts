@@ -80,7 +80,7 @@ export function isLLMBot(userAgent: string | null): boolean {
   return LLM_USER_AGENTS_LOWER.some((bot) => lower.includes(bot));
 }
 
-export const TRACKER_PREFIX = "/us/state-legislative-tracker";
+export const TRACKER_PREFIX = "/us/bill-tracker";
 export const TRACKER_MODAL_ORIGIN =
   "https://policyengine--state-legislative-tracker.modal.run";
 
