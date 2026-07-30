@@ -225,7 +225,7 @@ export const useUserPolicies = (userId: string) => {
 
   // Combine the results
   const isLoading = associationsLoading || policyQueries.some((q) => q.isLoading);
-  const error = associationsError || policyQueries.find((q) => q.error)?.error;
+  const error = associationsError;
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
@@ -235,7 +235,7 @@ export const useUserPolicies = (userId: string) => {
       policy: policyQueries[index]?.data,
       isLoading: policyQueries[index]?.isLoading ?? false,
       error: policyQueries[index]?.error ?? null,
-      isError: !!error,
+      isError: !!policyQueries[index]?.error,
     })
   );
 

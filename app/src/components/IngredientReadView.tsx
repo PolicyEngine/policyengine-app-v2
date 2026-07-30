@@ -1,4 +1,4 @@
-import { IconPlus } from '@tabler/icons-react';
+import { IconAlertTriangle, IconPlus } from '@tabler/icons-react';
 import {
   Button,
   Spinner,
@@ -11,6 +11,7 @@ import {
   Text,
   Title,
 } from '@/components/ui';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';
 import EmptyState from './common/EmptyState';
@@ -147,13 +148,40 @@ export default function IngredientReadView({
                 </TableHeader>
                 <TableBody>
                   {data.map((record) => (
-                    <TableRow key={record.id}>
-                      {columns.map((column) => (
+                    <TableRow
+                      key={record.id}
+                      aria-disabled={record.isDisabled || undefined}
+                      style={{
+                        backgroundColor: record.isDisabled ? colors.gray[50] : undefined,
+                        opacity: record.isDisabled ? 0.72 : 1,
+                      }}
+                    >
+                      {columns.map((column, columnIndex) => (
                         <TableCell
                           key={column.key}
                           style={{ padding: `${spacing.md} ${spacing.lg}` }}
                         >
-                          <ColumnRenderer config={column} record={record} />
+                          <div className="tw:flex tw:items-center tw:gap-2">
+                            {record.isDisabled && columnIndex === 0 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span
+                                    aria-label={
+                                      record.errorMessage || `Error loading this ${ingredient}`
+                                    }
+                                    className="tw:inline-flex tw:shrink-0 tw:items-center"
+                                    style={{ color: colors.error }}
+                                  >
+                                    <IconAlertTriangle size={16} />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                  {record.errorMessage || `Error loading this ${ingredient}`}
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                            <ColumnRenderer config={column} record={record} />
+                          </div>
                         </TableCell>
                       ))}
                     </TableRow>

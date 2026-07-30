@@ -17,7 +17,7 @@ export function MenuColumn({ config, record }: MenuColumnProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" disabled={record.isDisabled}>
           <IconDots size={16} />
         </Button>
       </DropdownMenuTrigger>
@@ -25,7 +25,11 @@ export function MenuColumn({ config, record }: MenuColumnProps) {
         {config.actions.map((action) => (
           <DropdownMenuItem
             key={action.action}
-            onClick={() => config.onAction(action.action, record.id)}
+            onClick={() => {
+              if (!record.isDisabled) {
+                config.onAction(action.action, record.id);
+              }
+            }}
             className={action.color === 'red' ? 'tw:text-red-500' : ''}
           >
             {action.label}

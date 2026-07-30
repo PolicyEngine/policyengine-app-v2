@@ -16,7 +16,12 @@ export function ActionsColumn({ config, record }: ActionsColumnProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => config.onAction(action.action, record.id)}
+              disabled={record.isDisabled}
+              onClick={() => {
+                if (!record.isDisabled) {
+                  config.onAction(action.action, record.id);
+                }
+              }}
               aria-label={action.tooltip}
             >
               {action.icon}

@@ -120,6 +120,8 @@ export default function PoliciesPage() {
 
       return {
         id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
+        isDisabled: !!item.error,
+        errorMessage: 'Error loading this policy',
         policyName: {
           text: item.association.label || `Policy #${item.association.policyId}`,
         } as TextValue,

@@ -202,6 +202,8 @@ export default function PopulationsPage() {
 
       return {
         id: item.association.id || item.association.householdId.toString(),
+        isDisabled: !!item.error,
+        errorMessage: 'Error loading this population',
         type: 'household',
         userId: item.association.userId,
         populationName: {
@@ -230,6 +232,8 @@ export default function PopulationsPage() {
 
       return {
         id: association.association.geographyId,
+        isDisabled: !!association.error,
+        errorMessage: 'Error loading this population',
         type: 'geography',
         userId: association.association.userId,
         geographyId: association.geography?.geographyId ?? association.association.geographyId,
