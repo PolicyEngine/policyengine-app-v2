@@ -20,7 +20,7 @@ import { extractShareDataFromUrl } from '@/utils/shareUtils';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { useModifyReportSubmission } from './hooks/useModifyReportSubmission';
 import { useReportBuilderState } from './hooks/useReportBuilderState';
-import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
+import type { ReportBuilderState, TopBarAction } from './types';
 
 export default function ModifyReportPage({ userReportId }: { userReportId?: string }) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
@@ -36,12 +36,6 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     userReportId ?? '',
     shareData
   );
-
-  const [pickerState, setPickerState] = useState<IngredientPickerState>({
-    isOpen: false,
-    simulationIndex: 0,
-    ingredientType: 'policy',
-  });
 
   const { handleSaveAsNew, handleReplace, isSavingNew, isReplacing, isReportSubmissionBlocked } =
     useModifyReportSubmission({
@@ -165,8 +159,6 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}
-        pickerState={pickerState}
-        setPickerState={setPickerState}
         BlockComponent={SimulationBlockFull}
         isReadOnly={isReadOnly}
       />

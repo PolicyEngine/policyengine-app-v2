@@ -44,7 +44,6 @@ import { getSamplePopulations } from '../constants';
 import { createCurrentLawPolicy } from '../currentLaw';
 import type {
   HouseholdEditorState,
-  IngredientPickerState,
   IngredientType,
   PolicyBrowseState,
   RecentPopulation,
@@ -55,18 +54,11 @@ import type {
 interface UseSimulationCanvasArgs {
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
-  pickerState: IngredientPickerState;
-  setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
 }
 
 const REGION_LOAD_TIMEOUT_MS = 10_000;
 
-export function useSimulationCanvas({
-  reportState,
-  setReportState,
-  pickerState,
-  setPickerState,
-}: UseSimulationCanvasArgs) {
+export function useSimulationCanvas({ reportState, setReportState }: UseSimulationCanvasArgs) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
   const {
@@ -601,20 +593,8 @@ export function useSimulationCanvas({
   );
 
   // ---------------------------------------------------------------------------
-  // Ingredient picker / create-custom actions
+  // Create-custom actions
   // ---------------------------------------------------------------------------
-
-  const handleIngredientSelect = useCallback(
-    (item: PolicyStateProps | PopulationStateProps | null) => {
-      const { simulationIndex, ingredientType } = pickerState;
-      if (ingredientType === 'policy') {
-        updatePolicy(simulationIndex, item as PolicyStateProps);
-      } else if (ingredientType === 'population') {
-        updatePopulationWithInheritance(simulationIndex, item as PopulationStateProps);
-      }
-    },
-    [pickerState, updatePolicy, updatePopulationWithInheritance]
-  );
 
   const handleCreateCustom = useCallback(
     (simulationIndex: number, ingredientType: IngredientType) => {
@@ -669,11 +649,6 @@ export function useSimulationCanvas({
     });
   }, [householdEditorState.simulationIndex]);
 
-  const closeIngredientPicker = useCallback(
-    () => setPickerState((prev) => ({ ...prev, isOpen: false })),
-    [setPickerState]
-  );
-
   // ---------------------------------------------------------------------------
   // Return
   // ---------------------------------------------------------------------------
@@ -720,12 +695,10 @@ export function useSimulationCanvas({
     handleEditPopulation,
     handleViewPopulation,
 
-    // Ingredient picker / custom
-    handleIngredientSelect,
+    // Custom ingredient creation
     handleCreateCustom,
 
     // Modal state
-    pickerState,
     policyBrowseState,
     policyCreationState,
     populationBrowseState,
@@ -736,6 +709,5 @@ export function useSimulationCanvas({
     closeHouseholdEditor,
     returnToPolicyBrowse,
     returnToPopulationBrowse,
-    closeIngredientPicker,
   };
 }

@@ -17,12 +17,6 @@ export interface ReportBuilderState {
 
 export type IngredientType = 'policy' | 'population' | 'dynamics';
 
-export interface IngredientPickerState {
-  isOpen: boolean;
-  simulationIndex: number;
-  ingredientType: IngredientType;
-}
-
 // ============================================================================
 // COLOR CONFIG
 // ============================================================================
@@ -227,14 +221,6 @@ export interface AddSimulationCardProps {
 // MODAL COMPONENT TYPES
 // ============================================================================
 
-export interface IngredientPickerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  type: IngredientType;
-  onSelect: (value: string) => void;
-  onCreateNew: () => void;
-}
-
 export interface PolicyBrowseState {
   isOpen: boolean;
   simulationIndex: number;
@@ -295,8 +281,6 @@ export interface TopBarAction {
 export interface SimulationCanvasProps {
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
-  pickerState: IngredientPickerState;
-  setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
 }
 
 export interface ReportMetaPanelProps {

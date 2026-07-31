@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSimulationCanvas } from '@/pages/reportBuilder/hooks/useSimulationCanvas';
-import type { IngredientPickerState, ReportBuilderState } from '@/pages/reportBuilder/types';
+import type { ReportBuilderState } from '@/pages/reportBuilder/types';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 
 const mockUseCurrentCountry = vi.fn();
@@ -42,16 +42,10 @@ vi.mock('@/api/usageTracking', () => ({
 
 describe('useSimulationCanvas', () => {
   const setReportState = vi.fn();
-  const setPickerState = vi.fn();
   const reportState: ReportBuilderState = {
     label: null,
     year: '2026',
     simulations: [initializeSimulationState()],
-  };
-  const pickerState: IngredientPickerState = {
-    isOpen: false,
-    simulationIndex: 0,
-    ingredientType: 'policy',
   };
 
   beforeEach(() => {
@@ -85,8 +79,6 @@ describe('useSimulationCanvas', () => {
       useSimulationCanvas({
         reportState,
         setReportState,
-        pickerState,
-        setPickerState,
       })
     );
 
@@ -116,8 +108,6 @@ describe('useSimulationCanvas', () => {
       useSimulationCanvas({
         reportState,
         setReportState,
-        pickerState,
-        setPickerState,
       })
     );
 
@@ -145,8 +135,6 @@ describe('useSimulationCanvas', () => {
       useSimulationCanvas({
         reportState,
         setReportState,
-        pickerState,
-        setPickerState,
       })
     );
 
@@ -186,8 +174,6 @@ describe('useSimulationCanvas', () => {
       useSimulationCanvas({
         reportState: reportStateWithPolicy,
         setReportState,
-        pickerState,
-        setPickerState,
       })
     );
 
@@ -229,8 +215,6 @@ describe('useSimulationCanvas', () => {
       useSimulationCanvas({
         reportState,
         setReportState,
-        pickerState,
-        setPickerState,
       })
     );
 
@@ -270,8 +254,6 @@ describe('useSimulationCanvas', () => {
       useSimulationCanvas({
         reportState,
         setReportState,
-        pickerState,
-        setPickerState,
       })
     );
 
@@ -284,5 +266,43 @@ describe('useSimulationCanvas', () => {
         errorMessage: 'Error loading this population',
       },
     ]);
+  });
+
+  test('given policy browsing is requested then the specialized policy modal opens', () => {
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+      })
+    );
+
+    act(() => {
+      result.current.handleBrowseMorePolicies(0);
+    });
+
+    expect(result.current.policyBrowseState).toEqual({
+      isOpen: true,
+      simulationIndex: 0,
+    });
+    expect(result.current.populationBrowseState.isOpen).toBe(false);
+  });
+
+  test('given population browsing is requested then the specialized population modal opens', () => {
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+      })
+    );
+
+    act(() => {
+      result.current.handleBrowseMorePopulations(0);
+    });
+
+    expect(result.current.populationBrowseState).toEqual({
+      isOpen: true,
+      simulationIndex: 0,
+    });
+    expect(result.current.policyBrowseState.isOpen).toBe(false);
   });
 });
