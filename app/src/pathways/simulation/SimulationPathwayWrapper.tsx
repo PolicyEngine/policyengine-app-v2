@@ -16,9 +16,16 @@ import { useRegions } from '@/hooks/useRegions';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { CURRENT_LAW_LABEL } from '@/pages/reportBuilder/currentLaw';
 import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';
+import {
+  findUserHouseholdByHouseholdId,
+  findUserPolicyByPolicyId,
+  getUserHouseholdAvailability,
+  getUserPolicyAvailability,
+} from '@/utils/ingredientAvailability';
 import {
   createPolicyCallbacks,
   createPopulationCallbacks,
@@ -81,6 +88,22 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
 
   const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
   const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
+  const isCurrentLawSelected =
+    simulationState.policy.id === currentLawId.toString() &&
+    simulationState.policy.label === CURRENT_LAW_LABEL;
+  const selectedPolicy = isCurrentLawSelected
+    ? undefined
+    : findUserPolicyByPolicyId(userPolicies, simulationState.policy.id);
+  const selectedHousehold = findUserHouseholdByHouseholdId(
+    userHouseholds,
+    simulationState.population.household?.id
+  );
+  const policyAvailability = selectedPolicy
+    ? getUserPolicyAvailability(selectedPolicy)
+    : { isDisabled: false, errorMessage: undefined };
+  const populationAvailability = selectedHousehold
+    ? getUserHouseholdAvailability(selectedHousehold)
+    : { isDisabled: false, errorMessage: undefined };
 
   // ========== CONDITIONAL NAVIGATION HANDLERS ==========
   // Skip selection view if user has no existing items
@@ -149,7 +172,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       policy: {
         ...prev.policy,
         id: currentLawId.toString(),
-        label: 'Current law',
+        label: CURRENT_LAW_LABEL,
         parameters: [],
       },
     }));
@@ -193,6 +216,10 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onNavigateToPolicy={handleNavigateToPolicy}
           onNavigateToPopulation={handleNavigateToPopulation}
           onNext={() => navigateToMode(SimulationViewMode.SUBMIT)}
+          isPolicyUnavailable={policyAvailability.isDisabled}
+          isPopulationUnavailable={populationAvailability.isDisabled}
+          policyErrorMessage={policyAvailability.errorMessage}
+          populationErrorMessage={populationAvailability.errorMessage}
           onBack={canGoBack ? goBack : undefined}
           onCancel={handleCancel}
         />
@@ -204,6 +231,10 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
         <SimulationSubmitView
           simulation={simulationState}
           onSubmitSuccess={simulationCallbacks.handleSubmitSuccess}
+          isPolicyUnavailable={policyAvailability.isDisabled}
+          isPopulationUnavailable={populationAvailability.isDisabled}
+          policyErrorMessage={policyAvailability.errorMessage}
+          populationErrorMessage={populationAvailability.errorMessage}
           onBack={canGoBack ? goBack : undefined}
           onCancel={handleCancel}
         />

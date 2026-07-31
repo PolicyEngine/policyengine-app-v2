@@ -7,6 +7,7 @@
  * - Household list
  */
 import { IconChevronRight, IconHome, IconSearch } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Group } from '@/components/ui/Group';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,6 +27,7 @@ interface HouseholdItem {
   memberCount: number;
   disabled?: boolean;
   statusMessage?: string;
+  errorMessage?: string;
 }
 
 interface PopulationBrowseContentProps {
@@ -192,7 +194,7 @@ export function PopulationBrowseContent({
                     cursor: household.disabled ? 'not-allowed' : 'pointer',
                     opacity: household.disabled ? 0.6 : 1,
                   }}
-                  role={household.disabled ? undefined : 'button'}
+                  role="button"
                   tabIndex={household.disabled ? -1 : 0}
                   aria-disabled={household.disabled || undefined}
                   onClick={() => {
@@ -238,7 +240,11 @@ export function PopulationBrowseContent({
                         )}
                       </Stack>
                     </Group>
-                    {!household.disabled && <IconChevronRight size={16} color={colors.gray[400]} />}
+                    {household.errorMessage ? (
+                      <IngredientErrorIcon message={household.errorMessage} />
+                    ) : (
+                      !household.disabled && <IconChevronRight size={16} color={colors.gray[400]} />
+                    )}
                   </Group>
                 </div>
               ))}

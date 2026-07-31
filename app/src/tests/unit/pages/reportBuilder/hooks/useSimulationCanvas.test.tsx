@@ -8,6 +8,10 @@ const mockUseCurrentCountry = vi.fn();
 const mockUseUserPolicies = vi.fn();
 const mockUseUserHouseholds = vi.fn();
 const mockUseRegions = vi.fn();
+const mockGeographyRecentIds = vi.fn();
+const mockHouseholdRecentIds = vi.fn();
+const mockRefetchPolicyAssociations = vi.fn();
+const mockRefetchHouseholdAssociations = vi.fn();
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => mockUseCurrentCountry(),
@@ -27,11 +31,11 @@ vi.mock('@/hooks/useRegions', () => ({
 
 vi.mock('@/api/usageTracking', () => ({
   geographyUsageStore: {
-    getRecentIds: () => [],
+    getRecentIds: (...args: unknown[]) => mockGeographyRecentIds(...args),
     getLastUsed: () => null,
   },
   householdUsageStore: {
-    getRecentIds: () => [],
+    getRecentIds: (...args: unknown[]) => mockHouseholdRecentIds(...args),
     getLastUsed: () => null,
   },
 }));
@@ -55,9 +59,21 @@ describe('useSimulationCanvas', () => {
     vi.useFakeTimers();
 
     mockUseCurrentCountry.mockReturnValue('us');
-    mockUseUserPolicies.mockReturnValue({ data: [], isLoading: false });
-    mockUseUserHouseholds.mockReturnValue({ data: [], isLoading: false });
+    mockUseUserPolicies.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      refetchAssociations: mockRefetchPolicyAssociations,
+    });
+    mockUseUserHouseholds.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      refetchAssociations: mockRefetchHouseholdAssociations,
+    });
     mockUseRegions.mockReturnValue({ data: [], isLoading: false });
+    mockGeographyRecentIds.mockReturnValue([]);
+    mockHouseholdRecentIds.mockReturnValue([]);
   });
 
   afterEach(() => {
@@ -87,6 +103,58 @@ describe('useSimulationCanvas', () => {
     expect(result.current.isInitialLoading).toBe(false);
   });
 
+  test('given policy associations fail then it exposes an error instead of permanent loading', async () => {
+    const error = new Error('Policy associations failed');
+    mockUseUserPolicies.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error,
+      refetchAssociations: mockRefetchPolicyAssociations,
+    });
+
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+        pickerState,
+        setPickerState,
+      })
+    );
+
+    expect(result.current.isInitialLoading).toBe(false);
+    expect(result.current.catalogError).toBe(error);
+    expect(result.current.catalogErrorMessage).toBe("We couldn't load your saved policies.");
+
+    await act(async () => {
+      await result.current.retryCatalogs();
+    });
+    expect(mockRefetchPolicyAssociations).toHaveBeenCalledOnce();
+    expect(mockRefetchHouseholdAssociations).not.toHaveBeenCalled();
+  });
+
+  test('given household associations fail then it exposes a household catalog error', () => {
+    const error = new Error('Household associations failed');
+    mockUseUserHouseholds.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error,
+      refetchAssociations: mockRefetchHouseholdAssociations,
+    });
+
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+        pickerState,
+        setPickerState,
+      })
+    );
+
+    expect(result.current.isInitialLoading).toBe(false);
+    expect(result.current.catalogError).toBe(error);
+    expect(result.current.catalogErrorMessage).toBe("We couldn't load your saved households.");
+  });
+
   test('given a selected policy then edit mode opens from policy state without association metadata', () => {
     const reportStateWithPolicy: ReportBuilderState = {
       ...reportState,
@@ -107,7 +175,12 @@ describe('useSimulationCanvas', () => {
       ],
     };
 
-    mockUseUserPolicies.mockReturnValue({ data: [], isLoading: false });
+    mockUseUserPolicies.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      refetchAssociations: mockRefetchPolicyAssociations,
+    });
 
     const { result } = renderHook(() =>
       useSimulationCanvas({
@@ -129,5 +202,87 @@ describe('useSimulationCanvas', () => {
         id: 'policy-replacement',
       },
     });
+  });
+
+  test('given a saved policy detail error then exposes it as disabled with the shared error message', () => {
+    mockUseUserPolicies.mockReturnValue({
+      data: [
+        {
+          association: {
+            id: 'broken-association',
+            policyId: 'broken-policy',
+            label: 'Broken policy',
+            countryId: 'us',
+          },
+          policy: undefined,
+          isLoading: false,
+          isError: true,
+          error: new Error('Policy request failed'),
+        },
+      ],
+      isLoading: false,
+      error: null,
+      refetchAssociations: mockRefetchPolicyAssociations,
+    });
+
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+        pickerState,
+        setPickerState,
+      })
+    );
+
+    expect(result.current.savedPolicies).toEqual([
+      expect.objectContaining({
+        id: 'broken-policy',
+        label: 'Broken policy',
+        isDisabled: true,
+        errorMessage: 'Error loading this policy',
+      }),
+    ]);
+  });
+
+  test('given a recent household detail error then exposes it as a disabled recent', () => {
+    mockHouseholdRecentIds.mockReturnValue(['broken-household']);
+    mockUseUserHouseholds.mockReturnValue({
+      data: [
+        {
+          association: {
+            id: 'broken-association',
+            householdId: 'broken-household',
+            label: 'Broken household',
+            countryId: 'us',
+          },
+          household: undefined,
+          isLoading: false,
+          isError: true,
+          error: new Error('Household request failed'),
+        },
+      ],
+      isLoading: false,
+      error: null,
+      refetchAssociations: mockRefetchHouseholdAssociations,
+    });
+
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+        pickerState,
+        setPickerState,
+      })
+    );
+
+    expect(result.current.recentPopulations).toEqual([
+      {
+        id: 'broken-household',
+        label: 'Broken household',
+        type: 'household',
+        isDisabled: true,
+        errorMessage: 'Error loading this population',
+      },
+    ]);
   });
 });

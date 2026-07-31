@@ -167,6 +167,8 @@ export default function ReportsPage() {
 
         return {
           id: item.userReport.id,
+          isDisabled: !!item.error,
+          errorMessage: 'Error loading this report',
           report: {
             text: item.userReport.label || `Report #${item.userReport.reportId}`,
             url: `/${countryId}/report-output/${item.userReport.id}`,

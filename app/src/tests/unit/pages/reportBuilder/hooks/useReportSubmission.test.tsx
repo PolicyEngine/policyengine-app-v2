@@ -20,6 +20,10 @@ import {
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
 
+const { mockIngredientAvailability } = vi.hoisted(() => ({
+  mockIngredientAvailability: vi.fn(),
+}));
+
 // Mock modules
 vi.mock('@/api/simulation', () => ({
   createSimulation: (...args: any[]) => mockCreateSimulationFn(...args),
@@ -59,6 +63,10 @@ vi.mock('@/constants', () => ({
   CURRENT_YEAR: '2026',
 }));
 
+vi.mock('@/pages/reportBuilder/hooks/useReportIngredientAvailability', () => ({
+  useReportIngredientAvailability: () => mockIngredientAvailability(),
+}));
+
 describe('useReportSubmission', () => {
   let queryClient: QueryClient;
   let mockStore: ReturnType<typeof createTestStore>;
@@ -67,6 +75,11 @@ describe('useReportSubmission', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupDefaultMocks();
+    mockIngredientAvailability.mockReturnValue({
+      hasUnavailableIngredients: false,
+      isCheckingIngredientAvailability: false,
+      isReportConfigured: true,
+    });
 
     queryClient = new QueryClient({
       defaultOptions: {
@@ -240,6 +253,11 @@ describe('useReportSubmission', () => {
 
     test('given simulation without policy then isReportConfigured is false', () => {
       // Given
+      mockIngredientAvailability.mockReturnValue({
+        hasUnavailableIngredients: false,
+        isCheckingIngredientAvailability: false,
+        isReportConfigured: false,
+      });
       const incompleteState = {
         ...mockSingleSimReportState,
         simulations: [
@@ -263,6 +281,31 @@ describe('useReportSubmission', () => {
 
       // Then
       expect(result.current.isReportConfigured).toBe(false);
+    });
+
+    test('given a selected ingredient has errored then submission is blocked', async () => {
+      // Given
+      mockIngredientAvailability.mockReturnValue({
+        hasUnavailableIngredients: true,
+        isCheckingIngredientAvailability: false,
+        isReportConfigured: false,
+      });
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockSingleSimReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      // When
+      await result.current.handleSubmit();
+
+      // Then
+      expect(result.current.isReportConfigured).toBe(false);
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
     });
   });
 });

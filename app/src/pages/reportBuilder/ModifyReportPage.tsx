@@ -43,14 +43,15 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     ingredientType: 'policy',
   });
 
-  const { handleSaveAsNew, handleReplace, isSavingNew, isReplacing } = useModifyReportSubmission({
-    reportState: reportState ?? { label: null, year: '', simulations: [] },
-    countryId,
-    existingUserReportId: userReportId ?? '',
-    onSuccess: (resultUserReportId) => {
-      nav.push(getReportOutputPath(countryId, resultUserReportId));
-    },
-  });
+  const { handleSaveAsNew, handleReplace, isSavingNew, isReplacing, isReportSubmissionBlocked } =
+    useModifyReportSubmission({
+      reportState: reportState ?? { label: null, year: '', simulations: [] },
+      countryId,
+      existingUserReportId: userReportId ?? '',
+      onSuccess: (resultUserReportId) => {
+        nav.push(getReportOutputPath(countryId, resultUserReportId));
+      },
+    });
 
   // View/edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -109,7 +110,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         variant: 'secondary' as const,
         loading: isReplacing,
         loadingLabel: 'Updating report...',
-        disabled: isSavingNew,
+        disabled: isSavingNew || isReportSubmissionBlocked,
       },
       {
         key: 'save-new',
@@ -119,7 +120,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         variant: 'primary' as const,
         loading: isSavingNew,
         loadingLabel: 'Creating report...',
-        disabled: isReplacing,
+        disabled: isReplacing || isReportSubmissionBlocked,
       },
     ];
   }, [
@@ -130,6 +131,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     isSavingNew,
     isReplacing,
     isEitherSubmitting,
+    isReportSubmissionBlocked,
   ]);
 
   if (isLoading || !reportState) {
@@ -187,6 +189,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
                 Cancel
               </Button>
               <Button
+                disabled={isReportSubmissionBlocked}
                 onClick={() => {
                   setShowSameNameWarning(false);
                   handleSaveAsNew(reportState?.label || 'Untitled report');

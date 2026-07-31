@@ -373,10 +373,12 @@ describe('useUserHousehold hooks', () => {
 
       // Then
       await waitFor(() => {
-        expect(result.current.isError).toBe(true);
+        expect(result.current.isLoading).toBe(false);
       });
 
       expect(result.current.data).toBeDefined();
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBeNull();
 
       // First household should have data
       expect(result.current.data![0].household).toBeInstanceOf(HouseholdModel);

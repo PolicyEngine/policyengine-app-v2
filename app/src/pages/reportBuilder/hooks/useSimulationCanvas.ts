@@ -21,6 +21,13 @@ import { Geography } from '@/types/ingredients/Geography';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
+import {
+  getHouseholdLoadErrorMessage,
+  getPolicyLoadErrorMessage,
+  getUserHouseholdAvailability,
+  getUserPolicyAvailability,
+  isUserHouseholdSelectable,
+} from '@/utils/ingredientAvailability';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
@@ -62,12 +69,49 @@ export function useSimulationCanvas({
 }: UseSimulationCanvasArgs) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
-  const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
-  const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
+  const {
+    data: policies,
+    isLoading: policiesLoading,
+    error: policiesError,
+    refetchAssociations: refetchPolicyAssociations,
+  } = useUserPolicies(userId);
+  const {
+    data: households,
+    isLoading: householdsLoading,
+    error: householdsError,
+    refetchAssociations: refetchHouseholdAssociations,
+  } = useUserHouseholds(userId);
   const { data: regions, isLoading: regionsLoading } = useRegions(countryId);
   const regionRecords = regions ?? [];
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
   const [hasRegionLoadTimedOut, setHasRegionLoadTimedOut] = useState(false);
+  const [isRetryingCatalogs, setIsRetryingCatalogs] = useState(false);
+
+  const catalogError = policiesError || householdsError || null;
+  const catalogErrorMessage =
+    policiesError && householdsError
+      ? "We couldn't load your saved policies and households."
+      : policiesError
+        ? "We couldn't load your saved policies."
+        : householdsError
+          ? "We couldn't load your saved households."
+          : undefined;
+
+  const retryCatalogs = useCallback(async () => {
+    setIsRetryingCatalogs(true);
+    try {
+      const retries: Promise<unknown>[] = [];
+      if (policiesError) {
+        retries.push(refetchPolicyAssociations());
+      }
+      if (householdsError) {
+        retries.push(refetchHouseholdAssociations());
+      }
+      await Promise.all(retries);
+    } finally {
+      setIsRetryingCatalogs(false);
+    }
+  }, [householdsError, policiesError, refetchHouseholdAssociations, refetchPolicyAssociations]);
 
   const isWaitingForRegions = regionsLoading || regionRecords.length === 0;
 
@@ -91,11 +135,12 @@ export function useSimulationCanvas({
   // best-effort here; if they never arrive, stop blocking the builder after a
   // short timeout instead of rendering a permanent skeleton.
   const isInitialLoading =
-    policiesLoading ||
-    householdsLoading ||
-    policies === undefined ||
-    households === undefined ||
-    (!hasRegionLoadTimedOut && isWaitingForRegions);
+    !catalogError &&
+    (policiesLoading ||
+      householdsLoading ||
+      policies === undefined ||
+      households === undefined ||
+      (!hasRegionLoadTimedOut && isWaitingForRegions));
 
   // ---------------------------------------------------------------------------
   // Modal visibility state
@@ -134,6 +179,7 @@ export function useSimulationCanvas({
           paramCount: countPolicyModifications(p.policy),
           createdAt: p.association.createdAt,
           updatedAt: p.association.updatedAt,
+          ...getUserPolicyAvailability(p),
         };
       })
       .sort((a, b) => {
@@ -194,13 +240,27 @@ export function useSimulationCanvas({
       const householdData = households?.find(
         (h) => String(h.association.householdId) === householdId
       );
-      if (!householdData?.household) {
+      if (!householdData) {
+        continue;
+      }
+
+      const label = householdData.association.label || `Household #${householdId}`;
+      const availability = getUserHouseholdAvailability(householdData);
+      if (!isUserHouseholdSelectable(householdData)) {
+        if (availability.errorMessage) {
+          results.push({
+            id: householdId,
+            label,
+            type: 'household',
+            ...availability,
+            timestamp: householdUsageStore.getLastUsed(householdId) || '',
+          });
+        }
         continue;
       }
 
       const household = householdData.household;
       const resolvedId = household.id || householdId;
-      const label = householdData.association.label || `Household #${householdId}`;
       results.push({
         id: resolvedId,
         label,
@@ -224,6 +284,16 @@ export function useSimulationCanvas({
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  const getPolicyErrorMessage = useCallback(
+    (policyId?: string | null) => getPolicyLoadErrorMessage(policies, policyId),
+    [policies]
+  );
+
+  const getPopulationErrorMessage = useCallback(
+    (householdId?: string | null) => getHouseholdLoadErrorMessage(households, householdId),
+    [households]
+  );
 
   /**
    * Update a simulation's population at `index`, and if it's the baseline (0)
@@ -611,11 +681,17 @@ export function useSimulationCanvas({
   return {
     countryId,
     isInitialLoading,
+    catalogError,
+    catalogErrorMessage,
+    isRetryingCatalogs,
+    retryCatalogs,
     isGeographySelected,
 
     // Computed data
     savedPolicies,
     recentPopulations,
+    getPolicyErrorMessage,
+    getPopulationErrorMessage,
 
     // Simulation actions
     handleAddSimulation,

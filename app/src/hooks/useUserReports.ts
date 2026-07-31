@@ -167,16 +167,25 @@ export const useUserReports = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Step 9: Combine loading states
+  const reportQueryById = new Map(reportIds.map((id, index) => [id, reportResults.queries[index]]));
+  const simulationQueryById = new Map(
+    simulationIds.map((id, index) => [id, simulationResults.queries[index]])
+  );
+  const policyQueryById = new Map(policyIds.map((id, index) => [id, policyResults.queries[index]]));
+  const householdQueryById = new Map(
+    householdIds.map((id, index) => [id, householdResults.queries[index]])
+  );
+
+  // Step 9: Combine fatal loading and error states. Detail fetch errors stay on rows.
   const { isLoading, error } = combineLoadingStates(
     { isLoading: repAssocLoading, error: repAssocError },
     { isLoading: simAssocLoading, error: simAssocError },
     { isLoading: polAssocLoading, error: polAssocError },
     { isLoading: housAssocLoading, error: housAssocError },
-    { isLoading: reportResults.isLoading, error: reportResults.error },
-    { isLoading: simulationResults.isLoading, error: simulationResults.error },
-    { isLoading: policyResults.isLoading, error: policyResults.error },
-    { isLoading: householdResults.isLoading, error: householdResults.error }
+    { isLoading: reportResults.isLoading },
+    { isLoading: simulationResults.isLoading },
+    { isLoading: policyResults.isLoading },
+    { isLoading: householdResults.isLoading }
   );
 
   // Step 10: Build enhanced results with all relationships
@@ -185,6 +194,7 @@ export const useUserReports = (userId: string) => {
       ?.filter((userRep) => userRep.reportId) // Filter out associations without reportId
       .map((userRep) => {
         // Get report from query results
+        const reportQuery = reportQueryById.get(userRep.reportId);
         const report = reports.find((r) => r.id === userRep.reportId);
 
         // Get related simulations from query results
@@ -193,12 +203,20 @@ export const useUserReports = (userId: string) => {
             ?.map((simId) => simulations.find((s) => s.id === simId))
             .filter((s): s is Simulation => !!s) ?? [];
 
+        const reportSimulationQueries =
+          report?.simulationIds?.map((simId) => simulationQueryById.get(simId)).filter(Boolean) ??
+          [];
+
         // Get policies from query results
         const reportPolicies = reportSimulations
           .map((sim) => sim.policyId)
           .filter((id): id is string => !!id)
           .map((policyId) => policyResults.queries.find((q) => q.data?.id === policyId)?.data)
           .filter((p): p is Policy => !!p);
+
+        const reportPolicyQueries = reportSimulations
+          .map((sim) => (sim.policyId ? policyQueryById.get(sim.policyId) : null))
+          .filter(Boolean);
 
         // Get unique policy IDs for finding user associations
         const uniquePolicyIds = [
@@ -231,6 +249,25 @@ export const useUserReports = (userId: string) => {
           }
         });
 
+        const reportHouseholdQueries = reportSimulations
+          .filter((sim) => sim.populationType === 'household' && sim.populationId)
+          .map((sim) => householdQueryById.get(sim.populationId as string))
+          .filter(Boolean);
+
+        const itemError =
+          reportQuery?.error ||
+          reportSimulationQueries.find((q) => q?.error)?.error ||
+          reportPolicyQueries.find((q) => q?.error)?.error ||
+          reportHouseholdQueries.find((q) => q?.error)?.error ||
+          null;
+
+        const itemIsLoading =
+          reportQuery?.isLoading ||
+          reportSimulationQueries.some((q) => q?.isLoading) ||
+          reportPolicyQueries.some((q) => q?.isLoading) ||
+          reportHouseholdQueries.some((q) => q?.isLoading) ||
+          false;
+
         // Find user associations for related entities
         const reportUserSimulations =
           simulationAssociations?.filter((sa) =>
@@ -255,8 +292,8 @@ export const useUserReports = (userId: string) => {
           userSimulations: reportUserSimulations,
           userPolicies: reportUserPolicies,
           userHouseholds: reportUserHouseholds,
-          isLoading: false,
-          error: null,
+          isLoading: itemIsLoading,
+          error: itemError,
         };
       }) ?? [];
 

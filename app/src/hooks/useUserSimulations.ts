@@ -132,14 +132,22 @@ export const useUserSimulations = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Step 7: Combine loading states
+  const simulationQueryById = new Map(
+    simulationIds.map((id, index) => [id, simulationResults.queries[index]])
+  );
+  const policyQueryById = new Map(policyIds.map((id, index) => [id, policyResults.queries[index]]));
+  const householdQueryById = new Map(
+    householdIds.map((id, index) => [id, householdResults.queries[index]])
+  );
+
+  // Step 7: Combine fatal loading and error states. Detail fetch errors stay on rows.
   const { isLoading, error } = combineLoadingStates(
     { isLoading: simAssocLoading, error: simAssocError },
     { isLoading: polAssocLoading, error: polAssocError },
     { isLoading: housAssocLoading, error: housAssocError },
-    { isLoading: simulationResults.isLoading, error: simulationResults.error },
-    { isLoading: policyResults.isLoading, error: policyResults.error },
-    { isLoading: householdResults.isLoading, error: householdResults.error }
+    { isLoading: simulationResults.isLoading },
+    { isLoading: policyResults.isLoading },
+    { isLoading: householdResults.isLoading }
   );
 
   // Step 8: Build enhanced results with all relationships
@@ -148,23 +156,23 @@ export const useUserSimulations = (userId: string) => {
       ?.filter((userSim) => userSim.simulationId) // Filter out associations without simulationId
       .map((userSim) => {
         // Get simulation from query results
+        const simulationQuery = simulationQueryById.get(userSim.simulationId);
         const simulation = simulations.find((s) => s.id === userSim.simulationId);
 
         // Get related policy from query results
-        const policy = simulation?.policyId
-          ? policyResults.queries.find((q) => q.data?.id === simulation.policyId)?.data
-          : undefined;
+        const policyQuery = simulation?.policyId ? policyQueryById.get(simulation.policyId) : null;
+        const policy = policyQuery?.data;
 
         // Determine if populationId is household or geography based on populationType
         let household: HouseholdModel | undefined;
         let geography: Geography | undefined;
         let userHousehold: UserHouseholdPopulation | undefined;
+        let householdQuery: (typeof householdResults.queries)[number] | null | undefined = null;
 
         if (simulation?.populationId && simulation?.populationType && simulation.countryId) {
           if (simulation.populationType === 'household') {
-            household = householdResults.queries.find(
-              (q) => q.data?.id === simulation.populationId
-            )?.data;
+            householdQuery = householdQueryById.get(simulation.populationId);
+            household = householdQuery?.data;
             userHousehold = householdAssociations?.find(
               (ha) => ha.householdId === simulation.populationId
             );
@@ -189,8 +197,12 @@ export const useUserSimulations = (userId: string) => {
           geography,
           userPolicy,
           userHousehold,
-          isLoading: false,
-          error: null,
+          isLoading:
+            simulationQuery?.isLoading ||
+            policyQuery?.isLoading ||
+            householdQuery?.isLoading ||
+            false,
+          error: simulationQuery?.error || policyQuery?.error || householdQuery?.error || null,
         };
       }) ?? [];
 

@@ -1,8 +1,5 @@
 import React from 'react';
-import { configureStore } from '@reduxjs/toolkit';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Provider } from 'react-redux';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import { Household as HouseholdModel } from '@/models/Household';
@@ -33,41 +30,6 @@ vi.mock('@/hooks/useUserGeographic', () => ({
 vi.mock('@/utils/validation/ingredientValidation', () => ({
   isHouseholdAssociationReady: () => true,
   isGeographicAssociationReady: () => false,
-}));
-
-vi.mock('@/components/common/PathwayView', () => ({
-  default: ({
-    title,
-    cardListItems = [],
-    primaryAction,
-  }: {
-    title: string;
-    cardListItems?: Array<{
-      id: string;
-      title: string;
-      subtitle?: string;
-      onClick: () => void;
-    }>;
-    primaryAction?: {
-      label: string;
-      onClick: () => void;
-      isDisabled?: boolean;
-    };
-  }) => (
-    <div>
-      <h1>{title}</h1>
-      {cardListItems.map((item) => (
-        <button key={item.id} type="button" onClick={item.onClick}>
-          {item.title}
-        </button>
-      ))}
-      {primaryAction ? (
-        <button type="button" onClick={primaryAction.onClick} disabled={primaryAction.isDisabled}>
-          {primaryAction.label}
-        </button>
-      ) : null}
-    </div>
-  ),
 }));
 
 const selectedHousehold = HouseholdModel.fromDraft({
@@ -104,22 +66,9 @@ const mockHouseholdAssociation: UserHouseholdMetadataWithAssociation = {
   isError: false,
 };
 
-function createStore() {
-  return configureStore({
-    reducer: {
-      metadata: () => ({
-        currentCountry: 'us',
-        economyOptions: { region: [] },
-      }),
-    },
-  });
-}
-
 function renderView(props?: Partial<React.ComponentProps<typeof PopulationExistingView>>) {
   return render(
-    <Provider store={createStore()}>
-      <PopulationExistingView onSelectHousehold={vi.fn()} onSelectGeography={vi.fn()} {...props} />
-    </Provider>
+    <PopulationExistingView onSelectHousehold={vi.fn()} onSelectGeography={vi.fn()} {...props} />
   );
 }
 
@@ -146,7 +95,11 @@ describe('PopulationExistingView', () => {
 
     renderView({ onSelectHousehold });
 
-    await user.click(screen.getByRole('button', { name: 'Selected household' }));
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Selected household Household #household-123',
+      })
+    );
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(onSelectHousehold).toHaveBeenCalledWith(
@@ -154,5 +107,79 @@ describe('PopulationExistingView', () => {
       selectedHousehold,
       'Selected household'
     );
+  });
+
+  test('given a household detail error then displays an unselectable card with a warning icon', async () => {
+    const user = userEvent.setup();
+    const onSelectHousehold = vi.fn();
+    mockUseUserHouseholds.mockReturnValue({
+      data: [
+        {
+          ...mockHouseholdAssociation,
+          association: {
+            ...mockHouseholdAssociation.association,
+            id: 'broken-association',
+            householdId: 'broken-household',
+            label: 'Broken household',
+          },
+          household: undefined,
+          isError: true,
+          error: new Error('Household request failed'),
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderView({ onSelectHousehold });
+    const householdCard = screen.getByText('Broken household').closest('button');
+
+    expect(householdCard).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByText('Failed to load')).toBeInTheDocument();
+    expect(screen.getByLabelText('Error loading this population')).toBeInTheDocument();
+
+    await user.click(householdCard!);
+    expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
+    expect(onSelectHousehold).not.toHaveBeenCalled();
+  });
+
+  test('given a selected household later errors then disables submission', async () => {
+    const user = userEvent.setup();
+    const onSelectHousehold = vi.fn();
+    let queryResult = {
+      data: [mockHouseholdAssociation],
+      isLoading: false,
+      isError: false,
+      error: null,
+    };
+    mockUseUserHouseholds.mockImplementation(() => queryResult);
+    const { rerender } = renderView({ onSelectHousehold });
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Selected household Household #household-123',
+      })
+    );
+    expect(screen.getByRole('button', { name: /next/i })).toBeEnabled();
+
+    queryResult = {
+      ...queryResult,
+      data: [
+        {
+          ...mockHouseholdAssociation,
+          household: undefined,
+          isError: true,
+          error: new Error('Household request failed'),
+        },
+      ],
+    } as any;
+    rerender(
+      <PopulationExistingView onSelectHousehold={onSelectHousehold} onSelectGeography={vi.fn()} />
+    );
+
+    expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: /next/i }));
+    expect(onSelectHousehold).not.toHaveBeenCalled();
   });
 });

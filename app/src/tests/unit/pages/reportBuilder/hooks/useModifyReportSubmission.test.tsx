@@ -17,6 +17,10 @@ import {
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
 
+const { mockIngredientAvailability } = vi.hoisted(() => ({
+  mockIngredientAvailability: vi.fn(),
+}));
+
 // Mock modules
 vi.mock('@/api/simulation', () => ({
   createSimulation: (...args: any[]) => mockCreateSimulationFn(...args),
@@ -74,6 +78,10 @@ vi.mock('@/constants', () => ({
   CURRENT_YEAR: '2026',
 }));
 
+vi.mock('@/pages/reportBuilder/hooks/useReportIngredientAvailability', () => ({
+  useReportIngredientAvailability: () => mockIngredientAvailability(),
+}));
+
 const mockMutateAsync = vi.fn().mockResolvedValue({});
 
 vi.mock('@/hooks/useUserReportAssociations', () => ({
@@ -103,6 +111,11 @@ describe('useModifyReportSubmission', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupDefaultMocks();
+    mockIngredientAvailability.mockReturnValue({
+      hasUnavailableIngredients: false,
+      isCheckingIngredientAvailability: false,
+      isReportConfigured: true,
+    });
 
     queryClient = new QueryClient({
       defaultOptions: {
@@ -231,5 +244,71 @@ describe('useModifyReportSubmission', () => {
         expect(mockOnSuccess).toHaveBeenCalledWith(EXISTING_USER_REPORT_ID);
       });
     });
+  });
+
+  test('given a selected ingredient has errored then save and replace are blocked', async () => {
+    // Given
+    mockIngredientAvailability.mockReturnValue({
+      hasUnavailableIngredients: true,
+      isCheckingIngredientAvailability: false,
+      isReportConfigured: false,
+    });
+    const { result } = renderHook(
+      () =>
+        useModifyReportSubmission({
+          reportState: mockTwoSimReportState,
+          countryId: 'us',
+          existingUserReportId: EXISTING_USER_REPORT_ID,
+          onSuccess: mockOnSuccess,
+        }),
+      { wrapper }
+    );
+
+    // When
+    await result.current.handleSaveAsNew('Blocked report');
+    await result.current.handleReplace();
+
+    // Then
+    expect(result.current.isReportSubmissionBlocked).toBe(true);
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given an incomplete simulation then save and replace are blocked', async () => {
+    // Given
+    mockIngredientAvailability.mockReturnValue({
+      hasUnavailableIngredients: false,
+      isCheckingIngredientAvailability: false,
+      isReportConfigured: false,
+    });
+    const incompleteState = {
+      ...mockTwoSimReportState,
+      simulations: [
+        {
+          ...mockTwoSimReportState.simulations[0],
+          policy: { id: undefined, label: null, parameters: [] },
+        },
+        mockTwoSimReportState.simulations[1],
+      ],
+    };
+    const { result } = renderHook(
+      () =>
+        useModifyReportSubmission({
+          reportState: incompleteState as any,
+          countryId: 'us',
+          existingUserReportId: EXISTING_USER_REPORT_ID,
+          onSuccess: mockOnSuccess,
+        }),
+      { wrapper }
+    );
+
+    // When
+    await result.current.handleSaveAsNew('Incomplete report');
+    await result.current.handleReplace();
+
+    // Then
+    expect(result.current.isReportSubmissionBlocked).toBe(true);
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
   });
 });

@@ -14,6 +14,7 @@ import {
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';
 import EmptyState from './common/EmptyState';
+import { IngredientErrorIcon } from './common/IngredientErrorIcon';
 
 // Main component props
 interface IngredientReadViewProps {
@@ -147,13 +148,27 @@ export default function IngredientReadView({
                 </TableHeader>
                 <TableBody>
                   {data.map((record) => (
-                    <TableRow key={record.id}>
-                      {columns.map((column) => (
+                    <TableRow
+                      key={record.id}
+                      aria-disabled={record.isDisabled || undefined}
+                      style={{
+                        backgroundColor: record.isDisabled ? colors.gray[50] : undefined,
+                        opacity: record.isDisabled ? 0.72 : 1,
+                      }}
+                    >
+                      {columns.map((column, columnIndex) => (
                         <TableCell
                           key={column.key}
                           style={{ padding: `${spacing.md} ${spacing.lg}` }}
                         >
-                          <ColumnRenderer config={column} record={record} />
+                          <div className="tw:flex tw:items-center tw:gap-2">
+                            {record.isDisabled && columnIndex === 0 && (
+                              <IngredientErrorIcon
+                                message={record.errorMessage || `Error loading this ${ingredient}`}
+                              />
+                            )}
+                            <ColumnRenderer config={column} record={record} />
+                          </div>
                         </TableCell>
                       ))}
                     </TableRow>

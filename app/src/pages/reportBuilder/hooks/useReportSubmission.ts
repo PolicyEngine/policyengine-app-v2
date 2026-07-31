@@ -12,18 +12,14 @@
  */
 import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { ReportAdapter, SimulationAdapter } from '@/adapters';
-import { createSimulation } from '@/api/simulation';
-import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
-import { MOCK_USER_ID } from '@/constants';
+import { ReportAdapter } from '@/adapters';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { SimulationStateProps } from '@/types/pathwayState';
 import { trackReportStarted } from '@/utils/analytics';
-import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
+import { createReportSimulations } from '../utils/createReportSimulations';
+import { useReportIngredientAvailability } from './useReportIngredientAvailability';
 
 interface UseReportSubmissionArgs {
   reportState: ReportBuilderState;
@@ -49,46 +45,6 @@ function getJourneyProfiler(): {
   return (window as any).__journeyProfiler ?? null;
 }
 
-function convertToSimulation(
-  simState: SimulationStateProps,
-  simulationId: string,
-  countryId: 'us' | 'uk',
-  currentLawId: number
-): Simulation | null {
-  const policyId = simState.policy?.id;
-  if (!policyId) {
-    return null;
-  }
-
-  let populationId: string | undefined;
-  let populationType: 'household' | 'geography' | undefined;
-
-  if (simState.population?.household?.id) {
-    populationId = simState.population.household.id;
-    populationType = 'household';
-  } else if (simState.population?.geography?.geographyId) {
-    populationId = simState.population.geography.geographyId;
-    populationType = 'geography';
-  }
-
-  if (!populationId || !populationType) {
-    return null;
-  }
-
-  return {
-    id: simulationId,
-    countryId,
-    apiVersion: undefined,
-    policyId: toApiPolicyId(policyId, currentLawId),
-    populationId,
-    populationType,
-    label: simState.label,
-    isCreated: true,
-    output: null,
-    status: 'pending',
-  };
-}
-
 export function useReportSubmission({
   reportState,
   countryId,
@@ -97,10 +53,7 @@ export function useReportSubmission({
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
-
-  const isReportConfigured = reportState.simulations.every(
-    (sim) => !!sim.policy.id && !!(sim.population.household?.id || sim.population.geography?.id)
-  );
+  const { isReportConfigured } = useReportIngredientAvailability(reportState);
 
   const handleSubmit = useCallback(async () => {
     if (!isReportConfigured || isSubmitting) {
@@ -113,69 +66,14 @@ export function useReportSubmission({
     journeyProfiler?.markStart?.('report-submit', 'user-interaction');
 
     try {
-      const simulationIds: string[] = [];
-      const simulations: (Simulation | null)[] = [];
       journeyProfiler?.markStart?.('report-submit-simulations', 'api-call');
-
-      for (const simState of reportState.simulations) {
-        const policyId = simState.policy?.id
-          ? toApiPolicyId(simState.policy.id, currentLawId)
-          : undefined;
-
-        if (!policyId) {
-          console.error('[useReportSubmission] Simulation missing policy ID');
-          continue;
-        }
-
-        let populationId: string | undefined;
-        let populationType: 'household' | 'geography' | undefined;
-
-        if (simState.population?.household?.id) {
-          populationId = simState.population.household.id;
-          populationType = 'household';
-        } else if (simState.population?.geography?.geographyId) {
-          populationId = simState.population.geography.geographyId;
-          populationType = 'geography';
-        }
-
-        if (!populationId || !populationType) {
-          console.error('[useReportSubmission] Simulation missing population');
-          continue;
-        }
-
-        const simulationData: Partial<Simulation> = {
-          populationId,
-          policyId,
-          populationType,
-        };
-
-        const payload = SimulationAdapter.toCreationPayload(simulationData);
-        const result = await createSimulation(countryId, payload);
-        const simulationId = result.result.simulation_id;
-        simulationIds.push(simulationId);
-
-        // Create UserSimulation association in localStorage so sharing works
-        const simulationStore = new LocalStorageSimulationStore();
-        await simulationStore.create({
-          userId: MOCK_USER_ID,
-          simulationId,
-          countryId,
-          label: simState.label ?? undefined,
-          isCreated: true,
-        });
-
-        const simulation = convertToSimulation(simState, simulationId, countryId, currentLawId);
-        simulations.push(simulation);
-      }
+      const { simulationIds, simulations } = await createReportSimulations({
+        simulationStates: reportState.simulations,
+        countryId,
+        currentLawId,
+      });
 
       journeyProfiler?.markEnd?.('report-submit-simulations', 'api-call');
-
-      if (simulationIds.length === 0) {
-        console.error('[useReportSubmission] No simulations created');
-        setIsSubmitting(false);
-        journeyProfiler?.markEnd?.('report-submit', 'user-interaction');
-        return;
-      }
 
       const reportData: Partial<Report> = {
         countryId,

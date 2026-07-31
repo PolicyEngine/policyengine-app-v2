@@ -1,6 +1,6 @@
 import { render, screen } from '@test-utils';
 import { useParams } from 'react-router-dom';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
@@ -21,6 +21,12 @@ import {
   TEST_COUNTRY_ID,
 } from '@/tests/fixtures/pathways/simulation/SimulationPathwayWrapperMocks';
 import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
+import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
+import * as simulationStateInitializer from '@/utils/pathwayState/initializeSimulationState';
+
+const { mockUsePathwayNavigation } = vi.hoisted(() => ({
+  mockUsePathwayNavigation: vi.fn(),
+}));
 
 // Mock dependencies
 vi.mock('react-router-dom', async () => {
@@ -62,12 +68,7 @@ vi.mock('@/hooks/useUserGeographic', () => ({
 }));
 
 vi.mock('@/hooks/usePathwayNavigation', () => ({
-  usePathwayNavigation: vi.fn(() => ({
-    mode: 'LABEL',
-    navigateToMode: vi.fn(),
-    goBack: vi.fn(),
-    getBackMode: vi.fn(),
-  })),
+  usePathwayNavigation: (...args: unknown[]) => mockUsePathwayNavigation(...args),
 }));
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -95,6 +96,17 @@ describe('SimulationPathwayWrapper', () => {
       isError: false,
       error: null,
     } as ReturnType<typeof useRegions>);
+    mockUsePathwayNavigation.mockReturnValue({
+      currentMode: SimulationViewMode.LABEL,
+      navigateToMode: vi.fn(),
+      goBack: vi.fn(),
+      canGoBack: false,
+      getBackMode: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('Error handling', () => {
@@ -151,5 +163,63 @@ describe('SimulationPathwayWrapper', () => {
       // Then
       expect(container).toBeInTheDocument();
     });
+  });
+
+  test('given a selected policy later errors then blocks submission with the shared error icon', () => {
+    vi.spyOn(simulationStateInitializer, 'initializeSimulationState').mockReturnValue({
+      id: undefined,
+      label: 'Saved simulation',
+      countryId: TEST_COUNTRY_ID,
+      policy: {
+        id: 'broken-policy',
+        label: 'Broken policy',
+        parameters: [],
+      },
+      population: {
+        label: 'Nationwide',
+        type: 'geography',
+        household: null,
+        geography: {
+          id: 'us',
+          geographyId: 'us',
+          countryId: 'us',
+          scope: 'national',
+          name: 'United States',
+        },
+      },
+    });
+    vi.mocked(useUserPolicies).mockReturnValue({
+      data: [
+        {
+          association: {
+            id: 'broken-association',
+            userId: 'anonymous',
+            policyId: 'broken-policy',
+            countryId: 'us',
+            label: 'Broken policy',
+          },
+          policy: undefined,
+          isLoading: false,
+          isError: true,
+          error: new Error('Policy request failed'),
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useUserPolicies>);
+    mockUsePathwayNavigation.mockReturnValue({
+      currentMode: SimulationViewMode.SUBMIT,
+      navigateToMode: vi.fn(),
+      goBack: vi.fn(),
+      canGoBack: true,
+      getBackMode: vi.fn(),
+    });
+
+    render(<SimulationPathwayWrapper />);
+
+    expect(screen.getByLabelText('Error loading this policy')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create simulation/i })).toBeDisabled();
+    expect(mockUseCreateSimulation.createSimulation).not.toHaveBeenCalled();
   });
 });

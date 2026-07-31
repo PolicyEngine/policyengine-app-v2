@@ -20,6 +20,7 @@ import {
   IconUsers,
   IconX,
 } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Group, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
@@ -47,6 +48,7 @@ export function IngredientSectionFull({
   savedPolicies = [],
   recentPopulations = [],
   currentLabel,
+  selectedErrorMessage,
   isReadOnly,
   onViewPolicy,
   onViewPopulation,
@@ -151,9 +153,14 @@ export function IngredientSectionFull({
 
   // Show policy details action for non-current-law policies.
   const showViewPolicyButton =
-    type === 'policy' && !isCurrentLaw(currentId) && !!currentId && onViewPolicy;
+    type === 'policy' &&
+    !selectedErrorMessage &&
+    !isCurrentLaw(currentId) &&
+    !!currentId &&
+    onViewPolicy;
   const showViewPopulationButton =
     type === 'population' &&
+    !selectedErrorMessage &&
     selectedPopulationLabel?.populationType === 'household' &&
     !!currentId &&
     onViewPopulation;
@@ -210,6 +217,7 @@ export function IngredientSectionFull({
       ) : hasSelection ? (
         /* Selected item - full-width card */
         <div
+          aria-disabled={Boolean(selectedErrorMessage)}
           style={{
             padding: `${spacing.md} ${spacing.lg}`,
             borderRadius: spacing.radius.container,
@@ -223,6 +231,7 @@ export function IngredientSectionFull({
             gap: spacing.md,
             minWidth: 0,
             overflow: 'hidden',
+            opacity: selectedErrorMessage ? 0.65 : 1,
           }}
         >
           <div
@@ -237,18 +246,24 @@ export function IngredientSectionFull({
               flexShrink: 0,
             }}
           >
-            {type === 'policy' &&
-              (isCurrentLaw(currentId) ? (
-                <IconScale size={18} color={colorConfig.icon} />
-              ) : (
-                <IconFileDescription size={18} color={colorConfig.icon} />
-              ))}
-            {type === 'population' &&
-              (selectedPopulationLabel?.populationType === 'household' ? (
-                <IconHome size={18} color={colorConfig.icon} />
-              ) : (
-                <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
-              ))}
+            {selectedErrorMessage ? (
+              <IngredientErrorIcon message={selectedErrorMessage} size={18} />
+            ) : (
+              <>
+                {type === 'policy' &&
+                  (isCurrentLaw(currentId) ? (
+                    <IconScale size={18} color={colorConfig.icon} />
+                  ) : (
+                    <IconFileDescription size={18} color={colorConfig.icon} />
+                  ))}
+                {type === 'population' &&
+                  (selectedPopulationLabel?.populationType === 'household' ? (
+                    <IconHome size={18} color={colorConfig.icon} />
+                  ) : (
+                    <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
+                  ))}
+              </>
+            )}
           </div>
           <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
             <Text
@@ -263,13 +278,16 @@ export function IngredientSectionFull({
             >
               {type === 'policy' ? selectedPolicyLabel?.label : selectedPopulationLabel?.label}
             </Text>
-            {(type === 'policy'
-              ? selectedPolicyLabel?.description
-              : selectedPopulationLabel?.description) && (
+            {(selectedErrorMessage ||
+              (type === 'policy'
+                ? selectedPolicyLabel?.description
+                : selectedPopulationLabel?.description)) && (
               <Text c={colors.gray[500]} style={{ fontSize: FONT_SIZES.small }}>
-                {type === 'policy'
-                  ? selectedPolicyLabel?.description
-                  : selectedPopulationLabel?.description}
+                {selectedErrorMessage
+                  ? 'Failed to load'
+                  : type === 'policy'
+                    ? selectedPolicyLabel?.description
+                    : selectedPopulationLabel?.description}
               </Text>
             )}
           </div>

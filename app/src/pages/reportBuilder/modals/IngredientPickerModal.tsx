@@ -10,6 +10,7 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Group } from '@/components/ui/Group';
@@ -29,6 +30,10 @@ import { RootState } from '@/store';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
+import {
+  getUserHouseholdAvailability,
+  getUserPolicyAvailability,
+} from '@/utils/ingredientAvailability';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { CountryMapIcon } from '../components/shared/CountryMapIcon';
@@ -216,6 +221,7 @@ export function IngredientPickerModal({
                         const paramCount = countPolicyModifications(p.policy); // Handles undefined gracefully
                         const policyParams = p.policy?.parameters || [];
                         const isExpanded = expandedPolicyId === policyId;
+                        const { isDisabled, errorMessage } = getUserPolicyAvailability(p);
 
                         return (
                           <div
@@ -225,28 +231,34 @@ export function IngredientPickerModal({
                               border: `1px solid ${isExpanded ? colorConfig.border : colors.border.light}`,
                               overflow: 'hidden',
                               transition: 'all 0.2s ease',
+                              opacity: isDisabled ? 0.6 : 1,
                             }}
                           >
                             {/* Main clickable row */}
                             <div
                               role="button"
-                              tabIndex={0}
+                              tabIndex={isDisabled ? -1 : 0}
+                              aria-disabled={isDisabled || undefined}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 padding: spacing.sm,
-                                cursor: 'pointer',
+                                cursor: isDisabled ? 'not-allowed' : 'pointer',
                                 transition: 'background 0.15s ease',
                               }}
-                              onClick={() => handleSelectPolicy(policyId, label, paramCount)}
+                              onClick={() =>
+                                !isDisabled && handleSelectPolicy(policyId, label, paramCount)
+                              }
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
+                                if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
                                   e.preventDefault();
                                   handleSelectPolicy(policyId, label, paramCount);
                                 }
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.background = colors.gray[50];
+                                if (!isDisabled) {
+                                  e.currentTarget.style.background = colors.gray[50];
+                                }
                               }}
                               onMouseLeave={(e) => {
                                 e.currentTarget.style.background = 'transparent';
@@ -258,7 +270,9 @@ export function IngredientPickerModal({
                                   {label}
                                 </Text>
                                 <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                                  {paramCount} param{paramCount !== 1 ? 's' : ''} changed
+                                  {isDisabled
+                                    ? 'Failed to load'
+                                    : `${paramCount} param${paramCount !== 1 ? 's' : ''} changed`}
                                 </Text>
                               </Stack>
 
@@ -266,6 +280,7 @@ export function IngredientPickerModal({
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
+                                disabled={isDisabled}
                                 onClick={(e) => {
                                   e.stopPropagation(); // Prevent selection
                                   setExpandedPolicyId(isExpanded ? null : policyId);
@@ -279,17 +294,24 @@ export function IngredientPickerModal({
                               </Button>
 
                               {/* Select indicator */}
-                              <IconChevronRight size={16} color={colors.gray[400]} />
+                              {errorMessage ? (
+                                <IngredientErrorIcon message={errorMessage} />
+                              ) : (
+                                <IconChevronRight size={16} color={colors.gray[400]} />
+                              )}
                             </div>
 
                             {/* Expandable parameter details - table-like display */}
                             <div
                               style={{
-                                maxHeight: isExpanded ? '400px' : '0px',
-                                opacity: isExpanded ? 1 : 0,
-                                overflow: isExpanded ? 'auto' : 'hidden',
+                                maxHeight: isExpanded && !isDisabled ? '400px' : '0px',
+                                opacity: isExpanded && !isDisabled ? 1 : 0,
+                                overflow: isExpanded && !isDisabled ? 'auto' : 'hidden',
                                 transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                                borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
+                                borderTop:
+                                  isExpanded && !isDisabled
+                                    ? `1px solid ${colors.gray[200]}`
+                                    : 'none',
                               }}
                             >
                               {/* Unified grid for header and data rows */}
@@ -615,20 +637,27 @@ export function IngredientPickerModal({
                         // Use association data for display (like Populations page)
                         const householdId = h.association.householdId.toString();
                         const label = h.association.label || `Household #${householdId}`;
+                        const { isDisabled, errorMessage } = getUserHouseholdAvailability(h);
                         return (
                           <div
                             key={householdId}
                             role="button"
-                            tabIndex={0}
+                            tabIndex={isDisabled ? -1 : 0}
+                            aria-disabled={isDisabled || undefined}
                             style={{
                               padding: spacing.sm,
                               borderRadius: spacing.radius.container,
                               border: `1px solid ${colors.border.light}`,
-                              cursor: 'pointer',
+                              cursor: isDisabled ? 'not-allowed' : 'pointer',
+                              opacity: isDisabled ? 0.6 : 1,
                             }}
-                            onClick={() => h.household && handleSelectHousehold(h.household, label)}
+                            onClick={() =>
+                              !isDisabled &&
+                              h.household &&
+                              handleSelectHousehold(h.household, label)
+                            }
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
+                              if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
                                 e.preventDefault();
                                 if (h.household) {
                                   handleSelectHousehold(h.household, label);
@@ -640,7 +669,11 @@ export function IngredientPickerModal({
                               <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
                                 {label}
                               </Text>
-                              <IconChevronRight size={16} color={colors.gray[400]} />
+                              {errorMessage ? (
+                                <IngredientErrorIcon message={errorMessage} />
+                              ) : (
+                                <IconChevronRight size={16} color={colors.gray[400]} />
+                              )}
                             </Group>
                           </div>
                         );
