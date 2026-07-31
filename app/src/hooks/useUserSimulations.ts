@@ -198,7 +198,10 @@ export const useUserSimulations = (userId: string) => {
           userPolicy,
           userHousehold,
           isLoading:
-            simulationQuery?.isLoading || policyQuery?.isLoading || householdQuery?.isLoading || false,
+            simulationQuery?.isLoading ||
+            policyQuery?.isLoading ||
+            householdQuery?.isLoading ||
+            false,
           error: simulationQuery?.error || policyQuery?.error || householdQuery?.error || null,
         };
       }) ?? [];
