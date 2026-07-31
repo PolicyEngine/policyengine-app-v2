@@ -6,12 +6,7 @@
  */
 import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
 import { styles } from '../styles';
-import type {
-  IngredientPickerState,
-  ReportBuilderState,
-  SimulationBlockProps,
-  TopBarAction,
-} from '../types';
+import type { ReportBuilderState, SimulationBlockProps, TopBarAction } from '../types';
 import { ReportMetaPanel } from './ReportMetaPanel';
 import { SimulationBlockFull } from './SimulationBlockFull';
 import { SimulationCanvas } from './SimulationCanvas';
@@ -22,8 +17,6 @@ interface ReportBuilderShellProps {
   actions: TopBarAction[];
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
-  pickerState: IngredientPickerState;
-  setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
   BlockComponent?: React.ComponentType<SimulationBlockProps>;
   isReadOnly?: boolean;
   backPath?: string;
@@ -35,8 +28,6 @@ export function ReportBuilderShell({
   actions,
   reportState,
   setReportState,
-  pickerState,
-  setPickerState,
   BlockComponent = SimulationBlockFull,
   isReadOnly,
   backPath,
@@ -68,8 +59,6 @@ export function ReportBuilderShell({
         reportYear={reportState.year}
         reportState={reportState}
         setReportState={setReportState}
-        pickerState={pickerState}
-        setPickerState={setPickerState}
         BlockComponent={BlockComponent}
         isReadOnly={isReadOnly}
       />

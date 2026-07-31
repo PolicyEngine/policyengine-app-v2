@@ -1,7 +1,7 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SimulationCanvas } from '@/pages/reportBuilder/components/SimulationCanvas';
-import type { IngredientPickerState, ReportBuilderState } from '@/pages/reportBuilder/types';
+import type { ReportBuilderState } from '@/pages/reportBuilder/types';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 
 const { mockRetryCatalogs, mockUseSimulationCanvas } = vi.hoisted(() => ({
@@ -19,12 +19,6 @@ describe('SimulationCanvas', () => {
     year: '2026',
     simulations: [initializeSimulationState()],
   };
-  const pickerState: IngredientPickerState = {
-    isOpen: false,
-    simulationIndex: 0,
-    ingredientType: 'policy',
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseSimulationCanvas.mockReturnValue({
@@ -46,13 +40,7 @@ describe('SimulationCanvas', () => {
     const user = userEvent.setup();
 
     render(
-      <SimulationCanvas
-        reportYear="2026"
-        reportState={reportState}
-        setReportState={vi.fn()}
-        pickerState={pickerState}
-        setPickerState={vi.fn()}
-      />
+      <SimulationCanvas reportYear="2026" reportState={reportState} setReportState={vi.fn()} />
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Saved ingredients unavailable');

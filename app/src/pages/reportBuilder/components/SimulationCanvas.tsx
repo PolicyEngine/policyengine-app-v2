@@ -10,13 +10,12 @@ import { Alert, AlertDescription, AlertTitle, Button, Spinner } from '@/componen
 import { useSimulationCanvas } from '../hooks/useSimulationCanvas';
 import {
   HouseholdCreationModal,
-  IngredientPickerModal,
   PolicyBrowseModal,
   PolicyCreationModal,
   PopulationBrowseModal,
 } from '../modals';
 import { styles } from '../styles';
-import type { IngredientPickerState, ReportBuilderState, SimulationBlockProps } from '../types';
+import type { ReportBuilderState, SimulationBlockProps } from '../types';
 import { AddSimulationCard } from './AddSimulationCard';
 import { SimulationBlock } from './SimulationBlock';
 import { SimulationCanvasSkeleton } from './SimulationCanvasSkeleton';
@@ -25,8 +24,6 @@ interface SimulationCanvasProps {
   reportYear: string;
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
-  pickerState: IngredientPickerState;
-  setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
   BlockComponent?: React.ComponentType<SimulationBlockProps>;
   isReadOnly?: boolean;
 }
@@ -35,12 +32,10 @@ export function SimulationCanvas({
   reportYear,
   reportState,
   setReportState,
-  pickerState,
-  setPickerState,
   BlockComponent = SimulationBlock,
   isReadOnly,
 }: SimulationCanvasProps) {
-  const canvas = useSimulationCanvas({ reportState, setReportState, pickerState, setPickerState });
+  const canvas = useSimulationCanvas({ reportState, setReportState });
   const isViewOnly = Boolean(isReadOnly);
   const noop = () => {};
   const handleHouseholdModalBack =
@@ -171,19 +166,6 @@ export function SimulationCanvas({
           )}
         </div>
       </div>
-
-      <IngredientPickerModal
-        isOpen={canvas.pickerState.isOpen}
-        onClose={canvas.closeIngredientPicker}
-        type={canvas.pickerState.ingredientType}
-        onSelect={canvas.handleIngredientSelect}
-        onCreateNew={() =>
-          canvas.handleCreateCustom(
-            canvas.pickerState.simulationIndex,
-            canvas.pickerState.ingredientType
-          )
-        }
-      />
 
       <PolicyBrowseModal
         isOpen={canvas.policyBrowseState.isOpen}
