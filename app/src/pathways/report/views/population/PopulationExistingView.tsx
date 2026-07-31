@@ -21,6 +21,12 @@ import { getCountryDisplayName } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import {
+  getLoadErrorAvailability,
+  getUserHouseholdAvailability,
+  isUserHouseholdSelectable,
+  POPULATION_LOAD_ERROR_MESSAGE,
+} from '@/utils/ingredientAvailability';
+import {
   isGeographicAssociationReady,
   isHouseholdAssociationReady,
 } from '@/utils/validation/ingredientValidation';
@@ -30,6 +36,18 @@ interface PopulationExistingViewProps {
   onSelectGeography: (geographyId: string, geography: Geography, label: string) => void;
   onBack?: () => void;
   onCancel?: () => void;
+}
+
+type ExistingPopulation =
+  | UserHouseholdMetadataWithAssociation
+  | UserGeographicMetadataWithAssociation;
+
+function getPopulationAssociationKey(association: ExistingPopulation): string {
+  if (isHouseholdMetadataWithAssociation(association)) {
+    return `household:${association.association.id || association.association.householdId}`;
+  }
+
+  return `geography:${association.association.id || association.association.geographyId}`;
 }
 
 export default function PopulationExistingView({
@@ -56,9 +74,17 @@ export default function PopulationExistingView({
     error: geographicError,
   } = useUserGeographics(userId);
 
-  const [localPopulation, setLocalPopulation] = useState<
-    UserHouseholdMetadataWithAssociation | UserGeographicMetadataWithAssociation | null
-  >(null);
+  const householdPopulations = householdData || [];
+  const geographicPopulations = geographicData || [];
+  const filteredHouseholds = householdPopulations.filter((association) =>
+    isHouseholdMetadataWithAssociation(association)
+  );
+  const allPopulations: ExistingPopulation[] = [...filteredHouseholds, ...geographicPopulations];
+  const [selectedPopulationKey, setSelectedPopulationKey] = useState<string | null>(null);
+  const localPopulation =
+    allPopulations.find(
+      (association) => getPopulationAssociationKey(association) === selectedPopulationKey
+    ) ?? null;
 
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
@@ -71,30 +97,32 @@ export default function PopulationExistingView({
     }
 
     if (isHouseholdMetadataWithAssociation(localPopulation)) {
-      return isHouseholdAssociationReady(localPopulation);
+      return (
+        isUserHouseholdSelectable(localPopulation) && isHouseholdAssociationReady(localPopulation)
+      );
     }
 
     if (isGeographicMetadataWithAssociation(localPopulation)) {
-      return isGeographicAssociationReady(localPopulation);
+      return !localPopulation.error && isGeographicAssociationReady(localPopulation);
     }
 
     return false;
   }
 
   function handleHouseholdPopulationSelect(association: UserHouseholdMetadataWithAssociation) {
-    if (!association) {
+    if (!association || !isUserHouseholdSelectable(association)) {
       return;
     }
 
-    setLocalPopulation(association);
+    setSelectedPopulationKey(getPopulationAssociationKey(association));
   }
 
   function handleGeographicPopulationSelect(association: UserGeographicMetadataWithAssociation) {
-    if (!association) {
+    if (!association || association.error || !isGeographicAssociationReady(association)) {
       return;
     }
 
-    setLocalPopulation(association);
+    setSelectedPopulationKey(getPopulationAssociationKey(association));
   }
 
   function handleSubmit() {
@@ -110,13 +138,11 @@ export default function PopulationExistingView({
   }
 
   function handleSubmitHouseholdPopulation() {
-    if (!localPopulation || !isHouseholdMetadataWithAssociation(localPopulation)) {
-      return;
-    }
-
-    // Guard: ensure household data is fully loaded before continuing
-    if (!localPopulation.household) {
-      console.error('[PopulationExistingView] Household model is undefined');
+    if (
+      !localPopulation ||
+      !isHouseholdMetadataWithAssociation(localPopulation) ||
+      !isUserHouseholdSelectable(localPopulation)
+    ) {
       return;
     }
 
@@ -129,7 +155,12 @@ export default function PopulationExistingView({
   }
 
   function handleSubmitGeographicPopulation() {
-    if (!localPopulation || !isGeographicMetadataWithAssociation(localPopulation)) {
+    if (
+      !localPopulation ||
+      !isGeographicMetadataWithAssociation(localPopulation) ||
+      localPopulation.error ||
+      !isGeographicAssociationReady(localPopulation)
+    ) {
       return;
     }
 
@@ -140,9 +171,6 @@ export default function PopulationExistingView({
     // Call parent callback instead of dispatching to Redux
     onSelectGeography(geographyId, geography, label);
   }
-
-  const householdPopulations = householdData || [];
-  const geographicPopulations = geographicData || [];
 
   if (isLoading) {
     return (
@@ -188,24 +216,23 @@ export default function PopulationExistingView({
     );
   }
 
-  // Filter household populations
-  const filteredHouseholds = householdPopulations.filter((association) =>
-    isHouseholdMetadataWithAssociation(association)
-  );
-
-  // Combine all populations (pagination handled by PathwayView)
-  const allPopulations = [...filteredHouseholds, ...geographicPopulations];
-
   // Build card list items from ALL household populations
   const householdCardItems = allPopulations
     .filter((association) => isHouseholdMetadataWithAssociation(association))
     .map((association) => {
       const isReady = isHouseholdAssociationReady(association);
+      const associationKey = getPopulationAssociationKey(association);
+      const isSelectable = isUserHouseholdSelectable(association);
+      const availability = getUserHouseholdAvailability(association);
 
       let title = '';
       let subtitle = '';
 
-      if (!isReady) {
+      if (association.error) {
+        title =
+          association.association.label || `Household #${association.association.householdId}`;
+        subtitle = 'Failed to load';
+      } else if (!isReady) {
         // NOT LOADED YET - show loading indicator
         title = '⏳ Loading...';
         subtitle = 'Household data not loaded yet';
@@ -218,13 +245,12 @@ export default function PopulationExistingView({
       }
 
       return {
-        id: association.association.id?.toString() || association.household?.id?.toString(), // Use association ID for unique key
+        id: associationKey,
         title,
         subtitle,
         onClick: () => handleHouseholdPopulationSelect(association!),
-        isSelected:
-          isHouseholdMetadataWithAssociation(localPopulation) &&
-          localPopulation.household?.id === association.household?.id,
+        ...availability,
+        isSelected: isSelectable && selectedPopulationKey === associationKey,
       };
     });
 
@@ -245,6 +271,12 @@ export default function PopulationExistingView({
   const geographicCardItems = allPopulations
     .filter((association) => isGeographicMetadataWithAssociation(association))
     .map((association) => {
+      const associationKey = getPopulationAssociationKey(association);
+      const isSelectable = !association.error && isGeographicAssociationReady(association);
+      const availability = getLoadErrorAvailability(
+        association.error,
+        POPULATION_LOAD_ERROR_MESSAGE
+      );
       let title = '';
       let subtitle = '';
 
@@ -264,13 +296,13 @@ export default function PopulationExistingView({
       }
 
       return {
-        id: association.association.id?.toString() || association.geography?.id?.toString(), // Use association ID for unique key
+        id: associationKey,
         title,
         subtitle,
         onClick: () => handleGeographicPopulationSelect(association!),
-        isSelected:
-          isGeographicMetadataWithAssociation(localPopulation) &&
-          localPopulation.geography?.id === association.geography!.id,
+        ...availability,
+        isDisabled: !isSelectable,
+        isSelected: isSelectable && selectedPopulationKey === associationKey,
       };
     });
 

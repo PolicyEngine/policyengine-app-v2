@@ -5,6 +5,8 @@
  * and callback logic lives in useSimulationCanvas.
  */
 
+import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
+import { Alert, AlertDescription, AlertTitle, Button, Spinner } from '@/components/ui';
 import { useSimulationCanvas } from '../hooks/useSimulationCanvas';
 import {
   HouseholdCreationModal,
@@ -54,6 +56,30 @@ export function SimulationCanvas({
     return <SimulationCanvasSkeleton />;
   }
 
+  if (canvas.catalogError) {
+    return (
+      <div style={styles.canvasContainer} className="tw:p-xl">
+        <Alert variant="destructive" className="tw:max-w-2xl">
+          <IconAlertCircle size={20} />
+          <AlertTitle>Saved ingredients unavailable</AlertTitle>
+          <AlertDescription>
+            <p>{canvas.catalogErrorMessage}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={canvas.retryCatalogs}
+              disabled={canvas.isRetryingCatalogs}
+              className="tw:mt-sm"
+            >
+              {canvas.isRetryingCatalogs ? <Spinner size="sm" /> : <IconRefresh size={16} />}
+              Try again
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <>
       <div style={styles.canvasContainer}>
@@ -87,6 +113,10 @@ export function SimulationCanvas({
             canRemove={false}
             savedPolicies={canvas.savedPolicies}
             recentPopulations={canvas.recentPopulations}
+            policyErrorMessage={canvas.getPolicyErrorMessage(reportState.simulations[0]?.policy.id)}
+            populationErrorMessage={canvas.getPopulationErrorMessage(
+              reportState.simulations[0]?.population.household?.id
+            )}
             isReadOnly={isReadOnly}
           />
 
@@ -125,6 +155,12 @@ export function SimulationCanvas({
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={canvas.savedPolicies}
               recentPopulations={canvas.recentPopulations}
+              policyErrorMessage={canvas.getPolicyErrorMessage(
+                reportState.simulations[1]?.policy.id
+              )}
+              populationErrorMessage={canvas.getPopulationErrorMessage(
+                reportState.simulations[0]?.population.household?.id
+              )}
               isReadOnly={isReadOnly}
             />
           ) : (

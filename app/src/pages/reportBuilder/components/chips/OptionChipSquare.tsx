@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
@@ -12,17 +13,27 @@ export function OptionChipSquare({
   isSelected,
   onClick,
   colorConfig,
+  isDisabled,
+  errorMessage,
 }: OptionChipSquareProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
       role="button"
-      tabIndex={0}
+      tabIndex={isDisabled ? -1 : 0}
+      aria-disabled={isDisabled || undefined}
       style={{
         ...chipStyles.chipSquare,
+        position: 'relative',
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
-        background: isSelected ? colorConfig.bg : isHovered ? colors.gray[50] : colors.white,
+        background: isSelected
+          ? colorConfig.bg
+          : isHovered && !isDisabled
+            ? colors.gray[50]
+            : colors.white,
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        opacity: isDisabled ? 0.6 : 1,
         ...(isSelected
           ? {
               ...chipStyles.chipSquareSelected,
@@ -30,16 +41,21 @@ export function OptionChipSquare({
             }
           : {}),
       }}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => !isDisabled && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={() => !isDisabled && onClick()}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick();
         }
       }}
     >
+      {errorMessage && (
+        <span className="tw:absolute tw:right-2 tw:top-2">
+          <IngredientErrorIcon message={errorMessage} />
+        </span>
+      )}
       <div
         style={{
           width: 28,

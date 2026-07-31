@@ -236,6 +236,7 @@ export const useUserHouseholds = (userId: string) => {
     data: associations,
     isLoading: associationsLoading,
     error: associationsError,
+    refetch: refetchAssociations,
   } = useHouseholdAssociationsByUser(userId);
 
   // Extract household IDs
@@ -281,6 +282,7 @@ export const useUserHouseholds = (userId: string) => {
     isLoading,
     isError,
     error,
+    refetchAssociations,
     associations, // Still available if needed separately
   };
 };

@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { act, render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import ModifyReportPage from '@/pages/reportBuilder/ModifyReportPage';
@@ -7,6 +7,9 @@ import type { ReportBuilderState } from '@/pages/reportBuilder/types';
 const mockUseAppLocation = vi.fn();
 const mockUseReportBuilderState = vi.fn();
 const mockReportBuilderShell = vi.fn();
+const { mockUseModifyReportSubmission } = vi.hoisted(() => ({
+  mockUseModifyReportSubmission: vi.fn(),
+}));
 
 const baseReportState: ReportBuilderState = {
   id: 'sur-123',
@@ -46,12 +49,7 @@ vi.mock('@/pages/reportBuilder/hooks/useReportBuilderState', () => ({
 }));
 
 vi.mock('@/pages/reportBuilder/hooks/useModifyReportSubmission', () => ({
-  useModifyReportSubmission: () => ({
-    handleSaveAsNew: vi.fn(),
-    handleReplace: vi.fn(),
-    isSavingNew: false,
-    isReplacing: false,
-  }),
+  useModifyReportSubmission: () => mockUseModifyReportSubmission(),
 }));
 
 vi.mock('@/pages/reportBuilder/components', () => ({
@@ -75,6 +73,13 @@ describe('ModifyReportPage', () => {
       originalState: baseReportState,
       isLoading: false,
       error: null,
+    });
+    mockUseModifyReportSubmission.mockReturnValue({
+      handleSaveAsNew: vi.fn(),
+      handleReplace: vi.fn(),
+      isSavingNew: false,
+      isReplacing: false,
+      isReportSubmissionBlocked: false,
     });
   });
 
@@ -137,5 +142,27 @@ describe('ModifyReportPage', () => {
 
     const shellProps = mockReportBuilderShell.mock.calls[0]?.[0];
     expect(shellProps.backLabel).toBe('sur-123');
+  });
+
+  test('given report submission is blocked then update and save actions are disabled', () => {
+    mockUseModifyReportSubmission.mockReturnValue({
+      handleSaveAsNew: vi.fn(),
+      handleReplace: vi.fn(),
+      isSavingNew: false,
+      isReplacing: false,
+      isReportSubmissionBlocked: true,
+    });
+    render(<ModifyReportPage userReportId="sur-123" />);
+
+    const initialShellProps = mockReportBuilderShell.mock.calls[0]?.[0];
+    act(() => initialShellProps.actions[0].onClick());
+
+    const editShellProps = mockReportBuilderShell.mock.lastCall?.[0];
+    expect(editShellProps.actions.find((action: any) => action.key === 'replace')).toMatchObject({
+      disabled: true,
+    });
+    expect(editShellProps.actions.find((action: any) => action.key === 'save-new')).toMatchObject({
+      disabled: true,
+    });
   });
 });

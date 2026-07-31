@@ -25,6 +25,7 @@ import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { Geography } from '@/types/ingredients/Geography';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
+import { getUserHouseholdAvailability } from '@/utils/ingredientAvailability';
 import {
   getUKConstituencies,
   getUKCountries,
@@ -139,7 +140,8 @@ export function PopulationBrowseModal({
         const usageTimestamp = householdUsageStore.getLastUsed(householdIdStr);
         const sortTimestamp =
           usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
-        const isSelectable = Boolean(h.household);
+        const availability = getUserHouseholdAvailability(h);
+        const isSelectable = !availability.isDisabled;
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
@@ -154,6 +156,7 @@ export function PopulationBrowseModal({
               : h.isLoading
                 ? 'Loading...'
                 : 'Failed to load',
+          errorMessage: availability.errorMessage,
         };
       })
       .sort((a, b) => b.sortTimestamp.localeCompare(a.sortTimestamp));
@@ -366,6 +369,7 @@ export function PopulationBrowseModal({
           memberCount: h.memberCount,
           disabled: !h.isSelectable,
           statusMessage: h.statusMessage,
+          errorMessage: h.errorMessage,
         }))}
         householdsLoading={householdsLoading}
         getSectionTitle={getSectionTitle}

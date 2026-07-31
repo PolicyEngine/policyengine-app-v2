@@ -1,4 +1,4 @@
-import { IconAlertTriangle, IconPlus } from '@tabler/icons-react';
+import { IconPlus } from '@tabler/icons-react';
 import {
   Button,
   Spinner,
@@ -11,10 +11,10 @@ import {
   Text,
   Title,
 } from '@/components/ui';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';
 import EmptyState from './common/EmptyState';
+import { IngredientErrorIcon } from './common/IngredientErrorIcon';
 
 // Main component props
 interface IngredientReadViewProps {
@@ -163,22 +163,9 @@ export default function IngredientReadView({
                         >
                           <div className="tw:flex tw:items-center tw:gap-2">
                             {record.isDisabled && columnIndex === 0 && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span
-                                    aria-label={
-                                      record.errorMessage || `Error loading this ${ingredient}`
-                                    }
-                                    className="tw:inline-flex tw:shrink-0 tw:items-center"
-                                    style={{ color: colors.error }}
-                                  >
-                                    <IconAlertTriangle size={16} />
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                  {record.errorMessage || `Error loading this ${ingredient}`}
-                                </TooltipContent>
-                              </Tooltip>
+                              <IngredientErrorIcon
+                                message={record.errorMessage || `Error loading this ${ingredient}`}
+                              />
                             )}
                             <ColumnRenderer config={column} record={record} />
                           </div>

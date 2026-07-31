@@ -1,4 +1,5 @@
 import { IconCheck } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Badge, Container, Group, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ export interface SummaryBoxItem {
   isFulfilled?: boolean;
   isDisabled?: boolean;
   badge?: string | number;
+  errorMessage?: string;
 }
 
 export interface TextListItem {
@@ -76,19 +78,23 @@ export default function IngredientSubmissionView({
               className={cn(
                 'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-all',
                 item.isDisabled
-                  ? 'tw:opacity-60 tw:border-border-light tw:bg-gray-50 tw:pointer-events-none'
+                  ? 'tw:opacity-60 tw:border-border-light tw:bg-gray-50'
                   : 'tw:border-border-light tw:bg-white tw:hover:bg-gray-50 tw:hover:border-border-medium'
               )}
             >
               <Group gap="sm" className="tw:items-center">
                 <div className="tw:w-5 tw:shrink-0" style={{ marginTop: '2px' }}>
-                  {item.isFulfilled && (
-                    <IconCheck
-                      size={20}
-                      style={{
-                        color: colors.primary[600],
-                      }}
-                    />
+                  {item.errorMessage ? (
+                    <IngredientErrorIcon message={item.errorMessage} size={20} />
+                  ) : (
+                    item.isFulfilled && (
+                      <IconCheck
+                        size={20}
+                        style={{
+                          color: colors.primary[600],
+                        }}
+                      />
+                    )
                   )}
                 </div>
                 <Stack gap="xs" style={{ flex: 1 }}>

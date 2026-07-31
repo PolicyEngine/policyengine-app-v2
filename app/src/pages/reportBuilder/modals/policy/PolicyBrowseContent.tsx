@@ -9,6 +9,7 @@ import {
   IconSearch,
   IconUsers,
 } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Button } from '@/components/ui/button';
 import { Group } from '@/components/ui/Group';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,8 @@ interface PolicyItem {
   paramCount: number;
   createdAt?: string;
   updatedAt?: string;
+  isDisabled?: boolean;
+  errorMessage?: string;
 }
 
 type ActiveSection = 'my-policies' | 'public';
@@ -216,12 +219,15 @@ export function PolicyBrowseContent({
                     ...modalStyles.policyCard,
                     background: colors.white,
                     borderColor: isSelected ? colorConfig.border : colors.gray[200],
+                    cursor: policy.isDisabled ? 'not-allowed' : 'pointer',
+                    opacity: policy.isDisabled ? 0.6 : 1,
                   }}
                   role="button"
-                  tabIndex={0}
-                  onClick={() => onSelectPolicy(policy)}
+                  tabIndex={policy.isDisabled ? -1 : 0}
+                  aria-disabled={policy.isDisabled || undefined}
+                  onClick={() => !policy.isDisabled && onSelectPolicy(policy)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+                    if (!policy.isDisabled && (e.key === 'Enter' || e.key === ' ')) {
                       e.preventDefault();
                       onSelectPolicy(policy);
                     }
@@ -249,13 +255,16 @@ export function PolicyBrowseContent({
                         {policy.label}
                       </Text>
                       <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                        {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''} changed
+                        {policy.isDisabled
+                          ? 'Failed to load'
+                          : `${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
                       </Text>
                     </Stack>
                     <Group gap="xs" style={{ flexShrink: 0 }}>
                       <Button
                         variant="ghost"
                         size="icon-sm"
+                        disabled={policy.isDisabled}
                         onClick={(e) => {
                           e.stopPropagation();
                           onPolicyInfoClick(policy.id);
@@ -263,7 +272,11 @@ export function PolicyBrowseContent({
                       >
                         <IconInfoCircle size={18} />
                       </Button>
-                      <IconChevronRight size={16} color={colors.gray[400]} />
+                      {policy.errorMessage ? (
+                        <IngredientErrorIcon message={policy.errorMessage} />
+                      ) : (
+                        <IconChevronRight size={16} color={colors.gray[400]} />
+                      )}
                     </Group>
                   </Group>
                 </div>

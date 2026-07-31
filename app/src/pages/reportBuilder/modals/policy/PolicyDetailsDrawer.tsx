@@ -3,6 +3,7 @@
  */
 import { useMemo, useState } from 'react';
 import { IconChevronRight, IconPencil, IconX } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Button } from '@/components/ui/button';
 import { Group } from '@/components/ui/Group';
 import { Stack } from '@/components/ui/Stack';
@@ -12,6 +13,7 @@ import { ParameterTreeNode } from '@/libs/buildParameterTree';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { formatPeriod } from '@/utils/dateUtils';
+import { POLICY_LOAD_ERROR_MESSAGE } from '@/utils/ingredientAvailability';
 import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { FONT_SIZES } from '../../constants';
@@ -23,6 +25,8 @@ interface PolicyDetailsDrawerProps {
     label: string;
     paramCount: number;
     parameters: Parameter[];
+    isDisabled?: boolean;
+    errorMessage?: string;
   } | null;
   parameters: Record<string, ParameterMetadata>;
   parameterTree: ParameterTreeNode | null | undefined;
@@ -113,9 +117,12 @@ export function PolicyDetailsDrawer({
         >
           <div style={{ padding: spacing.lg, borderBottom: `1px solid ${colors.gray[200]}` }}>
             <Group justify="space-between" align="center">
-              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
-                {policy.label || 'Untitled policy'}
-              </Text>
+              <Group gap="xs" wrap="nowrap">
+                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                  {policy.label || 'Untitled policy'}
+                </Text>
+                {policy.errorMessage && <IngredientErrorIcon message={policy.errorMessage} />}
+              </Group>
               <Button variant="ghost" size="icon-sm" onClick={onClose}>
                 <IconX size={18} />
               </Button>
@@ -129,26 +136,43 @@ export function PolicyDetailsDrawer({
               background: colors.gray[50],
             }}
           >
-            <PolicyOverviewContent
-              policyLabel={policy.label}
-              onLabelChange={() => {}}
-              isReadOnly
-              showNamingCard={false}
-              modificationCount={policy.paramCount}
-              modifiedParams={modifiedParams}
-              hoveredParamName={hoveredParamName}
-              onHoverParam={setHoveredParamName}
-              onClickParam={() => {}}
-            />
+            {policy.isDisabled ? (
+              <Stack align="center" gap="sm" style={{ padding: spacing.xl }}>
+                <IngredientErrorIcon
+                  message={policy.errorMessage || POLICY_LOAD_ERROR_MESSAGE}
+                  size={20}
+                />
+                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                  Failed to load this policy
+                </Text>
+              </Stack>
+            ) : (
+              <PolicyOverviewContent
+                policyLabel={policy.label}
+                onLabelChange={() => {}}
+                isReadOnly
+                showNamingCard={false}
+                modificationCount={policy.paramCount}
+                modifiedParams={modifiedParams}
+                hoveredParamName={hoveredParamName}
+                onHoverParam={setHoveredParamName}
+                onClickParam={() => {}}
+              />
+            )}
           </div>
           <div style={{ padding: spacing.lg, borderTop: `1px solid ${colors.gray[200]}` }}>
             <Stack gap="sm">
-              <Button className="tw:w-full" onClick={onSelect}>
+              <Button className="tw:w-full" onClick={onSelect} disabled={policy.isDisabled}>
                 Select this policy
                 <IconChevronRight size={16} />
               </Button>
               {onEdit && (
-                <Button variant="outline" className="tw:w-full" onClick={onEdit}>
+                <Button
+                  variant="outline"
+                  className="tw:w-full"
+                  onClick={onEdit}
+                  disabled={policy.isDisabled}
+                >
                   <IconPencil size={16} />
                   Edit policy
                 </Button>

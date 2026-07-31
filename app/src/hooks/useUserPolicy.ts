@@ -193,6 +193,7 @@ export const useUserPolicies = (userId: string) => {
     data: associations,
     isLoading: associationsLoading,
     error: associationsError,
+    refetch: refetchAssociations,
   } = usePolicyAssociationsByUser(userId);
 
   // Extract policy IDs
@@ -244,6 +245,7 @@ export const useUserPolicies = (userId: string) => {
     isLoading,
     isError,
     error,
+    refetchAssociations,
     associations, // Still available if needed separately
   };
 };
