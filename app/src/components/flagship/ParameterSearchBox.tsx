@@ -1,9 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconSearch } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
 import {
+  countHiddenByFilters,
   createParameterSearchIndex,
+  DEFAULT_SEARCH_FILTERS,
+  listStateCodes,
   ParameterSearchEntry,
+  ParameterSearchFilters,
   searchParameters,
 } from '@/libs/parameterSearch';
 
@@ -13,10 +17,21 @@ interface ParameterSearchBoxProps {
   placeholder?: string;
 }
 
+const badgeStyle: React.CSSProperties = {
+  fontSize: 10,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  padding: '1px 6px',
+  borderRadius: 999,
+  whiteSpace: 'nowrap',
+};
+
 /**
- * Typeahead over the full parameter index. Pure component: takes entries
- * as a prop (connect via selectParameterSearchEntries) so it is testable
- * and reusable outside redux contexts.
+ * Typeahead over the full parameter index with scope filters: state
+ * parameters (over half the US index) can be scoped to one state or
+ * federal-only, and contributed/experimental parameters are hidden
+ * unless opted in. Pure component: takes entries as a prop (connect via
+ * selectParameterSearchEntries).
  */
 export default function ParameterSearchBox({
   entries,
@@ -25,10 +40,18 @@ export default function ParameterSearchBox({
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
-  const listRef = useRef<HTMLDivElement>(null);
+  const [filters, setFilters] = useState<ParameterSearchFilters>(DEFAULT_SEARCH_FILTERS);
 
   const index = useMemo(() => createParameterSearchIndex(entries), [entries]);
-  const results = useMemo(() => searchParameters(index, query), [index, query]);
+  const stateCodes = useMemo(() => listStateCodes(entries), [entries]);
+  const results = useMemo(
+    () => searchParameters(index, query, 10, filters),
+    [index, query, filters]
+  );
+  const hiddenCount = useMemo(
+    () => (query.trim().length >= 2 ? countHiddenByFilters(index, query, 10, filters) : 0),
+    [index, query, filters]
+  );
 
   const select = (entry: ParameterSearchEntry) => {
     onSelect(entry);
@@ -91,11 +114,81 @@ export default function ParameterSearchBox({
         />
       </div>
 
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing.md,
+          marginTop: spacing.sm,
+          flexWrap: 'wrap',
+        }}
+      >
+        {stateCodes.length > 0 && (
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              fontSize: typography.fontSize.xs,
+              color: colors.text.secondary,
+              fontFamily: typography.fontFamily.primary,
+            }}
+          >
+            Scope
+            <select
+              value={filters.stateScope}
+              onChange={(event) => setFilters({ ...filters, stateScope: event.target.value })}
+              aria-label="State scope"
+              style={{
+                padding: `2px ${spacing.xs}`,
+                border: `1px solid ${colors.border.light}`,
+                borderRadius: 6,
+                fontSize: typography.fontSize.xs,
+                fontFamily: typography.fontFamily.primary,
+                background: colors.background.primary,
+                color: colors.text.primary,
+              }}
+            >
+              <option value="all">All jurisdictions</option>
+              <option value="federal">Federal only</option>
+              {stateCodes.map((code) => (
+                <option key={code} value={code}>
+                  Federal + {code.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+            fontSize: typography.fontSize.xs,
+            color: colors.text.secondary,
+            fontFamily: typography.fontFamily.primary,
+            cursor: 'pointer',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={filters.includeContrib}
+            onChange={(event) => setFilters({ ...filters, includeContrib: event.target.checked })}
+            aria-label="Include contributed parameters"
+          />
+          Include contributed (experimental)
+        </label>
+        {hiddenCount > 0 && (
+          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            {hiddenCount} {hiddenCount === 1 ? 'match' : 'matches'} hidden by filters
+          </span>
+        )}
+      </div>
+
       {results.length > 0 && (
         <div
           id="parameter-search-results"
           role="listbox"
-          ref={listRef}
           style={{
             position: 'absolute',
             top: '100%',
@@ -131,13 +224,47 @@ export default function ParameterSearchBox({
             >
               <div
                 style={{
-                  fontSize: typography.fontSize.sm,
-                  fontFamily: typography.fontFamily.primary,
-                  color: colors.text.primary,
-                  fontWeight: typography.fontWeight.medium,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                  justifyContent: 'space-between',
                 }}
               >
-                {entry.breadcrumb || entry.label}
+                <span
+                  style={{
+                    fontSize: typography.fontSize.sm,
+                    fontFamily: typography.fontFamily.primary,
+                    color: colors.text.primary,
+                    fontWeight: typography.fontWeight.medium,
+                  }}
+                >
+                  {entry.breadcrumb || entry.label}
+                </span>
+                <span style={{ display: 'flex', gap: spacing.xs, flexShrink: 0 }}>
+                  {entry.stateCode && (
+                    <span
+                      style={{
+                        ...badgeStyle,
+                        color: colors.text.secondary,
+                        background: colors.gray[50],
+                        border: `1px solid ${colors.border.light}`,
+                      }}
+                    >
+                      {entry.stateCode.toUpperCase()}
+                    </span>
+                  )}
+                  {entry.isContrib && (
+                    <span
+                      style={{
+                        ...badgeStyle,
+                        color: colors.primary[700],
+                        background: colors.primary[50],
+                      }}
+                    >
+                      contributed
+                    </span>
+                  )}
+                </span>
               </div>
               <div
                 style={{

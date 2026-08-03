@@ -23,6 +23,49 @@ export interface ParameterSearchEntry {
   breadcrumb: string;
   unit: string | null;
   description: string | null;
+  /** Contributed/experimental parameter (gov.contrib.*) */
+  isContrib: boolean;
+  /** Two-letter state code for state parameters (gov.states.xx.*, gov.contrib.states.xx.*) */
+  stateCode: string | null;
+}
+
+const STATE_PATH_PATTERN = /^gov\.(?:contrib\.)?states\.([a-z]{2})\./;
+
+export interface ParameterSearchFilters {
+  /** Include gov.contrib.* experimental parameters (default false) */
+  includeContrib: boolean;
+  /** 'all' | 'federal' | a two-letter state code */
+  stateScope: string;
+}
+
+export const DEFAULT_SEARCH_FILTERS: ParameterSearchFilters = {
+  includeContrib: false,
+  stateScope: 'all',
+};
+
+function matchesFilters(entry: ParameterSearchEntry, filters: ParameterSearchFilters): boolean {
+  if (!filters.includeContrib && entry.isContrib) {
+    return false;
+  }
+  if (filters.stateScope === 'federal' && entry.stateCode) {
+    return false;
+  }
+  if (
+    filters.stateScope !== 'all' &&
+    filters.stateScope !== 'federal' &&
+    entry.stateCode &&
+    entry.stateCode !== filters.stateScope
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/** Distinct state codes present in the entries, sorted (for scope dropdowns). */
+export function listStateCodes(entries: ParameterSearchEntry[]): string[] {
+  return [
+    ...new Set(entries.map((e) => e.stateCode).filter((c): c is string => Boolean(c))),
+  ].sort();
 }
 
 const EXCLUDED_PATH_PATTERNS = ['taxsim', 'gov.abolitions', 'pycache'];
@@ -49,15 +92,20 @@ export function buildParameterSearchEntries(
         breadcrumb: formatLabelParts(labels),
         unit: param.unit ?? null,
         description: param.description ?? null,
+        isContrib: param.parameter.startsWith('gov.contrib.'),
+        stateCode: STATE_PATH_PATTERN.exec(param.parameter)?.[1] ?? null,
       };
     });
 }
 
 const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
   keys: [
-    { name: 'breadcrumb', weight: 0.7 },
-    { name: 'path', weight: 0.2 },
-    { name: 'label', weight: 0.1 },
+    { name: 'breadcrumb', weight: 0.55 },
+    // Leaf labels are often the most information-dense part of the
+    // hierarchy, so they get their own strong weight beyond appearing
+    // at the end of the breadcrumb.
+    { name: 'label', weight: 0.3 },
+    { name: 'path', weight: 0.15 },
   ],
   threshold: 0.35,
   ignoreLocation: true,
@@ -78,7 +126,9 @@ export interface ParameterSearchIndex {
 export function createParameterSearchIndex(entries: ParameterSearchEntry[]): ParameterSearchIndex {
   return {
     entries,
-    haystacks: entries.map((entry) => `${entry.breadcrumb} ${entry.path}`.toLowerCase()),
+    haystacks: entries.map((entry) =>
+      `${entry.breadcrumb} ${entry.label} ${entry.path}`.toLowerCase()
+    ),
     fuse: new Fuse(entries, FUSE_OPTIONS),
   };
 }
@@ -94,7 +144,8 @@ export function createParameterSearchIndex(entries: ParameterSearchEntry[]): Par
 export function searchParameters(
   index: ParameterSearchIndex,
   query: string,
-  limit = 10
+  limit = 10,
+  filters: ParameterSearchFilters = DEFAULT_SEARCH_FILTERS
 ): ParameterSearchEntry[] {
   const trimmed = query.trim().toLowerCase();
   if (trimmed.length < 2) {
@@ -104,9 +155,13 @@ export function searchParameters(
   const tokens = trimmed.split(/\s+/);
   const candidates: ParameterSearchEntry[] = [];
   for (let i = 0; i < index.haystacks.length; i++) {
+    const entry = index.entries[i];
+    if (!matchesFilters(entry, filters)) {
+      continue;
+    }
     const haystack = index.haystacks[i];
     if (tokens.every((token) => haystack.includes(token))) {
-      candidates.push(index.entries[i]);
+      candidates.push(entry);
       if (candidates.length >= RERANK_CANDIDATE_CAP) {
         break;
       }
@@ -122,7 +177,32 @@ export function searchParameters(
       .map((result) => result.item);
   }
 
-  return index.fuse.search(trimmed, { limit }).map((result) => result.item);
+  // Typo fallback: full fuzzy search, filtered after ranking. Fetch a
+  // padded window so filtering still leaves up to `limit` results.
+  return index.fuse
+    .search(trimmed, { limit: limit * 10 })
+    .map((result) => result.item)
+    .filter((entry) => matchesFilters(entry, filters))
+    .slice(0, limit);
+}
+
+/**
+ * How many matches the current filters are hiding for this query —
+ * lets the UI say "N more hidden by filters" instead of a bare empty
+ * state.
+ */
+export function countHiddenByFilters(
+  index: ParameterSearchIndex,
+  query: string,
+  limit: number,
+  filters: ParameterSearchFilters
+): number {
+  const unfiltered = searchParameters(index, query, limit, {
+    includeContrib: true,
+    stateScope: 'all',
+  });
+  const filtered = searchParameters(index, query, limit, filters);
+  return Math.max(0, unfiltered.length - filtered.length);
 }
 
 /**

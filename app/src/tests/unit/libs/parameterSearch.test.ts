@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildParameterSearchEntries,
+  countHiddenByFilters,
   createParameterSearchIndex,
+  listStateCodes,
   searchParameters,
 } from '@/libs/parameterSearch';
 import US_METADATA from '@/mocks/US_Metadata.json';
@@ -112,6 +114,53 @@ describe('search quality against real US metadata (52k parameters)', () => {
 
   it('given the limit then no more than that many results return', () => {
     expect(searchParameters(index, 'tax', 5)).toHaveLength(5);
+  });
+
+  it('given the entries then contrib and state parameters are tagged', () => {
+    const contribEntry = entries.find((e) => e.path.startsWith('gov.contrib.'));
+    const stateEntry = entries.find((e) => e.path.startsWith('gov.states.ca.'));
+
+    expect(contribEntry?.isContrib).toBe(true);
+    expect(stateEntry?.stateCode).toBe('ca');
+    expect(listStateCodes(entries).length).toBeGreaterThan(40);
+  });
+
+  it('given default filters then contributed parameters never surface', () => {
+    const results = searchParameters(index, 'ctc additional bracket', 10);
+    expect(results.every((r) => !r.isContrib)).toBe(true);
+  });
+
+  it('given contributed opted in then contributed parameters can surface', () => {
+    const results = searchParameters(index, 'ctc additional bracket', 10, {
+      includeContrib: true,
+      stateScope: 'all',
+    });
+    expect(results.some((r) => r.isContrib)).toBe(true);
+  });
+
+  it('given federal-only scope then a generic query returns no state parameters', () => {
+    const results = searchParameters(index, 'income tax rate', 10, {
+      includeContrib: false,
+      stateScope: 'federal',
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((r) => r.stateCode === null)).toBe(true);
+  });
+
+  it('given a single-state scope then other states are excluded but that state matches', () => {
+    const results = searchParameters(index, 'income tax rate', 20, {
+      includeContrib: false,
+      stateScope: 'ut',
+    });
+    expect(results.every((r) => r.stateCode === null || r.stateCode === 'ut')).toBe(true);
+  });
+
+  it('given filters hiding matches then countHiddenByFilters reports them', () => {
+    const hidden = countHiddenByFilters(index, 'ctc additional bracket threshold', 10, {
+      includeContrib: false,
+      stateScope: 'all',
+    });
+    expect(hidden).toBeGreaterThan(0);
   });
 
   it('given a common multi-word query then the fast path answers in as-you-type latency', () => {

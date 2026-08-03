@@ -10,6 +10,8 @@ const ENTRIES: ParameterSearchEntry[] = [
     breadcrumb: 'IRS → Credits → Child tax credit → Amount',
     unit: 'currency-USD',
     description: null,
+    isContrib: false,
+    stateCode: null,
   },
   {
     path: 'gov.irs.credits.eitc.max',
@@ -17,6 +19,26 @@ const ENTRIES: ParameterSearchEntry[] = [
     breadcrumb: 'IRS → Credits → EITC → Maximum',
     unit: 'currency-USD',
     description: null,
+    isContrib: false,
+    stateCode: null,
+  },
+  {
+    path: 'gov.states.ut.tax.income.credits.ctc.amount',
+    label: 'amount',
+    breadcrumb: 'Utah → Income tax → Child tax credit → Amount',
+    unit: 'currency-USD',
+    description: null,
+    isContrib: false,
+    stateCode: 'ut',
+  },
+  {
+    path: 'gov.contrib.ctc.expansion.amount',
+    label: 'expanded amount',
+    breadcrumb: 'Contributed → CTC expansion → Amount',
+    unit: 'currency-USD',
+    description: null,
+    isContrib: true,
+    stateCode: null,
   },
 ];
 
@@ -67,6 +89,70 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  test('given default filters then contributed parameters are hidden with a hint', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // When
+    await user.type(
+      screen.getByRole('combobox', { name: /search parameters/i }),
+      'ctc expansion amount'
+    );
+
+    // Then
+    expect(screen.queryByText('Contributed → CTC expansion → Amount')).not.toBeInTheDocument();
+    expect(screen.getByText(/hidden by filters/i)).toBeInTheDocument();
+  });
+
+  test('given contributed is opted in then contributed parameters appear with a badge', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    await user.click(screen.getByRole('checkbox', { name: /include contributed/i }));
+
+    // When
+    await user.type(
+      screen.getByRole('combobox', { name: /search parameters/i }),
+      'ctc expansion amount'
+    );
+
+    // Then
+    expect(await screen.findByText('Contributed → CTC expansion → Amount')).toBeInTheDocument();
+    expect(screen.getByText('contributed')).toBeInTheDocument();
+  });
+
+  test('given federal-only scope then state parameters are excluded', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    await user.selectOptions(screen.getByRole('combobox', { name: /state scope/i }), 'federal');
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'child tax');
+
+    // Then
+    expect(screen.getByText('IRS → Credits → Child tax credit → Amount')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Utah → Income tax → Child tax credit → Amount')
+    ).not.toBeInTheDocument();
+  });
+
+  test('given a state scope then that state and federal both appear with state badges', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    await user.selectOptions(screen.getByRole('combobox', { name: /state scope/i }), 'ut');
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'child tax');
+
+    // Then
+    expect(screen.getByText('Utah → Income tax → Child tax credit → Amount')).toBeInTheDocument();
+    expect(screen.getByText('IRS → Credits → Child tax credit → Amount')).toBeInTheDocument();
+    expect(screen.getByText('UT')).toBeInTheDocument();
   });
 
   test('given a query with no match then no listbox renders', async () => {
