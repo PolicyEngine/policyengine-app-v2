@@ -1,15 +1,11 @@
 import {
-  IconAdjustments,
   IconBook,
   IconBrandGithub,
   IconBrandSlack,
   IconCpu,
   IconFileDescription,
-  IconFolder,
-  IconGavel,
   IconGitBranch,
   IconMail,
-  IconMessageCircle,
   IconPlus,
   IconScale,
   IconUsers,
@@ -19,7 +15,6 @@ import { WEBSITE_URL } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { isFlagshipShellEnabled } from '@/libs/featureFlags';
 import { colors, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
@@ -35,21 +30,12 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const countryId = useCurrentCountry();
 
   // All internal navigation paths include the country prefix for consistency with v1 app
-  const flagshipShell = isFlagshipShellEnabled();
-
-  const navItems = flagshipShell
-    ? [
-        { label: 'Ask', icon: IconMessageCircle, path: `/${countryId}/ask` },
-        { label: 'Tracker', icon: IconGavel, path: `/${countryId}/tracker` },
-        { label: 'Build', icon: IconAdjustments, path: `/${countryId}/build` },
-        { label: 'Library', icon: IconFolder, path: `/${countryId}/library` },
-      ]
-    : [
-        { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
-        { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
-        { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
-        { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
-      ];
+  const navItems = [
+    { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
+    { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
+    { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
+    { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
+  ];
 
   const resourceItems = [
     {
@@ -102,33 +88,17 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       }}
     >
       <div className="tw:px-4 tw:py-4">
-        {/* Flagship shell: a report is the output of a reform, so the
-            primary action is starting a reform, not the report wizard. */}
-        {flagshipShell ? (
-          <Button
-            className="tw:w-full"
-            style={{
-              fontSize: typography.fontSize.sm,
-              fontWeight: typography.fontWeight.medium,
-            }}
-            onClick={() => nav.push(`/${countryId}/build`)}
-          >
-            New reform
-            <IconPlus size={16} />
-          </Button>
-        ) : (
-          <Button
-            className="tw:w-full"
-            style={{
-              fontSize: typography.fontSize.sm,
-              fontWeight: typography.fontWeight.medium,
-            }}
-            onClick={() => nav.push(`/${countryId}/reports/create`)}
-          >
-            New report
-            <IconPlus size={16} />
-          </Button>
-        )}
+        <Button
+          className="tw:w-full"
+          style={{
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.medium,
+          }}
+          onClick={() => nav.push(`/${countryId}/reports/create`)}
+        >
+          New report
+          <IconPlus size={16} />
+        </Button>
       </div>
 
       <div className="tw:flex tw:flex-col tw:flex-1">
