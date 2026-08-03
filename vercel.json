@@ -192,6 +192,14 @@
       "source": "/uk/api/:path*",
       "destination": "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*"
     },
+    {
+      "source": "/scorecard",
+      "destination": "https://policyengine-scorecard.vercel.app/scorecard"
+    },
+    {
+      "source": "/scorecard/:path*",
+      "destination": "https://policyengine-scorecard.vercel.app/scorecard/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
