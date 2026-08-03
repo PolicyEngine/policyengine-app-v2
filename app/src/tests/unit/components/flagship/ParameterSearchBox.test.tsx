@@ -23,6 +23,15 @@ const ENTRIES: ParameterSearchEntry[] = [
     stateCode: null,
   },
   {
+    path: 'gov.irs.credits.eitc.phase_in_rate',
+    label: 'phase-in rate',
+    breadcrumb: 'IRS → Credits → EITC → Phase-in rate',
+    unit: '/1',
+    description: null,
+    isContrib: false,
+    stateCode: null,
+  },
+  {
     path: 'gov.states.ut.tax.income.credits.ctc.amount',
     label: 'amount',
     breadcrumb: 'Utah → Income tax → Child tax credit → Amount',
@@ -89,6 +98,37 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  test('given results sharing a folder then a folder header shows with indented leaf labels', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+
+    // Then
+    expect(await screen.findByText('IRS → Credits → EITC')).toBeInTheDocument();
+    expect(screen.getByText('Maximum')).toBeInTheDocument();
+    expect(screen.getByText('Phase-in rate')).toBeInTheDocument();
+    expect(screen.queryByText('IRS → Credits → EITC → Maximum')).not.toBeInTheDocument();
+  });
+
+  test('given a folder child is clicked then onSelect fires with that parameter', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={onSelect} />);
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+
+    // When
+    await user.click(await screen.findByText('Maximum'));
+
+    // Then
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'gov.irs.credits.eitc.max' })
+    );
   });
 
   test('given default filters then contributed parameters are hidden with a hint', async () => {

@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { IconSearch } from '@tabler/icons-react';
+import { IconFolder, IconSearch } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
 import {
   countHiddenByFilters,
   createParameterSearchIndex,
   DEFAULT_SEARCH_FILTERS,
+  groupSearchResults,
   listStateCodes,
   ParameterSearchEntry,
   ParameterSearchFilters,
@@ -17,6 +18,8 @@ interface ParameterSearchBoxProps {
   placeholder?: string;
 }
 
+const RESULT_LIMIT = 20;
+
 const badgeStyle: React.CSSProperties = {
   fontSize: 10,
   textTransform: 'uppercase',
@@ -26,12 +29,53 @@ const badgeStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+const controlShell: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: spacing.xs,
+  padding: `4px ${spacing.sm}`,
+  border: `1px solid ${colors.border.light}`,
+  borderRadius: 8,
+  background: colors.background.primary,
+  fontSize: typography.fontSize.xs,
+  fontFamily: typography.fontFamily.primary,
+  color: colors.text.secondary,
+  height: 30,
+};
+
+function capitalizeFirst(text: string): string {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
+function EntryBadges({ entry }: { entry: ParameterSearchEntry }) {
+  return (
+    <span style={{ display: 'flex', gap: spacing.xs, flexShrink: 0 }}>
+      {entry.stateCode && (
+        <span
+          style={{
+            ...badgeStyle,
+            color: colors.text.secondary,
+            background: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+          }}
+        >
+          {entry.stateCode.toUpperCase()}
+        </span>
+      )}
+      {entry.isContrib && (
+        <span style={{ ...badgeStyle, color: colors.primary[700], background: colors.primary[50] }}>
+          contributed
+        </span>
+      )}
+    </span>
+  );
+}
+
 /**
- * Typeahead over the full parameter index with scope filters: state
- * parameters (over half the US index) can be scoped to one state or
- * federal-only, and contributed/experimental parameters are hidden
- * unless opted in. Pure component: takes entries as a prop (connect via
- * selectParameterSearchEntries).
+ * Typeahead over the full parameter index. Results mirror the model's
+ * hierarchy: parameters sharing a folder cluster under a folder header
+ * with indented children, standalone parameters follow. Scope filters
+ * tame the state/contributed namespaces that dominate the index.
  */
 export default function ParameterSearchBox({
   entries,
@@ -44,12 +88,14 @@ export default function ParameterSearchBox({
 
   const index = useMemo(() => createParameterSearchIndex(entries), [entries]);
   const stateCodes = useMemo(() => listStateCodes(entries), [entries]);
-  const results = useMemo(
-    () => searchParameters(index, query, 10, filters),
+  const groups = useMemo(
+    () => groupSearchResults(searchParameters(index, query, RESULT_LIMIT, filters)),
     [index, query, filters]
   );
+  const flatEntries = useMemo(() => groups.flatMap((group) => group.entries), [groups]);
   const hiddenCount = useMemo(
-    () => (query.trim().length >= 2 ? countHiddenByFilters(index, query, 10, filters) : 0),
+    () =>
+      query.trim().length >= 2 ? countHiddenByFilters(index, query, RESULT_LIMIT, filters) : 0,
     [index, query, filters]
   );
 
@@ -60,22 +106,24 @@ export default function ParameterSearchBox({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (!results.length) {
+    if (!flatEntries.length) {
       return;
     }
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setHighlighted((current) => Math.min(current + 1, results.length - 1));
+      setHighlighted((current) => Math.min(current + 1, flatEntries.length - 1));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       setHighlighted((current) => Math.max(current - 1, 0));
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      select(results[highlighted]);
+      select(flatEntries[highlighted]);
     } else if (event.key === 'Escape') {
       setQuery('');
     }
   };
+
+  let runningIndex = -1;
 
   return (
     <div style={{ position: 'relative' }}>
@@ -101,7 +149,7 @@ export default function ParameterSearchBox({
           placeholder={placeholder}
           aria-label="Search parameters"
           role="combobox"
-          aria-expanded={results.length > 0}
+          aria-expanded={flatEntries.length > 0}
           aria-controls="parameter-search-results"
           style={{
             flex: 1,
@@ -118,35 +166,26 @@ export default function ParameterSearchBox({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: spacing.md,
+          gap: spacing.sm,
           marginTop: spacing.sm,
           flexWrap: 'wrap',
         }}
       >
         {stateCodes.length > 0 && (
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-              fontSize: typography.fontSize.xs,
-              color: colors.text.secondary,
-              fontFamily: typography.fontFamily.primary,
-            }}
-          >
+          <label style={controlShell}>
             Scope
             <select
               value={filters.stateScope}
               onChange={(event) => setFilters({ ...filters, stateScope: event.target.value })}
               aria-label="State scope"
               style={{
-                padding: `2px ${spacing.xs}`,
-                border: `1px solid ${colors.border.light}`,
-                borderRadius: 6,
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
                 fontSize: typography.fontSize.xs,
                 fontFamily: typography.fontFamily.primary,
-                background: colors.background.primary,
                 color: colors.text.primary,
+                cursor: 'pointer',
               }}
             >
               <option value="all">All jurisdictions</option>
@@ -159,24 +198,15 @@ export default function ParameterSearchBox({
             </select>
           </label>
         )}
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            fontSize: typography.fontSize.xs,
-            color: colors.text.secondary,
-            fontFamily: typography.fontFamily.primary,
-            cursor: 'pointer',
-          }}
-        >
+        <label style={{ ...controlShell, cursor: 'pointer' }}>
           <input
             type="checkbox"
             checked={filters.includeContrib}
             onChange={(event) => setFilters({ ...filters, includeContrib: event.target.checked })}
             aria-label="Include contributed parameters"
+            style={{ accentColor: colors.primary[500], width: 13, height: 13, margin: 0 }}
           />
-          Include contributed (experimental)
+          Contributed
         </label>
         {hiddenCount > 0 && (
           <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
@@ -185,7 +215,7 @@ export default function ParameterSearchBox({
         )}
       </div>
 
-      {results.length > 0 && (
+      {flatEntries.length > 0 && (
         <div
           id="parameter-search-results"
           role="listbox"
@@ -200,86 +230,94 @@ export default function ParameterSearchBox({
             borderRadius: 10,
             background: colors.background.primary,
             boxShadow: '0 8px 24px rgba(20, 32, 31, 0.12)',
-            maxHeight: 360,
+            maxHeight: 420,
             overflowY: 'auto',
           }}
         >
-          {results.map((entry, i) => (
-            <button
-              key={entry.path}
-              type="button"
-              role="option"
-              aria-selected={i === highlighted}
-              onMouseEnter={() => setHighlighted(i)}
-              onClick={() => select(entry)}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: `${spacing.sm} ${spacing.lg}`,
-                border: 'none',
-                cursor: 'pointer',
-                background: i === highlighted ? colors.primary[50] : 'transparent',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing.sm,
-                  justifyContent: 'space-between',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: typography.fontSize.sm,
-                    fontFamily: typography.fontFamily.primary,
-                    color: colors.text.primary,
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  {entry.breadcrumb || entry.label}
-                </span>
-                <span style={{ display: 'flex', gap: spacing.xs, flexShrink: 0 }}>
-                  {entry.stateCode && (
-                    <span
+          {groups.map((group) => {
+            const isFolder = group.entries.length > 1 && group.folder;
+            return (
+              <div key={group.folder || group.entries[0].path}>
+                {isFolder && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing.xs,
+                      padding: `${spacing.sm} ${spacing.lg} ${spacing.xs}`,
+                      fontSize: typography.fontSize.xs,
+                      fontFamily: typography.fontFamily.primary,
+                      fontWeight: typography.fontWeight.semibold,
+                      color: colors.text.secondary,
+                    }}
+                  >
+                    <IconFolder size={13} />
+                    {group.folder}
+                  </div>
+                )}
+                {group.entries.map((entry) => {
+                  runningIndex += 1;
+                  const i = runningIndex;
+                  return (
+                    <button
+                      key={entry.path}
+                      type="button"
+                      role="option"
+                      aria-selected={i === highlighted}
+                      onMouseEnter={() => setHighlighted(i)}
+                      onClick={() => select(entry)}
                       style={{
-                        ...badgeStyle,
-                        color: colors.text.secondary,
-                        background: colors.gray[50],
-                        border: `1px solid ${colors.border.light}`,
+                        display: 'block',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: isFolder
+                          ? `${spacing.xs} ${spacing.lg} ${spacing.xs} 40px`
+                          : `${spacing.sm} ${spacing.lg}`,
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: i === highlighted ? colors.primary[50] : 'transparent',
                       }}
                     >
-                      {entry.stateCode.toUpperCase()}
-                    </span>
-                  )}
-                  {entry.isContrib && (
-                    <span
-                      style={{
-                        ...badgeStyle,
-                        color: colors.primary[700],
-                        background: colors.primary[50],
-                      }}
-                    >
-                      contributed
-                    </span>
-                  )}
-                </span>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: spacing.sm,
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.sm,
+                            fontFamily: typography.fontFamily.primary,
+                            color: colors.text.primary,
+                            fontWeight: typography.fontWeight.medium,
+                          }}
+                        >
+                          {isFolder
+                            ? capitalizeFirst(entry.label)
+                            : entry.breadcrumb || entry.label}
+                        </span>
+                        <EntryBadges entry={entry} />
+                      </div>
+                      <div
+                        style={{
+                          fontSize: typography.fontSize.xs,
+                          fontFamily: typography.fontFamily.mono,
+                          color: colors.text.secondary,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {entry.path}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              <div
-                style={{
-                  fontSize: typography.fontSize.xs,
-                  fontFamily: typography.fontFamily.mono,
-                  color: colors.text.secondary,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {entry.path}
-              </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

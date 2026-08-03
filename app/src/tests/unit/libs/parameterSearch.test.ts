@@ -3,7 +3,9 @@ import {
   buildParameterSearchEntries,
   countHiddenByFilters,
   createParameterSearchIndex,
+  groupSearchResults,
   listStateCodes,
+  ParameterSearchEntry,
   searchParameters,
 } from '@/libs/parameterSearch';
 import US_METADATA from '@/mocks/US_Metadata.json';
@@ -83,6 +85,46 @@ describe('searchParameters', () => {
 
   it('given a blank query then no results are returned', () => {
     expect(searchParameters(index, '   ')).toEqual([]);
+  });
+});
+
+describe('groupSearchResults', () => {
+  const entry = (path: string, breadcrumb: string): ParameterSearchEntry => ({
+    path,
+    label: breadcrumb.split(' → ').pop() ?? path,
+    breadcrumb,
+    unit: null,
+    description: null,
+    isContrib: false,
+    stateCode: null,
+  });
+
+  it('given results sharing a folder then they cluster under it, folders before standalones', () => {
+    const groups = groupSearchResults([
+      entry('gov.a.solo', 'A → Solo'),
+      entry('gov.b.ctc.amount', 'B → CTC → Amount'),
+      entry('gov.b.ctc.phase_out', 'B → CTC → Phase-out'),
+      entry('gov.c.other', 'C → Other'),
+    ]);
+
+    expect(groups[0].folder).toBe('B → CTC');
+    expect(groups[0].entries.map((e) => e.path)).toEqual([
+      'gov.b.ctc.amount',
+      'gov.b.ctc.phase_out',
+    ]);
+    expect(groups[1].entries[0].path).toBe('gov.a.solo');
+    expect(groups[2].entries[0].path).toBe('gov.c.other');
+  });
+
+  it('given only singleton results then every group is standalone in rank order', () => {
+    const groups = groupSearchResults([entry('gov.a.x', 'A → X'), entry('gov.b.y', 'B → Y')]);
+
+    expect(groups.map((g) => g.entries.length)).toEqual([1, 1]);
+    expect(groups[0].entries[0].path).toBe('gov.a.x');
+  });
+
+  it('given no results then no groups return', () => {
+    expect(groupSearchResults([])).toEqual([]);
   });
 });
 

@@ -186,6 +186,40 @@ export function searchParameters(
     .slice(0, limit);
 }
 
+export interface ParameterSearchGroup {
+  /** Folder breadcrumb (everything above the leaf); '' when unknown */
+  folder: string;
+  entries: ParameterSearchEntry[];
+}
+
+/**
+ * Organizes flat results into a hierarchy for display: parameters
+ * sharing a parent folder cluster under a folder header (in rank
+ * order of their best hit), with folders listed before standalone
+ * parameters. Mirrors how the parameter tree is organized, so search
+ * results teach the structure instead of flattening it away.
+ */
+export function groupSearchResults(results: ParameterSearchEntry[]): ParameterSearchGroup[] {
+  const byFolder = new Map<string, ParameterSearchGroup>();
+  const order: ParameterSearchGroup[] = [];
+
+  for (const entry of results) {
+    const parts = entry.breadcrumb.split(' → ');
+    const folder = parts.slice(0, -1).join(' → ');
+    let group = byFolder.get(folder);
+    if (!group) {
+      group = { folder, entries: [] };
+      byFolder.set(folder, group);
+      order.push(group);
+    }
+    group.entries.push(entry);
+  }
+
+  const folders = order.filter((group) => group.entries.length > 1 && group.folder);
+  const standalone = order.filter((group) => group.entries.length === 1 || !group.folder);
+  return [...folders, ...standalone];
+}
+
 /**
  * How many matches the current filters are hiding for this query —
  * lets the UI say "N more hidden by filters" instead of a bare empty
