@@ -14,6 +14,7 @@ import {
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
 import { formatValue } from '@/utils/parameterValues';
+import ValueInput from './ValueInput';
 
 const SOURCE_NOTES: Record<string, string> = {
   manual: 'Hand-built',
@@ -23,37 +24,11 @@ const SOURCE_NOTES: Record<string, string> = {
 };
 
 function ProvisionValueInput({ path, value }: { path: string; value: any }) {
-  if (typeof value === 'boolean') {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => updateDraftProvisionValue(path, !value)}
-        aria-label={`Toggle new value for ${path}`}
-      >
-        {value ? 'on' : 'off'}
-      </Button>
-    );
-  }
-
   return (
-    <input
-      type="number"
-      step="any"
-      value={value ?? ''}
-      aria-label={`New value for ${path}`}
-      onChange={(event) =>
-        updateDraftProvisionValue(path, event.target.value === '' ? '' : Number(event.target.value))
-      }
-      style={{
-        width: 110,
-        padding: `${spacing.xs} ${spacing.sm}`,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: 6,
-        fontSize: typography.fontSize.sm,
-        fontFamily: typography.fontFamily.primary,
-        textAlign: 'right',
-      }}
+    <ValueInput
+      value={value}
+      onChange={(next) => updateDraftProvisionValue(path, next)}
+      ariaLabel={`New value for ${path}`}
     />
   );
 }
