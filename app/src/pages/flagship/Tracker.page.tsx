@@ -8,6 +8,7 @@ import {
   IconSearch,
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import BackToHome from '@/components/flagship/BackToHome';
 import ReformPreviewCard from '@/components/flagship/ReformPreviewCard';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
@@ -106,7 +107,8 @@ export default function TrackerPage() {
 
   return (
     <Stack style={{ maxWidth: 840, margin: '0 auto', gap: spacing.xl }}>
-      <Stack style={{ gap: spacing.sm, marginTop: spacing['3xl'] }}>
+      <BackToHome />
+      <Stack style={{ gap: spacing.sm }}>
         <Title order={1}>Legislative tracker</Title>
         <Text style={{ color: colors.text.secondary }}>
           Real bills, scored with the PolicyEngine model. Open any bill as an editable reform.

@@ -6,32 +6,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
-import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
-const SECTION_LABELS: Record<string, string> = {
-  ask: 'Ask',
-  tracker: 'Tracker',
-  build: 'Build',
-  library: 'Library',
-};
-
 /**
- * Minimal header for the flagship shell: brand (→ home) and a compact
- * menu of website links. Navigation lives on the Home launcher, not in
- * persistent chrome; a small section label keeps you oriented.
+ * Pure-brand header for the flagship shell: logo and a compact menu of
+ * website links. All navigation — including the way back — lives in
+ * page content, not in the chrome.
  */
 export default function FlagshipHeader() {
-  const location = useAppLocation();
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
-
-  const section = location.pathname.split('/')[2];
-  const sectionLabel = section ? SECTION_LABELS[section] : undefined;
 
   const moreLinks = [
     { label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
@@ -70,40 +58,6 @@ export default function FlagshipHeader() {
       >
         <img src={PolicyEngineLogo} alt="PolicyEngine" style={{ height: 24, width: 'auto' }} />
       </button>
-
-      {sectionLabel && (
-        <nav
-          aria-label="Breadcrumb"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            borderLeft: `1px solid ${colors.primary[500]}`,
-            paddingLeft: spacing.md,
-            fontSize: typography.fontSize.sm,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => nav.push(`/${countryId}/home`)}
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              fontSize: typography.fontSize.sm,
-              fontFamily: typography.fontFamily.primary,
-              color: colors.primary[100],
-              textDecoration: 'underline',
-              textUnderlineOffset: 3,
-            }}
-          >
-            Home
-          </button>
-          <span style={{ color: colors.primary[300] }}>/</span>
-          <span style={{ color: '#FFFFFF' }}>{sectionLabel}</span>
-        </nav>
-      )}
 
       <div style={{ flex: 1 }} />
 

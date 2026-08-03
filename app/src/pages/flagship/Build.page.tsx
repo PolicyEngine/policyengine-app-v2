@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IconAdjustments, IconArrowRight, IconPlus } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import BackToHome from '@/components/flagship/BackToHome';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import ReformPreviewCard from '@/components/flagship/ReformPreviewCard';
 import { Button, Stack, Text, Title } from '@/components/ui';
@@ -33,7 +34,8 @@ export default function BuildPage() {
 
   return (
     <Stack style={{ maxWidth: 720, margin: '0 auto', gap: spacing['2xl'] }}>
-      <Stack style={{ gap: spacing.md, marginTop: spacing['3xl'] }}>
+      <BackToHome />
+      <Stack style={{ gap: spacing.md }}>
         <Title order={1}>Build a reform</Title>
         <Text style={{ color: colors.text.secondary }}>
           Search any of the {entries.length > 0 ? entries.length.toLocaleString() : ''} parameters

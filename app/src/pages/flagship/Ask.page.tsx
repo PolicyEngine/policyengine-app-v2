@@ -3,6 +3,7 @@ import { IconArrowRight, IconFolder, IconPlus, IconSparkles } from '@tabler/icon
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
+import BackToHome from '@/components/flagship/BackToHome';
 import ReformPreviewCard from '@/components/flagship/ReformPreviewCard';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
@@ -73,7 +74,8 @@ export default function AskPage() {
 
   return (
     <Stack style={{ maxWidth: 720, margin: '0 auto', gap: spacing['2xl'] }}>
-      <Stack style={{ gap: spacing.md, marginTop: spacing['4xl'] }}>
+      <BackToHome />
+      <Stack style={{ gap: spacing.md }}>
         <Title order={1} style={{ textAlign: 'center' }}>
           What policy question can we answer?
         </Title>
