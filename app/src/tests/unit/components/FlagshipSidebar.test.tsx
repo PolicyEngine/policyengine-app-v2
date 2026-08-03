@@ -42,4 +42,24 @@ describe('Sidebar with flagship shell flag', () => {
     expect(screen.getByText('Library')).toBeInTheDocument();
     expect(screen.queryByText('Simulations')).not.toBeInTheDocument();
   });
+
+  test('given the flag is on then the primary button is new reform, not new report', () => {
+    // Given
+    setFlagshipShellEnabled(true);
+
+    // When
+    render(<Sidebar />);
+
+    // Then
+    expect(screen.getByRole('button', { name: /new reform/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /new report/i })).not.toBeInTheDocument();
+  });
+
+  test('given the flag is off then the new report button remains', () => {
+    // When
+    render(<Sidebar />);
+
+    // Then
+    expect(screen.getByRole('button', { name: /new report/i })).toBeInTheDocument();
+  });
 });

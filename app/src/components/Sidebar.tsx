@@ -35,7 +35,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const countryId = useCurrentCountry();
 
   // All internal navigation paths include the country prefix for consistency with v1 app
-  const navItems = isFlagshipShellEnabled()
+  const flagshipShell = isFlagshipShellEnabled();
+
+  const navItems = flagshipShell
     ? [
         { label: 'Ask', icon: IconMessageCircle, path: `/${countryId}/ask` },
         { label: 'Tracker', icon: IconGavel, path: `/${countryId}/tracker` },
@@ -100,17 +102,33 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       }}
     >
       <div className="tw:px-4 tw:py-4">
-        <Button
-          className="tw:w-full"
-          style={{
-            fontSize: typography.fontSize.sm,
-            fontWeight: typography.fontWeight.medium,
-          }}
-          onClick={() => nav.push(`/${countryId}/reports/create`)}
-        >
-          New report
-          <IconPlus size={16} />
-        </Button>
+        {/* Flagship shell: a report is the output of a reform, so the
+            primary action is starting a reform, not the report wizard. */}
+        {flagshipShell ? (
+          <Button
+            className="tw:w-full"
+            style={{
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.medium,
+            }}
+            onClick={() => nav.push(`/${countryId}/build`)}
+          >
+            New reform
+            <IconPlus size={16} />
+          </Button>
+        ) : (
+          <Button
+            className="tw:w-full"
+            style={{
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.medium,
+            }}
+            onClick={() => nav.push(`/${countryId}/reports/create`)}
+          >
+            New report
+            <IconPlus size={16} />
+          </Button>
+        )}
       </div>
 
       <div className="tw:flex tw:flex-col tw:flex-1">
