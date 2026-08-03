@@ -57,7 +57,7 @@ export default function FlagshipHeader() {
     >
       <button
         type="button"
-        onClick={() => nav.push(`/${countryId}`)}
+        onClick={() => nav.push(`/${countryId}/home`)}
         aria-label="PolicyEngine home"
         style={{
           display: 'flex',
@@ -72,16 +72,37 @@ export default function FlagshipHeader() {
       </button>
 
       {sectionLabel && (
-        <span
+        <nav
+          aria-label="Breadcrumb"
           style={{
-            fontSize: typography.fontSize.sm,
-            color: colors.primary[50],
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
             borderLeft: `1px solid ${colors.primary[500]}`,
             paddingLeft: spacing.md,
+            fontSize: typography.fontSize.sm,
           }}
         >
-          {sectionLabel}
-        </span>
+          <button
+            type="button"
+            onClick={() => nav.push(`/${countryId}/home`)}
+            style={{
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              fontSize: typography.fontSize.sm,
+              fontFamily: typography.fontFamily.primary,
+              color: colors.primary[100],
+              textDecoration: 'underline',
+              textUnderlineOffset: 3,
+            }}
+          >
+            Home
+          </button>
+          <span style={{ color: colors.primary[300] }}>/</span>
+          <span style={{ color: '#FFFFFF' }}>{sectionLabel}</span>
+        </nav>
       )}
 
       <div style={{ flex: 1 }} />

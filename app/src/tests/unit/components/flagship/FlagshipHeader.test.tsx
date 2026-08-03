@@ -31,7 +31,16 @@ describe('FlagshipHeader', () => {
 
     await user.click(screen.getByRole('button', { name: /policyengine home/i }));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/us');
+    expect(mockNavigate).toHaveBeenCalledWith('/us/home');
+  });
+
+  test('given a section then the breadcrumb offers a visible way back home', async () => {
+    const user = userEvent.setup();
+    render(<FlagshipHeader />);
+
+    await user.click(screen.getByRole('button', { name: /^home$/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/us/home');
   });
 
   test('given the more menu is opened then website links are available', async () => {
