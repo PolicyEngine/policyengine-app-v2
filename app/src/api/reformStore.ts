@@ -22,6 +22,24 @@ export interface ReformStore {
   delete: (reformId: string) => Promise<void>;
 }
 
+/**
+ * The central store reported itself unconfigured (503, e.g. no
+ * DATABASE_URL) or absent (collection-level 404). Distinct from real
+ * failures so the resilient store knows falling back is safe.
+ */
+export class ReformStoreUnavailableError extends Error {
+  constructor() {
+    super('Reform store unavailable');
+    this.name = 'ReformStoreUnavailableError';
+  }
+}
+
+function throwIfUnavailable(response: Response): void {
+  if (response.status === 503 || response.status === 404) {
+    throw new ReformStoreUnavailableError();
+  }
+}
+
 export class ApiReformStore implements ReformStore {
   private readonly BASE_URL = '/api/reforms';
 
@@ -35,6 +53,7 @@ export class ApiReformStore implements ReformStore {
     });
 
     if (!response.ok) {
+      throwIfUnavailable(response);
       throw new Error('Failed to create reform');
     }
 
@@ -53,6 +72,7 @@ export class ApiReformStore implements ReformStore {
     });
 
     if (!response.ok) {
+      throwIfUnavailable(response);
       throw new Error('Failed to fetch reforms');
     }
 
@@ -64,6 +84,12 @@ export class ApiReformStore implements ReformStore {
     const response = await fetch(`${this.BASE_URL}/${reformId}`, {
       headers: { 'Content-Type': 'application/json' },
     });
+
+    // Item-level 404 legitimately means "not found", so only 503
+    // signals an unconfigured store here.
+    if (response.status === 503) {
+      throw new ReformStoreUnavailableError();
+    }
 
     if (response.status === 404) {
       return null;
@@ -89,6 +115,10 @@ export class ApiReformStore implements ReformStore {
       body: JSON.stringify(payload),
     });
 
+    if (response.status === 503) {
+      throw new ReformStoreUnavailableError();
+    }
+
     if (!response.ok) {
       throw new Error('Failed to update reform');
     }
@@ -101,6 +131,10 @@ export class ApiReformStore implements ReformStore {
     const response = await fetch(`${this.BASE_URL}/${reformId}`, {
       method: 'DELETE',
     });
+
+    if (response.status === 503) {
+      throw new ReformStoreUnavailableError();
+    }
 
     if (!response.ok) {
       throw new Error('Failed to delete reform');
@@ -184,6 +218,83 @@ export class LocalStorageReformStore implements ReformStore {
   }
 }
 
+// Once the central store reports itself unavailable, stay on
+// localStorage for the rest of the session rather than hammering it.
+let centralStoreUnavailable = false;
+
+/** Test hook: reset the session-level availability flag. */
+export function resetReformStoreAvailabilityForTesting(): void {
+  centralStoreUnavailable = false;
+}
+
+/**
+ * Tries the central store first and falls back to localStorage when it
+ * is unconfigured (503) or absent — so the flagship shell works before
+ * the database is provisioned. Real failures (500s, validation) still
+ * surface to the caller.
+ */
+export class ResilientReformStore implements ReformStore {
+  constructor(
+    private readonly api: ReformStore = new ApiReformStore(),
+    private readonly local: ReformStore = new LocalStorageReformStore()
+  ) {}
+
+  private async withFallback<T>(
+    viaApi: (store: ReformStore) => Promise<T>,
+    viaLocal: (store: ReformStore) => Promise<T>
+  ): Promise<T> {
+    if (!centralStoreUnavailable) {
+      try {
+        return await viaApi(this.api);
+      } catch (error) {
+        if (!(error instanceof ReformStoreUnavailableError)) {
+          throw error;
+        }
+        centralStoreUnavailable = true;
+      }
+    }
+    return viaLocal(this.local);
+  }
+
+  create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
+    return this.withFallback(
+      (store) => store.create(reform),
+      (store) => store.create(reform)
+    );
+  }
+
+  findByUser(userId: string, countryId?: string): Promise<Reform[]> {
+    return this.withFallback(
+      (store) => store.findByUser(userId, countryId),
+      (store) => store.findByUser(userId, countryId)
+    );
+  }
+
+  findById(reformId: string): Promise<Reform | null> {
+    return this.withFallback(
+      (store) => store.findById(reformId),
+      (store) => store.findById(reformId)
+    );
+  }
+
+  update(
+    reformId: string,
+    updates: Partial<Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>>
+  ): Promise<Reform> {
+    return this.withFallback(
+      (store) => store.update(reformId, updates),
+      (store) => store.update(reformId, updates)
+    );
+  }
+
+  delete(reformId: string): Promise<void> {
+    return this.withFallback(
+      (store) => store.delete(reformId),
+      (store) => store.delete(reformId)
+    );
+  }
+}
+
 export function getReformStore(): ReformStore {
-  return getStoreBackend() === 'api' ? new ApiReformStore() : new LocalStorageReformStore();
+  return getStoreBackend() === 'api' ? new ResilientReformStore() : new LocalStorageReformStore();
 }

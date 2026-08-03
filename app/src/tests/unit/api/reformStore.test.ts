@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReformAdapter } from '@/adapters/ReformAdapter';
-import { ApiReformStore, LocalStorageReformStore } from '@/api/reformStore';
+import {
+  ApiReformStore,
+  LocalStorageReformStore,
+  resetReformStoreAvailabilityForTesting,
+  ResilientReformStore,
+} from '@/api/reformStore';
 import type { Reform } from '@/types/ingredients/Reform';
 import type { ReformMetadata } from '@/types/metadata/reformMetadata';
 
@@ -210,6 +215,72 @@ describe('LocalStorageReformStore', () => {
 
     await store.delete(created.id!);
 
+    expect(await store.findById(created.id!)).toBeNull();
+  });
+});
+
+describe('ResilientReformStore', () => {
+  let store: ResilientReformStore;
+
+  beforeEach(() => {
+    store = new ResilientReformStore();
+    localStorage.clear();
+    vi.clearAllMocks();
+    resetReformStoreAvailabilityForTesting();
+  });
+
+  it('given the API is healthy, when creating, then the central store is used', async () => {
+    (global.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => mockApiResponse });
+
+    const result = await store.create(mockReformInput);
+
+    expect(result.id).toBe('rf-1');
+    expect(await new LocalStorageReformStore().findByUser('user-123')).toHaveLength(0);
+  });
+
+  it('given the API returns 503, when creating, then it falls back to localStorage', async () => {
+    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 503 });
+
+    const result = await store.create(mockReformInput);
+
+    expect(result.id).toMatch(/^rf-/);
+    expect(await new LocalStorageReformStore().findByUser('user-123')).toHaveLength(1);
+  });
+
+  it('given a prior 503, when reading later, then localStorage is used without retrying the API', async () => {
+    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 503 });
+    await store.create(mockReformInput);
+    (global.fetch as any).mockClear();
+
+    const reforms = await store.findByUser('user-123', 'us');
+
+    expect(reforms).toHaveLength(1);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('given the collection endpoint is absent (404), when listing, then it falls back to localStorage', async () => {
+    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 404 });
+
+    const reforms = await store.findByUser('user-123');
+
+    expect(reforms).toEqual([]);
+  });
+
+  it('given a real server error (500), when creating, then it surfaces instead of falling back', async () => {
+    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 500 });
+
+    await expect(store.create(mockReformInput)).rejects.toThrow('Failed to create reform');
+    expect(await new LocalStorageReformStore().findByUser('user-123')).toHaveLength(0);
+  });
+
+  it('given a fallback save then update and delete keep working against localStorage', async () => {
+    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 503 });
+    const created = await store.create(mockReformInput);
+
+    const updated = await store.update(created.id!, { label: 'Renamed' });
+    expect(updated.label).toBe('Renamed');
+
+    await store.delete(created.id!);
     expect(await store.findById(created.id!)).toBeNull();
   });
 });
