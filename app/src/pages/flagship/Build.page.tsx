@@ -1,60 +1,35 @@
 import { useState } from 'react';
-import { IconAdjustments, IconArrowRight } from '@tabler/icons-react';
+import { IconAdjustments, IconArrowRight, IconPlus } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
+import ReformPreviewCard from '@/components/flagship/ReformPreviewCard';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
 import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
-
-/** Latest value whose start date is not in the future. */
-function getCurrentValue(values: Record<string, any> | undefined): any {
-  if (!values) {
-    return undefined;
-  }
-  const today = new Date().toISOString().slice(0, 10);
-  const applicable = Object.keys(values)
-    .filter((date) => date <= today)
-    .sort();
-  const key = applicable[applicable.length - 1] ?? Object.keys(values).sort()[0];
-  return key !== undefined ? values[key] : undefined;
-}
-
-function formatValue(value: any, unit: string | null): string {
-  if (value === undefined || value === null) {
-    return '—';
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'on' : 'off';
-  }
-  if (typeof value === 'number' && unit?.startsWith('currency-')) {
-    const currency = unit === 'currency-GBP' ? '£' : '$';
-    return `${currency}${value.toLocaleString()}`;
-  }
-  if (typeof value === 'number' && unit === '/1') {
-    return `${(value * 100).toLocaleString()}%`;
-  }
-  return String(value);
-}
+import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 /**
  * Build — the power-user entry point of the flagship shell.
  *
- * Universal parameter search fronts the existing policy creation
- * pathway: find any parameter by describing it, inspect it, then open
- * the editor. The same index will power the agent's locate stage.
+ * Universal parameter search feeds the reform composer: find a
+ * parameter, inspect it, add it to the draft reform, set the new value
+ * inline. The full tree editor remains available for browsing.
  */
 export default function BuildPage() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const draft = useDraftReform();
   const [selected, setSelected] = useState<ParameterSearchEntry | null>(null);
 
   const selectedValues = selected ? parameters?.[selected.path]?.values : undefined;
   const currentValue = getCurrentValue(selectedValues ?? undefined);
+  const inDraft = selected ? draft?.provisions.some((p) => p.path === selected.path) : false;
 
   return (
     <Stack style={{ maxWidth: 720, margin: '0 auto', gap: spacing['2xl'] }}>
@@ -62,8 +37,7 @@ export default function BuildPage() {
         <Title order={1}>Build a reform</Title>
         <Text style={{ color: colors.text.secondary }}>
           Search any of the {entries.length > 0 ? entries.length.toLocaleString() : ''} parameters
-          in the model — tax rates, benefit amounts, thresholds, and phase-outs — then edit them
-          into a reform.
+          in the model, then add the ones you want to change to your draft reform.
         </Text>
       </Stack>
 
@@ -87,10 +61,7 @@ export default function BuildPage() {
         >
           <Stack style={{ gap: spacing.xs }}>
             <Text
-              style={{
-                fontWeight: typography.fontWeight.semibold,
-                color: colors.text.primary,
-              }}
+              style={{ fontWeight: typography.fontWeight.semibold, color: colors.text.primary }}
             >
               {selected.breadcrumb || selected.label}
             </Text>
@@ -154,15 +125,28 @@ export default function BuildPage() {
           </Stack>
 
           <Stack style={{ flexDirection: 'row', gap: spacing.md }}>
-            <Button onClick={() => nav.push(`/${countryId}/policies/create`)}>
-              Edit in a reform
-              <IconArrowRight size={16} />
+            <Button
+              disabled={!!inDraft}
+              onClick={() => {
+                addDraftProvision(
+                  countryId,
+                  provisionFromSearchEntry(selected, selectedValues ?? undefined),
+                  'manual'
+                );
+              }}
+            >
+              {inDraft ? 'In draft reform' : 'Add to draft reform'}
+              {!inDraft && <IconPlus size={16} />}
             </Button>
             <Button variant="outline" onClick={() => setSelected(null)}>
               Clear
             </Button>
           </Stack>
         </Stack>
+      )}
+
+      {draft && draft.countryId === countryId && draft.provisions.length > 0 && (
+        <ReformPreviewCard draft={draft} />
       )}
 
       <Stack
@@ -177,8 +161,7 @@ export default function BuildPage() {
       >
         <IconAdjustments size={28} color={colors.primary[600]} />
         <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-          Prefer to browse? The parameter editor walks the full policy tree. Your changes become a
-          saved reform you can simulate, refine, and share.
+          Prefer to browse? The parameter editor walks the full policy tree.
         </Text>
         <Button variant="outline" onClick={() => nav.push(`/${countryId}/policies/create`)}>
           Open the parameter editor

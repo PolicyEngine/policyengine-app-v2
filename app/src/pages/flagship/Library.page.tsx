@@ -1,62 +1,32 @@
-import { IconFileDescription, IconPlus, IconScale, IconUsers } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
+import {
+  IconCopy,
+  IconFileDescription,
+  IconPencil,
+  IconPlus,
+  IconScale,
+  IconTrash,
+  IconUsers,
+} from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { loadReformIntoDraft } from '@/libs/draftReform';
+import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import { getCurrentValue } from '@/utils/parameterValues';
 
 const SOURCE_LABELS: Record<ReformSource, string> = {
   manual: 'Hand-built',
-  chat: 'From chat',
+  chat: 'From a question',
   bill: 'From a bill',
   tool: 'From a tool',
 };
-
-function ReformCard({ reform }: { reform: Reform }) {
-  return (
-    <Stack
-      style={{
-        gap: spacing.xs,
-        padding: spacing.lg,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: 8,
-        background: colors.background.primary,
-      }}
-    >
-      <Stack style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}>
-        <Text style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
-          {reform.label || 'Untitled reform'}
-        </Text>
-        <Text
-          style={{
-            fontSize: typography.fontSize.xs,
-            color: colors.primary[700],
-            background: colors.primary[50],
-            padding: `2px ${spacing.sm}`,
-            borderRadius: 999,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {SOURCE_LABELS[reform.provenance.source]}
-        </Text>
-      </Stack>
-      <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        {reform.parameters.length === 1
-          ? '1 parameter changed'
-          : `${reform.parameters.length} parameters changed`}
-        {reform.updatedAt &&
-          ` · updated ${new Date(reform.updatedAt).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          })}`}
-      </Text>
-    </Stack>
-  );
-}
 
 /**
  * Library — saved work across the flagship shell: reforms first (the
@@ -65,6 +35,8 @@ function ReformCard({ reform }: { reform: Reform }) {
 export default function LibraryPage() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
+  const queryClient = useQueryClient();
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
 
   const {
     data: reforms,
@@ -74,6 +46,35 @@ export default function LibraryPage() {
     queryKey: ['reforms', MOCK_USER_ID, countryId],
     queryFn: () => getReformStore().findByUser(MOCK_USER_ID, countryId),
   });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
+
+  const deleteMutation = useMutation({
+    mutationFn: (reformId: string) => getReformStore().delete(reformId),
+    onSuccess: invalidate,
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: (reform: Reform) =>
+      getReformStore().create({
+        userId: reform.userId,
+        countryId: reform.countryId,
+        label: `${reform.label || 'Untitled reform'} (copy)`,
+        parameters: reform.parameters,
+        baseline: reform.baseline,
+        provenance: reform.provenance,
+      }),
+    onSuccess: invalidate,
+  });
+
+  const editReform = (reform: Reform) => {
+    loadReformIntoDraft(reform, (path) => ({
+      breadcrumb: parameters ? formatLabelParts(getHierarchicalLabels(path, parameters)) : path,
+      unit: parameters?.[path]?.unit ?? null,
+      baselineValue: getCurrentValue(parameters?.[path]?.values),
+    }));
+    nav.push(`/${countryId}/build`);
+  };
 
   return (
     <Stack style={{ maxWidth: 720, margin: '0 auto', gap: spacing['2xl'] }}>
@@ -132,7 +133,73 @@ export default function LibraryPage() {
           </Stack>
         )}
         {reforms?.map((reform) => (
-          <ReformCard key={reform.id} reform={reform} />
+          <Stack
+            key={reform.id}
+            style={{
+              gap: spacing.xs,
+              padding: spacing.lg,
+              border: `1px solid ${colors.border.light}`,
+              borderRadius: 8,
+              background: colors.background.primary,
+            }}
+          >
+            <Stack
+              style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}
+            >
+              <Text
+                style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}
+              >
+                {reform.label || 'Untitled reform'}
+              </Text>
+              <Text
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  color: colors.primary[700],
+                  background: colors.primary[50],
+                  padding: `2px ${spacing.sm}`,
+                  borderRadius: 999,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {SOURCE_LABELS[reform.provenance.source]}
+              </Text>
+            </Stack>
+            <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+              {reform.parameters.length === 1
+                ? '1 parameter changed'
+                : `${reform.parameters.length} parameters changed`}
+              {reform.updatedAt &&
+                ` · updated ${new Date(reform.updatedAt).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}`}
+            </Text>
+            <Stack style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>
+              <Button variant="outline" size="sm" onClick={() => editReform(reform)}>
+                <IconPencil size={14} />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={duplicateMutation.isPending}
+                onClick={() => duplicateMutation.mutate(reform)}
+              >
+                <IconCopy size={14} />
+                Duplicate
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(reform.id!)}
+              >
+                <IconTrash size={14} />
+                Delete
+              </Button>
+            </Stack>
+          </Stack>
         ))}
       </Stack>
 

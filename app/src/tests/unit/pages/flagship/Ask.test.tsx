@@ -1,51 +1,113 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import { buildParameterSearchEntries, createParameterSearchIndex } from '@/libs/parameterSearch';
 import AskPage from '@/pages/flagship/Ask.page';
 
-const mockNavigate = vi.fn();
+const FIXTURE_COLLECTION = {
+  'gov.irs': { type: 'parameterNode', parameter: 'gov.irs', label: 'IRS' },
+  'gov.irs.credits': { type: 'parameterNode', parameter: 'gov.irs.credits', label: 'credits' },
+  'gov.irs.credits.ctc': {
+    type: 'parameterNode',
+    parameter: 'gov.irs.credits.ctc',
+    label: 'child tax credit',
+  },
+  'gov.irs.credits.ctc.amount': {
+    type: 'parameter',
+    parameter: 'gov.irs.credits.ctc.amount',
+    label: 'amount',
+    unit: 'currency-USD',
+    economy: true,
+    household: true,
+    values: { '2020-01-01': 2000 },
+  },
+} as any;
+
+const fixtureIndex = createParameterSearchIndex(buildParameterSearchEntries(FIXTURE_COLLECTION));
+
+vi.mock('@/libs/parameterSearch', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/libs/parameterSearch')>();
+  return {
+    ...actual,
+    selectParameterSearchIndex: () => fixtureIndex,
+  };
+});
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
     useParams: () => ({ countryId: 'us' }),
   };
 });
 
+vi.mock('@/api/reformStore', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/reformStore')>();
+  return {
+    ...actual,
+    getReformStore: () => ({ findByUser: vi.fn().mockResolvedValue([]) }),
+  };
+});
+
+function renderAsk() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AskPage />
+    </QueryClientProvider>
+  );
+}
+
 describe('AskPage', () => {
+  beforeEach(() => {
+    clearDraftReform();
+  });
+
   test('given an empty input then the ask button is disabled', () => {
-    render(<AskPage />);
+    renderAsk();
 
-    expect(screen.getByRole('button', { name: /ask/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^ask$/i })).toBeDisabled();
   });
 
-  test('given user clicks an example then it fills the input', async () => {
-    // Given
+  test('given a question is submitted then matching parameters are suggested', async () => {
     const user = userEvent.setup();
-    render(<AskPage />);
+    renderAsk();
 
-    // When
-    await user.click(
-      screen.getByRole('button', { name: /what if the child tax credit rose to \$3,600\?/i })
+    await user.type(
+      screen.getByRole('textbox', { name: /policy question/i }),
+      'child tax credit amount'
     );
+    await user.click(screen.getByRole('button', { name: /^ask$/i }));
 
-    // Then
-    expect(screen.getByRole('textbox', { name: /policy question/i })).toHaveValue(
-      'What if the child tax credit rose to $3,600?'
-    );
+    expect(await screen.findByText(/matching parameters/i)).toBeInTheDocument();
+    expect(screen.getByText('IRS → Credits → Child tax credit → Amount')).toBeInTheDocument();
   });
 
-  test('given a question is submitted then it routes to the build flow', async () => {
-    // Given
+  test('given a suggestion is added then it lands in the draft reform', async () => {
     const user = userEvent.setup();
-    render(<AskPage />);
-    await user.type(screen.getByRole('textbox', { name: /policy question/i }), 'double the CTC');
+    renderAsk();
 
-    // When
-    await user.click(screen.getByRole('button', { name: /ask/i }));
+    await user.type(screen.getByRole('textbox', { name: /policy question/i }), 'child tax credit');
+    await user.click(screen.getByRole('button', { name: /^ask$/i }));
+    await user.click(await screen.findByRole('button', { name: /^add$/i }));
 
-    // Then
-    expect(mockNavigate).toHaveBeenCalledWith('/us/build');
+    const draft = getDraftReform();
+    expect(draft?.provisions[0].path).toBe('gov.irs.credits.ctc.amount');
+    expect(draft?.source).toBe('chat');
+    expect(await screen.findByText(/here's your draft reform/i)).toBeInTheDocument();
+  });
+
+  test('given a query with no matches then an honest empty state shows', async () => {
+    const user = userEvent.setup();
+    renderAsk();
+
+    await user.type(
+      screen.getByRole('textbox', { name: /policy question/i }),
+      'zzzz quantum entanglement subsidy'
+    );
+    await user.click(screen.getByRole('button', { name: /^ask$/i }));
+
+    expect(await screen.findByText(/no parameters matched/i)).toBeInTheDocument();
   });
 });
