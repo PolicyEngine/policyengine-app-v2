@@ -23,16 +23,18 @@ describe('StandardLayout', () => {
     expect(main?.className).not.toContain('tw:max-w-[calc(100vw-300px)]');
   });
 
-  test('given the flagship flag is off then the sidebar renders and the top nav does not', () => {
+  test('given the flagship flag is off then the sidebar renders and the flagship header does not', () => {
     // When
     renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'us');
 
     // Then
     expect(screen.getByText('Sidebar')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^ask$/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /more policyengine links/i })
+    ).not.toBeInTheDocument();
   });
 
-  test('given the flagship flag is on then the top nav replaces the sidebar', () => {
+  test('given the flagship flag is on then the minimal header replaces the sidebar', () => {
     // Given
     setFlagshipShellEnabled(true);
 
@@ -40,8 +42,8 @@ describe('StandardLayout', () => {
     renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'us');
 
     // Then
-    expect(screen.getByRole('button', { name: /^ask$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /new reform/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /policyengine home/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /more policyengine links/i })).toBeInTheDocument();
     expect(screen.queryByText('Sidebar')).not.toBeInTheDocument();
   });
 });

@@ -1,12 +1,4 @@
-import {
-  IconAdjustments,
-  IconDotsVertical,
-  IconFolder,
-  IconGavel,
-  IconMessageCircle,
-  IconPlus,
-} from '@tabler/icons-react';
-import HeaderLogo from '@/components/homeHeader/HeaderLogo';
+import { IconDotsVertical } from '@tabler/icons-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,23 +11,27 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
+const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
+
+const SECTION_LABELS: Record<string, string> = {
+  ask: 'Ask',
+  tracker: 'Tracker',
+  build: 'Build',
+  library: 'Library',
+};
+
 /**
- * Single-row header for the flagship shell: brand, the four entry
- * points, and the primary action — replacing the stacked website
- * header + banner + tab bar. Website destinations live in the trailing
- * "more" menu instead of competing with app navigation.
+ * Minimal header for the flagship shell: brand (→ home) and a compact
+ * menu of website links. Navigation lives on the Home launcher, not in
+ * persistent chrome; a small section label keeps you oriented.
  */
 export default function FlagshipHeader() {
   const location = useAppLocation();
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
 
-  const items = [
-    { label: 'Ask', icon: IconMessageCircle, path: `/${countryId}/ask` },
-    { label: 'Tracker', icon: IconGavel, path: `/${countryId}/tracker` },
-    { label: 'Build', icon: IconAdjustments, path: `/${countryId}/build` },
-    { label: 'Library', icon: IconFolder, path: `/${countryId}/library` },
-  ];
+  const section = location.pathname.split('/')[2];
+  const sectionLabel = section ? SECTION_LABELS[section] : undefined;
 
   const moreLinks = [
     { label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
@@ -50,7 +46,7 @@ export default function FlagshipHeader() {
     <div
       style={{
         display: 'flex',
-        alignItems: 'stretch',
+        alignItems: 'center',
         gap: spacing.md,
         padding: `0 ${spacing.xl}`,
         height: spacing.layout.header,
@@ -59,109 +55,66 @@ export default function FlagshipHeader() {
         fontFamily: typography.fontFamily.primary,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <HeaderLogo />
-      </div>
-
-      <nav
-        aria-label="Primary"
+      <button
+        type="button"
+        onClick={() => nav.push(`/${countryId}`)}
+        aria-label="PolicyEngine home"
         style={{
           display: 'flex',
-          alignItems: 'stretch',
-          gap: spacing.xs,
-          overflowX: 'auto',
+          alignItems: 'center',
+          border: 'none',
+          background: 'none',
+          cursor: 'pointer',
+          padding: 0,
         }}
       >
-        {items.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <button
-              key={item.path}
-              type="button"
-              onClick={() => nav.push(item.path)}
-              aria-current={isActive ? 'page' : undefined}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                padding: `0 ${spacing.md}`,
-                border: 'none',
-                borderBottom: isActive ? '2px solid #FFFFFF' : '2px solid transparent',
-                borderTop: '2px solid transparent',
-                background: 'none',
-                cursor: 'pointer',
-                fontSize: typography.fontSize.sm,
-                fontFamily: typography.fontFamily.primary,
-                fontWeight: isActive
-                  ? typography.fontWeight.semibold
-                  : typography.fontWeight.normal,
-                color: isActive ? '#FFFFFF' : colors.primary[50],
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <item.icon size={16} />
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
+        <img src={PolicyEngineLogo} alt="PolicyEngine" style={{ height: 24, width: 'auto' }} />
+      </button>
+
+      {sectionLabel && (
+        <span
+          style={{
+            fontSize: typography.fontSize.sm,
+            color: colors.primary[50],
+            borderLeft: `1px solid ${colors.primary[500]}`,
+            paddingLeft: spacing.md,
+          }}
+        >
+          {sectionLabel}
+        </span>
+      )}
 
       <div style={{ flex: 1 }} />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-        <button
-          type="button"
-          onClick={() => nav.push(`/${countryId}/build`)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            padding: `${spacing.xs} ${spacing.md}`,
-            border: 'none',
-            borderRadius: 6,
-            background: '#FFFFFF',
-            color: colors.primary[700],
-            cursor: 'pointer',
-            fontSize: typography.fontSize.sm,
-            fontFamily: typography.fontFamily.primary,
-            fontWeight: typography.fontWeight.medium,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          New reform
-          <IconPlus size={14} />
-        </button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label="More PolicyEngine links"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: spacing.xs,
-                border: 'none',
-                borderRadius: 6,
-                background: 'none',
-                color: colors.primary[50],
-                cursor: 'pointer',
-              }}
-            >
-              <IconDotsVertical size={18} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {moreLinks.map((link) => (
-              <DropdownMenuItem key={link.href} asChild>
-                <a href={link.href} style={{ cursor: 'pointer' }}>
-                  {link.label}
-                </a>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label="More PolicyEngine links"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: spacing.xs,
+              border: 'none',
+              borderRadius: 6,
+              background: 'none',
+              color: colors.primary[50],
+              cursor: 'pointer',
+            }}
+          >
+            <IconDotsVertical size={18} />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {moreLinks.map((link) => (
+            <DropdownMenuItem key={link.href} asChild>
+              <a href={link.href} style={{ cursor: 'pointer' }}>
+                {link.label}
+              </a>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
