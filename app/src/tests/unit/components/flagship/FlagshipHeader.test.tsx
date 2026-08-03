@@ -1,6 +1,6 @@
 import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import FlagshipTopNav from '@/components/flagship/FlagshipTopNav';
+import FlagshipHeader from '@/components/flagship/FlagshipHeader';
 
 const mockNavigate = vi.fn();
 
@@ -14,10 +14,11 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-describe('FlagshipTopNav', () => {
-  test('given the nav renders then all four verbs and the new reform button show', () => {
-    render(<FlagshipTopNav />);
+describe('FlagshipHeader', () => {
+  test('given the header renders then brand, all four verbs, and the primary action show', () => {
+    render(<FlagshipHeader />);
 
+    expect(screen.getByAltText('PolicyEngine')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^ask$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /tracker/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^build$/i })).toBeInTheDocument();
@@ -26,7 +27,7 @@ describe('FlagshipTopNav', () => {
   });
 
   test('given the current route then that tab is marked current', () => {
-    render(<FlagshipTopNav />);
+    render(<FlagshipHeader />);
 
     expect(screen.getByRole('button', { name: /^ask$/i })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: /tracker/i })).not.toHaveAttribute('aria-current');
@@ -34,7 +35,7 @@ describe('FlagshipTopNav', () => {
 
   test('given a tab is clicked then it navigates to that route', async () => {
     const user = userEvent.setup();
-    render(<FlagshipTopNav />);
+    render(<FlagshipHeader />);
 
     await user.click(screen.getByRole('button', { name: /tracker/i }));
 
@@ -43,10 +44,21 @@ describe('FlagshipTopNav', () => {
 
   test('given new reform is clicked then it opens the composer in build', async () => {
     const user = userEvent.setup();
-    render(<FlagshipTopNav />);
+    render(<FlagshipHeader />);
 
     await user.click(screen.getByRole('button', { name: /new reform/i }));
 
     expect(mockNavigate).toHaveBeenCalledWith('/us/build');
+  });
+
+  test('given the more menu is opened then website links are available', async () => {
+    const user = userEvent.setup();
+    render(<FlagshipHeader />);
+
+    await user.click(screen.getByRole('button', { name: /more policyengine links/i }));
+
+    expect(await screen.findByRole('menuitem', { name: /research/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /donate/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /github/i })).toBeInTheDocument();
   });
 });

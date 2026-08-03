@@ -14,7 +14,7 @@ import { useAppLocation } from '@/contexts/LocationContext';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { cn } from '@/lib/utils';
 import { isFlagshipShellEnabled } from '@/libs/featureFlags';
-import FlagshipTopNav from './flagship/FlagshipTopNav';
+import FlagshipHeader from './flagship/FlagshipHeader';
 import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';
 import Sidebar from './Sidebar';
@@ -39,17 +39,15 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
     return <>{children}</>;
   }
 
-  // Flagship shell: four entry points don't earn a persistent sidebar —
-  // a slim tab bar under the header keeps content full-width. The legacy
-  // sidebar layout is unchanged with the flag off.
+  // Flagship shell: one header row — brand, the four entry points, and
+  // the primary action. No sidebar, no stacked website nav or banner.
+  // The legacy layout is unchanged with the flag off.
   if (isFlagshipShellEnabled()) {
     return (
       <LayoutProvider>
         <div className="tw:h-screen tw:overflow-hidden tw:flex tw:flex-col">
           <header className="tw:sticky tw:top-0 tw:z-50 tw:shrink-0">
-            <HeaderNavigation navbarOpened={navbarOpened} onToggleNavbar={toggleNavbar} />
-            <GiveCalcBanner />
-            <FlagshipTopNav />
+            <FlagshipHeader />
           </header>
           <main className="tw:flex-1 tw:min-w-0 tw:w-full tw:overflow-y-auto tw:overflow-x-hidden tw:p-[24px] tw:bg-gray-50">
             {children}
