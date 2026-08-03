@@ -1,4 +1,12 @@
-import { IconExternalLink, IconFlask, IconGavel, IconPencil } from '@tabler/icons-react';
+import { useMemo, useState } from 'react';
+import {
+  IconChevronDown,
+  IconChevronRight,
+  IconExternalLink,
+  IconFlask,
+  IconPencil,
+  IconSearch,
+} from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import ReformPreviewCard from '@/components/flagship/ReformPreviewCard';
 import { Button, Stack, Text, Title } from '@/components/ui';
@@ -16,33 +24,65 @@ import { RootState } from '@/store';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
+const STATUS_COLORS: Record<string, { color: string; background: string }> = {
+  Enacted: { color: colors.primary[700], background: colors.primary[50] },
+  'Passed chamber': { color: '#1E6B8A', background: '#E8F4FA' },
+  'In committee': { color: '#8A6D1E', background: '#FBF3DC' },
+  Introduced: { color: colors.gray[700], background: colors.gray[50] },
+};
+
 /**
  * Tracker — the legislative feed of the flagship shell.
  *
- * Currently renders sample bills (clearly labeled) to demonstrate the
- * feed and the bill → editable reform bridge; the live feed lands when
- * the tracker exposes its API. The existing proxied tracker remains
- * linked for real data.
+ * Dense, scannable rows built for a real feed of dozens of bills:
+ * search + status/jurisdiction filters up top, one compact row per
+ * bill, details and actions expand in place. Sample bills (clearly
+ * labeled) stand in until the tracker API is exposed.
  */
 export default function TrackerPage() {
   const countryId = useCurrentCountry();
   const draft = useDraftReform();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
 
-  const bills = SAMPLE_BILLS.filter((bill) => bill.countryId === countryId);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [jurisdictionFilter, setJurisdictionFilter] = useState('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const bills = useMemo(
+    () => SAMPLE_BILLS.filter((bill) => bill.countryId === countryId),
+    [countryId]
+  );
+  const jurisdictions = useMemo(
+    () => [...new Set(bills.map((bill) => bill.jurisdiction))].sort(),
+    [bills]
+  );
+  const statuses = useMemo(() => [...new Set(bills.map((bill) => bill.status))], [bills]);
+
+  const visibleBills = useMemo(() => {
+    const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    return bills.filter((bill) => {
+      const haystack = `${bill.title} ${bill.jurisdiction} ${bill.summary}`.toLowerCase();
+      return (
+        (statusFilter === 'all' || bill.status === statusFilter) &&
+        (jurisdictionFilter === 'all' || bill.jurisdiction === jurisdictionFilter) &&
+        tokens.every((token) => haystack.includes(token))
+      );
+    });
+  }, [bills, query, statusFilter, jurisdictionFilter]);
+
+  const resolveBreadcrumb = (path: string, fallback: string) =>
+    parameters?.[path] ? formatLabelParts(getHierarchicalLabels(path, parameters)) : fallback;
 
   const openAsDraft = (bill: SampleBill) => {
     clearDraftReform();
     bill.provisions.forEach((provision) => {
       const metadata = parameters?.[provision.path];
-      const breadcrumb = metadata
-        ? formatLabelParts(getHierarchicalLabels(provision.path, parameters!))
-        : provision.fallbackBreadcrumb;
       addDraftProvision(
         countryId,
         {
           path: provision.path,
-          breadcrumb,
+          breadcrumb: resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb),
           unit: metadata?.unit ?? null,
           baselineValue: getCurrentValue(metadata?.values),
           value: provision.proposedValue,
@@ -54,132 +94,246 @@ export default function TrackerPage() {
     setDraftLabel(bill.title);
   };
 
+  const selectStyle: React.CSSProperties = {
+    padding: `${spacing.xs} ${spacing.sm}`,
+    border: `1px solid ${colors.border.light}`,
+    borderRadius: 6,
+    fontSize: typography.fontSize.xs,
+    fontFamily: typography.fontFamily.primary,
+    background: colors.background.primary,
+    color: colors.text.primary,
+  };
+
   return (
-    <Stack style={{ maxWidth: 720, margin: '0 auto', gap: spacing['2xl'] }}>
-      <Stack style={{ gap: spacing.md, marginTop: spacing['3xl'] }}>
+    <Stack style={{ maxWidth: 840, margin: '0 auto', gap: spacing.xl }}>
+      <Stack style={{ gap: spacing.sm, marginTop: spacing['3xl'] }}>
         <Title order={1}>Legislative tracker</Title>
         <Text style={{ color: colors.text.secondary }}>
-          Real bills, scored with the PolicyEngine model. Open any bill as an editable reform to
-          explore variations.
+          Real bills, scored with the PolicyEngine model. Open any bill as an editable reform.
         </Text>
       </Stack>
 
       <Stack
         style={{
           flexDirection: 'row',
-          gap: spacing.md,
-          padding: spacing.md,
-          background: colors.warning ? `${colors.warning}22` : colors.gray[50],
+          gap: spacing.sm,
+          padding: `${spacing.sm} ${spacing.md}`,
+          background: colors.gray[50],
           borderRadius: 8,
-          alignItems: 'flex-start',
+          alignItems: 'center',
         }}
       >
-        <IconFlask size={16} color={colors.text.secondary} style={{ flexShrink: 0 }} />
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.primary }}>
-          Sample preview — these bills are illustrative. The live feed connects when the tracker API
-          is available; the full tracker below has real data today.
+        <IconFlask size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          Sample preview — illustrative bills until the tracker API connects.
+        </Text>
+        <div style={{ flex: 1 }} />
+        <a
+          href={`${WEBSITE_URL}/${countryId}/bill-tracker`}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: typography.fontSize.xs,
+            color: colors.primary[700],
+            fontFamily: typography.fontFamily.primary,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Full tracker
+          <IconExternalLink size={12} />
+        </a>
+      </Stack>
+
+      <Stack
+        style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center', flexWrap: 'wrap' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+            padding: `${spacing.xs} ${spacing.md}`,
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: 8,
+            background: colors.background.primary,
+            flex: 1,
+            minWidth: 200,
+          }}
+        >
+          <IconSearch size={14} color={colors.text.secondary} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search bills"
+            aria-label="Search bills"
+            style={{
+              flex: 1,
+              border: 'none',
+              outline: 'none',
+              fontSize: typography.fontSize.sm,
+              fontFamily: typography.fontFamily.primary,
+              background: 'transparent',
+            }}
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          aria-label="Status filter"
+          style={selectStyle}
+        >
+          <option value="all">All statuses</option>
+          {statuses.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <select
+          value={jurisdictionFilter}
+          onChange={(event) => setJurisdictionFilter(event.target.value)}
+          aria-label="Jurisdiction filter"
+          style={selectStyle}
+        >
+          <option value="all">All jurisdictions</option>
+          {jurisdictions.map((jurisdiction) => (
+            <option key={jurisdiction} value={jurisdiction}>
+              {jurisdiction}
+            </option>
+          ))}
+        </select>
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          {visibleBills.length} of {bills.length} bills
         </Text>
       </Stack>
 
-      {bills.length === 0 && (
-        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          No sample bills for this country yet — open the full tracker below.
-        </Text>
-      )}
-
-      {bills.map((bill) => (
-        <Stack
-          key={bill.id}
-          style={{
-            gap: spacing.sm,
-            padding: spacing.lg,
-            border: `1px solid ${colors.border.light}`,
-            borderRadius: 12,
-            background: colors.background.primary,
-          }}
-        >
-          <Stack style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}>
-            <Text
-              style={{
-                fontSize: typography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                color: colors.text.secondary,
-                fontWeight: typography.fontWeight.semibold,
-              }}
-            >
-              {bill.jurisdiction}
-            </Text>
-            <Text
-              style={{
-                fontSize: typography.fontSize.xs,
-                color: colors.primary[700],
-                background: colors.primary[50],
-                padding: `2px ${spacing.sm}`,
-                borderRadius: 999,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {bill.status}
-            </Text>
-          </Stack>
-          <Text style={{ fontWeight: typography.fontWeight.semibold, color: colors.text.primary }}>
-            {bill.title}
+      <div
+        style={{
+          border: `1px solid ${colors.border.light}`,
+          borderRadius: 12,
+          background: colors.background.primary,
+          overflow: 'hidden',
+        }}
+      >
+        {visibleBills.length === 0 && (
+          <Text
+            style={{
+              padding: spacing.xl,
+              fontSize: typography.fontSize.sm,
+              color: colors.text.secondary,
+              textAlign: 'center',
+            }}
+          >
+            No bills match — clear the search or filters.
           </Text>
-          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-            {bill.summary}
-          </Text>
-          {bill.provisions.map((provision) => {
-            const metadata = parameters?.[provision.path];
-            const baseline = getCurrentValue(metadata?.values);
-            return (
-              <Text
-                key={provision.path}
-                style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+        )}
+        {visibleBills.map((bill, i) => {
+          const isExpanded = expandedId === bill.id;
+          const statusStyle = STATUS_COLORS[bill.status] ?? STATUS_COLORS.Introduced;
+          const ChevronIcon = isExpanded ? IconChevronDown : IconChevronRight;
+          return (
+            <div
+              key={bill.id}
+              style={{ borderTop: i === 0 ? 'none' : `1px solid ${colors.border.light}` }}
+            >
+              <button
+                type="button"
+                onClick={() => setExpandedId(isExpanded ? null : bill.id)}
+                aria-expanded={isExpanded}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  width: '100%',
+                  padding: `${spacing.sm} ${spacing.lg}`,
+                  border: 'none',
+                  background: isExpanded ? colors.gray[50] : 'transparent',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontFamily: typography.fontFamily.primary,
+                }}
               >
-                {metadata
-                  ? formatLabelParts(getHierarchicalLabels(provision.path, parameters!))
-                  : provision.fallbackBreadcrumb}
-                : {formatValue(baseline, metadata?.unit ?? null)} →{' '}
-                {formatValue(provision.proposedValue, metadata?.unit ?? null)}
-              </Text>
-            );
-          })}
-          <Stack style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs }}>
-            <Button size="sm" onClick={() => openAsDraft(bill)}>
-              <IconPencil size={14} />
-              Open as draft reform
-            </Button>
-          </Stack>
-        </Stack>
-      ))}
+                <ChevronIcon size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
+                <span
+                  style={{
+                    fontSize: typography.fontSize.xs,
+                    color: colors.text.secondary,
+                    width: 110,
+                    flexShrink: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {bill.jurisdiction}
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    fontSize: typography.fontSize.sm,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.primary,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {bill.title}
+                </span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    ...statusStyle,
+                  }}
+                >
+                  {bill.status}
+                </span>
+              </button>
+
+              {isExpanded && (
+                <Stack style={{ gap: spacing.sm, padding: `0 ${spacing.lg} ${spacing.lg} 40px` }}>
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                    {bill.summary}
+                  </Text>
+                  {bill.provisions.map((provision) => {
+                    const metadata = parameters?.[provision.path];
+                    const baseline = getCurrentValue(metadata?.values);
+                    return (
+                      <Text
+                        key={provision.path}
+                        style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+                      >
+                        {resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb)}:{' '}
+                        {formatValue(baseline, metadata?.unit ?? null)} →{' '}
+                        {formatValue(provision.proposedValue, metadata?.unit ?? null)}
+                      </Text>
+                    );
+                  })}
+                  <div>
+                    <Button size="sm" onClick={() => openAsDraft(bill)}>
+                      <IconPencil size={14} />
+                      Open as draft reform
+                    </Button>
+                  </div>
+                </Stack>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {draft && draft.countryId === countryId && draft.provisions.length > 0 && (
         <ReformPreviewCard draft={draft} />
       )}
-
-      <Stack
-        style={{
-          gap: spacing.lg,
-          padding: spacing['2xl'],
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: 12,
-          background: colors.background.primary,
-          alignItems: 'flex-start',
-        }}
-      >
-        <IconGavel size={28} color={colors.primary[600]} />
-        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-          The full tracker has live state legislation with PolicyEngine cost and distributional
-          estimates.
-        </Text>
-        <Button variant="outline" asChild>
-          <a href={`${WEBSITE_URL}/${countryId}/bill-tracker`} target="_blank" rel="noreferrer">
-            Open the bill tracker
-            <IconExternalLink size={16} />
-          </a>
-        </Button>
-      </Stack>
     </Stack>
   );
 }

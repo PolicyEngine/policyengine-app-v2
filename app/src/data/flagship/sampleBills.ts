@@ -14,12 +14,14 @@ export interface SampleBillProvision {
   proposedValue: number;
 }
 
+export type SampleBillStatus = 'Introduced' | 'In committee' | 'Passed chamber' | 'Enacted';
+
 export interface SampleBill {
   id: string;
   countryId: CountryId;
   jurisdiction: string;
   title: string;
-  status: string;
+  status: SampleBillStatus;
   summary: string;
   provisions: SampleBillProvision[];
 }
@@ -67,6 +69,81 @@ export const SAMPLE_BILLS: SampleBill[] = [
         path: 'gov.usda.snap.max_allotment.main.CONTIGUOUS_US.1',
         fallbackBreadcrumb: 'USDA → SNAP → Maximum allotment',
         proposedValue: 350,
+      },
+    ],
+  },
+  {
+    id: 'wv-sb-392',
+    countryId: 'us',
+    jurisdiction: 'West Virginia',
+    title: 'SB 392 — personal income tax cut',
+    status: 'Passed chamber',
+    summary: 'Cuts personal income tax rates across all brackets by two percent.',
+    provisions: [
+      {
+        path: 'gov.states.wv.tax.income.rates.single[0].rate',
+        fallbackBreadcrumb: 'West Virginia → Income tax → Bottom rate',
+        proposedValue: 0.0216,
+      },
+    ],
+  },
+  {
+    id: 'mo-hb-798',
+    countryId: 'us',
+    jurisdiction: 'Missouri',
+    title: 'HB 798 — top income tax rate reduction',
+    status: 'In committee',
+    summary: 'Lowers the top individual income tax rate from 4.7% to 4.5%.',
+    provisions: [
+      {
+        path: 'gov.states.mo.tax.income.rates.top',
+        fallbackBreadcrumb: 'Missouri → Income tax → Top rate',
+        proposedValue: 0.045,
+      },
+    ],
+  },
+  {
+    id: 'ny-s-277',
+    countryId: 'us',
+    jurisdiction: 'New York',
+    title: 'S 277 — Empire State child credit increase',
+    status: 'Introduced',
+    summary: 'Raises the Empire State child credit for children under four.',
+    provisions: [
+      {
+        path: 'gov.states.ny.tax.income.credits.ctc.amount.base',
+        fallbackBreadcrumb: 'New York → Credits → Empire State child credit → Amount',
+        proposedValue: 1000,
+      },
+    ],
+  },
+  {
+    id: 'uk-pa-restore',
+    countryId: 'uk',
+    jurisdiction: 'UK Parliament',
+    title: 'Personal allowance uprating amendment',
+    status: 'Introduced',
+    summary: 'Raises the income tax personal allowance to £13,500.',
+    provisions: [
+      {
+        path: 'gov.hmrc.income_tax.allowances.personal_allowance.amount',
+        fallbackBreadcrumb: 'HMRC → Income tax → Personal allowance',
+        proposedValue: 13500,
+      },
+    ],
+  },
+  {
+    id: 'uk-two-child-limit',
+    countryId: 'uk',
+    jurisdiction: 'UK Parliament',
+    title: 'Universal credit two-child limit removal',
+    status: 'In committee',
+    summary: 'Removes the two-child limit on the universal credit child element.',
+    provisions: [
+      {
+        path: 'gov.dwp.universal_credit.elements.child.limit.child_count',
+        fallbackBreadcrumb: 'DWP → Universal credit → Child element → Child limit',
+        proposedValue: 99,
       },
     ],
   },
