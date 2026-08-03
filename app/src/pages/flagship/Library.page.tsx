@@ -24,7 +24,11 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { loadReformIntoDraft } from '@/libs/draftReform';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
-import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import {
+  formatCompactBreadcrumb,
+  formatLabelParts,
+  getHierarchicalLabels,
+} from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 const SOURCE_LABELS: Record<ReformSource, string> = {
@@ -276,12 +280,13 @@ export default function LibraryPage() {
                         >
                           <Stack style={{ flex: 1, gap: 2, minWidth: 0 }}>
                             <Text
+                              title={resolveBreadcrumb(parameter.name)}
                               style={{
                                 fontSize: typography.fontSize.sm,
                                 color: colors.text.primary,
                               }}
                             >
-                              {resolveBreadcrumb(parameter.name)}
+                              {formatCompactBreadcrumb(resolveBreadcrumb(parameter.name))}
                             </Text>
                             <Text
                               style={{

@@ -13,6 +13,7 @@ import {
   setDraftLabel,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
+import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
 import ValueInput from './ValueInput';
 
@@ -118,13 +119,14 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
               }}
             >
               <Text
+                title={provision.breadcrumb || provision.path}
                 style={{
                   fontSize: typography.fontSize.sm,
                   fontWeight: typography.fontWeight.medium,
                   color: colors.text.primary,
                 }}
               >
-                {provision.breadcrumb || provision.path}
+                {formatCompactBreadcrumb(provision.breadcrumb || provision.path)}
               </Text>
               <button
                 type="button"

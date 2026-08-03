@@ -16,7 +16,11 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, clearDraftReform, setDraftLabel } from '@/libs/draftReform';
 import { RootState } from '@/store';
-import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import {
+  formatCompactBreadcrumb,
+  formatLabelParts,
+  getHierarchicalLabels,
+} from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 const STATUS_COLORS: Record<string, { color: string; background: string }> = {
@@ -295,26 +299,72 @@ export default function TrackerPage() {
                 </button>
 
                 {isExpanded && (
-                  <Stack style={{ gap: spacing.sm, padding: `0 ${spacing.lg} ${spacing.lg} 40px` }}>
+                  <Stack style={{ gap: spacing.md, padding: `0 ${spacing.lg} ${spacing.lg} 40px` }}>
                     <Text
                       style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                     >
                       {bill.summary}
                     </Text>
-                    {bill.provisions.map((provision) => {
-                      const metadata = parameters?.[provision.path];
-                      const baseline = getCurrentValue(metadata?.values);
-                      return (
-                        <Text
-                          key={provision.path}
-                          style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
-                        >
-                          {resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb)}:{' '}
-                          {formatValue(baseline, metadata?.unit ?? null)} →{' '}
-                          {formatValue(provision.proposedValue, metadata?.unit ?? null)}
-                        </Text>
-                      );
-                    })}
+                    <div
+                      style={{
+                        background: colors.gray[50],
+                        borderRadius: 8,
+                        padding: `${spacing.xs} 0`,
+                      }}
+                    >
+                      {bill.provisions.map((provision) => {
+                        const metadata = parameters?.[provision.path];
+                        const baseline = getCurrentValue(metadata?.values);
+                        const unit = metadata?.unit ?? null;
+                        const fullBreadcrumb = resolveBreadcrumb(
+                          provision.path,
+                          provision.fallbackBreadcrumb
+                        );
+                        return (
+                          <div
+                            key={provision.path}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'baseline',
+                              justifyContent: 'space-between',
+                              gap: spacing.lg,
+                              padding: `${spacing.xs} ${spacing.md}`,
+                            }}
+                          >
+                            <Text
+                              title={fullBreadcrumb}
+                              style={{
+                                fontSize: typography.fontSize.sm,
+                                color: colors.text.primary,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {formatCompactBreadcrumb(fullBreadcrumb)}
+                            </Text>
+                            <Text
+                              style={{
+                                fontSize: typography.fontSize.sm,
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0,
+                                color: colors.text.secondary,
+                              }}
+                            >
+                              {formatValue(baseline, unit)} →{' '}
+                              <span
+                                style={{
+                                  color: colors.primary[700],
+                                  fontWeight: typography.fontWeight.semibold,
+                                }}
+                              >
+                                {formatValue(provision.proposedValue, unit)}
+                              </span>
+                            </Text>
+                          </div>
+                        );
+                      })}
+                    </div>
                     <div>
                       <Button size="sm" onClick={() => openAsDraft(bill)}>
                         <IconPencil size={14} />

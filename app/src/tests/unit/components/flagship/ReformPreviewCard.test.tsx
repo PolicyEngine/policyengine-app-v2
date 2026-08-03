@@ -65,7 +65,9 @@ describe('ReformPreviewCard', () => {
   test('given a draft then provisions show baseline value and breadcrumb', () => {
     renderCard();
 
-    expect(screen.getByText('IRS → Credits → Child tax credit → Base amount')).toBeInTheDocument();
+    // Long breadcrumbs display compacted, with the full path on hover
+    expect(screen.getByText('… → Credits → Child tax credit → Base amount')).toBeInTheDocument();
+    expect(screen.getByTitle('IRS → Credits → Child tax credit → Base amount')).toBeInTheDocument();
     expect(screen.getByText(/\$2,000/)).toBeInTheDocument();
   });
 
