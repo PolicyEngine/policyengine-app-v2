@@ -16,6 +16,8 @@ interface ParameterSearchBoxProps {
   entries: ParameterSearchEntry[];
   onSelect: (entry: ParameterSearchEntry) => void;
   placeholder?: string;
+  /** Formatted current value for a result row, e.g. "$2,000" */
+  currentValueFor?: (entry: ParameterSearchEntry) => string | null;
 }
 
 const RESULT_LIMIT = 20;
@@ -81,6 +83,7 @@ export default function ParameterSearchBox({
   entries,
   onSelect,
   placeholder = 'Search any parameter, e.g. child tax credit amount',
+  currentValueFor,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
@@ -298,7 +301,29 @@ export default function ParameterSearchBox({
                             ? capitalizeFirst(entry.label)
                             : entry.breadcrumb || entry.label}
                         </span>
-                        <EntryBadges entry={entry} />
+                        <span
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: spacing.sm,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {currentValueFor?.(entry) && (
+                            <span
+                              style={{
+                                fontSize: typography.fontSize.xs,
+                                fontFamily: typography.fontFamily.primary,
+                                color: colors.primary[700],
+                                fontWeight: typography.fontWeight.medium,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {currentValueFor(entry)}
+                            </span>
+                          )}
+                          <EntryBadges entry={entry} />
+                        </span>
                       </div>
                       <div
                         style={{

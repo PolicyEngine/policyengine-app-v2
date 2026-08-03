@@ -104,14 +104,19 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
           <Stack
             key={provision.path}
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.md,
+              gap: spacing.xs,
               padding: `${spacing.sm} ${spacing.lg}`,
               borderBottom: `1px solid ${colors.border.light}`,
             }}
           >
-            <Stack style={{ flex: 1, gap: 2, minWidth: 0 }}>
+            <Stack
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: spacing.sm,
+              }}
+            >
               <Text
                 style={{
                   fontSize: typography.fontSize.sm,
@@ -121,43 +126,41 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
               >
                 {provision.breadcrumb || provision.path}
               </Text>
+              <button
+                type="button"
+                onClick={() => removeDraftProvision(provision.path)}
+                aria-label={`Remove ${provision.breadcrumb || provision.path}`}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  color: colors.text.secondary,
+                  padding: 2,
+                  flexShrink: 0,
+                }}
+              >
+                <IconX size={14} />
+              </button>
+            </Stack>
+            <Stack
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.sm,
+                flexWrap: 'wrap',
+              }}
+            >
               <Text
                 style={{
-                  fontSize: typography.fontSize.xs,
-                  fontFamily: typography.fontFamily.mono,
+                  fontSize: typography.fontSize.sm,
                   color: colors.text.secondary,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                 }}
               >
-                {provision.path}
+                {formatValue(provision.baselineValue, provision.unit)} →
               </Text>
+              <ProvisionValueInput path={provision.path} value={provision.value} />
             </Stack>
-            <Text
-              style={{
-                fontSize: typography.fontSize.sm,
-                color: colors.text.secondary,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {formatValue(provision.baselineValue, provision.unit)} →
-            </Text>
-            <ProvisionValueInput path={provision.path} value={provision.value} />
-            <button
-              type="button"
-              onClick={() => removeDraftProvision(provision.path)}
-              aria-label={`Remove ${provision.breadcrumb || provision.path}`}
-              style={{
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                color: colors.text.secondary,
-                padding: spacing.xs,
-              }}
-            >
-              <IconX size={16} />
-            </button>
           </Stack>
         ))}
       </Stack>

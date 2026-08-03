@@ -8,19 +8,13 @@ import {
   IconSearch,
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import BackToHome from '@/components/flagship/BackToHome';
-import ReformPreviewCard from '@/components/flagship/ReformPreviewCard';
+import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
 import { SAMPLE_BILLS, SampleBill } from '@/data/flagship/sampleBills';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import {
-  addDraftProvision,
-  clearDraftReform,
-  setDraftLabel,
-  useDraftReform,
-} from '@/libs/draftReform';
+import { addDraftProvision, clearDraftReform, setDraftLabel } from '@/libs/draftReform';
 import { RootState } from '@/store';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
@@ -42,7 +36,6 @@ const STATUS_COLORS: Record<string, { color: string; background: string }> = {
  */
 export default function TrackerPage() {
   const countryId = useCurrentCountry();
-  const draft = useDraftReform();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
 
   const [query, setQuery] = useState('');
@@ -106,236 +99,235 @@ export default function TrackerPage() {
   };
 
   return (
-    <Stack style={{ maxWidth: 840, margin: '0 auto', gap: spacing.xl }}>
-      <BackToHome />
-      <Stack style={{ gap: spacing.sm }}>
-        <Title order={1}>Legislative tracker</Title>
-        <Text style={{ color: colors.text.secondary }}>
-          Real bills, scored with the PolicyEngine model. Open any bill as an editable reform.
-        </Text>
-      </Stack>
+    <WorkspaceLayout>
+      <Stack style={{ gap: spacing.lg }}>
+        <Stack style={{ gap: spacing.xs }}>
+          <Title order={1}>Legislative tracker</Title>
+          <Text style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
+            Real bills, scored with the PolicyEngine model. Open any bill as an editable reform.
+          </Text>
+        </Stack>
 
-      <Stack
-        style={{
-          flexDirection: 'row',
-          gap: spacing.sm,
-          padding: `${spacing.sm} ${spacing.md}`,
-          background: colors.gray[50],
-          borderRadius: 8,
-          alignItems: 'center',
-        }}
-      >
-        <IconFlask size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          Sample preview — illustrative bills until the tracker API connects.
-        </Text>
-        <div style={{ flex: 1 }} />
-        <a
-          href={`${WEBSITE_URL}/${countryId}/bill-tracker`}
-          target="_blank"
-          rel="noreferrer"
+        <Stack
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: typography.fontSize.xs,
-            color: colors.primary[700],
-            fontFamily: typography.fontFamily.primary,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Full tracker
-          <IconExternalLink size={12} />
-        </a>
-      </Stack>
-
-      <Stack
-        style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center', flexWrap: 'wrap' }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            padding: `${spacing.xs} ${spacing.md}`,
-            border: `1px solid ${colors.border.light}`,
+            flexDirection: 'row',
+            gap: spacing.sm,
+            padding: `${spacing.sm} ${spacing.md}`,
+            background: colors.gray[50],
             borderRadius: 8,
-            background: colors.background.primary,
-            flex: 1,
-            minWidth: 200,
+            alignItems: 'center',
           }}
         >
-          <IconSearch size={14} color={colors.text.secondary} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search bills"
-            aria-label="Search bills"
+          <IconFlask size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            Sample preview — illustrative bills until the tracker API connects.
+          </Text>
+          <div style={{ flex: 1 }} />
+          <a
+            href={`${WEBSITE_URL}/${countryId}/bill-tracker`}
+            target="_blank"
+            rel="noreferrer"
             style={{
-              flex: 1,
-              border: 'none',
-              outline: 'none',
-              fontSize: typography.fontSize.sm,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: typography.fontSize.xs,
+              color: colors.primary[700],
               fontFamily: typography.fontFamily.primary,
-              background: 'transparent',
-            }}
-          />
-        </div>
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          aria-label="Status filter"
-          style={selectStyle}
-        >
-          <option value="all">All statuses</option>
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-        <select
-          value={jurisdictionFilter}
-          onChange={(event) => setJurisdictionFilter(event.target.value)}
-          aria-label="Jurisdiction filter"
-          style={selectStyle}
-        >
-          <option value="all">All jurisdictions</option>
-          {jurisdictions.map((jurisdiction) => (
-            <option key={jurisdiction} value={jurisdiction}>
-              {jurisdiction}
-            </option>
-          ))}
-        </select>
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          {visibleBills.length} of {bills.length} bills
-        </Text>
-      </Stack>
-
-      <div
-        style={{
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: 12,
-          background: colors.background.primary,
-          overflow: 'hidden',
-        }}
-      >
-        {visibleBills.length === 0 && (
-          <Text
-            style={{
-              padding: spacing.xl,
-              fontSize: typography.fontSize.sm,
-              color: colors.text.secondary,
-              textAlign: 'center',
+              whiteSpace: 'nowrap',
             }}
           >
-            No bills match — clear the search or filters.
+            Full tracker
+            <IconExternalLink size={12} />
+          </a>
+        </Stack>
+
+        <Stack
+          style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              padding: `${spacing.xs} ${spacing.md}`,
+              border: `1px solid ${colors.border.light}`,
+              borderRadius: 8,
+              background: colors.background.primary,
+              flex: 1,
+              minWidth: 200,
+            }}
+          >
+            <IconSearch size={14} color={colors.text.secondary} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search bills"
+              aria-label="Search bills"
+              style={{
+                flex: 1,
+                border: 'none',
+                outline: 'none',
+                fontSize: typography.fontSize.sm,
+                fontFamily: typography.fontFamily.primary,
+                background: 'transparent',
+              }}
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            aria-label="Status filter"
+            style={selectStyle}
+          >
+            <option value="all">All statuses</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+          <select
+            value={jurisdictionFilter}
+            onChange={(event) => setJurisdictionFilter(event.target.value)}
+            aria-label="Jurisdiction filter"
+            style={selectStyle}
+          >
+            <option value="all">All jurisdictions</option>
+            {jurisdictions.map((jurisdiction) => (
+              <option key={jurisdiction} value={jurisdiction}>
+                {jurisdiction}
+              </option>
+            ))}
+          </select>
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            {visibleBills.length} of {bills.length} bills
           </Text>
-        )}
-        {visibleBills.map((bill, i) => {
-          const isExpanded = expandedId === bill.id;
-          const statusStyle = STATUS_COLORS[bill.status] ?? STATUS_COLORS.Introduced;
-          const ChevronIcon = isExpanded ? IconChevronDown : IconChevronRight;
-          return (
-            <div
-              key={bill.id}
-              style={{ borderTop: i === 0 ? 'none' : `1px solid ${colors.border.light}` }}
+        </Stack>
+
+        <div
+          style={{
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: 12,
+            background: colors.background.primary,
+            overflow: 'hidden',
+          }}
+        >
+          {visibleBills.length === 0 && (
+            <Text
+              style={{
+                padding: spacing.xl,
+                fontSize: typography.fontSize.sm,
+                color: colors.text.secondary,
+                textAlign: 'center',
+              }}
             >
-              <button
-                type="button"
-                onClick={() => setExpandedId(isExpanded ? null : bill.id)}
-                aria-expanded={isExpanded}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing.md,
-                  width: '100%',
-                  padding: `${spacing.sm} ${spacing.lg}`,
-                  border: 'none',
-                  background: isExpanded ? colors.gray[50] : 'transparent',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontFamily: typography.fontFamily.primary,
-                }}
+              No bills match — clear the search or filters.
+            </Text>
+          )}
+          {visibleBills.map((bill, i) => {
+            const isExpanded = expandedId === bill.id;
+            const statusStyle = STATUS_COLORS[bill.status] ?? STATUS_COLORS.Introduced;
+            const ChevronIcon = isExpanded ? IconChevronDown : IconChevronRight;
+            return (
+              <div
+                key={bill.id}
+                style={{ borderTop: i === 0 ? 'none' : `1px solid ${colors.border.light}` }}
               >
-                <ChevronIcon size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
-                <span
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(isExpanded ? null : bill.id)}
+                  aria-expanded={isExpanded}
                   style={{
-                    fontSize: typography.fontSize.xs,
-                    color: colors.text.secondary,
-                    width: 110,
-                    flexShrink: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing.md,
+                    width: '100%',
+                    padding: `${spacing.sm} ${spacing.lg}`,
+                    border: 'none',
+                    background: isExpanded ? colors.gray[50] : 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: typography.fontFamily.primary,
                   }}
                 >
-                  {bill.jurisdiction}
-                </span>
-                <span
-                  style={{
-                    flex: 1,
-                    fontSize: typography.fontSize.sm,
-                    fontWeight: typography.fontWeight.medium,
-                    color: colors.text.primary,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {bill.title}
-                </span>
-                <span
-                  style={{
-                    fontSize: 10,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    padding: '2px 8px',
-                    borderRadius: 999,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    ...statusStyle,
-                  }}
-                >
-                  {bill.status}
-                </span>
-              </button>
+                  <ChevronIcon size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
+                  <span
+                    style={{
+                      fontSize: typography.fontSize.xs,
+                      color: colors.text.secondary,
+                      width: 110,
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {bill.jurisdiction}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      fontSize: typography.fontSize.sm,
+                      fontWeight: typography.fontWeight.medium,
+                      color: colors.text.primary,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {bill.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      ...statusStyle,
+                    }}
+                  >
+                    {bill.status}
+                  </span>
+                </button>
 
-              {isExpanded && (
-                <Stack style={{ gap: spacing.sm, padding: `0 ${spacing.lg} ${spacing.lg} 40px` }}>
-                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                    {bill.summary}
-                  </Text>
-                  {bill.provisions.map((provision) => {
-                    const metadata = parameters?.[provision.path];
-                    const baseline = getCurrentValue(metadata?.values);
-                    return (
-                      <Text
-                        key={provision.path}
-                        style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
-                      >
-                        {resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb)}:{' '}
-                        {formatValue(baseline, metadata?.unit ?? null)} →{' '}
-                        {formatValue(provision.proposedValue, metadata?.unit ?? null)}
-                      </Text>
-                    );
-                  })}
-                  <div>
-                    <Button size="sm" onClick={() => openAsDraft(bill)}>
-                      <IconPencil size={14} />
-                      Open as draft reform
-                    </Button>
-                  </div>
-                </Stack>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {draft && draft.countryId === countryId && draft.provisions.length > 0 && (
-        <ReformPreviewCard draft={draft} />
-      )}
-    </Stack>
+                {isExpanded && (
+                  <Stack style={{ gap: spacing.sm, padding: `0 ${spacing.lg} ${spacing.lg} 40px` }}>
+                    <Text
+                      style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                    >
+                      {bill.summary}
+                    </Text>
+                    {bill.provisions.map((provision) => {
+                      const metadata = parameters?.[provision.path];
+                      const baseline = getCurrentValue(metadata?.values);
+                      return (
+                        <Text
+                          key={provision.path}
+                          style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+                        >
+                          {resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb)}:{' '}
+                          {formatValue(baseline, metadata?.unit ?? null)} →{' '}
+                          {formatValue(provision.proposedValue, metadata?.unit ?? null)}
+                        </Text>
+                      );
+                    })}
+                    <div>
+                      <Button size="sm" onClick={() => openAsDraft(bill)}>
+                        <IconPencil size={14} />
+                        Open as draft reform
+                      </Button>
+                    </div>
+                  </Stack>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Stack>
+    </WorkspaceLayout>
   );
 }

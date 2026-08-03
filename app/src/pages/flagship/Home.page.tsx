@@ -55,9 +55,9 @@ export default function FlagshipHomePage() {
       style={{
         maxWidth: 840,
         margin: '0 auto',
-        gap: spacing['3xl'],
-        paddingTop: spacing['5xl'],
-        paddingBottom: spacing['4xl'],
+        gap: spacing['2xl'],
+        paddingTop: spacing['3xl'],
+        paddingBottom: spacing['2xl'],
       }}
     >
       <Stack style={{ gap: spacing.md }}>

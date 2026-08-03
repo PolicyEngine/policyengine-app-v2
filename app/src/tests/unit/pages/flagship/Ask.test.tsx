@@ -42,14 +42,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('@/api/reformStore', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/reformStore')>();
-  return {
-    ...actual,
-    getReformStore: () => ({ findByUser: vi.fn().mockResolvedValue([]) }),
-  };
-});
-
 function renderAsk() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -64,13 +56,14 @@ describe('AskPage', () => {
     clearDraftReform();
   });
 
-  test('given an empty input then the ask button is disabled', () => {
+  test('given an empty input then examples show and no suggestions render', () => {
     renderAsk();
 
-    expect(screen.getByRole('button', { name: /^ask$/i })).toBeDisabled();
+    expect(screen.getByText(/try asking/i)).toBeInTheDocument();
+    expect(screen.queryByText(/matching parameters/i)).not.toBeInTheDocument();
   });
 
-  test('given a question is submitted then matching parameters are suggested', async () => {
+  test('given typing then matching parameters appear live, without a submit step', async () => {
     const user = userEvent.setup();
     renderAsk();
 
@@ -78,24 +71,37 @@ describe('AskPage', () => {
       screen.getByRole('textbox', { name: /policy question/i }),
       'child tax credit amount'
     );
-    await user.click(screen.getByRole('button', { name: /^ask$/i }));
 
     expect(await screen.findByText(/matching parameters/i)).toBeInTheDocument();
     expect(screen.getByText('IRS → Credits → Child tax credit → Amount')).toBeInTheDocument();
   });
 
-  test('given a suggestion is added then it lands in the draft reform', async () => {
+  test('given a suggestion is clicked then it joins the draft with the value from the question', async () => {
+    const user = userEvent.setup();
+    renderAsk();
+
+    await user.type(
+      screen.getByRole('textbox', { name: /policy question/i }),
+      'raise the child tax credit to $3,600'
+    );
+    await user.click(await screen.findByText('IRS → Credits → Child tax credit → Amount'));
+
+    const draft = getDraftReform();
+    expect(draft?.provisions[0].path).toBe('gov.irs.credits.ctc.amount');
+    expect(draft?.provisions[0].value).toBe(3600);
+    expect(draft?.source).toBe('chat');
+    expect(await screen.findByText(/here's your draft reform/i)).toBeInTheDocument();
+  });
+
+  test('given a question without an amount then no value is invented', async () => {
     const user = userEvent.setup();
     renderAsk();
 
     await user.type(screen.getByRole('textbox', { name: /policy question/i }), 'child tax credit');
-    await user.click(screen.getByRole('button', { name: /^ask$/i }));
-    await user.click(await screen.findByRole('button', { name: /^add$/i }));
+    await user.click(await screen.findByText('IRS → Credits → Child tax credit → Amount'));
 
-    const draft = getDraftReform();
-    expect(draft?.provisions[0].path).toBe('gov.irs.credits.ctc.amount');
-    expect(draft?.source).toBe('chat');
-    expect(await screen.findByText(/here's your draft reform/i)).toBeInTheDocument();
+    const provision = getDraftReform()?.provisions[0];
+    expect(provision?.value).toBe(provision?.baselineValue);
   });
 
   test('given a query with no matches then an honest empty state shows', async () => {
@@ -106,7 +112,6 @@ describe('AskPage', () => {
       screen.getByRole('textbox', { name: /policy question/i }),
       'zzzz quantum entanglement subsidy'
     );
-    await user.click(screen.getByRole('button', { name: /^ask$/i }));
 
     expect(await screen.findByText(/no parameters matched/i)).toBeInTheDocument();
   });
