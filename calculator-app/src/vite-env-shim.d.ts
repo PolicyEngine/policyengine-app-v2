@@ -11,6 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_MODE: string;
   readonly VITE_WEBSITE_URL: string;
   readonly VITE_CALCULATOR_URL: string;
+  readonly VITE_FLAGSHIP_SHELL?: string;
 }
 
 interface ImportMeta {

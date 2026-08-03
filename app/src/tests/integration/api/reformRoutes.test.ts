@@ -12,7 +12,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ReformAdapter } from '@/adapters/ReformAdapter';
 import type { Reform } from '@/types/ingredients/Reform';
 import type { ReformMetadata } from '@/types/metadata/reformMetadata';
-
 // Route handlers + db module live in calculator-app; imported relatively
 // since they are outside the @/ alias root.
 import {
@@ -21,16 +20,13 @@ import {
   PATCH as patchReform,
 } from '../../../../../calculator-app/src/app/api/reforms/[reformId]/route';
 import {
-  GET as listReforms,
   POST as createReform,
+  GET as listReforms,
 } from '../../../../../calculator-app/src/app/api/reforms/route';
 import { setDbForTesting } from '../../../../../calculator-app/src/db';
 import * as schema from '../../../../../calculator-app/src/db/schema';
 
-const MIGRATIONS_DIR = path.resolve(
-  __dirname,
-  '../../../../../calculator-app/src/db/migrations'
-);
+const MIGRATIONS_DIR = path.resolve(__dirname, '../../../../../calculator-app/src/db/migrations');
 
 let client: PGlite;
 

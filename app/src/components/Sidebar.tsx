@@ -1,11 +1,15 @@
 import {
+  IconAdjustments,
   IconBook,
   IconBrandGithub,
   IconBrandSlack,
   IconCpu,
   IconFileDescription,
+  IconFolder,
+  IconGavel,
   IconGitBranch,
   IconMail,
+  IconMessageCircle,
   IconPlus,
   IconScale,
   IconUsers,
@@ -15,6 +19,7 @@ import { WEBSITE_URL } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { isFlagshipShellEnabled } from '@/libs/featureFlags';
 import { colors, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
@@ -30,12 +35,19 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const countryId = useCurrentCountry();
 
   // All internal navigation paths include the country prefix for consistency with v1 app
-  const navItems = [
-    { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
-    { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
-    { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
-    { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
-  ];
+  const navItems = isFlagshipShellEnabled()
+    ? [
+        { label: 'Ask', icon: IconMessageCircle, path: `/${countryId}/ask` },
+        { label: 'Tracker', icon: IconGavel, path: `/${countryId}/tracker` },
+        { label: 'Build', icon: IconAdjustments, path: `/${countryId}/build` },
+        { label: 'Library', icon: IconFolder, path: `/${countryId}/library` },
+      ]
+    : [
+        { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
+        { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
+        { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
+        { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
+      ];
 
   const resourceItems = [
     {

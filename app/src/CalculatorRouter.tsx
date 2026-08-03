@@ -5,6 +5,11 @@
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useParams } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
+import { isFlagshipShellEnabled } from './libs/featureFlags';
+import AskPage from './pages/flagship/Ask.page';
+import BuildPage from './pages/flagship/Build.page';
+import LibraryPage from './pages/flagship/Library.page';
+import TrackerPage from './pages/flagship/Tracker.page';
 import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -113,8 +118,17 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <Navigate to="reports" replace />,
+                  element: <Navigate to={isFlagshipShellEnabled() ? 'ask' : 'reports'} replace />,
                 },
+                // Flagship shell routes (feature-flagged; see libs/featureFlags.ts)
+                ...(isFlagshipShellEnabled()
+                  ? [
+                      { path: 'ask', element: <AskPage /> },
+                      { path: 'tracker', element: <TrackerPage /> },
+                      { path: 'build', element: <BuildPage /> },
+                      { path: 'library', element: <LibraryPage /> },
+                    ]
+                  : []),
                 {
                   path: 'reports',
                   element: <ReportsPage />,
