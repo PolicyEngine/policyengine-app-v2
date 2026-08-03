@@ -13,12 +13,30 @@
 
 const FLAGSHIP_SHELL_STORAGE_KEY = 'pe-flagship-shell';
 
-export function isFlagshipShellEnabled(): boolean {
-  const envValue =
+/**
+ * Environment-only check. Stable between server and client renders in
+ * Next.js (NEXT_PUBLIC_* is inlined into both bundles), so SSR-safe
+ * code paths can rely on it without hydration mismatches.
+ */
+export function isFlagshipShellEnvEnabled(): boolean {
+  const viteValue =
     typeof import.meta !== 'undefined'
       ? (import.meta.env?.VITE_FLAGSHIP_SHELL as string | undefined)
       : undefined;
-  if (envValue === 'true') {
+  if (viteValue === 'true') {
+    return true;
+  }
+
+  // Next.js statically inlines NEXT_PUBLIC_* in server and client builds
+  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL === 'true') {
+    return true;
+  }
+
+  return false;
+}
+
+export function isFlagshipShellEnabled(): boolean {
+  if (isFlagshipShellEnvEnabled()) {
     return true;
   }
 
