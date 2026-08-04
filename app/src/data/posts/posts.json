@@ -6,7 +6,8 @@
     "tags": ["uk", "ai", "featured"],
     "authors": ["vahid-ahmadi"],
     "filename": "uk-ai-study.md",
-    "image": "uk-ai-study.png"
+    "image": "uk-ai-study.jpg",
+    "imageCredit": "dig.watch"
   },
   {
     "title": "How we used Claude Code to apply for the Public Benefit Innovation Fund",
