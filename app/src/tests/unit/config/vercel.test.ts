@@ -70,16 +70,22 @@ describe('vercel.json configuration', () => {
     // Then - routes array breaks SPA routing when combined with rewrites
     expect(config.routes).toBeUndefined();
   });
+});
 
-  test('given monorepo setup then root vercel.json exists for website project', () => {
-    // Given - Monorepo uses root vercel.json for policyengine-app-v2 project (serves policyengine.org)
-    // The policyengine-calculator project uses calculator/vercel.json (serves app.policyengine.org)
-    const rootVercelJsonPath = path.resolve(__dirname, '../../../../../vercel.json');
+describe('Vercel project topology', () => {
+  const repoRoot = path.resolve(__dirname, '../../../../..');
 
-    // When
-    const exists = fs.existsSync(rootVercelJsonPath);
+  test.each(['website/vercel.json', 'calculator-app/vercel.json'])(
+    'given the active Next.js projects then %s exists',
+    (relativePath) => {
+      expect(fs.existsSync(path.join(repoRoot, relativePath))).toBe(true);
+    }
+  );
 
-    // Then - Root config is required for monorepo website builds
-    expect(exists).toBe(true);
-  });
+  test.each(['vercel.json', 'calculator/vercel.json'])(
+    'given the retired Vite projects then %s does not exist',
+    (relativePath) => {
+      expect(fs.existsSync(path.join(repoRoot, relativePath))).toBe(false);
+    }
+  );
 });
