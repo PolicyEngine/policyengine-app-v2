@@ -15,6 +15,7 @@
       - Add the NICs exemption for recently-inactive employees dashboard at /uk/nics-exemption-inactive-employees
       - Add the temporary VAT cut on domestic electricity dashboard at /uk/electricity-vat-cut
       - Add the £2 bus fare cap analysis dashboard at /uk/bus-fare-cap
+      - Launch the PolicyEngine UK Chat beta at /uk/chat
     changed:
       - Remove Ben Ogorek from the team page
       - Move the Claude plugin page to /:countryId/ai-agents (runtime-agnostic — the skills catalog serves Claude Code and Codex) with a permanent redirect from /:countryId/claude-plugin; refresh the hero eyebrow and add the Codex install path

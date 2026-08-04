@@ -22,6 +22,10 @@ function withDeepRoute(route: AppZoneRoute): AppZoneRoute[] {
 
 export const appZoneRoutes: AppZoneRoute[] = [
   {
+    source: "/uk/chat",
+    destination: "https://policyengine-uk-chat.vercel.app/uk/chat",
+  },
+  {
     source: "/us/taxation-of-benefits-reforms",
     destination:
       "https://crfb-tob-impacts.vercel.app/us/taxation-of-benefits-reforms",

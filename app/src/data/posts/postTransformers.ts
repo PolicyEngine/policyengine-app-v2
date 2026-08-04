@@ -70,6 +70,7 @@ const topicLabels: TagLabels = {
   featured: 'Featured',
   impact: 'Impact',
   policy: 'Policy analysis',
+  product: 'Product',
   technical: 'Technical report',
   api: 'API',
   'benefit-access': 'Benefit access',
