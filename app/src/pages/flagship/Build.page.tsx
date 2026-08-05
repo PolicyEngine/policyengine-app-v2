@@ -1,12 +1,12 @@
-import { IconArrowRight } from '@tabler/icons-react';
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
+import ParameterTreeBrowser from '@/components/flagship/ParameterTreeBrowser';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Stack, Text, Title } from '@/components/ui';
-import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { addDraftProvision, provisionFromSearchEntry } from '@/libs/draftReform';
+import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
 import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
@@ -14,15 +14,22 @@ import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 /**
  * Build — the power-user entry point of the flagship shell.
  *
- * One step: search, click a result, and it lands in the draft rail
- * with its baseline — edit the value there. Current values show
- * directly in results, so there is no intermediate detail step.
+ * Search and the full policy tree sit side by side: search for speed,
+ * browse for discovery. Either way one click adds the parameter to
+ * the draft with its baseline — edit the value there.
  */
 export default function BuildPage() {
-  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const parameterTree = useSelector((state: RootState) => state.metadata.parameterTree);
+  const draft = useDraftReform();
+
+  const entriesByPath = useMemo(
+    () => new Map(entries.map((entry) => [entry.path, entry])),
+    [entries]
+  );
+  const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
 
   const addEntry = (entry: ParameterSearchEntry) => {
     addDraftProvision(
@@ -58,26 +65,30 @@ export default function BuildPage() {
           </Text>
         )}
 
-        <button
-          type="button"
-          onClick={() => nav.push(`/${countryId}/policies/create`)}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            fontSize: typography.fontSize.sm,
-            fontFamily: typography.fontFamily.primary,
-            color: colors.text.secondary,
-            alignSelf: 'flex-start',
-          }}
-        >
-          Prefer to browse the full policy tree? Open the parameter editor
-          <IconArrowRight size={14} />
-        </button>
+        <Stack style={{ gap: spacing.sm }}>
+          <Text
+            style={{
+              fontSize: typography.fontSize.xs,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: colors.text.secondary,
+              fontWeight: typography.fontWeight.semibold,
+            }}
+          >
+            Or browse the policy tree
+          </Text>
+          <ParameterTreeBrowser
+            tree={parameterTree}
+            addablePaths={new Set(entriesByPath.keys())}
+            draftPaths={draftPaths}
+            onSelectLeaf={(path) => {
+              const entry = entriesByPath.get(path);
+              if (entry) {
+                addEntry(entry);
+              }
+            }}
+          />
+        </Stack>
       </Stack>
     </WorkspaceLayout>
   );

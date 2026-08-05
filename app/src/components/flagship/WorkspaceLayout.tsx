@@ -30,7 +30,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
   }
 
   return (
-    <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
       <BackToHome />
       <div
         style={{
@@ -41,13 +41,15 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
           marginTop: spacing.md,
         }}
       >
-        <div style={{ flex: '1 1 480px', minWidth: 0 }}>{children}</div>
+        <div style={{ flex: '1 1 480px', minWidth: 0 }}>
+          <div style={{ maxWidth: 760, margin: '0 auto' }}>{children}</div>
+        </div>
         <div
           style={{
-            flex: '0 1 360px',
+            flex: '0 1 380px',
             minWidth: 300,
             position: 'sticky',
-            top: spacing.lg,
+            top: 0,
             animation: 'pe-rail-in 240ms ease-out',
           }}
         >
