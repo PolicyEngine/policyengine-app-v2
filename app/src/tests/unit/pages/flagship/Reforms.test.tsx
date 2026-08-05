@@ -72,9 +72,10 @@ describe('ReformsPage', () => {
 
     expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();
-    // "Yours" appears as both the filter chip and the row badge
-    expect(screen.getAllByText('Yours')).toHaveLength(2);
-    expect(screen.getByText('Enacted')).toBeInTheDocument();
+    // Plain muted meta text, no colored pills: jurisdiction · status for
+    // bills, provision count for your reforms
+    expect(screen.getByText('Utah · Enacted')).toBeInTheDocument();
+    expect(screen.getByText('1 provision')).toBeInTheDocument();
   });
 
   test('given the In Congress filter then only bills remain', async () => {
@@ -109,7 +110,8 @@ describe('ReformsPage', () => {
     expect(
       await screen.findByRole('button', { name: /open as draft reform/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/raises the base child tax credit/i)).toBeInTheDocument();
+    // Summary appears in both the row preview and the expanded detail
+    expect(screen.getAllByText(/raises the base child tax credit/i).length).toBeGreaterThan(1);
   });
 
   test('given open as draft on a bill then the draft is populated from its provisions', async () => {

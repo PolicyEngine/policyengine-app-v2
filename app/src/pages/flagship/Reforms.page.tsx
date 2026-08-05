@@ -6,7 +6,6 @@ import {
   IconCopy,
   IconDeviceFloppy,
   IconExternalLink,
-  IconFlask,
   IconPencil,
   IconPlus,
   IconScale,
@@ -40,13 +39,6 @@ import {
   getHierarchicalLabels,
 } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
-
-const STATUS_COLORS: Record<string, { color: string; background: string }> = {
-  Enacted: { color: colors.primary[700], background: colors.primary[50] },
-  'Passed chamber': { color: '#1E6B8A', background: '#E8F4FA' },
-  'In committee': { color: '#8A6D1E', background: '#FBF3DC' },
-  Introduced: { color: colors.gray[700], background: colors.gray[50] },
-};
 
 const SOURCE_LABELS: Record<ReformSource, string> = {
   manual: 'Hand-built',
@@ -218,27 +210,9 @@ export default function ReformsPage() {
     editedLabel !== (reform.label ?? '') ||
     reform.parameters.some((p) => editedValues[p.name] !== p.values[0]?.value);
 
-  const badge = (text: string, palette: { color: string; background: string }) => (
-    <span
-      style={{
-        fontSize: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        padding: '2px 8px',
-        borderRadius: 999,
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
-        color: palette.color,
-        background: palette.background,
-      }}
-    >
-      {text}
-    </span>
-  );
-
   const rowButtonStyle = (isExpanded: boolean): React.CSSProperties => ({
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.md,
     width: '100%',
     padding: `${spacing.sm} ${spacing.lg}`,
@@ -249,14 +223,61 @@ export default function ReformsPage() {
     fontFamily: typography.fontFamily.primary,
   });
 
-  const rowTitleStyle: React.CSSProperties = {
-    flex: 1,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text.primary,
+  const ellipsis: React.CSSProperties = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  };
+
+  /** Two-line row body: title + muted preview, with plain meta text right. */
+  const rowBody = (title: string, preview: string, meta: string) => (
+    <>
+      <Stack style={{ flex: 1, gap: 2, minWidth: 0 }}>
+        <Text
+          style={{
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.text.primary,
+            ...ellipsis,
+          }}
+        >
+          {title}
+        </Text>
+        {preview && (
+          <Text
+            style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary, ...ellipsis }}
+          >
+            {preview}
+          </Text>
+        )}
+      </Stack>
+      <Text
+        style={{
+          fontSize: typography.fontSize.xs,
+          color: colors.text.secondary,
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+          paddingTop: 2,
+        }}
+      >
+        {meta}
+      </Text>
+    </>
+  );
+
+  /** One-line change preview for a saved reform, e.g. "Amount: $2,000 → $3,600 · +2 more". */
+  const reformPreview = (reform: Reform) => {
+    const first = reform.parameters[0];
+    if (!first) {
+      return 'No provisions yet';
+    }
+    const breadcrumb = resolveBreadcrumb(first.name);
+    const tail = breadcrumb.split(' → ').slice(-2).join(' → ');
+    const unit = parameters?.[first.name]?.unit ?? null;
+    const baseline = getCurrentValue(parameters?.[first.name]?.values);
+    const change = `${tail}: ${formatValue(baseline, unit)} → ${formatValue(first.values[0]?.value, unit)}`;
+    const more = reform.parameters.length - 1;
+    return more > 0 ? `${change} · +${more} more` : change;
   };
 
   const provisionTable = (
@@ -321,58 +342,18 @@ export default function ReformsPage() {
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
-            alignItems: 'flex-end',
+            alignItems: 'center',
             gap: spacing.md,
           }}
         >
-          <Stack style={{ gap: spacing.xs }}>
-            <Title order={1}>Reforms</Title>
-            <Text style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
-              Bills scored with the PolicyEngine model and your saved reforms — every row opens a
-              full report or an editable draft.
-            </Text>
-          </Stack>
+          <Title order={1} style={{ margin: 0 }}>
+            Reforms
+          </Title>
           <Button onClick={() => nav.push(`/${countryId}/build`)}>
             New reform
             <IconPlus size={16} />
           </Button>
         </Stack>
-
-        {filter !== 'yours' && (
-          <Stack
-            style={{
-              flexDirection: 'row',
-              gap: spacing.sm,
-              padding: `${spacing.sm} ${spacing.md}`,
-              background: colors.gray[50],
-              borderRadius: 8,
-              alignItems: 'center',
-            }}
-          >
-            <IconFlask size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
-            <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-              Bills are a sample preview — illustrative until the tracker API connects.
-            </Text>
-            <div style={{ flex: 1 }} />
-            <a
-              href={`${WEBSITE_URL}/${countryId}/bill-tracker`}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                fontSize: typography.fontSize.xs,
-                color: colors.primary[700],
-                fontFamily: typography.fontFamily.primary,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Full tracker
-              <IconExternalLink size={12} />
-            </a>
-          </Stack>
-        )}
 
         <Stack
           style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center', flexWrap: 'wrap' }}
@@ -499,25 +480,15 @@ export default function ReformsPage() {
                     <ChevronIcon
                       size={14}
                       color={colors.text.secondary}
-                      style={{ flexShrink: 0 }}
+                      style={{ flexShrink: 0, marginTop: 3 }}
                     />
-                    <span style={rowTitleStyle}>{reform.label || 'Untitled reform'}</span>
-                    <span
-                      style={{
-                        fontSize: typography.fontSize.xs,
-                        color: colors.text.secondary,
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {reform.parameters.length === 1
+                    {rowBody(
+                      reform.label || 'Untitled reform',
+                      reformPreview(reform),
+                      reform.parameters.length === 1
                         ? '1 provision'
-                        : `${reform.parameters.length} provisions`}
-                    </span>
-                    {badge('Yours', {
-                      color: colors.primary[700],
-                      background: colors.primary[50],
-                    })}
+                        : `${reform.parameters.length} provisions`
+                    )}
                   </button>
 
                   {isExpanded && (
@@ -650,7 +621,6 @@ export default function ReformsPage() {
             {visibleBills.map((bill, i) => {
               const isExpanded = expandedId === bill.id;
               const ChevronIcon = isExpanded ? IconChevronDown : IconChevronRight;
-              const statusStyle = STATUS_COLORS[bill.status] ?? STATUS_COLORS.Introduced;
               return (
                 <div
                   key={bill.id}
@@ -670,20 +640,9 @@ export default function ReformsPage() {
                     <ChevronIcon
                       size={14}
                       color={colors.text.secondary}
-                      style={{ flexShrink: 0 }}
+                      style={{ flexShrink: 0, marginTop: 3 }}
                     />
-                    <span style={rowTitleStyle}>{bill.title}</span>
-                    <span
-                      style={{
-                        fontSize: typography.fontSize.xs,
-                        color: colors.text.secondary,
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {bill.jurisdiction}
-                    </span>
-                    {badge(bill.status, statusStyle)}
+                    {rowBody(bill.title, bill.summary, `${bill.jurisdiction} · ${bill.status}`)}
                   </button>
 
                   {isExpanded && (
@@ -734,6 +693,31 @@ export default function ReformsPage() {
               );
             })}
           </div>
+        )}
+
+        {filter !== 'yours' && (
+          <Text
+            style={{
+              fontSize: typography.fontSize.xs,
+              color: colors.text.secondary,
+            }}
+          >
+            Bills are illustrative samples until the tracker API connects ·{' '}
+            <a
+              href={`${WEBSITE_URL}/${countryId}/bill-tracker`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                color: colors.text.secondary,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              full tracker
+              <IconExternalLink size={11} />
+            </a>
+          </Text>
         )}
       </Stack>
     </WorkspaceLayout>
