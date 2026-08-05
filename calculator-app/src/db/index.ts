@@ -1,19 +1,21 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/postgres-js";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import postgres from "postgres";
 import * as schema from "./schema";
 
 /**
- * Driver-agnostic database handle: satisfied by the Neon HTTP driver in
- * production and by PGlite in integration tests.
+ * Driver-agnostic database handle: satisfied by postgres-js against
+ * Supabase in production and by PGlite in integration tests.
  */
 export type ReformDb = PgDatabase<PgQueryResultHKT, typeof schema>;
 
-// Lazy initialization: neon() throws if DATABASE_URL is unset, and Next.js
-// evaluates top-level module code at build time, so eager init would crash
-// `next build` on projects without the database provisioned.
+// Lazy initialization: Next.js evaluates top-level module code at build
+// time, so eager init would crash `next build` on projects without the
+// database provisioned.
 function createDb(): ReformDb {
-  const sql = neon(process.env.DATABASE_URL!);
+  // Supabase's pooled connection string (transaction mode) does not
+  // support prepared statements.
+  const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
   return drizzle(sql, { schema });
 }
 

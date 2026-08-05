@@ -104,5 +104,24 @@ export async function runFlagshipReport({
     provisions,
     createdAt: new Date().toISOString(),
   });
+
+  // Record the report centrally (pointer + provenance; never outputs).
+  // Best-effort: the run already succeeded, and the store falls back to
+  // localStorage when the database is unconfigured.
+  try {
+    const { getFlagshipReportStore } = await import('@/api/flagshipReportStore');
+    await getFlagshipReportStore().create({
+      userId: MOCK_USER_ID,
+      countryId,
+      apiReportId: String(metadata.baseReportId),
+      title: title || null,
+      sourceNote: sourceNote || null,
+      provisions,
+      year: CURRENT_YEAR,
+    });
+  } catch {
+    // The report still opens via the local association.
+  }
+
   return metadata.userReportId;
 }

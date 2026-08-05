@@ -14,6 +14,7 @@ import {
 } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { TrackedBill } from '@/api/billFeed';
 import { getReformStore } from '@/api/reformStore';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
@@ -21,10 +22,10 @@ import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { FOREVER, MOCK_USER_ID, WEBSITE_URL } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
-import { SAMPLE_BILLS, SampleBill } from '@/data/flagship/sampleBills';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
+import { useTrackedBills } from '@/hooks/useTrackedBills';
 import {
   addDraftProvision,
   clearDraftReform,
@@ -132,10 +133,7 @@ export default function ReformsPage() {
     onSuccess: invalidate,
   });
 
-  const bills = useMemo(
-    () => SAMPLE_BILLS.filter((bill) => bill.countryId === countryId),
-    [countryId]
-  );
+  const { bills, isLive } = useTrackedBills(countryId);
 
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matchesQuery = (haystack: string) =>
@@ -155,7 +153,7 @@ export default function ReformsPage() {
       ? formatLabelParts(getHierarchicalLabels(path, parameters))
       : (fallback ?? path);
 
-  const billProvisions = (bill: SampleBill) =>
+  const billProvisions = (bill: TrackedBill) =>
     bill.provisions.map((provision) => {
       const metadata = parameters?.[provision.path];
       return {
@@ -163,7 +161,7 @@ export default function ReformsPage() {
         breadcrumb: resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb),
         unit: metadata?.unit ?? null,
         baselineValue: getCurrentValue(metadata?.values),
-        value: provision.proposedValue,
+        value: provision.value,
       };
     });
 
@@ -179,7 +177,7 @@ export default function ReformsPage() {
       };
     });
 
-  const openBillAsDraft = (bill: SampleBill) => {
+  const openBillAsDraft = (bill: TrackedBill) => {
     clearDraftReform();
     billProvisions(bill).forEach((provision) =>
       addDraftProvision(countryId, provision, 'bill', bill.id)
@@ -654,7 +652,31 @@ export default function ReformsPage() {
                       >
                         {bill.summary}
                       </Text>
-                      {provisionTable(billProvisions(bill))}
+                      {bill.keyFindings && bill.keyFindings.length > 0 && (
+                        <Stack style={{ gap: 2 }}>
+                          {bill.keyFindings.map((finding) => (
+                            <Text
+                              key={finding}
+                              style={{
+                                fontSize: typography.fontSize.sm,
+                                color: colors.text.primary,
+                              }}
+                            >
+                              · {finding}
+                            </Text>
+                          ))}
+                        </Stack>
+                      )}
+                      {bill.provisions.length > 0 ? (
+                        provisionTable(billProvisions(bill))
+                      ) : (
+                        <Text
+                          style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+                        >
+                          Parameter mapping for this bill hasn't been published yet — report and
+                          draft actions unlock when it lands.
+                        </Text>
+                      )}
                       <Stack
                         style={{
                           flexDirection: 'row',
@@ -672,15 +694,38 @@ export default function ReformsPage() {
                               billProvisions(bill)
                             )
                           }
-                          disabled={runReport.isRunning}
+                          disabled={runReport.isRunning || bill.provisions.length === 0}
                         >
                           <IconChartBar size={14} />
                           {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => openBillAsDraft(bill)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openBillAsDraft(bill)}
+                          disabled={bill.provisions.length === 0}
+                        >
                           <IconPencil size={14} />
                           Open as draft reform
                         </Button>
+                        {bill.legiscanUrl && (
+                          <a
+                            href={bill.legiscanUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              fontSize: typography.fontSize.xs,
+                              color: colors.text.secondary,
+                              fontFamily: typography.fontFamily.primary,
+                            }}
+                          >
+                            LegiScan
+                            <IconExternalLink size={11} />
+                          </a>
+                        )}
                         {runReport.error && (
                           <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
                             {runReport.error}
@@ -695,7 +740,7 @@ export default function ReformsPage() {
           </div>
         )}
 
-        {filter !== 'yours' && (
+        {filter !== 'yours' && !isLive && (
           <Text
             style={{
               fontSize: typography.fontSize.xs,
