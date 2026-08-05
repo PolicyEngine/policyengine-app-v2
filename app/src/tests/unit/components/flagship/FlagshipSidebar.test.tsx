@@ -41,9 +41,8 @@ describe('FlagshipSidebar', () => {
     renderSidebar();
 
     expect(screen.getByRole('button', { name: 'Ask' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tracker' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Build' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Library' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reforms' })).toBeInTheDocument();
   });
 
   test('given the current route then its nav item is marked current', () => {
@@ -51,7 +50,7 @@ describe('FlagshipSidebar', () => {
     renderSidebar();
 
     expect(screen.getByRole('button', { name: 'Ask' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('button', { name: 'Tracker' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('button', { name: 'Reforms' })).not.toHaveAttribute('aria-current');
   });
 
   test('given a nav item is clicked then it navigates to that section', async () => {
@@ -59,9 +58,9 @@ describe('FlagshipSidebar', () => {
     const user = userEvent.setup();
     renderSidebar();
 
-    await user.click(screen.getByRole('button', { name: 'Tracker' }));
+    await user.click(screen.getByRole('button', { name: 'Reforms' }));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/us/tracker');
+    expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
   });
 
   test('given saved reforms then recent entries list in the sidebar', async () => {

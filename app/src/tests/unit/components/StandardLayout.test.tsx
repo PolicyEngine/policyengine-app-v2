@@ -55,7 +55,7 @@ describe('StandardLayout', () => {
 
     // Then
     expect(screen.getByRole('button', { name: 'Ask' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tracker' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reforms' })).toBeInTheDocument();
     expect(screen.queryByText('Sidebar')).not.toBeInTheDocument();
   });
 });

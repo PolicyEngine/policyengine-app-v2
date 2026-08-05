@@ -1,7 +1,6 @@
 import {
   IconAdjustments,
   IconDotsVertical,
-  IconFolder,
   IconGavel,
   IconMessageCircle,
 } from '@tabler/icons-react';
@@ -25,9 +24,8 @@ const PolicyEngineLogo = '/assets/logos/policyengine/teal.svg';
 
 const NAV_ITEMS = [
   { slug: 'ask', label: 'Ask', icon: IconMessageCircle },
-  { slug: 'tracker', label: 'Tracker', icon: IconGavel },
   { slug: 'build', label: 'Build', icon: IconAdjustments },
-  { slug: 'library', label: 'Library', icon: IconFolder },
+  { slug: 'reforms', label: 'Reforms', icon: IconGavel },
 ];
 
 /**
@@ -134,7 +132,7 @@ export default function FlagshipSidebar() {
             <button
               key={reform.id}
               type="button"
-              onClick={() => nav.push(`/${countryId}/library`)}
+              onClick={() => nav.push(`/${countryId}/reforms?filter=yours`)}
               style={{
                 border: 'none',
                 background: 'transparent',

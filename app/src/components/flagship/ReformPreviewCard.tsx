@@ -96,7 +96,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reforms'] });
       clearDraftReform();
-      nav.push(`/${draft.countryId}/library`);
+      nav.push(`/${draft.countryId}/reforms?filter=yours`);
     },
   });
 

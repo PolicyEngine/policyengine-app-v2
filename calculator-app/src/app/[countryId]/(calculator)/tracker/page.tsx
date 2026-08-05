@@ -1,12 +1,20 @@
 "use client";
 
-import TrackerPage from "@/pages/flagship/Tracker.page";
-import FlagshipGate from "../FlagshipGate";
+import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function TrackerRoute() {
-  return (
-    <FlagshipGate>
-      <TrackerPage />
-    </FlagshipGate>
-  );
+/** Tracker merged into Reforms; preserve deep-link queries (?bill=…). */
+export default function TrackerRoute({
+  params,
+}: {
+  params: Promise<{ countryId: string }>;
+}) {
+  const { countryId } = use(params);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(`/${countryId}/reforms${window.location.search}`);
+  }, [router, countryId]);
+
+  return null;
 }

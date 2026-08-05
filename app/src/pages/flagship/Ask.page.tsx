@@ -276,9 +276,9 @@ export default function AskPage() {
             <div style={{ flex: '1 1 220px', minWidth: 200 }}>
               <SectionTile
                 icon={IconGavel}
-                title="Tracker"
+                title="In Congress"
                 detail="Real bills scored with the model"
-                onClick={() => nav.push(`/${countryId}/tracker`)}
+                onClick={() => nav.push(`/${countryId}/reforms?filter=bills`)}
               />
             </div>
             <div style={{ flex: '1 1 220px', minWidth: 200 }}>
@@ -292,9 +292,9 @@ export default function AskPage() {
             <div style={{ flex: '1 1 220px', minWidth: 200 }}>
               <SectionTile
                 icon={IconFolder}
-                title="Library"
+                title="Your reforms"
                 detail="Your saved reforms"
-                onClick={() => nav.push(`/${countryId}/library`)}
+                onClick={() => nav.push(`/${countryId}/reforms?filter=yours`)}
               />
             </div>
           </div>
