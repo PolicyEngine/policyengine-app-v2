@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@test-utils';
+import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import FlagshipSidebar from '@/components/flagship/FlagshipSidebar';
 
@@ -26,10 +26,12 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
 
 function renderSidebar() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  return renderWithCountry(
     <QueryClientProvider client={queryClient}>
       <FlagshipSidebar />
-    </QueryClientProvider>
+    </QueryClientProvider>,
+    'us',
+    '/us/ask'
   );
 }
 

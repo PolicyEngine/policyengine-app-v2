@@ -6,7 +6,6 @@ import {
   IconMessageCircle,
 } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
 import { getReformStore } from '@/api/reformStore';
 import {
   DropdownMenu,
@@ -17,6 +16,7 @@ import {
   Text,
 } from '@/components/ui';
 import { MOCK_USER_ID, WEBSITE_URL } from '@/constants';
+import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -38,7 +38,7 @@ const NAV_ITEMS = [
 export default function FlagshipSidebar() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
-  const location = useLocation();
+  const location = useAppLocation();
 
   const { data: reforms } = useQuery({
     queryKey: ['reforms', MOCK_USER_ID, countryId],
