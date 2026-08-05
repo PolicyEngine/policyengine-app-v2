@@ -1,7 +1,6 @@
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDraftReform } from '@/libs/draftReform';
-import BackToHome from './BackToHome';
 import ReformPreviewCard from './ReformPreviewCard';
 
 interface WorkspaceLayoutProps {
@@ -23,7 +22,6 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
   if (!hasDraft) {
     return (
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-        <BackToHome />
         <div style={{ maxWidth: 760, margin: `${spacing.md} auto 0` }}>{children}</div>
       </div>
     );
@@ -31,7 +29,6 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
 
   return (
     <div style={{ width: '100%' }}>
-      <BackToHome />
       <div
         style={{
           display: 'flex',

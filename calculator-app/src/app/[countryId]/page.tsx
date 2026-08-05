@@ -18,7 +18,7 @@ export default function CountryIndexRoute({
   const router = useRouter();
 
   useEffect(() => {
-    const landing = isFlagshipShellEnabled() ? "home" : "reports";
+    const landing = isFlagshipShellEnabled() ? "ask" : "reports";
     router.replace(`/${countryId}/${landing}`);
   }, [router, countryId]);
 

@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import { IconPlus } from '@tabler/icons-react';
+import { IconChevronRight, IconPlus } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { getReformStore } from '@/api/reformStore';
 import ChatComposer from '@/components/flagship/ChatComposer';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Stack, Text, Title } from '@/components/ui';
+import { MOCK_USER_ID } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
+import { SAMPLE_BILLS } from '@/data/flagship/sampleBills';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
@@ -47,10 +52,18 @@ interface AskTurn {
 export default function AskPage() {
   const [input, setInput] = useState('');
   const [turns, setTurns] = useState<AskTurn[]>([]);
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const draft = useDraftReform();
   const index = useSelector(selectParameterSearchIndex);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+
+  const { data: reforms } = useQuery({
+    queryKey: ['reforms', MOCK_USER_ID, countryId],
+    queryFn: () => getReformStore().findByUser(MOCK_USER_ID, countryId),
+  });
+  const recentReforms = (reforms ?? []).slice(0, 3);
+  const bills = SAMPLE_BILLS.filter((bill) => bill.countryId === countryId).slice(0, 3);
 
   const examples = EXAMPLES[countryId] ?? EXAMPLES.default;
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
@@ -199,6 +212,119 @@ export default function AskPage() {
               </button>
             ))}
           </div>
+
+          {(bills.length > 0 || recentReforms.length > 0) && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: spacing['2xl'],
+                justifyContent: 'center',
+                marginTop: spacing.lg,
+              }}
+            >
+              {bills.length > 0 && (
+                <Stack style={{ gap: spacing.xs, flex: '0 1 300px', minWidth: 240 }}>
+                  <Text
+                    style={{
+                      fontSize: typography.fontSize.xs,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      color: colors.text.secondary,
+                      fontWeight: typography.fontWeight.semibold,
+                    }}
+                  >
+                    In Congress
+                  </Text>
+                  {bills.map((bill) => (
+                    <button
+                      key={bill.id}
+                      type="button"
+                      onClick={() => nav.push(`/${countryId}/tracker`)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.xs,
+                        border: 'none',
+                        background: 'none',
+                        padding: `${spacing.xs} 0`,
+                        cursor: 'pointer',
+                        fontSize: typography.fontSize.sm,
+                        fontFamily: typography.fontFamily.primary,
+                        color: colors.text.primary,
+                        textAlign: 'left',
+                      }}
+                    >
+                      <IconChevronRight
+                        size={13}
+                        color={colors.text.secondary}
+                        style={{ flexShrink: 0 }}
+                      />
+                      <span
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {bill.title}
+                      </span>
+                    </button>
+                  ))}
+                </Stack>
+              )}
+              {recentReforms.length > 0 && (
+                <Stack style={{ gap: spacing.xs, flex: '0 1 300px', minWidth: 240 }}>
+                  <Text
+                    style={{
+                      fontSize: typography.fontSize.xs,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      color: colors.text.secondary,
+                      fontWeight: typography.fontWeight.semibold,
+                    }}
+                  >
+                    Your reforms
+                  </Text>
+                  {recentReforms.map((reform) => (
+                    <button
+                      key={reform.id}
+                      type="button"
+                      onClick={() => nav.push(`/${countryId}/library`)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.xs,
+                        border: 'none',
+                        background: 'none',
+                        padding: `${spacing.xs} 0`,
+                        cursor: 'pointer',
+                        fontSize: typography.fontSize.sm,
+                        fontFamily: typography.fontFamily.primary,
+                        color: colors.text.primary,
+                        textAlign: 'left',
+                      }}
+                    >
+                      <IconChevronRight
+                        size={13}
+                        color={colors.text.secondary}
+                        style={{ flexShrink: 0 }}
+                      />
+                      <span
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {reform.label || 'Untitled reform'}
+                      </span>
+                    </button>
+                  ))}
+                </Stack>
+              )}
+            </div>
+          )}
         </Stack>
       </WorkspaceLayout>
     );

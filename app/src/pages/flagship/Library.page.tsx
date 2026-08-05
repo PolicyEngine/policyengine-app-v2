@@ -14,7 +14,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
-import BackToHome from '@/components/flagship/BackToHome';
 import ValueInput from '@/components/flagship/ValueInput';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { FOREVER, MOCK_USER_ID } from '@/constants';
@@ -132,7 +131,6 @@ export default function LibraryPage() {
 
   return (
     <Stack style={{ maxWidth: 840, margin: '0 auto', gap: spacing.xl }}>
-      <BackToHome />
       <Stack
         style={{
           flexDirection: 'row',

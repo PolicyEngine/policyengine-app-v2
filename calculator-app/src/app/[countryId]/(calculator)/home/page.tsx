@@ -1,12 +1,20 @@
 "use client";
 
-import FlagshipHomePage from "@/pages/flagship/Home.page";
-import FlagshipGate from "../FlagshipGate";
+import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function HomeRoute() {
-  return (
-    <FlagshipGate>
-      <FlagshipHomePage />
-    </FlagshipGate>
-  );
+/** The Home launcher is gone — Ask is the landing view. */
+export default function HomeRoute({
+  params,
+}: {
+  params: Promise<{ countryId: string }>;
+}) {
+  const { countryId } = use(params);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(`/${countryId}/ask`);
+  }, [router, countryId]);
+
+  return null;
 }

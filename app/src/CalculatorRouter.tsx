@@ -8,7 +8,6 @@ import StandardLayout from './components/StandardLayout';
 import { isFlagshipShellEnabled } from './libs/featureFlags';
 import AskPage from './pages/flagship/Ask.page';
 import BuildPage from './pages/flagship/Build.page';
-import FlagshipHomePage from './pages/flagship/Home.page';
 import LibraryPage from './pages/flagship/Library.page';
 import TrackerPage from './pages/flagship/Tracker.page';
 import NotFoundPage from './pages/NotFound.page';
@@ -119,12 +118,12 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <Navigate to={isFlagshipShellEnabled() ? 'home' : 'reports'} replace />,
+                  element: <Navigate to={isFlagshipShellEnabled() ? 'ask' : 'reports'} replace />,
                 },
                 // Flagship shell routes (feature-flagged; see libs/featureFlags.ts)
                 ...(isFlagshipShellEnabled()
                   ? [
-                      { path: 'home', element: <FlagshipHomePage /> },
+                      { path: 'home', element: <Navigate to="../ask" replace /> },
                       { path: 'ask', element: <AskPage /> },
                       { path: 'tracker', element: <TrackerPage /> },
                       { path: 'build', element: <BuildPage /> },
