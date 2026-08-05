@@ -129,7 +129,7 @@ describe('ReformPreviewCard', () => {
     expect(screen.getByText('1 provision')).toBeInTheDocument();
     expect(screen.getByText('Population')).toBeInTheDocument();
     expect(screen.getByText('Simulation')).toBeInTheDocument();
-    expect(screen.getByText(/not run yet/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run report/i })).toBeInTheDocument();
   });
 
   test('given the population section then nationwide is active and household waits on the run bridge', () => {

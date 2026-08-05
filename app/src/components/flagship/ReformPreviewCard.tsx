@@ -1,10 +1,11 @@
-import { IconArrowRight, IconTrash, IconX } from '@tabler/icons-react';
+import { IconArrowRight, IconChartBar, IconTrash, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Stack, Text } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
+import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import {
   clearDraftReform,
   DraftReform,
@@ -77,6 +78,7 @@ function SectionHeader({ label, detail }: { label: string; detail?: string }) {
 export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
+  const runReport = useRunFlagshipReport();
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -275,15 +277,16 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
       </Stack>
 
       <SectionHeader label="Simulation" />
-      <Text
-        style={{
-          fontSize: typography.fontSize.xs,
-          color: colors.text.secondary,
-          padding: `${spacing.xs} ${spacing.lg} ${spacing.sm}`,
-        }}
-      >
-        Baseline: current law · {new Date().getFullYear()} — not run yet
-      </Text>
+      <Stack style={{ gap: spacing.xs, padding: `${spacing.xs} ${spacing.lg} ${spacing.sm}` }}>
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          Baseline: current law · {new Date().getFullYear()}
+        </Text>
+        {runReport.error && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
+            {runReport.error}
+          </Text>
+        )}
+      </Stack>
 
       <Stack style={{ gap: spacing.md, padding: spacing.lg, paddingTop: spacing.sm }}>
         {saveMutation.isError && (
@@ -293,6 +296,20 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
         )}
         <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
           <Button
+            onClick={() =>
+              runReport.run(
+                draft.label || 'Draft reform',
+                SOURCE_NOTES[draft.source] ?? 'Draft reform',
+                draft.provisions
+              )
+            }
+            disabled={draft.provisions.length === 0 || runReport.isRunning}
+          >
+            <IconChartBar size={16} />
+            {runReport.isRunning ? 'Starting report…' : 'Run report'}
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => saveMutation.mutate()}
             disabled={draft.provisions.length === 0 || saveMutation.isPending}
           >

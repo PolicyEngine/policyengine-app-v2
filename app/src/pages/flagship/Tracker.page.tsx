@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  IconChartBar,
   IconChevronDown,
   IconChevronRight,
   IconExternalLink,
@@ -15,6 +16,7 @@ import { useAppLocation } from '@/contexts/LocationContext';
 import { SAMPLE_BILLS, SampleBill } from '@/data/flagship/sampleBills';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { addDraftProvision, clearDraftReform, setDraftLabel } from '@/libs/draftReform';
 import { RootState } from '@/store';
 import {
@@ -77,6 +79,22 @@ export default function TrackerPage() {
 
   const resolveBreadcrumb = (path: string, fallback: string) =>
     parameters?.[path] ? formatLabelParts(getHierarchicalLabels(path, parameters)) : fallback;
+
+  const runReport = useRunFlagshipReport();
+
+  const billSourceNote = (bill: SampleBill) => `${bill.jurisdiction} · ${bill.status}`;
+
+  const toRunProvisions = (bill: SampleBill) =>
+    bill.provisions.map((provision) => {
+      const metadata = parameters?.[provision.path];
+      return {
+        path: provision.path,
+        breadcrumb: resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb),
+        unit: metadata?.unit ?? null,
+        baselineValue: getCurrentValue(metadata?.values),
+        value: provision.proposedValue,
+      };
+    });
 
   const openAsDraft = (bill: SampleBill) => {
     clearDraftReform();
@@ -372,10 +390,34 @@ export default function TrackerPage() {
                       })}
                     </div>
                     <div>
-                      <Button size="sm" onClick={() => openAsDraft(bill)}>
-                        <IconPencil size={14} />
-                        Open as draft reform
-                      </Button>
+                      <Stack
+                        style={{
+                          flexDirection: 'row',
+                          gap: spacing.sm,
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            runReport.run(bill.title, billSourceNote(bill), toRunProvisions(bill))
+                          }
+                          disabled={runReport.isRunning}
+                        >
+                          <IconChartBar size={14} />
+                          {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => openAsDraft(bill)}>
+                          <IconPencil size={14} />
+                          Open as draft reform
+                        </Button>
+                        {runReport.error && (
+                          <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
+                            {runReport.error}
+                          </Text>
+                        )}
+                      </Stack>
                     </div>
                   </Stack>
                 )}

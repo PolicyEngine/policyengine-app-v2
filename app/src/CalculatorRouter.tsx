@@ -9,6 +9,7 @@ import { isFlagshipShellEnabled } from './libs/featureFlags';
 import AskPage from './pages/flagship/Ask.page';
 import BuildPage from './pages/flagship/Build.page';
 import LibraryPage from './pages/flagship/Library.page';
+import FlagshipReportPage from './pages/flagship/Report.page';
 import TrackerPage from './pages/flagship/Tracker.page';
 import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
@@ -128,6 +129,7 @@ const router = createBrowserRouter(
                       { path: 'tracker', element: <TrackerPage /> },
                       { path: 'build', element: <BuildPage /> },
                       { path: 'library', element: <LibraryPage /> },
+                      { path: 'report/:userReportId', element: <FlagshipReportPage /> },
                     ]
                   : []),
                 {
