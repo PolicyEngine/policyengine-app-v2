@@ -51,68 +51,88 @@ function renderAsk() {
   );
 }
 
+async function ask(user: ReturnType<typeof userEvent.setup>, question: string) {
+  await user.type(screen.getByRole('textbox', { name: /policy question/i }), question);
+  await user.click(screen.getByRole('button', { name: /send/i }));
+}
+
 describe('AskPage', () => {
   beforeEach(() => {
     clearDraftReform();
   });
 
-  test('given an empty input then examples show and no suggestions render', () => {
+  test('given no conversation then the centered prompt and example chips show', () => {
     renderAsk();
 
-    expect(screen.getByText(/try asking/i)).toBeInTheDocument();
-    expect(screen.queryByText(/matching parameters/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/what do you want to change/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Raise the child tax credit to $3,600' })
+    ).toBeInTheDocument();
   });
 
-  test('given typing then matching parameters appear live, without a submit step', async () => {
+  test('given a question is sent then it renders as a bubble with matches as the reply', async () => {
     const user = userEvent.setup();
     renderAsk();
 
-    await user.type(
-      screen.getByRole('textbox', { name: /policy question/i }),
-      'child tax credit amount'
-    );
+    await ask(user, 'child tax credit amount');
 
-    expect(await screen.findByText(/matching parameters/i)).toBeInTheDocument();
+    expect(screen.getByText('child tax credit amount')).toBeInTheDocument();
+    expect(screen.getByText(/here's what matched/i)).toBeInTheDocument();
     expect(screen.getByText('IRS → Credits → Child tax credit → Amount')).toBeInTheDocument();
   });
 
-  test('given a suggestion is clicked then it joins the draft with the value from the question', async () => {
+  test('given a match is clicked then it joins the draft with the value from that question', async () => {
     const user = userEvent.setup();
     renderAsk();
 
-    await user.type(
-      screen.getByRole('textbox', { name: /policy question/i }),
-      'raise the child tax credit to $3,600'
-    );
-    await user.click(await screen.findByText('IRS → Credits → Child tax credit → Amount'));
+    await ask(user, 'raise the child tax credit to $3,600');
+    await user.click(screen.getByText('IRS → Credits → Child tax credit → Amount'));
 
     const draft = getDraftReform();
     expect(draft?.provisions[0].path).toBe('gov.irs.credits.ctc.amount');
     expect(draft?.provisions[0].value).toBe(3600);
     expect(draft?.source).toBe('chat');
-    expect(await screen.findByText(/here's your draft reform/i)).toBeInTheDocument();
   });
 
   test('given a question without an amount then no value is invented', async () => {
     const user = userEvent.setup();
     renderAsk();
 
-    await user.type(screen.getByRole('textbox', { name: /policy question/i }), 'child tax credit');
-    await user.click(await screen.findByText('IRS → Credits → Child tax credit → Amount'));
+    await ask(user, 'child tax credit');
+    await user.click(screen.getByText('IRS → Credits → Child tax credit → Amount'));
 
     const provision = getDraftReform()?.provisions[0];
     expect(provision?.value).toBe(provision?.baselineValue);
   });
 
-  test('given a query with no matches then an honest empty state shows', async () => {
+  test('given a question with no matches then an honest empty reply shows', async () => {
     const user = userEvent.setup();
     renderAsk();
 
-    await user.type(
-      screen.getByRole('textbox', { name: /policy question/i }),
-      'zzzz quantum entanglement subsidy'
-    );
+    await ask(user, 'zzzz quantum entanglement subsidy');
 
-    expect(await screen.findByText(/no parameters matched/i)).toBeInTheDocument();
+    expect(screen.getByText(/no parameters matched/i)).toBeInTheDocument();
+  });
+
+  test('given an example chip is clicked then it sends as a question immediately', async () => {
+    const user = userEvent.setup();
+    renderAsk();
+
+    await user.click(screen.getByRole('button', { name: 'Raise the child tax credit to $3,600' }));
+
+    expect(screen.getByText('Raise the child tax credit to $3,600')).toBeInTheDocument();
+    expect(screen.getByText(/here's what matched/i)).toBeInTheDocument();
+  });
+
+  test('given several questions then earlier turns stay in the transcript', async () => {
+    const user = userEvent.setup();
+    renderAsk();
+
+    await ask(user, 'child tax credit');
+    await ask(user, 'zzzz nothing here');
+
+    expect(screen.getByText('child tax credit')).toBeInTheDocument();
+    expect(screen.getByText('zzzz nothing here')).toBeInTheDocument();
+    expect(screen.getByText(/no parameters matched/i)).toBeInTheDocument();
   });
 });
