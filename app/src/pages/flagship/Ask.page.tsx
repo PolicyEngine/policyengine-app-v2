@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { IconChevronRight, IconPlus } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
+import {
+  IconAdjustments,
+  IconChevronRight,
+  IconFolder,
+  IconGavel,
+  IconPlus,
+} from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { getReformStore } from '@/api/reformStore';
 import ChatComposer from '@/components/flagship/ChatComposer';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Stack, Text, Title } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
-import { SAMPLE_BILLS } from '@/data/flagship/sampleBills';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
@@ -40,12 +42,14 @@ interface AskTurn {
   matches: ParameterSearchEntry[];
 }
 
-/** Option-style card for the blank-state starter lists. */
-function StarterCard({
+/** Option-style tile linking a blank-state entry to its section. */
+function SectionTile({
+  icon: Icon,
   title,
   detail,
   onClick,
 }: {
+  icon: React.ComponentType<{ size: number; color?: string }>;
   title: string;
   detail: string;
   onClick: () => void;
@@ -77,6 +81,7 @@ function StarterCard({
         event.currentTarget.style.boxShadow = 'none';
       }}
     >
+      <Icon size={18} color={colors.text.secondary} />
       <Stack style={{ flex: 1, gap: 2, minWidth: 0 }}>
         <Text
           style={{
@@ -116,13 +121,6 @@ export default function AskPage() {
   const draft = useDraftReform();
   const index = useSelector(selectParameterSearchIndex);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-
-  const { data: reforms } = useQuery({
-    queryKey: ['reforms', MOCK_USER_ID, countryId],
-    queryFn: () => getReformStore().findByUser(MOCK_USER_ID, countryId),
-  });
-  const recentReforms = (reforms ?? []).slice(0, 3);
-  const bills = SAMPLE_BILLS.filter((bill) => bill.countryId === countryId).slice(0, 3);
 
   const examples = EXAMPLES[countryId] ?? EXAMPLES.default;
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
@@ -217,119 +215,89 @@ export default function AskPage() {
   if (!hasTurns) {
     return (
       <WorkspaceLayout>
-        <Stack
-          style={{
-            gap: spacing.xl,
-            justifyContent: 'center',
-            minHeight: '55vh',
-            paddingBottom: spacing['2xl'],
-          }}
-        >
-          <Title order={1} style={{ textAlign: 'center', fontWeight: 500 }}>
-            What do you want to change?
-          </Title>
-          <div style={{ position: 'relative' }}>
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                inset: '-40px -60px',
-                background: `radial-gradient(ellipse at center, ${colors.primary[100]}, transparent 70%)`,
-                filter: 'blur(20px)',
-                opacity: 0.6,
-                pointerEvents: 'none',
-              }}
-            />
-            <div style={{ position: 'relative' }}>{composer}</div>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: spacing.sm,
-              justifyContent: 'center',
-            }}
-          >
-            {examples.map((example) => (
-              <button
-                key={example}
-                type="button"
-                onClick={() => send(example)}
+        <Stack style={{ minHeight: 'calc(100vh - 128px)', gap: 0 }}>
+          <Stack style={{ flex: 1, justifyContent: 'center', gap: spacing.xl }}>
+            <Title order={1} style={{ textAlign: 'center', fontWeight: 500 }}>
+              What do you want to change?
+            </Title>
+            <div style={{ position: 'relative' }}>
+              <div
+                aria-hidden="true"
                 style={{
-                  fontSize: typography.fontSize.xs,
-                  color: colors.text.secondary,
-                  background: colors.background.primary,
-                  border: `1px solid ${colors.border.light}`,
-                  borderRadius: 999,
-                  padding: `${spacing.xs} ${spacing.md}`,
-                  cursor: 'pointer',
-                  fontFamily: typography.fontFamily.primary,
-                  lineHeight: 1.4,
+                  position: 'absolute',
+                  inset: '-40px -60px',
+                  background: `radial-gradient(ellipse at center, ${colors.primary[100]}, transparent 70%)`,
+                  filter: 'blur(20px)',
+                  opacity: 0.6,
+                  pointerEvents: 'none',
                 }}
-              >
-                {example}
-              </button>
-            ))}
-          </div>
-
-          {(bills.length > 0 || recentReforms.length > 0) && (
+              />
+              <div style={{ position: 'relative' }}>{composer}</div>
+            </div>
             <div
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: spacing['2xl'],
+                gap: spacing.sm,
                 justifyContent: 'center',
-                marginTop: spacing.lg,
               }}
             >
-              {bills.length > 0 && (
-                <Stack style={{ gap: spacing.sm, flex: '0 1 340px', minWidth: 260 }}>
-                  <Text
-                    style={{
-                      fontSize: typography.fontSize.xs,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                      color: colors.text.secondary,
-                      fontWeight: typography.fontWeight.semibold,
-                    }}
-                  >
-                    In Congress
-                  </Text>
-                  {bills.map((bill) => (
-                    <StarterCard
-                      key={bill.id}
-                      title={bill.title}
-                      detail={`${bill.jurisdiction} · ${bill.status}`}
-                      onClick={() => nav.push(`/${countryId}/tracker?bill=${bill.id}`)}
-                    />
-                  ))}
-                </Stack>
-              )}
-              {recentReforms.length > 0 && (
-                <Stack style={{ gap: spacing.sm, flex: '0 1 340px', minWidth: 260 }}>
-                  <Text
-                    style={{
-                      fontSize: typography.fontSize.xs,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                      color: colors.text.secondary,
-                      fontWeight: typography.fontWeight.semibold,
-                    }}
-                  >
-                    Your reforms
-                  </Text>
-                  {recentReforms.map((reform) => (
-                    <StarterCard
-                      key={reform.id}
-                      title={reform.label || 'Untitled reform'}
-                      detail={`${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`}
-                      onClick={() => nav.push(`/${countryId}/library`)}
-                    />
-                  ))}
-                </Stack>
-              )}
+              {examples.map((example) => (
+                <button
+                  key={example}
+                  type="button"
+                  onClick={() => send(example)}
+                  style={{
+                    fontSize: typography.fontSize.xs,
+                    color: colors.text.secondary,
+                    background: colors.background.primary,
+                    border: `1px solid ${colors.border.light}`,
+                    borderRadius: 999,
+                    padding: `${spacing.xs} ${spacing.md}`,
+                    cursor: 'pointer',
+                    fontFamily: typography.fontFamily.primary,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {example}
+                </button>
+              ))}
             </div>
-          )}
+          </Stack>
+
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: spacing.md,
+              paddingBottom: spacing.xl,
+            }}
+          >
+            <div style={{ flex: '1 1 220px', minWidth: 200 }}>
+              <SectionTile
+                icon={IconGavel}
+                title="Tracker"
+                detail="Real bills scored with the model"
+                onClick={() => nav.push(`/${countryId}/tracker`)}
+              />
+            </div>
+            <div style={{ flex: '1 1 220px', minWidth: 200 }}>
+              <SectionTile
+                icon={IconAdjustments}
+                title="Build"
+                detail="Search or browse every parameter"
+                onClick={() => nav.push(`/${countryId}/build`)}
+              />
+            </div>
+            <div style={{ flex: '1 1 220px', minWidth: 200 }}>
+              <SectionTile
+                icon={IconFolder}
+                title="Library"
+                detail="Your saved reforms"
+                onClick={() => nav.push(`/${countryId}/library`)}
+              />
+            </div>
+          </div>
         </Stack>
       </WorkspaceLayout>
     );
