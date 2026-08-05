@@ -11,6 +11,7 @@ import {
   draftToReform,
   removeDraftProvision,
   setDraftLabel,
+  setDraftPopulation,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
@@ -34,10 +35,44 @@ function ProvisionValueInput({ path, value }: { path: string; value: any }) {
   );
 }
 
+/** Shared section header so every component of the draft reads the same way. */
+function SectionHeader({ label, detail }: { label: string; detail?: string }) {
+  return (
+    <Stack
+      style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        gap: spacing.sm,
+        padding: `${spacing.sm} ${spacing.lg} 0`,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: typography.fontSize.xs,
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          color: colors.text.secondary,
+          fontWeight: typography.fontWeight.semibold,
+        }}
+      >
+        {label}
+      </Text>
+      {detail && (
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          {detail}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
 /**
- * The trust layer of the flagship shell: every provision the draft
- * reform will simulate, spelled out with baseline → new value, editable
- * before anything is saved or run.
+ * The running overview of the draft — the trust layer of the flagship
+ * shell. One section per component of the analysis (reform, population,
+ * simulation), each spelled out and editable before anything is saved
+ * or run. New components add sections here so every page displays the
+ * construction identically.
  */
 export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
@@ -96,10 +131,14 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
           {draft.editingReformId ? 'Editing reform' : "Here's your draft reform"}
         </Text>
         <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          {SOURCE_NOTES[draft.source]} · baseline: current law
+          {SOURCE_NOTES[draft.source]}
         </Text>
       </Stack>
 
+      <SectionHeader
+        label="Reform"
+        detail={`${draft.provisions.length} provision${draft.provisions.length === 1 ? '' : 's'}`}
+      />
       <Stack style={{ gap: 0 }}>
         {draft.provisions.map((provision) => (
           <Stack
@@ -167,7 +206,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
         ))}
       </Stack>
 
-      <Stack style={{ gap: spacing.md, padding: spacing.lg }}>
+      <Stack style={{ gap: spacing.sm, padding: `${spacing.sm} ${spacing.lg}` }}>
         <input
           value={draft.label}
           onChange={(event) => setDraftLabel(event.target.value)}
@@ -186,6 +225,67 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             Values match current law so far — edit a value above to make this a reform.
           </Text>
         )}
+      </Stack>
+
+      <SectionHeader label="Population" />
+      <Stack
+        style={{
+          flexDirection: 'row',
+          gap: spacing.xs,
+          padding: `${spacing.xs} ${spacing.lg} ${spacing.sm}`,
+        }}
+        role="group"
+        aria-label="Population scope"
+      >
+        {(
+          [
+            { scope: 'national', label: 'Nationwide', enabled: true },
+            { scope: 'household', label: 'A household', enabled: false },
+          ] as const
+        ).map(({ scope, label, enabled }) => {
+          const active = draft.population.scope === scope;
+          return (
+            <button
+              key={scope}
+              type="button"
+              disabled={!enabled}
+              aria-pressed={active}
+              title={enabled ? undefined : 'Household analysis arrives with the run bridge'}
+              onClick={() => setDraftPopulation({ scope })}
+              style={{
+                padding: `${spacing.xs} ${spacing.md}`,
+                borderRadius: 999,
+                border: `1px solid ${active ? colors.primary[500] : colors.border.light}`,
+                background: active ? colors.primary[50] : colors.background.primary,
+                color: enabled
+                  ? active
+                    ? colors.primary[700]
+                    : colors.text.primary
+                  : colors.gray[400],
+                fontSize: typography.fontSize.xs,
+                fontFamily: typography.fontFamily.primary,
+                fontWeight: active ? typography.fontWeight.medium : typography.fontWeight.normal,
+                cursor: enabled ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </Stack>
+
+      <SectionHeader label="Simulation" />
+      <Text
+        style={{
+          fontSize: typography.fontSize.xs,
+          color: colors.text.secondary,
+          padding: `${spacing.xs} ${spacing.lg} ${spacing.sm}`,
+        }}
+      >
+        Baseline: current law · {new Date().getFullYear()} — not run yet
+      </Text>
+
+      <Stack style={{ gap: spacing.md, padding: spacing.lg, paddingTop: spacing.sm }}>
         {saveMutation.isError && (
           <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
             Could not save the reform. Try again.

@@ -21,10 +21,20 @@ export interface DraftProvision {
   value: any;
 }
 
+/**
+ * The population component of the draft — who the reform applies to.
+ * National (full microsimulation population) is the default; household
+ * unlocks with the run bridge.
+ */
+export interface DraftPopulation {
+  scope: 'national' | 'household';
+}
+
 export interface DraftReform {
   countryId: CountryId;
   label: string;
   provisions: DraftProvision[];
+  population: DraftPopulation;
   source: ReformSource;
   sourceRef?: string;
   /** Set when editing an existing saved reform; save updates instead of creating */
@@ -41,7 +51,11 @@ function readDraft(): DraftReform | null {
       return null;
     }
     const parsed = JSON.parse(stored);
-    return parsed && Array.isArray(parsed.provisions) ? parsed : null;
+    if (!parsed || !Array.isArray(parsed.provisions)) {
+      return null;
+    }
+    // Drafts saved before the population component existed default to national.
+    return { population: { scope: 'national' }, ...parsed };
   } catch {
     return null;
   }
@@ -103,7 +117,14 @@ export function startDraftReform(
   source: ReformSource,
   sourceRef?: string
 ): DraftReform {
-  const draft: DraftReform = { countryId, label: '', provisions: [], source, sourceRef };
+  const draft: DraftReform = {
+    countryId,
+    label: '',
+    provisions: [],
+    population: { scope: 'national' },
+    source,
+    sourceRef,
+  };
   writeDraft(draft);
   return draft;
 }
@@ -159,6 +180,14 @@ export function setDraftLabel(label: string): void {
   writeDraft({ ...draft, label });
 }
 
+export function setDraftPopulation(population: DraftPopulation): void {
+  const draft = getSnapshot();
+  if (!draft) {
+    return;
+  }
+  writeDraft({ ...draft, population });
+}
+
 /** Loads a saved reform into the composer for editing. */
 export function loadReformIntoDraft(
   reform: Reform,
@@ -167,6 +196,7 @@ export function loadReformIntoDraft(
   writeDraft({
     countryId: reform.countryId,
     label: reform.label ?? '',
+    population: { scope: 'national' },
     provisions: reform.parameters.map((parameter) => {
       const { breadcrumb, unit, baselineValue } = resolve(parameter.name);
       return {

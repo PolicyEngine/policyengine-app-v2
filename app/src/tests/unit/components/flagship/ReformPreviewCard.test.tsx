@@ -121,4 +121,25 @@ describe('ReformPreviewCard', () => {
     expect(getDraftReform()).toBeNull();
     expect(mockCreate).not.toHaveBeenCalled();
   });
+
+  test('given a draft then the overview shows one section per component', () => {
+    renderCard();
+
+    expect(screen.getByText('Reform')).toBeInTheDocument();
+    expect(screen.getByText('1 provision')).toBeInTheDocument();
+    expect(screen.getByText('Population')).toBeInTheDocument();
+    expect(screen.getByText('Simulation')).toBeInTheDocument();
+    expect(screen.getByText(/not run yet/i)).toBeInTheDocument();
+  });
+
+  test('given the population section then nationwide is active and household waits on the run bridge', () => {
+    renderCard();
+
+    expect(screen.getByRole('button', { name: 'Nationwide' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'A household' })).toBeDisabled();
+    expect(getDraftReform()?.population).toEqual({ scope: 'national' });
+  });
 });
