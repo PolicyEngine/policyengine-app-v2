@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
+import { useAppLocation } from '@/contexts/LocationContext';
 import { SAMPLE_BILLS, SampleBill } from '@/data/flagship/sampleBills';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -42,10 +43,15 @@ export default function TrackerPage() {
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
 
+  const appLocation = useAppLocation();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [jurisdictionFilter, setJurisdictionFilter] = useState('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Deep links (?bill=<id>, e.g. from the Ask starter cards) open with
+  // that bill's full report expanded.
+  const [expandedId, setExpandedId] = useState<string | null>(() =>
+    new URLSearchParams(appLocation.search).get('bill')
+  );
 
   const bills = useMemo(
     () => SAMPLE_BILLS.filter((bill) => bill.countryId === countryId),

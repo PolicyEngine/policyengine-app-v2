@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@test-utils';
+import { render, renderWithCountry, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import TrackerPage from '@/pages/flagship/Tracker.page';
@@ -110,5 +110,19 @@ describe('TrackerPage', () => {
 
     const link = screen.getByRole('link', { name: /full tracker/i });
     expect(link).toHaveAttribute('href', expect.stringContaining('/us/bill-tracker'));
+  });
+
+  test('given a ?bill deep link then that bill opens with its full report expanded', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithCountry(
+      <QueryClientProvider client={queryClient}>
+        <TrackerPage />
+      </QueryClientProvider>,
+      'us',
+      '/us/tracker?bill=us-ctc-expansion'
+    );
+
+    expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeInTheDocument();
+    expect(screen.getByText(/raises the base child tax credit/i)).toBeInTheDocument();
   });
 });

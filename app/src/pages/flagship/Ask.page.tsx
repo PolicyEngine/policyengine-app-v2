@@ -40,6 +40,65 @@ interface AskTurn {
   matches: ParameterSearchEntry[];
 }
 
+/** Option-style card for the blank-state starter lists. */
+function StarterCard({
+  title,
+  detail,
+  onClick,
+}: {
+  title: string;
+  detail: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: spacing.md,
+        padding: `${spacing.sm} ${spacing.md}`,
+        border: `1px solid ${colors.border.light}`,
+        borderRadius: 10,
+        background: colors.background.primary,
+        cursor: 'pointer',
+        textAlign: 'left',
+        fontFamily: typography.fontFamily.primary,
+        width: '100%',
+        transition: 'border-color 120ms, box-shadow 120ms',
+      }}
+      onMouseEnter={(event) => {
+        event.currentTarget.style.borderColor = colors.primary[500];
+        event.currentTarget.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.06)';
+      }}
+      onMouseLeave={(event) => {
+        event.currentTarget.style.borderColor = colors.border.light;
+        event.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      <Stack style={{ flex: 1, gap: 2, minWidth: 0 }}>
+        <Text
+          style={{
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.text.primary,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {title}
+        </Text>
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          {detail}
+        </Text>
+      </Stack>
+      <IconChevronRight size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
+    </button>
+  );
+}
+
 /**
  * Ask — the natural-language entry point of the flagship shell, styled
  * after the UK chat interface: a centered pill composer with a
@@ -224,7 +283,7 @@ export default function AskPage() {
               }}
             >
               {bills.length > 0 && (
-                <Stack style={{ gap: spacing.xs, flex: '0 1 300px', minWidth: 240 }}>
+                <Stack style={{ gap: spacing.sm, flex: '0 1 340px', minWidth: 260 }}>
                   <Text
                     style={{
                       fontSize: typography.fontSize.xs,
@@ -237,44 +296,17 @@ export default function AskPage() {
                     In Congress
                   </Text>
                   {bills.map((bill) => (
-                    <button
+                    <StarterCard
                       key={bill.id}
-                      type="button"
-                      onClick={() => nav.push(`/${countryId}/tracker`)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: spacing.xs,
-                        border: 'none',
-                        background: 'none',
-                        padding: `${spacing.xs} 0`,
-                        cursor: 'pointer',
-                        fontSize: typography.fontSize.sm,
-                        fontFamily: typography.fontFamily.primary,
-                        color: colors.text.primary,
-                        textAlign: 'left',
-                      }}
-                    >
-                      <IconChevronRight
-                        size={13}
-                        color={colors.text.secondary}
-                        style={{ flexShrink: 0 }}
-                      />
-                      <span
-                        style={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {bill.title}
-                      </span>
-                    </button>
+                      title={bill.title}
+                      detail={`${bill.jurisdiction} · ${bill.status}`}
+                      onClick={() => nav.push(`/${countryId}/tracker?bill=${bill.id}`)}
+                    />
                   ))}
                 </Stack>
               )}
               {recentReforms.length > 0 && (
-                <Stack style={{ gap: spacing.xs, flex: '0 1 300px', minWidth: 240 }}>
+                <Stack style={{ gap: spacing.sm, flex: '0 1 340px', minWidth: 260 }}>
                   <Text
                     style={{
                       fontSize: typography.fontSize.xs,
@@ -287,39 +319,12 @@ export default function AskPage() {
                     Your reforms
                   </Text>
                   {recentReforms.map((reform) => (
-                    <button
+                    <StarterCard
                       key={reform.id}
-                      type="button"
+                      title={reform.label || 'Untitled reform'}
+                      detail={`${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`}
                       onClick={() => nav.push(`/${countryId}/library`)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: spacing.xs,
-                        border: 'none',
-                        background: 'none',
-                        padding: `${spacing.xs} 0`,
-                        cursor: 'pointer',
-                        fontSize: typography.fontSize.sm,
-                        fontFamily: typography.fontFamily.primary,
-                        color: colors.text.primary,
-                        textAlign: 'left',
-                      }}
-                    >
-                      <IconChevronRight
-                        size={13}
-                        color={colors.text.secondary}
-                        style={{ flexShrink: 0 }}
-                      />
-                      <span
-                        style={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {reform.label || 'Untitled reform'}
-                      </span>
-                    </button>
+                    />
                   ))}
                 </Stack>
               )}
