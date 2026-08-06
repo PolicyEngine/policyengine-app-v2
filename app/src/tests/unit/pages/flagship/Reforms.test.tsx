@@ -64,62 +64,41 @@ describe('ReformsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearDraftReform();
-  });
-
-  test('given the combined list then bills and your reforms render with provenance badges', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
-    renderReforms();
-
-    expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
-    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
-    // Plain muted meta text, no colored pills: jurisdiction · status for
-    // bills, provision count for your reforms
-    expect(screen.getByText('Utah · Enacted')).toBeInTheDocument();
-    expect(screen.getByText('1 provision')).toBeInTheDocument();
-  });
-
-  test('given the In Congress filter then only bills remain', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
-    const user = userEvent.setup();
-    renderReforms();
-    await screen.findByText('CTC to $3,600 for children under 6');
-
-    await user.click(screen.getByRole('button', { name: 'In Congress' }));
-
-    expect(screen.queryByText('CTC to $3,600 for children under 6')).not.toBeInTheDocument();
-    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
-  });
-
-  test('given the Yours filter then bills and the sample note disappear', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
-    const user = userEvent.setup();
-    renderReforms();
-    await screen.findByText('CTC to $3,600 for children under 6');
-
-    await user.click(screen.getByRole('button', { name: 'Yours' }));
-
-    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/sample preview/i)).not.toBeInTheDocument();
-    expect(screen.getByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
-  });
-
-  test('given a ?bill deep link then that bill opens expanded', async () => {
     mockFindByUser.mockResolvedValue([]);
+  });
+
+  test('given the default view then bill cards render with jurisdiction eyebrows', () => {
+    renderReforms();
+
+    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
+    // "Utah" appears as the card eyebrow and in the place filter
+    expect(screen.getAllByText('Utah').length).toBeGreaterThanOrEqual(2);
+    // Cards, not accordions: no expanded actions yet
+    expect(screen.queryByRole('button', { name: /open as draft reform/i })).not.toBeInTheDocument();
+  });
+
+  test('given a bill card is clicked then its detail opens with actions', async () => {
+    const user = userEvent.setup();
+    renderReforms();
+
+    await user.click(screen.getByText('Child tax credit expansion proposal'));
+
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeInTheDocument();
+    expect(screen.getByText(/raises the base child tax credit/i)).toBeInTheDocument();
+  });
+
+  test('given a ?bill deep link then the detail opens directly', () => {
     renderReforms('/us/reforms?bill=us-ctc-expansion');
 
-    expect(
-      await screen.findByRole('button', { name: /open as draft reform/i })
-    ).toBeInTheDocument();
-    // Summary appears in both the row preview and the expanded detail
-    expect(screen.getAllByText(/raises the base child tax credit/i).length).toBeGreaterThan(1);
+    expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeInTheDocument();
   });
 
-  test('given open as draft on a bill then the draft is populated from its provisions', async () => {
-    mockFindByUser.mockResolvedValue([]);
+  test('given open as draft in the detail then the draft is populated', async () => {
     const user = userEvent.setup();
     renderReforms();
 
-    await user.click(await screen.findByText('Child tax credit expansion proposal'));
+    await user.click(screen.getByText('Child tax credit expansion proposal'));
     await user.click(screen.getByRole('button', { name: /open as draft reform/i }));
 
     const draft = getDraftReform();
@@ -128,8 +107,27 @@ describe('ReformsPage', () => {
     expect(draft?.provisions.length).toBeGreaterThan(0);
   });
 
-  test('given no saved reforms under Yours then the empty state shows', async () => {
-    mockFindByUser.mockResolvedValue([]);
+  test('given the place filter then only that jurisdiction remains', async () => {
+    const user = userEvent.setup();
+    renderReforms();
+
+    await user.selectOptions(screen.getByLabelText(/filter by place/i), 'Utah');
+
+    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
+    expect(screen.queryByText('Child tax credit expansion proposal')).not.toBeInTheDocument();
+  });
+
+  test('given a search then bill cards filter', async () => {
+    const user = userEvent.setup();
+    renderReforms();
+
+    await user.type(screen.getByRole('textbox', { name: /search reforms/i }), 'snap');
+
+    expect(screen.getByText(/SNAP benefit adjustment/)).toBeInTheDocument();
+    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+  });
+
+  test('given the Yours tab with no reforms then the invitation shows', async () => {
     const user = userEvent.setup();
     renderReforms();
 
@@ -138,17 +136,18 @@ describe('ReformsPage', () => {
     expect(await screen.findByText(/no saved reforms yet/i)).toBeInTheDocument();
   });
 
-  test('given the store fails then an error message shows', async () => {
-    mockFindByUser.mockRejectedValue(new Error('boom'));
-    renderReforms();
+  test('given a ?filter=yours deep link then the Yours tab is active', async () => {
+    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    renderReforms('/us/reforms?filter=yours');
 
-    expect(await screen.findByText(/could not load your reforms/i)).toBeInTheDocument();
+    expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
+    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
   });
 
-  test('given an expanded reform then provisions are editable and save waits for changes', async () => {
+  test('given a reform card is clicked then its provisions edit in place', async () => {
     mockFindByUser.mockResolvedValue([CHAT_REFORM]);
     const user = userEvent.setup();
-    renderReforms();
+    renderReforms('/us/reforms?filter=yours');
 
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
@@ -160,7 +159,7 @@ describe('ReformsPage', () => {
     mockFindByUser.mockResolvedValue([CHAT_REFORM]);
     mockUpdate.mockResolvedValue({ ...CHAT_REFORM });
     const user = userEvent.setup();
-    renderReforms();
+    renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
     const input = screen.getByLabelText(/new value for gov\.irs/i);
@@ -172,11 +171,11 @@ describe('ReformsPage', () => {
     expect(mockUpdate.mock.calls[0][1].parameters[0].values[0].value).toBe(4000);
   });
 
-  test('given delete on an expanded reform then the store delete is called', async () => {
+  test('given delete in the reform detail then the store delete is called', async () => {
     mockFindByUser.mockResolvedValue([CHAT_REFORM]);
     mockDelete.mockResolvedValue(undefined);
     const user = userEvent.setup();
-    renderReforms();
+    renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
     await user.click(screen.getByRole('button', { name: /delete/i }));
@@ -184,11 +183,11 @@ describe('ReformsPage', () => {
     expect(mockDelete).toHaveBeenCalledWith('rf-1');
   });
 
-  test('given duplicate on an expanded reform then a copy is created', async () => {
+  test('given duplicate in the reform detail then a copy is created', async () => {
     mockFindByUser.mockResolvedValue([CHAT_REFORM]);
     mockCreate.mockResolvedValue({ id: 'rf-copy' });
     const user = userEvent.setup();
-    renderReforms();
+    renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
     await user.click(screen.getByRole('button', { name: /duplicate/i }));
@@ -198,16 +197,14 @@ describe('ReformsPage', () => {
     );
   });
 
-  test('given a search query then both kinds filter together', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+  test('given the back link in a detail then the grid returns', async () => {
     const user = userEvent.setup();
     renderReforms();
-    await screen.findByText('CTC to $3,600 for children under 6');
 
-    await user.type(screen.getByRole('textbox', { name: /search reforms/i }), 'snap');
+    await user.click(screen.getByText('Child tax credit expansion proposal'));
+    await user.click(screen.getByRole('button', { name: /all reforms/i }));
 
-    expect(screen.getByText(/SNAP benefit adjustment/)).toBeInTheDocument();
-    expect(screen.queryByText('CTC to $3,600 for children under 6')).not.toBeInTheDocument();
-    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /open as draft reform/i })).not.toBeInTheDocument();
   });
 });

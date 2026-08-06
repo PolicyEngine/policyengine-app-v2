@@ -27,6 +27,8 @@ export interface TrackedBill {
   /** Headline findings from the tracker's analysis, when available. */
   keyFindings?: string[];
   legiscanUrl?: string;
+  /** Analysis date (ISO), for newest-first ordering. */
+  date?: string;
 }
 
 function trackerConfig(): { url: string; anonKey: string } | null {
@@ -158,6 +160,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       provisions: provisionsFromReformParams(impact?.reform_params),
       keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
       legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
+      date: record.date ?? undefined,
     };
   });
 }
