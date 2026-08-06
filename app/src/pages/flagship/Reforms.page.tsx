@@ -506,19 +506,26 @@ export default function ReformsPage() {
               flexWrap: 'wrap',
             }}
           >
-            <Button
-              onClick={() =>
-                runReport.run(
-                  selectedBill.title,
-                  `${selectedBill.jurisdiction} · ${selectedBill.status}`,
-                  provisions
-                )
-              }
-              disabled={runReport.isRunning || provisions.length === 0}
-            >
-              <IconChartBar size={16} />
-              {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
-            </Button>
+            {selectedBill.impactData ? (
+              <Button onClick={() => nav.push(`/${countryId}/report/bill/${selectedBill.id}`)}>
+                <IconChartBar size={16} />
+                View impact report
+              </Button>
+            ) : (
+              <Button
+                onClick={() =>
+                  runReport.run(
+                    selectedBill.title,
+                    `${selectedBill.jurisdiction} · ${selectedBill.status}`,
+                    provisions
+                  )
+                }
+                disabled={runReport.isRunning || provisions.length === 0}
+              >
+                <IconChartBar size={16} />
+                {runReport.isRunning ? 'Starting report…' : 'Run impact report'}
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => openBillAsDraft(selectedBill)}

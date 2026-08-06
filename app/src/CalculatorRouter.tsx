@@ -14,6 +14,7 @@ import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import { isFlagshipShellEnabled } from './libs/featureFlags';
 import AskPage from './pages/flagship/Ask.page';
+import BillReportPage from './pages/flagship/BillReport.page';
 import BuildPage from './pages/flagship/Build.page';
 import ReformsPage from './pages/flagship/Reforms.page';
 import FlagshipReportPage from './pages/flagship/Report.page';
@@ -142,6 +143,7 @@ const router = createBrowserRouter(
                       { path: 'reforms', element: <ReformsPage /> },
                       { path: 'tracker', element: <LegacyReformsRedirect /> },
                       { path: 'library', element: <LegacyReformsRedirect /> },
+                      { path: 'report/bill/:billId', element: <BillReportPage /> },
                       { path: 'report/:userReportId', element: <FlagshipReportPage /> },
                     ]
                   : []),

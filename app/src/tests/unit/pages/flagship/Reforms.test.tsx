@@ -83,7 +83,7 @@ describe('ReformsPage', () => {
 
     await user.click(screen.getByText('Child tax credit expansion proposal'));
 
-    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run impact report/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeInTheDocument();
     expect(screen.getByText(/raises the base child tax credit/i)).toBeInTheDocument();
   });

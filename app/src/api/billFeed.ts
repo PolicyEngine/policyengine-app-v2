@@ -36,6 +36,24 @@ export interface TrackedBill {
     /** Poverty rate change in percent (negative = poverty falls). */
     povertyPercentChange?: number;
   };
+  /** Full stored impact records, when the tracker has computed them. */
+  impactData?: {
+    budgetary?: { stateRevenueImpact?: number; netCost?: number; households?: number };
+    poverty?: {
+      baselineRate?: number;
+      reformRate?: number;
+      change?: number;
+      percentChange?: number;
+    };
+    winnersLosers?: {
+      gainMore5Pct?: number;
+      gainLess5Pct?: number;
+      noChange?: number;
+      loseLess5Pct?: number;
+      loseMore5Pct?: number;
+    };
+    decile?: { relative?: Record<string, number>; average?: Record<string, number> };
+  };
 }
 
 function trackerConfig(): { url: string; anonKey: string } | null {
@@ -146,6 +164,27 @@ function extractImpacts(impact: any): TrackedBill['impacts'] {
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
+/** The full stored impact records, when the tracker computed this bill. */
+function extractImpactData(impact: any): TrackedBill['impactData'] {
+  if (!impact?.computed) {
+    return undefined;
+  }
+  const data: NonNullable<TrackedBill['impactData']> = {};
+  if (impact.budgetary_impact) {
+    data.budgetary = impact.budgetary_impact;
+  }
+  if (impact.poverty_impact) {
+    data.poverty = impact.poverty_impact;
+  }
+  if (impact.winners_losers) {
+    data.winnersLosers = impact.winners_losers;
+  }
+  if (impact.decile_impact) {
+    data.decile = impact.decile_impact;
+  }
+  return Object.keys(data).length > 0 ? data : undefined;
+}
+
 /**
  * Fetches analyzed bills from the tracker's Supabase project. Returns
  * null when the feed is not configured (callers fall back to samples).
@@ -153,7 +192,10 @@ function extractImpacts(impact: any): TrackedBill['impacts'] {
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const [research, impacts, processed] = await Promise.all([
     trackerSelect('research', '*'),
-    trackerSelect('reform_impacts', 'id,reform_params,computed,budgetary_impact,poverty_impact'),
+    trackerSelect(
+      'reform_impacts',
+      'id,reform_params,computed,budgetary_impact,poverty_impact,winners_losers,decile_impact'
+    ),
     trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
   ]);
   if (!research) {
@@ -183,6 +225,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
       date: record.date ?? undefined,
       impacts: extractImpacts(impact),
+      impactData: extractImpactData(impact),
     };
   });
 }
