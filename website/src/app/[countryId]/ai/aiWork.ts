@@ -51,13 +51,4 @@ export const aiWork: AiWorkEntry[] = [
     image: "/assets/posts/multi-agent-workflows-policy-research.webp",
     date: "2025-10",
   },
-  {
-    strand: "methods",
-    title:
-      "How we used Claude Code to apply for the Public Benefit Innovation Fund",
-    hook: "A grant application produced end to end with an agent, documented.",
-    href: "/us/research/policyengine-atlas-pbif-grant",
-    image: "/assets/posts/policyengine-atlas-demo.png",
-    date: "2025-08",
-  },
 ];
