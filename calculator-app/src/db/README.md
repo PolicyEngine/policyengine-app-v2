@@ -29,30 +29,31 @@ source <(grep -v '^#' .env.local | sed 's/^/export /') && bun run db:migrate
   without the database (including current prod) degrade cleanly; the client
   falls back via `VITE_STORE_BACKEND=localStorage` if needed.
 
-## Supabase setup (beat 1 of storage unification)
+## Storage backend (frozen — coordinate with the storage owner)
 
-Two env vars light up the central store and the live bill feed; without
-them the app runs on localStorage + sample bills, unchanged.
+The flagship's user-artifact storage (reforms + reports tables in this
+schema) is owned by the org storage workstream. To connect it, the
+owner provides a Postgres connection string from the existing shared
+Supabase infrastructure:
 
-1. **Flagship project** (user artifacts — reforms + reports):
-   Supabase dashboard → New project (PolicyEngine org) → Settings →
-   Database → "Connection string" (transaction pooler). Set as:
+```
+DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres
+```
 
-   ```
-   DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres
-   ```
+Then run migrations from calculator-app/: `bun run db:migrate`.
 
-   Then run migrations: `bun run db:migrate` (from calculator-app/).
+Without DATABASE_URL, the app runs fully on localStorage fallbacks —
+no behavior change. (A temporary `policyengine-app` project used for
+beat-1 verification was deleted on 2026-08-06 to avoid parallel
+infrastructure; its one-row export lives outside the repo.)
 
-2. **Tracker feed** (read-only bills from the state legislative
-   tracker's project): its Settings → API → anon public key.
+The tracker bill feed is separate (read-only, public anon key) and
+stays configured:
 
-   ```
-   NEXT_PUBLIC_TRACKER_SUPABASE_URL=https://ffgngqlgfsvqartilful.supabase.co
-   NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY=<anon key>
-   ```
+```
+NEXT_PUBLIC_TRACKER_SUPABASE_URL=https://ffgngqlgfsvqartilful.supabase.co
+NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY=<anon key>
+```
 
-Set all three in `.env.local` for dev and `vercel env add` for the
-deployment. Beat 2 (at native-tracker cutover) repoints the tracker
-pipeline's writes into the flagship project and retires the dual
-source — the seam is `app/src/api/billFeed.ts`.
+The beat-2 seam (repointing bills into the unified project) is
+`app/src/api/billFeed.ts`.
