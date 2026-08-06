@@ -182,6 +182,18 @@ export default function AskPage() {
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
             current: {formatValue(baseline, entry.unit)}
           </Text>
+          <Text
+            style={{
+              fontSize: 11,
+              fontFamily: typography.fontFamily.mono,
+              color: colors.gray[400],
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {entry.path}
+          </Text>
         </Stack>
         {inDraft ? (
           <Text

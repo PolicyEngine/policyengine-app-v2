@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import Fuse, { IFuseOptions } from 'fuse.js';
+import { priorFactor } from '@/libs/searchPriors';
 import { RootState } from '@/store';
 import { ParameterMetadata, ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
@@ -110,6 +111,7 @@ const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
   threshold: 0.35,
   ignoreLocation: true,
   minMatchCharLength: 2,
+  includeScore: true,
 };
 
 /** Cap on how many prefiltered candidates get fuzzy re-ranked per query. */
@@ -133,13 +135,56 @@ export function createParameterSearchIndex(entries: ParameterSearchEntry[]): Par
   };
 }
 
+/** Re-rank options: score everything, gate nothing — the coverage
+ * prefilter already decided what qualifies. */
+const RERANK_FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
+  ...FUSE_OPTIONS,
+  threshold: 1,
+};
+
+/** Fuzzy-rank candidates, then adjust by the derived priors. */
+function rankWithPriors(
+  candidates: ParameterSearchEntry[],
+  query: string,
+  limit: number
+): ParameterSearchEntry[] {
+  const ranked = new Fuse(candidates, RERANK_FUSE_OPTIONS)
+    .search(query)
+    .map((result) => ({
+      entry: result.item,
+      adjusted: (result.score ?? 0.5) * priorFactor(result.item.path),
+    }))
+    .sort((a, b) => a.adjusted - b.adjusted)
+    .slice(0, limit)
+    .map((item) => item.entry);
+  if (ranked.length >= Math.min(limit, candidates.length)) {
+    return ranked;
+  }
+  // Fuse can still drop candidates whose score rounds to nothing; top
+  // up from the coverage order so qualified entries never vanish.
+  const seen = new Set(ranked.map((entry) => entry.path));
+  for (const entry of candidates) {
+    if (ranked.length >= limit) {
+      break;
+    }
+    if (!seen.has(entry.path)) {
+      ranked.push(entry);
+    }
+  }
+  return ranked;
+}
+
 /**
- * Two-stage search, sized for as-you-type latency over ~50k entries:
+ * Two-stage search, sized for as-you-type latency over ~90k entries:
  *
- * 1. Fast path: require every query token as a substring (a few ms),
- *    then fuzzy re-rank only those candidates.
- * 2. Slow path: only when the prefilter finds nothing (e.g. typos),
- *    fall back to full fuzzy search.
+ * 1. Fast path: adaptive coverage — count how many query tokens each
+ *    entry contains and keep the entries achieving the best coverage.
+ *    Conversational filler ("why does the…") costs every entry equally,
+ *    so full-sentence queries still land without any stopword list.
+ * 2. Fuzzy re-rank of those candidates, adjusted by derived priors
+ *    (path depth, bracket internals, live usage counts).
+ * 3. Slow path: only when nothing matches any token (e.g. typos), fall
+ *    back to full fuzzy search.
  */
 export function searchParameters(
   index: ParameterSearchIndex,
@@ -152,38 +197,82 @@ export function searchParameters(
     return [];
   }
 
-  const tokens = trimmed.split(/\s+/);
-  const candidates: ParameterSearchEntry[] = [];
+  const tokens = [...new Set(trimmed.split(/\s+/).filter((token) => token.length >= 2))];
+
+  // Token score: 1 for an exact substring hit; 0.6 when only a prefix
+  // of the token (≥3 chars) appears — derived stemming, so "maximum"
+  // still credits entries that say "max" without any word list.
+  const tokenScore = (haystack: string, token: string): number => {
+    if (haystack.includes(token)) {
+      return 1;
+    }
+    if (token.length > 4) {
+      for (let cut = token.length - 1; cut >= 3; cut--) {
+        if (haystack.includes(token.slice(0, cut))) {
+          return 0.6;
+        }
+      }
+    }
+    return 0;
+  };
+
+  // Pass 1: score coverage per entry and find the best achieved.
+  const coverage = new Float32Array(index.haystacks.length);
+  let bestCoverage = 0;
   for (let i = 0; i < index.haystacks.length; i++) {
-    const entry = index.entries[i];
-    if (!matchesFilters(entry, filters)) {
+    if (!matchesFilters(index.entries[i], filters)) {
       continue;
     }
     const haystack = index.haystacks[i];
-    if (tokens.every((token) => haystack.includes(token))) {
-      candidates.push(entry);
-      if (candidates.length >= RERANK_CANDIDATE_CAP) {
-        break;
-      }
+    let matched = 0;
+    for (const token of tokens) {
+      matched += tokenScore(haystack, token);
+    }
+    coverage[i] = matched;
+    if (matched > bestCoverage) {
+      bestCoverage = matched;
     }
   }
 
-  if (candidates.length > 0) {
-    if (candidates.length <= limit) {
+  // Pass 2: keep entries within a tolerance band of the best coverage,
+  // so exact-wording entries don't monopolize over close paraphrases.
+  // Best-coverage entries are collected first so the candidate cap can
+  // never crowd them out with partial matches.
+  if (bestCoverage > 0) {
+    const floor = Math.max(bestCoverage - 0.5, bestCoverage * 0.75, 0.6);
+    const candidates: ParameterSearchEntry[] = [];
+    for (let i = 0; i < index.haystacks.length; i++) {
+      if (coverage[i] >= bestCoverage && candidates.length < RERANK_CANDIDATE_CAP) {
+        candidates.push(index.entries[i]);
+      }
+    }
+    for (let i = 0; i < index.haystacks.length; i++) {
+      if (
+        coverage[i] >= floor &&
+        coverage[i] < bestCoverage &&
+        candidates.length < RERANK_CANDIDATE_CAP
+      ) {
+        candidates.push(index.entries[i]);
+      }
+    }
+    if (candidates.length === 1) {
       return candidates;
     }
-    return new Fuse(candidates, FUSE_OPTIONS)
-      .search(trimmed, { limit })
-      .map((result) => result.item);
+    return rankWithPriors(candidates, trimmed, limit);
   }
 
   // Typo fallback: full fuzzy search, filtered after ranking. Fetch a
   // padded window so filtering still leaves up to `limit` results.
-  return index.fuse
+  const fallback = index.fuse
     .search(trimmed, { limit: limit * 10 })
-    .map((result) => result.item)
-    .filter((entry) => matchesFilters(entry, filters))
+    .map((result) => ({
+      entry: result.item,
+      adjusted: (result.score ?? 0.5) * priorFactor(result.item.path),
+    }))
+    .filter((ranked) => matchesFilters(ranked.entry, filters))
+    .sort((a, b) => a.adjusted - b.adjusted)
     .slice(0, limit);
+  return fallback.map((ranked) => ranked.entry);
 }
 
 export interface ParameterSearchGroup {
@@ -235,8 +324,7 @@ export function countHiddenByFilters(
     includeContrib: true,
     stateScope: 'all',
   });
-  const filtered = searchParameters(index, query, limit, filters);
-  return Math.max(0, unfiltered.length - filtered.length);
+  return unfiltered.filter((entry) => !matchesFilters(entry, filters)).length;
 }
 
 /**

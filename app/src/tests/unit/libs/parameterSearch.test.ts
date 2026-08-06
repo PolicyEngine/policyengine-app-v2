@@ -217,3 +217,70 @@ describe('search quality against real US metadata (52k parameters)', () => {
     expect(elapsed).toBeLessThan(500);
   });
 });
+
+describe('derived ranking priors', () => {
+  const PRIOR_COLLECTION = {
+    'gov.irs': { type: 'parameterNode', parameter: 'gov.irs', label: 'IRS' },
+    'gov.irs.credits': { type: 'parameterNode', parameter: 'gov.irs.credits', label: 'credits' },
+    'gov.irs.credits.ctc': {
+      type: 'parameterNode',
+      parameter: 'gov.irs.credits.ctc',
+      label: 'child tax credit',
+    },
+    'gov.irs.credits.ctc.amount': {
+      type: 'parameter',
+      parameter: 'gov.irs.credits.ctc.amount',
+      label: 'amount',
+      unit: 'currency-USD',
+      economy: true,
+      household: true,
+    },
+    'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount': {
+      type: 'parameter',
+      parameter: 'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      label: 'amount',
+      unit: 'currency-USD',
+      economy: true,
+      household: true,
+    },
+  } as any;
+  const priorIndex = createParameterSearchIndex(buildParameterSearchEntries(PRIOR_COLLECTION));
+
+  it('given a conversational question then coverage matching still finds the parameter', () => {
+    const results = searchParameters(
+      priorIndex,
+      'why does the child tax credit amount phase out',
+      5
+    );
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].path).toContain('gov.irs.credits.ctc');
+  });
+
+  it('given an acronym only in the path then it still matches', () => {
+    const results = searchParameters(priorIndex, 'ctc amount', 5);
+    expect(results[0].path).toContain('gov.irs.credits.ctc');
+  });
+
+  it('given equal matches then the shallow canonical parameter outranks the bracketed internal', () => {
+    const results = searchParameters(priorIndex, 'child tax credit amount', 5);
+    expect(results[0].path).toBe('gov.irs.credits.ctc.amount');
+  });
+
+  it('given live usage then the used parameter floats above unused siblings', async () => {
+    const { registerUsagePaths, resetUsagePaths } = await import('@/libs/searchPriors');
+    resetUsagePaths();
+    registerUsagePaths([
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount',
+    ]);
+
+    const results = searchParameters(priorIndex, 'child tax credit amount', 5);
+    expect(results[0].path).toBe(
+      'gov.irs.credits.ctc.phase_out.arpa.threshold.deep.amount[3].amount'
+    );
+
+    resetUsagePaths();
+  });
+});

@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchTrackerBills, TrackedBill } from '@/api/billFeed';
 import { SAMPLE_BILLS } from '@/data/flagship/sampleBills';
 import { CountryId } from '@/libs/countries';
+import { registerUsagePaths, resetUsagePaths } from '@/libs/searchPriors';
 
 function sampleBills(countryId: CountryId): TrackedBill[] {
   return SAMPLE_BILLS.filter((bill) => bill.countryId === countryId).map((bill) => ({
@@ -35,6 +37,15 @@ export function useTrackedBills(countryId: CountryId): {
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
+
+  // Parameters used in real analyses feed the search ranking prior.
+  // Reset-then-register keeps this idempotent across mounts.
+  useEffect(() => {
+    if (data && data.length > 0) {
+      resetUsagePaths();
+      registerUsagePaths(data.flatMap((bill) => bill.provisions.map((p) => p.path)));
+    }
+  }, [data]);
 
   const live = (data ?? []).filter((bill) => bill.countryId === countryId);
   const isLive = Boolean(data && data.length > 0);
