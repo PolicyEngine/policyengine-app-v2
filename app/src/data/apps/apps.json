@@ -346,6 +346,19 @@
   },
   {
     "type": "iframe",
+    "slug": "crossroads",
+    "title": "Crossroads",
+    "description": "Model how life events — marriage, divorce, a new baby, moving, income changes — affect a household's taxes, benefits, and healthcare coverage",
+    "source": "https://crossroads-khaki.vercel.app/",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "crossroads.png",
+    "date": "2026-07-31 12:00:00",
+    "authors": ["daphne-hansell"]
+  },
+  {
+    "type": "iframe",
     "slug": "cliffwatch",
     "title": "CliffWatch",
     "description": "Interactive calculator showing how benefits, refundable tax credits, taxes, and net income change for US households as earnings rise",
