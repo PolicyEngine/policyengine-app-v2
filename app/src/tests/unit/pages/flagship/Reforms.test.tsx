@@ -111,7 +111,7 @@ describe('ReformsPage', () => {
     const user = userEvent.setup();
     renderReforms();
 
-    await user.selectOptions(screen.getByLabelText(/filter by place/i), 'Utah');
+    await user.selectOptions(screen.getByLabelText(/filter by state/i), 'Utah');
 
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();
     expect(screen.queryByText('Child tax credit expansion proposal')).not.toBeInTheDocument();

@@ -759,7 +759,7 @@ export default function ReformsPage() {
             <select
               value={placeFilter}
               onChange={(event) => setPlaceFilter(event.target.value)}
-              aria-label="Filter by place"
+              aria-label="Filter by state"
               style={{
                 padding: `${spacing.xs} ${spacing.sm}`,
                 border: `1px solid ${colors.border.light}`,
@@ -770,7 +770,7 @@ export default function ReformsPage() {
                 color: colors.text.primary,
               }}
             >
-              <option value="all">All places</option>
+              <option value="all">United States</option>
               {places.map((place) => (
                 <option key={place} value={place}>
                   {place}
