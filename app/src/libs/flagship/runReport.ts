@@ -57,6 +57,8 @@ export interface RunFlagshipReportArgs {
   provisions: RunReportProvision[];
   /** Numeric current-law policy id from metadata (US 2, UK 1). */
   currentLawId: number;
+  /** Saved reform this run came from, for the central report record. */
+  reformId?: string | null;
 }
 
 export async function runFlagshipReport({
@@ -65,6 +67,7 @@ export async function runFlagshipReport({
   sourceNote,
   provisions,
   currentLawId,
+  reformId,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -118,6 +121,7 @@ export async function runFlagshipReport({
       sourceNote: sourceNote || null,
       provisions,
       year: CURRENT_YEAR,
+      reformId: reformId ?? null,
     });
   } catch {
     // The report still opens via the local association.

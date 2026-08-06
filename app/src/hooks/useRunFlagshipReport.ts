@@ -17,7 +17,12 @@ export function useRunFlagshipReport() {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const run = async (title: string, sourceNote: string, provisions: RunReportProvision[]) => {
+  const run = async (
+    title: string,
+    sourceNote: string,
+    provisions: RunReportProvision[],
+    reformId?: string | null
+  ) => {
     if (isRunning) {
       return;
     }
@@ -34,6 +39,7 @@ export function useRunFlagshipReport() {
         sourceNote,
         provisions,
         currentLawId: Number(currentLawId),
+        reformId,
       });
       nav.push(`/${countryId}/report/${userReportId}`);
     } catch {

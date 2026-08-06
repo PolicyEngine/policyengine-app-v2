@@ -19,6 +19,8 @@ export interface FlagshipReportRecord {
   provisions: RunReportProvision[];
   year: string;
   createdAt: string;
+  /** Saved reform this report came from, when known. */
+  reformId?: string | null;
 }
 
 export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt'>;
@@ -59,6 +61,7 @@ function fromMetadata(data: any): FlagshipReportRecord {
     })),
     year: data.year,
     createdAt: data.created_at,
+    reformId: data.reform_id ?? null,
   };
 }
 
@@ -83,6 +86,7 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
           value: p.value,
         })),
         year: report.year,
+        reform_id: report.reformId ?? null,
       }),
     });
     if (!response.ok) {
