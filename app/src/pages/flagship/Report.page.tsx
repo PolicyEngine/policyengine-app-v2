@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { IconHome, IconPlus, IconShieldCheck } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
@@ -135,205 +136,233 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   );
 
   return (
-    <Stack style={{ maxWidth: 1080, margin: '0 auto', gap: spacing.xl }}>
-      <Stack style={{ gap: spacing.xs }}>
-        <Stack
-          style={{
-            flexDirection: 'row',
-            alignItems: 'baseline',
-            gap: spacing.md,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Title order={1} style={{ margin: 0 }}>
-            {meta?.title || report?.label || 'Impact report'}
-          </Title>
-          {meta?.sourceNote && (
-            <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-              {meta.sourceNote}
-            </Text>
-          )}
-        </Stack>
-      </Stack>
-
+    <div style={{ maxWidth: 1440, margin: '0 auto' }}>
       <div
         style={{
-          position: 'sticky',
-          top: -24,
-          zIndex: 20,
           display: 'flex',
-          gap: spacing.xs,
           flexWrap: 'wrap',
-          background: colors.gray[50],
-          padding: `${spacing.sm} 0`,
-          borderBottom: `1px solid ${colors.border.light}`,
+          gap: spacing['2xl'],
+          alignItems: 'flex-start',
         }}
       >
-        {SECTIONS.map((section) => (
-          <button
-            key={section.id}
-            type="button"
-            onClick={() => scrollTo(section.id)}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              padding: `${spacing.xs} ${spacing.md}`,
-              borderRadius: 999,
-              fontSize: typography.fontSize.sm,
-              fontFamily: typography.fontFamily.primary,
-              color: colors.text.secondary,
-              cursor: 'pointer',
-            }}
-          >
-            {section.label}
-          </button>
-        ))}
-      </div>
-
-      <Stack style={{ gap: spacing.md }}>
-        <SectionHeading id="policy" title="Policy overview" />
-        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          Baseline: current law · {report?.year ?? '2026'} · Population:{' '}
-          {countryId === 'uk' ? 'United Kingdom' : 'United States'} (nationwide)
-        </Text>
-        {meta && meta.provisions.length > 0 ? (
-          <div
-            style={{ background: colors.gray[50], borderRadius: 10, padding: `${spacing.xs} 0` }}
-          >
-            {meta.provisions.map((provision) => (
-              <div
-                key={provision.path}
+        <div style={{ flex: '1 1 640px', minWidth: 0 }}>
+          <Stack style={{ maxWidth: 1080, margin: '0 auto', gap: spacing.xl }}>
+            <Stack style={{ gap: spacing.xs }}>
+              <Stack
                 style={{
-                  display: 'flex',
+                  flexDirection: 'row',
                   alignItems: 'baseline',
-                  justifyContent: 'space-between',
-                  gap: spacing.lg,
-                  padding: `${spacing.xs} ${spacing.md}`,
+                  gap: spacing.md,
+                  flexWrap: 'wrap',
                 }}
               >
-                <Text
-                  title={provision.breadcrumb || provision.path}
+                <Title order={1} style={{ margin: 0 }}>
+                  {meta?.title || report?.label || 'Impact report'}
+                </Title>
+                {meta?.sourceNote && (
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                    {meta.sourceNote}
+                  </Text>
+                )}
+              </Stack>
+            </Stack>
+
+            <div
+              style={{
+                position: 'sticky',
+                top: -24,
+                zIndex: 20,
+                display: 'flex',
+                gap: spacing.xs,
+                flexWrap: 'wrap',
+                background: colors.gray[50],
+                padding: `${spacing.sm} 0`,
+                borderBottom: `1px solid ${colors.border.light}`,
+              }}
+            >
+              {SECTIONS.map((section) => (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => scrollTo(section.id)}
                   style={{
+                    border: 'none',
+                    background: 'transparent',
+                    padding: `${spacing.xs} ${spacing.md}`,
+                    borderRadius: 999,
                     fontSize: typography.fontSize.sm,
-                    color: colors.text.primary,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {formatCompactBreadcrumb(provision.breadcrumb || provision.path)}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: typography.fontSize.sm,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
+                    fontFamily: typography.fontFamily.primary,
                     color: colors.text.secondary,
+                    cursor: 'pointer',
                   }}
                 >
-                  {formatValue(provision.baselineValue, provision.unit)} →{' '}
-                  <span
-                    style={{
-                      color: colors.primary[700],
-                      fontWeight: typography.fontWeight.semibold,
-                    }}
-                  >
-                    {formatValue(provision.value, provision.unit)}
-                  </span>
+                  {section.label}
+                </button>
+              ))}
+            </div>
+
+            <Stack style={{ gap: spacing.md }}>
+              <SectionHeading id="policy" title="Policy overview" />
+              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                Baseline: current law · {report?.year ?? '2026'} · Population:{' '}
+                {countryId === 'uk' ? 'United Kingdom' : 'United States'} (nationwide)
+              </Text>
+              {meta && meta.provisions.length > 0 ? (
+                <div
+                  style={{
+                    background: colors.gray[50],
+                    borderRadius: 10,
+                    padding: `${spacing.xs} 0`,
+                  }}
+                >
+                  {meta.provisions.map((provision) => (
+                    <div
+                      key={provision.path}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        justifyContent: 'space-between',
+                        gap: spacing.lg,
+                        padding: `${spacing.xs} ${spacing.md}`,
+                      }}
+                    >
+                      <Text
+                        title={provision.breadcrumb || provision.path}
+                        style={{
+                          fontSize: typography.fontSize.sm,
+                          color: colors.text.primary,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {formatCompactBreadcrumb(provision.breadcrumb || provision.path)}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: typography.fontSize.sm,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          color: colors.text.secondary,
+                        }}
+                      >
+                        {formatValue(provision.baselineValue, provision.unit)} →{' '}
+                        <span
+                          style={{
+                            color: colors.primary[700],
+                            fontWeight: typography.fontWeight.semibold,
+                          }}
+                        >
+                          {formatValue(provision.value, provision.unit)}
+                        </span>
+                      </Text>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  Provision detail is unavailable for this report.
                 </Text>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-            Provision detail is unavailable for this report.
-          </Text>
-        )}
-      </Stack>
+              )}
+            </Stack>
 
-      <Stack style={{ gap: spacing.md }}>
-        <SectionHeading id="economy" title="Economic impacts" />
-        {output ? (
-          <SocietyWideOverview output={output} showCongressionalCard={false} />
-        ) : (
-          computingState
-        )}
-      </Stack>
+            <Stack style={{ gap: spacing.md }}>
+              <SectionHeading id="economy" title="Economic impacts" />
+              {output ? (
+                <SocietyWideOverview output={output} showCongressionalCard={false} />
+              ) : (
+                computingState
+              )}
+            </Stack>
 
-      <Stack style={{ gap: spacing.md }}>
-        <SectionHeading id="districts" title="Districts" />
-        {!output && computingState}
-        {output && showUSDistricts && (
-          <CongressionalDistrictDataProvider
-            reformPolicyId={reformPolicyId ?? ''}
-            baselinePolicyId={baselinePolicyId ?? ''}
-            year={report?.year ?? ''}
-            region={region}
-          >
-            <StandaloneCongressionalDistrictCard output={output} />
-          </CongressionalDistrictDataProvider>
-        )}
-        {output && !showUSDistricts && countryId === 'uk' && (
-          <ConstituencySubPage output={output} />
-        )}
-        {output && !showUSDistricts && countryId !== 'uk' && (
-          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-            District-level impacts are not available for this report's scope.
-          </Text>
-        )}
-      </Stack>
+            <Stack style={{ gap: spacing.md }}>
+              <SectionHeading id="districts" title="Districts" />
+              {!output && computingState}
+              {output && showUSDistricts && (
+                <CongressionalDistrictDataProvider
+                  reformPolicyId={reformPolicyId ?? ''}
+                  baselinePolicyId={baselinePolicyId ?? ''}
+                  year={report?.year ?? ''}
+                  region={region}
+                >
+                  <StandaloneCongressionalDistrictCard output={output} />
+                </CongressionalDistrictDataProvider>
+              )}
+              {output && !showUSDistricts && countryId === 'uk' && (
+                <ConstituencySubPage output={output} />
+              )}
+              {output && !showUSDistricts && countryId !== 'uk' && (
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  District-level impacts are not available for this report's scope.
+                </Text>
+              )}
+            </Stack>
 
-      <Stack style={{ gap: spacing.md }}>
-        <SectionHeading id="household" title="Household" />
-        <Stack
-          style={{
-            gap: spacing.md,
-            padding: spacing.lg,
-            border: `1px dashed ${colors.border.light}`,
-            borderRadius: 12,
-            alignItems: 'flex-start',
-          }}
-        >
-          <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-            <IconHome size={18} color={colors.text.secondary} />
-            <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-              No household attached to this report yet.
-            </Text>
+            <Stack style={{ gap: spacing.md }}>
+              <SectionHeading id="household" title="Household" />
+              <Stack
+                style={{
+                  gap: spacing.md,
+                  padding: spacing.lg,
+                  border: `1px dashed ${colors.border.light}`,
+                  borderRadius: 12,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+                  <IconHome size={18} color={colors.text.secondary} />
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
+                    No household attached to this report yet.
+                  </Text>
+                </Stack>
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  See how this reform changes taxes and benefits for a specific family — build a
+                  household and it will appear here alongside the nationwide results.
+                </Text>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => nav.push(`/${countryId}/households`)}
+                >
+                  <IconPlus size={14} />
+                  Add a household
+                </Button>
+              </Stack>
+            </Stack>
+
+            <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
+              <SectionHeading id="validation" title="Validation" />
+              <Stack
+                style={{
+                  gap: spacing.sm,
+                  padding: spacing.lg,
+                  border: `1px dashed ${colors.border.light}`,
+                  borderRadius: 12,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+                  <IconShieldCheck size={18} color={colors.text.secondary} />
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
+                    External score comparison — coming soon.
+                  </Text>
+                </Stack>
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  This section will compare the estimate against external scorekeepers (JCT, CBO,
+                  state fiscal notes) once the validation adapter connects.
+                </Text>
+              </Stack>
+            </Stack>
           </Stack>
-          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-            See how this reform changes taxes and benefits for a specific family — build a household
-            and it will appear here alongside the nationwide results.
-          </Text>
-          <Button size="sm" variant="outline" onClick={() => nav.push(`/${countryId}/households`)}>
-            <IconPlus size={14} />
-            Add a household
-          </Button>
-        </Stack>
-      </Stack>
-
-      <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
-        <SectionHeading id="validation" title="Validation" />
-        <Stack
-          style={{
-            gap: spacing.sm,
-            padding: spacing.lg,
-            border: `1px dashed ${colors.border.light}`,
-            borderRadius: 12,
-            alignItems: 'flex-start',
-          }}
-        >
-          <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-            <IconShieldCheck size={18} color={colors.text.secondary} />
-            <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-              External score comparison — coming soon.
-            </Text>
-          </Stack>
-          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-            This section will compare the estimate against external scorekeepers (JCT, CBO, state
-            fiscal notes) once the validation adapter connects.
-          </Text>
-        </Stack>
-      </Stack>
-    </Stack>
+        </div>
+        <div style={{ flex: '0 1 340px', minWidth: 280 }}>
+          <ReportAdjustPanel
+            title={meta?.title || report?.label || 'Impact report'}
+            sourceNote={meta?.sourceNote || ''}
+            provisions={meta?.provisions ?? []}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
