@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildConceptClusters,
   buildParameterSearchEntries,
   countHiddenByFilters,
   createParameterSearchIndex,
@@ -282,5 +283,50 @@ describe('derived ranking priors', () => {
     );
 
     resetUsagePaths();
+  });
+});
+
+describe('derived concept clusters (real US metadata)', () => {
+  const parameters = (US_METADATA as any).result.parameters;
+  const clusters = buildConceptClusters(parameters);
+  const conceptIndex = createParameterSearchIndex(
+    buildParameterSearchEntries(parameters),
+    clusters
+  );
+
+  test('given the metadata then eitc and its spelled-out name share a cluster', () => {
+    const eitcCluster = clusters.find((cluster) => cluster.includes('eitc'));
+    expect(eitcCluster).toBeDefined();
+    expect(eitcCluster).toContain('earned income tax credit');
+  });
+
+  test('given "eitc" then earned_income state parameters surface too', () => {
+    const results = searchParameters(conceptIndex, 'eitc', 20);
+    expect(results.some((r) => r.path.includes('.eitc'))).toBe(true);
+    expect(results.some((r) => r.path.includes('earned_income'))).toBe(true);
+  });
+
+  test('given the spelled-out name then eitc-segment parameters surface', () => {
+    const results = searchParameters(conceptIndex, 'earned income tax credit', 20);
+    expect(results.some((r) => r.path.includes('.eitc'))).toBe(true);
+  });
+
+  test('given "eitc" with a state scope then only that state\'s variants remain', () => {
+    const results = searchParameters(conceptIndex, 'eitc', 20, {
+      includeContrib: false,
+      stateScope: 'ca',
+    });
+    expect(results.some((r) => r.stateCode === 'ca')).toBe(true);
+    // Scope keeps the state's own variants plus federal law; other
+    // states' versions are excluded.
+    expect(results.every((r) => r.stateCode === 'ca' || r.stateCode === null)).toBe(true);
+  });
+
+  test('given contrib enabled then contrib eitc reforms join the results', () => {
+    const results = searchParameters(conceptIndex, 'eitc', 40, {
+      includeContrib: true,
+      stateScope: 'all',
+    });
+    expect(results.some((r) => r.isContrib)).toBe(true);
   });
 });

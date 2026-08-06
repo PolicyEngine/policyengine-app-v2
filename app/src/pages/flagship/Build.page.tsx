@@ -7,7 +7,11 @@ import { Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
-import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
+import {
+  ParameterSearchEntry,
+  selectConceptClusters,
+  selectParameterSearchEntries,
+} from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
@@ -21,6 +25,7 @@ import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 export default function BuildPage() {
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
+  const clusters = useSelector(selectConceptClusters);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const parameterTree = useSelector((state: RootState) => state.metadata.parameterTree);
   const draft = useDraftReform();
@@ -53,6 +58,7 @@ export default function BuildPage() {
         {entries.length > 0 ? (
           <ParameterSearchBox
             entries={entries}
+            clusters={clusters}
             onSelect={addEntry}
             currentValueFor={(entry) => {
               const value = getCurrentValue(parameters?.[entry.path]?.values);

@@ -18,6 +18,8 @@ interface ParameterSearchBoxProps {
   placeholder?: string;
   /** Formatted current value for a result row, e.g. "$2,000" */
   currentValueFor?: (entry: ParameterSearchEntry) => string | null;
+  /** Derived concept clusters for variant-aware matching */
+  clusters?: string[][];
 }
 
 const RESULT_LIMIT = 20;
@@ -84,12 +86,13 @@ export default function ParameterSearchBox({
   onSelect,
   placeholder = 'Search any parameter, e.g. child tax credit amount',
   currentValueFor,
+  clusters = [],
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
   const [filters, setFilters] = useState<ParameterSearchFilters>(DEFAULT_SEARCH_FILTERS);
 
-  const index = useMemo(() => createParameterSearchIndex(entries), [entries]);
+  const index = useMemo(() => createParameterSearchIndex(entries, clusters), [entries, clusters]);
   const stateCodes = useMemo(() => listStateCodes(entries), [entries]);
   const groups = useMemo(
     () => groupSearchResults(searchParameters(index, query, RESULT_LIMIT, filters)),

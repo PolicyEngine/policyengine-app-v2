@@ -71,6 +71,87 @@ export function listStateCodes(entries: ParameterSearchEntry[]): string[] {
 
 const EXCLUDED_PATH_PATTERNS = ['taxsim', 'gov.abolitions', 'pycache'];
 
+/**
+ * Concept clusters derived from the tree itself: every node pairs its
+ * path segment with its label (segment `eitc` ↔ "Earned Income Tax
+ * Credit"; segment `earned_income` ↔ the same label), and pairs that
+ * share a member merge into one cluster. A query hitting any variant
+ * then credits entries carrying any other — "eitc" finds California's
+ * `earned_income` parameters and vice versa — with no curated lists.
+ * Oversized clusters are dropped as generic hubs ("rate", "amount").
+ */
+const MAX_CLUSTER_SIZE = 10;
+
+export function buildConceptClusters(collection: ParameterMetadataCollection): string[][] {
+  const parent = new Map<string, string>();
+  const find = (x: string): string => {
+    let root = x;
+    while (parent.get(root) !== undefined && parent.get(root) !== root) {
+      root = parent.get(root)!;
+    }
+    parent.set(x, root);
+    return root;
+  };
+  const ensure = (x: string) => {
+    if (!parent.has(x)) {
+      parent.set(x, x);
+    }
+  };
+  const union = (a: string, b: string) => {
+    ensure(a);
+    ensure(b);
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) {
+      parent.set(ra, rb);
+    }
+  };
+
+  for (const node of Object.values(collection) as any[]) {
+    const path: string | undefined = node?.parameter;
+    const label: string | undefined = node?.label;
+    if (!path || !label) {
+      continue;
+    }
+    const segment = path
+      .split('.')
+      .pop()!
+      .replace(/\[\d+\]$/, '')
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .trim();
+    const phrase = label.toLowerCase().trim();
+    if (segment.length < 3 || segment === phrase) {
+      continue;
+    }
+    // Keep pairs that look like abbreviation ↔ expansion or word ↔
+    // multi-word name; skip unrelated decorative labels.
+    const looksRelated =
+      phrase.startsWith(segment) ||
+      phrase.split(/\s+/).length >= 2 ||
+      segment.split(/\s+/).length >= 2;
+    if (!looksRelated) {
+      continue;
+    }
+    union(segment, phrase);
+  }
+
+  const clusters = new Map<string, Set<string>>();
+  for (const key of parent.keys()) {
+    if (!key) {
+      continue;
+    }
+    const root = find(key);
+    if (!clusters.has(root)) {
+      clusters.set(root, new Set());
+    }
+    clusters.get(root)!.add(key);
+  }
+  return [...clusters.values()]
+    .filter((members) => members.size >= 2 && members.size <= MAX_CLUSTER_SIZE)
+    .map((members) => [...members]);
+}
+
 function isSearchableParameter(param: any): param is ParameterMetadata {
   return (
     param?.type === 'parameter' &&
@@ -123,15 +204,30 @@ export interface ParameterSearchIndex {
   haystacks: string[];
   /** Full fuzzy index — the slow path, used only when the prefilter finds nothing. */
   fuse: Fuse<ParameterSearchEntry>;
+  /** Derived concept clusters (see buildConceptClusters). */
+  clusters: string[][];
+  /** Variant lookup: cluster member → its cluster. */
+  clusterByMember: Map<string, string[]>;
 }
 
-export function createParameterSearchIndex(entries: ParameterSearchEntry[]): ParameterSearchIndex {
+export function createParameterSearchIndex(
+  entries: ParameterSearchEntry[],
+  clusters: string[][] = []
+): ParameterSearchIndex {
+  const clusterByMember = new Map<string, string[]>();
+  for (const cluster of clusters) {
+    for (const member of cluster) {
+      clusterByMember.set(member, cluster);
+    }
+  }
   return {
     entries,
     haystacks: entries.map((entry) =>
-      `${entry.breadcrumb} ${entry.label} ${entry.path}`.toLowerCase()
+      `${entry.breadcrumb} ${entry.label} ${entry.path} ${entry.path.replace(/[._]/g, ' ')}`.toLowerCase()
     ),
     fuse: new Fuse(entries, FUSE_OPTIONS),
+    clusters,
+    clusterByMember,
   };
 }
 
@@ -206,7 +302,7 @@ export function searchParameters(
     if (haystack.includes(token)) {
       return 1;
     }
-    if (token.length > 4) {
+    if (token.length > 4 && !token.includes(' ')) {
       for (let cut = token.length - 1; cut >= 3; cut--) {
         if (haystack.includes(token.slice(0, cut))) {
           return 0.6;
@@ -215,6 +311,33 @@ export function searchParameters(
     }
     return 0;
   };
+
+  // Expand the query into variant groups via the derived concept
+  // clusters: a group is satisfied by any of its variants, so "eitc"
+  // credits entries that only say "earned income tax credit" (and the
+  // reverse) without double counting.
+  const groups: string[][] = [];
+  const consumed = new Set<string>();
+  for (const cluster of index.clusters) {
+    for (const member of cluster) {
+      if (member.includes(' ') && trimmed.includes(member)) {
+        groups.push(cluster);
+        for (const word of member.split(/\s+/)) {
+          consumed.add(word);
+        }
+        break;
+      }
+    }
+  }
+  for (const token of tokens) {
+    if (consumed.has(token)) {
+      continue;
+    }
+    groups.push(index.clusterByMember.get(token) ?? [token]);
+  }
+  if (groups.length === 0) {
+    return [];
+  }
 
   // Pass 1: score coverage per entry and find the best achieved.
   const coverage = new Float32Array(index.haystacks.length);
@@ -225,8 +348,18 @@ export function searchParameters(
     }
     const haystack = index.haystacks[i];
     let matched = 0;
-    for (const token of tokens) {
-      matched += tokenScore(haystack, token);
+    for (const group of groups) {
+      let best = 0;
+      for (const variant of group) {
+        const score = tokenScore(haystack, variant);
+        if (score > best) {
+          best = score;
+        }
+        if (best === 1) {
+          break;
+        }
+      }
+      matched += best;
     }
     coverage[i] = matched;
     if (matched > bestCoverage) {
@@ -338,7 +471,12 @@ export const selectParameterSearchEntries = createSelector(
     parameters ? buildParameterSearchEntries(parameters) : []
 );
 
+export const selectConceptClusters = createSelector(
+  [(state: RootState) => state.metadata.parameters],
+  (parameters): string[][] => (parameters ? buildConceptClusters(parameters) : [])
+);
+
 export const selectParameterSearchIndex = createSelector(
-  [selectParameterSearchEntries],
-  (entries): ParameterSearchIndex => createParameterSearchIndex(entries)
+  [selectParameterSearchEntries, selectConceptClusters],
+  (entries, clusters): ParameterSearchIndex => createParameterSearchIndex(entries, clusters)
 );
