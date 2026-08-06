@@ -4,6 +4,7 @@ export interface AiWorkEntry {
   hook: string;
   href: string;
   date: string; // YYYY-MM, newest first within strand
+  image: string; // under /assets/posts/
   external?: boolean;
 }
 
@@ -15,6 +16,7 @@ export const aiWork: AiWorkEntry[] = [
     title: "AI beliefs: what frontier models expect about the economy",
     hook: "Elicited beliefs about economic elasticities across 17 models, browsable by parameter.",
     href: "/ai-beliefs",
+    image: "/assets/posts/ai-beliefs-dashboard.png",
     date: "2026-07",
   },
   {
@@ -22,6 +24,7 @@ export const aiWork: AiWorkEntry[] = [
     title: "Agent skills for policy analysis",
     hook: "23 CI-tested skills serving Claude Code and Codex, from household calculations to population reform scoring.",
     href: "/us/ai-agents",
+    image: "/assets/posts/ai-agent-skills.png",
     date: "2026-07",
   },
   {
@@ -29,6 +32,7 @@ export const aiWork: AiWorkEntry[] = [
     title: "Introducing PolicyBench",
     hook: "How accurately can AI compute taxes and benefits? A benchmark over real statutes.",
     href: "/us/research/introducing-policybench",
+    image: "/assets/posts/introducing-policybench.webp",
     date: "2026-06",
   },
   {
@@ -36,6 +40,7 @@ export const aiWork: AiWorkEntry[] = [
     title: "Encoding policy with multi-agent AI",
     hook: "An interactive walkthrough of the pipeline that turns statute text into tested model code.",
     href: "/us/encode-policy-multi-agent-ai",
+    image: "/assets/posts/encode-policy-multi-agent.png",
     date: "2026-05",
   },
   {
@@ -43,6 +48,7 @@ export const aiWork: AiWorkEntry[] = [
     title: "Testing multi-agent AI workflows for policy research",
     hook: "What held up and what did not when agent teams ran research end to end.",
     href: "/us/research/multi-agent-workflows-policy-research",
+    image: "/assets/posts/multi-agent-workflows-policy-research.webp",
     date: "2025-10",
   },
   {
@@ -51,6 +57,7 @@ export const aiWork: AiWorkEntry[] = [
       "How we used Claude Code to apply for the Public Benefit Innovation Fund",
     hook: "A grant application produced end to end with an agent, documented.",
     href: "/us/research/policyengine-atlas-pbif-grant",
+    image: "/assets/posts/policyengine-atlas-demo.png",
     date: "2025-08",
   },
 ];
