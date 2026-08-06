@@ -29,6 +29,13 @@ export interface TrackedBill {
   legiscanUrl?: string;
   /** Analysis date (ISO), for newest-first ordering. */
   date?: string;
+  /** Headline impact numbers from the tracker's stored microsim run. */
+  impacts?: {
+    /** Change in state revenue (negative = revenue loss). */
+    revenue?: number;
+    /** Poverty rate change in percent (negative = poverty falls). */
+    povertyPercentChange?: number;
+  };
 }
 
 function trackerConfig(): { url: string; anonKey: string } | null {
@@ -125,6 +132,20 @@ export function provisionsFromReformParams(reformParams: unknown): TrackedBillPr
   });
 }
 
+/** Headline numbers from a reform_impacts row, when present and numeric. */
+function extractImpacts(impact: any): TrackedBill['impacts'] {
+  const revenue = impact?.budgetary_impact?.stateRevenueImpact;
+  const poverty = impact?.poverty_impact?.percentChange;
+  const result: NonNullable<TrackedBill['impacts']> = {};
+  if (typeof revenue === 'number' && Number.isFinite(revenue) && revenue !== 0) {
+    result.revenue = revenue;
+  }
+  if (typeof poverty === 'number' && Number.isFinite(poverty) && poverty !== 0) {
+    result.povertyPercentChange = poverty;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
 /**
  * Fetches analyzed bills from the tracker's Supabase project. Returns
  * null when the feed is not configured (callers fall back to samples).
@@ -132,7 +153,7 @@ export function provisionsFromReformParams(reformParams: unknown): TrackedBillPr
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const [research, impacts, processed] = await Promise.all([
     trackerSelect('research', '*'),
-    trackerSelect('reform_impacts', 'id,reform_params,computed'),
+    trackerSelect('reform_impacts', 'id,reform_params,computed,budgetary_impact,poverty_impact'),
     trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
   ]);
   if (!research) {
@@ -161,6 +182,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
       legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
       date: record.date ?? undefined,
+      impacts: extractImpacts(impact),
     };
   });
 }

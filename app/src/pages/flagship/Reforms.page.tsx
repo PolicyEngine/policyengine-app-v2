@@ -33,6 +33,7 @@ import {
 } from '@/libs/draftReform';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import {
   formatCompactBreadcrumb,
   formatLabelParts,
@@ -87,21 +88,33 @@ function Card({
   eyebrow,
   title,
   body,
+  stats,
+  linkUrl,
   onClick,
 }: {
   eyebrow: string;
   title: string;
   body: string;
+  stats?: React.ReactNode;
+  linkUrl?: string;
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClick();
+        }
+      }}
       style={{
         display: 'flex',
         flexDirection: 'column',
         gap: spacing.xs,
+        height: '100%',
         padding: spacing.lg,
         border: `1px solid ${colors.border.light}`,
         borderRadius: 12,
@@ -110,6 +123,7 @@ function Card({
         textAlign: 'left',
         fontFamily: typography.fontFamily.primary,
         transition: 'border-color 120ms, box-shadow 120ms, transform 120ms',
+        boxSizing: 'border-box',
       }}
       onMouseEnter={(event) => {
         event.currentTarget.style.borderColor = colors.primary[500];
@@ -122,7 +136,22 @@ function Card({
         event.currentTarget.style.transform = 'none';
       }}
     >
-      <Eyebrow>{eyebrow}</Eyebrow>
+      <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <div style={{ flex: 1 }} />
+        {linkUrl && (
+          <a
+            href={linkUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Bill text"
+            onClick={(event) => event.stopPropagation()}
+            style={{ display: 'inline-flex', color: colors.text.secondary }}
+          >
+            <IconExternalLink size={13} />
+          </a>
+        )}
+      </Stack>
       <Text
         style={{
           fontSize: typography.fontSize.base,
@@ -146,7 +175,33 @@ function Card({
           {body}
         </Text>
       )}
-    </button>
+      {stats && (
+        <div
+          style={{
+            marginTop: 'auto',
+            paddingTop: spacing.sm,
+            borderTop: `1px solid ${colors.border.light}`,
+            display: 'flex',
+            gap: spacing.lg,
+            flexWrap: 'wrap',
+          }}
+        >
+          {stats}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** One headline number on a card: value in teal, quiet label after. */
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <Text style={{ fontSize: typography.fontSize.sm, whiteSpace: 'nowrap' }}>
+      <span style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}>
+        {value}
+      </span>{' '}
+      <span style={{ color: colors.text.secondary }}>{label}</span>
+    </Text>
   );
 }
 
@@ -347,6 +402,32 @@ export default function ReformsPage() {
   const isDirty = (reform: Reform) =>
     editedLabel !== (reform.label ?? '') ||
     reform.parameters.some((p) => editedValues[p.name] !== p.values[0]?.value);
+
+  const billStats = (bill: TrackedBill): React.ReactNode => {
+    const stats: React.ReactNode[] = [];
+    const revenue = bill.impacts?.revenue;
+    if (typeof revenue === 'number') {
+      const { display, label } = formatBudgetaryImpact(revenue);
+      stats.push(
+        <Stat
+          key="revenue"
+          value={`${revenue < 0 ? '\u2212' : '+'}$${display}${label ? ` ${label}` : ''}`}
+          label="revenue"
+        />
+      );
+    }
+    const poverty = bill.impacts?.povertyPercentChange;
+    if (typeof poverty === 'number') {
+      stats.push(
+        <Stat
+          key="poverty"
+          value={`${poverty > 0 ? '+' : '\u2212'}${Math.abs(poverty).toFixed(1)}%`}
+          label="poverty"
+        />
+      );
+    }
+    return stats.length > 0 ? stats : undefined;
+  };
 
   const backLink = (
     <button
@@ -619,7 +700,7 @@ export default function ReformsPage() {
 
   // ---- The browsing surface ----
   return (
-    <WorkspaceLayout>
+    <WorkspaceLayout wide>
       <Stack style={{ gap: spacing.lg }}>
         <Stack
           style={{
@@ -771,6 +852,8 @@ export default function ReformsPage() {
                 eyebrow={bill.jurisdiction}
                 title={bill.title}
                 body={bill.summary}
+                linkUrl={bill.legiscanUrl}
+                stats={billStats(bill)}
                 onClick={() => setSelectedId(bill.id)}
               />
             ))}

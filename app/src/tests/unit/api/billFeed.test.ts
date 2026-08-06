@@ -51,6 +51,8 @@ describe('fetchTrackerBills', () => {
           reform_params: {
             'gov.states.ut.tax.income.rate': { '2026-01-01.2100-12-31': 0.0445 },
           },
+          budgetary_impact: { stateRevenueImpact: -120000000, netCost: -120000000 },
+          poverty_impact: { baselineRate: 0.11, reformRate: 0.108, percentChange: -1.8 },
         },
       ],
       processed_bills: [
@@ -87,6 +89,7 @@ describe('fetchTrackerBills', () => {
       provisions: [{ path: 'gov.states.ut.tax.income.rate', value: 0.0445 }],
       keyFindings: ['Costs state $120.0M annually'],
       legiscanUrl: 'https://legiscan.com/UT/bill/SB0060',
+      impacts: { revenue: -120000000, povertyPercentChange: -1.8 },
     });
   });
 });
