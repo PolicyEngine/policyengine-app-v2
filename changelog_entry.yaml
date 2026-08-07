@@ -1,6 +1,7 @@
 - bump: patch
   changes:
     added:
+      - Add the AI hub at /:countryId/ai — one home for PolicyEngine's AI research (economy strand) and AI-native modeling work (methods strand), driven by a checked-in data file
       - Add SMF citation on AI and junior hiring, which cites PolicyEngine UK's estimate for extending the employer NI exemption to age 25
       - Add City AM citation on Burnham and junior hiring, which cites PolicyEngine UK's estimate for extending the NI contribution exemption to 21-24-year-old NEETs
       - Add the Introducing PolicyBench research post
