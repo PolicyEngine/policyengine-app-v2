@@ -1439,3 +1439,53 @@ export default function SocietyWideOverview({
     </Stack>
   );
 }
+
+/**
+ * Congressional district card as a standalone dashboard section — used
+ * by the flagship report's Districts section. Must be rendered inside
+ * a CongressionalDistrictDataProvider.
+ */
+export function StandaloneCongressionalDistrictCard({
+  output,
+}: {
+  output: SocietyWideReportOutput;
+}) {
+  const header = (
+    <Group gap="md" align="center">
+      <div
+        style={{
+          width: SECONDARY_ICON_SIZE,
+          height: SECONDARY_ICON_SIZE,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.gray[100],
+          borderRadius: spacing.xs,
+          flexShrink: 0,
+        }}
+      >
+        <IconMap size={20} color={colors.gray[700]} stroke={1.5} />
+      </div>
+      <Text
+        style={{
+          fontSize: typography.fontSize.base,
+          fontWeight: typography.fontWeight.semibold,
+          color: colors.text.primary,
+        }}
+      >
+        Congressional district impact
+      </Text>
+    </Group>
+  );
+
+  return (
+    <CongressionalDistrictCard
+      output={output}
+      mode="expanded"
+      zIndex={1}
+      gridGap={GRID_GAP}
+      header={header}
+      onToggleMode={() => {}}
+    />
+  );
+}
