@@ -104,6 +104,10 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
 ## Embedded sites
 
+### The shell rule
+
+**Everything served on policyengine.org carries the PolicyEngine site shell — header/nav and footer — and zone children must render it themselves** (the aca-calc / snap-qc-sim pattern: global nav with the wordmark, Research, Model, API, Donate, plus the site footer links). There is no shelled fallthrough for zone paths: the website proxies each tool's path straight to the child, and `AppPage`/apps.json alone has **no production route** (removing a zone rewrite 404s the path — see #1143/#1144). The `app-zone-shell-audit` enforces the header on zone routes; `SHELL_BRAND_EXEMPT_SOURCES` lists the remaining bare legacy children and should only ever shrink — remove a tool's entry in the same change that ships its shell.
+
 ### Next.js multizones (default for all new tools)
 
 External PolicyEngine Next.js apps are stitched into `policyengine.org` as **Next.js multizones**. The website host (`website/next.config.ts`) proxies a public path to the zone's standalone Vercel deployment via `rewrites()`; the zone itself sets a matching `basePath` (or `assetPrefix` for root-served zones) so its `_next/*` assets resolve through the same proxy.

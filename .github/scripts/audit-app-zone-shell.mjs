@@ -51,7 +51,6 @@ const TOP_SHELL_SELECTOR =
 //   /uk/nics-exemption-inactive-employees — PolicyEngine/nics-exemption-inactive-employees
 //   /uk/electricity-vat-cut         — PolicyEngine/electricity-vat-cut
 //   /uk/bus-fare-cap                — PolicyEngine/bus-fare-cap
-//   /us/snap-payment-error-simulator — PolicyEngine/snap-qc-sim
 export const SHELL_BRAND_EXEMPT_SOURCES = [
   "/uk/scotland-income-tax-reform",
   "/uk/student-loan-visualisation",
@@ -62,7 +61,6 @@ export const SHELL_BRAND_EXEMPT_SOURCES = [
   "/uk/nics-exemption-inactive-employees",
   "/uk/electricity-vat-cut",
   "/uk/bus-fare-cap",
-  "/us/snap-payment-error-simulator",
 ];
 
 export function isShellBrandExempt(source) {
