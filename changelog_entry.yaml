@@ -1,1 +1,2 @@
 - Enforce the site shell on the SNAP payment error simulator route and fix four stale app iframe sources
+- Redirect /uk/cec (the retired Citizens' Economic Council simulator, embedded by citizensecon.org.uk) to /uk instead of a 404
