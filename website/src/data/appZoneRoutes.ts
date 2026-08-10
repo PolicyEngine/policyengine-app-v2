@@ -32,46 +32,13 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://refundable-credit-conversion.vercel.app/us/refundable-credit-conversion",
   },
   {
-    source: "/uk/scotland-income-tax-reform",
-    destination:
-      "https://scotland-income-tax-reform.vercel.app/uk/scotland-income-tax-reform",
-  },
-  {
     source: "/uk/uk-cliff-watch",
     destination: "https://uk-cliff-watch.vercel.app/uk/uk-cliff-watch",
-  },
-  {
-    source: "/uk/young-worker-nics",
-    destination: "https://young-worker-nics.vercel.app/uk/young-worker-nics",
-  },
-  {
-    source: "/uk/nics-exemption-inactive-employees",
-    destination:
-      "https://nics-exemption-inactive-employees.vercel.app/uk/nics-exemption-inactive-employees",
-  },
-  {
-    source: "/uk/electricity-vat-cut",
-    destination:
-      "https://electricity-vat-cut.vercel.app/uk/electricity-vat-cut",
-  },
-  {
-    source: "/uk/bus-fare-cap",
-    destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
-  },
-  {
-    source: "/us/snap-payment-error-simulator",
-    destination:
-      "https://snap-qc-sim.vercel.app/us/snap-payment-error-simulator",
   },
   {
     source: "/us/pe84",
     destination: "https://april-fools-2026-two.vercel.app/us/pe84/calculator",
     deepDestination: "https://april-fools-2026-two.vercel.app/us/pe84/:path*",
-  },
-  {
-    source: "/uk/student-loan-visualisation",
-    destination: "https://student-loan-visualisation.vercel.app/",
-    deepDestination: "https://student-loan-visualisation.vercel.app/:path*",
   },
   {
     source: "/uk/energy-price-shock",
@@ -212,15 +179,6 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://uk-public-services-imputation.vercel.app/uk/public-services-spending",
   },
   {
-    source: "/uk/uc-rebalancing",
-    destination: "https://uc-rebalancing.vercel.app/uk/uc-rebalancing",
-  },
-  {
-    source: "/uk/cancelling-fuel-duty-rise",
-    destination:
-      "https://cancelling-fuel-duty-rise.vercel.app/uk/cancelling-fuel-duty-rise",
-  },
-  {
     source: "/us/aca-calc",
     destination: "https://aca-calc.vercel.app/us/aca-calc",
   },
@@ -251,11 +209,6 @@ export const appZoneRoutes: AppZoneRoute[] = [
     source: "/us/2024-election-calculator",
     destination:
       "https://2024-election-dashboard-omega.vercel.app/us/2024-election-calculator",
-  },
-  {
-    source: "/us/obbba-household-explorer",
-    destination:
-      "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
   },
   {
     source: "/us/salternative",
