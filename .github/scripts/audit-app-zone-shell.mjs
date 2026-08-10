@@ -36,32 +36,17 @@ export const REQUIRED_NAV_LABELS = ["Research", "Model", "API", "Donate"];
 const TOP_SHELL_SELECTOR =
   'header, nav, [data-testid*="header" i], [data-testid*="site-header" i], a, button, img, [aria-label]';
 
-// Routes intentionally served WITHOUT a child-rendered PolicyEngine header.
-// These tools are embedded under policyengine.org, which already provides the
-// site header/nav, so the maintainers chose not to duplicate the PolicyEngine
-// shell inside the child app. These routes are still audited for liveness
-// (HTTP status, runtime errors, blank pages) — only the top-shell brand/nav
-// assertion is skipped. Remove an entry to re-enforce the full shell on it.
-//   /uk/scotland-income-tax-reform — PolicyEngine/scotland-income-tax-reform#8
-//   /uk/student-loan-visualisation — PolicyEngine/student-loan-visualisation#3
-//   /us/obbba-household-explorer    — PolicyEngine/obbba-household-by-household#240
-//   /uk/uc-rebalancing              — PolicyEngine/uc-rebalancing
-//   /uk/cancelling-fuel-duty-rise   — PolicyEngine/cancelling-fuel-duty-rise
-//   /uk/young-worker-nics           — PolicyEngine/young-worker-nics
-//   /uk/nics-exemption-inactive-employees — PolicyEngine/nics-exemption-inactive-employees
-//   /uk/electricity-vat-cut         — PolicyEngine/electricity-vat-cut
-//   /uk/bus-fare-cap                — PolicyEngine/bus-fare-cap
-export const SHELL_BRAND_EXEMPT_SOURCES = [
-  "/uk/scotland-income-tax-reform",
-  "/uk/student-loan-visualisation",
-  "/us/obbba-household-explorer",
-  "/uk/uc-rebalancing",
-  "/uk/cancelling-fuel-duty-rise",
-  "/uk/young-worker-nics",
-  "/uk/nics-exemption-inactive-employees",
-  "/uk/electricity-vat-cut",
-  "/uk/bus-fare-cap",
-];
+// Routes temporarily served WITHOUT a child-rendered PolicyEngine header.
+// Empty and it stays that way: every zone child now renders the site shell
+// itself (the multizone rewrite does not inject the parent shell), and the
+// zone-shell test asserts this list only ever shrinks. The last nine legacy
+// entries were removed after each repo shipped its shell — see
+// scotland-income-tax-reform#11, student-loan-visualisation#4,
+// obbba-household-by-household#245, uc-rebalancing#4,
+// cancelling-fuel-duty-rise#6, young-worker-nics#5,
+// nics-exemption-inactive-employees#11, electricity-vat-cut#1, and
+// bus-fare-cap#9.
+export const SHELL_BRAND_EXEMPT_SOURCES = [];
 
 export function isShellBrandExempt(source) {
   return SHELL_BRAND_EXEMPT_SOURCES.some(

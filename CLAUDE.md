@@ -106,7 +106,7 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
 ### The shell rule
 
-**Everything served on policyengine.org carries the PolicyEngine site shell — header/nav and footer — and zone children must render it themselves** (the aca-calc / snap-qc-sim pattern: global nav with the wordmark, Research, Model, API, Donate, plus the site footer links). There is no shelled fallthrough for zone paths: the website proxies each tool's path straight to the child, and `AppPage`/apps.json alone has **no production route** (removing a zone rewrite 404s the path — see #1143/#1144). The `app-zone-shell-audit` enforces the header on zone routes; `SHELL_BRAND_EXEMPT_SOURCES` lists the remaining bare legacy children and should only ever shrink — remove a tool's entry in the same change that ships its shell.
+**Everything served on policyengine.org carries the PolicyEngine site shell — header/nav and footer — and zone children must render it themselves** (the aca-calc / snap-qc-sim pattern: global nav with the wordmark, Research, Model, API, Donate, plus the site footer links). There is no shelled fallthrough for zone paths: the website proxies each tool's path straight to the child, and `AppPage`/apps.json alone has **no production route** (removing a zone rewrite 404s the path — see #1143/#1144). The `app-zone-shell-audit` enforces the header on zone routes; `SHELL_BRAND_EXEMPT_SOURCES` is empty and stays that way — the last nine bare legacy children shipped their shells in August 2026, and new zone embeds must render the shell from day one.
 
 ### Next.js multizones (default for all new tools)
 
