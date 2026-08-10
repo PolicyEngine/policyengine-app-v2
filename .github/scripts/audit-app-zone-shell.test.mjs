@@ -7,7 +7,6 @@ import {
   inspectTopShellData,
   isShellBrandExempt,
   resolveDestinationForSource,
-  SHELL_BRAND_EXEMPT_SOURCES,
   shouldAllowDestinationFallback,
   sourcePathFromSitemapLoc,
 } from "./audit-app-zone-shell.mjs";
@@ -251,10 +250,29 @@ describe("shouldAllowDestinationFallback", () => {
 });
 
 describe("isShellBrandExempt", () => {
-  test("the exemption list stays empty: every route carries the site shell", () => {
-    assert.equal(SHELL_BRAND_EXEMPT_SOURCES.length, 0);
-    assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), false);
-    assert.equal(isShellBrandExempt("/us/snap-payment-error-simulator"), false);
+  test("exempts configured routes and their subpaths", () => {
+    assert.equal(isShellBrandExempt("/uk/scotland-income-tax-reform"), true);
+    assert.equal(
+      isShellBrandExempt("/uk/student-loan-visualisation/budget-impact"),
+      true,
+    );
+    assert.equal(isShellBrandExempt("/uk/uc-rebalancing"), true);
+    assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), true);
+    assert.equal(isShellBrandExempt("/uk/young-worker-nics"), true);
+    assert.equal(
+      isShellBrandExempt("/uk/nics-exemption-inactive-employees"),
+      true,
+    );
+    assert.equal(isShellBrandExempt("/uk/electricity-vat-cut"), true);
+    assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), true);
+    assert.equal(
+      isShellBrandExempt("/us/snap-payment-error-simulator"),
+      true,
+    );
+  });
+
+  test("does not exempt other routes or partial-name collisions", () => {
     assert.equal(isShellBrandExempt("/uk/marriage"), false);
+    assert.equal(isShellBrandExempt("/uk/uc-rebalancing-extended"), false);
   });
 });
