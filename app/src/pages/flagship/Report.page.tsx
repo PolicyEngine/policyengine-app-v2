@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { IconHome, IconPlus, IconShieldCheck } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
@@ -21,8 +22,6 @@ import SocietyWideOverview, {
   StandaloneCongressionalDistrictCard,
 } from '@/pages/report-output/SocietyWideOverview';
 import type { CalcStartConfig } from '@/types/calculation';
-import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
-import { formatValue } from '@/utils/parameterValues';
 import { getDisplayStatus } from '@/utils/statusMapping';
 
 const SECTIONS = [
@@ -208,57 +207,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                 {countryId === 'uk' ? 'United Kingdom' : 'United States'} (nationwide)
               </Text>
               {meta && meta.provisions.length > 0 ? (
-                <div
-                  style={{
-                    background: colors.gray[50],
-                    borderRadius: 10,
-                    padding: `${spacing.xs} 0`,
-                  }}
-                >
-                  {meta.provisions.map((provision) => (
-                    <div
-                      key={provision.path}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'baseline',
-                        justifyContent: 'space-between',
-                        gap: spacing.lg,
-                        padding: `${spacing.xs} ${spacing.md}`,
-                      }}
-                    >
-                      <Text
-                        title={provision.breadcrumb || provision.path}
-                        style={{
-                          fontSize: typography.fontSize.sm,
-                          color: colors.text.primary,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {formatCompactBreadcrumb(provision.breadcrumb || provision.path)}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: typography.fontSize.sm,
-                          whiteSpace: 'nowrap',
-                          flexShrink: 0,
-                          color: colors.text.secondary,
-                        }}
-                      >
-                        {formatValue(provision.baselineValue, provision.unit)} →{' '}
-                        <span
-                          style={{
-                            color: colors.primary[700],
-                            fontWeight: typography.fontWeight.semibold,
-                          }}
-                        >
-                          {formatValue(provision.value, provision.unit)}
-                        </span>
-                      </Text>
-                    </div>
-                  ))}
-                </div>
+                <ProvisionList provisions={meta.provisions} />
               ) : (
                 <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
                   Provision detail is unavailable for this report.

@@ -15,6 +15,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { TrackedBill } from '@/api/billFeed';
 import { getReformStore } from '@/api/reformStore';
+import ProvisionList from '@/components/flagship/ProvisionList';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
@@ -202,53 +203,6 @@ function Stat({ value, label }: { value: string; label: string }) {
       </span>{' '}
       <span style={{ color: colors.text.secondary }}>{label}</span>
     </Text>
-  );
-}
-
-function ProvisionTable({ provisions }: { provisions: ProvisionView[] }) {
-  return (
-    <div style={{ background: colors.gray[50], borderRadius: 10, padding: `${spacing.xs} 0` }}>
-      {provisions.map((provision) => (
-        <div
-          key={provision.path}
-          style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            gap: spacing.lg,
-            padding: `${spacing.xs} ${spacing.md}`,
-          }}
-        >
-          <Text
-            title={provision.breadcrumb}
-            style={{
-              fontSize: typography.fontSize.sm,
-              color: colors.text.primary,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {formatCompactBreadcrumb(provision.breadcrumb)}
-          </Text>
-          <Text
-            style={{
-              fontSize: typography.fontSize.sm,
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              color: colors.text.secondary,
-            }}
-          >
-            {formatValue(provision.baselineValue, provision.unit)} →{' '}
-            <span
-              style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}
-            >
-              {formatValue(provision.value, provision.unit)}
-            </span>
-          </Text>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -491,7 +445,7 @@ export default function ReformsPage() {
             </Stack>
           )}
           {provisions.length > 0 ? (
-            <ProvisionTable provisions={provisions} />
+            <ProvisionList provisions={provisions} />
           ) : (
             <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
               Parameter mapping for this bill hasn't been published yet — report and draft actions

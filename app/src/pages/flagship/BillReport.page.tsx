@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { TrackedBill } from '@/api/billFeed';
+import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
@@ -12,12 +13,8 @@ import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { RootState } from '@/store';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
-import {
-  formatCompactBreadcrumb,
-  formatLabelParts,
-  getHierarchicalLabels,
-} from '@/utils/parameterLabels';
-import { formatValue, getCurrentValue } from '@/utils/parameterValues';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import { getCurrentValue } from '@/utils/parameterValues';
 
 interface BillReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
@@ -172,57 +169,12 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
             </Stack>
 
             {provisions.length > 0 && (
-              <div
-                style={{
-                  background: colors.gray[50],
-                  borderRadius: 10,
-                  padding: `${spacing.xs} 0`,
-                }}
-              >
-                {provisions.map((provision) => (
-                  <div
-                    key={provision.path}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'baseline',
-                      justifyContent: 'space-between',
-                      gap: spacing.lg,
-                      padding: `${spacing.xs} ${spacing.md}`,
-                    }}
-                  >
-                    <Text
-                      title={provision.breadcrumb}
-                      style={{
-                        fontSize: typography.fontSize.sm,
-                        color: colors.text.primary,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {formatCompactBreadcrumb(provision.breadcrumb)}
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: typography.fontSize.sm,
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                        color: colors.text.secondary,
-                      }}
-                    >
-                      {formatValue(provision.baselineValue, provision.unit)} →{' '}
-                      <span
-                        style={{
-                          color: colors.primary[700],
-                          fontWeight: typography.fontWeight.semibold,
-                        }}
-                      >
-                        {formatValue(provision.value, provision.unit)}
-                      </span>
-                    </Text>
-                  </div>
-                ))}
-              </div>
+              <Stack style={{ gap: spacing.md }}>
+                <Title order={2} style={{ margin: 0, fontSize: typography.fontSize.xl }}>
+                  What it changes
+                </Title>
+                <ProvisionList provisions={provisions} />
+              </Stack>
             )}
 
             <Stack style={{ gap: spacing.md }}>
