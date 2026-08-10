@@ -265,13 +265,15 @@ describe("isShellBrandExempt", () => {
     );
     assert.equal(isShellBrandExempt("/uk/electricity-vat-cut"), true);
     assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), true);
-    assert.equal(
-      isShellBrandExempt("/us/snap-payment-error-simulator"),
-      true,
-    );
   });
 
-  test("does not exempt other routes or partial-name collisions", () => {
+  test("does not exempt shelled children, other routes, or partial-name collisions", () => {
+    // snap-qc-sim renders the full site shell (PolicyEngine/snap-qc-sim#26),
+    // so its route left the exemption list and the audit enforces it.
+    assert.equal(
+      isShellBrandExempt("/us/snap-payment-error-simulator"),
+      false,
+    );
     assert.equal(isShellBrandExempt("/uk/marriage"), false);
     assert.equal(isShellBrandExempt("/uk/uc-rebalancing-extended"), false);
   });
