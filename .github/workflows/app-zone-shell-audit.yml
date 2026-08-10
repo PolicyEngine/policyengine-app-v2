@@ -15,6 +15,9 @@ jobs:
   audit:
     name: Audit PolicyEngine shell on app-zone routes
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
@@ -35,3 +38,21 @@ jobs:
         env:
           APP_ZONE_ALLOW_DESTINATION_FALLBACK: ${{ github.event_name == 'pull_request' && '1' || '0' }}
         run: node .github/scripts/audit-app-zone-shell.mjs
+
+      - name: File or bump an issue when the scheduled audit fails
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Production zone-shell audit is failing"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" \
+              --body "Still failing: $run_url"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The scheduled app-zone shell audit failed: $run_url
+
+          A zone child stopped rendering the PolicyEngine site shell, or a route is down or erroring. Every embedded tool renders the shell itself (CLAUDE.md → Embedded sites → The shell rule); the child repo's own CI shell guard should catch this at PR time — fix the child and check why its guard did not."
+          fi
