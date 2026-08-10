@@ -67,10 +67,10 @@ describe('ReformsPage', () => {
     mockFindByUser.mockResolvedValue([]);
   });
 
-  test('given the default view then bill cards render with jurisdiction eyebrows', () => {
+  test('given the default view then bill cards render with jurisdiction eyebrows', async () => {
     renderReforms();
 
-    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
+    expect(await screen.findByText(/HB 106/)).toBeInTheDocument();
     // "Utah" appears as the card eyebrow and in the place filter
     expect(screen.getAllByText('Utah').length).toBeGreaterThanOrEqual(2);
     // Cards, not accordions: no expanded actions yet
@@ -81,24 +81,26 @@ describe('ReformsPage', () => {
     const user = userEvent.setup();
     renderReforms();
 
-    await user.click(screen.getByText('Child tax credit expansion proposal'));
+    await user.click(await screen.findByText('Child tax credit expansion proposal'));
 
     expect(screen.getByRole('button', { name: /run impact report/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeInTheDocument();
     expect(screen.getByText(/raises the base child tax credit/i)).toBeInTheDocument();
   });
 
-  test('given a ?bill deep link then the detail opens directly', () => {
+  test('given a ?bill deep link then the detail opens directly', async () => {
     renderReforms('/us/reforms?bill=us-ctc-expansion');
 
-    expect(screen.getByRole('button', { name: /open as draft reform/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /open as draft reform/i })
+    ).toBeInTheDocument();
   });
 
   test('given open as draft in the detail then the draft is populated', async () => {
     const user = userEvent.setup();
     renderReforms();
 
-    await user.click(screen.getByText('Child tax credit expansion proposal'));
+    await user.click(await screen.findByText('Child tax credit expansion proposal'));
     await user.click(screen.getByRole('button', { name: /open as draft reform/i }));
 
     const draft = getDraftReform();
@@ -111,6 +113,7 @@ describe('ReformsPage', () => {
     const user = userEvent.setup();
     renderReforms();
 
+    await screen.findByText(/HB 106/);
     await user.selectOptions(screen.getByLabelText(/filter by state/i), 'Utah');
 
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();
@@ -123,7 +126,7 @@ describe('ReformsPage', () => {
 
     await user.type(screen.getByRole('textbox', { name: /search reforms/i }), 'snap');
 
-    expect(screen.getByText(/SNAP benefit adjustment/)).toBeInTheDocument();
+    expect(await screen.findByText(/SNAP benefit adjustment/)).toBeInTheDocument();
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
   });
 
@@ -201,7 +204,7 @@ describe('ReformsPage', () => {
     const user = userEvent.setup();
     renderReforms();
 
-    await user.click(screen.getByText('Child tax credit expansion proposal'));
+    await user.click(await screen.findByText('Child tax credit expansion proposal'));
     await user.click(screen.getByRole('button', { name: /all reforms/i }));
 
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();

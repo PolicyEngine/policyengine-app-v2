@@ -49,8 +49,12 @@ export function useTrackedBills(countryId: CountryId): {
 
   const live = (data ?? []).filter((bill) => bill.countryId === countryId);
   const isLive = Boolean(data && data.length > 0);
+  // While the feed is in flight, return nothing rather than the samples —
+  // otherwise the list renders sample cards and swaps them for live ones
+  // a few seconds later. Samples are the settled fallback only.
+  const fallback = isLoading ? [] : sampleBills(countryId);
   return {
-    bills: isLive ? live : sampleBills(countryId),
+    bills: isLive ? live : fallback,
     isLive,
     isLoading,
   };

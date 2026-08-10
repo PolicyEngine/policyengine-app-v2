@@ -232,7 +232,7 @@ export default function ReformsPage() {
   const [editedValues, setEditedValues] = useState<Record<string, any>>({});
 
   const runReport = useRunFlagshipReport();
-  const { bills, isLive } = useTrackedBills(countryId);
+  const { bills, isLive, isLoading: billsLoading } = useTrackedBills(countryId);
 
   const {
     data: reforms,
@@ -777,7 +777,8 @@ export default function ReformsPage() {
           </Text>
         )}
 
-        {tab === 'bills' && visibleBills.length === 0 && (
+        {tab === 'bills' && billsLoading && <Spinner />}
+        {tab === 'bills' && !billsLoading && visibleBills.length === 0 && (
           <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
             No bills match — adjust the search or place filter.
           </Text>
@@ -830,7 +831,7 @@ export default function ReformsPage() {
             ))}
         </div>
 
-        {tab === 'bills' && !isLive && (
+        {tab === 'bills' && !billsLoading && !isLive && (
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
             Showing illustrative samples — the live tracker feed connects via environment
             configuration.
