@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconArrowLeft,
   IconChartBar,
@@ -50,6 +50,9 @@ const SOURCE_LABELS: Record<ReformSource, string> = {
 };
 
 type Tab = 'bills' | 'yours';
+
+/** Bills render in pages of this size; scrolling near the end reveals the next page. */
+const BILLS_PAGE_SIZE = 12;
 
 interface ProvisionView {
   path: string;
@@ -329,6 +332,33 @@ export default function ReformsPage() {
         matches(`${bill.title} ${bill.jurisdiction} ${bill.summary}`)
     )
     .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+
+  // The live feed can carry hundreds of bills — render a page at a time
+  // and reveal the next as the reader approaches the end of the grid.
+  const [billsShown, setBillsShown] = useState(BILLS_PAGE_SIZE);
+  useEffect(() => {
+    setBillsShown(BILLS_PAGE_SIZE);
+  }, [tab, query, placeFilter, countryId]);
+  const pagedBills = visibleBills.slice(0, billsShown);
+  const hasMoreBills = visibleBills.length > billsShown;
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') {
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setBillsShown((count) => count + BILLS_PAGE_SIZE);
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMoreBills, billsShown]);
 
   const visibleReforms = (reforms ?? []).filter((reform) =>
     matches(reform.label || 'Untitled reform')
@@ -808,7 +838,7 @@ export default function ReformsPage() {
           }}
         >
           {tab === 'bills' &&
-            visibleBills.map((bill) => (
+            pagedBills.map((bill) => (
               <Card
                 key={bill.id}
                 eyebrow={bill.jurisdiction}
@@ -830,6 +860,29 @@ export default function ReformsPage() {
               />
             ))}
         </div>
+
+        {tab === 'bills' && hasMoreBills && (
+          <div
+            ref={loadMoreRef}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: spacing.sm,
+              padding: spacing.md,
+            }}
+          >
+            <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+              Showing {pagedBills.length} of {visibleBills.length} bills
+            </Text>
+            <Button
+              variant="outline"
+              onClick={() => setBillsShown((count) => count + BILLS_PAGE_SIZE)}
+            >
+              Show more
+            </Button>
+          </div>
+        )}
 
         {tab === 'bills' && !billsLoading && !isLive && (
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>

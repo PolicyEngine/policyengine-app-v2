@@ -23,6 +23,16 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
   };
 });
 
+const mockFetchTrackerBills = vi.fn();
+
+vi.mock('@/api/billFeed', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/billFeed')>();
+  return {
+    ...actual,
+    fetchTrackerBills: () => mockFetchTrackerBills(),
+  };
+});
+
 const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', async () => {
@@ -65,6 +75,8 @@ describe('ReformsPage', () => {
     vi.clearAllMocks();
     clearDraftReform();
     mockFindByUser.mockResolvedValue([]);
+    // No live feed by default — tests run against the in-repo samples.
+    mockFetchTrackerBills.mockResolvedValue(null);
   });
 
   test('given the default view then bill cards render with jurisdiction eyebrows', async () => {
@@ -128,6 +140,28 @@ describe('ReformsPage', () => {
 
     expect(await screen.findByText(/SNAP benefit adjustment/)).toBeInTheDocument();
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+  });
+
+  test('given more bills than one page then the grid paginates with show more', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue(
+      Array.from({ length: 30 }, (_, index) => ({
+        id: `live-bill-${index}`,
+        countryId: 'us',
+        jurisdiction: 'Utah',
+        title: `Live bill ${index}`,
+        status: 'Analyzed',
+        summary: '',
+        provisions: [],
+        date: `2026-01-${String((index % 28) + 1).padStart(2, '0')}`,
+      }))
+    );
+    renderReforms();
+
+    expect(await screen.findByText('Showing 12 of 30 bills')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Show more' }));
+
+    expect(screen.getByText('Showing 24 of 30 bills')).toBeInTheDocument();
   });
 
   test('given the Yours tab with no reforms then the invitation shows', async () => {
