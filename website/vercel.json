@@ -5,6 +5,11 @@
   "outputDirectory": ".next",
   "redirects": [
     {
+      "source": "/uk/cec",
+      "destination": "/uk",
+      "permanent": false
+    },
+    {
       "source": "/:countryId/blog/:slug",
       "destination": "/:countryId/research/:slug",
       "permanent": true
