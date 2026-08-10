@@ -104,16 +104,7 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
 ## Embedded sites
 
-### The shell rule (applies to every embed path)
-
-**Everything served on policyengine.org carries the PolicyEngine site shell — header/nav and footer.** There are exactly two compliant ways to put a tool on the site:
-
-1. **apps.json + AppPage (default for standalone tools).** Add an `apps.json` entry (`type: "iframe"`, `source` = the tool's standalone URL — including its basePath if it has one). The `/:countryId/:slug` catch-all renders it inside `AppLayout` (header + footer) via `IframeContent`, which forwards the parent's query string into the iframe and syncs `{type: "urlUpdate", params}` / `{type: "hashchange", hash}` postMessages back to the parent URL bar. No zone route needed; the tool's deep links and share URLs work through the shell.
-2. **App-zone rewrite (only for tools that render the full shell themselves).** A zone route serves the child app directly at the public path, so the child must render the complete PolicyEngine header/nav (audited by `app-zone-shell-audit`) and footer. If the tool does not render its own shell, do not give it a zone route — use path 1.
-
-The audit's `SHELL_BRAND_EXEMPT_SOURCES` list is empty and should stay empty (ten bare-child zone routes were removed 2026-08-09 and now serve through AppPage).
-
-### Next.js multizones (for tools rendering their own shell)
+### Next.js multizones (default for all new tools)
 
 External PolicyEngine Next.js apps are stitched into `policyengine.org` as **Next.js multizones**. The website host (`website/next.config.ts`) proxies a public path to the zone's standalone Vercel deployment via `rewrites()`; the zone itself sets a matching `basePath` (or `assetPrefix` for root-served zones) so its `_next/*` assets resolve through the same proxy.
 
