@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   IconAdjustments,
   IconDotsVertical,
@@ -37,6 +38,19 @@ export default function FlagshipSidebar() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const location = useAppLocation();
+
+  // Warm the section routes so the first click on each is instant.
+  useEffect(() => {
+    NAV_ITEMS.forEach(({ slug }) => nav.prefetch?.(`/${countryId}/${slug}`));
+  }, [nav, countryId]);
+
+  // Highlight the clicked item immediately — router navigation can take
+  // a beat (route compile in dev, RSC fetch in prod) and the sidebar
+  // should not look unresponsive while it lands.
+  const [pendingSlug, setPendingSlug] = useState<string | null>(null);
+  useEffect(() => {
+    setPendingSlug(null);
+  }, [location.pathname]);
 
   const { data: reforms } = useQuery({
     queryKey: ['reforms', MOCK_USER_ID, countryId],
@@ -83,12 +97,17 @@ export default function FlagshipSidebar() {
 
       <Stack style={{ gap: 2, padding: `0 ${spacing.sm}` }} aria-label="Primary">
         {NAV_ITEMS.map(({ slug, label, icon: Icon }) => {
-          const active = location.pathname.includes(`/${slug}`);
+          const active = pendingSlug
+            ? pendingSlug === slug
+            : location.pathname.includes(`/${slug}`);
           return (
             <button
               key={slug}
               type="button"
-              onClick={() => nav.push(`/${countryId}/${slug}`)}
+              onClick={() => {
+                setPendingSlug(slug);
+                nav.push(`/${countryId}/${slug}`);
+              }}
               aria-current={active ? 'page' : undefined}
               style={{
                 display: 'flex',
