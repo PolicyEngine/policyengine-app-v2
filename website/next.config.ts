@@ -69,6 +69,13 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/ai-agents",
         permanent: true,
       },
+      // Retired Citizens' Economic Council simulator, still embedded by
+      // citizensecon.org.uk/policymodelling → main UK simulator
+      {
+        source: "/uk/cec",
+        destination: "/uk",
+        permanent: false,
+      },
       // Legacy /blog → /research
       {
         source: "/:countryId/blog/:slug",
