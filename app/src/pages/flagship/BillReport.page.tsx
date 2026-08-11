@@ -298,11 +298,15 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
             <Tabs value={tab} onValueChange={setTab} style={{ gap: spacing.lg }}>
               <TabsList
-                variant="default"
-                className="tw:max-w-full tw:overflow-x-auto tw:justify-start"
+                variant="line"
+                className="tw:max-w-full tw:justify-start tw:gap-4 tw:overflow-x-auto tw:border-b tw:border-border"
               >
                 {tabs.map((option) => (
-                  <TabsTrigger key={option.id} value={option.id}>
+                  <TabsTrigger
+                    key={option.id}
+                    value={option.id}
+                    className="tw:px-0 tw:after:bottom-[-1px] tw:after:bg-primary"
+                  >
                     {option.label}
                   </TabsTrigger>
                 ))}
@@ -310,6 +314,17 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
               <TabsContent value="overview">
                 <Stack style={{ gap: spacing.md }}>
+                  {bill.summary && (
+                    <Text
+                      style={{
+                        fontSize: typography.fontSize.base,
+                        color: colors.text.secondary,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {bill.summary}
+                    </Text>
+                  )}
                   <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
                     {typeof revenue === 'number' && (
                       <ReportCard grow>
@@ -339,17 +354,6 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                       )}
                     </Stack>
                   </Stack>
-                  {bill.summary && (
-                    <Text
-                      style={{
-                        fontSize: typography.fontSize.base,
-                        color: colors.text.secondary,
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {bill.summary}
-                    </Text>
-                  )}
                   {(bill.author || bill.date || billTextUrl) && (
                     <Stack
                       style={{
