@@ -5,6 +5,11 @@
   "outputDirectory": ".next",
   "redirects": [
     {
+      "source": "/uk/cec",
+      "destination": "/uk",
+      "permanent": false
+    },
+    {
       "source": "/:countryId/blog/:slug",
       "destination": "/:countryId/research/:slug",
       "permanent": true
@@ -159,6 +164,14 @@
     {
       "source": "/us/api/:path*",
       "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/:path*"
+    },
+    {
+      "source": "/scorecard",
+      "destination": "https://policyengine-scorecard.vercel.app/scorecard"
+    },
+    {
+      "source": "/scorecard/:path*",
+      "destination": "https://policyengine-scorecard.vercel.app/scorecard/:path*"
     }
   ]
 }

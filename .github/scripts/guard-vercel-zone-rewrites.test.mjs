@@ -12,13 +12,19 @@ describe("extractZoneSlug", () => {
   test("extracts the slug after /us or /uk", () => {
     assert.equal(extractZoneSlug("/us/taxsim"), "taxsim");
     assert.equal(extractZoneSlug("/uk/api"), "api");
-    assert.equal(extractZoneSlug("/us/oregon-kicker-refund"), "oregon-kicker-refund");
+    assert.equal(
+      extractZoneSlug("/us/oregon-kicker-refund"),
+      "oregon-kicker-refund",
+    );
   });
 
   test("strips deep-path suffixes", () => {
     assert.equal(extractZoneSlug("/us/taxsim/:path*"), "taxsim");
     assert.equal(extractZoneSlug("/uk/api/"), "api");
-    assert.equal(extractZoneSlug("/us/california-wealth-tax/embed"), "california-wealth-tax");
+    assert.equal(
+      extractZoneSlug("/us/california-wealth-tax/embed"),
+      "california-wealth-tax",
+    );
   });
 
   test("handles parameterized country prefixes", () => {
@@ -39,13 +45,17 @@ describe("extractZoneSlug", () => {
 describe("isZoneShaped", () => {
   test("flags country-prefixed sources pointing at vercel.app", () => {
     assert.equal(
-      isZoneShaped({ source: "/us/taxsim", destination: "https://taxsim.vercel.app/us/taxsim" }),
+      isZoneShaped({
+        source: "/us/taxsim",
+        destination: "https://taxsim.vercel.app/us/taxsim",
+      }),
       true,
     );
     assert.equal(
       isZoneShaped({
         source: "/uk/api/:path*",
-        destination: "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*",
+        destination:
+          "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*",
       }),
       true,
     );
@@ -81,14 +91,18 @@ describe("isZoneShaped", () => {
   test("tolerates malformed inputs", () => {
     assert.equal(isZoneShaped(null), false);
     assert.equal(isZoneShaped({}), false);
-    assert.equal(isZoneShaped({ source: "/us/x", destination: "not-a-url" }), false);
+    assert.equal(
+      isZoneShaped({ source: "/us/x", destination: "not-a-url" }),
+      false,
+    );
   });
 });
 
 describe("findUnauthorizedZoneRewrites", () => {
   const legacyRewrite = {
     source: "/us/taxsim",
-    destination: "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim",
+    destination:
+      "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim",
   };
   const newRewrite = {
     source: "/us/qbi-calculator",
@@ -118,19 +132,14 @@ describe("findUnauthorizedZoneRewrites", () => {
 describe("LEGACY_VERCEL_JSON_ZONE_SLUGS", () => {
   test("matches the current main snapshot exactly", () => {
     // If this assertion fails, you've either added a new zone rewrite to
-    // vercel.json (route it through appZoneRoutes.ts instead) or migrated
-    // a legacy one to appZoneRoutes.ts (drop the slug from this set).
-    assert.deepEqual(
-      [...LEGACY_VERCEL_JSON_ZONE_SLUGS].sort(),
-      [
-        "api",
-        "california-wealth-tax",
-        "keep-your-pay-act",
-        "model",
-        "oregon-kicker-refund",
-        "taxsim",
-        "watca",
-      ],
-    );
+    // website/vercel.json (route it through appZoneRoutes.ts instead) or
+    // migrated a legacy one to appZoneRoutes.ts (drop the slug from this set).
+    assert.deepEqual([...LEGACY_VERCEL_JSON_ZONE_SLUGS].sort(), [
+      "api",
+      "keep-your-pay-act",
+      "model",
+      "taxsim",
+      "watca",
+    ]);
   });
 });

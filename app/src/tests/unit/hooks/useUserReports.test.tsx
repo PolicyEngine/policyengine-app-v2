@@ -400,14 +400,16 @@ describe('useUserReports', () => {
       expect(result.current.data.length).toBeGreaterThan(0);
       // Some simulations might still be cached, so we just verify the structure
       expect(result.current.data[0]).toHaveProperty('simulations');
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.data.some((report) => report.error)).toBe(true);
     });
 
-    test('given policy fetch fails then continues with partial data', async () => {
+    test('given policy fetch fails then marks affected reports without page-level error', async () => {
       // Given
       const userId = TEST_USER_ID;
-      vi.spyOn(policyApi, 'fetchPolicyById').mockRejectedValue(
-        new Error(ERROR_MESSAGES.POLICY_FETCH_FAILED)
-      );
+      const error = new Error('Policy fetch failed');
+      vi.spyOn(policyApi, 'fetchPolicyById').mockRejectedValue(error);
 
       // When
       const { result } = renderHook(() => useUserReports(userId), { wrapper });
@@ -417,12 +419,11 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Should still return reports but policies will be undefined or partial
-      // The hook doesn't guarantee empty arrays when fetches fail
       expect(result.current.data).toBeDefined();
       expect(result.current.data.length).toBeGreaterThan(0);
-      // Some policies might still be cached, so we just verify the structure
-      expect(result.current.data[0]).toHaveProperty('policies');
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.data.some((report) => report.error === error)).toBe(true);
     });
   });
 

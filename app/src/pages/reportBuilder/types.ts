@@ -17,12 +17,6 @@ export interface ReportBuilderState {
 
 export type IngredientType = 'policy' | 'population' | 'dynamics';
 
-export interface IngredientPickerState {
-  isOpen: boolean;
-  simulationIndex: number;
-  ingredientType: IngredientType;
-}
-
 // ============================================================================
 // COLOR CONFIG
 // ============================================================================
@@ -44,13 +38,17 @@ export interface SavedPolicy {
   paramCount: number;
   createdAt?: string;
   updatedAt?: string;
+  isDisabled?: boolean;
+  errorMessage?: string;
 }
 
 export interface RecentPopulation {
   id: string;
   label: string;
   type: 'geography' | 'household';
-  population: PopulationStateProps;
+  population?: PopulationStateProps;
+  isDisabled?: boolean;
+  errorMessage?: string;
 }
 
 // ============================================================================
@@ -125,6 +123,8 @@ export interface OptionChipSquareProps {
   isSelected: boolean;
   onClick: () => void;
   colorConfig: IngredientColorConfig;
+  isDisabled?: boolean;
+  errorMessage?: string;
 }
 
 export interface OptionChipRowProps {
@@ -134,6 +134,8 @@ export interface OptionChipRowProps {
   isSelected: boolean;
   onClick: () => void;
   colorConfig: IngredientColorConfig;
+  isDisabled?: boolean;
+  errorMessage?: string;
 }
 
 export interface CreateCustomChipProps {
@@ -175,6 +177,7 @@ export interface IngredientSectionProps {
   savedPolicies?: SavedPolicy[];
   recentPopulations?: RecentPopulation[];
   currentLabel?: string;
+  selectedErrorMessage?: string;
   isReadOnly?: boolean;
   onViewPolicy?: () => void;
   onViewPopulation?: () => void;
@@ -204,6 +207,8 @@ export interface SimulationBlockProps {
   inheritedPopulation?: PopulationStateProps;
   savedPolicies: SavedPolicy[];
   recentPopulations: RecentPopulation[];
+  policyErrorMessage?: string;
+  populationErrorMessage?: string;
   isReadOnly?: boolean;
 }
 
@@ -215,14 +220,6 @@ export interface AddSimulationCardProps {
 // ============================================================================
 // MODAL COMPONENT TYPES
 // ============================================================================
-
-export interface IngredientPickerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  type: IngredientType;
-  onSelect: (value: string) => void;
-  onCreateNew: () => void;
-}
 
 export interface PolicyBrowseState {
   isOpen: boolean;
@@ -284,8 +281,6 @@ export interface TopBarAction {
 export interface SimulationCanvasProps {
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
-  pickerState: IngredientPickerState;
-  setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
 }
 
 export interface ReportMetaPanelProps {

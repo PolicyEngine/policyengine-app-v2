@@ -17,7 +17,10 @@ import {
 
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
-  isPolicyWithAssociation: vi.fn((val) => val && val.policy && val.association),
+  isPolicyWithAssociation: vi.fn(
+    (value: unknown) =>
+      !!value && typeof value === 'object' && 'association' in value && 'policy' in value
+  ),
 }));
 
 describe('PolicyExistingView', () => {
@@ -126,6 +129,44 @@ describe('PolicyExistingView', () => {
       // The subtitle should show "Policy #unknown" when ID is missing
       expect(screen.getByText(/policy #unknown/i)).toBeInTheDocument();
     });
+
+    test('given a policy detail error then displays an unselectable card with a warning icon', async () => {
+      // Given
+      const user = userEvent.setup();
+      vi.mocked(useUserPolicies).mockReturnValue({
+        data: [
+          {
+            association: {
+              id: 'broken-association',
+              userId: '1',
+              policyId: 'broken-policy',
+              label: 'Broken policy',
+              countryId: 'us',
+            },
+            policy: undefined,
+            isLoading: false,
+            isError: true,
+            error: new Error('Policy request failed'),
+          },
+        ],
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as any);
+
+      // When
+      render(<PolicyExistingView onSelectPolicy={mockOnSelectPolicy} />);
+      const policyCard = screen.getByText('Broken policy').closest('button');
+
+      // Then
+      expect(policyCard).toHaveAttribute('aria-disabled', 'true');
+      expect(screen.getByText('Failed to load')).toBeInTheDocument();
+      expect(screen.getByLabelText('Error loading this policy')).toBeInTheDocument();
+
+      await user.click(policyCard!);
+      expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
+      expect(mockOnSelectPolicy).not.toHaveBeenCalled();
+    });
   });
 
   describe('User interactions', () => {
@@ -156,6 +197,38 @@ describe('PolicyExistingView', () => {
 
       // Then
       expect(mockOnSelectPolicy).toHaveBeenCalled();
+    });
+
+    test('given a selected policy later errors then disables submission', async () => {
+      // Given
+      const user = userEvent.setup();
+      let queryResult = mockUseUserPoliciesWithData as any;
+      vi.mocked(useUserPolicies).mockImplementation(() => queryResult);
+      const { rerender } = render(<PolicyExistingView onSelectPolicy={mockOnSelectPolicy} />);
+
+      await user.click(screen.getByText(/my policy/i).closest('button')!);
+      expect(screen.getByRole('button', { name: /next/i })).toBeEnabled();
+
+      // When
+      queryResult = {
+        ...queryResult,
+        data: queryResult.data.map((item: any, index: number) =>
+          index === 0
+            ? {
+                ...item,
+                policy: undefined,
+                isError: true,
+                error: new Error('Policy request failed'),
+              }
+            : item
+        ),
+      };
+      rerender(<PolicyExistingView onSelectPolicy={mockOnSelectPolicy} />);
+
+      // Then
+      expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
+      await user.click(screen.getByRole('button', { name: /next/i }));
+      expect(mockOnSelectPolicy).not.toHaveBeenCalled();
     });
   });
 

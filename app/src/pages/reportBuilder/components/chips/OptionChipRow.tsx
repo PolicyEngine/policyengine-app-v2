@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IconCheck } from '@tabler/icons-react';
+import { IngredientErrorIcon } from '@/components/common/IngredientErrorIcon';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
@@ -13,24 +14,33 @@ export function OptionChipRow({
   isSelected,
   onClick,
   colorConfig,
+  isDisabled,
+  errorMessage,
 }: OptionChipRowProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
       role="button"
-      tabIndex={0}
+      tabIndex={isDisabled ? -1 : 0}
+      aria-disabled={isDisabled || undefined}
       style={{
         ...chipStyles.chipRow,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
-        background: isSelected ? colorConfig.bg : isHovered ? colors.gray[50] : colors.white,
+        background: isSelected
+          ? colorConfig.bg
+          : isHovered && !isDisabled
+            ? colors.gray[50]
+            : colors.white,
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        opacity: isDisabled ? 0.6 : 1,
         ...(isSelected ? chipStyles.chipRowSelected : {}),
       }}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => !isDisabled && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={() => !isDisabled && onClick()}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick();
         }
@@ -58,7 +68,11 @@ export function OptionChipRow({
           </Text>
         )}
       </Stack>
-      {isSelected && <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />}
+      {errorMessage ? (
+        <IngredientErrorIcon message={errorMessage} />
+      ) : (
+        isSelected && <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />
+      )}
     </div>
   );
 }

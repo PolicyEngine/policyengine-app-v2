@@ -31,6 +31,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://crfb-tob-impacts.vercel.app/us/taxation-of-benefits-reforms",
   },
   {
+    source: "/us/refundable-credit-conversion",
+    destination:
+      "https://refundable-credit-conversion.vercel.app/us/refundable-credit-conversion",
+  },
+  {
     source: "/uk/scotland-income-tax-reform",
     destination:
       "https://scotland-income-tax-reform.vercel.app/uk/scotland-income-tax-reform",
@@ -56,6 +61,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
   {
     source: "/uk/bus-fare-cap",
     destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
+  },
+  {
+    source: "/us/snap-payment-error-simulator",
+    destination:
+      "https://snap-qc-sim.vercel.app/us/snap-payment-error-simulator",
   },
   {
     source: "/us/pe84",

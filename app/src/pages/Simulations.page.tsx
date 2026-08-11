@@ -101,6 +101,8 @@ export default function SimulationsPage() {
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
       id: item.userSimulation.id?.toString() || item.userSimulation.simulationId.toString(), // Use user association ID, not base simulation ID
+      isDisabled: !!item.error,
+      errorMessage: 'Error loading this simulation',
       simulation: {
         text: item.userSimulation.label || `Simulation #${item.userSimulation.simulationId}`,
       } as TextValue,

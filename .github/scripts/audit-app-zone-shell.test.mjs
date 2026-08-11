@@ -7,6 +7,7 @@ import {
   inspectTopShellData,
   isShellBrandExempt,
   resolveDestinationForSource,
+  SHELL_BRAND_EXEMPT_SOURCES,
   shouldAllowDestinationFallback,
   sourcePathFromSitemapLoc,
 } from "./audit-app-zone-shell.mjs";
@@ -250,27 +251,25 @@ describe("shouldAllowDestinationFallback", () => {
 });
 
 describe("isShellBrandExempt", () => {
-  test("exempts configured routes and their subpaths", () => {
-    assert.equal(isShellBrandExempt("/uk/scotland-income-tax-reform"), true);
-    assert.equal(
-      isShellBrandExempt("/uk/student-loan-visualisation/budget-impact"),
-      true,
-    );
-    assert.equal(isShellBrandExempt("/uk/uc-rebalancing"), true);
-    assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), true);
-    assert.equal(isShellBrandExempt("/uk/young-worker-nics"), true);
-    assert.equal(
-      isShellBrandExempt("/uk/nics-exemption-inactive-employees"),
-      true,
-    );
-    assert.equal(isShellBrandExempt("/uk/electricity-vat-cut"), true);
-    assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), true);
-    assert.equal(isShellBrandExempt("/uk/chat"), true);
-    assert.equal(isShellBrandExempt("/uk/chat/s/example"), true);
+  test("exempts nothing — every zone child renders its own shell", () => {
+    // The list only ever shrinks; it drained to empty when the last nine
+    // legacy children shipped their shells. Keep it empty: new zone embeds
+    // must render the site shell from day one.
+    assert.equal(SHELL_BRAND_EXEMPT_SOURCES.length, 0);
   });
 
-  test("does not exempt other routes or partial-name collisions", () => {
+  test("enforces the shell on formerly exempt and never-exempt routes alike", () => {
+    assert.equal(isShellBrandExempt("/uk/scotland-income-tax-reform"), false);
+    assert.equal(
+      isShellBrandExempt("/uk/student-loan-visualisation/budget-impact"),
+      false,
+    );
+    assert.equal(isShellBrandExempt("/us/obbba-household-explorer"), false);
+    assert.equal(isShellBrandExempt("/uk/bus-fare-cap"), false);
+    assert.equal(
+      isShellBrandExempt("/us/snap-payment-error-simulator"),
+      false,
+    );
     assert.equal(isShellBrandExempt("/uk/marriage"), false);
-    assert.equal(isShellBrandExempt("/uk/uc-rebalancing-extended"), false);
   });
 });

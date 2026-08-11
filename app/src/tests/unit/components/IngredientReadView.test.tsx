@@ -125,4 +125,51 @@ describe('IngredientReadView', () => {
     // Then
     expect(onBuild).toHaveBeenCalled();
   });
+
+  test('given disabled row then displays warning and blocks row action', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onAction = vi.fn();
+
+    // When
+    render(
+      <IngredientReadView
+        ingredient={MOCK_INGREDIENT.NAME.toLowerCase()}
+        title={MOCK_INGREDIENT.TITLE}
+        isLoading={false}
+        isError={false}
+        data={[
+          {
+            id: 'broken-policy',
+            isDisabled: true,
+            errorMessage: 'Error loading this policy',
+            name: { text: 'Broken Policy' },
+            actions: null,
+          },
+        ]}
+        columns={[
+          {
+            key: 'name',
+            header: 'Name',
+            type: 'text',
+          },
+          {
+            key: 'actions',
+            header: '',
+            type: 'actions',
+            actions: [{ action: 'edit', tooltip: 'Edit policy', icon: <span>Edit</span> }],
+            onAction,
+          },
+        ]}
+      />
+    );
+
+    // Then
+    expect(screen.getByLabelText('Error loading this policy')).toBeInTheDocument();
+    const actionButton = screen.getByRole('button', { name: 'Edit policy' });
+    expect(actionButton).toBeDisabled();
+
+    await user.click(actionButton);
+    expect(onAction).not.toHaveBeenCalled();
+  });
 });

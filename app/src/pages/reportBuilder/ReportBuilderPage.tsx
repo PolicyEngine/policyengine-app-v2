@@ -19,7 +19,7 @@ import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { getSamplePopulations } from './constants';
 import { createCurrentLawPolicy } from './currentLaw';
 import { useReportSubmission } from './hooks/useReportSubmission';
-import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
+import type { ReportBuilderState, TopBarAction } from './types';
 
 export default function ReportBuilderPage() {
   const countryId = useCurrentCountry() as 'us' | 'uk';
@@ -35,12 +35,6 @@ export default function ReportBuilderPage() {
     label: null,
     year: CURRENT_YEAR,
     simulations: [initialSim],
-  });
-
-  const [pickerState, setPickerState] = useState<IngredientPickerState>({
-    isOpen: false,
-    simulationIndex: 0,
-    ingredientType: 'policy',
   });
 
   // Submission logic (extracted hook)
@@ -109,8 +103,6 @@ export default function ReportBuilderPage() {
       actions={topBarActions}
       reportState={reportState}
       setReportState={setReportState}
-      pickerState={pickerState}
-      setPickerState={setPickerState}
       BlockComponent={SimulationBlockFull}
     />
   );

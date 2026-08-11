@@ -236,6 +236,7 @@ export const useUserHouseholds = (userId: string) => {
     data: associations,
     isLoading: associationsLoading,
     error: associationsError,
+    refetch: refetchAssociations,
   } = useHouseholdAssociationsByUser(userId);
 
   // Extract household IDs
@@ -256,7 +257,7 @@ export const useUserHouseholds = (userId: string) => {
 
   // Combine the results
   const isLoading = associationsLoading || householdQueries.some((q) => q.isLoading);
-  const error = associationsError || householdQueries.find((q) => q.error)?.error;
+  const error = associationsError;
   const isError = !!error;
 
   // Map associations to households - filter out associations without householdId
@@ -281,6 +282,7 @@ export const useUserHouseholds = (userId: string) => {
     isLoading,
     isError,
     error,
+    refetchAssociations,
     associations, // Still available if needed separately
   };
 };
