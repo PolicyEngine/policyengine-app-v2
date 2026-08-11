@@ -53,17 +53,16 @@ import {
 } from "@/data/posts/postTransformers";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import authorsData from "@/data/posts/authors.json";
+import { buildAuthorFilterOptions } from "@/lib/authorFilterOptions";
 
 /* ─── Constants ─── */
 
-// All authors from authors.json, sorted alphabetically by display name. The
+// All authors from authors.json, formatted and sorted by last name. The
 // dropdown previously hardcoded a 5-name subset; pulling from authors.json
 // keeps it in sync as authors are added without a code edit.
-const allAuthors = Object.entries(
+const allAuthors = buildAuthorFilterOptions(
   authorsData as Record<string, { name: string }>,
-)
-  .map(([key, value]) => ({ key, name: value.name }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+);
 
 const typeOptions = [
   { value: "article", label: "Article" },
