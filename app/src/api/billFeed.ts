@@ -16,6 +16,15 @@ export interface TrackedBillProvision {
   fallbackBreadcrumb?: string;
 }
 
+/** Shares of households by outcome, as fractions of 1. */
+export interface WinnerShares {
+  gainMore5Pct?: number;
+  gainLess5Pct?: number;
+  noChange?: number;
+  loseLess5Pct?: number;
+  loseMore5Pct?: number;
+}
+
 export interface TrackedBill {
   id: string;
   countryId: CountryId;
@@ -27,8 +36,19 @@ export interface TrackedBill {
   /** Headline findings from the tracker's analysis, when available. */
   keyFindings?: string[];
   legiscanUrl?: string;
+  /** The bill's source page (congress.gov / state legislature), when known. */
+  sourceUrl?: string;
+  /** Bill sponsor, e.g. "Rep. Mackenzie, Ryan [R-PA-7]". */
+  author?: string;
   /** Analysis date (ISO), for newest-first ordering. */
   date?: string;
+  /** Model and data versions behind the stored analysis. */
+  provenance?: {
+    modelVersion?: string;
+    dataset?: string;
+    datasetVersion?: string;
+    computedAt?: string;
+  };
   /** Headline impact numbers from the tracker's stored microsim run. */
   impacts?: {
     /** Change in state revenue (negative = revenue loss). */
@@ -45,12 +65,15 @@ export interface TrackedBill {
       change?: number;
       percentChange?: number;
     };
-    winnersLosers?: {
-      gainMore5Pct?: number;
-      gainLess5Pct?: number;
-      noChange?: number;
-      loseLess5Pct?: number;
-      loseMore5Pct?: number;
+    childPoverty?: {
+      baselineRate?: number;
+      reformRate?: number;
+      change?: number;
+      percentChange?: number;
+    };
+    winnersLosers?: WinnerShares & {
+      /** Outcome shares within each income decile (1–10). */
+      byDecile?: Record<string, WinnerShares>;
     };
     decile?: { relative?: Record<string, number>; average?: Record<string, number> };
   };
@@ -176,6 +199,9 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
   if (impact.poverty_impact) {
     data.poverty = impact.poverty_impact;
   }
+  if (impact.child_poverty_impact) {
+    data.childPoverty = impact.child_poverty_impact;
+  }
   if (impact.winners_losers) {
     // The tracker stores the all-households shares under intraDecile.all;
     // flatten them so consumers can read the documented flat fields.
@@ -187,6 +213,7 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
       noChange: wl.noChange ?? all.noChange,
       loseLess5Pct: wl.loseLess5Pct ?? all.loseLess5Pct,
       loseMore5Pct: wl.loseMore5Pct ?? all.loseMore5Pct,
+      byDecile: wl.intraDecile?.deciles ?? undefined,
     };
   }
   if (impact.decile_impact) {
@@ -204,7 +231,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
     trackerSelect('research', '*'),
     trackerSelect(
       'reform_impacts',
-      'id,reform_params,computed,budgetary_impact,poverty_impact,winners_losers,decile_impact'
+      'id,reform_params,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
     ),
     trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
   ]);
@@ -233,7 +260,17 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       provisions: provisionsFromReformParams(impact?.reform_params),
       keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
       legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
+      sourceUrl: record.url ?? undefined,
+      author: record.author ?? undefined,
       date: record.date ?? undefined,
+      provenance: impact
+        ? {
+            modelVersion: impact.policyengine_us_version ?? undefined,
+            dataset: impact.dataset_name ?? undefined,
+            datasetVersion: impact.dataset_version ?? undefined,
+            computedAt: impact.computed_at ?? undefined,
+          }
+        : undefined,
       impacts: extractImpacts(impact),
       impactData: extractImpactData(impact),
     };
