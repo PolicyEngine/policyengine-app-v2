@@ -152,6 +152,14 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
+    ...(typeof impact?.budgetary?.stateRevenueImpact === 'number' ||
+    typeof impact?.budgetary?.netCost === 'number'
+      ? [{ id: 'budgetary', label: 'Budgetary impact' }]
+      : []),
+    ...(typeof impact?.poverty?.percentChange === 'number' ||
+    typeof impact?.childPoverty?.percentChange === 'number'
+      ? [{ id: 'poverty', label: 'Poverty impact' }]
+      : []),
     ...(decileAverage.length > 0 || decileRelative.length > 0
       ? [{ id: 'distribution', label: 'Distribution' }]
       : []),
@@ -213,41 +221,6 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               <Title order={1} style={{ margin: 0 }}>
                 {bill.title}
               </Title>
-              {bill.summary && (
-                <Text
-                  style={{
-                    fontSize: typography.fontSize.base,
-                    color: colors.text.secondary,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {bill.summary}
-                </Text>
-              )}
-              {(bill.author || bill.date || billTextUrl) && (
-                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                  {bill.author && <>Sponsored by {bill.author}</>}
-                  {bill.author && bill.date && ' · '}
-                  {bill.date && <>Analyzed {formatDate(bill.date)}</>}
-                  {(bill.author || bill.date) && billTextUrl && ' · '}
-                  {billTextUrl && (
-                    <a
-                      href={billTextUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        color: colors.text.secondary,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 2,
-                      }}
-                    >
-                      Bill text
-                      <IconExternalLink size={11} />
-                    </a>
-                  )}
-                </Text>
-              )}
             </Stack>
 
             <Stack style={{ flexDirection: 'row', gap: spacing.md }}>
@@ -311,6 +284,41 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                     <StatTile value={`${worseOff.toFixed(0)}%`} label="households worse off" />
                   )}
                 </Stack>
+                {bill.summary && (
+                  <Text
+                    style={{
+                      fontSize: typography.fontSize.base,
+                      color: colors.text.secondary,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {bill.summary}
+                  </Text>
+                )}
+                {(bill.author || bill.date || billTextUrl) && (
+                  <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                    {bill.author && <>Sponsored by {bill.author}</>}
+                    {bill.author && bill.date && ' · '}
+                    {bill.date && <>Analyzed {formatDate(bill.date)}</>}
+                    {(bill.author || bill.date) && billTextUrl && ' · '}
+                    {billTextUrl && (
+                      <a
+                        href={billTextUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: colors.text.secondary,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 2,
+                        }}
+                      >
+                        Bill text
+                        <IconExternalLink size={11} />
+                      </a>
+                    )}
+                  </Text>
+                )}
                 {provisions.length > 0 && (
                   <Stack style={{ gap: spacing.sm }}>
                     <Title order={2} style={{ margin: 0, fontSize: typography.fontSize.xl }}>
@@ -319,6 +327,52 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                     <ProvisionList provisions={provisions} />
                   </Stack>
                 )}
+              </Stack>
+            )}
+
+            {tab === 'budgetary' && (
+              <Stack style={{ gap: spacing.md }}>
+                <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                  {typeof impact?.budgetary?.stateRevenueImpact === 'number' && (
+                    <StatTile
+                      value={money(impact.budgetary.stateRevenueImpact)}
+                      label="revenue change"
+                    />
+                  )}
+                  {typeof impact?.budgetary?.netCost === 'number' &&
+                    impact.budgetary.netCost !== impact.budgetary.stateRevenueImpact && (
+                      <StatTile value={money(impact.budgetary.netCost)} label="net cost" />
+                    )}
+                </Stack>
+                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                  Single-year budgetary impact from the tracker's stored microsimulation run.
+                </Text>
+              </Stack>
+            )}
+
+            {tab === 'poverty' && (
+              <Stack style={{ gap: spacing.md }}>
+                <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                  {typeof impact?.poverty?.percentChange === 'number' &&
+                    impact.poverty.percentChange !== 0 && (
+                      <StatTile
+                        value={percentChangeValue(impact.poverty.percentChange)}
+                        label="poverty rate change"
+                        detail={rateDetail(impact.poverty)}
+                      />
+                    )}
+                  {typeof impact?.childPoverty?.percentChange === 'number' &&
+                    impact.childPoverty.percentChange !== 0 && (
+                      <StatTile
+                        value={percentChangeValue(impact.childPoverty.percentChange)}
+                        label="child poverty change"
+                        detail={rateDetail(impact.childPoverty)}
+                      />
+                    )}
+                </Stack>
+                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                  Rates show the share of people in poverty before and after the reform.
+                </Text>
               </Stack>
             )}
 

@@ -95,6 +95,26 @@ describe('BillReportPage', () => {
     );
   });
 
+  test('given the budgetary and poverty tabs then their tiles render', async () => {
+    const user = userEvent.setup();
+    renderReport();
+
+    await user.click(await screen.findByRole('button', { name: 'Budgetary impact' }));
+    expect(screen.getByText('revenue change')).toBeInTheDocument();
+    expect(screen.getByText(/single-year budgetary impact/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Poverty impact' }));
+    expect(screen.getByText('child poverty change')).toBeInTheDocument();
+    expect(screen.getByText('16.6% → 9.9%')).toBeInTheDocument();
+  });
+
+  test('given the overview then the bill summary and attribution live there', async () => {
+    renderReport();
+
+    expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
+    expect(screen.getByText(/Sponsored by Rep\. Mackenzie/)).toBeInTheDocument();
+  });
+
   test('given the distribution tab then the chart toggles dollars and percent', async () => {
     const user = userEvent.setup();
     renderReport();
