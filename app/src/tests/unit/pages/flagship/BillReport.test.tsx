@@ -74,20 +74,21 @@ describe('BillReportPage', () => {
     mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
   });
 
-  test('given full impact data then the overview leads with all headline tiles', async () => {
+  test('given full impact data then the overview leads with all headline metrics', async () => {
     renderReport();
 
     expect(await screen.findByText('−$225.5 billion')).toBeInTheDocument();
-    expect(screen.getByText('child poverty change')).toBeInTheDocument();
+    expect(screen.getByText('Child poverty change')).toBeInTheDocument();
     expect(screen.getByText('16.6% → 9.9%')).toBeInTheDocument();
     // The total household count is not a "households affected" figure
     expect(screen.queryByText(/households affected/i)).not.toBeInTheDocument();
   });
 
-  test('given the header then sponsor, analysis date, and bill text link show', async () => {
+  test('given the overview then summary, sponsor, date, and bill text link show', async () => {
     renderReport();
 
-    expect(await screen.findByText(/Sponsored by Rep\. Mackenzie/)).toBeInTheDocument();
+    expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
+    expect(screen.getByText(/Sponsored by Rep\. Mackenzie/)).toBeInTheDocument();
     expect(screen.getByText(/Analyzed July 6, 2026/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /bill text/i })).toHaveAttribute(
       'href',
@@ -95,45 +96,38 @@ describe('BillReportPage', () => {
     );
   });
 
-  test('given the budgetary and poverty tabs then their tiles render', async () => {
+  test('given the budgetary and poverty tabs then their metrics render', async () => {
     const user = userEvent.setup();
     renderReport();
 
-    await user.click(await screen.findByRole('button', { name: 'Budgetary impact' }));
-    expect(screen.getByText('revenue change')).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Budgetary impact' }));
+    expect(screen.getByText('Revenue change')).toBeInTheDocument();
     expect(screen.getByText(/single-year budgetary impact/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Poverty impact' }));
-    expect(screen.getByText('child poverty change')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Poverty impact' }));
+    expect(screen.getByText('Child poverty change')).toBeInTheDocument();
     expect(screen.getByText('16.6% → 9.9%')).toBeInTheDocument();
-  });
-
-  test('given the overview then the bill summary and attribution live there', async () => {
-    renderReport();
-
-    expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
-    expect(screen.getByText(/Sponsored by Rep\. Mackenzie/)).toBeInTheDocument();
   });
 
   test('given the distribution tab then the chart toggles dollars and percent', async () => {
     const user = userEvent.setup();
     renderReport();
 
-    await user.click(await screen.findByRole('button', { name: 'Distribution' }));
+    await user.click(await screen.findByRole('tab', { name: 'Distribution' }));
     expect(screen.getByText('Average household income change by decile')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Percent' }));
+    await user.click(screen.getByRole('tab', { name: 'Percent' }));
     expect(screen.getByText('Relative household income change by decile')).toBeInTheDocument();
   });
 
-  test('given the winners tab then outcome tiles and the decile chart render', async () => {
+  test('given the winners tab then outcome metrics and the decile chart render', async () => {
     const user = userEvent.setup();
     renderReport();
 
-    await user.click(await screen.findByRole('button', { name: 'Winners and losers' }));
+    await user.click(await screen.findByRole('tab', { name: 'Winners and losers' }));
 
-    expect(screen.getByText('households better off')).toBeInTheDocument();
-    expect(screen.getByText('no change')).toBeInTheDocument();
+    expect(screen.getByText('Households better off')).toBeInTheDocument();
+    expect(screen.getAllByText('No change').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Outcomes by income decile')).toBeInTheDocument();
   });
 
@@ -141,7 +135,7 @@ describe('BillReportPage', () => {
     const user = userEvent.setup();
     renderReport();
 
-    await user.click(await screen.findByRole('button', { name: 'Notes and sources' }));
+    await user.click(await screen.findByRole('tab', { name: 'Notes and sources' }));
 
     expect(screen.getByText(/CRFB band/)).toBeInTheDocument();
     expect(screen.getByText(/policyengine-us 1\.729\.3/)).toBeInTheDocument();

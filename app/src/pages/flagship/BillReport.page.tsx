@@ -1,13 +1,29 @@
 import { useState } from 'react';
-import { IconArrowLeft, IconChartBar, IconExternalLink } from '@tabler/icons-react';
+import {
+  IconArrowLeft,
+  IconCalendar,
+  IconChartBar,
+  IconExternalLink,
+  IconUser,
+} from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { TrackedBill, WinnerShares } from '@/api/billFeed';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
-import StatTile from '@/components/flagship/StatTile';
-import { Button, Stack, Text, Title } from '@/components/ui';
+import MetricCard from '@/components/report/MetricCard';
+import {
+  Button,
+  SegmentedControl,
+  Stack,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Text,
+  Title,
+} from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -65,8 +81,17 @@ function winnerRow(label: string, shares: WinnerShares) {
   };
 }
 
-/** The bordered card every report visual sits in. */
-function ChartCard({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
+/** The bordered card every report metric and visual sits in — the
+ *  flagship echo of the report redesign's dashboard cards. */
+function ReportCard({
+  title,
+  children,
+  grow,
+}: {
+  title?: React.ReactNode;
+  children: React.ReactNode;
+  grow?: boolean;
+}) {
   return (
     <Stack
       style={{
@@ -75,6 +100,7 @@ function ChartCard({ title, children }: { title: React.ReactNode; children: Reac
         border: `1px solid ${colors.border.light}`,
         borderRadius: 12,
         background: colors.background.primary,
+        ...(grow ? { flex: '1 1 220px', minWidth: 200 } : {}),
       }}
     >
       {title}
@@ -83,10 +109,34 @@ function ChartCard({ title, children }: { title: React.ReactNode; children: Reac
   );
 }
 
+function ChartTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <Text
+      style={{
+        fontSize: typography.fontSize.sm,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+function Caption({ children }: { children: React.ReactNode }) {
+  return (
+    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+      {children}
+    </Text>
+  );
+}
+
 /**
  * A bill's impact report from the tracker's precomputed results —
  * opens instantly, no simulation run. The full nationwide dashboard
- * stays one click away via the standard run pipeline.
+ * stays one click away via the standard run pipeline. Mirrors the
+ * report-output redesign: teal title, metric cards, pill tabs, and
+ * segmented chart controls.
  */
 export default function BillReportPage({ billId: propId }: BillReportPageProps) {
   const params = useParams<{ billId: string }>();
@@ -97,7 +147,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const runReport = useRunFlagshipReport();
   const { bills, isLoading } = useTrackedBills(countryId);
   const [tab, setTab] = useState('overview');
-  const [decileMode, setDecileMode] = useState<'average' | 'relative'>('average');
+  const [decileMode, setDecileMode] = useState('average');
 
   const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
 
@@ -131,6 +181,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const winners = impact?.winnersLosers;
   const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
   const worseOff = winners && ((winners.loseMore5Pct ?? 0) + (winners.loseLess5Pct ?? 0)) * 100;
+  const revenue = impact?.budgetary?.stateRevenueImpact;
 
   const decileRowsFor = (record?: Record<string, number>, scale = 1) =>
     record
@@ -140,6 +191,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       : [];
   const decileAverage = decileRowsFor(impact?.decile?.average);
   const decileRelative = decileRowsFor(impact?.decile?.relative, 100);
+  const decileRows = decileMode === 'average' ? decileAverage : decileRelative;
 
   const winnersRows = winners?.byDecile
     ? [
@@ -152,8 +204,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
-    ...(typeof impact?.budgetary?.stateRevenueImpact === 'number' ||
-    typeof impact?.budgetary?.netCost === 'number'
+    ...(typeof revenue === 'number' || typeof impact?.budgetary?.netCost === 'number'
       ? [{ id: 'budgetary', label: 'Budgetary impact' }]
       : []),
     ...(typeof impact?.poverty?.percentChange === 'number' ||
@@ -172,6 +223,20 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   ];
 
   const billTextUrl = bill.sourceUrl ?? bill.legiscanUrl;
+
+  const povertyCard = (rates: NonNullable<typeof impact>['poverty'], label: string) =>
+    typeof rates?.percentChange === 'number' &&
+    rates.percentChange !== 0 && (
+      <ReportCard grow>
+        <MetricCard
+          label={label}
+          value={percentChangeValue(rates.percentChange)}
+          subtext={rateDetail(rates)}
+          trend={rates.percentChange < 0 ? 'positive' : 'negative'}
+          invertArrow
+        />
+      </ReportCard>
+    );
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto' }}>
@@ -218,427 +283,414 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               >
                 {bill.jurisdiction} · {bill.status}
               </Text>
-              <Title order={1} style={{ margin: 0 }}>
+              <Title
+                order={1}
+                style={{
+                  margin: 0,
+                  fontWeight: typography.fontWeight.semibold,
+                  fontSize: typography.fontSize['3xl'],
+                  color: colors.primary[700],
+                }}
+              >
                 {bill.title}
               </Title>
             </Stack>
 
-            <Stack style={{ flexDirection: 'row', gap: spacing.md }}>
-              {tabs.map((option) => {
-                const active = tab === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setTab(option.id)}
-                    aria-pressed={active}
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      padding: `0 0 ${spacing.xs}`,
-                      cursor: 'pointer',
-                      fontSize: typography.fontSize.base,
-                      fontFamily: typography.fontFamily.primary,
-                      fontWeight: active
-                        ? typography.fontWeight.semibold
-                        : typography.fontWeight.normal,
-                      color: active ? colors.text.primary : colors.text.secondary,
-                      borderBottom: `2px solid ${active ? colors.primary[500] : 'transparent'}`,
-                    }}
-                  >
+            <Tabs value={tab} onValueChange={setTab} style={{ gap: spacing.lg }}>
+              <TabsList
+                variant="default"
+                className="tw:max-w-full tw:overflow-x-auto tw:justify-start"
+              >
+                {tabs.map((option) => (
+                  <TabsTrigger key={option.id} value={option.id}>
                     {option.label}
-                  </button>
-                );
-              })}
-            </Stack>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            {tab === 'overview' && (
-              <Stack style={{ gap: spacing.md }}>
-                <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
-                  {typeof impact?.budgetary?.stateRevenueImpact === 'number' && (
-                    <StatTile
-                      value={money(impact.budgetary.stateRevenueImpact)}
-                      label="revenue change"
-                    />
-                  )}
-                  {typeof impact?.poverty?.percentChange === 'number' &&
-                    impact.poverty.percentChange !== 0 && (
-                      <StatTile
-                        value={percentChangeValue(impact.poverty.percentChange)}
-                        label="poverty rate change"
-                        detail={rateDetail(impact.poverty)}
-                      />
+              <TabsContent value="overview">
+                <Stack style={{ gap: spacing.md }}>
+                  <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                    {typeof revenue === 'number' && (
+                      <ReportCard grow>
+                        <div style={{ margin: 'auto 0' }}>
+                          <MetricCard
+                            label="Revenue change"
+                            value={money(revenue)}
+                            trend={revenue < 0 ? 'negative' : 'positive'}
+                            hero
+                          />
+                        </div>
+                      </ReportCard>
                     )}
-                  {typeof impact?.childPoverty?.percentChange === 'number' &&
-                    impact.childPoverty.percentChange !== 0 && (
-                      <StatTile
-                        value={percentChangeValue(impact.childPoverty.percentChange)}
-                        label="child poverty change"
-                        detail={rateDetail(impact.childPoverty)}
-                      />
-                    )}
-                  {typeof betterOff === 'number' && betterOff > 0 && (
-                    <StatTile value={`${betterOff.toFixed(0)}%`} label="households better off" />
-                  )}
-                  {typeof worseOff === 'number' && worseOff > 0 && (
-                    <StatTile value={`${worseOff.toFixed(0)}%`} label="households worse off" />
-                  )}
-                </Stack>
-                {bill.summary && (
-                  <Text
-                    style={{
-                      fontSize: typography.fontSize.base,
-                      color: colors.text.secondary,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {bill.summary}
-                  </Text>
-                )}
-                {(bill.author || bill.date || billTextUrl) && (
-                  <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                    {bill.author && <>Sponsored by {bill.author}</>}
-                    {bill.author && bill.date && ' · '}
-                    {bill.date && <>Analyzed {formatDate(bill.date)}</>}
-                    {(bill.author || bill.date) && billTextUrl && ' · '}
-                    {billTextUrl && (
-                      <a
-                        href={billTextUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          color: colors.text.secondary,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 2,
-                        }}
-                      >
-                        Bill text
-                        <IconExternalLink size={11} />
-                      </a>
-                    )}
-                  </Text>
-                )}
-                {provisions.length > 0 && (
-                  <Stack style={{ gap: spacing.sm }}>
-                    <Title order={2} style={{ margin: 0, fontSize: typography.fontSize.xl }}>
-                      What it changes
-                    </Title>
-                    <ProvisionList provisions={provisions} />
+                    <Stack style={{ flex: '1 1 320px', gap: spacing.md }}>
+                      <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                        {povertyCard(impact?.poverty, 'Poverty rate change')}
+                        {povertyCard(impact?.childPoverty, 'Child poverty change')}
+                      </Stack>
+                      {typeof betterOff === 'number' && betterOff > 0 && (
+                        <ReportCard>
+                          <MetricCard
+                            label="Households better off"
+                            value={`${betterOff.toFixed(0)}%`}
+                            trend="positive"
+                          />
+                        </ReportCard>
+                      )}
+                    </Stack>
                   </Stack>
-                )}
-              </Stack>
-            )}
-
-            {tab === 'budgetary' && (
-              <Stack style={{ gap: spacing.md }}>
-                <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
-                  {typeof impact?.budgetary?.stateRevenueImpact === 'number' && (
-                    <StatTile
-                      value={money(impact.budgetary.stateRevenueImpact)}
-                      label="revenue change"
-                    />
-                  )}
-                  {typeof impact?.budgetary?.netCost === 'number' &&
-                    impact.budgetary.netCost !== impact.budgetary.stateRevenueImpact && (
-                      <StatTile value={money(impact.budgetary.netCost)} label="net cost" />
-                    )}
-                </Stack>
-                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                  Single-year budgetary impact from the tracker's stored microsimulation run.
-                </Text>
-              </Stack>
-            )}
-
-            {tab === 'poverty' && (
-              <Stack style={{ gap: spacing.md }}>
-                <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
-                  {typeof impact?.poverty?.percentChange === 'number' &&
-                    impact.poverty.percentChange !== 0 && (
-                      <StatTile
-                        value={percentChangeValue(impact.poverty.percentChange)}
-                        label="poverty rate change"
-                        detail={rateDetail(impact.poverty)}
-                      />
-                    )}
-                  {typeof impact?.childPoverty?.percentChange === 'number' &&
-                    impact.childPoverty.percentChange !== 0 && (
-                      <StatTile
-                        value={percentChangeValue(impact.childPoverty.percentChange)}
-                        label="child poverty change"
-                        detail={rateDetail(impact.childPoverty)}
-                      />
-                    )}
-                </Stack>
-                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                  Rates show the share of people in poverty before and after the reform.
-                </Text>
-              </Stack>
-            )}
-
-            {tab === 'distribution' && (
-              <ChartCard
-                title={
-                  <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                  {bill.summary && (
                     <Text
                       style={{
-                        fontSize: typography.fontSize.sm,
-                        fontWeight: typography.fontWeight.medium,
-                        color: colors.text.primary,
-                        flex: 1,
+                        fontSize: typography.fontSize.base,
+                        color: colors.text.secondary,
+                        lineHeight: 1.6,
                       }}
                     >
-                      {decileMode === 'average'
-                        ? 'Average household income change by decile'
-                        : 'Relative household income change by decile'}
+                      {bill.summary}
                     </Text>
-                    {(
-                      [
-                        { id: 'average', label: 'Dollars' },
-                        { id: 'relative', label: 'Percent' },
-                      ] as const
-                    ).map((mode) => (
-                      <button
-                        key={mode.id}
-                        type="button"
-                        onClick={() => setDecileMode(mode.id)}
-                        aria-pressed={decileMode === mode.id}
-                        style={{
-                          border: `1px solid ${colors.border.light}`,
-                          borderRadius: 8,
-                          padding: `2px ${spacing.sm}`,
-                          fontSize: typography.fontSize.xs,
-                          fontFamily: typography.fontFamily.primary,
-                          cursor: 'pointer',
-                          background:
-                            decileMode === mode.id ? colors.primary[50] : colors.background.primary,
-                          color:
-                            decileMode === mode.id ? colors.primary[700] : colors.text.secondary,
-                        }}
-                      >
-                        {mode.label}
-                      </button>
-                    ))}
-                  </Stack>
-                }
-              >
-                <div style={{ width: '100%', height: 260 }}>
-                  <ResponsiveContainer>
-                    <BarChart
-                      data={decileMode === 'average' ? decileAverage : decileRelative}
-                      margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                  )}
+                  {(bill.author || bill.date || billTextUrl) && (
+                    <Stack
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: spacing.sm,
+                        flexWrap: 'wrap',
+                      }}
                     >
-                      <XAxis
-                        dataKey="decile"
-                        tickLine={false}
-                        axisLine={{ stroke: colors.border.light }}
-                        tick={{ fontSize: 12, fill: colors.text.secondary }}
-                      />
-                      <YAxis
-                        tickFormatter={(value: number) =>
-                          decileMode === 'average'
-                            ? `$${value.toLocaleString()}`
-                            : `${value.toFixed(1)}%`
-                        }
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ fontSize: 12, fill: colors.text.secondary }}
-                        width={70}
-                      />
-                      <Tooltip
-                        formatter={(value) => [
-                          decileMode === 'average'
-                            ? `$${Number(value ?? 0).toLocaleString()}`
-                            : `${Number(value ?? 0).toFixed(2)}%`,
-                          decileMode === 'average' ? 'Average change' : 'Relative change',
-                        ]}
-                        labelFormatter={(label) => `Decile ${label}`}
-                      />
-                      <Bar dataKey="value" radius={[3, 3, 0, 0]}>
-                        {(decileMode === 'average' ? decileAverage : decileRelative).map((row) => (
-                          <Cell
-                            key={row.decile}
-                            fill={row.value >= 0 ? colors.primary[500] : colors.gray[600]}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                  Income deciles rank households from lowest (1) to highest (10) income.
-                </Text>
-              </ChartCard>
-            )}
-
-            {tab === 'winners' && (
-              <Stack style={{ gap: spacing.md }}>
-                <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
-                  {typeof betterOff === 'number' && betterOff > 0 && (
-                    <StatTile value={`${betterOff.toFixed(0)}%`} label="households better off" />
-                  )}
-                  {typeof worseOff === 'number' && worseOff > 0 && (
-                    <StatTile value={`${worseOff.toFixed(0)}%`} label="households worse off" />
-                  )}
-                  {typeof winners?.noChange === 'number' && (
-                    <StatTile value={`${(winners.noChange * 100).toFixed(0)}%`} label="no change" />
-                  )}
-                </Stack>
-                {winnersRows.length > 0 && (
-                  <ChartCard
-                    title={
-                      <Text
-                        style={{
-                          fontSize: typography.fontSize.sm,
-                          fontWeight: typography.fontWeight.medium,
-                          color: colors.text.primary,
-                        }}
-                      >
-                        Outcomes by income decile
-                      </Text>
-                    }
-                  >
-                    <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
-                      {WINNER_SEGMENTS.map((segment) => (
-                        <Text
-                          key={segment.key}
+                      {bill.author && (
+                        <Stack
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+                        >
+                          <IconUser size={13} color={colors.text.secondary} />
+                          <Caption>Sponsored by {bill.author}</Caption>
+                        </Stack>
+                      )}
+                      {bill.date && (
+                        <Stack
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+                        >
+                          <IconCalendar size={13} color={colors.text.secondary} />
+                          <Caption>Analyzed {formatDate(bill.date)}</Caption>
+                        </Stack>
+                      )}
+                      {billTextUrl && (
+                        <a
+                          href={billTextUrl}
+                          target="_blank"
+                          rel="noreferrer"
                           style={{
-                            fontSize: typography.fontSize.xs,
                             color: colors.text.secondary,
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: 4,
+                            gap: 2,
+                            fontSize: typography.fontSize.xs,
+                            fontFamily: typography.fontFamily.primary,
                           }}
                         >
-                          <span
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: 2,
-                              background: segment.color,
-                              display: 'inline-block',
-                            }}
+                          Bill text
+                          <IconExternalLink size={11} />
+                        </a>
+                      )}
+                    </Stack>
+                  )}
+                  {provisions.length > 0 && (
+                    <Stack style={{ gap: spacing.sm }}>
+                      <Title order={2} style={{ margin: 0, fontSize: typography.fontSize.xl }}>
+                        What it changes
+                      </Title>
+                      <ProvisionList provisions={provisions} />
+                    </Stack>
+                  )}
+                </Stack>
+              </TabsContent>
+
+              <TabsContent value="budgetary">
+                <Stack style={{ gap: spacing.md }}>
+                  <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                    {typeof revenue === 'number' && (
+                      <ReportCard grow>
+                        <MetricCard
+                          label="Revenue change"
+                          value={money(revenue)}
+                          trend={revenue < 0 ? 'negative' : 'positive'}
+                          hero
+                        />
+                      </ReportCard>
+                    )}
+                    {typeof impact?.budgetary?.netCost === 'number' &&
+                      impact.budgetary.netCost !== revenue && (
+                        <ReportCard grow>
+                          <MetricCard
+                            label="Net cost"
+                            value={money(impact.budgetary.netCost)}
+                            trend={impact.budgetary.netCost < 0 ? 'negative' : 'positive'}
                           />
-                          {segment.label}
+                        </ReportCard>
+                      )}
+                  </Stack>
+                  <Caption>
+                    Single-year budgetary impact from the tracker's stored microsimulation run.
+                  </Caption>
+                </Stack>
+              </TabsContent>
+
+              <TabsContent value="poverty">
+                <Stack style={{ gap: spacing.md }}>
+                  <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                    {povertyCard(impact?.poverty, 'Poverty rate change')}
+                    {povertyCard(impact?.childPoverty, 'Child poverty change')}
+                  </Stack>
+                  <Caption>
+                    Rates show the share of people in poverty before and after the reform.
+                  </Caption>
+                </Stack>
+              </TabsContent>
+
+              <TabsContent value="distribution">
+                <ReportCard
+                  title={
+                    <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                      <div style={{ flex: 1 }}>
+                        <ChartTitle>
+                          {decileMode === 'average'
+                            ? 'Average household income change by decile'
+                            : 'Relative household income change by decile'}
+                        </ChartTitle>
+                      </div>
+                      <SegmentedControl
+                        size="xs"
+                        value={decileMode}
+                        onValueChange={setDecileMode}
+                        options={[
+                          { label: 'Dollars', value: 'average' },
+                          { label: 'Percent', value: 'relative' },
+                        ]}
+                      />
+                    </Stack>
+                  }
+                >
+                  <div style={{ width: '100%', height: 260 }}>
+                    <ResponsiveContainer>
+                      <BarChart data={decileRows} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                        <XAxis
+                          dataKey="decile"
+                          tickLine={false}
+                          axisLine={{ stroke: colors.border.light }}
+                          tick={{ fontSize: 12, fill: colors.text.secondary }}
+                        />
+                        <YAxis
+                          tickFormatter={(value: number) =>
+                            decileMode === 'average'
+                              ? `$${value.toLocaleString()}`
+                              : `${value.toFixed(1)}%`
+                          }
+                          tickLine={false}
+                          axisLine={false}
+                          tick={{ fontSize: 12, fill: colors.text.secondary }}
+                          width={70}
+                        />
+                        <Tooltip
+                          formatter={(value) => [
+                            decileMode === 'average'
+                              ? `$${Number(value ?? 0).toLocaleString()}`
+                              : `${Number(value ?? 0).toFixed(2)}%`,
+                            decileMode === 'average' ? 'Average change' : 'Relative change',
+                          ]}
+                          labelFormatter={(label) => `Decile ${label}`}
+                        />
+                        <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                          {decileRows.map((row) => (
+                            <Cell
+                              key={row.decile}
+                              fill={row.value >= 0 ? colors.primary[500] : colors.gray[600]}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <Caption>
+                    Income deciles rank households from lowest (1) to highest (10) income.
+                  </Caption>
+                </ReportCard>
+              </TabsContent>
+
+              <TabsContent value="winners">
+                <Stack style={{ gap: spacing.md }}>
+                  <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                    {typeof betterOff === 'number' && betterOff > 0 && (
+                      <ReportCard grow>
+                        <MetricCard
+                          label="Households better off"
+                          value={`${betterOff.toFixed(0)}%`}
+                          trend="positive"
+                        />
+                      </ReportCard>
+                    )}
+                    {typeof worseOff === 'number' && worseOff > 0 && (
+                      <ReportCard grow>
+                        <MetricCard
+                          label="Households worse off"
+                          value={`${worseOff.toFixed(0)}%`}
+                          trend="negative"
+                        />
+                      </ReportCard>
+                    )}
+                    {typeof winners?.noChange === 'number' && (
+                      <ReportCard grow>
+                        <MetricCard
+                          label="No change"
+                          value={`${(winners.noChange * 100).toFixed(0)}%`}
+                        />
+                      </ReportCard>
+                    )}
+                  </Stack>
+                  {winnersRows.length > 0 && (
+                    <ReportCard title={<ChartTitle>Outcomes by income decile</ChartTitle>}>
+                      <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+                        {WINNER_SEGMENTS.map((segment) => (
+                          <Text
+                            key={segment.key}
+                            style={{
+                              fontSize: typography.fontSize.xs,
+                              color: colors.text.secondary,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 2,
+                                background: segment.color,
+                                display: 'inline-block',
+                              }}
+                            />
+                            {segment.label}
+                          </Text>
+                        ))}
+                      </Stack>
+                      <div style={{ width: '100%', height: 340 }}>
+                        <ResponsiveContainer>
+                          <BarChart
+                            data={winnersRows}
+                            layout="vertical"
+                            margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                          >
+                            <XAxis
+                              type="number"
+                              domain={[0, 100]}
+                              tickFormatter={(value: number) => `${value}%`}
+                              tickLine={false}
+                              axisLine={{ stroke: colors.border.light }}
+                              tick={{ fontSize: 12, fill: colors.text.secondary }}
+                            />
+                            <YAxis
+                              type="category"
+                              dataKey="label"
+                              width={36}
+                              tickLine={false}
+                              axisLine={false}
+                              tick={{ fontSize: 12, fill: colors.text.secondary }}
+                            />
+                            <Tooltip
+                              formatter={(value, name) => [
+                                `${Number(value ?? 0).toFixed(1)}%`,
+                                String(name),
+                              ]}
+                              labelFormatter={(label) =>
+                                label === 'All' ? 'All households' : `Decile ${label}`
+                              }
+                            />
+                            {WINNER_SEGMENTS.map((segment) => (
+                              <Bar
+                                key={segment.key}
+                                dataKey={segment.key}
+                                stackId="outcome"
+                                name={segment.label}
+                                fill={segment.color}
+                              />
+                            ))}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </ReportCard>
+                  )}
+                </Stack>
+              </TabsContent>
+
+              <TabsContent value="notes">
+                <Stack style={{ gap: spacing.md }}>
+                  {bill.keyFindings && bill.keyFindings.length > 0 && (
+                    <Stack style={{ gap: spacing.xs }}>
+                      {bill.keyFindings.map((finding) => (
+                        <Text
+                          key={finding}
+                          style={{
+                            fontSize: typography.fontSize.sm,
+                            color: colors.text.primary,
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          · {finding}
                         </Text>
                       ))}
                     </Stack>
-                    <div style={{ width: '100%', height: 340 }}>
-                      <ResponsiveContainer>
-                        <BarChart
-                          data={winnersRows}
-                          layout="vertical"
-                          margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
-                        >
-                          <XAxis
-                            type="number"
-                            domain={[0, 100]}
-                            tickFormatter={(value: number) => `${value}%`}
-                            tickLine={false}
-                            axisLine={{ stroke: colors.border.light }}
-                            tick={{ fontSize: 12, fill: colors.text.secondary }}
-                          />
-                          <YAxis
-                            type="category"
-                            dataKey="label"
-                            width={36}
-                            tickLine={false}
-                            axisLine={false}
-                            tick={{ fontSize: 12, fill: colors.text.secondary }}
-                          />
-                          <Tooltip
-                            formatter={(value, name) => [
-                              `${Number(value ?? 0).toFixed(1)}%`,
-                              String(name),
-                            ]}
-                            labelFormatter={(label) =>
-                              label === 'All' ? 'All households' : `Decile ${label}`
-                            }
-                          />
-                          {WINNER_SEGMENTS.map((segment) => (
-                            <Bar
-                              key={segment.key}
-                              dataKey={segment.key}
-                              stackId="outcome"
-                              name={segment.label}
-                              fill={segment.color}
-                            />
-                          ))}
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </ChartCard>
-                )}
-              </Stack>
-            )}
+                  )}
+                  {bill.provenance && (
+                    <Caption>
+                      {[
+                        bill.provenance.modelVersion &&
+                          `Model version: policyengine-us ${bill.provenance.modelVersion}`,
+                        bill.provenance.dataset &&
+                          `Data version: ${bill.provenance.dataset}${
+                            bill.provenance.datasetVersion
+                              ? ` ${bill.provenance.datasetVersion}`
+                              : ''
+                          }`,
+                        bill.provenance.computedAt &&
+                          `Computed ${formatDate(bill.provenance.computedAt)}`,
+                      ]
+                        .filter(Boolean)
+                        .join(' • ')}
+                    </Caption>
+                  )}
+                </Stack>
+              </TabsContent>
+            </Tabs>
 
-            {tab === 'notes' && (
-              <Stack style={{ gap: spacing.md }}>
-                {bill.keyFindings && bill.keyFindings.length > 0 && (
-                  <Stack style={{ gap: spacing.xs }}>
-                    {bill.keyFindings.map((finding) => (
-                      <Text
-                        key={finding}
-                        style={{
-                          fontSize: typography.fontSize.sm,
-                          color: colors.text.primary,
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        · {finding}
-                      </Text>
-                    ))}
-                  </Stack>
-                )}
-                {bill.provenance && (
-                  <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                    {[
-                      bill.provenance.modelVersion &&
-                        `policyengine-us ${bill.provenance.modelVersion}`,
-                      bill.provenance.dataset &&
-                        `${bill.provenance.dataset}${
-                          bill.provenance.datasetVersion ? ` ${bill.provenance.datasetVersion}` : ''
-                        }`,
-                      bill.provenance.computedAt &&
-                        `computed ${formatDate(bill.provenance.computedAt)}`,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Text>
-                )}
-              </Stack>
-            )}
-
-            <Stack style={{ gap: spacing.md }}>
-              <Stack
-                style={{
-                  flexDirection: 'row',
-                  gap: spacing.md,
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                }}
+            <Stack
+              style={{
+                flexDirection: 'row',
+                gap: spacing.md,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
+              <Caption>
+                Precomputed by the PolicyEngine legislative tracker. District, household, and
+                validation views arrive with the full nationwide run.
+              </Caption>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  runReport.run(bill.title, `${bill.jurisdiction} · ${bill.status}`, provisions)
+                }
+                disabled={runReport.isRunning || provisions.length === 0}
               >
-                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                  Precomputed by the PolicyEngine legislative tracker. District, household, and
-                  validation views arrive with the full nationwide run.
+                <IconChartBar size={14} />
+                {runReport.isRunning ? 'Starting…' : 'Run the full report'}
+              </Button>
+              {runReport.error && (
+                <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
+                  {runReport.error}
                 </Text>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    runReport.run(bill.title, `${bill.jurisdiction} · ${bill.status}`, provisions)
-                  }
-                  disabled={runReport.isRunning || provisions.length === 0}
-                >
-                  <IconChartBar size={14} />
-                  {runReport.isRunning ? 'Starting…' : 'Run the full report'}
-                </Button>
-                {runReport.error && (
-                  <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
-                    {runReport.error}
-                  </Text>
-                )}
-              </Stack>
+              )}
             </Stack>
           </Stack>
         </div>
