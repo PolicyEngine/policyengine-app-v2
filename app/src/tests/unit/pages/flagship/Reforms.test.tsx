@@ -142,6 +142,37 @@ describe('ReformsPage', () => {
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
   });
 
+  test('given a bill with impact data then the detail leads with stat tiles', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        id: 'us-hr1425',
+        countryId: 'us',
+        jurisdiction: 'US',
+        title: 'HR 1425: Child Tax Credit to $5,000',
+        status: 'Analyzed',
+        summary: 'Raises the CTC to $5,000 per qualifying child.',
+        provisions: [],
+        keyFindings: ['External check (cost): within CRFB band.'],
+        impacts: { revenue: -225_500_000_000, povertyPercentChange: -14.3 },
+        impactData: {
+          poverty: { baselineRate: 0.169, reformRate: 0.145, percentChange: -14.3 },
+          winnersLosers: { gainMore5Pct: 0.236, gainLess5Pct: 0.199, noChange: 0.565 },
+        },
+      },
+    ]);
+    renderReforms();
+
+    await user.click(await screen.findByText('HR 1425: Child Tax Credit to $5,000'));
+
+    expect(screen.getByText('−$225.5 billion')).toBeInTheDocument();
+    expect(screen.getByText('16.9% → 14.5%')).toBeInTheDocument();
+    expect(screen.getByText('44%')).toBeInTheDocument();
+    // Prose findings sit behind a closed disclosure
+    expect(screen.getByText('Model notes and external checks')).toBeInTheDocument();
+    expect(screen.getByText(/CRFB band/)).not.toBeVisible();
+  });
+
   test('given more bills than one page then the grid paginates with show more', async () => {
     const user = userEvent.setup();
     mockFetchTrackerBills.mockResolvedValue(

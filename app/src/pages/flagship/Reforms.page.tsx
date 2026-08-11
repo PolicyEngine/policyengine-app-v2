@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 import { TrackedBill } from '@/api/billFeed';
 import { getReformStore } from '@/api/reformStore';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
@@ -439,6 +440,25 @@ export default function ReformsPage() {
   // ---- Detail: a tracked bill ----
   if (selectedBill) {
     const provisions = billProvisions(selectedBill);
+    const impact = selectedBill.impactData;
+    const winners = impact?.winnersLosers;
+    const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
+    const worseOff = winners && ((winners.loseMore5Pct ?? 0) + (winners.loseLess5Pct ?? 0)) * 100;
+    const poverty = impact?.poverty;
+    const povertyDetail =
+      typeof poverty?.baselineRate === 'number' && typeof poverty?.reformRate === 'number'
+        ? `${(poverty.baselineRate * 100).toFixed(1)}% → ${(poverty.reformRate * 100).toFixed(1)}%`
+        : undefined;
+    const revenue = selectedBill.impacts?.revenue ?? impact?.budgetary?.stateRevenueImpact;
+    const money = (value: number) => {
+      const { display, label } = formatBudgetaryImpact(value);
+      return `${value < 0 ? '−' : '+'}$${display}${label ? ` ${label}` : ''}`;
+    };
+    const hasTiles =
+      typeof revenue === 'number' ||
+      (typeof poverty?.percentChange === 'number' && poverty.percentChange !== 0) ||
+      (typeof betterOff === 'number' && betterOff > 0) ||
+      (typeof worseOff === 'number' && worseOff > 0);
     return (
       <WorkspaceLayout>
         <Stack style={{ gap: spacing.lg }}>
@@ -462,16 +482,24 @@ export default function ReformsPage() {
               {selectedBill.summary}
             </Text>
           )}
-          {selectedBill.keyFindings && selectedBill.keyFindings.length > 0 && (
-            <Stack style={{ gap: spacing.xs }}>
-              {selectedBill.keyFindings.map((finding) => (
-                <Text
-                  key={finding}
-                  style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}
-                >
-                  · {finding}
-                </Text>
-              ))}
+          {hasTiles && (
+            <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
+              {typeof revenue === 'number' && (
+                <StatTile value={money(revenue)} label="revenue change" />
+              )}
+              {typeof poverty?.percentChange === 'number' && poverty.percentChange !== 0 && (
+                <StatTile
+                  value={`${poverty.percentChange > 0 ? '+' : '−'}${Math.abs(poverty.percentChange).toFixed(1)}%`}
+                  label="poverty rate change"
+                  detail={povertyDetail}
+                />
+              )}
+              {typeof betterOff === 'number' && betterOff > 0 && (
+                <StatTile value={`${betterOff.toFixed(0)}%`} label="households better off" />
+              )}
+              {typeof worseOff === 'number' && worseOff > 0 && (
+                <StatTile value={`${worseOff.toFixed(0)}%`} label="households worse off" />
+              )}
             </Stack>
           )}
           {provisions.length > 0 ? (
@@ -481,6 +509,30 @@ export default function ReformsPage() {
               Parameter mapping for this bill hasn't been published yet — report and draft actions
               unlock when it lands.
             </Text>
+          )}
+          {selectedBill.keyFindings && selectedBill.keyFindings.length > 0 && (
+            <details>
+              <summary
+                style={{
+                  cursor: 'pointer',
+                  fontSize: typography.fontSize.sm,
+                  fontFamily: typography.fontFamily.primary,
+                  color: colors.text.secondary,
+                }}
+              >
+                Model notes and external checks
+              </summary>
+              <Stack style={{ gap: spacing.xs, paddingTop: spacing.sm }}>
+                {selectedBill.keyFindings.map((finding) => (
+                  <Text
+                    key={finding}
+                    style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                  >
+                    · {finding}
+                  </Text>
+                ))}
+              </Stack>
+            </details>
           )}
           <Stack
             style={{

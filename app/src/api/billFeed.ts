@@ -177,7 +177,17 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
     data.poverty = impact.poverty_impact;
   }
   if (impact.winners_losers) {
-    data.winnersLosers = impact.winners_losers;
+    // The tracker stores the all-households shares under intraDecile.all;
+    // flatten them so consumers can read the documented flat fields.
+    const wl = impact.winners_losers;
+    const all = wl.intraDecile?.all ?? {};
+    data.winnersLosers = {
+      gainMore5Pct: wl.gainMore5Pct ?? all.gainMore5Pct,
+      gainLess5Pct: wl.gainLess5Pct ?? all.gainLess5Pct,
+      noChange: wl.noChange ?? all.noChange,
+      loseLess5Pct: wl.loseLess5Pct ?? all.loseLess5Pct,
+      loseMore5Pct: wl.loseMore5Pct ?? all.loseMore5Pct,
+    };
   }
   if (impact.decile_impact) {
     data.decile = impact.decile_impact;

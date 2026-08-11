@@ -5,6 +5,7 @@ import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 
 import { TrackedBill } from '@/api/billFeed';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
+import StatTile from '@/components/flagship/StatTile';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -19,34 +20,6 @@ import { getCurrentValue } from '@/utils/parameterValues';
 interface BillReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
   billId?: string;
-}
-
-function StatTile({ value, label }: { value: string; label: string }) {
-  return (
-    <Stack
-      style={{
-        gap: 2,
-        padding: `${spacing.md} ${spacing.lg}`,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: 12,
-        background: colors.background.primary,
-        minWidth: 140,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: typography.fontSize.xl,
-          fontWeight: typography.fontWeight.semibold,
-          color: colors.text.primary,
-        }}
-      >
-        {value}
-      </Text>
-      <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        {label}
-      </Text>
-    </Stack>
-  );
 }
 
 function money(value: number): string {
