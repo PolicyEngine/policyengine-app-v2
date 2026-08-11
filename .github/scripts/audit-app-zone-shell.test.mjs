@@ -5,11 +5,13 @@ import {
   extractRoutes,
   extractSitemapLocs,
   inspectTopShellData,
+  isPendingStaticDeploy,
   isShellBrandExempt,
   resolveDestinationForSource,
   SHELL_BRAND_EXEMPT_SOURCES,
   shouldAllowDestinationFallback,
   sourcePathFromSitemapLoc,
+  staticAssetPathFor,
 } from "./audit-app-zone-shell.mjs";
 
 const visibleTopElement = (overrides = {}) => ({
@@ -271,5 +273,116 @@ describe("isShellBrandExempt", () => {
       false,
     );
     assert.equal(isShellBrandExempt("/uk/marriage"), false);
+  });
+});
+
+describe("staticAssetPathFor", () => {
+  test("maps a repo-relative destination onto its static asset", () => {
+    assert.equal(
+      staticAssetPathFor("/assets/posts/some-post/index.html"),
+      "app/public/assets/posts/some-post/index.html",
+    );
+  });
+
+  test("ignores query strings and fragments", () => {
+    assert.equal(
+      staticAssetPathFor("/assets/posts/some-post/index.html?embed=true"),
+      "app/public/assets/posts/some-post/index.html",
+    );
+    assert.equal(
+      staticAssetPathFor("/assets/posts/some-post/index.html#impact"),
+      "app/public/assets/posts/some-post/index.html",
+    );
+  });
+
+  test("returns null for external destinations", () => {
+    assert.equal(staticAssetPathFor("https://some-tool.vercel.app/us/x"), null);
+    assert.equal(staticAssetPathFor("http://some-tool.vercel.app/us/x"), null);
+    assert.equal(staticAssetPathFor("some-tool.vercel.app/us/x"), null);
+  });
+});
+
+describe("isPendingStaticDeploy", () => {
+  const present = () => true;
+  const absent = () => false;
+  const pendingRoute = {
+    destination: "/assets/posts/some-post/index.html",
+    status: 404,
+    ok: false,
+  };
+
+  test("treats a 404 in-repo asset as pending when fallback is allowed", () => {
+    assert.equal(
+      isPendingStaticDeploy(pendingRoute, {
+        allowDestinationFallback: true,
+        exists: present,
+      }),
+      true,
+    );
+  });
+
+  test("still fails on the production audit, which disables fallback", () => {
+    // The scheduled run is the backstop: a route that never deploys must not
+    // stay pending forever.
+    assert.equal(
+      isPendingStaticDeploy(pendingRoute, {
+        allowDestinationFallback: false,
+        exists: present,
+      }),
+      false,
+    );
+  });
+
+  test("fails when the asset is missing from the checkout", () => {
+    // A rewrite pointing at an asset nobody added is a broken route, not a
+    // route awaiting deploy.
+    assert.equal(
+      isPendingStaticDeploy(pendingRoute, {
+        allowDestinationFallback: true,
+        exists: absent,
+      }),
+      false,
+    );
+  });
+
+  test("does not excuse external destinations", () => {
+    // External tools serve from their own origin before the rewrite lands, so
+    // a 404 there is a real failure.
+    assert.equal(
+      isPendingStaticDeploy(
+        { ...pendingRoute, destination: "https://some-tool.vercel.app/us/x" },
+        { allowDestinationFallback: true, exists: present },
+      ),
+      false,
+    );
+  });
+
+  test("does not excuse a live route that is missing the shell", () => {
+    // 200 with no brand, or any non-404 error, is exactly what this audit
+    // exists to catch.
+    assert.equal(
+      isPendingStaticDeploy(
+        { ...pendingRoute, status: 200 },
+        { allowDestinationFallback: true, exists: present },
+      ),
+      false,
+    );
+    assert.equal(
+      isPendingStaticDeploy(
+        { ...pendingRoute, status: 500 },
+        { allowDestinationFallback: true, exists: present },
+      ),
+      false,
+    );
+  });
+
+  test("leaves passing routes alone", () => {
+    assert.equal(
+      isPendingStaticDeploy(
+        { ...pendingRoute, ok: true },
+        { allowDestinationFallback: true, exists: present },
+      ),
+      false,
+    );
   });
 });

@@ -7,11 +7,12 @@
  * migration. Production audits check the public source URL; pull requests can
  * opt into destination fallback for newly added rewrites that are not live yet.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_BASE_URL = "https://policyengine.org";
 const DEFAULT_ROUTES_FILE = "website/src/data/appZoneRoutes.ts";
+const DEFAULT_STATIC_ASSET_ROOT = "app/public";
 const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_SITEMAP_ROUTES = 30;
@@ -52,6 +53,44 @@ export function isShellBrandExempt(source) {
   return SHELL_BRAND_EXEMPT_SOURCES.some(
     (base) => source === base || source.startsWith(`${base}/`),
   );
+}
+
+/**
+ * Maps a repo-relative destination onto the static asset that serves it, or
+ * null for destinations pointing at an external origin.
+ */
+export function staticAssetPathFor(
+  destination,
+  staticRoot = DEFAULT_STATIC_ASSET_ROOT,
+) {
+  if (/^https?:\/\//i.test(destination)) return null;
+  if (!destination.startsWith("/")) return null;
+  const [path] = destination.split(/[?#]/);
+  return `${staticRoot}${path}`;
+}
+
+/**
+ * A route whose destination is a static asset in this repo cannot be live
+ * before the pull request that adds it deploys: neither the source path nor
+ * the destination exists on production yet, so both return 404 and the
+ * destination fallback has nothing to fall back to. That is the same "not
+ * live yet" case the fallback already covers for external destinations, which
+ * are serving from their own origin by the time the rewrite is proposed.
+ *
+ * Only ever reported on pull requests. The scheduled production audit runs
+ * with fallback disabled, so a route that never deploys still fails there.
+ */
+export function isPendingStaticDeploy(
+  { destination, status, ok },
+  {
+    allowDestinationFallback = false,
+    exists = existsSync,
+    staticRoot = DEFAULT_STATIC_ASSET_ROOT,
+  } = {},
+) {
+  if (ok || status !== 404 || !allowDestinationFallback) return false;
+  const assetPath = staticAssetPathFor(destination, staticRoot);
+  return assetPath !== null && exists(assetPath);
 }
 
 export function parseArgs(argv) {
@@ -520,6 +559,7 @@ async function auditRoute(
   baseUrl,
   timeout,
   allowDestinationFallback,
+  staticRoot = DEFAULT_STATIC_ASSET_ROOT,
 ) {
   const page = await browser.newPage({
     viewport: { width: 1440, height: 1000 },
@@ -544,6 +584,21 @@ async function auditRoute(
       testedUrl = destinationUrl;
       usedFallback = true;
     }
+  }
+
+  if (
+    isPendingStaticDeploy(
+      { destination: route.destination, status: result.status, ok: result.ok },
+      { allowDestinationFallback, staticRoot },
+    )
+  ) {
+    result = {
+      ok: true,
+      status: result.status,
+      reason:
+        "not live yet — destination is a static asset added in this checkout",
+      pending: true,
+    };
   }
 
   await page.close();
@@ -630,7 +685,13 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
         timeout,
         allowDestinationFallback,
       );
-      const mark = result.ok ? (result.exempt ? "SKIP" : "OK") : "FAIL";
+      const mark = result.ok
+        ? result.exempt
+          ? "SKIP"
+          : result.pending
+            ? "PENDING"
+            : "OK"
+        : "FAIL";
       console.log(`${mark} ${result.source}`);
       console.log(`    ${result.reason}`);
       if (result.usedFallback) {
@@ -651,10 +712,23 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
 
   const failures = results.filter((result) => !result.ok);
   const exempt = results.filter((result) => result.exempt);
-  const enforced = results.length - exempt.length;
+  const pending = results.filter((result) => result.pending);
+  const enforced = results.length - exempt.length - pending.length;
   console.log(
     `\n${enforced - failures.length}/${enforced} enforced app-zone routes have the PolicyEngine shell.`,
   );
+
+  if (pending.length > 0) {
+    console.log(
+      `\n${pending.length} route(s) not live yet — their destination is a static asset added in this checkout, so the shell is not enforced until they deploy:`,
+    );
+    for (const route of pending) {
+      console.log(`  - ${route.source} -> ${route.destination}`);
+    }
+    console.log(
+      "  The scheduled production audit runs without destination fallback and will enforce these once merged.",
+    );
+  }
 
   if (exempt.length > 0) {
     console.log(

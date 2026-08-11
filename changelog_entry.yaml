@@ -1,5 +1,6 @@
 - Enforce the site shell on the SNAP payment error simulator route and fix four stale app iframe sources
 - Enforce the site shell on the last nine bare embedded tools, emptying the zone-shell audit exemption list
 - Redirect /uk/cec (the retired Citizens' Economic Council simulator, embedded by citizensecon.org.uk) to /uk instead of a 404
+- Report zone routes whose destination is a static asset added in the same pull request as pending deploy rather than failing the shell audit, which no in-repo static page could previously pass
 - Launch the PolicyEngine UK Chat beta at /uk/chat
 - Publish the PolicyEngine UK Chat launch post as a scrollytelling page at /uk/introducing-policyengine-uk-chat, replacing the markdown research post
