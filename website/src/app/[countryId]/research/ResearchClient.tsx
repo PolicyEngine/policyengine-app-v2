@@ -371,13 +371,13 @@ function BlogPostGrid({
     </>
   );
 }
-
 /* ─── FilterSection ─── */
 
 const sectionHeaderStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  flexShrink: 0,
   padding: "10px 12px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -414,18 +414,18 @@ function FilterSection({
   return (
     <div
       style={{
+        display: "flex",
+        flexDirection: "column",
         borderRadius: "12px",
         border: `1px solid ${isExpanded ? colors.primary[200] : colors.border.light}`,
         backgroundColor: isExpanded ? "rgba(230, 255, 250, 0.3)" : colors.white,
         transition: "border-color 0.2s ease, background-color 0.2s ease",
         overflow: "hidden",
-        // Collapsed sections must keep their full header height when a sibling
-        // section expands — the parent flex column has `maxHeight: availableHeight;
-        // overflow: hidden`, and the default `flex-shrink: 1` would otherwise
-        // squish the headers down (visible bug: clicking "Author" shrinks the
-        // "Type" / "Topic" / "Location" headers because the expanded Author panel
-        // takes most of the available column height).
-        flexShrink: 0,
+        // Collapsed sections keep their full header height. The expanded section
+        // is the only shrinkable item, so its content takes the remaining viewport
+        // space and scrolls instead of pushing the filter stack below the page.
+        flexShrink: isExpanded ? 1 : 0,
+        minHeight: 0,
       }}
     >
       <button
@@ -488,13 +488,16 @@ function FilterSection({
 
       <div
         style={{
+          flex: isExpanded ? "1 1 auto" : "0 1 auto",
+          minHeight: 0,
           maxHeight: isExpanded
             ? `${Math.min(height, maxHeight)}px`
             : "0px",
           opacity: isExpanded ? 1 : 0,
           transition:
             "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease",
-          overflow: isExpanded ? "auto" : "hidden",
+          overflowX: "hidden",
+          overflowY: isExpanded ? "auto" : "hidden",
         }}
       >
         <div ref={contentRef} style={{ padding: "4px 12px 12px" }}>
@@ -590,7 +593,7 @@ interface ResearchFiltersProps {
   countryId?: string;
 }
 
-function ResearchFilters({
+export function ResearchFilters({
   searchQuery,
   onSearchChange,
   onSearchSubmit,
