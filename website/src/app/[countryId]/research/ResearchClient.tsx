@@ -16,10 +16,16 @@
  *   - Uses OptimisedImage for blog post images
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Fuse from "fuse.js";
 import {
   IconArrowRight,
   IconChevronDown,
@@ -49,11 +55,15 @@ import {
   getTopicTags,
   locationLabels,
   topicLabels,
-  type ResearchItem,
 } from "@/data/posts/postTransformers";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import authorsData from "@/data/posts/authors.json";
 import { buildAuthorFilterOptions } from "@/lib/authorFilterOptions";
+import {
+  searchResearchItems,
+  type ResearchSearchIndexEntry,
+  type ResearchSearchResult,
+} from "@/lib/researchSearch";
 
 /* ─── Constants ─── */
 
@@ -116,11 +126,11 @@ function buildFilterParams(
 
 /* ─── BlogPostCard ─── */
 
-function BlogPostCard({
+export function BlogPostCard({
   item,
   countryId,
 }: {
-  item: ResearchItem;
+  item: ResearchSearchResult;
   countryId: string;
 }) {
   const link = item.isApp
@@ -241,7 +251,7 @@ function BlogPostCard({
             {item.title}
           </p>
 
-          {/* Description */}
+          {/* Description or body-search excerpt */}
           <Text
             size="sm"
             style={{
@@ -252,9 +262,29 @@ function BlogPostCard({
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
               lineHeight: "1.6",
+              fontStyle: item.searchExcerpt ? "italic" : undefined,
             }}
           >
-            {item.description}
+            {item.searchExcerpt ? (
+              <>
+                “
+                {item.searchExcerpt.text.slice(
+                  0,
+                  item.searchExcerpt.highlightStart,
+                )}
+                <mark
+                  style={{
+                    backgroundColor: colors.primary[100],
+                    color: "inherit",
+                  }}
+                >
+                  {item.searchExcerpt.highlightedText}
+                </mark>
+                {item.searchExcerpt.text.slice(item.searchExcerpt.highlightEnd)}”
+              </>
+            ) : (
+              item.description
+            )}
           </Text>
 
           {/* CTA */}
@@ -290,7 +320,7 @@ function BlogPostCard({
 
 /* ─── BlogPostGrid ─── */
 
-function itemKey(item: ResearchItem) {
+function itemKey(item: ResearchSearchResult) {
   return `${item.isApp ? "app" : "post"}-${item.slug}`;
 }
 
@@ -298,7 +328,7 @@ function BlogPostGrid({
   items,
   countryId,
 }: {
-  items: ResearchItem[];
+  items: ResearchSearchResult[];
   countryId: string;
 }) {
   const prevKeysRef = useRef<Set<string>>(new Set());
@@ -892,6 +922,43 @@ export default function ResearchClient({
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>(() =>
     parseArrayParam(searchParams.get("authors")),
   );
+  const [searchIndex, setSearchIndex] = useState<
+    ResearchSearchIndexEntry[] | null
+  >(null);
+  const [searchIndexFailed, setSearchIndexFailed] = useState(false);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const shouldLoadSearchIndex =
+    searchQuery.trim().length > 0 && searchIndex === null && !searchIndexFailed;
+
+  useEffect(() => {
+    if (!shouldLoadSearchIndex) {
+      return;
+    }
+
+    let active = true;
+    fetch("/api/research-search-index")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load the article search index");
+        }
+        return response.json() as Promise<ResearchSearchIndexEntry[]>;
+      })
+      .then((index) => {
+        if (active) {
+          setSearchIndex(index);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSearchIndexFailed(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [shouldLoadSearchIndex]);
 
   // Sync URL params when filters change
   useEffect(() => {
@@ -920,7 +987,7 @@ export default function ResearchClient({
 
   // Filter items
   const filteredItems = useMemo(() => {
-    let items = allItems;
+    let items: ResearchSearchResult[] = allItems;
 
     // Filter by type
     if (selectedTypes.length > 0) {
@@ -952,12 +1019,12 @@ export default function ResearchClient({
     }
 
     // Apply search
-    if (searchQuery.trim()) {
-      const fuse = new Fuse(items, {
-        keys: ["title", "description"],
-        threshold: 0.3,
-      });
-      items = fuse.search(searchQuery).map((result) => result.item);
+    if (deferredSearchQuery.trim()) {
+      items = searchResearchItems(
+        items,
+        searchIndex || [],
+        deferredSearchQuery,
+      );
     }
 
     return items;
@@ -967,8 +1034,12 @@ export default function ResearchClient({
     selectedTopics,
     selectedLocations,
     selectedAuthors,
-    searchQuery,
+    deferredSearchQuery,
+    searchIndex,
   ]);
+
+  const isSearchIndexLoading =
+    searchQuery.trim().length > 0 && searchIndex === null && !searchIndexFailed;
 
   // Infinite scroll - show 8 items initially, load 8 more as user scrolls
   const { visibleCount, sentinelRef, hasMore, reset } = useInfiniteScroll({
@@ -1057,11 +1128,21 @@ export default function ResearchClient({
               className="tw:mb-md"
               style={{ color: colors.gray[500] }}
             >
-              {filteredItems.length}{" "}
-              {filteredItems.length === 1 ? "result" : "results"}
+              {isSearchIndexLoading
+                ? "Searching article text…"
+                : `${filteredItems.length} ${
+                    filteredItems.length === 1 ? "result" : "results"
+                  }`}
             </Text>
 
-            {filteredItems.length > 0 ? (
+            {isSearchIndexLoading ? (
+              <div
+                className="tw:flex tw:justify-center"
+                style={{ padding: spacing["3xl"] }}
+              >
+                <Spinner size="sm" />
+              </div>
+            ) : filteredItems.length > 0 ? (
               <>
                 <BlogPostGrid
                   items={visibleItems}
