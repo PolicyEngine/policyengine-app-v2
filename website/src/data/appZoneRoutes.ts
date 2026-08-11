@@ -186,6 +186,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
     deepDestination: "/assets/posts/encode-policy-multi-agent-ai/:path*",
   },
   {
+    source: "/uk/introducing-policyengine-uk-chat",
+    destination: "/assets/posts/introducing-policyengine-uk-chat/index.html",
+    deepDestination: "/assets/posts/introducing-policyengine-uk-chat/:path*",
+  },
+  {
     source: "/uk/scottish-budget-2026-27",
     destination:
       "https://post-scottish-budget-dashboard.vercel.app/uk/scottish-budget-2026-27",

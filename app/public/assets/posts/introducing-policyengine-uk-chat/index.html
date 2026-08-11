@@ -1,0 +1,3433 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="/assets/posts/introducing-policyengine-uk-chat/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      PolicyEngine UK Chat: AI tax and benefit answers grounded in the PolicyEngine
+      model
+    </title>
+    <meta
+      name="description"
+      content="How PolicyEngine UK Chat pairs a language model with the PolicyEngine UK microsimulation engine."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ══════════════════════════════════════════════════════════════
+         PE SITE HEADER (matches policyengine.org)
+         ══════════════════════════════════════════════════════════════ */
+
+      .pe-site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #ffffff;
+        border-bottom: 1px solid #d8e2e8;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+
+      .pe-site-header__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        max-width: 1180px;
+        margin: 0 auto;
+        min-height: 72px;
+        padding: 0 24px;
+      }
+
+      .pe-site-header__logo {
+        display: inline-flex;
+        align-items: center;
+        min-width: 156px;
+        border-bottom: 0;
+      }
+
+      .pe-site-header__logo img {
+        display: block;
+        width: 156px;
+        height: auto;
+      }
+
+      .pe-site-header__nav {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 24px;
+        color: #2c3e4f;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .pe-site-header__nav a {
+        color: inherit;
+        text-decoration: none;
+        white-space: nowrap;
+        border-bottom: 0;
+      }
+
+      .pe-site-header__nav a:hover {
+        color: #0c7c8c;
+      }
+
+      .pe-site-header__nav .pe-site-header__donate {
+        border: 1px solid #0c7c8c;
+        border-radius: 4px;
+        color: #0c7c8c;
+        padding: 9px 14px;
+      }
+
+      .pe-site-header__country {
+        border-left: 1px solid #d8e2e8;
+        margin-left: 4px;
+        padding-left: 24px;
+      }
+
+      @media (max-width: 760px) {
+        .pe-site-header__inner {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 12px;
+          min-height: 0;
+          padding: 16px 20px;
+        }
+
+        .pe-site-header__nav {
+          flex-wrap: wrap;
+          gap: 12px 18px;
+          justify-content: flex-start;
+          font-size: 14px;
+          line-height: 1.25;
+        }
+
+        .pe-site-header__country {
+          border-left: 0;
+          margin-left: 0;
+          padding-left: 0;
+        }
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         BASE — shared with policyengine.org/us/encode-policy-multi-agent-ai
+         ══════════════════════════════════════════════════════════════ */
+
+      :root {
+        --bg-diagram: #f9f8f6;
+        --bg-card: #ffffff;
+        --grid-color: rgba(13, 115, 119, 0.08);
+        --accent: #0d7377;
+        --accent-light: rgba(13, 115, 119, 0.1);
+        --accent-mid: rgba(13, 115, 119, 0.2);
+        --text-dark: #1e3a3a;
+        --text-mid: #4a6363;
+        --text-light: #7a9494;
+        --border: #d4dede;
+        --border-accent: rgba(13, 115, 119, 0.4);
+        --warning: #b45309;
+        --warning-bg: rgba(180, 83, 9, 0.08);
+        --navy: #2c6496;
+        --navy-deep: #17354f;
+        --navy-light: rgba(44, 100, 150, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Source Serif 4', Georgia, serif;
+        line-height: 1.9;
+        color: #2d3748;
+        background: #f7f8fa;
+      }
+
+      .scrolly-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .article-wrapper {
+        background: #fff;
+        padding: 80px 120px;
+        box-shadow: 0 4px 40px rgba(0, 0, 0, 0.06);
+        border-radius: 3px;
+      }
+
+      h1 {
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-size: 3rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 20px;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        font-size: 1.4rem;
+        color: #64748b;
+        font-style: italic;
+        margin-bottom: 24px;
+      }
+
+      .byline {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 50px;
+        padding-bottom: 50px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .beta-badge {
+        background: var(--accent);
+        color: #fff;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+      }
+
+      h2 {
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-top: 70px;
+        margin-bottom: 30px;
+        letter-spacing: -0.01em;
+      }
+
+      h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-top: 40px;
+        margin-bottom: 20px;
+      }
+
+      p {
+        margin-bottom: 24px;
+        font-size: 1.2rem;
+        color: #4a5568;
+      }
+
+      ul,
+      ol {
+        margin-bottom: 24px;
+        padding-left: 32px;
+      }
+
+      li {
+        margin-bottom: 12px;
+        font-size: 1.2rem;
+        color: #4a5568;
+      }
+
+      strong {
+        color: #1a202c;
+        font-weight: 600;
+      }
+
+      code {
+        font-family: 'JetBrains Mono', monospace;
+        background: #f1f5f9;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        color: #0f766e;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #e2e8f0;
+        margin: 60px 0;
+      }
+
+      a {
+        color: #0f766e;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(15, 118, 110, 0.3);
+        transition: border-color 0.2s;
+      }
+
+      a:hover {
+        border-color: #0f766e;
+      }
+
+      .footer {
+        margin-top: 60px;
+        padding-top: 40px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 1.1rem;
+        color: #64748b;
+        font-style: italic;
+      }
+
+      /* Reveal-on-scroll (matches the framer-motion whileInView reveal) */
+      .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition:
+          opacity 0.6s ease-out,
+          transform 0.6s ease-out;
+      }
+
+      .reveal.in-view {
+        opacity: 1;
+        transform: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         LEDE / PULL QUOTE
+         ══════════════════════════════════════════════════════════════ */
+
+      .insight-box {
+        background: linear-gradient(
+          135deg,
+          var(--accent-light) 0%,
+          rgba(13, 115, 119, 0.05) 100%
+        );
+        border-left: 4px solid var(--accent);
+        padding: 20px 24px;
+        margin: 28px 0;
+        border-radius: 0 10px 10px 0;
+      }
+
+      .insight-box p {
+        margin: 0;
+        font-size: 1.05rem;
+        color: var(--text-dark);
+        font-style: italic;
+      }
+
+      .insight-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+      }
+
+      .warning-box {
+        background: var(--warning-bg);
+        border-left: 4px solid var(--warning);
+        padding: 20px 24px;
+        margin: 28px 0;
+        border-radius: 0 10px 10px 0;
+      }
+
+      .warning-box p {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        color: var(--text-dark);
+      }
+
+      .warning-box p:last-child {
+        margin-bottom: 0;
+      }
+
+      .warning-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--warning);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         BOUNDARY DIAGRAM
+         ══════════════════════════════════════════════════════════════ */
+
+      .agent-flow-container {
+        background: var(--bg-diagram);
+        background-image: radial-gradient(
+          circle,
+          var(--grid-color) 1px,
+          transparent 1px
+        );
+        background-size: 20px 20px;
+        border-radius: 12px;
+        padding: 60px 40px 50px;
+        margin: 50px 0;
+        position: relative;
+        border: 1px solid var(--border);
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.03);
+        overflow-x: auto;
+      }
+
+      .agent-flow-container::before {
+        content: 'THE BOUNDARY';
+        position: absolute;
+        top: 18px;
+        left: 24px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        color: var(--text-light);
+        text-transform: uppercase;
+      }
+
+      .agent-flow-svg {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+        height: auto;
+      }
+
+      .agent-flow-svg .network-node {
+        fill: var(--bg-card);
+        stroke: var(--accent);
+        stroke-width: 2;
+      }
+
+      .agent-flow-svg .network-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        fill: var(--text-mid);
+        text-anchor: middle;
+      }
+
+      .agent-flow-svg .group-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        font-weight: 600;
+        text-anchor: middle;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .agent-flow-svg .lane-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-anchor: middle;
+      }
+
+      .agent-flow-svg .flow-arrow {
+        fill: var(--accent);
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         SCROLLYTELLING LAYOUT
+         ══════════════════════════════════════════════════════════════ */
+
+      .scrollytelling-container {
+        display: flex;
+        gap: 40px;
+        position: relative;
+        margin: 40px 0;
+      }
+
+      .scrolly-narrative {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .scrolly-sticky {
+        flex: 0 0 420px;
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+        align-self: flex-start;
+      }
+
+      .narrative-step {
+        min-height: 90vh;
+        padding: 40px 0;
+        opacity: 0.3;
+        transition: opacity 0.4s ease;
+      }
+
+      .narrative-step.active {
+        opacity: 1;
+      }
+
+      .narrative-step:first-child {
+        padding-top: 0;
+      }
+
+      .narrative-step:last-child {
+        min-height: auto;
+        padding-bottom: 100px;
+      }
+
+      .step-header {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: var(--accent);
+        color: white;
+        border-radius: 50%;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.95rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .step-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-dark);
+      }
+
+      .step-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-left: 8px;
+      }
+
+      .step-diagram {
+        background: var(--bg-diagram);
+        background-image: radial-gradient(
+          circle,
+          var(--grid-color) 1px,
+          transparent 1px
+        );
+        background-size: 20px 20px;
+        border-radius: 12px;
+        padding: 32px 24px;
+        margin-bottom: 28px;
+        border: 1px solid var(--border);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow-x: auto;
+        cursor: zoom-in;
+        position: relative;
+        transition: all 0.2s ease;
+      }
+
+      .step-diagram:hover {
+        border-color: var(--accent);
+        box-shadow: 0 4px 20px rgba(13, 115, 119, 0.15);
+      }
+
+      .step-diagram:hover .expand-hint {
+        opacity: 1;
+      }
+
+      .expand-hint {
+        position: absolute;
+        bottom: 12px;
+        right: 16px;
+        background: var(--accent);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+      }
+
+      .full-width-flow-svg {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+      }
+
+      .full-width-flow-svg .pipe-node {
+        fill: var(--bg-card);
+        stroke: var(--border);
+        stroke-width: 2;
+        transition: all 0.3s ease;
+      }
+
+      .full-width-flow-svg .pipe-node.model {
+        stroke: var(--accent);
+      }
+
+      .full-width-flow-svg .pipe-node.engine {
+        stroke: var(--navy);
+      }
+
+      .full-width-flow-svg .pipe-node.on.model {
+        fill: var(--accent);
+      }
+
+      .full-width-flow-svg .pipe-node.on.engine {
+        fill: var(--navy);
+      }
+
+      .full-width-flow-svg .pipe-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        fill: var(--text-mid);
+        text-anchor: middle;
+        transition: fill 0.3s ease;
+      }
+
+      .full-width-flow-svg .on + .pipe-label,
+      .full-width-flow-svg .pipe-label.on {
+        fill: #ffffff;
+        font-weight: 700;
+      }
+
+      .full-width-flow-svg .pipe-line {
+        stroke: var(--text-light);
+        stroke-width: 1.5;
+        stroke-dasharray: 5 3;
+        fill: none;
+      }
+
+      .full-width-flow-svg .lane-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-anchor: middle;
+      }
+
+      .step-content p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        margin-bottom: 20px;
+      }
+
+      /* Model / engine split panels */
+      .split-panels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin: 24px 0;
+      }
+
+      .model-panel,
+      .engine-panel {
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      .model-panel {
+        background: rgba(13, 115, 119, 0.07);
+        border: 1px solid rgba(13, 115, 119, 0.2);
+      }
+
+      .engine-panel {
+        background: rgba(44, 100, 150, 0.06);
+        border: 1px solid rgba(44, 100, 150, 0.18);
+      }
+
+      .model-panel-title,
+      .engine-panel-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .model-panel-title {
+        color: var(--accent);
+      }
+
+      .engine-panel-title {
+        color: var(--navy);
+      }
+
+      .model-panel ul,
+      .engine-panel ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .model-panel li,
+      .engine-panel li {
+        font-size: 0.95rem;
+        padding: 6px 0 6px 20px;
+        position: relative;
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      .model-panel li::before {
+        content: '~';
+        position: absolute;
+        left: 0;
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .engine-panel li::before {
+        content: '=';
+        position: absolute;
+        left: 0;
+        color: var(--navy);
+        font-weight: 700;
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         STICKY TRACE PANEL
+         ══════════════════════════════════════════════════════════════ */
+
+      .example-panel {
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow:
+          0 1px 3px rgba(13, 115, 119, 0.08),
+          0 8px 24px rgba(13, 115, 119, 0.12);
+        border: 2px solid var(--accent);
+      }
+
+      .example-header {
+        background: var(--bg-diagram);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .example-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        letter-spacing: 0.02em;
+      }
+
+      .example-badge {
+        background: var(--accent);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+      }
+
+      .example-body {
+        padding: 20px 24px 24px;
+        min-height: 460px;
+        background: var(--bg-diagram);
+      }
+
+      .example-section {
+        margin-bottom: 14px;
+      }
+
+      .example-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .example-section-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .example-section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .chat-bubble {
+        background: var(--accent);
+        color: #fff;
+        border-radius: 12px 12px 12px 4px;
+        padding: 12px 16px;
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .example-code {
+        background: linear-gradient(135deg, #f5f7f7 0%, var(--bg-diagram) 100%);
+        border-radius: 8px;
+        padding: 14px 16px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        line-height: 1.7;
+        color: var(--text-dark);
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+        white-space: pre;
+      }
+
+      .example-code .comment {
+        color: var(--text-light);
+        font-style: italic;
+      }
+
+      .example-code .keyword {
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      .example-code .string {
+        color: #047857;
+      }
+
+      .example-code .number {
+        color: #b45309;
+      }
+
+      .example-output {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 14px 16px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.76rem;
+        border: 1px solid var(--border);
+      }
+
+      .example-output-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 3px 8px;
+        margin: 0 -8px;
+        color: var(--text-mid);
+        border-radius: 4px;
+        line-height: 1.5;
+      }
+
+      .example-output-line .icon {
+        flex-shrink: 0;
+        font-weight: 600;
+      }
+
+      .example-output-line.success {
+        color: #059669;
+      }
+
+      .example-output-line.error {
+        color: #dc2626;
+      }
+
+      .example-output-line.warning {
+        color: #b45309;
+      }
+
+      .example-file {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--bg-card);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+
+      .example-file-name {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-dark);
+      }
+
+      .example-file-status {
+        margin-left: auto;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      .example-file-status.created {
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669;
+      }
+
+      .example-file-status.warning {
+        background: rgba(180, 83, 9, 0.15);
+        color: #b45309;
+      }
+
+      .trace-answer {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        color: var(--text-dark);
+      }
+
+      .trace-answer p {
+        font-size: 0.92rem;
+        margin: 0 0 10px;
+        color: var(--text-mid);
+      }
+
+      .trace-answer p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mini-chart {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .trace-slide {
+        display: none;
+      }
+
+      .trace-slide.active {
+        display: block;
+        animation: fadeIn 0.35s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .trace-progress {
+        display: flex;
+        gap: 4px;
+        padding: 0 20px 14px;
+        background: var(--bg-diagram);
+      }
+
+      .trace-progress span {
+        flex: 1;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--border);
+        transition: background 0.3s ease;
+      }
+
+      .trace-progress span.on {
+        background: var(--accent);
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         DESIGN PRINCIPLES GRID
+         ══════════════════════════════════════════════════════════════ */
+
+      .principles-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin: 40px 0;
+      }
+
+      .principle-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 32px 28px;
+        transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .principle-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+      }
+
+      .principle-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-6px);
+        box-shadow: 0 12px 40px rgba(13, 115, 119, 0.12);
+      }
+
+      .principle-card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .principle-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--accent-light);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        color: var(--accent);
+      }
+
+      .principle-icon svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .principle-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 12px;
+      }
+
+      .principle-desc {
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-size: 1.05rem;
+        color: var(--text-mid);
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      .principles-bottom {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        max-width: 820px;
+        margin: 0 auto;
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         TOOL SURFACE TIMELINE
+         ══════════════════════════════════════════════════════════════ */
+
+      .workflow-timeline {
+        background: var(--bg-diagram);
+        background-image: radial-gradient(
+          circle,
+          var(--grid-color) 1px,
+          transparent 1px
+        );
+        background-size: 20px 20px;
+        border-radius: 16px;
+        padding: 50px 40px;
+        margin: 40px 0;
+        border: 1px solid var(--border);
+      }
+
+      .workflow-header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .workflow-command {
+        display: inline-block;
+        background: var(--accent);
+        color: white;
+        padding: 14px 32px;
+        border-radius: 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .workflow-command-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        margin-bottom: 10px;
+      }
+
+      .timeline-phases {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+        position: relative;
+      }
+
+      .timeline-phases::before {
+        content: '';
+        position: absolute;
+        top: 25px;
+        left: 10%;
+        right: 10%;
+        height: 3px;
+        background: var(--accent);
+        z-index: 0;
+      }
+
+      .timeline-phase {
+        position: relative;
+        z-index: 1;
+      }
+
+      .timeline-phase-header {
+        text-align: center;
+        margin-bottom: 16px;
+        transition: transform 0.2s ease;
+      }
+
+      .timeline-phase-header:hover {
+        transform: scale(1.05);
+      }
+
+      .timeline-phase-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: var(--accent);
+        color: white;
+        border-radius: 50%;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 15px rgba(13, 115, 119, 0.3);
+      }
+
+      .timeline-phase-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-dark);
+      }
+
+      .timeline-phase-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 20px 16px;
+        min-height: 280px;
+        transition: all 0.25s ease;
+      }
+
+      .timeline-phase-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 8px 30px rgba(13, 115, 119, 0.1);
+      }
+
+      .timeline-agents {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+
+      .timeline-agent {
+        background: var(--accent-light);
+        color: var(--accent);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        font-weight: 500;
+        word-break: break-word;
+      }
+
+      .timeline-phase-desc {
+        font-size: 0.9rem;
+        color: var(--text-mid);
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      .timeline-phase-desc strong {
+        color: var(--text-dark);
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         CAPABILITY CARDS (interactive)
+         ══════════════════════════════════════════════════════════════ */
+
+      .iteration-container {
+        margin: 30px 0;
+      }
+
+      .iteration-hint {
+        text-align: center;
+        color: var(--text-light);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        margin-bottom: 12px;
+      }
+
+      .iteration-cards {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .iteration-card {
+        flex: 1;
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 14px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        position: relative;
+        font: inherit;
+      }
+
+      .iteration-card::after {
+        content: '';
+        position: absolute;
+        bottom: -12px;
+        left: 50%;
+        transform: translateX(-50%) scaleY(0);
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 10px solid var(--accent);
+        transition: transform 0.2s ease;
+        transform-origin: top;
+      }
+
+      .iteration-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(13, 115, 119, 0.15);
+      }
+
+      .iteration-card.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(13, 115, 119, 0.2);
+      }
+
+      .iteration-card.active::after {
+        transform: translateX(-50%) scaleY(1);
+      }
+
+      .iteration-num {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: var(--accent);
+        color: white;
+        border-radius: 50%;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0 auto 10px;
+      }
+
+      .iteration-card.active .iteration-num {
+        background: white;
+        color: var(--accent);
+      }
+
+      .iteration-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 4px;
+      }
+
+      .iteration-card.active .iteration-title {
+        color: white;
+      }
+
+      .iteration-subtitle {
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-size: 0.8rem;
+        color: var(--text-light);
+        line-height: 1.3;
+      }
+
+      .iteration-card.active .iteration-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .iteration-panel {
+        background: var(--bg-diagram);
+        border: 2px solid var(--accent);
+        border-radius: 12px;
+        padding: 24px 32px;
+        overflow: hidden;
+      }
+
+      .iteration-panel p {
+        margin: 10px 0;
+        line-height: 1.7;
+        font-size: 1.05rem;
+      }
+
+      .iteration-panel .ask {
+        font-style: italic;
+        color: var(--text-dark);
+        font-size: 1.15rem;
+      }
+
+      .iteration-panel .tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 16px;
+      }
+
+      .iteration-panel .tools span {
+        background: var(--accent-light);
+        color: var(--accent);
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+      }
+
+      .iteration-slide {
+        display: none;
+      }
+
+      .iteration-slide.active {
+        display: block;
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         STAT CARDS
+         ══════════════════════════════════════════════════════════════ */
+
+      .results-section {
+        margin: 40px 0;
+      }
+
+      .results-description {
+        background: var(--bg-diagram);
+        border-radius: 12px;
+        padding: 28px 32px;
+        border-left: 4px solid var(--accent);
+      }
+
+      .results-description p {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         STACK TABLE
+         ══════════════════════════════════════════════════════════════ */
+
+      .stack-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 30px 0;
+        font-size: 1rem;
+      }
+
+      .stack-table th {
+        text-align: left;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent);
+        padding: 10px 14px;
+        border-bottom: 2px solid var(--border);
+      }
+
+      .stack-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-mid);
+        vertical-align: top;
+      }
+
+      .stack-table td:first-child {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--text-dark);
+        white-space: nowrap;
+      }
+
+      .stack-table tr:hover td {
+        background: var(--accent-light);
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         TRY IT — CHAT MOCK
+         ══════════════════════════════════════════════════════════════ */
+
+      .chat-mock {
+        background: #fff;
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        margin: 30px 0;
+        box-shadow: 0 8px 30px rgba(13, 115, 119, 0.08);
+      }
+
+      .chat-mock-header {
+        background: var(--bg-diagram);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--text-mid);
+      }
+
+      .chat-mock-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      .chat-mock-body {
+        padding: 24px 24px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .chat-prompt {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: var(--bg-diagram);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-size: 1.02rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s ease;
+      }
+
+      .chat-prompt:hover {
+        border-color: var(--accent);
+        background: var(--accent-light);
+        transform: translateX(4px);
+      }
+
+      .chat-mock-footer {
+        padding: 18px 24px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .chat-cta {
+        display: inline-block;
+        background: var(--accent);
+        color: #fff;
+        padding: 12px 26px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-bottom: 0;
+        transition: background 0.2s ease;
+      }
+
+      .chat-cta:hover {
+        background: #0a5d60;
+        border-bottom: 0;
+      }
+
+      .chat-cta-note {
+        font-size: 0.9rem;
+        color: var(--text-light);
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         WHAT'S NEXT CARDS
+         ══════════════════════════════════════════════════════════════ */
+
+      .next-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 28px;
+        margin: 40px 0;
+      }
+
+      .next-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 32px 28px;
+        position: relative;
+        transition: all 0.25s ease;
+      }
+
+      .next-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(13, 115, 119, 0.1);
+      }
+
+      .next-card-badge {
+        display: inline-block;
+        background: var(--accent-light);
+        color: var(--accent);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 16px;
+      }
+
+      .next-card-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 14px;
+      }
+
+      .next-card-desc {
+        font-size: 1.05rem;
+        color: var(--text-mid);
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         DIAGRAM MODAL
+         ══════════════════════════════════════════════════════════════ */
+
+      .diagram-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 40px;
+        cursor: zoom-out;
+      }
+
+      .diagram-modal-overlay.open {
+        display: flex;
+      }
+
+      .diagram-modal-content {
+        background: var(--bg-diagram);
+        background-image: radial-gradient(
+          circle,
+          var(--grid-color) 1px,
+          transparent 1px
+        );
+        background-size: 20px 20px;
+        border-radius: 16px;
+        padding: 32px 40px 40px;
+        max-width: 95vw;
+        max-height: 90vh;
+        overflow: auto;
+        position: relative;
+        cursor: default;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        border: 2px solid var(--accent);
+      }
+
+      .diagram-modal-close {
+        position: absolute;
+        top: 16px;
+        right: 20px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .diagram-modal-close:hover {
+        background: #0a5d60;
+        transform: scale(1.1);
+      }
+
+      .diagram-modal-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 24px;
+        padding-right: 50px;
+      }
+
+      .diagram-modal-diagram {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-width: 800px;
+      }
+
+      .diagram-modal-diagram svg {
+        width: 100%;
+        height: auto;
+        max-height: 70vh;
+      }
+
+      /* ══════════════════════════════════════════════════════════════
+         RESPONSIVE
+         ══════════════════════════════════════════════════════════════ */
+
+      @media (max-width: 1200px) {
+        .article-wrapper {
+          padding: 60px;
+        }
+        h1 {
+          font-size: 2.4rem;
+        }
+        .principles-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .principles-bottom {
+          grid-template-columns: 1fr;
+          max-width: 100%;
+        }
+        .timeline-phases {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .timeline-phases::before {
+          display: none;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .scrollytelling-container {
+          flex-direction: column;
+        }
+        .scrolly-sticky {
+          position: relative;
+          top: 0;
+          flex: none;
+          width: 100%;
+          order: -1;
+          margin-bottom: 30px;
+        }
+        .narrative-step {
+          min-height: auto;
+          padding: 30px 0;
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .diagram-modal-overlay {
+          padding: 20px;
+        }
+        .diagram-modal-content {
+          padding: 24px;
+        }
+        .diagram-modal-diagram {
+          min-width: auto;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .article-wrapper {
+          padding: 30px 25px;
+        }
+        h1 {
+          font-size: 1.8rem;
+        }
+        .split-panels {
+          grid-template-columns: 1fr;
+        }
+        .iteration-cards {
+          flex-direction: column;
+        }
+        .principles-grid {
+          grid-template-columns: 1fr;
+        }
+        .timeline-phases {
+          grid-template-columns: 1fr;
+        }
+        .next-cards {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="pe-site-header" aria-label="PolicyEngine">
+      <div class="pe-site-header__inner">
+        <a class="pe-site-header__logo" href="/uk" aria-label="PolicyEngine UK home">
+          <img src="/assets/logos/policyengine/teal.svg" alt="PolicyEngine" />
+        </a>
+        <nav class="pe-site-header__nav" aria-label="PolicyEngine navigation">
+          <a href="/uk/research">Research</a>
+          <a href="/uk/model">Model</a>
+          <a href="/uk/api">API</a>
+          <a href="/uk/team">About</a>
+          <a class="pe-site-header__donate" href="/uk/donate">Donate</a>
+          <a class="pe-site-header__country" href="/uk">United Kingdom</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="scrolly-container">
+      <article class="article-wrapper">
+        <!-- ═══════════════ TITLE ═══════════════ -->
+        <div class="reveal">
+          <h1>
+            PolicyEngine UK Chat: AI tax and benefit answers grounded in the
+            PolicyEngine model
+          </h1>
+          <p class="subtitle">
+            How PolicyEngine UK Chat pairs a language model with the PolicyEngine UK
+            microsimulation engine
+          </p>
+          <div class="byline">
+            <span class="beta-badge">Beta</span>
+            <span>11 August 2026</span>
+          </div>
+        </div>
+
+        <!-- ═══════════════ WHAT MODELS CAN AND CANNOT COMPUTE ═══════════════ -->
+        <div class="reveal">
+          <h2>What models can and cannot compute</h2>
+          <p>
+            People increasingly ask AI systems what a tax or benefit reform would cost,
+            who would gain, and what a household would actually receive. Language models
+            handle the first half of that job well: they read an ambiguous question,
+            work out what is being asked, and explain the answer in plain English.
+          </p>
+          <p>
+            They handle the second half badly. Tax and benefit questions need a degree of
+            accuracy that models do not yet offer on their own. The figure has to come
+            from a model whose assumptions can be inspected and verified — not from
+            something that pattern-matches its way to a plausible number.
+          </p>
+          <p>
+            We have measured this directly. In
+            <a href="/us/research/introducing-policybench">PolicyBench</a>, an evaluation
+            built on the US tax and benefit system, we scored how accurately AI models
+            compute taxes and benefits from household prompts with no tools and no
+            lookups, against deterministic PolicyEngine outputs. In the launch results
+            the top model — OpenAI's GPT-5.5 — matched PolicyEngine exactly on
+            <strong>80.3%</strong> of its scored outputs. Computed amounts were the
+            hardest cases: income tax before credits scored far below eligibility flags,
+            because getting it right means sequencing income concepts, thresholds,
+            exclusions and credits in the correct order.
+          </p>
+          <div class="insight-box">
+            <div class="insight-label">The finding</div>
+            <p>
+              The harder the computation, the less a language model can be trusted to do
+              it unaided. The benchmark covers US policy, but the lesson carries directly
+              to the UK.
+            </p>
+          </div>
+          <p>
+            <strong>PolicyEngine UK Chat</strong> is built around that finding. It is a
+            conversational interface for UK tax and benefit analysis, now in beta, in
+            which the AI reads the question and the
+            <a href="https://github.com/PolicyEngine/policyengine-uk">PolicyEngine UK</a>
+            microsimulation model produces every number.
+          </p>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ THE BOUNDARY ═══════════════ -->
+        <div class="reveal">
+          <h2>The boundary</h2>
+          <p>
+            The central design decision is where the predictive layer stops and the
+            deterministic layer starts.
+          </p>
+          <p>
+            The <strong>predictive</strong> parts are the ones language models are
+            genuinely good at: interpreting wording, deciding which kind of analysis is
+            being requested, drafting the explanation, and suggesting a sensible
+            follow-up. Those tasks are open-ended and language-heavy.
+          </p>
+          <p>
+            The <strong>deterministic</strong> parts are the ones users need to be able
+            to check: validating the request, looking up parameters, constructing
+            household inputs, running simulations, computing weighted outputs, and
+            producing chart data. None of these should depend on model memory — and in
+            PolicyEngine UK Chat none of them do. The runtime enforces the boundary
+            instead of asking the model to respect it in a prompt.
+          </p>
+
+          <div class="agent-flow-container">
+            <svg
+              class="agent-flow-svg"
+              viewBox="0 0 900 300"
+              width="900"
+              role="img"
+              aria-label="The boundary between the predictive AI layer and the deterministic PolicyEngine engine: the model interprets the question and calls typed tools; the engine validates, simulates and computes; the model then explains the returned numbers."
+            >
+              <defs>
+                <marker
+                  id="arrowTeal"
+                  markerWidth="9"
+                  markerHeight="9"
+                  refX="7"
+                  refY="4.5"
+                  orient="auto"
+                >
+                  <path d="M0,0 L9,4.5 L0,9 Z" class="flow-arrow" />
+                </marker>
+              </defs>
+
+              <!-- lanes -->
+              <rect
+                x="20"
+                y="40"
+                width="380"
+                height="220"
+                rx="14"
+                fill="rgba(13,115,119,0.05)"
+                stroke="var(--accent)"
+                stroke-width="1.5"
+                stroke-dasharray="8 5"
+              />
+              <text x="210" y="66" class="lane-label" fill="#0d7377">
+                PREDICTIVE — LANGUAGE MODEL
+              </text>
+
+              <rect
+                x="500"
+                y="40"
+                width="380"
+                height="220"
+                rx="14"
+                fill="rgba(44,100,150,0.05)"
+                stroke="#2c6496"
+                stroke-width="1.5"
+                stroke-dasharray="8 5"
+              />
+              <text x="690" y="66" class="lane-label" fill="#2c6496">
+                DETERMINISTIC — POLICYENGINE UK
+              </text>
+
+              <!-- model nodes -->
+              <rect
+                x="50"
+                y="88"
+                width="150"
+                height="56"
+                rx="10"
+                fill="#fff"
+                stroke="#0d7377"
+                stroke-width="2"
+              />
+              <text x="125" y="112" class="network-label">Interpret the</text>
+              <text x="125" y="130" class="network-label">question</text>
+
+              <rect
+                x="220"
+                y="88"
+                width="150"
+                height="56"
+                rx="10"
+                fill="#fff"
+                stroke="#0d7377"
+                stroke-width="2"
+              />
+              <text x="295" y="112" class="network-label">Choose a tool</text>
+              <text x="295" y="130" class="network-label">and arguments</text>
+
+              <rect
+                x="135"
+                y="176"
+                width="150"
+                height="56"
+                rx="10"
+                fill="#fff"
+                stroke="#0d7377"
+                stroke-width="2"
+              />
+              <text x="210" y="200" class="network-label">Explain the</text>
+              <text x="210" y="218" class="network-label">returned numbers</text>
+
+              <!-- engine nodes -->
+              <rect
+                x="530"
+                y="88"
+                width="150"
+                height="56"
+                rx="10"
+                fill="#fff"
+                stroke="#2c6496"
+                stroke-width="2"
+              />
+              <text x="605" y="112" class="network-label">Validate</text>
+              <text x="605" y="130" class="network-label">and look up</text>
+
+              <rect
+                x="700"
+                y="88"
+                width="150"
+                height="56"
+                rx="10"
+                fill="#fff"
+                stroke="#2c6496"
+                stroke-width="2"
+              />
+              <text x="775" y="112" class="network-label">Simulate</text>
+              <text x="775" y="130" class="network-label">baseline + reform</text>
+
+              <rect
+                x="615"
+                y="176"
+                width="150"
+                height="56"
+                rx="10"
+                fill="#fff"
+                stroke="#2c6496"
+                stroke-width="2"
+              />
+              <text x="690" y="200" class="network-label">Weighted outputs</text>
+              <text x="690" y="218" class="network-label">and chart rows</text>
+
+              <!-- boundary -->
+              <line
+                x1="450"
+                y1="30"
+                x2="450"
+                y2="270"
+                stroke="#1a202c"
+                stroke-width="2"
+                stroke-dasharray="4 6"
+                opacity="0.45"
+              />
+              <text
+                x="450"
+                y="22"
+                class="lane-label"
+                fill="#1a202c"
+                style="letter-spacing: 0.2em"
+              >
+                TYPED TOOL BOUNDARY
+              </text>
+
+              <!-- flows -->
+              <line
+                x1="200"
+                y1="116"
+                x2="216"
+                y2="116"
+                stroke="#4a6363"
+                stroke-width="1.6"
+                marker-end="url(#arrowTeal)"
+              />
+              <line
+                x1="370"
+                y1="116"
+                x2="526"
+                y2="116"
+                stroke="#4a6363"
+                stroke-width="1.6"
+                marker-end="url(#arrowTeal)"
+              />
+              <text x="448" y="106" class="network-label" style="font-size: 11px">
+                tool call
+              </text>
+              <line
+                x1="680"
+                y1="116"
+                x2="696"
+                y2="116"
+                stroke="#4a6363"
+                stroke-width="1.6"
+                marker-end="url(#arrowTeal)"
+              />
+              <path
+                d="M775 144 L775 204 L769 204"
+                stroke="#4a6363"
+                stroke-width="1.6"
+                fill="none"
+                marker-end="url(#arrowTeal)"
+              />
+              <line
+                x1="611"
+                y1="204"
+                x2="289"
+                y2="204"
+                stroke="#4a6363"
+                stroke-width="1.6"
+                marker-end="url(#arrowTeal)"
+              />
+              <text x="450" y="194" class="network-label" style="font-size: 11px">
+                typed result
+              </text>
+            </svg>
+          </div>
+
+          <p>
+            When a question is ready for computation, the model receives the calculation
+            tools plus a reference generated from the installed engine — its capabilities
+            and its parameter schema. The model's view of what it can compute is
+            therefore tied to the deployed version of PolicyEngine, not to a hand-written
+            prompt that drifts out of date every time the model changes.
+          </p>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ SCROLLYTELLING ═══════════════ -->
+        <div class="reveal">
+          <h2>Anatomy of an answer</h2>
+          <p>
+            The clearest way to see the boundary is to follow one question through the
+            system. Take a question with real policy weight and no single obvious lookup:
+            <em>"What's the poverty impact of abolishing the two-child limit?"</em> Six
+            things happen before a number reaches the screen. Scroll through them — the
+            panel on the right shows the turn as it actually accumulates.
+          </p>
+
+          <div class="scrollytelling-container">
+            <div class="scrolly-narrative">
+              <!-- STEP 1 -->
+              <section class="narrative-step" data-step="0">
+                <div class="step-header">
+                  <div class="step-number">1</div>
+                  <div class="step-title">Route</div>
+                  <div class="step-subtitle">— the gateway pre-pass</div>
+                </div>
+                <div class="step-diagram" data-diagram="0" title="Click to expand">
+                  <div class="expand-hint">Click to expand</div>
+                </div>
+                <div class="step-content">
+                  <p>
+                    Every turn starts with a cheap classify-and-route pre-pass. The
+                    gateway decides what kind of request this is — a rule lookup, a
+                    household calculation, a society-wide reform — and grounds the loose
+                    parts of the question into slots the rest of the pipeline can use.
+                  </p>
+                  <p>
+                    It costs a fraction of a full turn and it keeps simple questions from
+                    dragging the whole simulation machinery behind them.
+                  </p>
+                  <div class="split-panels">
+                    <div class="model-panel">
+                      <div class="model-panel-title"><span>~</span> Model</div>
+                      <ul>
+                        <li>Reads "abolishing the two-child limit" as a reform request</li>
+                        <li>Grounds the implied year and population</li>
+                        <li>Picks the society-wide pathway over a household one</li>
+                      </ul>
+                    </div>
+                    <div class="engine-panel">
+                      <div class="engine-panel-title"><span>=</span> Engine</div>
+                      <ul>
+                        <li>Supplies the scope descriptor the gateway routes against</li>
+                        <li>Nothing is computed yet</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="insight-box">
+                    <div class="insight-label">Key insight</div>
+                    <p>
+                      Routing is a prediction, so it is allowed to be wrong. Nothing
+                      downstream trusts it for a number.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- STEP 2 -->
+              <section class="narrative-step" data-step="1">
+                <div class="step-header">
+                  <div class="step-number">2</div>
+                  <div class="step-title">Discover</div>
+                  <div class="step-subtitle">— what can actually be changed</div>
+                </div>
+                <div class="step-diagram" data-diagram="1" title="Click to expand">
+                  <div class="expand-hint">Click to expand</div>
+                </div>
+                <div class="step-content">
+                  <p>
+                    "The two-child limit" is a phrase in the news, not a parameter path.
+                    The model has to find the thing in the model that corresponds to it,
+                    and it does that by asking the engine rather than by remembering.
+                  </p>
+                  <p>
+                    Nine discovery tools split the catalogue by area — entities,
+                    variables, parameters, reform targets, household inputs, supported
+                    outputs — so the model requests only the metadata it needs instead of
+                    carrying the whole model in its context.
+                  </p>
+                  <div class="split-panels">
+                    <div class="model-panel">
+                      <div class="model-panel-title"><span>~</span> Model</div>
+                      <ul>
+                        <li>Searches reform targets for "two child limit"</li>
+                        <li>Reads back the parameter path and its current value</li>
+                      </ul>
+                    </div>
+                    <div class="engine-panel">
+                      <div class="engine-panel-title"><span>=</span> Engine</div>
+                      <ul>
+                        <li>Returns paths and aliases from the installed UK package</li>
+                        <li>Returns the parameter value for the requested year</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="insight-box">
+                    <div class="insight-label">Key insight</div>
+                    <p>
+                      The catalogue is generated from the deployed engine, so a model
+                      trained before a policy change still cannot invent a parameter that
+                      does not exist.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- STEP 3 -->
+              <section class="narrative-step" data-step="2">
+                <div class="step-header">
+                  <div class="step-number">3</div>
+                  <div class="step-title">Validate</div>
+                  <div class="step-subtitle">— fail before you compute</div>
+                </div>
+                <div class="step-diagram" data-diagram="2" title="Click to expand">
+                  <div class="expand-hint">Click to expand</div>
+                </div>
+                <div class="step-content">
+                  <p>
+                    Before anything runs, the proposed reform goes through
+                    <code>validate_reform</code> — a flat parameter-path reform checked
+                    against the real schema for the year in question. Synthetic households
+                    get the same treatment through <code>validate_household</code>.
+                  </p>
+                  <p>
+                    A bad path fails here, cheaply, with a typed error the model can read
+                    and correct. It does not fail silently three steps later inside a
+                    number that looks reasonable.
+                  </p>
+                  <div class="split-panels">
+                    <div class="model-panel">
+                      <div class="model-panel-title"><span>~</span> Model</div>
+                      <ul>
+                        <li>Proposes the reform as a parameter-path map</li>
+                        <li>Reads the error and retries if the path is wrong</li>
+                      </ul>
+                    </div>
+                    <div class="engine-panel">
+                      <div class="engine-panel-title"><span>=</span> Engine</div>
+                      <ul>
+                        <li>Type-checks paths, values and the year</li>
+                        <li>Rejects anything the model made up</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="insight-box">
+                    <div class="insight-label">Key insight</div>
+                    <p>
+                      Validation is the cheapest place in the system to catch a
+                      hallucination, and the only place where catching it costs nothing.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- STEP 4 -->
+              <section class="narrative-step" data-step="3">
+                <div class="step-header">
+                  <div class="step-number">4</div>
+                  <div class="step-title">Simulate</div>
+                  <div class="step-subtitle">— a handle, not a dataset</div>
+                </div>
+                <div class="step-diagram" data-diagram="3" title="Click to expand">
+                  <div class="expand-hint">Click to expand</div>
+                </div>
+                <div class="step-content">
+                  <p>
+                    <code>run_society_simulation</code> resolves the fixed dataset and
+                    materialises a baseline and a reform simulation in memory. What comes
+                    back to the model is not data. It is an opaque
+                    <code>simulation_id</code> plus metadata.
+                  </p>
+                  <p>
+                    The pair lives in a turn-local result store owned by the tool
+                    execution context. The model cannot inspect the underlying simulation
+                    objects, cannot serialise them, and cannot carry the handle into a
+                    later turn.
+                  </p>
+                  <div class="split-panels">
+                    <div class="model-panel">
+                      <div class="model-panel-title"><span>~</span> Model</div>
+                      <ul>
+                        <li>Requests the simulation and holds the handle</li>
+                        <li>Sees metadata only — never a row of survey data</li>
+                      </ul>
+                    </div>
+                    <div class="engine-panel">
+                      <div class="engine-panel-title"><span>=</span> Engine</div>
+                      <ul>
+                        <li>Builds baseline and reform <code>Simulation</code> objects</li>
+                        <li>Stores the pair and returns an opaque handle</li>
+                        <li>Computes no fiscal, poverty or decile result yet</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="insight-box">
+                    <div class="insight-label">Key insight</div>
+                    <p>
+                      Handing back a handle instead of an array is what makes the privacy
+                      boundary structural rather than aspirational.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- STEP 5 -->
+              <section class="narrative-step" data-step="4">
+                <div class="step-header">
+                  <div class="step-number">5</div>
+                  <div class="step-title">Derive</div>
+                  <div class="step-subtitle">— official weighted outputs</div>
+                </div>
+                <div class="step-diagram" data-diagram="4" title="Click to expand">
+                  <div class="expand-hint">Click to expand</div>
+                </div>
+                <div class="step-content">
+                  <p>
+                    The poverty question is answered by
+                    <code>compute_poverty_metrics</code>, which retrieves the stored pair
+                    and calls PolicyEngine's own UK poverty output classes. Seven
+                    derivative tools cover budgetary impact, programme breakdown, deciles,
+                    winners and losers, poverty, inequality, and generic weighted
+                    aggregates.
+                  </p>
+                  <p>
+                    These adapters may reshape an official output to fit the tool
+                    contract. They are not permitted to call the country microsimulation
+                    directly, convert weighted series to raw arrays, or implement survey
+                    weighting themselves.
+                  </p>
+                  <div class="split-panels">
+                    <div class="model-panel">
+                      <div class="model-panel-title"><span>~</span> Model</div>
+                      <ul>
+                        <li>Chooses which derivative answers the question asked</li>
+                        <li>Passes the handle through, unmodified</li>
+                      </ul>
+                    </div>
+                    <div class="engine-panel">
+                      <div class="engine-panel-title"><span>=</span> Engine</div>
+                      <ul>
+                        <li>Applies survey weights inside policyengine.py</li>
+                        <li>Returns baseline, reform and change</li>
+                        <li>Stores the result under its own typed handle</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="insight-box">
+                    <div class="insight-label">Key insight</div>
+                    <p>
+                      Every quantitative claim in the final answer traces back to one of
+                      these calls. There is no path by which a number reaches the user
+                      without one.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- STEP 6 -->
+              <section class="narrative-step" data-step="5">
+                <div class="step-header">
+                  <div class="step-number">6</div>
+                  <div class="step-title">Chart and answer</div>
+                  <div class="step-subtitle">— the only part the model writes</div>
+                </div>
+                <div class="step-diagram" data-diagram="5" title="Click to expand">
+                  <div class="expand-hint">Click to expand</div>
+                </div>
+                <div class="step-content">
+                  <p>
+                    <code>generate_chart</code> takes the derivative handle and emits a
+                    deterministic chart spec. Eight policy presets — budget waterfalls,
+                    absolute and relative decile bars, winners and losers, poverty,
+                    inequality, earnings variation — map typed outputs onto fixed rows.
+                    The frontend renders those rows and nothing else.
+                  </p>
+                  <p>
+                    Only then does the model write prose: it states the assumptions, reads
+                    out the computed figures, and offers a follow-up. The words are
+                    predicted. The numbers inside them are not.
+                  </p>
+                  <div class="split-panels">
+                    <div class="model-panel">
+                      <div class="model-panel-title"><span>~</span> Model</div>
+                      <ul>
+                        <li>Picks the preset that fits the derivative</li>
+                        <li>Writes the explanation and the stated assumptions</li>
+                        <li>Suggests the next question</li>
+                      </ul>
+                    </div>
+                    <div class="engine-panel">
+                      <div class="engine-panel-title"><span>=</span> Engine</div>
+                      <ul>
+                        <li>Maps the typed output to fixed chart rows</li>
+                        <li>Renders missing values as a dash, never as a bar</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="insight-box">
+                    <div class="insight-label">Key insight</div>
+                    <p>
+                      The model is the narrator of the turn, not the source of it.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- STICKY TRACE PANEL -->
+            <div class="scrolly-sticky">
+              <div class="example-panel">
+                <div class="example-header">
+                  <div class="example-title">turn trace</div>
+                  <div class="example-badge" id="trace-badge">gateway</div>
+                </div>
+                <div class="trace-progress" id="trace-progress">
+                  <span class="on"></span><span></span><span></span><span></span
+                  ><span></span><span></span>
+                </div>
+                <div class="example-body">
+                  <!-- SLIDE 1 -->
+                  <div class="trace-slide active" data-slide="0">
+                    <div class="example-section">
+                      <div class="example-section-title">user</div>
+                      <div class="chat-bubble">
+                        What's the poverty impact of abolishing the two-child limit?
+                      </div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">gateway</div>
+                      <div class="example-code"><span class="keyword">route</span>   → society_reform
+<span class="keyword">scope</span>   → uk
+<span class="keyword">year</span>    → <span class="number">2026</span>
+<span class="keyword">output</span>  → poverty</div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">status</div>
+                      <div class="example-output">
+                        <div class="example-output-line">
+                          <span class="icon">·</span
+                          ><span>classified in one cheap pre-pass</span>
+                        </div>
+                        <div class="example-output-line">
+                          <span class="icon">·</span
+                          ><span>no figures produced</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 2 -->
+                  <div class="trace-slide" data-slide="1">
+                    <div class="example-section">
+                      <div class="example-section-title">tool call</div>
+                      <div class="example-code"><span class="keyword">list_reform_targets</span>(
+  query=<span class="string">"two child limit"</span>
+)</div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">result</div>
+                      <div class="example-output">
+                        <div class="example-output-line success">
+                          <span class="icon">✓</span
+                          ><span>matched reformable parameter path</span>
+                        </div>
+                        <div class="example-output-line">
+                          <span class="icon">·</span
+                          ><span>alias resolved from the installed UK package</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">tool call</div>
+                      <div class="example-code"><span class="keyword">get_parameter</span>(
+  path=<span class="string">"…child_limit…"</span>,
+  year=<span class="number">2026</span>
+)</div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 3 -->
+                  <div class="trace-slide" data-slide="2">
+                    <div class="example-section">
+                      <div class="example-section-title">tool call</div>
+                      <div class="example-code"><span class="keyword">validate_reform</span>(
+  reform={ <span class="comment">…path: value…</span> },
+  year=<span class="number">2026</span>
+)</div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">result</div>
+                      <div class="example-output">
+                        <div class="example-output-line success">
+                          <span class="icon">✓</span><span>paths exist in the schema</span>
+                        </div>
+                        <div class="example-output-line success">
+                          <span class="icon">✓</span><span>values are the right type</span>
+                        </div>
+                        <div class="example-output-line success">
+                          <span class="icon">✓</span
+                          ><span>year is in range for the package</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">note</div>
+                      <div class="example-file">
+                        <span class="example-file-name">invalid path</span>
+                        <span class="example-file-status warning">rejected here</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 4 -->
+                  <div class="trace-slide" data-slide="3">
+                    <div class="example-section">
+                      <div class="example-section-title">tool call</div>
+                      <div class="example-code"><span class="keyword">run_society_simulation</span>(
+  reform={ <span class="comment">…validated…</span> },
+  year=<span class="number">2026</span>
+)</div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">returned to the model</div>
+                      <div class="example-code">{
+  <span class="string">"simulation_id"</span>: <span class="string">"sim_…"</span>,
+  <span class="string">"dataset"</span>: <span class="string">"enhanced_frs"</span>,
+  <span class="string">"year"</span>: <span class="number">2026</span>
+}</div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">not returned</div>
+                      <div class="example-output">
+                        <div class="example-output-line error">
+                          <span class="icon">✗</span><span>household rows</span>
+                        </div>
+                        <div class="example-output-line error">
+                          <span class="icon">✗</span><span>survey weights</span>
+                        </div>
+                        <div class="example-output-line error">
+                          <span class="icon">✗</span
+                          ><span>any serialisable simulation object</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 5 -->
+                  <div class="trace-slide" data-slide="4">
+                    <div class="example-section">
+                      <div class="example-section-title">tool call</div>
+                      <div class="example-code"><span class="keyword">compute_poverty_metrics</span>(
+  simulation_id=<span class="string">"sim_…"</span>
+)</div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">computed by policyengine.py</div>
+                      <div class="example-output">
+                        <div class="example-output-line success">
+                          <span class="icon">✓</span
+                          ><span>UK poverty rates, baseline and reform</span>
+                        </div>
+                        <div class="example-output-line success">
+                          <span class="icon">✓</span><span>poverty by age</span>
+                        </div>
+                        <div class="example-output-line success">
+                          <span class="icon">✓</span
+                          ><span>survey weights applied inside the engine</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">stored</div>
+                      <div class="example-file">
+                        <span class="example-file-name">result_id → typed handle</span>
+                        <span class="example-file-status created">turn-local</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SLIDE 6 -->
+                  <div class="trace-slide" data-slide="5">
+                    <div class="example-section">
+                      <div class="example-section-title">tool call</div>
+                      <div class="example-code"><span class="keyword">generate_chart</span>(
+  chart_kind=<span class="string">"poverty_relative_bar"</span>,
+  result_id=<span class="string">"res_…"</span>
+)</div>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">rendered</div>
+                      <svg
+                        class="mini-chart"
+                        viewBox="0 0 340 120"
+                        role="img"
+                        aria-label="Illustrative preset chart layout: relative change in poverty rate by age group."
+                      >
+                        <line
+                          x1="34"
+                          y1="96"
+                          x2="330"
+                          y2="96"
+                          stroke="#d4dede"
+                          stroke-width="1"
+                        />
+                        <line
+                          x1="34"
+                          y1="10"
+                          x2="34"
+                          y2="96"
+                          stroke="#d4dede"
+                          stroke-width="1"
+                        />
+                        <rect x="52" y="46" width="42" height="50" fill="#0d7377" rx="2" />
+                        <rect x="118" y="30" width="42" height="66" fill="#0d7377" rx="2" />
+                        <rect x="184" y="62" width="42" height="34" fill="#0d7377" rx="2" />
+                        <rect x="250" y="78" width="42" height="18" fill="#0d7377" rx="2" />
+                        <text
+                          x="73"
+                          y="110"
+                          text-anchor="middle"
+                          font-family="JetBrains Mono, monospace"
+                          font-size="8"
+                          fill="#7a9494"
+                        >
+                          all
+                        </text>
+                        <text
+                          x="139"
+                          y="110"
+                          text-anchor="middle"
+                          font-family="JetBrains Mono, monospace"
+                          font-size="8"
+                          fill="#7a9494"
+                        >
+                          child
+                        </text>
+                        <text
+                          x="205"
+                          y="110"
+                          text-anchor="middle"
+                          font-family="JetBrains Mono, monospace"
+                          font-size="8"
+                          fill="#7a9494"
+                        >
+                          adult
+                        </text>
+                        <text
+                          x="271"
+                          y="110"
+                          text-anchor="middle"
+                          font-family="JetBrains Mono, monospace"
+                          font-size="8"
+                          fill="#7a9494"
+                        >
+                          senior
+                        </text>
+                        <text
+                          x="34"
+                          y="8"
+                          text-anchor="start"
+                          font-family="JetBrains Mono, monospace"
+                          font-size="8"
+                          fill="#7a9494"
+                        >
+                          relative change in poverty rate
+                        </text>
+                      </svg>
+                    </div>
+                    <div class="example-section">
+                      <div class="example-section-title">answer</div>
+                      <div class="trace-answer">
+                        <p>
+                          Every figure quoted in the reply comes from the derivative
+                          result above, with the dataset, year and assumptions stated
+                          alongside it.
+                        </p>
+                        <p><em>Figures shown here are illustrative of the layout.</em></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ DESIGN PRINCIPLES ═══════════════ -->
+        <div class="reveal">
+          <h2>Design principles</h2>
+          <p>Five rules hold the boundary in place.</p>
+
+          <div class="principles-grid">
+            <div class="principle-card">
+              <div class="principle-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M4 17l6-6-6-6"></path>
+                  <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+              </div>
+              <div class="principle-title">Computed, never recalled</div>
+              <p class="principle-desc">
+                The agent does not quote numbers from memory. Every quantitative answer
+                is produced by a tool call against the compiled PolicyEngine UK model and
+                reported straight from the run.
+              </p>
+            </div>
+
+            <div class="principle-card">
+              <div class="principle-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+              </div>
+              <div class="principle-title">A typed tool surface</div>
+              <p class="principle-desc">
+                There is no model-authored Python execution tool. The model reaches the
+                engine through 21 typed tools with declared schemas, so what it can do is
+                a fixed, reviewable list rather than an open door.
+              </p>
+            </div>
+
+            <div class="principle-card">
+              <div class="principle-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <div class="principle-title">Opaque, turn-local handles</div>
+              <p class="principle-desc">
+                Simulations and derivatives are addressed by handle, not by value. The
+                result store belongs to one chat turn, and the model can neither inspect
+                nor serialise what sits behind a handle.
+              </p>
+            </div>
+          </div>
+
+          <div class="principles-bottom">
+            <div class="principle-card">
+              <div class="principle-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                  <line x1="8" y1="7" x2="16" y2="7"></line>
+                </svg>
+              </div>
+              <div class="principle-title">Reference from the engine</div>
+              <p class="principle-desc">
+                The model's capability and parameter reference is generated from the
+                installed engine rather than hand-written. Upgrade the country package
+                and the model's view of the world updates with it — no prompt drift.
+              </p>
+            </div>
+
+            <div class="principle-card">
+              <div class="principle-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <div class="principle-title">Aggregate-only by construction</div>
+              <p class="principle-desc">
+                The fixed Enhanced FRS dataset is aggregate-only in chat. The
+                serialisation layer rejects raw dataframes outright, so an accidental
+                row-level payload fails closed instead of becoming a tool response.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ TOOL SURFACE ═══════════════ -->
+        <div class="reveal">
+          <h2>The tool surface</h2>
+          <p>
+            Society-wide analysis is a lifecycle, not a single call. Each stage hands a
+            typed handle to the next, and the model can only move forward by holding the
+            handle the previous stage produced.
+          </p>
+
+          <div class="workflow-timeline">
+            <div class="workflow-header">
+              <div class="workflow-command-label">one chat turn</div>
+              <div class="workflow-command">21 typed tools · 5 stages</div>
+            </div>
+            <div class="timeline-phases">
+              <div class="timeline-phase">
+                <div class="timeline-phase-header">
+                  <div class="timeline-phase-num">1</div>
+                  <div class="timeline-phase-title">Discover</div>
+                </div>
+                <div class="timeline-phase-card">
+                  <div class="timeline-agents">
+                    <span class="timeline-agent">list_entities</span>
+                    <span class="timeline-agent">search_variables</span>
+                    <span class="timeline-agent">get_variable</span>
+                    <span class="timeline-agent">search_parameters</span>
+                    <span class="timeline-agent">get_parameter</span>
+                    <span class="timeline-agent">list_reform_targets</span>
+                    <span class="timeline-agent">list_household_input_variables</span>
+                    <span class="timeline-agent">list_society_output_variables</span>
+                    <span class="timeline-agent">list_supported_outputs</span>
+                  </div>
+                  <p class="timeline-phase-desc">
+                    Find <strong>entities, variables, parameters, reform targets and
+                    supported outputs</strong> in the deployed model. Split by catalogue
+                    area so the model asks only for the metadata it needs.
+                  </p>
+                </div>
+              </div>
+
+              <div class="timeline-phase">
+                <div class="timeline-phase-header">
+                  <div class="timeline-phase-num">2</div>
+                  <div class="timeline-phase-title">Validate</div>
+                </div>
+                <div class="timeline-phase-card">
+                  <div class="timeline-agents">
+                    <span class="timeline-agent">validate_reform</span>
+                    <span class="timeline-agent">validate_household</span>
+                  </div>
+                  <p class="timeline-phase-desc">
+                    Type-check a flat parameter-path <strong>reform</strong>, or the
+                    structure, variables and reform of a synthetic
+                    <strong>household</strong>, before any simulation is built.
+                  </p>
+                </div>
+              </div>
+
+              <div class="timeline-phase">
+                <div class="timeline-phase-header">
+                  <div class="timeline-phase-num">3</div>
+                  <div class="timeline-phase-title">Simulate</div>
+                </div>
+                <div class="timeline-phase-card">
+                  <div class="timeline-agents">
+                    <span class="timeline-agent">run_household_simulation</span>
+                    <span class="timeline-agent">run_society_simulation</span>
+                  </div>
+                  <p class="timeline-phase-desc">
+                    Run one synthetic household directly, or materialise a
+                    <strong>baseline and reform pair</strong> over the fixed dataset and
+                    return an opaque handle instead of data.
+                  </p>
+                </div>
+              </div>
+
+              <div class="timeline-phase">
+                <div class="timeline-phase-header">
+                  <div class="timeline-phase-num">4</div>
+                  <div class="timeline-phase-title">Derive</div>
+                </div>
+                <div class="timeline-phase-card">
+                  <div class="timeline-agents">
+                    <span class="timeline-agent">compute_budgetary_impact</span>
+                    <span class="timeline-agent">compute_program_breakdown</span>
+                    <span class="timeline-agent">compute_decile_impacts</span>
+                    <span class="timeline-agent">compute_winners_losers</span>
+                    <span class="timeline-agent">compute_poverty_metrics</span>
+                    <span class="timeline-agent">compute_inequality_metrics</span>
+                    <span class="timeline-agent">aggregate_result</span>
+                  </div>
+                  <p class="timeline-phase-desc">
+                    Turn a simulation handle into a <strong>weighted result</strong> by
+                    delegating to official policyengine.py output classes. No custom
+                    NumPy, no hand-rolled survey weighting.
+                  </p>
+                </div>
+              </div>
+
+              <div class="timeline-phase">
+                <div class="timeline-phase-header">
+                  <div class="timeline-phase-num">5</div>
+                  <div class="timeline-phase-title">Chart</div>
+                </div>
+                <div class="timeline-phase-card">
+                  <div class="timeline-agents">
+                    <span class="timeline-agent">generate_chart</span>
+                  </div>
+                  <p class="timeline-phase-desc">
+                    Map a derivative handle onto one of
+                    <strong>eight deterministic presets</strong>, or a generic line, bar,
+                    area or scatter spec over data already present in a tool result.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="results-section">
+            <div class="results-description">
+              <p>
+                Decile analysis makes the point concretely. Three explicit configurations
+                — ordinary income deciles, equivalised HBAI deciles, and wealth deciles —
+                each pass the income variable, decile variable, entity and ten quantiles
+                explicitly to policyengine.py. Nothing is inferred, and empty groups stay
+                null rather than becoming a plausible-looking zero.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ WHAT YOU CAN ASK ═══════════════ -->
+        <div class="reveal">
+          <h2>What you can ask</h2>
+          <p>
+            Five kinds of question are supported today, and they compose: a thread can
+            move from a rule lookup to a household example to a full reform analysis
+            without switching tools.
+          </p>
+
+          <div class="iteration-container">
+            <div class="iteration-hint">Click a card to see an example</div>
+            <div class="iteration-cards" id="capability-cards">
+              <button class="iteration-card active" data-cap="0" type="button">
+                <div class="iteration-num">1</div>
+                <div class="iteration-title">Rules</div>
+                <div class="iteration-subtitle">Current policy settings</div>
+              </button>
+              <button class="iteration-card" data-cap="1" type="button">
+                <div class="iteration-num">2</div>
+                <div class="iteration-title">Households</div>
+                <div class="iteration-subtitle">Illustrative calculations</div>
+              </button>
+              <button class="iteration-card" data-cap="2" type="button">
+                <div class="iteration-num">3</div>
+                <div class="iteration-title">Reforms</div>
+                <div class="iteration-subtitle">Population-wide impact</div>
+              </button>
+              <button class="iteration-card" data-cap="3" type="button">
+                <div class="iteration-num">4</div>
+                <div class="iteration-title">Charts</div>
+                <div class="iteration-subtitle">Computed outputs, drawn</div>
+              </button>
+              <button class="iteration-card" data-cap="4" type="button">
+                <div class="iteration-num">5</div>
+                <div class="iteration-title">Follow-ups</div>
+                <div class="iteration-subtitle">One continuous thread</div>
+              </button>
+            </div>
+
+            <div class="iteration-panel" id="capability-panel">
+              <div class="iteration-slide active" data-cap-slide="0">
+                <p class="ask">
+                  "What's the personal allowance this year, and where does it start
+                  tapering?"
+                </p>
+                <p>
+                  Allowances, rates, thresholds, benefit amounts, limits and tapers are
+                  read out of the model's parameter tree for the year you ask about —
+                  including the taper points that are easy to state from memory and easy
+                  to state wrongly.
+                </p>
+                <div class="tools">
+                  <span>search_parameters</span><span>get_parameter</span>
+                </div>
+              </div>
+
+              <div class="iteration-slide" data-cap-slide="1">
+                <p class="ask">
+                  "A single parent, two children, earning £28,000 — what do they take
+                  home?"
+                </p>
+                <p>
+                  The household is constructed as a synthetic input, validated, and run
+                  through the model to produce taxes, benefits and net income under
+                  stated assumptions. One household containing one benefit unit per call;
+                  more complex arrangements need separate calls.
+                </p>
+                <div class="tools">
+                  <span>list_household_input_variables</span
+                  ><span>validate_household</span><span>run_household_simulation</span>
+                </div>
+              </div>
+
+              <div class="iteration-slide" data-cap-slide="2">
+                <p class="ask">
+                  "How much does raising the personal allowance by £2,000 cost, and who
+                  gains?"
+                </p>
+                <p>
+                  Parametric reforms run across the UK population: budgetary impact,
+                  programme-level changes, poverty measures, decile impacts, winners and
+                  losers, and weighted caseload counts — each from its own derivative
+                  tool.
+                </p>
+                <div class="tools">
+                  <span>validate_reform</span><span>run_society_simulation</span
+                  ><span>compute_budgetary_impact</span><span>compute_decile_impacts</span>
+                </div>
+              </div>
+
+              <div class="iteration-slide" data-cap-slide="3">
+                <p class="ask">"Show me that by decile."</p>
+                <p>
+                  When a comparison reads better as a picture than as prose, the computed
+                  output is mapped onto a deterministic preset. The chart is drawn from
+                  the same typed result as the text, so the two cannot disagree.
+                </p>
+                <div class="tools"><span>generate_chart</span></div>
+              </div>
+
+              <div class="iteration-slide" data-cap-slide="4">
+                <p class="ask">"And what if I made it £3,000 instead?"</p>
+                <p>
+                  Follow-ups stay in the same thread. The conversation carries the
+                  context; the simulation handles do not — each turn re-runs what it
+                  needs, so a later answer is never quietly resting on an earlier turn's
+                  in-memory state.
+                </p>
+                <div class="tools"><span>gateway route</span><span>full lifecycle</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ THE STACK ═══════════════ -->
+        <div class="reveal">
+          <h2>The stack</h2>
+          <p>
+            The backend is organised by topic package — each directory owns one concern,
+            and the calculation boundary is one of them rather than a convention spread
+            across the codebase.
+          </p>
+
+          <table class="stack-table">
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Technology</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Frontend</td>
+                <td>Next.js 15 and React 19 with Mantine UI, deployed on Vercel</td>
+              </tr>
+              <tr>
+                <td>Backend</td>
+                <td>FastAPI on Python 3.13, served as a Modal ASGI app</td>
+              </tr>
+              <tr>
+                <td>Agent</td>
+                <td>Anthropic Claude models driven through a streaming tool-use loop</td>
+              </tr>
+              <tr>
+                <td>Engine</td>
+                <td>
+                  <code>policyengine.py</code> with the
+                  <code>policyengine-uk</code> country package
+                </td>
+              </tr>
+              <tr>
+                <td>Gateway</td>
+                <td>A cheap per-turn pre-pass that classifies and routes each message</td>
+              </tr>
+              <tr>
+                <td>Auth and storage</td>
+                <td>Supabase for auth, Postgres for conversation history</td>
+              </tr>
+              <tr>
+                <td>Observability</td>
+                <td>Tracing and metrics across the whole turn</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            <code>GET /version</code> reports the <code>policyengine.py</code> version and
+            the installed UK country package version, so any answer can be tied back to
+            the exact engine that produced it.
+          </p>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ LIMITATIONS ═══════════════ -->
+        <div class="reveal">
+          <h2>Limitations</h2>
+          <div class="warning-box">
+            <div class="warning-label">Beta</div>
+            <p>
+              PolicyEngine UK Chat is a modelling tool, not professional advice. It
+              reports what the model calculates under stated assumptions, and results
+              depend on the dataset, the year and those assumptions.
+            </p>
+            <p>
+              Only the major UK tax and benefit programmes are modelled, so questions
+              about minor or unmodelled provisions may not be answerable at all — which is
+              a better failure than an answer that looks right.
+            </p>
+            <p>As with any beta, verify important results before relying on them.</p>
+          </div>
+          <p>
+            The boundary described above constrains where numbers come from. It does not
+            make the model a good judge of which question you meant, and it cannot make
+            the underlying microsimulation say more than its data supports.
+          </p>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ TRY IT ═══════════════ -->
+        <div class="reveal">
+          <h2>Try it</h2>
+          <p>
+            The beta is open now. Bring a tax or benefit question, a household scenario,
+            or a reform you want to understand.
+          </p>
+
+          <div class="chat-mock">
+            <div class="chat-mock-header">
+              <span class="chat-mock-dot"></span>
+              <span>policyengine.org/uk/chat</span>
+            </div>
+            <div class="chat-mock-body">
+              <a class="chat-prompt" href="/uk/chat"
+                >What's the personal allowance this year, and where does it taper?</a
+              >
+              <a class="chat-prompt" href="/uk/chat"
+                >A single parent with two children earning £28,000 — what do they take
+                home?</a
+              >
+              <a class="chat-prompt" href="/uk/chat"
+                >How much does a £2,000 personal allowance increase cost?</a
+              >
+              <a class="chat-prompt" href="/uk/chat"
+                >What's the poverty impact of abolishing the two-child limit?</a
+              >
+            </div>
+            <div class="chat-mock-footer">
+              <a class="chat-cta" href="/uk/chat">Open the chat</a>
+              <span class="chat-cta-note">Beta · results are modelled, not advice</span>
+            </div>
+          </div>
+
+          <p>
+            If an answer looks wrong, incomplete or confusing, use the
+            <strong>Report issue</strong> button in the chat. It opens a prefilled GitHub
+            issue with the shared thread and your note, so we can inspect the question,
+            the tools it called, the computed outputs and the final explanation together
+            — which is only possible because each of those is a separate, recorded step.
+          </p>
+        </div>
+
+        <hr />
+
+        <!-- ═══════════════ WHAT'S NEXT ═══════════════ -->
+        <div class="reveal">
+          <h2>What's next</h2>
+          <p>
+            The beta covers the lifecycle from question to chart. The next problems are
+            about coverage and confidence.
+          </p>
+
+          <div class="next-cards">
+            <div class="next-card">
+              <span class="next-card-badge">In progress</span>
+              <div class="next-card-title">Evaluation in the open</div>
+              <p class="next-card-desc">
+                An offline and live evaluation harness runs graded cases against the
+                agent. Publishing those results the way we published PolicyBench is the
+                natural next step: the argument for a deterministic boundary is only as
+                good as the measurements behind it.
+              </p>
+            </div>
+
+            <div class="next-card">
+              <span class="next-card-badge">Exploring</span>
+              <div class="next-card-title">A wider tool surface</div>
+              <p class="next-card-desc">
+                The current surface covers parameter lookup, household calculation,
+                society-wide simulation, reform validation and charting. The exact list
+                will change as the beta evolves — every addition is a schema and a test,
+                not a paragraph in a prompt.
+              </p>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>
+              PolicyEngine is a nonprofit building free, open-source tools for tax and
+              benefit policy analysis. Learn more at
+              <a href="https://policyengine.org">policyengine.org</a>, or read the code at
+              <a href="https://github.com/PolicyEngine/policyengine-uk-chat"
+                >github.com/PolicyEngine/policyengine-uk-chat</a
+              >.
+            </p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Diagram lightbox -->
+    <div class="diagram-modal-overlay" id="diagram-modal">
+      <div class="diagram-modal-content" id="diagram-modal-content">
+        <button class="diagram-modal-close" id="diagram-modal-close" aria-label="Close">
+          &times;
+        </button>
+        <div class="diagram-modal-title" id="diagram-modal-title"></div>
+        <div class="diagram-modal-diagram" id="diagram-modal-diagram"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        'use strict';
+
+        /* ── Reveal on scroll ─────────────────────────────────────── */
+        var reveals = document.querySelectorAll('.reveal');
+        if ('IntersectionObserver' in window) {
+          var revealObserver = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add('in-view');
+                  revealObserver.unobserve(entry.target);
+                }
+              });
+            },
+            { rootMargin: '0px 0px -100px 0px' }
+          );
+          reveals.forEach(function (el) {
+            revealObserver.observe(el);
+          });
+        } else {
+          reveals.forEach(function (el) {
+            el.classList.add('in-view');
+          });
+        }
+
+        /* ── Pipeline diagrams ────────────────────────────────────── */
+        var STAGES = [
+          { label: 'question', lane: 'model' },
+          { label: 'route', lane: 'model' },
+          { label: 'discover', lane: 'engine' },
+          { label: 'validate', lane: 'engine' },
+          { label: 'simulate', lane: 'engine' },
+          { label: 'derive', lane: 'engine' },
+          { label: 'chart', lane: 'engine' },
+          { label: 'answer', lane: 'model' },
+        ];
+        // Which stage each narrative step lights up.
+        var STEP_STAGE = [1, 2, 3, 4, 5, 6];
+        var STEP_TITLES = [
+          'Route — the gateway pre-pass',
+          'Discover — what can actually be changed',
+          'Validate — fail before you compute',
+          'Simulate — a handle, not a dataset',
+          'Derive — official weighted outputs',
+          'Chart and answer',
+        ];
+        var SVG_NS = 'http://www.w3.org/2000/svg';
+
+        function el(name, attrs, text) {
+          var node = document.createElementNS(SVG_NS, name);
+          Object.keys(attrs || {}).forEach(function (k) {
+            node.setAttribute(k, attrs[k]);
+          });
+          if (text != null) node.textContent = text;
+          return node;
+        }
+
+        function buildPipeline(activeIndex) {
+          var boxW = 96;
+          var gap = 16;
+          var total = STAGES.length * boxW + (STAGES.length - 1) * gap;
+          var height = 130;
+          // The node stroke is centred on the box edge, so half of it sits outside
+          // the 0…total span. Pad the viewBox so the first and last box keep their
+          // full border instead of being sliced at the edge.
+          var pad = 3;
+          var svg = el('svg', {
+            class: 'full-width-flow-svg',
+            viewBox: -pad + ' 0 ' + (total + pad * 2) + ' ' + height,
+            role: 'img',
+            'aria-label':
+              'Pipeline from question to answer, with the ' +
+              STAGES[activeIndex].label +
+              ' stage highlighted.',
+          });
+
+          STAGES.forEach(function (stage, i) {
+            var x = i * (boxW + gap);
+            var on = i === activeIndex;
+            var g = el('g', {});
+            g.appendChild(
+              el('rect', {
+                x: x,
+                y: 40,
+                width: boxW,
+                height: 46,
+                rx: 9,
+                class: 'pipe-node ' + stage.lane + (on ? ' on' : ''),
+              })
+            );
+            g.appendChild(
+              el(
+                'text',
+                {
+                  x: x + boxW / 2,
+                  y: 68,
+                  class: 'pipe-label' + (on ? ' on' : ''),
+                },
+                stage.label
+              )
+            );
+            if (i < STAGES.length - 1) {
+              g.appendChild(
+                el('line', {
+                  x1: x + boxW,
+                  y1: 63,
+                  x2: x + boxW + gap,
+                  y2: 63,
+                  class: 'pipe-line',
+                })
+              );
+            }
+            g.appendChild(
+              el(
+                'text',
+                {
+                  x: x + boxW / 2,
+                  y: 104,
+                  class: 'lane-label',
+                  fill: stage.lane === 'model' ? '#0d7377' : '#2c6496',
+                },
+                stage.lane === 'model' ? 'MODEL' : 'ENGINE'
+              )
+            );
+            svg.appendChild(g);
+          });
+
+          return svg;
+        }
+
+        var diagramHosts = document.querySelectorAll('.step-diagram');
+        diagramHosts.forEach(function (host) {
+          var idx = parseInt(host.getAttribute('data-diagram'), 10);
+          host.insertBefore(buildPipeline(STEP_STAGE[idx]), host.firstChild);
+        });
+
+        /* ── Scrollytelling ───────────────────────────────────────── */
+        var steps = document.querySelectorAll('.narrative-step');
+        var slides = document.querySelectorAll('.trace-slide');
+        var progress = document.querySelectorAll('#trace-progress span');
+        var badge = document.getElementById('trace-badge');
+        var BADGES = [
+          'gateway',
+          'discovery',
+          'validation',
+          'simulation',
+          'derivative',
+          'artifact',
+        ];
+        var currentStep = -1;
+
+        function setStep(index) {
+          if (index === currentStep) return;
+          currentStep = index;
+          steps.forEach(function (s, i) {
+            s.classList.toggle('active', i === index);
+          });
+          slides.forEach(function (s, i) {
+            s.classList.toggle('active', i === index);
+          });
+          progress.forEach(function (p, i) {
+            p.classList.toggle('on', i <= index);
+          });
+          if (badge) badge.textContent = BADGES[index];
+        }
+
+        if ('IntersectionObserver' in window && steps.length) {
+          var stepObserver = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  setStep(parseInt(entry.target.getAttribute('data-step'), 10));
+                }
+              });
+            },
+            // Narrow band a third of the way down the viewport, matching
+            // the Scrollama offset used on the encode-policy post.
+            { rootMargin: '-33% 0px -60% 0px' }
+          );
+          steps.forEach(function (s) {
+            stepObserver.observe(s);
+          });
+        }
+        setStep(0);
+
+        /* ── Capability cards ─────────────────────────────────────── */
+        var capCards = document.querySelectorAll('.iteration-card');
+        var capSlides = document.querySelectorAll('.iteration-slide');
+        capCards.forEach(function (card) {
+          card.addEventListener('click', function () {
+            var idx = card.getAttribute('data-cap');
+            capCards.forEach(function (c) {
+              c.classList.toggle('active', c === card);
+            });
+            capSlides.forEach(function (s) {
+              s.classList.toggle('active', s.getAttribute('data-cap-slide') === idx);
+            });
+          });
+        });
+
+        /* ── Diagram lightbox ─────────────────────────────────────── */
+        var modal = document.getElementById('diagram-modal');
+        var modalTitle = document.getElementById('diagram-modal-title');
+        var modalDiagram = document.getElementById('diagram-modal-diagram');
+        var modalContent = document.getElementById('diagram-modal-content');
+        var modalClose = document.getElementById('diagram-modal-close');
+
+        function closeModal() {
+          modal.classList.remove('open');
+          modalDiagram.innerHTML = '';
+          document.body.style.overflow = '';
+        }
+
+        diagramHosts.forEach(function (host) {
+          host.addEventListener('click', function () {
+            var idx = parseInt(host.getAttribute('data-diagram'), 10);
+            modalTitle.textContent = 'Step ' + (idx + 1) + ': ' + STEP_TITLES[idx];
+            modalDiagram.innerHTML = '';
+            modalDiagram.appendChild(buildPipeline(STEP_STAGE[idx]));
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+          });
+        });
+
+        modal.addEventListener('click', closeModal);
+        modalContent.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+        modalClose.addEventListener('click', closeModal);
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+        });
+      })();
+    </script>
+  </body>
+</html>

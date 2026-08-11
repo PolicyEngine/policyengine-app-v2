@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "introducing-policyengine-uk-chat",
+    "title": "PolicyEngine UK Chat: AI tax and benefit answers grounded in the PolicyEngine model",
+    "description": "Announcing the beta of PolicyEngine UK Chat — a conversational interface that grounds AI answers to UK tax and benefit questions in PolicyEngine's microsimulation model.",
+    "source": "/assets/posts/introducing-policyengine-uk-chat/index.html",
+    "tags": ["uk", "featured", "technology", "ai", "product"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "introducing-policyengine-uk-chat.webp",
+    "date": "2026-08-11 12:00:00",
+    "authors": ["vahid-ahmadi", "anthony-volk"]
+  },
+  {
+    "type": "iframe",
     "slug": "bus-fare-cap",
     "title": "£2 bus fare cap analysis",
     "description": "Estimate the cost and household impact of capping single bus fares at £2 in England outside London for calendar 2027, modelled with PolicyEngine UK.",
