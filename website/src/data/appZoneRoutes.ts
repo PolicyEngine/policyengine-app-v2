@@ -197,8 +197,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/uk/introducing-policyengine-uk-chat",
-    destination: "/assets/posts/introducing-policyengine-uk-chat/index.html",
-    deepDestination: "/assets/posts/introducing-policyengine-uk-chat/:path*",
+    destination:
+      "https://policyengine-uk-chat-interactive-article.vercel.app/uk/introducing-policyengine-uk-chat",
+    deepDestination:
+      "https://policyengine-uk-chat-interactive-article.vercel.app/uk/introducing-policyengine-uk-chat/:path*",
   },
   {
     source: "/uk/scottish-budget-2026-27",

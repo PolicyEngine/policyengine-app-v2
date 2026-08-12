@@ -2,9 +2,9 @@
   {
     "type": "iframe",
     "slug": "introducing-policyengine-uk-chat",
-    "title": "PolicyEngine UK Chat: AI tax and benefit answers grounded in the PolicyEngine model",
-    "description": "Announcing the beta of PolicyEngine UK Chat — a conversational interface that grounds AI answers to UK tax and benefit questions in PolicyEngine's microsimulation model.",
-    "source": "/assets/posts/introducing-policyengine-uk-chat/index.html",
+    "title": "PolicyEngine UK Chat: an AI interface for tax and benefits",
+    "description": "How PolicyEngine UK Chat pairs an AI model with verified plans and deterministic tax and benefit calculations.",
+    "source": "https://policyengine-uk-chat-interactive-article.vercel.app/uk/introducing-policyengine-uk-chat",
     "tags": ["uk", "featured", "technology", "ai", "product"],
     "countryId": "uk",
     "displayWithResearch": true,
