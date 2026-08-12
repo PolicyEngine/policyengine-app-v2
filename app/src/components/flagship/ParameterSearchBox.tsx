@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { IconFolder, IconSearch } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
 import {
-  countHiddenByFilters,
   createParameterSearchIndex,
   DEFAULT_SEARCH_FILTERS,
   groupSearchResults,
@@ -99,11 +98,6 @@ export default function ParameterSearchBox({
     [index, query, filters]
   );
   const flatEntries = useMemo(() => groups.flatMap((group) => group.entries), [groups]);
-  const hiddenCount = useMemo(
-    () =>
-      query.trim().length >= 2 ? countHiddenByFilters(index, query, RESULT_LIMIT, filters) : 0,
-    [index, query, filters]
-  );
 
   const select = (entry: ParameterSearchEntry) => {
     onSelect(entry);
@@ -138,6 +132,54 @@ export default function ParameterSearchBox({
           display: 'flex',
           alignItems: 'center',
           gap: spacing.sm,
+          marginBottom: spacing.sm,
+          flexWrap: 'wrap',
+        }}
+      >
+        {stateCodes.length > 0 && (
+          <label style={controlShell}>
+            Scope
+            <select
+              value={filters.stateScope}
+              onChange={(event) => setFilters({ ...filters, stateScope: event.target.value })}
+              aria-label="State scope"
+              style={{
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+                fontSize: typography.fontSize.xs,
+                fontFamily: typography.fontFamily.primary,
+                color: colors.text.primary,
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">All jurisdictions</option>
+              <option value="federal">Federal only</option>
+              {stateCodes.map((code) => (
+                <option key={code} value={code}>
+                  {code.toUpperCase()} only
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label style={{ ...controlShell, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={filters.includeContrib}
+            onChange={(event) => setFilters({ ...filters, includeContrib: event.target.checked })}
+            aria-label="Include contributed parameters"
+            style={{ accentColor: colors.primary[500], width: 13, height: 13, margin: 0 }}
+          />
+          Contributed
+        </label>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing.sm,
           padding: `${spacing.md} ${spacing.lg}`,
           border: `1px solid ${colors.border.light}`,
           borderRadius: 10,
@@ -166,59 +208,6 @@ export default function ParameterSearchBox({
             background: 'transparent',
           }}
         />
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing.sm,
-          marginTop: spacing.sm,
-          flexWrap: 'wrap',
-        }}
-      >
-        {stateCodes.length > 0 && (
-          <label style={controlShell}>
-            Scope
-            <select
-              value={filters.stateScope}
-              onChange={(event) => setFilters({ ...filters, stateScope: event.target.value })}
-              aria-label="State scope"
-              style={{
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                fontSize: typography.fontSize.xs,
-                fontFamily: typography.fontFamily.primary,
-                color: colors.text.primary,
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all">All jurisdictions</option>
-              <option value="federal">Federal only</option>
-              {stateCodes.map((code) => (
-                <option key={code} value={code}>
-                  Federal + {code.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label style={{ ...controlShell, cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={filters.includeContrib}
-            onChange={(event) => setFilters({ ...filters, includeContrib: event.target.checked })}
-            aria-label="Include contributed parameters"
-            style={{ accentColor: colors.primary[500], width: 13, height: 13, margin: 0 }}
-          />
-          Contributed
-        </label>
-        {hiddenCount > 0 && (
-          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-            {hiddenCount} {hiddenCount === 1 ? 'match' : 'matches'} hidden by filters
-          </span>
-        )}
       </div>
 
       {flatEntries.length > 0 && (

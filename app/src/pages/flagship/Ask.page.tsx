@@ -70,6 +70,7 @@ function SectionTile({
         textAlign: 'left',
         fontFamily: typography.fontFamily.primary,
         width: '100%',
+        height: '100%',
         transition: 'border-color 120ms, box-shadow 120ms',
       }}
       onMouseEnter={(event) => {

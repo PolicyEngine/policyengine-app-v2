@@ -190,12 +190,13 @@ describe('search quality against real US metadata (52k parameters)', () => {
     expect(results.every((r) => r.stateCode === null)).toBe(true);
   });
 
-  it('given a single-state scope then other states are excluded but that state matches', () => {
+  it('given a single-state scope then only that state remains', () => {
     const results = searchParameters(index, 'income tax rate', 20, {
       includeContrib: false,
       stateScope: 'ut',
     });
-    expect(results.every((r) => r.stateCode === null || r.stateCode === 'ut')).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((r) => r.stateCode === 'ut')).toBe(true);
   });
 
   it('given filters hiding matches then countHiddenByFilters reports them', () => {
@@ -317,9 +318,9 @@ describe('derived concept clusters (real US metadata)', () => {
       stateScope: 'ca',
     });
     expect(results.some((r) => r.stateCode === 'ca')).toBe(true);
-    // Scope keeps the state's own variants plus federal law; other
-    // states' versions are excluded.
-    expect(results.every((r) => r.stateCode === 'ca' || r.stateCode === null)).toBe(true);
+    // A state scope means that state's parameters only — federal and
+    // other states' versions are excluded.
+    expect(results.every((r) => r.stateCode === 'ca')).toBe(true);
   });
 
   test('given contrib enabled then contrib eitc reforms join the results', () => {

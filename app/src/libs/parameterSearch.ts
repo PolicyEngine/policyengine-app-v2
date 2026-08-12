@@ -51,10 +51,11 @@ function matchesFilters(entry: ParameterSearchEntry, filters: ParameterSearchFil
   if (filters.stateScope === 'federal' && entry.stateCode) {
     return false;
   }
+  // A state selection means that state's parameters only — federal
+  // parameters (no stateCode) are excluded along with other states.
   if (
     filters.stateScope !== 'all' &&
     filters.stateScope !== 'federal' &&
-    entry.stateCode &&
     entry.stateCode !== filters.stateScope
   ) {
     return false;

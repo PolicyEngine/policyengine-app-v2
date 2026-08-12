@@ -131,7 +131,7 @@ describe('ParameterSearchBox', () => {
     );
   });
 
-  test('given default filters then contributed parameters are hidden with a hint', async () => {
+  test('given default filters then contributed parameters are hidden', async () => {
     // Given
     const user = userEvent.setup();
     render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
@@ -144,7 +144,6 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(screen.queryByText('Contributed → CTC expansion → Amount')).not.toBeInTheDocument();
-    expect(screen.getByText(/hidden by filters/i)).toBeInTheDocument();
   });
 
   test('given contributed is opted in then contributed parameters appear with a badge', async () => {
@@ -180,7 +179,7 @@ describe('ParameterSearchBox', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('given a state scope then that state and federal both appear with state badges', async () => {
+  test('given a state scope then only that state appears with its badge', async () => {
     // Given
     const user = userEvent.setup();
     render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
@@ -191,7 +190,7 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(screen.getByText('Utah → Income tax → Child tax credit → Amount')).toBeInTheDocument();
-    expect(screen.getByText('IRS → Credits → Child tax credit → Amount')).toBeInTheDocument();
+    expect(screen.queryByText('IRS → Credits → Child tax credit → Amount')).not.toBeInTheDocument();
     expect(screen.getByText('UT')).toBeInTheDocument();
   });
 
