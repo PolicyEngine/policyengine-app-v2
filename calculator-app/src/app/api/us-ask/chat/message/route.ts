@@ -27,7 +27,7 @@ export const maxDuration = 300;
 const METADATA_URL =
   process.env.US_METADATA_URL ?? "https://api.policyengine.org/us/metadata";
 const MODEL = process.env.US_ASK_MODEL ?? "claude-opus-5";
-const MAX_TOOL_TURNS = 6;
+const MAX_TOOL_TURNS = 10;
 const CONTEXT_TTL_MS = 6 * 60 * 60 * 1000;
 
 let cachedContext: {
@@ -116,12 +116,16 @@ export async function POST(request: Request): Promise<Response> {
       try {
         const turnMessages = [...messages];
         let finalText = "";
-        for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
+        for (let turn = 0; ; turn++) {
+          // Past the tool budget, force a prose wrap-up so the turn never
+          // ends tool-hungry with an empty answer.
+          const forceAnswer = turn >= MAX_TOOL_TURNS;
           const modelStream = client.messages.stream({
             model: MODEL,
             max_tokens: 16000,
             system: US_ASK_SYSTEM_PROMPT,
             tools: US_ASK_TOOLS as unknown as Anthropic.ToolUnion[],
+            ...(forceAnswer ? { tool_choice: { type: "none" as const } } : {}),
             messages: turnMessages,
           });
           modelStream.on("text", (delta) =>
@@ -147,7 +151,7 @@ export async function POST(request: Request): Promise<Response> {
             (block): block is Anthropic.ToolUseBlock =>
               block.type === "tool_use",
           );
-          if (toolUses.length === 0 || turn === MAX_TOOL_TURNS - 1) {
+          if (toolUses.length === 0 || forceAnswer) {
             break;
           }
 
