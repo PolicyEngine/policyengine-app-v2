@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   IconAdjustments,
   IconChevronRight,
@@ -6,7 +6,10 @@ import {
   IconGavel,
   IconPlus,
 } from '@tabler/icons-react';
+import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
+import remarkGfm from 'remark-gfm';
+import { isUkChatEnabled, streamUkChatTurn, toolActivityLabel, UkChatMessage } from '@/api/ukChat';
 import ChatComposer from '@/components/flagship/ChatComposer';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Stack, Text, Title } from '@/components/ui';
@@ -14,6 +17,11 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
+import {
+  ChatReformBridge,
+  provisionsFromChatReform,
+  reformFromToolInput,
+} from '@/libs/flagship/chatDraftBridge';
 import {
   ParameterSearchEntry,
   searchParameters,
@@ -37,9 +45,40 @@ const EXAMPLES: Record<string, string[]> = {
   ],
 };
 
+interface ChatTurnState {
+  answer: string;
+  status: 'streaming' | 'done' | 'error';
+  /** Human-readable label of the tool currently running, if any */
+  activity: string | null;
+  suggestions: string[];
+  /** Provisions extracted from the model's validated reform, if any */
+  bridge: ChatReformBridge | null;
+}
+
 interface AskTurn {
   question: string;
   matches: ParameterSearchEntry[];
+  /** Present when the turn ran through the live UK chat service */
+  chat?: ChatTurnState;
+  /** Set when the chat service failed and matches are the fallback */
+  fallback?: boolean;
+}
+
+/** Markdown answer styled to sit inside the chat transcript. */
+function ChatAnswer({ content }: { content: string }) {
+  return (
+    <div
+      style={{
+        fontSize: typography.fontSize.sm,
+        lineHeight: 1.6,
+        color: colors.text.primary,
+        fontFamily: typography.fontFamily.primary,
+        overflowWrap: 'break-word',
+      }}
+    >
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+    </div>
+  );
 }
 
 /** Option-style tile linking a blank-state entry to its section. */
@@ -126,14 +165,137 @@ export default function AskPage() {
   const examples = EXAMPLES[countryId] ?? EXAMPLES.default;
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
   const hasTurns = turns.length > 0;
+  const chatEnabled = isUkChatEnabled(countryId);
+
+  const sessionRef = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  /** Applies a patch to the newest turn's chat state. */
+  const patchLastChat = (patch: (chat: ChatTurnState) => ChatTurnState) => {
+    setTurns((prev) => {
+      const last = prev[prev.length - 1];
+      if (!last?.chat) {
+        return prev;
+      }
+      return [...prev.slice(0, -1), { ...last, chat: patch(last.chat) }];
+    });
+  };
+
+  const sendChatTurn = (question: string) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const history: UkChatMessage[] = turns.flatMap((turn) => {
+      const messages: UkChatMessage[] = [{ role: 'user', content: turn.question }];
+      if (turn.chat?.answer) {
+        messages.push({ role: 'assistant', content: turn.chat.answer });
+      }
+      return messages;
+    });
+
+    setTurns((prev) => [
+      // A new question aborts any in-flight turn; settle it so it doesn't
+      // sit on "Thinking…" forever.
+      ...prev.map((turn) =>
+        turn.chat?.status === 'streaming'
+          ? {
+              ...turn,
+              chat: {
+                ...turn.chat,
+                status: 'done' as const,
+                activity: null,
+                answer: turn.chat.answer || 'Interrupted by the next question.',
+              },
+            }
+          : turn
+      ),
+      {
+        question,
+        matches: [],
+        chat: { answer: '', status: 'streaming', activity: null, suggestions: [], bridge: null },
+      },
+    ]);
+
+    streamUkChatTurn(
+      {
+        messages: [...history, { role: 'user', content: question }],
+        sessionId: sessionRef.current,
+      },
+      {
+        onChunk: (text) =>
+          patchLastChat((chat) => ({ ...chat, answer: chat.answer + text, activity: null })),
+        onToolStart: ({ toolName }) =>
+          patchLastChat((chat) => ({ ...chat, activity: toolActivityLabel(toolName) })),
+        onToolUse: ({ toolName, toolInput }) => {
+          const reform = reformFromToolInput(toolName, toolInput);
+          if (!reform) {
+            return;
+          }
+          const bridge = provisionsFromChatReform(reform, index.entries, parameters);
+          if (bridge.provisions.length > 0) {
+            patchLastChat((chat) => ({ ...chat, bridge }));
+          }
+        },
+        onSuggestions: (suggestions) => patchLastChat((chat) => ({ ...chat, suggestions })),
+        onDone: ({ content, sessionId }) => {
+          sessionRef.current = sessionId ?? sessionRef.current;
+          patchLastChat((chat) => ({
+            ...chat,
+            answer: content || chat.answer,
+            status: 'done',
+            activity: null,
+          }));
+        },
+        onError: (message) =>
+          patchLastChat((chat) => ({
+            ...chat,
+            answer: chat.answer || message,
+            status: 'error',
+            activity: null,
+          })),
+      },
+      { signal: controller.signal }
+    ).catch(() => {
+      if (controller.signal.aborted) {
+        return;
+      }
+      // Service unreachable — degrade this turn to the keyword matcher.
+      setTurns((prev) => {
+        const last = prev[prev.length - 1];
+        if (!last?.chat || last.chat.status !== 'streaming') {
+          return prev;
+        }
+        return [
+          ...prev.slice(0, -1),
+          {
+            question: last.question,
+            matches: searchParameters(index, last.question, 6),
+            fallback: true,
+          },
+        ];
+      });
+    });
+  };
 
   const send = (raw?: string) => {
     const question = (raw ?? input).trim();
     if (!question) {
       return;
     }
-    setTurns((prev) => [...prev, { question, matches: searchParameters(index, question, 6) }]);
     setInput('');
+    if (chatEnabled) {
+      sendChatTurn(question);
+      return;
+    }
+    setTurns((prev) => [...prev, { question, matches: searchParameters(index, question, 6) }]);
+  };
+
+  const addBridgeToDraft = (bridge: ChatReformBridge) => {
+    bridge.provisions.forEach((provision) =>
+      addDraftProvision(countryId, provision, 'chat', 'uk-chat')
+    );
   };
 
   const addMatch = (entry: ParameterSearchEntry, question: string) => {
@@ -214,6 +376,123 @@ export default function AskPage() {
     );
   };
 
+  const suggestionChipStyle: React.CSSProperties = {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.secondary,
+    background: colors.background.primary,
+    border: `1px solid ${colors.border.light}`,
+    borderRadius: 999,
+    padding: `${spacing.xs} ${spacing.md}`,
+    cursor: 'pointer',
+    fontFamily: typography.fontFamily.primary,
+    lineHeight: 1.4,
+  };
+
+  const renderChatReply = (chat: ChatTurnState) => {
+    const bridgeInDraft =
+      chat.bridge !== null && chat.bridge.provisions.every((p) => draftPaths.has(p.path));
+    return (
+      <Stack style={{ gap: spacing.sm }}>
+        {chat.activity && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            {chat.activity}…
+          </Text>
+        )}
+        {chat.answer ? (
+          <ChatAnswer content={chat.answer} />
+        ) : (
+          !chat.activity &&
+          chat.status === 'streaming' && (
+            <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+              Thinking…
+            </Text>
+          )
+        )}
+        {chat.bridge && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: spacing.sm,
+              border: `1px solid ${colors.border.light}`,
+              borderRadius: 12,
+              padding: spacing.md,
+              background: colors.background.primary,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.medium,
+                color: colors.text.secondary,
+              }}
+            >
+              Reform validated by the model
+            </Text>
+            {chat.bridge.provisions.map((provision) => (
+              <div
+                key={provision.path}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  gap: spacing.md,
+                }}
+              >
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
+                  {provision.breadcrumb}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: typography.fontSize.sm,
+                    color: colors.text.secondary,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatValue(provision.baselineValue, provision.unit)} →{' '}
+                  {formatValue(provision.value, provision.unit)}
+                </Text>
+              </div>
+            ))}
+            <button
+              type="button"
+              disabled={bridgeInDraft}
+              onClick={() => chat.bridge && addBridgeToDraft(chat.bridge)}
+              style={{
+                alignSelf: 'flex-start',
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.medium,
+                fontFamily: typography.fontFamily.primary,
+                color: bridgeInDraft ? colors.text.secondary : colors.primary[700],
+                background: bridgeInDraft ? colors.gray[50] : colors.primary[50],
+                border: 'none',
+                borderRadius: 999,
+                padding: `${spacing.xs} ${spacing.md}`,
+                cursor: bridgeInDraft ? 'default' : 'pointer',
+              }}
+            >
+              {bridgeInDraft ? 'In draft' : 'Add to draft'}
+            </button>
+          </div>
+        )}
+        {chat.status === 'done' && chat.suggestions.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm }}>
+            {chat.suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => send(suggestion)}
+                style={suggestionChipStyle}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+      </Stack>
+    );
+  };
+
   const composer = (
     <ChatComposer
       value={input}
@@ -221,7 +500,11 @@ export default function AskPage() {
       onSend={() => send()}
       examples={examples}
       animatePlaceholder={!hasTurns}
-      note="Keyword matching today — AI drafting lands with the hosted analysis service"
+      note={
+        chatEnabled
+          ? 'Answers computed live by the PolicyEngine UK model'
+          : 'Keyword matching today — AI drafting lands with the hosted analysis service'
+      }
     />
   );
 
@@ -338,23 +621,31 @@ export default function AskPage() {
                   {turn.question}
                 </div>
               </div>
-              <Stack style={{ gap: spacing.sm }}>
-                {turn.matches.length === 0 ? (
-                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                    No parameters matched that phrasing — try naming the program or amount, or
-                    browse in Build.
-                  </Text>
-                ) : (
-                  <>
+              {turn.chat ? (
+                renderChatReply(turn.chat)
+              ) : (
+                <Stack style={{ gap: spacing.sm }}>
+                  {turn.matches.length === 0 ? (
                     <Text
                       style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                     >
-                      Here&apos;s what matched — click to add it to your draft.
+                      No parameters matched that phrasing — try naming the program or amount, or
+                      browse in Build.
                     </Text>
-                    {turn.matches.map((entry) => renderMatchRow(entry, turn.question))}
-                  </>
-                )}
-              </Stack>
+                  ) : (
+                    <>
+                      <Text
+                        style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                      >
+                        {turn.fallback
+                          ? 'The chat service is unreachable — here’s what matched by keyword instead.'
+                          : "Here's what matched — click to add it to your draft."}
+                      </Text>
+                      {turn.matches.map((entry) => renderMatchRow(entry, turn.question))}
+                    </>
+                  )}
+                </Stack>
+              )}
             </Stack>
           ))}
         </Stack>
