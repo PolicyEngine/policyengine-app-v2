@@ -41,26 +41,29 @@ export interface AskChatHandlers {
 export const UK_CHAT_PROXY_ENDPOINT = '/api/uk-chat/chat/message';
 export const US_ASK_ENDPOINT = '/api/us-ask/chat/message';
 
-function env(name: string): string | undefined {
-  return (
-    (typeof process !== 'undefined' && process.env?.[`NEXT_PUBLIC_${name}`]) ||
-    (typeof import.meta !== 'undefined' && (import.meta as any).env?.[`VITE_${name}`])
-  );
-}
-
 /**
  * The chat endpoint for a country, or null when Ask should use the
  * keyword matcher. UK is on by default (live service); US is opt-in
  * (NEXT_PUBLIC_US_ASK=on) because its route needs a server-side
  * ANTHROPIC_API_KEY. Both routes only exist in the Next.js build, so
  * the Vite app keeps the keyword matcher either way.
+ *
+ * Env reads must be static member expressions — Next.js inlines
+ * process.env.NEXT_PUBLIC_* into the client bundle textually, so a
+ * dynamic process.env[name] lookup is always undefined in the browser.
  */
 export function askChatEndpoint(countryId: string): string | null {
   if (countryId === 'uk') {
-    return env('UK_CHAT') === 'off' ? null : UK_CHAT_PROXY_ENDPOINT;
+    const flag =
+      (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_UK_CHAT) ||
+      (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_UK_CHAT);
+    return flag === 'off' ? null : UK_CHAT_PROXY_ENDPOINT;
   }
   if (countryId === 'us') {
-    return env('US_ASK') === 'on' ? US_ASK_ENDPOINT : null;
+    const flag =
+      (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_US_ASK) ||
+      (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_US_ASK);
+    return flag === 'on' ? US_ASK_ENDPOINT : null;
   }
   return null;
 }
