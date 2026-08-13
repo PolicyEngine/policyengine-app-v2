@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { streamUkChatTurn, toolActivityLabel, UkChatHandlers } from '@/api/ukChat';
+import {
+  askChatEndpoint,
+  AskChatHandlers,
+  streamAskChatTurn,
+  toolActivityLabel,
+} from '@/api/askChat';
 
 function sseResponse(frames: string[]): Response {
   const encoder = new TextEncoder();
@@ -17,7 +22,7 @@ function sseResponse(frames: string[]): Response {
 
 function collectingHandlers() {
   const events: Array<{ kind: string; payload: any }> = [];
-  const handlers: UkChatHandlers = {
+  const handlers: AskChatHandlers = {
     onChunk: (text) => events.push({ kind: 'chunk', payload: text }),
     onToolStart: (event) => events.push({ kind: 'tool_start', payload: event }),
     onToolUse: (event) => events.push({ kind: 'tool_use', payload: event }),
@@ -29,7 +34,7 @@ function collectingHandlers() {
   return { events, handlers };
 }
 
-describe('streamUkChatTurn', () => {
+describe('streamAskChatTurn', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -54,7 +59,7 @@ describe('streamUkChatTurn', () => {
     const { events, handlers } = collectingHandlers();
 
     // When
-    await streamUkChatTurn({ messages: [{ role: 'user', content: 'cost?' }] }, handlers);
+    await streamAskChatTurn({ messages: [{ role: 'user', content: 'cost?' }] }, handlers);
 
     // Then
     expect(events.map((e) => e.kind)).toEqual([
@@ -85,7 +90,7 @@ describe('streamUkChatTurn', () => {
     const { events, handlers } = collectingHandlers();
 
     // When
-    await streamUkChatTurn({ messages: [{ role: 'user', content: 'hi' }] }, handlers);
+    await streamAskChatTurn({ messages: [{ role: 'user', content: 'hi' }] }, handlers);
 
     // Then
     expect(events).toEqual([
@@ -103,7 +108,7 @@ describe('streamUkChatTurn', () => {
 
     // When / Then
     await expect(
-      streamUkChatTurn({ messages: [{ role: 'user', content: 'hi' }] }, {})
+      streamAskChatTurn({ messages: [{ role: 'user', content: 'hi' }] }, {})
     ).rejects.toThrow('429');
   });
 });
@@ -114,5 +119,27 @@ describe('toolActivityLabel', () => {
     expect(toolActivityLabel('compute_poverty_metrics')).toBe('Computing impacts');
     expect(toolActivityLabel('search_parameters')).toBe('Looking up the policy model');
     expect(toolActivityLabel('something_new')).toBe('Working');
+  });
+});
+
+describe('askChatEndpoint', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test('given uk then the UK proxy endpoint returns unless killed', () => {
+    expect(askChatEndpoint('uk')).toBe('/api/uk-chat/chat/message');
+    vi.stubEnv('NEXT_PUBLIC_UK_CHAT', 'off');
+    expect(askChatEndpoint('uk')).toBeNull();
+  });
+
+  test('given us then the ask agent endpoint is opt-in', () => {
+    expect(askChatEndpoint('us')).toBeNull();
+    vi.stubEnv('NEXT_PUBLIC_US_ASK', 'on');
+    expect(askChatEndpoint('us')).toBe('/api/us-ask/chat/message');
+  });
+
+  test('given another country then no chat endpoint returns', () => {
+    expect(askChatEndpoint('ca')).toBeNull();
   });
 });

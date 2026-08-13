@@ -1,54 +1,68 @@
 /**
- * Client for the PolicyEngine UK chat service (policyengine-uk-chat).
+ * Client for the flagship Ask chat services.
  *
- * The service exposes a public SSE endpoint (POST /chat/message) that
- * streams a typed event sequence per turn: text chunks, tool activity
- * (including the exact tool inputs, so the model-validated reform JSON
- * is visible), follow-up suggestions, and a terminal done/error event.
+ * Both country services stream the same typed SSE event sequence per
+ * turn — text chunks, tool activity (including exact tool inputs, so
+ * model-validated reform JSON is visible to the chat→draft bridge),
+ * follow-up suggestions, and a terminal done/error event:
  *
- * We consume it through a same-origin proxy route (/api/uk-chat/...)
- * so no CORS coordination with the service deployment is needed. This
- * client is purely additive on top of the service's public contract —
- * nothing here changes or depends on service internals.
+ * - UK: the policyengine-uk-chat service, consumed through a
+ *   same-origin proxy route (purely additive over its public contract).
+ * - US: the in-repo ask agent route (Claude + parameter-search tools
+ *   over live policyengine-us metadata).
  */
 
-export interface UkChatMessage {
+export interface AskChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
-export interface UkChatToolEvent {
+export interface AskChatToolEvent {
   toolName: string;
   toolId: string;
   toolInput?: Record<string, any>;
 }
 
-export interface UkChatDone {
+export interface AskChatDone {
   content: string;
   sessionId: string | null;
 }
 
-export interface UkChatHandlers {
+export interface AskChatHandlers {
   onChunk?: (text: string) => void;
-  onToolStart?: (event: UkChatToolEvent) => void;
-  onToolUse?: (event: UkChatToolEvent) => void;
+  onToolStart?: (event: AskChatToolEvent) => void;
+  onToolUse?: (event: AskChatToolEvent) => void;
   onToolResult?: (event: { toolName: string; status: 'success' | 'error' }) => void;
   onSuggestions?: (suggestions: string[]) => void;
-  onDone?: (done: UkChatDone) => void;
+  onDone?: (done: AskChatDone) => void;
   onError?: (message: string) => void;
 }
 
 export const UK_CHAT_PROXY_ENDPOINT = '/api/uk-chat/chat/message';
+export const US_ASK_ENDPOINT = '/api/us-ask/chat/message';
+
+function env(name: string): string | undefined {
+  return (
+    (typeof process !== 'undefined' && process.env?.[`NEXT_PUBLIC_${name}`]) ||
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.[`VITE_${name}`])
+  );
+}
 
 /**
- * The live service is UK-only today; the proxy route only exists in the
- * Next.js calculator build, so the Vite app keeps the keyword matcher.
+ * The chat endpoint for a country, or null when Ask should use the
+ * keyword matcher. UK is on by default (live service); US is opt-in
+ * (NEXT_PUBLIC_US_ASK=on) because its route needs a server-side
+ * ANTHROPIC_API_KEY. Both routes only exist in the Next.js build, so
+ * the Vite app keeps the keyword matcher either way.
  */
-export function isUkChatEnabled(countryId: string): boolean {
-  const killSwitch =
-    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_UK_CHAT) ||
-    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_UK_CHAT);
-  return countryId === 'uk' && killSwitch !== 'off';
+export function askChatEndpoint(countryId: string): string | null {
+  if (countryId === 'uk') {
+    return env('UK_CHAT') === 'off' ? null : UK_CHAT_PROXY_ENDPOINT;
+  }
+  if (countryId === 'us') {
+    return env('US_ASK') === 'on' ? US_ASK_ENDPOINT : null;
+  }
+  return null;
 }
 
 /** Human-readable activity line for the in-flight tool indicator. */
@@ -83,9 +97,9 @@ export function toolActivityLabel(toolName: string): string {
  * Resolves when the stream closes; rejects on transport failure
  * (service unreachable, non-2xx) so callers can fall back.
  */
-export async function streamUkChatTurn(
-  { messages, sessionId }: { messages: UkChatMessage[]; sessionId?: string | null },
-  handlers: UkChatHandlers,
+export async function streamAskChatTurn(
+  { messages, sessionId }: { messages: AskChatMessage[]; sessionId?: string | null },
+  handlers: AskChatHandlers,
   options: { signal?: AbortSignal; endpoint?: string } = {}
 ): Promise<void> {
   const response = await fetch(options.endpoint ?? UK_CHAT_PROXY_ENDPOINT, {
@@ -95,7 +109,7 @@ export async function streamUkChatTurn(
     signal: options.signal,
   });
   if (!response.ok || !response.body) {
-    throw new Error(`UK chat service responded ${response.status}`);
+    throw new Error(`Ask chat service responded ${response.status}`);
   }
 
   const reader = response.body.getReader();
@@ -119,7 +133,7 @@ export async function streamUkChatTurn(
   }
 }
 
-function dispatchFrame(frame: string, handlers: UkChatHandlers): void {
+function dispatchFrame(frame: string, handlers: AskChatHandlers): void {
   const data = frame
     .split('\n')
     .filter((line) => line.startsWith('data:'))
@@ -158,7 +172,7 @@ function dispatchFrame(frame: string, handlers: UkChatHandlers): void {
       handlers.onDone?.({ content: event.content ?? '', sessionId: event.session_id ?? null });
       break;
     case 'error':
-      handlers.onError?.(event.content || 'The UK chat service hit an error.');
+      handlers.onError?.(event.content || 'The chat service hit an error.');
       break;
     default:
       break;

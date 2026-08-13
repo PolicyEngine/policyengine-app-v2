@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { UkChatHandlers } from '@/api/ukChat';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { AskChatHandlers } from '@/api/askChat';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import { buildParameterSearchEntries, createParameterSearchIndex } from '@/libs/parameterSearch';
 import AskPage from '@/pages/flagship/Ask.page';
@@ -38,14 +38,14 @@ const FIXTURE_COLLECTION = {
 
 const fixtureIndex = createParameterSearchIndex(buildParameterSearchEntries(FIXTURE_COLLECTION));
 
-const mockStreamUkChatTurn = vi.fn();
+const mockStreamAskChatTurn = vi.fn();
 
-vi.mock('@/api/ukChat', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/ukChat')>();
+vi.mock('@/api/askChat', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/askChat')>();
   return {
     ...actual,
-    streamUkChatTurn: (...args: Parameters<typeof actual.streamUkChatTurn>) =>
-      mockStreamUkChatTurn(...args),
+    streamAskChatTurn: (...args: Parameters<typeof actual.streamAskChatTurn>) =>
+      mockStreamAskChatTurn(...args),
   };
 });
 
@@ -73,8 +73,8 @@ async function ask(user: ReturnType<typeof userEvent.setup>, question: string) {
 }
 
 /** Resolves the mocked stream after synchronously replaying the given events. */
-function streamReplying(replay: (handlers: UkChatHandlers) => void) {
-  mockStreamUkChatTurn.mockImplementation(async (_request, handlers: UkChatHandlers) => {
+function streamReplying(replay: (handlers: AskChatHandlers) => void) {
+  mockStreamAskChatTurn.mockImplementation(async (_request, handlers: AskChatHandlers) => {
     replay(handlers);
   });
 }
@@ -82,7 +82,7 @@ function streamReplying(replay: (handlers: UkChatHandlers) => void) {
 describe('AskPage UK chat mode', () => {
   beforeEach(() => {
     clearDraftReform();
-    mockStreamUkChatTurn.mockReset();
+    mockStreamAskChatTurn.mockReset();
   });
 
   test('given a question then the streamed answer renders as markdown prose', async () => {
@@ -105,7 +105,7 @@ describe('AskPage UK chat mode', () => {
     // Then
     expect(screen.getByText('Raise the personal allowance to £15,000')).toBeInTheDocument();
     expect(screen.getByText('£10 billion')).toBeInTheDocument();
-    expect(mockStreamUkChatTurn).toHaveBeenCalledTimes(1);
+    expect(mockStreamAskChatTurn).toHaveBeenCalledTimes(1);
   });
 
   test('given the model validates a reform then add to draft stores its provisions', async () => {
@@ -149,14 +149,14 @@ describe('AskPage UK chat mode', () => {
     await user.click(screen.getByRole('button', { name: 'What about poverty?' }));
 
     // Then
-    expect(mockStreamUkChatTurn).toHaveBeenCalledTimes(2);
+    expect(mockStreamAskChatTurn).toHaveBeenCalledTimes(2);
     expect(screen.getAllByText('What about poverty?').length).toBeGreaterThan(0);
   });
 
   test('given the service is unreachable then the turn falls back to keyword matches', async () => {
     // Given
     const user = userEvent.setup();
-    mockStreamUkChatTurn.mockRejectedValue(new Error('UK chat service responded 502'));
+    mockStreamAskChatTurn.mockRejectedValue(new Error('UK chat service responded 502'));
     renderAsk();
 
     // When
@@ -169,5 +169,41 @@ describe('AskPage UK chat mode', () => {
     expect(
       screen.getByText('HMRC → Income tax → Allowances → Personal allowance → Amount')
     ).toBeInTheDocument();
+  });
+});
+
+describe('AskPage US ask mode', () => {
+  beforeEach(() => {
+    clearDraftReform();
+    mockStreamAskChatTurn.mockReset();
+    vi.stubEnv('NEXT_PUBLIC_US_ASK', 'on');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test('given the opt-in flag then a US question streams through the ask agent endpoint', async () => {
+    // Given
+    const user = userEvent.setup();
+    streamReplying((handlers) => {
+      handlers.onChunk?.('The CTC base amount is $2,000.');
+      handlers.onDone?.({ content: 'The CTC base amount is $2,000.', sessionId: 's1' });
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AskPage />
+      </QueryClientProvider>,
+      'us'
+    );
+
+    // When
+    await ask(user, 'What is the child tax credit amount?');
+
+    // Then
+    expect(screen.getByText('The CTC base amount is $2,000.')).toBeInTheDocument();
+    const options = mockStreamAskChatTurn.mock.calls[0][2];
+    expect(options.endpoint).toBe('/api/us-ask/chat/message');
   });
 });

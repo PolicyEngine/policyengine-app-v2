@@ -9,7 +9,12 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { useSelector } from 'react-redux';
 import remarkGfm from 'remark-gfm';
-import { isUkChatEnabled, streamUkChatTurn, toolActivityLabel, UkChatMessage } from '@/api/ukChat';
+import {
+  askChatEndpoint,
+  AskChatMessage,
+  streamAskChatTurn,
+  toolActivityLabel,
+} from '@/api/askChat';
 import ChatComposer from '@/components/flagship/ChatComposer';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Stack, Text, Title } from '@/components/ui';
@@ -165,7 +170,8 @@ export default function AskPage() {
   const examples = EXAMPLES[countryId] ?? EXAMPLES.default;
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
   const hasTurns = turns.length > 0;
-  const chatEnabled = isUkChatEnabled(countryId);
+  const chatEndpoint = askChatEndpoint(countryId);
+  const chatEnabled = chatEndpoint !== null;
 
   const sessionRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -187,8 +193,8 @@ export default function AskPage() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    const history: UkChatMessage[] = turns.flatMap((turn) => {
-      const messages: UkChatMessage[] = [{ role: 'user', content: turn.question }];
+    const history: AskChatMessage[] = turns.flatMap((turn) => {
+      const messages: AskChatMessage[] = [{ role: 'user', content: turn.question }];
       if (turn.chat?.answer) {
         messages.push({ role: 'assistant', content: turn.chat.answer });
       }
@@ -218,7 +224,7 @@ export default function AskPage() {
       },
     ]);
 
-    streamUkChatTurn(
+    streamAskChatTurn(
       {
         messages: [...history, { role: 'user', content: question }],
         sessionId: sessionRef.current,
@@ -256,7 +262,7 @@ export default function AskPage() {
             activity: null,
           })),
       },
-      { signal: controller.signal }
+      { signal: controller.signal, endpoint: chatEndpoint ?? undefined }
     ).catch(() => {
       if (controller.signal.aborted) {
         return;
@@ -294,7 +300,7 @@ export default function AskPage() {
 
   const addBridgeToDraft = (bridge: ChatReformBridge) => {
     bridge.provisions.forEach((provision) =>
-      addDraftProvision(countryId, provision, 'chat', 'uk-chat')
+      addDraftProvision(countryId, provision, 'chat', countryId === 'uk' ? 'uk-chat' : 'us-ask')
     );
   };
 
@@ -502,7 +508,9 @@ export default function AskPage() {
       animatePlaceholder={!hasTurns}
       note={
         chatEnabled
-          ? 'Answers computed live by the PolicyEngine UK model'
+          ? countryId === 'uk'
+            ? 'Answers computed live by the PolicyEngine UK model'
+            : 'AI drafting against the policyengine-us parameters — impacts compute when you run the report'
           : 'Keyword matching today — AI drafting lands with the hosted analysis service'
       }
     />
