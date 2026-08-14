@@ -39,6 +39,19 @@ const TRACKED_BILL = {
     datasetVersion: '1.17.0',
     computedAt: '2026-07-09T14:09:18Z',
   },
+  validation: {
+    fiscalNoteEstimate: -230_000_000_000,
+    fiscalNoteUrl: 'https://www.cbo.gov/example',
+    peEstimate: -225_500_000_000,
+    targetRangeLow: -210_000_000_000,
+    targetRangeHigh: -250_000_000_000,
+    withinRange: true,
+    differencePct: 2,
+    discrepancyExplanation: 'The official score assumes a later effective date.',
+    externalAnalyses: [
+      { source: 'CRFB', url: 'https://www.crfb.org/example', estimate: -220_000_000_000 },
+    ],
+  },
   impacts: { revenue: -225_500_000_000, povertyPercentChange: -14.3 },
   impactData: {
     budgetary: { stateRevenueImpact: -225_500_000_000, households: 163_000_000 },
@@ -140,5 +153,26 @@ describe('BillReportPage', () => {
     expect(screen.getByText(/CRFB band/)).toBeInTheDocument();
     expect(screen.getByText(/policyengine-us 1\.729\.3/)).toBeInTheDocument();
     expect(screen.getByText(/populace-us 1\.17\.0/)).toBeInTheDocument();
+  });
+
+  test('given validation data then the header shows the fiscal-note chip', async () => {
+    renderReport();
+
+    expect((await screen.findAllByText(/Within fiscal-note range/)).length).toBeGreaterThanOrEqual(
+      1
+    );
+  });
+
+  test('given the validation tab then external checks render with estimates', async () => {
+    const user = userEvent.setup();
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Validation' }));
+
+    expect(screen.getByText('External checks for this bill')).toBeInTheDocument();
+    expect(screen.getByText('PolicyEngine estimate')).toBeInTheDocument();
+    expect(screen.getByText('-$225.5B')).toBeInTheDocument();
+    expect(screen.getByText('CRFB')).toBeInTheDocument();
+    expect(screen.getByText(/later effective date/)).toBeInTheDocument();
   });
 });

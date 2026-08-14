@@ -12,6 +12,11 @@ import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 
 import { TrackedBill, WinnerShares } from '@/api/billFeed';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
+import {
+  BillValidationSection,
+  ModelTrackRecordSection,
+  ValidationChip,
+} from '@/components/flagship/ValidationPanel';
 import MetricCard from '@/components/report/MetricCard';
 import {
   Button,
@@ -29,6 +34,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
+import { scorecardProgramsFromPaths } from '@/libs/flagship/modelValidation';
 import { RootState } from '@/store';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
@@ -217,6 +223,9 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
     ...(winnersRows.length > 0 || (typeof betterOff === 'number' && betterOff > 0)
       ? [{ id: 'winners', label: 'Winners and losers' }]
       : []),
+    ...(bill.validation || scorecardProgramsFromPaths(bill.provisions.map((p) => p.path)).length > 0
+      ? [{ id: 'validation', label: 'Validation' }]
+      : []),
     ...((bill.keyFindings && bill.keyFindings.length > 0) || bill.provenance
       ? [{ id: 'notes', label: 'Notes and sources' }]
       : []),
@@ -294,6 +303,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               >
                 {bill.title}
               </Title>
+              {bill.validation && <ValidationChip validation={bill.validation} />}
             </Stack>
 
             <Tabs value={tab} onValueChange={setTab} style={{ gap: spacing.lg }}>
@@ -627,6 +637,13 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                 </Stack>
               </TabsContent>
 
+              <TabsContent value="validation">
+                <Stack style={{ gap: spacing.md }}>
+                  {bill.validation && <BillValidationSection validation={bill.validation} />}
+                  <ModelTrackRecordSection paths={bill.provisions.map((p) => p.path)} />
+                </Stack>
+              </TabsContent>
+
               <TabsContent value="notes">
                 <Stack style={{ gap: spacing.md }}>
                   {bill.keyFindings && bill.keyFindings.length > 0 && (
@@ -676,8 +693,8 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               }}
             >
               <Caption>
-                Precomputed by the PolicyEngine legislative tracker. District, household, and
-                validation views arrive with the full nationwide run.
+                Precomputed by the PolicyEngine legislative tracker. District and household views
+                arrive with the full nationwide run.
               </Caption>
               <Button
                 size="sm"

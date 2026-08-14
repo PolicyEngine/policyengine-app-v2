@@ -25,6 +25,32 @@ export interface WinnerShares {
   loseMore5Pct?: number;
 }
 
+/** One third-party analysis of a bill (think tank, policy center). */
+export interface BillExternalAnalysis {
+  source?: string;
+  url?: string;
+  estimate?: number;
+  notes?: string;
+}
+
+/**
+ * External validation of the tracker's estimate, from the pipeline's
+ * fiscal-finder pass: the official fiscal note, third-party analyses,
+ * and whether PolicyEngine's estimate lands within the accepted range.
+ */
+export interface BillValidation {
+  fiscalNoteSource?: string;
+  fiscalNoteUrl?: string;
+  fiscalNoteEstimate?: number;
+  peEstimate?: number;
+  targetRangeLow?: number;
+  targetRangeHigh?: number;
+  withinRange?: boolean;
+  differencePct?: number;
+  discrepancyExplanation?: string;
+  externalAnalyses?: BillExternalAnalysis[];
+}
+
 export interface TrackedBill {
   id: string;
   countryId: CountryId;
@@ -56,6 +82,8 @@ export interface TrackedBill {
     /** Poverty rate change in percent (negative = poverty falls). */
     povertyPercentChange?: number;
   };
+  /** External validation of the stored estimate, when the tracker has it. */
+  validation?: BillValidation;
   /** Full stored impact records, when the tracker has computed them. */
   impactData?: {
     budgetary?: { stateRevenueImpact?: number; netCost?: number; households?: number };
@@ -227,19 +255,24 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
  * null when the feed is not configured (callers fall back to samples).
  */
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
-  const [research, impacts, processed] = await Promise.all([
+  const [research, impacts, processed, validations] = await Promise.all([
     trackerSelect('research', '*'),
     trackerSelect(
       'reform_impacts',
       'id,reform_params,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
     ),
     trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
+    trackerSelect(
+      'validation_metadata',
+      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses'
+    ),
   ]);
   if (!research) {
     return null;
   }
 
   const impactsById = new Map((impacts ?? []).map((impact) => [impact.id, impact]));
+  const validationById = new Map((validations ?? []).map((row) => [row.id, row]));
   const processedByKey = new Map(
     (processed ?? []).map((bill) => [
       `${String(bill.state).toLowerCase()}-${String(bill.bill_number).toLowerCase().replace(/\s+/g, '')}`,
@@ -271,8 +304,42 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
             computedAt: impact.computed_at ?? undefined,
           }
         : undefined,
+      validation: extractValidation(validationById.get(record.id)),
       impacts: extractImpacts(impact),
       impactData: extractImpactData(impact),
     };
   });
+}
+
+function extractValidation(row: any): BillValidation | undefined {
+  if (!row) {
+    return undefined;
+  }
+  const numberOr = (value: any) => (typeof value === 'number' ? value : undefined);
+  const validation: BillValidation = {
+    fiscalNoteSource: row.fiscal_note_source ?? undefined,
+    fiscalNoteUrl: row.fiscal_note_url ?? undefined,
+    fiscalNoteEstimate: numberOr(row.fiscal_note_estimate),
+    peEstimate: numberOr(row.pe_estimate),
+    targetRangeLow: numberOr(row.target_range_low),
+    targetRangeHigh: numberOr(row.target_range_high),
+    withinRange: typeof row.within_range === 'boolean' ? row.within_range : undefined,
+    differencePct: numberOr(row.difference_from_fiscal_note_pct),
+    discrepancyExplanation: row.discrepancy_explanation ?? undefined,
+    externalAnalyses: Array.isArray(row.external_analyses)
+      ? row.external_analyses.map((analysis: any) => ({
+          source: analysis?.source ?? undefined,
+          url: analysis?.url ?? undefined,
+          estimate: typeof analysis?.estimate === 'number' ? analysis.estimate : undefined,
+          notes: analysis?.notes ?? undefined,
+        }))
+      : undefined,
+  };
+  // A row with no comparison content at all isn't worth a tab.
+  const hasContent =
+    validation.peEstimate !== undefined &&
+    (validation.withinRange !== undefined ||
+      validation.fiscalNoteEstimate !== undefined ||
+      (validation.externalAnalyses?.length ?? 0) > 0);
+  return hasContent ? validation : undefined;
 }
