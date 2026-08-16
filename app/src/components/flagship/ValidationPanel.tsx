@@ -208,10 +208,21 @@ export function BillValidationSection({ validation }: { validation: BillValidati
   );
 }
 
-export function ModelTrackRecordSection({ paths }: { paths: string[] }) {
-  const [rows, setRows] = useState<ModelValidationRow[] | null>(null);
+export interface ModelTrackRecord {
+  programs: string[];
+  /** undefined while loading, null when unavailable */
+  rows: ModelValidationRow[] | null | undefined;
+}
+
+/**
+ * Fetches the track record as soon as the paths are known — call this
+ * at page level, not inside a tab panel, so the request runs in
+ * parallel with the rest of the report instead of starting on tab
+ * click (inactive tab panels are unmounted).
+ */
+export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
+  const [rows, setRows] = useState<ModelValidationRow[] | null | undefined>(undefined);
   const programsKey = scorecardProgramsFromPaths(paths).join(',');
-  const programs = programsKey ? programsKey.split(',') : [];
 
   useEffect(() => {
     let cancelled = false;
@@ -227,8 +238,22 @@ export function ModelTrackRecordSection({ paths }: { paths: string[] }) {
     };
   }, [programsKey]);
 
-  if (programs.length === 0 || !rows) {
+  return { programs: programsKey ? programsKey.split(',') : [], rows };
+}
+
+export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTrackRecord }) {
+  const { programs, rows } = trackRecord;
+  if (programs.length === 0 || rows === null) {
     return null;
+  }
+  if (rows === undefined) {
+    return (
+      <SectionCard>
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          Loading external comparisons…
+        </Text>
+      </SectionCard>
+    );
   }
 
   return (

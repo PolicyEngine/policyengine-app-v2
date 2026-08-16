@@ -15,6 +15,7 @@ import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import {
   BillValidationSection,
   ModelTrackRecordSection,
+  useModelTrackRecord,
   ValidationChip,
 } from '@/components/flagship/ValidationPanel';
 import MetricCard from '@/components/report/MetricCard';
@@ -34,7 +35,6 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { scorecardProgramsFromPaths } from '@/libs/flagship/modelValidation';
 import { RootState } from '@/store';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
@@ -157,6 +157,10 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
 
+  // Kick off the scorecard fetch with the rest of the report, not on
+  // tab click — inactive tab panels are unmounted.
+  const trackRecord = useModelTrackRecord(bill ? bill.provisions.map((p) => p.path) : []);
+
   const resolveBreadcrumb = (path: string, fallback?: string) =>
     parameters?.[path]
       ? formatLabelParts(getHierarchicalLabels(path, parameters))
@@ -223,7 +227,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
     ...(winnersRows.length > 0 || (typeof betterOff === 'number' && betterOff > 0)
       ? [{ id: 'winners', label: 'Winners and losers' }]
       : []),
-    ...(bill.validation || scorecardProgramsFromPaths(bill.provisions.map((p) => p.path)).length > 0
+    ...(bill.validation || trackRecord.programs.length > 0
       ? [{ id: 'validation', label: 'Validation' }]
       : []),
     ...((bill.keyFindings && bill.keyFindings.length > 0) || bill.provenance
@@ -640,7 +644,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               <TabsContent value="validation">
                 <Stack style={{ gap: spacing.md }}>
                   {bill.validation && <BillValidationSection validation={bill.validation} />}
-                  <ModelTrackRecordSection paths={bill.provisions.map((p) => p.path)} />
+                  <ModelTrackRecordSection trackRecord={trackRecord} />
                 </Stack>
               </TabsContent>
 
