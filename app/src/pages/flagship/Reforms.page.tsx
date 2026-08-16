@@ -510,30 +510,6 @@ export default function ReformsPage() {
               unlock when it lands.
             </Text>
           )}
-          {selectedBill.keyFindings && selectedBill.keyFindings.length > 0 && (
-            <details>
-              <summary
-                style={{
-                  cursor: 'pointer',
-                  fontSize: typography.fontSize.sm,
-                  fontFamily: typography.fontFamily.primary,
-                  color: colors.text.secondary,
-                }}
-              >
-                Model notes and external checks
-              </summary>
-              <Stack style={{ gap: spacing.xs, paddingTop: spacing.sm }}>
-                {selectedBill.keyFindings.map((finding) => (
-                  <Text
-                    key={finding}
-                    style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
-                  >
-                    · {finding}
-                  </Text>
-                ))}
-              </Stack>
-            </details>
-          )}
           <Stack
             style={{
               flexDirection: 'row',

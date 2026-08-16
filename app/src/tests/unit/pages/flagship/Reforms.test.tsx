@@ -168,9 +168,9 @@ describe('ReformsPage', () => {
     expect(screen.getByText('−$225.5 billion')).toBeInTheDocument();
     expect(screen.getByText('16.9% → 14.5%')).toBeInTheDocument();
     expect(screen.getByText('44%')).toBeInTheDocument();
-    // Prose findings sit behind a closed disclosure
-    expect(screen.getByText('Model notes and external checks')).toBeInTheDocument();
-    expect(screen.getByText(/CRFB band/)).not.toBeVisible();
+    // Prose findings live on the report's notes tab, not the overview
+    expect(screen.queryByText('Model notes and external checks')).not.toBeInTheDocument();
+    expect(screen.queryByText(/CRFB band/)).not.toBeInTheDocument();
   });
 
   test('given more bills than one page then the grid paginates with show more', async () => {
