@@ -115,11 +115,15 @@ describe('BillReportPage', () => {
 
     await user.click(await screen.findByRole('tab', { name: 'Budgetary impact' }));
     expect(screen.getByText('Revenue change')).toBeInTheDocument();
+    expect(screen.getByText('Average per household')).toBeInTheDocument();
+    expect(screen.getByText('How the estimate compares')).toBeInTheDocument();
     expect(screen.getByText(/single-year budgetary impact/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Poverty impact' }));
     expect(screen.getByText('Child poverty change')).toBeInTheDocument();
     expect(screen.getByText('16.6% → 9.9%')).toBeInTheDocument();
+    expect(screen.getByText('Poverty rate, before and after')).toBeInTheDocument();
+    expect(screen.getByText('Current law')).toBeInTheDocument();
   });
 
   test('given the distribution tab then the chart toggles dollars and percent', async () => {

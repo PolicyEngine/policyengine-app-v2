@@ -8,7 +8,16 @@ import {
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+  Bar,
+  BarChart,
+  Cell,
+  LabelList,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { TrackedBill, WinnerShares } from '@/api/billFeed';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
@@ -43,6 +52,10 @@ import { getCurrentValue } from '@/utils/parameterValues';
 interface BillReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
   billId?: string;
+}
+
+function moneyPlain(value: number): string {
+  return `${value < 0 ? '\u2212' : ''}$${Math.abs(Math.round(value)).toLocaleString()}`;
 }
 
 function money(value: number): string {
@@ -188,6 +201,63 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   });
 
   const impact = bill.impactData;
+
+  const households = impact?.budgetary?.households;
+  const revenueForAverage = impact?.budgetary?.stateRevenueImpact;
+  const perHousehold =
+    typeof revenueForAverage === 'number' && households
+      ? revenueForAverage / households
+      : undefined;
+
+  // PolicyEngine vs external estimates, when the validation pass found any.
+  // Bars plot magnitudes (these are almost always all-negative revenue
+  // effects, which read backwards on a signed axis); labels keep the sign.
+  const estimateComparisonRaw = [
+    ...(typeof (bill.validation?.peEstimate ?? revenueForAverage) === 'number'
+      ? [{ label: 'PolicyEngine', value: bill.validation?.peEstimate ?? revenueForAverage! }]
+      : []),
+    ...(typeof bill.validation?.fiscalNoteEstimate === 'number'
+      ? [{ label: 'Official fiscal note', value: bill.validation.fiscalNoteEstimate }]
+      : typeof bill.validation?.targetRangeLow === 'number' &&
+          typeof bill.validation?.targetRangeHigh === 'number'
+        ? [
+            { label: 'Fiscal note (low)', value: bill.validation.targetRangeLow },
+            { label: 'Fiscal note (high)', value: bill.validation.targetRangeHigh },
+          ]
+        : []),
+    ...(bill.validation?.externalAnalyses ?? [])
+      .filter((analysis) => analysis.source && typeof analysis.estimate === 'number')
+      .map((analysis) => ({ label: analysis.source!, value: analysis.estimate! })),
+  ];
+  const estimateSign = estimateComparisonRaw.every((entry) => entry.value <= 0) ? -1 : 1;
+  const estimateComparison = estimateComparisonRaw.map((entry) => ({
+    ...entry,
+    magnitude: Math.abs(entry.value),
+  }));
+
+  const povertyChartRows = [
+    ...(typeof impact?.poverty?.baselineRate === 'number' &&
+    typeof impact?.poverty?.reformRate === 'number'
+      ? [
+          {
+            group: 'All people',
+            baseline: impact.poverty.baselineRate * 100,
+            reform: impact.poverty.reformRate * 100,
+          },
+        ]
+      : []),
+    ...(typeof impact?.childPoverty?.baselineRate === 'number' &&
+    typeof impact?.childPoverty?.reformRate === 'number'
+      ? [
+          {
+            group: 'Children',
+            baseline: impact.childPoverty.baselineRate * 100,
+            reform: impact.childPoverty.reformRate * 100,
+          },
+        ]
+      : []),
+  ];
+
   const winners = impact?.winnersLosers;
   const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
   const worseOff = winners && ((winners.loseMore5Pct ?? 0) + (winners.loseLess5Pct ?? 0)) * 100;
@@ -425,7 +495,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               </TabsContent>
 
               <TabsContent value="budgetary">
-                <Stack style={{ gap: spacing.md }}>
+                <Stack style={{ gap: spacing.lg }}>
                   <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
                     {typeof revenue === 'number' && (
                       <ReportCard grow>
@@ -434,6 +504,15 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                           value={money(revenue)}
                           trend={revenue < 0 ? 'negative' : 'positive'}
                           hero
+                        />
+                      </ReportCard>
+                    )}
+                    {typeof perHousehold === 'number' && (
+                      <ReportCard grow>
+                        <MetricCard
+                          label="Average per household"
+                          value={moneyPlain(perHousehold)}
+                          trend={perHousehold < 0 ? 'negative' : 'positive'}
                         />
                       </ReportCard>
                     )}
@@ -448,6 +527,61 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                         </ReportCard>
                       )}
                   </Stack>
+                  {estimateComparison.length > 1 && (
+                    <ReportCard title={<ChartTitle>How the estimate compares</ChartTitle>}>
+                      <div style={{ width: '100%', height: 60 + estimateComparison.length * 52 }}>
+                        <ResponsiveContainer>
+                          <BarChart
+                            data={estimateComparison}
+                            layout="vertical"
+                            margin={{ top: 8, right: 48, bottom: 8, left: 8 }}
+                          >
+                            <XAxis
+                              type="number"
+                              tickFormatter={(value: number) => money(estimateSign * value)}
+                              tickLine={false}
+                              axisLine={{ stroke: colors.border.light }}
+                              tick={{ fontSize: 12, fill: colors.text.secondary }}
+                            />
+                            <YAxis
+                              type="category"
+                              dataKey="label"
+                              tickLine={false}
+                              axisLine={false}
+                              tick={{ fontSize: 12, fill: colors.text.secondary }}
+                              width={150}
+                            />
+                            <Tooltip
+                              formatter={(value) => [money(Number(value ?? 0)), 'Estimate']}
+                              cursor={{ fill: colors.gray[50] }}
+                            />
+                            <Bar dataKey="magnitude" radius={[0, 3, 3, 0]} barSize={22}>
+                              <LabelList
+                                dataKey="value"
+                                position="right"
+                                formatter={(value) => money(Number(value ?? 0))}
+                                style={{ fontSize: 12, fill: colors.text.primary }}
+                              />
+                              {estimateComparison.map((entry) => (
+                                <Cell
+                                  key={entry.label}
+                                  fill={
+                                    entry.label === 'PolicyEngine'
+                                      ? colors.primary[500]
+                                      : colors.gray[400]
+                                  }
+                                />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <Caption>
+                        External estimates from the tracker&apos;s validation pass — see the
+                        Validation tab for scope notes.
+                      </Caption>
+                    </ReportCard>
+                  )}
                   <Caption>
                     Single-year budgetary impact from the tracker's stored microsimulation run.
                   </Caption>
@@ -455,14 +589,96 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               </TabsContent>
 
               <TabsContent value="poverty">
-                <Stack style={{ gap: spacing.md }}>
+                <Stack style={{ gap: spacing.lg }}>
                   <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
                     {povertyCard(impact?.poverty, 'Poverty rate change')}
                     {povertyCard(impact?.childPoverty, 'Child poverty change')}
                   </Stack>
-                  <Caption>
-                    Rates show the share of people in poverty before and after the reform.
-                  </Caption>
+                  {povertyChartRows.length > 0 && (
+                    <ReportCard title={<ChartTitle>Poverty rate, before and after</ChartTitle>}>
+                      <Stack
+                        style={{ flexDirection: 'row', gap: spacing.lg, flexWrap: 'wrap' }}
+                        aria-hidden
+                      >
+                        {[
+                          { label: 'Current law', color: colors.gray[400] },
+                          { label: 'With this bill', color: colors.primary[500] },
+                        ].map((entry) => (
+                          <Stack
+                            key={entry.label}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+                          >
+                            <span
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 2,
+                                background: entry.color,
+                              }}
+                            />
+                            <Text
+                              style={{
+                                fontSize: typography.fontSize.xs,
+                                color: colors.text.secondary,
+                              }}
+                            >
+                              {entry.label}
+                            </Text>
+                          </Stack>
+                        ))}
+                      </Stack>
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                          <BarChart
+                            data={povertyChartRows}
+                            margin={{ top: 24, right: 8, bottom: 8, left: 8 }}
+                            barGap={6}
+                          >
+                            <XAxis
+                              dataKey="group"
+                              tickLine={false}
+                              axisLine={{ stroke: colors.border.light }}
+                              tick={{ fontSize: 12, fill: colors.text.secondary }}
+                            />
+                            <YAxis
+                              tickFormatter={(value: number) => `${value.toFixed(0)}%`}
+                              tickLine={false}
+                              axisLine={false}
+                              tick={{ fontSize: 12, fill: colors.text.secondary }}
+                              width={44}
+                            />
+                            <Tooltip
+                              formatter={(value, name) => [
+                                `${Number(value ?? 0).toFixed(1)}%`,
+                                name === 'baseline' ? 'Current law' : 'With this bill',
+                              ]}
+                              cursor={{ fill: colors.gray[50] }}
+                            />
+                            <Bar dataKey="baseline" fill={colors.gray[400]} radius={[3, 3, 0, 0]}>
+                              <LabelList
+                                dataKey="baseline"
+                                position="top"
+                                formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
+                                style={{ fontSize: 12, fill: colors.text.secondary }}
+                              />
+                            </Bar>
+                            <Bar dataKey="reform" fill={colors.primary[500]} radius={[3, 3, 0, 0]}>
+                              <LabelList
+                                dataKey="reform"
+                                position="top"
+                                formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
+                                style={{ fontSize: 12, fill: colors.text.primary }}
+                              />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <Caption>
+                        Share of people below the Supplemental Poverty Measure line, from the
+                        tracker&apos;s stored run.
+                      </Caption>
+                    </ReportCard>
+                  )}
                 </Stack>
               </TabsContent>
 
@@ -489,9 +705,12 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                     </Stack>
                   }
                 >
-                  <div style={{ width: '100%', height: 260 }}>
+                  <div style={{ width: '100%', height: 360 }}>
                     <ResponsiveContainer>
-                      <BarChart data={decileRows} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                      <BarChart
+                        data={decileRows}
+                        margin={{ top: 24, right: 8, bottom: 8, left: 8 }}
+                      >
                         <XAxis
                           dataKey="decile"
                           tickLine={false}
@@ -519,6 +738,16 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                           labelFormatter={(label) => `Decile ${label}`}
                         />
                         <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                          <LabelList
+                            dataKey="value"
+                            position="top"
+                            formatter={(value) =>
+                              decileMode === 'average'
+                                ? `$${Math.round(Number(value ?? 0)).toLocaleString()}`
+                                : `${Number(value ?? 0).toFixed(1)}%`
+                            }
+                            style={{ fontSize: 11, fill: colors.text.secondary }}
+                          />
                           {decileRows.map((row) => (
                             <Cell
                               key={row.decile}
