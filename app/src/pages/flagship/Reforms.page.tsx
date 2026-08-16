@@ -874,7 +874,13 @@ export default function ReformsPage() {
                 body={bill.summary}
                 linkUrl={bill.legiscanUrl}
                 stats={billStats(bill)}
-                onClick={() => setSelectedId(bill.id)}
+                // Scored bills go straight to their report — the detail
+                // view is the launchpad for bills without one yet.
+                onClick={() =>
+                  bill.impactData
+                    ? nav.push(`/${countryId}/report/bill/${bill.id}`)
+                    : setSelectedId(bill.id)
+                }
               />
             ))}
           {tab === 'yours' &&

@@ -142,7 +142,7 @@ describe('ReformsPage', () => {
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
   });
 
-  test('given a bill with impact data then the detail leads with stat tiles', async () => {
+  test('given a scored bill then clicking its card opens the report directly', async () => {
     const user = userEvent.setup();
     mockFetchTrackerBills.mockResolvedValue([
       {
@@ -165,12 +165,9 @@ describe('ReformsPage', () => {
 
     await user.click(await screen.findByText('HR 1425: Child Tax Credit to $5,000'));
 
-    expect(screen.getByText('−$225.5 billion')).toBeInTheDocument();
-    expect(screen.getByText('16.9% → 14.5%')).toBeInTheDocument();
-    expect(screen.getByText('44%')).toBeInTheDocument();
-    // Prose findings live on the report's notes tab, not the overview
-    expect(screen.queryByText('Model notes and external checks')).not.toBeInTheDocument();
-    expect(screen.queryByText(/CRFB band/)).not.toBeInTheDocument();
+    // No intermediate detail — the report page has everything the
+    // detail showed, plus tabs, validation, and the adjust rail.
+    expect(mockNavigate).toHaveBeenCalledWith('/us/report/bill/us-hr1425');
   });
 
   test('given more bills than one page then the grid paginates with show more', async () => {

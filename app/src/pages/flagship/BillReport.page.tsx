@@ -322,7 +322,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
     );
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+    <div style={{ maxWidth: 1480, margin: '0 auto' }}>
       <div
         style={{
           display: 'flex',
@@ -331,11 +331,11 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
           alignItems: 'flex-start',
         }}
       >
-        <div style={{ flex: '1 1 560px', minWidth: 0 }}>
-          <Stack style={{ maxWidth: 900, margin: '0 auto', gap: spacing.xl }}>
+        <div style={{ flex: '1 1 640px', minWidth: 0 }}>
+          <Stack style={{ maxWidth: 1040, margin: '0 auto', gap: spacing.xl }}>
             <button
               type="button"
-              onClick={() => nav.push(`/${countryId}/reforms?bill=${bill.id}`)}
+              onClick={() => nav.push(`/${countryId}/reforms`)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
