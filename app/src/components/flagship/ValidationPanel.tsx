@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BillValidation } from '@/api/billFeed';
-import { Stack, Text } from '@/components/ui';
+import { Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
   fetchModelValidation,
@@ -249,9 +249,12 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
   if (rows === undefined) {
     return (
       <SectionCard>
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          Loading external comparisons…
-        </Text>
+        <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <Spinner size="sm" />
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            Loading external comparisons…
+          </Text>
+        </Stack>
       </SectionCard>
     );
   }
