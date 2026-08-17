@@ -300,9 +300,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
     ...(bill.validation || trackRecord.programs.length > 0
       ? [{ id: 'validation', label: 'Validation' }]
       : []),
-    ...((bill.keyFindings && bill.keyFindings.length > 0) || bill.provenance
-      ? [{ id: 'notes', label: 'Notes and sources' }]
-      : []),
+    ...(bill.provenance ? [{ id: 'notes', label: 'Notes and sources' }] : []),
   ];
 
   const billTextUrl = bill.sourceUrl ?? bill.legiscanUrl;
@@ -879,22 +877,6 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
               <TabsContent value="notes">
                 <Stack style={{ gap: spacing.md }}>
-                  {bill.keyFindings && bill.keyFindings.length > 0 && (
-                    <Stack style={{ gap: spacing.xs }}>
-                      {bill.keyFindings.map((finding) => (
-                        <Text
-                          key={finding}
-                          style={{
-                            fontSize: typography.fontSize.sm,
-                            color: colors.text.primary,
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          · {finding}
-                        </Text>
-                      ))}
-                    </Stack>
-                  )}
                   {bill.provenance && (
                     <Caption>
                       {[

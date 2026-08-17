@@ -148,15 +148,17 @@ describe('BillReportPage', () => {
     expect(screen.getByText('Outcomes by income decile')).toBeInTheDocument();
   });
 
-  test('given the notes tab then findings and provenance render', async () => {
+  test('given the notes tab then only provenance renders', async () => {
     const user = userEvent.setup();
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Notes and sources' }));
 
-    expect(screen.getByText(/CRFB band/)).toBeInTheDocument();
     expect(screen.getByText(/policyengine-us 1\.729\.3/)).toBeInTheDocument();
     expect(screen.getByText(/populace-us 1\.17\.0/)).toBeInTheDocument();
+    expect(screen.getByText(/Computed July 9, 2026/)).toBeInTheDocument();
+    // The findings prose reiterated the impact tabs — gone
+    expect(screen.queryByText(/CRFB band/)).not.toBeInTheDocument();
   });
 
   test('given validation data then the header shows the fiscal-note chip', async () => {
