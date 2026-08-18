@@ -1,46 +1,50 @@
-// Model track record, served from the PolicyEngine scorecard — the
-// repo that compares PolicyEngine/Populace estimates against external
-// analyses (Urban Institute's State of the Safety Net, and future
-// sources) with per-row honesty statuses. The published comparison
-// artifact is ~20MB, so this route caches it server-side and returns
-// only the compact, comparable US-level rows for the programs a bill
-// or reform touches.
+// Model track record, served from the live PolicyEngine scorecard —
+// the deployed score repository at policyengine.org/scorecard. We read
+// the same published data shards the scorecard app renders, so the
+// numbers here always match what a click-through shows. The Urban
+// State of the Safety Net shard (~10MB) is cached server-side and
+// reduced to the compact, comparable US-level rows for the programs a
+// bill or reform touches.
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
-const SCORECARD_URL =
-  process.env.SCORECARD_COMPARISON_URL ??
-  "https://raw.githubusercontent.com/PolicyEngine/policyengine-scorecard/main/data/comparison.json";
+const SCORECARD_DATA_URL =
+  process.env.SCORECARD_DATA_URL ??
+  "https://www.policyengine.org/scorecard/data/sources/urban_sotsn.json";
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const MAX_ROWS_PER_PROGRAM = 8;
 
-interface ScorecardRow {
-  source: string;
-  program: string;
-  metric: string;
-  subgroup: string;
-  geography: string;
-  unit_concept: string | null;
-  period: string | null;
-  status: string;
-  external_value: number | null;
-  pe_value: number | null;
-  ratio: number | null;
-  calibration_relationship: string | null;
+interface ScorecardShard {
+  id: string;
+  row_defaults: Record<string, unknown>;
+  rows: ScorecardRow[];
 }
 
-let cached: { promise: Promise<ScorecardRow[]>; fetchedAt: number } | null =
+interface ScorecardRow {
+  program: string;
+  metric: string;
+  geography: string;
+  subgroup?: string;
+  unit?: string | null;
+  status: string;
+  relationship?: string;
+  value: number | null;
+  ratio: number | null;
+  pe?: { value?: number | null } | null;
+}
+
+let cached: { promise: Promise<ScorecardShard>; fetchedAt: number } | null =
   null;
 
-function getScorecardRows(): Promise<ScorecardRow[]> {
+function getShard(): Promise<ScorecardShard> {
   if (!cached || Date.now() - cached.fetchedAt > CACHE_TTL_MS) {
     const promise = (async () => {
-      const response = await fetch(SCORECARD_URL);
+      const response = await fetch(SCORECARD_DATA_URL);
       if (!response.ok) {
         throw new Error(`scorecard fetch failed: ${response.status}`);
       }
-      const payload = await response.json();
-      return (payload?.rows ?? []) as ScorecardRow[];
+      return (await response.json()) as ScorecardShard;
     })();
     promise.catch(() => {
       cached = null;
@@ -60,9 +64,9 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "programs is required" }, { status: 400 });
   }
 
-  let rows: ScorecardRow[];
+  let shard: ScorecardShard;
   try {
-    rows = await getScorecardRows();
+    shard = await getShard();
   } catch {
     return Response.json(
       { error: "scorecard data unavailable" },
@@ -70,23 +74,33 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 
+  const defaults = shard.row_defaults ?? {};
+  const defaultRelationship =
+    typeof defaults.relationship === "string" ? defaults.relationship : null;
+  const period =
+    [defaults.period, String(defaults.time_basis ?? "").replaceAll("_", " ")]
+      .filter(Boolean)
+      .join(" ") || null;
+
   const wanted = new Set(programs);
-  const matched = rows.filter(
+  const matched = (shard.rows ?? []).filter(
     (row) =>
       wanted.has(row.program) &&
       row.geography === "US" &&
-      row.subgroup === "total" &&
+      (row.subgroup ?? "total") === "total" &&
       (row.status === "comparable" || row.status === "constructed") &&
-      typeof row.pe_value === "number" &&
-      typeof row.external_value === "number" &&
+      typeof row.pe?.value === "number" &&
+      typeof row.value === "number" &&
       typeof row.ratio === "number",
   );
 
   // Held-out comparisons are true validation (the dataset was not tuned
   // to them), so they lead; within that, plain comparable before
   // constructed approximations.
+  const relationshipOf = (row: ScorecardRow) =>
+    row.relationship ?? defaultRelationship;
   const rank = (row: ScorecardRow) =>
-    (row.calibration_relationship === "held_out" ? 0 : 2) +
+    (relationshipOf(row) === "held_out" ? 0 : 2) +
     (row.status === "comparable" ? 0 : 1);
   matched.sort(
     (a, b) =>
@@ -108,16 +122,16 @@ export async function GET(request: Request): Promise<Response> {
   return Response.json(
     {
       rows: selected.map((row) => ({
-        source: row.source,
+        source: shard.id ?? "urban_sotsn",
         program: row.program,
         metric: row.metric,
-        period: row.period,
+        period,
         status: row.status,
-        unitConcept: row.unit_concept,
-        externalValue: row.external_value,
-        peValue: row.pe_value,
+        unitConcept: row.unit ?? null,
+        externalValue: row.value,
+        peValue: row.pe!.value,
         ratio: row.ratio,
-        heldOut: row.calibration_relationship === "held_out",
+        heldOut: relationshipOf(row) === "held_out",
       })),
     },
     { headers: { "Cache-Control": "public, max-age=3600" } },
