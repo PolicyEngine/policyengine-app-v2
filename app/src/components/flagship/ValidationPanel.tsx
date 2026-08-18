@@ -3,6 +3,7 @@ import { BillValidation } from '@/api/billFeed';
 import { Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
+  claimsFromBillValidation,
   fetchModelValidation,
   METRIC_LABELS,
   ModelValidationRow,
@@ -121,7 +122,16 @@ export function ValidationChip({ validation }: { validation: BillValidation }) {
   );
 }
 
-export function BillValidationSection({ validation }: { validation: BillValidation }) {
+export function BillValidationSection({
+  billId,
+  validation,
+}: {
+  billId: string;
+  validation: BillValidation;
+}) {
+  // External numbers render from scorecard-shaped claims, so tracker
+  // rows today and scorecard shard rows tomorrow are interchangeable.
+  const claims = claimsFromBillValidation(billId, validation);
   const range =
     typeof validation.targetRangeLow === 'number' && typeof validation.targetRangeHigh === 'number'
       ? [validation.targetRangeLow, validation.targetRangeHigh].sort((a, b) => a - b)
@@ -135,18 +145,28 @@ export function BillValidationSection({ validation }: { validation: BillValidati
             <tr>
               <td style={headCellStyle}>PolicyEngine estimate</td>
               <td style={cellStyle}>{compactMoney(validation.peEstimate)}</td>
+              <td style={cellStyle} />
             </tr>
           )}
-          {typeof validation.fiscalNoteEstimate === 'number' && (
+          {range && (
             <tr>
-              <td style={headCellStyle}>Official fiscal note</td>
+              <td style={headCellStyle}>Accepted range</td>
               <td style={cellStyle}>
-                {compactMoney(validation.fiscalNoteEstimate)}
-                {validation.fiscalNoteUrl && (
+                {compactMoney(range[0])} to {compactMoney(range[1])}
+              </td>
+              <td style={cellStyle} />
+            </tr>
+          )}
+          {claims.map((claim) => (
+            <tr key={claim.source}>
+              <td style={headCellStyle}>{claim.source}</td>
+              <td style={cellStyle}>
+                {compactMoney(claim.externalValue)}
+                {claim.sourceUrl && (
                   <>
                     {' '}
                     <a
-                      href={validation.fiscalNoteUrl}
+                      href={claim.sourceUrl}
                       target="_blank"
                       rel="noreferrer"
                       style={{ color: colors.primary[700] }}
@@ -156,40 +176,11 @@ export function BillValidationSection({ validation }: { validation: BillValidati
                   </>
                 )}
               </td>
-            </tr>
-          )}
-          {range && (
-            <tr>
-              <td style={headCellStyle}>Accepted range</td>
-              <td style={cellStyle}>
-                {compactMoney(range[0])} to {compactMoney(range[1])}
+              <td style={{ ...cellStyle, color: colors.text.secondary }}>
+                {typeof claim.ratio === 'number' ? `${claim.ratio.toFixed(2)}× PE` : ''}
               </td>
             </tr>
-          )}
-          {(validation.externalAnalyses ?? []).map(
-            (analysis, i) =>
-              analysis.source && (
-                <tr key={`${analysis.source}-${i}`}>
-                  <td style={headCellStyle}>{analysis.source}</td>
-                  <td style={cellStyle}>
-                    {typeof analysis.estimate === 'number' ? compactMoney(analysis.estimate) : '—'}
-                    {analysis.url && (
-                      <>
-                        {' '}
-                        <a
-                          href={analysis.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ color: colors.primary[700] }}
-                        >
-                          source
-                        </a>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              )
-          )}
+          ))}
         </tbody>
       </table>
       <ValidationChip validation={validation} />

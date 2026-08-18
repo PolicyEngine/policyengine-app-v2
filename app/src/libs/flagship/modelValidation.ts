@@ -94,3 +94,68 @@ export async function fetchModelValidation(
     return null;
   }
 }
+
+/**
+ * The scorecard's claim shape, as our validation lingua franca: every
+ * external number — tracker fiscal notes today, scorecard shards, and
+ * future sources — normalizes to this row, mirroring the deployed
+ * scorecard's data contract (policy-keyed, provenance-carrying).
+ */
+export interface ValidationClaim {
+  /** Source label, e.g. "Official fiscal note", "CRFB", "urban_sotsn" */
+  source: string;
+  sourceUrl?: string;
+  /** The policy the claim scores — bill id for tracker claims */
+  policy: string;
+  metric: string;
+  externalValue: number;
+  peValue?: number;
+  /** PE ÷ external, when both sides exist */
+  ratio?: number;
+  notes?: string;
+}
+
+/** Tracker validation_metadata → scorecard-shaped claims. */
+export function claimsFromBillValidation(
+  billId: string,
+  validation: {
+    fiscalNoteEstimate?: number;
+    fiscalNoteUrl?: string;
+    peEstimate?: number;
+    discrepancyExplanation?: string;
+    externalAnalyses?: Array<{ source?: string; url?: string; estimate?: number; notes?: string }>;
+  }
+): ValidationClaim[] {
+  const pe = validation.peEstimate;
+  const claim = (
+    source: string,
+    externalValue: number,
+    extra: Partial<ValidationClaim> = {}
+  ): ValidationClaim => ({
+    source,
+    policy: billId,
+    metric: 'budgetary_impact',
+    externalValue,
+    peValue: pe,
+    ratio: typeof pe === 'number' && externalValue !== 0 ? pe / externalValue : undefined,
+    ...extra,
+  });
+  return [
+    ...(typeof validation.fiscalNoteEstimate === 'number'
+      ? [
+          claim('Official fiscal note', validation.fiscalNoteEstimate, {
+            sourceUrl: validation.fiscalNoteUrl,
+            notes: validation.discrepancyExplanation,
+          }),
+        ]
+      : []),
+    ...(validation.externalAnalyses ?? [])
+      .filter((analysis) => analysis.source && typeof analysis.estimate === 'number')
+      .map((analysis) =>
+        claim(analysis.source!, analysis.estimate!, {
+          sourceUrl: analysis.url,
+          notes: analysis.notes,
+        })
+      ),
+  ];
+}

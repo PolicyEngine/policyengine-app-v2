@@ -870,7 +870,9 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
               <TabsContent value="validation">
                 <Stack style={{ gap: spacing.md }}>
-                  {bill.validation && <BillValidationSection validation={bill.validation} />}
+                  {bill.validation && (
+                    <BillValidationSection billId={bill.id} validation={bill.validation} />
+                  )}
                   <ModelTrackRecordSection trackRecord={trackRecord} />
                 </Stack>
               </TabsContent>
