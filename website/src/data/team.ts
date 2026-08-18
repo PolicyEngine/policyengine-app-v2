@@ -8,7 +8,7 @@ export const founders: TeamMember[] = [
   },
   {
     name: "Nikhil Woodruff",
-    bio: "is the co-founder and CTO of PolicyEngine. He previously served as UK Research Director at the UBI Center, a think tank researching universal basic income policies, and worked at Caspian as a data scientist, improving anti-money laundering investigations. Nikhil earned a bachelor's degree in Computer Science from the University of Durham.",
+    bio: "was a co-founder of PolicyEngine. He previously served as UK Research Director at the UBI Center, a think tank researching universal basic income policies, and worked at Caspian as a data scientist, improving anti-money laundering investigations. Nikhil earned a bachelor's degree in Computer Science from the University of Durham.",
     image: "/assets/team/nikhil-woodruff.webp",
   },
 ];
@@ -28,11 +28,6 @@ export const staff: TeamMember[] = [
     name: "Vahid Ahmadi",
     bio: "is a research associate at PolicyEngine. Previously, he served as a pre-doctoral researcher at the Centre for Macroeconomics (CFM) at the London School of Economics (LSE). Vahid holds a master's degree in Economics from the University of Munich (LMU) and a bachelor's degree in Electrical Engineering from the Sharif University of Technology.",
     image: "/assets/team/vahid-ahmadi.webp",
-  },
-  {
-    name: "Daphne Hansell",
-    bio: "is a research associate at PolicyEngine. She focuses on the intersection of healthcare and the tax code. Previously, she was a health policy intern at the Niskanen Center and a policy fellow at the Progressive Policy Institute. Daphne holds an B.A. in Public Health from Bryn Mawr College.",
-    image: "/assets/team/daphne-hansell.webp",
   },
   {
     name: "David Trimmer",
