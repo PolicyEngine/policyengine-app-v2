@@ -262,11 +262,12 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
   return (
     <SectionCard>
       <SectionTitle>
-        Model track record — {programs.map((p) => PROGRAM_LABELS[p] ?? p).join(', ')}
+        Program context — {programs.map((p) => PROGRAM_LABELS[p] ?? p).join(', ')}
       </SectionTitle>
       <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        How PolicyEngine&apos;s calibrated data reproduces independent external analyses of the
-        programs this bill touches, from the{' '}
+        How the model&apos;s baseline representation of the programs this bill touches compares with
+        independent external measurement. This is credibility context for the ingredients behind the
+        estimate — not a check of this bill&apos;s numbers. From the{' '}
         <a
           href={SCORECARD_URL}
           target="_blank"
