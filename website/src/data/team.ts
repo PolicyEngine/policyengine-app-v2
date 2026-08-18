@@ -8,7 +8,7 @@ export const founders: TeamMember[] = [
   },
   {
     name: "Nikhil Woodruff",
-    bio: "is the co-founder and CTO of PolicyEngine. He previously served as UK Research Director at the UBI Center, a think tank researching universal basic income policies, and worked at Caspian as a data scientist, improving anti-money laundering investigations. Nikhil earned a bachelor's degree in Computer Science from the University of Durham.",
+    bio: "was a co-founder of PolicyEngine. He previously served as UK Research Director at the UBI Center, a think tank researching universal basic income policies, and worked at Caspian as a data scientist, improving anti-money laundering investigations. Nikhil earned a bachelor's degree in Computer Science from the University of Durham.",
     image: "/assets/team/nikhil-woodruff.webp",
   },
 ];
