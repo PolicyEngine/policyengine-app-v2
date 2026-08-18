@@ -22,6 +22,10 @@ function withDeepRoute(route: AppZoneRoute): AppZoneRoute[] {
 
 export const appZoneRoutes: AppZoneRoute[] = [
   {
+    source: "/uk/chat",
+    destination: "https://policyengine-uk-chat.vercel.app/uk/chat",
+  },
+  {
     source: "/us/taxation-of-benefits-reforms",
     destination:
       "https://crfb-tob-impacts.vercel.app/us/taxation-of-benefits-reforms",
@@ -190,6 +194,13 @@ export const appZoneRoutes: AppZoneRoute[] = [
     source: "/us/encode-policy-multi-agent-ai",
     destination: "/assets/posts/encode-policy-multi-agent-ai/index.html",
     deepDestination: "/assets/posts/encode-policy-multi-agent-ai/:path*",
+  },
+  {
+    source: "/uk/introducing-policyengine-uk-chat",
+    destination:
+      "https://policyengine-uk-chat-interactive-ar.vercel.app/uk/introducing-policyengine-uk-chat",
+    deepDestination:
+      "https://policyengine-uk-chat-interactive-ar.vercel.app/uk/introducing-policyengine-uk-chat/:path*",
   },
   {
     source: "/uk/scottish-budget-2026-27",

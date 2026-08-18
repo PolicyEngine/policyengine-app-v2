@@ -214,6 +214,8 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
     .filter(
       (item) => item.tags.includes(countryId) || item.tags.includes("global"),
     )
+    // Product announcements do not belong in "Expert policy analysis".
+    .filter((item) => !item.tags.includes("product"))
     .slice(0, TOTAL_ITEMS);
 
   if (relevantItems.length === 0) {
