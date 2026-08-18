@@ -36,6 +36,7 @@ export default function CountryLayout({
       push: (path: string) => router.push(path),
       replace: (path: string) => router.replace(path),
       back: () => router.back(),
+      prefetch: (path: string) => router.prefetch(path),
     }),
     [router],
   );

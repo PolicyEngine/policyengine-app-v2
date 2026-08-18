@@ -2,9 +2,22 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
-import { createBrowserRouter, Navigate, Outlet, RouterProvider, useParams } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  RouterProvider,
+  useLocation,
+  useParams,
+} from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
+import { isFlagshipShellEnabled } from './libs/featureFlags';
+import AskPage from './pages/flagship/Ask.page';
+import BillReportPage from './pages/flagship/BillReport.page';
+import BuildPage from './pages/flagship/Build.page';
+import ReformsPage from './pages/flagship/Reforms.page';
+import FlagshipReportPage from './pages/flagship/Report.page';
 import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -20,6 +33,12 @@ import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+
+/** Tracker and Library merged into Reforms; preserve deep-link queries. */
+function LegacyReformsRedirect() {
+  const location = useLocation();
+  return <Navigate to={`../reforms${location.search}`} replace />;
+}
 
 /** Bridges react-router useParams to ModifyReportPage's prop interface. */
 function ModifyReportPageRoute() {
@@ -113,8 +132,21 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <Navigate to="reports" replace />,
+                  element: <Navigate to={isFlagshipShellEnabled() ? 'ask' : 'reports'} replace />,
                 },
+                // Flagship shell routes (feature-flagged; see libs/featureFlags.ts)
+                ...(isFlagshipShellEnabled()
+                  ? [
+                      { path: 'home', element: <Navigate to="../ask" replace /> },
+                      { path: 'ask', element: <AskPage /> },
+                      { path: 'build', element: <BuildPage /> },
+                      { path: 'reforms', element: <ReformsPage /> },
+                      { path: 'tracker', element: <LegacyReformsRedirect /> },
+                      { path: 'library', element: <LegacyReformsRedirect /> },
+                      { path: 'report/bill/:billId', element: <BillReportPage /> },
+                      { path: 'report/:userReportId', element: <FlagshipReportPage /> },
+                    ]
+                  : []),
                 {
                   path: 'reports',
                   element: <ReportsPage />,
