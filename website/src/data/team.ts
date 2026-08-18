@@ -30,11 +30,6 @@ export const staff: TeamMember[] = [
     image: "/assets/team/vahid-ahmadi.webp",
   },
   {
-    name: "Daphne Hansell",
-    bio: "is a research associate at PolicyEngine. She focuses on the intersection of healthcare and the tax code. Previously, she was a health policy intern at the Niskanen Center and a policy fellow at the Progressive Policy Institute. Daphne holds an B.A. in Public Health from Bryn Mawr College.",
-    image: "/assets/team/daphne-hansell.webp",
-  },
-  {
     name: "David Trimmer",
     bio: "is a research analyst at PolicyEngine. Previously, he was a contributor at the People's Policy Project and a social policy intern at the Niskanen Center. David holds an MPA from The George Washington University and a B.S. in Political Science from The Rochester Institute of Technology.",
     image: "/assets/team/david-trimmer.webp",
