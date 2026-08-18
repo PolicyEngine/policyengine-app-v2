@@ -19,7 +19,7 @@ export interface ModelValidationRow {
   heldOut: boolean;
 }
 
-export const SCORECARD_URL = 'https://github.com/PolicyEngine/policyengine-scorecard';
+export const SCORECARD_URL = 'https://www.policyengine.org/scorecard';
 
 /** Path-token → scorecard program id. Order matters only for labels. */
 const PROGRAM_TOKENS: Array<[RegExp, string]> = [
