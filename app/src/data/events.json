@@ -1,5 +1,17 @@
 [
   {
+    "title": "New technologies for evidence-based policy making: a workshop alongside IARIW 2026",
+    "date": "2026-08-27",
+    "type": "workshop",
+    "location": "Brussels, Belgium",
+    "host": "CAPE (UCLouvain Saint-Louis) and PolicyEngine",
+    "description": "Free half-day workshop: talks and live demos of open microsimulation platforms (BEAMM, PolicyEngine), simulation-ready microdata and executable law, then a roundtable with senior Belgian public-finance officials. Held alongside the 39th IARIW General Conference.",
+    "registrationUrl": "https://docs.google.com/forms/d/e/1FAIpQLSfpfDAGrAeAD4yG1aupgZnJ6VecBGZIaCHqWuVCYRXxuEDWeA/viewform",
+    "url": "https://policyengine.org/us/events/iariw-2026",
+    "tags": ["global"],
+    "featured": true
+  },
+  {
     "title": "CliffWatch: where, when, and how benefit cliffs hit US households",
     "date": "2026-05-29",
     "type": "webinar",
