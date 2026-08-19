@@ -9,16 +9,28 @@ export const REGISTRATION_FORM_URL =
 const ASSETS = "/assets/events/iariw-2026";
 
 const program: { time: string; title: string; detail?: string }[] = [
-  { time: "13:00", title: "Coffee and welcome" },
+  { time: "13:00", title: "Coffee and arrivals" },
   {
-    time: "13:30–15:30",
-    title: "Talks with live demos",
+    time: "13:30",
+    title: "Welcome",
     detail:
-      "Microsimulation as public infrastructure: BEAMM's open platform for Belgium (Tom Truyts, CAPE). Open models and simulation-ready microdata for the US and UK, and from models to executable law: encoding and certifying policy rules (Max Ghenis, PolicyEngine).",
+      "Tom Truyts (CAPE, UCLouvain Saint-Louis) and Max Ghenis (PolicyEngine).",
   },
-  { time: "15:30–16:00", title: "Coffee break" },
   {
-    time: "16:00–17:00",
+    time: "13:45\u201314:35",
+    title: "BEAMM: Belgium's open microsimulation platform",
+    detail:
+      "Talk and live demo \u2014 Tom Truyts, CAPE / UCLouvain Saint-Louis.",
+  },
+  {
+    time: "14:40\u201315:30",
+    title: "From open models to executable law: PolicyEngine and Axiom",
+    detail:
+      "Open US and UK models, simulation-ready microdata, and encoding and certifying policy rules \u2014 talk and live demo \u2014 Max Ghenis, PolicyEngine.",
+  },
+  { time: "15:30\u201316:00", title: "Coffee break" },
+  {
+    time: "16:00\u201317:00",
     title:
       "Roundtable: AI and new technologies for open, evidence-based policy making",
     detail:
