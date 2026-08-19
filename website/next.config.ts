@@ -65,6 +65,11 @@ const nextConfig: NextConfig = {
       },
       // Claude-branded skills page → runtime-agnostic AI agents page
       {
+        source: "/iariw-2026",
+        destination: "/us/events/iariw-2026",
+        permanent: false,
+      },
+      {
         source: "/:countryId/claude-plugin",
         destination: "/:countryId/ai-agents",
         permanent: true,
