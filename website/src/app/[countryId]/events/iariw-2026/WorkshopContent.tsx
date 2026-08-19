@@ -14,7 +14,7 @@ const program: { time: string; title: string; detail?: string }[] = [
     time: "13:30–15:30",
     title: "Talks with live demos",
     detail:
-      "Microsimulation as public infrastructure: BEAMM's open platform for Belgium (Tom Truyts, CAPE). Open models and simulation-ready microdata for the US and UK, and from models to executable law: encoding and certifying policy rules (Max Ghenis, PolicyEngine). Third talk to be announced.",
+      "Microsimulation as public infrastructure: BEAMM's open platform for Belgium (Tom Truyts, CAPE). Open models and simulation-ready microdata for the US and UK, and from models to executable law: encoding and certifying policy rules (Max Ghenis, PolicyEngine).",
   },
   { time: "15:30–16:00", title: "Coffee break" },
   {
