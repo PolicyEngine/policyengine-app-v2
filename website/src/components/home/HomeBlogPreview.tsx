@@ -36,6 +36,9 @@ function formatItemDate(dateStr: string): string {
 }
 
 function getItemHref(item: ResearchItem, countryId: string): string {
+  if (item.externalUrl) {
+    return item.externalUrl;
+  }
   return item.isApp
     ? `/${item.countryId}/${item.slug}`
     : `/${countryId}/research/${item.slug}`;
@@ -57,6 +60,19 @@ function CardLink({
   children: React.ReactNode;
 }) {
   const href = getItemHref(item, countryId);
+  if (item.externalUrl) {
+    return (
+      <a
+        href={href}
+        className={className}
+        style={style}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {children}
+      </a>
+    );
+  }
   if (item.isApp) {
     return (
       <a href={href} className={className} style={style}>

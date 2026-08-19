@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Replacing council tax with a land value tax: a household-level microsimulation for the UK",
+    "description": "A household-level microsimulation framework for land value tax reform in the UK, applied to replacing council tax. A budget-neutral 0.79% rate leaves two thirds of households better off, with incidence organised by wealth rather than income.",
+    "date": "2026-08-06",
+    "tags": ["uk"],
+    "authors": ["vahid-ahmadi", "max-ghenis"],
+    "image": "paper-lvt-uk.png",
+    "slug": "paper-lvt-council-tax-uk",
+    "externalUrl": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7242479"
+  },
+  {
+    "title": "Who bears the AI shock? The distributional and fiscal incidence in the UK",
+    "description": "Linking occupation-level AI exposure to the Family Resources Survey, this paper simulates employment, wage and capital-income shocks across 66 scenarios. The central calibration costs the Exchequer £17.7 billion a year and raises absolute poverty by 1.87 percentage points.",
+    "date": "2026-07-24",
+    "tags": ["uk", "us", "ai"],
+    "authors": ["vahid-ahmadi"],
+    "image": "paper-ai-shock-uk.png",
+    "slug": "paper-ai-shock-uk",
+    "externalUrl": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7174479"
+  },
+  {
+    "title": "An open firm-level microsimulation for UK VAT threshold policy analysis",
+    "description": "An open firm-level microsimulation for transparent, conditional costing of UK VAT registration-threshold reforms, characterising the notch through a £21,250 dominated region above the £85,000 threshold.",
+    "date": "2026-07-24",
+    "tags": ["uk", "vat"],
+    "authors": ["vahid-ahmadi"],
+    "image": "paper-vat-threshold-uk.png",
+    "slug": "paper-vat-threshold-uk",
+    "externalUrl": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7173398"
+  }
+]
