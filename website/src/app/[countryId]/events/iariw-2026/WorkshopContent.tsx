@@ -132,9 +132,12 @@ export default function WorkshopContent() {
             <div>No IARIW registration needed</div>
           </div>
           <div>
-            <div style={mutedStyle}>Bring</div>
-            <div style={{ fontWeight: 600 }}>A laptop</div>
-            <div>Nothing to install; it all runs in the browser</div>
+            <div style={mutedStyle}>Format</div>
+            <div style={{ fontWeight: 600 }}>Talks, live demos, roundtable</div>
+            <div>
+              Everything runs in the browser; follow along on a laptop if you
+              like
+            </div>
           </div>
         </div>
 
