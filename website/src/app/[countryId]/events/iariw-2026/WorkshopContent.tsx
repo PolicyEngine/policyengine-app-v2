@@ -8,7 +8,12 @@ export const REGISTRATION_FORM_URL =
 
 const ASSETS = "/assets/events/iariw-2026";
 
-const program: { time: string; title: string; detail?: string }[] = [
+const program: {
+  time: string;
+  title: string;
+  detail?: string;
+  people?: string[];
+}[] = [
   { time: "13:00", title: "Coffee and arrivals" },
   {
     time: "13:30",
@@ -33,8 +38,12 @@ const program: { time: string; title: string; detail?: string }[] = [
     time: "16:00\u201317:00",
     title:
       "Roundtable: AI and new technologies for open, evidence-based policy making",
-    detail:
-      "With Koen Algoed (Director General, Budget and Finance Department, Flemish Region), Jean-Baptiste Traversa (Head of microsimulation modelling, Federal Public Service Finance), Tom Truyts and Max Ghenis.",
+    people: [
+      "Koen Algoed \u2014 Director General, Budget and Finance Department, Flemish Region",
+      "Jean-Baptiste Traversa \u2014 Head of microsimulation modelling, Federal Public Service Finance",
+      "Tom Truyts \u2014 CAPE, UCLouvain Saint-Louis",
+      "Max Ghenis \u2014 PolicyEngine",
+    ],
   },
   { time: "17:00", title: "Walk together to the IARIW reception" },
 ];
@@ -183,6 +192,21 @@ export default function WorkshopContent() {
                     >
                       {item.detail}
                     </span>
+                  )}
+                  {item.people && (
+                    <ul
+                      style={{
+                        margin: `${spacing.xs} 0 0`,
+                        paddingLeft: "1.2em",
+                        ...mutedStyle,
+                      }}
+                    >
+                      {item.people.map((person) => (
+                        <li key={person} style={{ marginTop: "2px" }}>
+                          {person}
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </span>
               </li>
