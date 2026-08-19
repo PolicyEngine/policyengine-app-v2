@@ -4,6 +4,7 @@
  */
 
 import postsData from "./posts.json";
+import papersData from "./papers.json";
 import appsData from "@/data/apps.json";
 import type { BlogPost } from "@/types/blog";
 
@@ -19,6 +20,9 @@ export interface ResearchItem {
   slug: string;
   isApp: boolean;
   countryId: string;
+  /** "paper" items link out to an external site (e.g. SSRN). */
+  type?: "paper";
+  externalUrl?: string;
 }
 
 export type TagLabels = Record<string, string>;
@@ -221,5 +225,33 @@ export function getResearchItems(): ResearchItem[] {
       countryId: app.countryId,
     }));
 
-  return [...postItems, ...appItems].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const paperItems: ResearchItem[] = (
+    papersData as Array<{
+      title: string;
+      description: string;
+      date: string;
+      authors: string[];
+      tags: string[];
+      image: string;
+      slug: string;
+      externalUrl: string;
+    }>
+  ).map((paper) => ({
+    title: paper.title,
+    description: paper.description,
+    date: paper.date,
+    authors: paper.authors,
+    tags: paper.tags,
+    image: paper.image,
+    slug: paper.slug,
+    isApp: false,
+    countryId:
+      paper.tags.find((tag) => ["us", "uk", "ca", "ng"].includes(tag)) || "us",
+    type: "paper" as const,
+    externalUrl: paper.externalUrl,
+  }));
+
+  return [...postItems, ...appItems, ...paperItems].sort((a, b) =>
+    a.date < b.date ? 1 : -1,
+  );
 }

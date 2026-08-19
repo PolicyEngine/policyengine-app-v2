@@ -77,6 +77,7 @@ const allAuthors = buildAuthorFilterOptions(
 const typeOptions = [
   { value: "article", label: "Article" },
   { value: "interactive", label: "Interactive" },
+  { value: "paper", label: "Paper" },
 ];
 
 type ExpandedSection = "type" | "topics" | "locations" | "authors" | null;
@@ -133,9 +134,11 @@ export function BlogPostCard({
   item: ResearchSearchResult;
   countryId: string;
 }) {
-  const link = item.isApp
-    ? `/${item.countryId}/${item.slug}`
-    : `/${countryId}/research/${item.slug}`;
+  const link = item.externalUrl
+    ? item.externalUrl
+    : item.isApp
+      ? `/${item.countryId}/${item.slug}`
+      : `/${countryId}/research/${item.slug}`;
 
   const formattedDate = new Date(item.date).toLocaleDateString("en-US", {
     year: "numeric",
@@ -143,10 +146,12 @@ export function BlogPostCard({
     day: "numeric",
   });
 
-  const displayTags = item.tags
-    .filter((tag) => topicLabels[tag] || locationLabels[tag])
-    .slice(0, 3)
-    .map((tag) => topicLabels[tag] || locationLabels[tag] || tag);
+  const displayTags = [
+    ...(item.type === "paper" ? ["Paper"] : []),
+    ...item.tags
+      .filter((tag) => topicLabels[tag] || locationLabels[tag])
+      .map((tag) => topicLabels[tag] || locationLabels[tag] || tag),
+  ].slice(0, 3);
 
   // Apps may be served via Vercel rewrites (reverse proxy), so use a plain
   // <a> to force a full server request instead of client-side routing.
@@ -302,7 +307,13 @@ export function BlogPostCard({
             }}
             className="tw:transition-all tw:duration-200 tw:group-hover:gap-2"
           >
-            <span>{item.isApp ? "Open" : "Read more"}</span>
+            <span>
+              {item.type === "paper"
+                ? "Read paper"
+                : item.isApp
+                  ? "Open"
+                  : "Read more"}
+            </span>
             <IconArrowRight
               size={15}
               className="tw:transition-transform tw:duration-200 tw:group-hover:translate-x-0.5"
@@ -312,6 +323,18 @@ export function BlogPostCard({
       </div>
   );
 
+  if (item.externalUrl) {
+    return (
+      <a
+        href={link}
+        className={cardClassName}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {cardContent}
+      </a>
+    );
+  }
   if (item.isApp) {
     return <a href={link} className={cardClassName}>{cardContent}</a>;
   }
@@ -992,7 +1015,8 @@ export default function ResearchClient({
     // Filter by type
     if (selectedTypes.length > 0) {
       items = items.filter((item) => {
-        const itemType = item.isApp ? "interactive" : "article";
+        const itemType =
+          item.type ?? (item.isApp ? "interactive" : "article");
         return selectedTypes.includes(itemType);
       });
     }
