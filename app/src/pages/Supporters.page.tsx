@@ -134,7 +134,7 @@ const projects: SupportedProject[] = [
   },
   {
     title: 'State & congressional district policy breakdowns',
-    amount: 273500,
+    amount: 248525,
     currency: 'USD',
     awardDate: '2025-05',
     description:
