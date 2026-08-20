@@ -8,21 +8,42 @@ export const REGISTRATION_FORM_URL =
 
 const ASSETS = "/assets/events/iariw-2026";
 
-const program: { time: string; title: string; detail?: string }[] = [
-  { time: "13:00", title: "Coffee and welcome" },
+const program: {
+  time: string;
+  title: string;
+  detail?: string;
+  people?: string[];
+}[] = [
+  { time: "13:00", title: "Coffee and arrivals" },
   {
-    time: "13:30–15:30",
-    title: "Talks with live demos",
+    time: "13:30",
+    title: "Welcome",
     detail:
-      "Microsimulation as public infrastructure: BEAMM's open platform for Belgium (Tom Truyts, CAPE). Open models and simulation-ready microdata for the US and UK, and from models to executable law: encoding and certifying policy rules (Max Ghenis, PolicyEngine).",
+      "Tom Truyts (CAPE, UCLouvain Saint-Louis) and Max Ghenis (PolicyEngine).",
   },
-  { time: "15:30–16:00", title: "Coffee break" },
   {
-    time: "16:00–17:00",
+    time: "13:45\u201314:35",
+    title: "BEAMM: Belgium's open microsimulation platform",
+    detail:
+      "Talk and live demo \u2014 Tom Truyts, CAPE / UCLouvain Saint-Louis.",
+  },
+  {
+    time: "14:40\u201315:30",
+    title: "From open models to executable law: PolicyEngine and Axiom",
+    detail:
+      "Open US and UK models, simulation-ready microdata, and encoding and certifying policy rules \u2014 talk and live demo \u2014 Max Ghenis, PolicyEngine.",
+  },
+  { time: "15:30\u201316:00", title: "Coffee break" },
+  {
+    time: "16:00\u201317:00",
     title:
       "Roundtable: AI and new technologies for open, evidence-based policy making",
-    detail:
-      "With Koen Algoed (Director General, Budget and Finance Department, Flemish Region), Jean-Baptiste Traversa (Head of microsimulation modelling, Federal Public Service Finance), Tom Truyts and Max Ghenis.",
+    people: [
+      "Koen Algoed \u2014 Director General, Budget and Finance Department, Flemish Region",
+      "Jean-Baptiste Traversa \u2014 Head of microsimulation modelling, Federal Public Service Finance",
+      "Tom Truyts \u2014 CAPE, UCLouvain Saint-Louis",
+      "Max Ghenis \u2014 PolicyEngine",
+    ],
   },
   { time: "17:00", title: "Walk together to the IARIW reception" },
 ];
@@ -171,6 +192,21 @@ export default function WorkshopContent() {
                     >
                       {item.detail}
                     </span>
+                  )}
+                  {item.people && (
+                    <ul
+                      style={{
+                        margin: `${spacing.xs} 0 0`,
+                        paddingLeft: "1.2em",
+                        ...mutedStyle,
+                      }}
+                    >
+                      {item.people.map((person) => (
+                        <li key={person} style={{ marginTop: "2px" }}>
+                          {person}
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </span>
               </li>
