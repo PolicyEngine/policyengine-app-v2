@@ -1,9 +1,14 @@
 import { useMemo } from 'react';
-import { IconHome, IconPlus, IconShieldCheck } from '@tabler/icons-react';
+import { IconHome, IconPlus } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import EstimateValidation from '@/components/flagship/EstimateValidation';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
+import {
+  ModelTrackRecordSection,
+  useModelTrackRecord,
+} from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
@@ -121,6 +126,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     year: report?.year,
     region,
   });
+
+  const trackRecord = useModelTrackRecord(meta?.provisions.map((p) => p.path) ?? []);
 
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -281,25 +288,34 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
             <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
               <SectionHeading id="validation" title="Validation" />
+              <ModelTrackRecordSection trackRecord={trackRecord} />
               <Stack
                 style={{
                   gap: spacing.sm,
                   padding: spacing.lg,
-                  border: `1px dashed ${colors.border.light}`,
+                  border: `1px solid ${colors.border.light}`,
                   borderRadius: 12,
-                  alignItems: 'flex-start',
+                  alignItems: 'stretch',
                 }}
               >
-                <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-                  <IconShieldCheck size={18} color={colors.text.secondary} />
-                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-                    External score comparison — coming soon.
-                  </Text>
-                </Stack>
-                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                  This section will compare the estimate against external scorekeepers (JCT, CBO,
-                  state fiscal notes) once the validation adapter connects.
+                <Text
+                  style={{
+                    fontSize: typography.fontSize.sm,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.primary,
+                  }}
+                >
+                  External checks for this reform
                 </Text>
+                <EstimateValidation
+                  request={{
+                    countryId,
+                    label: meta?.title || report?.label || 'Drafted reform',
+                    provisions: meta?.provisions ?? [],
+                    peEstimate: output?.budget?.budgetary_impact,
+                    year: report?.year,
+                  }}
+                />
               </Stack>
             </Stack>
           </Stack>
