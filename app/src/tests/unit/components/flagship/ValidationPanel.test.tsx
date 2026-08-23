@@ -1,6 +1,29 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
-import { ModelTrackRecordSection } from '@/components/flagship/ValidationPanel';
+import {
+  BillValidationSection,
+  ModelTrackRecordSection,
+} from '@/components/flagship/ValidationPanel';
+
+describe('BillValidationSection', () => {
+  test('given drifted validation then the chip demands a re-check and the note explains', () => {
+    render(
+      <BillValidationSection
+        billId="ut-sb60"
+        validation={{
+          peEstimate: -120000000,
+          fiscalNoteEstimate: -118000000,
+          withinRange: true,
+          drift: { stale: true, reasons: ['the model estimate has changed since validation'] },
+        }}
+      />
+    );
+
+    expect(screen.getByText(/re-check needed/i)).toBeInTheDocument();
+    expect(screen.getByText(/predates the current analysis/i)).toBeInTheDocument();
+    expect(screen.queryByText(/within fiscal-note range/i)).not.toBeInTheDocument();
+  });
+});
 
 describe('ModelTrackRecordSection', () => {
   test('given the scorecard is unreachable then an honest note renders, not a blank tab', () => {

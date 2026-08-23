@@ -104,6 +104,10 @@ export function ValidationChip({ validation }: { validation: BillValidation }) {
     validation.fiscalNoteEstimate !== undefined || validation.fiscalNoteUrl !== undefined
       ? 'fiscal-note'
       : 'external-estimate';
+  // A stale check must not read as a current verdict, so the chip drops
+  // its pass/fail coloring and says a re-check is due.
+  const stale = validation.drift?.stale === true;
+  const withinRange = validation.withinRange && !stale;
   return (
     <span
       style={{
@@ -113,17 +117,19 @@ export function ValidationChip({ validation }: { validation: BillValidation }) {
         fontSize: typography.fontSize.xs,
         fontFamily: typography.fontFamily.primary,
         fontWeight: typography.fontWeight.medium,
-        color: validation.withinRange ? colors.primary[700] : colors.text.secondary,
-        background: validation.withinRange ? colors.primary[50] : colors.gray[50],
-        border: `1px solid ${validation.withinRange ? colors.primary[500] : colors.border.light}`,
+        color: withinRange ? colors.primary[700] : colors.text.secondary,
+        background: withinRange ? colors.primary[50] : colors.gray[50],
+        border: `1px solid ${withinRange ? colors.primary[500] : colors.border.light}`,
         borderRadius: 999,
         padding: `2px ${spacing.md}`,
         whiteSpace: 'nowrap',
       }}
     >
-      {validation.withinRange
-        ? `Within ${rangeLabel} range${delta}`
-        : `Outside ${rangeLabel} range${delta}`}
+      {stale
+        ? `Validated against an earlier run · re-check needed`
+        : validation.withinRange
+          ? `Within ${rangeLabel} range${delta}`
+          : `Outside ${rangeLabel} range${delta}`}
     </span>
   );
 }
@@ -190,6 +196,12 @@ export function BillValidationSection({
         </tbody>
       </table>
       <ValidationChip validation={validation} />
+      {validation.drift && (
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          This check predates the current analysis: {validation.drift.reasons.join('; ')}. The
+          comparison below describes the earlier estimate until validation is re-run.
+        </Text>
+      )}
       {validation.verification && (
         <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
           {

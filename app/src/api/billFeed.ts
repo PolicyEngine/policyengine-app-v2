@@ -54,6 +54,14 @@ export interface BillValidation {
     overall: 'confirmed' | 'partially_confirmed' | 'refuted' | 'unverifiable';
     verifiedAt?: string;
   };
+  /**
+   * When the bill's current model run no longer matches what validation
+   * checked, the comparison is historical and needs a re-run.
+   */
+  drift?: {
+    stale: true;
+    reasons: string[];
+  };
 }
 
 export interface TrackedBill {
@@ -269,7 +277,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
     trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
     trackerSelect(
       'validation_metadata',
-      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at'
+      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against'
     ),
   ]);
   if (!research) {
@@ -309,14 +317,47 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
             computedAt: impact.computed_at ?? undefined,
           }
         : undefined,
-      validation: extractValidation(validationById.get(record.id)),
+      validation: extractValidation(validationById.get(record.id), impact),
       impacts: extractImpacts(impact),
       impactData: extractImpactData(impact),
     };
   });
 }
 
-function extractValidation(row: any): BillValidation | undefined {
+/**
+ * Compares the validation-time snapshot against the bill's current model
+ * run. Any divergence means the stored comparison describes an estimate
+ * that no longer exists, so the row must say so instead of implying the
+ * check still holds.
+ */
+function detectValidationDrift(row: any, impact: any): BillValidation['drift'] {
+  const snapshot = row?.validated_against;
+  if (!snapshot || !impact) {
+    return undefined;
+  }
+  const reasons: string[] = [];
+  const snapEstimate = snapshot.pe_estimate;
+  const currentEstimate = impact.budgetary_impact?.stateRevenueImpact;
+  if (
+    typeof snapEstimate === 'number' &&
+    typeof currentEstimate === 'number' &&
+    Math.abs(currentEstimate - snapEstimate) > Math.abs(snapEstimate) * 0.005
+  ) {
+    reasons.push('the model estimate has changed since validation');
+  }
+  if (
+    snapshot.model_version &&
+    impact.policyengine_us_version &&
+    snapshot.model_version !== impact.policyengine_us_version
+  ) {
+    reasons.push(
+      `the analysis was recomputed with policyengine-us ${impact.policyengine_us_version} (validated against ${snapshot.model_version})`
+    );
+  }
+  return reasons.length > 0 ? { stale: true, reasons } : undefined;
+}
+
+function extractValidation(row: any, impact?: any): BillValidation | undefined {
   if (!row) {
     return undefined;
   }
@@ -334,6 +375,7 @@ function extractValidation(row: any): BillValidation | undefined {
     verification: row.verification?.overall
       ? { overall: row.verification.overall, verifiedAt: row.verified_at ?? undefined }
       : undefined,
+    drift: detectValidationDrift(row, impact),
     externalAnalyses: Array.isArray(row.external_analyses)
       ? row.external_analyses.map((analysis: any) => ({
           source: analysis?.source ?? undefined,

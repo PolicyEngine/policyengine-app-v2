@@ -92,4 +92,85 @@ describe('fetchTrackerBills', () => {
       impacts: { revenue: -120000000, povertyPercentChange: -1.8 },
     });
   });
+
+  test('given the model run moved past the validation snapshot then drift is flagged', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+
+    const responses: Record<string, any[]> = {
+      research: [{ id: 'ut-sb60', state: 'UT', title: 'UT SB60' }],
+      reform_impacts: [
+        {
+          id: 'ut-sb60',
+          computed: true,
+          budgetary_impact: { stateRevenueImpact: -130000000 },
+          policyengine_us_version: '1.600.0',
+        },
+      ],
+      validation_metadata: [
+        {
+          id: 'ut-sb60',
+          pe_estimate: -120000000,
+          fiscal_note_estimate: -118000000,
+          within_range: true,
+          validated_against: { pe_estimate: -120000000, model_version: '1.584.0' },
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const table = String(url).match(/rest\/v1\/(\w+)\?/)?.[1] ?? '';
+        return { ok: true, json: async () => responses[table] ?? [] };
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills![0].validation?.drift).toEqual({
+      stale: true,
+      reasons: [
+        'the model estimate has changed since validation',
+        'the analysis was recomputed with policyengine-us 1.600.0 (validated against 1.584.0)',
+      ],
+    });
+  });
+
+  test('given the current run matches the validation snapshot then no drift is flagged', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+
+    const responses: Record<string, any[]> = {
+      research: [{ id: 'ut-sb60', state: 'UT', title: 'UT SB60' }],
+      reform_impacts: [
+        {
+          id: 'ut-sb60',
+          computed: true,
+          budgetary_impact: { stateRevenueImpact: -120000000 },
+          policyengine_us_version: '1.584.0',
+        },
+      ],
+      validation_metadata: [
+        {
+          id: 'ut-sb60',
+          pe_estimate: -120000000,
+          fiscal_note_estimate: -118000000,
+          within_range: true,
+          validated_against: { pe_estimate: -120000000, model_version: '1.584.0' },
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const table = String(url).match(/rest\/v1\/(\w+)\?/)?.[1] ?? '';
+        return { ok: true, json: async () => responses[table] ?? [] };
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills![0].validation?.withinRange).toBe(true);
+    expect(bills![0].validation?.drift).toBeUndefined();
+  });
 });
