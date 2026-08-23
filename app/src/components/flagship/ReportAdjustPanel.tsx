@@ -54,7 +54,9 @@ export default function ReportAdjustPanel({
   const runReport = useRunFlagshipReport();
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapsed by default: the report is the main event; adjusting is
+  // one click away on the edge tab.
+  const [collapsed, setCollapsed] = useState(true);
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);

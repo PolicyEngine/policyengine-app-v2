@@ -44,9 +44,9 @@ const PROVISIONS = [
   },
 ];
 
-function renderPanel() {
+async function renderPanel() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <ReportAdjustPanel
         title="CTC expansion"
@@ -55,6 +55,9 @@ function renderPanel() {
       />
     </QueryClientProvider>
   );
+  // Collapsed by default — expand via the edge tab before interacting.
+  await userEvent.setup().click(screen.getByRole('button', { name: /adjust parameters/i }));
+  return result;
 }
 
 describe('ReportAdjustPanel', () => {
@@ -63,8 +66,8 @@ describe('ReportAdjustPanel', () => {
     mockFindByUser.mockResolvedValue([]);
   });
 
-  test('given the panel then provisions are editable and recompute waits for a change', () => {
-    renderPanel();
+  test('given the panel then provisions are editable and recompute waits for a change', async () => {
+    await renderPanel();
 
     expect(screen.getByLabelText(/adjusted value for gov\.irs/i)).toHaveValue(2500);
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
@@ -73,7 +76,7 @@ describe('ReportAdjustPanel', () => {
   test('given no matching reform then recompute saves a new one and runs linked to it', async () => {
     mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
     const user = userEvent.setup();
-    renderPanel();
+    await renderPanel();
 
     const input = screen.getByLabelText(/adjusted value for gov\.irs/i);
     await user.clear(input);
@@ -111,7 +114,7 @@ describe('ReportAdjustPanel', () => {
       },
     ]);
     const user = userEvent.setup();
-    renderPanel();
+    await renderPanel();
 
     const input = screen.getByLabelText(/adjusted value for gov\.irs/i);
     await user.clear(input);
@@ -128,7 +131,7 @@ describe('ReportAdjustPanel', () => {
   test('given a provision is removed then recompute runs without it', async () => {
     mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
     const user = userEvent.setup();
-    renderPanel();
+    await renderPanel();
 
     await user.click(screen.getByRole('button', { name: /remove USDA/i }));
     await user.click(screen.getByRole('button', { name: /recompute/i }));
@@ -141,7 +144,7 @@ describe('ReportAdjustPanel', () => {
 
   test('given all provisions are removed then recompute stays disabled with a restore path', async () => {
     const user = userEvent.setup();
-    renderPanel();
+    await renderPanel();
 
     await user.click(screen.getByRole('button', { name: /remove IRS/i }));
     await user.click(screen.getByRole('button', { name: /remove USDA/i }));
@@ -155,7 +158,7 @@ describe('ReportAdjustPanel', () => {
 
   test('given collapse then the panel shrinks to the adjust tab and reopens', async () => {
     const user = userEvent.setup();
-    renderPanel();
+    await renderPanel();
 
     await user.click(screen.getByRole('button', { name: /collapse the adjust panel/i }));
     expect(screen.queryByRole('button', { name: /recompute/i })).not.toBeInTheDocument();
