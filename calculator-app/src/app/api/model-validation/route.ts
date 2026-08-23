@@ -1,50 +1,111 @@
-// Model track record, served from the live PolicyEngine scorecard —
-// the deployed score repository at policyengine.org/scorecard. We read
-// the same published data shards the scorecard app renders, so the
-// numbers here always match what a click-through shows. The Urban
-// State of the Safety Net shard (~10MB) is cached server-side and
-// reduced to the compact, comparable US-level rows for the programs a
-// bill or reform touches.
+// Model track record, served from the live PolicyEngine scorecard at
+// policyengine.org/scorecard. The deployed app's data layout has
+// changed once already (per-source shards -> single comparison file),
+// so this route tries each known layout in order and normalizes both
+// row shapes; the GitHub repo's committed file is the final fallback.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const SCORECARD_DATA_URL =
-  process.env.SCORECARD_DATA_URL ??
-  "https://www.policyengine.org/scorecard/data/sources/urban_sotsn.json";
+const DATA_URLS = [
+  process.env.SCORECARD_DATA_URL,
+  "https://www.policyengine.org/scorecard/data/comparison.json",
+  "https://www.policyengine.org/scorecard/data/sources/urban_sotsn.json",
+  "https://raw.githubusercontent.com/PolicyEngine/policyengine-scorecard/main/data/comparison.json",
+].filter(Boolean) as string[];
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const MAX_ROWS_PER_PROGRAM = 8;
 
-interface ScorecardShard {
-  id: string;
-  row_defaults: Record<string, unknown>;
-  rows: ScorecardRow[];
-}
-
-interface ScorecardRow {
+interface NormalizedRow {
+  source: string;
   program: string;
   metric: string;
   geography: string;
-  subgroup?: string;
-  unit?: string | null;
+  subgroup: string;
+  unit: string | null;
+  period: string | null;
   status: string;
-  relationship?: string;
-  value: number | null;
+  externalValue: number | null;
+  peValue: number | null;
   ratio: number | null;
-  pe?: { value?: number | null } | null;
+  heldOut: boolean;
 }
 
-let cached: { promise: Promise<ScorecardShard>; fetchedAt: number } | null =
+function normalize(payload: any): NormalizedRow[] {
+  const rows: any[] = payload?.rows ?? [];
+  if (rows.length === 0) {
+    return [];
+  }
+  const defaults = payload?.row_defaults ?? {};
+  const defaultRelationship =
+    typeof defaults.relationship === "string" ? defaults.relationship : null;
+  const defaultPeriod =
+    [defaults.period, String(defaults.time_basis ?? "").replaceAll("_", " ")]
+      .filter(Boolean)
+      .join(" ") || null;
+
+  return rows.map((row): NormalizedRow => {
+    // comparison.json shape: external_value / pe_value / calibration_relationship
+    if ("external_value" in row) {
+      return {
+        source: row.source ?? "scorecard",
+        program: row.program,
+        metric: row.metric,
+        geography: row.geography,
+        subgroup: row.subgroup ?? "total",
+        unit: row.unit_concept ?? null,
+        period: row.period ?? null,
+        status: row.status,
+        externalValue:
+          typeof row.external_value === "number" ? row.external_value : null,
+        peValue: typeof row.pe_value === "number" ? row.pe_value : null,
+        ratio: typeof row.ratio === "number" ? row.ratio : null,
+        heldOut: row.calibration_relationship === "held_out",
+      };
+    }
+    // per-source shard shape: value / pe.value / relationship (+ row_defaults)
+    return {
+      source: payload?.id ?? "scorecard",
+      program: row.program,
+      metric: row.metric,
+      geography: row.geography,
+      subgroup: row.subgroup ?? "total",
+      unit: row.unit ?? null,
+      period: row.period ?? defaultPeriod,
+      status: row.status,
+      externalValue: typeof row.value === "number" ? row.value : null,
+      peValue: typeof row.pe?.value === "number" ? row.pe.value : null,
+      ratio: typeof row.ratio === "number" ? row.ratio : null,
+      heldOut: (row.relationship ?? defaultRelationship) === "held_out",
+    };
+  });
+}
+
+let cached: { promise: Promise<NormalizedRow[]>; fetchedAt: number } | null =
   null;
 
-function getShard(): Promise<ScorecardShard> {
+function getRows(): Promise<NormalizedRow[]> {
   if (!cached || Date.now() - cached.fetchedAt > CACHE_TTL_MS) {
     const promise = (async () => {
-      const response = await fetch(SCORECARD_DATA_URL);
-      if (!response.ok) {
-        throw new Error(`scorecard fetch failed: ${response.status}`);
+      let lastError: unknown = new Error("no scorecard data URLs configured");
+      for (const url of DATA_URLS) {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(
+              `scorecard fetch failed: ${response.status} (${url})`,
+            );
+          }
+          const rows = normalize(await response.json());
+          if (rows.length > 0) {
+            return rows;
+          }
+          throw new Error(`scorecard payload had no rows (${url})`);
+        } catch (error) {
+          lastError = error;
+        }
       }
-      return (await response.json()) as ScorecardShard;
+      throw lastError;
     })();
     promise.catch(() => {
       cached = null;
@@ -64,9 +125,9 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "programs is required" }, { status: 400 });
   }
 
-  let shard: ScorecardShard;
+  let rows: NormalizedRow[];
   try {
-    shard = await getShard();
+    rows = await getRows();
   } catch {
     return Response.json(
       { error: "scorecard data unavailable" },
@@ -74,34 +135,23 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 
-  const defaults = shard.row_defaults ?? {};
-  const defaultRelationship =
-    typeof defaults.relationship === "string" ? defaults.relationship : null;
-  const period =
-    [defaults.period, String(defaults.time_basis ?? "").replaceAll("_", " ")]
-      .filter(Boolean)
-      .join(" ") || null;
-
   const wanted = new Set(programs);
-  const matched = (shard.rows ?? []).filter(
+  const matched = rows.filter(
     (row) =>
       wanted.has(row.program) &&
       row.geography === "US" &&
-      (row.subgroup ?? "total") === "total" &&
+      row.subgroup === "total" &&
       (row.status === "comparable" || row.status === "constructed") &&
-      typeof row.pe?.value === "number" &&
-      typeof row.value === "number" &&
+      typeof row.peValue === "number" &&
+      typeof row.externalValue === "number" &&
       typeof row.ratio === "number",
   );
 
   // Held-out comparisons are true validation (the dataset was not tuned
   // to them), so they lead; within that, plain comparable before
   // constructed approximations.
-  const relationshipOf = (row: ScorecardRow) =>
-    row.relationship ?? defaultRelationship;
-  const rank = (row: ScorecardRow) =>
-    (relationshipOf(row) === "held_out" ? 0 : 2) +
-    (row.status === "comparable" ? 0 : 1);
+  const rank = (row: NormalizedRow) =>
+    (row.heldOut ? 0 : 2) + (row.status === "comparable" ? 0 : 1);
   matched.sort(
     (a, b) =>
       a.program.localeCompare(b.program) ||
@@ -122,16 +172,16 @@ export async function GET(request: Request): Promise<Response> {
   return Response.json(
     {
       rows: selected.map((row) => ({
-        source: shard.id ?? "urban_sotsn",
+        source: row.source,
         program: row.program,
         metric: row.metric,
-        period,
+        period: row.period,
         status: row.status,
-        unitConcept: row.unit ?? null,
-        externalValue: row.value,
-        peValue: row.pe!.value,
+        unitConcept: row.unit,
+        externalValue: row.externalValue,
+        peValue: row.peValue,
         ratio: row.ratio,
-        heldOut: relationshipOf(row) === "held_out",
+        heldOut: row.heldOut,
       })),
     },
     { headers: { "Cache-Control": "public, max-age=3600" } },

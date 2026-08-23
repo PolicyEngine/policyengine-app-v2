@@ -234,8 +234,26 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
 
 export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTrackRecord }) {
   const { programs, rows } = trackRecord;
-  if (programs.length === 0 || rows === null) {
+  if (programs.length === 0) {
     return null;
+  }
+  if (rows === null) {
+    return (
+      <SectionCard>
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          External comparisons are temporarily unavailable — see the{' '}
+          <a
+            href={SCORECARD_URL}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: colors.primary[700] }}
+          >
+            PolicyEngine scorecard
+          </a>{' '}
+          directly.
+        </Text>
+      </SectionCard>
+    );
   }
   if (rows === undefined) {
     return (
