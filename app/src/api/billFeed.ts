@@ -49,6 +49,11 @@ export interface BillValidation {
   differencePct?: number;
   discrepancyExplanation?: string;
   externalAnalyses?: BillExternalAnalysis[];
+  /** Adversarial second-pass verification of the stored claims. */
+  verification?: {
+    overall: 'confirmed' | 'partially_confirmed' | 'refuted' | 'unverifiable';
+    verifiedAt?: string;
+  };
 }
 
 export interface TrackedBill {
@@ -264,7 +269,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
     trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
     trackerSelect(
       'validation_metadata',
-      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses'
+      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at'
     ),
   ]);
   if (!research) {
@@ -326,6 +331,9 @@ function extractValidation(row: any): BillValidation | undefined {
     withinRange: typeof row.within_range === 'boolean' ? row.within_range : undefined,
     differencePct: numberOr(row.difference_from_fiscal_note_pct),
     discrepancyExplanation: row.discrepancy_explanation ?? undefined,
+    verification: row.verification?.overall
+      ? { overall: row.verification.overall, verifiedAt: row.verified_at ?? undefined }
+      : undefined,
     externalAnalyses: Array.isArray(row.external_analyses)
       ? row.external_analyses.map((analysis: any) => ({
           source: analysis?.source ?? undefined,

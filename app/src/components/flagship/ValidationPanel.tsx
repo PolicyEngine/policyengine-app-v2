@@ -190,6 +190,22 @@ export function BillValidationSection({
         </tbody>
       </table>
       <ValidationChip validation={validation} />
+      {validation.verification && (
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          {
+            {
+              confirmed: 'Sources and figures independently re-verified',
+              partially_confirmed: 'Sources and figures partially re-verified',
+              refuted: 'Re-verification disputed these figures — treat with caution',
+              unverifiable: 'Sources could not be independently re-verified',
+            }[validation.verification.overall]
+          }
+          {validation.verification.verifiedAt
+            ? ` (${validation.verification.verifiedAt.slice(0, 10)})`
+            : ''}
+          .
+        </Text>
+      )}
       {validation.discrepancyExplanation && (
         <Text
           style={{
