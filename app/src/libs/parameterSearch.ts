@@ -487,3 +487,14 @@ export const selectParameterSearchIndex = createSelector(
   [selectParameterSearchEntries, selectConceptClusters],
   (entries, clusters): ParameterSearchIndex => createParameterSearchIndex(entries, clusters)
 );
+
+export const selectParameterEntriesByPath = createSelector(
+  [selectParameterSearchEntries],
+  (entries): Map<string, ParameterSearchEntry> =>
+    new Map(entries.map((entry) => [entry.path, entry]))
+);
+
+export const selectAddableParameterPaths = createSelector(
+  [selectParameterSearchEntries],
+  (entries): Set<string> => new Set(entries.map((entry) => entry.path))
+);

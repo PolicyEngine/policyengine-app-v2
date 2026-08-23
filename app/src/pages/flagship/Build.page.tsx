@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import ParameterTreeBrowser from '@/components/flagship/ParameterTreeBrowser';
@@ -9,7 +8,9 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
 import {
   ParameterSearchEntry,
+  selectAddableParameterPaths,
   selectConceptClusters,
+  selectParameterEntriesByPath,
   selectParameterSearchEntries,
   selectParameterSearchIndex,
 } from '@/libs/parameterSearch';
@@ -33,10 +34,10 @@ export default function BuildPage() {
   const parameterTree = useSelector((state: RootState) => state.metadata.parameterTree);
   const draft = useDraftReform();
 
-  const entriesByPath = useMemo(
-    () => new Map(entries.map((entry) => [entry.path, entry])),
-    [entries]
-  );
+  // Store-memoized like the index: built once per metadata load, not
+  // per navigation or render.
+  const entriesByPath = useSelector(selectParameterEntriesByPath);
+  const addablePaths = useSelector(selectAddableParameterPaths);
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
 
   const addEntry = (entry: ParameterSearchEntry) => {
@@ -89,7 +90,7 @@ export default function BuildPage() {
           </Text>
           <ParameterTreeBrowser
             tree={parameterTree}
-            addablePaths={new Set(entriesByPath.keys())}
+            addablePaths={addablePaths}
             draftPaths={draftPaths}
             onSelectLeaf={(path) => {
               const entry = entriesByPath.get(path);
