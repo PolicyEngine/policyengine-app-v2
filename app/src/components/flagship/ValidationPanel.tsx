@@ -98,6 +98,12 @@ export function ValidationChip({ validation }: { validation: BillValidation }) {
   }
   const delta =
     typeof validation.differencePct === 'number' ? ` · Δ ${validation.differencePct}%` : '';
+  // "Fiscal-note" only when an official note anchors the range; scaled
+  // third-party scores get the honest generic label.
+  const rangeLabel =
+    validation.fiscalNoteEstimate !== undefined || validation.fiscalNoteUrl !== undefined
+      ? 'fiscal-note'
+      : 'external-estimate';
   return (
     <span
       style={{
@@ -116,8 +122,8 @@ export function ValidationChip({ validation }: { validation: BillValidation }) {
       }}
     >
       {validation.withinRange
-        ? `Within fiscal-note range${delta}`
-        : `Outside fiscal-note range${delta}`}
+        ? `Within ${rangeLabel} range${delta}`
+        : `Outside ${rangeLabel} range${delta}`}
     </span>
   );
 }
