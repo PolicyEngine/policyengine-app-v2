@@ -8,12 +8,15 @@ import {
   listStateCodes,
   ParameterSearchEntry,
   ParameterSearchFilters,
+  ParameterSearchIndex,
   searchParameters,
 } from '@/libs/parameterSearch';
 
 interface ParameterSearchBoxProps {
   entries: ParameterSearchEntry[];
   onSelect: (entry: ParameterSearchEntry) => void;
+  /** Prebuilt index (e.g. the store-memoized one); skips a rebuild per mount */
+  index?: ParameterSearchIndex;
   placeholder?: string;
   /** Formatted current value for a result row, e.g. "$2,000" */
   currentValueFor?: (entry: ParameterSearchEntry) => string | null;
@@ -86,12 +89,16 @@ export default function ParameterSearchBox({
   placeholder = 'Search any parameter, e.g. child tax credit amount',
   currentValueFor,
   clusters = [],
+  index: providedIndex,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
   const [filters, setFilters] = useState<ParameterSearchFilters>(DEFAULT_SEARCH_FILTERS);
 
-  const index = useMemo(() => createParameterSearchIndex(entries, clusters), [entries, clusters]);
+  const index = useMemo(
+    () => providedIndex ?? createParameterSearchIndex(entries, clusters),
+    [providedIndex, entries, clusters]
+  );
   const stateCodes = useMemo(() => listStateCodes(entries), [entries]);
   const groups = useMemo(
     () => groupSearchResults(searchParameters(index, query, RESULT_LIMIT, filters)),

@@ -11,6 +11,7 @@ import {
   ParameterSearchEntry,
   selectConceptClusters,
   selectParameterSearchEntries,
+  selectParameterSearchIndex,
 } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
@@ -26,6 +27,8 @@ export default function BuildPage() {
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
   const clusters = useSelector(selectConceptClusters);
+  // Store-memoized: survives navigation, so Build mounts don't rebuild it.
+  const searchIndex = useSelector(selectParameterSearchIndex);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const parameterTree = useSelector((state: RootState) => state.metadata.parameterTree);
   const draft = useDraftReform();
@@ -59,6 +62,7 @@ export default function BuildPage() {
           <ParameterSearchBox
             entries={entries}
             clusters={clusters}
+            index={searchIndex}
             onSelect={addEntry}
             currentValueFor={(entry) => {
               const value = getCurrentValue(parameters?.[entry.path]?.values);

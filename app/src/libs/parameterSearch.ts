@@ -221,12 +221,18 @@ export function createParameterSearchIndex(
       clusterByMember.set(member, cluster);
     }
   }
+  // Fuse construction over ~20k entries costs hundreds of ms and is only
+  // needed when the fast prefilter finds nothing, so build it lazily.
+  let fuseInstance: Fuse<ParameterSearchEntry> | null = null;
   return {
     entries,
     haystacks: entries.map((entry) =>
       `${entry.breadcrumb} ${entry.label} ${entry.path} ${entry.path.replace(/[._]/g, ' ')}`.toLowerCase()
     ),
-    fuse: new Fuse(entries, FUSE_OPTIONS),
+    get fuse() {
+      fuseInstance ??= new Fuse(entries, FUSE_OPTIONS);
+      return fuseInstance;
+    },
     clusters,
     clusterByMember,
   };
