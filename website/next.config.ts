@@ -184,6 +184,15 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         ...policyEngineIconRewrites,
         ...appZoneRewrites,
+        // PolicyEngine Belgium prototype (Vercel) — static demo over Microcosm-BE
+        {
+          source: "/be",
+          destination: "https://policyengine-be-demo.vercel.app/",
+        },
+        {
+          source: "/be/:path*",
+          destination: "https://policyengine-be-demo.vercel.app/:path*",
+        },
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         {
           source: "/us/api",
