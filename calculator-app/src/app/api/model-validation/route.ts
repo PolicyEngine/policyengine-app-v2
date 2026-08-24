@@ -1,3 +1,8 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
+
 // Model track record, served from the live PolicyEngine scorecard at
 // policyengine.org/scorecard. The deployed app's data layout has
 // changed once already (per-source shards -> single comparison file),
@@ -116,6 +121,9 @@ function getRows(): Promise<NormalizedRow[]> {
 }
 
 export async function GET(request: Request): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   const url = new URL(request.url);
   const programs = (url.searchParams.get("programs") ?? "")
     .split(",")

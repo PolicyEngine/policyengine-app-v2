@@ -1,3 +1,7 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
 import { and, desc, eq } from "drizzle-orm";
 import { countryIds } from "@/libs/countries";
 import { getDb, isDbConfigured } from "../../../db";
@@ -44,6 +48,9 @@ function validateCreationPayload(payload: any): string | null {
 }
 
 export async function GET(request: Request): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return dbUnavailable();
   }
@@ -69,6 +76,9 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return dbUnavailable();
   }

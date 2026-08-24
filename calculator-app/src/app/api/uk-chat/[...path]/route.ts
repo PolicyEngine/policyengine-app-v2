@@ -1,3 +1,8 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
+
 // Same-origin proxy to the PolicyEngine UK chat service, mirroring the
 // thin passthrough the service's own frontend uses. Proxying server-side
 // keeps the flagship Ask surface off the service's CORS allow list — the
@@ -20,6 +25,9 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ path: string[] }> },
 ): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   const { path } = await params;
   const endpoint = (path ?? []).join("/");
   if (!ALLOWED_PATHS.has(endpoint)) {

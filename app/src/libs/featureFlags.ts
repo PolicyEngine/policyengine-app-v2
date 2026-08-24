@@ -9,9 +9,38 @@
  * Enable locally either way:
  * - env: VITE_FLAGSHIP_SHELL=true
  * - console: localStorage.setItem('pe-flagship-shell', 'on') and reload
+ *   (honored only where FLAGSHIP_OVERRIDE=allow is set — dev servers and
+ *   the beta deployment, never production)
  */
 
 const FLAGSHIP_SHELL_STORAGE_KEY = 'pe-flagship-shell';
+
+/**
+ * Whether the localStorage override may activate the shell. Off unless
+ * the deployment opts in (or in dev), so production builds have no
+ * runtime activation path — the env flag is the only switch.
+ */
+function isOverrideAllowed(): boolean {
+  const viteValue =
+    typeof import.meta !== 'undefined'
+      ? ((import.meta.env?.VITE_FLAGSHIP_OVERRIDE ?? import.meta.env?.DEV) as
+          | string
+          | boolean
+          | undefined)
+      : undefined;
+  if (viteValue === 'allow' || viteValue === true) {
+    return true;
+  }
+  if (typeof process !== 'undefined') {
+    if (process.env?.NEXT_PUBLIC_FLAGSHIP_OVERRIDE === 'allow') {
+      return true;
+    }
+    if (process.env?.NODE_ENV === 'development') {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Environment-only check. Stable between server and client renders in
@@ -38,6 +67,9 @@ export function isFlagshipShellEnvEnabled(): boolean {
 export function isFlagshipShellEnabled(): boolean {
   if (isFlagshipShellEnvEnabled()) {
     return true;
+  }
+  if (!isOverrideAllowed()) {
+    return false;
   }
 
   try {

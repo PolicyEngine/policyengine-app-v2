@@ -1,3 +1,7 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
 import { eq } from "drizzle-orm";
 import { getDb, isDbConfigured } from "../../../../db";
 import { reports } from "../../../../db/schema";
@@ -14,6 +18,9 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ reportId: string }> },
 ): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return json({ error: "Report store is not configured" }, 503);
   }

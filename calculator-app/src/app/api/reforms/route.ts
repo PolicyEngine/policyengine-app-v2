@@ -1,3 +1,7 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
 import { and, desc, eq } from "drizzle-orm";
 import { reformBaselines, reformSources } from "@/types/ingredients/Reform";
 import type { ReformCreationMetadata } from "@/types/metadata/reformMetadata";
@@ -39,20 +43,29 @@ function validateCreationPayload(payload: any): string | null {
     return "parameters must be an array";
   }
   for (const parameter of payload.parameters) {
-    if (typeof parameter?.name !== "string" || !Array.isArray(parameter?.values)) {
+    if (
+      typeof parameter?.name !== "string" ||
+      !Array.isArray(parameter?.values)
+    ) {
       return "each parameter needs a name and a values array";
     }
   }
   if (!reformBaselines.includes(payload.baseline)) {
     return `baseline must be one of: ${reformBaselines.join(", ")}`;
   }
-  if (!payload.provenance || !reformSources.includes(payload.provenance.source)) {
+  if (
+    !payload.provenance ||
+    !reformSources.includes(payload.provenance.source)
+  ) {
     return `provenance.source must be one of: ${reformSources.join(", ")}`;
   }
   return null;
 }
 
 export async function GET(request: Request): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return dbUnavailable();
   }
@@ -78,6 +91,9 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return dbUnavailable();
   }

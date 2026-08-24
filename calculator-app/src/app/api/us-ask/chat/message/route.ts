@@ -1,3 +1,7 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   buildUsAskContext,
@@ -71,6 +75,9 @@ function sse(payload: unknown): string {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!process.env.ANTHROPIC_API_KEY) {
     return json({ error: "US ask service is not configured" }, 503);
   }

@@ -1,3 +1,7 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   buildValidationPrompt,
@@ -30,6 +34,9 @@ function json(body: unknown, status: number): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!process.env.ANTHROPIC_API_KEY) {
     return json({ error: "Estimate validation is not configured" }, 503);
   }

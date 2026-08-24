@@ -1,3 +1,7 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
 import { eq } from "drizzle-orm";
 import { reformBaselines, reformSources } from "@/types/ingredients/Reform";
 import type { ReformUpdateMetadata } from "@/types/metadata/reformMetadata";
@@ -11,7 +15,8 @@ import { reformRowToMetadata } from "../../../../db/serialize";
 
 type RouteContext = { params: Promise<{ reformId: string }> };
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -28,7 +33,13 @@ function notFound(): Response {
   return json({ error: "Reform not found" }, 404);
 }
 
-export async function GET(_request: Request, context: RouteContext): Promise<Response> {
+export async function GET(
+  _request: Request,
+  context: RouteContext,
+): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return dbUnavailable();
   }
@@ -38,7 +49,10 @@ export async function GET(_request: Request, context: RouteContext): Promise<Res
     return notFound();
   }
 
-  const [row] = await getDb().select().from(reforms).where(eq(reforms.id, reformId));
+  const [row] = await getDb()
+    .select()
+    .from(reforms)
+    .where(eq(reforms.id, reformId));
   if (!row) {
     return notFound();
   }
@@ -46,7 +60,13 @@ export async function GET(_request: Request, context: RouteContext): Promise<Res
   return json(reformRowToMetadata(row));
 }
 
-export async function PATCH(request: Request, context: RouteContext): Promise<Response> {
+export async function PATCH(
+  request: Request,
+  context: RouteContext,
+): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return dbUnavailable();
   }
@@ -78,13 +98,24 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
   }
   if (payload.baseline !== undefined) {
     if (!reformBaselines.includes(payload.baseline)) {
-      return json({ error: `baseline must be one of: ${reformBaselines.join(", ")}` }, 400);
+      return json(
+        { error: `baseline must be one of: ${reformBaselines.join(", ")}` },
+        400,
+      );
     }
     updates.baseline = payload.baseline;
   }
   if (payload.provenance !== undefined) {
-    if (!payload.provenance || !reformSources.includes(payload.provenance.source)) {
-      return json({ error: `provenance.source must be one of: ${reformSources.join(", ")}` }, 400);
+    if (
+      !payload.provenance ||
+      !reformSources.includes(payload.provenance.source)
+    ) {
+      return json(
+        {
+          error: `provenance.source must be one of: ${reformSources.join(", ")}`,
+        },
+        400,
+      );
     }
     updates.provenance = payload.provenance;
   }
@@ -106,7 +137,13 @@ export async function PATCH(request: Request, context: RouteContext): Promise<Re
   return json(reformRowToMetadata(row));
 }
 
-export async function DELETE(_request: Request, context: RouteContext): Promise<Response> {
+export async function DELETE(
+  _request: Request,
+  context: RouteContext,
+): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   if (!isDbConfigured()) {
     return dbUnavailable();
   }
@@ -116,7 +153,10 @@ export async function DELETE(_request: Request, context: RouteContext): Promise<
     return notFound();
   }
 
-  const [row] = await getDb().delete(reforms).where(eq(reforms.id, reformId)).returning();
+  const [row] = await getDb()
+    .delete(reforms)
+    .where(eq(reforms.id, reformId))
+    .returning();
   if (!row) {
     return notFound();
   }
