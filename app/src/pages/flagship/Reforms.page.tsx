@@ -236,7 +236,12 @@ export default function ReformsPage() {
   const [editedValues, setEditedValues] = useState<Record<string, any>>({});
 
   const runReport = useRunFlagshipReport();
-  const { bills, isLive, isLoading: billsLoading } = useTrackedBills(countryId);
+  const {
+    bills,
+    isConfigured: billsConfigured,
+    isLoading: billsLoading,
+    isError: billsError,
+  } = useTrackedBills(countryId);
 
   const {
     data: reforms,
@@ -836,10 +841,29 @@ export default function ReformsPage() {
         )}
 
         {tab === 'bills' && billsLoading && <Spinner />}
-        {tab === 'bills' && !billsLoading && visibleBills.length === 0 && (
-          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-            No bills match — adjust the search or place filter.
+        {tab === 'bills' && billsError && (
+          <Text style={{ color: colors.error, fontSize: typography.fontSize.sm }}>
+            Could not load the bill feed. Try reloading the page.
           </Text>
+        )}
+        {tab === 'bills' && !billsLoading && !billsError && !billsConfigured && (
+          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+            The bill feed is not configured for this deployment.
+          </Text>
+        )}
+        {tab === 'bills' && !billsLoading && !billsError && billsConfigured && (
+          <>
+            {bills.length === 0 && (
+              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                No analyzed bills yet for this country.
+              </Text>
+            )}
+            {bills.length > 0 && visibleBills.length === 0 && (
+              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                No bills match — adjust the search or place filter.
+              </Text>
+            )}
+          </>
         )}
         {tab === 'yours' && !isPending && visibleReforms.length === 0 && (
           <Stack
@@ -916,13 +940,6 @@ export default function ReformsPage() {
               Show more
             </Button>
           </div>
-        )}
-
-        {tab === 'bills' && !billsLoading && !isLive && (
-          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-            Showing illustrative samples — the live tracker feed connects via environment
-            configuration.
-          </Text>
         )}
       </Stack>
     </WorkspaceLayout>
