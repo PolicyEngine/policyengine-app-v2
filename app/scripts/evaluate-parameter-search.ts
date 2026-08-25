@@ -32,12 +32,12 @@ import {
   type ParameterSearchEvalCase,
   type ParameterSearchEvalMetrics,
 } from '../src/libs/parameterSearchEval';
+import { loadParameterMetadata } from './loadParameterMetadata';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(__dirname, '../src/tests/fixtures/libs');
 const CASES_PATH = path.join(FIXTURES, 'parameterSearchEvalCases.json');
 const BASELINE_PATH = path.join(FIXTURES, 'parameterSearchEvalBaseline.json');
-const CACHE_DIR = path.join(__dirname, '../node_modules/.cache/policyengine');
 
 interface Baseline extends ParameterSearchEvalMetrics {
   /** Model version the baseline was recorded against, for context on drift. */
@@ -50,33 +50,10 @@ function readFlag(name: string): string | null {
   return index >= 0 ? (process.argv[index + 1] ?? null) : null;
 }
 
-async function loadParameters(country: string): Promise<{ parameters: any; version: string }> {
-  const override = readFlag('metadata');
-  const cachePath = path.join(CACHE_DIR, `${country}-metadata.json`);
-  const source = override ?? cachePath;
-
-  if (fs.existsSync(source)) {
-    const cached = JSON.parse(fs.readFileSync(source, 'utf-8'));
-    const result = cached.result ?? cached;
-    return { parameters: result.parameters, version: result.version ?? 'unknown' };
-  }
-
-  console.log(`Fetching ${country} metadata (cached to ${cachePath} for later runs)…`);
-  const response = await fetch(`https://api.policyengine.org/${country}/metadata`);
-  if (!response.ok) {
-    throw new Error(`Metadata fetch failed: ${response.status}`);
-  }
-  const payload = await response.json();
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(cachePath, JSON.stringify(payload));
-  const result = payload.result ?? payload;
-  return { parameters: result.parameters, version: result.version ?? 'unknown' };
-}
-
 async function main(): Promise<void> {
   const country = readFlag('country') ?? 'us';
   const cases: ParameterSearchEvalCase[] = JSON.parse(fs.readFileSync(CASES_PATH, 'utf-8'));
-  const { parameters, version } = await loadParameters(country);
+  const { parameters, version } = await loadParameterMetadata(country, readFlag('metadata'));
 
   const buildStart = performance.now();
   const entries = buildParameterSearchEntries(parameters);
@@ -105,6 +82,10 @@ async function main(): Promise<void> {
   const contribOnly = cases.filter((testCase) =>
     testCase.expectedPaths.every((expected) => expected.startsWith('gov.contrib.'))
   ).length;
+  const expected = cases.flatMap((testCase) => testCase.expectedPaths);
+  const stateOf = /^gov\.(?:contrib\.)?states\.([a-z]{2})\./;
+  const states = new Set(expected.map((p) => stateOf.exec(p)?.[1]).filter(Boolean));
+  const federal = expected.filter((p) => !stateOf.test(p)).length;
   console.log(
     `${metrics.cases} cases (${contribOnly} reform only contributed parameters) · ` +
       `${(searchMs / Math.max(metrics.cases, 1)).toFixed(0)}ms/query\n`
@@ -114,6 +95,14 @@ async function main(): Promise<void> {
   }
   console.log(`  MRR          ${metrics.mrr.toFixed(3)}`);
   console.log(`  median rank  ${metrics.medianRank ?? '—'}`);
+
+  // Coverage is part of the result: a score means little without knowing
+  // which slice of policy it was measured on.
+  console.log('\nWhat these cases cover:');
+  console.log(`  ${expected.length} expected parameters across ${states.size} states`);
+  console.log(
+    `  ${federal} are federal (${((100 * federal) / expected.length).toFixed(0)}%) — the tracker follows state bills`
+  );
 
   if (metrics.misses.length > 0) {
     console.log('\nMisses (no expected parameter in the top 20):');
