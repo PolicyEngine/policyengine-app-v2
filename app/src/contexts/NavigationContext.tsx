@@ -4,6 +4,8 @@ interface NavigationFunctions {
   push: (path: string) => void;
   replace: (path: string) => void;
   back: () => void;
+  /** Warm a route before it is visited. Only the Next.js router provides this. */
+  prefetch?: (path: string) => void;
 }
 
 const NavigationContext = createContext<NavigationFunctions | null>(null);

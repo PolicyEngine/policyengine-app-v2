@@ -7,7 +7,8 @@ import { countryIds } from "@/libs/countries";
 import { geolocationService } from "@/routing/geolocation/GeolocationService";
 
 /**
- * Root page — redirects to /:countryId/reports based on IP geolocation.
+ * Root page — redirects to /:countryId based on IP geolocation. The
+ * country index route owns the landing decision (ask vs reports).
  * Mirrors app/src/routing/RedirectToCountry.tsx for the Next.js app.
  */
 export default function RootPage() {
@@ -17,7 +18,7 @@ export default function RootPage() {
     async function detect() {
       const cached = getCachedCountry();
       if (cached) {
-        router.replace(`/${cached}/reports`);
+        router.replace(`/${cached}`);
         return;
       }
 
@@ -31,10 +32,13 @@ export default function RootPage() {
         const allowedCountryIds: readonly string[] = countryIds;
         const country = allowedCountryIds.includes(detected) ? detected : "us";
         cacheCountry(country);
-        router.replace(`/${country}/reports`);
+        router.replace(`/${country}`);
       } catch (error) {
-        console.warn("[RootPage] Geolocation failed, falling back to US:", error);
-        router.replace("/us/reports");
+        console.warn(
+          "[RootPage] Geolocation failed, falling back to US:",
+          error,
+        );
+        router.replace("/us");
       }
     }
 
@@ -61,7 +65,10 @@ function getCachedCountry(): string | null {
       if (countryIds.includes(country)) {
         return country;
       }
-      console.warn("[RootPage] Cached country is not a valid country ID:", country);
+      console.warn(
+        "[RootPage] Cached country is not a valid country ID:",
+        country,
+      );
     }
     localStorage.removeItem("detectedCountry");
   } catch (error) {
