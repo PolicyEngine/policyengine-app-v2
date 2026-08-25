@@ -31,6 +31,9 @@ const MIGRATIONS_DIR = path.resolve(__dirname, '../../../../../calculator-app/sr
 let client: PGlite;
 
 beforeAll(async () => {
+  // The routes 404 on flag-off deployments; these tests exercise the
+  // flag-on behavior.
+  process.env.NEXT_PUBLIC_FLAGSHIP_SHELL = 'true';
   client = new PGlite();
   const migrationSql = readFileSync(path.join(MIGRATIONS_DIR, '0000_create-reforms.sql'), 'utf8');
   await client.exec(migrationSql);
@@ -327,6 +330,23 @@ describe('degraded mode (no database configured)', () => {
         process.env.DATABASE_URL = previousUrl;
       }
       setDbForTesting(drizzle(client, { schema }) as any);
+    }
+  });
+});
+
+describe('flag-off deployments (production leak gate)', () => {
+  it('given the flagship flag is off then every handler 404s before touching the db', async () => {
+    const previous = process.env.NEXT_PUBLIC_FLAGSHIP_SHELL;
+    process.env.NEXT_PUBLIC_FLAGSHIP_SHELL = '';
+
+    try {
+      expect((await createReform(postRequest(VALID_PAYLOAD))).status).toBe(404);
+      expect((await listReforms(listRequest('user_id=user-1'))).status).toBe(404);
+      expect((await getReform(new Request('http://test'), itemContext('x'))).status).toBe(404);
+      expect((await patchReform(patchRequest({ label: 'x' }), itemContext('x'))).status).toBe(404);
+      expect((await deleteReform(new Request('http://test'), itemContext('x'))).status).toBe(404);
+    } finally {
+      process.env.NEXT_PUBLIC_FLAGSHIP_SHELL = previous;
     }
   });
 });
