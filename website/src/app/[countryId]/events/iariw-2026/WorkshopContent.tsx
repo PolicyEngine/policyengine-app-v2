@@ -19,7 +19,7 @@ const program: {
     time: "13:30",
     title: "Welcome",
     detail:
-      "Tom Truyts (CAPE, UCLouvain Saint-Louis) and Max Ghenis (PolicyEngine).",
+      "Tom Truyts (CAPE, UCLouvain Saint-Louis) and Max Ghenis (PolicyEngine and Axiom).",
   },
   {
     time: "13:45\u201314:35",
@@ -31,7 +31,7 @@ const program: {
     time: "14:40\u201315:30",
     title: "From open models to executable law: PolicyEngine and Axiom",
     detail:
-      "Open US and UK models, simulation-ready microdata, and encoding and certifying policy rules \u2014 talk and live demo \u2014 Max Ghenis, PolicyEngine.",
+      "Open US and UK models, simulation-ready microdata, and encoding and certifying policy rules \u2014 talk and live demo \u2014 Max Ghenis, PolicyEngine and Axiom.",
   },
   { time: "15:30\u201316:00", title: "Coffee break" },
   {
@@ -43,7 +43,7 @@ const program: {
       "Koen Algoed \u2014 Secretary General, Budget and Finance Department, Flemish Region",
       "Jean-Baptiste Traversa \u2014 Head of microsimulation modelling, Federal Public Service Finance",
       "Tom Truyts \u2014 CAPE, UCLouvain Saint-Louis",
-      "Max Ghenis \u2014 PolicyEngine",
+      "Max Ghenis \u2014 PolicyEngine and Axiom",
     ],
   },
   { time: "17:00", title: "Walk together to the IARIW reception" },
@@ -73,6 +73,12 @@ const hosts = [
     alt: "PolicyEngine",
     href: "https://policyengine.org",
     height: 36,
+  },
+  {
+    src: `${ASSETS}/axiom-foundation.svg`,
+    alt: "The Axiom Foundation",
+    href: "https://axiom.org",
+    height: 40,
   },
 ];
 
@@ -115,8 +121,8 @@ export default function WorkshopContent() {
         description={
           <>
             A free half-day workshop on open microsimulation, simulation-ready
-            microdata, and executable law, co-hosted by CAPE (UCLouvain
-            Saint-Louis) and PolicyEngine alongside the 39th IARIW General
+            microdata, and executable law, co-organized by PolicyEngine, the Axiom
+            Foundation, CAPE, and BEAMM at UCLouvain Saint-Louis, alongside the 39th IARIW General
             Conference. Thursday 27 August 2026, 13:00–17:00, Brussels.
           </>
         }
@@ -294,7 +300,7 @@ export default function WorkshopContent() {
           </div>
         </Section>
 
-        <Section title="Co-hosts">
+        <Section title="Co-organizers">
           <div
             style={{
               display: "flex",
