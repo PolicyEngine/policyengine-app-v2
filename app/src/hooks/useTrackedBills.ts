@@ -1,37 +1,24 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchTrackerBills, TrackedBill } from '@/api/billFeed';
-import { SAMPLE_BILLS } from '@/data/flagship/sampleBills';
 import { CountryId } from '@/libs/countries';
 import { registerUsagePaths, resetUsagePaths } from '@/libs/searchPriors';
 
-function sampleBills(countryId: CountryId): TrackedBill[] {
-  return SAMPLE_BILLS.filter((bill) => bill.countryId === countryId).map((bill) => ({
-    id: bill.id,
-    countryId: bill.countryId,
-    jurisdiction: bill.jurisdiction,
-    title: bill.title,
-    status: bill.status,
-    summary: bill.summary,
-    provisions: bill.provisions.map((provision) => ({
-      path: provision.path,
-      value: provision.proposedValue,
-      fallbackBreadcrumb: provision.fallbackBreadcrumb,
-    })),
-  }));
-}
-
 /**
- * Bills for the Reforms surface: the tracker's live Supabase feed when
- * configured, the in-repo samples otherwise. `isLive` drives the
- * sample-data footnote.
+ * Bills for the Reforms surface, live from the tracker feed.
+ *
+ * There is no stand-in data: a deployment without tracker credentials
+ * reports `isConfigured: false` and the surface says so, rather than
+ * showing invented bills that read as real analyses.
  */
 export function useTrackedBills(countryId: CountryId): {
   bills: TrackedBill[];
-  isLive: boolean;
+  /** False when this deployment has no tracker credentials configured. */
+  isConfigured: boolean;
   isLoading: boolean;
+  isError: boolean;
 } {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['tracker-bills'],
     queryFn: fetchTrackerBills,
     staleTime: 5 * 60 * 1000,
@@ -47,15 +34,12 @@ export function useTrackedBills(countryId: CountryId): {
     }
   }, [data]);
 
-  const live = (data ?? []).filter((bill) => bill.countryId === countryId);
-  const isLive = Boolean(data && data.length > 0);
-  // While the feed is in flight, return nothing rather than the samples —
-  // otherwise the list renders sample cards and swaps them for live ones
-  // a few seconds later. Samples are the settled fallback only.
-  const fallback = isLoading ? [] : sampleBills(countryId);
   return {
-    bills: isLive ? live : fallback,
-    isLive,
+    bills: (data ?? []).filter((bill) => bill.countryId === countryId),
+    // fetchTrackerBills resolves to null — not an error — when the feed
+    // has no credentials; undefined just means the query is still in flight.
+    isConfigured: data !== null,
     isLoading,
+    isError,
   };
 }

@@ -60,6 +60,59 @@ const CHAT_REFORM: Reform = {
   updatedAt: '2026-08-01T00:00:00Z',
 };
 
+/**
+ * Three bills standing in for the tracker feed. The feed is the only
+ * source of bills in the app, so the fixture lives with the tests that
+ * need it rather than shipping as data.
+ */
+const FEED_BILLS = [
+  {
+    id: 'ut-hb-106',
+    countryId: 'us' as const,
+    jurisdiction: 'Utah',
+    title: 'HB 106 — income tax rate reduction',
+    status: 'Enacted',
+    summary: 'Reduces the individual income tax rate from 4.55% to 4.45%.',
+    provisions: [
+      {
+        path: 'gov.states.ut.tax.income.rate',
+        value: 0.0445,
+        fallbackBreadcrumb: 'Utah → Income tax → Rate',
+      },
+    ],
+  },
+  {
+    id: 'us-ctc-expansion',
+    countryId: 'us' as const,
+    jurisdiction: 'Federal',
+    title: 'Child tax credit expansion proposal',
+    status: 'Introduced',
+    summary: 'Raises the base child tax credit amount to $2,500 per child.',
+    provisions: [
+      {
+        path: 'gov.irs.credits.ctc.amount.base[0].amount',
+        value: 2500,
+        fallbackBreadcrumb: 'IRS → Credits → Child tax credit → Base amount',
+      },
+    ],
+  },
+  {
+    id: 'us-snap-allotment',
+    countryId: 'us' as const,
+    jurisdiction: 'Federal',
+    title: 'SNAP benefit adjustment proposal',
+    status: 'In committee',
+    summary: 'Adjusts the SNAP maximum allotment share of the Thrifty Food Plan.',
+    provisions: [
+      {
+        path: 'gov.usda.snap.max_allotment.main.CONTIGUOUS_US.1',
+        value: 350,
+        fallbackBreadcrumb: 'USDA → SNAP → Maximum allotment',
+      },
+    ],
+  },
+];
+
 function renderReforms(path?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const ui = (
@@ -75,8 +128,7 @@ describe('ReformsPage', () => {
     vi.clearAllMocks();
     clearDraftReform();
     mockFindByUser.mockResolvedValue([]);
-    // No live feed by default — tests run against the in-repo samples.
-    mockFetchTrackerBills.mockResolvedValue(null);
+    mockFetchTrackerBills.mockResolvedValue(FEED_BILLS);
   });
 
   test('given the default view then bill cards render with jurisdiction eyebrows', async () => {
@@ -271,5 +323,30 @@ describe('ReformsPage', () => {
 
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /open as draft reform/i })).not.toBeInTheDocument();
+  });
+
+  test('given no tracker credentials then the surface says the feed is unconfigured', async () => {
+    mockFetchTrackerBills.mockResolvedValue(null);
+    renderReforms();
+
+    expect(await screen.findByText(/feed is not configured/i)).toBeInTheDocument();
+    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+  });
+
+  test('given the feed errors then the error shows instead of an empty grid', async () => {
+    mockFetchTrackerBills.mockRejectedValue(new Error('tracker down'));
+    renderReforms();
+
+    // The feed retries once before failing, so give it past the retry delay.
+    expect(
+      await screen.findByText(/could not load the bill feed/i, {}, { timeout: 5000 })
+    ).toBeInTheDocument();
+  });
+
+  test('given a country with no analyzed bills then the empty state says so', async () => {
+    mockFetchTrackerBills.mockResolvedValue([]);
+    renderReforms();
+
+    expect(await screen.findByText(/no analyzed bills yet/i)).toBeInTheDocument();
   });
 });
