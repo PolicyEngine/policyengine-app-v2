@@ -27,6 +27,7 @@ import {
   searchParameters,
 } from '../src/libs/parameterSearch';
 import {
+  buildProgramEvalCases,
   compareToBaseline,
   evaluateParameterSearch,
   type ParameterSearchEvalCase,
@@ -39,10 +40,19 @@ const FIXTURES = path.join(__dirname, '../src/tests/fixtures/libs');
 const CASES_PATH = path.join(FIXTURES, 'parameterSearchEvalCases.json');
 const BASELINE_PATH = path.join(FIXTURES, 'parameterSearchEvalBaseline.json');
 
-interface Baseline extends ParameterSearchEvalMetrics {
+/**
+ * Two suites, never averaged: the tracker cases are one analyst's exact
+ * parameter in one policy area, the program cases are shallow coverage
+ * across everything the model implements. A single blended number would
+ * hide whichever one moved.
+ */
+type SuiteName = 'tracker' | 'programs';
+
+interface Baseline {
   /** Model version the baseline was recorded against, for context on drift. */
   metadataVersion: string;
   country: string;
+  suites: Partial<Record<SuiteName, ParameterSearchEvalMetrics>>;
 }
 
 function readFlag(name: string): string | null {
@@ -50,10 +60,34 @@ function readFlag(name: string): string | null {
   return index >= 0 ? (process.argv[index + 1] ?? null) : null;
 }
 
+function reportSuite(
+  title: string,
+  note: string,
+  metrics: ParameterSearchEvalMetrics,
+  msPerQuery: number
+): void {
+  console.log(`\n${title}`);
+  console.log(`  ${note}`);
+  console.log(`  ${metrics.cases} cases · ${msPerQuery.toFixed(0)}ms/query`);
+  for (const [cutoff, rate] of Object.entries(metrics.hitRate)) {
+    console.log(`    hit rate @${cutoff.padEnd(3)} ${(100 * rate).toFixed(1)}%`);
+  }
+  console.log(`    MRR          ${metrics.mrr.toFixed(3)}`);
+  console.log(`    median rank  ${metrics.medianRank ?? '—'}`);
+  if (metrics.misses.length > 0) {
+    console.log(`    misses (nothing expected in the top 20):`);
+    for (const miss of metrics.misses) {
+      console.log(`      ${miss.query.slice(0, 90)}`);
+    }
+  }
+}
+
 async function main(): Promise<void> {
   const country = readFlag('country') ?? 'us';
-  const cases: ParameterSearchEvalCase[] = JSON.parse(fs.readFileSync(CASES_PATH, 'utf-8'));
-  const { parameters, version } = await loadParameterMetadata(country, readFlag('metadata'));
+  const { parameters, version, programs } = await loadParameterMetadata(
+    country,
+    readFlag('metadata')
+  );
 
   const buildStart = performance.now();
   const entries = buildParameterSearchEntries(parameters);
@@ -61,59 +95,114 @@ async function main(): Promise<void> {
   const index = createParameterSearchIndex(entries, clusters);
   const buildMs = performance.now() - buildStart;
 
-  // Ground truth includes gov.contrib.* parameters — a quarter of the
-  // cases reform nothing else — so scoring with the UI's default filter
-  // would count filter policy as a ranking failure. Measure ranking here;
-  // the filter default is a separate question.
-  const filters = { ...DEFAULT_SEARCH_FILTERS, includeContrib: true };
-  const searchStart = performance.now();
-  const metrics = evaluateParameterSearch(
-    (query, limit) => searchParameters(index, query, limit, filters).map((entry) => entry.path),
-    cases,
-    { cutoffs: [5, 10, 20], maxMisses: 8 }
-  );
-  const searchMs = performance.now() - searchStart;
-
   console.log(`\n${country.toUpperCase()} · model ${version}`);
   console.log(
     `${entries.length.toLocaleString()} entries · ${clusters.length.toLocaleString()} clusters · ` +
       `index built in ${buildMs.toFixed(0)}ms`
   );
-  const contribOnly = cases.filter((testCase) =>
-    testCase.expectedPaths.every((expected) => expected.startsWith('gov.contrib.'))
-  ).length;
-  const expected = cases.flatMap((testCase) => testCase.expectedPaths);
-  const stateOf = /^gov\.(?:contrib\.)?states\.([a-z]{2})\./;
-  const states = new Set(expected.map((p) => stateOf.exec(p)?.[1]).filter(Boolean));
-  const federal = expected.filter((p) => !stateOf.test(p)).length;
-  console.log(
-    `${metrics.cases} cases (${contribOnly} reform only contributed parameters) · ` +
-      `${(searchMs / Math.max(metrics.cases, 1)).toFixed(0)}ms/query\n`
-  );
-  for (const [cutoff, rate] of Object.entries(metrics.hitRate)) {
-    console.log(`  hit rate @${cutoff.padEnd(3)} ${(100 * rate).toFixed(1)}%`);
+
+  // Ground truth includes gov.contrib.* parameters — a quarter of the
+  // tracker cases reform nothing else — so scoring with the UI's default
+  // filter would count filter policy as a ranking failure. Measure
+  // ranking here; the filter default is a separate question.
+  const filters = { ...DEFAULT_SEARCH_FILTERS, includeContrib: true };
+  const run = (query: string, limit: number) =>
+    searchParameters(index, query, limit, filters).map((entry) => entry.path);
+  const score = (cases: ParameterSearchEvalCase[]) => {
+    const started = performance.now();
+    const metrics = evaluateParameterSearch(run, cases, { cutoffs: [5, 10, 20], maxMisses: 5 });
+    return { metrics, msPerQuery: (performance.now() - started) / Math.max(cases.length, 1) };
+  };
+
+  const suites: Partial<Record<SuiteName, ParameterSearchEvalMetrics>> = {};
+
+  // Suite 1 — bills the tracker analysed: an analyst's exact parameter,
+  // deep in one policy area (US state income tax).
+  if (country === 'us') {
+    const trackerCases: ParameterSearchEvalCase[] = JSON.parse(
+      fs.readFileSync(CASES_PATH, 'utf-8')
+    );
+    const expected = trackerCases.flatMap((testCase) => testCase.expectedPaths ?? []);
+    const stateOf = /^gov\.(?:contrib\.)?states\.([a-z]{2})\./;
+    const states = new Set(expected.map((path) => stateOf.exec(path)?.[1]).filter(Boolean));
+    const federal = expected.filter((path) => !stateOf.test(path)).length;
+    const { metrics, msPerQuery } = score(trackerCases);
+    suites.tracker = metrics;
+    reportSuite(
+      'Tracker bills — exact parameter, one policy area',
+      `${expected.length} parameters across ${states.size} states; ${federal} federal`,
+      metrics,
+      msPerQuery
+    );
   }
-  console.log(`  MRR          ${metrics.mrr.toFixed(3)}`);
-  console.log(`  median rank  ${metrics.medianRank ?? '—'}`);
 
-  // Coverage is part of the result: a score means little without knowing
-  // which slice of policy it was measured on.
-  console.log('\nWhat these cases cover:');
-  console.log(`  ${expected.length} expected parameters across ${states.size} states`);
-  console.log(
-    `  ${federal} are federal (${((100 * federal) / expected.length).toFixed(0)}%) — the tracker follows state bills`
-  );
+  // Suite 2 — every program the model implements, queried by the names
+  // the model itself gives them. Shallow (any parameter in the program
+  // counts) but broad, and each program contributes both its acronym and
+  // its spelled-out name.
+  const paths = Object.keys(parameters);
+  const {
+    cases: programCases,
+    skippedUnmapped,
+    skippedBroad,
+  } = buildProgramEvalCases(programs, paths);
+  if (programCases.length > 0) {
+    const { metrics, msPerQuery } = score(programCases);
+    suites.programs = metrics;
+    reportSuite(
+      'Modelled programs — right region of the tree, every policy area',
+      `${programCases.length} queries over ${programs.length} programs; ` +
+        `skipped ${skippedUnmapped.length} unmapped, ${skippedBroad.length} too broad`,
+      metrics,
+      msPerQuery
+    );
 
-  if (metrics.misses.length > 0) {
-    console.log('\nMisses (no expected parameter in the top 20):');
-    for (const miss of metrics.misses) {
-      console.log(`  ${miss.query}`);
-      console.log(`    wanted: ${miss.expectedPaths.slice(0, 2).join(', ')}`);
+    // Acronyms and their expansions should reach the same place; where
+    // they do not, that is the concept-matching gap in one number.
+    const byId = new Map(programCases.map((testCase) => [testCase.id, testCase]));
+    let pairs = 0;
+    let agree = 0;
+    const disagreed: string[] = [];
+    for (const [id, testCase] of byId) {
+      if (!id.endsWith(':name')) {
+        continue;
+      }
+      const full = byId.get(id.replace(':name', ':full'));
+      if (!full) {
+        continue;
+      }
+      pairs += 1;
+      const shortHit = run(testCase.query, 10).some((path) =>
+        testCase.expectedPrefixes?.some((prefix) => path.startsWith(`${prefix}.`))
+      );
+      const longHit = run(full.query, 10).some((path) =>
+        full.expectedPrefixes?.some((prefix) => path.startsWith(`${prefix}.`))
+      );
+      if (shortHit === longHit) {
+        agree += 1;
+      } else {
+        disagreed.push(`${testCase.query} ${shortHit ? '>' : '<'} ${full.query}`);
+      }
+    }
+    if (pairs > 0) {
+      console.log(
+        `\n  short name vs full name agree on ${agree}/${pairs} programs ` +
+          `(${((100 * agree) / pairs).toFixed(0)}%)`
+      );
+      for (const line of disagreed.slice(0, 6)) {
+        console.log(`    only one form finds it: ${line}`);
+      }
     }
   }
 
   if (process.argv.includes('--update-baseline')) {
-    const baseline: Baseline = { ...metrics, misses: [], metadataVersion: version, country };
+    const baseline: Baseline = {
+      metadataVersion: version,
+      country,
+      suites: Object.fromEntries(
+        Object.entries(suites).map(([name, metrics]) => [name, { ...metrics, misses: [] }])
+      ),
+    };
     fs.writeFileSync(BASELINE_PATH, `${JSON.stringify(baseline, null, 2)}\n`);
     console.log(`\nBaseline updated: ${BASELINE_PATH}`);
     return;
@@ -129,10 +218,23 @@ async function main(): Promise<void> {
     console.log(`\nBaseline is for ${baseline.country}; skipping comparison.`);
     return;
   }
-  const { regressed, lines } = compareToBaseline(metrics, baseline);
+  let regressedAnywhere = false;
   console.log(`\nAgainst baseline (model ${baseline.metadataVersion}):`);
-  lines.forEach((line) => console.log(`  ${line}`));
-  if (regressed) {
+  for (const [name, metrics] of Object.entries(suites) as [
+    SuiteName,
+    ParameterSearchEvalMetrics,
+  ][]) {
+    const recorded = baseline.suites?.[name];
+    if (!recorded) {
+      console.log(`  ${name}: no baseline recorded`);
+      continue;
+    }
+    const { regressed, lines } = compareToBaseline(metrics, recorded);
+    console.log(`  ${name}:`);
+    lines.forEach((line) => console.log(`    ${line}`));
+    regressedAnywhere ||= regressed;
+  }
+  if (regressedAnywhere) {
     console.error('\nSearch quality regressed beyond tolerance.');
     process.exit(1);
   }

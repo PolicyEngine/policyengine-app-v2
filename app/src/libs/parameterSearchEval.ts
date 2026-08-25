@@ -18,7 +18,99 @@ export interface ParameterSearchEvalCase {
   /** What a searcher would plausibly type — a bill title and summary. */
   query: string;
   /** Parameter paths the analysis actually used. */
-  expectedPaths: string[];
+  expectedPaths?: string[];
+  /**
+   * Path prefixes any of whose parameters count as a hit. Used where the
+   * right answer is a region of the tree rather than one parameter — a
+   * program name should land somewhere in that program.
+   */
+  expectedPrefixes?: string[];
+}
+
+function isHit(path: string, testCase: ParameterSearchEvalCase): boolean {
+  if (testCase.expectedPaths?.includes(path)) {
+    return true;
+  }
+  return Boolean(testCase.expectedPrefixes?.some((prefix) => path.startsWith(`${prefix}.`)));
+}
+
+/**
+ * Programs as the model itself describes them (metadata's
+ * modelled_policies), turned into search cases.
+ *
+ * This is coarser evidence than an analyst's exact parameter pick, but it
+ * spans every program PolicyEngine models rather than the one corner a
+ * bill tracker happens to follow. Each program yields up to two cases —
+ * its short name and its full name — which is also a direct read on
+ * whether acronyms and their expansions find the same place.
+ */
+export interface ModelledProgram {
+  id: string;
+  name: string;
+  full_name?: string;
+  category?: string;
+  parameter_prefix?: string | null;
+}
+
+export interface ProgramCaseOptions {
+  /**
+   * Skip programs whose prefix covers more than this share of the index:
+   * "anything under gov.states" is satisfied by most of the tree, so a
+   * hit there measures nothing.
+   */
+  maxIndexShare?: number;
+}
+
+export interface ProgramCaseBuild {
+  cases: ParameterSearchEvalCase[];
+  /** Programs with no parameters under their prefix — nothing to find. */
+  skippedUnmapped: string[];
+  /** Programs whose prefix was too broad to be evidence. */
+  skippedBroad: string[];
+}
+
+export function buildProgramEvalCases(
+  programs: ModelledProgram[],
+  parameterPaths: string[],
+  options: ProgramCaseOptions = {}
+): ProgramCaseBuild {
+  const maxIndexShare = options.maxIndexShare ?? 0.05;
+  const limit = parameterPaths.length * maxIndexShare;
+  const cases: ParameterSearchEvalCase[] = [];
+  const skippedUnmapped: string[] = [];
+  const skippedBroad: string[] = [];
+
+  for (const program of programs) {
+    const prefix = program.parameter_prefix;
+    if (!prefix) {
+      skippedUnmapped.push(program.name);
+      continue;
+    }
+    let covered = 0;
+    for (const path of parameterPaths) {
+      if (path.startsWith(`${prefix}.`)) {
+        covered += 1;
+      }
+    }
+    if (covered === 0) {
+      skippedUnmapped.push(program.name);
+      continue;
+    }
+    if (covered > limit) {
+      skippedBroad.push(program.name);
+      continue;
+    }
+    const queries = new Set([program.name, program.full_name].filter(Boolean) as string[]);
+    for (const query of queries) {
+      cases.push({
+        id: `${program.id}:${query === program.name ? 'name' : 'full'}`,
+        query,
+        expectedPrefixes: [prefix],
+      });
+    }
+  }
+
+  return { cases, skippedUnmapped, skippedBroad };
 }
 
 export interface ParameterSearchEvalMiss {
@@ -73,15 +165,14 @@ export function evaluateParameterSearch(
   let reciprocalTotal = 0;
 
   for (const testCase of cases) {
-    const expected = new Set(testCase.expectedPaths);
     const results = run(testCase.query, deepest);
-    const zeroBased = results.findIndex((path) => expected.has(path));
+    const zeroBased = results.findIndex((path) => isHit(path, testCase));
     if (zeroBased < 0) {
       if (misses.length < maxMisses) {
         misses.push({
           id: testCase.id,
           query: testCase.query,
-          expectedPaths: testCase.expectedPaths,
+          expectedPaths: testCase.expectedPaths ?? testCase.expectedPrefixes ?? [],
         });
       }
       continue;

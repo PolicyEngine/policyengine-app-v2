@@ -10,6 +10,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import type { ModelledProgram } from '../src/libs/parameterSearchEval';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = path.join(__dirname, '../node_modules/.cache/policyengine');
@@ -17,6 +18,8 @@ const CACHE_DIR = path.join(__dirname, '../node_modules/.cache/policyengine');
 export interface LoadedMetadata {
   parameters: Record<string, any>;
   version: string;
+  /** metadata.modelled_policies.programs — every program the model implements. */
+  programs: ModelledProgram[];
 }
 
 export async function loadParameterMetadata(
@@ -28,8 +31,7 @@ export async function loadParameterMetadata(
 
   if (fs.existsSync(source)) {
     const cached = JSON.parse(fs.readFileSync(source, 'utf-8'));
-    const result = cached.result ?? cached;
-    return { parameters: result.parameters, version: result.version ?? 'unknown' };
+    return unpack(cached);
   }
 
   console.log(`Fetching ${country} metadata (cached to ${cachePath} for later runs)…`);
@@ -40,6 +42,14 @@ export async function loadParameterMetadata(
   const payload = await response.json();
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   fs.writeFileSync(cachePath, JSON.stringify(payload));
+  return unpack(payload);
+}
+
+function unpack(payload: any): LoadedMetadata {
   const result = payload.result ?? payload;
-  return { parameters: result.parameters, version: result.version ?? 'unknown' };
+  return {
+    parameters: result.parameters,
+    version: result.version ?? 'unknown',
+    programs: result.modelled_policies?.programs ?? [],
+  };
 }
