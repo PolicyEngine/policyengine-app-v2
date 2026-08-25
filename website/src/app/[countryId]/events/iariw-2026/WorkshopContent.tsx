@@ -39,7 +39,8 @@ const program: {
     title:
       "Roundtable: AI and new technologies for open, evidence-based policy making",
     people: [
-      "Koen Algoed \u2014 Director General, Budget and Finance Department, Flemish Region",
+      "H\u00e9l\u00e8ne Latzer \u2014 UCLouvain Saint-Louis (moderator)",
+      "Koen Algoed \u2014 Secretary General, Budget and Finance Department, Flemish Region",
       "Jean-Baptiste Traversa \u2014 Head of microsimulation modelling, Federal Public Service Finance",
       "Tom Truyts \u2014 CAPE, UCLouvain Saint-Louis",
       "Max Ghenis \u2014 PolicyEngine",
