@@ -1,0 +1,1214 @@
+[
+  {
+    "id": "al-hb527",
+    "query": "Alabama HB527: Qualified Overtime Compensation Deduction Alabama HB527 creates a state income tax deduction of up to $1,",
+    "expectedPaths": [
+      "gov.contrib.states.al.hb527.cap",
+      "gov.contrib.states.al.hb527.in_effect"
+    ]
+  },
+  {
+    "id": "az-hb2636",
+    "query": "Millionaire Income Tax Surcharge (8% above $1M) Replaces Arizona's 2.5% flat individual income tax with a two-bracket pr",
+    "expectedPaths": [
+      "gov.states.az.tax.income.main.joint.brackets[1].rate",
+      "gov.states.az.tax.income.main.single.brackets[1].rate",
+      "gov.states.az.tax.income.main.separate.brackets[1].rate",
+      "gov.states.az.tax.income.main.joint.brackets[1].threshold",
+      "gov.states.az.tax.income.main.single.brackets[1].threshold",
+      "gov.states.az.tax.income.main.separate.brackets[1].threshold",
+      "gov.states.az.tax.income.main.head_of_household.brackets[1].rate",
+      "gov.states.az.tax.income.main.head_of_household.brackets[1].threshold"
+    ]
+  },
+  {
+    "id": "ca-ab1690",
+    "query": "Young Child Tax Credit Age Expansion Expands California's Young Child Tax Credit (YCTC) by gradually increasing the qual",
+    "expectedPaths": [
+      "gov.states.ca.tax.income.credits.young_child.ineligible_age"
+    ]
+  },
+  {
+    "id": "ca-ab2591",
+    "query": "Taxing Californians into Poverty Protection Act Hypothetical analysis of California AB 2591 (Bains), which allows taxpay",
+    "expectedPaths": [
+      "gov.contrib.states.ca.ab2591.in_effect"
+    ]
+  },
+  {
+    "id": "co-hb1062",
+    "query": "CO HB1062: Expand Deduction for Retirement Benefits Eliminates the $20,000 (age 55-64) and $24,000 (age 65+) caps on Col",
+    "expectedPaths": [
+      "gov.states.co.tax.income.subtractions.pension.cap.older",
+      "gov.states.co.tax.income.subtractions.pension.cap.younger"
+    ]
+  },
+  {
+    "id": "ct-hb5009",
+    "query": "An Act Increasing And Expanding The Property Tax Credit Expands Connecticut's property tax credit by tripling the maximu",
+    "expectedPaths": [
+      "gov.contrib.states.ct.hb5009.in_effect"
+    ]
+  },
+  {
+    "id": "ct-hb5114",
+    "query": "Connecticut Refundable Renters Tax Credit Connecticut HB5114 creates a refundable renters tax credit equal to 20% of ann",
+    "expectedPaths": [
+      "gov.contrib.states.ct.hb5114.in_effect"
+    ]
+  },
+  {
+    "id": "ct-hb5133",
+    "query": "Increase Top Marginal Income Tax Rate Increases Connecticut's top marginal income tax rate from 6.99% to 7.99% for high ",
+    "expectedPaths": [
+      "gov.states.ct.tax.income.rates.joint.brackets[6].rate",
+      "gov.states.ct.tax.income.rates.single.brackets[6].rate",
+      "gov.states.ct.tax.income.rates.separate.brackets[6].rate",
+      "gov.states.ct.tax.income.rates.surviving_spouse.brackets[6].rate",
+      "gov.states.ct.tax.income.rates.head_of_household.brackets[6].rate"
+    ]
+  },
+  {
+    "id": "ct-hb5134",
+    "query": "Establishing a Refundable Child Tax Credit Creates a new refundable child tax credit of $600 per qualifying child (up to",
+    "expectedPaths": [
+      "gov.contrib.states.ct.refundable_ctc.in_effect"
+    ]
+  },
+  {
+    "id": "ct-sb100",
+    "query": "An Act Reducing Certain Personal Income Tax Marginal Rates Reduces Connecticut's lowest two marginal income tax rates fo",
+    "expectedPaths": [
+      "gov.contrib.states.ct.sb100.in_effect"
+    ]
+  },
+  {
+    "id": "ct-sb69",
+    "query": "SB69 Eliminates Connecticut's state Earned Income Tax Credit (EITC), which currently provides 40% of the federal EITC to",
+    "expectedPaths": [
+      "gov.states.ct.tax.income.credits.eitc.match",
+      "gov.states.ct.tax.income.credits.eitc.qualifying_child_bonus.in_effect"
+    ]
+  },
+  {
+    "id": "ct-sb78",
+    "query": "CT SB78: SS Benefit Deduction Threshold Elimination Eliminates the qualifying income thresholds for the personal income ",
+    "expectedPaths": [
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.JOINT",
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.SINGLE",
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.SEPARATE",
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.SURVIVING_SPOUSE",
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "ct-tax-rebate-2026",
+    "query": "2026 Tax Rebate (Lamont Proposal) Governor Lamont's proposed one-time tax rebate providing $200 per person ($400 for joi",
+    "expectedPaths": [
+      "gov.contrib.states.ct.tax_rebate_2026.in_effect"
+    ]
+  },
+  {
+    "id": "dc-hjr142",
+    "query": "HJR 142: Nullifying DC Tax Conformity Act Congressional resolution disapproving the D.C. Income and Franchise Tax Confor",
+    "expectedPaths": [
+      "gov.states.dc.tax.income.credits.eitc.with_children.match"
+    ]
+  },
+  {
+    "id": "de-hb274",
+    "query": "AN ACT TO AMEND TITLE 30 OF THE DELAWARE CODE RELATING TO THE CHILD AND DEPENDENT CARE EXPENSE TAX CREDIT Increases Dela",
+    "expectedPaths": [
+      "gov.states.de.tax.income.credits.cdcc.match"
+    ]
+  },
+  {
+    "id": "ga-hb1001",
+    "query": "Georgia Income Tax Rate Cut (HB1001) Accelerates Georgia's income tax rate reduction to 4.99% starting in 2026. Removes ",
+    "expectedPaths": [
+      "gov.states.ga.tax.income.main.joint.brackets[0].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[1].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[2].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[3].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[4].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[5].rate",
+      "gov.states.ga.tax.income.main.single.brackets[0].rate",
+      "gov.states.ga.tax.income.main.single.brackets[1].rate",
+      "gov.states.ga.tax.income.main.single.brackets[2].rate",
+      "gov.states.ga.tax.income.main.single.brackets[3].rate",
+      "gov.states.ga.tax.income.main.single.brackets[4].rate",
+      "gov.states.ga.tax.income.main.single.brackets[5].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[0].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[1].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[2].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[3].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[4].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[5].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[0].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[1].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[2].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[3].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[4].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[5].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[0].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[1].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[2].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[3].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[4].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[5].rate"
+    ]
+  },
+  {
+    "id": "ga-hb463",
+    "query": "Georgia Economic Growth and Tax Relief Act of 2026 Hypothetical multi-year analysis of Georgia HB463 assuming all revenu",
+    "expectedPaths": [
+      "gov.states.ga.tax.income.exemptions.dependent",
+      "gov.states.ga.tax.income.main.joint.brackets[0].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[1].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[2].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[3].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[4].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[5].rate",
+      "gov.states.ga.tax.income.main.single.brackets[0].rate",
+      "gov.states.ga.tax.income.main.single.brackets[1].rate",
+      "gov.states.ga.tax.income.main.single.brackets[2].rate",
+      "gov.states.ga.tax.income.main.single.brackets[3].rate",
+      "gov.states.ga.tax.income.main.single.brackets[4].rate",
+      "gov.states.ga.tax.income.main.single.brackets[5].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[0].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[1].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[2].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[3].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[4].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[5].rate",
+      "gov.states.ga.tax.income.deductions.standard.amount.JOINT",
+      "gov.states.ga.tax.income.deductions.standard.amount.SINGLE",
+      "gov.states.ga.tax.income.agi.exclusions.retirement.cap.older",
+      "gov.states.ga.tax.income.deductions.standard.amount.SEPARATE",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[0].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[1].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[2].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[3].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[4].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[5].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[0].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[1].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[2].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[3].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[4].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[5].rate",
+      "gov.states.ga.tax.income.deductions.standard.amount.SURVIVING_SPOUSE",
+      "gov.states.ga.tax.income.deductions.standard.amount.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "ga-hb463-2026",
+    "query": "Georgia HB 463 (2026): flat income tax rate to 4.99% Georgia HB 463 (2026), signed May 11, 2026, sets the state flat ind",
+    "expectedPaths": [
+      "gov.states.ga.tax.income.main.flat_rate",
+      "gov.states.ga.tax.income.agi.exclusions.tips.cap",
+      "gov.states.ga.tax.income.agi.exclusions.overtime.cap"
+    ]
+  },
+  {
+    "id": "ga-hb880",
+    "query": "HB880 Hypothetical multi-year analysis of Georgia HB880 assuming all revenue growth triggers are met. Phases in annual i",
+    "expectedPaths": [
+      "gov.states.ga.tax.income.exemptions.dependent",
+      "gov.states.ga.tax.income.main.joint.brackets[0].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[1].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[2].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[3].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[4].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[5].rate",
+      "gov.states.ga.tax.income.main.single.brackets[0].rate",
+      "gov.states.ga.tax.income.main.single.brackets[1].rate",
+      "gov.states.ga.tax.income.main.single.brackets[2].rate",
+      "gov.states.ga.tax.income.main.single.brackets[3].rate",
+      "gov.states.ga.tax.income.main.single.brackets[4].rate",
+      "gov.states.ga.tax.income.main.single.brackets[5].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[0].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[1].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[2].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[3].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[4].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[5].rate",
+      "gov.states.ga.tax.income.deductions.standard.amount.JOINT",
+      "gov.states.ga.tax.income.deductions.standard.amount.SINGLE",
+      "gov.states.ga.tax.income.agi.exclusions.retirement.cap.older",
+      "gov.states.ga.tax.income.deductions.standard.amount.SEPARATE",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[0].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[1].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[2].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[3].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[4].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[5].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[0].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[1].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[2].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[3].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[4].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[5].rate",
+      "gov.states.ga.tax.income.deductions.standard.amount.SURVIVING_SPOUSE",
+      "gov.states.ga.tax.income.deductions.standard.amount.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "ga-sb168",
+    "query": "SB168: Accelerated Income Tax Elimination Reduces Georgia's flat income tax rate from 5.09% to 4.19% for 2026, with 1.0p",
+    "expectedPaths": [
+      "gov.states.ga.tax.income.main.joint.brackets[0].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[1].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[2].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[3].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[4].rate",
+      "gov.states.ga.tax.income.main.joint.brackets[5].rate",
+      "gov.states.ga.tax.income.main.single.brackets[0].rate",
+      "gov.states.ga.tax.income.main.single.brackets[1].rate",
+      "gov.states.ga.tax.income.main.single.brackets[2].rate",
+      "gov.states.ga.tax.income.main.single.brackets[3].rate",
+      "gov.states.ga.tax.income.main.single.brackets[4].rate",
+      "gov.states.ga.tax.income.main.single.brackets[5].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[0].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[1].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[2].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[3].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[4].rate",
+      "gov.states.ga.tax.income.main.separate.brackets[5].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[0].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[1].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[2].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[3].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[4].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse.brackets[5].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[0].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[1].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[2].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[3].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[4].rate",
+      "gov.states.ga.tax.income.main.head_of_household.brackets[5].rate"
+    ]
+  },
+  {
+    "id": "ga-sb476",
+    "query": "Income Tax Reduction Act of 2026 Reduces Georgia income tax rate to 4.99% and increases standard deductions to $50,000 f",
+    "expectedPaths": [
+      "gov.states.ga.tax.income.main.joint[0].rate",
+      "gov.states.ga.tax.income.main.joint[1].rate",
+      "gov.states.ga.tax.income.main.joint[2].rate",
+      "gov.states.ga.tax.income.main.joint[3].rate",
+      "gov.states.ga.tax.income.main.joint[4].rate",
+      "gov.states.ga.tax.income.main.joint[5].rate",
+      "gov.states.ga.tax.income.main.single[0].rate",
+      "gov.states.ga.tax.income.main.single[1].rate",
+      "gov.states.ga.tax.income.main.single[2].rate",
+      "gov.states.ga.tax.income.main.single[3].rate",
+      "gov.states.ga.tax.income.main.single[4].rate",
+      "gov.states.ga.tax.income.main.single[5].rate",
+      "gov.states.ga.tax.income.main.separate[0].rate",
+      "gov.states.ga.tax.income.main.separate[1].rate",
+      "gov.states.ga.tax.income.main.separate[2].rate",
+      "gov.states.ga.tax.income.main.separate[3].rate",
+      "gov.states.ga.tax.income.main.separate[4].rate",
+      "gov.states.ga.tax.income.main.separate[5].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse[0].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse[1].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse[2].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse[3].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse[4].rate",
+      "gov.states.ga.tax.income.main.surviving_spouse[5].rate",
+      "gov.states.ga.tax.income.main.head_of_household[0].rate",
+      "gov.states.ga.tax.income.main.head_of_household[1].rate",
+      "gov.states.ga.tax.income.main.head_of_household[2].rate",
+      "gov.states.ga.tax.income.main.head_of_household[3].rate",
+      "gov.states.ga.tax.income.main.head_of_household[4].rate",
+      "gov.states.ga.tax.income.main.head_of_household[5].rate",
+      "gov.states.ga.tax.income.deductions.standard.amount.JOINT",
+      "gov.states.ga.tax.income.deductions.standard.amount.SINGLE",
+      "gov.states.ga.tax.income.deductions.standard.amount.SEPARATE",
+      "gov.states.ga.tax.income.deductions.standard.amount.SURVIVING_SPOUSE",
+      "gov.states.ga.tax.income.deductions.standard.amount.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "ga-sb520",
+    "query": "Georgia Tax Reform - Progressive Income Tax with Expanded Credits (SB520) Shifts Georgia from a flat 5.19% income tax to",
+    "expectedPaths": [
+      "gov.contrib.states.ga.sb520.in_effect",
+      "gov.contrib.states.ga.sb520.brackets.in_effect"
+    ]
+  },
+  {
+    "id": "hi-hb2306",
+    "query": "HB2306 HD1 Freezes Hawaii income tax bracket thresholds at 2025 levels, increases top three marginal rates by 1pp (9%→10",
+    "expectedPaths": [
+      "gov.contrib.states.hi.hb2306.cdcc.in_effect",
+      "gov.states.hi.tax.income.credits.eitc.match",
+      "gov.states.hi.tax.income.rates.joint.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.joint.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.joint.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.single.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.single.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.single.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.separate.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.separate.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.separate.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.joint.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[11].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[7].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[7].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[7].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[7].threshold"
+    ]
+  },
+  {
+    "id": "hi-sb3125-hd1",
+    "query": "SB3125 HD1 Freezes Hawaii income tax bracket thresholds at 2025 levels, increases top three marginal rates by 1pp (9%→10",
+    "expectedPaths": [
+      "gov.contrib.states.hi.hb2306.cdcc.in_effect",
+      "gov.states.hi.tax.income.credits.eitc.match",
+      "gov.states.hi.tax.income.rates.joint.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.joint.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.joint.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.single.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.single.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.single.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.separate.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.separate.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.separate.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.joint.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.joint.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.single.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.separate.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[9].rate",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[10].rate",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[11].rate",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[0].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[1].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[2].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[3].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[4].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[5].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[6].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[7].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[8].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[9].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.surviving_spouse.brackets[11].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[10].threshold",
+      "gov.states.hi.tax.income.rates.head_of_household.brackets[11].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint.brackets[7].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate.brackets[7].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[2].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[3].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[4].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[5].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[6].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[7].amount",
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor.brackets[0].amount",
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor.brackets[1].amount",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse.brackets[7].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[1].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[2].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[3].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[4].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[5].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[6].threshold",
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household.brackets[7].threshold"
+    ]
+  },
+  {
+    "id": "ia-hf1020",
+    "query": "Child and Dependent Care Credit Expansion Modifies the Iowa child and dependent care credit by removing the $90,000 inco",
+    "expectedPaths": [
+      "gov.states.ia.tax.income.credits.child_care.fraction.brackets[4].amount",
+      "gov.states.ia.tax.income.credits.child_care.fraction.brackets[5].amount",
+      "gov.states.ia.tax.income.credits.child_care.fraction.brackets[6].amount"
+    ]
+  },
+  {
+    "id": "id-sb1450",
+    "query": "Idaho SB1450 - Child Tax Credit Permanent Extension Extends Idaho's $205 nonrefundable child tax credit indefinitely by ",
+    "expectedPaths": [
+      "gov.contrib.states.id.s1450.in_effect"
+    ]
+  },
+  {
+    "id": "il-hb4680",
+    "query": "Illinois EITC Enhancement Increases the Illinois Earned Income Tax Credit match from 20% to 30% of the federal EITC, eff",
+    "expectedPaths": [
+      "gov.states.il.tax.income.credits.eitc.match"
+    ]
+  },
+  {
+    "id": "ks-hb2620",
+    "query": "Kansas EITC Increase (HB2620) Increases the Kansas earned income tax credit from 17% to 18% of the federal EITC.",
+    "expectedPaths": [
+      "gov.states.ks.tax.income.credits.eitc_fraction"
+    ]
+  },
+  {
+    "id": "ks-hb2629",
+    "query": "Kansas Standard Deduction Increase (HB2629) Kansas HB2629 increases the standard deduction base amounts for all filing s",
+    "expectedPaths": [
+      "gov.states.ks.tax.income.deductions.standard.base_amount.JOINT",
+      "gov.states.ks.tax.income.deductions.standard.base_amount.SINGLE",
+      "gov.states.ks.tax.income.deductions.standard.base_amount.SEPARATE",
+      "gov.states.ks.tax.income.deductions.standard.base_amount.SURVIVING_SPOUSE",
+      "gov.states.ks.tax.income.deductions.standard.base_amount.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "ma-h5007",
+    "query": "An Act relative to reducing the state personal income tax rate from 5% to 4% Initiative petition to reduce Massachusetts",
+    "expectedPaths": [
+      "gov.states.ma.tax.income.rates.part_b",
+      "gov.states.ma.tax.income.rates.part_a.dividends"
+    ]
+  },
+  {
+    "id": "md-hb411",
+    "query": "Income Tax - Standard Deduction - Alteration Increases the Maryland standard deduction from $3,350 to $4,100 for single ",
+    "expectedPaths": [
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.JOINT",
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.SINGLE",
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.SEPARATE",
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.SURVIVING_SPOUSE",
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "mi-hb4055",
+    "query": "House Bill 4055 Creates a refundable state child tax credit equal to 50% of the federal child tax credit under IRC Secti",
+    "expectedPaths": [
+      "gov.contrib.states.mi.ctc.in_effect"
+    ]
+  },
+  {
+    "id": "mi-hb4170",
+    "query": "House Bill 4170 Amends the Income Tax Act to reduce Michigan's flat individual income tax rate from 4.25% to 4.05%, effe",
+    "expectedPaths": [
+      "gov.states.mi.tax.income.rate"
+    ]
+  },
+  {
+    "id": "mi-hb5519",
+    "query": "House Bill 5519 Reduces Michigan flat individual income tax rate from 4.25% to 3.9%, effective January 1, 2026.",
+    "expectedPaths": [
+      "gov.states.mi.tax.income.rate"
+    ]
+  },
+  {
+    "id": "mi-invest-in-kids",
+    "query": "Invest in MI Kids (2026 Ballot Initiative) Constitutional amendment imposing a 5% income tax surcharge on income above $",
+    "expectedPaths": [
+      "gov.contrib.states.mi.surtax.in_effect"
+    ]
+  },
+  {
+    "id": "mn-hf100",
+    "query": "MN HF 100: Unlimited Social Security Subtraction Removes the income-based phaseout on Minnesota's Social Security benefi",
+    "expectedPaths": [
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.JOINT",
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.SINGLE",
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.SEPARATE",
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.SURVIVING_SPOUSE",
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "mn-hf154",
+    "query": "First-Tier Income Tax Rate Reduction Reduces Minnesota's first-tier individual income tax rate from 5.35% to 2.8%, a 2.5",
+    "expectedPaths": [
+      "gov.states.mn.tax.income.rates.joint.brackets[0].rate",
+      "gov.states.mn.tax.income.rates.single.brackets[0].rate",
+      "gov.states.mn.tax.income.rates.separate.brackets[0].rate",
+      "gov.states.mn.tax.income.rates.surviving_spouse.brackets[0].rate",
+      "gov.states.mn.tax.income.rates.head_of_household.brackets[0].rate"
+    ]
+  },
+  {
+    "id": "mn-hf2197-ctc-wfc-marriage-penalty",
+    "query": "MN HF2197: CTC Marriage Penalty + WFC Reform Increases CTC phaseout threshold for joint filers to $75,000 and other file",
+    "expectedPaths": [
+      "gov.states.mn.tax.income.credits.cwfc.phase_out.threshold.joint",
+      "gov.states.mn.tax.income.credits.cwfc.phase_out.threshold.other",
+      "gov.states.mn.tax.income.credits.cwfc.wfc.eligible.childless_adult_age.minimum"
+    ]
+  },
+  {
+    "id": "mn-hf2502-ctc-marriage-penalty",
+    "query": "MN HF2502: CTC Marriage Penalty Elimination Increases child credit phaseout threshold for joint filers from $35,000 to $",
+    "expectedPaths": [
+      "gov.states.mn.tax.income.credits.cwfc.phase_out.threshold.joint"
+    ]
+  },
+  {
+    "id": "mn-hf4621",
+    "query": "MN HF 4621: Increase child tax credit to $2,000 Increases the Minnesota child tax credit (part of the Working Family Cre",
+    "expectedPaths": [
+      "gov.states.mn.tax.income.credits.cwfc.ctc.amount"
+    ]
+  },
+  {
+    "id": "mn-hf4890",
+    "query": "Establishing a fifth individual income tax bracket and expanding the Minnesota Child Credit Minnesota HF4890 adds a fift",
+    "expectedPaths": [
+      "gov.contrib.states.mn.hf4890.in_effect",
+      "gov.states.mn.tax.income.credits.cwfc.ctc.amount"
+    ]
+  },
+  {
+    "id": "mo-sb1240",
+    "query": "Eliminates the individual income tax Eliminates Missouri individual income tax for all tax years beginning on or after J",
+    "expectedPaths": [
+      "gov.states.mo.tax.income.rates.brackets[0].rate",
+      "gov.states.mo.tax.income.rates.brackets[1].rate",
+      "gov.states.mo.tax.income.rates.brackets[2].rate",
+      "gov.states.mo.tax.income.rates.brackets[3].rate",
+      "gov.states.mo.tax.income.rates.brackets[4].rate",
+      "gov.states.mo.tax.income.rates.brackets[5].rate",
+      "gov.states.mo.tax.income.rates.brackets[6].rate",
+      "gov.states.mo.tax.income.rates.brackets[7].rate",
+      "gov.states.mo.tax.income.rates.brackets[8].rate"
+    ]
+  },
+  {
+    "id": "mo-sb458",
+    "query": "Flat 4.0% Income Tax + Federal Tax Deduction Elimination Replaces Missouri's graduated income tax brackets (0%-4.7%) wit",
+    "expectedPaths": [
+      "gov.states.mo.tax.income.rates.brackets[0].rate",
+      "gov.states.mo.tax.income.rates.brackets[1].rate",
+      "gov.states.mo.tax.income.rates.brackets[2].rate",
+      "gov.states.mo.tax.income.rates.brackets[3].rate",
+      "gov.states.mo.tax.income.rates.brackets[4].rate",
+      "gov.states.mo.tax.income.rates.brackets[6].rate",
+      "gov.states.mo.tax.income.rates.brackets[7].rate",
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate.brackets[0].amount",
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate.brackets[1].amount",
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate.brackets[2].amount",
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate.brackets[3].amount"
+    ]
+  },
+  {
+    "id": "ms-sb2869",
+    "query": "Senate Bill 2869 Freezes the Mississippi income tax rate at 4% permanently, reversing the HB1 (Build Up Mississippi Act)",
+    "expectedPaths": [
+      "gov.states.ms.tax.income.rate[1].rate"
+    ]
+  },
+  {
+    "id": "nc-h459",
+    "query": "NC H459: Income Tax Rate Reduction Trigger Mods Freezes the North Carolina flat individual income tax rate at 4.25% for ",
+    "expectedPaths": [
+      "gov.states.nc.tax.income.rate"
+    ]
+  },
+  {
+    "id": "nc-s211",
+    "query": "NC S211: 5% EITC Reenacts NC state EITC at 5% of federal credit for tax years 2025-2027. Sunsets after December 31, 2027",
+    "expectedPaths": [
+      "gov.contrib.states.nc.eitc.match",
+      "gov.contrib.states.nc.eitc.in_effect"
+    ]
+  },
+  {
+    "id": "nc-s304",
+    "query": "NC S304: 10% EITC Reenacts North Carolina state EITC at 10% of the federal credit. NC eliminated its EITC in 2014; this ",
+    "expectedPaths": [
+      "gov.contrib.states.nc.eitc.match",
+      "gov.contrib.states.nc.eitc.in_effect"
+    ]
+  },
+  {
+    "id": "nd-hb1388",
+    "query": "Marriage Penalty Elimination (HB1388) North Dakota HB1388 eliminates the marriage penalty by restructuring income tax br",
+    "expectedPaths": [
+      "gov.states.nd.tax.income.rates.joint[1].threshold",
+      "gov.states.nd.tax.income.rates.joint[2].threshold",
+      "gov.states.nd.tax.income.rates.single[1].threshold",
+      "gov.states.nd.tax.income.rates.single[2].threshold",
+      "gov.states.nd.tax.income.rates.separate[1].threshold",
+      "gov.states.nd.tax.income.rates.separate[2].threshold",
+      "gov.states.nd.tax.income.credits.marriage_penalty.maximum",
+      "gov.states.nd.tax.income.rates.surviving_spouse[1].threshold",
+      "gov.states.nd.tax.income.rates.surviving_spouse[2].threshold",
+      "gov.states.nd.tax.income.rates.head_of_household[1].threshold",
+      "gov.states.nd.tax.income.rates.head_of_household[2].threshold"
+    ]
+  },
+  {
+    "id": "ne-lb710",
+    "query": "LB710 Nebraska LB710 doubles the state earned income tax credit match rate from 10% to 20% of the federal EITC, effectiv",
+    "expectedPaths": [
+      "gov.states.ne.tax.income.credits.eitc.fraction"
+    ]
+  },
+  {
+    "id": "nj-a1185-marriage-penalty-elimination",
+    "query": "NJ A1185/S2401: Marriage Penalty Elimination Act Revises joint filer rate brackets to eliminate the marriage penalty by ",
+    "expectedPaths": [
+      "gov.states.nj.tax.income.main.joint.brackets[2].rate",
+      "gov.states.nj.tax.income.main.joint.brackets[1].threshold",
+      "gov.states.nj.tax.income.main.joint.brackets[2].threshold",
+      "gov.states.nj.tax.income.main.surviving_spouse.brackets[2].rate",
+      "gov.states.nj.tax.income.main.head_of_household.brackets[2].rate",
+      "gov.states.nj.tax.income.main.surviving_spouse.brackets[1].threshold",
+      "gov.states.nj.tax.income.main.surviving_spouse.brackets[2].threshold",
+      "gov.states.nj.tax.income.main.head_of_household.brackets[1].threshold",
+      "gov.states.nj.tax.income.main.head_of_household.brackets[2].threshold"
+    ]
+  },
+  {
+    "id": "ny-a05435",
+    "query": "A05435 - Increases Top Two Income Tax Brackets Increases the personal income tax rate on taxable income between $5M and ",
+    "expectedPaths": [
+      "gov.states.ny.tax.income.main.joint.brackets[7].rate",
+      "gov.states.ny.tax.income.main.joint.brackets[8].rate",
+      "gov.states.ny.tax.income.main.single.brackets[7].rate",
+      "gov.states.ny.tax.income.main.single.brackets[8].rate",
+      "gov.states.ny.tax.income.main.separate.brackets[7].rate",
+      "gov.states.ny.tax.income.main.separate.brackets[8].rate",
+      "gov.states.ny.tax.income.main.surviving_spouse.brackets[7].rate",
+      "gov.states.ny.tax.income.main.surviving_spouse.brackets[8].rate",
+      "gov.states.ny.tax.income.main.head_of_household.brackets[7].rate",
+      "gov.states.ny.tax.income.main.head_of_household.brackets[8].rate",
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.joint.brackets[4].amount",
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.single.brackets[3].amount",
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.separate.brackets[3].amount",
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.surviving_spouse.brackets[4].amount",
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.head_of_household.brackets[3].amount"
+    ]
+  },
+  {
+    "id": "ny-a06774",
+    "query": "Enhanced Child and Dependent Care Credit Act Increases the NY child and dependent care credit to 110% of the federal cre",
+    "expectedPaths": [
+      "_use_reform",
+      "gov.contrib.states.ny.a06774.in_effect"
+    ]
+  },
+  {
+    "id": "ny-a5661",
+    "query": "A5661: Increase NY EITC to 45% Increases New York's Earned Income Tax Credit match rate from 30% to 45% of the federal E",
+    "expectedPaths": [
+      "gov.states.ny.tax.income.credits.eitc.match"
+    ]
+  },
+  {
+    "id": "ny-s4487",
+    "query": "Supplemental Empire State Child Credit for Newborns Creates a $1,000 refundable supplemental credit for each qualifying ",
+    "expectedPaths": [
+      "gov.contrib.states.ny.s04487.in_effect"
+    ]
+  },
+  {
+    "id": "ny-s9077",
+    "query": "NY S9077: Empire State Child Credit Expansion Extends and expands the Empire State Child Credit through 2030+. Increases",
+    "expectedPaths": [
+      "gov.states.ny.tax.income.credits.ctc.post_2024.in_effect",
+      "gov.states.ny.tax.income.credits.ctc.post_2024.phase_out.increment",
+      "gov.states.ny.tax.income.credits.ctc.post_2024.amount.brackets[0].amount",
+      "gov.states.ny.tax.income.credits.ctc.post_2024.amount.brackets[1].amount",
+      "gov.states.ny.tax.income.credits.ctc.post_2024.amount.brackets[2].threshold"
+    ]
+  },
+  {
+    "id": "ny-s9110",
+    "query": "NY S9110: Personal Income Tax Rate Reform New York S9110 phases in over 10 years (2026-2035) an exemption of the first $",
+    "expectedPaths": [
+      "gov.contrib.states.ny.s9110.in_effect"
+    ]
+  },
+  {
+    "id": "ok-hb2229",
+    "query": "Oklahoma HB2229: Double the State EITC Oklahoma HB2229 would double the state EITC match rate from 5% to 10% of the fede",
+    "expectedPaths": [
+      "gov.states.ok.tax.income.credits.earned_income.eitc_fraction"
+    ]
+  },
+  {
+    "id": "ok-sb2156",
+    "query": "Oklahoma Income Tax Elimination (SB2156) Eliminates Oklahoma's personal income tax by setting all bracket rates (current",
+    "expectedPaths": [
+      "gov.states.ok.tax.income.rates.joint.brackets[1].rate",
+      "gov.states.ok.tax.income.rates.joint.brackets[2].rate",
+      "gov.states.ok.tax.income.rates.joint.brackets[3].rate",
+      "gov.states.ok.tax.income.rates.single.brackets[1].rate",
+      "gov.states.ok.tax.income.rates.single.brackets[2].rate",
+      "gov.states.ok.tax.income.rates.single.brackets[3].rate",
+      "gov.states.ok.tax.income.rates.separate.brackets[1].rate",
+      "gov.states.ok.tax.income.rates.separate.brackets[2].rate",
+      "gov.states.ok.tax.income.rates.separate.brackets[3].rate",
+      "gov.states.ok.tax.income.rates.surviving_spouse.brackets[1].rate",
+      "gov.states.ok.tax.income.rates.surviving_spouse.brackets[2].rate",
+      "gov.states.ok.tax.income.rates.surviving_spouse.brackets[3].rate",
+      "gov.states.ok.tax.income.rates.head_of_household.brackets[1].rate",
+      "gov.states.ok.tax.income.rates.head_of_household.brackets[2].rate",
+      "gov.states.ok.tax.income.rates.head_of_household.brackets[3].rate"
+    ]
+  },
+  {
+    "id": "or-sb1507",
+    "query": "Oregon SB1507: EITC Match Rate Increase One provision of Oregon state budget bill SB1507 raises the EITC match rate effe",
+    "expectedPaths": [
+      "gov.states.or.tax.income.credits.eitc.match.no_young_child",
+      "gov.states.or.tax.income.credits.eitc.match.has_young_child"
+    ]
+  },
+  {
+    "id": "ri-h7313",
+    "query": "High-Earner Income Tax Surcharge Creates a 3% additional tax on Rhode Island taxable income exceeding ,000 (in 2026 doll",
+    "expectedPaths": [
+      "_use_reform",
+      "gov.contrib.states.ri.high_earner_tax.in_effect"
+    ]
+  },
+  {
+    "id": "ri-hb8338",
+    "query": "House Bill 8338 Rhode Island HB8338 creates a refundable child tax credit of $660 per qualifying child (age 18 or under)",
+    "expectedPaths": [
+      "gov.contrib.states.ri.ctc.amount",
+      "gov.contrib.states.ri.ctc.age_limit",
+      "gov.contrib.states.ri.ctc.in_effect",
+      "gov.contrib.states.ri.ctc.refundability.cap",
+      "gov.contrib.states.ri.dependent_exemption.amount",
+      "gov.contrib.states.ri.ctc.young_child_boost.amount",
+      "gov.contrib.states.ri.dependent_exemption.in_effect",
+      "gov.contrib.states.ri.ctc.stepped_phaseout.increment",
+      "gov.contrib.states.ri.ctc.stepped_phaseout.threshold",
+      "gov.contrib.states.ri.ctc.young_child_boost.age_limit",
+      "gov.contrib.states.ri.dependent_exemption.phaseout.rate",
+      "gov.contrib.states.ri.ctc.stepped_phaseout.rate_per_step",
+      "gov.contrib.states.ri.dependent_exemption.age_limit.in_effect",
+      "gov.contrib.states.ri.dependent_exemption.age_limit.threshold"
+    ]
+  },
+  {
+    "id": "ri-s2364",
+    "query": "Rhode Island EITC Increase (S2364) Rhode Island S2364 increases the state earned-income tax credit from 16% to 30% of th",
+    "expectedPaths": [
+      "gov.states.ri.tax.income.credits.eitc.match"
+    ]
+  },
+  {
+    "id": "ri-sb2672",
+    "query": "S2672 Rhode Island SB2676 reduces personal income tax rates by 10% phased in over five years (2027-2031). All three brac",
+    "expectedPaths": [
+      "gov.states.ri.tax.income.rate.brackets[0].rate",
+      "gov.states.ri.tax.income.rate.brackets[1].rate",
+      "gov.states.ri.tax.income.rate.brackets[2].rate"
+    ]
+  },
+  {
+    "id": "sc-h3492",
+    "query": "Analysis of South Carolina H.3492: Making the state EITC partially refundable South Carolina H.3492 makes the state EITC",
+    "expectedPaths": [
+      "gov.contrib.states.sc.h3492.in_effect"
+    ]
+  },
+  {
+    "id": "sc-h4216",
+    "query": "SC H.4216 - Income Tax Reform (Amended Feb 2026) South Carolina H.4216 replaces the graduated income tax structure with ",
+    "expectedPaths": [
+      "gov.contrib.states.sc.h4216.in_effect"
+    ]
+  },
+  {
+    "id": "sc-h4216-jan",
+    "query": "SC H.4216 - Income Tax Reform (January 2026 version) January 2026 version of SC H.4216 with 5.39% top rate. Replaces gra",
+    "expectedPaths": [
+      "gov.contrib.states.sc.h4216.in_effect",
+      "gov.contrib.states.sc.h4216.rates.brackets[1].rate"
+    ]
+  },
+  {
+    "id": "us-hr1425",
+    "query": "HR 1425: Child Tax Credit to $5,000, fully refundable HR 1425 amends IRC §24 to raise the Child Tax Credit to $5,000 per",
+    "expectedPaths": [
+      "gov.irs.credits.ctc.phase_out.amount",
+      "gov.irs.credits.ctc.amount.base[0].amount",
+      "gov.irs.credits.ctc.refundable.fully_refundable"
+    ]
+  },
+  {
+    "id": "us-hr904",
+    "query": "HR 904: No Tax on Social Security HR 904 repeals the inclusion of Social Security benefits in gross income under IRC § 8",
+    "expectedPaths": [
+      "gov.irs.social_security.taxability.rate.base.excess",
+      "gov.irs.social_security.taxability.rate.base.benefit_cap",
+      "gov.irs.social_security.taxability.rate.additional.excess",
+      "gov.irs.social_security.taxability.rate.additional.bracket",
+      "gov.irs.social_security.taxability.rate.additional.benefit_cap"
+    ]
+  },
+  {
+    "id": "ut-hb210",
+    "query": "Utah HB210 S2: Marriage Penalty Removal Removes marriage penalties in Utah tax credits by equalizing phase-out threshold",
+    "expectedPaths": [
+      "_use_reform",
+      "_skip_params",
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SINGLE",
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.HEAD_OF_HOUSEHOLD",
+      "gov.states.ut.tax.income.credits.retirement.phase_out.threshold.SINGLE",
+      "gov.states.ut.tax.income.credits.ss_benefits.phase_out.threshold.SINGLE",
+      "gov.states.ut.tax.income.credits.taxpayer.phase_out.threshold.HEAD_OF_HOUSEHOLD",
+      "gov.states.ut.tax.income.credits.retirement.phase_out.threshold.HEAD_OF_HOUSEHOLD",
+      "gov.states.ut.tax.income.credits.ss_benefits.phase_out.threshold.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "ut-hb290",
+    "query": "Utah HB290: CTC Phaseout Threshold Increase Utah HB290 raises child tax credit phaseout thresholds effective for tax yea",
+    "expectedPaths": [
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.JOINT",
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SINGLE",
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SEPARATE",
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SURVIVING_SPOUSE",
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "ut-sb60",
+    "query": "Utah SB60: Income tax rate reduction (enacted) Utah Senate Bill 60 reduced the state flat income tax rate from 4.5% to 4",
+    "expectedPaths": [
+      "gov.states.ut.tax.income.rate"
+    ]
+  },
+  {
+    "id": "ut-sb60-bill",
+    "query": "Utah SB60: Income tax rate reduction (enacted) Utah Senate Bill 60 reduced the state flat income tax rate from 4.5% to 4",
+    "expectedPaths": [
+      "gov.states.ut.tax.income.rate"
+    ]
+  },
+  {
+    "id": "va-hb12",
+    "query": "Income tax; standard deduction — removes sunset, makes permanent Removes the sunset provision on Virginia's enhanced sta",
+    "expectedPaths": [
+      "gov.states.va.tax.income.deductions.standard.JOINT",
+      "gov.states.va.tax.income.deductions.standard.SINGLE",
+      "gov.states.va.tax.income.deductions.standard.SEPARATE",
+      "gov.states.va.tax.income.deductions.standard.SURVIVING_SPOUSE",
+      "gov.states.va.tax.income.deductions.standard.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "va-hb979",
+    "query": "Virginia HB979: Income Tax Reform Virginia HB979 proposes comprehensive income tax reform effective January 1, 2027. The",
+    "expectedPaths": [
+      "_use_reform",
+      "_skip_params",
+      "gov.contrib.states.va.hb979.in_effect",
+      "gov.states.va.tax.income.deductions.standard.JOINT",
+      "gov.states.va.tax.income.deductions.standard.SINGLE",
+      "gov.states.va.tax.income.deductions.standard.SEPARATE",
+      "gov.states.va.tax.income.deductions.standard.SURVIVING_SPOUSE",
+      "gov.states.va.tax.income.deductions.standard.HEAD_OF_HOUSEHOLD"
+    ]
+  },
+  {
+    "id": "wi-ab1030",
+    "query": "AB1030: Increase Wisconsin EITC Increases Wisconsin's Earned Income Tax Credit to 34% of the federal credit for all file",
+    "expectedPaths": [
+      "gov.states.wi.tax.income.credits.earned_income.fraction[0].amount",
+      "gov.states.wi.tax.income.credits.earned_income.fraction[1].amount",
+      "gov.states.wi.tax.income.credits.earned_income.fraction[2].amount"
+    ]
+  },
+  {
+    "id": "wv-hb4927",
+    "query": "Abolish West Virginia Personal Income Tax West Virginia HB4927 abolishes the personal income tax by setting all bracket ",
+    "expectedPaths": [
+      "gov.states.wv.tax.income.rates.head.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[4].rate"
+    ]
+  },
+  {
+    "id": "wv-sb392",
+    "query": "SB392 Reduces West Virginia personal income tax rates across all five brackets by approximately 10%, effective January 1",
+    "expectedPaths": [
+      "gov.states.wv.tax.income.rates.head.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.head.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.joint.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.single.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.separate.brackets[4].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[0].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[1].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[2].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[3].rate",
+      "gov.states.wv.tax.income.rates.surviving_spouse.brackets[4].rate"
+    ]
+  }
+]
