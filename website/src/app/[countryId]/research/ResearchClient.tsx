@@ -16,10 +16,16 @@
  *   - Uses OptimisedImage for blog post images
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Fuse from "fuse.js";
 import {
   IconArrowRight,
   IconChevronDown,
@@ -49,21 +55,24 @@ import {
   getTopicTags,
   locationLabels,
   topicLabels,
-  type ResearchItem,
 } from "@/data/posts/postTransformers";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import authorsData from "@/data/posts/authors.json";
+import { buildAuthorFilterOptions } from "@/lib/authorFilterOptions";
+import {
+  searchResearchItems,
+  type ResearchSearchIndexEntry,
+  type ResearchSearchResult,
+} from "@/lib/researchSearch";
 
 /* ─── Constants ─── */
 
-// All authors from authors.json, sorted alphabetically by display name. The
+// All authors from authors.json, formatted and sorted by last name. The
 // dropdown previously hardcoded a 5-name subset; pulling from authors.json
 // keeps it in sync as authors are added without a code edit.
-const allAuthors = Object.entries(
+const allAuthors = buildAuthorFilterOptions(
   authorsData as Record<string, { name: string }>,
-)
-  .map(([key, value]) => ({ key, name: value.name }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+);
 
 const typeOptions = [
   { value: "article", label: "Article" },
@@ -117,11 +126,11 @@ function buildFilterParams(
 
 /* ─── BlogPostCard ─── */
 
-function BlogPostCard({
+export function BlogPostCard({
   item,
   countryId,
 }: {
-  item: ResearchItem;
+  item: ResearchSearchResult;
   countryId: string;
 }) {
   const link = item.isApp
@@ -242,7 +251,7 @@ function BlogPostCard({
             {item.title}
           </p>
 
-          {/* Description */}
+          {/* Description or body-search excerpt */}
           <Text
             size="sm"
             style={{
@@ -253,9 +262,29 @@ function BlogPostCard({
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
               lineHeight: "1.6",
+              fontStyle: item.searchExcerpt ? "italic" : undefined,
             }}
           >
-            {item.description}
+            {item.searchExcerpt ? (
+              <>
+                “
+                {item.searchExcerpt.text.slice(
+                  0,
+                  item.searchExcerpt.highlightStart,
+                )}
+                <mark
+                  style={{
+                    backgroundColor: colors.primary[100],
+                    color: "inherit",
+                  }}
+                >
+                  {item.searchExcerpt.highlightedText}
+                </mark>
+                {item.searchExcerpt.text.slice(item.searchExcerpt.highlightEnd)}”
+              </>
+            ) : (
+              item.description
+            )}
           </Text>
 
           {/* CTA */}
@@ -291,7 +320,7 @@ function BlogPostCard({
 
 /* ─── BlogPostGrid ─── */
 
-function itemKey(item: ResearchItem) {
+function itemKey(item: ResearchSearchResult) {
   return `${item.isApp ? "app" : "post"}-${item.slug}`;
 }
 
@@ -299,7 +328,7 @@ function BlogPostGrid({
   items,
   countryId,
 }: {
-  items: ResearchItem[];
+  items: ResearchSearchResult[];
   countryId: string;
 }) {
   const prevKeysRef = useRef<Set<string>>(new Set());
@@ -371,13 +400,13 @@ function BlogPostGrid({
     </>
   );
 }
-
 /* ─── FilterSection ─── */
 
 const sectionHeaderStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  flexShrink: 0,
   padding: "10px 12px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -414,18 +443,18 @@ function FilterSection({
   return (
     <div
       style={{
+        display: "flex",
+        flexDirection: "column",
         borderRadius: "12px",
         border: `1px solid ${isExpanded ? colors.primary[200] : colors.border.light}`,
         backgroundColor: isExpanded ? "rgba(230, 255, 250, 0.3)" : colors.white,
         transition: "border-color 0.2s ease, background-color 0.2s ease",
         overflow: "hidden",
-        // Collapsed sections must keep their full header height when a sibling
-        // section expands — the parent flex column has `maxHeight: availableHeight;
-        // overflow: hidden`, and the default `flex-shrink: 1` would otherwise
-        // squish the headers down (visible bug: clicking "Author" shrinks the
-        // "Type" / "Topic" / "Location" headers because the expanded Author panel
-        // takes most of the available column height).
-        flexShrink: 0,
+        // Collapsed sections keep their full header height. The expanded section
+        // is the only shrinkable item, so its content takes the remaining viewport
+        // space and scrolls instead of pushing the filter stack below the page.
+        flexShrink: isExpanded ? 1 : 0,
+        minHeight: 0,
       }}
     >
       <button
@@ -488,13 +517,16 @@ function FilterSection({
 
       <div
         style={{
+          flex: isExpanded ? "1 1 auto" : "0 1 auto",
+          minHeight: 0,
           maxHeight: isExpanded
             ? `${Math.min(height, maxHeight)}px`
             : "0px",
           opacity: isExpanded ? 1 : 0,
           transition:
             "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease",
-          overflow: isExpanded ? "auto" : "hidden",
+          overflowX: "hidden",
+          overflowY: isExpanded ? "auto" : "hidden",
         }}
       >
         <div ref={contentRef} style={{ padding: "4px 12px 12px" }}>
@@ -590,7 +622,7 @@ interface ResearchFiltersProps {
   countryId?: string;
 }
 
-function ResearchFilters({
+export function ResearchFilters({
   searchQuery,
   onSearchChange,
   onSearchSubmit,
@@ -890,6 +922,43 @@ export default function ResearchClient({
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>(() =>
     parseArrayParam(searchParams.get("authors")),
   );
+  const [searchIndex, setSearchIndex] = useState<
+    ResearchSearchIndexEntry[] | null
+  >(null);
+  const [searchIndexFailed, setSearchIndexFailed] = useState(false);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const shouldLoadSearchIndex =
+    searchQuery.trim().length > 0 && searchIndex === null && !searchIndexFailed;
+
+  useEffect(() => {
+    if (!shouldLoadSearchIndex) {
+      return;
+    }
+
+    let active = true;
+    fetch("/api/research-search-index")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load the article search index");
+        }
+        return response.json() as Promise<ResearchSearchIndexEntry[]>;
+      })
+      .then((index) => {
+        if (active) {
+          setSearchIndex(index);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSearchIndexFailed(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [shouldLoadSearchIndex]);
 
   // Sync URL params when filters change
   useEffect(() => {
@@ -918,7 +987,7 @@ export default function ResearchClient({
 
   // Filter items
   const filteredItems = useMemo(() => {
-    let items = allItems;
+    let items: ResearchSearchResult[] = allItems;
 
     // Filter by type
     if (selectedTypes.length > 0) {
@@ -950,12 +1019,12 @@ export default function ResearchClient({
     }
 
     // Apply search
-    if (searchQuery.trim()) {
-      const fuse = new Fuse(items, {
-        keys: ["title", "description"],
-        threshold: 0.3,
-      });
-      items = fuse.search(searchQuery).map((result) => result.item);
+    if (deferredSearchQuery.trim()) {
+      items = searchResearchItems(
+        items,
+        searchIndex || [],
+        deferredSearchQuery,
+      );
     }
 
     return items;
@@ -965,8 +1034,12 @@ export default function ResearchClient({
     selectedTopics,
     selectedLocations,
     selectedAuthors,
-    searchQuery,
+    deferredSearchQuery,
+    searchIndex,
   ]);
+
+  const isSearchIndexLoading =
+    searchQuery.trim().length > 0 && searchIndex === null && !searchIndexFailed;
 
   // Infinite scroll - show 8 items initially, load 8 more as user scrolls
   const { visibleCount, sentinelRef, hasMore, reset } = useInfiniteScroll({
@@ -1055,11 +1128,21 @@ export default function ResearchClient({
               className="tw:mb-md"
               style={{ color: colors.gray[500] }}
             >
-              {filteredItems.length}{" "}
-              {filteredItems.length === 1 ? "result" : "results"}
+              {isSearchIndexLoading
+                ? "Searching article text…"
+                : `${filteredItems.length} ${
+                    filteredItems.length === 1 ? "result" : "results"
+                  }`}
             </Text>
 
-            {filteredItems.length > 0 ? (
+            {isSearchIndexLoading ? (
+              <div
+                className="tw:flex tw:justify-center"
+                style={{ padding: spacing["3xl"] }}
+              >
+                <Spinner size="sm" />
+              </div>
+            ) : filteredItems.length > 0 ? (
               <>
                 <BlogPostGrid
                   items={visibleItems}

@@ -5,12 +5,14 @@
 The `app/` directory contains the legacy Vite build. Some parts have been ported to Next.js, others are still active.
 
 **Ported to website/ (do NOT modify in app/):**
+
 - Website components: `home/`, `shared/static/`, `Footer.tsx`, `FooterSubscribe.tsx`, `blog/BlogPostCard.tsx`, `blog/BlogPostGrid.tsx`, `blog/ResearchFilters.tsx`
   - Note: `homeHeader/` and `shared/HomeHeader.tsx` were also ported to `website/src/components/Header.tsx`, but the calculator-app still renders `HomeHeader` via `StandardLayout`, so these remain editable in `app/`. Keep the calculator header in sync with the website header when the website one changes.
 - Website pages: `Home`, `Research`, `Blog`, `Team`, `Supporters`, `Donate`, `Privacy`, `Terms`, `Brand*`, `Citations`, `AppPage`
-- `vercel.json` (root) — new rewrites go in `website/next.config.ts`
+- Production website routing — new rewrites go in `website/next.config.ts`, not `website/vercel.json`
 
 **Still active in app/ (OK to modify):**
+
 - Calculator components (report builder, household, charts, sidebar, etc.) — `calculator-app/` imports these via `externalDir`
 - Calculator pages (report output, pathways, etc.)
 - `app/src/data/` — shared data files (posts.json, citations.json, apps.json, authors.json)
@@ -102,18 +104,22 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
 ## Embedded sites
 
+### The shell rule
+
+**Everything served on policyengine.org carries the PolicyEngine site shell — header/nav and footer — and zone children must render it themselves** (the aca-calc / snap-qc-sim pattern: global nav with the wordmark, Research, Model, API, Donate, plus the site footer links). There is no shelled fallthrough for zone paths: the website proxies each tool's path straight to the child, and `AppPage`/apps.json alone has **no production route** (removing a zone rewrite 404s the path — see #1143/#1144). The `app-zone-shell-audit` enforces the header on zone routes; `SHELL_BRAND_EXEMPT_SOURCES` is empty and stays that way — the last nine bare legacy children shipped their shells in August 2026, and new zone embeds must render the shell from day one.
+
 ### Next.js multizones (default for all new tools)
 
 External PolicyEngine Next.js apps are stitched into `policyengine.org` as **Next.js multizones**. The website host (`website/next.config.ts`) proxies a public path to the zone's standalone Vercel deployment via `rewrites()`; the zone itself sets a matching `basePath` (or `assetPrefix` for root-served zones) so its `_next/*` assets resolve through the same proxy.
 
-**To add a new zone embed, edit two files — and *not* `vercel.json`:**
+**To add a new zone embed, edit two files — and _not_ `website/vercel.json`:**
 
 1. `website/src/data/appZoneRoutes.ts` — add a `{ source, destination }` entry. `appZoneRewrites` flattens this into the deep-path rewrite pair and feeds `beforeFiles` in `website/next.config.ts`.
 2. The zone repo — set `basePath: '/us/<slug>'` (path-mounted) or `assetPrefix: '/_zones/<slug>'` (root-served). See the `policyengine-interactive-tools` skill / `complete:audit-multizone` for the full rule set.
 
 `changelog_entry.yaml` gets the user-facing line.
 
-Why not `vercel.json`? The root `vercel.json` still hosts a few legacy zone rewrites and host-only routes (favicons, SPA catch-all), but multizone is the source of truth going forward — new entries in `vercel.json` will collide with the website's own `beforeFiles` ordering and bypass the multizone audit CI. Adding to `appZoneRoutes.ts` is the only path that gets validated by `app-zone-shell-audit` and `multizone-tracking-audit`. The `guard-vercel-zone-rewrites` workflow fails the PR if a new country-prefixed `*.vercel.app` rewrite slips into `vercel.json`.
+Why not `website/vercel.json`? It retains a few legacy zone rewrites and host-only routes, but multizone is the source of truth going forward — new entries will collide with the website's own `beforeFiles` ordering and bypass the multizone audit CI. Adding to `appZoneRoutes.ts` is the only path that gets validated by `app-zone-shell-audit` and `multizone-tracking-audit`. The `guard-vercel-zone-rewrites` workflow fails the PR if a new country-prefixed `*.vercel.app` rewrite slips into `website/vercel.json`.
 
 Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/PolicyEngine/policyengine-app-v2/pull/1047), [#1027 multizone apps registry](https://github.com/PolicyEngine/policyengine-app-v2/pull/1027).
 
@@ -121,15 +127,15 @@ Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/Polic
 
 A few static GitHub Pages sites are still embedded via iframes in `app/src/pages/`. Do not add new ones — use multizones.
 
-| Route                             | Component                   | Embed source                                 |
-| --------------------------------- | --------------------------- | -------------------------------------------- |
-| `/:countryId/2025-year-in-review` | `YearInReview.page.tsx`     | `policyengine.github.io/2025-year-in-review` |
+| Route                             | Component               | Embed source                                 |
+| --------------------------------- | ----------------------- | -------------------------------------------- |
+| `/:countryId/2025-year-in-review` | `YearInReview.page.tsx` | `policyengine.github.io/2025-year-in-review` |
 
 CI automatically checks these embed URLs on every push and PR (the `check-embeds` job in `pr.yaml` and `push.yaml`).
 
-### Host-only `vercel.json` rewrites
+### Host-only `website/vercel.json` rewrites
 
-The root `vercel.json` is still used for host-internal rewrites (favicons, the SPA catch-all, a handful of pre-multizone external proxies). Treat any `/us/*` → `*.vercel.app` shape there as legacy — do not add to it.
+`website/vercel.json` is still used for host-internal rewrites and a handful of pre-multizone external proxies. Treat any `/us/*` → `*.vercel.app` shape there as legacy — do not add to it.
 
 ## Before committing
 

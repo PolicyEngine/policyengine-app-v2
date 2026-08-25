@@ -65,9 +65,21 @@ const nextConfig: NextConfig = {
       },
       // Claude-branded skills page → runtime-agnostic AI agents page
       {
+        source: "/iariw-2026",
+        destination: "/us/events/iariw-2026",
+        permanent: false,
+      },
+      {
         source: "/:countryId/claude-plugin",
         destination: "/:countryId/ai-agents",
         permanent: true,
+      },
+      // Retired Citizens' Economic Council simulator, still embedded by
+      // citizensecon.org.uk/policymodelling → main UK simulator
+      {
+        source: "/uk/cec",
+        destination: "/uk",
+        permanent: false,
       },
       // Legacy /blog → /research
       {
@@ -172,6 +184,15 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         ...policyEngineIconRewrites,
         ...appZoneRewrites,
+        // PolicyEngine Belgium prototype (Vercel) — static demo over Microcosm-BE
+        {
+          source: "/be",
+          destination: "https://policyengine-be-demo.vercel.app/",
+        },
+        {
+          source: "/be/:path*",
+          destination: "https://policyengine-be-demo.vercel.app/:path*",
+        },
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         {
           source: "/us/api",

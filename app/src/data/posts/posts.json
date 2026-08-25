@@ -1,5 +1,15 @@
 [
   {
+    "title": "Who bears the AI shock? Distributional and fiscal incidence in the UK",
+    "description": "PolicyEngine traces AI employment, wage and capital shocks through the UK tax-benefit system, estimating the budgetary and distributional impacts across incidence scenarios.",
+    "date": "2026-08-04",
+    "tags": ["uk", "ai", "featured"],
+    "authors": ["vahid-ahmadi"],
+    "filename": "uk-ai-study.md",
+    "image": "uk-ai-study.jpg",
+    "imageCredit": "dig.watch"
+  },
+  {
     "title": "How we used Claude Code to apply for the Public Benefit Innovation Fund",
     "description": "Treating writing as software development, we built an entire grant application with interactive demos, perfect consistency, and real-time stakeholder iteration.",
     "date": "2025-08-28",
