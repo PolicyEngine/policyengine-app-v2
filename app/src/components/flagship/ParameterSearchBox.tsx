@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { IconFolder, IconSearch } from '@tabler/icons-react';
+import { IconFolder, IconInfoCircle, IconSearch } from '@tabler/icons-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
   createParameterSearchIndex,
@@ -22,7 +23,13 @@ interface ParameterSearchBoxProps {
   currentValueFor?: (entry: ParameterSearchEntry) => string | null;
   /** Derived concept clusters for variant-aware matching */
   clusters?: string[][];
+  /** State code → name, so the scope filter reads "California", not "CA only" */
+  stateLabels?: Record<string, string>;
 }
+
+const CONTRIB_EXPLANATION =
+  'Policy options contributed to the model — proposed reforms and ' +
+  'experimental provisions that are not current law.';
 
 const RESULT_LIMIT = 20;
 
@@ -89,6 +96,7 @@ export default function ParameterSearchBox({
   placeholder = 'Search any parameter, e.g. child tax credit amount',
   currentValueFor,
   clusters = [],
+  stateLabels = {},
   index: providedIndex,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
@@ -99,7 +107,15 @@ export default function ParameterSearchBox({
     () => providedIndex ?? createParameterSearchIndex(entries, clusters),
     [providedIndex, entries, clusters]
   );
-  const stateCodes = useMemo(() => listStateCodes(entries), [entries]);
+  // Named states sort by name; any code the metadata does not name falls
+  // to the end of the list under its bare code.
+  const stateOptions = useMemo(
+    () =>
+      listStateCodes(entries)
+        .map((code) => ({ code, label: stateLabels[code] ?? code.toUpperCase() }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [entries, stateLabels]
+  );
   const groups = useMemo(
     () => groupSearchResults(searchParameters(index, query, RESULT_LIMIT, filters)),
     [index, query, filters]
@@ -143,7 +159,7 @@ export default function ParameterSearchBox({
           flexWrap: 'wrap',
         }}
       >
-        {stateCodes.length > 0 && (
+        {stateOptions.length > 0 && (
           <label style={controlShell}>
             Scope
             <select
@@ -162,24 +178,58 @@ export default function ParameterSearchBox({
             >
               <option value="all">All jurisdictions</option>
               <option value="federal">Federal only</option>
-              {stateCodes.map((code) => (
-                <option key={code} value={code}>
-                  {code.toUpperCase()} only
-                </option>
-              ))}
+              <optgroup label="States">
+                {stateOptions.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.label}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </label>
         )}
-        <label style={{ ...controlShell, cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={filters.includeContrib}
-            onChange={(event) => setFilters({ ...filters, includeContrib: event.target.checked })}
-            aria-label="Include contributed parameters"
-            style={{ accentColor: colors.primary[500], width: 13, height: 13, margin: 0 }}
-          />
-          Contributed
-        </label>
+        <div style={controlShell}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              cursor: 'pointer',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={filters.includeContrib}
+              onChange={(event) => setFilters({ ...filters, includeContrib: event.target.checked })}
+              aria-label="Include contributed parameters"
+              style={{ accentColor: colors.primary[500], width: 13, height: 13, margin: 0 }}
+            />
+            Contributed
+          </label>
+          {/* Outside the label: a control inside it would toggle the filter. */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label={CONTRIB_EXPLANATION}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 0,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'help',
+                  color: colors.text.secondary,
+                }}
+              >
+                <IconInfoCircle size={13} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" style={{ maxWidth: 240 }}>
+              {CONTRIB_EXPLANATION}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       <div
@@ -294,6 +344,11 @@ export default function ParameterSearchBox({
                             fontFamily: typography.fontFamily.primary,
                             color: colors.text.primary,
                             fontWeight: typography.fontWeight.medium,
+                            // Without a zero min-width this column collapses to
+                            // its longest word when a value runs long, stacking
+                            // the label one word per line.
+                            flex: 1,
+                            minWidth: 0,
                           }}
                         >
                           {isFolder
@@ -306,16 +361,22 @@ export default function ParameterSearchBox({
                             alignItems: 'center',
                             gap: spacing.sm,
                             flexShrink: 0,
+                            // List-valued parameters (a dozen variable names)
+                            // must not push the label out of its own row.
+                            maxWidth: '45%',
                           }}
                         >
                           {currentValueFor?.(entry) && (
                             <span
+                              title={currentValueFor(entry) ?? undefined}
                               style={{
                                 fontSize: typography.fontSize.xs,
                                 fontFamily: typography.fontFamily.primary,
                                 color: colors.primary[700],
                                 fontWeight: typography.fontWeight.medium,
                                 whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
                               }}
                             >
                               {currentValueFor(entry)}

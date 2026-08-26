@@ -6,6 +6,7 @@ import { Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
+import { getStateLabels } from '@/libs/metadataUtils';
 import {
   ParameterSearchEntry,
   selectAddableParameterPaths,
@@ -28,6 +29,7 @@ export default function BuildPage() {
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
   const clusters = useSelector(selectConceptClusters);
+  const stateLabels = useSelector(getStateLabels);
   // Store-memoized: survives navigation, so Build mounts don't rebuild it.
   const searchIndex = useSelector(selectParameterSearchIndex);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
@@ -63,6 +65,7 @@ export default function BuildPage() {
           <ParameterSearchBox
             entries={entries}
             clusters={clusters}
+            stateLabels={stateLabels}
             index={searchIndex}
             onSelect={addEntry}
             currentValueFor={(entry) => {

@@ -58,6 +58,20 @@ export const getRegions = createSelector(
     })) || []
 );
 
+/**
+ * Two-letter state code → the model's own name for it ("ca" →
+ * "California"), read off the region options rather than a name list.
+ */
+export const getStateLabels = createSelector(
+  (state: RootState) => state.metadata.economyOptions.region,
+  (regions): Record<string, string> =>
+    Object.fromEntries(
+      (regions ?? [])
+        .filter((region) => region.name?.startsWith('state/'))
+        .map((region) => [region.name.slice('state/'.length), region.label])
+    )
+);
+
 export const getBasicInputFields = createSelector(
   [
     (state: RootState) => state.metadata.basicInputs,
