@@ -1,1 +1,1 @@
-- Add an offline evaluation harness for parameter search, scored against the bills the legislative tracker has already analysed
+- Find parameters by acronym or spelled-out name in parameter search, with acronyms derived from the model's own labels

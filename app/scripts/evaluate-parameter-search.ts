@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import {
+  buildConceptAliases,
   buildConceptClusters,
   buildParameterSearchEntries,
   createParameterSearchIndex,
@@ -92,13 +93,14 @@ async function main(): Promise<void> {
   const buildStart = performance.now();
   const entries = buildParameterSearchEntries(parameters);
   const clusters = buildConceptClusters(parameters);
-  const index = createParameterSearchIndex(entries, clusters);
+  const aliases = buildConceptAliases(parameters);
+  const index = createParameterSearchIndex(entries, clusters, aliases);
   const buildMs = performance.now() - buildStart;
 
   console.log(`\n${country.toUpperCase()} · model ${version}`);
   console.log(
     `${entries.length.toLocaleString()} entries · ${clusters.length.toLocaleString()} clusters · ` +
-      `index built in ${buildMs.toFixed(0)}ms`
+      `${aliases.size.toLocaleString()} aliases · index built in ${buildMs.toFixed(0)}ms`
   );
 
   // Ground truth includes gov.contrib.* parameters — a quarter of the
@@ -140,12 +142,16 @@ async function main(): Promise<void> {
   // the model itself gives them. Shallow (any parameter in the program
   // counts) but broad, and each program contributes both its acronym and
   // its spelled-out name.
-  const paths = Object.keys(parameters);
+  // Searchable entries, not every parameter: Medicaid and its like carry
+  // economy/household false and never enter the index, so a program with
+  // nothing searchable behind it is unreachable by construction rather
+  // than badly ranked.
+  const searchablePaths = entries.map((entry) => entry.path);
   const {
     cases: programCases,
     skippedUnmapped,
     skippedBroad,
-  } = buildProgramEvalCases(programs, paths);
+  } = buildProgramEvalCases(programs, searchablePaths);
   if (programCases.length > 0) {
     const { metrics, msPerQuery } = score(programCases);
     suites.programs = metrics;
