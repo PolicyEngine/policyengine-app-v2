@@ -270,4 +270,41 @@ describe('ParameterSearchBox', () => {
       screen.queryByRole('button', { name: /open irs → credits → eitc in the policy tree/i })
     ).not.toBeInTheDocument();
   });
+
+  test('given a bracketed parameter then the folder path drops the bracket index', async () => {
+    // Given — the policy tree has no node for a bracket index, so a
+    // folder path pointing at one names something it cannot reveal
+    const user = userEvent.setup();
+    const onOpenFolder = vi.fn();
+    const bracketed: ParameterSearchEntry[] = [
+      {
+        path: 'gov.irs.credits.eitc.max[0].threshold',
+        label: 'threshold',
+        breadcrumb: 'IRS → Credits → EITC → Maximum → Bracket 1 → Threshold',
+        unit: 'currency-USD',
+        description: null,
+        isContrib: false,
+        stateCode: null,
+      },
+      {
+        path: 'gov.irs.credits.eitc.max[0].amount',
+        label: 'amount',
+        breadcrumb: 'IRS → Credits → EITC → Maximum → Bracket 1 → Amount',
+        unit: 'currency-USD',
+        description: null,
+        isContrib: false,
+        stateCode: null,
+      },
+    ];
+    render(
+      <ParameterSearchBox entries={bracketed} onSelect={vi.fn()} onOpenFolder={onOpenFolder} />
+    );
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'bracket');
+    await user.click(screen.getByRole('button', { name: /open .* in the policy tree/i }));
+
+    // Then
+    expect(onOpenFolder).toHaveBeenCalledWith('gov.irs.credits.eitc.max');
+  });
 });

@@ -40,20 +40,32 @@ export default function ParameterTreeBrowser({
 }: ParameterTreeBrowserProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const pendingScroll = useRef<string | null>(null);
 
   useEffect(() => {
     if (!expandTo) {
       return;
     }
+    pendingScroll.current = expandTo;
     setExpanded((prev) => new Set([...prev, ...pathWithAncestors(expandTo)]));
-    // The rows for those ancestors only exist after the expansion renders.
-    const frame = requestAnimationFrame(() => {
-      const rows = containerRef.current?.querySelectorAll('[data-path]') ?? [];
-      const target = [...rows].find((row) => row.getAttribute('data-path') === expandTo);
-      target?.scrollIntoView({ block: 'center' });
-    });
-    return () => cancelAnimationFrame(frame);
   }, [expandTo]);
+
+  // The row only exists once the expansion has rendered, so the scroll
+  // waits for a render in which it is actually there — an animation
+  // frame scheduled alongside the state update fires too early and
+  // finds nothing.
+  useEffect(() => {
+    const target = pendingScroll.current;
+    if (!target) {
+      return;
+    }
+    const rows = containerRef.current?.querySelectorAll('[data-path]') ?? [];
+    const row = [...rows].find((candidate) => candidate.getAttribute('data-path') === target);
+    if (row) {
+      row.scrollIntoView({ block: 'center' });
+      pendingScroll.current = null;
+    }
+  }, [expanded]);
 
   if (!tree) {
     return (

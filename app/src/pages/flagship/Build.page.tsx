@@ -84,6 +84,9 @@ export default function BuildPage() {
               stateLabels={stateLabels}
               index={searchIndex}
               onSelect={addEntry}
+              // With the tree open, a floating result list would cover
+              // the folder the reader just asked to see.
+              resultsInFlow={showTree}
               onOpenFolder={(folderPath) => {
                 // Results stay up: the near miss is worth comparing
                 // against whatever the folder turns out to hold.

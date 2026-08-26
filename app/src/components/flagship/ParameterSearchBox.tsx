@@ -31,12 +31,29 @@ interface ParameterSearchBoxProps {
    * to the siblings that did not.
    */
   onOpenFolder?: (folderPath: string) => void;
+  /**
+   * Render results in the page flow rather than floating over it. Set
+   * when something below needs to stay visible — a floating list would
+   * sit on top of the very folder it just opened.
+   */
+  resultsInFlow?: boolean;
 }
 
-/** The parent path of a leaf: gov.irs.credits.ctc.amount → gov.irs.credits.ctc. */
+/**
+ * The folder a leaf sits in: gov.irs.credits.ctc.amount →
+ * gov.irs.credits.ctc.
+ *
+ * Bracket indices are not nodes in the policy tree — it stops at
+ * `...eitc.max` and renders the brackets inside it — so a trailing
+ * `[n]` is dropped. Pointing at `...max[0]` names a folder the tree
+ * cannot reveal, and the reveal silently does nothing.
+ */
 function parentPath(path: string): string | null {
   const lastDot = path.lastIndexOf('.');
-  return lastDot > 0 ? path.slice(0, lastDot) : null;
+  if (lastDot <= 0) {
+    return null;
+  }
+  return path.slice(0, lastDot).replace(/\[\d+\]$/, '');
 }
 
 const CONTRIB_EXPLANATION =
@@ -110,10 +127,12 @@ export default function ParameterSearchBox({
   clusters = [],
   stateLabels = {},
   onOpenFolder,
+  resultsInFlow = false,
   index: providedIndex,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
+  const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
   const [filters, setFilters] = useState<ParameterSearchFilters>(DEFAULT_SEARCH_FILTERS);
 
   const index = useMemo(
@@ -285,16 +304,14 @@ export default function ParameterSearchBox({
           id="parameter-search-results"
           role="listbox"
           style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 20,
+            ...(resultsInFlow
+              ? { position: 'relative' }
+              : { position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20 }),
             marginTop: spacing.xs,
             border: `1px solid ${colors.border.light}`,
             borderRadius: 10,
             background: colors.background.primary,
-            boxShadow: '0 8px 24px rgba(20, 32, 31, 0.12)',
+            boxShadow: resultsInFlow ? 'none' : '0 8px 24px rgba(20, 32, 31, 0.12)',
             maxHeight: 420,
             overflowY: 'auto',
           }}
@@ -328,17 +345,28 @@ export default function ParameterSearchBox({
                         </div>
                       );
                     }
+                    const isHovered = hoveredFolder === folderPath;
                     return (
                       <button
                         type="button"
                         onClick={() => onOpenFolder(folderPath)}
+                        onMouseEnter={() => setHoveredFolder(folderPath)}
+                        onMouseLeave={() => setHoveredFolder(null)}
+                        onFocus={() => setHoveredFolder(folderPath)}
+                        onBlur={() => setHoveredFolder(null)}
                         title={`Open ${group.folder} in the policy tree`}
                         aria-label={`Open ${group.folder} in the policy tree`}
                         style={{
                           ...headerStyle,
                           border: 'none',
-                          background: 'transparent',
                           cursor: 'pointer',
+                          // A folder header is the one row here that
+                          // navigates rather than adds, so it has to look
+                          // like something you can press.
+                          color: isHovered ? colors.primary[700] : colors.text.secondary,
+                          background: isHovered ? colors.primary[50] : 'transparent',
+                          textDecoration: isHovered ? 'underline' : 'none',
+                          textUnderlineOffset: 3,
                         }}
                       >
                         <IconFolder size={13} />
@@ -351,7 +379,25 @@ export default function ParameterSearchBox({
                         >
                           {group.folder}
                         </span>
-                        <IconArrowRight size={12} style={{ flexShrink: 0 }} />
+                        <IconArrowRight
+                          size={12}
+                          style={{
+                            flexShrink: 0,
+                            transform: isHovered ? 'translateX(2px)' : undefined,
+                            transition: 'transform 120ms ease',
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: typography.fontWeight.normal,
+                            opacity: isHovered ? 1 : 0,
+                            transition: 'opacity 120ms ease',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          open in tree
+                        </span>
                       </button>
                     );
                   })()}
