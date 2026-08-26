@@ -40,6 +40,8 @@ export default function BuildPage() {
   // Search is the surface; the tree is the fallback for when you do not
   // know what the thing is called, so it stays out of the way until asked for.
   const [showTree, setShowTree] = useState(false);
+  // The folder a search result pointed at, revealed in the tree below.
+  const [treeFocus, setTreeFocus] = useState<string | null>(null);
 
   // Store-memoized like the index: built once per metadata load, not
   // per navigation or render.
@@ -82,6 +84,12 @@ export default function BuildPage() {
               stateLabels={stateLabels}
               index={searchIndex}
               onSelect={addEntry}
+              onOpenFolder={(folderPath) => {
+                // Results stay up: the near miss is worth comparing
+                // against whatever the folder turns out to hold.
+                setShowTree(true);
+                setTreeFocus(folderPath);
+              }}
               currentValueFor={(entry) => {
                 const value = getCurrentValue(parameters?.[entry.path]?.values);
                 return value === undefined ? null : formatValue(value, entry.unit);
@@ -102,7 +110,14 @@ export default function BuildPage() {
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Button
               variant="ghost"
-              onClick={() => setShowTree((open) => !open)}
+              onClick={() =>
+                setShowTree((open) => {
+                  if (open) {
+                    setTreeFocus(null);
+                  }
+                  return !open;
+                })
+              }
               aria-expanded={showTree}
               aria-controls="policy-tree"
               style={{
@@ -134,6 +149,7 @@ export default function BuildPage() {
               tree={parameterTree}
               addablePaths={addablePaths}
               draftPaths={draftPaths}
+              expandTo={treeFocus}
               onSelectLeaf={(path) => {
                 const entry = entriesByPath.get(path);
                 if (entry) {

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { IconFolder, IconInfoCircle, IconSearch } from '@tabler/icons-react';
+import { IconArrowRight, IconFolder, IconInfoCircle, IconSearch } from '@tabler/icons-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
@@ -25,6 +25,18 @@ interface ParameterSearchBoxProps {
   clusters?: string[][];
   /** State code → name, so the scope filter reads "California", not "CA only" */
   stateLabels?: Record<string, string>;
+  /**
+   * Called with a folder's parameter path when its header is clicked.
+   * Search shows only the leaves that matched; this is how a reader gets
+   * to the siblings that did not.
+   */
+  onOpenFolder?: (folderPath: string) => void;
+}
+
+/** The parent path of a leaf: gov.irs.credits.ctc.amount → gov.irs.credits.ctc. */
+function parentPath(path: string): string | null {
+  const lastDot = path.lastIndexOf('.');
+  return lastDot > 0 ? path.slice(0, lastDot) : null;
 }
 
 const CONTRIB_EXPLANATION =
@@ -97,6 +109,7 @@ export default function ParameterSearchBox({
   currentValueFor,
   clusters = [],
   stateLabels = {},
+  onOpenFolder,
   index: providedIndex,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
@@ -290,23 +303,58 @@ export default function ParameterSearchBox({
             const isFolder = group.entries.length > 1 && group.folder;
             return (
               <div key={group.folder || group.entries[0].path}>
-                {isFolder && (
-                  <div
-                    style={{
+                {isFolder &&
+                  (() => {
+                    const folderPath = parentPath(group.entries[0].path);
+                    const headerStyle: React.CSSProperties = {
                       display: 'flex',
                       alignItems: 'center',
                       gap: spacing.xs,
+                      width: '100%',
                       padding: `${spacing.sm} ${spacing.lg} ${spacing.xs}`,
                       fontSize: typography.fontSize.xs,
                       fontFamily: typography.fontFamily.primary,
                       fontWeight: typography.fontWeight.semibold,
                       color: colors.text.secondary,
-                    }}
-                  >
-                    <IconFolder size={13} />
-                    {group.folder}
-                  </div>
-                )}
+                      textAlign: 'left',
+                    };
+                    // Only a folder with a resolvable path can be opened;
+                    // otherwise the header stays the label it was.
+                    if (!onOpenFolder || !folderPath) {
+                      return (
+                        <div style={headerStyle}>
+                          <IconFolder size={13} />
+                          {group.folder}
+                        </div>
+                      );
+                    }
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => onOpenFolder(folderPath)}
+                        title={`Open ${group.folder} in the policy tree`}
+                        aria-label={`Open ${group.folder} in the policy tree`}
+                        style={{
+                          ...headerStyle,
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <IconFolder size={13} />
+                        <span
+                          style={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {group.folder}
+                        </span>
+                        <IconArrowRight size={12} style={{ flexShrink: 0 }} />
+                      </button>
+                    );
+                  })()}
                 {group.entries.map((entry) => {
                   runningIndex += 1;
                   const i = runningIndex;

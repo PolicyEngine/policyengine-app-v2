@@ -239,4 +239,35 @@ describe('ParameterSearchBox', () => {
     // Then
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
+
+  test('given a folder group then its header opens that folder in the tree', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onOpenFolder = vi.fn();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} onOpenFolder={onOpenFolder} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+    await user.click(
+      screen.getByRole('button', { name: /open irs → credits → eitc in the policy tree/i })
+    );
+
+    // Then — the folder path, not the breadcrumb
+    expect(onOpenFolder).toHaveBeenCalledWith('gov.irs.credits.eitc');
+  });
+
+  test('given no folder handler then the header stays a label', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+
+    // Then
+    expect(screen.getByText('IRS → Credits → EITC')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /open irs → credits → eitc in the policy tree/i })
+    ).not.toBeInTheDocument();
+  });
 });
