@@ -40,15 +40,9 @@ export default function WorkspaceLayout({ children, wide = false }: WorkspaceLay
         <div style={{ flex: '1 1 480px', minWidth: 0 }}>
           <div style={{ maxWidth: contentWidth, margin: '0 auto' }}>{children}</div>
         </div>
-        <div
-          style={{
-            flex: '0 1 380px',
-            minWidth: 300,
-            position: 'sticky',
-            top: 0,
-            animation: 'pe-rail-in 240ms ease-out',
-          }}
-        >
+        {/* The panel owns its width, height and folding; the layout
+            only decides that it sits here. */}
+        <div style={{ display: 'flex', animation: 'pe-rail-in 240ms ease-out' }}>
           <style>{`@keyframes pe-rail-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }`}</style>
           <ReformPreviewCard draft={draft!} />
         </div>

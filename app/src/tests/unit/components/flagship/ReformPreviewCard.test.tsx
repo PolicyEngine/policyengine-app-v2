@@ -150,10 +150,12 @@ describe('ReformPreviewCard', () => {
     renderCard();
 
     // When
-    await user.click(screen.getByRole('button', { name: /here's your draft reform/i }));
+    await user.click(screen.getByRole('button', { name: /collapse here's your draft reform/i }));
 
-    // Then — the count survives the fold; the editing controls do not
-    expect(screen.getByText('1 provision')).toBeInTheDocument();
+    // Then — the folded spine keeps the panel's name; the controls go
+    expect(
+      screen.getByRole('button', { name: /open here's your draft reform/i })
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /run report/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
   });
@@ -163,11 +165,9 @@ describe('ReformPreviewCard', () => {
     const user = userEvent.setup();
     seedDraft();
     renderCard();
-    const header = screen.getByRole('button', { name: /here's your draft reform/i });
-
     // When
-    await user.click(header);
-    await user.click(header);
+    await user.click(screen.getByRole('button', { name: /collapse here's your draft reform/i }));
+    await user.click(screen.getByRole('button', { name: /open here's your draft reform/i }));
 
     // Then
     expect(screen.getByRole('button', { name: /run report/i })).toBeInTheDocument();
@@ -180,9 +180,8 @@ describe('ReformPreviewCard', () => {
     renderCard();
 
     // Then — an unseen draft is what this panel exists to prevent
-    expect(screen.getByRole('button', { name: /here's your draft reform/i })).toHaveAttribute(
-      'aria-expanded',
-      'true'
-    );
+    expect(
+      screen.getByRole('button', { name: /collapse here's your draft reform/i })
+    ).toHaveAttribute('aria-expanded', 'true');
   });
 });

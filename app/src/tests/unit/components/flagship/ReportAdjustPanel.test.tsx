@@ -56,7 +56,7 @@ async function renderPanel() {
     </QueryClientProvider>
   );
   // Collapsed by default — expand via the edge tab before interacting.
-  await userEvent.setup().click(screen.getByRole('button', { name: /adjust parameters/i }));
+  await userEvent.setup().click(screen.getByRole('button', { name: /open adjust parameters/i }));
   return result;
 }
 
@@ -160,10 +160,10 @@ describe('ReportAdjustPanel', () => {
     const user = userEvent.setup();
     await renderPanel();
 
-    await user.click(screen.getByRole('button', { name: /collapse the adjust panel/i }));
+    await user.click(screen.getByRole('button', { name: /collapse adjust parameters/i }));
     expect(screen.queryByRole('button', { name: /recompute/i })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /adjust parameters/i }));
+    await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
     expect(screen.getByRole('button', { name: /recompute/i })).toBeInTheDocument();
   });
 });
