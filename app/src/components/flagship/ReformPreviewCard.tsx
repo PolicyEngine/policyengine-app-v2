@@ -20,6 +20,10 @@ import { formatValue } from '@/utils/parameterValues';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
+/**
+ * How the draft came about, for the report's own record. This is
+ * provenance the report carries, not a label the panel needs to wear.
+ */
 const SOURCE_NOTES: Record<string, string> = {
   manual: 'Hand-built',
   chat: 'Drafted from your question',
@@ -107,11 +111,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
   }`;
 
   return (
-    <SidePanel
-      title={draft.editingReformId ? 'Editing reform' : "Here's your draft reform"}
-      meta={SOURCE_NOTES[draft.source]}
-      accent
-    >
+    <SidePanel title={draft.editingReformId ? 'Editing reform' : 'Draft reform'} accent>
       <SectionHeader label="Reform" detail={provisionCount} />
       <Stack style={{ gap: 0 }}>
         {draft.provisions.map((provision) => (
