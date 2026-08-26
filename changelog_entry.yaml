@@ -1,3 +1,1 @@
-- Name states in the parameter search filter, explain the contributed filter, and stop long parameter values from squeezing result labels
-- Lead the build page with search, fold the policy tree behind a toggle, and open a search result's folder in the tree
-- Let the draft reform panel fold away
+- Show a spinner while the parameter index and policy tree load on the build page

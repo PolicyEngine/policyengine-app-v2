@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { IconChevronDown, IconChevronRight, IconPlus } from '@tabler/icons-react';
-import { Text } from '@/components/ui';
+import { Spinner, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { ParameterTreeNode } from '@/types/metadata';
 
@@ -57,9 +57,12 @@ export default function ParameterTreeBrowser({
 
   if (!tree) {
     return (
-      <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-        Loading the policy tree…
-      </Text>
+      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+        <Spinner size="sm" />
+        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+          Loading the policy tree…
+        </Text>
+      </div>
     );
   }
 

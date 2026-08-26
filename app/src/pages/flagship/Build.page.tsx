@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import ParameterTreeBrowser from '@/components/flagship/ParameterTreeBrowser';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
-import { Button, Stack, Text, Title } from '@/components/ui';
+import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
@@ -96,15 +96,22 @@ export default function BuildPage() {
               }}
             />
           ) : (
-            <Text
+            // The index takes a moment on the US tree — say so with
+            // something moving, so the wait reads as work rather than
+            // an empty page.
+            <Stack
               style={{
-                color: colors.text.secondary,
-                fontSize: typography.fontSize.sm,
-                textAlign: 'center',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: spacing.sm,
               }}
             >
-              Loading the parameter index…
-            </Text>
+              <Spinner size="sm" />
+              <Text style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
+                Loading the parameter index…
+              </Text>
+            </Stack>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'center' }}>
