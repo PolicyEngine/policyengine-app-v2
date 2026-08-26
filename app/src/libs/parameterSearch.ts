@@ -153,6 +153,145 @@ export function buildConceptClusters(collection: ParameterMetadataCollection): s
     .map((members) => [...members]);
 }
 
+/**
+ * Concept aliases: a variant → the canonical phrase it names.
+ *
+ * Two derivations, no lists. A node pairs its path segment with its
+ * label (`ctc` ↔ "child tax credit"), and every multi-word label yields
+ * its own initialism ("Universal Credit" → `uc`) — which is how an
+ * acronym the tree never spells out still finds its program.
+ *
+ * Unlike the clusters, aliases never merge transitively: a variant that
+ * names different things in different places is ambiguous, and an
+ * ambiguous variant is dropped rather than pulling unrelated concepts
+ * into one bucket. ("earned income" appears under EITC, SNAP deductions
+ * and a Georgia retirement cap; canonicalizing it to any one of those
+ * would be a lie.)
+ */
+const ALIAS_DOMINANCE = 0.6;
+
+/** Words too structural to carry an initialism's meaning. */
+const INITIALISM_SKIP = new Set(['and', 'or', 'of', 'the', 'for', 'to', 'in', 'a', 'an']);
+
+function normalizePhrase(label: string): string {
+  return label.toLowerCase().replace(/\.$/, '').replace(/\s+/g, ' ').trim();
+}
+
+/** "Child Tax Credit" → "ctc"; returns null when there is no acronym to make. */
+export function initialismOf(phrase: string): string | null {
+  const words = phrase.split(/\s+/).filter((word) => word && !INITIALISM_SKIP.has(word));
+  if (words.length < 2) {
+    return null;
+  }
+  const letters = words
+    .map((word) => word[0])
+    .filter((letter) => /[a-z]/.test(letter))
+    .join('');
+  return letters.length >= 2 ? letters : null;
+}
+
+export function buildConceptAliases(collection: ParameterMetadataCollection): Map<string, string> {
+  const counts = new Map<string, Map<string, number>>();
+  const record = (variant: string, phrase: string) => {
+    if (!variant || variant === phrase || variant.length < 2) {
+      return;
+    }
+    const byPhrase = counts.get(variant) ?? new Map<string, number>();
+    byPhrase.set(phrase, (byPhrase.get(phrase) ?? 0) + 1);
+    counts.set(variant, byPhrase);
+  };
+
+  for (const node of Object.values(collection) as any[]) {
+    const path: string | undefined = node?.parameter;
+    const label: string | undefined = node?.label;
+    if (!path || !label) {
+      continue;
+    }
+    const phrase = normalizePhrase(label);
+    if (phrase.split(' ').length < 2) {
+      continue;
+    }
+    // Only acronyms become aliases. Pairing a path segment with its
+    // label reads plausibly — "income" sits on a node labelled "income
+    // elasticity of labor supply" — but rewriting a common word to one
+    // long label is how a query about income tax ends up about labor
+    // supply elasticity. Segment ↔ label stays in the clusters, which
+    // only decide candidacy and cannot rewrite anything.
+    const initialism = initialismOf(phrase);
+    if (initialism) {
+      record(initialism, phrase);
+    }
+  }
+
+  const aliases = new Map<string, string>();
+  for (const [variant, byPhrase] of counts) {
+    let best = '';
+    let bestCount = 0;
+    let total = 0;
+    for (const [phrase, count] of byPhrase) {
+      total += count;
+      if (count > bestCount) {
+        best = phrase;
+        bestCount = count;
+      }
+    }
+    // A variant that means different things in different corners of the
+    // tree is not an alias for any of them.
+    if (bestCount / total >= ALIAS_DOMINANCE) {
+      aliases.set(variant, best);
+    }
+  }
+  return aliases;
+}
+
+/**
+ * Rewrites a query into canonical phrases: "ctc" and "child tax credit"
+ * become the same string, so they rank identically instead of each
+ * favouring the entries that happen to spell it their way.
+ */
+export function canonicalizeQuery(query: string, aliases: Map<string, string>): string {
+  let text = query.toLowerCase().trim();
+  if (!text) {
+    return text;
+  }
+  // Phrases first and longest first, so "earned income tax credit" is not
+  // consumed word by word.
+  const phrases = [...aliases.keys()]
+    .filter((variant) => variant.includes(' '))
+    .sort((a, b) => b.length - a.length);
+  for (const phrase of phrases) {
+    if (text.includes(phrase)) {
+      text = text.split(phrase).join(aliases.get(phrase)!);
+    }
+  }
+  return text
+    .split(/\s+/)
+    .map((token) => aliases.get(token) ?? token)
+    .join(' ');
+}
+
+/** The canonical phrases an entry carries, for its searchable text. */
+function entryConceptText(entry: ParameterSearchEntry, aliases: Map<string, string>): string {
+  const keys = new Set<string>();
+  for (const segment of entry.path.split('.')) {
+    keys.add(
+      segment
+        .replace(/\[\d+\]$/, '')
+        .replace(/_/g, ' ')
+        .toLowerCase()
+    );
+  }
+  keys.add(normalizePhrase(entry.label));
+  const phrases = new Set<string>();
+  for (const key of keys) {
+    const canonical = aliases.get(key);
+    if (canonical) {
+      phrases.add(canonical);
+    }
+  }
+  return [...phrases].join(' ');
+}
+
 function isSearchableParameter(param: any): param is ParameterMetadata {
   return (
     param?.type === 'parameter' &&
@@ -209,11 +348,14 @@ export interface ParameterSearchIndex {
   clusters: string[][];
   /** Variant lookup: cluster member → its cluster. */
   clusterByMember: Map<string, string[]>;
+  /** Variant → canonical phrase (see buildConceptAliases). */
+  aliases: Map<string, string>;
 }
 
 export function createParameterSearchIndex(
   entries: ParameterSearchEntry[],
-  clusters: string[][] = []
+  clusters: string[][] = [],
+  aliases = new Map<string, string>()
 ): ParameterSearchIndex {
   const clusterByMember = new Map<string, string[]>();
   for (const cluster of clusters) {
@@ -226,8 +368,10 @@ export function createParameterSearchIndex(
   let fuseInstance: Fuse<ParameterSearchEntry> | null = null;
   return {
     entries,
+    // The canonical phrases go in the haystack too, so an entry spelled
+    // one way is found by a query normalized the other way.
     haystacks: entries.map((entry) =>
-      `${entry.breadcrumb} ${entry.label} ${entry.path} ${entry.path.replace(/[._]/g, ' ')}`.toLowerCase()
+      `${entry.breadcrumb} ${entry.label} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)}`.toLowerCase()
     ),
     get fuse() {
       fuseInstance ??= new Fuse(entries, FUSE_OPTIONS);
@@ -235,6 +379,7 @@ export function createParameterSearchIndex(
     },
     clusters,
     clusterByMember,
+    aliases,
   };
 }
 
@@ -295,7 +440,7 @@ export function searchParameters(
   limit = 10,
   filters: ParameterSearchFilters = DEFAULT_SEARCH_FILTERS
 ): ParameterSearchEntry[] {
-  const trimmed = query.trim().toLowerCase();
+  const trimmed = canonicalizeQuery(query, index.aliases);
   if (trimmed.length < 2) {
     return [];
   }
@@ -483,9 +628,16 @@ export const selectConceptClusters = createSelector(
   (parameters): string[][] => (parameters ? buildConceptClusters(parameters) : [])
 );
 
+export const selectConceptAliases = createSelector(
+  [(state: RootState) => state.metadata.parameters],
+  (parameters): Map<string, string> =>
+    parameters ? buildConceptAliases(parameters) : new Map<string, string>()
+);
+
 export const selectParameterSearchIndex = createSelector(
-  [selectParameterSearchEntries, selectConceptClusters],
-  (entries, clusters): ParameterSearchIndex => createParameterSearchIndex(entries, clusters)
+  [selectParameterSearchEntries, selectConceptClusters, selectConceptAliases],
+  (entries, clusters, aliases): ParameterSearchIndex =>
+    createParameterSearchIndex(entries, clusters, aliases)
 );
 
 export const selectParameterEntriesByPath = createSelector(
