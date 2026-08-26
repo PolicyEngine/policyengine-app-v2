@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildConceptAliases,
   buildConceptClusters,
   buildParameterSearchEntries,
+  canonicalizeQuery,
   countHiddenByFilters,
   createParameterSearchIndex,
   groupSearchResults,
+  initialismOf,
   listStateCodes,
   ParameterSearchEntry,
   searchParameters,
@@ -329,5 +332,59 @@ describe('derived concept clusters (real US metadata)', () => {
       stateScope: 'all',
     });
     expect(results.some((r) => r.isContrib)).toBe(true);
+  });
+});
+
+describe('concept aliases', () => {
+  const COLLECTION: any = {
+    'gov.irs.credits.ctc': {
+      type: 'parameterNode',
+      parameter: 'gov.irs.credits.ctc',
+      label: 'Child Tax Credit',
+    },
+    'gov.irs.credits.ctc.amount': {
+      type: 'parameter',
+      parameter: 'gov.irs.credits.ctc.amount',
+      label: 'Child Tax Credit amount',
+      economy: true,
+    },
+    'gov.dwp.universal_credit': {
+      type: 'parameterNode',
+      parameter: 'gov.dwp.universal_credit',
+      label: 'Universal Credit',
+    },
+  };
+
+  it('given a multi-word label then its initialism becomes an alias', () => {
+    const aliases = buildConceptAliases(COLLECTION);
+
+    expect(aliases.get('ctc')).toBe('child tax credit');
+    // No path segment spells this one out — the initialism rule is the
+    // only way "uc" reaches Universal Credit.
+    expect(aliases.get('uc')).toBe('universal credit');
+  });
+
+  it('given an initialism claimed by rival concepts then it is left alone', () => {
+    const contested: any = {
+      a: { parameter: 'gov.a', label: 'Union County' },
+      b: { parameter: 'gov.b', label: 'Unemployment Compensation' },
+      c: { parameter: 'gov.c', label: 'Unmarried Childless' },
+    };
+
+    expect(buildConceptAliases(contested).has('uc')).toBe(false);
+  });
+
+  it('given a single-word label then no initialism is derived', () => {
+    expect(initialismOf('medicaid')).toBeNull();
+    // Structural words carry no meaning in an acronym.
+    expect(initialismOf('temporary assistance for needy families')).toBe('tanf');
+  });
+
+  it('given an acronym query then it canonicalizes to the spelled-out phrase', () => {
+    const aliases = buildConceptAliases(COLLECTION);
+
+    expect(canonicalizeQuery('CTC amount', aliases)).toBe('child tax credit amount');
+    // Already spelled out: unchanged, so both forms rank identically.
+    expect(canonicalizeQuery('child tax credit amount', aliases)).toBe('child tax credit amount');
   });
 });
