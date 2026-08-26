@@ -182,7 +182,9 @@ describe('ParameterSearchBox', () => {
   test('given a state scope then only that state appears with its badge', async () => {
     // Given
     const user = userEvent.setup();
-    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    render(
+      <ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} stateLabels={{ ut: 'Utah' }} />
+    );
     await user.selectOptions(screen.getByRole('combobox', { name: /state scope/i }), 'ut');
 
     // When
@@ -191,7 +193,36 @@ describe('ParameterSearchBox', () => {
     // Then
     expect(screen.getByText('Utah → Income tax → Child tax credit → Amount')).toBeInTheDocument();
     expect(screen.queryByText('IRS → Credits → Child tax credit → Amount')).not.toBeInTheDocument();
-    expect(screen.getByText('UT')).toBeInTheDocument();
+    // The badge keeps the code; only the filter option spells the state out.
+    expect(screen.getByRole('option', { name: 'Utah' })).toBeInTheDocument();
+    expect(screen.getAllByText('UT').length).toBeGreaterThan(0);
+  });
+
+  test('given state labels then the scope filter names states instead of codes', () => {
+    // Given / When
+    render(
+      <ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} stateLabels={{ ut: 'Utah' }} />
+    );
+
+    // Then
+    expect(screen.getByRole('option', { name: 'Utah' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'UT only' })).not.toBeInTheDocument();
+  });
+
+  test('given no label for a state then the filter falls back to its code', () => {
+    // Given / When
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // Then
+    expect(screen.getByRole('option', { name: 'UT' })).toBeInTheDocument();
+  });
+
+  test('given the contributed filter then its meaning is available to the reader', () => {
+    // Given / When
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // Then
+    expect(screen.getByLabelText(/not current law/i)).toBeInTheDocument();
   });
 
   test('given a query with no match then no listbox renders', async () => {
@@ -207,5 +238,36 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  test('given a folder group then its header opens that folder in the tree', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onOpenFolder = vi.fn();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} onOpenFolder={onOpenFolder} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+    await user.click(
+      screen.getByRole('button', { name: /open irs → credits → eitc in the policy tree/i })
+    );
+
+    // Then — the folder path, not the breadcrumb
+    expect(onOpenFolder).toHaveBeenCalledWith('gov.irs.credits.eitc');
+  });
+
+  test('given no folder handler then the header stays a label', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+
+    // Then
+    expect(screen.getByText('IRS → Credits → EITC')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /open irs → credits → eitc in the policy tree/i })
+    ).not.toBeInTheDocument();
   });
 });

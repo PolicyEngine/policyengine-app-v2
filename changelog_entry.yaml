@@ -1,1 +1,3 @@
-- Find parameters by acronym or spelled-out name in parameter search, with acronyms derived from the model's own labels
+- Name states in the parameter search filter, explain the contributed filter, and stop long parameter values from squeezing result labels
+- Lead the build page with search, fold the policy tree behind a toggle, and open a search result's folder in the tree
+- Let the draft reform panel fold away

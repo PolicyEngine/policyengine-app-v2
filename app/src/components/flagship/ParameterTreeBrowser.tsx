@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IconChevronDown, IconChevronRight, IconPlus } from '@tabler/icons-react';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
@@ -12,6 +12,18 @@ interface ParameterTreeBrowserProps {
   addablePaths: Set<string>;
   /** Paths already in the draft — shown with an "In draft" tag. */
   draftPaths: Set<string>;
+  /**
+   * Folder path to reveal — its ancestors expand, it opens, and it
+   * scrolls into view. Set when a search result's folder is opened, so
+   * a near miss leads to the parameters around it.
+   */
+  expandTo?: string | null;
+}
+
+/** Every ancestor path of a dotted parameter path, plus the path itself. */
+function pathWithAncestors(path: string): string[] {
+  const segments = path.split('.');
+  return segments.map((_, index) => segments.slice(0, index + 1).join('.'));
 }
 
 /**
@@ -24,8 +36,24 @@ export default function ParameterTreeBrowser({
   onSelectLeaf,
   addablePaths,
   draftPaths,
+  expandTo = null,
 }: ParameterTreeBrowserProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!expandTo) {
+      return;
+    }
+    setExpanded((prev) => new Set([...prev, ...pathWithAncestors(expandTo)]));
+    // The rows for those ancestors only exist after the expansion renders.
+    const frame = requestAnimationFrame(() => {
+      const rows = containerRef.current?.querySelectorAll('[data-path]') ?? [];
+      const target = [...rows].find((row) => row.getAttribute('data-path') === expandTo);
+      target?.scrollIntoView({ block: 'center' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [expandTo]);
 
   if (!tree) {
     return (
@@ -62,6 +90,7 @@ export default function ParameterTreeBrowser({
             <div key={node.name}>
               <button
                 type="button"
+                data-path={node.name}
                 onClick={() => toggle(node.name)}
                 aria-expanded={isExpanded}
                 style={{
@@ -76,6 +105,7 @@ export default function ParameterTreeBrowser({
                   fontSize: typography.fontSize.sm,
                   color: colors.text.primary,
                   boxSizing: 'border-box',
+                  background: node.name === expandTo ? colors.primary[50] : 'transparent',
                 }}
               >
                 <ChevronIcon size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
@@ -100,6 +130,7 @@ export default function ParameterTreeBrowser({
           <button
             key={node.name}
             type="button"
+            data-path={node.name}
             disabled={!addable || inDraft}
             onClick={() => onSelectLeaf(node.name)}
             style={{
@@ -151,6 +182,7 @@ export default function ParameterTreeBrowser({
 
   return (
     <div
+      ref={containerRef}
       style={{
         border: `1px solid ${colors.border.light}`,
         borderRadius: 12,
