@@ -13,6 +13,8 @@
     "generate-llms-txt": "tsx scripts/generate-llms-txt.ts",
     "generate-prerender": "tsx scripts/generate-prerender.ts",
     "generate-sitemap": "tsx scripts/generate-sitemap.ts",
+    "evaluate-search": "tsx scripts/evaluate-parameter-search.ts",
+    "refresh-search-eval-cases": "tsx scripts/refresh-parameter-search-cases.ts",
     "build-with-types": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
