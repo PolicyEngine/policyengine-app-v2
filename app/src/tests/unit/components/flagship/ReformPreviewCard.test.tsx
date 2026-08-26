@@ -142,4 +142,47 @@ describe('ReformPreviewCard', () => {
     expect(screen.getByRole('button', { name: 'A household' })).toBeDisabled();
     expect(getDraftReform()?.population).toEqual({ scope: 'national' });
   });
+
+  test('given the header is clicked then the draft folds to its heading and count', async () => {
+    // Given
+    const user = userEvent.setup();
+    seedDraft();
+    renderCard();
+
+    // When
+    await user.click(screen.getByRole('button', { name: /here's your draft reform/i }));
+
+    // Then — the count survives the fold; the editing controls do not
+    expect(screen.getByText('1 provision')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /run report/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
+  });
+
+  test('given a folded draft then clicking again restores the controls', async () => {
+    // Given
+    const user = userEvent.setup();
+    seedDraft();
+    renderCard();
+    const header = screen.getByRole('button', { name: /here's your draft reform/i });
+
+    // When
+    await user.click(header);
+    await user.click(header);
+
+    // Then
+    expect(screen.getByRole('button', { name: /run report/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('Reform name')).toBeInTheDocument();
+  });
+
+  test('given the default view then the draft is open', () => {
+    // Given / When
+    seedDraft();
+    renderCard();
+
+    // Then — an unseen draft is what this panel exists to prevent
+    expect(screen.getByRole('button', { name: /here's your draft reform/i })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+  });
 });
