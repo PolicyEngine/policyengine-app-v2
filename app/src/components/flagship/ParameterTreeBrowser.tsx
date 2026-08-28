@@ -18,6 +18,8 @@ interface ParameterTreeBrowserProps {
    * a near miss leads to the parameters around it.
    */
   expandTo?: string | null;
+  /** Bump to repeat a reveal of the same path (state equality would swallow it). */
+  expandSeq?: number;
 }
 
 /** Every ancestor path of a dotted parameter path, plus the path itself. */
@@ -37,6 +39,7 @@ export default function ParameterTreeBrowser({
   addablePaths,
   draftPaths,
   expandTo = null,
+  expandSeq = 0,
 }: ParameterTreeBrowserProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -47,8 +50,10 @@ export default function ParameterTreeBrowser({
       return;
     }
     pendingScroll.current = expandTo;
+    // A new Set even when the contents are unchanged, so the scroll
+    // effect below re-fires for a repeat reveal of the same path.
     setExpanded((prev) => new Set([...prev, ...pathWithAncestors(expandTo)]));
-  }, [expandTo]);
+  }, [expandTo, expandSeq]);
 
   // The row only exists once the expansion has rendered, so the scroll
   // waits for a render in which it is actually there — an animation
@@ -59,12 +64,14 @@ export default function ParameterTreeBrowser({
     if (!target) {
       return;
     }
-    const rows = containerRef.current?.querySelectorAll('[data-path]') ?? [];
-    const row = [...rows].find((candidate) => candidate.getAttribute('data-path') === target);
-    if (row) {
-      row.scrollIntoView({ block: 'center' });
-      pendingScroll.current = null;
-    }
+    // One attempt, then clear regardless: by this render the expansion
+    // has committed, so the row either exists now or never will — a
+    // armed leftover would rescan the tree on every later toggle and
+    // could yank the viewport to a stale target minutes on.
+    pendingScroll.current = null;
+    containerRef.current
+      ?.querySelector(`[data-path="${CSS.escape(target)}"]`)
+      ?.scrollIntoView({ block: 'center' });
   }, [expanded]);
 
   if (!tree) {

@@ -345,14 +345,17 @@ export default function ParameterSearchBox({
                         </div>
                       );
                     }
-                    const isHovered = hoveredFolder === folderPath;
+                    // Keyed by the group's breadcrumb, not the stripped
+                    // folder path — bracket siblings share the path and
+                    // would hover in lockstep.
+                    const isHovered = hoveredFolder === group.folder;
                     return (
                       <button
                         type="button"
                         onClick={() => onOpenFolder(folderPath)}
-                        onMouseEnter={() => setHoveredFolder(folderPath)}
+                        onMouseEnter={() => setHoveredFolder(group.folder)}
                         onMouseLeave={() => setHoveredFolder(null)}
-                        onFocus={() => setHoveredFolder(folderPath)}
+                        onFocus={() => setHoveredFolder(group.folder)}
                         onBlur={() => setHoveredFolder(null)}
                         title={`Open ${group.folder} in the policy tree`}
                         aria-label={`Open ${group.folder} in the policy tree`}
@@ -387,17 +390,20 @@ export default function ParameterSearchBox({
                             transition: 'transform 120ms ease',
                           }}
                         />
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: typography.fontWeight.normal,
-                            opacity: isHovered ? 1 : 0,
-                            transition: 'opacity 120ms ease',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          open in tree
-                        </span>
+                        {/* Rendered only on hover: an invisible span
+                            still holds layout width and truncated the
+                            folder name at rest. */}
+                        {isHovered && (
+                          <span
+                            style={{
+                              fontSize: typography.fontSize.xs,
+                              fontWeight: typography.fontWeight.normal,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Open in tree
+                          </span>
+                        )}
                       </button>
                     );
                   })()}

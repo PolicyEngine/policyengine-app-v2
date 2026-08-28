@@ -41,7 +41,10 @@ export default function BuildPage() {
   // know what the thing is called, so it stays out of the way until asked for.
   const [showTree, setShowTree] = useState(false);
   // The folder a search result pointed at, revealed in the tree below.
-  const [treeFocus, setTreeFocus] = useState<string | null>(null);
+  // The folder a search result pointed at; the counter makes every
+  // click a fresh reveal — the same path twice would otherwise be a
+  // state no-op and the tree would sit unmoved.
+  const [treeFocus, setTreeFocus] = useState<{ path: string; seq: number } | null>(null);
 
   // Store-memoized like the index: built once per metadata load, not
   // per navigation or render.
@@ -84,14 +87,15 @@ export default function BuildPage() {
               stateLabels={stateLabels}
               index={searchIndex}
               onSelect={addEntry}
-              // With the tree open, a floating result list would cover
-              // the folder the reader just asked to see.
-              resultsInFlow={showTree}
+              // Always in flow on this page: a floating list would
+              // cover the tree, and flipping modes mid-interaction
+              // would shift rows under the pointer.
+              resultsInFlow
               onOpenFolder={(folderPath) => {
                 // Results stay up: the near miss is worth comparing
                 // against whatever the folder turns out to hold.
                 setShowTree(true);
-                setTreeFocus(folderPath);
+                setTreeFocus((prev) => ({ path: folderPath, seq: (prev?.seq ?? 0) + 1 }));
               }}
               currentValueFor={(entry) => {
                 const value = getCurrentValue(parameters?.[entry.path]?.values);
@@ -159,7 +163,8 @@ export default function BuildPage() {
               tree={parameterTree}
               addablePaths={addablePaths}
               draftPaths={draftPaths}
-              expandTo={treeFocus}
+              expandTo={treeFocus?.path ?? null}
+              expandSeq={treeFocus?.seq ?? 0}
               onSelectLeaf={(path) => {
                 const entry = entriesByPath.get(path);
                 if (entry) {

@@ -932,13 +932,11 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
             </Stack>
           </Stack>
         </div>
-        <div style={{ display: 'flex' }}>
-          <ReportAdjustPanel
-            title={bill.title}
-            sourceNote={`${bill.jurisdiction} · ${bill.status}`}
-            provisions={provisions}
-          />
-        </div>
+        <ReportAdjustPanel
+          title={bill.title}
+          sourceNote={`${bill.jurisdiction} · ${bill.status}`}
+          provisions={provisions}
+        />
       </div>
     </div>
   );

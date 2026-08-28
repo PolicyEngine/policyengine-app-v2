@@ -1,8 +1,50 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import SidePanel from '@/components/flagship/SidePanel';
 
 describe('SidePanel', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  test('given a storageKey then the fold survives a remount', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <SidePanel title="Draft reform" storageKey="draft-test">
+        <p>panel body</p>
+      </SidePanel>
+    );
+    await user.click(screen.getByRole('button', { name: /collapse draft reform/i }));
+    unmount();
+
+    // Remount, as a page navigation does — the fold must hold.
+    render(
+      <SidePanel title="Draft reform" storageKey="draft-test">
+        <p>panel body</p>
+      </SidePanel>
+    );
+
+    expect(screen.getByRole('button', { name: /open draft reform/i })).toBeInTheDocument();
+    expect(screen.queryByText('panel body')).not.toBeInTheDocument();
+  });
+
+  test('given the shell slot exists then the panel renders into it', () => {
+    const slot = document.createElement('div');
+    slot.id = 'flagship-side-panel-slot';
+    document.body.appendChild(slot);
+    try {
+      render(
+        <SidePanel title="Adjust parameters">
+          <p>panel body</p>
+        </SidePanel>
+      );
+
+      expect(slot.textContent).toContain('panel body');
+    } finally {
+      slot.remove();
+    }
+  });
+
   test('given an open panel then its body and header meta show', () => {
     render(
       <SidePanel title="Adjust parameters" meta="2 provisions">

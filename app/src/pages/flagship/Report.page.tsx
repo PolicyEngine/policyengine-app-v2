@@ -320,13 +320,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             </Stack>
           </Stack>
         </div>
-        <div style={{ display: 'flex' }}>
-          <ReportAdjustPanel
-            title={meta?.title || report?.label || 'Impact report'}
-            sourceNote={meta?.sourceNote || ''}
-            provisions={meta?.provisions ?? []}
-          />
-        </div>
+        <ReportAdjustPanel
+          title={meta?.title || report?.label || 'Impact report'}
+          sourceNote={meta?.sourceNote || ''}
+          provisions={meta?.provisions ?? []}
+        />
       </div>
     </div>
   );

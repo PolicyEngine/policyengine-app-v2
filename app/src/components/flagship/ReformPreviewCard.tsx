@@ -111,7 +111,11 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
   }`;
 
   return (
-    <SidePanel title={draft.editingReformId ? 'Editing reform' : 'Draft reform'} accent>
+    <SidePanel
+      title={draft.editingReformId ? 'Editing reform' : 'Draft reform'}
+      storageKey="draft-reform"
+      accent
+    >
       <SectionHeader label="Reform" detail={provisionCount} />
       <Stack style={{ gap: 0 }}>
         {draft.provisions.map((provision) => (

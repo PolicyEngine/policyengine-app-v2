@@ -10,11 +10,10 @@ interface WorkspaceLayoutProps {
 }
 
 /**
- * Shared layout for the working sections (Ask, Build, Reforms). With
- * no draft the content sits alone in a centered column; the moment a
- * draft exists it slides in as a sticky right panel — the panel only
- * exists when there is something in it. Panes wrap to a single column
- * on narrow screens.
+ * Shared layout for the working sections (Ask, Build, Reforms). The
+ * content sits in a centered column; the moment a draft exists its
+ * panel appears — rendered here, docked by SidePanel into the shell's
+ * right plane, so the layout never manages rail geometry itself.
  */
 export default function WorkspaceLayout({ children, wide = false }: WorkspaceLayoutProps) {
   const draft = useDraftReform();
@@ -22,31 +21,10 @@ export default function WorkspaceLayout({ children, wide = false }: WorkspaceLay
   const hasDraft = Boolean(draft && draft.countryId === countryId && draft.provisions.length > 0);
   const contentWidth = wide ? 1400 : 760;
 
-  if (!hasDraft) {
-    return <div style={{ maxWidth: contentWidth, margin: `${spacing.md} auto 0` }}>{children}</div>;
-  }
-
   return (
-    <div style={{ width: '100%' }}>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: spacing['2xl'],
-          alignItems: 'flex-start',
-          marginTop: spacing.md,
-        }}
-      >
-        <div style={{ flex: '1 1 480px', minWidth: 0 }}>
-          <div style={{ maxWidth: contentWidth, margin: '0 auto' }}>{children}</div>
-        </div>
-        {/* The panel owns its width, height and folding; the layout
-            only decides that it sits here. */}
-        <div style={{ display: 'flex', animation: 'pe-rail-in 240ms ease-out' }}>
-          <style>{`@keyframes pe-rail-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }`}</style>
-          <ReformPreviewCard draft={draft!} />
-        </div>
-      </div>
+    <div style={{ maxWidth: contentWidth, margin: `${spacing.md} auto 0` }}>
+      {children}
+      {hasDraft && <ReformPreviewCard draft={draft!} />}
     </div>
   );
 }

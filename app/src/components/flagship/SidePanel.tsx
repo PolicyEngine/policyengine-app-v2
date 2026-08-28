@@ -1,32 +1,31 @@
-import { useState } from 'react';
-import { IconChevronDown, IconChevronsLeft } from '@tabler/icons-react';
+import { useEffect, useLayoutEffect, useState } from 'react';
+import { IconChevronDown } from '@tabler/icons-react';
+import { createPortal } from 'react-dom';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 /**
- * The flagship shell's right-hand plane.
+ * The flagship shell's right plane.
  *
  * Both companions — the draft reform and a report's adjust rail — are
- * the same shape: a column that runs the height of the page beside the
- * content, scrolling its own body, folding to a slim tab that keeps its
- * place in the layout. Panels differ in what they hold, not in how they
- * sit, so the chrome lives here rather than twice.
- *
- * The shell's <main> is the scroll container, so full height means the
- * viewport minus that element's padding.
+ * the same shape: a column beside the content, folding to a slim spine.
+ * The chrome lives here once, and the column is real: the panel portals
+ * into a slot that is a flex sibling of the shell's scrolling <main>
+ * (see StandardLayout), so it runs the full height of the page by
+ * construction, never scrolls away with the content, and never wraps
+ * beneath it. Where the slot does not exist (tests, the legacy shell)
+ * the panel renders in place.
  */
-/**
- * Narrow enough that a report's content column (640px basis) and this
- * panel still share one flex line at 1280px — at 380 the row wrapped and
- * the panel fell under the report.
- */
+export const SIDE_PANEL_SLOT_ID = 'flagship-side-panel-slot';
+
 const PANEL_WIDTH = 340;
-const TAB_WIDTH = 40;
-/** StandardLayout pads <main> by 24px top and bottom. */
-const PANEL_HEIGHT = 'calc(100vh - 48px)';
+const SPINE_WIDTH = 40;
+
+/** Effects that must run before paint, without warning during SSR. */
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 interface SidePanelProps {
-  /** Header text, and the label on the folded tab. */
+  /** Header text, and the label on the folded spine. */
   title: string;
   /** Right-hand note in the header: source, count, whatever is short. */
   meta?: string;
@@ -34,7 +33,21 @@ interface SidePanelProps {
   accent?: boolean;
   /** Report companions start folded; the draft starts open. */
   defaultOpen?: boolean;
+  /**
+   * Remember the fold across navigations under this key. The draft
+   * panel follows the reader between pages; without persistence every
+   * navigation would spring a deliberately folded panel back open.
+   */
+  storageKey?: string;
   children: React.ReactNode;
+}
+
+function readStoredOpen(storageKey: string | undefined, fallback: boolean): boolean {
+  if (!storageKey || typeof sessionStorage === 'undefined') {
+    return fallback;
+  }
+  const stored = sessionStorage.getItem(`side-panel-open:${storageKey}`);
+  return stored === null ? fallback : stored === 'true';
 }
 
 export default function SidePanel({
@@ -42,71 +55,38 @@ export default function SidePanel({
   meta,
   accent = false,
   defaultOpen = true,
+  storageKey,
   children,
 }: SidePanelProps) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpenState] = useState(() => readStoredOpen(storageKey, defaultOpen));
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useIsomorphicLayoutEffect(() => {
+    setSlot(document.getElementById(SIDE_PANEL_SLOT_ID));
+  }, []);
+
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    if (storageKey && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(`side-panel-open:${storageKey}`, String(next));
+    }
+  };
+
+  const borderColor = accent ? colors.primary[500] : colors.border.light;
   const headerBackground = accent ? colors.primary[50] : colors.gray[50];
   const titleColor = accent ? colors.primary[700] : colors.text.primary;
+  const bodyId = `side-panel-body-${(storageKey ?? title).replace(/\W+/g, '-').toLowerCase()}`;
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-expanded={false}
-        aria-label={`Open ${title}`}
-        title={title}
-        style={{
-          all: 'unset',
-          boxSizing: 'border-box',
-          cursor: 'pointer',
-          position: 'sticky',
-          top: 0,
-          flex: `0 0 ${TAB_WIDTH}px`,
-          width: TAB_WIDTH,
-          height: PANEL_HEIGHT,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: spacing.sm,
-          padding: `${spacing.md} 0`,
-          border: `1px solid ${accent ? colors.primary[500] : colors.border.light}`,
-          borderRadius: 12,
-          background: headerBackground,
-        }}
-      >
-        <IconChevronsLeft size={16} color={titleColor} style={{ transform: 'rotate(180deg)' }} />
-        <Text
-          style={{
-            // Vertical label: the tab is a spine, not a button with a
-            // truncated word in it.
-            writingMode: 'vertical-rl',
-            fontSize: typography.fontSize.xs,
-            fontWeight: typography.fontWeight.semibold,
-            color: titleColor,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {title}
-        </Text>
-      </button>
-    );
-  }
-
-  return (
+  const content = open ? (
     <div
       aria-label={title}
       style={{
-        position: 'sticky',
-        top: 0,
-        flex: `0 1 ${PANEL_WIDTH}px`,
         width: PANEL_WIDTH,
-        minWidth: 300,
-        height: PANEL_HEIGHT,
+        height: '100%',
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
-        border: `1px solid ${accent ? colors.primary[500] : colors.border.light}`,
-        borderRadius: 12,
+        borderLeft: `1px solid ${borderColor}`,
         background: colors.background.primary,
         overflow: 'hidden',
       }}
@@ -115,6 +95,7 @@ export default function SidePanel({
         type="button"
         onClick={() => setOpen(false)}
         aria-expanded
+        aria-controls={bodyId}
         aria-label={`Collapse ${title}`}
         style={{
           all: 'unset',
@@ -134,7 +115,7 @@ export default function SidePanel({
           <IconChevronDown
             size={14}
             color={titleColor}
-            style={{ flexShrink: 0, transform: 'rotate(-90deg)' }}
+            style={{ flexShrink: 0, transition: 'transform 160ms ease' }}
           />
           <Text
             style={{
@@ -152,8 +133,53 @@ export default function SidePanel({
           </Text>
         )}
       </button>
-      {/* The body scrolls, not the page: the panel keeps its own height. */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>{children}</div>
+      {/* The body scrolls, not the page: the plane keeps its own height. */}
+      <div id={bodyId} style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        {children}
+      </div>
     </div>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      aria-expanded={false}
+      aria-label={`Open ${title}`}
+      title={title}
+      style={{
+        all: 'unset',
+        boxSizing: 'border-box',
+        cursor: 'pointer',
+        width: SPINE_WIDTH,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: spacing.sm,
+        padding: `${spacing.md} 0`,
+        borderLeft: `1px solid ${borderColor}`,
+        background: headerBackground,
+      }}
+    >
+      <IconChevronDown
+        size={14}
+        color={titleColor}
+        style={{ transform: 'rotate(90deg)', transition: 'transform 160ms ease' }}
+      />
+      <Text
+        style={{
+          // Vertical label: the spine is a spine, not a squeezed button.
+          writingMode: 'vertical-rl',
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.semibold,
+          color: titleColor,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {title}
+      </Text>
+    </button>
   );
+
+  // Into the shell's right-plane slot when it exists; in place otherwise.
+  return slot ? createPortal(content, slot) : content;
 }

@@ -58,6 +58,9 @@ function renderCard() {
 describe('ReformPreviewCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The panel remembers its fold in sessionStorage; a fold test must
+    // not leak a closed panel into the next test.
+    sessionStorage.clear();
     clearDraftReform();
     seedDraft();
   });
