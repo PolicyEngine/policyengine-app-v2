@@ -112,7 +112,10 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
 
   return (
     <SidePanel
-      title={draft.editingReformId ? 'Editing reform' : 'Draft reform'}
+      // The reform's own name is the identity, the way a document title
+      // is — the kicker carries the draft/editing state instead.
+      title={draft.label.trim() || 'New reform'}
+      kicker={draft.editingReformId ? 'Editing' : 'Draft'}
       storageKey="draft-reform"
       accent
     >

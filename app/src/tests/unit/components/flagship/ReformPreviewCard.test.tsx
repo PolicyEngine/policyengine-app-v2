@@ -153,10 +153,10 @@ describe('ReformPreviewCard', () => {
     renderCard();
 
     // When
-    await user.click(screen.getByRole('button', { name: /collapse draft reform/i }));
+    await user.click(screen.getByRole('button', { name: /collapse new reform/i }));
 
     // Then — the folded spine keeps the panel's name; the controls go
-    expect(screen.getByRole('button', { name: /open draft reform/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open new reform/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /run report/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
   });
@@ -167,8 +167,8 @@ describe('ReformPreviewCard', () => {
     seedDraft();
     renderCard();
     // When
-    await user.click(screen.getByRole('button', { name: /collapse draft reform/i }));
-    await user.click(screen.getByRole('button', { name: /open draft reform/i }));
+    await user.click(screen.getByRole('button', { name: /collapse new reform/i }));
+    await user.click(screen.getByRole('button', { name: /open new reform/i }));
 
     // Then
     expect(screen.getByRole('button', { name: /run report/i })).toBeInTheDocument();
@@ -181,9 +181,25 @@ describe('ReformPreviewCard', () => {
     renderCard();
 
     // Then — an unseen draft is what this panel exists to prevent
-    expect(screen.getByRole('button', { name: /collapse draft reform/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /collapse new reform/i })).toHaveAttribute(
       'aria-expanded',
       'true'
     );
+  });
+
+  test('given the draft is named then the panel header carries that name', async () => {
+    // Given
+    const user = userEvent.setup();
+    seedDraft();
+    renderCard();
+
+    // When
+    await user.type(screen.getByLabelText('Reform name'), 'CTC expansion 2026');
+
+    // Then — the title is the reform's identity, like a document title
+    expect(
+      screen.getByRole('button', { name: /collapse ctc expansion 2026/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Draft')).toBeInTheDocument();
   });
 });
