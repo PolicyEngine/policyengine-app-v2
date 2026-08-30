@@ -1,4 +1,4 @@
-import { IconArrowRight, IconChartBar, IconTrash, IconX } from '@tabler/icons-react';
+import { IconChartBar, IconTrash, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Stack, Text } from '@/components/ui';
@@ -119,6 +119,24 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
       storageKey="draft-reform"
       accent
     >
+      {/* The name first: it is the reform's identity, and the header
+          above mirrors it as you type. */}
+      <Stack style={{ gap: spacing.sm, padding: `0 ${spacing.lg} ${spacing.xs}` }}>
+        <input
+          value={draft.label}
+          onChange={(event) => setDraftLabel(event.target.value)}
+          placeholder="Name this reform, e.g. CTC expansion 2026"
+          aria-label="Reform name"
+          style={{
+            padding: `${spacing.sm} ${spacing.md}`,
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: 8,
+            fontSize: typography.fontSize.sm,
+            fontFamily: typography.fontFamily.primary,
+          }}
+        />
+      </Stack>
+
       <SectionHeader label="Reform" detail={provisionCount} />
       <Stack style={{ gap: 0 }}>
         {draft.provisions.map((provision) => (
@@ -185,24 +203,14 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             </Stack>
           </Stack>
         ))}
-      </Stack>
-
-      <Stack style={{ gap: spacing.sm, padding: `${spacing.sm} ${spacing.lg}` }}>
-        <input
-          value={draft.label}
-          onChange={(event) => setDraftLabel(event.target.value)}
-          placeholder="Name this reform, e.g. CTC expansion 2026"
-          aria-label="Reform name"
-          style={{
-            padding: `${spacing.sm} ${spacing.md}`,
-            border: `1px solid ${colors.border.light}`,
-            borderRadius: 8,
-            fontSize: typography.fontSize.sm,
-            fontFamily: typography.fontFamily.primary,
-          }}
-        />
         {!hasEditedValue && draft.provisions.length > 0 && (
-          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          <Text
+            style={{
+              fontSize: typography.fontSize.xs,
+              color: colors.text.secondary,
+              padding: `${spacing.sm} ${spacing.lg} 0`,
+            }}
+          >
             Values match current law so far — edit a value above to make this a reform.
           </Text>
         )}
@@ -273,29 +281,32 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             Could not save the reform. Try again.
           </Text>
         )}
-        <Stack style={{ flexDirection: 'row', gap: spacing.md, flexWrap: 'wrap' }}>
-          <Button
-            onClick={() =>
-              runReport.run(
-                draft.label || 'Draft reform',
-                SOURCE_NOTES[draft.source] ?? 'Draft reform',
-                draft.provisions
-              )
-            }
-            disabled={draft.provisions.length === 0 || runReport.isRunning}
-          >
-            <IconChartBar size={16} />
-            {runReport.isRunning ? 'Starting report…' : 'Run report'}
-          </Button>
+        {/* The primary verb gets the full row; the two secondary verbs
+            share the one below it. */}
+        <Button
+          onClick={() =>
+            runReport.run(
+              draft.label || 'Draft reform',
+              SOURCE_NOTES[draft.source] ?? 'Draft reform',
+              draft.provisions
+            )
+          }
+          disabled={draft.provisions.length === 0 || runReport.isRunning}
+          style={{ width: '100%' }}
+        >
+          <IconChartBar size={16} />
+          {runReport.isRunning ? 'Starting report…' : 'Run report'}
+        </Button>
+        <Stack style={{ flexDirection: 'row', gap: spacing.sm }}>
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
             disabled={draft.provisions.length === 0 || saveMutation.isPending}
+            style={{ flex: 1 }}
           >
             {draft.editingReformId ? 'Save changes' : 'Save to library'}
-            <IconArrowRight size={16} />
           </Button>
-          <Button variant="outline" onClick={() => clearDraftReform()}>
+          <Button variant="outline" onClick={() => clearDraftReform()} style={{ flex: 1 }}>
             <IconTrash size={16} />
             Discard draft
           </Button>

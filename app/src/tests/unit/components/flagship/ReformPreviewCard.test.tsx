@@ -155,10 +155,11 @@ describe('ReformPreviewCard', () => {
     // When
     await user.click(screen.getByRole('button', { name: /collapse new reform/i }));
 
-    // Then — the folded spine keeps the panel's name; the controls go
+    // Then — the folded spine keeps the panel's name; the controls fade
+    // out but stay mounted so the fold can animate
     expect(screen.getByRole('button', { name: /open new reform/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /run report/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
+    expect(screen.getByText('Run report')).not.toBeVisible();
+    expect(screen.getByLabelText('Reform name')).not.toBeVisible();
   });
 
   test('given a folded draft then clicking again restores the controls', async () => {
@@ -171,8 +172,8 @@ describe('ReformPreviewCard', () => {
     await user.click(screen.getByRole('button', { name: /open new reform/i }));
 
     // Then
-    expect(screen.getByRole('button', { name: /run report/i })).toBeInTheDocument();
-    expect(screen.getByLabelText('Reform name')).toBeInTheDocument();
+    expect(screen.getByText('Run report')).toBeVisible();
+    expect(screen.getByLabelText('Reform name')).toBeVisible();
   });
 
   test('given the default view then the draft is open', () => {

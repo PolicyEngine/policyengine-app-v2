@@ -25,7 +25,7 @@ describe('SidePanel', () => {
     );
 
     expect(screen.getByRole('button', { name: /open draft reform/i })).toBeInTheDocument();
-    expect(screen.queryByText('panel body')).not.toBeInTheDocument();
+    expect(screen.getByText('panel body')).not.toBeVisible();
   });
 
   test('given the shell slot exists then the panel renders into it', () => {
@@ -66,9 +66,10 @@ describe('SidePanel', () => {
 
     await user.click(screen.getByRole('button', { name: /collapse adjust parameters/i }));
 
-    // The spine keeps the panel's name and its place in the layout.
+    // The spine keeps the panel's name; the body fades out but stays
+    // mounted so the fold can animate — hidden, not removed.
     expect(screen.getByRole('button', { name: /open adjust parameters/i })).toBeInTheDocument();
-    expect(screen.queryByText('panel body')).not.toBeInTheDocument();
+    expect(screen.getByText('panel body')).not.toBeVisible();
   });
 
   test('given defaultOpen false then the panel starts folded', () => {
@@ -82,7 +83,7 @@ describe('SidePanel', () => {
       'aria-expanded',
       'false'
     );
-    expect(screen.queryByText('panel body')).not.toBeInTheDocument();
+    expect(screen.getByText('panel body')).not.toBeVisible();
   });
 
   test('given a folded panel then reopening restores the body', async () => {
@@ -95,6 +96,6 @@ describe('SidePanel', () => {
 
     await user.click(screen.getByRole('button', { name: /open draft reform/i }));
 
-    expect(screen.getByText('panel body')).toBeInTheDocument();
+    expect(screen.getByText('panel body')).toBeVisible();
   });
 });
