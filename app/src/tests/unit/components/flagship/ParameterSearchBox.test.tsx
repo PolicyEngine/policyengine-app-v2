@@ -240,42 +240,9 @@ describe('ParameterSearchBox', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 
-  test('given a folder group then its header opens that folder in the tree', async () => {
-    // Given
+  test('given a folder header is clicked then the folder contents show in place', async () => {
+    // Given — search matched only one of the folder's parameters
     const user = userEvent.setup();
-    const onOpenFolder = vi.fn();
-    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} onOpenFolder={onOpenFolder} />);
-
-    // When
-    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
-    await user.click(
-      screen.getByRole('button', { name: /open irs → credits → eitc in the policy tree/i })
-    );
-
-    // Then — the folder path, not the breadcrumb
-    expect(onOpenFolder).toHaveBeenCalledWith('gov.irs.credits.eitc');
-  });
-
-  test('given no folder handler then the header stays a label', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
-
-    // When
-    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
-
-    // Then
-    expect(screen.getByText('IRS → Credits → EITC')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /open irs → credits → eitc in the policy tree/i })
-    ).not.toBeInTheDocument();
-  });
-
-  test('given a bracketed parameter then the folder path drops the bracket index', async () => {
-    // Given — the policy tree has no node for a bracket index, so a
-    // folder path pointing at one names something it cannot reveal
-    const user = userEvent.setup();
-    const onOpenFolder = vi.fn();
     const bracketed: ParameterSearchEntry[] = [
       {
         path: 'gov.irs.credits.eitc.max[0].threshold',
@@ -295,16 +262,67 @@ describe('ParameterSearchBox', () => {
         isContrib: false,
         stateCode: null,
       },
+      {
+        path: 'gov.irs.credits.eitc.max[1].threshold',
+        label: 'threshold',
+        breadcrumb: 'IRS → Credits → EITC → Maximum → Bracket 2 → Threshold',
+        unit: 'currency-USD',
+        description: null,
+        isContrib: false,
+        stateCode: null,
+      },
     ];
-    render(
-      <ParameterSearchBox entries={bracketed} onSelect={vi.fn()} onOpenFolder={onOpenFolder} />
-    );
-
-    // When
+    render(<ParameterSearchBox entries={bracketed} onSelect={vi.fn()} />);
+    // 'bracket' matches both Bracket 1 rows, so they cluster under a
+    // folder header; Bracket 2's lone row stays standalone.
     await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'bracket');
-    await user.click(screen.getByRole('button', { name: /open .* in the policy tree/i }));
 
-    // Then
-    expect(onOpenFolder).toHaveBeenCalledWith('gov.irs.credits.eitc.max');
+    // When — the bracket index is not a folder of its own, so the header
+    // resolves to the real parent and lists every descendant
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+
+    // Then — the sibling the query missed is now on screen
+    expect(screen.getByText('3 parameters')).toBeInTheDocument();
+    expect(screen.getByText('Bracket 1 → Amount')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /back to matches/i })).toBeInTheDocument();
+  });
+
+  test('given folder contents then selecting one adds it and closes the list', async () => {
+    const user = userEvent.setup();
+    const onSelectEntry = vi.fn();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={onSelectEntry} />);
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+
+    await user.click(screen.getByText('Phase-in rate'));
+
+    expect(onSelectEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'gov.irs.credits.eitc.phase_in_rate' })
+    );
+  });
+
+  test('given back to matches then the search results return', async () => {
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+
+    await user.click(screen.getByRole('button', { name: /back to matches/i }));
+
+    expect(screen.getByText('IRS → Credits → EITC')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /back to matches/i })).not.toBeInTheDocument();
+  });
+
+  test('given escape inside a folder then it steps back to matches, not to empty', async () => {
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+
+    await user.type(input, '{Escape}');
+
+    expect(input).toHaveValue('eitc');
+    expect(screen.queryByRole('button', { name: /back to matches/i })).not.toBeInTheDocument();
   });
 });

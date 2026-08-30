@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { IconChevronDown, IconChevronRight, IconPlus } from '@tabler/icons-react';
 import { Spinner, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
@@ -12,20 +12,6 @@ interface ParameterTreeBrowserProps {
   addablePaths: Set<string>;
   /** Paths already in the draft — shown with an "In draft" tag. */
   draftPaths: Set<string>;
-  /**
-   * Folder path to reveal — its ancestors expand, it opens, and it
-   * scrolls into view. Set when a search result's folder is opened, so
-   * a near miss leads to the parameters around it.
-   */
-  expandTo?: string | null;
-  /** Bump to repeat a reveal of the same path (state equality would swallow it). */
-  expandSeq?: number;
-}
-
-/** Every ancestor path of a dotted parameter path, plus the path itself. */
-function pathWithAncestors(path: string): string[] {
-  const segments = path.split('.');
-  return segments.map((_, index) => segments.slice(0, index + 1).join('.'));
 }
 
 /**
@@ -38,41 +24,8 @@ export default function ParameterTreeBrowser({
   onSelectLeaf,
   addablePaths,
   draftPaths,
-  expandTo = null,
-  expandSeq = 0,
 }: ParameterTreeBrowserProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const pendingScroll = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!expandTo) {
-      return;
-    }
-    pendingScroll.current = expandTo;
-    // A new Set even when the contents are unchanged, so the scroll
-    // effect below re-fires for a repeat reveal of the same path.
-    setExpanded((prev) => new Set([...prev, ...pathWithAncestors(expandTo)]));
-  }, [expandTo, expandSeq]);
-
-  // The row only exists once the expansion has rendered, so the scroll
-  // waits for a render in which it is actually there — an animation
-  // frame scheduled alongside the state update fires too early and
-  // finds nothing.
-  useEffect(() => {
-    const target = pendingScroll.current;
-    if (!target) {
-      return;
-    }
-    // One attempt, then clear regardless: by this render the expansion
-    // has committed, so the row either exists now or never will — a
-    // armed leftover would rescan the tree on every later toggle and
-    // could yank the viewport to a stale target minutes on.
-    pendingScroll.current = null;
-    containerRef.current
-      ?.querySelector(`[data-path="${CSS.escape(target)}"]`)
-      ?.scrollIntoView({ block: 'center' });
-  }, [expanded]);
 
   if (!tree) {
     return (
@@ -112,7 +65,6 @@ export default function ParameterTreeBrowser({
             <div key={node.name}>
               <button
                 type="button"
-                data-path={node.name}
                 onClick={() => toggle(node.name)}
                 aria-expanded={isExpanded}
                 style={{
@@ -127,7 +79,6 @@ export default function ParameterTreeBrowser({
                   fontSize: typography.fontSize.sm,
                   color: colors.text.primary,
                   boxSizing: 'border-box',
-                  background: node.name === expandTo ? colors.primary[50] : 'transparent',
                 }}
               >
                 <ChevronIcon size={14} color={colors.text.secondary} style={{ flexShrink: 0 }} />
@@ -204,7 +155,6 @@ export default function ParameterTreeBrowser({
 
   return (
     <div
-      ref={containerRef}
       style={{
         border: `1px solid ${colors.border.light}`,
         borderRadius: 12,

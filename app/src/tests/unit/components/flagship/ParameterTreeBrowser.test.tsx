@@ -118,35 +118,4 @@ describe('ParameterTreeBrowser', () => {
 
     expect(screen.getByText(/loading the policy tree/i)).toBeInTheDocument();
   });
-
-  test('given expandTo then the folder and its ancestors open to reveal the parameter', () => {
-    // Given / When
-    render(
-      <ParameterTreeBrowser
-        tree={FIXTURE_TREE}
-        addablePaths={ADDABLE}
-        draftPaths={new Set()}
-        onSelectLeaf={vi.fn()}
-        expandTo="gov.irs"
-      />
-    );
-
-    // Then — no click needed; the ancestor chain expanded on its own
-    expect(screen.getByText('Child tax credit amount')).toBeInTheDocument();
-  });
-
-  test('given no expandTo then nothing is expanded', () => {
-    // Given / When
-    render(
-      <ParameterTreeBrowser
-        tree={FIXTURE_TREE}
-        addablePaths={ADDABLE}
-        draftPaths={new Set()}
-        onSelectLeaf={vi.fn()}
-      />
-    );
-
-    // Then
-    expect(screen.queryByText('Child tax credit amount')).not.toBeInTheDocument();
-  });
 });
