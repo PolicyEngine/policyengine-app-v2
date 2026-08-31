@@ -253,9 +253,9 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://2024-election-dashboard-omega.vercel.app/us/2024-election-calculator",
   },
   {
-    source: "/us/obbba-household-explorer",
+    source: "/us/obbba-households",
     destination:
-      "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
+      "https://obbba-household-by-household.vercel.app/us/obbba-households",
   },
   {
     source: "/us/salternative",

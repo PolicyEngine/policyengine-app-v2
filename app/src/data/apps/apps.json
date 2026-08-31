@@ -5,25 +5,39 @@
     "title": "SNAP payment error simulator",
     "description": "Simulate each state's measured SNAP payment error rate from its own Quality Control cases: cost-share tier probabilities under the FY 2028 formula, the FY 2025 vs FY 2026 election, audit-volume effects, and a verified case-level model scenario.",
     "source": "https://snap-qc-sim.vercel.app/",
-    "tags": ["us", "featured", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "snap-payment-error-simulator.jpg",
     "date": "2026-08-09 12:00:00",
-    "authors": ["max-ghenis"]
+    "authors": [
+      "max-ghenis"
+    ]
   },
   {
     "type": "iframe",
     "slug": "bus-fare-cap",
-    "title": "£2 bus fare cap analysis",
-    "description": "Estimate the cost and household impact of capping single bus fares at £2 in England outside London for calendar 2027, modelled with PolicyEngine UK.",
+    "title": "\u00a32 bus fare cap analysis",
+    "description": "Estimate the cost and household impact of capping single bus fares at \u00a32 in England outside London for calendar 2027, modelled with PolicyEngine UK.",
     "source": "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "bus-fare-cap.jpg",
     "date": "2026-07-23 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -31,12 +45,19 @@
     "title": "Temporary VAT cut on domestic electricity",
     "description": "Estimate the fiscal cost and distributional impact of cutting VAT on domestic electricity from 5% to 0% for six months from October 2026, modelled with PolicyEngine UK.",
     "source": "https://electricity-vat-cut.vercel.app/uk/electricity-vat-cut",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "electricity-vat-cut.jpg",
     "date": "2026-07-21 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -44,12 +65,19 @@
     "title": "NICs exemption for recently-inactive employees",
     "description": "Estimate the cost, employment effects, and poverty impact of exempting employers from NICs on employees who recently moved from economic inactivity into work, modelled with PolicyEngine UK.",
     "source": "https://nics-exemption-inactive-employees.vercel.app/uk/nics-exemption-inactive-employees",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "nics-exemption-inactive-employees.jpg",
     "date": "2026-07-13 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -57,12 +85,19 @@
     "title": "Employer NICs exemption for young workers",
     "description": "Estimate the fiscal cost and employment effects of extending the employer NICs zero rate to young workers, either all 18 to 24-year-olds or only recent NEETs, modelled with PolicyEngine UK.",
     "source": "https://young-worker-nics.vercel.app/uk/young-worker-nics",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "young-worker-nics.jpg",
     "date": "2026-07-09 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -70,7 +105,12 @@
     "title": "Social Security taxation reform dashboard",
     "description": "Explore policy options for reforming the taxation of Social Security benefits, with budgetary impacts through 2100 using PolicyEngine microsimulation. Analysis commissioned by the Committee for a Responsible Federal Budget.",
     "source": "https://crfb-tob-impacts.vercel.app/",
-    "tags": ["us", "policy", "interactives", "tax"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives",
+      "tax"
+    ],
     "countryId": "us"
   },
   {
@@ -79,12 +119,19 @@
     "title": "UK CliffWatch",
     "description": "See where benefit withdrawal and taxes create cliffs and high marginal rates as a UK household's earnings rise, modelled with PolicyEngine UK.",
     "source": "https://uk-cliff-watch.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-cliff-watch.jpg",
     "date": "2026-06-26 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -92,12 +139,19 @@
     "title": "Scotland income tax analysis dashboard",
     "description": "Reform UK Scotland proposes replacing Scotland's six income tax bands with the simpler rest-of-UK structure, then reducing every rate by 1pp or 4pp. This dashboard estimates the revenue cost and distributional effects using the PolicyEngine UK microsimulation model.",
     "source": "https://scotland-income-tax-reform.vercel.app/",
-    "tags": ["uk", "featured", "policy", "scotland"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "scotland"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "scotland-income-tax-reform.jpg",
     "date": "2026-04-01 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -105,12 +159,18 @@
     "title": "Introducing the PE-84",
     "description": "The world's first graphing microsimulator. Ten million households per second. Fifty thousand tax and benefit parameters. In your pocket.",
     "source": "https://april-fools-2026-two.vercel.app/calculator",
-    "tags": ["us", "uk", "featured"],
+    "tags": [
+      "us",
+      "uk",
+      "featured"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "pe84.png",
     "date": "2026-04-01 09:00:00",
-    "authors": ["max-ghenis"]
+    "authors": [
+      "max-ghenis"
+    ]
   },
   {
     "type": "iframe",
@@ -118,11 +178,16 @@
     "title": "PolicyEngine 2025 Year in Review",
     "description": "2025 was our biggest year yet. 62 jurisdictions, 100K+ people served, PolicyEngine 2.0, and more.",
     "source": "https://policyengine.github.io/2025-year-in-review/us?embed=true",
-    "tags": ["us", "featured"],
+    "tags": [
+      "us",
+      "featured"
+    ],
     "countryId": "us",
     "image": "2025-year-in-review.png",
     "date": "2025-12-31 12:00:00",
-    "authors": ["max-ghenis"]
+    "authors": [
+      "max-ghenis"
+    ]
   },
   {
     "type": "iframe",
@@ -130,11 +195,16 @@
     "title": "PolicyEngine 2025 Year in Review",
     "description": "2025 was our biggest year yet. 62 jurisdictions, 100K+ people served, PolicyEngine 2.0, and more.",
     "source": "https://policyengine.github.io/2025-year-in-review/uk?embed=true",
-    "tags": ["uk", "featured"],
+    "tags": [
+      "uk",
+      "featured"
+    ],
     "countryId": "uk",
     "image": "2025-year-in-review.png",
     "date": "2025-12-31 12:00:00",
-    "authors": ["max-ghenis"]
+    "authors": [
+      "max-ghenis"
+    ]
   },
   {
     "type": "iframe",
@@ -142,12 +212,18 @@
     "title": "The distributional impact of student loan reform",
     "description": "PolicyEngine models how cancelling the threshold freeze and capping interest at RPI affect graduate repayments across the income distribution",
     "source": "https://student-loan-visualisation.vercel.app/",
-    "tags": ["uk", "featured", "policy"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "student-loan-visualisation.webp",
     "date": "2026-02-25 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -155,12 +231,19 @@
     "title": "Energy price shock: distributional impact and policy options",
     "description": "Estimate the distributional impact of energy price shock scenarios on UK households, with electricity and gas breakdowns, and model five policy responses",
     "source": "https://energy-price-shock.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "energy-price-shock-calculator.png",
     "date": "2026-04-22 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -168,12 +251,20 @@
     "title": "Keep Your Pay Act calculator",
     "description": "Estimate the household and national impact of Senator Booker's Keep Your Pay Act, which raises the standard deduction, expands the Child Tax Credit, and triples the childless EITC",
     "source": "https://keep-your-pay-act.vercel.app/",
-    "tags": ["us", "featured", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "keep-your-pay-act-calculator.png",
     "date": "2026-03-09 12:00:00",
-    "authors": ["david-trimmer", "daphne-hansell"]
+    "authors": [
+      "david-trimmer",
+      "daphne-hansell"
+    ]
   },
   {
     "type": "iframe",
@@ -181,12 +272,18 @@
     "title": "Oregon Kicker Refund calculator",
     "description": "Calculate your 2025 Oregon Kicker refund based on your 2024 Oregon tax liability. The kicker returns surplus state revenue to taxpayers.",
     "source": "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "oregon-kicker-refund.png",
     "date": "2026-03-25 12:00:00",
-    "authors": ["david-trimmer"]
+    "authors": [
+      "david-trimmer"
+    ]
   },
   {
     "type": "iframe",
@@ -194,12 +291,18 @@
     "title": "Working Parents Tax Relief Act calculator",
     "description": "Estimate the impact of Rep. McDonald Rivet's proposed EITC enhancement for parents of young children, which increases credit percentages for families with children under age 4",
     "source": "https://wptra.vercel.app/us/working-parents-tax-relief-act",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "working-parents-tax-relief-act.png",
     "date": "2026-04-15 12:00:00",
-    "authors": ["david-trimmer"]
+    "authors": [
+      "david-trimmer"
+    ]
   },
   {
     "type": "iframe",
@@ -207,12 +310,18 @@
     "title": "Utah 2026 tax changes calculator",
     "description": "Estimate the impact of Utah's 2026 tax changes, including SB60's income tax rate cut from 4.5% to 4.45% and HB290's expansion of the state Child Tax Credit",
     "source": "https://policyengine-utah-2026-tax-changes.vercel.app/us/utah-2026-tax-changes",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "utah-2026-dashboard.png",
     "date": "2026-04-27 12:00:00",
-    "authors": ["david-trimmer"]
+    "authors": [
+      "david-trimmer"
+    ]
   },
   {
     "type": "iframe",
@@ -220,12 +329,18 @@
     "title": "Missouri income tax elimination calculator",
     "description": "Explore paths to eliminating Missouri's individual income tax under HJR 173 and 174, modeling household and state revenue impacts across four reform approaches",
     "source": "https://missouri-income-tax-elimination.vercel.app/us/missouri-income-tax-elimination",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "mo-income-tax-elimination.png",
     "date": "2026-05-14 12:00:00",
-    "authors": ["david-trimmer"]
+    "authors": [
+      "david-trimmer"
+    ]
   },
   {
     "type": "iframe",
@@ -233,12 +348,18 @@
     "title": "South Carolina 2026 tax changes calculator",
     "description": "Estimate the household and statewide impact of South Carolina H.4216 (Act 110), which consolidates income tax brackets, replaces federal deductions with the state-specific SCIAD, and caps the nonrefundable state EITC at $200",
     "source": "https://south-carolina-2026-tax-changes.vercel.app/us/south-carolina-2026-tax-changes",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "south-carolina-2026-tax-changes.png",
     "date": "2026-05-19 12:00:00",
-    "authors": ["david-trimmer"]
+    "authors": [
+      "david-trimmer"
+    ]
   },
   {
     "type": "iframe",
@@ -246,25 +367,39 @@
     "title": "UK Universal Credit rebalancing analysis dashboard",
     "description": "PolicyEngine analysed the household and fiscal impact of the Universal Credit Act 2025 rebalancing package: an above-inflation uplift to the standard allowance and a fixed monthly health element",
     "source": "https://uc-rebalancing.vercel.app/uk/uc-rebalancing",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uc-rebalancing.avif",
     "date": "2026-06-01 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
     "slug": "cancelling-fuel-duty-rise",
     "title": "UK fuel duty rise cancellation analysis dashboard",
-    "description": "PolicyEngine estimated the fiscal cost and household impact of cancelling the Autumn Budget 2025 fuel-duty rise — the staged unwinding of the 5p cut and the April 2027 RPI uprating",
+    "description": "PolicyEngine estimated the fiscal cost and household impact of cancelling the Autumn Budget 2025 fuel-duty rise \u2014 the staged unwinding of the 5p cut and the April 2027 RPI uprating",
     "source": "https://cancelling-fuel-duty-rise.vercel.app/uk/cancelling-fuel-duty-rise",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "cancelling-fuel-duty-rise.webp",
     "date": "2026-06-01 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -272,12 +407,18 @@
     "title": "West Virginia SB 392 income tax cut calculator",
     "description": "Estimate the household and statewide impact of West Virginia Senate Bill 392, which reduces personal income tax rates by approximately 5% starting in 2026",
     "source": "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "wv-income-tax-cut-dashboard.png",
     "date": "2026-05-04 12:00:00",
-    "authors": ["david-trimmer"]
+    "authors": [
+      "david-trimmer"
+    ]
   },
   {
     "type": "iframe",
@@ -285,12 +426,20 @@
     "title": "Working Americans' Tax Cut Act calculator",
     "description": "Estimate the household and national impact of the cost-of-living exemption and millionaire surtax proposed by Senator Van Hollen",
     "source": "https://working-americans-tax-cut-act-one.vercel.app/us/watca",
-    "tags": ["us", "featured", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "watca-calculator.webp",
     "date": "2026-03-06 12:00:00",
-    "authors": ["max-ghenis", "pavel-makarchuk"]
+    "authors": [
+      "max-ghenis",
+      "pavel-makarchuk"
+    ]
   },
   {
     "type": "iframe",
@@ -298,12 +447,20 @@
     "title": "California wealth tax fiscal impact calculator",
     "description": "Estimate how California's proposed billionaire wealth tax changes revenue once avoidance, migration, return flows, and income-tax offsets are taken into account",
     "source": "/us/california-wealth-tax/embed",
-    "tags": ["us", "us-ca", "policy", "interactives", "tax"],
+    "tags": [
+      "us",
+      "us-ca",
+      "policy",
+      "interactives",
+      "tax"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "california-wealth-tax-calculator.png",
     "date": "2026-03-25 12:00:00",
-    "authors": ["max-ghenis"]
+    "authors": [
+      "max-ghenis"
+    ]
   },
   {
     "type": "iframe",
@@ -311,12 +468,19 @@
     "title": "Council tax to land value tax reform dashboard",
     "description": "Explore the revenue and distributional effects of replacing council tax with an annual land value tax in the UK",
     "source": "https://uk-land-value-tax.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-land-value-tax.webp",
     "date": "2026-03-24 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -324,12 +488,21 @@
     "title": "UK Spring Statement 2026 analysis dashboard",
     "description": "Interactive dashboard analysing OBR March 2026 forecast revisions and their impact on UK household incomes across income deciles and household types",
     "source": "https://uk-spring-statement-2026-policy-engine.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-spring-statement-2026.webp",
     "date": "2026-03-04 12:00:00",
-    "authors": ["max-ghenis", "vahid-ahmadi", "pavel-makarchuk"]
+    "authors": [
+      "max-ghenis",
+      "vahid-ahmadi",
+      "pavel-makarchuk"
+    ]
   },
   {
     "type": "iframe",
@@ -337,25 +510,37 @@
     "title": "TANF calculator",
     "description": "Interactive calculator showing TANF benefit eligibility and amounts for US households across all states",
     "source": "https://policyengine.github.io/tanf-calculator/",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "tanf-calculator.png",
     "date": "2026-03-18 12:00:00",
-    "authors": ["ziming-hua"]
+    "authors": [
+      "ziming-hua"
+    ]
   },
   {
     "type": "iframe",
     "slug": "coverage-compass",
     "title": "Coverage Compass",
-    "description": "Model how life events — moving, income changes, pregnancy — affect a household's healthcare coverage and out-of-pocket costs across Medicaid, CHIP, and the ACA marketplace",
+    "description": "Model how life events \u2014 moving, income changes, pregnancy \u2014 affect a household's healthcare coverage and out-of-pocket costs across Medicaid, CHIP, and the ACA marketplace",
     "source": "https://coverage-compass-policy-engine.vercel.app/",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "coverage-compass.png",
     "date": "2026-05-06 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": [
+      "daphne-hansell"
+    ]
   },
   {
     "type": "iframe",
@@ -363,12 +548,19 @@
     "title": "CliffWatch",
     "description": "Interactive calculator showing how benefits, refundable tax credits, taxes, and net income change for US households as earnings rise",
     "source": "https://cliff-watch.vercel.app/",
-    "tags": ["us", "featured", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "benefit-cliff-calculator.png",
     "date": "2026-04-14 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": [
+      "daphne-hansell"
+    ]
   },
   {
     "type": "iframe",
@@ -376,12 +568,19 @@
     "title": "Marriage incentive calculator",
     "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
     "source": "https://marriage-zeta-beryl.vercel.app/us/marriage",
-    "tags": ["us", "featured", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "marriage-calculator.webp",
     "date": "2026-02-13 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": [
+      "daphne-hansell"
+    ]
   },
   {
     "type": "iframe",
@@ -389,12 +588,18 @@
     "title": "Marriage incentive calculator",
     "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for UK households",
     "source": "https://marriage-zeta-beryl.vercel.app/us/marriage#country=uk",
-    "tags": ["uk", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": false,
     "image": "marriage-calculator.webp",
     "date": "2026-02-13 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": [
+      "daphne-hansell"
+    ]
   },
   {
     "type": "iframe",
@@ -402,12 +607,19 @@
     "title": "2026 state legislative tracker",
     "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",
     "source": "https://policyengine--state-legislative-tracker.modal.run/",
-    "tags": ["us", "featured", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "state-legislative-tracker.webp",
     "date": "2026-02-11 12:00:00",
-    "authors": ["pavel-makarchuk"]
+    "authors": [
+      "pavel-makarchuk"
+    ]
   },
   {
     "type": "iframe",
@@ -415,12 +627,18 @@
     "title": "Salary sacrifice cap analysis tool",
     "description": "Interactive tool to analyse the revenue and distributional impacts of capping NI-exempt pension salary sacrifice contributions",
     "source": "https://policyengine.github.io/uk-salary-sacrifice-analysis/",
-    "tags": ["uk", "featured", "policy"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-salary-sacrifice-tool.webp",
     "date": "2026-02-09 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -428,12 +646,18 @@
     "title": "Student loan deductions calculator",
     "description": "Interactive tool to analyse student loan repayments, marginal tax rates, take-home pay, and lifetime costs for UK graduates",
     "source": "https://uk-student-loan-calculator.vercel.app/",
-    "tags": ["uk", "featured", "policy"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-student-loan-calculator.webp",
     "date": "2026-02-06 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -441,12 +665,19 @@
     "title": "Automating tax and benefit policy modeling with multi-agent AI",
     "description": "How we built a system that transforms a policy request into a complete, tested pull request in 90 minutes.",
     "source": "/assets/posts/encode-policy-multi-agent-ai/index.html",
-    "tags": ["us", "technical", "featured", "interactives"],
+    "tags": [
+      "us",
+      "technical",
+      "featured",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "encode-policy-multi-agent-ai-cover.webp",
     "date": "2026-02-02 12:00:00",
-    "authors": ["ziming-hua"]
+    "authors": [
+      "ziming-hua"
+    ]
   },
   {
     "type": "iframe",
@@ -454,12 +685,20 @@
     "title": "Scottish Budget 2026-27",
     "description": "Interactive dashboard analysing how the Scottish Budget 2026-27 measures affect living standards, poverty, and local areas across Scotland",
     "source": "https://post-scottish-budget-dashboard.vercel.app/",
-    "tags": ["uk", "featured", "policy", "scotland", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "scotland",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "scottish-budget-2026.webp",
     "date": "2026-01-23 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -467,12 +706,19 @@
     "title": "UK local areas dashboard",
     "description": "Explore how national policies affect different local areas across the UK, including parliamentary constituencies and local authorities",
     "source": "https://local-area.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-local-areas-dashboard.webp",
     "date": "2025-12-16 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -480,12 +726,19 @@
     "title": "UK Autumn Budget 2025 analysis dashboard",
     "description": "Interactive tool to explore revenue and distributional impacts of UK Autumn Budget 2025 policies across income deciles, constituencies, and household types",
     "source": "https://uk-autumn-budget-dashboard.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "autumn-2025-budget-dashboard.webp",
     "date": "2025-12-09 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -493,12 +746,19 @@
     "title": "UK public services spending analysis dashboard",
     "description": "Explore how public services spending varies across demographic groups and regions in the UK, including NHS healthcare, education, and transport subsidies",
     "source": "https://uk-public-services-imputation.vercel.app",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-public-services-spending.webp",
     "date": "2025-11-11 11:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -506,7 +766,13 @@
     "title": "ACA Reforms Calculator",
     "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
     "source": "https://aca-calc.vercel.app/?embedded=true",
-    "tags": ["us", "featured", "healthcare", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "healthcare",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us"
   },
   {
@@ -515,7 +781,12 @@
     "title": "ACA Reforms Calculator",
     "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
     "source": "https://aca-calc.vercel.app/?embedded=true",
-    "tags": ["us", "healthcare", "policy", "interactives"],
+    "tags": [
+      "us",
+      "healthcare",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us"
   },
   {
@@ -524,7 +795,11 @@
     "title": "Child Tax Credit calculator",
     "description": "Calculate child tax credit benefits for your household",
     "source": "https://ctc-calculator.vercel.app/?embedded=true",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us"
   },
   {
@@ -533,7 +808,11 @@
     "title": "2024 election CTC comparison",
     "description": "Compare Vance vs Harris child tax credit proposals",
     "source": "https://vance-harris-ctc-comparison.vercel.app/?embedded=true",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us"
   },
   {
@@ -542,7 +821,11 @@
     "title": "GiveCalc",
     "description": "Calculate charitable giving tax benefits",
     "source": "https://givecalc.vercel.app/?embedded=true",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us"
   },
   {
@@ -551,7 +834,11 @@
     "title": "UK 2024 manifestos comparison",
     "description": "Compare UK party manifestos for 2024 election",
     "source": "https://uk-2024-manifestos-comparison.vercel.app/?embedded=true",
-    "tags": ["uk", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk"
   },
   {
@@ -560,12 +847,18 @@
     "title": "State EITCs and CTCs",
     "description": "Explore state-level earned income and child tax credits across all US states, including eligibility rules, credit amounts, and phase-out ranges",
     "source": "https://policyengine.github.io/us-state-eitcs-ctcs/",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "state-eitcs-ctcs.png",
     "date": "2026-04-27 12:00:00",
-    "authors": ["pavel-makarchuk"]
+    "authors": [
+      "pavel-makarchuk"
+    ]
   },
   {
     "type": "iframe",
@@ -573,16 +866,25 @@
     "title": "2024 election personal impact calculator",
     "description": "See how Trump vs Harris tax plans affect your household",
     "source": "https://2024-election-dashboard.vercel.app/?embedded=true",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us"
   },
   {
     "type": "iframe",
-    "slug": "obbba-household-explorer",
+    "slug": "obbba-households",
     "title": "OBBBA household impact explorer",
     "description": "Interactive scatter plot to explore household-level impacts of the One Big Beautiful Bill Act",
-    "source": "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
-    "tags": ["us", "featured", "policy", "reconciliation"],
+    "source": "https://obbba-household-by-household.vercel.app/us/obbba-households",
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "reconciliation"
+    ],
     "countryId": "us"
   },
   {
@@ -591,12 +893,19 @@
     "title": "The SALTernative",
     "description": "Interactive calculator for modeling SALT deduction and AMT reform scenarios, with household and nationwide budget impacts",
     "source": "https://salt-amt-calculator.vercel.app/us/salternative?embedded=true",
-    "tags": ["us", "featured", "policy", "interactives"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "salternative.png",
     "date": "2026-02-15 12:00:00",
-    "authors": ["max-ghenis"]
+    "authors": [
+      "max-ghenis"
+    ]
   },
   {
     "type": "iframe",
@@ -604,12 +913,19 @@
     "title": "Two-child limit calculator",
     "description": "Explore policy reforms to the two-child benefit limit and their impacts on households, government spending, and child poverty.",
     "source": "https://uk-two-child-limit-app.vercel.app",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": [
+      "uk",
+      "featured",
+      "policy",
+      "interactives"
+    ],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "young-child-exemption-two-child-limit.webp",
     "date": "2025-10-28",
-    "authors": ["vahid-ahmadi"]
+    "authors": [
+      "vahid-ahmadi"
+    ]
   },
   {
     "type": "iframe",
@@ -617,7 +933,10 @@
     "title": "Rhode Island Child Tax Credit calculator",
     "description": "Interactive calculator for estimating Rhode Island Child Tax Credit benefits",
     "source": "https://ri-ctc-calculator-policy-engine.vercel.app/",
-    "tags": ["us", "policy"],
+    "tags": [
+      "us",
+      "policy"
+    ],
     "countryId": "us"
   },
   {
@@ -626,25 +945,42 @@
     "title": "NJ Child Tax Credit increase calculator",
     "description": "See the impact of New Jersey's enacted 25% Child Tax Credit increase (P.L.2026, c.26) on New Jersey households, statewide and by congressional district",
     "source": "https://nj-ctc-increase.vercel.app/us/nj-ctc-increase",
-    "tags": ["us", "policy", "interactives"],
+    "tags": [
+      "us",
+      "policy",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "nj-ctc-increase-calculator.png",
     "date": "2026-07-13 12:00:00",
-    "authors": ["david-trimmer"]
+    "authors": [
+      "david-trimmer"
+    ]
   },
   {
     "type": "iframe",
     "slug": "obbba-household-by-household",
     "title": "The One Big Beautiful Bill Act, household by household",
     "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
-    "source": "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
-    "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
+    "source": "https://obbba-household-by-household.vercel.app/us/obbba-households",
+    "tags": [
+      "us",
+      "policy",
+      "featured",
+      "reconciliation",
+      "interactives"
+    ],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "obbba-household-by-household.webp",
     "date": "2025-08-11",
-    "authors": ["max-ghenis", "pavel-makarchuk", "ben-ogorek", "nikhil-woodruff"]
+    "authors": [
+      "max-ghenis",
+      "pavel-makarchuk",
+      "ben-ogorek",
+      "nikhil-woodruff"
+    ]
   },
   {
     "type": "obbba-iframe",
@@ -652,7 +988,12 @@
     "title": "OBBBA scatter plot explorer",
     "description": "Interactive scatter plot visualization of OBBBA household impacts",
     "source": "https://policyengine.github.io/obbba-scatter",
-    "tags": ["us", "featured", "policy", "reconciliation"],
+    "tags": [
+      "us",
+      "featured",
+      "policy",
+      "reconciliation"
+    ],
     "countryId": "us"
   },
   {
@@ -661,7 +1002,10 @@
     "title": "SNAP district map",
     "description": "Interactive map showing SNAP (food stamps) data by congressional district",
     "source": "https://policyengine.github.io/snap-district-map/",
-    "tags": ["us", "policy"],
+    "tags": [
+      "us",
+      "policy"
+    ],
     "countryId": "us"
   }
 ]
