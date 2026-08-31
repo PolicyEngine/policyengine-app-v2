@@ -93,14 +93,35 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/us/obbba-household-explorer",
+        destination: "/us/obbba-households",
+        permanent: true,
+      },
+      {
+        source: "/us/obbba-household-explorer/:path*",
+        destination: "/us/obbba-households/:path*",
+        permanent: true,
+      },
+      {
         source: "/us/obbba-household-by-household",
-        destination: "/us/obbba-household-explorer",
+        destination: "/us/obbba-households",
         permanent: true,
       },
       {
         source: "/us/obbba-household-by-household/:path*",
-        destination: "/us/obbba-household-explorer/:path*",
+        destination: "/us/obbba-households/:path*",
         permanent: true,
+      },
+      // Vanity alias for the OB3 shorthand.
+      {
+        source: "/us/ob3-households",
+        destination: "/us/obbba-households",
+        permanent: false,
+      },
+      {
+        source: "/us/ob3-households/:path*",
+        destination: "/us/obbba-households/:path*",
+        permanent: false,
       },
       {
         source: "/us/aca-reforms-calculator",
@@ -137,7 +158,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/us/obbba-scatter",
-        destination: "/us/obbba-household-explorer",
+        destination: "/us/obbba-households",
         permanent: true,
       },
       {
