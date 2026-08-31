@@ -439,7 +439,9 @@ export default function ParameterSearchBox({
             borderRadius: 10,
             background: colors.background.primary,
             boxShadow: resultsInFlow ? 'none' : '0 8px 24px rgba(20, 32, 31, 0.12)',
-            maxHeight: 420,
+            // In flow the page scrolls, so the list can take most of the
+            // viewport; floating over other content it stays a dropdown.
+            maxHeight: resultsInFlow ? '72vh' : 420,
             overflowY: 'auto',
           }}
         >
