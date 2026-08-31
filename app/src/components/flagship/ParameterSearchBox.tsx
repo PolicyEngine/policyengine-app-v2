@@ -32,6 +32,12 @@ interface ParameterSearchBoxProps {
   /** State code → name, so the scope filter reads "California", not "CA only" */
   stateLabels?: Record<string, string>;
   /**
+   * Label for any tree node by dotted path, from the metadata the
+   * entries were built from. Powers the clickable breadcrumb when
+   * browsing a folder; without it the breadcrumb is static text.
+   */
+  labelFor?: (path: string) => string | null | undefined;
+  /**
    * Render results in the page flow rather than floating over it. Set
    * when something below needs to stay visible — a floating list would
    * sit on top of the very folder it just opened.
@@ -89,6 +95,51 @@ function capitalizeFirst(text: string): string {
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
 }
 
+interface FolderSubfolder {
+  path: string;
+  count: number;
+  /** One entry inside, to derive a display name when no label exists */
+  sample: ParameterSearchEntry;
+}
+
+/**
+ * One level of a folder: its own leaves plus a row per immediate
+ * subfolder, instead of every descendant flattened with arrow-prefixed
+ * labels. Bracket leaves (`max[0].amount`) count as the folder's own —
+ * bracket indices are not nodes in the policy tree.
+ */
+function buildFolderView(entries: ParameterSearchEntry[], path: string) {
+  const descendants: ParameterSearchEntry[] = [];
+  const direct: ParameterSearchEntry[] = [];
+  const subfolderMap = new Map<string, FolderSubfolder>();
+  for (const entry of entries) {
+    const inDot = entry.path.startsWith(`${path}.`);
+    if (!inDot && !entry.path.startsWith(`${path}[`)) {
+      continue;
+    }
+    descendants.push(entry);
+    const rest = inDot ? entry.path.slice(path.length + 1) : '';
+    const separator = rest.search(/[.[]/);
+    if (!inDot || separator === -1) {
+      direct.push(entry);
+      continue;
+    }
+    const subPath = `${path}.${rest.slice(0, separator)}`;
+    const subfolder = subfolderMap.get(subPath);
+    if (subfolder) {
+      subfolder.count += 1;
+    } else {
+      subfolderMap.set(subPath, { path: subPath, count: 1, sample: entry });
+    }
+  }
+  direct.sort((a, b) => a.path.localeCompare(b.path));
+  return {
+    descendants,
+    direct,
+    subfolders: [...subfolderMap.values()].sort((a, b) => a.path.localeCompare(b.path)),
+  };
+}
+
 function EntryBadges({ entry }: { entry: ParameterSearchEntry }) {
   return (
     <span style={{ display: 'flex', gap: spacing.xs, flexShrink: 0 }}>
@@ -128,6 +179,7 @@ export default function ParameterSearchBox({
   stateLabels = {},
   resultsInFlow = false,
   index: providedIndex,
+  labelFor,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
@@ -158,30 +210,25 @@ export default function ParameterSearchBox({
     () => groupSearchResults(searchParameters(index, query, RESULT_LIMIT, filters)),
     [index, query, filters]
   );
-  const folderEntries = useMemo(() => {
-    if (!browsing) {
-      return [];
-    }
-    return entries
-      .filter(
-        (entry) =>
-          entry.path.startsWith(`${browsing.path}.`) || entry.path.startsWith(`${browsing.path}[`)
-      )
-      .sort((a, b) => a.path.localeCompare(b.path));
-  }, [entries, browsing]);
+  const folderView = useMemo(
+    () => (browsing ? buildFolderView(entries, browsing.path) : null),
+    [entries, browsing]
+  );
 
   /**
    * The folder's display name, as the longest breadcrumb prefix its
    * contents share. The clicked header's label can be deeper than the
    * folder itself — "… → Bracket 1" for a folder that also holds
    * Bracket 2 — because bracket indices fold into their parent.
+   * Fallback for when no `labelFor` lookup produces crumbs.
    */
   const folderLabel = useMemo(() => {
-    if (folderEntries.length === 0) {
+    const contents = folderView?.descendants ?? [];
+    if (contents.length === 0) {
       return browsing?.folder ?? '';
     }
-    let prefix = folderEntries[0].breadcrumb.split(' → ').slice(0, -1);
-    for (const entry of folderEntries.slice(1)) {
+    let prefix = contents[0].breadcrumb.split(' → ').slice(0, -1);
+    for (const entry of contents.slice(1)) {
       const segments = entry.breadcrumb.split(' → ');
       let shared = 0;
       while (shared < prefix.length && prefix[shared] === segments[shared]) {
@@ -190,11 +237,36 @@ export default function ParameterSearchBox({
       prefix = prefix.slice(0, shared);
     }
     return prefix.join(' → ');
-  }, [folderEntries, browsing]);
+  }, [folderView, browsing]);
+
+  /**
+   * The breadcrumb as clickable ancestors: every prefix of the folder
+   * path that the metadata gives a label to. Unlabeled nodes simply get
+   * no crumb, matching how entry breadcrumbs are built.
+   */
+  const crumbs = useMemo(() => {
+    if (!browsing || !labelFor) {
+      return [];
+    }
+    const segments = browsing.path.split('.');
+    const found: { path: string; label: string }[] = [];
+    for (let depth = 2; depth <= segments.length; depth += 1) {
+      const ancestor = segments.slice(0, depth).join('.');
+      const label = labelFor(ancestor);
+      if (label) {
+        found.push({ path: ancestor, label: capitalizeFirst(label) });
+      }
+    }
+    return found;
+  }, [browsing, labelFor]);
+
+  // What entry breadcrumbs are sliced against; the crumb join equals
+  // the shared breadcrumb prefix because both come from the same labels.
+  const currentLabel = crumbs.length > 0 ? crumbs.map((c) => c.label).join(' → ') : folderLabel;
 
   const flatEntries = useMemo(
-    () => (browsing ? folderEntries : groups.flatMap((group) => group.entries)),
-    [browsing, folderEntries, groups]
+    () => (browsing ? (folderView?.direct ?? []) : groups.flatMap((group) => group.entries)),
+    [browsing, folderView, groups]
   );
 
   const select = (entry: ParameterSearchEntry) => {
@@ -205,6 +277,18 @@ export default function ParameterSearchBox({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
+    // Escape works even in a folder with no direct parameters, where
+    // there is nothing to highlight but still somewhere to go back to.
+    if (event.key === 'Escape') {
+      // Step out of the folder first; a second Escape clears the search.
+      if (browsing) {
+        setBrowsing(null);
+        setHighlighted(0);
+      } else {
+        setQuery('');
+      }
+      return;
+    }
     if (!flatEntries.length) {
       return;
     }
@@ -217,14 +301,6 @@ export default function ParameterSearchBox({
     } else if (event.key === 'Enter') {
       event.preventDefault();
       select(flatEntries[highlighted]);
-    } else if (event.key === 'Escape') {
-      // Step out of the folder first; a second Escape clears the search.
-      if (browsing) {
-        setBrowsing(null);
-        setHighlighted(0);
-      } else {
-        setQuery('');
-      }
     }
   };
 
@@ -337,7 +413,7 @@ export default function ParameterSearchBox({
           placeholder={placeholder}
           aria-label="Search parameters"
           role="combobox"
-          aria-expanded={flatEntries.length > 0}
+          aria-expanded={Boolean(browsing) || flatEntries.length > 0}
           aria-controls="parameter-search-results"
           style={{
             flex: 1,
@@ -400,7 +476,7 @@ export default function ParameterSearchBox({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: spacing.sm,
-                  padding: `${spacing.sm} ${spacing.lg} ${spacing.xs}`,
+                  padding: `${spacing.sm} ${spacing.lg} 2px`,
                   fontSize: typography.fontSize.xs,
                   fontFamily: typography.fontFamily.primary,
                   fontWeight: typography.fontWeight.semibold,
@@ -411,22 +487,79 @@ export default function ParameterSearchBox({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: spacing.xs,
+                    gap: 4,
                     minWidth: 0,
+                    flexWrap: 'wrap',
                   }}
                 >
                   <IconFolder size={13} style={{ flexShrink: 0 }} />
-                  <span
-                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                  >
-                    {folderLabel}
-                  </span>
+                  {crumbs.length > 0 ? (
+                    crumbs.map((crumb, idx) => (
+                      <span
+                        key={crumb.path}
+                        style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                      >
+                        {idx > 0 && <span aria-hidden>→</span>}
+                        {idx < crumbs.length - 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBrowsing({ path: crumb.path, folder: crumb.label });
+                              setHighlighted(0);
+                            }}
+                            onMouseEnter={() => setHoveredFolder(crumb.path)}
+                            onMouseLeave={() => setHoveredFolder(null)}
+                            onFocus={() => setHoveredFolder(crumb.path)}
+                            onBlur={() => setHoveredFolder(null)}
+                            title={`Open ${crumb.label}`}
+                            style={{
+                              padding: 0,
+                              border: 'none',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              font: 'inherit',
+                              color:
+                                hoveredFolder === crumb.path
+                                  ? colors.primary[700]
+                                  : colors.text.secondary,
+                              textDecoration: hoveredFolder === crumb.path ? 'underline' : 'none',
+                            }}
+                          >
+                            {crumb.label}
+                          </button>
+                        ) : (
+                          <span style={{ color: colors.text.primary }}>{crumb.label}</span>
+                        )}
+                      </span>
+                    ))
+                  ) : (
+                    <span
+                      style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
+                      {folderLabel}
+                    </span>
+                  )}
                 </span>
                 <span style={{ fontWeight: typography.fontWeight.normal, whiteSpace: 'nowrap' }}>
-                  {folderEntries.length} parameter{folderEntries.length === 1 ? '' : 's'}
+                  {folderView?.descendants.length ?? 0} parameter
+                  {(folderView?.descendants.length ?? 0) === 1 ? '' : 's'}
                 </span>
               </div>
-              {folderEntries.map((entry, i) => (
+              {/* The full path once, instead of repeated under every row. */}
+              <div
+                style={{
+                  padding: `0 ${spacing.lg} ${spacing.xs}`,
+                  fontSize: typography.fontSize.xs,
+                  fontFamily: typography.fontFamily.mono,
+                  color: colors.text.secondary,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {browsing.path}
+              </div>
+              {(folderView?.direct ?? []).map((entry, i) => (
                 <button
                   key={entry.path}
                   type="button"
@@ -465,8 +598,8 @@ export default function ParameterSearchBox({
                       {/* Relative to the folder: inside it, the shared
                           prefix is noise. */}
                       {capitalizeFirst(
-                        folderLabel && entry.breadcrumb.startsWith(`${folderLabel} → `)
-                          ? entry.breadcrumb.slice(folderLabel.length + 3)
+                        currentLabel && entry.breadcrumb.startsWith(`${currentLabel} → `)
+                          ? entry.breadcrumb.slice(currentLabel.length + 3)
                           : entry.label
                       )}
                     </span>
@@ -498,20 +631,81 @@ export default function ParameterSearchBox({
                       <EntryBadges entry={entry} />
                     </span>
                   </div>
-                  <div
-                    style={{
-                      fontSize: typography.fontSize.xs,
-                      fontFamily: typography.fontFamily.mono,
-                      color: colors.text.secondary,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {entry.path}
-                  </div>
                 </button>
               ))}
+              {(folderView?.subfolders ?? []).map((sub) => {
+                const fromLookup = labelFor?.(sub.path);
+                const name = fromLookup
+                  ? capitalizeFirst(fromLookup)
+                  : currentLabel && sub.sample.breadcrumb.startsWith(`${currentLabel} → `)
+                    ? sub.sample.breadcrumb.slice(currentLabel.length + 3).split(' → ')[0]
+                    : capitalizeFirst(
+                        sub.path.slice(sub.path.lastIndexOf('.') + 1).replace(/_/g, ' ')
+                      );
+                const isHovered = hoveredFolder === sub.path;
+                return (
+                  <button
+                    key={sub.path}
+                    type="button"
+                    onClick={() => {
+                      setBrowsing({ path: sub.path, folder: name });
+                      setHighlighted(0);
+                    }}
+                    onMouseEnter={() => setHoveredFolder(sub.path)}
+                    onMouseLeave={() => setHoveredFolder(null)}
+                    onFocus={() => setHoveredFolder(sub.path)}
+                    onBlur={() => setHoveredFolder(null)}
+                    aria-label={`Open ${name}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing.xs,
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: `${spacing.xs} ${spacing.lg} ${spacing.xs} 40px`,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: isHovered ? colors.primary[50] : 'transparent',
+                      fontSize: typography.fontSize.sm,
+                      fontFamily: typography.fontFamily.primary,
+                      fontWeight: typography.fontWeight.medium,
+                      color: isHovered ? colors.primary[700] : colors.text.primary,
+                    }}
+                  >
+                    <IconFolder size={14} style={{ flexShrink: 0, color: colors.text.secondary }} />
+                    <span
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {name}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: typography.fontSize.xs,
+                        fontWeight: typography.fontWeight.normal,
+                        color: colors.text.secondary,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {sub.count} parameter{sub.count === 1 ? '' : 's'}
+                    </span>
+                    {/* The constant affordance: folders open, rows add. */}
+                    <IconChevronRight
+                      size={12}
+                      style={{
+                        flexShrink: 0,
+                        transform: isHovered ? 'translateX(2px)' : undefined,
+                        transition: 'transform 120ms ease',
+                      }}
+                    />
+                  </button>
+                );
+              })}
             </>
           )}
           {!browsing &&

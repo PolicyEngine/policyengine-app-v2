@@ -83,6 +83,7 @@ export default function BuildPage() {
               stateLabels={stateLabels}
               index={searchIndex}
               onSelect={addEntry}
+              labelFor={(path) => parameters?.[path]?.label ?? null}
               // Always in flow on this page: a floating list would
               // cover the tree when it is open.
               resultsInFlow

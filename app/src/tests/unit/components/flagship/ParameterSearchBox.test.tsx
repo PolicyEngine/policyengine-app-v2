@@ -51,6 +51,48 @@ const ENTRIES: ParameterSearchEntry[] = [
   },
 ];
 
+// A folder with both its own leaf and a nested subfolder, for the
+// in-place folder browser: crumbs up, subfolder rows down.
+const REFUNDABILITY_ENTRIES: ParameterSearchEntry[] = [
+  {
+    path: 'gov.irs.credits.ctc.refundable.fully_refundable',
+    label: 'fully refundable',
+    breadcrumb: 'IRS → Credits → Child tax credit → Refundability → Fully refundable',
+    unit: 'bool',
+    description: null,
+    isContrib: false,
+    stateCode: null,
+  },
+  {
+    path: 'gov.irs.credits.ctc.refundable.phase_in.rate',
+    label: 'rate',
+    breadcrumb: 'IRS → Credits → Child tax credit → Refundability → Phase-in → Rate',
+    unit: '/1',
+    description: null,
+    isContrib: false,
+    stateCode: null,
+  },
+  {
+    path: 'gov.irs.credits.ctc.refundable.phase_in.threshold',
+    label: 'threshold',
+    breadcrumb: 'IRS → Credits → Child tax credit → Refundability → Phase-in → Threshold',
+    unit: 'currency-USD',
+    description: null,
+    isContrib: false,
+    stateCode: null,
+  },
+];
+
+const NODE_LABELS: Record<string, string> = {
+  'gov.irs': 'IRS',
+  'gov.irs.credits': 'Credits',
+  'gov.irs.credits.ctc': 'Child tax credit',
+  'gov.irs.credits.ctc.refundable': 'Refundability',
+  'gov.irs.credits.ctc.refundable.phase_in': 'Phase-in',
+};
+
+const labelForNode = (path: string) => NODE_LABELS[path] ?? null;
+
 describe('ParameterSearchBox', () => {
   test('given a matching query then results show breadcrumb and path', async () => {
     // Given
@@ -311,6 +353,54 @@ describe('ParameterSearchBox', () => {
 
     expect(screen.getByText('IRS → Credits → EITC')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /back to matches/i })).not.toBeInTheDocument();
+  });
+
+  test('given a breadcrumb crumb is clicked then the parent folder opens with subfolder rows', async () => {
+    // Given — browsing the Phase-in folder, reached from search
+    const user = userEvent.setup();
+    render(
+      <ParameterSearchBox
+        entries={REFUNDABILITY_ENTRIES}
+        onSelect={vi.fn()}
+        labelFor={labelForNode}
+      />
+    );
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'phase-in');
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+    expect(screen.getByText('2 parameters')).toBeInTheDocument();
+
+    // When — stepping up one level via the breadcrumb
+    await user.click(screen.getByRole('button', { name: 'Refundability' }));
+
+    // Then — the parent's own leaf shows, and Phase-in folds into a
+    // subfolder row instead of flattened arrow-prefixed rows
+    expect(screen.getByText('3 parameters')).toBeInTheDocument();
+    expect(screen.getByText('Fully refundable')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open phase-in/i })).toBeInTheDocument();
+    expect(screen.queryByText('Phase-in → Rate')).not.toBeInTheDocument();
+  });
+
+  test('given a subfolder row is clicked then the dropdown descends into it', async () => {
+    // Given — browsing the Refundability folder
+    const user = userEvent.setup();
+    render(
+      <ParameterSearchBox
+        entries={REFUNDABILITY_ENTRIES}
+        onSelect={vi.fn()}
+        labelFor={labelForNode}
+      />
+    );
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'phase-in');
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+    await user.click(screen.getByRole('button', { name: 'Refundability' }));
+
+    // When
+    await user.click(screen.getByRole('button', { name: /open phase-in/i }));
+
+    // Then
+    expect(screen.getByText('2 parameters')).toBeInTheDocument();
+    expect(screen.getByText('Rate')).toBeInTheDocument();
+    expect(screen.getByText('Threshold')).toBeInTheDocument();
   });
 
   test('given escape inside a folder then it steps back to matches, not to empty', async () => {
