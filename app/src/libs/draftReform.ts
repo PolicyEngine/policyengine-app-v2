@@ -39,6 +39,11 @@ export interface DraftReform {
   sourceRef?: string;
   /** Set when editing an existing saved reform; save updates instead of creating */
   editingReformId?: string;
+  /**
+   * When this draft began. Per-draft UI state (the panel's fold) keys on
+   * it, so a new draft never inherits how the last one was left.
+   */
+  startedAt?: number;
 }
 
 const STORAGE_KEY = 'pe-draft-reform';
@@ -124,6 +129,7 @@ export function startDraftReform(
     population: { scope: 'national' },
     source,
     sourceRef,
+    startedAt: Date.now(),
   };
   writeDraft(draft);
   return draft;
@@ -210,6 +216,7 @@ export function loadReformIntoDraft(
     source: reform.provenance.source,
     sourceRef: reform.provenance.ref,
     editingReformId: reform.id,
+    startedAt: Date.now(),
   });
 }
 

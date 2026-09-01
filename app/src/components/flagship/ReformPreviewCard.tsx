@@ -116,7 +116,13 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
       // is — the kicker carries the draft/editing state instead.
       title={draft.label.trim() || 'New reform'}
       kicker={draft.editingReformId ? 'Editing' : 'Draft'}
-      storageKey="draft-reform"
+      // The count rides in the header, and on the folded spine — folded,
+      // it is all that says what is in there.
+      meta={provisionCount}
+      // Keyed per draft: the fold follows this draft between pages, but a
+      // new draft always opens — an unseen draft is what this panel exists
+      // to prevent.
+      storageKey={`draft-reform:${draft.startedAt ?? 'legacy'}`}
       accent
     >
       {/* The name first: it is the reform's identity, and the header
@@ -137,7 +143,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
         />
       </Stack>
 
-      <SectionHeader label="Reform" detail={provisionCount} />
+      <SectionHeader label="Reform" />
       <Stack style={{ gap: 0 }}>
         {draft.provisions.map((provision) => (
           <Stack

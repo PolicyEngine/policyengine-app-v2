@@ -51,8 +51,7 @@ interface ParameterSearchBoxProps {
  *
  * Bracket indices are not nodes in the policy tree — it stops at
  * `...eitc.max` and renders the brackets inside it — so a trailing
- * `[n]` is dropped. Pointing at `...max[0]` names a folder the tree
- * cannot reveal, and the reveal silently does nothing.
+ * `[n]` is dropped: `...max[0]` is not a folder anything can open.
  */
 function parentPath(path: string): string | null {
   const lastDot = path.lastIndexOf('.');
@@ -60,6 +59,34 @@ function parentPath(path: string): string | null {
     return null;
   }
   return path.slice(0, lastDot).replace(/\[\d+\]$/, '');
+}
+
+/**
+ * The folder a search group opens. Groups form on breadcrumb labels, and
+ * unlabeled tree nodes fold out of breadcrumbs, so one group can span
+ * sibling paths — `…amount.base[0]` and `…amount.actc[0]` both read
+ * "… → Amount → Bracket 1". The shared ancestor is the folder that holds
+ * every matched row; null when there is none deep enough to browse.
+ */
+function groupFolderPath(entries: ParameterSearchEntry[]): string | null {
+  let shared: string[] | null = null;
+  for (const entry of entries) {
+    const parent = parentPath(entry.path);
+    if (!parent) {
+      return null;
+    }
+    const segments = parent.split('.');
+    if (!shared) {
+      shared = segments;
+      continue;
+    }
+    let depth = 0;
+    while (depth < shared.length && depth < segments.length && shared[depth] === segments[depth]) {
+      depth += 1;
+    }
+    shared = shared.slice(0, depth);
+  }
+  return shared && shared.length >= 2 ? shared.join('.') : null;
 }
 
 const CONTRIB_EXPLANATION =
@@ -300,7 +327,9 @@ export default function ParameterSearchBox({
       setHighlighted((current) => Math.max(current - 1, 0));
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      select(flatEntries[highlighted]);
+      // The list can shrink under a stale highlight (a filter change);
+      // clamp rather than select past the end.
+      select(flatEntries[Math.min(highlighted, flatEntries.length - 1)]);
     }
   };
 
@@ -322,7 +351,10 @@ export default function ParameterSearchBox({
             Scope
             <select
               value={filters.stateScope}
-              onChange={(event) => setFilters({ ...filters, stateScope: event.target.value })}
+              onChange={(event) => {
+                setFilters({ ...filters, stateScope: event.target.value });
+                setHighlighted(0);
+              }}
               aria-label="State scope"
               style={{
                 border: 'none',
@@ -358,7 +390,10 @@ export default function ParameterSearchBox({
             <input
               type="checkbox"
               checked={filters.includeContrib}
-              onChange={(event) => setFilters({ ...filters, includeContrib: event.target.checked })}
+              onChange={(event) => {
+                setFilters({ ...filters, includeContrib: event.target.checked });
+                setHighlighted(0);
+              }}
               aria-label="Include contributed parameters"
               style={{ accentColor: colors.primary[500], width: 13, height: 13, margin: 0 }}
             />
@@ -717,7 +752,7 @@ export default function ParameterSearchBox({
                 <div key={group.folder || group.entries[0].path}>
                   {isFolder &&
                     (() => {
-                      const folderPath = parentPath(group.entries[0].path);
+                      const folderPath = groupFolderPath(group.entries);
                       const headerStyle: React.CSSProperties = {
                         display: 'flex',
                         alignItems: 'center',

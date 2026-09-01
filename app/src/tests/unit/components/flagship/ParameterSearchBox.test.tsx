@@ -415,4 +415,75 @@ describe('ParameterSearchBox', () => {
     expect(input).toHaveValue('eitc');
     expect(screen.queryByRole('button', { name: /back to matches/i })).not.toBeInTheDocument();
   });
+
+  test('given a filter narrows the list under a stale highlight then enter still selects', async () => {
+    // Given — highlight sits deep in a four-result list
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={onSelect} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'credits');
+    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+
+    // When — the list shrinks under it, then Enter
+    await user.selectOptions(screen.getByRole('combobox', { name: /state scope/i }), 'federal');
+    await user.click(input);
+    await user.keyboard('{Enter}');
+
+    // Then — a real entry, never undefined
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ path: expect.any(String) })
+    );
+  });
+
+  test('given a group spanning sibling paths then browse opens their shared ancestor', async () => {
+    // Given — two rows whose unlabeled parents (base, actc) fold out of
+    // the breadcrumb, so search groups them under one header
+    const user = userEvent.setup();
+    const siblings: ParameterSearchEntry[] = [
+      {
+        path: 'gov.irs.credits.ctc.amount.base[0].threshold',
+        label: 'threshold',
+        breadcrumb: 'IRS → Credits → Child tax credit → Amount → Bracket 1 → Threshold',
+        unit: 'currency-USD',
+        description: null,
+        isContrib: false,
+        stateCode: null,
+      },
+      {
+        path: 'gov.irs.credits.ctc.amount.actc[0].threshold',
+        label: 'threshold',
+        breadcrumb: 'IRS → Credits → Child tax credit → Amount → Bracket 1 → Threshold',
+        unit: 'currency-USD',
+        description: null,
+        isContrib: false,
+        stateCode: null,
+      },
+    ];
+    const labels: Record<string, string> = {
+      'gov.irs': 'IRS',
+      'gov.irs.credits': 'Credits',
+      'gov.irs.credits.ctc': 'Child tax credit',
+      'gov.irs.credits.ctc.amount': 'Amount',
+      'gov.irs.credits.ctc.amount.base': 'Base',
+      'gov.irs.credits.ctc.amount.actc': 'ACTC',
+    };
+    render(
+      <ParameterSearchBox
+        entries={siblings}
+        onSelect={vi.fn()}
+        labelFor={(path) => labels[path] ?? null}
+      />
+    );
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'bracket');
+
+    // When
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+
+    // Then — the folder that holds both matched rows, not just the first's
+    expect(screen.getByText('2 parameters')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open base/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open actc/i })).toBeInTheDocument();
+  });
 });

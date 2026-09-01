@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { IconChevronDown } from '@tabler/icons-react';
 import { createPortal } from 'react-dom';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 /**
  * The flagship shell's right plane.
@@ -23,6 +24,12 @@ const SPINE_WIDTH = 40;
 /** Width eases over this; the two faces crossfade inside it. */
 const WIDTH_MS = 240;
 const FADE_MS = 160;
+/**
+ * Below this the shell cannot spare a 340px column beside the sidebar
+ * and the content, so the open panel floats over the content instead.
+ * The spine keeps its place in the column as the way back.
+ */
+const OVERLAY_BELOW = '(max-width: 1023px)';
 
 /** Effects that must run before paint, without warning during SSR. */
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -36,7 +43,10 @@ interface SidePanelProps {
    * the thing's own name.
    */
   kicker?: string;
-  /** Right-hand note in the header: source, count, whatever is short. */
+  /**
+   * Right-hand note in the header, repeated on the folded spine: source,
+   * count, whatever is short enough to say what is in there.
+   */
   meta?: string;
   /** Teal title, for a panel holding unsaved work — the same accent the
    * sidebar gives its active item, not a colored band. */
@@ -52,12 +62,29 @@ interface SidePanelProps {
   children: React.ReactNode;
 }
 
+// Storage can be absent (SSR) or throw (a sandboxed embed, blocked
+// cookies); either way the fold is simply not remembered.
 function readStoredOpen(storageKey: string | undefined, fallback: boolean): boolean {
-  if (!storageKey || typeof sessionStorage === 'undefined') {
+  if (!storageKey) {
     return fallback;
   }
-  const stored = sessionStorage.getItem(`side-panel-open:${storageKey}`);
-  return stored === null ? fallback : stored === 'true';
+  try {
+    const stored = sessionStorage.getItem(`side-panel-open:${storageKey}`);
+    return stored === null ? fallback : stored === 'true';
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStoredOpen(storageKey: string | undefined, open: boolean): void {
+  if (!storageKey) {
+    return;
+  }
+  try {
+    sessionStorage.setItem(`side-panel-open:${storageKey}`, String(open));
+  } catch {
+    // Not remembered.
+  }
 }
 
 export default function SidePanel({
@@ -71,26 +98,52 @@ export default function SidePanel({
 }: SidePanelProps) {
   const [open, setOpenState] = useState(() => readStoredOpen(storageKey, defaultOpen));
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const collapseRef = useRef<HTMLButtonElement>(null);
+  const expandRef = useRef<HTMLButtonElement>(null);
+  /**
+   * Set by the toggle buttons so focus follows the fold onto the other
+   * face — the face just used disappears from the tab order, and without
+   * this the keyboard lands on <body>. Not set on mount or when the
+   * stored fold is restored, where nothing had focus to keep.
+   */
+  const focusAfterToggle = useRef(false);
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const overlay = useMediaQuery(OVERLAY_BELOW);
 
   useIsomorphicLayoutEffect(() => {
     setSlot(document.getElementById(SIDE_PANEL_SLOT_ID));
   }, []);
 
-  const setOpen = (next: boolean) => {
-    setOpenState(next);
-    if (storageKey && typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem(`side-panel-open:${storageKey}`, String(next));
+  useEffect(() => {
+    if (!focusAfterToggle.current) {
+      return;
     }
+    focusAfterToggle.current = false;
+    (open ? collapseRef : expandRef).current?.focus();
+  }, [open]);
+
+  // A new key is a new thing to remember (one draft replaced by the next
+  // in the same mounted panel): re-read its fold rather than carry the
+  // old one over.
+  const lastKey = useRef(storageKey);
+  useEffect(() => {
+    if (lastKey.current === storageKey) {
+      return;
+    }
+    lastKey.current = storageKey;
+    setOpenState(readStoredOpen(storageKey, defaultOpen));
+  }, [storageKey, defaultOpen]);
+
+  const toggle = (next: boolean) => {
+    focusAfterToggle.current = true;
+    setOpenState(next);
+    writeStoredOpen(storageKey, next);
   };
 
   // The plane mirrors the left sidebar: the same flat surface and quiet
   // edge, with teal reserved for text — no colored bands.
   const titleColor = accent ? colors.primary[700] : colors.text.primary;
   const bodyId = `side-panel-body-${(storageKey ?? title).replace(/\W+/g, '-').toLowerCase()}`;
-
-  const reduceMotion =
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   /**
    * Both faces stay mounted so the fold can animate: the container's
@@ -106,28 +159,41 @@ export default function SidePanel({
       : `opacity ${FADE_MS}ms ease, visibility 0s linear ${visible ? 0 : FADE_MS}ms`,
   });
 
+  const surface: React.CSSProperties = {
+    borderLeft: `1px solid ${colors.border.light}`,
+    background: colors.gray[50],
+  };
+
   const content = (
     <div
       style={{
-        width: open ? PANEL_WIDTH : SPINE_WIDTH,
+        // Narrow shells keep only the spine's width; the open panel
+        // floats over the content instead of squeezing it.
+        width: open && !overlay ? PANEL_WIDTH : SPINE_WIDTH,
         transition: reduceMotion ? undefined : `width ${WIDTH_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
         height: '100%',
         position: 'relative',
         flexShrink: 0,
         overflow: 'hidden',
-        borderLeft: `1px solid ${colors.border.light}`,
-        background: colors.gray[50],
         fontFamily: typography.fontFamily.primary,
+        ...surface,
       }}
     >
       <div
         aria-label={title}
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
+          ...(overlay
+            ? {
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                height: '100vh',
+                zIndex: 30,
+                boxShadow: `-${spacing.sm} 0 ${spacing.xl} ${colors.shadow.medium}`,
+                ...surface,
+              }
+            : { position: 'absolute', top: 0, left: 0, height: '100%' }),
           width: PANEL_WIDTH,
-          height: '100%',
           minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
@@ -135,8 +201,9 @@ export default function SidePanel({
         }}
       >
         <button
+          ref={collapseRef}
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={() => toggle(false)}
           aria-expanded
           aria-controls={bodyId}
           aria-label={`Collapse ${title}`}
@@ -188,7 +255,13 @@ export default function SidePanel({
             </span>
           </span>
           {meta && (
-            <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            <Text
+              style={{
+                fontSize: typography.fontSize.xs,
+                color: colors.text.secondary,
+                whiteSpace: 'nowrap',
+              }}
+            >
               {meta}
             </Text>
           )}
@@ -200,11 +273,12 @@ export default function SidePanel({
       </div>
 
       <button
+        ref={expandRef}
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => toggle(true)}
         aria-expanded={false}
         aria-label={`Open ${title}`}
-        title={title}
+        title={meta ? `${title} · ${meta}` : title}
         style={{
           all: 'unset',
           boxSizing: 'border-box',
@@ -238,6 +312,14 @@ export default function SidePanel({
           }}
         >
           {title}
+          {/* Folded, the count is all that is left to say what is in there. */}
+          {meta && (
+            <span
+              style={{ color: colors.text.secondary, fontWeight: typography.fontWeight.normal }}
+            >
+              {` · ${meta}`}
+            </span>
+          )}
         </Text>
       </button>
     </div>

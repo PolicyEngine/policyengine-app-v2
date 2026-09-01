@@ -203,4 +203,24 @@ describe('ReformPreviewCard', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Draft')).toBeInTheDocument();
   });
+
+  test('given a folded draft is discarded then the next draft opens', async () => {
+    // Given — a draft the user folded away
+    const user = userEvent.setup();
+    const now = vi.spyOn(Date, 'now');
+    now.mockReturnValue(1_000);
+    seedDraft();
+    renderCard();
+    await user.click(screen.getByRole('button', { name: /^collapse/i }));
+    expect(screen.queryByRole('button', { name: /^collapse/i })).not.toBeInTheDocument();
+
+    // When — that draft goes and a new one begins
+    clearDraftReform();
+    now.mockReturnValue(2_000);
+    seedDraft();
+
+    // Then — the new draft is not hidden behind the old fold
+    expect(await screen.findByRole('button', { name: /^collapse/i })).toBeInTheDocument();
+    now.mockRestore();
+  });
 });

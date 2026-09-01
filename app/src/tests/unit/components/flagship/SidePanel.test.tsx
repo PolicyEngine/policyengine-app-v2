@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SidePanel from '@/components/flagship/SidePanel';
 
 describe('SidePanel', () => {
@@ -97,5 +97,65 @@ describe('SidePanel', () => {
     await user.click(screen.getByRole('button', { name: /open draft reform/i }));
 
     expect(screen.getByText('panel body')).toBeVisible();
+  });
+
+  test('given the fold is toggled then focus moves to the other face', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(
+      <SidePanel title="Draft reform">
+        <p>panel body</p>
+      </SidePanel>
+    );
+
+    // When — collapse from the keyboard
+    const collapse = screen.getByRole('button', { name: /collapse draft reform/i });
+    collapse.focus();
+    await user.keyboard('{Enter}');
+
+    // Then — the spine's button holds focus, not <body>
+    expect(screen.getByRole('button', { name: /open draft reform/i })).toHaveFocus();
+
+    // And back again
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('button', { name: /collapse draft reform/i })).toHaveFocus();
+  });
+
+  test('given storage that throws then the panel still renders with its default fold', () => {
+    // Given — a sandboxed embed where any storage access throws
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+
+    // When / Then
+    render(
+      <SidePanel title="Draft reform" storageKey="draft-test">
+        <p>panel body</p>
+      </SidePanel>
+    );
+    expect(screen.getByText('panel body')).toBeVisible();
+    getItem.mockRestore();
+    setItem.mockRestore();
+  });
+
+  test('given meta then the folded spine repeats it', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(
+      <SidePanel title="Draft reform" meta="3 provisions">
+        <p>panel body</p>
+      </SidePanel>
+    );
+
+    // When
+    await user.click(screen.getByRole('button', { name: /collapse draft reform/i }));
+
+    // Then
+    expect(screen.getByRole('button', { name: /open draft reform/i })).toHaveTextContent(
+      '3 provisions'
+    );
   });
 });

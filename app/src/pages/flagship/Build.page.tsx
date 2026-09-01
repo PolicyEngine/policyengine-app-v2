@@ -40,7 +40,6 @@ export default function BuildPage() {
   // Search is the surface; the tree is the fallback for when you do not
   // know what the thing is called, so it stays out of the way until asked for.
   const [showTree, setShowTree] = useState(false);
-  // The folder a search result pointed at, revealed in the tree below.
 
   // Store-memoized like the index: built once per metadata load, not
   // per navigation or render.
