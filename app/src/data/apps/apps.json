@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "free-childcare-reform",
+    "title": "Free childcare hours and a 75% subsidy",
+    "description": "Estimate the cost and household impact of 15 free childcare hours from 9 months plus a 75% subsidy replacing Tax-Free Childcare, modelled with PolicyEngine UK.",
+    "source": "https://free-childcare-reform.vercel.app/uk/free-childcare-reform",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "free-childcare-reform.jpg",
+    "date": "2026-09-03 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "snap-payment-error-simulator",
     "title": "SNAP payment error simulator",
     "description": "Simulate each state's measured SNAP payment error rate from its own Quality Control cases: cost-share tier probabilities under the FY 2028 formula, the FY 2025 vs FY 2026 election, audit-volume effects, and a verified case-level model scenario.",
