@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "free-childcare-reform",
+    "title": "Two childcare reforms: free hours and a 75% subsidy",
+    "description": "Estimate the cost, labour supply response and household impact of two UK childcare reforms for 2027-28 to 2029-30 \u2014 15 free hours for every child from 9 months with a further 15 for working parents earning under \u00a3100,000, and a 75% subsidy of childcare costs replacing Tax-Free Childcare \u2014 modelled with PolicyEngine UK.",
+    "source": "https://free-childcare-reform.vercel.app/uk/free-childcare-reform",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "free-childcare-reform.jpg",
+    "date": "2026-09-03 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "snap-payment-error-simulator",
     "title": "SNAP payment error simulator",
     "description": "Simulate each state's measured SNAP payment error rate from its own Quality Control cases: cost-share tier probabilities under the FY 2028 formula, the FY 2025 vs FY 2026 election, audit-volume effects, and a verified case-level model scenario.",
