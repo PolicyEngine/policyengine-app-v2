@@ -2,7 +2,7 @@
   {
     "type": "iframe",
     "slug": "free-childcare-reform",
-    "title": "Two childcare reforms: free hours and a 75% subsidy",
+    "title": "Free childcare hours and a 75% subsidy",
     "description": "Estimate the cost and household impact of 15 free childcare hours from 9 months plus a 75% subsidy replacing Tax-Free Childcare, modelled with PolicyEngine UK.",
     "source": "https://free-childcare-reform.vercel.app/uk/free-childcare-reform",
     "tags": ["uk", "featured", "policy", "interactives"],
