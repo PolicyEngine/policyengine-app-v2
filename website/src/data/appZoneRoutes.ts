@@ -166,7 +166,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
   },
   {
     source: "/us/marriage",
-    destination: "https://marriage-zeta-beryl.vercel.app/us/marriage",
+    // The marriage app defaults to the UK, so the US route has to say so
+    // explicitly rather than relying on the app's fallback.
+    destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=us",
+    deepDestination:
+      "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=us",
   },
   {
     source: "/uk/marriage",
