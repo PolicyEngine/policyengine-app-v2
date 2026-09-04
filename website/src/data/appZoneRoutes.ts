@@ -59,6 +59,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
   },
   {
+    source: "/uk/free-childcare-reform",
+    destination:
+      "https://free-childcare-reform.vercel.app/uk/free-childcare-reform",
+  },
+  {
     source: "/us/snap-payment-error-simulator",
     destination:
       "https://snap-qc-sim.vercel.app/us/snap-payment-error-simulator",
