@@ -5,12 +5,13 @@ import { useEffect, useState } from 'react';
  * Drop-in replacement for @mantine/hooks useMediaQuery.
  */
 export function useMediaQuery(query: string): boolean {
+  // matchMedia is missing under SSR and in jsdom; treat both as "no match".
   const [matches, setMatches] = useState<boolean>(
-    () => typeof window !== 'undefined' && window.matchMedia(query).matches
+    () => typeof window !== 'undefined' && Boolean(window.matchMedia?.(query).matches)
   );
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return;
     }
 

@@ -1,10 +1,5 @@
 import { useState } from 'react';
-import {
-  IconAdjustments,
-  IconChartBar,
-  IconLayoutSidebarRightCollapse,
-  IconX,
-} from '@tabler/icons-react';
+import { IconChartBar, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Stack, Text } from '@/components/ui';
@@ -16,6 +11,7 @@ import { RunReportProvision } from '@/libs/flagship/runReport';
 import { Reform } from '@/types/ingredients/Reform';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
+import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
 interface ReportAdjustPanelProps {
@@ -54,9 +50,6 @@ export default function ReportAdjustPanel({
   const runReport = useRunFlagshipReport();
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
-  // Collapsed by default: the report is the main event; adjusting is
-  // one click away on the edge tab.
-  const [collapsed, setCollapsed] = useState(true);
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);
@@ -124,87 +117,12 @@ export default function ReportAdjustPanel({
     }
   };
 
-  if (collapsed) {
-    return (
-      <button
-        type="button"
-        onClick={() => setCollapsed(false)}
-        aria-label="Adjust parameters"
-        style={{
-          position: 'sticky',
-          top: spacing.md,
-          alignSelf: 'flex-start',
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing.xs,
-          padding: `${spacing.sm} ${spacing.md}`,
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: 10,
-          background: colors.background.primary,
-          cursor: 'pointer',
-          fontSize: typography.fontSize.sm,
-          fontFamily: typography.fontFamily.primary,
-          color: colors.text.primary,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        <IconAdjustments size={16} color={colors.primary[700]} />
-        Adjust
-      </button>
-    );
-  }
-
   return (
-    <Stack
-      aria-label="Adjust parameters"
-      style={{
-        gap: 0,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: 12,
-        background: colors.background.primary,
-        overflow: 'hidden',
-        position: 'sticky',
-        top: spacing.md,
-        alignSelf: 'flex-start',
-        width: '100%',
-      }}
+    <SidePanel
+      title="Adjust parameters"
+      meta={`${active.length} provision${active.length === 1 ? '' : 's'}`}
+      defaultOpen={false}
     >
-      <Stack
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.sm,
-          padding: `${spacing.md} ${spacing.lg}`,
-          background: colors.gray[50],
-        }}
-      >
-        <Text
-          style={{
-            fontSize: typography.fontSize.sm,
-            fontWeight: typography.fontWeight.semibold,
-            color: colors.text.primary,
-          }}
-        >
-          Adjust parameters
-        </Text>
-        <button
-          type="button"
-          onClick={() => setCollapsed(true)}
-          aria-label="Collapse the adjust panel"
-          style={{
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            color: colors.text.secondary,
-            display: 'inline-flex',
-            padding: 2,
-          }}
-        >
-          <IconLayoutSidebarRightCollapse size={16} />
-        </button>
-      </Stack>
-
       <Stack style={{ gap: 0 }}>
         {active.map((provision) => (
           <Stack
@@ -325,6 +243,6 @@ export default function ReportAdjustPanel({
           report.
         </Text>
       </Stack>
-    </Stack>
+    </SidePanel>
   );
 }

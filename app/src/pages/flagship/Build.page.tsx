@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import ParameterTreeBrowser from '@/components/flagship/ParameterTreeBrowser';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
-import { Button, Stack, Text, Title } from '@/components/ui';
+import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
@@ -40,8 +40,6 @@ export default function BuildPage() {
   // Search is the surface; the tree is the fallback for when you do not
   // know what the thing is called, so it stays out of the way until asked for.
   const [showTree, setShowTree] = useState(false);
-  // The folder a search result pointed at, revealed in the tree below.
-  const [treeFocus, setTreeFocus] = useState<string | null>(null);
 
   // Store-memoized like the index: built once per metadata load, not
   // per navigation or render.
@@ -84,40 +82,38 @@ export default function BuildPage() {
               stateLabels={stateLabels}
               index={searchIndex}
               onSelect={addEntry}
-              onOpenFolder={(folderPath) => {
-                // Results stay up: the near miss is worth comparing
-                // against whatever the folder turns out to hold.
-                setShowTree(true);
-                setTreeFocus(folderPath);
-              }}
+              labelFor={(path) => parameters?.[path]?.label ?? null}
+              // Always in flow on this page: a floating list would
+              // cover the tree when it is open.
+              resultsInFlow
               currentValueFor={(entry) => {
                 const value = getCurrentValue(parameters?.[entry.path]?.values);
                 return value === undefined ? null : formatValue(value, entry.unit);
               }}
             />
           ) : (
-            <Text
+            // The index takes a moment on the US tree — say so with
+            // something moving, so the wait reads as work rather than
+            // an empty page.
+            <Stack
               style={{
-                color: colors.text.secondary,
-                fontSize: typography.fontSize.sm,
-                textAlign: 'center',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: spacing.sm,
               }}
             >
-              Loading the parameter index…
-            </Text>
+              <Spinner size="sm" />
+              <Text style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
+                Loading the parameter index…
+              </Text>
+            </Stack>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Button
               variant="ghost"
-              onClick={() =>
-                setShowTree((open) => {
-                  if (open) {
-                    setTreeFocus(null);
-                  }
-                  return !open;
-                })
-              }
+              onClick={() => setShowTree((open) => !open)}
               aria-expanded={showTree}
               aria-controls="policy-tree"
               style={{
@@ -149,7 +145,6 @@ export default function BuildPage() {
               tree={parameterTree}
               addablePaths={addablePaths}
               draftPaths={draftPaths}
-              expandTo={treeFocus}
               onSelectLeaf={(path) => {
                 const entry = entriesByPath.get(path);
                 if (entry) {

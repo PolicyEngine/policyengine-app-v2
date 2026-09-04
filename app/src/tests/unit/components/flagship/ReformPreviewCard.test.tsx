@@ -58,6 +58,9 @@ function renderCard() {
 describe('ReformPreviewCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The panel remembers its fold in sessionStorage; a fold test must
+    // not leak a closed panel into the next test.
+    sessionStorage.clear();
     clearDraftReform();
     seedDraft();
   });
@@ -150,12 +153,13 @@ describe('ReformPreviewCard', () => {
     renderCard();
 
     // When
-    await user.click(screen.getByRole('button', { name: /here's your draft reform/i }));
+    await user.click(screen.getByRole('button', { name: /collapse new reform/i }));
 
-    // Then — the count survives the fold; the editing controls do not
-    expect(screen.getByText('1 provision')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /run report/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
+    // Then — the folded spine keeps the panel's name; the controls fade
+    // out but stay mounted so the fold can animate
+    expect(screen.getByRole('button', { name: /open new reform/i })).toBeInTheDocument();
+    expect(screen.getByText('Run report')).not.toBeVisible();
+    expect(screen.getByLabelText('Reform name')).not.toBeVisible();
   });
 
   test('given a folded draft then clicking again restores the controls', async () => {
@@ -163,15 +167,13 @@ describe('ReformPreviewCard', () => {
     const user = userEvent.setup();
     seedDraft();
     renderCard();
-    const header = screen.getByRole('button', { name: /here's your draft reform/i });
-
     // When
-    await user.click(header);
-    await user.click(header);
+    await user.click(screen.getByRole('button', { name: /collapse new reform/i }));
+    await user.click(screen.getByRole('button', { name: /open new reform/i }));
 
     // Then
-    expect(screen.getByRole('button', { name: /run report/i })).toBeInTheDocument();
-    expect(screen.getByLabelText('Reform name')).toBeInTheDocument();
+    expect(screen.getByText('Run report')).toBeVisible();
+    expect(screen.getByLabelText('Reform name')).toBeVisible();
   });
 
   test('given the default view then the draft is open', () => {
@@ -180,9 +182,45 @@ describe('ReformPreviewCard', () => {
     renderCard();
 
     // Then — an unseen draft is what this panel exists to prevent
-    expect(screen.getByRole('button', { name: /here's your draft reform/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /collapse new reform/i })).toHaveAttribute(
       'aria-expanded',
       'true'
     );
+  });
+
+  test('given the draft is named then the panel header carries that name', async () => {
+    // Given
+    const user = userEvent.setup();
+    seedDraft();
+    renderCard();
+
+    // When
+    await user.type(screen.getByLabelText('Reform name'), 'CTC expansion 2026');
+
+    // Then — the title is the reform's identity, like a document title
+    expect(
+      screen.getByRole('button', { name: /collapse ctc expansion 2026/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Draft')).toBeInTheDocument();
+  });
+
+  test('given a folded draft is discarded then the next draft opens', async () => {
+    // Given — a draft the user folded away
+    const user = userEvent.setup();
+    const now = vi.spyOn(Date, 'now');
+    now.mockReturnValue(1_000);
+    seedDraft();
+    renderCard();
+    await user.click(screen.getByRole('button', { name: /^collapse/i }));
+    expect(screen.queryByRole('button', { name: /^collapse/i })).not.toBeInTheDocument();
+
+    // When — that draft goes and a new one begins
+    clearDraftReform();
+    now.mockReturnValue(2_000);
+    seedDraft();
+
+    // Then — the new draft is not hidden behind the old fold
+    expect(await screen.findByRole('button', { name: /^collapse/i })).toBeInTheDocument();
+    now.mockRestore();
   });
 });

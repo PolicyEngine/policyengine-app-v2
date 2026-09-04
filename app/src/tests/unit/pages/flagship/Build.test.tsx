@@ -35,4 +35,14 @@ describe('BuildPage', () => {
 
     expect(screen.queryByText(/loading the policy tree/i)).not.toBeInTheDocument();
   });
+
+  test('given the parameter index has not loaded then a spinner stands in for the search box', () => {
+    // Given / When — the store starts empty, as it does on a cold load
+    render(<BuildPage />);
+
+    // Then
+    expect(screen.getByText(/loading the parameter index/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('status').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('combobox', { name: /search parameters/i })).not.toBeInTheDocument();
+  });
 });
