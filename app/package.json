@@ -15,6 +15,7 @@
     "generate-sitemap": "tsx scripts/generate-sitemap.ts",
     "evaluate-search": "tsx scripts/evaluate-parameter-search.ts",
     "refresh-search-eval-cases": "tsx scripts/refresh-parameter-search-cases.ts",
+    "build-parameter-dependencies": "python3 scripts/build-parameter-dependency-map.py",
     "build-with-types": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

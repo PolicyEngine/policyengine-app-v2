@@ -5,6 +5,13 @@
  * PolicyEngine scorecard).
  */
 
+import {
+  DEFAULT_MAX_DEPTH,
+  loadParameterDependencies,
+  ParameterDependencyMap,
+  variablesReachedByPaths,
+} from '@/libs/flagship/parameterDependencies';
+
 export interface ModelValidationRow {
   source: string;
   program: string;
@@ -56,7 +63,11 @@ export const METRIC_LABELS: Record<string, string> = {
   average_benefit: 'Average benefit',
 };
 
-/** Scorecard programs touched by a set of parameter paths. */
+/**
+ * Scorecard programs touched by a set of parameter paths, by path token.
+ * The fallback when the traced dependency map has no reader for a path
+ * (a parameter no traced formula read, or a model newer than the map).
+ */
 export function scorecardProgramsFromPaths(paths: string[]): string[] {
   const programs = new Set<string>();
   for (const path of paths) {
@@ -65,6 +76,63 @@ export function scorecardProgramsFromPaths(paths: string[]): string[] {
       if (pattern.test(normalized)) {
         programs.add(program);
       }
+    }
+  }
+  return [...programs];
+}
+
+/** Model output variable → the scorecard program it measures. */
+export const VARIABLE_PROGRAMS: Record<string, string> = {
+  snap: 'snap',
+  wic: 'wic',
+  tanf: 'tanf',
+  ssi: 'ssi',
+  eitc: 'eitc',
+  refundable_ctc: 'ctc_refund',
+  ctc: 'ctc_refund',
+  hud_hap: 'housing',
+  housing_assistance: 'housing',
+  spm_unit_energy_subsidy: 'liheap',
+};
+
+/**
+ * Everything downstream of a parameter eventually touches every program
+ * through net income, so only the nearest program outputs count: those
+ * within one hop of the closest one. An EITC parameter reaches `eitc` at
+ * depth 1 and `refundable_ctc` at depth 3; only EITC is its program.
+ */
+const NEAREST_PROGRAM_SLACK = 1;
+
+/**
+ * Scorecard programs a reform moves, from the variables its parameter
+ * paths reach in the traced dependency map. Each path contributes the
+ * programs of its nearest reached output variables; a path the map does
+ * not know falls back to token matching. Order follows the paths, so the
+ * program behind the first provision leads.
+ */
+export async function scorecardProgramsForPaths(
+  paths: string[],
+  maxDepth: number = DEFAULT_MAX_DEPTH
+): Promise<string[]> {
+  let map: ParameterDependencyMap;
+  try {
+    map = await loadParameterDependencies();
+  } catch {
+    return scorecardProgramsFromPaths(paths);
+  }
+  const programs = new Set<string>();
+  for (const path of paths) {
+    const hits = variablesReachedByPaths([path], map, maxDepth).filter(
+      (entry) => VARIABLE_PROGRAMS[entry.variable]
+    );
+    const fromGraph =
+      hits.length > 0
+        ? hits
+            .filter((entry) => entry.depth <= hits[0].depth + NEAREST_PROGRAM_SLACK)
+            .map((entry) => VARIABLE_PROGRAMS[entry.variable])
+        : scorecardProgramsFromPaths([path]);
+    for (const program of fromGraph) {
+      programs.add(program);
     }
   }
   return [...programs];

@@ -9,7 +9,7 @@ import {
   ModelValidationRow,
   PROGRAM_LABELS,
   SCORECARD_URL,
-  scorecardProgramsFromPaths,
+  scorecardProgramsForPaths,
 } from '@/libs/flagship/modelValidation';
 
 /**
@@ -246,24 +246,37 @@ export interface ModelTrackRecord {
  * click (inactive tab panels are unmounted).
  */
 export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
+  const [programs, setPrograms] = useState<string[]>([]);
   const [rows, setRows] = useState<ModelValidationRow[] | null | undefined>(undefined);
-  const programsKey = scorecardProgramsFromPaths(paths).join(',');
+  const pathsKey = paths.join('\n');
 
   useEffect(() => {
     let cancelled = false;
-    if (programsKey) {
-      fetchModelValidation(programsKey.split(',')).then((result) => {
+    const resolvedPaths = pathsKey ? pathsKey.split('\n') : [];
+    if (resolvedPaths.length === 0) {
+      setPrograms([]);
+      return;
+    }
+    // The traced dependency map resolves paths to the output variables
+    // they move; the scorecard rows follow once the programs are known.
+    scorecardProgramsForPaths(resolvedPaths).then(async (resolved) => {
+      if (cancelled) {
+        return;
+      }
+      setPrograms(resolved);
+      if (resolved.length > 0) {
+        const result = await fetchModelValidation(resolved);
         if (!cancelled) {
           setRows(result);
         }
-      });
-    }
+      }
+    });
     return () => {
       cancelled = true;
     };
-  }, [programsKey]);
+  }, [pathsKey]);
 
-  return { programs: programsKey ? programsKey.split(',') : [], rows };
+  return { programs, rows };
 }
 
 export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTrackRecord }) {
