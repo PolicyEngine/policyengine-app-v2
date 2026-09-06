@@ -64,6 +64,8 @@ export interface CalibrationMatches {
   geography: string;
   /** The model version the dependency map was traced from. */
   modelVersion: string;
+  /** Variables the reform reaches, calibrated or not. */
+  reachedCount: number;
   matches: CalibrationVariableMatch[];
 }
 
@@ -203,6 +205,7 @@ export async function calibrationMatchesForPaths(
     releaseId: fetched.releaseId,
     geography,
     modelVersion: map.model.version,
+    reachedCount: reached.length,
     matches: summarizeMatches(reached, fetched.rows),
   };
 }

@@ -105,7 +105,7 @@ export function useCalibrationMatches(
     let cancelled = false;
     const resolvedPaths = pathsKey ? pathsKey.split('\n') : [];
     if (resolvedPaths.length === 0) {
-      setMatches({ releaseId: null, geography, modelVersion: '', matches: [] });
+      setMatches({ releaseId: null, geography, modelVersion: '', reachedCount: 0, matches: [] });
       return;
     }
     calibrationMatchesForPaths(resolvedPaths, geography).then((result) => {
@@ -148,11 +148,24 @@ export function CalibrationMatchSection({
       </SectionCard>
     );
   }
+  const where = matches.geography === 'US' ? 'nationally' : `in ${matches.geography}`;
   if (matches.matches.length === 0) {
-    return null;
+    if (matches.reachedCount === 0) {
+      return null;
+    }
+    // Silence would read as "fine". State credits are the usual case: the
+    // dashboard's state income tax targets carry no model-variable mapping.
+    return (
+      <SectionCard>
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          None of the {matches.reachedCount} variables this reform moves is a calibration target{' '}
+          {where}, so the data behind this estimate is unvalidated on that side. See the{' '}
+          <DashboardLink>calibration dashboard</DashboardLink> for what is covered.
+        </Text>
+      </SectionCard>
+    );
   }
 
-  const where = matches.geography === 'US' ? 'nationally' : `in ${matches.geography}`;
   const attention = matches.matches.filter((m) => m.meanAbsRelativeError > ATTENTION_ERROR);
 
   return (

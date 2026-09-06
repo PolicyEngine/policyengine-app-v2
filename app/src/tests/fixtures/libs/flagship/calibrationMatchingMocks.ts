@@ -52,6 +52,7 @@ export const mockCalibrationMatches: CalibrationMatches = {
   releaseId: POPULACE_RELEASE_ID,
   geography: 'US',
   modelVersion: '1.808.0',
+  reachedCount: 12,
   matches: [
     {
       variable: 'refundable_ctc',

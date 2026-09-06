@@ -20,9 +20,21 @@ describe('CalibrationMatchSection', () => {
     expect(screen.getByText(/checking the calibration/i)).toBeInTheDocument();
   });
 
-  test('given no calibrated variables then nothing renders', () => {
+  test('given reached variables but none calibrated then the gap is stated, not hidden', () => {
+    render(
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount: 33, matches: [] }}
+      />
+    );
+
+    expect(screen.getByText(/none of the 33 variables .* in CA/i)).toBeInTheDocument();
+  });
+
+  test('given no provisions at all then nothing renders', () => {
     const { container } = render(
-      <CalibrationMatchSection matches={{ ...mockCalibrationMatches, matches: [] }} />
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, reachedCount: 0, matches: [] }}
+      />
     );
 
     expect(container).toBeEmptyDOMElement();
