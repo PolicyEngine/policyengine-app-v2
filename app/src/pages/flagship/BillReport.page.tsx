@@ -19,6 +19,10 @@ import {
   YAxis,
 } from 'recharts';
 import { TrackedBill, WinnerShares } from '@/api/billFeed';
+import {
+  CalibrationMatchSection,
+  useCalibrationMatches,
+} from '@/components/flagship/CalibrationMatches';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import {
@@ -172,7 +176,13 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   // Kick off the scorecard fetch with the rest of the report, not on
   // tab click — inactive tab panels are unmounted.
-  const trackRecord = useModelTrackRecord(bill ? bill.provisions.map((p) => p.path) : []);
+  const billPaths = bill ? bill.provisions.map((p) => p.path) : [];
+  const trackRecord = useModelTrackRecord(billPaths);
+  // A state bill's data check is against that state's calibration targets.
+  const calibration = useCalibrationMatches(
+    billPaths,
+    bill?.state ? `state/${bill.state.toLowerCase()}` : undefined
+  );
 
   const resolveBreadcrumb = (path: string, fallback?: string) =>
     parameters?.[path]
@@ -873,6 +883,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                   {bill.validation && (
                     <BillValidationSection billId={bill.id} validation={bill.validation} />
                   )}
+                  <CalibrationMatchSection matches={calibration} />
                   <ModelTrackRecordSection trackRecord={trackRecord} />
                 </Stack>
               </TabsContent>

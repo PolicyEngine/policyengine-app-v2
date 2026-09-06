@@ -7,6 +7,7 @@ export const CTC_AMOUNT_FOLDER_PATH = 'gov.irs.credits.ctc.amount';
 export const CTC_FULLY_REFUNDABLE_PATH = 'gov.irs.credits.ctc.refundable.fully_refundable';
 export const EITC_MAX_PATH = 'gov.irs.credits.eitc.max[0].amount';
 export const SALT_CAP_PATH = 'gov.irs.deductions.itemized.salt_and_real_estate.cap';
+export const CA_EITC_PATH = 'gov.states.ca.tax.income.credits.earned_income.phase_in.rate[0].rate';
 export const SNAP_STANDARD_DEDUCTION_PATH = 'gov.usda.snap.income.deductions.standard';
 export const SNAP_MAX_ALLOTMENT_PATH = 'gov.usda.snap.max_allotment.main.CONTIGUOUS_US.4';
 export const UNTRACED_BRACKET_PATH = 'gov.irs.income.bracket.rates[3].rate';
@@ -33,6 +34,7 @@ export const mockParameterDependencyMap: ParameterDependencyMap = {
     [CTC_FULLY_REFUNDABLE_PATH]: ['refundable_ctc'],
     'gov.irs.credits.eitc.max': ['eitc_maximum'],
     [SALT_CAP_PATH]: ['salt_cap'],
+    'gov.states.ca.tax.income.credits.earned_income.phase_in.rate': ['ca_eitc'],
     [SNAP_STANDARD_DEDUCTION_PATH]: ['snap_standard_deduction'],
   },
   consumers: {
@@ -49,6 +51,7 @@ export const mockParameterDependencyMap: ParameterDependencyMap = {
     ctc_limiting_tax_liability: ['refundable_ctc'],
     salt_cap: ['salt_deduction'],
     salt_deduction: ['taxable_income'],
+    ca_eitc: ['ca_income_tax'],
     snap_standard_deduction: ['snap_deductions'],
   },
 };

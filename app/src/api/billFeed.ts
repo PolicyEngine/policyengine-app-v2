@@ -68,6 +68,8 @@ export interface TrackedBill {
   id: string;
   countryId: CountryId;
   jurisdiction: string;
+  /** Two-letter state code for state bills; absent for federal ones. */
+  state?: string;
   title: string;
   status: string;
   summary: string;
@@ -300,6 +302,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       id: record.id,
       countryId: 'us',
       jurisdiction: STATE_NAMES[record.state] ?? record.state ?? 'Federal',
+      state: /^[a-z]{2}$/i.test(record.state ?? '') ? record.state.toUpperCase() : undefined,
       title: record.title ?? record.id,
       status: status || 'Analyzed',
       summary: record.description ?? '',

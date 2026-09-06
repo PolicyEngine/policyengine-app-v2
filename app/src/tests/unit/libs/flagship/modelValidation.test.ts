@@ -5,6 +5,7 @@ import {
   scorecardProgramsFromPaths,
 } from '@/libs/flagship/modelValidation';
 import {
+  CA_EITC_PATH,
   CTC_BASE_AMOUNT_PATH,
   CTC_SECOND_BRACKET_PATH,
   EITC_MAX_PATH,
@@ -87,6 +88,10 @@ describe('scorecardProgramsForPaths', () => {
 
   test('given a path echoing into a farther program then only the nearest program returns', async () => {
     await expect(scorecardProgramsForPaths([EITC_MAX_PATH])).resolves.toEqual(['eitc']);
+  });
+
+  test('given a state credit the map knows then no federal program is borrowed', async () => {
+    await expect(scorecardProgramsForPaths([CA_EITC_PATH])).resolves.toEqual([]);
   });
 
   test('given a known path reaching no program variable then nothing returns', async () => {
