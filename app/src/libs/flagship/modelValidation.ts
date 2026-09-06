@@ -9,6 +9,7 @@ import {
   DEFAULT_MAX_DEPTH,
   loadParameterDependencies,
   ParameterDependencyMap,
+  readersOfPath,
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
@@ -122,17 +123,22 @@ export async function scorecardProgramsForPaths(
   }
   const programs = new Set<string>();
   for (const path of paths) {
+    // Only a path the map has never seen read falls back to tokens. A known
+    // path that reaches no program variable (a state credit, say) gets no
+    // program: borrowing federal EITC context for CalEITC would mislead.
+    if (readersOfPath(path, map).length === 0) {
+      for (const program of scorecardProgramsFromPaths([path])) {
+        programs.add(program);
+      }
+      continue;
+    }
     const hits = variablesReachedByPaths([path], map, maxDepth).filter(
       (entry) => VARIABLE_PROGRAMS[entry.variable]
     );
-    const fromGraph =
-      hits.length > 0
-        ? hits
-            .filter((entry) => entry.depth <= hits[0].depth + NEAREST_PROGRAM_SLACK)
-            .map((entry) => VARIABLE_PROGRAMS[entry.variable])
-        : scorecardProgramsFromPaths([path]);
-    for (const program of fromGraph) {
-      programs.add(program);
+    for (const entry of hits) {
+      if (entry.depth <= hits[0].depth + NEAREST_PROGRAM_SLACK) {
+        programs.add(VARIABLE_PROGRAMS[entry.variable]);
+      }
     }
   }
   return [...programs];
