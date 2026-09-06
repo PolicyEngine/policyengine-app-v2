@@ -2,6 +2,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import BillReportPage from '@/pages/flagship/BillReport.page';
+import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
+
+const mockCalibrationMatchesForPaths = vi.fn();
+
+vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/libs/flagship/calibrationMatching')>();
+  return {
+    ...actual,
+    calibrationMatchesForPaths: (...args: unknown[]) => mockCalibrationMatchesForPaths(...args),
+  };
+});
 
 const mockFetchTrackerBills = vi.fn();
 
@@ -72,11 +83,11 @@ const TRACKED_BILL = {
   },
 };
 
-function renderReport() {
+function renderReport(billId = 'us-hr1425') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <BillReportPage billId="us-hr1425" />
+      <BillReportPage billId={billId} />
     </QueryClientProvider>
   );
 }
@@ -180,5 +191,32 @@ describe('BillReportPage', () => {
     expect(screen.getByText('-$225.5B')).toBeInTheDocument();
     expect(screen.getByText('CRFB')).toBeInTheDocument();
     expect(screen.getByText(/later effective date/)).toBeInTheDocument();
+  });
+
+  test('given a state bill then its data check runs against that state and says so', async () => {
+    const user = userEvent.setup();
+    const SNAP_STANDARD_DEDUCTION_PATH = 'gov.usda.snap.income.deductions.standard';
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        id: 'ut-sb60',
+        jurisdiction: 'Utah',
+        state: 'UT',
+        provisions: [{ path: SNAP_STANDARD_DEDUCTION_PATH, value: 250 }],
+      },
+    ]);
+    mockCalibrationMatchesForPaths.mockResolvedValue({
+      ...mockCalibrationMatches,
+      geography: 'UT',
+    });
+    renderReport('ut-sb60');
+
+    await user.click(await screen.findByRole('tab', { name: 'Validation' }));
+
+    expect(mockCalibrationMatchesForPaths).toHaveBeenCalledWith(
+      [SNAP_STANDARD_DEDUCTION_PATH],
+      'UT'
+    );
+    expect(await screen.findByText(/administrative totals in UT/)).toBeInTheDocument();
   });
 });
