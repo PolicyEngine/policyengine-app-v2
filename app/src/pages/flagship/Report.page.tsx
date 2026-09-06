@@ -2,6 +2,10 @@ import { useMemo } from 'react';
 import { IconHome, IconPlus } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import {
+  CalibrationMatchSection,
+  useCalibrationMatches,
+} from '@/components/flagship/CalibrationMatches';
 import EstimateValidation from '@/components/flagship/EstimateValidation';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
@@ -127,7 +131,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     region,
   });
 
-  const trackRecord = useModelTrackRecord(meta?.provisions.map((p) => p.path) ?? []);
+  const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
+  const trackRecord = useModelTrackRecord(provisionPaths);
+  const calibration = useCalibrationMatches(provisionPaths, region);
 
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -288,6 +294,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
             <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
               <SectionHeading id="validation" title="Validation" />
+              <CalibrationMatchSection matches={calibration} />
               <ModelTrackRecordSection trackRecord={trackRecord} />
               <Stack
                 style={{
