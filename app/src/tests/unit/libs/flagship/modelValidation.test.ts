@@ -1,8 +1,16 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
   claimsFromBillValidation,
+  scorecardProgramsForPaths,
   scorecardProgramsFromPaths,
 } from '@/libs/flagship/modelValidation';
+import {
+  CTC_BASE_AMOUNT_PATH,
+  CTC_SECOND_BRACKET_PATH,
+  EITC_MAX_PATH,
+  SALT_CAP_PATH,
+  SNAP_MAX_ALLOTMENT_PATH,
+} from '@/tests/fixtures/libs/flagship/parameterDependenciesMocks';
 
 describe('scorecardProgramsFromPaths', () => {
   test('given program-bearing paths then scorecard program ids return', () => {
@@ -57,5 +65,45 @@ describe('claimsFromBillValidation', () => {
 
   test('given no comparable estimates then no claims return', () => {
     expect(claimsFromBillValidation('x', { peEstimate: -5 })).toEqual([]);
+  });
+});
+
+vi.mock('@/libs/flagship/parameterDependencies', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/libs/flagship/parameterDependencies')>();
+  const { mockParameterDependencyMap } =
+    await import('@/tests/fixtures/libs/flagship/parameterDependenciesMocks');
+  return {
+    ...original,
+    loadParameterDependencies: vi.fn(async () => mockParameterDependencyMap),
+  };
+});
+
+describe('scorecardProgramsForPaths', () => {
+  test('given a path the traced map knows then programs come from reached variables', async () => {
+    await expect(scorecardProgramsForPaths([CTC_BASE_AMOUNT_PATH])).resolves.toEqual([
+      'ctc_refund',
+    ]);
+  });
+
+  test('given a path echoing into a farther program then only the nearest program returns', async () => {
+    await expect(scorecardProgramsForPaths([EITC_MAX_PATH])).resolves.toEqual(['eitc']);
+  });
+
+  test('given a known path reaching no program variable then nothing returns', async () => {
+    await expect(scorecardProgramsForPaths([SALT_CAP_PATH])).resolves.toEqual([]);
+  });
+
+  test('given a path the map does not know then token matching fills in', async () => {
+    await expect(scorecardProgramsForPaths([SNAP_MAX_ALLOTMENT_PATH])).resolves.toEqual(['snap']);
+  });
+
+  test('given mixed paths then programs keep provision order without duplicates', async () => {
+    await expect(
+      scorecardProgramsForPaths([
+        SNAP_MAX_ALLOTMENT_PATH,
+        CTC_BASE_AMOUNT_PATH,
+        CTC_SECOND_BRACKET_PATH,
+      ])
+    ).resolves.toEqual(['snap', 'ctc_refund']);
   });
 });
