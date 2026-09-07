@@ -21,8 +21,15 @@ const DATA_URLS = [
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const MAX_ROWS_PER_PROGRAM = 8;
 
+interface SourceMeta {
+  name: string | null;
+  url: string | null;
+}
+
 interface NormalizedRow {
   source: string;
+  sourceName: string | null;
+  sourceUrl: string | null;
   program: string;
   metric: string;
   geography: string;
@@ -36,11 +43,34 @@ interface NormalizedRow {
   heldOut: boolean;
 }
 
+/** The external source behind a payload: comparison.json carries one
+ * `source_meta`; a per-source shard is itself the source. */
+function sourceMetaOf(payload: any): Record<string, SourceMeta> {
+  const meta = payload?.source_meta ?? payload;
+  if (typeof meta?.id !== "string") {
+    return {};
+  }
+  return {
+    [meta.id]: {
+      name: typeof meta.name === "string" ? meta.name : null,
+      url: typeof meta.url === "string" ? meta.url : null,
+    },
+  };
+}
+
 function normalize(payload: any): NormalizedRow[] {
   const rows: any[] = payload?.rows ?? [];
   if (rows.length === 0) {
     return [];
   }
+  const sources = sourceMetaOf(payload);
+  const withSource = (
+    row: Omit<NormalizedRow, "sourceName" | "sourceUrl">,
+  ) => ({
+    ...row,
+    sourceName: sources[row.source]?.name ?? null,
+    sourceUrl: sources[row.source]?.url ?? null,
+  });
   const defaults = payload?.row_defaults ?? {};
   const defaultRelationship =
     typeof defaults.relationship === "string" ? defaults.relationship : null;
@@ -52,7 +82,7 @@ function normalize(payload: any): NormalizedRow[] {
   return rows.map((row): NormalizedRow => {
     // comparison.json shape: external_value / pe_value / calibration_relationship
     if ("external_value" in row) {
-      return {
+      return withSource({
         source: row.source ?? "scorecard",
         program: row.program,
         metric: row.metric,
@@ -66,10 +96,10 @@ function normalize(payload: any): NormalizedRow[] {
         peValue: typeof row.pe_value === "number" ? row.pe_value : null,
         ratio: typeof row.ratio === "number" ? row.ratio : null,
         heldOut: row.calibration_relationship === "held_out",
-      };
+      });
     }
     // per-source shard shape: value / pe.value / relationship (+ row_defaults)
-    return {
+    return withSource({
       source: payload?.id ?? "scorecard",
       program: row.program,
       metric: row.metric,
@@ -82,7 +112,7 @@ function normalize(payload: any): NormalizedRow[] {
       peValue: typeof row.pe?.value === "number" ? row.pe.value : null,
       ratio: typeof row.ratio === "number" ? row.ratio : null,
       heldOut: (row.relationship ?? defaultRelationship) === "held_out",
-    };
+    });
   });
 }
 
@@ -181,6 +211,8 @@ export async function GET(request: Request): Promise<Response> {
     {
       rows: selected.map((row) => ({
         source: row.source,
+        sourceName: row.sourceName,
+        sourceUrl: row.sourceUrl,
         program: row.program,
         metric: row.metric,
         period: row.period,

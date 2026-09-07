@@ -7,3 +7,4 @@
 - Show how well the microdata is calibrated for the variables a reform moves, next to the scorecard context on the report's validation tab
 - Pin what each report's validation was matched against (populace release, model version, per-variable fit) and say when a newer release has made that comparison historical
 - Give flagship report links a durable id so a shared link opens with its provisions and validation on any device
+- Link the validation tab's calibration rows to the dashboard filtered by source and level, and the scorecard rows to their external source and the scorecard's comparison and method pages

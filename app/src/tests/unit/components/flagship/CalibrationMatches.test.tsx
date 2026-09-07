@@ -50,8 +50,23 @@ describe('CalibrationMatchSection', () => {
     expect(screen.getByText('refundable ctc')).toBeInTheDocument();
     expect(screen.getAllByText(/mechanism · 3 hops/i)).toHaveLength(2);
     expect(screen.getByText('4.0%')).toBeInTheDocument();
-    expect(screen.getByText(/IRS Statistics of Income · US · -6.0%/)).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' })).toHaveLength(2);
+    expect(screen.getByText(/-6.0%/)).toBeInTheDocument();
     expect(screen.getByText(/release populace-us-2024/)).toBeInTheDocument();
+  });
+
+  test('given matches then worst targets and counts link to the dashboard filtered by source and level', () => {
+    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
+
+    const worst = screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' });
+    expect(worst[0]).toHaveAttribute(
+      'href',
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/populace/targets?source=irs_soi&level=national'
+    );
+    expect(screen.getAllByRole('link', { name: '2' })[0]).toHaveAttribute(
+      'href',
+      expect.stringContaining('source=irs_soi&level=national')
+    );
   });
 
   test('given a variable far off then it is called out above the table', () => {

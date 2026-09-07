@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
-  CALIBRATION_DASHBOARD_URL,
   CalibrationMatches,
   calibrationMatchesForPaths,
   CalibrationRing,
   CalibrationTargetRow,
+  dashboardTargetsUrl,
   geographyForRegion,
 } from '@/libs/flagship/calibrationMatching';
 import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation';
@@ -75,12 +75,23 @@ function SectionCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-function DashboardLink({ children }: { children: React.ReactNode }) {
+function DashboardLink({
+  children,
+  source,
+  level,
+  title,
+}: {
+  children: React.ReactNode;
+  source?: string | null;
+  level?: 'national' | 'state' | null;
+  title?: string;
+}) {
   return (
     <a
-      href={CALIBRATION_DASHBOARD_URL}
+      href={dashboardTargetsUrl({ source, level })}
       target="_blank"
       rel="noreferrer"
+      title={title}
       style={{ color: colors.primary[700] }}
     >
       {children}
@@ -172,6 +183,7 @@ export function CalibrationMatchSection({
     );
   }
   const where = matches.geography === 'US' ? 'nationally' : `in ${matches.geography}`;
+  const level = matches.geography === 'US' ? 'national' : 'state';
   if (matches.matches.length === 0) {
     if (matches.reachedCount === 0) {
       return null;
@@ -183,7 +195,7 @@ export function CalibrationMatchSection({
         <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
           None of the {matches.reachedCount} variables this reform moves is a calibration target{' '}
           {where}, so the data behind this estimate is unvalidated on that side. See the{' '}
-          <DashboardLink>calibration dashboard</DashboardLink> for what is covered.
+          <DashboardLink level={level}>calibration dashboard</DashboardLink> for what is covered.
         </Text>
       </SectionCard>
     );
@@ -206,7 +218,7 @@ export function CalibrationMatchSection({
         How well the microdata behind this estimate matches administrative totals {where} for each
         variable the reform reaches, nearest first. A primary or mechanism variable that is far off
         means the base the reform reprices is mis-sized in the data. From the{' '}
-        <DashboardLink>calibration dashboard</DashboardLink>
+        <DashboardLink level={level}>calibration dashboard</DashboardLink>
         {matches.releaseId ? ` (release ${matches.releaseId})` : ''}, matched through the model
         {matches.modelVersion ? ` at policyengine-us ${matches.modelVersion}` : ''}.
       </Text>
@@ -235,7 +247,15 @@ export function CalibrationMatchSection({
                 <td style={{ ...cellStyle, color: colors.text.secondary }}>
                   {RING_LABELS[match.ring]} · {match.depth} {match.depth === 1 ? 'hop' : 'hops'}
                 </td>
-                <td style={cellStyle}>{match.targetCount}</td>
+                <td style={cellStyle}>
+                  <DashboardLink
+                    source={match.worst.source}
+                    level={level}
+                    title={`${match.worst.sourceLabel ?? match.worst.source} targets ${where} on the calibration dashboard`}
+                  >
+                    {match.targetCount}
+                  </DashboardLink>
+                </td>
                 <td
                   style={{
                     ...cellStyle,
@@ -252,7 +272,27 @@ export function CalibrationMatchSection({
                   {percent(match.meanAbsRelativeError)}
                 </td>
                 <td style={{ ...cellStyle, color: colors.text.secondary }}>
-                  {worstLabel(match.worst)} · {percent(match.worst.relativeError ?? 0)}
+                  <DashboardLink
+                    source={match.worst.source}
+                    level={match.worst.level}
+                    title={match.worst.name}
+                  >
+                    {worstLabel(match.worst)}
+                  </DashboardLink>{' '}
+                  · {percent(match.worst.relativeError ?? 0)}
+                  {match.worst.sourceUrl && (
+                    <>
+                      {' · '}
+                      <a
+                        href={match.worst.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: colors.primary[700] }}
+                      >
+                        source
+                      </a>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
