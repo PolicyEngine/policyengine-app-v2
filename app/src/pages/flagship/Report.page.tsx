@@ -40,6 +40,7 @@ import SocietyWideOverview, {
 } from '@/pages/report-output/SocietyWideOverview';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
+import { allSimulationsLoaded } from '@/utils/reportSimulations';
 import { getDisplayStatus } from '@/utils/statusMapping';
 
 const SECTIONS = [
@@ -101,7 +102,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   } = useReportProgressDisplay(report?.id);
 
   const calcConfigs = useMemo(() => {
-    if (!report?.id || !simulations?.[0]) {
+    // Wait for the reform simulation too: starting on the baseline alone
+    // scores current law against itself and persists zeros as the result.
+    if (!report?.id || !allSimulationsLoaded(report, simulations)) {
       return null;
     }
     const simulation1 = simulations[0];

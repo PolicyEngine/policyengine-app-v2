@@ -6,6 +6,7 @@ import {
   valueForYear,
 } from '@/libs/flagship/reportProvenance';
 import type { Policy } from '@/types/ingredients/Policy';
+import { allSimulationsLoaded } from '@/utils/reportSimulations';
 
 const CTC_BASE_PATH = 'gov.irs.credits.ctc.amount.base[0].amount';
 
@@ -88,5 +89,24 @@ describe('provenanceFromPolicy', () => {
 
   test('given no policy yet then there is no provenance', () => {
     expect(provenanceFromPolicy(undefined, metadataParameters, 'x')).toBeNull();
+  });
+});
+
+describe('allSimulationsLoaded', () => {
+  const report = { id: '3723', simulationIds: ['71', '2307'] } as any;
+  const baseline = { id: '71', policyId: '2' } as any;
+  const reform = { id: '2307', policyId: '98370' } as any;
+
+  test('given only the baseline simulation so far then the run must wait', () => {
+    expect(allSimulationsLoaded(report, [baseline])).toBe(false);
+  });
+
+  test('given both simulations then the run may start', () => {
+    expect(allSimulationsLoaded(report, [reform, baseline])).toBe(true);
+  });
+
+  test('given no report or no simulation ids then it never starts', () => {
+    expect(allSimulationsLoaded(undefined, [baseline])).toBe(false);
+    expect(allSimulationsLoaded({ id: 'x', simulationIds: [] } as any, [])).toBe(false);
   });
 });

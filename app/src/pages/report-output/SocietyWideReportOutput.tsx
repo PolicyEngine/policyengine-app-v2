@@ -13,6 +13,7 @@ import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
+import { allSimulationsLoaded } from '@/utils/reportSimulations';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
@@ -177,7 +178,9 @@ export function SocietyWideReportOutput({
 
   // Build calculation config for auto-start
   const calcConfigs = useMemo(() => {
-    if (!report || !simulations?.[0]) {
+    // Wait for every simulation: starting on the baseline alone scores
+    // current law against itself and persists zeros as the result.
+    if (!report || !simulations?.[0] || !allSimulationsLoaded(report, simulations)) {
       return null;
     }
 
