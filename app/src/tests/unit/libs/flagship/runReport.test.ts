@@ -45,7 +45,7 @@ describe('runFlagshipReport', () => {
       currentLawId: 2,
     });
 
-    expect(userReportId).toBe('sur-abc');
+    expect(userReportId).toBe('55');
     expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
       label: 'CTC expansion',
       data: {
@@ -70,7 +70,7 @@ describe('runFlagshipReport', () => {
     );
   });
 
-  test('given a run then provenance is stashed under the userReportId', async () => {
+  test('given a run then provenance is stashed under the API report id', async () => {
     await runFlagshipReport({
       countryId: 'us',
       title: 'CTC expansion',
@@ -79,7 +79,7 @@ describe('runFlagshipReport', () => {
       currentLawId: 2,
     });
 
-    const meta = readReportMeta('sur-abc');
+    const meta = readReportMeta('55');
     expect(meta?.title).toBe('CTC expansion');
     expect(meta?.sourceNote).toBe('Federal · Introduced');
     expect(meta?.provisions).toEqual([PROVISION]);

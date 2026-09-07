@@ -17,6 +17,7 @@ export class PolicyAdapter {
       countryId: metadata.country_id,
       apiVersion: metadata.api_version,
       parameters: convertPolicyJsonToParameters(metadata.policy_json),
+      ...(metadata.label ? { label: metadata.label } : {}),
     };
   }
 

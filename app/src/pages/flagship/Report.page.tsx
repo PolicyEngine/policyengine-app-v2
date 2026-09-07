@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { IconHome, IconPlus } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import {
@@ -20,10 +21,11 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
-import { useUserReportById } from '@/hooks/useUserReports';
+import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import ErrorPage from '@/pages/report-output/ErrorPage';
@@ -32,6 +34,7 @@ import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/Mi
 import SocietyWideOverview, {
   StandaloneCongressionalDistrictCard,
 } from '@/pages/report-output/SocietyWideOverview';
+import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { getDisplayStatus } from '@/utils/statusMapping';
 
@@ -76,8 +79,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const userReportId = propId ?? params.userReportId ?? '';
-  const meta = readReportMeta(userReportId);
-  const { report, simulations } = useUserReportById(userReportId);
+  const { report, simulations, policies } = useFlagshipReport(userReportId);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  // Provenance: the local stash from the run, else rebuilt from the reform
+  // policy so a shared link validates like the original.
+  const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
+  const meta =
+    readReportMeta(userReportId) ?? provenanceFromPolicy(reformPolicy, parameters, report?.label);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   const {
