@@ -19,6 +19,10 @@ const BASE_URL =
 const PAGE_SIZE = 500;
 const MAX_PAGES = 40;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+// Browsers may keep a response for an hour in production; a dev server
+// must not, or a route change hides behind the previous answer.
+const CACHE_CONTROL =
+  process.env.NODE_ENV === "production" ? "public, max-age=3600" : "no-store";
 const MAX_ROWS_PER_VARIABLE = 500;
 
 interface TargetRow {
@@ -187,6 +191,6 @@ async function respond(
 
   return Response.json(
     { releaseId: targets.releaseId, geography, rows },
-    { headers: { "Cache-Control": "public, max-age=3600" } },
+    { headers: { "Cache-Control": CACHE_CONTROL } },
   );
 }
