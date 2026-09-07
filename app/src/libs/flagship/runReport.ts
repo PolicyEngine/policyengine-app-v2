@@ -7,9 +7,10 @@ import { CountryId } from '@/libs/countries';
 /**
  * The run bridge: turns a set of provisions (from a draft reform or a
  * tracked bill) into a full society-wide report — policy → baseline +
- * reform simulations → report record — and returns the userReportId
+ * reform simulations → report record — and returns the API report id
  * whose page auto-starts the calculation and renders the chart
- * dashboard.
+ * dashboard. The API id is the durable one: a link carrying it opens
+ * on any device, where the local association id would not.
  */
 export interface RunReportProvision {
   path: string;
@@ -101,7 +102,8 @@ export async function runFlagshipReport({
     },
   });
 
-  saveReportMeta(metadata.userReportId, {
+  const reportId = String(metadata.baseReportId);
+  saveReportMeta(reportId, {
     title,
     sourceNote,
     provisions,
@@ -127,5 +129,5 @@ export async function runFlagshipReport({
     // The report still opens via the local association.
   }
 
-  return metadata.userReportId;
+  return reportId;
 }

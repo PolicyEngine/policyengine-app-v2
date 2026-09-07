@@ -6,3 +6,4 @@
 - Trace the parameter to variable dependency map from the model so validation matches a reform to the variables it actually moves
 - Show how well the microdata is calibrated for the variables a reform moves, next to the scorecard context on the report's validation tab
 - Pin what each report's validation was matched against (populace release, model version, per-variable fit) and say when a newer release has made that comparison historical
+- Give flagship report links a durable id so a shared link opens with its provisions and validation on any device
