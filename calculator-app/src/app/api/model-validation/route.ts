@@ -19,6 +19,10 @@ const DATA_URLS = [
   "https://raw.githubusercontent.com/PolicyEngine/policyengine-scorecard/main/data/comparison.json",
 ].filter(Boolean) as string[];
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+// Browsers may keep a response for an hour in production; a dev server
+// must not, or a route change hides behind the previous answer.
+const CACHE_CONTROL =
+  process.env.NODE_ENV === "production" ? "public, max-age=3600" : "no-store";
 const MAX_ROWS_PER_PROGRAM = 8;
 
 interface SourceMeta {
@@ -224,6 +228,6 @@ export async function GET(request: Request): Promise<Response> {
         heldOut: row.heldOut,
       })),
     },
-    { headers: { "Cache-Control": "public, max-age=3600" } },
+    { headers: { "Cache-Control": CACHE_CONTROL } },
   );
 }
