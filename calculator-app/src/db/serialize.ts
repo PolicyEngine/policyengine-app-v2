@@ -30,6 +30,7 @@ export function reportRowToMetadata(row: ReportRow) {
     provisions: row.provisions,
     reform_id: row.reformId,
     year: row.year,
+    validation: row.validation ?? null,
     created_at: row.createdAt.toISOString(),
   };
 }

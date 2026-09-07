@@ -61,10 +61,13 @@ export async function GET(request: Request): Promise<Response> {
     return json({ error: "user_id is required" }, 400);
   }
   const countryId = searchParams.get("country_id");
+  const apiReportId = searchParams.get("api_report_id");
 
-  const conditions = countryId
-    ? and(eq(reports.userId, userId), eq(reports.countryId, countryId))
-    : eq(reports.userId, userId);
+  const conditions = and(
+    eq(reports.userId, userId),
+    ...(countryId ? [eq(reports.countryId, countryId)] : []),
+    ...(apiReportId ? [eq(reports.apiReportId, apiReportId)] : []),
+  );
 
   const rows = await getDb()
     .select()

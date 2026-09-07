@@ -1,4 +1,9 @@
 import { CountryId } from '@/libs/countries';
+import {
+  ReportValidationSnapshot,
+  validationFromWire,
+  validationToWire,
+} from '@/libs/flagship/reportValidation';
 import { RunReportProvision } from '@/libs/flagship/runReport';
 
 /**
@@ -21,14 +26,20 @@ export interface FlagshipReportRecord {
   createdAt: string;
   /** Saved reform this report came from, when known. */
   reformId?: string | null;
+  /** What validation matched this report against, pinned at match time. */
+  validation?: ReportValidationSnapshot | null;
 }
 
-export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt'>;
+export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt' | 'validation'>;
 
 export interface FlagshipReportStore {
   create: (report: NewFlagshipReport) => Promise<FlagshipReportRecord>;
   findByUser: (userId: string, countryId?: string) => Promise<FlagshipReportRecord[]>;
   findById: (id: string) => Promise<FlagshipReportRecord | null>;
+  /** The record pointing at an API report, when this user has one. */
+  findByApiReportId: (userId: string, apiReportId: string) => Promise<FlagshipReportRecord | null>;
+  /** Pins the validation snapshot to a record. */
+  saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
 }
 
 class ReportStoreUnavailableError extends Error {
@@ -62,6 +73,7 @@ function fromMetadata(data: any): FlagshipReportRecord {
     year: data.year,
     createdAt: data.created_at,
     reformId: data.reform_id ?? null,
+    validation: validationFromWire(data.validation),
   };
 }
 
@@ -120,6 +132,36 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     }
     return fromMetadata(await response.json());
   }
+
+  async findByApiReportId(
+    userId: string,
+    apiReportId: string
+  ): Promise<FlagshipReportRecord | null> {
+    const params = new URLSearchParams({ user_id: userId, api_report_id: apiReportId });
+    const response = await fetch(`${this.BASE_URL}?${params}`);
+    if (!response.ok) {
+      throwIfUnavailable(response);
+      throw new Error('Failed to load the report');
+    }
+    const records = ((await response.json()) as any[]).map(fromMetadata);
+    return records[0] ?? null;
+  }
+
+  async saveValidation(
+    id: string,
+    snapshot: ReportValidationSnapshot
+  ): Promise<FlagshipReportRecord> {
+    const response = await fetch(`${this.BASE_URL}/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ validation: validationToWire(snapshot) }),
+    });
+    if (!response.ok) {
+      throwIfUnavailable(response);
+      throw new Error('Failed to save the validation snapshot');
+    }
+    return fromMetadata(await response.json());
+  }
 }
 
 const LOCAL_KEY = 'pe-flagship-reports';
@@ -160,6 +202,32 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   async findById(id: string): Promise<FlagshipReportRecord | null> {
     return this.read().find((record) => record.id === id) ?? null;
   }
+
+  async findByApiReportId(
+    userId: string,
+    apiReportId: string
+  ): Promise<FlagshipReportRecord | null> {
+    return (
+      this.read().find(
+        (record) => record.userId === userId && record.apiReportId === apiReportId
+      ) ?? null
+    );
+  }
+
+  async saveValidation(
+    id: string,
+    snapshot: ReportValidationSnapshot
+  ): Promise<FlagshipReportRecord> {
+    const records = this.read();
+    const index = records.findIndex((record) => record.id === id);
+    if (index === -1) {
+      throw new Error('Report not found');
+    }
+    const updated = { ...records[index], validation: snapshot };
+    records[index] = updated;
+    this.write(records);
+    return updated;
+  }
 }
 
 let centralUnavailable = false;
@@ -194,6 +262,14 @@ class ResilientFlagshipReportStore implements FlagshipReportStore {
 
   findById(id: string): Promise<FlagshipReportRecord | null> {
     return this.withFallback((store) => store.findById(id));
+  }
+
+  findByApiReportId(userId: string, apiReportId: string): Promise<FlagshipReportRecord | null> {
+    return this.withFallback((store) => store.findByApiReportId(userId, apiReportId));
+  }
+
+  saveValidation(id: string, snapshot: ReportValidationSnapshot): Promise<FlagshipReportRecord> {
+    return this.withFallback((store) => store.saveValidation(id, snapshot));
   }
 }
 

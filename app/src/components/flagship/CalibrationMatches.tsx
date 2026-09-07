@@ -9,6 +9,7 @@ import {
   CalibrationTargetRow,
   geographyForRegion,
 } from '@/libs/flagship/calibrationMatching';
+import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation';
 
 /**
  * The data-side validation surface for a report: which of the variables
@@ -121,10 +122,32 @@ export function useCalibrationMatches(
   return matches;
 }
 
+/** The pin a report carries, and why it may no longer describe the live check. */
+export interface CalibrationPin {
+  snapshot: ReportValidationSnapshot | null;
+  drift: string[];
+}
+
+function PinNote({ pin }: { pin: CalibrationPin }) {
+  if (!pin.snapshot) {
+    return null;
+  }
+  const when = pin.snapshot.matchedAt.slice(0, 10);
+  return (
+    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+      {pin.drift.length === 0
+        ? `Pinned ${when}; the release and model it was matched against are still current.`
+        : `Pinned ${when}; since then ${pin.drift.join(' and ')}. The table shows the live comparison; the pinned one is historical.`}
+    </Text>
+  );
+}
+
 export function CalibrationMatchSection({
   matches,
+  pin,
 }: {
   matches: CalibrationMatches | null | undefined;
+  pin?: CalibrationPin;
 }) {
   if (matches === null) {
     return (
@@ -236,6 +259,7 @@ export function CalibrationMatchSection({
           </tbody>
         </table>
       </div>
+      {pin && <PinNote pin={pin} />}
     </SectionCard>
   );
 }
