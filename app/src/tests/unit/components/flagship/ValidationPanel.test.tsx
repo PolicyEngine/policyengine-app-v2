@@ -27,21 +27,27 @@ describe('BillValidationSection', () => {
 
 describe('ModelTrackRecordSection', () => {
   test('given the scorecard is unreachable then an honest note renders, not a blank tab', () => {
-    render(<ModelTrackRecordSection trackRecord={{ programs: ['snap'], rows: null }} />);
+    render(
+      <ModelTrackRecordSection trackRecord={{ resolved: true, programs: ['snap'], rows: null }} />
+    );
 
     expect(screen.getByText(/temporarily unavailable/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /policyengine scorecard/i })).toBeInTheDocument();
   });
 
   test('given rows are loading then the spinner state renders', () => {
-    render(<ModelTrackRecordSection trackRecord={{ programs: ['snap'], rows: undefined }} />);
+    render(
+      <ModelTrackRecordSection
+        trackRecord={{ resolved: true, programs: ['snap'], rows: undefined }}
+      />
+    );
 
     expect(screen.getByText(/loading external comparisons/i)).toBeInTheDocument();
   });
 
   test('given no matched programs then nothing renders', () => {
     const { container } = render(
-      <ModelTrackRecordSection trackRecord={{ programs: [], rows: undefined }} />
+      <ModelTrackRecordSection trackRecord={{ resolved: true, programs: [], rows: undefined }} />
     );
 
     expect(container).toBeEmptyDOMElement();
@@ -51,6 +57,7 @@ describe('ModelTrackRecordSection', () => {
     render(
       <ModelTrackRecordSection
         trackRecord={{
+          resolved: true,
           programs: ['snap'],
           rows: [
             {

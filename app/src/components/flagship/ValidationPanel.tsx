@@ -235,6 +235,8 @@ export function BillValidationSection({
 
 export interface ModelTrackRecord {
   programs: string[];
+  /** True once the programs have been resolved from the paths. */
+  resolved: boolean;
   /** undefined while loading, null when unavailable */
   rows: ModelValidationRow[] | null | undefined;
 }
@@ -247,6 +249,7 @@ export interface ModelTrackRecord {
  */
 export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
   const [programs, setPrograms] = useState<string[]>([]);
+  const [resolved, setResolved] = useState(false);
   const [rows, setRows] = useState<ModelValidationRow[] | null | undefined>(undefined);
   const pathsKey = paths.join('\n');
 
@@ -255,6 +258,7 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
     const resolvedPaths = pathsKey ? pathsKey.split('\n') : [];
     if (resolvedPaths.length === 0) {
       setPrograms([]);
+      setResolved(true);
       return;
     }
     // The traced dependency map resolves paths to the output variables
@@ -264,6 +268,7 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
         return;
       }
       setPrograms(resolved);
+      setResolved(true);
       if (resolved.length > 0) {
         const result = await fetchModelValidation(resolved);
         if (!cancelled) {
@@ -276,7 +281,7 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
     };
   }, [pathsKey]);
 
-  return { programs, rows };
+  return { programs, resolved, rows };
 }
 
 export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTrackRecord }) {

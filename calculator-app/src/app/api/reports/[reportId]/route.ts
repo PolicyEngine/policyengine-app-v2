@@ -36,3 +36,49 @@ export async function GET(
   }
   return json(reportRowToMetadata(row));
 }
+
+function isValidationPayload(value: any): boolean {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof value.matched_at === "string" &&
+    typeof value.map_model_version === "string" &&
+    (value.calibration === null || typeof value.calibration === "object") &&
+    (value.scorecard === null || typeof value.scorecard === "object")
+  );
+}
+
+/** Pins what validation matched the report against. Idempotent. */
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ reportId: string }> },
+): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
+  if (!isDbConfigured()) {
+    return json({ error: "Report store is not configured" }, 503);
+  }
+
+  let payload: any;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: "Invalid JSON body" }, 400);
+  }
+  if (!isValidationPayload(payload?.validation)) {
+    return json({ error: "validation snapshot is required" }, 400);
+  }
+
+  const { reportId } = await params;
+  const [row] = await getDb()
+    .update(reports)
+    .set({ validation: payload.validation })
+    .where(eq(reports.id, reportId))
+    .returning();
+
+  if (!row) {
+    return json({ error: "Report not found" }, 404);
+  }
+  return json(reportRowToMetadata(row));
+}

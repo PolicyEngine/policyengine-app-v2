@@ -70,6 +70,13 @@ export const reports = pgTable(
     /** Originating reform row, when the run came from a saved reform. */
     reformId: uuid("reform_id"),
     year: text("year").notNull(),
+    /**
+     * What validation matched this report against, pinned at match time:
+     * the populace release and model version behind the calibration
+     * check and the scorecard programs. Later releases make the stored
+     * comparison historical, which the report can then say.
+     */
+    validation: jsonb("validation").$type<ReportValidationMetadata | null>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -85,6 +92,33 @@ export interface ReportProvisionMetadata {
   unit: string | null;
   baseline_value: unknown;
   value: unknown;
+}
+
+export interface ReportValidationMatchMetadata {
+  variable: string;
+  depth: number;
+  ring: "primary" | "mechanism" | "downstream";
+  target_count: number;
+  mean_abs_relative_error: number;
+  worst: {
+    name: string;
+    source: string;
+    geography: string;
+    relative_error: number | null;
+  };
+}
+
+export interface ReportValidationMetadata {
+  matched_at: string;
+  /** Model version the dependency map was traced from. */
+  map_model_version: string;
+  calibration: {
+    release_id: string | null;
+    geography: string;
+    reached_count: number;
+    matches: ReportValidationMatchMetadata[];
+  } | null;
+  scorecard: { programs: string[] } | null;
 }
 
 export type ReportRow = typeof reports.$inferSelect;

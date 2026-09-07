@@ -14,12 +14,14 @@ import {
   useModelTrackRecord,
 } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text, Title } from '@/components/ui';
+import { MOCK_USER_ID } from '@/constants';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
+import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { readReportMeta } from '@/libs/flagship/runReport';
@@ -134,6 +136,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
+  // The store keys records by the API report id as a string.
+  const pin = useReportValidationSnapshot(
+    MOCK_USER_ID,
+    report?.id !== undefined && report?.id !== null ? String(report.id) : undefined,
+    {
+      calibration,
+      programs: trackRecord.resolved ? trackRecord.programs : undefined,
+    }
+  );
 
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -294,7 +305,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
             <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
               <SectionHeading id="validation" title="Validation" />
-              <CalibrationMatchSection matches={calibration} />
+              <CalibrationMatchSection matches={calibration} pin={pin} />
               <ModelTrackRecordSection trackRecord={trackRecord} />
               <Stack
                 style={{
