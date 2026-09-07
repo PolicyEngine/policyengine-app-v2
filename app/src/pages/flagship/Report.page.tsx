@@ -11,6 +11,11 @@ import EstimateValidation from '@/components/flagship/EstimateValidation';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import {
+  ReportComputing,
+  ReportUnresolvable,
+  ReportWaiting,
+} from '@/components/flagship/ReportComputing';
+import {
   ModelTrackRecordSection,
   useModelTrackRecord,
 } from '@/components/flagship/ValidationPanel';
@@ -21,7 +26,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFlagshipReport } from '@/hooks/useFlagshipReport';
+import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
@@ -29,13 +34,13 @@ import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import ErrorPage from '@/pages/report-output/ErrorPage';
-import LoadingPage from '@/pages/report-output/LoadingPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
 import SocietyWideOverview, {
   StandaloneCongressionalDistrictCard,
 } from '@/pages/report-output/SocietyWideOverview';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
+import { allSimulationsLoaded } from '@/utils/reportSimulations';
 import { getDisplayStatus } from '@/utils/statusMapping';
 
 const SECTIONS = [
@@ -79,7 +84,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const userReportId = propId ?? params.userReportId ?? '';
-  const { report, simulations, policies } = useFlagshipReport(userReportId);
+  const { report, simulations, policies, isLoading } = useFlagshipReport(userReportId);
+  // A local association id from another browser resolves to nothing.
+  const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   // Provenance: the local stash from the run, else rebuilt from the reform
   // policy so a shared link validates like the original.
@@ -95,7 +102,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   } = useReportProgressDisplay(report?.id);
 
   const calcConfigs = useMemo(() => {
-    if (!report?.id || !simulations?.[0]) {
+    // Wait for the reform simulation too: starting on the baseline alone
+    // scores current law against itself and persists zeros as the result.
+    if (!report?.id || !allSimulationsLoaded(report, simulations)) {
       return null;
     }
     const simulation1 = simulations[0];
@@ -159,9 +168,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const computingState = calcStatus.isError ? (
     <ErrorPage error={new Error(calcStatus.error?.message || 'Calculation failed')} />
+  ) : unresolvable ? (
+    <ReportUnresolvable />
   ) : (
-    <LoadingPage
-      message={progressMessage || `${getDisplayStatus('pending')} society-wide impacts...`}
+    <ReportComputing
+      message={progressMessage || `${getDisplayStatus('pending')} society-wide impacts…`}
       progress={hasCalcStatus ? displayProgress : undefined}
     />
   );
@@ -258,7 +269,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
             <Stack style={{ gap: spacing.md }}>
               <SectionHeading id="districts" title="Districts" />
-              {!output && computingState}
+              {!output && !unresolvable && <ReportWaiting what="District impacts" />}
               {output && showUSDistricts && (
                 <CongressionalDistrictDataProvider
                   reformPolicyId={reformPolicyId ?? ''}

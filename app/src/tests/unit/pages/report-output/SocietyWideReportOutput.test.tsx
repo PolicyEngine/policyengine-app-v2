@@ -197,7 +197,7 @@ describe('SocietyWideReportOutput', () => {
       <SocietyWideReportOutput
         reportId="test-report-123"
         report={MOCK_REPORT}
-        simulations={[MOCK_SIMULATION_BASELINE]}
+        simulations={[MOCK_SIMULATION_BASELINE, MOCK_SIMULATION_REFORM]}
       />
     );
 
@@ -213,6 +213,25 @@ describe('SocietyWideReportOutput', () => {
           }),
         ]),
       })
+    );
+  });
+
+  test('given only the baseline simulation has loaded then the calculation waits', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
+
+    // Then: starting now would score current law against itself.
+    expect(mockUseStartCalculationOnLoad).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: false, configs: [] })
     );
   });
 
@@ -366,7 +385,7 @@ describe('SocietyWideReportOutput', () => {
       <SocietyWideReportOutput
         reportId="test-report-123"
         report={MOCK_REPORT}
-        simulations={[MOCK_SIMULATION_BASELINE]}
+        simulations={[MOCK_SIMULATION_BASELINE, MOCK_SIMULATION_REFORM]}
       />
     );
 
