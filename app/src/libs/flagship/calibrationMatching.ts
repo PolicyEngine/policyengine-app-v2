@@ -72,6 +72,26 @@ export interface CalibrationMatches {
 export const CALIBRATION_DASHBOARD_URL =
   'https://calibration-diagnostics.vercel.app/calibration/dashboard/populace/targets';
 
+/**
+ * The dashboard's targets page filtered the way it accepts: by source and
+ * by level (national or state). It does not address a single target or a
+ * geography in the URL, so this is the closest deep link.
+ */
+export function dashboardTargetsUrl(filters: {
+  source?: string | null;
+  level?: 'national' | 'state' | null;
+}): string {
+  const params = new URLSearchParams();
+  if (filters.source) {
+    params.set('source', filters.source);
+  }
+  if (filters.level) {
+    params.set('level', filters.level);
+  }
+  const query = params.toString();
+  return query ? `${CALIBRATION_DASHBOARD_URL}?${query}` : CALIBRATION_DASHBOARD_URL;
+}
+
 /** Primary within one hop, mechanism to four, then the system echoing. */
 export function ringForDepth(depth: number): CalibrationRing {
   if (depth <= 1) {

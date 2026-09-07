@@ -15,6 +15,9 @@ import {
 
 export interface ModelValidationRow {
   source: string;
+  /** The external source's name and page, when the scorecard knows them. */
+  sourceName?: string | null;
+  sourceUrl?: string | null;
   program: string;
   metric: string;
   period: string | null;
@@ -28,6 +31,9 @@ export interface ModelValidationRow {
 }
 
 export const SCORECARD_URL = 'https://www.policyengine.org/scorecard';
+/** The scorecard's comparison table and its sources-and-method page. */
+export const SCORECARD_COMPARISON_URL = `${SCORECARD_URL}?view=scorecard`;
+export const SCORECARD_METHOD_URL = `${SCORECARD_URL}?view=about`;
 
 /** Path-token → scorecard program id. Order matters only for labels. */
 const PROGRAM_TOKENS: Array<[RegExp, string]> = [

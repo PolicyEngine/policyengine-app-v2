@@ -62,6 +62,8 @@ describe('ModelTrackRecordSection', () => {
           rows: [
             {
               source: 'urban-sotsn',
+              sourceName: 'Urban Institute — State of the Safety Net 2025',
+              sourceUrl: 'https://apps.urban.org/features/state-safety-net/',
               program: 'snap',
               metric: 'eligible_count',
               period: '2023 average month',
@@ -78,6 +80,17 @@ describe('ModelTrackRecordSection', () => {
     );
 
     expect(screen.getByText(/SNAP · Eligible people/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '69.1M' })).toHaveAttribute(
+      'href',
+      'https://apps.urban.org/features/state-safety-net/'
+    );
+    expect(
+      screen.getByRole('link', { name: /Urban Institute — State of the Safety Net 2025/ })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'PolicyEngine scorecard' })).toHaveAttribute(
+      'href',
+      'https://www.policyengine.org/scorecard?view=scorecard'
+    );
     expect(screen.getByText('0.96×')).toBeInTheDocument();
     expect(screen.getByText('held out')).toBeInTheDocument();
   });

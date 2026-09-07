@@ -8,6 +8,8 @@ import {
   METRIC_LABELS,
   ModelValidationRow,
   PROGRAM_LABELS,
+  SCORECARD_COMPARISON_URL,
+  SCORECARD_METHOD_URL,
   SCORECARD_URL,
   scorecardProgramsForPaths,
 } from '@/libs/flagship/modelValidation';
@@ -320,6 +322,15 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
     );
   }
 
+  // The external sources behind the rows, named once with their pages.
+  const sources = [
+    ...new Map(
+      rows
+        .filter((row) => row.sourceName || row.sourceUrl)
+        .map((row) => [row.source, { name: row.sourceName ?? row.source, url: row.sourceUrl }])
+    ).values(),
+  ];
+
   return (
     <SectionCard>
       <SectionTitle>
@@ -330,14 +341,47 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
         independent external measurement. This is credibility context for the ingredients behind the
         estimate — not a check of this bill&apos;s numbers. From the{' '}
         <a
-          href={SCORECARD_URL}
+          href={SCORECARD_COMPARISON_URL}
           target="_blank"
           rel="noreferrer"
           style={{ color: colors.primary[700] }}
         >
           PolicyEngine scorecard
         </a>
-        . &ldquo;Held out&rdquo; means the dataset was not calibrated to that comparison.
+        {' ('}
+        <a
+          href={SCORECARD_METHOD_URL}
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: colors.primary[700] }}
+        >
+          sources and method
+        </a>
+        ). &ldquo;Held out&rdquo; means the dataset was not calibrated to that comparison.
+        {sources.length > 0 && (
+          <>
+            {' '}
+            External figures from{' '}
+            {sources.map((source, index) => (
+              <span key={source.name}>
+                {index > 0 ? ', ' : ''}
+                {source.url ? (
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: colors.primary[700] }}
+                  >
+                    {source.name}
+                  </a>
+                ) : (
+                  source.name
+                )}
+              </span>
+            ))}
+            .
+          </>
+        )}
       </Text>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -357,7 +401,21 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
                   {PROGRAM_LABELS[row.program] ?? row.program} ·{' '}
                   {METRIC_LABELS[row.metric] ?? row.metric.replaceAll('_', ' ')}
                 </td>
-                <td style={cellStyle}>{metricValue(row, row.externalValue)}</td>
+                <td style={cellStyle}>
+                  {row.sourceUrl ? (
+                    <a
+                      href={row.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={row.sourceName ?? row.source}
+                      style={{ color: colors.primary[700] }}
+                    >
+                      {metricValue(row, row.externalValue)}
+                    </a>
+                  ) : (
+                    metricValue(row, row.externalValue)
+                  )}
+                </td>
                 <td style={cellStyle}>{metricValue(row, row.peValue)}</td>
                 <td style={cellStyle}>{row.ratio.toFixed(2)}×</td>
                 <td style={{ ...cellStyle, fontSize: typography.fontSize.xs }}>
