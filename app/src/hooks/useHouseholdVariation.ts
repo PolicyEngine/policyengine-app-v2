@@ -1,11 +1,15 @@
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { fetchHouseholdById } from '@/api/household';
-import { fetchHouseholdVariation } from '@/api/householdVariation';
+import { fetchHouseholdVariationWithProvenance } from '@/api/householdVariation';
 import { countryIds } from '@/libs/countries';
 import { householdVariationKeys } from '@/libs/queryKeys';
 import { Household } from '@/models/Household';
+import type { RootState } from '@/store';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { buildHouseholdVariationAxes } from '@/utils/householdVariationAxes';
+import { getModelMetadataError, getSPMSelectionError } from '@/utils/spmSelection';
 
 interface UseHouseholdVariationParams {
   householdId: string;
@@ -44,7 +48,11 @@ export function useHouseholdVariation({
   personName,
   enabled = true,
 }: UseHouseholdVariationParams) {
-  return useQuery({
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentContext = useRef({ metadata, countryId });
+  currentContext.current = { metadata, countryId };
+  const metadataError = getModelMetadataError(countryId, metadata);
+  const query = useQuery({
     queryKey: householdVariationKeys.byParams(
       householdId,
       policyId,
@@ -52,36 +60,63 @@ export function useHouseholdVariation({
       countryId,
       personName ?? ''
     ),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
+      const checkCurrentMetadata = () => {
+        const context = currentContext.current;
+        const readinessError =
+          signal.aborted || context.countryId !== countryId
+            ? 'The country changed. Wait for its model information before calculating.'
+            : getModelMetadataError(countryId, context.metadata);
+        if (readinessError) {
+          throw Object.assign(new Error(readinessError), { retryable: false });
+        }
+        return context.metadata;
+      };
+      checkCurrentMetadata();
+
       // Step 1: Fetch API metadata and hydrate the native household model.
       const householdMetadata = await fetchHouseholdById(countryId, householdId);
       const household = Household.fromV1Metadata(householdMetadata);
+      const selectionError = getSPMSelectionError(household, year, checkCurrentMetadata());
+      if (selectionError) {
+        throw Object.assign(new Error(selectionError), { retryable: false });
+      }
 
       // Step 2: Build axes configuration
       const householdWithAxes = buildHouseholdVariationAxes(household, year, personName);
 
       // Step 3: Call calculate-full API
-      const resultData = await fetchHouseholdVariation(
+      const calculation = await fetchHouseholdVariationWithProvenance(
         household.countryId,
         householdWithAxes,
-        policyData
+        policyData,
+        household.spm
       );
 
       // Step 4: Wrap raw calculation data with the metadata report utilities need.
       const result: HouseholdCalculationOutput = {
         id: householdId,
         countryId: countryId as (typeof countryIds)[number],
-        householdData: resultData,
+        householdData: calculation.result,
+        spmConfig: calculation.spm_config,
+        spmProvenance: calculation.spm_provenance,
       };
       return result;
     },
-    enabled,
+    enabled: enabled && !metadataError,
     staleTime: 30 * 60 * 1000, // 30 min - data stays fresh
     gcTime: 35 * 60 * 1000, // 35 min - keep in memory longer than staleTime
     // CONCERN: calculate-full is expensive - use longer cache + prevent refetch on window focus
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    retry: 1, // Only retry once to avoid clobbering API
+    // Corrective input errors require editing, not another request with identical inputs.
+    retry: (failureCount, error) =>
+      !('retryable' in error && error.retryable === false) && failureCount < 1,
   });
+  return {
+    ...query,
+    isLoading: query.isLoading && !metadataError,
+    error: enabled && metadataError ? new Error(metadataError) : query.error,
+  };
 }

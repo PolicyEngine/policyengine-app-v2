@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
+import SPMMethodologyFootnote from '@/components/household/SPMMethodologyFootnote';
 import { Group, RadioGroup, RadioGroupItem, Spinner, Stack, Text } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -496,6 +497,10 @@ export default function MarginalTaxRatesSubPage({
         {renderChart()}
         <ChartWatermark />
       </div>
+      <SPMMethodologyFootnote
+        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+        context="variation"
+      />
     </Stack>
   );
 }

@@ -92,11 +92,6 @@ export function useCreateReport(reportLabel?: string) {
         // Determine calculation type from simulation
         const simulation1 = simulations?.simulation1;
         const simulation2 = simulations?.simulation2;
-        // Household comparisons intentionally support one shared household across
-        // baseline/reform simulations. The builder locks the reform population to
-        // inherit the baseline household, so each per-simulation calculation uses
-        // household1 with that simulation's policy.
-        const household = populations?.household1;
         const geography = populations?.geography1;
 
         if (!simulation1) {
@@ -131,6 +126,7 @@ export function useCreateReport(reportLabel?: string) {
               .startCalculation({
                 calcId: sim.id, // Each simulation uses its own ID
                 targetType: 'simulation', // Simulation-level calculation
+                reportId: reportIdStr,
                 countryId: report.countryId,
                 year: report.year,
                 simulations: {
@@ -138,7 +134,10 @@ export function useCreateReport(reportLabel?: string) {
                   simulation2: null,
                 },
                 populations: {
-                  household1: household || null,
+                  household1:
+                    [populations?.household1, populations?.household2].find(
+                      (candidate) => candidate?.id === sim.populationId
+                    ) || null,
                   household2: null,
                   geography1: null,
                   geography2: null,

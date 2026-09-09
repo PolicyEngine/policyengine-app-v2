@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { vi } from 'vitest';
+import { Household } from '@/models/Household';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
 import metadataReducer from '@/reducers/metadataReducer';
 
@@ -155,4 +156,19 @@ export function setupDefaultMocks() {
     callbacks?.onSuccess?.({ userReport: { id: 'user-report-new' } });
     return Promise.resolve();
   });
+}
+
+export const CORRECTED_REPORT_YEAR = '2023';
+export function mockDraftHouseholdSimulation(countryId: 'us' | 'uk' = 'us') {
+  return {
+    ...mockSingleSimReportState.simulations[0],
+    countryId,
+    population: {
+      label: TEST_LABELS.BASELINE,
+      type: 'household' as const,
+      household: Household.starter(countryId, CORRECTED_REPORT_YEAR),
+      householdNeedsCreation: true,
+      geography: null,
+    },
+  };
 }

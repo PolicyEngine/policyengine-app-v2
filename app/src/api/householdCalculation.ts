@@ -1,17 +1,23 @@
 import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
+import type { SPMProvenance, SPMSelection } from '@/types/spm';
+import { householdAPIError } from './householdError';
 
 export interface HouseholdCalculationResponse {
   status: 'ok' | 'error';
   result: HouseholdCalculationData | null;
   error?: string;
   policyengine_bundle?: PolicyEngineBundle | null;
+  spm_config?: SPMSelection;
+  spm_provenance?: SPMProvenance;
 }
 
 export interface HouseholdCalculationResult {
   result: HouseholdCalculationData;
   policyengine_bundle?: PolicyEngineBundle | null;
+  spm_config?: SPMSelection;
+  spm_provenance?: SPMProvenance;
 }
 
 export async function fetchHouseholdCalculationWithBundle(
@@ -35,7 +41,10 @@ export async function fetchHouseholdCalculationWithBundle(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`Household calculation failed: ${response.statusText}`);
+      throw await householdAPIError(
+        response,
+        `Household calculation failed: ${response.statusText}`
+      );
     }
 
     const data: HouseholdCalculationResponse = await response.json();
@@ -47,6 +56,8 @@ export async function fetchHouseholdCalculationWithBundle(
     return {
       result: data.result,
       policyengine_bundle: data.policyengine_bundle ?? null,
+      ...(data.spm_config ? { spm_config: data.spm_config } : {}),
+      ...(data.spm_provenance ? { spm_provenance: data.spm_provenance } : {}),
     };
   } catch (error) {
     clearTimeout(timeoutId);

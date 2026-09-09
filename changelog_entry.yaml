@@ -10,3 +10,7 @@
 - Link the validation tab's calibration rows to the dashboard filtered by source and level, and the scorecard rows to their external source and the scorecard's comparison and method pages
 - Replace the report's duplicated progress bars and skeleton blocks with one status card while the run computes, and explain local-only links opened elsewhere
 - Wait for every simulation to load before starting a report's calculation, so a report is never scored as current law against itself and stored as "no change"
+- Require an explicit national or county SPM choice when the API supports canonical thresholds, preserve it for saved households and earnings variations, and show calculation provenance in report methodology
+- Wait for current-country model information before saving or calculating households, show corrective SPM save and saved-report errors, reproduce each simulation's settings separately, and label point and earnings-variation methodology receipts
+- Preserve canonical household receipts and terminal errors from report creation and modification, share calculation ownership through saving, pin recorded reproduction runtimes, and guide unsupported-year corrections
+- Make report-year corrections save new household inputs for the selected period without aging, inflation adjustments, or changes to historical households and policy dates

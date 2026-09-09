@@ -38,7 +38,7 @@ export default function ReportBuilderPage() {
   });
 
   // Submission logic (extracted hook)
-  const { handleSubmit, isSubmitting, isReportConfigured } = useReportSubmission({
+  const { handleSubmit, isSubmitting, isReportConfigured, submissionError } = useReportSubmission({
     reportState,
     countryId,
     onSuccess: (userReportId) => {
@@ -100,6 +100,7 @@ export default function ReportBuilderPage() {
   return (
     <ReportBuilderShell
       title="Create new report"
+      submissionError={submissionError}
       actions={topBarActions}
       reportState={reportState}
       setReportState={setReportState}

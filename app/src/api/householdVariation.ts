@@ -1,10 +1,13 @@
 import { BASE_URL } from '@/constants';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
+import type { SPMProvenance, SPMSelection } from '@/types/spm';
 
 export interface HouseholdVariationResponse {
   status: 'ok' | 'error';
   result: HouseholdCalculationData | null;
   error?: string;
+  spm_config?: SPMSelection;
+  spm_provenance?: SPMProvenance;
 }
 
 /**
@@ -16,11 +19,12 @@ export interface HouseholdVariationResponse {
  * @param policyData - Policy parameters to apply
  * @returns Household data with array values (401 points) for all variables
  */
-export async function fetchHouseholdVariation(
+export async function fetchHouseholdVariationWithProvenance(
   countryId: string,
   householdWithAxes: any,
-  policyData: any
-): Promise<HouseholdCalculationData> {
+  policyData: any,
+  spm?: SPMSelection
+): Promise<HouseholdVariationResponse & { result: HouseholdCalculationData }> {
   const requestUrl = `${BASE_URL}/${countryId}/calculate-full`;
 
   const controller = new AbortController();
@@ -33,6 +37,7 @@ export async function fetchHouseholdVariation(
       body: JSON.stringify({
         household: householdWithAxes,
         policy: policyData,
+        ...(spm ? { spm } : {}),
       }),
       signal: controller.signal,
     });
@@ -62,7 +67,7 @@ export async function fetchHouseholdVariation(
       throw new Error(data.error || 'Household variation calculation failed');
     }
 
-    return data.result;
+    return { ...data, result: data.result };
   } catch (error) {
     clearTimeout(timeoutId);
 
@@ -75,4 +80,19 @@ export async function fetchHouseholdVariation(
 
     throw error;
   }
+}
+
+export async function fetchHouseholdVariation(
+  countryId: string,
+  householdWithAxes: any,
+  policyData: any,
+  spm?: SPMSelection
+): Promise<HouseholdCalculationData> {
+  const response = await fetchHouseholdVariationWithProvenance(
+    countryId,
+    householdWithAxes,
+    policyData,
+    spm
+  );
+  return response.result;
 }

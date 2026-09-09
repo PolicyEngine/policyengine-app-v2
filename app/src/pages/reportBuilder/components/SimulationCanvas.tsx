@@ -16,6 +16,7 @@ import {
 } from '../modals';
 import { styles } from '../styles';
 import type { ReportBuilderState, SimulationBlockProps } from '../types';
+import { arePopulationsEqual } from '../utils/arePopulationsEqual';
 import { AddSimulationCard } from './AddSimulationCard';
 import { SimulationBlock } from './SimulationBlock';
 import { SimulationCanvasSkeleton } from './SimulationCanvasSkeleton';
@@ -37,6 +38,10 @@ export function SimulationCanvas({
 }: SimulationCanvasProps) {
   const canvas = useSimulationCanvas({ reportState, setReportState });
   const isViewOnly = Boolean(isReadOnly);
+  const reformSharesPopulation = arePopulationsEqual(
+    reportState.simulations[0]?.population,
+    reportState.simulations[1]?.population
+  );
   const noop = () => {};
   const handleHouseholdModalBack =
     isViewOnly || !canvas.householdEditorState.returnToBrowseOnBack
@@ -146,7 +151,7 @@ export function SimulationCanvas({
               onRemove={() => canvas.handleRemoveSimulation(1)}
               canRemove={!canvas.isGeographySelected}
               isRequired={canvas.isGeographySelected}
-              populationInherited
+              populationInherited={reformSharesPopulation}
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={canvas.savedPolicies}
               recentPopulations={canvas.recentPopulations}
@@ -154,7 +159,7 @@ export function SimulationCanvas({
                 reportState.simulations[1]?.policy.id
               )}
               populationErrorMessage={canvas.getPopulationErrorMessage(
-                reportState.simulations[0]?.population.household?.id
+                reportState.simulations[1]?.population.household?.id
               )}
               isReadOnly={isReadOnly}
             />

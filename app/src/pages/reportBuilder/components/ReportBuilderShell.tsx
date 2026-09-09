@@ -5,6 +5,8 @@
  * Accepts all logic via props so different modes (setup, modify) can compose it.
  */
 import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
+import { Text } from '@/components/ui';
+import { useReportSPMSelectionError } from '../hooks/useReportIngredientAvailability';
 import { styles } from '../styles';
 import type { ReportBuilderState, SimulationBlockProps, TopBarAction } from '../types';
 import { ReportMetaPanel } from './ReportMetaPanel';
@@ -21,6 +23,7 @@ interface ReportBuilderShellProps {
   isReadOnly?: boolean;
   backPath?: string;
   backLabel?: string;
+  submissionError?: Error | null;
 }
 
 export function ReportBuilderShell({
@@ -32,7 +35,24 @@ export function ReportBuilderShell({
   isReadOnly,
   backPath,
   backLabel,
+  submissionError,
 }: ReportBuilderShellProps) {
+  const spmSelectionError = useReportSPMSelectionError(reportState);
+  const submissionErrorCode =
+    submissionError && 'code' in submissionError && typeof submissionError.code === 'string'
+      ? submissionError.code
+      : undefined;
+  const submissionRecovery =
+    submissionErrorCode === 'SPM_YEAR_UNAVAILABLE'
+      ? 'Choose a supported report year and copy the household inputs to that year before submitting again.'
+      : submissionErrorCode === 'SPM_GEOGRAPHY_REQUIRED' ||
+          submissionErrorCode === 'SPM_GEOGRAPHY_UNAVAILABLE'
+        ? 'Edit the household to review its county FIPS code or choose another SPM geography, then submit again.'
+        : submissionErrorCode === 'SPM_COMPOSITION_REQUIRED'
+          ? 'Edit the household to review its members and required inputs, then submit again.'
+          : submissionErrorCode === 'SPM_SETTINGS_INVALID'
+            ? 'Edit the household to choose its SPM settings again, then submit again.'
+            : 'Your report inputs are still here. Correct them and submit again.';
   return (
     <div style={styles.pageContainer}>
       {/* Back breadcrumb */}
@@ -54,6 +74,18 @@ export function ReportBuilderShell({
           isReadOnly={isReadOnly}
         />
       </TopBar>
+
+      {submissionError && !isReadOnly && (
+        <Text size="sm" role="alert" className="tw:my-md">
+          {submissionError.message} {submissionErrorCode && `Error code: ${submissionErrorCode}. `}
+          {submissionRecovery}
+        </Text>
+      )}
+      {spmSelectionError && !isReadOnly && (
+        <Text size="sm" role="alert" className="tw:my-md">
+          {spmSelectionError}
+        </Text>
+      )}
 
       <SimulationCanvas
         reportYear={reportState.year}

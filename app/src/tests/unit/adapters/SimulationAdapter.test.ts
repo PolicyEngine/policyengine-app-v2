@@ -15,6 +15,41 @@ import {
 
 describe('SimulationAdapter', () => {
   describe('fromMetadata', () => {
+    it('given a legacy plain error_message then retains the original explanation', () => {
+      const errorMessage = mockErrorMessage();
+      const metadata = mockSimulationMetadata({
+        status: 'error',
+        output: null,
+        error_message: errorMessage,
+      });
+
+      const result = SimulationAdapter.fromMetadata(metadata);
+
+      expect(result.errorMessage).toBe(errorMessage);
+      expect(result.errorCode).toBeUndefined();
+    });
+
+    it('given an unrelated API error code then preserves it through persistence and hydration', () => {
+      const errorMessage = mockErrorMessage();
+      const payload = SimulationAdapter.toErrorPayload(
+        TEST_SIMULATION_IDS.SIM_123,
+        errorMessage,
+        'POLICY_NOT_FOUND'
+      );
+
+      const result = SimulationAdapter.fromMetadata({
+        ...mockSimulationMetadata(),
+        ...payload,
+      });
+
+      expect(result).toMatchObject({
+        errorMessage,
+        errorCode: 'POLICY_NOT_FOUND',
+        status: 'error',
+        output: null,
+      });
+    });
+
     it('given household simulation metadata then converts to Simulation', () => {
       // Given
       const metadata = mockSimulationMetadata();

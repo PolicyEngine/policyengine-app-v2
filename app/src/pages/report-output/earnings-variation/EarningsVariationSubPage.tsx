@@ -2,6 +2,7 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { IconCheck, IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import SPMMethodologyFootnote from '@/components/household/SPMMethodologyFootnote';
 import {
   Button,
   Group,
@@ -380,6 +381,10 @@ export default function EarningsVariationSubPage({
           year={normalizedReportYear}
         />
       )}
+      <SPMMethodologyFootnote
+        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+        context="variation"
+      />
     </Stack>
   );
 }

@@ -97,7 +97,7 @@ vi.mock('@/contexts/CalcOrchestratorContext', () => ({
 }));
 
 vi.mock('@/libs/queryKeys', () => ({
-  reportKeys: { all: ['reports'] },
+  reportKeys: { all: ['reports'], byId: (id: string) => ['reports', id] },
   reportAssociationKeys: { all: ['reportAssociations'] },
 }));
 

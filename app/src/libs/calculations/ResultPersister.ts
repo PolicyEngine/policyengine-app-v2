@@ -1,55 +1,42 @@
 import { QueryClient } from '@tanstack/react-query';
-import { markReportCompleted } from '@/api/report';
-import { updateSimulationOutput } from '@/api/simulation';
+import { SimulationAdapter } from '@/adapters/SimulationAdapter';
+import { markReportCompleted, markReportError } from '@/api/report';
+import { markSimulationError, updateSimulationOutput } from '@/api/simulation';
 import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
+import { householdCalculationError } from '@/utils/householdCalculationError';
 
-/**
- * Persists calculation results to the appropriate backend resource
- * Supports polymorphic persistence to either reports or simulations
- */
+/** Persists terminal calculations and reconciles their parent after durable writes. */
 export class ResultPersister {
+  private static parentWrites = new WeakMap<QueryClient, Map<string, Promise<void>>>();
+
   constructor(private queryClient: QueryClient) {}
 
-  /**
-   * Persist calculation result based on target type
-   * @param status - The completed calculation status with result
-   * @param countryId - Country ID for API calls
-   * @param year - Report year for persistence
-   * @throws Error if persistence fails after retry
-   */
   async persist(status: CalcStatus, countryId: string, year: string): Promise<void> {
-    if (!status.result) {
+    if (status.status !== 'error' && !status.result) {
       throw new Error('Cannot persist: result is missing from CalcStatus');
     }
 
-    try {
+    const write = async () => {
       if (status.metadata.targetType === 'report') {
         await this.persistToReport(status.metadata.calcId, status.result, countryId, year);
       } else {
-        await this.persistToSimulation(
-          status.metadata.calcId,
-          status.result,
-          countryId,
-          status.metadata.reportId // Pass parent reportId for household sim-level calcs
-        );
+        await this.persistToSimulation(status, countryId);
+        if (status.metadata.reportId) {
+          await this.reconcileParentReport(status.metadata.reportId, countryId);
+        }
       }
+    };
+
+    try {
+      await write();
     } catch (error) {
       console.error('[ResultPersister] Persistence failed, retrying once...', error);
-      // Retry once after 1 second
-      await this.sleep(1000);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       try {
-        if (status.metadata.targetType === 'report') {
-          await this.persistToReport(status.metadata.calcId, status.result, countryId, year);
-        } else {
-          await this.persistToSimulation(
-            status.metadata.calcId,
-            status.result,
-            countryId,
-            status.metadata.reportId // Pass parent reportId for household sim-level calcs
-          );
-        }
+        await write();
       } catch (retryError) {
         console.error('[ResultPersister] Retry failed', retryError);
         throw new Error(
@@ -59,136 +46,137 @@ export class ResultPersister {
     }
   }
 
-  /**
-   * Persist result to a report
-   */
   private async persistToReport(
     reportId: string,
-    result: any,
+    result: CalcStatus['result'],
     countryId: string,
     year: string
   ): Promise<void> {
-    // Create a Report object with the result
+    const previous = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
     const report: Report = {
       id: reportId,
-      countryId: countryId as any,
+      countryId: countryId as Report['countryId'],
       year,
       apiVersion: null,
       simulationIds: [],
+      ...previous,
       status: 'complete',
-      output: result,
+      output: result as Report['output'],
     };
-
-    // Use existing markReportCompleted API
-    await markReportCompleted(countryId as any, reportId, report);
-
-    // Invalidate report metadata cache so Reports page shows updated status
-    // WHY: Reports page reads from reportKeys.byId(), not calculation cache.
-    // After persisting to database, we need to invalidate so next fetch gets fresh data.
-    // This is safe because database persistence is complete at this point.
-    this.queryClient.invalidateQueries({
-      queryKey: reportKeys.byId(reportId),
-    });
+    await markReportCompleted(report.countryId, reportId, report);
+    this.cacheReport(reportId, report);
   }
 
-  /**
-   * Persist result to a simulation
-   *
-   * For household reports: After persisting simulation, check if all simulations
-   * for the parent report are complete. If yes, mark the report as complete.
-   */
-  private async persistToSimulation(
-    simulationId: string,
-    result: any,
-    countryId: string,
-    reportId?: string
-  ): Promise<void> {
-    // Use new updateSimulationOutput API
-    await updateSimulationOutput(countryId as any, simulationId, result);
-
-    // Invalidate simulation metadata cache so Reports page shows updated status
-    // WHY: Reports page may display simulation info, and we need fresh data after persistence.
-    // This is safe because database persistence is complete at this point.
-    this.queryClient.invalidateQueries({
-      queryKey: simulationKeys.byId(simulationId),
-    });
-
-    // For household reports: Check if all simulations are complete
-    if (reportId) {
-      const allSimsComplete = await this.checkAllSimulationsComplete(reportId);
-
-      if (allSimsComplete) {
-        // Fetch the report to get its year
-        const report = this.queryClient.getQueryData<any>(reportKeys.byId(reportId));
-        if (!report?.year) {
-          throw new Error(`Cannot persist report ${reportId}: year is missing from report data`);
-        }
-
-        // Aggregate outputs from all simulations
-        const aggregatedOutput = await this.aggregateSimulationOutputs(reportId);
-
-        // Mark report as complete with aggregated output
-        await this.persistToReport(reportId, aggregatedOutput, countryId, report.year);
-      }
-    }
-  }
-
-  /**
-   * Check if all simulations for a report are complete
-   * @param reportId - Parent report ID
-   * @returns true if all simulations have status='complete' in calculation cache
-   */
-  private async checkAllSimulationsComplete(reportId: string): Promise<boolean> {
-    // Get report to find simulation IDs
-    const report = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
-    if (!report) {
-      return false;
+  private async persistToSimulation(status: CalcStatus, countryId: string): Promise<void> {
+    const simulationId = status.metadata.calcId;
+    const key = calculationKeys.bySimulationId(simulationId);
+    // A parent PATCH retry must not write the same simulation again.
+    if (this.queryClient.getQueryData<CalcStatus>(key)?.persisted) {
+      return;
     }
 
-    // Check each simulation's calculation cache
-    for (const simId of report.simulationIds) {
-      const simStatus = this.queryClient.getQueryData<CalcStatus>(
-        calculationKeys.bySimulationId(simId)
+    const metadata =
+      status.status === 'error'
+        ? await markSimulationError(
+            countryId as Report['countryId'],
+            simulationId,
+            status.error?.message,
+            status.error?.code
+          )
+        : await updateSimulationOutput(
+            countryId as Report['countryId'],
+            simulationId,
+            status.result
+          );
+
+    this.queryClient.setQueryData<CalcStatus>(key, { ...status, persisted: true });
+    if (metadata) {
+      this.queryClient.setQueryData(
+        simulationKeys.byId(simulationId),
+        SimulationAdapter.fromMetadata(metadata)
       );
+    }
+    void this.queryClient.invalidateQueries({ queryKey: simulationKeys.byId(simulationId) });
+  }
 
-      if (simStatus?.status !== 'complete') {
-        return false;
+  /** Join parent writes so simultaneous siblings cannot overwrite a failure with success. */
+  async reconcileParentReport(reportId: string, countryId: string): Promise<void> {
+    let writes = ResultPersister.parentWrites.get(this.queryClient);
+    if (!writes) {
+      writes = new Map();
+      ResultPersister.parentWrites.set(this.queryClient, writes);
+    }
+    const previous = writes.get(reportId) ?? Promise.resolve();
+    const task = previous.catch(() => undefined).then(() => this.updateParent(reportId, countryId));
+    writes.set(reportId, task);
+    try {
+      await task;
+    } finally {
+      if (writes.get(reportId) === task) {
+        writes.delete(reportId);
       }
     }
-
-    return true;
   }
 
-  /**
-   * Aggregate simulation outputs for a household report
-   * @param reportId - Parent report ID
-   * @returns Array of household outputs (one per simulation)
-   */
-  private async aggregateSimulationOutputs(reportId: string): Promise<any> {
+  private async updateParent(reportId: string, countryId: string): Promise<void> {
     const report = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
-    if (!report) {
-      throw new Error(`Report ${reportId} not found in cache during aggregation`);
+    if (!report || report.status !== 'pending' || report.simulationIds.length === 0) {
+      return;
     }
 
-    // Get all simulation outputs from calculation cache
-    const outputs = report.simulationIds
-      .map((simId) => {
-        const simStatus = this.queryClient.getQueryData<CalcStatus>(
-          calculationKeys.bySimulationId(simId)
-        );
-        return simStatus?.result;
-      })
-      .filter((output) => output !== undefined);
-
-    // For household reports, return array of household outputs
-    // This matches what HouseholdOverview expects
-    return outputs;
+    const statuses = report.simulationIds.map((id) => this.durableSimulationStatus(id));
+    const failure = statuses.find((status) => status?.status === 'error');
+    if (failure) {
+      const failedReport: Report = { ...report, status: 'error', outputType: 'household' };
+      const error = failure.error;
+      const message = error?.code ? `[${error.code}] ${error.message}` : error?.message;
+      await markReportError(countryId as Report['countryId'], reportId, failedReport, message);
+      this.cacheReport(reportId, failedReport);
+    } else if (statuses.every((status) => status?.status === 'complete' && status.result)) {
+      const completedReport: Report = {
+        ...report,
+        status: 'complete',
+        outputType: 'household',
+        output: Object.fromEntries(
+          report.simulationIds.map((id, index) => [id, statuses[index]!.result])
+        ) as Report['output'],
+      };
+      await markReportCompleted(countryId as Report['countryId'], reportId, completedReport);
+      this.cacheReport(reportId, completedReport);
+    }
   }
 
-  /**
-   * Sleep helper for retry logic
-   */
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  private durableSimulationStatus(simulationId: string): CalcStatus | undefined {
+    const calculation = this.queryClient.getQueryData<CalcStatus>(
+      calculationKeys.bySimulationId(simulationId)
+    );
+    if (calculation?.persisted) {
+      return calculation;
+    }
+    // Reopened reports may have siblings loaded from storage, without an active calculation.
+    const simulation = this.queryClient.getQueryData<Simulation>(simulationKeys.byId(simulationId));
+    if (!simulation || (simulation.status !== 'complete' && simulation.status !== 'error')) {
+      return undefined;
+    }
+    return {
+      status: simulation.status,
+      persisted: true,
+      result: simulation.output as CalcStatus['result'],
+      error:
+        simulation.status === 'error'
+          ? householdCalculationError({ code: simulation.errorCode }, simulation.errorMessage)
+          : undefined,
+      metadata: {
+        calcId: simulationId,
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: 0,
+      },
+    };
+  }
+
+  private cacheReport(reportId: string, report: Report): void {
+    this.queryClient.setQueryData(reportKeys.byId(reportId), report);
+    void this.queryClient.invalidateQueries({ queryKey: reportKeys.byId(reportId) });
   }
 }

@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createHousehold } from '@/api/household';
+import { Household } from '@/models/Household';
 import { createReportSimulations } from '@/pages/reportBuilder/utils/createReportSimulations';
 import {
+  CORRECTED_REPORT_YEAR,
   CURRENT_LAW_ID,
   mockCreateSimulationFn,
+  mockDraftHouseholdSimulation,
   mockLocalStorageCreateFn,
+  mockSingleSimReportState,
   mockTwoSimReportState,
   setupDefaultMocks,
   TEST_LABELS,
@@ -11,6 +16,8 @@ import {
   TEST_POPULATION,
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
+
+vi.mock('@/api/household', () => ({ createHousehold: vi.fn() }));
 
 vi.mock('@/api/simulation', () => ({
   createSimulation: (...args: any[]) => mockCreateSimulationFn(...args),
@@ -80,7 +87,9 @@ describe('createReportSimulations', () => {
       population: {
         label: 'Test household',
         type: 'household',
-        household: { id: TEST_POPULATION.HOUSEHOLD_ID },
+        household: Household.starter('us', mockTwoSimReportState.year).withId(
+          TEST_POPULATION.HOUSEHOLD_ID
+        ),
         geography: null,
       },
     };
@@ -130,6 +139,33 @@ describe('createReportSimulations', () => {
     ).rejects.toThrow('Report has incomplete simulations');
     expect(mockCreateSimulationFn).not.toHaveBeenCalled();
     expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given a draft from another country then rejects every write before preparing households', async () => {
+    await expect(
+      createReportSimulations({
+        simulationStates: [mockDraftHouseholdSimulation('us'), mockDraftHouseholdSimulation('uk')],
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: CORRECTED_REPORT_YEAR,
+      })
+    ).rejects.toThrow('original country');
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given a draft period differs from the report year then rejects writes instead of calculating the wrong period', async () => {
+    await expect(
+      createReportSimulations({
+        simulationStates: [mockDraftHouseholdSimulation()],
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: mockSingleSimReportState.year,
+      })
+    ).rejects.toThrow('Household inputs do not match report year');
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
   });
 
   test('does not persist an association when simulation creation returns no ID', async () => {

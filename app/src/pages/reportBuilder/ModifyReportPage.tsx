@@ -21,6 +21,7 @@ import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { useModifyReportSubmission } from './hooks/useModifyReportSubmission';
 import { useReportBuilderState } from './hooks/useReportBuilderState';
 import type { ReportBuilderState, TopBarAction } from './types';
+import { cloneReportBuilderState } from './utils/cloneReportBuilderState';
 
 export default function ModifyReportPage({ userReportId }: { userReportId?: string }) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
@@ -37,15 +38,21 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     shareData
   );
 
-  const { handleSaveAsNew, handleReplace, isSavingNew, isReplacing, isReportSubmissionBlocked } =
-    useModifyReportSubmission({
-      reportState: reportState ?? { label: null, year: '', simulations: [] },
-      countryId,
-      existingUserReportId: userReportId ?? '',
-      onSuccess: (resultUserReportId) => {
-        nav.push(getReportOutputPath(countryId, resultUserReportId));
-      },
-    });
+  const {
+    handleSaveAsNew,
+    handleReplace,
+    isSavingNew,
+    isReplacing,
+    isReportSubmissionBlocked,
+    submissionError,
+  } = useModifyReportSubmission({
+    reportState: reportState ?? { label: null, year: '', simulations: [] },
+    countryId,
+    existingUserReportId: userReportId ?? '',
+    onSuccess: (resultUserReportId) => {
+      nav.push(getReportOutputPath(countryId, resultUserReportId));
+    },
+  });
 
   // View/edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -89,7 +96,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         icon: <IconX size={16} />,
         onClick: () => {
           if (originalState) {
-            setReportState(structuredClone(originalState) as ReportBuilderState);
+            setReportState(cloneReportBuilderState(originalState));
           }
           setIsEditing(false);
         },
@@ -151,6 +158,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   return (
     <>
       <ReportBuilderShell
+        submissionError={submissionError}
         title={isReadOnly ? 'View report setup' : 'Edit report'}
         backPath={
           userReportId ? `/${countryId}/report-output/${userReportId}${shareSearch}` : undefined
