@@ -12,7 +12,10 @@ import {
   ParameterSearchEntry,
   searchParameters,
 } from '@/libs/parameterSearch';
-import US_METADATA from '@/mocks/US_Metadata.json';
+import {
+  buildLargeParameterCollection,
+  buildSearchQualityParameterCollection,
+} from '@/tests/fixtures/libs/parameterSearchMocks';
 
 const SMALL_COLLECTION = {
   'gov.irs': { type: 'parameterNode', parameter: 'gov.irs', label: 'IRS' },
@@ -132,13 +135,15 @@ describe('groupSearchResults', () => {
   });
 });
 
-describe('search quality against real US metadata (52k parameters)', () => {
-  const parameters = (US_METADATA as any).result.parameters;
+describe('search quality with model-shaped metadata', () => {
+  const parameters = buildSearchQualityParameterCollection();
   const entries = buildParameterSearchEntries(parameters);
   const index = createParameterSearchIndex(entries);
+  const largeEntries = buildParameterSearchEntries(buildLargeParameterCollection());
+  const largeIndex = createParameterSearchIndex(largeEntries);
 
-  it('given the full metadata then tens of thousands of parameters are indexed', () => {
-    expect(entries.length).toBeGreaterThan(10000);
+  it('given a generated large collection then more than ten thousand parameters are indexed', () => {
+    expect(largeEntries.length).toBeGreaterThan(10_000);
   });
 
   it.each([
@@ -211,14 +216,13 @@ describe('search quality against real US metadata (52k parameters)', () => {
   });
 
   it('given a common multi-word query then the fast path answers in as-you-type latency', () => {
-    searchParameters(index, 'child tax'); // warm up
+    searchParameters(largeIndex, 'child tax'); // warm up
     const start = performance.now();
-    searchParameters(index, 'child tax credit amount');
+    searchParameters(largeIndex, 'child tax credit amount');
     const elapsed = performance.now() - start;
 
-    // Full fuzzy scan over 52k entries took ~1300ms; the token prefilter
-    // must keep the common case well under typeahead latency. Generous
-    // bound to stay CI-safe while still catching a full-scan regression.
+    // The token prefilter must keep the common case within typeahead latency
+    // even when the generated input contains more than 10,000 parameters.
     expect(elapsed).toBeLessThan(500);
   });
 });
@@ -290,8 +294,8 @@ describe('derived ranking priors', () => {
   });
 });
 
-describe('derived concept clusters (real US metadata)', () => {
-  const parameters = (US_METADATA as any).result.parameters;
+describe('derived concept clusters', () => {
+  const parameters = buildSearchQualityParameterCollection();
   const clusters = buildConceptClusters(parameters);
   const conceptIndex = createParameterSearchIndex(
     buildParameterSearchEntries(parameters),
