@@ -5,6 +5,7 @@ import { createReportSimulations } from '@/pages/reportBuilder/utils/createRepor
 import {
   CORRECTED_REPORT_YEAR,
   CURRENT_LAW_ID,
+  mixedPopulationReportState,
   mockCreateSimulationFn,
   mockDraftHouseholdSimulation,
   mockLocalStorageCreateFn,
@@ -16,6 +17,7 @@ import {
   TEST_POPULATION,
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
+import { ownershipReportState } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
 
 vi.mock('@/api/household', () => ({ createHousehold: vi.fn() }));
 
@@ -48,6 +50,49 @@ describe('createReportSimulations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupDefaultMocks();
+  });
+
+  test.each([true, false])(
+    'given household baseline is %s when mixed populations bypass selection then rejects before every write',
+    async (householdFirst) => {
+      const reportState = mixedPopulationReportState(householdFirst);
+      const originalState = JSON.stringify(reportState);
+
+      await expect(
+        createReportSimulations({
+          simulationStates: reportState.simulations,
+          countryId: 'us',
+          currentLawId: CURRENT_LAW_ID,
+          reportYear: reportState.year,
+        })
+      ).rejects.toThrow('Baseline and reform must use the same population type');
+
+      expect(createHousehold).not.toHaveBeenCalled();
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+      expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+      expect(JSON.stringify(reportState)).toBe(originalState);
+    }
+  );
+
+  test('given independent same-type households and policies when saved then retains each input and its dates', async () => {
+    const reportState = ownershipReportState();
+    const originalState = JSON.stringify(reportState);
+
+    const result = await createReportSimulations({
+      simulationStates: reportState.simulations,
+      countryId: 'us',
+      currentLawId: CURRENT_LAW_ID,
+      reportYear: reportState.year,
+    });
+
+    expect(result.simulations.map((simulation) => simulation.populationId)).toEqual(
+      reportState.simulations.map((simulation) => simulation.population.household!.id)
+    );
+    expect(result.simulations.map((simulation) => simulation.policyId)).toEqual(
+      reportState.simulations.map((simulation) => simulation.policy.id)
+    );
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(JSON.stringify(reportState)).toBe(originalState);
   });
 
   test('creates API simulations, local associations, and domain simulations', async () => {

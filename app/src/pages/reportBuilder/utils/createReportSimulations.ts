@@ -6,7 +6,10 @@ import { MOCK_USER_ID } from '@/constants';
 import type { Household } from '@/models/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
-import { hasRequiredSimulationIngredients } from '@/utils/ingredientAvailability';
+import {
+  getReportPopulationError,
+  hasRequiredSimulationIngredients,
+} from '@/utils/ingredientAvailability';
 import { toApiPolicyId } from '../currentLaw';
 import { householdMatchesReportYear } from './changeReportYear';
 
@@ -29,6 +32,10 @@ export async function createReportSimulations({
   currentLawId,
   reportYear,
 }: CreateReportSimulationsArgs): Promise<CreatedReportSimulations> {
+  const populationError = getReportPopulationError(simulationStates);
+  if (populationError) {
+    throw new Error(populationError);
+  }
   if (!hasRequiredSimulationIngredients(simulationStates)) {
     throw new Error('Report has incomplete simulations');
   }

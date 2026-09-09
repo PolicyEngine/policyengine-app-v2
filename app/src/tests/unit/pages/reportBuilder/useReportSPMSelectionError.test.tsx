@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { useReportIngredientAvailability } from '@/pages/reportBuilder/hooks/useReportIngredientAvailability';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
 import metadataReducer, { fetchMetadataThunk } from '@/reducers/metadataReducer';
+import { mixedPopulationReportState } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
 import { createMockApiPayload } from '@/tests/fixtures/reducers/metadataReducerMocks';
 import {
   CANONICAL_SPM_METADATA,
@@ -25,14 +26,20 @@ vi.mock('@/hooks/useUserHousehold', () => ({
   useUserHouseholds: () => ({ data: [], isLoading: false }),
 }));
 
-function Readiness({ selected }: { selected: boolean }) {
+function Readiness({
+  selected,
+  reportState,
+}: {
+  selected: boolean;
+  reportState?: ReportBuilderState;
+}) {
   const simulation = initializeSimulationState();
   simulation.policy.id = 'saved-policy';
   simulation.population.household = (
     selected ? stateOnlyHousehold().withSPM(NATIONAL_SPM) : stateOnlyHousehold()
   ).withId('saved-household');
   const state: ReportBuilderState = { year: SPM_TEST_YEAR, label: null, simulations: [simulation] };
-  const availability = useReportIngredientAvailability(state);
+  const availability = useReportIngredientAvailability(reportState ?? state);
   return (
     <>
       <p>{availability.spmSelectionError ?? 'Ready to calculate'}</p>
@@ -57,6 +64,22 @@ function setup(metadata: MetadataState, selected = false) {
 }
 
 describe('saved-household report readiness', () => {
+  test.each([true, false])(
+    'given mixed populations with household baseline %s then actual availability blocks submission',
+    (householdFirst) => {
+      const store = configureStore({
+        reducer: { metadata: metadataReducer },
+        preloadedState: { metadata: RESOLVED_LEGACY_METADATA },
+      });
+      render(
+        <Provider store={store}>
+          <Readiness selected={false} reportState={mixedPopulationReportState(householdFirst)} />
+        </Provider>
+      );
+      expect(screen.getByRole('button', { name: 'Run report' })).toBeDisabled();
+    }
+  );
+
   test('given a previously saved state-only household then a report requires an explicit SPM choice', () => {
     const { rerender, ui } = setup(RESOLVED_CANONICAL_METADATA);
     expect(screen.getByText(/choose national or local/)).toBeInTheDocument();

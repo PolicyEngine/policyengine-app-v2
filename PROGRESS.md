@@ -18,6 +18,9 @@
 - Completed hydration fix: terminal source/country/empty-simulation errors, error-first page rendering, immediate stale-state hiding, and immutable snapshot ownership for delayed setters after reopening.
 - Hydration regression-first evidence: 13 failures initially and two further stale-owner failures; final 26 tests / 4 suites pass, scoped ESLint/Prettier and diff checks pass. Evidence: `rollout/app-fable-fixes/hydration-*.txt`.
 
+- Completed mixed-population fix: shared preflight rejects both mixed directions, dual selections and stale declared types before household/simulation writes; readiness and accessible swap/select UI provide correction while preserving independent same-type inputs.
+- Mixed-population regression-first evidence: 8 write-boundary failures and 6 readiness/UI failures reproduced; final 60 tests / 8 suites pass with format/lint clean. Tests include actual hydrated state, manual state and stale readiness across create/replace/save-as-new.
+
 ### Next
 - Add regression-first coverage and fixes for mixed populations before writes, typed variation/MTR API errors, and terminal hydration failures with source isolation.
 - Run affected R3 regressions, typechecks, production builds, scoped format/lint, and notebook-source hash comparison.

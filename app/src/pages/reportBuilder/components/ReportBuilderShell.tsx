@@ -6,6 +6,7 @@
  */
 import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
 import { Text } from '@/components/ui';
+import { getReportPopulationError } from '@/utils/ingredientAvailability';
 import { useReportSPMSelectionError } from '../hooks/useReportIngredientAvailability';
 import { styles } from '../styles';
 import type { ReportBuilderState, SimulationBlockProps, TopBarAction } from '../types';
@@ -38,6 +39,7 @@ export function ReportBuilderShell({
   submissionError,
 }: ReportBuilderShellProps) {
   const spmSelectionError = useReportSPMSelectionError(reportState);
+  const populationError = getReportPopulationError(reportState.simulations);
   const submissionErrorCode =
     submissionError && 'code' in submissionError && typeof submissionError.code === 'string'
       ? submissionError.code
@@ -79,6 +81,11 @@ export function ReportBuilderShell({
         <Text size="sm" role="alert" className="tw:my-md">
           {submissionError.message} {submissionErrorCode && `Error code: ${submissionErrorCode}. `}
           {submissionRecovery}
+        </Text>
+      )}
+      {populationError && !isReadOnly && (
+        <Text size="sm" role="alert" className="tw:my-md">
+          {populationError}
         </Text>
       )}
       {spmSelectionError && !isReadOnly && (

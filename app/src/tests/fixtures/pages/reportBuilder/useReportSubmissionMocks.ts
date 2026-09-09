@@ -2,7 +2,10 @@ import { configureStore } from '@reduxjs/toolkit';
 import { vi } from 'vitest';
 import { Household } from '@/models/Household';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
+import { hydrateReportBuilderState } from '@/pages/reportBuilder/utils/hydrateReportBuilderState';
 import metadataReducer from '@/reducers/metadataReducer';
+import { ownershipHydrationData } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 // Test constants
 export const TEST_SIMULATION_IDS = {
@@ -170,5 +173,35 @@ export function mockDraftHouseholdSimulation(countryId: 'us' | 'uk' = 'us') {
       householdNeedsCreation: true,
       geography: null,
     },
+  };
+}
+
+export function mixedPopulationReportState(
+  householdFirst: boolean,
+  source: 'draft' | 'hydrated' = 'draft'
+): ReportBuilderState {
+  if (source === 'hydrated') {
+    const data = ownershipHydrationData('mixed-population-report');
+    const geography = mockTwoSimReportState.simulations[0].population.geography!;
+    const simulations: Simulation[] = data.simulations.map((simulation, index) =>
+      index === (householdFirst ? 1 : 0)
+        ? { ...simulation, populationId: geography.geographyId, populationType: 'geography' }
+        : simulation
+    );
+    return hydrateReportBuilderState({
+      ...data,
+      simulations,
+      geographies: [geography],
+      currentLawId: CURRENT_LAW_ID,
+    });
+  }
+  const householdSimulation = mockDraftHouseholdSimulation();
+  const geographySimulation = mockTwoSimReportState.simulations[1];
+  return {
+    ...mockTwoSimReportState,
+    year: CORRECTED_REPORT_YEAR,
+    simulations: householdFirst
+      ? [householdSimulation, geographySimulation]
+      : [geographySimulation, householdSimulation],
   };
 }

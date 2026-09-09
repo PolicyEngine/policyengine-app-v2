@@ -42,6 +42,19 @@ export function SimulationCanvas({
     reportState.simulations[0]?.population,
     reportState.simulations[1]?.population
   );
+  // Changing a shared baseline updates both populations. Independent populations
+  // must instead match the other simulation's type without replacing its inputs.
+  const otherPopulation =
+    reportState.simulations[canvas.populationBrowseState?.simulationIndex === 0 ? 1 : 0]
+      ?.population;
+  const allowedPopulationType =
+    canvas.populationBrowseState?.simulationIndex === 0 && reformSharesPopulation
+      ? undefined
+      : otherPopulation?.household
+        ? 'household'
+        : otherPopulation?.geography
+          ? 'geography'
+          : undefined;
   const noop = () => {};
   const handleHouseholdModalBack =
     isViewOnly || !canvas.householdEditorState.returnToBrowseOnBack
@@ -186,6 +199,7 @@ export function SimulationCanvas({
         onClose={canvas.closePopulationBrowse}
         onSelect={canvas.handlePopulationSelectFromBrowse}
         reportYear={reportYear}
+        allowedPopulationType={allowedPopulationType}
         onCreateNew={() => {
           canvas.closePopulationBrowse();
           canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population');

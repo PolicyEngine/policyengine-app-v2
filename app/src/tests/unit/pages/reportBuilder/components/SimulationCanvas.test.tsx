@@ -3,13 +3,17 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SimulationBlockFull } from '@/pages/reportBuilder/components/SimulationBlockFull';
 import { SimulationCanvas } from '@/pages/reportBuilder/components/SimulationCanvas';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
+import { mixedPopulationReportState } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
 import { ownershipReportState } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 
-const { mockRetryCatalogs, mockUseSimulationCanvas } = vi.hoisted(() => ({
-  mockRetryCatalogs: vi.fn(),
-  mockUseSimulationCanvas: vi.fn(),
-}));
+const { mockRetryCatalogs, mockUseSimulationCanvas, mockPopulationBrowseModal } = vi.hoisted(
+  () => ({
+    mockRetryCatalogs: vi.fn(),
+    mockUseSimulationCanvas: vi.fn(),
+    mockPopulationBrowseModal: vi.fn(() => null),
+  })
+);
 
 vi.mock('@/pages/reportBuilder/hooks/useSimulationCanvas', () => ({
   useSimulationCanvas: (...args: unknown[]) => mockUseSimulationCanvas(...args),
@@ -19,7 +23,7 @@ vi.mock('@/pages/reportBuilder/modals', () => ({
   HouseholdCreationModal: () => null,
   PolicyCreationModal: () => null,
   PolicyBrowseModal: () => null,
-  PopulationBrowseModal: () => null,
+  PopulationBrowseModal: mockPopulationBrowseModal,
 }));
 
 describe('SimulationCanvas', () => {
@@ -44,6 +48,49 @@ describe('SimulationCanvas', () => {
       returnToPolicyBrowse: vi.fn(),
     });
   });
+
+  test.each([true, false])(
+    'given mixed populations with household baseline %s then both populations can be swapped to correct the report',
+    async (householdFirst) => {
+      const state = mixedPopulationReportState(householdFirst);
+      const handleBrowseMorePopulations = vi.fn();
+      mockUseSimulationCanvas.mockReturnValue({
+        countryId: 'us',
+        isInitialLoading: false,
+        catalogError: null,
+        householdEditorState: { isOpen: false },
+        policyCreationState: { isOpen: false },
+        populationBrowseState: { isOpen: false, simulationIndex: 1 },
+        policyBrowseState: { isOpen: false },
+        getPolicyErrorMessage: vi.fn(),
+        getPopulationErrorMessage: vi.fn(),
+        handleBrowseMorePopulations,
+      });
+      const user = userEvent.setup();
+
+      render(
+        <SimulationCanvas
+          reportYear={state.year}
+          reportState={state}
+          setReportState={vi.fn()}
+          BlockComponent={SimulationBlockFull}
+        />
+      );
+
+      const swapButtons = screen.getAllByRole('button', { name: 'Swap population' });
+      expect(swapButtons).toHaveLength(2);
+      await user.click(swapButtons[0]);
+      expect(handleBrowseMorePopulations).toHaveBeenLastCalledWith(0);
+      await user.click(swapButtons[1]);
+      expect(handleBrowseMorePopulations).toHaveBeenLastCalledWith(1);
+      expect(mockPopulationBrowseModal).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          allowedPopulationType: householdFirst ? 'household' : 'geography',
+        }),
+        undefined
+      );
+    }
+  );
 
   test('given a catalog failure then shows an actionable error instead of the loading skeleton', async () => {
     const user = userEvent.setup();
