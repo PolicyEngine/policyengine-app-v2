@@ -2,7 +2,7 @@ import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
 import type { SPMProvenance, SPMSelection } from '@/types/spm';
-import { householdAPIError } from './householdError';
+import { householdAPIError, householdAPIErrorFromBody } from './householdError';
 
 export interface HouseholdCalculationResponse {
   status: 'ok' | 'error';
@@ -50,7 +50,7 @@ export async function fetchHouseholdCalculationWithBundle(
     const data: HouseholdCalculationResponse = await response.json();
 
     if (data.status === 'error' || !data.result) {
-      throw new Error(data.error || 'Household calculation failed');
+      throw householdAPIErrorFromBody(data, 'Household calculation failed');
     }
 
     return {

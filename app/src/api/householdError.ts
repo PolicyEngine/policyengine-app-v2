@@ -1,13 +1,38 @@
+import { isCorrectiveSPMError } from '@/utils/householdCalculationError';
+
+export interface HouseholdAPIError extends Error {
+  code?: string;
+  retryable: boolean;
+}
+
+/** Parse the same API envelope for both HTTP errors and legacy status:error responses. */
+export function householdAPIErrorFromBody(body: unknown, fallback: string): HouseholdAPIError {
+  const payload = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
+  const detail = Array.isArray(payload.errors)
+    ? payload.errors.find(
+        (error): error is { message: string; code?: unknown } =>
+          !!error && typeof error === 'object' && typeof error.message === 'string'
+      )
+    : undefined;
+  const message =
+    detail?.message ??
+    (typeof payload.message === 'string'
+      ? payload.message
+      : typeof payload.error === 'string'
+        ? payload.error
+        : fallback);
+  const code = typeof detail?.code === 'string' ? detail.code : undefined;
+  return Object.assign(new Error(message), { code, retryable: !isCorrectiveSPMError(code) });
+}
+
 /** Preserve the API's validation message and code, with legacy response support. */
-export async function householdAPIError(response: Response, fallback: string): Promise<Error> {
+export async function householdAPIError(
+  response: Response,
+  fallback: string
+): Promise<HouseholdAPIError> {
   try {
-    const body = await response.json();
-    const detail = Array.isArray(body.errors)
-      ? body.errors.find((error: { message?: unknown }) => typeof error.message === 'string')
-      : undefined;
-    const message = detail?.message ?? (typeof body.message === 'string' ? body.message : fallback);
-    return Object.assign(new Error(message), { code: detail?.code });
+    return householdAPIErrorFromBody(await response.json(), fallback);
   } catch {
-    return new Error(fallback);
+    return householdAPIErrorFromBody(null, fallback);
   }
 }

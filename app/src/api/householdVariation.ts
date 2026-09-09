@@ -1,6 +1,7 @@
 import { BASE_URL } from '@/constants';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
 import type { SPMProvenance, SPMSelection } from '@/types/spm';
+import { householdAPIError, householdAPIErrorFromBody } from './householdError';
 
 export interface HouseholdVariationResponse {
   status: 'ok' | 'error';
@@ -45,26 +46,16 @@ export async function fetchHouseholdVariationWithProvenance(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const errorText = await response.text();
-
-      // Try to parse error response if it's JSON
-      let errorDetail = errorText;
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorDetail = errorJson.message || errorJson.error || errorText;
-      } catch {
-        // Not JSON, use text as-is
-      }
-
-      throw new Error(
-        `Variation calculation failed: ${response.status} ${response.statusText}. ${errorDetail}`
+      throw await householdAPIError(
+        response,
+        `Variation calculation failed: ${response.status} ${response.statusText}`
       );
     }
 
     const data: HouseholdVariationResponse = await response.json();
 
     if (data.status === 'error' || !data.result) {
-      throw new Error(data.error || 'Household variation calculation failed');
+      throw householdAPIErrorFromBody(data, 'Household variation calculation failed');
     }
 
     return { ...data, result: data.result };

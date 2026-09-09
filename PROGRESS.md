@@ -21,8 +21,11 @@
 - Completed mixed-population fix: shared preflight rejects both mixed directions, dual selections and stale declared types before household/simulation writes; readiness and accessible swap/select UI provide correction while preserving independent same-type inputs.
 - Mixed-population regression-first evidence: 8 write-boundary failures and 6 readiness/UI failures reproduced; final 60 tests / 8 suites pass with format/lint clean. Tests include actual hydrated state, manual state and stale readiness across create/replace/save-as-new.
 
+- Completed variation/MTR fix: shared typed API parser handles real HTTP 400 errors and HTTP 200 compatibility envelopes for both point and variation calls. Corrective codes set retryable:false; both pages display usable errors immediately, including while the sibling request is pending.
+- Variation regression-first evidence: 32 initial failures plus 4 pending-sibling failures; final 41 focused tests / 2 suites and 105 affected tests / 9 suites pass, format/lint clean. Exact API source binding and commands are recorded in `rollout/app-fable-fixes/VARIATION-ERRORS.md`.
+- Both production builds pass; combined 84-suite tests, forced workspace typechecks and final scoped formatting/lint are running.
+
 ### Next
-- Add regression-first coverage and fixes for mixed populations before writes, typed variation/MTR API errors, and terminal hydration failures with source isolation.
 - Run affected R3 regressions, typechecks, production builds, scoped format/lint, and notebook-source hash comparison.
 - Commit/push verified changes, verify PR source and body, and write `rollout/app-fable-fixes/FINAL-REPORT.md`. Root retains Fable gate recording and live verification.
 
