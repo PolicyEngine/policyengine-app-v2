@@ -1,0 +1,17 @@
+{
+  "state": "blocked",
+  "local_validation_commit": "fd3525207bc5afcdf975edae8d5366559d980012",
+  "validated_app_src_tree": "97349af472b9a8693cbb7d87c7a2d7921f66b7a1",
+  "remote_head": "8a94c03b81117eeedde2fb9325c6f860496789af",
+  "base": "2e38710033e846461217291328a3748d1cd45de7",
+  "remote_branch": "max/canonical-spm-household-reports-20260909",
+  "pr": 1192,
+  "pr_state": "open",
+  "pr_draft": true,
+  "remote_body_matches_initial_read": true,
+  "shell_error": "Could not resolve host: github.com",
+  "connector_action": "github_create_tree",
+  "connector_error": "MCP tool call requires approval, but approval policy is never",
+  "remote_mutations": false,
+  "prepared_pr_body": "PR-BODY.md"
+}

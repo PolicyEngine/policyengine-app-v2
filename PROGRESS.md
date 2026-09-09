@@ -3,7 +3,7 @@
 ## Fable final findings — 2026-09-09
 
 ### State
-- All three final findings implemented and verified for PR #1192. Starting head `8a94c03b81117eeedde2fb9325c6f860496789af`; unchanged base `2e38710033e846461217291328a3748d1cd45de7`.
+- All three final findings implemented, verified and committed locally for PR #1192; publication is blocked by transport/session approval policy. Starting head `8a94c03b81117eeedde2fb9325c6f860496789af`; unchanged base `2e38710033e846461217291328a3748d1cd45de7`.
 - Verified implementation commit `d9ee7aab4e2af4793e58de09647eaf25ca67ba14`; exact app source tree and test/log hashes are in `rollout/app-fable-fixes/validation.json`.
 - Current standing orders supersede historical no-commit instructions below: each coherent step committed, final publication targets `max/canonical-spm-household-reports-20260909`.
 
@@ -16,8 +16,11 @@
 - All **18/18 notebook generation-source hashes** match the original qualification receipt; all five original untracked handoff reports remain byte-for-byte intact. No generator/numeric, fixture expected-value, dependency or global chrome changes.
 - No browser, live population calculation, expensive axes/notebook recalculation, deployment, merge, sibling edits, or forbidden-log access. Independent cross-review found no remaining material source issue.
 
+- Shell push failed DNS. Connector tree upload was rejected: “MCP tool call requires approval, but approval policy is never.” No remote mutation occurred. Final read verified PR still open/draft at starting head with its unchanged body.
+- Wrote `rollout/app-fable-fixes/FINAL-REPORT.md`, concise `STATUS.md`, prepared `PR-BODY.md` and exact publication blocker record. Local final artifacts are committed; code tree remains the tested tree.
+
 ### Next
-- Publish verified commits, verify remote/PR head and PR body, and commit final `rollout/app-fable-fixes/FINAL-REPORT.md`.
+- Root: push local HEAD to the authorized remote branch using working transport, apply prepared PR body, and verify remote head/base/body.
 - Root retains Fable gate recording (dispatcher BrokenPipeError was not bypassed), live service/published-package verification and rollout decisions.
 
 ## Follow-up review R3 — 2026-09-09
