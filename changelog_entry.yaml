@@ -14,3 +14,4 @@
 - Wait for current-country model information before saving or calculating households, show corrective SPM save and saved-report errors, reproduce each simulation's settings separately, and label point and earnings-variation methodology receipts
 - Preserve canonical household receipts and terminal errors from report creation and modification, share calculation ownership through saving, pin recorded reproduction runtimes, and guide unsupported-year corrections
 - Make report-year corrections save new household inputs for the selected period without aging, inflation adjustments, or changes to historical households and policy dates
+- Block reports that mix households and geographies before saving, retain corrective SPM errors in earnings and marginal tax rate views without automatic retries, and show invalid saved reports as load errors

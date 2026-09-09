@@ -1,6 +1,7 @@
 src/tests/integration/household/GenericHouseholdOrchestration.test.tsx
 src/tests/integration/household/HouseholdSPMMethodology.test.tsx
 src/tests/integration/household/HouseholdSPMSaveErrors.test.tsx
+src/tests/integration/household/HouseholdVariationSPMErrors.test.tsx
 src/tests/integration/household/HouseholdVariationSPMReadiness.test.tsx
 src/tests/integration/household/ReportYearSPMRecovery.test.tsx
 src/tests/integration/household/SavedReportSPMErrors.test.tsx
@@ -11,6 +12,7 @@ src/tests/unit/adapters/UserSimulationAdapter.test.ts
 src/tests/unit/api/household.test.ts
 src/tests/unit/api/householdAssociation.test.ts
 src/tests/unit/api/householdCalculation.test.ts
+src/tests/unit/api/householdErrors.test.ts
 src/tests/unit/api/householdSPM.test.ts
 src/tests/unit/api/metadata.test.ts
 src/tests/unit/api/simulation.test.ts
@@ -49,6 +51,7 @@ src/tests/unit/pages/report-output/reproduce-in-python/PolicyReproducibility.tes
 src/tests/unit/pages/report-output/useHouseholdCalculations.test.ts
 src/tests/unit/pages/reportBuilder/ModifyReportPage.test.tsx
 src/tests/unit/pages/reportBuilder/components/IngredientSectionFull.test.tsx
+src/tests/unit/pages/reportBuilder/components/ReportBuilderShell.test.tsx
 src/tests/unit/pages/reportBuilder/components/SimulationCanvas.test.tsx
 src/tests/unit/pages/reportBuilder/components/chips/OptionChips.test.tsx
 src/tests/unit/pages/reportBuilder/hooks/useModifyReportSubmission.test.tsx
@@ -57,6 +60,7 @@ src/tests/unit/pages/reportBuilder/hooks/useReportSubmission.test.tsx
 src/tests/unit/pages/reportBuilder/hooks/useSimulationCanvas.test.tsx
 src/tests/unit/pages/reportBuilder/modals/HouseholdCreationModal.test.tsx
 src/tests/unit/pages/reportBuilder/modals/PolicyCreationModal.test.tsx
+src/tests/unit/pages/reportBuilder/modals/PopulationBrowseModal.test.tsx
 src/tests/unit/pages/reportBuilder/modals/policy/PolicyDetailsDrawer.test.tsx
 src/tests/unit/pages/reportBuilder/modals/policyCreation/ChangesCard.test.tsx
 src/tests/unit/pages/reportBuilder/useReportSPMSelectionError.test.tsx
@@ -76,4 +80,5 @@ src/tests/unit/utils/householdHead.test.ts
 src/tests/unit/utils/householdTableData.test.ts
 src/tests/unit/utils/householdValues.test.ts
 src/tests/unit/utils/householdVariationAxes.test.ts
+src/tests/unit/utils/ingredientAvailability.test.ts
 src/tests/unit/utils/reproducibilityCode.test.ts

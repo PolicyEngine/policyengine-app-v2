@@ -3,31 +3,22 @@
 ## Fable final findings — 2026-09-09
 
 ### State
-- Active authorized app-only follow-up for PR #1192; starting head `8a94c03b81117eeedde2fb9325c6f860496789af`, unchanged base `2e38710033e846461217291328a3748d1cd45de7`.
-- Current standing orders supersede historical no-commit instructions below: commit each coherent step, push verified changes to `max/canonical-spm-household-reports-20260909`, and maintain this committed record.
-- Preserve reports, fixtures, R3 immutable year recovery, original household/policy dates, and all 18 notebook generation-source hashes. No browser, population calculation work, deployment, merge, sibling edits, or forbidden log access.
+- All three final findings implemented and verified for PR #1192. Starting head `8a94c03b81117eeedde2fb9325c6f860496789af`; unchanged base `2e38710033e846461217291328a3748d1cd45de7`.
+- Verified implementation commit `d9ee7aab4e2af4793e58de09647eaf25ca67ba14`; exact app source tree and test/log hashes are in `rollout/app-fable-fixes/validation.json`.
+- Current standing orders supersede historical no-commit instructions below: each coherent step committed, final publication targets `max/canonical-spm-household-reports-20260909`.
 
 ### Done
-- Read the complete Fable review at `20260909-171303-pr-9fbed02a/rounds/001-2576d7d9a00c/peer-output.md`, repository/app/test guidance and visual standards.
-- Confirmed clean tracked source at the requested head; existing untracked handoff reports are preserved.
-- Attempted remote fetch before editing; sandbox DNS could not resolve github.com. Connector source verification and final push remain pending.
-- GitHub connector verified PR #1192 open/draft with exact requested head/base/branch; initial PR metadata saved for final body verification.
-- Checked all 18 notebook generation-source hashes: exact match. Recorded source/review/receipt/handoff SHA-256 binding and the historical 79-suite affected list.
-- Located the original notebook receipt at `/Users/maxghenis/spm-rebuild-20260908/rollout/app-installed-notebook-qualification/source-receipt.json`.
-
-- Completed hydration fix: terminal source/country/empty-simulation errors, error-first page rendering, immediate stale-state hiding, and immutable snapshot ownership for delayed setters after reopening.
-- Hydration regression-first evidence: 13 failures initially and two further stale-owner failures; final 26 tests / 4 suites pass, scoped ESLint/Prettier and diff checks pass. Evidence: `rollout/app-fable-fixes/hydration-*.txt`.
-
-- Completed mixed-population fix: shared preflight rejects both mixed directions, dual selections and stale declared types before household/simulation writes; readiness and accessible swap/select UI provide correction while preserving independent same-type inputs.
-- Mixed-population regression-first evidence: 8 write-boundary failures and 6 readiness/UI failures reproduced; final 60 tests / 8 suites pass with format/lint clean. Tests include actual hydrated state, manual state and stale readiness across create/replace/save-as-new.
-
-- Completed variation/MTR fix: shared typed API parser handles real HTTP 400 errors and HTTP 200 compatibility envelopes for both point and variation calls. Corrective codes set retryable:false; both pages display usable errors immediately, including while the sibling request is pending.
-- Variation regression-first evidence: 32 initial failures plus 4 pending-sibling failures; final 41 focused tests / 2 suites and 105 affected tests / 9 suites pass, format/lint clean. Exact API source binding and commands are recorded in `rollout/app-fable-fixes/VARIATION-ERRORS.md`.
-- Both production builds pass; combined 84-suite tests, forced workspace typechecks and final scoped formatting/lint are running.
+- Read the full Fable review, app/repository/test guidance, and design standards; attempted fetch before editing. Shell fetch failed DNS, while GitHub connector verified exact open/draft PR head/base/branch.
+- Committed terminal hydration errors, immediate old-state hiding and immutable snapshot ownership; 13 original red failures plus two recovered-owner failures, then 26 focused tests / 4 suites passed.
+- Committed mixed-population preflight before household/simulation writes plus correction/selection UI. Both directions across create/replace/save-as-new, actual hydrated state, stale readiness, ambiguous manual state and independent households/policies are covered; 14 red failures, then 60 tests / 8 suites passed.
+- Committed shared typed HTTP 400 and compatible HTTP 200 error parsing for point/variation; deterministic SPM retries stop, corrective errors appear while a sibling is pending. 32 original red failures plus four pending-sibling failures, then 105 affected tests / 9 suites passed. Exact read-only API source SHA-256 binding is recorded.
+- Final combined regression run: **934 tests / 84 suites passed** (36.15s), covering the prior 79-suite R3 set and five added affected suites. All three forced workspace typechecks, both production builds, scoped Prettier/ESLint on all 29 changed TypeScript files, and diff checks passed.
+- All **18/18 notebook generation-source hashes** match the original qualification receipt; all five original untracked handoff reports remain byte-for-byte intact. No generator/numeric, fixture expected-value, dependency or global chrome changes.
+- No browser, live population calculation, expensive axes/notebook recalculation, deployment, merge, sibling edits, or forbidden-log access. Independent cross-review found no remaining material source issue.
 
 ### Next
-- Run affected R3 regressions, typechecks, production builds, scoped format/lint, and notebook-source hash comparison.
-- Commit/push verified changes, verify PR source and body, and write `rollout/app-fable-fixes/FINAL-REPORT.md`. Root retains Fable gate recording and live verification.
+- Publish verified commits, verify remote/PR head and PR body, and commit final `rollout/app-fable-fixes/FINAL-REPORT.md`.
+- Root retains Fable gate recording (dispatcher BrokenPipeError was not bypassed), live service/published-package verification and rollout decisions.
 
 ## Follow-up review R3 — 2026-09-09
 

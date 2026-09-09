@@ -1,0 +1,86 @@
+{
+  "implementation_commit": "d9ee7aab4e2af4793e58de09647eaf25ca67ba14",
+  "implementation_app_src_tree": "97349af472b9a8693cbb7d87c7a2d7921f66b7a1",
+  "tests": {
+    "suites": 84,
+    "passed": 934,
+    "duration_seconds": 36.15,
+    "path_list": "affected-tests.txt",
+    "run_receipt": "test-run.json"
+  },
+  "typecheck": {
+    "command": "bun run typecheck --force",
+    "successful_workspaces": 3,
+    "cached": 0
+  },
+  "builds": [
+    {
+      "cwd": "app",
+      "command": "bun run build:calculator",
+      "exit_code": 0
+    },
+    {
+      "cwd": "calculator-app",
+      "command": "bun run build",
+      "exit_code": 0
+    }
+  ],
+  "style": {
+    "files": 29,
+    "file_list": "changed-typescript.txt",
+    "prettier": "pass",
+    "eslint_max_warnings_0": "pass"
+  },
+  "notebook_hashes": {
+    "app/src/utils/reproducibilityCode.ts": true,
+    "app/src/pages/report-output/HouseholdReportOutput.tsx": true,
+    "app/src/pages/report-output/reproduce-in-python/HouseholdReproducibility.tsx": true,
+    "app/src/models/Household.ts": true,
+    "app/src/models/BaseModel.ts": true,
+    "app/src/constants.ts": true,
+    "app/src/utils/householdVariationAxes.ts": true,
+    "app/tsconfig.json": true,
+    "bun.lock": true,
+    "app/src/models/household/schema.ts": true,
+    "app/src/models/household/pythonPackageCodec.ts": true,
+    "app/src/models/household/appTypes.ts": true,
+    "app/src/models/household/fromUSDraft.ts": true,
+    "app/src/models/household/utils.ts": true,
+    "app/src/models/household/v1Types.ts": true,
+    "app/src/models/household/pythonPackageTypes.ts": true,
+    "app/src/models/household/namedCodecHelpers.ts": true,
+    "app/src/models/household/appCodec.ts": true
+  },
+  "preserved_handoffs_match": true,
+  "logs": {
+    "affected_tests": {
+      "path": "/private/tmp/app-fable-affected-tests.log",
+      "sha256": "7994e3f77ea125b7cc70bbb2194b0d298da096303264896139f6d4835ce545e5"
+    },
+    "typecheck": {
+      "path": "/private/tmp/app-fable-typecheck.log",
+      "sha256": "68d3bcb0ecab3fd3ae88486262f0f88ec71adff4f345c4d9f682b5107c0bc0c2"
+    },
+    "vite_build": {
+      "path": "/private/tmp/app-fable-vite-build.log",
+      "sha256": "d917bb0ae1661246ad364a82b67b21b66ad7c8646fc9509e623253c06496d7c1"
+    },
+    "next_build": {
+      "path": "/private/tmp/app-fable-next-build.log",
+      "sha256": "5366bf22aca48eb7d4682638ff8f05807ac170d3ceaed45abbb846a5f880af6b"
+    },
+    "prettier": {
+      "path": "/private/tmp/app-fable-prettier.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    "eslint": {
+      "path": "/private/tmp/app-fable-eslint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "limitations": [
+    "Vite existing chunk-size and mixed import warnings; Turbo cache-write permission warnings, compiler tasks all successful.",
+    "No live services, browser, notebook/axes recalculation, deployment, merge or sibling edits.",
+    "Notebook qualification reused by exact 18 source hashes; prior numeric qualification is not a new calculation result."
+  ]
+}
