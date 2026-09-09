@@ -189,13 +189,13 @@ export default function HouseholdOverview({
   let heroSubtext: string;
 
   if (!isComparisonMode) {
-    heroLabel = 'Your Net Income';
+    heroLabel = 'Your net income';
     heroSubtext = 'Total household income after taxes and benefits';
   } else if (comparison.direction === 'no-change') {
-    heroLabel = 'Net Income Change';
+    heroLabel = 'Net income change';
     heroSubtext = `No change under "${reformLabel}" compared to "${baselineLabel}"`;
   } else {
-    heroLabel = 'Net Income Change';
+    heroLabel = 'Net income change';
     const direction = comparison.direction === 'increase' ? 'increase' : 'decrease';
     heroSubtext = `${direction.charAt(0).toUpperCase() + direction.slice(1)} under "${reformLabel}" compared to "${baselineLabel}"`;
   }

@@ -128,7 +128,7 @@ export function useSaveSharedReport() {
     // Use the userReportId from shareData for idempotent save
     const reportLabel =
       shareData.userReport.label ??
-      `Saved Report - ${new Date().toLocaleDateString('en-US', {
+      `Saved report - ${new Date().toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',

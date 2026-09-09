@@ -176,14 +176,13 @@ export const getFieldLabel = (fieldName: string) => {
     state_name: 'State',
     region: 'Region',
     brma: 'Broad Rental Market Area',
-    local_authority: 'Local Authority',
+    local_authority: 'Local authority',
     age: 'Age',
-    employment_income: 'Employment Income',
+    employment_income: 'Employment income',
   };
 
-  return (
-    labelMap[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
-  );
+  const fallbackLabel = fieldName.replace(/_/g, ' ');
+  return labelMap[fieldName] || fallbackLabel.charAt(0).toUpperCase() + fallbackLabel.slice(1);
 };
 
 /**

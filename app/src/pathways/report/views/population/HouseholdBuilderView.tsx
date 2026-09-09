@@ -125,7 +125,7 @@ export default function HouseholdBuilderView({
         title="Create household"
         content={
           <Stack align="center" gap="md" className="tw:p-xl">
-            <p className="tw:text-red-600 tw:font-semibold">Configuration Error</p>
+            <p className="tw:text-red-600 tw:font-semibold">Configuration error</p>
             <p className="tw:text-gray-500 tw:text-center">
               No report year available. Please return to the report creation page and select a year
               before creating a household.
@@ -193,7 +193,7 @@ export default function HouseholdBuilderView({
         title="Create household"
         content={
           <Stack align="center" gap="md" className="tw:p-xl">
-            <p className="tw:text-red-600 tw:font-semibold">Failed to Load Required Data</p>
+            <p className="tw:text-red-600 tw:font-semibold">Failed to load required data</p>
             <p className="tw:text-gray-500 tw:text-center">
               Unable to load household configuration data. Please refresh the page and try again.
             </p>

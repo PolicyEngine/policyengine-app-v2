@@ -313,7 +313,7 @@ export default function ClaudePluginsPage() {
     : 'What is the budgetary impact of doubling the standard deduction?';
 
   return (
-    <StaticPageLayout title="Claude Plugins">
+    <StaticPageLayout title="Claude plugins">
       {/* ━━━ HERO ━━━ */}
       <div
         style={{

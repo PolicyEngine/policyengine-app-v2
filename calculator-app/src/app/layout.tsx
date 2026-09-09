@@ -7,7 +7,7 @@ import "./globals.css";
 const GA_MEASUREMENT_ID = "G-2YHG89FY0N";
 
 export const metadata: Metadata = {
-  title: "PolicyEngine Calculator",
+  title: "PolicyEngine calculator",
   description:
     "Calculate your taxes and benefits, create policy simulations, and analyze reform impacts.",
   icons: {

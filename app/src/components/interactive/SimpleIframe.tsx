@@ -10,7 +10,7 @@ import type { IframeContentProps } from '@/types/apps';
 
 export default function SimpleIframe({
   url,
-  title = 'Interactive App',
+  title = 'Interactive app',
   height,
   width = '100%',
 }: IframeContentProps) {

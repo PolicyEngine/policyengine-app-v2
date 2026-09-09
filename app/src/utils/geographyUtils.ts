@@ -69,7 +69,7 @@ const countryLabels: Record<string, string> = {
 
 export function getCountryLabel(countryCode: string): string {
   if (!(countryCode in countryLabels)) {
-    return 'Unknown Country';
+    return 'Unknown country';
   }
   return countryLabels[countryCode];
 }

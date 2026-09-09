@@ -25,7 +25,7 @@ const colorTokens = [
   {
     name: "primary.500",
     value: colors.primary[500],
-    label: "Primary (Teal)",
+    label: "Primary (teal)",
   },
   { name: "primary.600", value: colors.primary[600], label: "Primary dark" },
   {
