@@ -15,6 +15,9 @@
 - Checked all 18 notebook generation-source hashes: exact match. Recorded source/review/receipt/handoff SHA-256 binding and the historical 79-suite affected list.
 - Located the original notebook receipt at `/Users/maxghenis/spm-rebuild-20260908/rollout/app-installed-notebook-qualification/source-receipt.json`.
 
+- Completed hydration fix: terminal source/country/empty-simulation errors, error-first page rendering, immediate stale-state hiding, and immutable snapshot ownership for delayed setters after reopening.
+- Hydration regression-first evidence: 13 failures initially and two further stale-owner failures; final 26 tests / 4 suites pass, scoped ESLint/Prettier and diff checks pass. Evidence: `rollout/app-fable-fixes/hydration-*.txt`.
+
 ### Next
 - Add regression-first coverage and fixes for mixed populations before writes, typed variation/MTR API errors, and terminal hydration failures with source isolation.
 - Run affected R3 regressions, typechecks, production builds, scoped format/lint, and notebook-source hash comparison.

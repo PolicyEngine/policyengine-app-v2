@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
@@ -49,13 +49,40 @@ export function useReportBuilderState(
     data.userReport?.countryId === countryId &&
     data.report?.countryId === countryId &&
     data.report?.id === data.userReport?.reportId;
-  const currentSnapshot = snapshot?.sourceKey === sourceKey && dataMatchesSource ? snapshot : null;
+  const error = useMemo(() => {
+    if (data.error || data.isLoading) {
+      return data.error;
+    }
+    if (!dataMatchesSource) {
+      return new Error(
+        'The loaded report does not match this report or country. Return to your reports and reopen it.'
+      );
+    }
+    if (data.simulations.length === 0) {
+      return new Error(
+        'This report has no simulations. Create a new report or reopen a report with simulations.'
+      );
+    }
+    return null;
+  }, [data.error, data.isLoading, dataMatchesSource, data.simulations.length]);
+  const currentSnapshot =
+    snapshot?.sourceKey === sourceKey && dataMatchesSource && !data.isLoading && !error
+      ? snapshot
+      : null;
   // Hide old state during the render of a source change, before effects run.
   const reportState = currentSnapshot?.reportState ?? null;
+  const originalState = currentSnapshot?.originalState ?? null;
   const setReportState = useCallback<UseReportBuilderStateReturn['setReportState']>(
     (nextState) => {
       setSnapshot((previous) => {
-        if (!previous || previous.sourceKey !== sourceKey) {
+        if (
+          !previous ||
+          previous.sourceKey !== sourceKey ||
+          previous.originalState !== originalState ||
+          data.isLoading ||
+          !dataMatchesSource ||
+          error
+        ) {
           return previous;
         }
         return {
@@ -65,13 +92,18 @@ export function useReportBuilderState(
         };
       });
     },
-    [sourceKey]
+    [sourceKey, originalState, data.isLoading, dataMatchesSource, error]
   );
 
   useEffect(() => {
+    if (snapshot && (snapshot.sourceKey !== sourceKey || error)) {
+      // Retire the previous draft so delayed setters cannot mutate or revive it.
+      setSnapshot(null);
+      return;
+    }
     if (
       !data.isLoading &&
-      !data.error &&
+      !error &&
       data.userReport &&
       data.report &&
       dataMatchesSource &&
@@ -98,7 +130,7 @@ export function useReportBuilderState(
     }
   }, [
     data.isLoading,
-    data.error,
+    error,
     data.userReport,
     data.report,
     data.simulations,
@@ -112,13 +144,14 @@ export function useReportBuilderState(
     reportState,
     sourceKey,
     dataMatchesSource,
+    snapshot,
   ]);
 
   return {
     reportState,
     setReportState,
-    originalState: currentSnapshot?.originalState ?? null,
-    isLoading: data.isLoading || (!data.error && reportState === null),
-    error: data.error,
+    originalState,
+    isLoading: !error && (data.isLoading || reportState === null),
+    error,
   };
 }

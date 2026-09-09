@@ -135,21 +135,21 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     isReportSubmissionBlocked,
   ]);
 
-  if (isLoading || !reportState) {
-    return (
-      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
-        <Stack gap="xl">
-          <Text>Loading report...</Text>
-        </Stack>
-      </Container>
-    );
-  }
-
   if (error) {
     return (
       <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
         <Stack gap="xl">
           <Text c="red">Error loading report: {error.message}</Text>
+        </Stack>
+      </Container>
+    );
+  }
+
+  if (isLoading || !reportState) {
+    return (
+      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+        <Stack gap="xl">
+          <Text>Loading report...</Text>
         </Stack>
       </Container>
     );

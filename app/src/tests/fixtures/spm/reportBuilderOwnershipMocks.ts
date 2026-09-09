@@ -78,3 +78,41 @@ export function ownershipHydrationData(source: string, countryId: 'us' | 'uk' = 
     error: null,
   };
 }
+
+export const OWNERSHIP_HYDRATION_ERRORS = {
+  source:
+    'The loaded report does not match this report or country. Return to your reports and reopen it.',
+  empty: 'This report has no simulations. Create a new report or reopen a report with simulations.',
+  fetch: 'The report could not be fetched',
+} as const;
+
+export const mismatchedOwnershipHydrationCases = [
+  {
+    name: 'another association',
+    update: (data: ReturnType<typeof ownershipHydrationData>) => ({
+      ...data,
+      userReport: { ...data.userReport, id: 'another-association' },
+    }),
+  },
+  {
+    name: 'an association in another country',
+    update: (data: ReturnType<typeof ownershipHydrationData>) => ({
+      ...data,
+      userReport: { ...data.userReport, countryId: 'uk' as const },
+    }),
+  },
+  {
+    name: 'a report in another country',
+    update: (data: ReturnType<typeof ownershipHydrationData>) => ({
+      ...data,
+      report: { ...data.report, countryId: 'uk' as const },
+    }),
+  },
+  {
+    name: 'a different base report',
+    update: (data: ReturnType<typeof ownershipHydrationData>) => ({
+      ...data,
+      report: { ...data.report, id: 'another-report' },
+    }),
+  },
+];

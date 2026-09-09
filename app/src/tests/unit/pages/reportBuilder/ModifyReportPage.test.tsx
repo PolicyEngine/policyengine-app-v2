@@ -4,7 +4,10 @@ import type { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredi
 import { Household } from '@/models/Household';
 import ModifyReportPage from '@/pages/reportBuilder/ModifyReportPage';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
-import { ownershipReportState } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
+import {
+  OWNERSHIP_HYDRATION_ERRORS,
+  ownershipReportState,
+} from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
 
 const mockUseAppLocation = vi.fn();
 const mockUseReportBuilderState = vi.fn();
@@ -96,6 +99,25 @@ describe('ModifyReportPage', () => {
     expect(shellProps.backPath).toBe('/us/report-output/sur-123');
     expect(shellProps.backLabel).toBe('Test report');
   });
+
+  test.each(Object.values(OWNERSHIP_HYDRATION_ERRORS))(
+    'given a terminal loading error then displays %s without rendering editable report actions',
+    (message) => {
+      mockUseReportBuilderState.mockReturnValue({
+        reportState: null,
+        setReportState: vi.fn(),
+        originalState: null,
+        isLoading: false,
+        error: new Error(message),
+      });
+
+      render(<ModifyReportPage userReportId="sur-123" />);
+
+      expect(screen.getByText(`Error loading report: ${message}`)).toBeInTheDocument();
+      expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
+      expect(mockReportBuilderShell).not.toHaveBeenCalled();
+    }
+  );
 
   test('given independent household edits then cancel restores callable household models and each original population', () => {
     const original = ownershipReportState();
