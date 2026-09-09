@@ -17,7 +17,7 @@ $ vitest run src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test
    × useReportBuilderState source ownership > given an empty refresh after editing then immediately hides old state and rejects stale setters before recovery 7ms
      → expected "spy" to not be called at all, but actually been called 1 times
 
-Received: 
+Received:
 
   1st spy call:
 
@@ -183,7 +183,7 @@ Number of calls: 1
    × useReportBuilderState source ownership > given a source switch still loading then rejects stale setters and reopening starts from saved inputs 3ms
      → expected "spy" to not be called at all, but actually been called 1 times
 
-Received: 
+Received:
 
   1st spy call:
 
@@ -351,7 +351,7 @@ Number of calls: 1
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given an empty refresh after editing then immediately hides old state and rejects stale setters before recovery
 AssertionError: expected "spy" to not be called at all, but actually been called 1 times
 
-Received: 
+Received:
 
   1st spy call:
 
@@ -526,7 +526,7 @@ Number of calls: 1
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given a source switch still loading then rejects stale setters and reopening starts from saved inputs
 AssertionError: expected "spy" to not be called at all, but actually been called 1 times
 
-Received: 
+Received:
 
   1st spy call:
 

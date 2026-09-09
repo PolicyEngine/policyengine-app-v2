@@ -28,7 +28,7 @@ $ vitest run src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test
    × useReportBuilderState source ownership > given a source switch still loading then rejects stale setters and reopening starts from saved inputs 3ms
      → expected "spy" to not be called at all, but actually been called 1 times
 
-Received: 
+Received:
 
   1st spy call:
 
@@ -296,7 +296,7 @@ Ignored nodes: comments, script, style
  ❯ ../node_modules/@testing-library/dom/dist/query-helpers.js:95:19
  ❯ src/tests/unit/pages/reportBuilder/ModifyReportPage.test.tsx:116:21
     114|       render(<ModifyReportPage userReportId="sur-123" />);
-    115| 
+    115|
     116|       expect(screen.getByText(`Error loading report: ${message}`)).toB…
        |                     ^
     117|       expect(screen.queryByText('Loading report...')).not.toBeInTheDoc…
@@ -332,7 +332,7 @@ Ignored nodes: comments, script, style
  ❯ ../node_modules/@testing-library/dom/dist/query-helpers.js:95:19
  ❯ src/tests/unit/pages/reportBuilder/ModifyReportPage.test.tsx:116:21
     114|       render(<ModifyReportPage userReportId="sur-123" />);
-    115| 
+    115|
     116|       expect(screen.getByText(`Error loading report: ${message}`)).toB…
        |                     ^
     117|       expect(screen.queryByText('Loading report...')).not.toBeInTheDoc…
@@ -368,7 +368,7 @@ Ignored nodes: comments, script, style
  ❯ ../node_modules/@testing-library/dom/dist/query-helpers.js:95:19
  ❯ src/tests/unit/pages/reportBuilder/ModifyReportPage.test.tsx:116:21
     114|       render(<ModifyReportPage userReportId="sur-123" />);
-    115| 
+    115|
     116|       expect(screen.getByText(`Error loading report: ${message}`)).toB…
        |                     ^
     117|       expect(screen.queryByText('Loading report...')).not.toBeInTheDoc…
@@ -382,15 +382,15 @@ Ignored nodes: comments, script, style
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given loaded data for 'a different base report' then reports a terminal error without an editable snapshot
 AssertionError: expected undefined to be 'The loaded report does not match this…' // Object.is equality
 
-- Expected: 
+- Expected:
 "The loaded report does not match this report or country. Return to your reports and reopen it."
 
-+ Received: 
++ Received:
 undefined
 
  ❯ src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx:138:45
     136|       const { result } = renderHook(() => useReportBuilderState('first…
-    137| 
+    137|
     138|       expect(result.current.error?.message).toBe(OWNERSHIP_HYDRATION_E…
        |                                             ^
     139|       expect(result.current.isLoading).toBe(false);
@@ -402,15 +402,15 @@ undefined
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given a loaded shared report with no simulations then reports a terminal error
 AssertionError: expected undefined to be 'This report has no simulations. Creat…' // Object.is equality
 
-- Expected: 
+- Expected:
 "This report has no simulations. Create a new report or reopen a report with simulations."
 
-+ Received: 
++ Received:
 undefined
 
  ❯ src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx:155:45
     153|       );
-    154| 
+    154|
     155|       expect(result.current.error?.message).toBe(OWNERSHIP_HYDRATION_E…
        |                                             ^
     156|       expect(result.current.isLoading).toBe(false);
@@ -421,15 +421,15 @@ undefined
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given a shared association that does not round-trip then shows an error after loading completes
 AssertionError: expected undefined to be 'The loaded report does not match this…' // Object.is equality
 
-- Expected: 
+- Expected:
 "The loaded report does not match this report or country. Return to your reports and reopen it."
 
-+ Received: 
++ Received:
 undefined
 
  ❯ src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx:172:43
     170|     rerender();
-    171| 
+    171|
     172|     expect(result.current.error?.message).toBe(OWNERSHIP_HYDRATION_ERR…
        |                                           ^
     173|     expect(result.current.isLoading).toBe(false);
@@ -440,10 +440,10 @@ undefined
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given an empty refresh after editing then immediately hides old state and rejects stale setters before recovery
 AssertionError: expected { id: 'first-association', …(3) } to be null
 
-- Expected: 
+- Expected:
 null
 
-+ Received: 
++ Received:
 {
   "id": "first-association",
   "label": null,
@@ -601,7 +601,7 @@ null
 
  ❯ src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx:191:62
     189|     rerender();
-    190| 
+    190|
     191|     expect(renderedStates[rendersBeforeRefresh].reportState).toBeNull(…
        |                                                              ^
     192|     expect(result.current.isLoading).toBe(false);
@@ -612,10 +612,10 @@ null
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given a terminal fetch error after editing then preserves the error and removes the editable draft
 AssertionError: expected { id: 'first-association', …(3) } to be null
 
-- Expected: 
+- Expected:
 null
 
-+ Received: 
++ Received:
 {
   "id": "first-association",
   "label": null,
@@ -784,7 +784,7 @@ null
  FAIL  src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx > useReportBuilderState source ownership > given a source switch still loading then rejects stale setters and reopening starts from saved inputs
 AssertionError: expected "spy" to not be called at all, but actually been called 1 times
 
-Received: 
+Received:
 
   1st spy call:
 
@@ -950,7 +950,7 @@ Number of calls: 1
 
  ❯ src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test.tsx:234:29
     232|     act(() => staleSetter(staleUpdate));
-    233| 
+    233|
     234|     expect(staleUpdate).not.toHaveBeenCalled();
        |                             ^
     235|     expect(result.current.reportState).toBeNull();

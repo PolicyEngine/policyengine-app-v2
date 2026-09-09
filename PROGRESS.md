@@ -17,6 +17,7 @@
 - No browser, live population calculation, expensive axes/notebook recalculation, deployment, merge, sibling edits, or forbidden-log access. Independent cross-review found no remaining material source issue.
 
 - Shell push failed DNS. Connector tree upload was rejected: “MCP tool call requires approval, but approval policy is never.” No remote mutation occurred. Final read verified PR still open/draft at starting head with its unchanged body.
+- Final whole-follow-up diff audit found only trailing whitespace in newly captured hydration logs; normalized that whitespace without changing evidence or source. Full diff check now passes.
 - Wrote `rollout/app-fable-fixes/FINAL-REPORT.md`, concise `STATUS.md`, prepared `PR-BODY.md` and exact publication blocker record. Local final artifacts are committed; code tree remains the tested tree.
 
 ### Next

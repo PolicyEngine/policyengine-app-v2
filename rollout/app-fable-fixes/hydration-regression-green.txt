@@ -11,4 +11,3 @@ $ vitest run src/tests/unit/pages/reportBuilder/hooks/useReportBuilderState.test
       Tests  26 passed (26)
    Start at  17:32:21
    Duration  1.08s (transform 344ms, setup 174ms, collect 961ms, tests 103ms, environment 705ms, prepare 156ms)
-
