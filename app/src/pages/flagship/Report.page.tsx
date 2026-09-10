@@ -10,11 +10,7 @@ import {
 import EstimateValidation from '@/components/flagship/EstimateValidation';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
-import {
-  ReportComputing,
-  ReportUnresolvable,
-  ReportWaiting,
-} from '@/components/flagship/ReportComputing';
+import { ReportComputingScreen, ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import {
   ModelTrackRecordSection,
   useModelTrackRecord,
@@ -31,6 +27,7 @@ import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
+import { reportStages } from '@/libs/flagship/reportStages';
 import { readReportMeta } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import ErrorPage from '@/pages/report-output/ErrorPage';
@@ -41,7 +38,6 @@ import SocietyWideOverview, {
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
-import { getDisplayStatus } from '@/utils/statusMapping';
 
 const SECTIONS = [
   { id: 'policy', label: 'Policy overview' },
@@ -91,8 +87,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // Provenance: the local stash from the run, else rebuilt from the reform
   // policy so a shared link validates like the original.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
+  // Without metadata the rebuilt provisions would show raw paths and no
+  // baseline, so they count as still loading until it arrives.
   const meta =
-    readReportMeta(userReportId) ?? provenanceFromPolicy(reformPolicy, parameters, report?.label);
+    readReportMeta(userReportId) ??
+    (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   const {
@@ -166,18 +165,21 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  const computingState = calcStatus.isError ? (
-    <ErrorPage error={new Error(calcStatus.error?.message || 'Calculation failed')} />
-  ) : unresolvable ? (
-    <ReportUnresolvable />
-  ) : (
-    <ReportComputing
-      message={progressMessage || `${getDisplayStatus('pending')} society-wide impacts…`}
-      progress={hasCalcStatus ? displayProgress : undefined}
-    />
+  const title = meta?.title || report?.label || 'Impact report';
+  const baselineLine = `Baseline: current law · ${report?.year ?? '2026'} · Population: ${
+    countryId === 'uk' ? 'United Kingdom' : 'United States'
+  } (nationwide)`;
+
+  // The validation cards render in both states: they are ready before the
+  // run finishes and are worth reading while it runs.
+  const dataChecks = (
+    <>
+      <CalibrationMatchSection matches={calibration} pin={pin} />
+      <ModelTrackRecordSection trackRecord={trackRecord} />
+    </>
   );
 
-  return (
+  const layout = (main: React.ReactNode) => (
     <div style={{ maxWidth: 1440, margin: '0 auto' }}>
       <div
         style={{
@@ -187,182 +189,231 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           alignItems: 'flex-start',
         }}
       >
-        <div style={{ flex: '1 1 640px', minWidth: 0 }}>
-          <Stack style={{ maxWidth: 1080, margin: '0 auto', gap: spacing.xl }}>
-            <Stack style={{ gap: spacing.xs }}>
-              <Stack
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'baseline',
-                  gap: spacing.md,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <Title order={1} style={{ margin: 0 }}>
-                  {meta?.title || report?.label || 'Impact report'}
-                </Title>
-                {meta?.sourceNote && (
-                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                    {meta.sourceNote}
-                  </Text>
-                )}
-              </Stack>
-            </Stack>
-
-            <div
-              style={{
-                position: 'sticky',
-                top: -24,
-                zIndex: 20,
-                display: 'flex',
-                gap: spacing.xs,
-                flexWrap: 'wrap',
-                background: colors.gray[50],
-                padding: `${spacing.sm} 0`,
-                borderBottom: `1px solid ${colors.border.light}`,
-              }}
-            >
-              {SECTIONS.map((section) => (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => scrollTo(section.id)}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    padding: `${spacing.xs} ${spacing.md}`,
-                    borderRadius: 999,
-                    fontSize: typography.fontSize.sm,
-                    fontFamily: typography.fontFamily.primary,
-                    color: colors.text.secondary,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {section.label}
-                </button>
-              ))}
-            </div>
-
-            <Stack style={{ gap: spacing.md }}>
-              <SectionHeading id="policy" title="Policy overview" />
-              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                Baseline: current law · {report?.year ?? '2026'} · Population:{' '}
-                {countryId === 'uk' ? 'United Kingdom' : 'United States'} (nationwide)
-              </Text>
-              {meta && meta.provisions.length > 0 ? (
-                <ProvisionList provisions={meta.provisions} />
-              ) : (
-                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                  Provision detail is unavailable for this report.
-                </Text>
-              )}
-            </Stack>
-
-            <Stack style={{ gap: spacing.md }}>
-              <SectionHeading id="economy" title="Economic impacts" />
-              {output ? (
-                <SocietyWideOverview output={output} showCongressionalCard={false} />
-              ) : (
-                computingState
-              )}
-            </Stack>
-
-            <Stack style={{ gap: spacing.md }}>
-              <SectionHeading id="districts" title="Districts" />
-              {!output && !unresolvable && <ReportWaiting what="District impacts" />}
-              {output && showUSDistricts && (
-                <CongressionalDistrictDataProvider
-                  reformPolicyId={reformPolicyId ?? ''}
-                  baselinePolicyId={baselinePolicyId ?? ''}
-                  year={report?.year ?? ''}
-                  region={region}
-                >
-                  <StandaloneCongressionalDistrictCard output={output} />
-                </CongressionalDistrictDataProvider>
-              )}
-              {output && !showUSDistricts && countryId === 'uk' && (
-                <ConstituencySubPage output={output} />
-              )}
-              {output && !showUSDistricts && countryId !== 'uk' && (
-                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                  District-level impacts are not available for this report's scope.
-                </Text>
-              )}
-            </Stack>
-
-            <Stack style={{ gap: spacing.md }}>
-              <SectionHeading id="household" title="Household" />
-              <Stack
-                style={{
-                  gap: spacing.md,
-                  padding: spacing.lg,
-                  border: `1px dashed ${colors.border.light}`,
-                  borderRadius: 12,
-                  alignItems: 'flex-start',
-                }}
-              >
-                <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-                  <IconHome size={18} color={colors.text.secondary} />
-                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-                    No household attached to this report yet.
-                  </Text>
-                </Stack>
-                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                  See how this reform changes taxes and benefits for a specific family — build a
-                  household and it will appear here alongside the nationwide results.
-                </Text>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => nav.push(`/${countryId}/households`)}
-                >
-                  <IconPlus size={14} />
-                  Add a household
-                </Button>
-              </Stack>
-            </Stack>
-
-            <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
-              <SectionHeading id="validation" title="Validation" />
-              <CalibrationMatchSection matches={calibration} pin={pin} />
-              <ModelTrackRecordSection trackRecord={trackRecord} />
-              <Stack
-                style={{
-                  gap: spacing.sm,
-                  padding: spacing.lg,
-                  border: `1px solid ${colors.border.light}`,
-                  borderRadius: 12,
-                  alignItems: 'stretch',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: typography.fontSize.sm,
-                    fontWeight: typography.fontWeight.medium,
-                    color: colors.text.primary,
-                  }}
-                >
-                  External checks for this reform
-                </Text>
-                <EstimateValidation
-                  request={{
-                    countryId,
-                    label: meta?.title || report?.label || 'Drafted reform',
-                    provisions: meta?.provisions ?? [],
-                    peEstimate: output?.budget?.budgetary_impact,
-                    year: report?.year,
-                  }}
-                />
-              </Stack>
-            </Stack>
-          </Stack>
-        </div>
+        <div style={{ flex: '1 1 640px', minWidth: 0 }}>{main}</div>
         <ReportAdjustPanel
-          title={meta?.title || report?.label || 'Impact report'}
+          title={title}
           sourceNote={meta?.sourceNote || ''}
           provisions={meta?.provisions ?? []}
         />
       </div>
     </div>
+  );
+
+  if (!output) {
+    if (unresolvable) {
+      return layout(
+        <Stack style={{ maxWidth: 1080, margin: '0 auto', gap: spacing.xl }}>
+          <Title order={1} style={{ margin: 0 }}>
+            {title}
+          </Title>
+          <ReportUnresolvable />
+        </Stack>
+      );
+    }
+    if (calcStatus.isError) {
+      return layout(
+        <Stack style={{ maxWidth: 1080, margin: '0 auto', gap: spacing.xl }}>
+          <Title order={1} style={{ margin: 0 }}>
+            {title}
+          </Title>
+          <ErrorPage error={new Error(calcStatus.error?.message || 'Calculation failed')} />
+        </Stack>
+      );
+    }
+    const validationResolved = calibration !== undefined && trackRecord.resolved;
+    const stages = reportStages({
+      reportLoaded: !!report && allSimulationsLoaded(report, simulations),
+      provisionsLoaded: meta !== null,
+      provisionCount: meta?.provisions.length ?? 0,
+      calc: {
+        status: calcStatus.status,
+        message: progressMessage || calcStatus.message,
+        queuePosition: calcStatus.queuePosition,
+        progress: hasCalcStatus ? displayProgress : undefined,
+      },
+      validationResolved,
+      calibratedCount: calibration?.matches.length,
+      scorecardPrograms: trackRecord.resolved ? trackRecord.programs : undefined,
+    });
+    const hasDataChecks =
+      (calibration && calibration.matches.length > 0) ||
+      (trackRecord.rows !== undefined && trackRecord.programs.length > 0);
+    return layout(
+      <ReportComputingScreen
+        title={title}
+        sourceNote={meta?.sourceNote}
+        baselineLine={baselineLine}
+        provisions={meta?.provisions ?? null}
+        stages={stages}
+        progress={hasCalcStatus ? displayProgress : undefined}
+      >
+        {hasDataChecks && (
+          <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
+            <SectionHeading id="validation" title="Validation" />
+            {dataChecks}
+          </Stack>
+        )}
+      </ReportComputingScreen>
+    );
+  }
+
+  return layout(
+    <Stack style={{ maxWidth: 1080, margin: '0 auto', gap: spacing.xl }}>
+      <Stack style={{ gap: spacing.xs }}>
+        <Stack
+          style={{
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            gap: spacing.md,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Title order={1} style={{ margin: 0 }}>
+            {title}
+          </Title>
+          {meta?.sourceNote && (
+            <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+              {meta.sourceNote}
+            </Text>
+          )}
+        </Stack>
+      </Stack>
+
+      <div
+        style={{
+          position: 'sticky',
+          top: -24,
+          zIndex: 20,
+          display: 'flex',
+          gap: spacing.xs,
+          flexWrap: 'wrap',
+          background: colors.gray[50],
+          padding: `${spacing.sm} 0`,
+          borderBottom: `1px solid ${colors.border.light}`,
+        }}
+      >
+        {SECTIONS.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            onClick={() => scrollTo(section.id)}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              padding: `${spacing.xs} ${spacing.md}`,
+              borderRadius: 999,
+              fontSize: typography.fontSize.sm,
+              fontFamily: typography.fontFamily.primary,
+              color: colors.text.secondary,
+              cursor: 'pointer',
+            }}
+          >
+            {section.label}
+          </button>
+        ))}
+      </div>
+
+      <Stack style={{ gap: spacing.md }}>
+        <SectionHeading id="policy" title="Policy overview" />
+        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+          {baselineLine}
+        </Text>
+        {meta && meta.provisions.length > 0 ? (
+          <ProvisionList provisions={meta.provisions} />
+        ) : (
+          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+            Provision detail is unavailable for this report.
+          </Text>
+        )}
+      </Stack>
+
+      <Stack style={{ gap: spacing.md }}>
+        <SectionHeading id="economy" title="Economic impacts" />
+        <SocietyWideOverview output={output} showCongressionalCard={false} />
+      </Stack>
+
+      <Stack style={{ gap: spacing.md }}>
+        <SectionHeading id="districts" title="Districts" />
+        {output && showUSDistricts && (
+          <CongressionalDistrictDataProvider
+            reformPolicyId={reformPolicyId ?? ''}
+            baselinePolicyId={baselinePolicyId ?? ''}
+            year={report?.year ?? ''}
+            region={region}
+          >
+            <StandaloneCongressionalDistrictCard output={output} />
+          </CongressionalDistrictDataProvider>
+        )}
+        {output && !showUSDistricts && countryId === 'uk' && (
+          <ConstituencySubPage output={output} />
+        )}
+        {output && !showUSDistricts && countryId !== 'uk' && (
+          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+            District-level impacts are not available for this report's scope.
+          </Text>
+        )}
+      </Stack>
+
+      <Stack style={{ gap: spacing.md }}>
+        <SectionHeading id="household" title="Household" />
+        <Stack
+          style={{
+            gap: spacing.md,
+            padding: spacing.lg,
+            border: `1px dashed ${colors.border.light}`,
+            borderRadius: 12,
+            alignItems: 'flex-start',
+          }}
+        >
+          <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+            <IconHome size={18} color={colors.text.secondary} />
+            <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
+              No household attached to this report yet.
+            </Text>
+          </Stack>
+          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+            See how this reform changes taxes and benefits for a specific family — build a household
+            and it will appear here alongside the nationwide results.
+          </Text>
+          <Button size="sm" variant="outline" onClick={() => nav.push(`/${countryId}/households`)}>
+            <IconPlus size={14} />
+            Add a household
+          </Button>
+        </Stack>
+      </Stack>
+
+      <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
+        <SectionHeading id="validation" title="Validation" />
+        {dataChecks}
+        <Stack
+          style={{
+            gap: spacing.sm,
+            padding: spacing.lg,
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: 12,
+            alignItems: 'stretch',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.medium,
+              color: colors.text.primary,
+            }}
+          >
+            External checks for this reform
+          </Text>
+          <EstimateValidation
+            request={{
+              countryId,
+              label: meta?.title || report?.label || 'Drafted reform',
+              provisions: meta?.provisions ?? [],
+              peEstimate: output.budget?.budgetary_impact,
+              year: report?.year,
+            }}
+          />
+        </Stack>
+      </Stack>
+    </Stack>
   );
 }
