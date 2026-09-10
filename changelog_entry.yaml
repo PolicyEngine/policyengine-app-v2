@@ -15,3 +15,4 @@
 - Keep a flagship report's validation off the screen until the run has finished; the checks still start with the run so they are ready when it completes
 - Regenerate the traced dependency map at policyengine-us 1.824.8 so validation matches against the current model
 - Point the calibration dashboard links at the dashboard's renamed microcosm path; the old populace path now redirects to a 404
+- Say what a calibration row's distance from the reform means in words instead of counting hops

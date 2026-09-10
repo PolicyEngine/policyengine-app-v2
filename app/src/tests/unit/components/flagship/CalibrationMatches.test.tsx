@@ -48,7 +48,7 @@ describe('CalibrationMatchSection', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
 
     expect(screen.getByText('refundable ctc')).toBeInTheDocument();
-    expect(screen.getAllByText(/mechanism · 3 hops/i)).toHaveLength(2);
+    expect(screen.getAllByText(/mechanism · 3 formula steps from the parameter/i)).toHaveLength(2);
     expect(screen.getByText('4.0%')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' })).toHaveLength(2);
     expect(screen.getByText(/-6.0%/)).toBeInTheDocument();

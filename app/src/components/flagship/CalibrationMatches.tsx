@@ -25,6 +25,14 @@ const RING_LABELS: Record<CalibrationRing, string> = {
   downstream: 'Downstream',
 };
 
+/** The dependency depth in words: 1 is a formula that reads the parameter itself. */
+function describeDepth(depth: number): string {
+  if (depth <= 1) {
+    return 'reads the parameter directly';
+  }
+  return `${depth} formula steps from the parameter`;
+}
+
 /** Above this the fit is worth calling out; the diagnostics skill's escalation bar. */
 export const ATTENTION_ERROR = 0.25;
 
@@ -234,7 +242,12 @@ export function CalibrationMatchSection({
           <thead>
             <tr>
               <th style={headCellStyle}>Variable</th>
-              <th style={headCellStyle}>Reach</th>
+              <th
+                style={headCellStyle}
+                title="How far the variable sits from the changed parameter: whether its own formula reads the parameter, or how many formula steps separate them"
+              >
+                Relationship to the reform
+              </th>
               <th style={headCellStyle}>Targets</th>
               <th style={headCellStyle}>Mean error</th>
               <th style={headCellStyle}>Worst target</th>
@@ -245,7 +258,7 @@ export function CalibrationMatchSection({
               <tr key={match.variable}>
                 <td style={cellStyle}>{humanize(match.variable)}</td>
                 <td style={{ ...cellStyle, color: colors.text.secondary }}>
-                  {RING_LABELS[match.ring]} · {match.depth} {match.depth === 1 ? 'hop' : 'hops'}
+                  {RING_LABELS[match.ring]} · {describeDepth(match.depth)}
                 </td>
                 <td style={cellStyle}>
                   <DashboardLink
