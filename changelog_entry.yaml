@@ -16,4 +16,4 @@
 - Regenerate the traced dependency map at policyengine-us 1.824.8 so validation matches against the current model
 - Point the calibration dashboard links at the dashboard's renamed microcosm path; the old populace path now redirects to a 404
 - Say what a calibration row's distance from the reform means in words instead of counting hops
-- Use sentence case consistently across interface copy and enforce it with a deterministic source test
+- Use sentence case consistently across interface copy
