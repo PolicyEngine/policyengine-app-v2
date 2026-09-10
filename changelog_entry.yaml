@@ -12,5 +12,5 @@
 - Wait for every simulation to load before starting a report's calculation, so a report is never scored as current law against itself and stored as "no change"
 - Stop the report page logging "Query data cannot be undefined" on every fresh load
 - Show one loading view while a report computes: the reform it scores, the run's stages as they happen, and the data checks as they arrive
-- Show the data checks behind a society-wide report on the production report page: calibration of the variables the reform moves and the scorecard's track record for the programs it reaches
 - Keep a flagship report's validation off the screen until the run has finished; the checks still start with the run so they are ready when it completes
+- Regenerate the traced dependency map at policyengine-us 1.824.8 so validation matches against the current model

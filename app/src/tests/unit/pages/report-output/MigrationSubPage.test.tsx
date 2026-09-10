@@ -4,7 +4,6 @@ import MigrationSubPage, {
   canShowCongressionalDistrictImpactCard,
 } from '@/pages/report-output/MigrationSubPage';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
-import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 
@@ -19,12 +18,6 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
   CongressionalDistrictDataProvider: vi.fn(({ children }) => (
     <div data-testid="congressional-provider">{children}</div>
-  )),
-}));
-
-vi.mock('@/components/report/ReportValidationSection', () => ({
-  default: vi.fn(({ region, reformPolicy }: { region?: string; reformPolicy?: Policy }) => (
-    <div data-testid="report-validation" data-region={region} data-policy={reformPolicy?.id} />
   )),
 }));
 
@@ -103,19 +96,13 @@ function simulationsForRegion(region: string): Simulation[] {
   ];
 }
 
-const policies: Policy[] = [
-  { id: 'baseline-policy', countryId: 'us', label: 'Current law', parameters: [] },
-  { id: 'reform-policy', countryId: 'us', label: 'Reform', parameters: [] },
-];
-
-function renderMigrationSubPage(region: string, countryId: string = 'us') {
-  mockUseCurrentCountry.mockReturnValue(countryId);
+function renderMigrationSubPage(region: string) {
+  mockUseCurrentCountry.mockReturnValue('us');
   render(
     <MigrationSubPage
       output={createMockSocietyWideOutput() as any}
       report={report}
       simulations={simulationsForRegion(region)}
-      policies={policies}
     />
   );
 }
@@ -178,34 +165,4 @@ describe('MigrationSubPage congressional district card gating', () => {
       );
     }
   );
-});
-
-describe('MigrationSubPage validation section', () => {
-  test('given a US report with its reform policy then the validation section renders for the region', () => {
-    renderMigrationSubPage('state/ca');
-
-    const section = screen.getByTestId('report-validation');
-    expect(section).toHaveAttribute('data-region', 'state/ca');
-    expect(section).toHaveAttribute('data-policy', 'reform-policy');
-    expect(screen.getByText('Validation')).toBeInTheDocument();
-  });
-
-  test('given a UK report then the validation section stays out', () => {
-    renderMigrationSubPage('uk', 'uk');
-
-    expect(screen.queryByTestId('report-validation')).not.toBeInTheDocument();
-  });
-
-  test('given the reform policy has not loaded then the validation section stays out', () => {
-    mockUseCurrentCountry.mockReturnValue('us');
-    render(
-      <MigrationSubPage
-        output={createMockSocietyWideOutput() as any}
-        report={report}
-        simulations={simulationsForRegion('us')}
-      />
-    );
-
-    expect(screen.queryByTestId('report-validation')).not.toBeInTheDocument();
-  });
 });

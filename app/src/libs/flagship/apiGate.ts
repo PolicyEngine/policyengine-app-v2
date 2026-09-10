@@ -2,9 +2,6 @@
  * Server-side gate for flagship API routes. The flagship shell ships
  * dark; its routes must not exist on deployments where the flag is off,
  * so production exposes no new surface until go-live flips the env.
- * The two read-only data-check routes (`calibration-targets`,
- * `model-validation`) are the exception: they carry no user data and
- * serve the production report page, so they are not gated.
  */
 export function isFlagshipApiEnabled(): boolean {
   return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL === 'true';

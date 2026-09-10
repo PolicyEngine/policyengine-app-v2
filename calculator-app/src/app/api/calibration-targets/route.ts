@@ -1,12 +1,14 @@
+import {
+  flagshipApiDisabledResponse,
+  isFlagshipApiEnabled,
+} from "@/libs/flagship/apiGate";
+
 // Calibration targets for a set of model variables in one geography, from
 // the calibration dashboard's per-target diagnostics for the current
 // populace release. The dashboard filters by its own label keys, not by
 // PolicyEngine variable names, so this route pulls the full target set
 // once (a dozen 500-row pages), caches it, and indexes it by
 // `policyengine_variables` — the join key the validation layer uses.
-//
-// Read-only and public: it carries no user data, so it serves the
-// production report page as well as the flagship shell.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -141,6 +143,9 @@ async function respond(
   rawVariables: unknown[],
   rawGeography: string | null,
 ): Promise<Response> {
+  if (!isFlagshipApiEnabled()) {
+    return flagshipApiDisabledResponse();
+  }
   const variables = rawVariables
     .filter((v): v is string => typeof v === "string")
     .map((v) => v.trim())

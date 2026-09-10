@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import ReportValidationSection from '@/components/report/ReportValidationSection';
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,7 +13,6 @@ import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistr
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { Geography } from '@/types/ingredients/Geography';
-import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
@@ -30,7 +28,6 @@ interface MigrationSubPageProps {
   output: SocietyWideReportOutput;
   report?: Report;
   simulations?: Simulation[];
-  policies?: Policy[];
   geographies?: Geography[];
 }
 
@@ -129,7 +126,6 @@ export default function MigrationSubPage({
   output,
   report,
   simulations,
-  policies,
   geographies,
 }: MigrationSubPageProps) {
   const countryId = useCurrentCountry();
@@ -151,9 +147,6 @@ export default function MigrationSubPage({
     year,
     region,
   });
-  // The traced dependency map behind the data checks covers policyengine-us.
-  const reformPolicy = policies?.find((policy) => policy.id === reformPolicyId);
-  const showValidation = countryId === 'us' && !!reformPolicy;
 
   const stackChildren = (
     <>
@@ -198,20 +191,6 @@ export default function MigrationSubPage({
             <LocalAuthoritySubPage output={output} />
           </CollapsibleSection>
         </>
-      )}
-
-      {showValidation && (
-        <CollapsibleSection label="Validation">
-          <ReportValidationSection
-            countryId={countryId}
-            reformPolicy={reformPolicy}
-            region={region}
-            year={year}
-            apiReportId={report?.id}
-            label={report?.label}
-            peEstimate={output.budget?.budgetary_impact}
-          />
-        </CollapsibleSection>
       )}
     </>
   );
