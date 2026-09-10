@@ -48,7 +48,7 @@ describe('CalibrationMatchSection', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
 
     expect(screen.getByText('refundable ctc')).toBeInTheDocument();
-    expect(screen.getAllByText(/mechanism · 3 hops/i)).toHaveLength(2);
+    expect(screen.getAllByText(/mechanism · 3 formula steps from the parameter/i)).toHaveLength(2);
     expect(screen.getByText('4.0%')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' })).toHaveLength(2);
     expect(screen.getByText(/-6.0%/)).toBeInTheDocument();
@@ -61,7 +61,7 @@ describe('CalibrationMatchSection', () => {
     const worst = screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' });
     expect(worst[0]).toHaveAttribute(
       'href',
-      'https://calibration-diagnostics.vercel.app/calibration/dashboard/populace/targets?source=irs_soi&level=national'
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?source=irs_soi&level=national'
     );
     expect(screen.getAllByRole('link', { name: '2' })[0]).toHaveAttribute(
       'href',

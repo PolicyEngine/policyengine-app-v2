@@ -170,8 +170,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     countryId === 'uk' ? 'United Kingdom' : 'United States'
   } (nationwide)`;
 
-  // The validation cards render in both states: they are ready before the
-  // run finishes and are worth reading while it runs.
+  // The checks start with the run so they are ready when it finishes, but
+  // they only render on the completed report: results before the numbers
+  // read as a verdict on a report that does not exist yet.
   const dataChecks = (
     <>
       <CalibrationMatchSection matches={calibration} pin={pin} />
@@ -235,9 +236,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       calibratedCount: calibration?.matches.length,
       scorecardPrograms: trackRecord.resolved ? trackRecord.programs : undefined,
     });
-    const hasDataChecks =
-      (calibration && calibration.matches.length > 0) ||
-      (trackRecord.rows !== undefined && trackRecord.programs.length > 0);
     return layout(
       <ReportComputingScreen
         title={title}
@@ -246,14 +244,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         provisions={meta?.provisions ?? null}
         stages={stages}
         progress={hasCalcStatus ? displayProgress : undefined}
-      >
-        {hasDataChecks && (
-          <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
-            <SectionHeading id="validation" title="Validation" />
-            {dataChecks}
-          </Stack>
-        )}
-      </ReportComputingScreen>
+      />
     );
   }
 
