@@ -1,6 +1,7 @@
 import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
+import { typography } from '@/designTokens';
 import SocietyWideOverview, {
   buildOutcomeMapData,
   getDistrictPayloadAvailability,
@@ -27,8 +28,16 @@ const ALL_NO_CHANGE = {
   'No change': 1,
 };
 
-const { mockUseCongressionalDistrictData } = vi.hoisted(() => ({
+const { mockUseCongressionalDistrictData, plotProps } = vi.hoisted(() => ({
   mockUseCongressionalDistrictData: vi.fn(),
+  plotProps: [] as Array<{ layout?: { font?: { family?: string } } }>,
+}));
+
+vi.mock('react-plotly.js', () => ({
+  default: vi.fn((props: { layout?: { font?: { family?: string } } }) => {
+    plotProps.push(props);
+    return null;
+  }),
 }));
 
 vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
@@ -89,8 +98,23 @@ vi.mock('@/utils/formatPowers', () => ({
 
 describe('SocietyWideOverview', () => {
   beforeEach(() => {
+    plotProps.length = 0;
     vi.clearAllMocks();
     mockUseCongressionalDistrictData.mockReturnValue(createCongressionalDistrictContextMock());
+  });
+
+  test('given compact overview charts then they use the shared chart font', () => {
+    // Given
+    const output = createMockSocietyWideOutput();
+
+    // When
+    render(<SocietyWideOverview output={output} />);
+
+    // Then
+    expect(plotProps.map((props) => props.layout?.font?.family)).toEqual([
+      typography.fontFamily.primary,
+      typography.fontFamily.primary,
+    ]);
   });
 
   describe('budgetary impact section', () => {
