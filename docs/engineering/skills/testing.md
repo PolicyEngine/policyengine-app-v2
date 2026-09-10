@@ -1,11 +1,11 @@
-# Testing Conventions
+# Testing conventions
 
 ## Test commands
 
-- Run tests: `npm test` or `npm run vitest`
-- Watch mode: `npm run vitest:watch`
-- With coverage: `npm run vitest -- --coverage`
-- Full check: `npm run test-all` (includes linting & typecheck)
+- Run tests: `bun run vitest`
+- Watch mode: `bun run vitest:watch`
+- With coverage: `bun run vitest -- --coverage`
+- Full check: `bun run check` (includes type checking, linting, and formatting verification)
 
 ## Writing tests
 
@@ -194,7 +194,7 @@
 - Data transformations in adapters
 - Hook behavior and state management
 
-## What NOT to test
+## What not to test
 
 - Mantine component internals
 - Third-party library behavior
