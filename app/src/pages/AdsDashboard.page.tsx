@@ -11,7 +11,7 @@ export default function AdsDashboardPage() {
         border: 'none',
         display: 'block',
       }}
-      title="PolicyEngine Ads Transparency Dashboard"
+      title="PolicyEngine ads transparency dashboard"
     />
   );
 }

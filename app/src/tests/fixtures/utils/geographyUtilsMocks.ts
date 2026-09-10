@@ -12,7 +12,7 @@ export const EXPECTED_COUNTRY_LABELS = {
   US: 'United States',
   UK: 'United Kingdom',
   CA: 'Canada',
-  UNKNOWN: 'Unknown Country',
+  UNKNOWN: 'Unknown country',
 } as const;
 
 export const TEST_REGION_CODES = {

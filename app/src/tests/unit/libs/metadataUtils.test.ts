@@ -163,7 +163,7 @@ describe('metadataUtils', () => {
       expect(getFieldLabel(TEST_FIELD_NAMES.AGE)).toBe(EXPECTED_LABELS.AGE);
     });
 
-    it('given employment_income then returns Employment Income', () => {
+    it('given employment_income then returns Employment income', () => {
       expect(getFieldLabel(TEST_FIELD_NAMES.EMPLOYMENT_INCOME)).toBe(
         EXPECTED_LABELS.EMPLOYMENT_INCOME
       );
@@ -173,14 +173,14 @@ describe('metadataUtils', () => {
       expect(getFieldLabel(TEST_FIELD_NAMES.BRMA)).toBe(EXPECTED_LABELS.BRMA);
     });
 
-    it('given unmapped field then title-cases it', () => {
+    it('given unmapped field then converts it to sentence case', () => {
       expect(getFieldLabel(TEST_FIELD_NAMES.HOUSEHOLD_INCOME)).toBe(
         EXPECTED_LABELS.HOUSEHOLD_INCOME
       );
     });
 
-    it('given snake_case then converts to Title Case', () => {
-      expect(getFieldLabel('some_field_name')).toBe('Some Field Name');
+    it('given snake_case then converts to sentence case', () => {
+      expect(getFieldLabel('some_field_name')).toBe('Some field name');
     });
   });
 

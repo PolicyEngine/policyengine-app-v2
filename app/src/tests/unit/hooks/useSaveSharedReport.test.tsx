@@ -210,7 +210,7 @@ describe('useSaveSharedReport', () => {
     // Then
     expect(mockCreateReport.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: expect.stringContaining('Saved Report'),
+        label: expect.stringContaining('Saved report'),
       })
     );
   });

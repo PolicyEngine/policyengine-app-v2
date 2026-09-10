@@ -459,7 +459,7 @@ export default function MarginalTaxRatesSubPage({
           <Area
             type="monotone"
             dataKey="difference"
-            name="MTR Difference"
+            name="MTR difference"
             stroke={colors.primary[500]}
             fill={colors.primary[500]}
             fillOpacity={0.6}

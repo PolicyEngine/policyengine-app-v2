@@ -257,7 +257,7 @@ export default function PopulationExistingView({
   // Helper function to get geographic label from metadata
   const getGeographicLabel = (geography: Geography) => {
     if (!geography) {
-      return 'Unknown Location';
+      return 'Unknown location';
     }
 
     if (geography.scope === 'national') {

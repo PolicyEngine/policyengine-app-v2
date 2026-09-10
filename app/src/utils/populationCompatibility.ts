@@ -24,14 +24,14 @@ export function arePopulationsCompatible(
 
 /**
  * Gets a human-readable label for a population.
- * Priority: population.label → household ID → geography name → 'Unknown Household(s)'
+ * Priority: population.label → household ID → geography name → 'Unknown household(s)'
  *
  * @param population - The population object
  * @returns A human-readable label
  */
 export function getPopulationLabel(population: Population | null): string {
   if (!population) {
-    return 'Unknown Household(s)';
+    return 'Unknown household(s)';
   }
 
   // First priority: user-defined label
@@ -54,19 +54,19 @@ export function getPopulationLabel(population: Population | null): string {
     return population.geography.id;
   }
 
-  return 'Unknown Household(s)';
+  return 'Unknown household(s)';
 }
 
 /**
  * Gets a human-readable label for a simulation.
- * Priority: simulation.label → Simulation #${id} → 'Unknown Simulation'
+ * Priority: simulation.label → Simulation #${id} → 'Unknown simulation'
  *
  * @param simulation - The simulation object
  * @returns A human-readable label
  */
 export function getSimulationLabel(simulation: Simulation | null): string {
   if (!simulation) {
-    return 'Unknown Simulation';
+    return 'Unknown simulation';
   }
 
   // First priority: user-defined label
@@ -79,5 +79,5 @@ export function getSimulationLabel(simulation: Simulation | null): string {
     return `Simulation #${simulation.id}`;
   }
 
-  return 'Unknown Simulation';
+  return 'Unknown simulation';
 }

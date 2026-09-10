@@ -47,7 +47,7 @@ describe('policyComparison', () => {
       );
 
       expect(columns).toHaveLength(1);
-      expect(columns[0].label).toBe('Current Law / Baseline / Reform');
+      expect(columns[0].label).toBe('Current law / Baseline / Reform');
       expect(columns[0].policyLabels).toHaveLength(3);
     });
 
@@ -55,7 +55,7 @@ describe('policyComparison', () => {
       const columns = determinePolicyColumns(MOCK_POLICY_A, MOCK_POLICY_A_CLONE, MOCK_POLICY_B);
 
       expect(columns).toHaveLength(2);
-      expect(columns[0].label).toBe('Current Law / Baseline');
+      expect(columns[0].label).toBe('Current law / Baseline');
       expect(columns[1].label).toBe('Reform');
     });
 
@@ -63,7 +63,7 @@ describe('policyComparison', () => {
       const columns = determinePolicyColumns(MOCK_POLICY_A, MOCK_POLICY_B, MOCK_POLICY_A_CLONE);
 
       expect(columns).toHaveLength(2);
-      expect(columns[0].label).toBe('Current Law / Reform');
+      expect(columns[0].label).toBe('Current law / Reform');
       expect(columns[1].label).toBe('Baseline');
     });
 
@@ -71,7 +71,7 @@ describe('policyComparison', () => {
       const columns = determinePolicyColumns(MOCK_POLICY_A, MOCK_POLICY_B, MOCK_POLICY_B);
 
       expect(columns).toHaveLength(2);
-      expect(columns[0].label).toBe('Current Law');
+      expect(columns[0].label).toBe('Current law');
       expect(columns[1].label).toBe('Baseline / Reform');
     });
 
@@ -79,7 +79,7 @@ describe('policyComparison', () => {
       const columns = determinePolicyColumns(MOCK_POLICY_A, MOCK_POLICY_B, MOCK_POLICY_C);
 
       expect(columns).toHaveLength(3);
-      expect(columns[0].label).toBe('Current Law');
+      expect(columns[0].label).toBe('Current law');
       expect(columns[1].label).toBe('Baseline');
       expect(columns[2].label).toBe('Reform');
     });
@@ -102,7 +102,7 @@ describe('policyComparison', () => {
     it('handles single policy scenarios', () => {
       const columnsCurrentLaw = determinePolicyColumns(MOCK_POLICY_A, undefined, undefined);
       expect(columnsCurrentLaw).toHaveLength(1);
-      expect(columnsCurrentLaw[0].label).toBe('Current Law');
+      expect(columnsCurrentLaw[0].label).toBe('Current law');
 
       const columnsBaseline = determinePolicyColumns(undefined, MOCK_POLICY_A, undefined);
       expect(columnsBaseline).toHaveLength(1);
