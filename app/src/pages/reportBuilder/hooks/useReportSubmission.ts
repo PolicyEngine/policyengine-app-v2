@@ -31,6 +31,7 @@ interface UseReportSubmissionReturn {
   handleSubmit: () => Promise<void>;
   isSubmitting: boolean;
   isReportConfigured: boolean;
+  submissionError: Error | null;
 }
 
 function getJourneyProfiler(): {
@@ -51,6 +52,7 @@ export function useReportSubmission({
   onSuccess,
 }: UseReportSubmissionArgs): UseReportSubmissionReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
   const { isReportConfigured } = useReportIngredientAvailability(reportState);
@@ -62,15 +64,17 @@ export function useReportSubmission({
 
     const journeyProfiler = getJourneyProfiler();
     setIsSubmitting(true);
+    setSubmissionError(null);
     trackReportStarted();
     journeyProfiler?.markStart?.('report-submit', 'user-interaction');
 
     try {
       journeyProfiler?.markStart?.('report-submit-simulations', 'api-call');
-      const { simulationIds, simulations } = await createReportSimulations({
+      const { simulationIds, simulations, simulationStates } = await createReportSimulations({
         simulationStates: reportState.simulations,
         countryId,
         currentLawId,
+        reportYear: reportState.year,
       });
 
       journeyProfiler?.markEnd?.('report-submit-simulations', 'api-call');
@@ -94,10 +98,10 @@ export function useReportSubmission({
             simulation2: simulations[1] || null,
           },
           populations: {
-            household1: reportState.simulations[0]?.population?.household || null,
-            household2: reportState.simulations[1]?.population?.household || null,
-            geography1: reportState.simulations[0]?.population?.geography || null,
-            geography2: reportState.simulations[1]?.population?.geography || null,
+            household1: simulationStates[0]?.population?.household || null,
+            household2: simulationStates[1]?.population?.household || null,
+            geography1: simulationStates[0]?.population?.geography || null,
+            geography2: simulationStates[1]?.population?.geography || null,
           },
         },
         {
@@ -107,6 +111,9 @@ export function useReportSubmission({
           },
           onError: (error) => {
             console.error('[useReportSubmission] Report creation failed:', error);
+            setSubmissionError(
+              error instanceof Error ? error : new Error('Unable to create this report.')
+            );
             setIsSubmitting(false);
             journeyProfiler?.markEnd?.('report-submit-create-report', 'api-call');
             journeyProfiler?.markEnd?.('report-submit', 'user-interaction');
@@ -117,6 +124,9 @@ export function useReportSubmission({
       journeyProfiler?.markEnd?.('report-submit', 'user-interaction');
     } catch (error) {
       console.error('[useReportSubmission] Error running report:', error);
+      setSubmissionError(
+        error instanceof Error ? error : new Error('Unable to create this report.')
+      );
       setIsSubmitting(false);
       journeyProfiler?.markEnd?.('report-submit-create-report', 'api-call');
       journeyProfiler?.markEnd?.('report-submit-simulations', 'api-call');
@@ -132,5 +142,5 @@ export function useReportSubmission({
     onSuccess,
   ]);
 
-  return { handleSubmit, isSubmitting, isReportConfigured };
+  return { handleSubmit, isSubmitting, isReportConfigured, submissionError };
 }

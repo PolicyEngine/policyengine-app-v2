@@ -200,9 +200,8 @@ export function addVariationAxesToPythonPackageHouseholdData(
 
 export function cleanPythonPackageHouseholdNullValuesForYear(
   householdInput: PythonPackageHouseholdData,
-  year: number
+  _year: number
 ): PythonPackageHouseholdSituation {
-  const yearKey = String(year);
   const householdInputCopy = cloneValue(householdInput) as PythonPackageHouseholdSituation;
   const entityCollections = Object.values(householdInputCopy) as Array<
     Record<string, PythonPackageHouseholdPersonData | PythonPackageHouseholdGroupData> | undefined
@@ -219,8 +218,15 @@ export function cleanPythonPackageHouseholdNullValuesForYear(
           continue;
         }
 
-        if (isYearValueMap(value) && value[yearKey] === null) {
-          delete entity[variable];
+        if (isYearValueMap(value)) {
+          for (const [period, periodValue] of Object.entries(value)) {
+            if (periodValue === null) {
+              delete value[period];
+            }
+          }
+          if (Object.keys(value).length === 0) {
+            delete entity[variable];
+          }
         }
       }
     }

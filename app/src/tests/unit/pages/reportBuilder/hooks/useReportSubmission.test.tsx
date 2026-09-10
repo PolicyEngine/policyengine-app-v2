@@ -1,13 +1,15 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@test-utils';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createHousehold } from '@/api/household';
 import { useReportSubmission } from '@/pages/reportBuilder/hooks/useReportSubmission';
 import {
   createTestStore,
   CURRENT_LAW_ID,
+  mixedPopulationReportState,
   mockCreateReportFn,
   mockCreateSimulationFn,
   mockLocalStorageCreateFn,
@@ -25,6 +27,8 @@ const { mockIngredientAvailability } = vi.hoisted(() => ({
 }));
 
 // Mock modules
+vi.mock('@/api/household', () => ({ createHousehold: vi.fn() }));
+
 vi.mock('@/api/simulation', () => ({
   createSimulation: (...args: any[]) => mockCreateSimulationFn(...args),
 }));
@@ -106,6 +110,37 @@ describe('useReportSubmission', () => {
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
+  );
+
+  test.each([
+    [true, 'draft'],
+    [false, 'draft'],
+    [true, 'hydrated'],
+    [false, 'hydrated'],
+  ] as const)(
+    'given household baseline is %s in %s state and availability is stale when creating then rejects mixed populations before writes',
+    async (householdFirst, source) => {
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mixedPopulationReportState(householdFirst, source),
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await act(() => result.current.handleSubmit());
+
+      expect(result.current.submissionError?.message).toContain(
+        'Baseline and reform must use the same population type'
+      );
+      expect(createHousehold).not.toHaveBeenCalled();
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+      expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+      expect(mockCreateReportFn).not.toHaveBeenCalled();
+      expect(mockOnSuccess).not.toHaveBeenCalled();
+    }
   );
 
   describe('localStorage association creation', () => {
