@@ -23,6 +23,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
+import { DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
@@ -1124,6 +1125,7 @@ export default function SocietyWideOverview({
                   }
                   layout={
                     {
+                      ...DEFAULT_CHART_LAYOUT,
                       margin: { t: 5, b: 50, l: 55, r: 15 },
                       showlegend: false,
                       paper_bgcolor: 'transparent',
@@ -1182,6 +1184,7 @@ export default function SocietyWideOverview({
                   },
                 ]}
                 layout={{
+                  ...DEFAULT_CHART_LAYOUT,
                   margin: { t: 5, b: 20, l: 50, r: 5 },
                   showlegend: false,
                   paper_bgcolor: 'transparent',
