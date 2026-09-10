@@ -105,11 +105,12 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
  * These tabs need the OUTPUT data (calculated society-wide impacts)
  */
 const OUTPUT_TABS: Record<string, (props: OutputTabProps) => React.ReactElement> = {
-  migration: ({ output, report, simulations, geographies }) => (
+  migration: ({ output, report, simulations, policies, geographies }) => (
     <MigrationSubPage
       output={output}
       report={report}
       simulations={simulations}
+      policies={policies}
       geographies={geographies}
     />
   ),

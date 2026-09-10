@@ -1,13 +1,11 @@
-import {
-  flagshipApiDisabledResponse,
-  isFlagshipApiEnabled,
-} from "@/libs/flagship/apiGate";
-
 // Model track record, served from the live PolicyEngine scorecard at
 // policyengine.org/scorecard. The deployed app's data layout has
 // changed once already (per-source shards -> single comparison file),
 // so this route tries each known layout in order and normalizes both
 // row shapes; the GitHub repo's committed file is the final fallback.
+//
+// Read-only and public: it carries no user data, so it serves the
+// production report page as well as the flagship shell.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -155,9 +153,6 @@ function getRows(): Promise<NormalizedRow[]> {
 }
 
 export async function GET(request: Request): Promise<Response> {
-  if (!isFlagshipApiEnabled()) {
-    return flagshipApiDisabledResponse();
-  }
   const url = new URL(request.url);
   const programs = (url.searchParams.get("programs") ?? "")
     .split(",")
