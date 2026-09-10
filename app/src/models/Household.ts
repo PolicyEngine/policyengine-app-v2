@@ -1,4 +1,5 @@
 import type { CountryId } from '@/libs/countries';
+import type { SPMSelection } from '@/types/spm';
 import { BaseModel } from './BaseModel';
 import {
   buildAppHouseholdDataFromV1Data,
@@ -470,6 +471,8 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   private readonly yearValue: number | null;
 
+  private readonly spmValue?: SPMSelection;
+
   private readonly appInputData: AppHouseholdInputData;
 
   private constructor(args: {
@@ -478,6 +481,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     label?: string | null;
     year?: number | null;
     appInputData: AppHouseholdInputData;
+    spm?: SPMSelection;
   }) {
     super();
 
@@ -485,11 +489,23 @@ export class Household extends BaseModel<HouseholdModelData> {
       throw new Error('Household requires an id');
     }
 
+    if (args.spm && args.countryId !== 'us') {
+      throw new Error('SPM settings are only available for US households');
+    }
+    this.spmValue = args.spm ? cloneValue(args.spm) : undefined;
     this.id = args.id;
     this.countryIdValue = normalizeCountryId(args.countryId);
     this.labelValue = args.label ?? null;
     this.yearValue = args.year ?? null;
     this.appInputData = cloneAppHouseholdInputData(args.appInputData);
+  }
+
+  get spm(): SPMSelection | undefined {
+    return this.spmValue ? cloneValue(this.spmValue) : undefined;
+  }
+
+  withSPM(spm: SPMSelection | undefined): Household {
+    return Household.fromAppInput({ ...this.toJSON(), spm });
   }
 
   get countryId(): CountryId {
@@ -960,6 +976,7 @@ export class Household extends BaseModel<HouseholdModelData> {
       id: input.id ?? 'draft-household',
       countryId: normalizeCountryId(input.countryId),
       label: input.label ?? null,
+      spm: input.spm,
       year,
       appInputData,
     });
@@ -971,9 +988,11 @@ export class Household extends BaseModel<HouseholdModelData> {
     label?: string | null;
     year?: number | null;
     id?: string;
+    spm?: SPMSelection;
   }): Household {
     return Household.fromAppInput({
       id: args.id,
+      spm: args.spm,
       countryId: args.countryId,
       householdData: args.householdData,
       label: args.label,
@@ -1023,6 +1042,7 @@ export class Household extends BaseModel<HouseholdModelData> {
       id: String(metadata.id),
       countryId: metadata.country_id as CountryId,
       label: metadata.label ?? null,
+      spm: metadata.spm,
       year,
       householdData: appInputData,
     });
@@ -1042,6 +1062,7 @@ export class Household extends BaseModel<HouseholdModelData> {
       id: options.id ?? 'draft-household',
       countryId: payload.country_id as CountryId,
       label: options.label ?? payload.label ?? null,
+      spm: payload.spm,
       year,
       householdData: appInputData,
     });
@@ -1051,6 +1072,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return new Household({
       id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       appInputData: this.appInputData,
@@ -1061,6 +1083,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return new Household({
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label,
       year: this.year,
       appInputData: this.appInputData,
@@ -1399,6 +1422,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return {
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       householdData: this.householdData,
@@ -1408,6 +1432,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   toV1CreationPayload(): V1HouseholdCreateEnvelope {
     return buildV1CreateEnvelopeFromAppInput({
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       householdData: this.appInputData,
       label: this.label,
       year: this.year ?? inferYearFromData(this.appInputData),
@@ -1426,6 +1451,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return {
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       householdData: cloneValue(this.appInputData),
@@ -1440,6 +1466,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return new Household({
       id: this.id,
       countryId: this.countryId,
+      ...(this.spm ? { spm: this.spm } : {}),
       label: this.label,
       year: this.year,
       appInputData,

@@ -50,6 +50,7 @@ import type {
   ReportBuilderState,
   SavedPolicy,
 } from '../types';
+import { arePopulationsEqual } from '../utils/arePopulationsEqual';
 
 interface UseSimulationCanvasArgs {
   reportState: ReportBuilderState;
@@ -289,16 +290,20 @@ export function useSimulationCanvas({ reportState, setReportState }: UseSimulati
 
   /**
    * Update a simulation's population at `index`, and if it's the baseline (0)
-   * propagate the same population to sim[1] when it exists.
+   * propagate to sim[1] only when it shared the previous baseline population.
    */
   const updatePopulationWithInheritance = useCallback(
     (simulationIndex: number, population: PopulationStateProps) => {
       setReportState((prev) => {
+        const reformSharesPopulation = arePopulationsEqual(
+          prev.simulations[0]?.population,
+          prev.simulations[1]?.population
+        );
         const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: { ...population } } : sim
         );
 
-        if (simulationIndex === 0 && newSimulations.length > 1) {
+        if (simulationIndex === 0 && reformSharesPopulation) {
           newSimulations[1] = { ...newSimulations[1], population: { ...population } };
         }
 
@@ -585,7 +590,7 @@ export function useSimulationCanvas({ reportState, setReportState }: UseSimulati
         isOpen: true,
         simulationIndex,
         initialPopulation: currentPopulation,
-        initialEditorMode: 'edit',
+        initialEditorMode: currentPopulation.householdNeedsCreation ? 'create' : 'edit',
         returnToBrowseOnBack: false,
       });
     },
