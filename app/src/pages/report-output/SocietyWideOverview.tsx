@@ -1450,6 +1450,9 @@ export function StandaloneCongressionalDistrictCard({
 }: {
   output: SocietyWideReportOutput;
 }) {
+  // Opens expanded (it is the section's only card) and collapses to the
+  // dashboard summary on demand, like the card does on the overview grid.
+  const [mode, setMode] = useState<'expanded' | 'shrunken'>('expanded');
   const header = (
     <Group gap="md" align="center">
       <div
@@ -1481,11 +1484,11 @@ export function StandaloneCongressionalDistrictCard({
   return (
     <CongressionalDistrictCard
       output={output}
-      mode="expanded"
+      mode={mode}
       zIndex={1}
       gridGap={GRID_GAP}
       header={header}
-      onToggleMode={() => {}}
+      onToggleMode={() => setMode((prev) => (prev === 'expanded' ? 'shrunken' : 'expanded'))}
     />
   );
 }
