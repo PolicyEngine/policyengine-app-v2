@@ -10,3 +10,4 @@
 - Link the validation tab's calibration rows to the dashboard filtered by source and level, and the scorecard rows to their external source and the scorecard's comparison and method pages
 - Replace the report's duplicated progress bars and skeleton blocks with one status card while the run computes, and explain local-only links opened elsewhere
 - Wait for every simulation to load before starting a report's calculation, so a report is never scored as current law against itself and stored as "no change"
+- Stop the report page logging "Query data cannot be undefined" on every fresh load

@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { calculationKeys } from '@/libs/queryKeys';
 import {
   createTestQueryClient,
@@ -54,6 +55,34 @@ describe('useCalculationStatus', () => {
   );
 
   describe('cache-only reading', () => {
+    test('given the progress hook shares the key then subscribing never fetches its placeholder', async () => {
+      // Given: the report page mounts both hooks on the same calculation key.
+      // The progress hook registers a disabled placeholder query function
+      // that returns undefined; the status observer must not fetch through it.
+      const reportId = HOOK_TEST_CONSTANTS.TEST_REPORT_ID;
+      const { result } = renderHook(
+        () => {
+          useReportProgressDisplay(reportId);
+          return useCalculationStatus(reportId, 'report');
+        },
+        { wrapper }
+      );
+
+      // When: React Query has had a chance to run any mount-time fetch
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      // Then: nothing fetched, nothing errored, still the initializing placeholder
+      const state = queryClient.getQueryState(calculationKeys.byReportId(reportId));
+      expect(state?.fetchStatus).toBe('idle');
+      expect(state?.status).not.toBe('error');
+      expect(state?.dataUpdateCount).toBe(0);
+      expect(result.current.status).toBe('initializing');
+
+      // And: a cache write from the orchestrator still reaches the subscriber
+      queryClient.setQueryData(calculationKeys.byReportId(reportId), mockCalcStatusComplete);
+      await waitFor(() => expect(result.current.isComplete).toBe(true));
+    });
+
     test('given no data in cache then returns idle status', () => {
       // When
       const { result } = renderHook(
