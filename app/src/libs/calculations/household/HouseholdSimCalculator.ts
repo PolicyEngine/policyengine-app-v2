@@ -5,6 +5,7 @@ import {
 } from '@/api/householdCalculation';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
+import { householdCalculationError } from '@/utils/householdCalculationError';
 
 /**
  * Executes a single household simulation calculation
@@ -70,7 +71,7 @@ export class HouseholdSimCalculator {
       // Set final complete status
       const completeStatus: CalcStatus = {
         status: 'complete',
-        result: calculation.result,
+        result: calculation,
         message: 'Complete',
         metadata: {
           calcId: this.simulationId,
@@ -90,11 +91,7 @@ export class HouseholdSimCalculator {
       const errorStatus: CalcStatus = {
         status: 'error',
         message: 'Calculation failed',
-        error: {
-          code: 'HOUSEHOLD_CALC_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown error',
-          retryable: true,
-        },
+        error: householdCalculationError(error, 'Unknown error'),
         metadata: {
           calcId: this.simulationId,
           calcType: 'household',

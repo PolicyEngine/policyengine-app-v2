@@ -1,7 +1,9 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { Household } from '@/models/Household';
 import { useSimulationCanvas } from '@/pages/reportBuilder/hooks/useSimulationCanvas';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
+import { ownershipReportState } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 
 const mockUseCurrentCountry = vi.fn();
@@ -94,6 +96,99 @@ describe('useSimulationCanvas', () => {
     });
     expect(result.current.isInitialLoading).toBe(false);
   });
+
+  test.each([
+    'different ID',
+    'different settings',
+    'different inputs',
+    'different country',
+    'pending draft',
+  ] as const)(
+    'given an independent reform with %s then editing baseline preserves the reform household and policy',
+    (difference) => {
+      const independent = ownershipReportState();
+      const baseline = independent.simulations[0].population;
+      if (difference !== 'different ID') {
+        const originalReform = independent.simulations[1].population.household!;
+        independent.simulations[1].population = {
+          ...baseline,
+          household:
+            difference === 'different settings'
+              ? baseline.household!.withSPM(originalReform.spm)
+              : difference === 'different inputs'
+                ? baseline.household!.setPersonVariableAtYear(
+                    'you',
+                    'employment_income',
+                    '2026',
+                    12345
+                  )
+                : difference === 'different country'
+                  ? Household.fromAppInput({
+                      ...baseline.household!.toJSON(),
+                      countryId: 'uk',
+                      spm: undefined,
+                    })
+                  : baseline.household,
+          ...(difference === 'pending draft' ? { householdNeedsCreation: true } : {}),
+        };
+      }
+      const before = JSON.stringify(independent);
+      const { result } = renderHook(() =>
+        useSimulationCanvas({ reportState: independent, setReportState })
+      );
+      const replacement = {
+        ...baseline,
+        household: baseline.household!.withId('new-baseline'),
+      };
+
+      act(() => result.current.handleHouseholdSaved(replacement));
+      const updated = setReportState.mock.lastCall?.[0](independent) as ReportBuilderState;
+
+      expect(updated.simulations[0].population.household!.id).toBe('new-baseline');
+      expect(updated.simulations[1]).toBe(independent.simulations[1]);
+      expect(JSON.stringify(independent)).toBe(before);
+    }
+  );
+
+  test('given equivalent baseline and reform households then editing baseline retains intentional inheritance', () => {
+    const shared = ownershipReportState();
+    const baseline = shared.simulations[0].population;
+    shared.simulations[1].population = {
+      ...baseline,
+      household: Household.fromAppInput(baseline.household!.toJSON()),
+    };
+    const { result } = renderHook(() =>
+      useSimulationCanvas({ reportState: shared, setReportState })
+    );
+    const replacement = { ...baseline, household: baseline.household!.withId('new-baseline') };
+
+    act(() => result.current.handleHouseholdSaved(replacement));
+    const updated = setReportState.mock.lastCall?.[0](shared) as ReportBuilderState;
+
+    expect(updated.simulations[0].population.household!.id).toBe('new-baseline');
+    expect(updated.simulations[1].population.household!.id).toBe('new-baseline');
+    expect(updated.simulations[1].policy).toEqual(shared.simulations[1].policy);
+    expect(shared.simulations[0].population.household!.id).toBe('ownership-baseline');
+  });
+
+  test.each([false, true])(
+    'given household creation is pending %s then opens the matching editor without looking up a synthetic draft association',
+    (householdNeedsCreation) => {
+      const state = ownershipReportState();
+      state.simulations[0].population.householdNeedsCreation = householdNeedsCreation;
+      const { result } = renderHook(() =>
+        useSimulationCanvas({ reportState: state, setReportState })
+      );
+
+      act(() => result.current.handleEditPopulation(0));
+
+      expect(result.current.householdEditorState).toMatchObject({
+        isOpen: true,
+        initialEditorMode: householdNeedsCreation ? 'create' : 'edit',
+        initialPopulation: state.simulations[0].population,
+      });
+    }
+  );
 
   test('given policy associations fail then it exposes an error instead of permanent loading', async () => {
     const error = new Error('Policy associations failed');

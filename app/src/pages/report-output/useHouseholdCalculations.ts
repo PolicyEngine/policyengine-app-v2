@@ -8,11 +8,14 @@ import type { HouseholdReportViewModel } from './HouseholdReportViewModel';
  * Single responsibility: Start calculations when needed
  * Delegates decision-making to ViewModel
  */
-export function useHouseholdCalculations(viewModel: HouseholdReportViewModel) {
+export function useHouseholdCalculations(
+  viewModel: HouseholdReportViewModel,
+  inputsReady: boolean
+) {
   const orchestrator = useHouseholdReportOrchestrator();
 
   useEffect(() => {
-    if (viewModel.shouldStartCalculations(orchestrator)) {
+    if (inputsReady && viewModel.shouldStartCalculations(orchestrator)) {
       const config = viewModel.buildCalculationConfig();
 
       if (config) {
@@ -22,6 +25,7 @@ export function useHouseholdCalculations(viewModel: HouseholdReportViewModel) {
   }, [
     viewModel,
     orchestrator,
+    inputsReady,
     // Re-run when simulation states change
     viewModel.simulationStates.isPending,
   ]);

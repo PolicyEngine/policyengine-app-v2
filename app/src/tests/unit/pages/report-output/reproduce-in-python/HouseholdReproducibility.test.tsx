@@ -10,11 +10,6 @@ import {
   UK_HOUSEHOLD_REPRODUCIBILITY_PROPS,
 } from '@/tests/fixtures/pages/report-output/reproduce-in-python/reproducibilityMocks';
 
-// Mock the useReportYear hook
-vi.mock('@/hooks/useReportYear', () => ({
-  useReportYear: () => MOCK_REPORT_YEAR,
-}));
-
 describe('HouseholdReproducibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,7 +60,12 @@ describe('HouseholdReproducibility', () => {
       render(
         <HouseholdReproducibility
           {...DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS}
-          policyengineVersion={MOCK_POLICYENGINE_VERSION}
+          simulations={[
+            {
+              ...DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS.simulations[0],
+              policyengineVersion: MOCK_POLICYENGINE_VERSION,
+            },
+          ]}
         />
       );
 
@@ -162,7 +162,7 @@ describe('HouseholdReproducibility', () => {
       expect(screen.getByText(/employment_income/)).toBeInTheDocument();
     });
 
-    test('given year context then uses correct year in calculation', () => {
+    test('given a saved report year then uses that year in calculation', () => {
       // When
       render(<HouseholdReproducibility {...DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS} />);
 
