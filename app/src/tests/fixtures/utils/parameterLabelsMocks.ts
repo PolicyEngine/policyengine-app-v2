@@ -19,7 +19,7 @@ export const TEST_PARAM_NAMES = {
 
 /**
  * Mock parameter metadata collection for testing
- * Note: Matches actual metadata structure from US_Metadata.json
+ * Matches the parameter metadata structure returned by the API.
  */
 export const MOCK_PARAMETER_METADATA: ParameterMetadataCollection = {
   'gov.irs': {
