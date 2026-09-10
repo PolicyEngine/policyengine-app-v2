@@ -61,7 +61,7 @@ describe('CalibrationMatchSection', () => {
     const worst = screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' });
     expect(worst[0]).toHaveAttribute(
       'href',
-      'https://calibration-diagnostics.vercel.app/calibration/dashboard/populace/targets?source=irs_soi&level=national'
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?source=irs_soi&level=national'
     );
     expect(screen.getAllByRole('link', { name: '2' })[0]).toHaveAttribute(
       'href',
