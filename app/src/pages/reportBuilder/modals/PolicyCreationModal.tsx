@@ -46,6 +46,11 @@ import {
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import {
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  normalizePolicyParameters,
+} from '@/utils/policyCurrentLaw';
+import { addParameterToPolicy } from '@/utils/policyParameterUpdate';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { getReportYearDateBounds } from '../utils/reportYearDates';
@@ -102,6 +107,7 @@ export function PolicyCreationModal({
   // Local policy state
   const [policyLabel, setPolicyLabel] = useState<string>('');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
+  const [wasNoOpSubmission, setWasNoOpSubmission] = useState(false);
 
   // Sidebar tab state -- controls main content area
   const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
@@ -160,6 +166,7 @@ export function PolicyCreationModal({
     if (isOpen) {
       setPolicyLabel(initialPolicy?.label || '');
       setPolicyParameters(initialPolicy?.parameters || []);
+      setWasNoOpSubmission(false);
       setEditorMode(resolvedInitialEditorMode);
       setActiveTab('overview');
       setSelectedParam(null);
@@ -172,13 +179,18 @@ export function PolicyCreationModal({
     }
   }, [isOpen, initialPolicy, resolvedInitialEditorMode, defaultStartDate, defaultEndDate]);
 
+  const effectivePolicyParameters = useMemo(
+    () => normalizePolicyParameters(policyParameters, parameters),
+    [policyParameters, parameters]
+  );
+
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(
     () => ({
       label: policyLabel,
-      parameters: policyParameters,
+      parameters: effectivePolicyParameters,
     }),
-    [policyLabel, policyParameters]
+    [policyLabel, effectivePolicyParameters]
   );
 
   // Count modifications
@@ -186,7 +198,7 @@ export function PolicyCreationModal({
 
   // Get modified parameter data for the Changes section
   const modifiedParams: ModifiedParam[] = useMemo(() => {
-    return policyParameters.map((p) => {
+    return effectivePolicyParameters.map((p) => {
       const metadata = parameters[p.name];
       const hierarchicalLabels = getHierarchicalLabels(p.name, parameters);
       const displayLabel =
@@ -206,7 +218,7 @@ export function PolicyCreationModal({
         changes,
       };
     });
-  }, [policyParameters, parameters]);
+  }, [effectivePolicyParameters, parameters]);
 
   // Get searchable parameters from memoized selector
   const searchableParameters = useSelector(selectSearchableParameters);
@@ -267,23 +279,19 @@ export function PolicyCreationModal({
       return;
     }
 
-    const updatedParameters = [...policyParameters];
-    let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
+    const candidatePolicy = addParameterToPolicy(
+      { label: policyLabel, parameters: policyParameters },
+      selectedParam.parameter,
+      intervals
+    );
+    const normalizedParameters = normalizePolicyParameters(candidatePolicy.parameters, parameters);
 
-    if (!existingParam) {
-      existingParam = { name: selectedParam.parameter, values: [] };
-      updatedParameters.push(existingParam);
-    }
-
-    const paramCollection = new ValueIntervalCollection(existingParam.values);
-    intervals.forEach((interval) => {
-      paramCollection.addInterval(interval);
-    });
-
-    existingParam.values = paramCollection.getIntervals();
-    setPolicyParameters(updatedParameters);
+    setPolicyParameters(normalizedParameters);
+    setWasNoOpSubmission(
+      candidatePolicy.parameters.length > 0 && normalizedParameters.length === 0
+    );
     setIntervals([]);
-  }, [selectedParam, intervals, policyParameters]);
+  }, [selectedParam, intervals, policyLabel, policyParameters, parameters]);
 
   const handleRemoveParamChange = useCallback(
     (paramName: string, indexToRemove: number) => {
@@ -305,6 +313,7 @@ export function PolicyCreationModal({
           })
           .filter((param) => param.values.length > 0)
       );
+      setWasNoOpSubmission(false);
     },
     [isReadOnly]
   );
@@ -314,8 +323,13 @@ export function PolicyCreationModal({
     async (labelOverride?: string | null) => {
       const resolvedLabel =
         labelOverride === undefined ? normalizedPolicyLabel : (labelOverride?.trim() ?? '');
+      const normalizedParameters = normalizePolicyParameters(policyParameters, parameters);
+      if (normalizedParameters.length === 0) {
+        setWasNoOpSubmission(policyParameters.length > 0);
+        return;
+      }
       const policyData: Partial<Policy> = {
-        parameters: policyParameters,
+        parameters: normalizedParameters,
       };
 
       const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
@@ -325,7 +339,7 @@ export function PolicyCreationModal({
         const createdPolicy: PolicyStateProps = {
           id: result.result.policy_id,
           label: resolvedLabel || null,
-          parameters: policyParameters,
+          parameters: normalizedParameters,
         };
         onPolicyCreated(createdPolicy);
         onClose();
@@ -333,7 +347,14 @@ export function PolicyCreationModal({
         console.error('Failed to create policy:', error);
       }
     },
-    [normalizedPolicyLabel, policyParameters, createPolicyWithLabel, onPolicyCreated, onClose]
+    [
+      normalizedPolicyLabel,
+      policyParameters,
+      parameters,
+      createPolicyWithLabel,
+      onPolicyCreated,
+      onClose,
+    ]
   );
 
   // Unnamed-policy warning for creating/saving without a name
@@ -362,10 +383,15 @@ export function PolicyCreationModal({
     if (!initialPolicy?.id) {
       return;
     }
+    const normalizedParameters = normalizePolicyParameters(policyParameters, parameters);
+    if (normalizedParameters.length === 0) {
+      setWasNoOpSubmission(policyParameters.length > 0);
+      return;
+    }
     setIsUpdating(true);
     setAssociationLookupError(null);
 
-    const policyData: Partial<Policy> = { parameters: policyParameters };
+    const policyData: Partial<Policy> = { parameters: normalizedParameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
 
     try {
@@ -393,7 +419,7 @@ export function PolicyCreationModal({
       onPolicyCreated({
         id: newPolicyId,
         label: desiredLabel ?? null,
-        parameters: policyParameters,
+        parameters: normalizedParameters,
       });
       onClose();
     } catch (error) {
@@ -403,6 +429,7 @@ export function PolicyCreationModal({
   }, [
     normalizedPolicyLabel,
     policyParameters,
+    parameters,
     initialPolicy?.id,
     resolveInitialPolicyAssociation,
     countryId,
@@ -456,7 +483,7 @@ export function PolicyCreationModal({
     const baseValues = new ValueIntervalCollection(selectedParam.values as ValuesList);
     const reformValues = new ValueIntervalCollection(baseValues);
 
-    const paramToChart = policyParameters.find((p) => p.name === selectedParam.parameter);
+    const paramToChart = effectivePolicyParameters.find((p) => p.name === selectedParam.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
       const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
       for (const interval of userIntervals.getIntervals()) {
@@ -704,11 +731,17 @@ export function PolicyCreationModal({
               </Button>
             </Group>
             <div>
-              {associationLookupError && (
+              {associationLookupError ? (
                 <Text size="sm" c="red">
                   {associationLookupError}
                 </Text>
-              )}
+              ) : (wasNoOpSubmission ||
+                  (policyParameters.length > 0 && effectivePolicyParameters.length === 0)) &&
+                !isReadOnly ? (
+                <Text size="sm" style={{ color: colors.text.warning }}>
+                  {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
+                </Text>
+              ) : null}
             </div>
             <Group gap="sm" justify="end">
               {!forceReadOnly && effectiveEditorMode === 'create' && (

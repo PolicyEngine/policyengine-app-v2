@@ -9,6 +9,28 @@ const mockFindByUser = vi.fn();
 const mockDelete = vi.fn();
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
+const mockReduxState = {
+  metadata: {
+    currentLawId: 2,
+    parameters: {
+      'gov.irs.credits.ctc.amount.base[0].amount': {
+        type: 'parameter',
+        parameter: 'gov.irs.credits.ctc.amount.base[0].amount',
+        label: 'Child tax credit amount',
+        unit: 'currency-USD',
+        values: { '2020-01-01': 2000 },
+      },
+    },
+  },
+};
+
+vi.mock('react-redux', async () => {
+  const actual = await vi.importActual<typeof import('react-redux')>('react-redux');
+  return {
+    ...actual,
+    useSelector: (selector: (state: typeof mockReduxState) => unknown) => selector(mockReduxState),
+  };
+});
 
 vi.mock('@/api/reformStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/reformStore')>();
@@ -152,6 +174,22 @@ describe('ReformsPage', () => {
     expect(screen.getByText(/raises the base child tax credit/i)).toBeInTheDocument();
   });
 
+  test('given a tracked bill matches current law then the report action is disabled', async () => {
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...FEED_BILLS[1],
+        provisions: [{ ...FEED_BILLS[1].provisions[0], value: 2000 }],
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms();
+
+    await user.click(await screen.findByText('Child tax credit expansion proposal'));
+
+    expect(screen.getByRole('button', { name: /run impact report/i })).toBeDisabled();
+    expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
+  });
+
   test('given a ?bill deep link then the detail opens directly', async () => {
     renderReforms('/us/reforms?bill=us-ctc-expansion');
 
@@ -286,6 +324,21 @@ describe('ReformsPage', () => {
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
     expect(mockUpdate.mock.calls[0][1].parameters[0].values[0].value).toBe(4000);
+  });
+
+  test('given an amended value matches current law then save is disabled', async () => {
+    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    const input = screen.getByLabelText(/new value for gov\.irs/i);
+    await user.clear(input);
+    await user.type(input, '2000');
+
+    expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
+    expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {
