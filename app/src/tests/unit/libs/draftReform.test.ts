@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   addDraftProvision,
   clearDraftReform,
+  draftToPolicyParameters,
   draftToReform,
   getDraftReform,
   loadReformIntoDraft,
@@ -19,6 +20,15 @@ const CTC_PROVISION = {
   unit: 'currency-USD',
   baselineValue: 2000,
   value: 2000,
+};
+
+const CURRENT_LAW_METADATA = {
+  [CTC_PROVISION.path]: {
+    type: 'parameter' as const,
+    parameter: CTC_PROVISION.path,
+    label: 'Child tax credit amount',
+    values: { '2020-01-01': 2000, '2027-07-01': 3000 },
+  },
 };
 
 describe('draftReform', () => {
@@ -120,7 +130,7 @@ describe('draftReform', () => {
     addDraftProvision('us', { ...CTC_PROVISION, value: 3600 });
     setDraftLabel('From HB 106');
 
-    const reform = draftToReform(getDraftReform()!, 'anonymous');
+    const reform = draftToReform(getDraftReform()!, 'anonymous', CURRENT_LAW_METADATA);
 
     expect(reform.userId).toBe('anonymous');
     expect(reform.label).toBe('From HB 106');
@@ -128,6 +138,32 @@ describe('draftReform', () => {
     expect(reform.parameters[0].name).toBe(CTC_PROVISION.path);
     expect(reform.parameters[0].values[0].value).toBe(3600);
     expect(reform.parameters[0].values[0].endDate).toBe('2100-12-31');
+  });
+
+  it('given a draft value matches current law then draftToPolicyParameters removes it', () => {
+    startDraftReform('us', 'manual');
+    addDraftProvision('us', CTC_PROVISION);
+
+    expect(
+      draftToPolicyParameters(getDraftReform()!, {
+        [CTC_PROVISION.path]: {
+          ...CURRENT_LAW_METADATA[CTC_PROVISION.path],
+          values: { '2020-01-01': 2000 },
+        },
+      })
+    ).toEqual([]);
+  });
+
+  it('given current law changes inside the draft range then retains only the later difference', () => {
+    startDraftReform('us', 'manual');
+    addDraftProvision('us', CTC_PROVISION);
+
+    expect(draftToPolicyParameters(getDraftReform()!, CURRENT_LAW_METADATA)).toEqual([
+      {
+        name: CTC_PROVISION.path,
+        values: [{ startDate: '2027-07-01', endDate: '2100-12-31', value: 2000 }],
+      },
+    ]);
   });
 
   it('given a search entry and metadata values then provisionFromSearchEntry uses the current value as baseline', () => {

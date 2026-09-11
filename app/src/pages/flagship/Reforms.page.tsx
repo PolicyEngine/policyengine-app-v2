@@ -33,6 +33,7 @@ import {
   loadReformIntoDraft,
   setDraftLabel,
 } from '@/libs/draftReform';
+import { getEffectiveRunReportParameters, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
@@ -42,6 +43,11 @@ import {
   getHierarchicalLabels,
 } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
+import {
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  NoEffectivePolicyChangesError,
+  normalizePolicyParameters,
+} from '@/utils/policyCurrentLaw';
 
 const SOURCE_LABELS: Record<ReformSource, string> = {
   manual: 'Hand-built',
@@ -55,13 +61,7 @@ type Tab = 'bills' | 'yours';
 /** Bills render in pages of this size; scrolling near the end reveals the next page. */
 const BILLS_PAGE_SIZE = 12;
 
-interface ProvisionView {
-  path: string;
-  breadcrumb: string;
-  unit: string | null;
-  baselineValue: any;
-  value: any;
-}
+interface ProvisionView extends RunReportProvision {}
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -235,6 +235,27 @@ export default function ReformsPage() {
   const [editedLabel, setEditedLabel] = useState('');
   const [editedValues, setEditedValues] = useState<Record<string, any>>({});
 
+  const getEditedParameters = (reform: Reform) =>
+    normalizePolicyParameters(
+      reform.parameters.map((parameter) => ({
+        name: parameter.name,
+        values:
+          parameter.values.length > 0
+            ? parameter.values.map((interval) => ({
+                ...interval,
+                value: editedValues[parameter.name],
+              }))
+            : [
+                {
+                  startDate: `${new Date().getFullYear()}-01-01`,
+                  endDate: FOREVER,
+                  value: editedValues[parameter.name],
+                },
+              ],
+      })),
+      parameters
+    );
+
   const runReport = useRunFlagshipReport();
   const {
     bills,
@@ -255,20 +276,17 @@ export default function ReformsPage() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
 
   const saveMutation = useMutation({
-    mutationFn: (reform: Reform) =>
-      getReformStore().update(reform.id!, {
+    mutationFn: (reform: Reform) => {
+      const effectiveParameters = getEditedParameters(reform);
+      if (effectiveParameters.length === 0) {
+        throw new NoEffectivePolicyChangesError();
+      }
+
+      return getReformStore().update(reform.id!, {
         label: editedLabel || null,
-        parameters: reform.parameters.map((parameter) => ({
-          name: parameter.name,
-          values: [
-            {
-              startDate: parameter.values[0]?.startDate ?? `${new Date().getFullYear()}-01-01`,
-              endDate: parameter.values[0]?.endDate ?? FOREVER,
-              value: editedValues[parameter.name],
-            },
-          ],
-        })),
-      }),
+        parameters: effectiveParameters,
+      });
+    },
     onSuccess: invalidate,
   });
 
@@ -281,15 +299,21 @@ export default function ReformsPage() {
   });
 
   const duplicateMutation = useMutation({
-    mutationFn: (reform: Reform) =>
-      getReformStore().create({
+    mutationFn: (reform: Reform) => {
+      const effectiveParameters = normalizePolicyParameters(reform.parameters, parameters);
+      if (effectiveParameters.length === 0) {
+        throw new NoEffectivePolicyChangesError();
+      }
+
+      return getReformStore().create({
         userId: reform.userId,
         countryId: reform.countryId,
         label: `${reform.label || 'Untitled reform'} (copy)`,
-        parameters: reform.parameters,
+        parameters: effectiveParameters,
         baseline: reform.baseline,
         provenance: reform.provenance,
-      }),
+      });
+    },
     onSuccess: invalidate,
   });
 
@@ -319,6 +343,7 @@ export default function ReformsPage() {
         unit: metadata?.unit ?? null,
         baselineValue: getCurrentValue(metadata?.values),
         value: parameter.values[0]?.value,
+        values: parameter.values,
       };
     });
 
@@ -445,6 +470,8 @@ export default function ReformsPage() {
   // ---- Detail: a tracked bill ----
   if (selectedBill) {
     const provisions = billProvisions(selectedBill);
+    const hasEffectiveBillChanges =
+      provisions.length > 0 && getEffectiveRunReportParameters(provisions, parameters).length > 0;
     const impact = selectedBill.impactData;
     const winners = impact?.winnersLosers;
     const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
@@ -537,7 +564,7 @@ export default function ReformsPage() {
                     provisions
                   )
                 }
-                disabled={runReport.isRunning || provisions.length === 0}
+                disabled={runReport.isRunning || !hasEffectiveBillChanges}
               >
                 <IconChartBar size={16} />
                 {runReport.isRunning ? 'Starting report…' : 'Run impact report'}
@@ -574,6 +601,11 @@ export default function ReformsPage() {
                 {runReport.error}
               </Text>
             )}
+            {!selectedBill.impactData && provisions.length > 0 && !hasEffectiveBillChanges && (
+              <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.warning }}>
+                {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
+              </Text>
+            )}
           </Stack>
         </Stack>
       </WorkspaceLayout>
@@ -582,6 +614,11 @@ export default function ReformsPage() {
 
   // ---- Detail: one of your reforms ----
   if (selectedReform) {
+    const effectiveEditedParameters = getEditedParameters(selectedReform);
+    const hasEffectiveEditedChanges = effectiveEditedParameters.length > 0;
+    const selectedReformProvisions = reformProvisions(selectedReform);
+    const hasEffectiveSavedChanges =
+      getEffectiveRunReportParameters(selectedReformProvisions, parameters).length > 0;
     return (
       <WorkspaceLayout>
         <Stack style={{ gap: spacing.lg }}>
@@ -665,17 +702,19 @@ export default function ReformsPage() {
                 runReport.run(
                   selectedReform.label || 'Untitled reform',
                   SOURCE_LABELS[selectedReform.provenance.source],
-                  reformProvisions(selectedReform)
+                  selectedReformProvisions
                 )
               }
-              disabled={runReport.isRunning}
+              disabled={runReport.isRunning || !hasEffectiveSavedChanges}
             >
               <IconChartBar size={16} />
               {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
             </Button>
             <Button
               variant="outline"
-              disabled={!isDirty(selectedReform) || saveMutation.isPending}
+              disabled={
+                !isDirty(selectedReform) || !hasEffectiveEditedChanges || saveMutation.isPending
+              }
               onClick={() => saveMutation.mutate(selectedReform)}
             >
               <IconDeviceFloppy size={16} />
@@ -697,7 +736,7 @@ export default function ReformsPage() {
             </Button>
             <Button
               variant="outline"
-              disabled={duplicateMutation.isPending}
+              disabled={duplicateMutation.isPending || !hasEffectiveSavedChanges}
               onClick={() => duplicateMutation.mutate(selectedReform)}
             >
               <IconCopy size={16} />
@@ -714,6 +753,12 @@ export default function ReformsPage() {
             {runReport.error && (
               <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
                 {runReport.error}
+              </Text>
+            )}
+            {(!hasEffectiveSavedChanges ||
+              (isDirty(selectedReform) && !hasEffectiveEditedChanges)) && (
+              <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.warning }}>
+                {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
               </Text>
             )}
           </Stack>

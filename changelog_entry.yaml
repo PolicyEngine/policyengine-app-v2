@@ -18,3 +18,4 @@
 - Say what a calibration row's distance from the reform means in words instead of counting hops
 - Use sentence case consistently across interface copy
 - Use the PolicyEngine font in compact society-wide charts
+- Prevent policies and reforms that match current law from being saved or run

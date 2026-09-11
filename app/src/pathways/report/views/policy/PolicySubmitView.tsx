@@ -4,6 +4,7 @@
  * Props-based instead of Redux-based
  */
 
+import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
 import IngredientSubmissionView, {
   DateIntervalValue,
@@ -12,11 +13,16 @@ import IngredientSubmissionView, {
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { countryIds } from '@/libs/countries';
+import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
+import {
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  normalizePolicyParameters,
+} from '@/utils/policyCurrentLaw';
 
 interface PolicySubmitViewProps {
   policy: PolicyStateProps;
@@ -34,24 +40,27 @@ export default function PolicySubmitView({
   onCancel,
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
+  const currentLawMetadata = useSelector((state: RootState) => state.metadata.parameters);
 
-  // Issue #605: Block empty policy creation
-  const hasNoParameters = !policy.parameters || policy.parameters.length === 0;
+  const effectiveParameters = normalizePolicyParameters(policy.parameters, currentLawMetadata);
+  const hasNoParameters = effectiveParameters.length === 0;
+  const startedEmpty = !policy.parameters || policy.parameters.length === 0;
 
   // Convert state to Policy type structure
   const policyData: Partial<Policy> = {
-    parameters: policy?.parameters,
+    parameters: effectiveParameters,
   };
 
   function handleSubmit() {
-    if (!policy) {
-      console.error('No policy found');
+    const normalizedParameters = normalizePolicyParameters(policy.parameters, currentLawMetadata);
+    if (normalizedParameters.length === 0) {
       return;
     }
 
-    const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
-      policyData as Policy
-    );
+    const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload({
+      ...policyData,
+      parameters: normalizedParameters,
+    } as Policy);
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
         trackPolicyCreated();
@@ -75,7 +84,7 @@ export default function PolicySubmitView({
         {
           text: 'Provision',
           isHeader: true,
-          subItems: policy.parameters.map((param) => {
+          subItems: effectiveParameters.map((param) => {
             const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
               dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
               value: valueInterval.value,
@@ -99,7 +108,11 @@ export default function PolicySubmitView({
       submitButtonLoading={isPending}
       submitButtonDisabled={hasNoParameters}
       warningMessage={
-        hasNoParameters ? 'Add at least one parameter change to create a policy.' : undefined
+        hasNoParameters
+          ? startedEmpty
+            ? 'Add at least one parameter change to create a policy.'
+            : NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+          : undefined
       }
       onBack={onBack}
       onCancel={onCancel}
