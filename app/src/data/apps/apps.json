@@ -399,15 +399,15 @@
   {
     "type": "iframe",
     "slug": "marriage",
-    "title": "Marriage incentive calculator",
-    "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for UK households",
-    "source": "https://marriage-zeta-beryl.vercel.app/us/marriage#country=uk",
-    "tags": ["uk", "policy", "interactives"],
+    "title": "Marriage calculator",
+    "description": "Compare a couple's taxes and benefits when living together against living in separate households, modelled with PolicyEngine UK.",
+    "source": "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk",
+    "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
-    "displayWithResearch": false,
+    "displayWithResearch": true,
     "image": "marriage-calculator.webp",
-    "date": "2026-02-13 12:00:00",
-    "authors": ["daphne-hansell"]
+    "date": "2026-09-11 12:00:00",
+    "authors": ["max-ghenis", "vahid-ahmadi"]
   },
   {
     "type": "iframe",
