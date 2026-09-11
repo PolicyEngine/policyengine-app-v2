@@ -87,6 +87,7 @@ export function useHydrateCalculationCache({
         if (simulation.output && simulation.status === 'complete') {
           const completeStatus: CalcStatus = {
             status: 'complete',
+            persisted: true,
             result: simulation.output as any,
             metadata: {
               calcId: simulation.id,
@@ -115,6 +116,7 @@ export function useHydrateCalculationCache({
 
       const completeStatus: CalcStatus = {
         status: 'complete',
+        persisted: true,
         result: report.output as any,
         metadata: {
           calcId: currentReportId,

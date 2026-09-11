@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { mixedPopulationReportState } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
 import {
   getHouseholdLoadErrorMessage,
   getPolicyLoadErrorMessage,
@@ -37,6 +38,27 @@ function householdItem(householdId: string, error: Error | null) {
 }
 
 describe('ingredientAvailability', () => {
+  test.each([true, false])(
+    'given household baseline is %s when selected populations differ in type then blocks report readiness',
+    (householdFirst) => {
+      expect(
+        hasRequiredSimulationIngredients(mixedPopulationReportState(householdFirst).simulations)
+      ).toBe(false);
+    }
+  );
+
+  test('given manual state contains both population kinds then blocks readiness instead of ignoring a population', () => {
+    const state = mixedPopulationReportState(true);
+    state.simulations[0].population.geography = state.simulations[1].population.geography;
+    expect(hasRequiredSimulationIngredients([state.simulations[0]])).toBe(false);
+  });
+
+  test('given a stale population type disagrees with its selected ingredient then blocks readiness', () => {
+    const state = mixedPopulationReportState(true);
+    state.simulations[0].population.type = 'geography';
+    expect(hasRequiredSimulationIngredients([state.simulations[0]])).toBe(false);
+  });
+
   test('blocks a simulation when its selected policy has errored', () => {
     const policies = [policyItem('selected-policy', new Error('Request failed'))];
     const households = [householdItem('selected-household', null)];

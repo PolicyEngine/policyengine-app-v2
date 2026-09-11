@@ -1,5 +1,7 @@
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { SimulationAdapter } from '@/adapters/SimulationAdapter';
+import { NavigationProvider } from '@/contexts/NavigationContext';
 import { useUserReportById } from '@/hooks/useUserReports';
 import ReportOutputPage from '@/pages/ReportOutput.page';
 import {
@@ -19,6 +21,23 @@ import {
   MOCK_USER_REPORT_ID,
   MOCK_USER_REPORT_UK,
 } from '@/tests/fixtures/pages/ReportOutputPageMocks';
+import {
+  CORRECTIVE_SPM_ERRORS,
+  FAILED_SPM_REPORT,
+  failedSimulationMetadata,
+  SPM_YEAR_ERROR,
+} from '@/tests/fixtures/spm/reportErrorMocks';
+
+vi.mock('@/pages/report-output/useHouseholdCalculations', () => ({
+  useHouseholdCalculations: vi.fn(),
+}));
+vi.mock('@/hooks/household', () => ({
+  useSimulationProgressDisplay: () => ({
+    displayProgress: 0,
+    hasCalcStatus: false,
+    message: null,
+  }),
+}));
 
 // Mock dependencies
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -116,6 +135,47 @@ describe('ReportOutputPage', () => {
       error: null,
     });
   });
+
+  test.each([CORRECTIVE_SPM_ERRORS[0], SPM_YEAR_ERROR])(
+    'given a saved $code failure then corrective recovery opens the owned report setup',
+    async (apiError) => {
+      vi.mocked(useUserReportById).mockReturnValue({
+        userReport: MOCK_USER_REPORT,
+        report: FAILED_SPM_REPORT,
+        simulations: [
+          SimulationAdapter.fromMetadata(
+            failedSimulationMetadata(
+              SimulationAdapter.toErrorPayload(101, apiError.message, apiError.code)
+            )
+          ),
+        ],
+        userSimulations: [],
+        userPolicies: [],
+        policies: [],
+        households: [],
+        userHouseholds: [],
+        geographies: [],
+        isLoading: false,
+        error: null,
+      });
+      const push = vi.fn();
+      render(
+        <NavigationProvider value={{ push, replace: vi.fn(), back: vi.fn() }}>
+          <ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />
+        </NavigationProvider>
+      );
+
+      expect(screen.getByRole('alert')).toHaveTextContent(apiError.message);
+      await userEvent.setup().click(
+        screen.getByRole('button', {
+          name:
+            apiError.code === 'SPM_YEAR_UNAVAILABLE' ? 'Edit report year' : 'Edit household inputs',
+        })
+      );
+
+      expect(push).toHaveBeenCalledWith(`/us/report-output/${MOCK_USER_REPORT_ID}/config`);
+    }
+  );
 
   test('given report with year then year is passed to layout', () => {
     // Given - MOCK_REPORT has year '2024'

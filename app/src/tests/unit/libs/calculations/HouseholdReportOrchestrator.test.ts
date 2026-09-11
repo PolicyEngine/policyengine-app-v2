@@ -22,10 +22,8 @@ vi.mock('@/utils/cacheMonitor', () => ({
     logInvalidation: vi.fn(),
   },
 }));
-vi.mock('@/libs/calculations/household/HouseholdSimCalculator', () => ({
-  HouseholdSimCalculator: vi.fn().mockImplementation(() => ({
-    execute: mocks.execute,
-  })),
+vi.mock('@/api/householdCalculation', () => ({
+  fetchHouseholdCalculationWithBundle: mocks.execute,
 }));
 vi.mock('@/libs/calculations/household/HouseholdProgressCoordinator', () => ({
   HouseholdProgressCoordinator: vi.fn().mockImplementation(() => ({
@@ -89,7 +87,12 @@ describe('HouseholdReportOrchestrator', () => {
     await orchestrator.startReport(config);
 
     await vi.waitFor(() => {
-      expect(markSimulationError).toHaveBeenCalledWith('us', 'sim-1', '404 Not Found');
+      expect(markSimulationError).toHaveBeenCalledWith(
+        'us',
+        'sim-1',
+        '404 Not Found',
+        'HOUSEHOLD_CALC_FAILED'
+      );
       expect(markReportError).toHaveBeenCalledWith(
         'us',
         'report-123',
@@ -97,7 +100,7 @@ describe('HouseholdReportOrchestrator', () => {
           id: 'report-123',
           status: 'error',
         }),
-        '404 Not Found'
+        '[HOUSEHOLD_CALC_FAILED] 404 Not Found'
       );
     });
 

@@ -32,6 +32,11 @@ export const fetchMetadataThunk = createAsyncThunk<
   async (country: string, { rejectWithValue }) => {
     try {
       const data = await fetchMetadataApi(country);
+      if (data.status !== 'ok' || !data.result?.version) {
+        return rejectWithValue(
+          data.message || 'Model information did not include a resolved version'
+        );
+      }
       return { data, country };
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
@@ -39,9 +44,9 @@ export const fetchMetadataThunk = createAsyncThunk<
   },
   {
     // Prevent duplicate fetches (e.g. from React StrictMode double-invoking effects)
-    condition: (_country, { getState }) => {
+    condition: (country, { getState }) => {
       const { metadata } = getState();
-      if (metadata.loading) {
+      if (metadata.loading && metadata.currentCountry === country) {
         return false;
       }
     },
@@ -57,22 +62,8 @@ const metadataSlice = createSlice({
         return;
       }
 
-      state.currentCountry = action.payload;
-      // Optionally clear existing metadata when country changes
-      // This prevents showing stale data from previous country
-      if (state.version !== null) {
-        // Clear metadata but keep loading/error states
-        state.variables = {};
-        state.parameters = {};
-        state.entities = {};
-        state.variableModules = {};
-        state.economyOptions = { region: [], time_period: [], datasets: [] };
-        state.currentLawId = 0;
-        state.basicInputs = [];
-        state.modelledPolicies = { core: {}, filtered: {} };
-        state.version = null;
-        state.parameterTree = null;
-      }
+      // Changing country invalidates any pending response as well as cached capabilities.
+      return { ...initialState, currentCountry: action.payload };
     },
     clearMetadata(state) {
       return { ...initialState, currentCountry: state.currentCountry };
@@ -80,16 +71,28 @@ const metadataSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchMetadataThunk.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(fetchMetadataThunk.pending, (_state, action) => {
+        return {
+          ...initialState,
+          currentCountry: action.meta.arg,
+          currentRequestId: action.meta.requestId,
+          loading: true,
+        };
       })
       .addCase(fetchMetadataThunk.fulfilled, (state, action) => {
         const { data, country } = action.payload;
+        if (
+          !state.currentRequestId ||
+          state.currentRequestId !== action.meta.requestId ||
+          state.currentCountry !== country
+        ) {
+          return;
+        }
         const body = data.result;
 
         state.loading = false;
         state.error = null;
+        state.currentRequestId = undefined;
         state.currentCountry = country;
 
         // Transform API response to state
@@ -102,6 +105,7 @@ const metadataSlice = createSlice({
         state.basicInputs = body.basicInputs;
         state.modelledPolicies = body.modelled_policies;
         state.version = body.version;
+        state.spm = body.spm;
 
         // Build parameter tree from parameters (following V1 approach)
         try {
@@ -111,15 +115,22 @@ const metadataSlice = createSlice({
         }
       })
       .addCase(fetchMetadataThunk.rejected, (state, action) => {
+        if (
+          !state.currentRequestId ||
+          state.currentRequestId !== action.meta.requestId ||
+          state.currentCountry !== action.meta.arg
+        ) {
+          return;
+        }
         state.loading = false;
-        state.error = action.payload as string;
+        state.currentRequestId = undefined;
+        state.error = (action.payload as string) || action.error.message || 'Unknown error';
       });
   },
 });
 
 export const { setCurrentCountry, clearMetadata } = metadataSlice.actions;
 
-// The metadata.currentCountry state is only used internally by useFetchMetadata
-// to track which country's metadata is currently cached.
+// currentCountry identifies both the active request and the metadata used by readiness checks.
 
 export default metadataSlice.reducer;

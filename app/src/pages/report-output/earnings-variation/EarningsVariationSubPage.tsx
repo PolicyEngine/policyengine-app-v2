@@ -2,6 +2,8 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { IconCheck, IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import HouseholdVariationError from '@/components/household/HouseholdVariationError';
+import SPMMethodologyFootnote from '@/components/household/SPMMethodologyFootnote';
 import {
   Button,
   Group,
@@ -219,28 +221,20 @@ export default function EarningsVariationSubPage({
     );
   }
 
+  if (baselineError) {
+    return <HouseholdVariationError error={baselineError} simulationRole="baseline" />;
+  }
+
+  if (reform && reformError) {
+    return <HouseholdVariationError error={reformError} simulationRole="reform" />;
+  }
+
   if (isLoading) {
     return (
       <Group className="tw:gap-sm tw:items-center">
         <Spinner size="sm" />
         <Text className="tw:text-sm">Loading earnings variation...</Text>
       </Group>
-    );
-  }
-
-  if (baselineError) {
-    return (
-      <Stack gap="md">
-        <Text c="red">Error loading baseline variation: {baselineError.message}</Text>
-      </Stack>
-    );
-  }
-
-  if (reform && reformError) {
-    return (
-      <Stack gap="md">
-        <Text c="red">Error loading reform variation: {reformError.message}</Text>
-      </Stack>
     );
   }
 
@@ -380,6 +374,10 @@ export default function EarningsVariationSubPage({
           year={normalizedReportYear}
         />
       )}
+      <SPMMethodologyFootnote
+        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+        context="variation"
+      />
     </Stack>
   );
 }

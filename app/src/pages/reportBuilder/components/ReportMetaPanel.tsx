@@ -18,11 +18,11 @@ import {
   SelectValue,
   Text,
 } from '@/components/ui';
-import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
+import { changeReportYear, householdMatchesReportYear } from '../utils/changeReportYear';
 
 const SEGMENT_HEIGHT = 38;
 
@@ -44,6 +44,25 @@ interface ReportMetaPanelProps {
 
 export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: ReportMetaPanelProps) {
   const yearOptions = useSelector(getTaxYears);
+  const [yearError, setYearError] = useState<string | null>(null);
+  const hasHousehold = reportState.simulations.some(
+    (simulation) => simulation.population.household
+  );
+  const needsHouseholdYearCopy = reportState.simulations.some(
+    ({ population }) =>
+      population.household && !householdMatchesReportYear(population.household, reportState.year)
+  );
+  const handleYearChange = (year: string) => {
+    try {
+      const next = changeReportYear(reportState, year);
+      setReportState(next);
+      setYearError(null);
+    } catch (error) {
+      setYearError(
+        error instanceof Error ? error.message : 'Unable to change the household input year.'
+      );
+    }
+  };
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
   const [inputWidth, setInputWidth] = useState<number | null>(null);
@@ -217,15 +236,10 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
         >
           Year
         </Text>
-        <Select
-          value={reportState.year}
-          onValueChange={(value) =>
-            setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
-          }
-          disabled={isReadOnly}
-        >
+        <Select value={reportState.year} onValueChange={handleYearChange} disabled={isReadOnly}>
           <SelectTrigger
             aria-label="Report year"
+            aria-describedby={hasHousehold && !isReadOnly ? 'household-year-help' : undefined}
             className="tw:border-none tw:bg-transparent tw:shadow-none tw:focus-visible:ring-0 tw:h-auto tw:p-0 tw:min-h-0"
             style={{
               fontFamily: typography.fontFamily.primary,
@@ -247,6 +261,29 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
           </SelectContent>
         </Select>
       </div>
+      {hasHousehold && !isReadOnly && (
+        <Text
+          id="household-year-help"
+          size="sm"
+          className="tw:basis-full tw:order-1 tw:text-muted-foreground"
+        >
+          Changing the year copies each household’s inputs to that year. Ages and monetary amounts
+          stay the same; no aging or inflation adjustment is applied. New households are saved when
+          you submit. Existing households and policy dates stay unchanged.
+        </Text>
+      )}
+      {needsHouseholdYearCopy && !isReadOnly && (
+        <div className="tw:basis-full tw:order-1">
+          <Button variant="outline" onClick={() => handleYearChange(reportState.year)}>
+            Use household inputs in {reportState.year}
+          </Button>
+        </div>
+      )}
+      {yearError && !isReadOnly && (
+        <Text role="alert" size="sm" className="tw:basis-full tw:order-1">
+          {yearError}
+        </Text>
+      )}
     </div>
   );
 }

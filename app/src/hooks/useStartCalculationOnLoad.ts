@@ -101,7 +101,7 @@ export function useStartCalculationOnLoad({
       }
 
       // Check if orchestrator is already running for this calcId
-      if (manager.isRunning(config.calcId)) {
+      if (manager.isRunning(config.calcId, config.targetType)) {
         continue;
       }
 

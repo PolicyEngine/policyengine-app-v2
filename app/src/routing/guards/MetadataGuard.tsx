@@ -62,7 +62,7 @@ export function MetadataGuard() {
 
   // If metadata.version is null/undefined, metadata hasn't loaded yet
   // This handles the case where loading is false but fetch hasn't started
-  if (!metadata.version) {
+  if (!metadata.version || metadata.currentCountry !== countryId) {
     return <MetadataLoadingExperience countryId={countryId} />;
   }
 

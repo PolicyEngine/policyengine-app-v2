@@ -4,6 +4,7 @@ import { Household } from '@/models/Household';
 import { HouseholdReportOutput } from '@/pages/report-output/HouseholdReportOutput';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
+import type { HouseholdReproduction } from '@/utils/reproducibilityCode';
 
 vi.mock('@/hooks/household', () => ({
   useSimulationProgressDisplay: () => ({
@@ -18,8 +19,14 @@ vi.mock('@/pages/report-output/useHouseholdCalculations', () => ({
 }));
 
 vi.mock('@/pages/report-output/reproduce-in-python/HouseholdReproducibility', () => ({
-  default: ({ household }: { household: Household | null }) => (
-    <div data-testid="repro-household-id">{household?.id ?? 'none'}</div>
+  default: ({ simulations }: { simulations: HouseholdReproduction[] }) => (
+    <div>
+      {simulations.map(({ role, household }) => (
+        <div key={role} data-testid={`repro-${role}-household-id`}>
+          {household?.id ?? 'none'}
+        </div>
+      ))}
+    </div>
   ),
 }));
 
@@ -91,6 +98,9 @@ describe('HouseholdReportOutput', () => {
       />
     );
 
-    expect(screen.getByTestId('repro-household-id')).toHaveTextContent('household-baseline');
+    expect(screen.getByTestId('repro-baseline-household-id')).toHaveTextContent(
+      'household-baseline'
+    );
+    expect(screen.getByTestId('repro-reform-household-id')).toHaveTextContent('household-reform');
   });
 });
