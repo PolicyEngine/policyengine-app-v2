@@ -1,8 +1,13 @@
+import { convertParametersToPolicyJson } from '@/adapters/conversionHelpers';
 import { createPolicy } from '@/api/policy';
 import { createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import { Parameter } from '@/types/subIngredients/parameter';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { NoEffectivePolicyChangesError, normalizePolicyParameters } from '@/utils/policyCurrentLaw';
 
 /**
  * The run bridge: turns a set of provisions (from a draft reform or a
@@ -18,6 +23,8 @@ export interface RunReportProvision {
   unit: string | null;
   baselineValue: any;
   value: any;
+  /** Preserve explicit date ranges when running a saved reform. */
+  values?: ValueInterval[];
 }
 
 /** Provenance shown in the flagship report header, stashed per report. */
@@ -27,6 +34,25 @@ export interface FlagshipReportMeta {
   sourceNote: string;
   provisions: RunReportProvision[];
   createdAt: string;
+}
+
+/** Build and normalize the policy parameters used by a flagship report. */
+export function getEffectiveRunReportParameters(
+  provisions: RunReportProvision[],
+  currentLawMetadata: ParameterMetadataCollection
+): Parameter[] {
+  const parameters = provisions.map((provision) => ({
+    name: provision.path,
+    values: provision.values ?? [
+      {
+        startDate: `${CURRENT_YEAR}-01-01`,
+        endDate: FOREVER,
+        value: provision.value,
+      },
+    ],
+  }));
+
+  return normalizePolicyParameters(parameters, currentLawMetadata);
 }
 
 const META_KEY = 'pe-flagship-report-meta';
@@ -56,6 +82,7 @@ export interface RunFlagshipReportArgs {
   title: string;
   sourceNote: string;
   provisions: RunReportProvision[];
+  currentLawMetadata: ParameterMetadataCollection;
   /** Numeric current-law policy id from metadata (US 2, UK 1). */
   currentLawId: number;
   /** Saved reform this run came from, for the central report record. */
@@ -67,6 +94,7 @@ export async function runFlagshipReport({
   title,
   sourceNote,
   provisions,
+  currentLawMetadata,
   currentLawId,
   reformId,
 }: RunFlagshipReportArgs): Promise<string> {
@@ -74,9 +102,15 @@ export async function runFlagshipReport({
     throw new Error('Cannot run a report with no provisions');
   }
 
-  const data = Object.fromEntries(
-    provisions.map((p) => [p.path, { [`${CURRENT_YEAR}-01-01.${FOREVER}`]: p.value }])
+  const effectiveParameters = getEffectiveRunReportParameters(provisions, currentLawMetadata);
+  if (effectiveParameters.length === 0) {
+    throw new NoEffectivePolicyChangesError();
+  }
+  const effectiveParameterNames = new Set(effectiveParameters.map((parameter) => parameter.name));
+  const effectiveProvisions = provisions.filter((provision) =>
+    effectiveParameterNames.has(provision.path)
   );
+  const data = convertParametersToPolicyJson(effectiveParameters);
   const policyResponse = await createPolicy(countryId, { data, label: title || undefined });
   const reformPolicyId = Number(policyResponse.result.policy_id);
 
@@ -106,7 +140,7 @@ export async function runFlagshipReport({
   saveReportMeta(reportId, {
     title,
     sourceNote,
-    provisions,
+    provisions: effectiveProvisions,
     createdAt: new Date().toISOString(),
   });
 
@@ -121,7 +155,7 @@ export async function runFlagshipReport({
       apiReportId: String(metadata.baseReportId),
       title: title || null,
       sourceNote: sourceNote || null,
-      provisions,
+      provisions: effectiveProvisions,
       year: CURRENT_YEAR,
       reformId: reformId ?? null,
     });

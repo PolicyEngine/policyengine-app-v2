@@ -17,6 +17,7 @@ import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { normalizePolicyParameters } from '@/utils/policyCurrentLaw';
 import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
 import Menu from '../../components/policyParameterSelector/Menu';
 import PolicyParameterSelectorMain from '../../components/PolicyParameterSelectorMain';
@@ -44,7 +45,11 @@ export default function PolicyParameterSelectorView({
   );
 
   // Count modifications from policy prop
-  const modificationCount = countPolicyModifications(policy);
+  const effectivePolicy = {
+    ...policy,
+    parameters: normalizePolicyParameters(policy.parameters, parameters),
+  };
+  const modificationCount = countPolicyModifications(effectivePolicy);
 
   const headerHeight = parseInt(spacing.appShell.header.height, 10);
   const navbarWidth = parseInt(spacing.appShell.navbar.width, 10);

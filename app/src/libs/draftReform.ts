@@ -1,8 +1,11 @@
 import { useSyncExternalStore } from 'react';
-import { FOREVER } from '@/constants';
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import { Parameter } from '@/types/subIngredients/parameter';
 import { getCurrentValue } from '@/utils/parameterValues';
+import { normalizePolicyParameters } from '@/utils/policyCurrentLaw';
 
 /**
  * The draft reform being composed in the flagship shell.
@@ -235,26 +238,37 @@ export function provisionFromSearchEntry(
   };
 }
 
-/** Converts the draft to the Reform shape for the store. */
-export function draftToReform(
+/** Converts draft provisions to the effective parameter changes they represent. */
+export function draftToPolicyParameters(
   draft: DraftReform,
-  userId: string
-): Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> {
-  const year = new Date().getFullYear();
-  return {
-    userId,
-    countryId: draft.countryId,
-    label: draft.label || null,
-    parameters: draft.provisions.map((provision) => ({
+  currentLawMetadata: ParameterMetadataCollection
+): Parameter[] {
+  return normalizePolicyParameters(
+    draft.provisions.map((provision) => ({
       name: provision.path,
       values: [
         {
-          startDate: `${year}-01-01`,
+          startDate: `${CURRENT_YEAR}-01-01`,
           endDate: FOREVER,
           value: provision.value,
         },
       ],
     })),
+    currentLawMetadata
+  );
+}
+
+/** Converts the draft to the Reform shape for the store. */
+export function draftToReform(
+  draft: DraftReform,
+  userId: string,
+  currentLawMetadata: ParameterMetadataCollection
+): Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> {
+  return {
+    userId,
+    countryId: draft.countryId,
+    label: draft.label || null,
+    parameters: draftToPolicyParameters(draft, currentLawMetadata),
     baseline: 'current-law',
     provenance: { source: draft.source, ref: draft.sourceRef },
   };

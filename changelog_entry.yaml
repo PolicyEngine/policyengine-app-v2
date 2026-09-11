@@ -23,3 +23,4 @@
 - Preserve canonical household receipts and terminal errors from report creation and modification, share calculation ownership through saving, pin recorded reproduction runtimes, and guide unsupported-year corrections
 - Make report-year corrections save new household inputs for the selected period without aging, inflation adjustments, or changes to historical households and policy dates
 - Block reports that mix households and geographies before saving, retain corrective SPM errors in earnings and marginal tax rate views without automatic retries, and show invalid saved reports as load errors
+- Prevent policies and reforms that match current law from being saved or run

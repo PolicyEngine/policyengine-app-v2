@@ -23,6 +23,15 @@ const PROVISION = {
   value: 2500,
 };
 
+const CURRENT_LAW_METADATA = {
+  [PROVISION.path]: {
+    type: 'parameter' as const,
+    parameter: PROVISION.path,
+    label: 'Child tax credit amount',
+    values: { '2020-01-01': 2000 },
+  },
+};
+
 describe('runFlagshipReport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,6 +51,7 @@ describe('runFlagshipReport', () => {
       title: 'CTC expansion',
       sourceNote: 'Federal · Introduced',
       provisions: [PROVISION],
+      currentLawMetadata: CURRENT_LAW_METADATA,
       currentLawId: 2,
     });
 
@@ -76,6 +86,7 @@ describe('runFlagshipReport', () => {
       title: 'CTC expansion',
       sourceNote: 'Federal · Introduced',
       provisions: [PROVISION],
+      currentLawMetadata: CURRENT_LAW_METADATA,
       currentLawId: 2,
     });
 
@@ -92,9 +103,47 @@ describe('runFlagshipReport', () => {
         title: 'Empty',
         sourceNote: 'Draft',
         provisions: [],
+        currentLawMetadata: CURRENT_LAW_METADATA,
         currentLawId: 2,
       })
     ).rejects.toThrow(/no provisions/);
     expect(mockCreatePolicy).not.toHaveBeenCalled();
+  });
+
+  test('given every provision matches current law then it refuses to run before API requests', async () => {
+    await expect(
+      runFlagshipReport({
+        countryId: 'us',
+        title: 'No-op',
+        sourceNote: 'Draft',
+        provisions: [{ ...PROVISION, value: 2000 }],
+        currentLawMetadata: CURRENT_LAW_METADATA,
+        currentLawId: 2,
+      })
+    ).rejects.toThrow(/match current law/i);
+    expect(mockCreatePolicy).not.toHaveBeenCalled();
+  });
+
+  test('given current law changes inside the proposed range then sends only the effective segment', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'Future difference',
+      sourceNote: 'Draft',
+      provisions: [{ ...PROVISION, value: 2000 }],
+      currentLawMetadata: {
+        [PROVISION.path]: {
+          ...CURRENT_LAW_METADATA[PROVISION.path],
+          values: { '2020-01-01': 2000, '2027-07-01': 3000 },
+        },
+      },
+      currentLawId: 2,
+    });
+
+    expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
+      label: 'Future difference',
+      data: {
+        [PROVISION.path]: { '2027-07-01.2100-12-31': 2000 },
+      },
+    });
   });
 });

@@ -6,7 +6,7 @@ export interface ParameterMetadata {
   description?: string | null;
   unit?: string | null;
   period?: string | null; // TODO: Specify period values
-  values?: Record<string, number>; // Historical values
+  values?: Record<string, unknown>; // Historical current-law values
   economy?: boolean;
   household?: boolean;
 }

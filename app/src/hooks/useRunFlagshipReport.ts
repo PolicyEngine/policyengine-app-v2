@@ -4,6 +4,10 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { runFlagshipReport, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
+import {
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  NoEffectivePolicyChangesError,
+} from '@/utils/policyCurrentLaw';
 
 /**
  * Runs the flagship report pipeline for a set of provisions and
@@ -14,6 +18,7 @@ export function useRunFlagshipReport() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const currentLawMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,12 +43,17 @@ export function useRunFlagshipReport() {
         title,
         sourceNote,
         provisions,
+        currentLawMetadata,
         currentLawId: Number(currentLawId),
         reformId,
       });
       nav.push(`/${countryId}/report/${userReportId}`);
-    } catch {
-      setError('Could not start the report. Try again.');
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof NoEffectivePolicyChangesError
+          ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+          : 'Could not start the report. Try again.'
+      );
       setIsRunning(false);
     }
   };

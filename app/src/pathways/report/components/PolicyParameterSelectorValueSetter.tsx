@@ -11,10 +11,17 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Button, Separator } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
+import { colors } from '@/designTokens/colors';
 import { getDateRange } from '@/libs/metadataUtils';
+import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import {
+  NO_EFFECTIVE_PARAMETER_CHANGE_MESSAGE,
+  normalizeParameterIntervals,
+  normalizePolicyParameters,
+} from '@/utils/policyCurrentLaw';
 import { addParameterToPolicy } from '@/utils/policyParameterUpdate';
 import { ModeSelectorButton, ValueSetterComponents, ValueSetterMode } from './valueSetters';
 
@@ -30,9 +37,11 @@ export default function PolicyParameterSelectorValueSetter({
   onPolicyUpdate,
 }: PolicyParameterSelectorValueSetterProps) {
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
   // Get date ranges from metadata using utility selector
   const { minDate, maxDate } = useSelector(getDateRange);
+  const currentLawMetadata = useSelector((state: RootState) => state.metadata.parameters);
 
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
@@ -46,13 +55,30 @@ export default function PolicyParameterSelectorValueSetter({
 
   function handleModeChange(newMode: ValueSetterMode) {
     resetValueSettingState();
+    setValidationMessage(null);
     setMode(newMode);
   }
 
   function handleSubmit() {
+    if (intervals.length === 0) {
+      return;
+    }
+
     // Use immutable utility to add parameter intervals
     // This creates new array references to ensure React detects the state change
-    const updatedPolicy = addParameterToPolicy(policy, param.parameter, intervals);
+    const candidatePolicy = addParameterToPolicy(policy, param.parameter, intervals);
+    const effectiveParameters = normalizePolicyParameters(
+      candidatePolicy.parameters,
+      currentLawMetadata
+    );
+    const updatedPolicy = { ...candidatePolicy, parameters: effectiveParameters };
+
+    setValidationMessage(
+      normalizeParameterIntervals(intervals, currentLawMetadata[param.parameter]?.values).length ===
+        0
+        ? NO_EFFECTIVE_PARAMETER_CHANGE_MESSAGE
+        : null
+    );
 
     // Notify parent of policy update
     onPolicyUpdate(updatedPolicy);
@@ -90,6 +116,11 @@ export default function PolicyParameterSelectorValueSetter({
             </Button>
           </div>
         </div>
+        {validationMessage && (
+          <p role="status" className="tw:text-sm" style={{ color: colors.text.warning }}>
+            {validationMessage}
+          </p>
+        )}
       </div>
     </div>
   );

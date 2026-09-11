@@ -12,7 +12,20 @@ const MODAL_TEST_TIMEOUT_MS = 20_000;
 const mockReduxState = {
   metadata: {
     parameterTree: null,
-    parameters: {},
+    parameters: {
+      'gov.test.no_op': {
+        label: 'No-op parameter',
+        type: 'parameter',
+        parameter: 'gov.test.no_op',
+        values: { '2020-01-01': 1 },
+      },
+      'gov.test.transition': {
+        label: 'Transition parameter',
+        type: 'parameter',
+        parameter: 'gov.test.transition',
+        values: { '2025-01-01': 100, '2026-07-01': 200 },
+      },
+    },
     loading: false,
     economyOptions: {
       time_period: [{ name: '2024', label: '2024' }],
@@ -80,6 +93,28 @@ const modifiedPolicy: PolicyStateProps = {
   ],
 };
 
+const noOpPolicy: PolicyStateProps = {
+  id: 'pol-123',
+  label: 'No-op policy',
+  parameters: [
+    {
+      name: 'gov.test.no_op',
+      values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 1 }],
+    },
+  ],
+};
+
+const transitionPolicy: PolicyStateProps = {
+  id: 'pol-123',
+  label: 'Transition policy',
+  parameters: [
+    {
+      name: 'gov.test.transition',
+      values: [{ startDate: '2025-01-01', endDate: '2026-12-31', value: 100 }],
+    },
+  ],
+};
+
 describe('PolicyCreationModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -102,6 +137,72 @@ describe('PolicyCreationModal', () => {
       },
     });
   });
+
+  test(
+    'given every edited value matches current law then disables both save actions',
+    () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={noOpPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /update existing policy/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /save as new policy/i })).toBeDisabled();
+      expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
+      expect(mockCreatePolicyApi).not.toHaveBeenCalled();
+      expect(mockCreatePolicyWithLabel).not.toHaveBeenCalled();
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given current law changes inside an edited range then updates with only the effective segment',
+    async () => {
+      const onPolicyCreated = vi.fn();
+
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={onPolicyCreated}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={transitionPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /update existing policy/i }));
+
+      await waitFor(() => {
+        expect(mockCreatePolicyApi).toHaveBeenCalledWith('us', {
+          data: {
+            'gov.test.transition': {
+              '2026-07-01.2026-12-31': 100,
+            },
+          },
+        });
+      });
+      expect(onPolicyCreated).toHaveBeenCalledWith({
+        id: 'pol-replacement',
+        label: 'Transition policy',
+        parameters: [
+          {
+            name: 'gov.test.transition',
+            values: [{ startDate: '2026-07-01', endDate: '2026-12-31', value: 100 }],
+          },
+        ],
+      });
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
 
   test(
     'given forceReadOnly then does not render edit transition actions',

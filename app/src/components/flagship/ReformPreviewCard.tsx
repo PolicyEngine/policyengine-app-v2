@@ -1,5 +1,6 @@
 import { IconChartBar, IconTrash, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Stack, Text } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
@@ -9,14 +10,20 @@ import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import {
   clearDraftReform,
   DraftReform,
+  draftToPolicyParameters,
   draftToReform,
   removeDraftProvision,
   setDraftLabel,
   setDraftPopulation,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
+import { RootState } from '@/store';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
+import {
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  NoEffectivePolicyChangesError,
+} from '@/utils/policyCurrentLaw';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
@@ -84,11 +91,17 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
+  const currentLawMetadata = useSelector((state: RootState) => state.metadata.parameters);
+  const effectiveParameters = draftToPolicyParameters(draft, currentLawMetadata);
+  const hasEffectiveChanges = effectiveParameters.length > 0;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const store = getReformStore();
-      const payload = draftToReform(draft, MOCK_USER_ID);
+      const payload = draftToReform(draft, MOCK_USER_ID, currentLawMetadata);
+      if (payload.parameters.length === 0) {
+        throw new NoEffectivePolicyChangesError();
+      }
       if (draft.editingReformId) {
         return store.update(draft.editingReformId, {
           label: payload.label,
@@ -105,9 +118,8 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
     },
   });
 
-  const hasEditedValue = draft.provisions.some((p) => p.value !== p.baselineValue);
-  const provisionCount = `${draft.provisions.length} provision${
-    draft.provisions.length === 1 ? '' : 's'
+  const provisionCount = `${effectiveParameters.length} provision${
+    effectiveParameters.length === 1 ? '' : 's'
   }`;
 
   return (
@@ -209,7 +221,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             </Stack>
           </Stack>
         ))}
-        {!hasEditedValue && draft.provisions.length > 0 && (
+        {!hasEffectiveChanges && draft.provisions.length > 0 && (
           <Text
             style={{
               fontSize: typography.fontSize.xs,
@@ -217,7 +229,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
               padding: `${spacing.sm} ${spacing.lg} 0`,
             }}
           >
-            Values match current law so far — edit a value above to make this a reform.
+            {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE} Edit a value above to make this a reform.
           </Text>
         )}
       </Stack>
@@ -297,7 +309,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
               draft.provisions
             )
           }
-          disabled={draft.provisions.length === 0 || runReport.isRunning}
+          disabled={!hasEffectiveChanges || runReport.isRunning}
           style={{ width: '100%' }}
         >
           <IconChartBar size={16} />
@@ -307,7 +319,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={draft.provisions.length === 0 || saveMutation.isPending}
+            disabled={!hasEffectiveChanges || saveMutation.isPending}
             style={{ flex: 1 }}
           >
             {draft.editingReformId ? 'Save changes' : 'Save to library'}

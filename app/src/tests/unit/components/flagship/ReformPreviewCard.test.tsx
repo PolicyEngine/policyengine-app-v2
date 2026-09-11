@@ -12,6 +12,27 @@ import {
 
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
+const mockReduxState = {
+  metadata: {
+    currentLawId: 2,
+    parameters: {
+      'gov.irs.credits.ctc.amount.base[0].amount': {
+        type: 'parameter',
+        parameter: 'gov.irs.credits.ctc.amount.base[0].amount',
+        label: 'Child tax credit amount',
+        values: { '2020-01-01': 2000 },
+      },
+    },
+  },
+};
+
+vi.mock('react-redux', async () => {
+  const actual = await vi.importActual<typeof import('react-redux')>('react-redux');
+  return {
+    ...actual,
+    useSelector: (selector: (state: typeof mockReduxState) => unknown) => selector(mockReduxState),
+  };
+});
 
 vi.mock('@/api/reformStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/reformStore')>();
@@ -77,7 +98,9 @@ describe('ReformPreviewCard', () => {
   test('given values equal baseline then the nudge to edit shows', () => {
     renderCard();
 
-    expect(screen.getByText(/values match current law so far/i)).toBeInTheDocument();
+    expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /save to library/i })).toBeDisabled();
   });
 
   test('given a new value is typed then the draft updates', async () => {
@@ -96,6 +119,9 @@ describe('ReformPreviewCard', () => {
     mockCreate.mockResolvedValue({ id: 'rf-1' });
     renderCard();
 
+    const input = screen.getByLabelText(/new value for gov\.irs/i);
+    await user.clear(input);
+    await user.type(input, '3600');
     await user.click(screen.getByRole('button', { name: /save to library/i }));
 
     await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
@@ -129,7 +155,7 @@ describe('ReformPreviewCard', () => {
     renderCard();
 
     expect(screen.getByText('Reform')).toBeInTheDocument();
-    expect(screen.getByText('1 provision')).toBeInTheDocument();
+    expect(screen.getByText('0 provisions')).toBeInTheDocument();
     expect(screen.getByText('Population')).toBeInTheDocument();
     expect(screen.getByText('Simulation')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /run report/i })).toBeInTheDocument();
