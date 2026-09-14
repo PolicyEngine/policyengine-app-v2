@@ -48,7 +48,10 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { getEffectiveRunReportParameters } from '@/libs/flagship/runReport';
+import {
+  createRunReportProvision,
+  getEffectiveRunReportParameters,
+} from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
@@ -203,13 +206,13 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   const provisions = bill.provisions.map((provision) => {
     const metadata = parameters?.[provision.path];
-    return {
+    return createRunReportProvision({
       path: provision.path,
       breadcrumb: resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb),
       unit: metadata?.unit ?? null,
       baselineValue: getCurrentValue(metadata?.values),
       value: provision.value,
-    };
+    });
   });
   const hasResolvedProvisionMetadata =
     provisions.length > 0 &&

@@ -10,6 +10,7 @@ import type {
   ReformParameterMetadata,
   ReformProvenanceMetadata,
 } from "@/types/metadata/reformMetadata";
+import type { ValueInterval } from "@/types/subIngredients/valueInterval";
 
 /**
  * Central store for the flagship app's reform objects.
@@ -91,7 +92,9 @@ export interface ReportProvisionMetadata {
   breadcrumb: string;
   unit: string | null;
   baseline_value: unknown;
-  value: unknown;
+  values: ValueInterval[];
+  /** Read compatibility for report rows written before dated values were stored. */
+  value?: unknown;
 }
 
 export interface ReportValidationMatchMetadata {

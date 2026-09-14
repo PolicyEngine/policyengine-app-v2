@@ -14,22 +14,17 @@ import type { Policy } from '@/types/ingredients/Policy';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { getCurrentValue } from '@/utils/parameterValues';
+import { getParameterValueAtDate } from '@/utils/policyParameterUpdate';
 
 /** The value a parameter's intervals set for `year`; the first interval when none covers it. */
 export function valueForYear(parameter: Parameter, year: string = CURRENT_YEAR): unknown {
-  const covering = parameter.values.find(
-    (interval) =>
-      String(interval.startDate).slice(0, 4) <= year &&
-      String(interval.endDate ?? '9999').slice(0, 4) >= year
-  );
-  return (covering ?? parameter.values[0])?.value;
+  return getParameterValueAtDate(parameter, `${year}-01-01`);
 }
 
 /** Rebuilds report provisions from a policy's parameter changes. */
 export function provisionsFromPolicy(
   policy: Policy | null | undefined,
-  parameters: Record<string, any> | null | undefined,
-  year: string = CURRENT_YEAR
+  parameters: Record<string, any> | null | undefined
 ): RunReportProvision[] {
   return (policy?.parameters ?? []).map((parameter) => {
     const metadata = parameters?.[parameter.name];
@@ -40,7 +35,7 @@ export function provisionsFromPolicy(
         : parameter.name,
       unit: metadata?.unit ?? null,
       baselineValue: getCurrentValue(metadata?.values),
-      value: valueForYear(parameter, year),
+      values: parameter.values.map((interval) => ({ ...interval })),
     };
   });
 }
@@ -52,8 +47,7 @@ export function provisionsFromPolicy(
 export function provenanceFromPolicy(
   policy: Policy | null | undefined,
   parameters: Record<string, any> | null | undefined,
-  label: string | null | undefined,
-  year: string = CURRENT_YEAR
+  label: string | null | undefined
 ): FlagshipReportMeta | null {
   if (!policy) {
     return null;
@@ -61,7 +55,7 @@ export function provenanceFromPolicy(
   return {
     title: label || policy.label || '',
     sourceNote: '',
-    provisions: provisionsFromPolicy(policy, parameters, year),
+    provisions: provisionsFromPolicy(policy, parameters),
     createdAt: '',
   };
 }

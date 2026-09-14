@@ -16,7 +16,7 @@ import {
   useModelTrackRecord,
 } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text, Title } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -28,7 +28,7 @@ import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { reportStages } from '@/libs/flagship/reportStages';
-import { readReportMeta } from '@/libs/flagship/runReport';
+import { getRunReportProvisionValue, readReportMeta } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import ErrorPage from '@/pages/report-output/ErrorPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
@@ -398,7 +398,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             request={{
               countryId,
               label: meta?.title || report?.label || 'Drafted reform',
-              provisions: meta?.provisions ?? [],
+              provisions: (meta?.provisions ?? []).map((provision) => ({
+                path: provision.path,
+                value: getRunReportProvisionValue(provision, String(report?.year ?? CURRENT_YEAR)),
+              })),
               peEstimate: output.budget?.budgetary_impact,
               year: report?.year,
             }}

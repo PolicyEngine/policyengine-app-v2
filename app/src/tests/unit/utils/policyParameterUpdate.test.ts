@@ -9,7 +9,11 @@
 import { describe, expect, test } from 'vitest';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { addParameterToPolicy } from '@/utils/policyParameterUpdate';
+import {
+  addParameterToPolicy,
+  getParameterValueAtDate,
+  updateParameterValueAtDate,
+} from '@/utils/policyParameterUpdate';
 
 // Test fixtures
 const BOOLEAN_PARAM_NAME = 'gov.irs.deductions.itemized.charity.floor.applies';
@@ -215,5 +219,37 @@ describe('addParameterToPolicy', () => {
       expect(updatedPolicy.parameters).toBeDefined();
       expect(updatedPolicy.parameters).toHaveLength(1);
     });
+  });
+});
+
+describe('dated parameter value helpers', () => {
+  test('given multiple intervals when updating a covered date then only that interval changes', () => {
+    const parameter = {
+      name: NUMERIC_PARAM_NAME,
+      values: [
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 1_000 },
+        { startDate: '2027-01-01', endDate: '2100-12-31', value: 2_000 },
+      ],
+    };
+
+    const updated = updateParameterValueAtDate(parameter, '2026-07-01', 1_500);
+
+    expect(updated.values).toEqual([
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 1_500 },
+      { startDate: '2027-01-01', endDate: '2100-12-31', value: 2_000 },
+    ]);
+    expect(parameter.values[0].value).toBe(1_000);
+  });
+
+  test('given no interval covers the date then the first interval remains the editable value', () => {
+    const parameter = {
+      name: NUMERIC_PARAM_NAME,
+      values: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 2_000 }],
+    };
+
+    expect(getParameterValueAtDate(parameter, '2026-01-01')).toBe(2_000);
+    expect(updateParameterValueAtDate(parameter, '2026-01-01', 2_500).values).toEqual([
+      { startDate: '2027-01-01', endDate: '2100-12-31', value: 2_500 },
+    ]);
   });
 });

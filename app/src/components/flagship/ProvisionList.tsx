@@ -1,14 +1,9 @@
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { getRunReportProvisionValue, type RunReportProvision } from '@/libs/flagship/runReport';
 import { formatValue } from '@/utils/parameterValues';
 
-export interface ProvisionListItem {
-  path: string;
-  breadcrumb: string;
-  unit: string | null;
-  baselineValue: any;
-  value: any;
-}
+export type ProvisionListItem = RunReportProvision;
 
 /**
  * A reform's provisions as a first-class card. Each row leads with the
@@ -32,7 +27,7 @@ export default function ProvisionList({ provisions }: { provisions: ProvisionLis
         const name = parts[parts.length - 1] ?? provision.path;
         const context = parts.slice(0, -1).join(' → ');
         const baseline = formatValue(provision.baselineValue, provision.unit);
-        const proposed = formatValue(provision.value, provision.unit);
+        const proposed = formatValue(getRunReportProvisionValue(provision), provision.unit);
         const unchanged = baseline === proposed;
 
         return (

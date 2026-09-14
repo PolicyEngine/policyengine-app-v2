@@ -58,25 +58,25 @@ const PROVISIONS = [
     breadcrumb: 'IRS → Credits → Child tax credit → Base amount',
     unit: 'currency-USD',
     baselineValue: 2000,
-    value: 2500,
+    values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 }],
   },
   {
     path: 'gov.usda.snap.max_allotment',
     breadcrumb: 'USDA → SNAP → Maximum allotment',
     unit: 'currency-USD',
     baselineValue: 300,
-    value: 350,
+    values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 350 }],
   },
 ];
 
-async function renderPanel() {
+async function renderPanel(provisions = PROVISIONS) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
     <QueryClientProvider client={queryClient}>
       <ReportAdjustPanel
         title="CTC expansion"
         sourceNote="Federal · Introduced"
-        provisions={PROVISIONS}
+        provisions={provisions}
       />
     </QueryClientProvider>
   );
@@ -116,9 +116,16 @@ describe('ReportAdjustPanel', () => {
     expect(runTitle).toBe('CTC expansion (adjusted)');
     expect(reformId).toBe('rf-new');
     expect(runProvisions).toEqual([
-      expect.objectContaining({ path: PROVISIONS[0].path, value: 3600 }),
-      expect.objectContaining({ path: PROVISIONS[1].path, value: 350 }),
+      expect.objectContaining({
+        path: PROVISIONS[0].path,
+        values: [expect.objectContaining({ value: 3600 })],
+      }),
+      expect.objectContaining({
+        path: PROVISIONS[1].path,
+        values: [expect.objectContaining({ value: 350 })],
+      }),
     ]);
+    expect(runProvisions[0]).not.toHaveProperty('value');
   });
 
   test('given the adjusted set matches a saved reform then it is reused, not duplicated', async () => {
@@ -221,7 +228,36 @@ describe('ReportAdjustPanel', () => {
       })
     );
     expect(mockRun.mock.calls[0][2]).toEqual([
-      expect.objectContaining({ path: PROVISIONS[1].path, value: 350 }),
+      expect.objectContaining({
+        path: PROVISIONS[1].path,
+        values: [expect.objectContaining({ value: 350 })],
+      }),
+    ]);
+  });
+
+  test('given future-dated values then changing the current interval preserves later intervals', async () => {
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'Dated CTC adjustment' });
+    const datedProvisions = [
+      {
+        ...PROVISIONS[0],
+        values: [
+          { startDate: '2026-01-01', endDate: '2026-12-31', value: 2500 },
+          { startDate: '2027-01-01', endDate: '2100-12-31', value: 4200 },
+        ],
+      },
+    ];
+    const user = userEvent.setup();
+    await renderPanel(datedProvisions);
+
+    const input = screen.getByLabelText(/adjusted value for gov\.irs/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockRun.mock.calls[0][2][0].values).toEqual([
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 3600 },
+      { startDate: '2027-01-01', endDate: '2100-12-31', value: 4200 },
     ]);
   });
 

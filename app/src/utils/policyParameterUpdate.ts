@@ -7,9 +7,50 @@
  * Issue #602: Boolean policy parameters not being saved to API
  */
 
+import { FOREVER } from '@/constants';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+
+/** Return the interval covering an ISO date, or the first interval as the editor fallback. */
+export function getParameterIntervalAtDate(
+  parameter: Parameter,
+  date: string
+): ValueInterval | undefined {
+  return (
+    parameter.values.find((interval) => interval.startDate <= date && interval.endDate >= date) ??
+    parameter.values[0]
+  );
+}
+
+/** Return the parameter value edited for an ISO date. */
+export function getParameterValueAtDate(parameter: Parameter, date: string): unknown {
+  return getParameterIntervalAtDate(parameter, date)?.value;
+}
+
+/**
+ * Replace the value for the interval edited at `date` while preserving every
+ * other dated interval. Parameters without values receive a new open-ended
+ * interval beginning at `date`.
+ */
+export function updateParameterValueAtDate(
+  parameter: Parameter,
+  date: string,
+  value: unknown
+): Parameter {
+  const editedInterval = getParameterIntervalAtDate(parameter, date) ?? {
+    startDate: date,
+    endDate: FOREVER,
+    value,
+  };
+  const values = new ValueIntervalCollection(parameter.values);
+  values.addInterval({ ...editedInterval, value });
+
+  return {
+    ...parameter,
+    values: values.getIntervals(),
+  };
+}
 
 /**
  * Adds parameter intervals to a policy, returning a new policy object.

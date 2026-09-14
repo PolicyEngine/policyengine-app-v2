@@ -23,7 +23,7 @@ const newReport: NewFlagshipReport = {
       breadcrumb: 'IRS → Credits → CTC → Amount',
       unit: 'currency-USD',
       baselineValue: 2200,
-      value: 2500,
+      values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 }],
     },
   ],
   year: '2026',
@@ -61,6 +61,35 @@ describe('LocalStorageFlagshipReportStore', () => {
     await expect(store.saveValidation('lfr-missing', mockReportValidationSnapshot)).rejects.toThrow(
       'Report not found'
     );
+  });
+
+  test('given a legacy scalar provision then reading converts it to dated values', async () => {
+    localStorage.setItem(
+      'pe-flagship-reports',
+      JSON.stringify([
+        {
+          ...newReport,
+          id: 'legacy-report',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          provisions: [
+            {
+              path: newReport.provisions[0].path,
+              breadcrumb: newReport.provisions[0].breadcrumb,
+              unit: newReport.provisions[0].unit,
+              baselineValue: 2200,
+              value: 2500,
+            },
+          ],
+        },
+      ])
+    );
+
+    const record = await new LocalStorageFlagshipReportStore().findById('legacy-report');
+
+    expect(record?.provisions[0].values).toEqual([
+      { startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 },
+    ]);
+    expect(record?.provisions[0]).not.toHaveProperty('value');
   });
 });
 
@@ -100,6 +129,18 @@ describe('ApiFlagshipReportStore', () => {
       `/api/reports?user_id=${USER_ID}&api_report_id=${API_REPORT_ID}`
     );
     expect(record?.validation).toEqual(mockReportValidationSnapshot);
+  });
+
+  test('given a new report then the API receives dated values without a duplicate scalar', async () => {
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => storedRow });
+    const store = new ApiFlagshipReportStore();
+
+    await store.create(newReport);
+
+    const request = fetchMock.mock.calls[0][1];
+    const body = JSON.parse(request.body);
+    expect(body.provisions[0].values).toEqual(newReport.provisions[0].values);
+    expect(body.provisions[0]).not.toHaveProperty('value');
   });
 
   test('given a snapshot then it is PATCHed in wire form', async () => {

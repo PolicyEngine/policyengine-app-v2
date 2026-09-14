@@ -20,7 +20,7 @@ const PROVISION = {
   breadcrumb: 'IRS → Credits → Child tax credit → Base amount',
   unit: 'currency-USD',
   baselineValue: 2000,
-  value: 2500,
+  values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 }],
 };
 
 const CURRENT_LAW_METADATA = {
@@ -96,6 +96,25 @@ describe('runFlagshipReport', () => {
     expect(meta?.provisions).toEqual([PROVISION]);
   });
 
+  test('given stored provenance has both representations then dated values are canonical', () => {
+    localStorage.setItem(
+      'pe-flagship-report-meta',
+      JSON.stringify({
+        'legacy-report': {
+          title: 'Legacy report',
+          sourceNote: 'Saved reform',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          provisions: [{ ...PROVISION, value: 9999 }],
+        },
+      })
+    );
+
+    const provision = readReportMeta('legacy-report')?.provisions[0];
+
+    expect(provision?.values).toEqual(PROVISION.values);
+    expect(provision).not.toHaveProperty('value');
+  });
+
   test('given no provisions then it refuses to run', async () => {
     await expect(
       runFlagshipReport({
@@ -116,7 +135,12 @@ describe('runFlagshipReport', () => {
         countryId: 'us',
         title: 'No-op',
         sourceNote: 'Draft',
-        provisions: [{ ...PROVISION, value: 2000 }],
+        provisions: [
+          {
+            ...PROVISION,
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
+          },
+        ],
         currentLawMetadata: CURRENT_LAW_METADATA,
         currentLawId: 2,
       })
@@ -129,7 +153,12 @@ describe('runFlagshipReport', () => {
       countryId: 'us',
       title: 'Future difference',
       sourceNote: 'Draft',
-      provisions: [{ ...PROVISION, value: 2000 }],
+      provisions: [
+        {
+          ...PROVISION,
+          values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
+        },
+      ],
       currentLawMetadata: {
         [PROVISION.path]: {
           ...CURRENT_LAW_METADATA[PROVISION.path],
@@ -145,5 +174,8 @@ describe('runFlagshipReport', () => {
         [PROVISION.path]: { '2027-07-01.2100-12-31': 2000 },
       },
     });
+    expect(readReportMeta('55')?.provisions[0].values).toEqual([
+      { startDate: '2027-07-01', endDate: '2100-12-31', value: 2000 },
+    ]);
   });
 });

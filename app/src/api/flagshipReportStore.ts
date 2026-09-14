@@ -4,7 +4,7 @@ import {
   validationFromWire,
   validationToWire,
 } from '@/libs/flagship/reportValidation';
-import { RunReportProvision } from '@/libs/flagship/runReport';
+import { createRunReportProvision, RunReportProvision } from '@/libs/flagship/runReport';
 
 /**
  * Store for flagship report records: a pointer to the computed output
@@ -55,6 +55,29 @@ function throwIfUnavailable(response: Response): void {
   }
 }
 
+function provisionFromStorage(provision: any, year: string): RunReportProvision {
+  if (Array.isArray(provision.values)) {
+    return {
+      path: provision.path,
+      breadcrumb: provision.breadcrumb,
+      unit: provision.unit ?? null,
+      baselineValue: provision.baseline_value ?? provision.baselineValue,
+      values: provision.values.map((interval: any) => ({ ...interval })),
+    };
+  }
+
+  return createRunReportProvision(
+    {
+      path: provision.path,
+      breadcrumb: provision.breadcrumb,
+      unit: provision.unit ?? null,
+      baselineValue: provision.baseline_value ?? provision.baselineValue,
+      value: provision.value,
+    },
+    `${year}-01-01`
+  );
+}
+
 function fromMetadata(data: any): FlagshipReportRecord {
   return {
     id: data.id,
@@ -63,13 +86,9 @@ function fromMetadata(data: any): FlagshipReportRecord {
     apiReportId: data.api_report_id,
     title: data.title,
     sourceNote: data.source_note,
-    provisions: (data.provisions ?? []).map((p: any) => ({
-      path: p.path,
-      breadcrumb: p.breadcrumb,
-      unit: p.unit ?? null,
-      baselineValue: p.baseline_value,
-      value: p.value,
-    })),
+    provisions: (data.provisions ?? []).map((provision: any) =>
+      provisionFromStorage(provision, data.year)
+    ),
     year: data.year,
     createdAt: data.created_at,
     reformId: data.reform_id ?? null,
@@ -95,7 +114,7 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
           breadcrumb: p.breadcrumb,
           unit: p.unit,
           baseline_value: p.baselineValue,
-          value: p.value,
+          values: p.values,
         })),
         year: report.year,
         reform_id: report.reformId ?? null,
@@ -169,7 +188,12 @@ const LOCAL_KEY = 'pe-flagship-reports';
 export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   private read(): FlagshipReportRecord[] {
     try {
-      return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]');
+      return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]').map((record: any) => ({
+        ...record,
+        provisions: (record.provisions ?? []).map((provision: any) =>
+          provisionFromStorage(provision, record.year)
+        ),
+      }));
     } catch {
       return [];
     }

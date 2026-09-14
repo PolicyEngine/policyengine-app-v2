@@ -17,6 +17,7 @@ import {
   setDraftPopulation,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
+import { createRunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
@@ -329,7 +330,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             runReport.run(
               draft.label || 'Draft reform',
               SOURCE_NOTES[draft.source] ?? 'Draft reform',
-              draft.provisions
+              draft.provisions.map((provision) => createRunReportProvision(provision))
             )
           }
           disabled={!hasEffectiveChanges || runReport.isRunning}

@@ -56,12 +56,12 @@ describe('valueForYear', () => {
 });
 
 describe('provisionsFromPolicy', () => {
-  test('given a policy and metadata then provisions carry path, value, baseline, and unit', () => {
-    const [provision] = provisionsFromPolicy(reformPolicy, metadataParameters, '2026');
+  test('given a policy and metadata then provisions carry path, dated values, baseline, and unit', () => {
+    const [provision] = provisionsFromPolicy(reformPolicy, metadataParameters);
 
     expect(provision).toMatchObject({
       path: CTC_BASE_PATH,
-      value: 2500,
+      values: reformPolicy.parameters![0].values,
       unit: 'currency-USD',
     });
     expect(provision.baselineValue).toBe(2200);
@@ -69,7 +69,7 @@ describe('provisionsFromPolicy', () => {
   });
 
   test('given a path missing from metadata then the path itself is the breadcrumb', () => {
-    const [provision] = provisionsFromPolicy(reformPolicy, {}, '2026');
+    const [provision] = provisionsFromPolicy(reformPolicy, {});
 
     expect(provision.breadcrumb).toBe(CTC_BASE_PATH);
     expect(provision.unit).toBeNull();

@@ -20,7 +20,7 @@ const provision = {
   breadcrumb: 'IRS → Credits → Child Tax Credit → Amount → Bracket 1 → Amount',
   unit: 'currency-USD',
   baselineValue: 2200,
-  value: 2500,
+  values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 }],
 };
 
 describe('ReportComputingScreen', () => {

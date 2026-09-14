@@ -4,11 +4,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Stack, Text } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { getEffectiveRunReportParameters, RunReportProvision } from '@/libs/flagship/runReport';
+import {
+  getEffectiveRunReportProvisions,
+  getRunReportProvisionValue,
+  RunReportProvision,
+} from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform } from '@/types/ingredients/Reform';
 import type { Parameter } from '@/types/subIngredients/parameter';
@@ -19,6 +23,7 @@ import {
   normalizePolicyParameters,
   policyParametersEqual,
 } from '@/utils/policyCurrentLaw';
+import { updateParameterValueAtDate } from '@/utils/policyParameterUpdate';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
@@ -60,18 +65,16 @@ export default function ReportAdjustPanel({
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);
-  const [values, setValues] = useState<Record<string, any>>(() =>
-    Object.fromEntries(provisions.map((provision) => [provision.path, provision.value]))
+  const [adjusted, setAdjusted] = useState<RunReportProvision[]>(() =>
+    provisions.map((provision) => ({
+      ...provision,
+      values: provision.values.map((interval) => ({ ...interval })),
+    }))
   );
 
-  const active = provisions.filter((provision) => !removed.has(provision.path));
-  const adjusted = useMemo(
-    () =>
-      active.map((provision) => ({
-        ...provision,
-        value: values[provision.path],
-      })),
-    [active, values]
+  const active = useMemo(
+    () => adjusted.filter((provision) => !removed.has(provision.path)),
+    [adjusted, removed]
   );
   const hasRequiredMetadata =
     !metadata.loading &&
@@ -79,18 +82,21 @@ export default function ReportAdjustPanel({
     metadata.currentCountry === countryId &&
     metadata.version !== null &&
     metadata.currentLawId > 0 &&
-    adjusted.every((provision) => metadata.parameters[provision.path]?.values);
-  const effectiveParameters = useMemo(
-    () =>
-      hasRequiredMetadata ? getEffectiveRunReportParameters(adjusted, metadata.parameters) : [],
-    [adjusted, hasRequiredMetadata, metadata.parameters]
+    active.every((provision) => metadata.parameters[provision.path]?.values);
+  const effectiveProvisions = useMemo(
+    () => (hasRequiredMetadata ? getEffectiveRunReportProvisions(active, metadata.parameters) : []),
+    [active, hasRequiredMetadata, metadata.parameters]
   );
-  const effectiveByName = new Map(
-    effectiveParameters.map((parameter) => [parameter.name, parameter])
-  );
-  const effectiveProvisions = adjusted.filter((provision) => effectiveByName.has(provision.path));
+  const effectiveParameters = effectiveProvisions.map((provision) => ({
+    name: provision.path,
+    values: provision.values,
+  }));
   const isDirty =
-    removed.size > 0 || provisions.some((provision) => values[provision.path] !== provision.value);
+    removed.size > 0 ||
+    !policyParametersEqual(
+      provisions.map((provision) => ({ name: provision.path, values: provision.values })),
+      adjusted.map((provision) => ({ name: provision.path, values: provision.values }))
+    );
   const busy = isReconciling || runReport.isRunning;
 
   if (provisions.length === 0) {
@@ -210,9 +216,21 @@ export default function ReportAdjustPanel({
                 {formatValue(provision.baselineValue, provision.unit)} →
               </Text>
               <ValueInput
-                value={values[provision.path]}
+                value={getRunReportProvisionValue(provision)}
                 onChange={(next) =>
-                  setValues((current) => ({ ...current, [provision.path]: next }))
+                  setAdjusted((current) =>
+                    current.map((currentProvision) => {
+                      if (currentProvision.path !== provision.path) {
+                        return currentProvision;
+                      }
+                      const updated = updateParameterValueAtDate(
+                        { name: currentProvision.path, values: currentProvision.values },
+                        `${CURRENT_YEAR}-01-01`,
+                        next
+                      );
+                      return { ...currentProvision, values: updated.values };
+                    })
+                  )
                 }
                 ariaLabel={`Adjusted value for ${provision.path}`}
               />

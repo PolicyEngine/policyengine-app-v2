@@ -86,6 +86,21 @@ const CHAT_REFORM: Reform = {
   updatedAt: '2026-08-01T00:00:00Z',
 };
 
+const DATED_REFORM: Reform = {
+  ...CHAT_REFORM,
+  id: 'rf-dated',
+  label: 'Dated CTC reform',
+  parameters: [
+    {
+      name: 'gov.irs.credits.ctc.amount.base[0].amount',
+      values: [
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 3600 },
+        { startDate: '2027-01-01', endDate: '2100-12-31', value: 4000 },
+      ],
+    },
+  ],
+};
+
 /**
  * Three bills standing in for the tracker feed. The feed is the only
  * source of bills in the app, so the fixture lives with the tests that
@@ -350,6 +365,41 @@ describe('ReformsPage', () => {
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
     expect(mockUpdate.mock.calls[0][1].parameters[0].values[0].value).toBe(4000);
+  });
+
+  test('given a label-only edit then save preserves every dated parameter value', async () => {
+    mockFindByUser.mockResolvedValue([DATED_REFORM]);
+    mockUpdate.mockResolvedValue({ ...DATED_REFORM });
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('Dated CTC reform'));
+
+    const label = screen.getByRole('textbox', { name: /reform name/i });
+    await user.clear(label);
+    await user.type(label, 'Renamed dated CTC reform');
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate.mock.calls[0][1].parameters).toEqual(DATED_REFORM.parameters);
+  });
+
+  test('given a dated reform then editing the current value preserves its future value', async () => {
+    mockFindByUser.mockResolvedValue([DATED_REFORM]);
+    mockUpdate.mockResolvedValue({ ...DATED_REFORM });
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('Dated CTC reform'));
+
+    const input = screen.getByLabelText(/new value for gov\.irs/i);
+    await user.clear(input);
+    await user.type(input, '3800');
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual([
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 3800 },
+      { startDate: '2027-01-01', endDate: '2100-12-31', value: 4000 },
+    ]);
   });
 
   test('given an amended value matches current law then save is disabled', async () => {

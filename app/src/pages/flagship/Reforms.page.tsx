@@ -20,7 +20,7 @@ import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { FOREVER, MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -33,9 +33,15 @@ import {
   loadReformIntoDraft,
   setDraftLabel,
 } from '@/libs/draftReform';
-import { getEffectiveRunReportParameters, RunReportProvision } from '@/libs/flagship/runReport';
+import {
+  createRunReportProvision,
+  getEffectiveRunReportParameters,
+  getRunReportProvisionValue,
+  RunReportProvision,
+} from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import type { Parameter } from '@/types/subIngredients/parameter';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import {
   formatCompactBreadcrumb,
@@ -48,7 +54,9 @@ import {
   NoEffectivePolicyChangesError,
   normalizePolicyParameters,
   POLICY_METADATA_LOADING_MESSAGE,
+  policyParametersEqual,
 } from '@/utils/policyCurrentLaw';
+import { getParameterValueAtDate, updateParameterValueAtDate } from '@/utils/policyParameterUpdate';
 
 const SOURCE_LABELS: Record<ReformSource, string> = {
   manual: 'Hand-built',
@@ -241,28 +249,9 @@ export default function ReformsPage() {
   // Deep links (?bill=<id>) open straight into that bill's detail.
   const [selectedId, setSelectedId] = useState<string | null>(() => urlParams.get('bill'));
   const [editedLabel, setEditedLabel] = useState('');
-  const [editedValues, setEditedValues] = useState<Record<string, any>>({});
+  const [editedParameters, setEditedParameters] = useState<Parameter[]>([]);
 
-  const getEditedParameters = (reform: Reform) =>
-    normalizePolicyParameters(
-      reform.parameters.map((parameter) => ({
-        name: parameter.name,
-        values:
-          parameter.values.length > 0
-            ? parameter.values.map((interval) => ({
-                ...interval,
-                value: editedValues[parameter.name],
-              }))
-            : [
-                {
-                  startDate: `${new Date().getFullYear()}-01-01`,
-                  endDate: FOREVER,
-                  value: editedValues[parameter.name],
-                },
-              ],
-      })),
-      parameters
-    );
+  const getEditedParameters = () => normalizePolicyParameters(editedParameters, parameters);
 
   const runReport = useRunFlagshipReport();
   const {
@@ -288,7 +277,7 @@ export default function ReformsPage() {
       if (!metadataReady) {
         throw new Error(POLICY_METADATA_LOADING_MESSAGE);
       }
-      const effectiveParameters = getEditedParameters(reform);
+      const effectiveParameters = getEditedParameters();
       if (effectiveParameters.length === 0) {
         throw new NoEffectivePolicyChangesError();
       }
@@ -339,13 +328,13 @@ export default function ReformsPage() {
   const billProvisions = (bill: TrackedBill): ProvisionView[] =>
     bill.provisions.map((provision) => {
       const metadata = parameters?.[provision.path];
-      return {
+      return createRunReportProvision({
         path: provision.path,
         breadcrumb: resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb),
         unit: metadata?.unit ?? null,
         baselineValue: getCurrentValue(metadata?.values),
         value: provision.value,
-      };
+      });
     });
 
   const reformProvisions = (reform: Reform): ProvisionView[] =>
@@ -356,8 +345,7 @@ export default function ReformsPage() {
         breadcrumb: resolveBreadcrumb(parameter.name),
         unit: metadata?.unit ?? null,
         baselineValue: getCurrentValue(metadata?.values),
-        value: parameter.values[0]?.value,
-        values: parameter.values,
+        values: parameter.values.map((interval) => ({ ...interval })),
       };
     });
 
@@ -417,20 +405,30 @@ export default function ReformsPage() {
   const openReform = (reform: Reform) => {
     setSelectedId(reform.id!);
     setEditedLabel(reform.label ?? '');
-    setEditedValues(Object.fromEntries(reform.parameters.map((p) => [p.name, p.values[0]?.value])));
+    setEditedParameters(
+      reform.parameters.map((parameter) => ({
+        ...parameter,
+        values: parameter.values.map((interval) => ({ ...interval })),
+      }))
+    );
   };
 
   const openBillAsDraft = (bill: TrackedBill) => {
     clearDraftReform();
-    billProvisions(bill).forEach((provision) =>
-      addDraftProvision(countryId, provision, 'bill', bill.id)
-    );
+    billProvisions(bill).forEach((provision) => {
+      addDraftProvision(
+        countryId,
+        { ...provision, value: getRunReportProvisionValue(provision) },
+        'bill',
+        bill.id
+      );
+    });
     setDraftLabel(bill.title);
   };
 
   const isDirty = (reform: Reform) =>
     editedLabel !== (reform.label ?? '') ||
-    reform.parameters.some((p) => editedValues[p.name] !== p.values[0]?.value);
+    !policyParametersEqual(reform.parameters, editedParameters);
 
   const billStats = (bill: TrackedBill): React.ReactNode => {
     const stats: React.ReactNode[] = [];
@@ -634,7 +632,7 @@ export default function ReformsPage() {
 
   // ---- Detail: one of your reforms ----
   if (selectedReform) {
-    const effectiveEditedParameters = metadataReady ? getEditedParameters(selectedReform) : [];
+    const effectiveEditedParameters = metadataReady ? getEditedParameters() : [];
     const hasEffectiveEditedChanges = effectiveEditedParameters.length > 0;
     const selectedReformProvisions = reformProvisions(selectedReform);
     const hasEffectiveSavedChanges =
@@ -666,6 +664,9 @@ export default function ReformsPage() {
             {selectedReform.parameters.map((parameter) => {
               const baseline = getCurrentValue(parameters?.[parameter.name]?.values);
               const unit = parameters?.[parameter.name]?.unit ?? null;
+              const editedParameter =
+                editedParameters.find((candidate) => candidate.name === parameter.name) ??
+                parameter;
               return (
                 <Stack
                   key={parameter.name}
@@ -695,9 +696,15 @@ export default function ReformsPage() {
                     {formatValue(baseline, unit)} →
                   </Text>
                   <ValueInput
-                    value={editedValues[parameter.name]}
+                    value={getParameterValueAtDate(editedParameter, `${CURRENT_YEAR}-01-01`)}
                     onChange={(next) =>
-                      setEditedValues((current) => ({ ...current, [parameter.name]: next }))
+                      setEditedParameters((current) =>
+                        current.map((candidate) =>
+                          candidate.name === parameter.name
+                            ? updateParameterValueAtDate(candidate, `${CURRENT_YEAR}-01-01`, next)
+                            : candidate
+                        )
+                      )
                     }
                     ariaLabel={`New value for ${parameter.name}`}
                   />
