@@ -7,6 +7,12 @@ import {
 } from '@/tests/fixtures/types/valueIntervalMocks';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
+const ONE_DAY_INTERVAL = {
+  startDate: '2026-04-15',
+  endDate: '2026-04-15',
+  value: 100,
+};
+
 describe('ValueIntervalCollection', () => {
   describe('Construction from Array', () => {
     test('given array of ValueInterval objects then creates collection', () => {
@@ -123,6 +129,66 @@ describe('ValueIntervalCollection', () => {
       // Then
       expect(collection.getIntervals()).toEqual([]);
       expect(collection.getIntervals()).toHaveLength(0);
+    });
+
+    test('given equal inclusive bounds when adding an interval then stores one policy day', () => {
+      const collection = new ValueIntervalCollection();
+
+      collection.addInterval(ONE_DAY_INTERVAL);
+
+      expect(collection.getIntervals()).toEqual([ONE_DAY_INTERVAL]);
+    });
+
+    test('given the start is after the end when adding an interval then rejects it', () => {
+      const collection = new ValueIntervalCollection();
+
+      expect(() =>
+        collection.addInterval({
+          startDate: '2026-04-16',
+          endDate: '2026-04-15',
+          value: 100,
+        })
+      ).toThrow('start date 2026-04-16 must be on or before end date 2026-04-15');
+    });
+
+    test('given values on consecutive effective dates then represents the first as one day', () => {
+      const collection = new ValueIntervalCollection({
+        '2026-04-15': 100,
+        '2026-04-16': 200,
+      });
+
+      expect(collection.getIntervals()).toEqual([
+        ONE_DAY_INTERVAL,
+        { startDate: '2026-04-16', endDate: '2100-12-31', value: 200 },
+      ]);
+    });
+
+    test('given a one-day replacement inside a longer interval then preserves both sides', () => {
+      const collection = new ValueIntervalCollection([
+        { startDate: '2026-04-01', endDate: '2026-04-30', value: 50 },
+      ]);
+
+      collection.addInterval(ONE_DAY_INTERVAL);
+
+      expect(collection.getIntervals()).toEqual([
+        { startDate: '2026-04-01', endDate: '2026-04-14', value: 50 },
+        ONE_DAY_INTERVAL,
+        { startDate: '2026-04-16', endDate: '2026-04-30', value: 50 },
+      ]);
+    });
+
+    test('given adjacent one-day intervals with equal values then merges them', () => {
+      const collection = new ValueIntervalCollection([ONE_DAY_INTERVAL]);
+
+      collection.addInterval({
+        startDate: '2026-04-16',
+        endDate: '2026-04-16',
+        value: 100,
+      });
+
+      expect(collection.getIntervals()).toEqual([
+        { startDate: '2026-04-15', endDate: '2026-04-16', value: 100 },
+      ]);
     });
   });
 

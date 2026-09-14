@@ -6,6 +6,7 @@ Use these rules whenever code reads, edits, compares, stores, or submits policy 
 
 - `Parameter.values` is the authoritative in-memory and persisted representation of proposed policy values.
 - Each value is a `ValueInterval` with inclusive `startDate` and `endDate` fields and a serialized PolicyEngine value.
+- Equal interval bounds are valid and represent a policy value that applies for one day.
 - Do not add a parallel scalar `value` field to a policy, reform, draft, report provision, component state, fixture, or storage record. A parallel scalar can discard scheduled changes and become inconsistent with the dated values.
 - Convert a scalar source with `convertScalarToValueIntervals` once, at the boundary where chat or another scalar-only external source enters the policy model.
 - Convert an external dated range map with `convertDateRangeMapToValueIntervals`. Never select only one entry from a dated map: every scheduled value must survive conversion.

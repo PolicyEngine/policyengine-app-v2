@@ -252,4 +252,17 @@ describe('dated parameter value helpers', () => {
       { startDate: '2027-01-01', endDate: '2100-12-31', value: 2_500 },
     ]);
   });
+
+  test('given a one-day parameter interval when editing that day then preserves its bounds', () => {
+    const parameter = {
+      name: NUMERIC_PARAM_NAME,
+      values: [{ startDate: '2026-04-15', endDate: '2026-04-15', value: 1_000 }],
+    };
+
+    const updated = updateParameterValueAtDate(parameter, '2026-04-15', 1_500);
+
+    expect(updated.values).toEqual([
+      { startDate: '2026-04-15', endDate: '2026-04-15', value: 1_500 },
+    ]);
+  });
 });

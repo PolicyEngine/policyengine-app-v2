@@ -116,5 +116,24 @@ describe('PolicyAdapter', () => {
         data: {},
       });
     });
+
+    it('given a one-day policy value then serialization and reconstruction preserve both bounds', () => {
+      const oneDayValues = [{ startDate: '2026-04-15', endDate: '2026-04-15', value: 0.25 }];
+      const policy = mockPolicy({
+        parameters: [{ name: TEST_PARAMETER_NAMES.TAX_RATE, values: oneDayValues }],
+      });
+
+      const payload = PolicyAdapter.toCreationPayload(policy);
+      const reconstructed = PolicyAdapter.fromMetadata(
+        mockPolicyMetadata({ policy_json: payload.data })
+      );
+
+      expect(payload.data).toEqual({
+        [TEST_PARAMETER_NAMES.TAX_RATE]: { '2026-04-15.2026-04-15': 0.25 },
+      });
+      expect(reconstructed.parameters).toEqual([
+        { name: TEST_PARAMETER_NAMES.TAX_RATE, values: oneDayValues },
+      ]);
+    });
   });
 });

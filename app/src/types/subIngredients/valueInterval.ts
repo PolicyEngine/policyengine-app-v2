@@ -276,9 +276,9 @@ export class ValueIntervalCollection {
       throw new Error(`Invalid interval: start date and end date cannot be empty`);
     }
 
-    if (this.parseDate(startDate) >= this.parseDate(endDate)) {
+    if (this.parseDate(startDate) > this.parseDate(endDate)) {
       throw new Error(
-        `Invalid interval: start date ${startDate} must be before end date ${endDate}`
+        `Invalid interval: start date ${startDate} must be on or before end date ${endDate}`
       );
     }
   }
