@@ -676,5 +676,18 @@
     "source": "https://policyengine.github.io/snap-district-map/",
     "tags": ["us", "policy"],
     "countryId": "us"
+  },
+  {
+    "type": "iframe",
+    "slug": "child-poverty-impact-dashboard",
+    "title": "Child poverty impact dashboard",
+    "description": "Estimate how federal and state tax and benefit reforms — Child Tax Credits, EITCs, child allowances, dependent exemptions, and SNAP — would affect child poverty, household incomes, and state budgets in all 50 states and DC, using PolicyEngine microsimulation over calibrated state datasets.",
+    "source": "https://child-poverty-impact-dashboard-sigma.vercel.app/",
+    "tags": ["us", "featured", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "child-poverty-impact-dashboard.png",
+    "date": "2026-09-15 12:00:00",
+    "authors": ["david-trimmer"]
   }
 ]
