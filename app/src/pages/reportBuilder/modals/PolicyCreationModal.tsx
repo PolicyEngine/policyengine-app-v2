@@ -46,6 +46,11 @@ import {
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import {
+  evaluatePolicyAgainstCurrentLaw,
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+} from '@/utils/policyCurrentLaw';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { getReportYearDateBounds } from '../utils/reportYearDates';
@@ -92,11 +97,8 @@ export function PolicyCreationModal({
   const userId = MOCK_USER_ID.toString();
 
   // Get metadata from Redux state
-  const {
-    parameterTree,
-    parameters,
-    loading: metadataLoading,
-  } = useSelector((state: RootState) => state.metadata);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const { parameterTree, parameters, loading: metadataLoading } = metadata;
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
@@ -183,6 +185,11 @@ export function PolicyCreationModal({
 
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
+  const currentLawEvaluation = useMemo(
+    () => evaluatePolicyAgainstCurrentLaw(policyParameters, metadata, countryId),
+    [policyParameters, metadata, countryId]
+  );
+  const canSavePolicy = currentLawEvaluation.status === 'has-effective-changes';
 
   // Get modified parameter data for the Changes section
   const modifiedParams: ModifiedParam[] = useMemo(() => {
@@ -312,10 +319,14 @@ export function PolicyCreationModal({
   // Handle policy creation
   const handleCreatePolicy = useCallback(
     async (labelOverride?: string | null) => {
+      if (currentLawEvaluation.status !== 'has-effective-changes') {
+        return;
+      }
+
       const resolvedLabel =
         labelOverride === undefined ? normalizedPolicyLabel : (labelOverride?.trim() ?? '');
       const policyData: Partial<Policy> = {
-        parameters: policyParameters,
+        parameters: currentLawEvaluation.parameters,
       };
 
       const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
@@ -325,7 +336,7 @@ export function PolicyCreationModal({
         const createdPolicy: PolicyStateProps = {
           id: result.result.policy_id,
           label: resolvedLabel || null,
-          parameters: policyParameters,
+          parameters: currentLawEvaluation.parameters,
         };
         onPolicyCreated(createdPolicy);
         onClose();
@@ -333,7 +344,7 @@ export function PolicyCreationModal({
         console.error('Failed to create policy:', error);
       }
     },
-    [normalizedPolicyLabel, policyParameters, createPolicyWithLabel, onPolicyCreated, onClose]
+    [normalizedPolicyLabel, currentLawEvaluation, createPolicyWithLabel, onPolicyCreated, onClose]
   );
 
   // Unnamed-policy warning for creating/saving without a name
@@ -359,13 +370,13 @@ export function PolicyCreationModal({
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!initialPolicy?.id) {
+    if (!initialPolicy?.id || currentLawEvaluation.status !== 'has-effective-changes') {
       return;
     }
     setIsUpdating(true);
     setAssociationLookupError(null);
 
-    const policyData: Partial<Policy> = { parameters: policyParameters };
+    const policyData: Partial<Policy> = { parameters: currentLawEvaluation.parameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
 
     try {
@@ -393,7 +404,7 @@ export function PolicyCreationModal({
       onPolicyCreated({
         id: newPolicyId,
         label: desiredLabel ?? null,
-        parameters: policyParameters,
+        parameters: currentLawEvaluation.parameters,
       });
       onClose();
     } catch (error) {
@@ -402,7 +413,7 @@ export function PolicyCreationModal({
     }
   }, [
     normalizedPolicyLabel,
-    policyParameters,
+    currentLawEvaluation,
     initialPolicy?.id,
     resolveInitialPolicyAssociation,
     countryId,
@@ -704,17 +715,29 @@ export function PolicyCreationModal({
               </Button>
             </Group>
             <div>
-              {associationLookupError && (
+              {associationLookupError ? (
                 <Text size="sm" c="red">
                   {associationLookupError}
                 </Text>
-              )}
+              ) : modificationCount > 0 &&
+                currentLawEvaluation.status === 'metadata-unavailable' &&
+                !isReadOnly ? (
+                <Text size="sm" style={{ color: colors.text.warning }}>
+                  {POLICY_COMPARISON_UNAVAILABLE_MESSAGE}
+                </Text>
+              ) : modificationCount > 0 &&
+                currentLawEvaluation.status === 'no-effective-changes' &&
+                !isReadOnly ? (
+                <Text size="sm" style={{ color: colors.text.warning }}>
+                  {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
+                </Text>
+              ) : null}
             </div>
             <Group gap="sm" justify="end">
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
                   onClick={() => requestSaveAction('create')}
-                  disabled={isCreating || modificationCount === 0}
+                  disabled={isCreating || !canSavePolicy}
                 >
                   {isCreating && <Spinner size="sm" />}
                   Create policy
@@ -736,13 +759,13 @@ export function PolicyCreationModal({
                     label="Update existing policy"
                     onClick={() => requestSaveAction('update-existing')}
                     loading={isUpdating}
-                    disabled={isCreating || modificationCount === 0}
+                    disabled={isCreating || !canSavePolicy}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
                     onClick={() => requestSaveAction('save-as-new')}
                     loading={isCreating}
-                    disabled={isUpdating || modificationCount === 0}
+                    disabled={isUpdating || !canSavePolicy}
                   />
                 </>
               )}

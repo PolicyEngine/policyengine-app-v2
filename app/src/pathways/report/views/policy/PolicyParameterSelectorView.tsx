@@ -12,11 +12,17 @@ import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@/componen
 import { spacing, typography } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 import { useIsMobile } from '@/hooks/useChartDimensions';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
+import {
+  evaluatePolicyAgainstCurrentLaw,
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+} from '@/utils/policyCurrentLaw';
 import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
 import Menu from '../../components/policyParameterSelector/Menu';
 import PolicyParameterSelectorMain from '../../components/PolicyParameterSelectorMain';
@@ -37,14 +43,28 @@ export default function PolicyParameterSelectorView({
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
   const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure();
   const isMobile = useIsMobile();
+  const countryId = useCurrentCountry();
 
   // Get metadata from Redux state
-  const { parameterTree, parameters, loading, error } = useSelector(
-    (state: RootState) => state.metadata
-  );
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const { parameterTree, parameters, loading, error } = metadata;
 
   // Count modifications from policy prop
   const modificationCount = countPolicyModifications(policy);
+  const currentLawEvaluation = evaluatePolicyAgainstCurrentLaw(
+    policy.parameters,
+    metadata,
+    countryId
+  );
+  const reviewDisabled = currentLawEvaluation.status !== 'has-effective-changes';
+  const reviewDisabledReason =
+    modificationCount === 0
+      ? 'Add at least one parameter change before reviewing the policy.'
+      : currentLawEvaluation.status === 'metadata-unavailable'
+        ? POLICY_COMPARISON_UNAVAILABLE_MESSAGE
+        : currentLawEvaluation.status === 'no-effective-changes'
+          ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+          : undefined;
 
   const headerHeight = parseInt(spacing.appShell.header.height, 10);
   const navbarWidth = parseInt(spacing.appShell.navbar.width, 10);
@@ -138,7 +158,7 @@ export default function PolicyParameterSelectorView({
                 </span>
               </div>
             )}
-            <Button onClick={onNext}>
+            <Button onClick={onNext} disabled={reviewDisabled} title={reviewDisabledReason}>
               Review my policy
               <IconChevronRight size={16} />
             </Button>
@@ -183,7 +203,12 @@ export default function PolicyParameterSelectorView({
                   Back
                 </Button>
               )}
-              <Button size="sm" onClick={onNext}>
+              <Button
+                size="sm"
+                onClick={onNext}
+                disabled={reviewDisabled}
+                title={reviewDisabledReason}
+              >
                 Review
                 <IconChevronRight size={16} />
               </Button>

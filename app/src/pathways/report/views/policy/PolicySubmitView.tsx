@@ -4,6 +4,7 @@
  * Props-based instead of Redux-based
  */
 
+import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
 import IngredientSubmissionView, {
   DateIntervalValue,
@@ -12,11 +13,17 @@ import IngredientSubmissionView, {
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { countryIds } from '@/libs/countries';
+import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
+import {
+  evaluatePolicyAgainstCurrentLaw,
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+} from '@/utils/policyCurrentLaw';
 
 interface PolicySubmitViewProps {
   policy: PolicyStateProps;
@@ -34,18 +41,25 @@ export default function PolicySubmitView({
   onCancel,
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentLawEvaluation = evaluatePolicyAgainstCurrentLaw(
+    policy.parameters,
+    metadata,
+    countryId
+  );
 
   // Issue #605: Block empty policy creation
-  const hasNoParameters = !policy.parameters || policy.parameters.length === 0;
+  const startedEmpty = !policy.parameters || policy.parameters.length === 0;
+  const effectiveParameters =
+    currentLawEvaluation.status === 'has-effective-changes' ? currentLawEvaluation.parameters : [];
 
   // Convert state to Policy type structure
   const policyData: Partial<Policy> = {
-    parameters: policy?.parameters,
+    parameters: effectiveParameters,
   };
 
   function handleSubmit() {
-    if (!policy) {
-      console.error('No policy found');
+    if (currentLawEvaluation.status !== 'has-effective-changes') {
       return;
     }
 
@@ -69,25 +83,26 @@ export default function PolicySubmitView({
   };
 
   // Create hierarchical provisions list with header and date intervals
-  const provisions: TextListItem[] = hasNoParameters
-    ? []
-    : [
-        {
-          text: 'Provision',
-          isHeader: true,
-          subItems: policy.parameters.map((param) => {
-            const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
-              dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-              value: valueInterval.value,
-            }));
+  const provisions: TextListItem[] =
+    effectiveParameters.length === 0
+      ? []
+      : [
+          {
+            text: 'Provision',
+            isHeader: true,
+            subItems: effectiveParameters.map((param) => {
+              const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
+                dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
+                value: valueInterval.value,
+              }));
 
-            return {
-              label: param.name,
-              dateIntervals,
-            } as TextListSubItem;
-          }),
-        },
-      ];
+              return {
+                label: param.name,
+                dateIntervals,
+              } as TextListSubItem;
+            }),
+          },
+        ];
 
   return (
     <IngredientSubmissionView
@@ -97,9 +112,15 @@ export default function PolicySubmitView({
       submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      submitButtonDisabled={hasNoParameters}
+      submitButtonDisabled={currentLawEvaluation.status !== 'has-effective-changes'}
       warningMessage={
-        hasNoParameters ? 'Add at least one parameter change to create a policy.' : undefined
+        startedEmpty
+          ? 'Add at least one parameter change to create a policy.'
+          : currentLawEvaluation.status === 'metadata-unavailable'
+            ? POLICY_COMPARISON_UNAVAILABLE_MESSAGE
+            : currentLawEvaluation.status === 'no-effective-changes'
+              ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+              : undefined
       }
       onBack={onBack}
       onCancel={onCancel}

@@ -1,3 +1,5 @@
+import type { ValuesList } from '@/types/subIngredients/valueInterval';
+
 // Based on what the API currently exposes
 export interface ParameterMetadata {
   label: string;
@@ -6,7 +8,7 @@ export interface ParameterMetadata {
   description?: string | null;
   unit?: string | null;
   period?: string | null; // TODO: Specify period values
-  values?: Record<string, number>; // Historical values
+  values?: ValuesList; // Historical values
   economy?: boolean;
   household?: boolean;
 }
