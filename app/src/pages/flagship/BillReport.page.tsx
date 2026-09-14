@@ -28,6 +28,7 @@ import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import {
   BillValidationSection,
   ModelTrackRecordSection,
+  trackRecordPrograms,
   useModelTrackRecord,
   ValidationChip,
 } from '@/components/flagship/ValidationPanel';
@@ -307,7 +308,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
     ...(winnersRows.length > 0 || (typeof betterOff === 'number' && betterOff > 0)
       ? [{ id: 'winners', label: 'Winners and losers' }]
       : []),
-    ...(bill.validation || trackRecord.programs.length > 0
+    ...(bill.validation || (trackRecordPrograms(trackRecord)?.length ?? 0) > 0
       ? [{ id: 'validation', label: 'Validation' }]
       : []),
     ...(bill.provenance ? [{ id: 'notes', label: 'Notes and sources' }] : []),
