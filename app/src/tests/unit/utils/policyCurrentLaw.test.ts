@@ -35,6 +35,17 @@ describe('hasRequiredPolicyMetadata', () => {
     expect(hasRequiredPolicyMetadata(READY_METADATA, 'us', [parameter])).toBe(true);
   });
 
+  test('given current-law metadata begins at the PolicyEngine year-zero sentinel then returns true', () => {
+    const sentinelParameter = createParameter(
+      TEST_PARAMETER_NAMES.beginningOfTimeAmount,
+      '2026-01-01',
+      '2026-12-31',
+      150
+    );
+
+    expect(hasRequiredPolicyMetadata(READY_METADATA, 'us', [sentinelParameter])).toBe(true);
+  });
+
   test.each([
     ['loading', { loading: true }],
     ['an error', { error: 'Metadata failed' }],
@@ -137,6 +148,15 @@ describe('policyValuesEqual', () => {
 });
 
 describe('normalizeParameterIntervals', () => {
+  test('given current law begins at the year-zero sentinel then removes a matching interval', () => {
+    const result = normalizeParameterIntervals(
+      [{ startDate: '2025-01-01', endDate: '2025-12-31', value: 100 }],
+      CURRENT_LAW_METADATA[TEST_PARAMETER_NAMES.beginningOfTimeAmount].values
+    );
+
+    expect(result).toEqual([]);
+  });
+
   test('given a value that matches current law throughout then removes the interval', () => {
     const result = normalizeParameterIntervals(
       [{ startDate: '2025-01-01', endDate: '2025-12-31', value: 100 }],

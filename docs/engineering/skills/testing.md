@@ -7,6 +7,8 @@
 - With coverage: `bun run vitest -- --coverage`
 - Full check: `bun run check` (includes type checking, linting, and formatting verification)
 
+The app's Vitest commands set `TZ=America/New_York` so date tests always exercise a negative UTC offset and daylight-saving transitions. Do not remove that fixed timezone or rely on a developer machine's local timezone for calendar-date coverage.
+
 ## Writing tests
 
 1. **Always use @test-utils**: Import `render` and other utilities from `@test-utils`, not `@testing-library/react`

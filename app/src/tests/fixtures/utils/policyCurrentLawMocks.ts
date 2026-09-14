@@ -2,6 +2,7 @@ import type { ParameterMetadataCollection } from '@/types/metadata/parameterMeta
 import type { Parameter } from '@/types/subIngredients/parameter';
 
 export const TEST_PARAMETER_NAMES = {
+  beginningOfTimeAmount: 'gov.test.beginning_of_time_amount',
   changingAmount: 'gov.test.changing_amount',
   zeroAmount: 'gov.test.zero_amount',
   booleanSetting: 'gov.test.boolean_setting',
@@ -10,6 +11,13 @@ export const TEST_PARAMETER_NAMES = {
 } as const;
 
 export const CURRENT_LAW_METADATA: ParameterMetadataCollection = {
+  [TEST_PARAMETER_NAMES.beginningOfTimeAmount]: {
+    label: 'Beginning-of-time amount',
+    type: 'parameter',
+    parameter: TEST_PARAMETER_NAMES.beginningOfTimeAmount,
+    unit: 'currency-USD',
+    values: { '0000-01-01': 100 },
+  },
   [TEST_PARAMETER_NAMES.changingAmount]: {
     label: 'Changing amount',
     type: 'parameter',

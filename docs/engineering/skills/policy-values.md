@@ -7,6 +7,7 @@ Use these rules whenever code reads, edits, compares, stores, or submits policy 
 - `Parameter.values` is the authoritative in-memory and persisted representation of proposed policy values.
 - Each value is a `ValueInterval` with inclusive `startDate` and `endDate` fields and a serialized PolicyEngine value.
 - Keep interval bounds as canonical `YYYY-MM-DD` strings in state, storage, API payloads, and component interfaces. Never store or pass JavaScript `Date` or Day.js objects as policy interval bounds.
+- PolicyEngine metadata uses years `0000` and `0001` for values effective from the beginning of available history. Treat these as valid four-digit policy years; the shared date helpers account for JavaScript date libraries' special handling of years below 100.
 - Equal interval bounds are valid and represent a policy value that applies for one day.
 - Do not add a parallel scalar `value` field to a policy, reform, draft, report provision, component state, fixture, or storage record. A parallel scalar can discard scheduled changes and become inconsistent with the dated values.
 - Convert a scalar source with `convertScalarToValueIntervals` once, at the boundary where chat or another scalar-only external source enters the policy model.

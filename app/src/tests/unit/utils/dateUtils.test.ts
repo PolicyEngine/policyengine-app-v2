@@ -9,6 +9,7 @@ import {
 import {
   compareISODateStrings,
   formatDate,
+  formatPeriod,
   formatReportTimestamp,
   fromLocalDateString,
   isValidISODateString,
@@ -29,6 +30,17 @@ describe('dateUtils', () => {
       expect(isValidISODateString(TEST_DATES.ISO_2026_INVALID_LEAP_DAY)).toBe(false);
     });
 
+    it('given PolicyEngine beginning-of-time dates then validates their calendar dates', () => {
+      expect(isValidISODateString(TEST_DATES.POLICYENGINE_BEGINNING_OF_TIME)).toBe(true);
+      expect(isValidISODateString(TEST_DATES.POLICYENGINE_FIRST_YEAR)).toBe(true);
+      expect(isValidISODateString(TEST_DATES.POLICYENGINE_YEAR_ZERO_LEAP_DAY)).toBe(true);
+      expect(isValidISODateString(TEST_DATES.POLICYENGINE_FIRST_YEAR_INVALID_LEAP_DAY)).toBe(false);
+    });
+
+    it('given a date at the end of PolicyEngine year zero then shifts into year one', () => {
+      expect(shiftISODate('0000-12-31', 1)).toBe(TEST_DATES.POLICYENGINE_FIRST_YEAR);
+    });
+
     it('given ISO calendar dates then compares them without timezone conversion', () => {
       expect(
         compareISODateStrings(
@@ -36,6 +48,14 @@ describe('dateUtils', () => {
           TEST_DATES.ISO_2026_DAY_AFTER_US_DST_START
         )
       ).toBeLessThan(0);
+    });
+  });
+
+  describe('formatPeriod', () => {
+    it('given a partial-year period beginning in year zero then preserves the canonical year', () => {
+      expect(formatPeriod('0000-06-15', '2100-12-31')).toBe(
+        EXPECTED_FORMATS.POLICYENGINE_BEGINNING_OF_TIME_PERIOD
+      );
     });
   });
 

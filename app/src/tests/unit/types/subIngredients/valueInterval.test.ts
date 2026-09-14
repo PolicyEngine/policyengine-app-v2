@@ -163,6 +163,14 @@ describe('ValueIntervalCollection', () => {
       ]);
     });
 
+    test('given a value effective from the PolicyEngine year-zero sentinel then constructs it', () => {
+      const collection = new ValueIntervalCollection({ '0000-01-01': 100 });
+
+      expect(collection.getIntervals()).toEqual([
+        { startDate: '0000-01-01', endDate: '2100-12-31', value: 100 },
+      ]);
+    });
+
     test('given a one-day replacement inside a longer interval then preserves both sides', () => {
       const collection = new ValueIntervalCollection([
         { startDate: '2026-04-01', endDate: '2026-04-30', value: 50 },

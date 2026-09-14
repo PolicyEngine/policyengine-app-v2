@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import utc from 'dayjs/plugin/utc';
 import { countryIds } from '@/libs/countries';
@@ -8,10 +8,47 @@ dayjs.extend(utc);
 
 const ISO_DATE_FORMAT = 'YYYY-MM-DD';
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const EARLY_YEAR_CALENDAR_OFFSET = 2000;
+
+interface ParsedISOCalendarDate {
+  date: Dayjs;
+  yearOffset: number;
+}
+
+/**
+ * Parse a PolicyEngine calendar date without changing its four-digit year.
+ *
+ * Day.js inherits JavaScript's special handling of years 0000 through 0099.
+ * PolicyEngine metadata uses those years as beginning-of-time effective dates,
+ * so validate them against a Gregorian-equivalent year 2,000 years later. The
+ * offset is a multiple of 400 and therefore preserves the Gregorian leap cycle.
+ */
+function parseISOCalendarDate(value: string): ParsedISOCalendarDate | undefined {
+  if (!ISO_DATE_PATTERN.test(value)) {
+    return undefined;
+  }
+
+  const year = Number(value.slice(0, 4));
+  const yearOffset = year < 100 ? EARLY_YEAR_CALENDAR_OFFSET : 0;
+  const parseableValue = `${String(year + yearOffset).padStart(4, '0')}${value.slice(4)}`;
+  const date = dayjs.utc(parseableValue, ISO_DATE_FORMAT, true);
+
+  return date.isValid() ? { date, yearOffset } : undefined;
+}
+
+function formatISOCalendarDate(date: Dayjs, yearOffset: number): string {
+  const year = date.year() - yearOffset;
+
+  if (year < 0 || year > 9999) {
+    throw new Error('Shifted ISO date is outside the supported four-digit year range');
+  }
+
+  return `${String(year).padStart(4, '0')}-${date.format('MM-DD')}`;
+}
 
 /** Whether a string represents a real Gregorian calendar date in YYYY-MM-DD format. */
 export function isValidISODateString(value: string): boolean {
-  return ISO_DATE_PATTERN.test(value) && dayjs.utc(value, ISO_DATE_FORMAT, true).isValid();
+  return parseISOCalendarDate(value) !== undefined;
 }
 
 /** Compare two canonical YYYY-MM-DD strings without converting them to instants. */
@@ -24,11 +61,13 @@ export function compareISODateStrings(left: string, right: string): number {
  * The UTC-backed Day.js object is confined to this function and never enters app state.
  */
 export function shiftISODate(value: string, days: number): string {
-  if (!isValidISODateString(value)) {
+  const parsed = parseISOCalendarDate(value);
+
+  if (!parsed) {
     throw new Error(`Invalid ISO date: ${value}`);
   }
 
-  return dayjs.utc(value, ISO_DATE_FORMAT, true).add(days, 'day').format(ISO_DATE_FORMAT);
+  return formatISOCalendarDate(parsed.date.add(days, 'day'), parsed.yearOffset);
 }
 
 /**
@@ -234,7 +273,9 @@ export function formatPeriod(startDate: string, endDate: string): string {
   const FOREVER = '2100-12-31';
 
   // Handle missing or invalid dates
-  if (!startDate || !endDate) {
+  const parsedStartDate = parseISOCalendarDate(startDate);
+  const parsedEndDate = parseISOCalendarDate(endDate);
+  if (!parsedStartDate || !parsedEndDate) {
     return '—';
   }
 
@@ -242,23 +283,12 @@ export function formatPeriod(startDate: string, endDate: string): string {
   const startParts = startDate.split('-');
   const endParts = endDate.split('-');
 
-  // Validate date format (should have 3 parts: YYYY-MM-DD)
-  if (startParts.length !== 3 || endParts.length !== 3) {
-    return '—';
-  }
-
   const [startYear, startMonth, startDay] = startParts;
   const [endYear, endMonth, endDay] = endParts;
 
   // Helper to format a single date
-  const formatFullDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      timeZone: 'UTC',
-    }).format(date);
+  const formatFullDate = (parsedDate: ParsedISOCalendarDate, year: string): string => {
+    return `${parsedDate.date.format('MMM D')}, ${year}`;
   };
 
   // Check for "onward" case (FOREVER end date)
@@ -268,7 +298,7 @@ export function formatPeriod(startDate: string, endDate: string): string {
       return `${startYear} onward`;
     }
     // Otherwise show full start date + onward
-    return `${formatFullDate(startDate)} onward`;
+    return `${formatFullDate(parsedStartDate, startYear)} onward`;
   }
 
   // Check for year-aligned case (Jan 1 to Dec 31)
@@ -282,5 +312,8 @@ export function formatPeriod(startDate: string, endDate: string): string {
   }
 
   // Default: format as full date range
-  return `${formatFullDate(startDate)} - ${formatFullDate(endDate)}`;
+  return `${formatFullDate(parsedStartDate, startYear)} - ${formatFullDate(
+    parsedEndDate,
+    endYear
+  )}`;
 }
