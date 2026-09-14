@@ -177,6 +177,25 @@ describe('ValueIntervalCollection', () => {
       ]);
     });
 
+    test('given a one-day replacement on a daylight-saving transition then preserves both sides', () => {
+      const collection = new ValueIntervalCollection([
+        { startDate: '2026-03-01', endDate: '2026-03-31', value: 50 },
+      ]);
+      const transitionDateInterval = {
+        startDate: '2026-03-08',
+        endDate: '2026-03-08',
+        value: 100,
+      };
+
+      collection.addInterval(transitionDateInterval);
+
+      expect(collection.getIntervals()).toEqual([
+        { startDate: '2026-03-01', endDate: '2026-03-07', value: 50 },
+        transitionDateInterval,
+        { startDate: '2026-03-09', endDate: '2026-03-31', value: 50 },
+      ]);
+    });
+
     test('given adjacent one-day intervals with equal values then merges them', () => {
       const collection = new ValueIntervalCollection([ONE_DAY_INTERVAL]);
 

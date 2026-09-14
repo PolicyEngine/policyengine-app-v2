@@ -1,3 +1,4 @@
+import { compareISODateStrings, isValidISODateString, shiftISODate } from '@/utils/dateUtils';
 import { FOREVER } from '../../constants';
 
 // This is the standard way of serializing intervals, including
@@ -104,7 +105,7 @@ export class ValueIntervalCollection {
         const nextDate = allStartDates[allStartDates.indexOf(date) + 1];
         this.addInterval({
           startDate: date,
-          endDate: this.getDayBefore(this.parseDate(nextDate)),
+          endDate: shiftISODate(nextDate, -1),
           value,
         } as ValueInterval);
       }
@@ -157,7 +158,7 @@ export class ValueIntervalCollection {
         return [
           this.createShortenedInterval(
             existingInterval,
-            this.getDayBefore(this.parseDate(newInterval.startDate)),
+            shiftISODate(newInterval.startDate, -1),
             'end'
           ),
         ];
@@ -166,7 +167,7 @@ export class ValueIntervalCollection {
         return [
           this.createShortenedInterval(
             existingInterval,
-            this.getDayAfter(this.parseDate(newInterval.endDate)),
+            shiftISODate(newInterval.endDate, 1),
             'start'
           ),
         ];
@@ -175,12 +176,12 @@ export class ValueIntervalCollection {
         return [
           this.createShortenedInterval(
             existingInterval,
-            this.getDayBefore(this.parseDate(newInterval.startDate)),
+            shiftISODate(newInterval.startDate, -1),
             'end'
           ),
           this.createShortenedInterval(
             existingInterval,
-            this.getDayAfter(this.parseDate(newInterval.endDate)),
+            shiftISODate(newInterval.endDate, 1),
             'start'
           ),
         ];
@@ -191,38 +192,52 @@ export class ValueIntervalCollection {
   }
 
   private analyzeOverlap(existingInterval: ValueInterval, newInterval: ValueInterval): OverlapType {
-    const existingStart = this.parseDate(existingInterval.startDate);
-    const existingEnd = this.parseDate(existingInterval.endDate);
-    const newStart = this.parseDate(newInterval.startDate);
-    const newEnd = this.parseDate(newInterval.endDate);
+    const existingStart = existingInterval.startDate;
+    const existingEnd = existingInterval.endDate;
+    const newStart = newInterval.startDate;
+    const newEnd = newInterval.endDate;
 
     // No overlap - new interval is completely before existing
-    if (newEnd < existingStart) {
+    if (compareISODateStrings(newEnd, existingStart) < 0) {
       return OverlapType.NO_OVERLAP_BEFORE;
     }
 
     // No overlap - new interval is completely after existing
-    if (newStart > existingEnd) {
+    if (compareISODateStrings(newStart, existingEnd) > 0) {
       return OverlapType.NO_OVERLAP_AFTER;
     }
 
     // New interval completely contains existing
-    if (newStart <= existingStart && newEnd >= existingEnd) {
+    if (
+      compareISODateStrings(newStart, existingStart) <= 0 &&
+      compareISODateStrings(newEnd, existingEnd) >= 0
+    ) {
       return OverlapType.NEW_CONTAINS_EXISTING;
     }
 
     // Existing interval completely contains new
-    if (existingStart < newStart && existingEnd > newEnd) {
+    if (
+      compareISODateStrings(existingStart, newStart) < 0 &&
+      compareISODateStrings(existingEnd, newEnd) > 0
+    ) {
       return OverlapType.EXISTING_CONTAINS_NEW;
     }
 
     // New interval overlaps the start of existing
-    if (newStart <= existingStart && newEnd >= existingStart && newEnd < existingEnd) {
+    if (
+      compareISODateStrings(newStart, existingStart) <= 0 &&
+      compareISODateStrings(newEnd, existingStart) >= 0 &&
+      compareISODateStrings(newEnd, existingEnd) < 0
+    ) {
       return OverlapType.OVERLAP_START;
     }
 
     // New interval overlaps the end of existing
-    if (newStart > existingStart && newStart <= existingEnd && newEnd >= existingEnd) {
+    if (
+      compareISODateStrings(newStart, existingStart) > 0 &&
+      compareISODateStrings(newStart, existingEnd) <= 0 &&
+      compareISODateStrings(newEnd, existingEnd) >= 0
+    ) {
       return OverlapType.OVERLAP_END;
     }
 
@@ -250,26 +265,8 @@ export class ValueIntervalCollection {
     return interval.startDate !== '' && interval.endDate !== '';
   }
 
-  private parseDate(dateString: string): number {
-    return Date.parse(dateString);
-  }
-
-  private getDayBefore(timestamp: number): string {
-    const ISO_STRING_SEPARATOR = 'T';
-    const date = new Date(timestamp);
-    date.setDate(date.getDate() - 1);
-    return date.toISOString().split(ISO_STRING_SEPARATOR)[0];
-  }
-
-  private getDayAfter(timestamp: number): string {
-    const ISO_STRING_SEPARATOR = 'T';
-    const date = new Date(timestamp);
-    date.setDate(date.getDate() + 1);
-    return date.toISOString().split(ISO_STRING_SEPARATOR)[0];
-  }
-
   private sortIntervalsByStartDate(intervals: ValueInterval[]): ValueInterval[] {
-    return intervals.sort((a, b) => this.parseDate(a.startDate) - this.parseDate(b.startDate));
+    return intervals.sort((a, b) => compareISODateStrings(a.startDate, b.startDate));
   }
 
   private validateISODateString(dateString: string) {
@@ -277,8 +274,7 @@ export class ValueIntervalCollection {
       throw new Error(`Invalid date format: ${dateString}. Expected format is YYYY-MM-DD`);
     }
 
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
+    if (!isValidISODateString(dateString)) {
       throw new Error(`Invalid date: ${dateString}`);
     }
   }
@@ -288,7 +284,7 @@ export class ValueIntervalCollection {
       throw new Error(`Invalid interval: start date and end date cannot be empty`);
     }
 
-    if (this.parseDate(startDate) > this.parseDate(endDate)) {
+    if (compareISODateStrings(startDate, endDate) > 0) {
       throw new Error(
         `Invalid interval: start date ${startDate} must be on or before end date ${endDate}`
       );
@@ -297,7 +293,7 @@ export class ValueIntervalCollection {
 
   private sortValuesList(valuesList: ValuesList): ValuesList {
     return Object.fromEntries(
-      Object.entries(valuesList).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+      Object.entries(valuesList).sort(([a], [b]) => compareISODateStrings(a, b))
     );
   }
 
@@ -319,9 +315,8 @@ export class ValueIntervalCollection {
       const nextInterval = sortedIntervals[i];
 
       // Check if current and next intervals are adjacent with same value
-      const dayAfterCurrentEnd = this.getDayAfter(this.parseDate(currentInterval.endDate));
-      const isAdjacent =
-        this.parseDate(nextInterval.startDate) === this.parseDate(dayAfterCurrentEnd);
+      const dayAfterCurrentEnd = shiftISODate(currentInterval.endDate, 1);
+      const isAdjacent = nextInterval.startDate === dayAfterCurrentEnd;
       const hasSameValue = currentInterval.value === nextInterval.value;
 
       if (isAdjacent && hasSameValue) {
@@ -351,11 +346,10 @@ export class ValueIntervalCollection {
    */
   getIntervalAtDate(date: string): ValueInterval | undefined {
     this.validateISODateString(date);
-    const targetDate = this.parseDate(date);
     const interval = this.intervals.find(
       (candidate) =>
-        targetDate >= this.parseDate(candidate.startDate) &&
-        targetDate <= this.parseDate(candidate.endDate)
+        compareISODateStrings(date, candidate.startDate) >= 0 &&
+        compareISODateStrings(date, candidate.endDate) <= 0
     );
 
     return interval ? { ...interval } : undefined;
@@ -376,13 +370,12 @@ export class ValueIntervalCollection {
    */
   getIntervalsFromDate(date: string): ValueInterval[] {
     this.validateISODateString(date);
-    const targetDate = this.parseDate(date);
 
     return this.intervals
-      .filter((interval) => this.parseDate(interval.endDate) >= targetDate)
+      .filter((interval) => compareISODateStrings(interval.endDate, date) >= 0)
       .map((interval) => ({
         ...interval,
-        startDate: this.parseDate(interval.startDate) < targetDate ? date : interval.startDate,
+        startDate: compareISODateStrings(interval.startDate, date) < 0 ? date : interval.startDate,
       }));
   }
 

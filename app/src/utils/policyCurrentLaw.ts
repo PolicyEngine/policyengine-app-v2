@@ -2,6 +2,7 @@ import type { MetadataState } from '@/types/metadata';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import type { ValueInterval, ValuesList } from '@/types/subIngredients/valueInterval';
+import { compareISODateStrings, isValidISODateString, shiftISODate } from '@/utils/dateUtils';
 
 export const NO_EFFECTIVE_POLICY_CHANGES_MESSAGE =
   'The selected values match current law, so there are no policy changes to save.';
@@ -16,8 +17,6 @@ export class NoEffectivePolicyChangesError extends Error {
     this.name = 'NoEffectivePolicyChangesError';
   }
 }
-
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 interface CurrentLawEntry {
   startDate: string;
@@ -51,9 +50,9 @@ export function hasRequiredPolicyMetadata(
         currentLawEntries.length > 0 &&
         parameter.values.every(
           (interval) =>
-            isValidIsoDate(interval.startDate) &&
-            isValidIsoDate(interval.endDate) &&
-            interval.startDate <= interval.endDate &&
+            isValidISODateString(interval.startDate) &&
+            isValidISODateString(interval.endDate) &&
+            compareISODateStrings(interval.startDate, interval.endDate) <= 0 &&
             getCurrentLawValue(currentLawEntries, interval.startDate).found
         )
       );
@@ -96,37 +95,15 @@ export function policyValuesEqual(left: unknown, right: unknown): boolean {
   return false;
 }
 
-function isValidIsoDate(date: string): boolean {
-  if (!ISO_DATE_PATTERN.test(date)) {
-    return false;
-  }
-
-  const [year, month, day] = date.split('-').map(Number);
-  const parsed = new Date(Date.UTC(year, month - 1, day));
-
-  return (
-    parsed.getUTCFullYear() === year &&
-    parsed.getUTCMonth() === month - 1 &&
-    parsed.getUTCDate() === day
-  );
-}
-
-function shiftIsoDate(date: string, days: number): string {
-  const [year, month, day] = date.split('-').map(Number);
-  const parsed = new Date(Date.UTC(year, month - 1, day));
-  parsed.setUTCDate(parsed.getUTCDate() + days);
-  return parsed.toISOString().slice(0, 10);
-}
-
 function getCurrentLawEntries(values: ValuesList | undefined): CurrentLawEntry[] {
   if (!values) {
     return [];
   }
 
   return Object.entries(values)
-    .filter(([startDate]) => isValidIsoDate(startDate))
+    .filter(([startDate]) => isValidISODateString(startDate))
     .map(([startDate, value]) => ({ startDate, value }))
-    .sort((left, right) => left.startDate.localeCompare(right.startDate));
+    .sort((left, right) => compareISODateStrings(left.startDate, right.startDate));
 }
 
 function getCurrentLawValue(
@@ -137,7 +114,7 @@ function getCurrentLawValue(
   let value: unknown;
 
   for (const entry of entries) {
-    if (entry.startDate > date) {
+    if (compareISODateStrings(entry.startDate, date) > 0) {
       break;
     }
     found = true;
@@ -150,16 +127,20 @@ function getCurrentLawValue(
 function mergeAdjacentIntervals(intervals: ValueInterval[]): ValueInterval[] {
   const sorted = intervals
     .map((interval) => ({ ...interval }))
-    .sort((left, right) => left.startDate.localeCompare(right.startDate));
+    .sort((left, right) => compareISODateStrings(left.startDate, right.startDate));
 
   return sorted.reduce<ValueInterval[]>((merged, interval) => {
     const previous = merged.at(-1);
-    if (!previous || !isValidIsoDate(previous.endDate) || !isValidIsoDate(interval.startDate)) {
+    if (
+      !previous ||
+      !isValidISODateString(previous.endDate) ||
+      !isValidISODateString(interval.startDate)
+    ) {
       merged.push(interval);
       return merged;
     }
 
-    const isAdjacent = shiftIsoDate(previous.endDate, 1) === interval.startDate;
+    const isAdjacent = shiftISODate(previous.endDate, 1) === interval.startDate;
     if (isAdjacent && policyValuesEqual(previous.value, interval.value)) {
       previous.endDate = interval.endDate;
       return merged;
@@ -191,9 +172,9 @@ export function normalizeParameterIntervals(
 
   const effectiveIntervals = proposedIntervals.flatMap((interval) => {
     if (
-      !isValidIsoDate(interval.startDate) ||
-      !isValidIsoDate(interval.endDate) ||
-      interval.startDate > interval.endDate
+      !isValidISODateString(interval.startDate) ||
+      !isValidISODateString(interval.endDate) ||
+      compareISODateStrings(interval.startDate, interval.endDate) > 0
     ) {
       return [{ ...interval }];
     }
@@ -202,12 +183,16 @@ export function normalizeParameterIntervals(
       interval.startDate,
       ...currentLawEntries
         .map((entry) => entry.startDate)
-        .filter((date) => date > interval.startDate && date <= interval.endDate),
+        .filter(
+          (date) =>
+            compareISODateStrings(date, interval.startDate) > 0 &&
+            compareISODateStrings(date, interval.endDate) <= 0
+        ),
     ];
 
     return segmentStarts.flatMap((segmentStart, index) => {
       const nextStart = segmentStarts[index + 1];
-      const segmentEnd = nextStart ? shiftIsoDate(nextStart, -1) : interval.endDate;
+      const segmentEnd = nextStart ? shiftISODate(nextStart, -1) : interval.endDate;
       const currentLaw = getCurrentLawValue(currentLawEntries, segmentStart);
 
       if (currentLaw.found && policyValuesEqual(interval.value, currentLaw.value)) {
@@ -255,8 +240,8 @@ function canonicalizePolicyParameters(parameters: Parameter[]): Parameter[] {
     .map(([name, values]) => ({
       name,
       values: mergeAdjacentIntervals(values).sort((left, right) => {
-        const startComparison = left.startDate.localeCompare(right.startDate);
-        return startComparison || left.endDate.localeCompare(right.endDate);
+        const startComparison = compareISODateStrings(left.startDate, right.startDate);
+        return startComparison || compareISODateStrings(left.endDate, right.endDate);
       }),
     }));
 }

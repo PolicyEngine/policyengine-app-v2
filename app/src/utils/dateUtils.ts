@@ -1,5 +1,35 @@
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import utc from 'dayjs/plugin/utc';
 import { countryIds } from '@/libs/countries';
+
+dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+
+const ISO_DATE_FORMAT = 'YYYY-MM-DD';
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Whether a string represents a real Gregorian calendar date in YYYY-MM-DD format. */
+export function isValidISODateString(value: string): boolean {
+  return ISO_DATE_PATTERN.test(value) && dayjs.utc(value, ISO_DATE_FORMAT, true).isValid();
+}
+
+/** Compare two canonical YYYY-MM-DD strings without converting them to instants. */
+export function compareISODateStrings(left: string, right: string): number {
+  return left.localeCompare(right);
+}
+
+/**
+ * Move a canonical calendar date by whole days and return another date-only string.
+ * The UTC-backed Day.js object is confined to this function and never enters app state.
+ */
+export function shiftISODate(value: string, days: number): string {
+  if (!isValidISODateString(value)) {
+    throw new Error(`Invalid ISO date: ${value}`);
+  }
+
+  return dayjs.utc(value, ISO_DATE_FORMAT, true).add(days, 'day').format(ISO_DATE_FORMAT);
+}
 
 /**
  * Date formatting types available for use across the application

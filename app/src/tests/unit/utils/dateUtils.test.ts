@@ -7,13 +7,38 @@ import {
   TEST_DATES,
 } from '@/tests/fixtures/utils/dateUtilsMocks';
 import {
+  compareISODateStrings,
   formatDate,
   formatReportTimestamp,
   fromLocalDateString,
+  isValidISODateString,
+  shiftISODate,
   toLocalDateString,
 } from '@/utils/dateUtils';
 
 describe('dateUtils', () => {
+  describe('ISO calendar dates', () => {
+    it('given a date on a daylight-saving transition then shifts by calendar day', () => {
+      expect(shiftISODate(TEST_DATES.ISO_2026_US_DST_START, 1)).toBe(
+        TEST_DATES.ISO_2026_DAY_AFTER_US_DST_START
+      );
+    });
+
+    it('given leap-day candidates then validates the Gregorian calendar date', () => {
+      expect(isValidISODateString(TEST_DATES.ISO_2024_VALID_LEAP_DAY)).toBe(true);
+      expect(isValidISODateString(TEST_DATES.ISO_2026_INVALID_LEAP_DAY)).toBe(false);
+    });
+
+    it('given ISO calendar dates then compares them without timezone conversion', () => {
+      expect(
+        compareISODateStrings(
+          TEST_DATES.ISO_2026_US_DST_START,
+          TEST_DATES.ISO_2026_DAY_AFTER_US_DST_START
+        )
+      ).toBeLessThan(0);
+    });
+  });
+
   describe('formatDate', () => {
     describe('short-month-day-year format', () => {
       it('given ISO date then formats as short month', () => {
