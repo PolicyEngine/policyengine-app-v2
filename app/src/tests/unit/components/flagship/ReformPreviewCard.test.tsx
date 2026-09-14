@@ -62,7 +62,7 @@ function seedDraft() {
     breadcrumb: 'IRS → Credits → Child tax credit → Base amount',
     unit: 'currency-USD',
     baselineValue: 2000,
-    value: 2000,
+    values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
   });
 }
 
@@ -132,7 +132,7 @@ describe('ReformPreviewCard', () => {
     await user.clear(input);
     await user.type(input, '3600');
 
-    expect(getDraftReform()?.provisions[0].value).toBe(3600);
+    expect(getDraftReform()?.provisions[0].values[0].value).toBe(3600);
   });
 
   test('given save is clicked then the reform is created and the draft clears', async () => {

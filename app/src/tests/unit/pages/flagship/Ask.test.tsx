@@ -90,7 +90,7 @@ describe('AskPage', () => {
 
     const draft = getDraftReform();
     expect(draft?.provisions[0].path).toBe('gov.irs.credits.ctc.amount');
-    expect(draft?.provisions[0].value).toBe(3600);
+    expect(draft?.provisions[0].values[0].value).toBe(3600);
     expect(draft?.source).toBe('chat');
   });
 
@@ -102,7 +102,7 @@ describe('AskPage', () => {
     await user.click(screen.getByText('IRS → Credits → Child tax credit → Amount'));
 
     const provision = getDraftReform()?.provisions[0];
-    expect(provision?.value).toBe(provision?.baselineValue);
+    expect(provision?.values[0].value).toBe(provision?.baselineValue);
   });
 
   test('given a question with no matches then an honest empty reply shows', async () => {

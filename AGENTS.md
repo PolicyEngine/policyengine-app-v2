@@ -12,5 +12,6 @@ Required document lookup:
 - Interface text, design tokens, colors, spacing, or typography: `docs/engineering/skills/design-tokens.md`
 - Charts: `docs/engineering/skills/chart-standards.md`
 - Policy, report, simulation, household, or geography list pages: `docs/engineering/skills/ingredient-patterns.md`
+- Policy parameter values, date intervals, or current-law comparisons: `docs/engineering/skills/policy-values.md`
 - Component styling or file organization: `docs/engineering/skills/styling.md`
 - Tests, fixtures, or mocks: `docs/engineering/skills/testing.md`

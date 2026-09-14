@@ -1,3 +1,4 @@
+import type { MetadataState } from '@/types/metadata';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import type { ValueInterval, ValuesList } from '@/types/subIngredients/valueInterval';
@@ -21,6 +22,30 @@ const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 interface CurrentLawEntry {
   startDate: string;
   value: unknown;
+}
+
+export type PolicyMetadataReadinessState = Pick<
+  MetadataState,
+  'loading' | 'error' | 'currentCountry' | 'currentLawId' | 'version' | 'parameters'
+>;
+
+/**
+ * Whether current model metadata can safely classify every proposed parameter
+ * against current law. Callers must fail closed when this returns false.
+ */
+export function hasRequiredPolicyMetadata(
+  metadata: PolicyMetadataReadinessState,
+  countryId: string,
+  parameters: Parameter[] | undefined
+): boolean {
+  return (
+    !metadata.loading &&
+    !metadata.error &&
+    metadata.currentCountry === countryId &&
+    Boolean(metadata.version) &&
+    metadata.currentLawId > 0 &&
+    (parameters ?? []).every((parameter) => metadata.parameters[parameter.name]?.values != null)
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

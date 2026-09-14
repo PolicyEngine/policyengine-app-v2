@@ -36,7 +36,6 @@ import {
 import {
   createRunReportProvision,
   getEffectiveRunReportParameters,
-  getRunReportProvisionValue,
   RunReportProvision,
 } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -50,6 +49,7 @@ import {
 } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 import {
+  hasRequiredPolicyMetadata,
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   NoEffectivePolicyChangesError,
   normalizePolicyParameters,
@@ -232,12 +232,8 @@ export default function ReformsPage() {
   const queryClient = useQueryClient();
   const metadata = useSelector((state: RootState) => state.metadata);
   const parameters = metadata.parameters;
-  const metadataReady =
-    !metadata.loading &&
-    !metadata.error &&
-    metadata.currentCountry === countryId &&
-    metadata.version !== null &&
-    metadata.currentLawId > 0;
+  const metadataReadyFor = (policyParameters: Parameter[]) =>
+    hasRequiredPolicyMetadata(metadata, countryId, policyParameters);
   const appLocation = useAppLocation();
   const urlParams = useMemo(() => new URLSearchParams(appLocation.search), [appLocation.search]);
 
@@ -274,7 +270,7 @@ export default function ReformsPage() {
 
   const saveMutation = useMutation({
     mutationFn: (reform: Reform) => {
-      if (!metadataReady) {
+      if (!metadataReadyFor(editedParameters)) {
         throw new Error(POLICY_METADATA_LOADING_MESSAGE);
       }
       const effectiveParameters = getEditedParameters();
@@ -300,7 +296,7 @@ export default function ReformsPage() {
 
   const duplicateMutation = useMutation({
     mutationFn: (reform: Reform) => {
-      if (!metadataReady) {
+      if (!metadataReadyFor(reform.parameters)) {
         throw new Error(POLICY_METADATA_LOADING_MESSAGE);
       }
       const effectiveParameters = normalizePolicyParameters(reform.parameters, parameters);
@@ -416,12 +412,7 @@ export default function ReformsPage() {
   const openBillAsDraft = (bill: TrackedBill) => {
     clearDraftReform();
     billProvisions(bill).forEach((provision) => {
-      addDraftProvision(
-        countryId,
-        { ...provision, value: getRunReportProvisionValue(provision) },
-        'bill',
-        bill.id
-      );
+      addDraftProvision(countryId, provision, 'bill', bill.id);
     });
     setDraftLabel(bill.title);
   };
@@ -482,8 +473,11 @@ export default function ReformsPage() {
   // ---- Detail: a tracked bill ----
   if (selectedBill) {
     const provisions = billProvisions(selectedBill);
+    const billMetadataReady = metadataReadyFor(
+      provisions.map((provision) => ({ name: provision.path, values: provision.values }))
+    );
     const hasEffectiveBillChanges =
-      metadataReady &&
+      billMetadataReady &&
       provisions.length > 0 &&
       getEffectiveRunReportParameters(provisions, parameters).length > 0;
     const impact = selectedBill.impactData;
@@ -615,7 +609,7 @@ export default function ReformsPage() {
                 {runReport.error}
               </Text>
             )}
-            {!selectedBill.impactData && provisions.length > 0 && !metadataReady ? (
+            {!selectedBill.impactData && provisions.length > 0 && !billMetadataReady ? (
               <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
                 {POLICY_METADATA_LOADING_MESSAGE}
               </Text>
@@ -632,11 +626,13 @@ export default function ReformsPage() {
 
   // ---- Detail: one of your reforms ----
   if (selectedReform) {
-    const effectiveEditedParameters = metadataReady ? getEditedParameters() : [];
+    const editedMetadataReady = metadataReadyFor(editedParameters);
+    const savedMetadataReady = metadataReadyFor(selectedReform.parameters);
+    const effectiveEditedParameters = editedMetadataReady ? getEditedParameters() : [];
     const hasEffectiveEditedChanges = effectiveEditedParameters.length > 0;
     const selectedReformProvisions = reformProvisions(selectedReform);
     const hasEffectiveSavedChanges =
-      metadataReady &&
+      savedMetadataReady &&
       getEffectiveRunReportParameters(selectedReformProvisions, parameters).length > 0;
     return (
       <WorkspaceLayout>
@@ -734,7 +730,7 @@ export default function ReformsPage() {
                 )
               }
               disabled={runReport.isRunning || !hasEffectiveSavedChanges}
-              title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
+              title={!savedMetadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
             >
               <IconChartBar size={16} />
               {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
@@ -744,7 +740,7 @@ export default function ReformsPage() {
               disabled={
                 !isDirty(selectedReform) || !hasEffectiveEditedChanges || saveMutation.isPending
               }
-              title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
+              title={!editedMetadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
               onClick={() => saveMutation.mutate(selectedReform)}
             >
               <IconDeviceFloppy size={16} />
@@ -767,7 +763,7 @@ export default function ReformsPage() {
             <Button
               variant="outline"
               disabled={duplicateMutation.isPending || !hasEffectiveSavedChanges}
-              title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
+              title={!savedMetadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
               onClick={() => duplicateMutation.mutate(selectedReform)}
             >
               <IconCopy size={16} />
@@ -786,7 +782,7 @@ export default function ReformsPage() {
                 {runReport.error}
               </Text>
             )}
-            {!metadataReady ? (
+            {!savedMetadataReady || (isDirty(selectedReform) && !editedMetadataReady) ? (
               <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
                 {POLICY_METADATA_LOADING_MESSAGE}
               </Text>

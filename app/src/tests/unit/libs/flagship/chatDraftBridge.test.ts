@@ -57,19 +57,27 @@ describe('provisionsFromChatReform', () => {
         breadcrumb: 'HMRC → Income tax → Personal allowance → Amount',
         unit: 'currency-GBP',
         baselineValue: 12570,
-        value: 15000,
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 15000 }],
       },
     ]);
   });
 
-  test('given a date-map reform value then it collapses to the scalar', () => {
+  test('given a date-map reform value then every dated interval is preserved', () => {
     const { provisions } = provisionsFromChatReform(
-      { [PERSONAL_ALLOWANCE_PATH]: { '2026-01-01.2100-12-31': 16000 } },
+      {
+        [PERSONAL_ALLOWANCE_PATH]: {
+          '2026-01-01.2026-12-31': 16000,
+          '2027-01-01.2100-12-31': 17000,
+        },
+      },
       ENTRIES,
       PARAMETERS
     );
 
-    expect(provisions[0].value).toBe(16000);
+    expect(provisions[0].values).toEqual([
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 16000 },
+      { startDate: '2027-01-01', endDate: '2100-12-31', value: 17000 },
+    ]);
   });
 
   test('given a path the local index does not know then it lands in unknownPaths', () => {

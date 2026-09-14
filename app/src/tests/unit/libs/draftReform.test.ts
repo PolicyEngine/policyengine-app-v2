@@ -19,7 +19,7 @@ const CTC_PROVISION = {
   breadcrumb: 'IRS → Credits → Child tax credit → Base amount',
   unit: 'currency-USD',
   baselineValue: 2000,
-  value: 2000,
+  values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
 };
 
 const CURRENT_LAW_METADATA = {
@@ -47,10 +47,13 @@ describe('draftReform', () => {
 
   it('given the same parameter is added twice then it is not duplicated', () => {
     addDraftProvision('us', CTC_PROVISION);
-    addDraftProvision('us', { ...CTC_PROVISION, value: 9999 });
+    addDraftProvision('us', {
+      ...CTC_PROVISION,
+      values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 9999 }],
+    });
 
     expect(getDraftReform()?.provisions).toHaveLength(1);
-    expect(getDraftReform()?.provisions[0].value).toBe(2000);
+    expect(getDraftReform()?.provisions[0].values[0].value).toBe(2000);
   });
 
   it('given a draft for another country then adding replaces it with a fresh draft', () => {
@@ -60,7 +63,7 @@ describe('draftReform', () => {
       breadcrumb: 'HMRC → Income tax → Personal allowance',
       unit: 'currency-GBP',
       baselineValue: 12570,
-      value: 12570,
+      values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 12570 }],
     });
 
     const draft = getDraftReform();
@@ -72,7 +75,7 @@ describe('draftReform', () => {
     addDraftProvision('us', CTC_PROVISION);
     updateDraftProvisionValue(CTC_PROVISION.path, 3600);
 
-    expect(getDraftReform()?.provisions[0].value).toBe(3600);
+    expect(getDraftReform()?.provisions[0].values[0].value).toBe(3600);
     expect(getDraftReform()?.provisions[0].baselineValue).toBe(2000);
   });
 
@@ -96,7 +99,7 @@ describe('draftReform', () => {
     expect(getDraftReform()).toBeNull();
   });
 
-  it('given a saved reform is loaded then provisions carry resolved metadata and the editing id', () => {
+  it('given a saved reform is loaded then every dated value and the editing id are preserved', () => {
     const reform: Reform = {
       id: 'rf-1',
       userId: 'anonymous',
@@ -105,7 +108,10 @@ describe('draftReform', () => {
       parameters: [
         {
           name: CTC_PROVISION.path,
-          values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+          values: [
+            { startDate: '2026-01-01', endDate: '2026-12-31', value: 3600 },
+            { startDate: '2027-01-01', endDate: '2100-12-31', value: 4000 },
+          ],
         },
       ],
       baseline: 'current-law',
@@ -121,13 +127,82 @@ describe('draftReform', () => {
     const draft = getDraftReform();
     expect(draft?.editingReformId).toBe('rf-1');
     expect(draft?.label).toBe('Saved CTC reform');
-    expect(draft?.provisions[0].value).toBe(3600);
+    expect(draft?.provisions[0].values).toEqual(reform.parameters[0].values);
+    expect(draft?.provisions[0].values).not.toBe(reform.parameters[0].values);
     expect(draft?.provisions[0].baselineValue).toBe(2000);
+  });
+
+  it('given a dated saved reform is edited then later values survive policy conversion', () => {
+    const reform: Reform = {
+      id: 'rf-dated',
+      userId: 'anonymous',
+      countryId: 'us',
+      label: 'Scheduled CTC reform',
+      parameters: [
+        {
+          name: CTC_PROVISION.path,
+          values: [
+            { startDate: '2026-01-01', endDate: '2026-12-31', value: 3600 },
+            { startDate: '2027-01-01', endDate: '2100-12-31', value: 4000 },
+          ],
+        },
+      ],
+      baseline: 'current-law',
+      provenance: { source: 'manual' },
+    };
+    loadReformIntoDraft(reform, () => ({
+      breadcrumb: CTC_PROVISION.breadcrumb,
+      unit: CTC_PROVISION.unit,
+      baselineValue: CTC_PROVISION.baselineValue,
+    }));
+
+    updateDraftProvisionValue(CTC_PROVISION.path, 3800);
+
+    expect(draftToPolicyParameters(getDraftReform()!, CURRENT_LAW_METADATA)).toEqual([
+      {
+        name: CTC_PROVISION.path,
+        values: [
+          { startDate: '2026-01-01', endDate: '2026-12-31', value: 3800 },
+          { startDate: '2027-01-01', endDate: '2100-12-31', value: 4000 },
+        ],
+      },
+    ]);
+  });
+
+  it('given a legacy scalar draft in storage then it migrates to dated values on read', () => {
+    localStorage.setItem(
+      'pe-draft-reform',
+      JSON.stringify({
+        countryId: 'us',
+        label: 'Legacy draft',
+        provisions: [
+          {
+            path: CTC_PROVISION.path,
+            breadcrumb: CTC_PROVISION.breadcrumb,
+            unit: CTC_PROVISION.unit,
+            baselineValue: 2000,
+            value: 3600,
+          },
+        ],
+        source: 'manual',
+      })
+    );
+
+    expect(getDraftReform()?.provisions[0]).toEqual({
+      path: CTC_PROVISION.path,
+      breadcrumb: CTC_PROVISION.breadcrumb,
+      unit: CTC_PROVISION.unit,
+      baselineValue: 2000,
+      values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+    });
   });
 
   it('given a draft then draftToReform produces the store shape with a year-to-forever interval', () => {
     startDraftReform('us', 'bill', 'ut-hb-106');
-    addDraftProvision('us', { ...CTC_PROVISION, value: 3600 });
+    addDraftProvision('us', {
+      ...CTC_PROVISION,
+      values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+    });
     setDraftLabel('From HB 106');
 
     const reform = draftToReform(getDraftReform()!, 'anonymous', CURRENT_LAW_METADATA);
@@ -173,6 +248,8 @@ describe('draftReform', () => {
     );
 
     expect(provision.baselineValue).toBe(1500);
-    expect(provision.value).toBe(1500);
+    expect(provision.values).toEqual([
+      { startDate: '2026-01-01', endDate: '2100-12-31', value: 1500 },
+    ]);
   });
 });

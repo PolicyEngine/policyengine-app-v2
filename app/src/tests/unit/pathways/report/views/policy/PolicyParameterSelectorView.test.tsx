@@ -21,6 +21,9 @@ vi.mock('react-redux', async () => {
           parameters: CURRENT_LAW_METADATA,
           loading: false,
           error: null,
+          currentCountry: 'us',
+          currentLawId: 1,
+          version: 'test',
         },
       }),
   };

@@ -12,14 +12,17 @@ import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@/componen
 import { spacing, typography } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 import { useIsMobile } from '@/hooks/useChartDimensions';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import {
+  hasRequiredPolicyMetadata,
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   normalizePolicyParameters,
+  POLICY_METADATA_LOADING_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
 import Menu from '../../components/policyParameterSelector/Menu';
@@ -41,23 +44,26 @@ export default function PolicyParameterSelectorView({
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
   const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure();
   const isMobile = useIsMobile();
+  const countryId = useCurrentCountry();
 
   // Get metadata from Redux state
-  const { parameterTree, parameters, loading, error } = useSelector(
-    (state: RootState) => state.metadata
-  );
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const { parameterTree, parameters, loading, error } = metadata;
 
   // Count modifications from policy prop
+  const metadataReady = hasRequiredPolicyMetadata(metadata, countryId, policy.parameters);
   const effectivePolicy = {
     ...policy,
-    parameters: normalizePolicyParameters(policy.parameters, parameters),
+    parameters: metadataReady ? normalizePolicyParameters(policy.parameters, parameters) : [],
   };
   const modificationCount = countPolicyModifications(effectivePolicy);
   const reviewDisabled = modificationCount === 0;
   const reviewDisabledReason = reviewDisabled
-    ? policy.parameters.length > 0
-      ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
-      : 'Add at least one parameter change before reviewing the policy.'
+    ? !metadataReady && policy.parameters.length > 0
+      ? POLICY_METADATA_LOADING_MESSAGE
+      : policy.parameters.length > 0
+        ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+        : 'Add at least one parameter change before reviewing the policy.'
     : undefined;
 
   const headerHeight = parseInt(spacing.appShell.header.height, 10);

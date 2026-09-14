@@ -20,8 +20,10 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
 import {
+  hasRequiredPolicyMetadata,
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   normalizePolicyParameters,
+  POLICY_METADATA_LOADING_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 
 interface PolicySubmitViewProps {
@@ -40,9 +42,13 @@ export default function PolicySubmitView({
   onCancel,
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
-  const currentLawMetadata = useSelector((state: RootState) => state.metadata.parameters);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const metadataReady = hasRequiredPolicyMetadata(metadata, countryId, policy.parameters);
+  const currentLawMetadata = metadata.parameters;
 
-  const effectiveParameters = normalizePolicyParameters(policy.parameters, currentLawMetadata);
+  const effectiveParameters = metadataReady
+    ? normalizePolicyParameters(policy.parameters, currentLawMetadata)
+    : [];
   const hasNoParameters = effectiveParameters.length === 0;
   const startedEmpty = !policy.parameters || policy.parameters.length === 0;
 
@@ -52,6 +58,9 @@ export default function PolicySubmitView({
   };
 
   function handleSubmit() {
+    if (!hasRequiredPolicyMetadata(metadata, countryId, policy.parameters)) {
+      return;
+    }
     const normalizedParameters = normalizePolicyParameters(policy.parameters, currentLawMetadata);
     if (normalizedParameters.length === 0) {
       return;
@@ -106,13 +115,15 @@ export default function PolicySubmitView({
       submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      submitButtonDisabled={hasNoParameters}
+      submitButtonDisabled={!metadataReady || hasNoParameters}
       warningMessage={
-        hasNoParameters
-          ? startedEmpty
-            ? 'Add at least one parameter change to create a policy.'
-            : NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
-          : undefined
+        !metadataReady && !startedEmpty
+          ? POLICY_METADATA_LOADING_MESSAGE
+          : hasNoParameters
+            ? startedEmpty
+              ? 'Add at least one parameter change to create a policy.'
+              : NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+            : undefined
       }
       onBack={onBack}
       onCancel={onCancel}

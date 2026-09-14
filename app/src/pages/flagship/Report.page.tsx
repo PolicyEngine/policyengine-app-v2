@@ -191,11 +191,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         }}
       >
         <div style={{ flex: '1 1 640px', minWidth: 0 }}>{main}</div>
-        <ReportAdjustPanel
-          title={title}
-          sourceNote={meta?.sourceNote || ''}
-          provisions={meta?.provisions ?? []}
-        />
+        {meta && (
+          <ReportAdjustPanel
+            key={userReportId}
+            reportKey={`report:${countryId}:${userReportId}`}
+            title={title}
+            sourceNote={meta.sourceNote || ''}
+            provisions={meta.provisions}
+          />
+        )}
       </div>
     </div>
   );

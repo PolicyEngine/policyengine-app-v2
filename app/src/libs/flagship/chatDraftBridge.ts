@@ -1,4 +1,5 @@
-import { DraftProvision } from '@/libs/draftReform';
+import { convertDateRangeMapToValueIntervals } from '@/adapters/conversionHelpers';
+import { createDraftProvision, DraftProvision } from '@/libs/draftReform';
 import { ParameterSearchEntry } from '@/libs/parameterSearch';
 import { getCurrentValue } from '@/utils/parameterValues';
 
@@ -33,15 +34,6 @@ export function reformFromToolInput(
   return Object.keys(reform).length > 0 ? reform : null;
 }
 
-/** Collapses `{"2026-01-01.2100-12-31": 15000}` date maps to their value. */
-function scalarReformValue(raw: any): any {
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    const values = Object.values(raw);
-    return values.length > 0 ? values[0] : undefined;
-  }
-  return raw;
-}
-
 export interface ChatReformBridge {
   provisions: DraftProvision[];
   /** Reform paths the local parameter index doesn't know (version skew). */
@@ -59,18 +51,32 @@ export function provisionsFromChatReform(
 
   for (const [path, raw] of Object.entries(reform)) {
     const entry = byPath.get(path);
-    const value = scalarReformValue(raw);
-    if (!entry || value === undefined) {
+    if (!entry || raw === undefined || Array.isArray(raw)) {
       unknownPaths.push(path);
       continue;
     }
-    provisions.push({
+
+    const details = {
       path,
       breadcrumb: entry.breadcrumb || entry.label,
       unit: entry.unit,
       baselineValue: getCurrentValue(parameters?.[path]?.values),
-      value,
-    });
+    };
+    if (raw && typeof raw === 'object') {
+      try {
+        const values = convertDateRangeMapToValueIntervals(raw);
+        if (values.length === 0) {
+          unknownPaths.push(path);
+          continue;
+        }
+        provisions.push({ ...details, values });
+      } catch {
+        unknownPaths.push(path);
+      }
+      continue;
+    }
+
+    provisions.push(createDraftProvision({ ...details, value: raw }));
   }
 
   return { provisions, unknownPaths };

@@ -129,7 +129,7 @@ describe('AskPage UK chat mode', () => {
     // Then
     const draft = getDraftReform();
     expect(draft?.provisions[0].path).toBe(PERSONAL_ALLOWANCE_PATH);
-    expect(draft?.provisions[0].value).toBe(15000);
+    expect(draft?.provisions[0].values[0].value).toBe(15000);
     expect(draft?.source).toBe('chat');
     expect(screen.getByRole('button', { name: /in draft/i })).toBeDisabled();
   });

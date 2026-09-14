@@ -47,8 +47,10 @@ import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import {
+  hasRequiredPolicyMetadata,
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   normalizePolicyParameters,
+  POLICY_METADATA_LOADING_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 import { addParameterToPolicy } from '@/utils/policyParameterUpdate';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
@@ -97,11 +99,8 @@ export function PolicyCreationModal({
   const userId = MOCK_USER_ID.toString();
 
   // Get metadata from Redux state
-  const {
-    parameterTree,
-    parameters,
-    loading: metadataLoading,
-  } = useSelector((state: RootState) => state.metadata);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const { parameterTree, parameters, loading: metadataLoading } = metadata;
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
@@ -179,9 +178,10 @@ export function PolicyCreationModal({
     }
   }, [isOpen, initialPolicy, resolvedInitialEditorMode, defaultStartDate, defaultEndDate]);
 
+  const metadataReady = hasRequiredPolicyMetadata(metadata, countryId, policyParameters);
   const effectivePolicyParameters = useMemo(
-    () => normalizePolicyParameters(policyParameters, parameters),
-    [policyParameters, parameters]
+    () => (metadataReady ? normalizePolicyParameters(policyParameters, parameters) : []),
+    [metadataReady, policyParameters, parameters]
   );
 
   // Create local policy state object for components
@@ -284,6 +284,9 @@ export function PolicyCreationModal({
       selectedParam.parameter,
       intervals
     );
+    if (!hasRequiredPolicyMetadata(metadata, countryId, candidatePolicy.parameters)) {
+      return;
+    }
     const normalizedParameters = normalizePolicyParameters(candidatePolicy.parameters, parameters);
 
     setPolicyParameters(normalizedParameters);
@@ -291,7 +294,7 @@ export function PolicyCreationModal({
       candidatePolicy.parameters.length > 0 && normalizedParameters.length === 0
     );
     setIntervals([]);
-  }, [selectedParam, intervals, policyLabel, policyParameters, parameters]);
+  }, [selectedParam, intervals, policyLabel, policyParameters, metadata, countryId, parameters]);
 
   const handleRemoveParamChange = useCallback(
     (paramName: string, indexToRemove: number) => {
@@ -323,6 +326,9 @@ export function PolicyCreationModal({
     async (labelOverride?: string | null) => {
       const resolvedLabel =
         labelOverride === undefined ? normalizedPolicyLabel : (labelOverride?.trim() ?? '');
+      if (!hasRequiredPolicyMetadata(metadata, countryId, policyParameters)) {
+        return;
+      }
       const normalizedParameters = normalizePolicyParameters(policyParameters, parameters);
       if (normalizedParameters.length === 0) {
         setWasNoOpSubmission(policyParameters.length > 0);
@@ -350,6 +356,8 @@ export function PolicyCreationModal({
     [
       normalizedPolicyLabel,
       policyParameters,
+      metadata,
+      countryId,
       parameters,
       createPolicyWithLabel,
       onPolicyCreated,
@@ -381,6 +389,9 @@ export function PolicyCreationModal({
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
     if (!initialPolicy?.id) {
+      return;
+    }
+    if (!hasRequiredPolicyMetadata(metadata, countryId, policyParameters)) {
       return;
     }
     const normalizedParameters = normalizePolicyParameters(policyParameters, parameters);
@@ -429,6 +440,7 @@ export function PolicyCreationModal({
   }, [
     normalizedPolicyLabel,
     policyParameters,
+    metadata,
     parameters,
     initialPolicy?.id,
     resolveInitialPolicyAssociation,
@@ -735,6 +747,10 @@ export function PolicyCreationModal({
                 <Text size="sm" c="red">
                   {associationLookupError}
                 </Text>
+              ) : !metadataReady && policyParameters.length > 0 && !isReadOnly ? (
+                <Text size="sm" style={{ color: colors.text.warning }}>
+                  {POLICY_METADATA_LOADING_MESSAGE}
+                </Text>
               ) : (wasNoOpSubmission ||
                   (policyParameters.length > 0 && effectivePolicyParameters.length === 0)) &&
                 !isReadOnly ? (
@@ -747,7 +763,7 @@ export function PolicyCreationModal({
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
                   onClick={() => requestSaveAction('create')}
-                  disabled={isCreating || modificationCount === 0}
+                  disabled={!metadataReady || isCreating || modificationCount === 0}
                 >
                   {isCreating && <Spinner size="sm" />}
                   Create policy
@@ -769,13 +785,13 @@ export function PolicyCreationModal({
                     label="Update existing policy"
                     onClick={() => requestSaveAction('update-existing')}
                     loading={isUpdating}
-                    disabled={isCreating || modificationCount === 0}
+                    disabled={!metadataReady || isCreating || modificationCount === 0}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
                     onClick={() => requestSaveAction('save-as-new')}
                     loading={isCreating}
-                    disabled={isUpdating || modificationCount === 0}
+                    disabled={!metadataReady || isUpdating || modificationCount === 0}
                   />
                 </>
               )}

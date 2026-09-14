@@ -21,7 +21,13 @@ import { Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
+import {
+  addDraftProvision,
+  getDraftProvisionValue,
+  provisionFromSearchEntry,
+  useDraftReform,
+  withDraftProvisionValue,
+} from '@/libs/draftReform';
 import {
   ChatReformBridge,
   provisionsFromChatReform,
@@ -309,7 +315,7 @@ export default function AskPage() {
     const proposed = parseValueFromQuestion(question, entry.unit);
     addDraftProvision(
       countryId,
-      proposed === undefined ? provision : { ...provision, value: proposed },
+      proposed === undefined ? provision : withDraftProvisionValue(provision, proposed),
       'chat',
       'ask-keyword-v0'
     );
@@ -456,7 +462,7 @@ export default function AskPage() {
                   }}
                 >
                   {formatValue(provision.baselineValue, provision.unit)} →{' '}
-                  {formatValue(provision.value, provision.unit)}
+                  {formatValue(getDraftProvisionValue(provision), provision.unit)}
                 </Text>
               </div>
             ))}

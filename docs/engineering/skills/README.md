@@ -12,5 +12,6 @@ Current guidance:
 - `design-tokens.md`: sentence case, design tokens, colors, spacing, and typography.
 - `chart-standards.md`: supported chart libraries, shared chart components, responsive sizing, tooltips, and exports.
 - `ingredient-patterns.md`: reusable list-page and rename patterns for policies, reports, simulations, households, and geographies.
+- `policy-values.md`: canonical policy value intervals, safe date-based editing, current-law comparison, and metadata readiness.
 - `styling.md`: component styling, file organization, Tailwind conventions, and shared interface components.
 - `testing.md`: test commands, file layout, fixtures, mocks, accessibility queries, and coverage expectations.

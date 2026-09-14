@@ -13,6 +13,11 @@ const mockCreatePolicy = vi.hoisted(() => vi.fn());
 
 const mockReduxState = {
   metadata: {
+    loading: false,
+    error: null as string | null,
+    currentCountry: 'us',
+    currentLawId: 1,
+    version: 'test',
     parameters: {
       'gov.test.amount': {
         label: 'Test amount',
@@ -64,8 +69,8 @@ const POLICY_WITH_PARAMS: PolicyStateProps = {
   label: 'Test Policy',
   parameters: [
     {
-      name: 'gov.irs.deductions.itemized.charity.floor.applies',
-      values: [{ startDate: '2025-01-01', endDate: '2099-12-31', value: false }],
+      name: 'gov.test.amount',
+      values: [{ startDate: '2025-01-01', endDate: '2025-12-31', value: 150 }],
     },
   ],
 };
@@ -103,6 +108,11 @@ const mockOnCancel = vi.fn();
 describe('PolicySubmitView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReduxState.metadata.loading = false;
+    mockReduxState.metadata.error = null;
+    mockReduxState.metadata.currentCountry = 'us';
+    mockReduxState.metadata.currentLawId = 1;
+    mockReduxState.metadata.version = 'test';
   });
 
   describe('Issue #605: Block empty policy creation', () => {
@@ -230,6 +240,58 @@ describe('PolicySubmitView', () => {
         )
       );
     });
+
+    test('given model metadata is loading then submission is disabled and no request is made', async () => {
+      mockReduxState.metadata.loading = true;
+      const user = userEvent.setup();
+
+      render(
+        <PolicySubmitView
+          policy={POLICY_WITH_PARAMS}
+          countryId="us"
+          onSubmitSuccess={mockOnSubmitSuccess}
+        />
+      );
+
+      const submitButton = screen.getByRole('button', { name: /create policy/i });
+      expect(submitButton).toBeDisabled();
+      expect(screen.getByText(/policy details are still loading/i)).toBeInTheDocument();
+      await user.click(submitButton);
+      expect(mockCreatePolicy).not.toHaveBeenCalled();
+    });
+
+    test('given metadata belongs to another country then submission is disabled', () => {
+      mockReduxState.metadata.currentCountry = 'uk';
+
+      render(
+        <PolicySubmitView
+          policy={POLICY_WITH_PARAMS}
+          countryId="us"
+          onSubmitSuccess={mockOnSubmitSuccess}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /create policy/i })).toBeDisabled();
+      expect(mockCreatePolicy).not.toHaveBeenCalled();
+    });
+
+    test('given proposed parameter metadata is unavailable then submission is disabled', () => {
+      const policy: PolicyStateProps = {
+        label: 'Unknown parameter',
+        parameters: [
+          {
+            name: 'gov.test.unavailable',
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 1 }],
+          },
+        ],
+      };
+
+      render(
+        <PolicySubmitView policy={policy} countryId="us" onSubmitSuccess={mockOnSubmitSuccess} />
+      );
+
+      expect(screen.getByRole('button', { name: /create policy/i })).toBeDisabled();
+    });
   });
 
   describe('Rendering', () => {
@@ -258,9 +320,7 @@ describe('PolicySubmitView', () => {
       );
 
       // Then
-      expect(
-        screen.getByText('gov.irs.deductions.itemized.charity.floor.applies')
-      ).toBeInTheDocument();
+      expect(screen.getByText('gov.test.amount')).toBeInTheDocument();
     });
   });
 });

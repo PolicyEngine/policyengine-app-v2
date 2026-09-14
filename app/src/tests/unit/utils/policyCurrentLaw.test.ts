@@ -6,12 +6,58 @@ import {
 } from '@/tests/fixtures/utils/policyCurrentLawMocks';
 import {
   hasEffectivePolicyChanges,
+  hasRequiredPolicyMetadata,
   NoEffectivePolicyChangesError,
   normalizeParameterIntervals,
   normalizePolicyParameters,
   policyValuesEqual,
   requireEffectivePolicyParameters,
 } from '@/utils/policyCurrentLaw';
+
+const READY_METADATA = {
+  loading: false,
+  error: null,
+  currentCountry: 'us',
+  currentLawId: 1,
+  version: 'test',
+  parameters: CURRENT_LAW_METADATA,
+};
+
+describe('hasRequiredPolicyMetadata', () => {
+  const parameter = createParameter(
+    TEST_PARAMETER_NAMES.changingAmount,
+    '2026-01-01',
+    '2026-12-31',
+    150
+  );
+
+  test('given current model metadata covers every proposed parameter then returns true', () => {
+    expect(hasRequiredPolicyMetadata(READY_METADATA, 'us', [parameter])).toBe(true);
+  });
+
+  test.each([
+    ['loading', { loading: true }],
+    ['an error', { error: 'Metadata failed' }],
+    ['another country', { currentCountry: 'uk' }],
+    ['no model version', { version: null }],
+    ['no current-law policy', { currentLawId: 0 }],
+  ])('given metadata has %s then returns false', (_label, patch) => {
+    expect(hasRequiredPolicyMetadata({ ...READY_METADATA, ...patch }, 'us', [parameter])).toBe(
+      false
+    );
+  });
+
+  test('given a proposed parameter has no current-law values then returns false', () => {
+    const unknown = createParameter(
+      TEST_PARAMETER_NAMES.missingMetadata,
+      '2026-01-01',
+      '2026-12-31',
+      1
+    );
+
+    expect(hasRequiredPolicyMetadata(READY_METADATA, 'us', [unknown])).toBe(false);
+  });
+});
 
 describe('policyValuesEqual', () => {
   test.each([

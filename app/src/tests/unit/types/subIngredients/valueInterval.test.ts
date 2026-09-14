@@ -125,4 +125,21 @@ describe('ValueIntervalCollection', () => {
       expect(collection.getIntervals()).toHaveLength(0);
     });
   });
+
+  describe('Date lookup', () => {
+    test('given a covered date then returns the complete matching interval', () => {
+      const collection = new ValueIntervalCollection(MOCK_VALUE_INTERVALS);
+
+      const interval = collection.getIntervalAtDate(MOCK_VALUE_INTERVAL.startDate);
+
+      expect(interval).toEqual(MOCK_VALUE_INTERVAL);
+      expect(interval).not.toBe(MOCK_VALUE_INTERVAL);
+    });
+
+    test('given an uncovered date then returns undefined', () => {
+      const collection = new ValueIntervalCollection(MOCK_VALUE_INTERVALS);
+
+      expect(collection.getIntervalAtDate('1900-01-01')).toBeUndefined();
+    });
+  });
 });

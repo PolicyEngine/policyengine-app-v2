@@ -56,7 +56,11 @@ import { RootState } from '@/store';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { getCurrentValue } from '@/utils/parameterValues';
-import { NO_EFFECTIVE_POLICY_CHANGES_MESSAGE } from '@/utils/policyCurrentLaw';
+import {
+  hasRequiredPolicyMetadata,
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  POLICY_METADATA_LOADING_MESSAGE,
+} from '@/utils/policyCurrentLaw';
 
 interface BillReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
@@ -171,7 +175,8 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const billId = propId ?? params.billId ?? '';
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const parameters = metadata.parameters;
   const runReport = useRunFlagshipReport();
   const { bills, isLoading } = useTrackedBills(countryId);
   const [tab, setTab] = useState('overview');
@@ -216,7 +221,11 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   });
   const hasResolvedProvisionMetadata =
     provisions.length > 0 &&
-    provisions.every((provision) => parameters[provision.path]?.values !== undefined);
+    hasRequiredPolicyMetadata(
+      metadata,
+      countryId,
+      provisions.map((provision) => ({ name: provision.path, values: provision.values }))
+    );
   const hasEffectiveBillChanges =
     hasResolvedProvisionMetadata &&
     getEffectiveRunReportParameters(provisions, parameters).length > 0;
@@ -951,15 +960,21 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                   {runReport.error}
                 </Text>
               )}
-              {hasResolvedProvisionMetadata && !hasEffectiveBillChanges && (
+              {!hasResolvedProvisionMetadata && provisions.length > 0 ? (
+                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                  {POLICY_METADATA_LOADING_MESSAGE}
+                </Text>
+              ) : provisions.length > 0 && !hasEffectiveBillChanges ? (
                 <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
                   {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
                 </Text>
-              )}
+              ) : null}
             </Stack>
           </Stack>
         </div>
         <ReportAdjustPanel
+          key={bill.id}
+          reportKey={`bill:${countryId}:${bill.id}`}
           title={bill.title}
           sourceNote={`${bill.jurisdiction} · ${bill.status}`}
           provisions={provisions}

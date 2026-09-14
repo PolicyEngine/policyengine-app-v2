@@ -4,8 +4,10 @@ import { CountryId } from '@/libs/countries';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { getCurrentValue } from '@/utils/parameterValues';
 import { normalizePolicyParameters } from '@/utils/policyCurrentLaw';
+import { getParameterValueAtDate, updateParameterValueAtDate } from '@/utils/policyParameterUpdate';
 
 /**
  * The draft reform being composed in the flagship shell.
@@ -20,8 +22,12 @@ export interface DraftProvision {
   breadcrumb: string;
   unit: string | null;
   baselineValue: any;
-  /** The proposed new value; starts equal to baseline until edited */
-  value: any;
+  /** Canonical PolicyEngine representation of every proposed dated value. */
+  values: Parameter['values'];
+}
+
+export interface ScalarDraftProvision extends Omit<DraftProvision, 'values'> {
+  value: unknown;
 }
 
 /**
@@ -52,6 +58,55 @@ export interface DraftReform {
 const STORAGE_KEY = 'pe-draft-reform';
 const CHANGE_EVENT = 'pe-draft-reform-change';
 
+/** Convert a scalar source into the canonical dated representation at its input boundary. */
+export function createDraftProvision(
+  provision: ScalarDraftProvision,
+  startDate: string = `${CURRENT_YEAR}-01-01`
+): DraftProvision {
+  const { value, ...details } = provision;
+  return {
+    ...details,
+    values: [{ startDate, endDate: FOREVER, value }],
+  };
+}
+
+/** Return the value displayed and edited for a draft year. */
+export function getDraftProvisionValue(
+  provision: DraftProvision,
+  year: string = CURRENT_YEAR
+): unknown {
+  return getParameterValueAtDate(
+    { name: provision.path, values: provision.values },
+    `${year}-01-01`
+  );
+}
+
+/** Return a draft provision with the interval at `date` updated immutably. */
+export function withDraftProvisionValue(
+  provision: DraftProvision,
+  value: unknown,
+  date: string = `${CURRENT_YEAR}-01-01`
+): DraftProvision {
+  const updated = updateParameterValueAtDate(
+    { name: provision.path, values: provision.values },
+    date,
+    value
+  );
+  return { ...provision, values: updated.values };
+}
+
+function normalizeStoredDraftProvision(provision: any): DraftProvision {
+  const { value, values, ...details } = provision;
+  if (Array.isArray(values)) {
+    return {
+      ...details,
+      values: values.map((interval: ValueInterval) => ({ ...interval })),
+    };
+  }
+
+  return createDraftProvision({ ...details, value });
+}
+
 function readDraft(): DraftReform | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -62,8 +117,13 @@ function readDraft(): DraftReform | null {
     if (!parsed || !Array.isArray(parsed.provisions)) {
       return null;
     }
-    // Drafts saved before the population component existed default to national.
-    return { population: { scope: 'national' }, ...parsed };
+    // Drafts saved before the population component or canonical dated values
+    // existed are upgraded at the localStorage boundary.
+    return {
+      population: { scope: 'national' },
+      ...parsed,
+      provisions: parsed.provisions.map(normalizeStoredDraftProvision),
+    };
   } catch {
     return null;
   }
@@ -164,7 +224,9 @@ export function updateDraftProvisionValue(path: string, value: any): void {
   }
   writeDraft({
     ...draft,
-    provisions: draft.provisions.map((p) => (p.path === path ? { ...p, value } : p)),
+    provisions: draft.provisions.map((provision) =>
+      provision.path === path ? withDraftProvisionValue(provision, value) : provision
+    ),
   });
 }
 
@@ -213,7 +275,7 @@ export function loadReformIntoDraft(
         breadcrumb,
         unit,
         baselineValue,
-        value: parameter.values[0]?.value ?? baselineValue,
+        values: parameter.values.map((interval) => ({ ...interval })),
       };
     }),
     source: reform.provenance.source,
@@ -229,13 +291,13 @@ export function provisionFromSearchEntry(
   values: Record<string, any> | undefined | null
 ): DraftProvision {
   const baselineValue = getCurrentValue(values);
-  return {
+  return createDraftProvision({
     path: entry.path,
     breadcrumb: entry.breadcrumb,
     unit: entry.unit,
     baselineValue,
     value: baselineValue,
-  };
+  });
 }
 
 /** Converts draft provisions to the effective parameter changes they represent. */
@@ -246,13 +308,7 @@ export function draftToPolicyParameters(
   return normalizePolicyParameters(
     draft.provisions.map((provision) => ({
       name: provision.path,
-      values: [
-        {
-          startDate: `${CURRENT_YEAR}-01-01`,
-          endDate: FOREVER,
-          value: provision.value,
-        },
-      ],
+      values: provision.values.map((interval) => ({ ...interval })),
     })),
     currentLawMetadata
   );

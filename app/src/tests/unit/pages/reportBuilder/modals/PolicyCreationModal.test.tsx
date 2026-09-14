@@ -25,8 +25,18 @@ const mockReduxState = {
         parameter: 'gov.test.transition',
         values: { '2025-01-01': 100, '2026-07-01': 200 },
       },
+      'gov.test.parameter': {
+        label: 'Test parameter',
+        type: 'parameter',
+        parameter: 'gov.test.parameter',
+        values: { '2020-01-01': 0 },
+      },
     },
     loading: false,
+    error: null as string | null,
+    currentCountry: 'us',
+    currentLawId: 1,
+    version: 'test',
     economyOptions: {
       time_period: [{ name: '2024', label: '2024' }],
     },
@@ -118,6 +128,11 @@ const transitionPolicy: PolicyStateProps = {
 describe('PolicyCreationModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReduxState.metadata.loading = false;
+    mockReduxState.metadata.error = null;
+    mockReduxState.metadata.currentCountry = 'us';
+    mockReduxState.metadata.currentLawId = 1;
+    mockReduxState.metadata.version = 'test';
     mockCreatePolicyWithLabel.mockResolvedValue({ result: { policy_id: 'pol-new' } });
     mockCreatePolicyApi.mockResolvedValue({ result: { policy_id: 'pol-replacement' } });
     mockUpdatePolicyAssociation.mockResolvedValue({
@@ -158,6 +173,55 @@ describe('PolicyCreationModal', () => {
       expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
       expect(mockCreatePolicyApi).not.toHaveBeenCalled();
       expect(mockCreatePolicyWithLabel).not.toHaveBeenCalled();
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given model metadata is loading then disables policy creation',
+    () => {
+      mockReduxState.metadata.loading = true;
+
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={modifiedPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /update existing policy/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /save as new policy/i })).toBeDisabled();
+      expect(screen.getByText(/policy details are still loading/i)).toBeInTheDocument();
+      expect(mockCreatePolicyApi).not.toHaveBeenCalled();
+      expect(mockCreatePolicyWithLabel).not.toHaveBeenCalled();
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given metadata belongs to another country then disables policy creation',
+    () => {
+      mockReduxState.metadata.currentCountry = 'uk';
+
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={modifiedPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /update existing policy/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /save as new policy/i })).toBeDisabled();
     },
     MODAL_TEST_TIMEOUT_MS
   );

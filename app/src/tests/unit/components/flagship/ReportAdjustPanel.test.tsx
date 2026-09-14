@@ -69,11 +69,12 @@ const PROVISIONS = [
   },
 ];
 
-async function renderPanel(provisions = PROVISIONS) {
+async function renderPanel(provisions = PROVISIONS, reportKey = 'report-1') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
     <QueryClientProvider client={queryClient}>
       <ReportAdjustPanel
+        reportKey={reportKey}
         title="CTC expansion"
         sourceNote="Federal · Introduced"
         provisions={provisions}
@@ -96,6 +97,69 @@ describe('ReportAdjustPanel', () => {
 
     expect(screen.getByLabelText(/adjusted value for gov\.irs/i)).toHaveValue(2500);
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+  });
+
+  test('given provisions arrive after the first render then the panel hydrates from them', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel
+          reportKey="shared-report"
+          title="Shared report"
+          sourceNote=""
+          provisions={[]}
+        />
+      </QueryClientProvider>
+    );
+    expect(
+      screen.queryByRole('button', { name: /open adjust parameters/i })
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel
+          reportKey="shared-report"
+          title="Shared report"
+          sourceNote=""
+          provisions={PROVISIONS}
+        />
+      </QueryClientProvider>
+    );
+    await userEvent.setup().click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+    expect(screen.getByLabelText(/adjusted value for gov\.irs/i)).toHaveValue(2500);
+  });
+
+  test('given navigation changes the report key then local removals are reset', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel
+          reportKey="report-1"
+          title="First report"
+          sourceNote=""
+          provisions={PROVISIONS}
+        />
+      </QueryClientProvider>
+    );
+    await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+    await user.click(screen.getByRole('button', { name: /remove IRS/i }));
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel
+          reportKey="report-2"
+          title="Second report"
+          sourceNote=""
+          provisions={PROVISIONS}
+        />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/adjusted value for gov\.irs/i)).toBeInTheDocument()
+    );
   });
 
   test('given no matching reform then recompute saves a new one and runs linked to it', async () => {

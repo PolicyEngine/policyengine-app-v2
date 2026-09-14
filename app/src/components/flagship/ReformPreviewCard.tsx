@@ -12,16 +12,17 @@ import {
   DraftReform,
   draftToPolicyParameters,
   draftToReform,
+  getDraftProvisionValue,
   removeDraftProvision,
   setDraftLabel,
   setDraftPopulation,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
-import { createRunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
 import {
+  hasRequiredPolicyMetadata,
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   NoEffectivePolicyChangesError,
   POLICY_METADATA_LOADING_MESSAGE,
@@ -95,12 +96,14 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
   const runReport = useRunFlagshipReport();
   const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawMetadata = metadata.parameters;
-  const metadataReady =
-    !metadata.loading &&
-    !metadata.error &&
-    metadata.currentCountry === draft.countryId &&
-    metadata.version !== null &&
-    metadata.currentLawId > 0;
+  const metadataReady = hasRequiredPolicyMetadata(
+    metadata,
+    draft.countryId,
+    draft.provisions.map((provision) => ({
+      name: provision.path,
+      values: provision.values,
+    }))
+  );
   const effectiveParameters = metadataReady
     ? draftToPolicyParameters(draft, currentLawMetadata)
     : [];
@@ -231,7 +234,10 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
               >
                 {formatValue(provision.baselineValue, provision.unit)} →
               </Text>
-              <ProvisionValueInput path={provision.path} value={provision.value} />
+              <ProvisionValueInput
+                path={provision.path}
+                value={getDraftProvisionValue(provision)}
+              />
             </Stack>
           </Stack>
         ))}
@@ -330,7 +336,10 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             runReport.run(
               draft.label || 'Draft reform',
               SOURCE_NOTES[draft.source] ?? 'Draft reform',
-              draft.provisions.map((provision) => createRunReportProvision(provision))
+              draft.provisions.map((provision) => ({
+                ...provision,
+                values: provision.values.map((interval) => ({ ...interval })),
+              }))
             )
           }
           disabled={!hasEffectiveChanges || runReport.isRunning}

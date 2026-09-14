@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IconChartBar, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -19,6 +19,7 @@ import type { Parameter } from '@/types/subIngredients/parameter';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
 import {
+  hasRequiredPolicyMetadata,
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   normalizePolicyParameters,
   policyParametersEqual,
@@ -28,6 +29,8 @@ import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
 interface ReportAdjustPanelProps {
+  /** Stable identity used to clear local edits when navigation loads another report. */
+  reportKey: string;
   /** Title of the report being adjusted; the recomputed one appends "(adjusted)". */
   title: string;
   sourceNote: string;
@@ -54,6 +57,7 @@ function reformMatches(
  * report, linked to that reform. Collapses to a slim edge tab.
  */
 export default function ReportAdjustPanel({
+  reportKey,
   title,
   sourceNote,
   provisions,
@@ -65,24 +69,33 @@ export default function ReportAdjustPanel({
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);
-  const [adjusted, setAdjusted] = useState<RunReportProvision[]>(() =>
-    provisions.map((provision) => ({
+  const [parameterOverrides, setParameterOverrides] = useState<Parameter[]>([]);
+
+  useEffect(() => {
+    setRemoved(new Set());
+    setParameterOverrides([]);
+    setReconcileError(null);
+  }, [reportKey]);
+
+  const adjusted = useMemo(() => {
+    const overridesByPath = new Map(
+      parameterOverrides.map((parameter) => [parameter.name, parameter.values])
+    );
+    return provisions.map((provision) => ({
       ...provision,
-      values: provision.values.map((interval) => ({ ...interval })),
-    }))
-  );
+      values: overridesByPath.get(provision.path) ?? provision.values,
+    }));
+  }, [parameterOverrides, provisions]);
 
   const active = useMemo(
     () => adjusted.filter((provision) => !removed.has(provision.path)),
     [adjusted, removed]
   );
-  const hasRequiredMetadata =
-    !metadata.loading &&
-    !metadata.error &&
-    metadata.currentCountry === countryId &&
-    metadata.version !== null &&
-    metadata.currentLawId > 0 &&
-    active.every((provision) => metadata.parameters[provision.path]?.values);
+  const activeParameters = active.map((provision) => ({
+    name: provision.path,
+    values: provision.values,
+  }));
+  const hasRequiredMetadata = hasRequiredPolicyMetadata(metadata, countryId, activeParameters);
   const effectiveProvisions = useMemo(
     () => (hasRequiredMetadata ? getEffectiveRunReportProvisions(active, metadata.parameters) : []),
     [active, hasRequiredMetadata, metadata.parameters]
@@ -218,19 +231,20 @@ export default function ReportAdjustPanel({
               <ValueInput
                 value={getRunReportProvisionValue(provision)}
                 onChange={(next) =>
-                  setAdjusted((current) =>
-                    current.map((currentProvision) => {
-                      if (currentProvision.path !== provision.path) {
-                        return currentProvision;
-                      }
-                      const updated = updateParameterValueAtDate(
-                        { name: currentProvision.path, values: currentProvision.values },
-                        `${CURRENT_YEAR}-01-01`,
-                        next
-                      );
-                      return { ...currentProvision, values: updated.values };
-                    })
-                  )
+                  setParameterOverrides((current) => {
+                    const source =
+                      current.find((parameter) => parameter.name === provision.path) ??
+                      ({ name: provision.path, values: provision.values } satisfies Parameter);
+                    const updated = updateParameterValueAtDate(
+                      source,
+                      `${CURRENT_YEAR}-01-01`,
+                      next
+                    );
+                    return [
+                      ...current.filter((parameter) => parameter.name !== provision.path),
+                      updated,
+                    ];
+                  })
                 }
                 ariaLabel={`Adjusted value for ${provision.path}`}
               />

@@ -5,6 +5,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { runFlagshipReport, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import {
+  hasRequiredPolicyMetadata,
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   NoEffectivePolicyChangesError,
 } from '@/utils/policyCurrentLaw';
@@ -17,8 +18,9 @@ import {
 export function useRunFlagshipReport() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
-  const currentLawMetadata = useSelector((state: RootState) => state.metadata.parameters);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentLawId = metadata.currentLawId;
+  const currentLawMetadata = metadata.parameters;
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +33,11 @@ export function useRunFlagshipReport() {
     if (isRunning) {
       return;
     }
-    if (!currentLawId) {
+    const parameters = provisions.map((provision) => ({
+      name: provision.path,
+      values: provision.values,
+    }));
+    if (!hasRequiredPolicyMetadata(metadata, countryId, parameters)) {
       setError('Model metadata is still loading — try again in a moment.');
       return;
     }

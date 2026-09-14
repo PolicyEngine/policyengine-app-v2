@@ -17,10 +17,8 @@ export function getParameterIntervalAtDate(
   parameter: Parameter,
   date: string
 ): ValueInterval | undefined {
-  return (
-    parameter.values.find((interval) => interval.startDate <= date && interval.endDate >= date) ??
-    parameter.values[0]
-  );
+  const values = new ValueIntervalCollection(parameter.values);
+  return values.getIntervalAtDate(date) ?? values.getIntervals()[0];
 }
 
 /** Return the parameter value edited for an ISO date. */

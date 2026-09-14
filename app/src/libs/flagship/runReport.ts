@@ -31,7 +31,7 @@ export interface ScalarRunReportProvision extends Omit<RunReportProvision, 'valu
   value: unknown;
 }
 
-/** Convert a scalar source such as a tracked bill or draft into dated values. */
+/** Convert a scalar source such as a tracked bill into dated values. */
 export function createRunReportProvision(
   provision: ScalarRunReportProvision,
   startDate: string = `${CURRENT_YEAR}-01-01`

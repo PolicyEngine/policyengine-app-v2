@@ -8,6 +8,11 @@ const mockCalibrationMatchesForPaths = vi.fn();
 const mockRun = vi.fn();
 const { mockMetadata } = vi.hoisted(() => ({
   mockMetadata: {
+    loading: false,
+    error: null,
+    currentCountry: 'us',
+    currentLawId: 1,
+    version: 'test',
     parameters: {
       'gov.irs.credits.ctc.amount.base[0].amount': {
         unit: 'currency-USD',
