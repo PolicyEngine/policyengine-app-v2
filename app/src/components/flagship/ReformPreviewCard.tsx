@@ -23,6 +23,7 @@ import { formatValue } from '@/utils/parameterValues';
 import {
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   NoEffectivePolicyChangesError,
+  POLICY_METADATA_LOADING_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
@@ -91,12 +92,24 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
-  const currentLawMetadata = useSelector((state: RootState) => state.metadata.parameters);
-  const effectiveParameters = draftToPolicyParameters(draft, currentLawMetadata);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentLawMetadata = metadata.parameters;
+  const metadataReady =
+    !metadata.loading &&
+    !metadata.error &&
+    metadata.currentCountry === draft.countryId &&
+    metadata.version !== null &&
+    metadata.currentLawId > 0;
+  const effectiveParameters = metadataReady
+    ? draftToPolicyParameters(draft, currentLawMetadata)
+    : [];
   const hasEffectiveChanges = effectiveParameters.length > 0;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!metadataReady) {
+        throw new Error(POLICY_METADATA_LOADING_MESSAGE);
+      }
       const store = getReformStore();
       const payload = draftToReform(draft, MOCK_USER_ID, currentLawMetadata);
       if (payload.parameters.length === 0) {
@@ -221,7 +234,17 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             </Stack>
           </Stack>
         ))}
-        {!hasEffectiveChanges && draft.provisions.length > 0 && (
+        {!metadataReady && draft.provisions.length > 0 ? (
+          <Text
+            style={{
+              fontSize: typography.fontSize.xs,
+              color: colors.text.secondary,
+              padding: `${spacing.sm} ${spacing.lg} 0`,
+            }}
+          >
+            {POLICY_METADATA_LOADING_MESSAGE}
+          </Text>
+        ) : !hasEffectiveChanges && draft.provisions.length > 0 ? (
           <Text
             style={{
               fontSize: typography.fontSize.xs,
@@ -231,7 +254,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
           >
             {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE} Edit a value above to make this a reform.
           </Text>
-        )}
+        ) : null}
       </Stack>
 
       <SectionHeader label="Population" />
@@ -310,6 +333,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             )
           }
           disabled={!hasEffectiveChanges || runReport.isRunning}
+          title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
           style={{ width: '100%' }}
         >
           <IconChartBar size={16} />
@@ -320,6 +344,7 @@ export default function ReformPreviewCard({ draft }: { draft: DraftReform }) {
             variant="outline"
             onClick={() => saveMutation.mutate()}
             disabled={!hasEffectiveChanges || saveMutation.isPending}
+            title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
             style={{ flex: 1 }}
           >
             {draft.editingReformId ? 'Save changes' : 'Save to library'}

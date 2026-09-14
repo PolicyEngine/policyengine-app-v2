@@ -11,6 +11,10 @@ const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockReduxState = {
   metadata: {
+    loading: false,
+    error: null,
+    currentCountry: 'us',
+    version: 'test',
     currentLawId: 2,
     parameters: {
       'gov.irs.credits.ctc.amount.base[0].amount': {
@@ -148,6 +152,10 @@ function renderReforms(path?: string) {
 describe('ReformsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReduxState.metadata.loading = false;
+    mockReduxState.metadata.currentCountry = 'us';
+    mockReduxState.metadata.version = 'test';
+    mockReduxState.metadata.currentLawId = 2;
     clearDraftReform();
     mockFindByUser.mockResolvedValue([]);
     mockFetchTrackerBills.mockResolvedValue(FEED_BILLS);
@@ -308,6 +316,24 @@ describe('ReformsPage', () => {
 
     expect(screen.getByLabelText(/new value for gov\.irs/i)).toHaveValue(3600);
     expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
+  });
+
+  test('given metadata is loading then saved reform actions remain disabled', async () => {
+    mockReduxState.metadata.loading = true;
+    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.clear(screen.getByRole('textbox', { name: /reform name/i }));
+    await user.type(screen.getByRole('textbox', { name: /reform name/i }), 'Renamed CTC reform');
+
+    expect(screen.getByText(/policy details are still loading/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /duplicate/i })).toBeDisabled();
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   test('given an amended value then save updates the reform', async () => {

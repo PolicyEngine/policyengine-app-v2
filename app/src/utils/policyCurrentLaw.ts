@@ -6,6 +6,8 @@ export const NO_EFFECTIVE_POLICY_CHANGES_MESSAGE =
   'The selected values match current law, so there are no policy changes to save.';
 export const NO_EFFECTIVE_PARAMETER_CHANGE_MESSAGE =
   'The selected value matches current law, so it was not added to the policy.';
+export const POLICY_METADATA_LOADING_MESSAGE =
+  'Policy details are still loading. Wait a moment before saving or running this reform.';
 
 export class NoEffectivePolicyChangesError extends Error {
   constructor(message: string = NO_EFFECTIVE_POLICY_CHANGES_MESSAGE) {

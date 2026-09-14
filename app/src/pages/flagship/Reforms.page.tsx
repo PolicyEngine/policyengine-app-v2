@@ -47,6 +47,7 @@ import {
   NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
   NoEffectivePolicyChangesError,
   normalizePolicyParameters,
+  POLICY_METADATA_LOADING_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 
 const SOURCE_LABELS: Record<ReformSource, string> = {
@@ -221,7 +222,14 @@ export default function ReformsPage() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const parameters = metadata.parameters;
+  const metadataReady =
+    !metadata.loading &&
+    !metadata.error &&
+    metadata.currentCountry === countryId &&
+    metadata.version !== null &&
+    metadata.currentLawId > 0;
   const appLocation = useAppLocation();
   const urlParams = useMemo(() => new URLSearchParams(appLocation.search), [appLocation.search]);
 
@@ -277,6 +285,9 @@ export default function ReformsPage() {
 
   const saveMutation = useMutation({
     mutationFn: (reform: Reform) => {
+      if (!metadataReady) {
+        throw new Error(POLICY_METADATA_LOADING_MESSAGE);
+      }
       const effectiveParameters = getEditedParameters(reform);
       if (effectiveParameters.length === 0) {
         throw new NoEffectivePolicyChangesError();
@@ -300,6 +311,9 @@ export default function ReformsPage() {
 
   const duplicateMutation = useMutation({
     mutationFn: (reform: Reform) => {
+      if (!metadataReady) {
+        throw new Error(POLICY_METADATA_LOADING_MESSAGE);
+      }
       const effectiveParameters = normalizePolicyParameters(reform.parameters, parameters);
       if (effectiveParameters.length === 0) {
         throw new NoEffectivePolicyChangesError();
@@ -471,7 +485,9 @@ export default function ReformsPage() {
   if (selectedBill) {
     const provisions = billProvisions(selectedBill);
     const hasEffectiveBillChanges =
-      provisions.length > 0 && getEffectiveRunReportParameters(provisions, parameters).length > 0;
+      metadataReady &&
+      provisions.length > 0 &&
+      getEffectiveRunReportParameters(provisions, parameters).length > 0;
     const impact = selectedBill.impactData;
     const winners = impact?.winnersLosers;
     const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
@@ -601,11 +617,15 @@ export default function ReformsPage() {
                 {runReport.error}
               </Text>
             )}
-            {!selectedBill.impactData && provisions.length > 0 && !hasEffectiveBillChanges && (
+            {!selectedBill.impactData && provisions.length > 0 && !metadataReady ? (
+              <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                {POLICY_METADATA_LOADING_MESSAGE}
+              </Text>
+            ) : !selectedBill.impactData && provisions.length > 0 && !hasEffectiveBillChanges ? (
               <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.warning }}>
                 {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
               </Text>
-            )}
+            ) : null}
           </Stack>
         </Stack>
       </WorkspaceLayout>
@@ -614,10 +634,11 @@ export default function ReformsPage() {
 
   // ---- Detail: one of your reforms ----
   if (selectedReform) {
-    const effectiveEditedParameters = getEditedParameters(selectedReform);
+    const effectiveEditedParameters = metadataReady ? getEditedParameters(selectedReform) : [];
     const hasEffectiveEditedChanges = effectiveEditedParameters.length > 0;
     const selectedReformProvisions = reformProvisions(selectedReform);
     const hasEffectiveSavedChanges =
+      metadataReady &&
       getEffectiveRunReportParameters(selectedReformProvisions, parameters).length > 0;
     return (
       <WorkspaceLayout>
@@ -706,6 +727,7 @@ export default function ReformsPage() {
                 )
               }
               disabled={runReport.isRunning || !hasEffectiveSavedChanges}
+              title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
             >
               <IconChartBar size={16} />
               {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
@@ -715,6 +737,7 @@ export default function ReformsPage() {
               disabled={
                 !isDirty(selectedReform) || !hasEffectiveEditedChanges || saveMutation.isPending
               }
+              title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
               onClick={() => saveMutation.mutate(selectedReform)}
             >
               <IconDeviceFloppy size={16} />
@@ -737,6 +760,7 @@ export default function ReformsPage() {
             <Button
               variant="outline"
               disabled={duplicateMutation.isPending || !hasEffectiveSavedChanges}
+              title={!metadataReady ? POLICY_METADATA_LOADING_MESSAGE : undefined}
               onClick={() => duplicateMutation.mutate(selectedReform)}
             >
               <IconCopy size={16} />
@@ -755,12 +779,16 @@ export default function ReformsPage() {
                 {runReport.error}
               </Text>
             )}
-            {(!hasEffectiveSavedChanges ||
-              (isDirty(selectedReform) && !hasEffectiveEditedChanges)) && (
+            {!metadataReady ? (
+              <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                {POLICY_METADATA_LOADING_MESSAGE}
+              </Text>
+            ) : !hasEffectiveSavedChanges ||
+              (isDirty(selectedReform) && !hasEffectiveEditedChanges) ? (
               <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.warning }}>
                 {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
               </Text>
-            )}
+            ) : null}
           </Stack>
         </Stack>
       </WorkspaceLayout>

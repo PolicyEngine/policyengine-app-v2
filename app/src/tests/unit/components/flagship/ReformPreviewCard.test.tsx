@@ -7,6 +7,7 @@ import {
   clearDraftReform,
   getDraftReform,
   startDraftReform,
+  updateDraftProvisionValue,
   useDraftReform,
 } from '@/libs/draftReform';
 
@@ -14,6 +15,10 @@ const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockReduxState = {
   metadata: {
+    loading: false,
+    error: null,
+    currentCountry: 'us',
+    version: 'test',
     currentLawId: 2,
     parameters: {
       'gov.irs.credits.ctc.amount.base[0].amount': {
@@ -79,6 +84,10 @@ function renderCard() {
 describe('ReformPreviewCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReduxState.metadata.loading = false;
+    mockReduxState.metadata.currentCountry = 'us';
+    mockReduxState.metadata.version = 'test';
+    mockReduxState.metadata.currentLawId = 2;
     // The panel remembers its fold in sessionStorage; a fold test must
     // not leak a closed panel into the next test.
     sessionStorage.clear();
@@ -101,6 +110,18 @@ describe('ReformPreviewCard', () => {
     expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /run report/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /save to library/i })).toBeDisabled();
+  });
+
+  test('given metadata is loading then reform actions remain disabled', () => {
+    mockReduxState.metadata.loading = true;
+    updateDraftProvisionValue('gov.irs.credits.ctc.amount.base[0].amount', 3600);
+
+    renderCard();
+
+    expect(screen.getByText(/policy details are still loading/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /save to library/i })).toBeDisabled();
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   test('given a new value is typed then the draft updates', async () => {
