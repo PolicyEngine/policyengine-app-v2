@@ -56,8 +56,8 @@ export function PolicyDetailsDrawer({
           ? formatLabelParts(hierarchicalLabels)
           : param.name.split('.').pop() || param.name;
       const metadata = parameters[param.name];
-      const changes = (param.values || []).map((interval, index) => ({
-        index,
+      const changes = (param.values || []).map((interval) => ({
+        interval: { ...interval },
         period: formatPeriod(interval.startDate, interval.endDate),
         value: formatParameterValue(interval.value, metadata?.unit ?? undefined),
       }));

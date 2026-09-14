@@ -1,5 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type {
+  ChangesCardProps,
+  ModifiedParam,
+} from '@/pages/reportBuilder/modals/policyCreation/types';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import type { PolicyStateProps } from '@/types/pathwayState';
 
@@ -77,12 +81,44 @@ vi.mock('@/api/policy', () => ({
 }));
 
 vi.mock('@/pages/reportBuilder/modals/policyCreation', () => ({
-  ChangesCard: () => <div data-testid="changes-card" />,
+  ChangesCard: ({ modifiedParams, onRemoveChange }: ChangesCardProps) => (
+    <div data-testid="changes-card">
+      {modifiedParams.flatMap((parameter) =>
+        parameter.changes.map((change) => (
+          <button
+            key={`${parameter.paramName}-${change.interval.startDate}-${change.interval.endDate}`}
+            type="button"
+            onClick={() => onRemoveChange?.(parameter.paramName, change.interval)}
+          >
+            Remove displayed change
+          </button>
+        ))
+      )}
+    </div>
+  ),
   EmptyParameterState: () => <div data-testid="empty-parameter-state" />,
   HistoricalValuesCard: () => <div data-testid="historical-values-card" />,
   ParameterHeaderCard: () => <div data-testid="parameter-header-card" />,
   ParameterSidebar: () => <div data-testid="parameter-sidebar" />,
-  PolicyOverviewContent: () => <div data-testid="policy-overview-content" />,
+  PolicyOverviewContent: ({
+    modifiedParams,
+    onClickParam,
+  }: {
+    modifiedParams: ModifiedParam[];
+    onClickParam: (paramName: string) => void;
+  }) => (
+    <div data-testid="policy-overview-content">
+      {modifiedParams.map((parameter) => (
+        <button
+          key={parameter.paramName}
+          type="button"
+          onClick={() => onClickParam(parameter.paramName)}
+        >
+          Open displayed parameter
+        </button>
+      ))}
+    </div>
+  ),
   ValueSetterCard: () => <div data-testid="value-setter-card" />,
 }));
 
@@ -121,6 +157,20 @@ const transitionPolicy: PolicyStateProps = {
     {
       name: 'gov.test.transition',
       values: [{ startDate: '2025-01-01', endDate: '2026-12-31', value: 100 }],
+    },
+  ],
+};
+
+const policyWithHiddenNoOpBeforeEffectiveChange: PolicyStateProps = {
+  id: 'pol-123',
+  label: 'Mixed policy',
+  parameters: [
+    {
+      name: 'gov.test.parameter',
+      values: [
+        { startDate: '2024-01-01', endDate: '2024-12-31', value: 0 },
+        { startDate: '2025-01-01', endDate: '2025-12-31', value: 1 },
+      ],
     },
   ],
 };
@@ -264,6 +314,34 @@ describe('PolicyCreationModal', () => {
           },
         ],
       });
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given a hidden no-op precedes a displayed change then removes the displayed interval',
+    async () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={policyWithHiddenNoOpBeforeEffectiveChange}
+          initialEditorMode="edit"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /open displayed parameter/i }));
+      fireEvent.click(screen.getByRole('button', { name: /remove displayed change/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /update existing policy/i })).toBeDisabled();
+      });
+      expect(
+        screen.queryByRole('button', { name: /remove displayed change/i })
+      ).not.toBeInTheDocument();
     },
     MODAL_TEST_TIMEOUT_MS
   );

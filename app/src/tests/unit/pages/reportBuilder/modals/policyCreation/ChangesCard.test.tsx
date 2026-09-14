@@ -8,14 +8,22 @@ const modifiedParams: ModifiedParam[] = [
     paramName: 'gov.test.parameter',
     label: 'Test parameter',
     changes: [
-      { index: 0, period: '2024', value: '$100' },
-      { index: 1, period: '2025', value: '$200' },
+      {
+        interval: { startDate: '2024-01-01', endDate: '2024-12-31', value: 100 },
+        period: '2024',
+        value: '$100',
+      },
+      {
+        interval: { startDate: '2025-01-01', endDate: '2025-12-31', value: 200 },
+        period: '2025',
+        value: '$200',
+      },
     ],
   },
 ];
 
 describe('ChangesCard', () => {
-  test('given editable changes then removes the selected interval by index', async () => {
+  test('given editable changes then removes the selected canonical interval', async () => {
     const user = userEvent.setup();
     const handleRemoveChange = vi.fn();
 
@@ -23,7 +31,11 @@ describe('ChangesCard', () => {
 
     await user.click(screen.getByRole('button', { name: /remove 2025 change/i }));
 
-    expect(handleRemoveChange).toHaveBeenCalledWith('gov.test.parameter', 1);
+    expect(handleRemoveChange).toHaveBeenCalledWith('gov.test.parameter', {
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+      value: 200,
+    });
   });
 
   test('given read-only mode then does not render remove actions', () => {

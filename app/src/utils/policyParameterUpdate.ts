@@ -50,6 +50,17 @@ export function updateParameterValueAtDate(
   };
 }
 
+/** Remove one canonical dated value from a parameter without mutating the input. */
+export function removeParameterInterval(parameter: Parameter, interval: ValueInterval): Parameter {
+  const values = new ValueIntervalCollection(parameter.values);
+  values.removeInterval(interval);
+
+  return {
+    ...parameter,
+    values: values.getIntervals().map((retainedInterval) => ({ ...retainedInterval })),
+  };
+}
+
 /**
  * Adds parameter intervals to a policy, returning a new policy object.
  *

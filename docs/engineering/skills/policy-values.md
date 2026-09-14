@@ -15,7 +15,7 @@ Use these rules whenever code reads, edits, compares, stores, or submits policy 
 ## Reading and editing intervals
 
 - Use `ValueIntervalCollection` for date lookup and interval mutation. Use `getIntervalAtDate` when callers need the complete interval and `getValueAtDate` when they only need its value.
-- Use the helpers in `policyParameterUpdate` for `Parameter` objects. `getParameterValueAtDate` supplies the editor fallback used by existing interfaces, and `updateParameterValueAtDate` changes the selected interval without discarding other intervals.
+- Use the helpers in `policyParameterUpdate` for `Parameter` objects. `getParameterValueAtDate` supplies the editor fallback used by existing interfaces, `updateParameterValueAtDate` changes the selected interval without discarding other intervals, and `removeParameterInterval` removes a canonical interval through `ValueIntervalCollection` rather than using its display index against another array.
 - Preserve every interval that the user did not edit. Deep-copy interval objects when data crosses a storage or component ownership boundary.
 - When selecting a parameter from current-law metadata, initialize its editable values from the current-law schedule at the editing date and later. Do not extend the value at the editing date indefinitely, because that would replace later current-law changes before the user edits anything.
 - Keep serializable `ValueInterval[]` in Redux, local storage, API models, and component state. `ValueIntervalCollection` is the operation layer, not a serialized state type.

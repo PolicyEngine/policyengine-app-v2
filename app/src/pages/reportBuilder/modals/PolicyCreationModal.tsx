@@ -52,7 +52,7 @@ import {
   normalizePolicyParameters,
   POLICY_METADATA_LOADING_MESSAGE,
 } from '@/utils/policyCurrentLaw';
-import { addParameterToPolicy } from '@/utils/policyParameterUpdate';
+import { addParameterToPolicy, removeParameterInterval } from '@/utils/policyParameterUpdate';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { getReportYearDateBounds } from '../utils/reportYearDates';
@@ -206,8 +206,8 @@ export function PolicyCreationModal({
           ? formatLabelParts(hierarchicalLabels)
           : p.name.split('.').pop() || p.name;
 
-      const changes = p.values.map((interval, index) => ({
-        index,
+      const changes = p.values.map((interval) => ({
+        interval: { ...interval },
         period: formatPeriod(interval.startDate, interval.endDate),
         value: formatParameterValue(interval.value, metadata?.unit),
       }));
@@ -297,28 +297,21 @@ export function PolicyCreationModal({
   }, [selectedParam, intervals, policyLabel, policyParameters, metadata, countryId, parameters]);
 
   const handleRemoveParamChange = useCallback(
-    (paramName: string, indexToRemove: number) => {
+    (paramName: string, intervalToRemove: ValueInterval) => {
       if (isReadOnly) {
         return;
       }
 
       setPolicyParameters((currentParameters) =>
-        currentParameters
-          .map((param) => {
-            if (param.name !== paramName) {
-              return param;
-            }
-
-            return {
-              ...param,
-              values: param.values.filter((_, index) => index !== indexToRemove),
-            };
-          })
+        normalizePolicyParameters(currentParameters, parameters)
+          .map((param) =>
+            param.name === paramName ? removeParameterInterval(param, intervalToRemove) : param
+          )
           .filter((param) => param.values.length > 0)
       );
       setWasNoOpSubmission(false);
     },
-    [isReadOnly]
+    [isReadOnly, parameters]
   );
 
   // Handle policy creation

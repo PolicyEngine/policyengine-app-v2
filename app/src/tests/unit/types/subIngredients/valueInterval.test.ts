@@ -224,4 +224,24 @@ describe('ValueIntervalCollection', () => {
       expect(result[1]).not.toBe(source[1]);
     });
   });
+
+  describe('Interval removal', () => {
+    test('given a matching interval then removes that complete interval', () => {
+      const intervalToRemove = {
+        startDate: '2026-01-01',
+        endDate: '2026-12-31',
+        value: 1_000,
+      };
+      const retainedInterval = {
+        startDate: '2027-01-01',
+        endDate: '2100-12-31',
+        value: 2_000,
+      };
+      const collection = new ValueIntervalCollection([intervalToRemove, retainedInterval]);
+
+      collection.removeInterval(intervalToRemove);
+
+      expect(collection.getIntervals()).toEqual([retainedInterval]);
+    });
+  });
 });

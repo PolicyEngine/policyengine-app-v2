@@ -72,6 +72,18 @@ export class ValueIntervalCollection {
     this.intervals = this.mergeSortedAdjacentSameValueIntervals(this.intervals);
   }
 
+  /** Remove the canonical interval with the same inclusive date bounds. */
+  removeInterval(interval: ValueInterval): void {
+    this.validateISODateString(interval.startDate);
+    this.validateISODateString(interval.endDate);
+    this.validateValidInterval(interval.startDate, interval.endDate);
+
+    this.intervals = this.intervals.filter(
+      (candidate) =>
+        candidate.startDate !== interval.startDate || candidate.endDate !== interval.endDate
+    );
+  }
+
   /**
    * Used to add data from Parameter.values, which only maps
    * start dates to values, not end dates

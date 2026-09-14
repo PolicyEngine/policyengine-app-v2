@@ -12,6 +12,7 @@ import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import {
   addParameterToPolicy,
   getParameterValueAtDate,
+  removeParameterInterval,
   updateParameterValueAtDate,
 } from '@/utils/policyParameterUpdate';
 
@@ -264,5 +265,27 @@ describe('dated parameter value helpers', () => {
     expect(updated.values).toEqual([
       { startDate: '2026-04-15', endDate: '2026-04-15', value: 1_500 },
     ]);
+  });
+
+  test('given a canonical interval when removing it then preserves the other intervals', () => {
+    const intervalToRemove = {
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+      value: 1_000,
+    };
+    const retainedInterval = {
+      startDate: '2027-01-01',
+      endDate: '2100-12-31',
+      value: 2_000,
+    };
+    const parameter = {
+      name: NUMERIC_PARAM_NAME,
+      values: [intervalToRemove, retainedInterval],
+    };
+
+    const updated = removeParameterInterval(parameter, intervalToRemove);
+
+    expect(updated.values).toEqual([retainedInterval]);
+    expect(parameter.values).toEqual([intervalToRemove, retainedInterval]);
   });
 });

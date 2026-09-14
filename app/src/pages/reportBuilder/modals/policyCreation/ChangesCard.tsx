@@ -43,7 +43,7 @@ export function ChangesCard({
       <Stack gap="xs">
         {changes.map((change) => (
           <Group
-            key={`${change.paramName}-${change.index}`}
+            key={`${change.paramName}-${change.interval.startDate}-${change.interval.endDate}`}
             justify="space-between"
             style={{
               padding: spacing.sm,
@@ -64,7 +64,7 @@ export function ChangesCard({
                   variant="ghost"
                   size="icon-xs"
                   aria-label={`Remove ${change.period} change`}
-                  onClick={() => onRemoveChange?.(change.paramName, change.index)}
+                  onClick={() => onRemoveChange?.(change.paramName, change.interval)}
                 >
                   <IconTrash size={12} />
                 </Button>

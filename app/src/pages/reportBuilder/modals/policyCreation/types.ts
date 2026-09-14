@@ -22,7 +22,7 @@ export interface ModifiedParam {
   paramName: string;
   label: string;
   changes: Array<{
-    index: number;
+    interval: ValueInterval;
     period: string;
     value: string;
   }>;
@@ -93,7 +93,7 @@ export interface ValueSetterCardProps {
 export interface ChangesCardProps {
   modifiedParams: ModifiedParam[];
   isReadOnly?: boolean;
-  onRemoveChange?: (paramName: string, changeIndex: number) => void;
+  onRemoveChange?: (paramName: string, interval: ValueInterval) => void;
 }
 
 /**
