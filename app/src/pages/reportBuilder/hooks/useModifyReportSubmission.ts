@@ -9,7 +9,7 @@
  * In both cases, base ingredients (Simulation, Report) are always freshly created
  * via the API — only the user association layer differs.
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { ReportAdapter } from '@/adapters';
@@ -24,6 +24,10 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import type { SimulationStateProps } from '@/types/pathwayState';
 import { ReportBuilderState } from '../types';
 import { createReportSimulations } from '../utils/createReportSimulations';
+import {
+  getReportPolicyActionability,
+  type ReportPolicyActionability,
+} from '../utils/reportPolicyActionability';
 import { useReportIngredientAvailability } from './useReportIngredientAvailability';
 
 interface UseModifyReportSubmissionArgs {
@@ -40,6 +44,7 @@ interface UseModifyReportSubmissionReturn {
   isReplacing: boolean;
   isReportSubmissionBlocked: boolean;
   submissionError: Error | null;
+  reportPolicyActionability: ReportPolicyActionability;
 }
 
 export function useModifyReportSubmission({
@@ -48,7 +53,8 @@ export function useModifyReportSubmission({
   existingUserReportId,
   onSuccess,
 }: UseModifyReportSubmissionArgs): UseModifyReportSubmissionReturn {
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentLawId = metadata.currentLawId;
   const manager = useCalcOrchestratorManager();
   const updateReportAssociation = useUpdateReportAssociation();
   const queryClient = useQueryClient();
@@ -56,7 +62,32 @@ export function useModifyReportSubmission({
   const [isSavingNew, setIsSavingNew] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false);
   const { isReportConfigured } = useReportIngredientAvailability(reportState);
-  const isReportSubmissionBlocked = !isReportConfigured;
+  const metadataReady =
+    !metadata.loading &&
+    !metadata.error &&
+    metadata.currentCountry === countryId &&
+    metadata.version !== null &&
+    currentLawId > 0;
+  const reportPolicyActionability = useMemo(
+    () =>
+      getReportPolicyActionability({
+        simulations: reportState.simulations,
+        currentLawMetadata: metadata.parameters,
+        metadataReady,
+      }),
+    [metadata.parameters, metadataReady, reportState.simulations]
+  );
+  const isReportSubmissionBlocked = !isReportConfigured || !reportPolicyActionability.isActionable;
+
+  const isActionableAtSubmission = useCallback(
+    () =>
+      getReportPolicyActionability({
+        simulations: reportState.simulations,
+        currentLawMetadata: metadata.parameters,
+        metadataReady,
+      }).isActionable,
+    [metadata.parameters, metadataReady, reportState.simulations]
+  );
 
   /**
    * Shared logic: create simulations via API and build the report payload.
@@ -154,7 +185,7 @@ export function useModifyReportSubmission({
    */
   const handleSaveAsNew = useCallback(
     async (label: string) => {
-      if (isSavingNew || isReplacing || isReportSubmissionBlocked) {
+      if (isSavingNew || isReplacing || isReportSubmissionBlocked || !isActionableAtSubmission()) {
         return;
       }
       setIsSavingNew(true);
@@ -187,6 +218,7 @@ export function useModifyReportSubmission({
       isSavingNew,
       isReplacing,
       isReportSubmissionBlocked,
+      isActionableAtSubmission,
       createSimulationsAndReport,
       countryId,
       queryClient,
@@ -200,7 +232,7 @@ export function useModifyReportSubmission({
    * existing UserReport association to point to the new base report ID.
    */
   const handleReplace = useCallback(async () => {
-    if (isSavingNew || isReplacing || isReportSubmissionBlocked) {
+    if (isSavingNew || isReplacing || isReportSubmissionBlocked || !isActionableAtSubmission()) {
       return;
     }
     setIsReplacing(true);
@@ -233,6 +265,7 @@ export function useModifyReportSubmission({
     isSavingNew,
     isReplacing,
     isReportSubmissionBlocked,
+    isActionableAtSubmission,
     createSimulationsAndReport,
     countryId,
     existingUserReportId,
@@ -249,5 +282,6 @@ export function useModifyReportSubmission({
     isReplacing,
     isReportSubmissionBlocked,
     submissionError,
+    reportPolicyActionability,
   };
 }

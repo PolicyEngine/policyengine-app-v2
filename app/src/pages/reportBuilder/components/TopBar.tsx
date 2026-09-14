@@ -105,10 +105,10 @@ export function TopBar({ children, actions }: TopBarProps) {
                   transition: 'all 0.3s ease',
                   flexShrink: 0,
                   whiteSpace: 'nowrap',
-                  cursor: 'pointer',
                 }}
                 onClick={action.onClick}
                 disabled={action.disabled || action.loading}
+                title={action.disabled ? (action.disabledReason ?? undefined) : undefined}
                 onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
                   handleMouseEnter(e, action)
                 }

@@ -323,6 +323,96 @@ describe('useSimulationCanvas', () => {
     ]);
   });
 
+  test('given a saved policy is selected then its resolved parameters enter report state', () => {
+    const parameters = [
+      {
+        name: 'gov.test.amount',
+        values: [{ startDate: '2026-01-01', endDate: '9999-12-31', value: 150 }],
+      },
+    ];
+    mockUseUserPolicies.mockReturnValue({
+      data: [
+        {
+          association: {
+            id: 'saved-association',
+            policyId: 'saved-policy',
+            label: 'Saved reform',
+            countryId: 'us',
+          },
+          policy: { id: 'saved-policy', countryId: 'us', parameters },
+          isLoading: false,
+          isError: false,
+          error: null,
+        },
+      ],
+      isLoading: false,
+      error: null,
+      refetchAssociations: mockRefetchPolicyAssociations,
+    });
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+      })
+    );
+
+    act(() => {
+      result.current.handleSelectSavedPolicy(0, 'saved-policy', 'Saved reform', 1);
+    });
+
+    const update = setReportState.mock.calls[0][0];
+    expect(update(reportState).simulations[0].policy).toEqual({
+      id: 'saved-policy',
+      label: 'Saved reform',
+      parameters,
+    });
+  });
+
+  test('given a saved policy is selected from the browser then placeholders are replaced', () => {
+    const parameters = [
+      {
+        name: 'gov.test.amount',
+        values: [{ startDate: '2026-01-01', endDate: '9999-12-31', value: 150 }],
+      },
+    ];
+    mockUseUserPolicies.mockReturnValue({
+      data: [
+        {
+          association: {
+            id: 'saved-association',
+            policyId: 'saved-policy',
+            label: 'Saved reform',
+            countryId: 'us',
+          },
+          policy: { id: 'saved-policy', countryId: 'us', parameters },
+          isLoading: false,
+          isError: false,
+          error: null,
+        },
+      ],
+      isLoading: false,
+      error: null,
+      refetchAssociations: mockRefetchPolicyAssociations,
+    });
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState,
+        setReportState,
+      })
+    );
+
+    act(() => {
+      result.current.handlePolicySelectFromBrowse({
+        id: 'saved-policy',
+        label: 'Saved reform',
+        parameters: [{ name: '', values: [] }],
+      });
+    });
+
+    const update = setReportState.mock.calls[0][0];
+    expect(update(reportState).simulations[0].policy.parameters).toEqual(parameters);
+  });
+
   test('given a recent household detail error then exposes it as a disabled recent', () => {
     mockHouseholdRecentIds.mockReturnValue(['broken-household']);
     mockUseUserHouseholds.mockReturnValue({

@@ -12,6 +12,8 @@ import {
   mixedPopulationReportState,
   mockCreateReportFn,
   mockCreateSimulationFn,
+  mockCurrentLawSingleSimReportState,
+  mockIdenticalPolicyReportState,
   mockLocalStorageCreateFn,
   mockOnSuccess,
   mockSingleSimReportState,
@@ -245,7 +247,7 @@ describe('useReportSubmission', () => {
       const { result } = renderHook(
         () =>
           useReportSubmission({
-            reportState: mockSingleSimReportState,
+            reportState: mockTwoSimReportState,
             countryId: 'us',
             onSuccess: mockOnSuccess,
           }),
@@ -255,7 +257,7 @@ describe('useReportSubmission', () => {
       // When
       await result.current.handleSubmit();
 
-      // Then — current-law ID should be converted to currentLawId (0)
+      // Then — the local current-law sentinel should be converted to the API policy ID.
       await waitFor(() => {
         expect(mockCreateSimulationFn).toHaveBeenCalledWith(
           'us',
@@ -341,6 +343,50 @@ describe('useReportSubmission', () => {
       // Then
       expect(result.current.isReportConfigured).toBe(false);
       expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('report policy actionability', () => {
+    test('given a current-law-only report then submission is disabled before API requests', async () => {
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockCurrentLawSingleSimReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      expect(result.current.reportPolicyActionability).toMatchObject({
+        isActionable: false,
+        reason: 'no-effective-policy-change',
+      });
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+      expect(mockCreateReportFn).not.toHaveBeenCalled();
+    });
+
+    test('given equivalent comparison policies then submission is disabled before API requests', async () => {
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockIdenticalPolicyReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      expect(result.current.reportPolicyActionability).toMatchObject({
+        isActionable: false,
+        reason: 'identical-policy-configurations',
+      });
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+      expect(mockCreateReportFn).not.toHaveBeenCalled();
     });
   });
 });

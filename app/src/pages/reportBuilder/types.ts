@@ -272,6 +272,7 @@ export interface TopBarAction {
   disabled?: boolean;
   loading?: boolean;
   loadingLabel?: string;
+  disabledReason?: string | null;
 }
 
 // ============================================================================

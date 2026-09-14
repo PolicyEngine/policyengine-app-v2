@@ -55,6 +55,7 @@ export const GENERIC_REPORT_STATE: ReportBuilderState = {
     const simulation = initializeSimulationState();
     simulation.label = index === 0 ? 'Baseline' : 'Reform';
     simulation.policy.id = GENERIC_POLICY_IDS[index];
+    simulation.policy.parameters = GENERIC_POLICIES[index].parameters ?? [];
     simulation.population.household = household;
     return simulation;
   }),

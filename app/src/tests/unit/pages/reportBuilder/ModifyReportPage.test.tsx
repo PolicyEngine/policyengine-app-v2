@@ -86,6 +86,12 @@ describe('ModifyReportPage', () => {
       isReplacing: false,
       isReportSubmissionBlocked: false,
       submissionError: null,
+      reportPolicyActionability: {
+        isActionable: true,
+        reason: null,
+        message: null,
+        normalizedPolicies: [],
+      },
     });
   });
 
@@ -205,6 +211,13 @@ describe('ModifyReportPage', () => {
       isSavingNew: false,
       isReplacing: false,
       isReportSubmissionBlocked: true,
+      submissionError: null,
+      reportPolicyActionability: {
+        isActionable: false,
+        reason: 'no-effective-policy-change',
+        message: 'A report needs an effective policy change.',
+        normalizedPolicies: [[]],
+      },
     });
     render(<ModifyReportPage userReportId="sur-123" />);
 
@@ -214,10 +227,16 @@ describe('ModifyReportPage', () => {
     const editShellProps = mockReportBuilderShell.mock.lastCall?.[0];
     expect(editShellProps.actions.find((action: any) => action.key === 'replace')).toMatchObject({
       disabled: true,
+      disabledReason: 'A report needs an effective policy change.',
     });
     expect(editShellProps.actions.find((action: any) => action.key === 'save-new')).toMatchObject({
       disabled: true,
+      disabledReason: 'A report needs an effective policy change.',
     });
+    expect(editShellProps.validationMessage).toBe('A report needs an effective policy change.');
+
+    act(() => editShellProps.actions.find((action: any) => action.key === 'save-new').onClick());
+    expect(screen.getByRole('button', { name: /save anyway/i })).toBeDisabled();
   });
 
   test('given corrected household persistence fails then forwards the submission error to the visible builder shell', () => {
@@ -229,6 +248,12 @@ describe('ModifyReportPage', () => {
       isReplacing: false,
       isReportSubmissionBlocked: false,
       submissionError: error,
+      reportPolicyActionability: {
+        isActionable: true,
+        reason: null,
+        message: null,
+        normalizedPolicies: [],
+      },
     });
 
     render(<ModifyReportPage userReportId="sur-123" />);

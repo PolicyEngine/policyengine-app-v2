@@ -378,13 +378,16 @@ export function useSimulationCanvas({ reportState, setReportState }: UseSimulati
 
   const handleSelectSavedPolicy = useCallback(
     (simulationIndex: number, policyId: string, label: string, paramCount: number) => {
+      const savedPolicy = policies?.find(
+        (candidate) => candidate.association.policyId.toString() === policyId
+      )?.policy;
       updatePolicy(simulationIndex, {
         id: policyId,
         label,
-        parameters: Array(paramCount).fill({}),
+        parameters: savedPolicy?.parameters ?? Array(paramCount).fill({}),
       });
     },
-    [updatePolicy]
+    [policies, updatePolicy]
   );
 
   const handleDeselectPolicy = useCallback(
@@ -400,9 +403,15 @@ export function useSimulationCanvas({ reportState, setReportState }: UseSimulati
 
   const handlePolicySelectFromBrowse = useCallback(
     (policy: PolicyStateProps) => {
-      updatePolicy(policyBrowseState.simulationIndex, policy);
+      const savedPolicy = policies?.find(
+        (candidate) => candidate.association.policyId.toString() === policy.id
+      )?.policy;
+      updatePolicy(policyBrowseState.simulationIndex, {
+        ...policy,
+        parameters: savedPolicy?.parameters ?? policy.parameters,
+      });
     },
-    [policyBrowseState.simulationIndex, updatePolicy]
+    [policies, policyBrowseState.simulationIndex, updatePolicy]
   );
 
   const handlePolicyCreated = useCallback(

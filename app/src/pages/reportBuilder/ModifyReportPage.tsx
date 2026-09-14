@@ -45,6 +45,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     isReplacing,
     isReportSubmissionBlocked,
     submissionError,
+    reportPolicyActionability,
   } = useModifyReportSubmission({
     reportState: reportState ?? { label: null, year: '', simulations: [] },
     countryId,
@@ -112,6 +113,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         loading: isReplacing,
         loadingLabel: 'Updating report...',
         disabled: isSavingNew || isReportSubmissionBlocked,
+        disabledReason: reportPolicyActionability.message,
       },
       {
         key: 'save-new',
@@ -122,6 +124,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         loading: isSavingNew,
         loadingLabel: 'Creating report...',
         disabled: isReplacing || isReportSubmissionBlocked,
+        disabledReason: reportPolicyActionability.message,
       },
     ];
   }, [
@@ -133,6 +136,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     isReplacing,
     isEitherSubmitting,
     isReportSubmissionBlocked,
+    reportPolicyActionability.message,
   ]);
 
   if (error) {
@@ -169,6 +173,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}
         BlockComponent={SimulationBlockFull}
         isReadOnly={isReadOnly}
+        validationMessage={isEditing ? reportPolicyActionability.message : null}
       />
 
       <Dialog
@@ -190,6 +195,11 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
               </Button>
               <Button
                 disabled={isReportSubmissionBlocked}
+                title={
+                  isReportSubmissionBlocked
+                    ? (reportPolicyActionability.message ?? undefined)
+                    : undefined
+                }
                 onClick={() => {
                   setShowSameNameWarning(false);
                   handleSaveAsNew(reportState?.label || 'Untitled report');

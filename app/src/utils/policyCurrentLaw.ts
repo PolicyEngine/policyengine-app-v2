@@ -200,6 +200,32 @@ export function normalizePolicyParameters(
   });
 }
 
+function canonicalizePolicyParameters(parameters: Parameter[]): Parameter[] {
+  const valuesByName = new Map<string, ValueInterval[]>();
+
+  for (const parameter of parameters) {
+    valuesByName.set(parameter.name, [
+      ...(valuesByName.get(parameter.name) ?? []),
+      ...parameter.values,
+    ]);
+  }
+
+  return [...valuesByName.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([name, values]) => ({
+      name,
+      values: mergeAdjacentIntervals(values).sort((left, right) => {
+        const startComparison = left.startDate.localeCompare(right.startDate);
+        return startComparison || left.endDate.localeCompare(right.endDate);
+      }),
+    }));
+}
+
+/** Compare normalized policy parameters without relying on IDs or insertion order. */
+export function policyParametersEqual(left: Parameter[], right: Parameter[]): boolean {
+  return policyValuesEqual(canonicalizePolicyParameters(left), canonicalizePolicyParameters(right));
+}
+
 /** Whether a proposed policy contains at least one effective change. */
 export function hasEffectivePolicyChanges(
   parameters: Parameter[] | undefined,

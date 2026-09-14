@@ -1,12 +1,25 @@
 import { Household } from '@/models/Household';
-import { createMockStateWithData } from '@/tests/fixtures/reducers/metadataReducerMocks';
+import {
+  createMockStateWithData,
+  MOCK_PARAMETERS,
+} from '@/tests/fixtures/reducers/metadataReducerMocks';
 import type { SPMMetadata, SPMProvenance, SPMSelection } from '@/types/spm';
 
 export const SPM_TEST_YEAR = '2026';
 export const NATIONAL_SPM: SPMSelection = { geography_kind: 'national' };
 export const COUNTY_SPM: SPMSelection = { geography_kind: 'county' };
 export const CANONICAL_SPM_METADATA: SPMMetadata = { available: true };
-export const RESOLVED_CANONICAL_METADATA = createMockStateWithData({ spm: CANONICAL_SPM_METADATA });
+export const RESOLVED_CANONICAL_METADATA = createMockStateWithData({
+  spm: CANONICAL_SPM_METADATA,
+  parameters: {
+    ...MOCK_PARAMETERS,
+    'gov.irs.credits.ctc.amount.base': {
+      type: 'parameter',
+      parameter: 'gov.irs.credits.ctc.amount.base',
+      values: { '2026-01-01': 2_000 },
+    },
+  },
+});
 export const RESOLVED_LEGACY_METADATA = createMockStateWithData();
 export const SPM_RECEIPT: SPMProvenance = {
   forecast_id: 'test-canonical-forecast',

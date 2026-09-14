@@ -14,9 +14,30 @@ export const TEST_SIMULATION_IDS = {
 } as const;
 
 export const TEST_POLICY_IDS = {
+  SECOND_REFORM_POLICY: 'policy-reform-2',
   REFORM_POLICY: 'policy-reform-1',
   CURRENT_LAW: 'current-law',
 } as const;
+
+export const REPORT_PARAMETER_NAME = 'gov.test.report.amount';
+export const REPORT_CURRENT_LAW_METADATA = {
+  [REPORT_PARAMETER_NAME]: {
+    type: 'parameter',
+    parameter: REPORT_PARAMETER_NAME,
+    values: { '2020-01-01': 100 },
+  },
+  'gov.test.parameter': {
+    type: 'parameter',
+    parameter: 'gov.test.parameter',
+    values: { '2020-01-01': 0 },
+  },
+};
+export const REPORT_EFFECTIVE_PARAMETERS = [
+  {
+    name: REPORT_PARAMETER_NAME,
+    values: [{ startDate: '2026-01-01', endDate: '9999-12-31', value: 150 }],
+  },
+];
 
 export const TEST_POPULATION = {
   GEOGRAPHY_ID: 'us',
@@ -29,7 +50,7 @@ export const TEST_LABELS = {
   REPORT: 'Test Report',
 } as const;
 
-export const CURRENT_LAW_ID = 0;
+export const CURRENT_LAW_ID = 2;
 
 // Mock API responses
 export const mockCreateSimulationResponse = (simulationId: string) => ({
@@ -43,7 +64,11 @@ export const mockSingleSimReportState: ReportBuilderState = {
   simulations: [
     {
       label: TEST_LABELS.BASELINE,
-      policy: { id: TEST_POLICY_IDS.CURRENT_LAW, label: 'Current law', parameters: [] },
+      policy: {
+        id: TEST_POLICY_IDS.REFORM_POLICY,
+        label: 'Reform',
+        parameters: REPORT_EFFECTIVE_PARAMETERS,
+      },
       population: {
         label: 'US',
         type: 'geography',
@@ -83,7 +108,11 @@ export const mockTwoSimReportState: ReportBuilderState = {
     },
     {
       label: TEST_LABELS.REFORM,
-      policy: { id: TEST_POLICY_IDS.REFORM_POLICY, label: 'Reform', parameters: [] },
+      policy: {
+        id: TEST_POLICY_IDS.REFORM_POLICY,
+        label: 'Reform',
+        parameters: REPORT_EFFECTIVE_PARAMETERS,
+      },
       population: {
         label: 'US',
         type: 'geography',
@@ -100,6 +129,28 @@ export const mockTwoSimReportState: ReportBuilderState = {
   ],
 };
 
+export const mockCurrentLawSingleSimReportState: ReportBuilderState = {
+  ...mockSingleSimReportState,
+  simulations: [
+    {
+      ...mockSingleSimReportState.simulations[0],
+      policy: { id: TEST_POLICY_IDS.CURRENT_LAW, label: 'Current law', parameters: [] },
+    },
+  ],
+};
+
+export const mockIdenticalPolicyReportState: ReportBuilderState = {
+  ...mockTwoSimReportState,
+  simulations: mockTwoSimReportState.simulations.map((simulation, index) => ({
+    ...simulation,
+    policy: {
+      id: index === 0 ? TEST_POLICY_IDS.REFORM_POLICY : TEST_POLICY_IDS.SECOND_REFORM_POLICY,
+      label: `Equivalent reform ${index + 1}`,
+      parameters: structuredClone(REPORT_EFFECTIVE_PARAMETERS),
+    },
+  })),
+};
+
 // Store helpers
 export function createTestStore(currentLawId: number = CURRENT_LAW_ID) {
   return configureStore({
@@ -110,14 +161,14 @@ export function createTestStore(currentLawId: number = CURRENT_LAW_ID) {
         loading: false,
         error: null,
         variables: {},
-        parameters: {},
+        parameters: REPORT_CURRENT_LAW_METADATA,
         entities: {},
         variableModules: {},
         economyOptions: { region: [], time_period: [], datasets: [] },
         currentLawId,
         basicInputs: [],
         modelledPolicies: { core: {}, filtered: {} },
-        version: null,
+        version: 'test-version',
         parameterTree: null,
       },
     },
@@ -195,7 +246,10 @@ export function mixedPopulationReportState(
       currentLawId: CURRENT_LAW_ID,
     });
   }
-  const householdSimulation = mockDraftHouseholdSimulation();
+  const householdSimulation = {
+    ...mockDraftHouseholdSimulation(),
+    policy: { id: TEST_POLICY_IDS.CURRENT_LAW, label: 'Current law', parameters: [] },
+  };
   const geographySimulation = mockTwoSimReportState.simulations[1];
   return {
     ...mockTwoSimReportState,

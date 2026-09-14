@@ -10,7 +10,7 @@
  * Accepts an onSuccess callback instead of navigating directly,
  * so the consuming page controls routing.
  */
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ReportAdapter } from '@/adapters';
 import { useCreateReport } from '@/hooks/useCreateReport';
@@ -19,6 +19,10 @@ import { Report } from '@/types/ingredients/Report';
 import { trackReportStarted } from '@/utils/analytics';
 import { ReportBuilderState } from '../types';
 import { createReportSimulations } from '../utils/createReportSimulations';
+import {
+  getReportPolicyActionability,
+  type ReportPolicyActionability,
+} from '../utils/reportPolicyActionability';
 import { useReportIngredientAvailability } from './useReportIngredientAvailability';
 
 interface UseReportSubmissionArgs {
@@ -32,6 +36,7 @@ interface UseReportSubmissionReturn {
   isSubmitting: boolean;
   isReportConfigured: boolean;
   submissionError: Error | null;
+  reportPolicyActionability: ReportPolicyActionability;
 }
 
 function getJourneyProfiler(): {
@@ -51,14 +56,35 @@ export function useReportSubmission({
   countryId,
   onSuccess,
 }: UseReportSubmissionArgs): UseReportSubmissionReturn {
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentLawId = metadata.currentLawId;
   const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
   const { isReportConfigured } = useReportIngredientAvailability(reportState);
+  const metadataReady =
+    !metadata.loading &&
+    !metadata.error &&
+    metadata.currentCountry === countryId &&
+    metadata.version !== null &&
+    currentLawId > 0;
+  const reportPolicyActionability = useMemo(
+    () =>
+      getReportPolicyActionability({
+        simulations: reportState.simulations,
+        currentLawMetadata: metadata.parameters,
+        metadataReady,
+      }),
+    [metadata.parameters, metadataReady, reportState.simulations]
+  );
 
   const handleSubmit = useCallback(async () => {
-    if (!isReportConfigured || isSubmitting) {
+    const submissionActionability = getReportPolicyActionability({
+      simulations: reportState.simulations,
+      currentLawMetadata: metadata.parameters,
+      metadataReady,
+    });
+    if (!isReportConfigured || !submissionActionability.isActionable || isSubmitting) {
       return;
     }
 
@@ -138,9 +164,17 @@ export function useReportSubmission({
     reportState,
     countryId,
     currentLawId,
+    metadata.parameters,
+    metadataReady,
     createReport,
     onSuccess,
   ]);
 
-  return { handleSubmit, isSubmitting, isReportConfigured, submissionError };
+  return {
+    handleSubmit,
+    isSubmitting,
+    isReportConfigured,
+    submissionError,
+    reportPolicyActionability,
+  };
 }

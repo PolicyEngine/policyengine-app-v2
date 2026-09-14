@@ -48,10 +48,12 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
+import { getEffectiveRunReportParameters } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { getCurrentValue } from '@/utils/parameterValues';
+import { NO_EFFECTIVE_POLICY_CHANGES_MESSAGE } from '@/utils/policyCurrentLaw';
 
 interface BillReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
@@ -209,6 +211,12 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       value: provision.value,
     };
   });
+  const hasResolvedProvisionMetadata =
+    provisions.length > 0 &&
+    provisions.every((provision) => parameters[provision.path]?.values !== undefined);
+  const hasEffectiveBillChanges =
+    hasResolvedProvisionMetadata &&
+    getEffectiveRunReportParameters(provisions, parameters).length > 0;
 
   const impact = bill.impactData;
 
@@ -930,7 +938,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
                 onClick={() =>
                   runReport.run(bill.title, `${bill.jurisdiction} · ${bill.status}`, provisions)
                 }
-                disabled={runReport.isRunning || provisions.length === 0}
+                disabled={runReport.isRunning || !hasEffectiveBillChanges}
               >
                 <IconChartBar size={14} />
                 {runReport.isRunning ? 'Starting…' : 'Run the full report'}
@@ -938,6 +946,11 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
               {runReport.error && (
                 <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
                   {runReport.error}
+                </Text>
+              )}
+              {hasResolvedProvisionMetadata && !hasEffectiveBillChanges && (
+                <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                  {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
                 </Text>
               )}
             </Stack>

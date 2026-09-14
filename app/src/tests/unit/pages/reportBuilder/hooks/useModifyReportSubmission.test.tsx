@@ -12,6 +12,8 @@ import {
   CURRENT_LAW_ID,
   mixedPopulationReportState,
   mockCreateSimulationFn,
+  mockCurrentLawSingleSimReportState,
+  mockIdenticalPolicyReportState,
   mockLocalStorageCreateFn,
   mockOnSuccess,
   mockTwoSimReportState,
@@ -356,4 +358,36 @@ describe('useModifyReportSubmission', () => {
     expect(mockCreateSimulationFn).not.toHaveBeenCalled();
     expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
   });
+
+  test.each([
+    ['a current-law-only report', mockCurrentLawSingleSimReportState, 'no-effective-policy-change'],
+    [
+      'equivalent comparison policies',
+      mockIdenticalPolicyReportState,
+      'identical-policy-configurations',
+    ],
+  ])(
+    'given %s then save and replace are disabled before API requests',
+    async (_label, state, reason) => {
+      const { result } = renderHook(
+        () =>
+          useModifyReportSubmission({
+            reportState: state,
+            countryId: 'us',
+            existingUserReportId: EXISTING_USER_REPORT_ID,
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSaveAsNew('Blocked report');
+      await result.current.handleReplace();
+
+      expect(result.current.isReportSubmissionBlocked).toBe(true);
+      expect(result.current.reportPolicyActionability.reason).toBe(reason);
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+      expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+    }
+  );
 });

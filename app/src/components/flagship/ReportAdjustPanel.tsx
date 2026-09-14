@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconChartBar, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Stack, Text } from '@/components/ui';
-import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
+import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { RunReportProvision } from '@/libs/flagship/runReport';
+import { getEffectiveRunReportParameters, RunReportProvision } from '@/libs/flagship/runReport';
+import { RootState } from '@/store';
 import { Reform } from '@/types/ingredients/Reform';
+import type { Parameter } from '@/types/subIngredients/parameter';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
+import {
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  normalizePolicyParameters,
+  policyParametersEqual,
+} from '@/utils/policyCurrentLaw';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
@@ -21,17 +29,15 @@ interface ReportAdjustPanelProps {
   provisions: RunReportProvision[];
 }
 
-/** True when the reform's parameter set is exactly the given provisions. */
-function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
-  if (reform.parameters.length !== provisions.length) {
-    return false;
-  }
-  return provisions.every((provision) =>
-    reform.parameters.some(
-      (parameter) =>
-        parameter.name === provision.path &&
-        String(parameter.values[0]?.value) === String(provision.value)
-    )
+/** True when a saved reform has the same effective parameter intervals. */
+function reformMatches(
+  reform: Reform,
+  effectiveParameters: Parameter[],
+  currentLawMetadata: RootState['metadata']['parameters']
+): boolean {
+  return policyParametersEqual(
+    normalizePolicyParameters(reform.parameters, currentLawMetadata),
+    effectiveParameters
   );
 }
 
@@ -49,6 +55,7 @@ export default function ReportAdjustPanel({
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const countryId = useCurrentCountry();
+  const metadata = useSelector((state: RootState) => state.metadata);
   const queryClient = useQueryClient();
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
@@ -58,6 +65,30 @@ export default function ReportAdjustPanel({
   );
 
   const active = provisions.filter((provision) => !removed.has(provision.path));
+  const adjusted = useMemo(
+    () =>
+      active.map((provision) => ({
+        ...provision,
+        value: values[provision.path],
+      })),
+    [active, values]
+  );
+  const hasRequiredMetadata =
+    !metadata.loading &&
+    !metadata.error &&
+    metadata.currentCountry === countryId &&
+    metadata.version !== null &&
+    metadata.currentLawId > 0 &&
+    adjusted.every((provision) => metadata.parameters[provision.path]?.values);
+  const effectiveParameters = useMemo(
+    () =>
+      hasRequiredMetadata ? getEffectiveRunReportParameters(adjusted, metadata.parameters) : [],
+    [adjusted, hasRequiredMetadata, metadata.parameters]
+  );
+  const effectiveByName = new Map(
+    effectiveParameters.map((parameter) => [parameter.name, parameter])
+  );
+  const effectiveProvisions = adjusted.filter((provision) => effectiveByName.has(provision.path));
   const isDirty =
     removed.size > 0 || provisions.some((provision) => values[provision.path] !== provision.value);
   const busy = isReconciling || runReport.isRunning;
@@ -67,19 +98,19 @@ export default function ReportAdjustPanel({
   }
 
   const recompute = async () => {
+    if (!hasRequiredMetadata || effectiveParameters.length === 0) {
+      return;
+    }
     setReconcileError(null);
     setIsReconciling(true);
     try {
-      const adjusted = active.map((provision) => ({
-        ...provision,
-        value: values[provision.path],
-      }));
-
       // Reconcile with saved reforms: reuse an exact match, otherwise
       // save the adjusted set as its own reform.
       const store = getReformStore();
       const existing = await store.findByUser(MOCK_USER_ID, countryId);
-      const match = existing.find((reform) => reformMatches(reform, adjusted));
+      const match = existing.find((reform) =>
+        reformMatches(reform, effectiveParameters, metadata.parameters)
+      );
 
       let reformId: string;
       let runTitle: string;
@@ -91,16 +122,7 @@ export default function ReportAdjustPanel({
           userId: MOCK_USER_ID,
           countryId,
           label: `${title} (adjusted)`,
-          parameters: adjusted.map((provision) => ({
-            name: provision.path,
-            values: [
-              {
-                startDate: `${CURRENT_YEAR}-01-01`,
-                endDate: FOREVER,
-                value: provision.value,
-              },
-            ],
-          })),
+          parameters: effectiveParameters,
           baseline: 'current-law',
           provenance: { source: 'manual', ref: 'report-adjust' },
         });
@@ -109,7 +131,7 @@ export default function ReportAdjustPanel({
         runTitle = created.label || `${title} (adjusted)`;
       }
 
-      await runReport.run(runTitle, sourceNote, adjusted, reformId);
+      await runReport.run(runTitle, sourceNote, effectiveProvisions, reformId);
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
     } finally {
@@ -234,7 +256,24 @@ export default function ReportAdjustPanel({
             {reconcileError || runReport.error}
           </Text>
         )}
-        <Button onClick={recompute} disabled={!isDirty || busy || active.length === 0}>
+        {isDirty &&
+          active.length > 0 &&
+          hasRequiredMetadata &&
+          effectiveParameters.length === 0 && (
+            <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+              {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
+            </Text>
+          )}
+        <Button
+          onClick={recompute}
+          disabled={
+            !isDirty ||
+            busy ||
+            active.length === 0 ||
+            !hasRequiredMetadata ||
+            effectiveParameters.length === 0
+          }
+        >
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>

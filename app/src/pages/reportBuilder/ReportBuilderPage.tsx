@@ -38,7 +38,13 @@ export default function ReportBuilderPage() {
   });
 
   // Submission logic (extracted hook)
-  const { handleSubmit, isSubmitting, isReportConfigured, submissionError } = useReportSubmission({
+  const {
+    handleSubmit,
+    isSubmitting,
+    isReportConfigured,
+    submissionError,
+    reportPolicyActionability,
+  } = useReportSubmission({
     reportState,
     countryId,
     onSuccess: (userReportId) => {
@@ -89,12 +95,13 @@ export default function ReportBuilderPage() {
         icon: <IconPlayerPlay size={16} />,
         onClick: handleSubmit,
         variant: 'primary',
-        disabled: !isReportConfigured,
+        disabled: !isReportConfigured || !reportPolicyActionability.isActionable,
+        disabledReason: reportPolicyActionability.message,
         loading: isSubmitting,
         loadingLabel: 'Running...',
       },
     ],
-    [handleSubmit, isReportConfigured, isSubmitting]
+    [handleSubmit, isReportConfigured, isSubmitting, reportPolicyActionability]
   );
 
   return (
@@ -105,6 +112,7 @@ export default function ReportBuilderPage() {
       reportState={reportState}
       setReportState={setReportState}
       BlockComponent={SimulationBlockFull}
+      validationMessage={isReportConfigured ? reportPolicyActionability.message : null}
     />
   );
 }

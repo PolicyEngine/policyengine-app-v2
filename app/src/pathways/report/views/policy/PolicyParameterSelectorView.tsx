@@ -17,7 +17,10 @@ import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
-import { normalizePolicyParameters } from '@/utils/policyCurrentLaw';
+import {
+  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  normalizePolicyParameters,
+} from '@/utils/policyCurrentLaw';
 import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
 import Menu from '../../components/policyParameterSelector/Menu';
 import PolicyParameterSelectorMain from '../../components/PolicyParameterSelectorMain';
@@ -50,6 +53,12 @@ export default function PolicyParameterSelectorView({
     parameters: normalizePolicyParameters(policy.parameters, parameters),
   };
   const modificationCount = countPolicyModifications(effectivePolicy);
+  const reviewDisabled = modificationCount === 0;
+  const reviewDisabledReason = reviewDisabled
+    ? policy.parameters.length > 0
+      ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+      : 'Add at least one parameter change before reviewing the policy.'
+    : undefined;
 
   const headerHeight = parseInt(spacing.appShell.header.height, 10);
   const navbarWidth = parseInt(spacing.appShell.navbar.width, 10);
@@ -143,7 +152,7 @@ export default function PolicyParameterSelectorView({
                 </span>
               </div>
             )}
-            <Button onClick={onNext}>
+            <Button onClick={onNext} disabled={reviewDisabled} title={reviewDisabledReason}>
               Review my policy
               <IconChevronRight size={16} />
             </Button>
@@ -188,7 +197,12 @@ export default function PolicyParameterSelectorView({
                   Back
                 </Button>
               )}
-              <Button size="sm" onClick={onNext}>
+              <Button
+                size="sm"
+                onClick={onNext}
+                disabled={reviewDisabled}
+                title={reviewDisabledReason}
+              >
                 Review
                 <IconChevronRight size={16} />
               </Button>

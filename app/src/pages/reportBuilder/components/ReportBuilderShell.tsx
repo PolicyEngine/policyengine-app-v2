@@ -6,6 +6,7 @@
  */
 import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
 import { Text } from '@/components/ui';
+import { colors, spacing, typography } from '@/designTokens';
 import { getReportPopulationError } from '@/utils/ingredientAvailability';
 import { useReportSPMSelectionError } from '../hooks/useReportIngredientAvailability';
 import { styles } from '../styles';
@@ -25,6 +26,7 @@ interface ReportBuilderShellProps {
   backPath?: string;
   backLabel?: string;
   submissionError?: Error | null;
+  validationMessage?: string | null;
 }
 
 export function ReportBuilderShell({
@@ -37,6 +39,7 @@ export function ReportBuilderShell({
   backPath,
   backLabel,
   submissionError,
+  validationMessage,
 }: ReportBuilderShellProps) {
   const spmSelectionError = useReportSPMSelectionError(reportState);
   const populationError = getReportPopulationError(reportState.simulations);
@@ -91,6 +94,19 @@ export function ReportBuilderShell({
       {spmSelectionError && !isReadOnly && (
         <Text size="sm" role="alert" className="tw:my-md">
           {spmSelectionError}
+        </Text>
+      )}
+      {validationMessage && (
+        <Text
+          role="status"
+          style={{
+            color: colors.text.secondary,
+            fontSize: typography.fontSize.sm,
+            marginTop: -spacing.md,
+            marginBottom: spacing.md,
+          }}
+        >
+          {validationMessage}
         </Text>
       )}
 

@@ -5,6 +5,29 @@ import BillReportPage from '@/pages/flagship/BillReport.page';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 
 const mockCalibrationMatchesForPaths = vi.fn();
+const mockRun = vi.fn();
+const { mockMetadata } = vi.hoisted(() => ({
+  mockMetadata: {
+    parameters: {
+      'gov.irs.credits.ctc.amount.base[0].amount': {
+        unit: 'currency-USD',
+        values: { '2020-01-01': 2000 },
+      },
+    },
+  },
+}));
+
+vi.mock('react-redux', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-redux')>();
+  return {
+    ...actual,
+    useSelector: (selector: (state: unknown) => unknown) => selector({ metadata: mockMetadata }),
+  };
+});
+
+vi.mock('@/hooks/useRunFlagshipReport', () => ({
+  useRunFlagshipReport: () => ({ run: mockRun, isRunning: false, error: null }),
+}));
 
 vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/libs/flagship/calibrationMatching')>();
@@ -218,5 +241,22 @@ describe('BillReportPage', () => {
       'UT'
     );
     expect(await screen.findByText(/administrative totals in UT/)).toBeInTheDocument();
+  });
+
+  test('given every bill provision matches current law then the full report cannot be run', async () => {
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        provisions: [{ path: 'gov.irs.credits.ctc.amount.base[0].amount', value: 2000 }],
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReport();
+
+    const button = await screen.findByRole('button', { name: /run the full report/i });
+    expect(button).toBeDisabled();
+    expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
+    await user.click(button);
+    expect(mockRun).not.toHaveBeenCalled();
   });
 });
