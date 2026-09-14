@@ -3,13 +3,21 @@
  * the compact comparison rows the calculator's /api/model-validation
  * route serves for them (PolicyEngine vs external analyses, from the
  * PolicyEngine scorecard).
+ *
+ * The join is the model variable name, the same walk calibration does:
+ * a reform's parameter paths reach a set of variables in the traced
+ * dependency map, and every scorecard row names the variables its
+ * PolicyEngine value was computed from. Depth is the ring: a program
+ * whose output reads the parameter directly is primary context, one a
+ * few formula steps away is the mechanism, deeper is the tax-benefit
+ * system echoing the change.
  */
 
+import { CalibrationRing, ringForDepth } from '@/libs/flagship/calibrationMatching';
 import {
   DEFAULT_MAX_DEPTH,
   loadParameterDependencies,
-  ParameterDependencyMap,
-  readersOfPath,
+  ReachedVariable,
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
@@ -28,25 +36,14 @@ export interface ModelValidationRow {
   ratio: number;
   /** True when the dataset was not calibrated to this comparison. */
   heldOut: boolean;
+  /** The model variables the PolicyEngine value was computed from. */
+  policyengineVariables: string[];
 }
 
 export const SCORECARD_URL = 'https://www.policyengine.org/scorecard';
 /** The scorecard's comparison table and its sources-and-method page. */
 export const SCORECARD_COMPARISON_URL = `${SCORECARD_URL}?view=scorecard`;
 export const SCORECARD_METHOD_URL = `${SCORECARD_URL}?view=about`;
-
-/** Path-token → scorecard program id. Order matters only for labels. */
-const PROGRAM_TOKENS: Array<[RegExp, string]> = [
-  [/\bsnap\b/, 'snap'],
-  [/\bwic\b/, 'wic'],
-  [/\btanf\b/, 'tanf'],
-  [/\bssi\b/, 'ssi'],
-  [/\bliheap\b/, 'liheap'],
-  [/\bccdf\b/, 'ccdf'],
-  [/\beitc\b|\bearned_income\b/, 'eitc'],
-  [/\bctc\b|\bchild_tax_credit\b/, 'ctc_refund'],
-  [/\bhud\b|\bhousing\b/, 'housing'],
-];
 
 export const PROGRAM_LABELS: Record<string, string> = {
   snap: 'SNAP',
@@ -58,6 +55,7 @@ export const PROGRAM_LABELS: Record<string, string> = {
   eitc: 'EITC',
   ctc_refund: 'Refundable CTC',
   housing: 'Housing assistance',
+  spm_poverty: 'SPM poverty',
 };
 
 export const METRIC_LABELS: Record<string, string> = {
@@ -68,111 +66,124 @@ export const METRIC_LABELS: Record<string, string> = {
   participation_gap_count: 'Eligible non-participants',
   benefit_total: 'Total benefits',
   average_benefit: 'Average benefit',
+  poverty_rate: 'Poverty rate',
+  poverty_rate_fullpart: 'Poverty rate at full participation',
+  poverty_count_change_fullpart: 'People lifted out of poverty at full participation',
+  poverty_rate_relative_change_fullpart: 'Poverty rate change at full participation',
 };
 
-/**
- * Scorecard programs touched by a set of parameter paths, by path token.
- * The fallback when the traced dependency map has no reader for a path
- * (a parameter no traced formula read, or a model newer than the map).
- */
-export function scorecardProgramsFromPaths(paths: string[]): string[] {
-  const programs = new Set<string>();
-  for (const path of paths) {
-    const normalized = path.toLowerCase().replace(/[.[\]]/g, ' ');
-    for (const [pattern, program] of PROGRAM_TOKENS) {
-      if (pattern.test(normalized)) {
-        programs.add(program);
-      }
-    }
-  }
-  return [...programs];
+export interface ScorecardProgramMatch {
+  program: string;
+  /** The nearest reached variable the program's rows were computed from. */
+  variable: string;
+  depth: number;
+  ring: CalibrationRing;
 }
 
-/** Model output variable → the scorecard program it measures. */
-export const VARIABLE_PROGRAMS: Record<string, string> = {
-  snap: 'snap',
-  wic: 'wic',
-  tanf: 'tanf',
-  ssi: 'ssi',
-  eitc: 'eitc',
-  refundable_ctc: 'ctc_refund',
-  ctc: 'ctc_refund',
-  hud_hap: 'housing',
-  housing_assistance: 'housing',
-  spm_unit_energy_subsidy: 'liheap',
-};
-
-/**
- * Everything downstream of a parameter eventually touches every program
- * through net income, so only the nearest program outputs count: those
- * within one hop of the closest one. An EITC parameter reaches `eitc` at
- * depth 1 and `refundable_ctc` at depth 3; only EITC is its program.
- */
-const NEAREST_PROGRAM_SLACK = 1;
-
-/**
- * Scorecard programs a reform moves, from the variables its parameter
- * paths reach in the traced dependency map. Each path contributes the
- * programs of its nearest reached output variables; a path the map does
- * not know falls back to token matching. Order follows the paths, so the
- * program behind the first provision leads.
- */
-export async function scorecardProgramsForPaths(
-  paths: string[],
-  maxDepth: number = DEFAULT_MAX_DEPTH
-): Promise<string[]> {
-  let map: ParameterDependencyMap;
-  try {
-    map = await loadParameterDependencies();
-  } catch {
-    return scorecardProgramsFromPaths(paths);
-  }
-  const programs = new Set<string>();
-  for (const path of paths) {
-    // Only a path the map has never seen read falls back to tokens. A known
-    // path that reaches no program variable (a state credit, say) gets no
-    // program: borrowing federal EITC context for CalEITC would mislead.
-    if (readersOfPath(path, map).length === 0) {
-      for (const program of scorecardProgramsFromPaths([path])) {
-        programs.add(program);
-      }
-      continue;
-    }
-    const hits = variablesReachedByPaths([path], map, maxDepth).filter(
-      (entry) => VARIABLE_PROGRAMS[entry.variable]
-    );
-    for (const entry of hits) {
-      if (entry.depth <= hits[0].depth + NEAREST_PROGRAM_SLACK) {
-        programs.add(VARIABLE_PROGRAMS[entry.variable]);
-      }
-    }
-  }
-  return [...programs];
+export interface ScorecardMatches {
+  /** The model version the dependency map was traced from. */
+  modelVersion: string;
+  /** Variables the reform reaches, measured by the scorecard or not. */
+  reachedCount: number;
+  /** Programs the reform moves, nearest first. */
+  programs: ScorecardProgramMatch[];
+  /** Comparison rows grouped in program order. */
+  rows: ModelValidationRow[];
 }
 
 /**
- * Fetches comparison rows for the given programs. Returns null when the
- * route is unavailable (Vite build, scorecard unreachable) so callers
- * can render nothing.
+ * Group scorecard rows under the programs they measure, each program at
+ * the depth of the nearest reached variable its rows were computed from.
+ * Nearest program first; rows follow program order, keeping the route's
+ * order within a program (held-out comparisons lead).
+ */
+export function summarizeScorecardPrograms(
+  reached: ReachedVariable[],
+  rows: ModelValidationRow[]
+): { programs: ScorecardProgramMatch[]; rows: ModelValidationRow[] } {
+  const depthOf = new Map(reached.map((entry) => [entry.variable, entry]));
+  const programs = new Map<string, ScorecardProgramMatch>();
+  for (const row of rows) {
+    for (const variable of row.policyengineVariables) {
+      const entry = depthOf.get(variable);
+      if (!entry) {
+        continue;
+      }
+      const current = programs.get(row.program);
+      if (!current || entry.depth < current.depth) {
+        programs.set(row.program, {
+          program: row.program,
+          variable,
+          depth: entry.depth,
+          ring: ringForDepth(entry.depth),
+        });
+      }
+    }
+  }
+  const ordered = [...programs.values()].sort(
+    (a, b) => a.depth - b.depth || a.program.localeCompare(b.program)
+  );
+  const rank = new Map(ordered.map((match, index) => [match.program, index]));
+  return {
+    programs: ordered,
+    rows: rows
+      .filter((row) => rank.has(row.program))
+      .sort((a, b) => rank.get(a.program)! - rank.get(b.program)!),
+  };
+}
+
+/**
+ * Fetches comparison rows computed from any of `variables`. Returns null
+ * when the route is unavailable (Vite build, scorecard unreachable) so
+ * callers can render an honest note.
  */
 export async function fetchModelValidation(
-  programs: string[]
+  variables: string[]
 ): Promise<ModelValidationRow[] | null> {
-  if (programs.length === 0) {
-    return null;
+  if (variables.length === 0) {
+    return [];
   }
   try {
-    const response = await fetch(
-      `/api/model-validation?programs=${encodeURIComponent(programs.join(','))}`
-    );
+    const response = await fetch('/api/model-validation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variables }),
+    });
     if (!response.ok) {
       return null;
     }
     const payload = await response.json();
-    return Array.isArray(payload?.rows) && payload.rows.length > 0 ? payload.rows : null;
+    return Array.isArray(payload?.rows) ? payload.rows : [];
   } catch {
     return null;
   }
+}
+
+/**
+ * The scorecard matches for a reform: the programs whose comparison rows
+ * were computed from variables its paths reach (to `maxDepth`), with the
+ * rows. Null when either the map or the scorecard is unavailable.
+ */
+export async function scorecardMatchesForPaths(
+  paths: string[],
+  maxDepth: number = DEFAULT_MAX_DEPTH
+): Promise<ScorecardMatches | null> {
+  let map;
+  try {
+    map = await loadParameterDependencies();
+  } catch {
+    return null;
+  }
+  const reached = variablesReachedByPaths(paths, map, maxDepth);
+  const fetched = await fetchModelValidation(reached.map((entry) => entry.variable));
+  if (fetched === null) {
+    return null;
+  }
+  return {
+    modelVersion: map.model.version,
+    reachedCount: reached.length,
+    ...summarizeScorecardPrograms(reached, fetched),
+  };
 }
 
 /**

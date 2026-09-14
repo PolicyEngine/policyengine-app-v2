@@ -4,7 +4,10 @@ import {
 } from "@/libs/flagship/apiGate";
 
 // Model track record, served from the live PolicyEngine scorecard at
-// policyengine.org/scorecard. The deployed app's data layout has
+// policyengine.org/scorecard. Rows are matched by the model variables
+// their PolicyEngine value was computed from (`policyengine_variables`,
+// the join key the validation layer shares with calibration), or by
+// program id for hand checks. The deployed app's data layout has
 // changed once already (per-source shards -> single comparison file),
 // so this route tries each known layout in order and normalizes both
 // row shapes; the GitHub repo's committed file is the final fallback.
@@ -45,6 +48,14 @@ interface NormalizedRow {
   peValue: number | null;
   ratio: number | null;
   heldOut: boolean;
+  /** The model variables the PolicyEngine value was computed from. */
+  policyengineVariables: string[];
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === "string")
+    : [];
 }
 
 /** The external source behind a payload: comparison.json carries one
@@ -100,9 +111,11 @@ function normalize(payload: any): NormalizedRow[] {
         peValue: typeof row.pe_value === "number" ? row.pe_value : null,
         ratio: typeof row.ratio === "number" ? row.ratio : null,
         heldOut: row.calibration_relationship === "held_out",
+        policyengineVariables: stringList(row.policyengine_variables),
       });
     }
-    // per-source shard shape: value / pe.value / relationship (+ row_defaults)
+    // per-source shard shape: value / pe.value / relationship (+ row_defaults).
+    // Shards predate the variable field, so these rows match by program only.
     return withSource({
       source: payload?.id ?? "scorecard",
       program: row.program,
@@ -116,6 +129,7 @@ function normalize(payload: any): NormalizedRow[] {
       peValue: typeof row.pe?.value === "number" ? row.pe.value : null,
       ratio: typeof row.ratio === "number" ? row.ratio : null,
       heldOut: (row.relationship ?? defaultRelationship) === "held_out",
+      policyengineVariables: stringList(row.pe?.policyengine_variables),
     });
   });
 }
@@ -154,17 +168,49 @@ function getRows(): Promise<NormalizedRow[]> {
   return cached.promise;
 }
 
+function csv(value: string | null): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+// A reform reaches a few hundred variables, more than a query string
+// should carry, so the client POSTs; GET stays for hand checks.
 export async function GET(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  return respond(
+    csv(url.searchParams.get("variables")),
+    csv(url.searchParams.get("programs")),
+  );
+}
+
+export async function POST(request: Request): Promise<Response> {
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  return respond(stringList(body?.variables), stringList(body?.programs));
+}
+
+async function respond(
+  rawVariables: string[],
+  rawPrograms: string[],
+): Promise<Response> {
   if (!isFlagshipApiEnabled()) {
     return flagshipApiDisabledResponse();
   }
-  const url = new URL(request.url);
-  const programs = (url.searchParams.get("programs") ?? "")
-    .split(",")
-    .map((p) => p.trim().toLowerCase())
-    .filter(Boolean);
-  if (programs.length === 0) {
-    return Response.json({ error: "programs is required" }, { status: 400 });
+  const variables = new Set(rawVariables.map((v) => v.trim()).filter(Boolean));
+  const programs = new Set(
+    rawPrograms.map((p) => p.trim().toLowerCase()).filter(Boolean),
+  );
+  if (variables.size === 0 && programs.size === 0) {
+    return Response.json(
+      { error: "variables or programs is required" },
+      { status: 400 },
+    );
   }
 
   let rows: NormalizedRow[];
@@ -177,10 +223,10 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 
-  const wanted = new Set(programs);
   const matched = rows.filter(
     (row) =>
-      wanted.has(row.program) &&
+      (programs.has(row.program) ||
+        row.policyengineVariables.some((v) => variables.has(v))) &&
       row.geography === "US" &&
       row.subgroup === "total" &&
       (row.status === "comparable" || row.status === "constructed") &&
@@ -191,7 +237,8 @@ export async function GET(request: Request): Promise<Response> {
 
   // Held-out comparisons are true validation (the dataset was not tuned
   // to them), so they lead; within that, plain comparable before
-  // constructed approximations.
+  // constructed approximations. The client orders programs by how near
+  // the reform they sit; here they are just grouped.
   const rank = (row: NormalizedRow) =>
     (row.heldOut ? 0 : 2) + (row.status === "comparable" ? 0 : 1);
   matched.sort(
@@ -226,6 +273,7 @@ export async function GET(request: Request): Promise<Response> {
         peValue: row.peValue,
         ratio: row.ratio,
         heldOut: row.heldOut,
+        policyengineVariables: row.policyengineVariables,
       })),
     },
     { headers: { "Cache-Control": CACHE_CONTROL } },

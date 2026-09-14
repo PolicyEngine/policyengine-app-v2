@@ -19,14 +19,14 @@ import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation'
  * the data-side bias of the estimate.
  */
 
-const RING_LABELS: Record<CalibrationRing, string> = {
+export const RING_LABELS: Record<CalibrationRing, string> = {
   primary: 'Primary',
   mechanism: 'Mechanism',
   downstream: 'Downstream',
 };
 
 /** The dependency depth in words: 1 is a formula that reads the parameter itself. */
-function describeDepth(depth: number): string {
+export function describeDepth(depth: number): string {
   if (depth <= 1) {
     return 'reads the parameter directly';
   }

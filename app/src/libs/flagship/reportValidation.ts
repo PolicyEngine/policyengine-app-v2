@@ -34,8 +34,11 @@ export interface ReportValidationSnapshot {
 /** What the report is being matched against right now. */
 export interface LiveValidation {
   calibration: CalibrationMatches | null | undefined;
-  /** Scorecard programs resolved for the report, undefined while loading. */
-  programs: string[] | undefined;
+  /**
+   * Scorecard programs resolved for the report: undefined while loading,
+   * null when the scorecard was unavailable.
+   */
+  programs: string[] | null | undefined;
 }
 
 /** Both checks have resolved (to a result or an honest null). */

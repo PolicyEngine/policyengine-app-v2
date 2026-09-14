@@ -13,6 +13,7 @@ import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportComputingScreen, ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import {
   ModelTrackRecordSection,
+  trackRecordPrograms,
   useModelTrackRecord,
 } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text, Title } from '@/components/ui';
@@ -156,10 +157,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const pin = useReportValidationSnapshot(
     MOCK_USER_ID,
     report?.id !== undefined && report?.id !== null ? String(report.id) : undefined,
-    {
-      calibration,
-      programs: trackRecord.resolved ? trackRecord.programs : undefined,
-    }
+    { calibration, programs: trackRecordPrograms(trackRecord) }
   );
 
   const scrollTo = (id: string) =>
@@ -221,7 +219,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         </Stack>
       );
     }
-    const validationResolved = calibration !== undefined && trackRecord.resolved;
+    const validationResolved = calibration !== undefined && trackRecord !== undefined;
     const stages = reportStages({
       reportLoaded: !!report && allSimulationsLoaded(report, simulations),
       provisionsLoaded: meta !== null,
@@ -234,7 +232,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       },
       validationResolved,
       calibratedCount: calibration?.matches.length,
-      scorecardPrograms: trackRecord.resolved ? trackRecord.programs : undefined,
+      scorecardPrograms: trackRecordPrograms(trackRecord) ?? undefined,
     });
     return layout(
       <ReportComputingScreen
