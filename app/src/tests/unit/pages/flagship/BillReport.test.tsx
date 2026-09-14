@@ -230,7 +230,12 @@ describe('BillReportPage', () => {
         id: 'ut-sb60',
         jurisdiction: 'Utah',
         state: 'UT',
-        provisions: [{ path: SNAP_STANDARD_DEDUCTION_PATH, value: 250 }],
+        provisions: [
+          {
+            path: SNAP_STANDARD_DEDUCTION_PATH,
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 250 }],
+          },
+        ],
       },
     ]);
     mockCalibrationMatchesForPaths.mockResolvedValue({
@@ -252,7 +257,12 @@ describe('BillReportPage', () => {
     mockFetchTrackerBills.mockResolvedValue([
       {
         ...TRACKED_BILL,
-        provisions: [{ path: 'gov.irs.credits.ctc.amount.base[0].amount', value: 2000 }],
+        provisions: [
+          {
+            path: 'gov.irs.credits.ctc.amount.base[0].amount',
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
+          },
+        ],
       },
     ]);
     const user = userEvent.setup();

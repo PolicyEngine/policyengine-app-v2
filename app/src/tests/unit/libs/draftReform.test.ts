@@ -249,7 +249,49 @@ describe('draftReform', () => {
 
     expect(provision.baselineValue).toBe(1500);
     expect(provision.values).toEqual([
-      { startDate: '2026-01-01', endDate: '2100-12-31', value: 1500 },
+      { startDate: '2026-01-01', endDate: '2098-12-31', value: 1500 },
+      { startDate: '2099-01-01', endDate: '2100-12-31', value: 9999 },
+    ]);
+  });
+
+  it('given an untouched search selection then its copied current-law schedule normalizes away', () => {
+    const provision = provisionFromSearchEntry(
+      {
+        path: CTC_PROVISION.path,
+        breadcrumb: CTC_PROVISION.breadcrumb,
+        unit: CTC_PROVISION.unit,
+      },
+      CURRENT_LAW_METADATA[CTC_PROVISION.path].values
+    );
+    addDraftProvision('us', provision);
+
+    expect(provision.values).toEqual([
+      { startDate: '2026-01-01', endDate: '2027-06-30', value: 2000 },
+      { startDate: '2027-07-01', endDate: '2100-12-31', value: 3000 },
+    ]);
+    expect(draftToPolicyParameters(getDraftReform()!, CURRENT_LAW_METADATA)).toEqual([]);
+  });
+
+  it('given a copied current-law schedule is edited then later current-law changes remain unchanged', () => {
+    addDraftProvision(
+      'us',
+      provisionFromSearchEntry(
+        {
+          path: CTC_PROVISION.path,
+          breadcrumb: CTC_PROVISION.breadcrumb,
+          unit: CTC_PROVISION.unit,
+        },
+        CURRENT_LAW_METADATA[CTC_PROVISION.path].values
+      )
+    );
+
+    updateDraftProvisionValue(CTC_PROVISION.path, 2500);
+
+    expect(draftToPolicyParameters(getDraftReform()!, CURRENT_LAW_METADATA)).toEqual([
+      {
+        name: CTC_PROVISION.path,
+        values: [{ startDate: '2026-01-01', endDate: '2027-06-30', value: 2500 }],
+      },
     ]);
   });
 });

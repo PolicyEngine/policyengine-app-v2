@@ -11,6 +11,7 @@ import {
   TEST_PARAMETER_NAMES,
 } from '@/tests/fixtures/utils/policyCurrentLawMocks';
 import type { SimulationStateProps } from '@/types/pathwayState';
+import type { PolicyMetadataReadinessState } from '@/utils/policyCurrentLaw';
 
 function simulation(
   id: string,
@@ -40,12 +41,21 @@ const changedAmount = createParameter(
   150
 );
 
+const READY_METADATA = {
+  loading: false,
+  error: null,
+  currentCountry: 'us',
+  currentLawId: 1,
+  version: 'test',
+  parameters: CURRENT_LAW_METADATA,
+} satisfies PolicyMetadataReadinessState;
+
 describe('getReportPolicyActionability', () => {
   test('given a one-simulation current-law report then it requires an effective policy change', () => {
     const result = getReportPolicyActionability({
       simulations: [simulation('current-law', [])],
-      currentLawMetadata: CURRENT_LAW_METADATA,
-      metadataReady: true,
+      metadata: READY_METADATA,
+      countryId: 'us',
     });
 
     expect(result).toMatchObject({
@@ -58,8 +68,8 @@ describe('getReportPolicyActionability', () => {
   test('given one effective reform then it is actionable and exposes its normalized parameters', () => {
     const result = getReportPolicyActionability({
       simulations: [simulation('policy-1', [changedAmount])],
-      currentLawMetadata: CURRENT_LAW_METADATA,
-      metadataReady: true,
+      metadata: READY_METADATA,
+      countryId: 'us',
     });
 
     expect(result).toMatchObject({ isActionable: true, reason: null });
@@ -81,8 +91,8 @@ describe('getReportPolicyActionability', () => {
   ])('given %s then the comparison is non-actionable', (_label, first, second) => {
     const result = getReportPolicyActionability({
       simulations: [first, second],
-      currentLawMetadata: CURRENT_LAW_METADATA,
-      metadataReady: true,
+      metadata: READY_METADATA,
+      countryId: 'us',
     });
 
     expect(result).toMatchObject({
@@ -100,8 +110,8 @@ describe('getReportPolicyActionability', () => {
           createParameter(TEST_PARAMETER_NAMES.changingAmount, '2025-01-01', '2028-12-31', 100),
         ]),
       ],
-      currentLawMetadata: CURRENT_LAW_METADATA,
-      metadataReady: true,
+      metadata: READY_METADATA,
+      countryId: 'us',
     });
 
     expect(result.isActionable).toBe(true);
@@ -118,28 +128,46 @@ describe('getReportPolicyActionability', () => {
           createParameter(TEST_PARAMETER_NAMES.zeroAmount, '2025-01-01', '2025-12-31', 0),
         ]),
       ],
-      currentLawMetadata: CURRENT_LAW_METADATA,
-      metadataReady: true,
+      metadata: READY_METADATA,
+      countryId: 'us',
     });
 
     expect(result.isActionable).toBe(false);
   });
 
   test.each([
-    ['metadata is loading', false, simulation('policy-1', [changedAmount])],
-    ['saved policy contents are placeholders', true, simulation('policy-1', [{} as any])],
+    [
+      'metadata is loading',
+      { ...READY_METADATA, loading: true },
+      simulation('policy-1', [changedAmount]),
+    ],
+    ['saved policy contents are placeholders', READY_METADATA, simulation('policy-1', [{} as any])],
     [
       'parameter metadata is missing',
-      true,
+      READY_METADATA,
       simulation('policy-1', [
         createParameter(TEST_PARAMETER_NAMES.missingMetadata, '2025-01-01', '2025-12-31', 1),
       ]),
     ],
-  ])('given %s then actionability fails closed', (_label, metadataReady, selectedSimulation) => {
+    [
+      'parameter metadata has no dated values',
+      {
+        ...READY_METADATA,
+        parameters: {
+          ...CURRENT_LAW_METADATA,
+          [TEST_PARAMETER_NAMES.changingAmount]: {
+            ...CURRENT_LAW_METADATA[TEST_PARAMETER_NAMES.changingAmount],
+            values: {},
+          },
+        },
+      },
+      simulation('policy-1', [changedAmount]),
+    ],
+  ])('given %s then actionability fails closed', (_label, metadata, selectedSimulation) => {
     const result = getReportPolicyActionability({
       simulations: [selectedSimulation],
-      currentLawMetadata: CURRENT_LAW_METADATA,
-      metadataReady,
+      metadata: metadata as PolicyMetadataReadinessState,
+      countryId: 'us',
     });
 
     expect(result).toMatchObject({

@@ -117,7 +117,7 @@ const FEED_BILLS = [
     provisions: [
       {
         path: 'gov.states.ut.tax.income.rate',
-        value: 0.0445,
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.0445 }],
         fallbackBreadcrumb: 'Utah → Income tax → Rate',
       },
     ],
@@ -132,7 +132,7 @@ const FEED_BILLS = [
     provisions: [
       {
         path: 'gov.irs.credits.ctc.amount.base[0].amount',
-        value: 2500,
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 }],
         fallbackBreadcrumb: 'IRS → Credits → Child tax credit → Base amount',
       },
     ],
@@ -147,7 +147,7 @@ const FEED_BILLS = [
     provisions: [
       {
         path: 'gov.usda.snap.max_allotment.main.CONTIGUOUS_US.1',
-        value: 350,
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 350 }],
         fallbackBreadcrumb: 'USDA → SNAP → Maximum allotment',
       },
     ],
@@ -201,7 +201,12 @@ describe('ReformsPage', () => {
     mockFetchTrackerBills.mockResolvedValue([
       {
         ...FEED_BILLS[1],
-        provisions: [{ ...FEED_BILLS[1].provisions[0], value: 2000 }],
+        provisions: [
+          {
+            ...FEED_BILLS[1].provisions[0],
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
+          },
+        ],
       },
     ]);
     const user = userEvent.setup();
@@ -222,6 +227,16 @@ describe('ReformsPage', () => {
   });
 
   test('given open as draft in the detail then the draft is populated', async () => {
+    const scheduledValues = [
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 2500 },
+      { startDate: '2027-01-01', endDate: '2100-12-31', value: 3000 },
+    ];
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...FEED_BILLS[1],
+        provisions: [{ ...FEED_BILLS[1].provisions[0], values: scheduledValues }],
+      },
+    ]);
     const user = userEvent.setup();
     renderReforms();
 
@@ -232,6 +247,8 @@ describe('ReformsPage', () => {
     expect(draft?.source).toBe('bill');
     expect(draft?.label).toBe('Child tax credit expansion proposal');
     expect(draft?.provisions.length).toBeGreaterThan(0);
+    expect(draft?.provisions[0].values).toEqual(scheduledValues);
+    expect(draft?.provisions[0].values).not.toBe(scheduledValues);
   });
 
   test('given the place filter then only that jurisdiction remains', async () => {

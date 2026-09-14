@@ -1,7 +1,11 @@
-import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { SimulationStateProps } from '@/types/pathwayState';
 import type { Parameter } from '@/types/subIngredients/parameter';
-import { normalizePolicyParameters, policyParametersEqual } from '@/utils/policyCurrentLaw';
+import {
+  hasRequiredPolicyMetadata,
+  normalizePolicyParameters,
+  policyParametersEqual,
+  type PolicyMetadataReadinessState,
+} from '@/utils/policyCurrentLaw';
 import { isCurrentLaw } from '../currentLaw';
 
 export const REPORT_REQUIRES_POLICY_CHANGE_MESSAGE =
@@ -25,8 +29,8 @@ export interface ReportPolicyActionability {
 
 interface GetReportPolicyActionabilityArgs {
   simulations: SimulationStateProps[];
-  currentLawMetadata: ParameterMetadataCollection;
-  metadataReady: boolean;
+  metadata: PolicyMetadataReadinessState;
+  countryId: string;
 }
 
 function isResolvedParameter(parameter: Parameter): boolean {
@@ -40,8 +44,8 @@ function isResolvedParameter(parameter: Parameter): boolean {
 /** Determine whether a report will compare materially different policy rules. */
 export function getReportPolicyActionability({
   simulations,
-  currentLawMetadata,
-  metadataReady,
+  metadata,
+  countryId,
 }: GetReportPolicyActionabilityArgs): ReportPolicyActionability {
   const unavailable = (): ReportPolicyActionability => ({
     isActionable: false,
@@ -50,7 +54,7 @@ export function getReportPolicyActionability({
     normalizedPolicies: [],
   });
 
-  if (!metadataReady || simulations.length === 0) {
+  if (!hasRequiredPolicyMetadata(metadata, countryId, []) || simulations.length === 0) {
     return unavailable();
   }
 
@@ -65,11 +69,11 @@ export function getReportPolicyActionability({
     }
     if (
       !policy.parameters.every(isResolvedParameter) ||
-      policy.parameters.some((parameter) => !currentLawMetadata[parameter.name]?.values)
+      !hasRequiredPolicyMetadata(metadata, countryId, policy.parameters)
     ) {
       return unavailable();
     }
-    normalizedPolicies.push(normalizePolicyParameters(policy.parameters, currentLawMetadata));
+    normalizedPolicies.push(normalizePolicyParameters(policy.parameters, metadata.parameters));
   }
 
   if (normalizedPolicies.length === 1) {

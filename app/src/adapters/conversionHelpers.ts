@@ -1,3 +1,4 @@
+import { FOREVER } from '@/constants';
 import { ReportOutput } from '@/types/ingredients/Report';
 import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
@@ -25,6 +26,15 @@ export function convertDateRangeMapToValueIntervals(
       value,
     };
   });
+}
+
+/** Convert a scalar policy input to the canonical dated representation. */
+export function convertScalarToValueIntervals(
+  value: unknown,
+  startDate: string,
+  endDate: string = FOREVER
+): ValueInterval[] {
+  return [{ startDate, endDate, value }];
 }
 
 /**

@@ -102,7 +102,8 @@ describe('AskPage', () => {
     await user.click(screen.getByText('IRS → Credits → Child tax credit → Amount'));
 
     const provision = getDraftReform()?.provisions[0];
-    expect(provision?.values[0].value).toBe(provision?.baselineValue);
+    expect(provision?.baselineValue).toBeUndefined();
+    expect(provision?.values).toEqual([]);
   });
 
   test('given a question with no matches then an honest empty reply shows', async () => {

@@ -358,6 +358,22 @@ export class ValueIntervalCollection {
     return this.getIntervalAtDate(date)?.value;
   }
 
+  /**
+   * Gets the schedule from a specific date onward, clipping the first
+   * overlapping interval to that date and returning independent objects.
+   */
+  getIntervalsFromDate(date: string): ValueInterval[] {
+    this.validateISODateString(date);
+    const targetDate = this.parseDate(date);
+
+    return this.intervals
+      .filter((interval) => this.parseDate(interval.endDate) >= targetDate)
+      .map((interval) => ({
+        ...interval,
+        startDate: this.parseDate(interval.startDate) < targetDate ? date : interval.startDate,
+      }));
+  }
+
   clear(): void {
     this.intervals = [];
   }

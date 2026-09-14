@@ -62,27 +62,21 @@ export function useReportSubmission({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
   const { isReportConfigured } = useReportIngredientAvailability(reportState);
-  const metadataReady =
-    !metadata.loading &&
-    !metadata.error &&
-    metadata.currentCountry === countryId &&
-    metadata.version !== null &&
-    currentLawId > 0;
   const reportPolicyActionability = useMemo(
     () =>
       getReportPolicyActionability({
         simulations: reportState.simulations,
-        currentLawMetadata: metadata.parameters,
-        metadataReady,
+        metadata,
+        countryId,
       }),
-    [metadata.parameters, metadataReady, reportState.simulations]
+    [countryId, metadata, reportState.simulations]
   );
 
   const handleSubmit = useCallback(async () => {
     const submissionActionability = getReportPolicyActionability({
       simulations: reportState.simulations,
-      currentLawMetadata: metadata.parameters,
-      metadataReady,
+      metadata,
+      countryId,
     });
     if (!isReportConfigured || !submissionActionability.isActionable || isSubmitting) {
       return;
@@ -164,8 +158,7 @@ export function useReportSubmission({
     reportState,
     countryId,
     currentLawId,
-    metadata.parameters,
-    metadataReady,
+    metadata,
     createReport,
     onSuccess,
   ]);

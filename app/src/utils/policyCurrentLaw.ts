@@ -44,7 +44,20 @@ export function hasRequiredPolicyMetadata(
     metadata.currentCountry === countryId &&
     Boolean(metadata.version) &&
     metadata.currentLawId > 0 &&
-    (parameters ?? []).every((parameter) => metadata.parameters[parameter.name]?.values != null)
+    (parameters ?? []).every((parameter) => {
+      const currentLawEntries = getCurrentLawEntries(metadata.parameters[parameter.name]?.values);
+
+      return (
+        currentLawEntries.length > 0 &&
+        parameter.values.every(
+          (interval) =>
+            isValidIsoDate(interval.startDate) &&
+            isValidIsoDate(interval.endDate) &&
+            interval.startDate <= interval.endDate &&
+            getCurrentLawValue(currentLawEntries, interval.startDate).found
+        )
+      );
+    })
   );
 }
 

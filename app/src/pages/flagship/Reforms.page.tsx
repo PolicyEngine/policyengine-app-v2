@@ -33,11 +33,7 @@ import {
   loadReformIntoDraft,
   setDraftLabel,
 } from '@/libs/draftReform';
-import {
-  createRunReportProvision,
-  getEffectiveRunReportParameters,
-  RunReportProvision,
-} from '@/libs/flagship/runReport';
+import { getEffectiveRunReportParameters, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import type { Parameter } from '@/types/subIngredients/parameter';
@@ -324,13 +320,13 @@ export default function ReformsPage() {
   const billProvisions = (bill: TrackedBill): ProvisionView[] =>
     bill.provisions.map((provision) => {
       const metadata = parameters?.[provision.path];
-      return createRunReportProvision({
+      return {
         path: provision.path,
         breadcrumb: resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb),
         unit: metadata?.unit ?? null,
         baselineValue: getCurrentValue(metadata?.values),
-        value: provision.value,
-      });
+        values: provision.values.map((interval) => ({ ...interval })),
+      };
     });
 
   const reformProvisions = (reform: Reform): ProvisionView[] =>

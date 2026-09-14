@@ -141,5 +141,21 @@ describe('ValueIntervalCollection', () => {
 
       expect(collection.getIntervalAtDate('1900-01-01')).toBeUndefined();
     });
+
+    test('given a starting date then returns the remaining schedule with its first interval clipped', () => {
+      const source = [
+        { startDate: '2025-01-01', endDate: '2026-12-31', value: 100 },
+        { startDate: '2027-01-01', endDate: '2100-12-31', value: 200 },
+      ];
+      const collection = new ValueIntervalCollection(source);
+
+      const result = collection.getIntervalsFromDate('2026-01-01');
+
+      expect(result).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 100 },
+        { startDate: '2027-01-01', endDate: '2100-12-31', value: 200 },
+      ]);
+      expect(result[1]).not.toBe(source[1]);
+    });
   });
 });

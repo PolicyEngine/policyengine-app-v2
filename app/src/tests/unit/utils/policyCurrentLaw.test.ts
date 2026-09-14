@@ -57,6 +57,55 @@ describe('hasRequiredPolicyMetadata', () => {
 
     expect(hasRequiredPolicyMetadata(READY_METADATA, 'us', [unknown])).toBe(false);
   });
+
+  test.each([
+    ['an empty value map', {}],
+    ['only invalid effective dates', { not_a_date: 100 }],
+  ])('given current-law metadata has %s then returns false', (_label, values) => {
+    expect(
+      hasRequiredPolicyMetadata(
+        {
+          ...READY_METADATA,
+          parameters: {
+            ...CURRENT_LAW_METADATA,
+            [parameter.name]: {
+              ...CURRENT_LAW_METADATA[parameter.name],
+              values,
+            },
+          },
+        },
+        'us',
+        [parameter]
+      )
+    ).toBe(false);
+  });
+
+  test('given current-law values begin after a proposed interval then returns false', () => {
+    expect(
+      hasRequiredPolicyMetadata(
+        {
+          ...READY_METADATA,
+          parameters: {
+            ...CURRENT_LAW_METADATA,
+            [parameter.name]: {
+              ...CURRENT_LAW_METADATA[parameter.name],
+              values: { '2027-01-01': 200 },
+            },
+          },
+        },
+        'us',
+        [parameter]
+      )
+    ).toBe(false);
+  });
+
+  test('given a proposed interval has invalid dates then returns false', () => {
+    expect(
+      hasRequiredPolicyMetadata(READY_METADATA, 'us', [
+        createParameter(parameter.name, '2026-02-30', '2026-12-31', 150),
+      ])
+    ).toBe(false);
+  });
 });
 
 describe('policyValuesEqual', () => {

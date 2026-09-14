@@ -1,10 +1,11 @@
 import { useSyncExternalStore } from 'react';
-import { CURRENT_YEAR, FOREVER } from '@/constants';
+import { convertScalarToValueIntervals } from '@/adapters/conversionHelpers';
+import { CURRENT_YEAR } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { getCurrentValue } from '@/utils/parameterValues';
 import { normalizePolicyParameters } from '@/utils/policyCurrentLaw';
 import { getParameterValueAtDate, updateParameterValueAtDate } from '@/utils/policyParameterUpdate';
@@ -66,7 +67,7 @@ export function createDraftProvision(
   const { value, ...details } = provision;
   return {
     ...details,
-    values: [{ startDate, endDate: FOREVER, value }],
+    values: convertScalarToValueIntervals(value, startDate),
   };
 }
 
@@ -290,14 +291,15 @@ export function provisionFromSearchEntry(
   entry: { path: string; breadcrumb: string; unit: string | null },
   values: Record<string, any> | undefined | null
 ): DraftProvision {
-  const baselineValue = getCurrentValue(values);
-  return createDraftProvision({
+  const startDate = `${CURRENT_YEAR}-01-01`;
+  const currentLawValues = new ValueIntervalCollection(values ?? undefined);
+  return {
     path: entry.path,
     breadcrumb: entry.breadcrumb,
     unit: entry.unit,
-    baselineValue,
-    value: baselineValue,
-  });
+    baselineValue: currentLawValues.getValueAtDate(startDate) ?? getCurrentValue(values),
+    values: currentLawValues.getIntervalsFromDate(startDate),
+  };
 }
 
 /** Converts draft provisions to the effective parameter changes they represent. */

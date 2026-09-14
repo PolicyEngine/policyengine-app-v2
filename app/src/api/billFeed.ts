@@ -1,4 +1,11 @@
+import {
+  convertDateRangeMapToValueIntervals,
+  convertScalarToValueIntervals,
+} from '@/adapters/conversionHelpers';
+import { CURRENT_YEAR } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import type { PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
+import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
  * The bill feed behind the Reforms surface.
@@ -11,7 +18,7 @@ import { CountryId } from '@/libs/countries';
  */
 export interface TrackedBillProvision {
   path: string;
-  value: any;
+  values: ValueInterval[];
   /** Used when the parameter is missing from loaded metadata. */
   fallbackBreadcrumb?: string;
 }
@@ -204,15 +211,25 @@ const STATE_NAMES: Record<string, string> = {
   WY: 'Wyoming',
 };
 
-/** Reform-params dict ({path: {"date.date": value}} or {path: value}) → provisions. */
+/** Reform-params dict ({path: {"date.date": value}} or {path: value}) → dated provisions. */
 export function provisionsFromReformParams(reformParams: unknown): TrackedBillProvision[] {
   if (!reformParams || typeof reformParams !== 'object') {
     return [];
   }
-  return Object.entries(reformParams as Record<string, any>).map(([path, raw]) => {
-    const value =
-      raw && typeof raw === 'object' && !Array.isArray(raw) ? Object.values(raw)[0] : raw;
-    return { path, value };
+  return Object.entries(reformParams as Record<string, unknown>).flatMap(([path, raw]) => {
+    if (Array.isArray(raw) || raw === undefined) {
+      return [];
+    }
+
+    try {
+      const values =
+        raw !== null && typeof raw === 'object'
+          ? convertDateRangeMapToValueIntervals(raw as PolicyMetadataParamValues)
+          : convertScalarToValueIntervals(raw, `${CURRENT_YEAR}-01-01`);
+      return values.length > 0 ? [{ path, values }] : [];
+    } catch {
+      return [];
+    }
   });
 }
 

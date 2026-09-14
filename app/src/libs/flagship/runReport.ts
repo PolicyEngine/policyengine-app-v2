@@ -1,8 +1,11 @@
-import { convertParametersToPolicyJson } from '@/adapters/conversionHelpers';
+import {
+  convertParametersToPolicyJson,
+  convertScalarToValueIntervals,
+} from '@/adapters/conversionHelpers';
 import { createPolicy } from '@/api/policy';
 import { createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
-import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
@@ -39,7 +42,7 @@ export function createRunReportProvision(
   const { value, ...details } = provision;
   return {
     ...details,
-    values: [{ startDate, endDate: FOREVER, value }],
+    values: convertScalarToValueIntervals(value, startDate),
   };
 }
 

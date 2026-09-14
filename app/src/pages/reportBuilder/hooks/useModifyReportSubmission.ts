@@ -62,20 +62,14 @@ export function useModifyReportSubmission({
   const [isSavingNew, setIsSavingNew] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false);
   const { isReportConfigured } = useReportIngredientAvailability(reportState);
-  const metadataReady =
-    !metadata.loading &&
-    !metadata.error &&
-    metadata.currentCountry === countryId &&
-    metadata.version !== null &&
-    currentLawId > 0;
   const reportPolicyActionability = useMemo(
     () =>
       getReportPolicyActionability({
         simulations: reportState.simulations,
-        currentLawMetadata: metadata.parameters,
-        metadataReady,
+        metadata,
+        countryId,
       }),
-    [metadata.parameters, metadataReady, reportState.simulations]
+    [countryId, metadata, reportState.simulations]
   );
   const isReportSubmissionBlocked = !isReportConfigured || !reportPolicyActionability.isActionable;
 
@@ -83,10 +77,10 @@ export function useModifyReportSubmission({
     () =>
       getReportPolicyActionability({
         simulations: reportState.simulations,
-        currentLawMetadata: metadata.parameters,
-        metadataReady,
+        metadata,
+        countryId,
       }).isActionable,
-    [metadata.parameters, metadataReady, reportState.simulations]
+    [countryId, metadata, reportState.simulations]
   );
 
   /**
