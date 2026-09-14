@@ -26,6 +26,21 @@ describe('provisionsFromReformParams', () => {
     ]);
   });
 
+  test('given an array-valued parameter then preserves the complete value', () => {
+    const arrayValue = ['single', 'joint'];
+
+    const provisions = provisionsFromReformParams({
+      'gov.test.allowed_filing_statuses': arrayValue,
+    });
+
+    expect(provisions).toEqual([
+      {
+        path: 'gov.test.allowed_filing_statuses',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: arrayValue }],
+      },
+    ]);
+  });
+
   test('given null or malformed params then no provisions are invented', () => {
     expect(provisionsFromReformParams(null)).toEqual([]);
     expect(provisionsFromReformParams('not-an-object')).toEqual([]);

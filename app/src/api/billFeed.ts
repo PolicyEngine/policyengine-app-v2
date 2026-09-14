@@ -217,13 +217,13 @@ export function provisionsFromReformParams(reformParams: unknown): TrackedBillPr
     return [];
   }
   return Object.entries(reformParams as Record<string, unknown>).flatMap(([path, raw]) => {
-    if (Array.isArray(raw) || raw === undefined) {
+    if (raw === undefined) {
       return [];
     }
 
     try {
       const values =
-        raw !== null && typeof raw === 'object'
+        raw !== null && typeof raw === 'object' && !Array.isArray(raw)
           ? convertDateRangeMapToValueIntervals(raw as PolicyMetadataParamValues)
           : convertScalarToValueIntervals(raw, `${CURRENT_YEAR}-01-01`);
       return values.length > 0 ? [{ path, values }] : [];

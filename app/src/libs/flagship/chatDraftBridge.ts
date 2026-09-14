@@ -51,7 +51,7 @@ export function provisionsFromChatReform(
 
   for (const [path, raw] of Object.entries(reform)) {
     const entry = byPath.get(path);
-    if (!entry || raw === undefined || Array.isArray(raw)) {
+    if (!entry || raw === undefined) {
       unknownPaths.push(path);
       continue;
     }
@@ -62,7 +62,7 @@ export function provisionsFromChatReform(
       unit: entry.unit,
       baselineValue: getCurrentValue(parameters?.[path]?.values),
     };
-    if (raw && typeof raw === 'object') {
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
       try {
         const values = convertDateRangeMapToValueIntervals(raw);
         if (values.length === 0) {

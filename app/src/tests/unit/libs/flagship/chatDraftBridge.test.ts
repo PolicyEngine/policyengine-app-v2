@@ -80,6 +80,21 @@ describe('provisionsFromChatReform', () => {
     ]);
   });
 
+  test('given an array-valued parameter then preserves the complete value', () => {
+    const arrayValue = ['single', 'joint'];
+
+    const { provisions, unknownPaths } = provisionsFromChatReform(
+      { [PERSONAL_ALLOWANCE_PATH]: arrayValue },
+      ENTRIES,
+      PARAMETERS
+    );
+
+    expect(unknownPaths).toEqual([]);
+    expect(provisions[0].values).toEqual([
+      { startDate: '2026-01-01', endDate: '2100-12-31', value: arrayValue },
+    ]);
+  });
+
   test('given a path the local index does not know then it lands in unknownPaths', () => {
     const { provisions, unknownPaths } = provisionsFromChatReform(
       { 'gov.hmrc.brand_new.parameter': 5 },
