@@ -4,18 +4,11 @@ import type { ValueInterval, ValuesList } from '@/types/subIngredients/valueInte
 
 export const POLICY_MATCHES_CURRENT_LAW_MESSAGE =
   'The selected values match current law, so there are no policy changes to save.';
-export const POLICY_COMPARISON_UNAVAILABLE_MESSAGE =
-  'Current-law values are unavailable, so this policy cannot be saved yet.';
 
 type PolicyMetadataForComparison = Pick<
   MetadataState,
   'loading' | 'error' | 'currentCountry' | 'currentLawId' | 'version' | 'parameters'
 >;
-
-export type PolicyCurrentLawComparison =
-  | { status: 'unavailable' }
-  | { status: 'matches-current-law' }
-  | { status: 'differs-from-current-law' };
 
 interface CalendarDate {
   year: number;
@@ -114,14 +107,14 @@ function getCurrentLawValue(entries: CurrentLawEntry[], date: string): CurrentLa
 function intervalMatchesCurrentLaw(
   interval: ValueInterval,
   currentLawEntries: CurrentLawEntry[]
-): boolean | null {
+): boolean {
   if (
     !parseCalendarDate(interval.startDate) ||
     !parseCalendarDate(interval.endDate) ||
     interval.startDate > interval.endDate ||
     !getCurrentLawValue(currentLawEntries, interval.startDate)
   ) {
-    return null;
+    return false;
   }
 
   const currentLawValuesInInterval = [
@@ -138,20 +131,19 @@ function intervalMatchesCurrentLaw(
 
 /**
  * Compare canonical policy parameter intervals with the current-law schedules in model metadata.
- * The comparison reports a difference when any proposed interval differs from current law at any
- * covered date. It never rewrites the proposed policy. Unavailable or malformed metadata prevents
- * submission rather than guessing whether the policy differs from current law.
+ * Returns true only when the policy contains proposed values and every proposed interval matches
+ * current law throughout its covered dates. The proposed policy is never rewritten.
  */
-export function comparePolicyToCurrentLaw(
+export function isPolicyDuplicateOfCurrentLaw(
   parameters: Parameter[] | undefined,
   metadata: PolicyMetadataForComparison,
   countryId: string
-): PolicyCurrentLawComparison {
+): boolean {
   const parametersWithValues = (parameters ?? []).filter(
     (parameter) => parameter.values.length > 0
   );
   if (parametersWithValues.length === 0) {
-    return { status: 'matches-current-law' };
+    return false;
   }
 
   if (
@@ -161,26 +153,17 @@ export function comparePolicyToCurrentLaw(
     !metadata.version ||
     metadata.currentLawId <= 0
   ) {
-    return { status: 'unavailable' };
+    return false;
   }
 
-  let differsFromCurrentLaw = false;
-  for (const parameter of parametersWithValues) {
+  return parametersWithValues.every((parameter) => {
     const currentLawEntries = getCurrentLawEntries(metadata.parameters[parameter.name]?.values);
     if (!currentLawEntries) {
-      return { status: 'unavailable' };
+      return false;
     }
 
-    for (const interval of parameter.values) {
-      const matchesCurrentLaw = intervalMatchesCurrentLaw(interval, currentLawEntries);
-      if (matchesCurrentLaw === null) {
-        return { status: 'unavailable' };
-      }
-      differsFromCurrentLaw ||= !matchesCurrentLaw;
-    }
-  }
-
-  return differsFromCurrentLaw
-    ? { status: 'differs-from-current-law' }
-    : { status: 'matches-current-law' };
+    return parameter.values.every((interval) =>
+      intervalMatchesCurrentLaw(interval, currentLawEntries)
+    );
+  });
 }

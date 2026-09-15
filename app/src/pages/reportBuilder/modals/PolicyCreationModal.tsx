@@ -47,8 +47,7 @@ import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import {
-  comparePolicyToCurrentLaw,
-  POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+  isPolicyDuplicateOfCurrentLaw,
   POLICY_MATCHES_CURRENT_LAW_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
@@ -185,11 +184,10 @@ export function PolicyCreationModal({
 
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
-  const currentLawComparison = useMemo(
-    () => comparePolicyToCurrentLaw(policyParameters, metadata, countryId),
+  const isDupeOfCurrentLaw = useMemo(
+    () => isPolicyDuplicateOfCurrentLaw(policyParameters, metadata, countryId),
     [policyParameters, metadata, countryId]
   );
-  const canSavePolicy = currentLawComparison.status === 'differs-from-current-law';
 
   // Get modified parameter data for the Changes section
   const modifiedParams: ModifiedParam[] = useMemo(() => {
@@ -319,7 +317,7 @@ export function PolicyCreationModal({
   // Handle policy creation
   const handleCreatePolicy = useCallback(
     async (labelOverride?: string | null) => {
-      if (currentLawComparison.status !== 'differs-from-current-law') {
+      if (modificationCount === 0 || isDupeOfCurrentLaw) {
         return;
       }
 
@@ -347,7 +345,8 @@ export function PolicyCreationModal({
     [
       normalizedPolicyLabel,
       policyParameters,
-      currentLawComparison,
+      modificationCount,
+      isDupeOfCurrentLaw,
       createPolicyWithLabel,
       onPolicyCreated,
       onClose,
@@ -377,7 +376,7 @@ export function PolicyCreationModal({
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!initialPolicy?.id || currentLawComparison.status !== 'differs-from-current-law') {
+    if (!initialPolicy?.id || modificationCount === 0 || isDupeOfCurrentLaw) {
       return;
     }
     setIsUpdating(true);
@@ -421,7 +420,8 @@ export function PolicyCreationModal({
   }, [
     normalizedPolicyLabel,
     policyParameters,
-    currentLawComparison,
+    modificationCount,
+    isDupeOfCurrentLaw,
     initialPolicy?.id,
     resolveInitialPolicyAssociation,
     countryId,
@@ -727,15 +727,7 @@ export function PolicyCreationModal({
                 <Text size="sm" c="red">
                   {associationLookupError}
                 </Text>
-              ) : modificationCount > 0 &&
-                currentLawComparison.status === 'unavailable' &&
-                !isReadOnly ? (
-                <Text size="sm" style={{ color: colors.text.warning }}>
-                  {POLICY_COMPARISON_UNAVAILABLE_MESSAGE}
-                </Text>
-              ) : modificationCount > 0 &&
-                currentLawComparison.status === 'matches-current-law' &&
-                !isReadOnly ? (
+              ) : modificationCount > 0 && isDupeOfCurrentLaw && !isReadOnly ? (
                 <Text size="sm" style={{ color: colors.text.warning }}>
                   {POLICY_MATCHES_CURRENT_LAW_MESSAGE}
                 </Text>
@@ -745,7 +737,7 @@ export function PolicyCreationModal({
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
                   onClick={() => requestSaveAction('create')}
-                  disabled={isCreating || !canSavePolicy}
+                  disabled={isCreating || modificationCount === 0 || isDupeOfCurrentLaw}
                 >
                   {isCreating && <Spinner size="sm" />}
                   Create policy
@@ -767,13 +759,13 @@ export function PolicyCreationModal({
                     label="Update existing policy"
                     onClick={() => requestSaveAction('update-existing')}
                     loading={isUpdating}
-                    disabled={isCreating || !canSavePolicy}
+                    disabled={isCreating || modificationCount === 0 || isDupeOfCurrentLaw}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
                     onClick={() => requestSaveAction('save-as-new')}
                     loading={isCreating}
-                    disabled={isUpdating || !canSavePolicy}
+                    disabled={isUpdating || modificationCount === 0 || isDupeOfCurrentLaw}
                   />
                 </>
               )}

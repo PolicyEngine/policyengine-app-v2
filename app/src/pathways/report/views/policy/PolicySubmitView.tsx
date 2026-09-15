@@ -20,8 +20,7 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
 import {
-  comparePolicyToCurrentLaw,
-  POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+  isPolicyDuplicateOfCurrentLaw,
   POLICY_MATCHES_CURRENT_LAW_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 
@@ -42,7 +41,7 @@ export default function PolicySubmitView({
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
   const metadata = useSelector((state: RootState) => state.metadata);
-  const currentLawComparison = comparePolicyToCurrentLaw(policy.parameters, metadata, countryId);
+  const isDupeOfCurrentLaw = isPolicyDuplicateOfCurrentLaw(policy.parameters, metadata, countryId);
 
   // Issue #605: Block empty policy creation
   const startedEmpty = !policy.parameters || policy.parameters.length === 0;
@@ -53,7 +52,7 @@ export default function PolicySubmitView({
   };
 
   function handleSubmit() {
-    if (currentLawComparison.status !== 'differs-from-current-law') {
+    if (startedEmpty || isDupeOfCurrentLaw) {
       return;
     }
 
@@ -106,15 +105,13 @@ export default function PolicySubmitView({
       submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      submitButtonDisabled={currentLawComparison.status !== 'differs-from-current-law'}
+      submitButtonDisabled={startedEmpty || isDupeOfCurrentLaw}
       warningMessage={
         startedEmpty
           ? 'Add at least one parameter change to create a policy.'
-          : currentLawComparison.status === 'unavailable'
-            ? POLICY_COMPARISON_UNAVAILABLE_MESSAGE
-            : currentLawComparison.status === 'matches-current-law'
-              ? POLICY_MATCHES_CURRENT_LAW_MESSAGE
-              : undefined
+          : isDupeOfCurrentLaw
+            ? POLICY_MATCHES_CURRENT_LAW_MESSAGE
+            : undefined
       }
       onBack={onBack}
       onCancel={onCancel}

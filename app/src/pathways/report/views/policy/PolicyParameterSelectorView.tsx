@@ -19,8 +19,7 @@ import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import {
-  comparePolicyToCurrentLaw,
-  POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+  isPolicyDuplicateOfCurrentLaw,
   POLICY_MATCHES_CURRENT_LAW_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
@@ -51,16 +50,14 @@ export default function PolicyParameterSelectorView({
 
   // Count modifications from policy prop
   const modificationCount = countPolicyModifications(policy);
-  const currentLawComparison = comparePolicyToCurrentLaw(policy.parameters, metadata, countryId);
-  const reviewDisabled = currentLawComparison.status !== 'differs-from-current-law';
+  const isDupeOfCurrentLaw = isPolicyDuplicateOfCurrentLaw(policy.parameters, metadata, countryId);
+  const reviewDisabled = modificationCount === 0 || isDupeOfCurrentLaw;
   const reviewDisabledReason =
     modificationCount === 0
       ? 'Add at least one parameter change before reviewing the policy.'
-      : currentLawComparison.status === 'unavailable'
-        ? POLICY_COMPARISON_UNAVAILABLE_MESSAGE
-        : currentLawComparison.status === 'matches-current-law'
-          ? POLICY_MATCHES_CURRENT_LAW_MESSAGE
-          : undefined;
+      : isDupeOfCurrentLaw
+        ? POLICY_MATCHES_CURRENT_LAW_MESSAGE
+        : undefined;
 
   const headerHeight = parseInt(spacing.appShell.header.height, 10);
   const navbarWidth = parseInt(spacing.appShell.navbar.width, 10);
