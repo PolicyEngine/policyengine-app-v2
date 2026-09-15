@@ -70,7 +70,8 @@ describe('PolicyParameterSelectorView', () => {
 
     const reviewButton = screen.getByRole('button', { name: /review my policy/i });
     expect(reviewButton).toBeDisabled();
-    expect(reviewButton).toHaveAttribute('title', expect.stringMatching(/match current law/i));
+    expect(reviewButton).toHaveAccessibleDescription(/match current law/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/match current law/i);
   });
 
   test('given a policy changes current law then review invokes the next step', () => {
@@ -101,6 +102,7 @@ describe('PolicyParameterSelectorView', () => {
 
     const reviewButton = screen.getByRole('button', { name: /^review$/i });
     expect(reviewButton).toBeDisabled();
-    expect(reviewButton).toHaveAttribute('title', expect.stringMatching(/match current law/i));
+    expect(reviewButton).toHaveAccessibleDescription(/match current law/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/match current law/i);
   });
 });

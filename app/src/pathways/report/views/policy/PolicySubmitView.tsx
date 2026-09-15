@@ -20,9 +20,9 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
 import {
-  evaluatePolicyAgainstCurrentLaw,
-  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  comparePolicyToCurrentLaw,
   POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+  POLICY_MATCHES_CURRENT_LAW_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 
 interface PolicySubmitViewProps {
@@ -42,24 +42,18 @@ export default function PolicySubmitView({
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
   const metadata = useSelector((state: RootState) => state.metadata);
-  const currentLawEvaluation = evaluatePolicyAgainstCurrentLaw(
-    policy.parameters,
-    metadata,
-    countryId
-  );
+  const currentLawComparison = comparePolicyToCurrentLaw(policy.parameters, metadata, countryId);
 
   // Issue #605: Block empty policy creation
   const startedEmpty = !policy.parameters || policy.parameters.length === 0;
-  const effectiveParameters =
-    currentLawEvaluation.status === 'has-effective-changes' ? currentLawEvaluation.parameters : [];
 
   // Convert state to Policy type structure
   const policyData: Partial<Policy> = {
-    parameters: effectiveParameters,
+    parameters: policy.parameters,
   };
 
   function handleSubmit() {
-    if (currentLawEvaluation.status !== 'has-effective-changes') {
+    if (currentLawComparison.status !== 'differs-from-current-law') {
       return;
     }
 
@@ -84,13 +78,13 @@ export default function PolicySubmitView({
 
   // Create hierarchical provisions list with header and date intervals
   const provisions: TextListItem[] =
-    effectiveParameters.length === 0
+    policy.parameters.length === 0
       ? []
       : [
           {
             text: 'Provision',
             isHeader: true,
-            subItems: effectiveParameters.map((param) => {
+            subItems: policy.parameters.map((param) => {
               const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
                 dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
                 value: valueInterval.value,
@@ -112,14 +106,14 @@ export default function PolicySubmitView({
       submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      submitButtonDisabled={currentLawEvaluation.status !== 'has-effective-changes'}
+      submitButtonDisabled={currentLawComparison.status !== 'differs-from-current-law'}
       warningMessage={
         startedEmpty
           ? 'Add at least one parameter change to create a policy.'
-          : currentLawEvaluation.status === 'metadata-unavailable'
+          : currentLawComparison.status === 'unavailable'
             ? POLICY_COMPARISON_UNAVAILABLE_MESSAGE
-            : currentLawEvaluation.status === 'no-effective-changes'
-              ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+            : currentLawComparison.status === 'matches-current-law'
+              ? POLICY_MATCHES_CURRENT_LAW_MESSAGE
               : undefined
       }
       onBack={onBack}

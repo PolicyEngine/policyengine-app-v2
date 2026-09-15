@@ -332,7 +332,7 @@ describe('PolicyCreationModal', () => {
   );
 
   test(
-    'given a policy contains matching and changed intervals then submits only the changed interval',
+    'given a policy contains matching and changed intervals then submits the original policy',
     async () => {
       render(
         <PolicyCreationModal
@@ -353,6 +353,7 @@ describe('PolicyCreationModal', () => {
           {
             data: {
               'gov.test.parameter': {
+                '2024-01-01.2024-12-31': 0,
                 '2025-01-01.2025-12-31': 1,
               },
             },

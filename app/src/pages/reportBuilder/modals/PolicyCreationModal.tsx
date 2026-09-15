@@ -47,9 +47,9 @@ import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import {
-  evaluatePolicyAgainstCurrentLaw,
-  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  comparePolicyToCurrentLaw,
   POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+  POLICY_MATCHES_CURRENT_LAW_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
@@ -185,11 +185,11 @@ export function PolicyCreationModal({
 
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
-  const currentLawEvaluation = useMemo(
-    () => evaluatePolicyAgainstCurrentLaw(policyParameters, metadata, countryId),
+  const currentLawComparison = useMemo(
+    () => comparePolicyToCurrentLaw(policyParameters, metadata, countryId),
     [policyParameters, metadata, countryId]
   );
-  const canSavePolicy = currentLawEvaluation.status === 'has-effective-changes';
+  const canSavePolicy = currentLawComparison.status === 'differs-from-current-law';
 
   // Get modified parameter data for the Changes section
   const modifiedParams: ModifiedParam[] = useMemo(() => {
@@ -319,14 +319,14 @@ export function PolicyCreationModal({
   // Handle policy creation
   const handleCreatePolicy = useCallback(
     async (labelOverride?: string | null) => {
-      if (currentLawEvaluation.status !== 'has-effective-changes') {
+      if (currentLawComparison.status !== 'differs-from-current-law') {
         return;
       }
 
       const resolvedLabel =
         labelOverride === undefined ? normalizedPolicyLabel : (labelOverride?.trim() ?? '');
       const policyData: Partial<Policy> = {
-        parameters: currentLawEvaluation.parameters,
+        parameters: policyParameters,
       };
 
       const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
@@ -336,7 +336,7 @@ export function PolicyCreationModal({
         const createdPolicy: PolicyStateProps = {
           id: result.result.policy_id,
           label: resolvedLabel || null,
-          parameters: currentLawEvaluation.parameters,
+          parameters: policyParameters,
         };
         onPolicyCreated(createdPolicy);
         onClose();
@@ -344,7 +344,14 @@ export function PolicyCreationModal({
         console.error('Failed to create policy:', error);
       }
     },
-    [normalizedPolicyLabel, currentLawEvaluation, createPolicyWithLabel, onPolicyCreated, onClose]
+    [
+      normalizedPolicyLabel,
+      policyParameters,
+      currentLawComparison,
+      createPolicyWithLabel,
+      onPolicyCreated,
+      onClose,
+    ]
   );
 
   // Unnamed-policy warning for creating/saving without a name
@@ -370,13 +377,13 @@ export function PolicyCreationModal({
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!initialPolicy?.id || currentLawEvaluation.status !== 'has-effective-changes') {
+    if (!initialPolicy?.id || currentLawComparison.status !== 'differs-from-current-law') {
       return;
     }
     setIsUpdating(true);
     setAssociationLookupError(null);
 
-    const policyData: Partial<Policy> = { parameters: currentLawEvaluation.parameters };
+    const policyData: Partial<Policy> = { parameters: policyParameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
 
     try {
@@ -404,7 +411,7 @@ export function PolicyCreationModal({
       onPolicyCreated({
         id: newPolicyId,
         label: desiredLabel ?? null,
-        parameters: currentLawEvaluation.parameters,
+        parameters: policyParameters,
       });
       onClose();
     } catch (error) {
@@ -413,7 +420,8 @@ export function PolicyCreationModal({
     }
   }, [
     normalizedPolicyLabel,
-    currentLawEvaluation,
+    policyParameters,
+    currentLawComparison,
     initialPolicy?.id,
     resolveInitialPolicyAssociation,
     countryId,
@@ -720,16 +728,16 @@ export function PolicyCreationModal({
                   {associationLookupError}
                 </Text>
               ) : modificationCount > 0 &&
-                currentLawEvaluation.status === 'metadata-unavailable' &&
+                currentLawComparison.status === 'unavailable' &&
                 !isReadOnly ? (
                 <Text size="sm" style={{ color: colors.text.warning }}>
                   {POLICY_COMPARISON_UNAVAILABLE_MESSAGE}
                 </Text>
               ) : modificationCount > 0 &&
-                currentLawEvaluation.status === 'no-effective-changes' &&
+                currentLawComparison.status === 'matches-current-law' &&
                 !isReadOnly ? (
                 <Text size="sm" style={{ color: colors.text.warning }}>
-                  {NO_EFFECTIVE_POLICY_CHANGES_MESSAGE}
+                  {POLICY_MATCHES_CURRENT_LAW_MESSAGE}
                 </Text>
               ) : null}
             </div>

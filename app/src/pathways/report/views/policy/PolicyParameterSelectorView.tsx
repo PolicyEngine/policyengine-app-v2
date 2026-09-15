@@ -19,9 +19,9 @@ import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import {
-  evaluatePolicyAgainstCurrentLaw,
-  NO_EFFECTIVE_POLICY_CHANGES_MESSAGE,
+  comparePolicyToCurrentLaw,
   POLICY_COMPARISON_UNAVAILABLE_MESSAGE,
+  POLICY_MATCHES_CURRENT_LAW_MESSAGE,
 } from '@/utils/policyCurrentLaw';
 import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
 import Menu from '../../components/policyParameterSelector/Menu';
@@ -51,19 +51,15 @@ export default function PolicyParameterSelectorView({
 
   // Count modifications from policy prop
   const modificationCount = countPolicyModifications(policy);
-  const currentLawEvaluation = evaluatePolicyAgainstCurrentLaw(
-    policy.parameters,
-    metadata,
-    countryId
-  );
-  const reviewDisabled = currentLawEvaluation.status !== 'has-effective-changes';
+  const currentLawComparison = comparePolicyToCurrentLaw(policy.parameters, metadata, countryId);
+  const reviewDisabled = currentLawComparison.status !== 'differs-from-current-law';
   const reviewDisabledReason =
     modificationCount === 0
       ? 'Add at least one parameter change before reviewing the policy.'
-      : currentLawEvaluation.status === 'metadata-unavailable'
+      : currentLawComparison.status === 'unavailable'
         ? POLICY_COMPARISON_UNAVAILABLE_MESSAGE
-        : currentLawEvaluation.status === 'no-effective-changes'
-          ? NO_EFFECTIVE_POLICY_CHANGES_MESSAGE
+        : currentLawComparison.status === 'matches-current-law'
+          ? POLICY_MATCHES_CURRENT_LAW_MESSAGE
           : undefined;
 
   const headerHeight = parseInt(spacing.appShell.header.height, 10);
@@ -158,10 +154,28 @@ export default function PolicyParameterSelectorView({
                 </span>
               </div>
             )}
-            <Button onClick={onNext} disabled={reviewDisabled} title={reviewDisabledReason}>
-              Review my policy
-              <IconChevronRight size={16} />
-            </Button>
+            <div className="tw:flex tw:flex-col tw:items-end tw:gap-xs">
+              {reviewDisabledReason && (
+                <span
+                  id="policy-review-disabled-reason"
+                  role="status"
+                  className="tw:text-sm"
+                  style={{ color: colors.text.warning }}
+                >
+                  {reviewDisabledReason}
+                </span>
+              )}
+              <Button
+                onClick={onNext}
+                disabled={reviewDisabled}
+                aria-describedby={
+                  reviewDisabledReason ? 'policy-review-disabled-reason' : undefined
+                }
+              >
+                Review my policy
+                <IconChevronRight size={16} />
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -172,6 +186,16 @@ export default function PolicyParameterSelectorView({
           className="tw:fixed tw:bottom-0 tw:left-0 tw:right-0 tw:p-md tw:bg-white tw:z-50"
           style={{ borderTop: `1px solid ${colors.border.light}` }}
         >
+          {reviewDisabledReason && (
+            <div
+              id="policy-review-disabled-reason"
+              role="status"
+              className="tw:mb-xs tw:text-xs tw:text-right"
+              style={{ color: colors.text.warning }}
+            >
+              {reviewDisabledReason}
+            </div>
+          )}
           <div className="tw:flex tw:justify-between tw:items-center tw:gap-sm tw:flex-nowrap">
             <Button variant="outline" size="sm" onClick={toggleMobile}>
               <IconChevronUp
@@ -207,7 +231,9 @@ export default function PolicyParameterSelectorView({
                 size="sm"
                 onClick={onNext}
                 disabled={reviewDisabled}
-                title={reviewDisabledReason}
+                aria-describedby={
+                  reviewDisabledReason ? 'policy-review-disabled-reason' : undefined
+                }
               >
                 Review
                 <IconChevronRight size={16} />

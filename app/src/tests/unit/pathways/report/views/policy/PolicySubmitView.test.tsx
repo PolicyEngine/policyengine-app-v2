@@ -213,7 +213,7 @@ describe('PolicySubmitView', () => {
       expect(mockCreatePolicy).not.toHaveBeenCalled();
     });
 
-    test('given matching and changed intervals then submits only the changed interval', () => {
+    test('given matching and changed intervals then submits the original policy', () => {
       render(
         <PolicySubmitView
           policy={POLICY_WITH_PARTIAL_CHANGE}
@@ -228,6 +228,7 @@ describe('PolicySubmitView', () => {
         {
           data: {
             'gov.irs.deductions.itemized.charity.floor.applies': {
+              '2025-01-01.2025-12-31': true,
               '2026-01-01.2026-12-31': false,
             },
           },

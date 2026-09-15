@@ -2,7 +2,7 @@ import type { MetadataState } from '@/types/metadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import type { ValueInterval, ValuesList } from '@/types/subIngredients/valueInterval';
 
-export const NO_EFFECTIVE_POLICY_CHANGES_MESSAGE =
+export const POLICY_MATCHES_CURRENT_LAW_MESSAGE =
   'The selected values match current law, so there are no policy changes to save.';
 export const POLICY_COMPARISON_UNAVAILABLE_MESSAGE =
   'Current-law values are unavailable, so this policy cannot be saved yet.';
@@ -12,10 +12,10 @@ type PolicyMetadataForComparison = Pick<
   'loading' | 'error' | 'currentCountry' | 'currentLawId' | 'version' | 'parameters'
 >;
 
-export type PolicyCurrentLawEvaluation =
-  | { status: 'metadata-unavailable'; parameters: [] }
-  | { status: 'no-effective-changes'; parameters: [] }
-  | { status: 'has-effective-changes'; parameters: Parameter[] };
+export type PolicyCurrentLawComparison =
+  | { status: 'unavailable' }
+  | { status: 'matches-current-law' }
+  | { status: 'differs-from-current-law' };
 
 interface CalendarDate {
   year: number;
@@ -53,31 +53,6 @@ function parseCalendarDate(value: string): CalendarDate | null {
   }
 
   return { year, month, day };
-}
-
-function previousCalendarDate(value: string): string {
-  const parsed = parseCalendarDate(value);
-  if (!parsed) {
-    throw new Error(`Invalid policy date: ${value}`);
-  }
-
-  let { year, month, day } = parsed;
-  if (day > 1) {
-    day -= 1;
-  } else if (month > 1) {
-    month -= 1;
-    day = getDaysInMonth(year, month);
-  } else {
-    year -= 1;
-    month = 12;
-    day = 31;
-  }
-
-  if (year < 0) {
-    throw new Error(`Policy date cannot precede 0000-01-01: ${value}`);
-  }
-
-  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -136,10 +111,10 @@ function getCurrentLawValue(entries: CurrentLawEntry[], date: string): CurrentLa
   return applicableEntry;
 }
 
-function evaluateInterval(
+function intervalMatchesCurrentLaw(
   interval: ValueInterval,
   currentLawEntries: CurrentLawEntry[]
-): ValueInterval[] | null {
+): boolean | null {
   if (
     !parseCalendarDate(interval.startDate) ||
     !parseCalendarDate(interval.endDate) ||
@@ -149,45 +124,34 @@ function evaluateInterval(
     return null;
   }
 
-  const segmentStarts = [
-    interval.startDate,
+  const currentLawValuesInInterval = [
+    getCurrentLawValue(currentLawEntries, interval.startDate)?.value,
     ...currentLawEntries
-      .map((entry) => entry.startDate)
-      .filter((date) => date > interval.startDate && date <= interval.endDate),
+      .filter(
+        (entry) => entry.startDate > interval.startDate && entry.startDate <= interval.endDate
+      )
+      .map((entry) => entry.value),
   ];
 
-  return segmentStarts.flatMap((segmentStart, index) => {
-    const currentLaw = getCurrentLawValue(currentLawEntries, segmentStart);
-    if (!currentLaw || policyValuesEqual(interval.value, currentLaw.value)) {
-      return [];
-    }
-
-    const nextStart = segmentStarts[index + 1];
-    return [
-      {
-        startDate: segmentStart,
-        endDate: nextStart ? previousCalendarDate(nextStart) : interval.endDate,
-        value: interval.value,
-      },
-    ];
-  });
+  return currentLawValuesInInterval.every((value) => policyValuesEqual(interval.value, value));
 }
 
 /**
  * Compare canonical policy parameter intervals with the current-law schedules in model metadata.
- * Matching portions are omitted from the returned parameters; unavailable or malformed metadata
- * prevents submission rather than guessing whether a proposed value changes current law.
+ * The comparison reports a difference when any proposed interval differs from current law at any
+ * covered date. It never rewrites the proposed policy. Unavailable or malformed metadata prevents
+ * submission rather than guessing whether the policy differs from current law.
  */
-export function evaluatePolicyAgainstCurrentLaw(
+export function comparePolicyToCurrentLaw(
   parameters: Parameter[] | undefined,
   metadata: PolicyMetadataForComparison,
   countryId: string
-): PolicyCurrentLawEvaluation {
+): PolicyCurrentLawComparison {
   const parametersWithValues = (parameters ?? []).filter(
     (parameter) => parameter.values.length > 0
   );
   if (parametersWithValues.length === 0) {
-    return { status: 'no-effective-changes', parameters: [] };
+    return { status: 'matches-current-law' };
   }
 
   if (
@@ -197,31 +161,26 @@ export function evaluatePolicyAgainstCurrentLaw(
     !metadata.version ||
     metadata.currentLawId <= 0
   ) {
-    return { status: 'metadata-unavailable', parameters: [] };
+    return { status: 'unavailable' };
   }
 
-  const effectiveParameters: Parameter[] = [];
+  let differsFromCurrentLaw = false;
   for (const parameter of parametersWithValues) {
     const currentLawEntries = getCurrentLawEntries(metadata.parameters[parameter.name]?.values);
     if (!currentLawEntries) {
-      return { status: 'metadata-unavailable', parameters: [] };
+      return { status: 'unavailable' };
     }
 
-    const effectiveIntervals: ValueInterval[] = [];
     for (const interval of parameter.values) {
-      const evaluatedIntervals = evaluateInterval(interval, currentLawEntries);
-      if (!evaluatedIntervals) {
-        return { status: 'metadata-unavailable', parameters: [] };
+      const matchesCurrentLaw = intervalMatchesCurrentLaw(interval, currentLawEntries);
+      if (matchesCurrentLaw === null) {
+        return { status: 'unavailable' };
       }
-      effectiveIntervals.push(...evaluatedIntervals);
-    }
-
-    if (effectiveIntervals.length > 0) {
-      effectiveParameters.push({ ...parameter, values: effectiveIntervals });
+      differsFromCurrentLaw ||= !matchesCurrentLaw;
     }
   }
 
-  return effectiveParameters.length > 0
-    ? { status: 'has-effective-changes', parameters: effectiveParameters }
-    : { status: 'no-effective-changes', parameters: [] };
+  return differsFromCurrentLaw
+    ? { status: 'differs-from-current-law' }
+    : { status: 'matches-current-law' };
 }
