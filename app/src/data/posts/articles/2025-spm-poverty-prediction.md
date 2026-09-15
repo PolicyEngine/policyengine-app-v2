@@ -39,7 +39,7 @@ The full description, with every variable named and linked, is in the [PolicyEng
 
 ## What Census published
 
-*Poverty in the United States: 2025* (P60-290) reports SPM poverty of 13.1 percent for all people, up 0.1 point from 2024; 13.4 percent for children, down 0.1; and 15.4 percent for people 65 and over, up 0.2. By housing tenure, the renter rate rose 0.8 points to 24.0 percent, the rate for owners with a mortgage fell 0.2 to 6.0, and the rate for owners without a mortgage was unchanged at 11.9.
+*Poverty in the United States: 2025* (P60-290) reports SPM poverty of 13.1 percent for all people, up 0.1 point from 2024; 13.4 percent for children, down 0.1; and 15.4 percent for people 65 and over, up 0.2. In numbers, 44.4 million people and 9.7 million children were below the SPM threshold. The report re-bases 2024 to Vintage 2025 population controls, which puts its 2024 child rate at 13.5 percent rather than the 13.4 we anchored on; the changes below are the ones Census printed. By housing tenure, the renter rate rose 0.8 points to 24.0 percent, the rate for owners with a mortgage fell 0.2 to 6.0, and the rate for owners without a mortgage was unchanged at 11.9.
 
 | Group | Census change, pp | Registered prediction | Miss | Prior model | Miss |
 | --- | ---: | ---: | ---: | ---: | ---: |
