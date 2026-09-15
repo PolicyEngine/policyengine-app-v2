@@ -1,6 +1,6 @@
 Every SPM poverty rate starts with a threshold: the amount a family of a given size and housing situation needs, in its part of the country, in a given year. Census publishes the rates each September. BLS publishes the national thresholds a few weeks earlier, and the local adjustments arrive with the microdata. Anyone who wants a threshold for a year Census has not reached yet has had to guess.
 
-[spm-calculator 1.0](https://pypi.org/project/spm-calculator/1.0.0/) is our answer to that. It computes a Supplemental Poverty Measure threshold for any family composition, housing tenure, and metro or nonmetro area, for 2022 through 2035. Through 2025 it uses the published BLS values. Beyond that it projects them by the method BLS and Census use, advancing the same data windows they advance. The [calculator app](https://policyengine.org/us/spm-calculator) runs the same artifact in the browser.
+[spm-calculator 1.0](https://pypi.org/project/spm-calculator/) is our answer to that. It computes a Supplemental Poverty Measure threshold for any family composition, housing tenure, and metro or nonmetro area, for 2022 through 2035. Through 2025 it uses the published BLS values. Beyond that it projects them by the method BLS and Census use, advancing the same data windows they advance. The [calculator app](https://policyengine.org/us/spm-calculator) runs the same artifact in the browser.
 
 ## What a threshold is made of
 
@@ -24,7 +24,7 @@ The app also lost options. Earlier versions offered county and congressional-dis
 
 ## What it does not do
 
-The calculator computes thresholds. It does not compute resources, so it does not produce a poverty rate; that is the job of the tax and benefit model, and our [prediction for Tuesday's 2025 rate](/us/research/2025-spm-poverty-prediction) explains how the two fit together. It validates against BLS's published cells rather than replicating BLS's code. Its forecasts are conditional on the CBO price path and on real spending following one of the two scenarios, and every projected number carries that label.
+The calculator computes thresholds. It does not compute resources, so it does not produce a poverty rate; that is the job of the tax and benefit model, and our [prediction for the 2025 rate](/us/research/2025-spm-poverty-prediction) explains how the two fit together. It validates against BLS's published cells rather than replicating BLS's code. Its forecasts are conditional on the CBO price path and on real spending following one of the two scenarios, and every projected number carries that label.
 
 ## Using it
 

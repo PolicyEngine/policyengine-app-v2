@@ -1,4 +1,4 @@
-On Tuesday, September 15, the Census Bureau publishes poverty rates for 2025. Our prediction for the Supplemental Poverty Measure is 13.2 percent of people, up from 13.0 percent in 2024. For children we predict 14.3 percent, up from 13.4; for people 65 and over, 14.6 percent, down from 15.1.
+At 10 am ET on September 15, the Census Bureau publishes poverty rates for 2025. Our prediction for the Supplemental Poverty Measure is 13.2 percent of people, up from 13.0 percent in 2024. For children we predict 14.3 percent, up from 13.4; for people 65 and over, 14.6 percent, down from 15.1.
 
 We wrote the numbers down before the release. The prediction file, its hash, and an OpenTimestamps proof are in the [spm-threshold-paper repository](https://github.com/PolicyEngine/spm-threshold-paper/blob/master/data/predictions/2025-spm-poverty-rates-2026-09-11.json). If it misses, it stays there.
 
@@ -12,11 +12,11 @@ The prediction is the Census 2024 rate plus PolicyEngine's modeled change from 2
 | Under 18 | 13.4 | +0.86 | 14.3 |
 | 65 and over | 15.1 | −0.52 | 14.6 |
 
-The 2024 anchors are the corrected series Census published in August after BLS revised the thresholds. On the original series the anchors are 12.9, 13.4 and 15.0, and the predictions round to 13.1, 14.3 and 14.5.
+The 2024 anchors are the corrected series in Table 3 of Census's [August working paper](https://www.census.gov/library/working-papers/2026/demo/sehsd-wp2026-17.html), issued after BLS revised the thresholds. On the original series the anchors are 12.9, 13.4 and 15.0, and the predictions round to 13.1, 14.3 and 14.5.
 
-The model in production until this week would have predicted a fall, to 12.5 percent. It aged the 2024 thresholds by 2.6 percent CPI-U inflation. The thresholds BLS published in August rose 4.4 to 6.3 percent, and the new [spm-calculator](/us/research/introducing-spm-calculator) uses them directly. Most of the difference between the two predictions is that threshold growth.
+The model serving policyengine.org today would have predicted a fall, to 12.5 percent. It ages the 2024 thresholds by 2.6 percent CPI-U inflation. The thresholds BLS published in August rose 4.4 to 6.3 percent, and the new [spm-calculator](/us/research/introducing-spm-calculator) uses them directly.
 
-The modeled changes come from development runs on policyengine-core 3.30.1. A rerun on the exact runtime we are shipping is in progress as this posts; the prediction file commits us to adding a dated amendment, never an edit, if any group's change moves by 0.05 points or more.
+The modeled changes come from development runs on policyengine-core 3.30.1. A rerun before the release on the shipping runtime, policyengine-us 2.2.1 with the certified population release, reproduced the all-people and child changes to within 0.001 points. The prediction file commits us to a dated amendment, never an edit, if any group's change moves by 0.05 points or more.
 
 ## How PolicyEngine calculates SPM poverty
 
@@ -37,6 +37,6 @@ The full description, with every variable named and linked, is in the [PolicyEng
 - **Levels.** The model's own 2025 level is 13.2 percent for all people, 16.6 for children and 10.9 for seniors. The child and senior levels sit far from Census, in opposite directions, which is why we report changes. Those gaps are open questions for us, not corrections to Census.
 - **Local thresholds for 2025** are projections until Census publishes the geography.
 
-## What Tuesday tells us
+## What the release tells us
 
-Census will publish the 2025 rate and a revised 2024 rate on the corrected thresholds. We will grade the prediction against the published change for each group, add the result to the [paper repository](https://github.com/PolicyEngine/spm-threshold-paper), and write up what the misses point to.
+Census publishes the 2025 rate and the 2024 rate on the corrected thresholds. We will grade the prediction against the published change for each group, add the result to the [paper repository](https://github.com/PolicyEngine/spm-threshold-paper), and write up what the misses point to.

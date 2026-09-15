@@ -1,8 +1,8 @@
 [
   {
-    "title": "Our prediction for Tuesday's 2025 poverty numbers",
+    "title": "Our prediction for the 2025 poverty numbers",
     "description": "PolicyEngine predicts a 2025 SPM poverty rate of 13.2 percent, up from 13.0, with 14.3 for children and 14.6 for people 65 and over. How the model builds the number, and what it does not yet do.",
-    "date": "2026-09-11",
+    "date": "2026-09-15",
     "tags": [
       "us",
       "technical",
@@ -15,9 +15,9 @@
     "image": "2025-spm-poverty-prediction.webp"
   },
   {
-    "title": "Introducing spm-calculator 1.0: SPM thresholds for any family, anywhere, through 2035",
+    "title": "Introducing spm-calculator 1.0: SPM thresholds for any family, any US area, 2022 through 2035",
     "description": "The rebuilt calculator uses BLS's corrected thresholds through 2025 and projects later years by advancing the same expenditure and rent windows BLS and Census use. Its August nowcast of the 2025 thresholds missed by 1.17 percent; CPI aging would have missed by 2.58.",
-    "date": "2026-09-11",
+    "date": "2026-09-15",
     "tags": [
       "us",
       "technical",
