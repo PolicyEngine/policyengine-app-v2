@@ -1,4 +1,4 @@
-At 10 am ET on September 15, the Census Bureau publishes poverty rates for 2025. Our prediction for the Supplemental Poverty Measure is 13.2 percent of people, up from 13.0 percent in 2024. For children we predict 14.3 percent, up from 13.4; for people 65 and over, 14.6 percent, down from 15.1.
+At 10 am ET on September 15, the Census Bureau published poverty rates for 2025. Our prediction, registered September 11, was that Supplemental Poverty Measure poverty would rise 0.2 points to 13.2 percent of people, rise 0.9 points to 14.3 percent for children, and fall 0.5 points to 14.6 percent for people 65 and over. Census reported 13.1 percent (up 0.1), 13.4 percent for children (down 0.1), and 15.4 percent for people 65 and over (up 0.2). The child prediction missed by a point. The results section at the end grades both this prediction and the prior model's.
 
 We wrote the numbers down before the release. The prediction file, its hash, and an OpenTimestamps proof are in the [spm-threshold-paper repository](https://github.com/PolicyEngine/spm-threshold-paper/blob/master/data/predictions/2025-spm-poverty-rates-2026-09-11.json). If it misses, it stays there.
 
@@ -37,6 +37,14 @@ The full description, with every variable named and linked, is in the [PolicyEng
 - **Levels.** The model's own 2025 level is 13.2 percent for all people, 16.6 for children and 10.9 for seniors. The child and senior levels sit far from Census, in opposite directions, which is why we report changes. Those gaps are open questions for us, not corrections to Census.
 - **Local thresholds for 2025** are projections until Census publishes the geography.
 
-## What the release tells us
+## What Census published
 
-Census publishes the 2025 rate and the 2024 rate on the corrected thresholds. We will grade the prediction against the published change for each group, add the result to the [paper repository](https://github.com/PolicyEngine/spm-threshold-paper), and write up what the misses point to.
+*Poverty in the United States: 2025* (P60-290) reports SPM poverty of 13.1 percent for all people, up 0.1 point from 2024; 13.4 percent for children, down 0.1; and 15.4 percent for people 65 and over, up 0.2. By housing tenure, the renter rate rose 0.8 points to 24.0 percent, the rate for owners with a mortgage fell 0.2 to 6.0, and the rate for owners without a mortgage was unchanged at 11.9.
+
+| Group | Census change, pp | Registered prediction | Miss | Prior model | Miss |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| All people | +0.1 | +0.2 | +0.1 | −0.5 | −0.6 |
+| Under 18 | −0.1 | +0.9 | +1.0 | −0.2 | −0.1 |
+| 65 and over | +0.2 | −0.5 | −0.7 | −1.2 | −1.4 |
+
+The registered prediction was closer than the prior model for all people and for people 65 and over. The prior model was closer for children, where the registered change missed by a full point. The renter rate rose in line with the threshold growth for renters; the child rate did not, so the miss sits in the resources of families with children, not in the thresholds. The grade goes into the [paper repository](https://github.com/PolicyEngine/spm-threshold-paper) as a dated record, and the child miss is the next thing to take apart.
