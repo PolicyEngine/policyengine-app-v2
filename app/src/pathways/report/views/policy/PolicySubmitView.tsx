@@ -52,7 +52,7 @@ export default function PolicySubmitView({
   };
 
   function handleSubmit() {
-    if (startedEmpty || isDupeOfCurrentLaw) {
+    if (isDupeOfCurrentLaw) {
       return;
     }
 
@@ -105,7 +105,7 @@ export default function PolicySubmitView({
       submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      submitButtonDisabled={startedEmpty || isDupeOfCurrentLaw}
+      submitButtonDisabled={isDupeOfCurrentLaw}
       warningMessage={
         startedEmpty
           ? 'Add at least one parameter change to create a policy.'

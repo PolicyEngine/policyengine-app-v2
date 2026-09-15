@@ -131,8 +131,8 @@ function intervalMatchesCurrentLaw(
 
 /**
  * Compare canonical policy parameter intervals with the current-law schedules in model metadata.
- * Returns true only when the policy contains proposed values and every proposed interval matches
- * current law throughout its covered dates. The proposed policy is never rewritten.
+ * Returns true when the policy has no proposed values or every proposed interval matches current
+ * law throughout its covered dates. The proposed policy is never rewritten.
  */
 export function isPolicyDuplicateOfCurrentLaw(
   parameters: Parameter[] | undefined,
@@ -143,7 +143,7 @@ export function isPolicyDuplicateOfCurrentLaw(
     (parameter) => parameter.values.length > 0
   );
   if (parametersWithValues.length === 0) {
-    return false;
+    return true;
   }
 
   if (

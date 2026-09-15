@@ -51,7 +51,6 @@ export default function PolicyParameterSelectorView({
   // Count modifications from policy prop
   const modificationCount = countPolicyModifications(policy);
   const isDupeOfCurrentLaw = isPolicyDuplicateOfCurrentLaw(policy.parameters, metadata, countryId);
-  const reviewDisabled = modificationCount === 0 || isDupeOfCurrentLaw;
   const reviewDisabledReason =
     modificationCount === 0
       ? 'Add at least one parameter change before reviewing the policy.'
@@ -164,7 +163,7 @@ export default function PolicyParameterSelectorView({
               )}
               <Button
                 onClick={onNext}
-                disabled={reviewDisabled}
+                disabled={isDupeOfCurrentLaw}
                 aria-describedby={
                   reviewDisabledReason ? 'policy-review-disabled-reason' : undefined
                 }
@@ -227,7 +226,7 @@ export default function PolicyParameterSelectorView({
               <Button
                 size="sm"
                 onClick={onNext}
-                disabled={reviewDisabled}
+                disabled={isDupeOfCurrentLaw}
                 aria-describedby={
                   reviewDisabledReason ? 'policy-review-disabled-reason' : undefined
                 }

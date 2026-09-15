@@ -317,7 +317,7 @@ export function PolicyCreationModal({
   // Handle policy creation
   const handleCreatePolicy = useCallback(
     async (labelOverride?: string | null) => {
-      if (modificationCount === 0 || isDupeOfCurrentLaw) {
+      if (isDupeOfCurrentLaw) {
         return;
       }
 
@@ -345,7 +345,6 @@ export function PolicyCreationModal({
     [
       normalizedPolicyLabel,
       policyParameters,
-      modificationCount,
       isDupeOfCurrentLaw,
       createPolicyWithLabel,
       onPolicyCreated,
@@ -376,7 +375,7 @@ export function PolicyCreationModal({
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!initialPolicy?.id || modificationCount === 0 || isDupeOfCurrentLaw) {
+    if (!initialPolicy?.id || isDupeOfCurrentLaw) {
       return;
     }
     setIsUpdating(true);
@@ -420,7 +419,6 @@ export function PolicyCreationModal({
   }, [
     normalizedPolicyLabel,
     policyParameters,
-    modificationCount,
     isDupeOfCurrentLaw,
     initialPolicy?.id,
     resolveInitialPolicyAssociation,
@@ -737,7 +735,7 @@ export function PolicyCreationModal({
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
                   onClick={() => requestSaveAction('create')}
-                  disabled={isCreating || modificationCount === 0 || isDupeOfCurrentLaw}
+                  disabled={isCreating || isDupeOfCurrentLaw}
                 >
                   {isCreating && <Spinner size="sm" />}
                   Create policy
@@ -759,13 +757,13 @@ export function PolicyCreationModal({
                     label="Update existing policy"
                     onClick={() => requestSaveAction('update-existing')}
                     loading={isUpdating}
-                    disabled={isCreating || modificationCount === 0 || isDupeOfCurrentLaw}
+                    disabled={isCreating || isDupeOfCurrentLaw}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
                     onClick={() => requestSaveAction('save-as-new')}
                     loading={isCreating}
-                    disabled={isUpdating || modificationCount === 0 || isDupeOfCurrentLaw}
+                    disabled={isUpdating || isDupeOfCurrentLaw}
                   />
                 </>
               )}

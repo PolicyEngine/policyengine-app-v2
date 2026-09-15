@@ -8,6 +8,12 @@ import {
 import { isPolicyDuplicateOfCurrentLaw } from '@/utils/policyCurrentLaw';
 
 describe('isPolicyDuplicateOfCurrentLaw', () => {
+  test('given a policy has no modifications then returns true', () => {
+    const result = isPolicyDuplicateOfCurrentLaw([], READY_POLICY_METADATA, 'us');
+
+    expect(result).toBe(true);
+  });
+
   test('given an unchanged default value then reports that the policy matches current law', () => {
     const result = isPolicyDuplicateOfCurrentLaw(
       [createParameter(TEST_PARAMETER_NAMES.zeroAmount, '2026-01-01', '2100-12-31', 0)],
