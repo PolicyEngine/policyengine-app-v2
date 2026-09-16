@@ -1,10 +1,46 @@
 import { describe, expect, it } from 'vitest';
+import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
 import { HouseholdReportViewModel } from '@/pages/report-output/HouseholdReportViewModel';
 import { mockHouseholdResult } from '@/tests/fixtures/api/householdCalculationMocks';
+import { CORRECTIVE_SPM_ERRORS, FAILED_SPM_REPORT } from '@/tests/fixtures/spm/reportErrorMocks';
+import { NATIONAL_SPM, SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 
 describe('HouseholdReportViewModel', () => {
+  it.each([undefined, null, { stale: true }])(
+    'given a failed simulation with output %j and another pending then keeps the failure visible without retrying',
+    (output) => {
+      const simulation: Simulation = {
+        id: '101',
+        label: null,
+        isCreated: true,
+        status: 'error',
+        output,
+        errorCode: CORRECTIVE_SPM_ERRORS[0].code,
+        errorMessage: CORRECTIVE_SPM_ERRORS[0].message,
+      };
+      const viewModel = new HouseholdReportViewModel(
+        FAILED_SPM_REPORT,
+        [simulation, { id: '102', label: null, isCreated: true, status: 'pending' }],
+        undefined,
+        undefined
+      );
+
+      expect(viewModel.simulationStates).toEqual({
+        isPending: true,
+        isComplete: false,
+        isError: true,
+      });
+      expect(
+        viewModel.shouldStartCalculations({
+          isCalculating: () => false,
+        } as unknown as HouseholdReportOrchestrator)
+      ).toBe(false);
+      expect(viewModel.getErrorMessage()).toContain(CORRECTIVE_SPM_ERRORS[0].message);
+    }
+  );
+
   it('unwraps persisted household calculation wrappers for report output', () => {
     const report: Report = {
       id: 'report-1',
@@ -25,6 +61,8 @@ describe('HouseholdReportViewModel', () => {
         status: 'complete',
         output: {
           result: mockHouseholdResult.householdData,
+          spm_config: NATIONAL_SPM,
+          spm_provenance: SPM_RECEIPT,
           policyengine_bundle: {
             policyengine_version: '3.4.1',
           },
@@ -39,6 +77,8 @@ describe('HouseholdReportViewModel', () => {
         id: 'sim-1',
         countryId: 'us',
         householdData: mockHouseholdResult.householdData,
+        spmConfig: NATIONAL_SPM,
+        spmProvenance: SPM_RECEIPT,
       },
     ]);
   });

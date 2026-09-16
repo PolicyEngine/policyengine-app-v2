@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { BillValidation } from '@/api/billFeed';
+import { describeDepth, RING_LABELS } from '@/components/flagship/CalibrationMatches';
 import { Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
   claimsFromBillValidation,
-  fetchModelValidation,
   METRIC_LABELS,
   ModelValidationRow,
   PROGRAM_LABELS,
   SCORECARD_COMPARISON_URL,
   SCORECARD_METHOD_URL,
   SCORECARD_URL,
-  scorecardProgramsForPaths,
+  ScorecardMatches,
+  scorecardMatchesForPaths,
 } from '@/libs/flagship/modelValidation';
 
 /**
@@ -235,12 +236,15 @@ export function BillValidationSection({
   );
 }
 
-export interface ModelTrackRecord {
-  programs: string[];
-  /** True once the programs have been resolved from the paths. */
-  resolved: boolean;
-  /** undefined while loading, null when unavailable */
-  rows: ModelValidationRow[] | null | undefined;
+/**
+ * The scorecard matches for a report: `undefined` while loading, `null`
+ * when the map or the scorecard is unavailable.
+ */
+export type ModelTrackRecord = ScorecardMatches | null | undefined;
+
+/** The program ids of a resolved track record, for the pin and the run's stages. */
+export function trackRecordPrograms(trackRecord: ModelTrackRecord): string[] | null | undefined {
+  return trackRecord ? trackRecord.programs.map((match) => match.program) : trackRecord;
 }
 
 /**
@@ -250,32 +254,21 @@ export interface ModelTrackRecord {
  * click (inactive tab panels are unmounted).
  */
 export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
-  const [programs, setPrograms] = useState<string[]>([]);
-  const [resolved, setResolved] = useState(false);
-  const [rows, setRows] = useState<ModelValidationRow[] | null | undefined>(undefined);
+  const [trackRecord, setTrackRecord] = useState<ModelTrackRecord>(undefined);
   const pathsKey = paths.join('\n');
 
   useEffect(() => {
     let cancelled = false;
     const resolvedPaths = pathsKey ? pathsKey.split('\n') : [];
     if (resolvedPaths.length === 0) {
-      setPrograms([]);
-      setResolved(true);
+      setTrackRecord({ modelVersion: '', reachedCount: 0, programs: [], rows: [] });
       return;
     }
-    // The traced dependency map resolves paths to the output variables
-    // they move; the scorecard rows follow once the programs are known.
-    scorecardProgramsForPaths(resolvedPaths).then(async (resolved) => {
-      if (cancelled) {
-        return;
-      }
-      setPrograms(resolved);
-      setResolved(true);
-      if (resolved.length > 0) {
-        const result = await fetchModelValidation(resolved);
-        if (!cancelled) {
-          setRows(result);
-        }
+    // The traced dependency map resolves paths to the variables they
+    // move; the scorecard rows computed from those variables follow.
+    scorecardMatchesForPaths(resolvedPaths).then((result) => {
+      if (!cancelled) {
+        setTrackRecord(result);
       }
     });
     return () => {
@@ -283,15 +276,11 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
     };
   }, [pathsKey]);
 
-  return { programs, resolved, rows };
+  return trackRecord;
 }
 
 export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTrackRecord }) {
-  const { programs, rows } = trackRecord;
-  if (programs.length === 0) {
-    return null;
-  }
-  if (rows === null) {
+  if (trackRecord === null) {
     return (
       <SectionCard>
         <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
@@ -309,7 +298,7 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
       </SectionCard>
     );
   }
-  if (rows === undefined) {
+  if (trackRecord === undefined) {
     return (
       <SectionCard>
         <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -318,6 +307,30 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
             Loading external comparisons…
           </Text>
         </Stack>
+      </SectionCard>
+    );
+  }
+  const { programs, rows } = trackRecord;
+  if (programs.length === 0) {
+    if (trackRecord.reachedCount === 0) {
+      return null;
+    }
+    // Silence would read as "fine". State credits are the usual case: the
+    // scorecard measures federal programs and poverty, not state credits.
+    return (
+      <SectionCard>
+        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          None of the {trackRecord.reachedCount} variables this reform moves is measured by the{' '}
+          <a
+            href={SCORECARD_COMPARISON_URL}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: colors.primary[700] }}
+          >
+            PolicyEngine scorecard
+          </a>
+          , so there is no external comparison for the programs behind this estimate.
+        </Text>
       </SectionCard>
     );
   }
@@ -334,12 +347,16 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
   return (
     <SectionCard>
       <SectionTitle>
-        Program context — {programs.map((p) => PROGRAM_LABELS[p] ?? p).join(', ')}
+        Program context —{' '}
+        {programs.map((match) => PROGRAM_LABELS[match.program] ?? match.program).join(', ')}
       </SectionTitle>
       <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        How the model&apos;s baseline representation of the programs this bill touches compares with
-        independent external measurement. This is credibility context for the ingredients behind the
-        estimate — not a check of this bill&apos;s numbers. From the{' '}
+        How the model&apos;s baseline representation of the programs this reform moves compares with
+        independent external measurement, nearest program first. This is credibility context for the
+        ingredients behind the estimate — not a check of this reform&apos;s numbers. Matched through
+        the model
+        {trackRecord.modelVersion ? ` at policyengine-us ${trackRecord.modelVersion}` : ''}. From
+        the{' '}
         <a
           href={SCORECARD_COMPARISON_URL}
           target="_blank"
@@ -395,41 +412,76 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={`${row.program}-${row.metric}`}>
-                <td style={cellStyle}>
-                  {PROGRAM_LABELS[row.program] ?? row.program} ·{' '}
-                  {METRIC_LABELS[row.metric] ?? row.metric.replaceAll('_', ' ')}
-                </td>
-                <td style={cellStyle}>
-                  {row.sourceUrl ? (
-                    <a
-                      href={row.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={row.sourceName ?? row.source}
-                      style={{ color: colors.primary[700] }}
-                    >
-                      {metricValue(row, row.externalValue)}
-                    </a>
-                  ) : (
-                    metricValue(row, row.externalValue)
-                  )}
-                </td>
-                <td style={cellStyle}>{metricValue(row, row.peValue)}</td>
-                <td style={cellStyle}>{row.ratio.toFixed(2)}×</td>
-                <td style={{ ...cellStyle, fontSize: typography.fontSize.xs }}>
-                  <span
-                    style={{ color: row.heldOut ? colors.primary[700] : colors.text.secondary }}
-                  >
-                    {row.heldOut ? 'held out' : 'calibrated'}
-                  </span>
-                </td>
-              </tr>
+            {programs.map((match) => (
+              <ProgramRows
+                key={match.program}
+                match={match}
+                rows={rows.filter((row) => row.program === match.program)}
+              />
             ))}
           </tbody>
         </table>
       </div>
     </SectionCard>
+  );
+}
+
+/**
+ * One program's comparison rows under a heading that says how near the
+ * reform the program sits, in the calibration card's words.
+ */
+function ProgramRows({
+  match,
+  rows,
+}: {
+  match: ScorecardMatches['programs'][number];
+  rows: ModelValidationRow[];
+}) {
+  return (
+    <>
+      <tr>
+        <td
+          colSpan={5}
+          style={{
+            ...cellStyle,
+            paddingTop: spacing.sm,
+            fontWeight: typography.fontWeight.medium,
+          }}
+          title={`Computed from ${match.variable.replaceAll('_', ' ')}`}
+        >
+          {PROGRAM_LABELS[match.program] ?? match.program}{' '}
+          <span style={{ color: colors.text.secondary, fontWeight: typography.fontWeight.normal }}>
+            · {RING_LABELS[match.ring]} · {describeDepth(match.depth)}
+          </span>
+        </td>
+      </tr>
+      {rows.map((row) => (
+        <tr key={`${row.program}-${row.metric}`}>
+          <td style={cellStyle}>{METRIC_LABELS[row.metric] ?? row.metric.replaceAll('_', ' ')}</td>
+          <td style={cellStyle}>
+            {row.sourceUrl ? (
+              <a
+                href={row.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                title={row.sourceName ?? row.source}
+                style={{ color: colors.primary[700] }}
+              >
+                {metricValue(row, row.externalValue)}
+              </a>
+            ) : (
+              metricValue(row, row.externalValue)
+            )}
+          </td>
+          <td style={cellStyle}>{metricValue(row, row.peValue)}</td>
+          <td style={cellStyle}>{row.ratio.toFixed(2)}×</td>
+          <td style={{ ...cellStyle, fontSize: typography.fontSize.xs }}>
+            <span style={{ color: row.heldOut ? colors.primary[700] : colors.text.secondary }}>
+              {row.heldOut ? 'held out' : 'calibrated'}
+            </span>
+          </td>
+        </tr>
+      ))}
+    </>
   );
 }

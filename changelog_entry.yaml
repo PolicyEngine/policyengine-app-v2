@@ -1,3 +1,4 @@
+- Prevent policy creation and updates when proposed parameter values only reproduce current law
 - Name states in the parameter search filter, explain the contributed filter, and stop long parameter values from squeezing result labels
 - Lead the build page with search, fold the policy tree behind a toggle, and open a search result's folder in the tree
 - Let the draft reform panel fold away
@@ -18,4 +19,10 @@
 - Say what a calibration row's distance from the reform means in words instead of counting hops
 - Use sentence case consistently across interface copy
 - Use the PolicyEngine font in compact society-wide charts
+- Require an explicit national or county SPM choice when the API supports canonical thresholds, preserve it for saved households and earnings variations, and show calculation provenance in report methodology
+- Wait for current-country model information before saving or calculating households, show corrective SPM save and saved-report errors, reproduce each simulation's settings separately, and label point and earnings-variation methodology receipts
+- Preserve canonical household receipts and terminal errors from report creation and modification, share calculation ownership through saving, pin recorded reproduction runtimes, and guide unsupported-year corrections
+- Make report-year corrections save new household inputs for the selected period without aging, inflation adjustments, or changes to historical households and policy dates
+- Block reports that mix households and geographies before saving, retain corrective SPM errors in earnings and marginal tax rate views without automatic retries, and show invalid saved reports as load errors
+- Match a report's scorecard context by the model variables the reform reaches, the same walk as calibration, and say how near the reform each program sits; SPM poverty joins the programs the scorecard can measure
 - Keep expanded policy parameter folders and their children visible in the sidebar

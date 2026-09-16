@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
+import { RESOLVED_LEGACY_METADATA } from '@/tests/fixtures/spm/spmMocks';
 import {
   mockBoolMetadata,
   mockEmptyHousehold,
@@ -538,7 +539,8 @@ describe('HouseholdValidation', () => {
       const result = HouseholdValidation.isReadyForSimulation(
         mockValidUSHousehold,
         VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
+        VALIDATION_YEARS.DEFAULT,
+        RESOLVED_LEGACY_METADATA
       );
 
       // Then
@@ -550,7 +552,8 @@ describe('HouseholdValidation', () => {
       const result = HouseholdValidation.isReadyForSimulation(
         mockEmptyHousehold,
         VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
+        VALIDATION_YEARS.DEFAULT,
+        RESOLVED_LEGACY_METADATA
       );
 
       // Then
@@ -563,7 +566,8 @@ describe('HouseholdValidation', () => {
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdMissingAge,
         VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
+        VALIDATION_YEARS.DEFAULT,
+        RESOLVED_LEGACY_METADATA
       );
 
       // Then

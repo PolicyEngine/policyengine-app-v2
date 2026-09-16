@@ -254,6 +254,7 @@ describe('ResultPersister', () => {
       queryClient.setQueryData(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1), {
         status: 'complete',
         result: result1,
+        persisted: true,
         metadata: {
           calcId: TEST_CALC_IDS.SIM_1,
           targetType: 'simulation',
@@ -280,7 +281,7 @@ describe('ResultPersister', () => {
         expect.objectContaining({
           id: TEST_CALC_IDS.REPORT_123,
           status: 'complete',
-          output: [result1, result2],
+          output: { [TEST_CALC_IDS.SIM_1]: result1, [TEST_CALC_IDS.SIM_2]: result2 },
         })
       );
     });

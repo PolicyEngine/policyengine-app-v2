@@ -63,7 +63,7 @@ describe('CalcOrchestrator', () => {
         TEST_COUNTRIES.US,
         TEST_YEARS.DEFAULT
       );
-      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1, 'simulation');
     });
 
     it('given household calculation then sets computing status before API call', async () => {
@@ -108,7 +108,7 @@ describe('CalcOrchestrator', () => {
       await orchestrator.startCalculation(config);
 
       // Then - Should cleanup immediately, not start polling
-      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1, 'simulation');
     });
   });
 

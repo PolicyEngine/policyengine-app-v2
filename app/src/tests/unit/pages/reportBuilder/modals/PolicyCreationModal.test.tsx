@@ -12,8 +12,19 @@ const MODAL_TEST_TIMEOUT_MS = 20_000;
 const mockReduxState = {
   metadata: {
     parameterTree: null,
-    parameters: {},
+    parameters: {
+      'gov.test.parameter': {
+        label: 'Test parameter',
+        type: 'parameter',
+        parameter: 'gov.test.parameter',
+        values: { '0000-01-01': 0 },
+      },
+    },
     loading: false,
+    error: null,
+    currentCountry: 'us',
+    currentLawId: 1,
+    version: 'test-version',
     economyOptions: {
       time_period: [{ name: '2024', label: '2024' }],
     },
@@ -76,6 +87,31 @@ const modifiedPolicy: PolicyStateProps = {
     {
       name: 'gov.test.parameter',
       values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 1 }],
+    },
+  ],
+};
+
+const currentLawPolicy: PolicyStateProps = {
+  id: 'pol-123',
+  label: 'Current-law duplicate',
+  parameters: [
+    {
+      name: 'gov.test.parameter',
+      values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 0 }],
+    },
+  ],
+};
+
+const partlyChangedPolicy: PolicyStateProps = {
+  id: 'pol-123',
+  label: 'Partly changed policy',
+  parameters: [
+    {
+      name: 'gov.test.parameter',
+      values: [
+        { startDate: '2024-01-01', endDate: '2024-12-31', value: 0 },
+        { startDate: '2025-01-01', endDate: '2025-12-31', value: 1 },
+      ],
     },
   ],
 };
@@ -245,6 +281,85 @@ describe('PolicyCreationModal', () => {
 
       await waitFor(() => {
         expect(mockCreatePolicyWithLabel).toHaveBeenCalledWith(expect.any(Object), 'Test policy');
+      });
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given a policy matches current law then disables every save action and explains why',
+    () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={currentLawPolicy}
+          initialEditorMode="edit"
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /update existing policy/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /save as new policy/i })).toBeDisabled();
+      expect(screen.getByText(/selected values match current law/i)).toBeInTheDocument();
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given a new policy matches current law then disables creation without calling the API',
+    () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={currentLawPolicy}
+          initialEditorMode="create"
+        />
+      );
+
+      const createButton = screen.getByRole('button', { name: /create policy/i });
+      expect(createButton).toBeDisabled();
+      fireEvent.click(createButton);
+      expect(mockCreatePolicyWithLabel).not.toHaveBeenCalled();
+    },
+    MODAL_TEST_TIMEOUT_MS
+  );
+
+  test(
+    'given a policy contains matching and changed intervals then submits the original policy',
+    async () => {
+      render(
+        <PolicyCreationModal
+          isOpen
+          onClose={vi.fn()}
+          onPolicyCreated={vi.fn()}
+          reportYear="2024"
+          simulationIndex={0}
+          initialPolicy={partlyChangedPolicy}
+          initialEditorMode="create"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /create policy/i }));
+
+      await waitFor(() => {
+        expect(mockCreatePolicyWithLabel).toHaveBeenCalledWith(
+          {
+            data: {
+              'gov.test.parameter': {
+                '2024-01-01.2024-12-31': 0,
+                '2025-01-01.2025-12-31': 1,
+              },
+            },
+          },
+          'Partly changed policy'
+        );
       });
     },
     MODAL_TEST_TIMEOUT_MS

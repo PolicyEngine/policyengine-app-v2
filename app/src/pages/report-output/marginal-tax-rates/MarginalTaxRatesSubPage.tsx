@@ -16,6 +16,8 @@ import {
 } from 'recharts';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
+import HouseholdVariationError from '@/components/household/HouseholdVariationError';
+import SPMMethodologyFootnote from '@/components/household/SPMMethodologyFootnote';
 import { Group, RadioGroup, RadioGroupItem, Spinner, Stack, Text } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -274,28 +276,20 @@ export default function MarginalTaxRatesSubPage({
     );
   }
 
+  if (baselineError) {
+    return <HouseholdVariationError error={baselineError} simulationRole="baseline" />;
+  }
+
+  if (reform && reformError) {
+    return <HouseholdVariationError error={reformError} simulationRole="reform" />;
+  }
+
   if (isLoading) {
     return (
       <Group className="tw:gap-sm tw:items-center">
         <Spinner size="sm" />
         <Text className="tw:text-sm">Loading marginal tax rates...</Text>
       </Group>
-    );
-  }
-
-  if (baselineError) {
-    return (
-      <Stack gap="md">
-        <Text c="red">Error loading baseline variation: {baselineError.message}</Text>
-      </Stack>
-    );
-  }
-
-  if (reform && reformError) {
-    return (
-      <Stack gap="md">
-        <Text c="red">Error loading reform variation: {reformError.message}</Text>
-      </Stack>
     );
   }
 
@@ -496,6 +490,10 @@ export default function MarginalTaxRatesSubPage({
         {renderChart()}
         <ChartWatermark />
       </div>
+      <SPMMethodologyFootnote
+        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+        context="variation"
+      />
     </Stack>
   );
 }

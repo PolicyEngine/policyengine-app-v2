@@ -1,3 +1,4 @@
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { CalcError } from './CalcError';
 import { CalcMetadata } from './CalcMetadata';
@@ -6,7 +7,10 @@ import type { HouseholdCalculationData } from './household';
 /**
  * Union type for all possible calculation results
  */
-export type CalcResult = SocietyWideReportOutput | HouseholdCalculationData;
+export type CalcResult =
+  | SocietyWideReportOutput
+  | HouseholdCalculationData
+  | HouseholdCalculationResult;
 
 /**
  * Calculation status values
@@ -62,6 +66,9 @@ export interface CalcStatus {
    * See CalcStatusValue type documentation for detailed state descriptions
    */
   status: CalcStatusValue;
+
+  /** The terminal result/error has been saved to its backend resource. */
+  persisted?: boolean;
 
   /**
    * Progress percentage (0-100)

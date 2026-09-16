@@ -13,11 +13,26 @@ import {
   cleanPythonPackageHouseholdNullValuesForYear,
 } from '@/models/household/pythonPackageCodec';
 import type { PythonPackageHouseholdSituation } from '@/models/household/pythonPackageTypes';
+import type { SPMProvenance, SPMSelection } from '@/types/spm';
 
 // Default year fallback - use the app's current year constant
 const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
 
 type PolicyData = { baseline: { data: any }; reform: { data: any } };
+
+export interface HouseholdReproduction {
+  role: 'baseline' | 'reform';
+  household: Household | null;
+  policy: Record<string, any> | null;
+  spmConfig?: SPMSelection;
+  spmProvenance?: SPMProvenance;
+  policyengineVersion?: string | null;
+  modelVersion?: string | null;
+}
+
+// These distributions own the calculation runtime and canonical SPM formulas.
+// Country releases can allow a range of core versions, so pin the returned receipt.
+const SPM_RUNTIME_PACKAGES = ['policyengine-core', 'spm-calculator'] as const;
 
 // Maps region prefixes (from metadata) to HuggingFace subfolder names.
 // Note: place/ is NOT included — places use the parent state's dataset + filtering.
@@ -134,13 +149,30 @@ function getPlaceFips(region: string): string | null {
  * Utility function to sanitize a string and ensure that it's valid Python;
  * currently converts JS 'null', 'true', 'false', '"Infinity"', and '"-Infinity"' to Python
  */
-export function sanitizeStringToPython(str: string): string {
-  return str
-    .replace(/true/g, 'True')
-    .replace(/false/g, 'False')
-    .replace(/null/g, 'None')
-    .replace(/"Infinity"/g, 'np.inf')
-    .replace(/"-Infinity"/g, '-np.inf');
+export function sanitizeStringToPython(str: string, convertInfinity: boolean = true): string {
+  return str.replace(/"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b/g, (token, offset) => {
+    if (token.startsWith('"')) {
+      // The API serializes unbounded policy values as strings. Object keys and
+      // all other strings must retain their original spelling.
+      const isKey = /^\s*:/.test(str.slice(offset + token.length));
+      if (convertInfinity && !isKey && token === '"Infinity"') {
+        return 'np.inf';
+      }
+      if (convertInfinity && !isKey && token === '"-Infinity"') {
+        return '-np.inf';
+      }
+      return token;
+    }
+    return token === 'true' ? 'True' : token === 'false' ? 'False' : 'None';
+  });
+}
+
+function serializePolicyData(data: Record<string, any>): string {
+  return JSON.stringify(
+    data,
+    (_key, value) => (typeof value === 'number' && !Number.isFinite(value) ? String(value) : value),
+    2
+  );
 }
 
 /**
@@ -204,7 +236,7 @@ function getHeaderCode(
 
   // If either baseline or reform contains Infinity or -Infinity, add numpy import
   const allValues = getAllPolicyValues(policy);
-  if (allValues.some((value) => value === Infinity || value === -Infinity)) {
+  if (allValues.some((value) => [Infinity, -Infinity, 'Infinity', '-Infinity'].includes(value))) {
     lines.push('import numpy as np');
   }
 
@@ -226,7 +258,7 @@ function getBaselineCode(
   if (!policy?.baseline?.data || Object.keys(policy.baseline.data).length === 0) {
     return [];
   }
-  let jsonStr = JSON.stringify(policy.baseline.data, null, 2);
+  let jsonStr = serializePolicyData(policy.baseline.data);
   jsonStr = sanitizeStringToPython(jsonStr);
   const lines = [''].concat(jsonStr.split('\n'));
   lines[1] = `baseline = Reform.from_dict(${lines[1]}`;
@@ -241,7 +273,7 @@ function getReformCode(policy: PolicyData, countryId: string): string[] {
   if (!policy?.baseline?.data || Object.keys(policy.reform.data).length === 0) {
     return [];
   }
-  let jsonStr = JSON.stringify(policy.reform.data, null, 2);
+  let jsonStr = serializePolicyData(policy.reform.data);
   jsonStr = sanitizeStringToPython(jsonStr);
   const lines = [''].concat(jsonStr.split('\n'));
   lines[1] = `reform = Reform.from_dict(${lines[1]}`;
@@ -253,7 +285,7 @@ function getPolicyDictCode(policyData: Record<string, any>, variableName: string
   if (Object.keys(policyData).length === 0) {
     return [];
   }
-  let jsonStr = JSON.stringify(policyData, null, 2);
+  let jsonStr = serializePolicyData(policyData);
   jsonStr = sanitizeStringToPython(jsonStr);
   const lines = [''].concat(jsonStr.split('\n'));
   lines[1] = `${variableName} = ${lines[1]}`;
@@ -285,7 +317,9 @@ function getSituationCode(
   countryId: string,
   year: number,
   household: Household | null,
-  earningVariation: boolean
+  earningVariation: boolean,
+  role: 'baseline' | 'reform' = 'reform',
+  spmConfig: SPMSelection | undefined = household?.spm
 ): string[] {
   if (type !== 'household') {
     return [];
@@ -294,12 +328,23 @@ function getSituationCode(
   const householdSituation = buildHouseholdSituation(household, countryId, year, earningVariation);
 
   let householdJson = JSON.stringify(householdSituation, null, 2);
-  householdJson = sanitizeStringToPython(householdJson);
+  householdJson = sanitizeStringToPython(householdJson, false);
 
   const lines: string[] = ['', '', `situation = ${householdJson}`, '', 'simulation = Simulation('];
 
-  if (Object.keys(policy.reform.data).length) {
-    lines.push('    reform=reform,');
+  if (Object.keys(policy[role].data).length) {
+    lines.push(`    reform=${role},`);
+  }
+
+  if (spmConfig) {
+    const spm = Object.entries(spmConfig)
+      .filter(([, value]) => value !== undefined)
+      .map(
+        ([key, value]) =>
+          `${JSON.stringify(key)}: ${value === null ? 'None' : JSON.stringify(value)}`
+      )
+      .join(', ');
+    lines.push(`    spm={${spm}},`);
   }
 
   lines.push(
@@ -310,7 +355,126 @@ function getSituationCode(
     'print(output)'
   );
 
+  if (countryId === 'us' && spmConfig) {
+    lines.push(
+      '',
+      '# Calculate SPM outputs before reading the receipt.',
+      'spm_variables = [',
+      '    "spm_unit_spm_threshold",',
+      '    "spm_unit_spm_threshold_housing_portion",',
+      '    "spm_unit_net_income",',
+      '    "spm_unit_is_in_spm_poverty",',
+      ']',
+      'for variable in spm_variables:',
+      `    print(variable, simulation.calculate(variable, ${year}))`,
+      'print("spm_config", simulation.spm_config)',
+      'print("spm_provenance", simulation.spm_provenance())'
+    );
+  }
+
   return lines;
+}
+
+export function getHouseholdReproductionUnavailableReason(
+  countryId: string,
+  reproduction: HouseholdReproduction,
+  year: number | null
+): string | null {
+  if (!reproduction.household || reproduction.policy === null) {
+    return "Load this simulation's household and policy to generate its code.";
+  }
+  if (!year || !Number.isInteger(year)) {
+    return 'This report has no saved calculation year. Exact reproduction is unavailable.';
+  }
+  if (!reproduction.modelVersion) {
+    return 'This simulation has no resolved model version. Complete its calculation to save the version needed for exact reproduction. Older reports may need to be calculated again.';
+  }
+  const { spmConfig, spmProvenance } = reproduction;
+  if (countryId === 'us' && (reproduction.household.spm || spmConfig || spmProvenance)) {
+    if (
+      !spmProvenance ||
+      !spmConfig?.forecast_content_sha256 ||
+      !spmConfig.scenario ||
+      spmConfig.forecast_content_sha256 !== spmProvenance?.forecast_sha256 ||
+      spmConfig.scenario !== spmProvenance.scenario ||
+      spmConfig.geography_kind !== spmProvenance.geography_kind
+    ) {
+      return 'This simulation has no matching resolved SPM settings and receipt. Complete its calculation to save the artifact identity needed for exact reproduction.';
+    }
+    const runtimeVersions = spmProvenance.runtime_versions;
+    const missingPackages = SPM_RUNTIME_PACKAGES.filter((name) => !runtimeVersions?.[name]);
+    if (missingPackages.length > 0) {
+      return `This simulation has no recorded version for ${missingPackages.join(' and ')}. Exact reproduction is unavailable until its calculation saves these runtime versions.`;
+    }
+    const recordedModelVersion = runtimeVersions[`policyengine-${countryId}`];
+    const recordedWrapperVersion = runtimeVersions.policyengine;
+    if (
+      (recordedModelVersion && recordedModelVersion !== reproduction.modelVersion) ||
+      (recordedWrapperVersion &&
+        reproduction.policyengineVersion &&
+        recordedWrapperVersion !== reproduction.policyengineVersion)
+    ) {
+      return 'This simulation has conflicting package versions in its calculation metadata and SPM receipt. Exact reproduction is unavailable until they agree.';
+    }
+  }
+  return null;
+}
+
+/** Each block runs in its own notebook so different resolved versions stay isolated. */
+export function getHouseholdReproducibilityCode(
+  countryId: string,
+  reproduction: HouseholdReproduction,
+  year: number | null,
+  earningVariation: boolean = false
+): string[] {
+  const { role, household, policy, policyengineVersion, modelVersion, spmConfig } = reproduction;
+  if (getHouseholdReproductionUnavailableReason(countryId, reproduction, year)) {
+    return [];
+  }
+  const policies = {
+    baseline: { data: role === 'baseline' ? policy : {} },
+    reform: { data: role === 'reform' ? policy : {} },
+  };
+  const header = getHeaderCode(
+    'household',
+    countryId,
+    policies,
+    countryId,
+    null,
+    true,
+    policyengineVersion ?? null
+  );
+  if (modelVersion) {
+    const modelPin = `"policyengine-${countryId}==${modelVersion}"`;
+    if (policyengineVersion) {
+      header[0] += ` ${modelPin}`;
+    } else {
+      header.unshift(`%pip install ${modelPin}`, '');
+    }
+  }
+  if (countryId === 'us' && spmConfig) {
+    for (const packageName of SPM_RUNTIME_PACKAGES) {
+      header[0] += ` "${packageName}==${reproduction.spmProvenance!.runtime_versions[packageName]}"`;
+    }
+  }
+  return [
+    `# ${role === 'baseline' ? 'Baseline' : 'Reform'} ${earningVariation ? 'earning variation' : 'point calculation'}`,
+    '# Run this block in a fresh Python notebook.',
+    ...header,
+    ...(role === 'baseline'
+      ? getBaselineCode(policies, countryId)
+      : getReformCode(policies, countryId)),
+    ...getSituationCode(
+      'household',
+      policies,
+      countryId,
+      year!,
+      household,
+      earningVariation,
+      role,
+      spmConfig
+    ),
+  ];
 }
 
 /**

@@ -26,39 +26,55 @@ describe('BillValidationSection', () => {
 });
 
 describe('ModelTrackRecordSection', () => {
+  const ctcMatch = {
+    program: 'ctc_refund',
+    variable: 'refundable_ctc',
+    depth: 2,
+    ring: 'mechanism' as const,
+  };
+
   test('given the scorecard is unreachable then an honest note renders, not a blank tab', () => {
-    render(
-      <ModelTrackRecordSection trackRecord={{ resolved: true, programs: ['snap'], rows: null }} />
-    );
+    render(<ModelTrackRecordSection trackRecord={null} />);
 
     expect(screen.getByText(/temporarily unavailable/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /policyengine scorecard/i })).toBeInTheDocument();
   });
 
-  test('given rows are loading then the spinner state renders', () => {
-    render(
-      <ModelTrackRecordSection
-        trackRecord={{ resolved: true, programs: ['snap'], rows: undefined }}
-      />
-    );
+  test('given matches are loading then the spinner state renders', () => {
+    render(<ModelTrackRecordSection trackRecord={undefined} />);
 
     expect(screen.getByText(/loading external comparisons/i)).toBeInTheDocument();
   });
 
-  test('given no matched programs then nothing renders', () => {
+  test('given the reform reaches nothing then nothing renders', () => {
     const { container } = render(
-      <ModelTrackRecordSection trackRecord={{ resolved: true, programs: [], rows: undefined }} />
+      <ModelTrackRecordSection
+        trackRecord={{ modelVersion: '1.808.0', reachedCount: 0, programs: [], rows: [] }}
+      />
     );
 
     expect(container).toBeEmptyDOMElement();
   });
 
-  test('given rows then the comparison table renders with honesty labels', () => {
+  test('given reached variables the scorecard does not measure then the note says so', () => {
+    render(
+      <ModelTrackRecordSection
+        trackRecord={{ modelVersion: '1.808.0', reachedCount: 30, programs: [], rows: [] }}
+      />
+    );
+
+    expect(
+      screen.getByText(/none of the 30 variables this reform moves is measured/i)
+    ).toBeInTheDocument();
+  });
+
+  test('given rows then each program heads its comparisons with its distance from the reform', () => {
     render(
       <ModelTrackRecordSection
         trackRecord={{
-          resolved: true,
-          programs: ['snap'],
+          modelVersion: '1.808.0',
+          reachedCount: 12,
+          programs: [{ program: 'snap', variable: 'snap', depth: 1, ring: 'primary' }, ctcMatch],
           rows: [
             {
               source: 'urban-sotsn',
@@ -73,13 +89,34 @@ describe('ModelTrackRecordSection', () => {
               peValue: 66363627,
               ratio: 0.96,
               heldOut: true,
+              policyengineVariables: ['snap', 'is_snap_eligible'],
+            },
+            {
+              source: 'urban-sotsn',
+              sourceName: 'Urban Institute — State of the Safety Net 2025',
+              sourceUrl: 'https://apps.urban.org/features/state-safety-net/',
+              program: 'ctc_refund',
+              metric: 'eligibility_rate',
+              period: '2023 average month',
+              status: 'constructed',
+              unitConcept: 'tax units',
+              externalValue: 0.12,
+              peValue: 0.114,
+              ratio: 0.95,
+              heldOut: false,
+              policyengineVariables: ['refundable_ctc'],
             },
           ],
         }}
       />
     );
 
-    expect(screen.getByText(/SNAP · Eligible people/)).toBeInTheDocument();
+    expect(screen.getByText(/Program context — SNAP, Refundable CTC/)).toBeInTheDocument();
+    expect(screen.getByText(/at policyengine-us 1\.808\.0/)).toBeInTheDocument();
+    expect(screen.getByText(/Primary · reads the parameter directly/)).toBeInTheDocument();
+    expect(screen.getByText(/Mechanism · 2 formula steps from the parameter/)).toBeInTheDocument();
+    expect(screen.getByText('Eligible people')).toBeInTheDocument();
+    expect(screen.getByText('Eligibility rate')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '69.1M' })).toHaveAttribute(
       'href',
       'https://apps.urban.org/features/state-safety-net/'
@@ -93,5 +130,6 @@ describe('ModelTrackRecordSection', () => {
     );
     expect(screen.getByText('0.96×')).toBeInTheDocument();
     expect(screen.getByText('held out')).toBeInTheDocument();
+    expect(screen.getByText('calibrated')).toBeInTheDocument();
   });
 });

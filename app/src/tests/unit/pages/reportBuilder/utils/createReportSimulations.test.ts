@@ -1,9 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createHousehold } from '@/api/household';
+import { Household } from '@/models/Household';
 import { createReportSimulations } from '@/pages/reportBuilder/utils/createReportSimulations';
 import {
+  CORRECTED_REPORT_YEAR,
   CURRENT_LAW_ID,
+  mixedPopulationReportState,
   mockCreateSimulationFn,
+  mockDraftHouseholdSimulation,
   mockLocalStorageCreateFn,
+  mockSingleSimReportState,
   mockTwoSimReportState,
   setupDefaultMocks,
   TEST_LABELS,
@@ -11,6 +17,9 @@ import {
   TEST_POPULATION,
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/pages/reportBuilder/useReportSubmissionMocks';
+import { ownershipReportState } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
+
+vi.mock('@/api/household', () => ({ createHousehold: vi.fn() }));
 
 vi.mock('@/api/simulation', () => ({
   createSimulation: (...args: any[]) => mockCreateSimulationFn(...args),
@@ -41,6 +50,49 @@ describe('createReportSimulations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupDefaultMocks();
+  });
+
+  test.each([true, false])(
+    'given household baseline is %s when mixed populations bypass selection then rejects before every write',
+    async (householdFirst) => {
+      const reportState = mixedPopulationReportState(householdFirst);
+      const originalState = JSON.stringify(reportState);
+
+      await expect(
+        createReportSimulations({
+          simulationStates: reportState.simulations,
+          countryId: 'us',
+          currentLawId: CURRENT_LAW_ID,
+          reportYear: reportState.year,
+        })
+      ).rejects.toThrow('Baseline and reform must use the same population type');
+
+      expect(createHousehold).not.toHaveBeenCalled();
+      expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+      expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+      expect(JSON.stringify(reportState)).toBe(originalState);
+    }
+  );
+
+  test('given independent same-type households and policies when saved then retains each input and its dates', async () => {
+    const reportState = ownershipReportState();
+    const originalState = JSON.stringify(reportState);
+
+    const result = await createReportSimulations({
+      simulationStates: reportState.simulations,
+      countryId: 'us',
+      currentLawId: CURRENT_LAW_ID,
+      reportYear: reportState.year,
+    });
+
+    expect(result.simulations.map((simulation) => simulation.populationId)).toEqual(
+      reportState.simulations.map((simulation) => simulation.population.household!.id)
+    );
+    expect(result.simulations.map((simulation) => simulation.policyId)).toEqual(
+      reportState.simulations.map((simulation) => simulation.policy.id)
+    );
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(JSON.stringify(reportState)).toBe(originalState);
   });
 
   test('creates API simulations, local associations, and domain simulations', async () => {
@@ -80,7 +132,9 @@ describe('createReportSimulations', () => {
       population: {
         label: 'Test household',
         type: 'household',
-        household: { id: TEST_POPULATION.HOUSEHOLD_ID },
+        household: Household.starter('us', mockTwoSimReportState.year).withId(
+          TEST_POPULATION.HOUSEHOLD_ID
+        ),
         geography: null,
       },
     };
@@ -130,6 +184,33 @@ describe('createReportSimulations', () => {
     ).rejects.toThrow('Report has incomplete simulations');
     expect(mockCreateSimulationFn).not.toHaveBeenCalled();
     expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given a draft from another country then rejects every write before preparing households', async () => {
+    await expect(
+      createReportSimulations({
+        simulationStates: [mockDraftHouseholdSimulation('us'), mockDraftHouseholdSimulation('uk')],
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: CORRECTED_REPORT_YEAR,
+      })
+    ).rejects.toThrow('original country');
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
+    expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  test('given a draft period differs from the report year then rejects writes instead of calculating the wrong period', async () => {
+    await expect(
+      createReportSimulations({
+        simulationStates: [mockDraftHouseholdSimulation()],
+        countryId: 'us',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: mockSingleSimReportState.year,
+      })
+    ).rejects.toThrow('Household inputs do not match report year');
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(mockCreateSimulationFn).not.toHaveBeenCalled();
   });
 
   test('does not persist an association when simulation creation returns no ID', async () => {

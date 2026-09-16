@@ -118,10 +118,36 @@ export function hasUnavailableSimulationIngredients(
 export function hasRequiredSimulationIngredients(simulations: SimulationStateProps[]): boolean {
   return (
     simulations.length > 0 &&
+    !getReportPopulationError(simulations) &&
     simulations.every(
       (simulation) =>
         !!simulation.policy.id &&
         !!(simulation.population.household?.id || simulation.population.geography?.geographyId)
     )
   );
+}
+
+/** Validate actual selected ingredients, including hydrated or manually assembled state. */
+export function getReportPopulationError(simulations: SimulationStateProps[]): string | null {
+  const populationTypes = new Set<'household' | 'geography'>();
+  for (const { population } of simulations) {
+    if (population.household && population.geography) {
+      return 'Each simulation must select one population. Use “Swap population” to choose a household or a geography again.';
+    }
+    const selectedType = population.household
+      ? 'household'
+      : population.geography
+        ? 'geography'
+        : null;
+    if (!selectedType) {
+      continue;
+    }
+    if (population.type && population.type !== selectedType) {
+      return 'A simulation’s population type does not match its selected population. Use “Swap population” to choose it again.';
+    }
+    populationTypes.add(selectedType);
+  }
+  return populationTypes.size > 1
+    ? 'Baseline and reform must use the same population type. Use “Swap population” to select households for both simulations or geographies for both.'
+    : null;
 }

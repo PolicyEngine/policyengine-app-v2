@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
+import SPMMethodologyFootnote from '@/components/household/SPMMethodologyFootnote';
+import { Button, Stack, Text } from '@/components/ui';
 import { useSimulationProgressDisplay } from '@/hooks/household';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { Household } from '@/models/Household';
+import type { RootState } from '@/store';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
@@ -9,7 +15,8 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
-import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
+import { convertPoliciesToV1Format, type HouseholdReproduction } from '@/utils/reproducibilityCode';
+import { getModelMetadataError, getSPMSelectionError } from '@/utils/spmSelection';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
@@ -106,6 +113,7 @@ interface HouseholdReportOutputProps {
   activeView?: string;
   isLoading: boolean;
   error: Error | null;
+  onEditHousehold?: () => void;
 }
 
 /**
@@ -130,8 +138,11 @@ export function HouseholdReportOutput({
   activeView = '',
   isLoading: dataLoading,
   error: dataError,
+  onEditHousehold,
 }: HouseholdReportOutputProps) {
   const normalizedSubpage = resolveDefaultReportOutputSubpage('household', subpage);
+  const countryId = useCurrentCountry();
+  const metadata = useSelector((state: RootState) => state.metadata);
 
   // Build view model (memoized - recomputes only when props change)
   const viewModel = useMemo(
@@ -139,8 +150,34 @@ export function HouseholdReportOutput({
     [report, simulations, userSimulations, userPolicies]
   );
 
-  // Handle calculation orchestration
-  useHouseholdCalculations(viewModel);
+  // Next.js renders this page before metadata finishes loading. Only pending reports
+  // need this gate; saved results remain readable without revalidating old inputs.
+  const { isPending, isComplete, isError } = viewModel.simulationStates;
+  const modelReadinessError = getModelMetadataError(countryId, metadata);
+  let householdReadinessError: string | null = null;
+  if (isPending && report && !modelReadinessError) {
+    if (report.countryId !== countryId) {
+      householdReadinessError = 'Open this report in its original country before calculating.';
+    } else {
+      for (const simulation of simulations ?? []) {
+        const household = households?.find(
+          (candidate) =>
+            candidate.id === simulation.populationId && candidate.countryId === countryId
+        );
+        householdReadinessError = household
+          ? getSPMSelectionError(household, report.year, metadata)
+          : 'Household inputs are unavailable. Reload the page to load them before calculating.';
+        if (householdReadinessError) {
+          break;
+        }
+      }
+    }
+  }
+  const calculationReadinessError = modelReadinessError ?? householdReadinessError;
+  useHouseholdCalculations(
+    viewModel,
+    !dataLoading && !dataError && !!report && !calculationReadinessError
+  );
 
   // Get real-time progress display (for UI enhancement only)
   const {
@@ -148,9 +185,6 @@ export function HouseholdReportOutput({
     hasCalcStatus,
     message: progressMessage,
   } = useSimulationProgressDisplay(viewModel.simulationIds);
-
-  // Extract states from view model
-  const { isPending, isComplete, isError } = viewModel.simulationStates;
 
   // ============================================================
   // RENDER FLOW: Linear progression through data availability
@@ -168,21 +202,41 @@ export function HouseholdReportOutput({
 
   // 3. Data loaded - render input-only tabs immediately (no calculation needed)
   if (normalizedSubpage === 'reproduce') {
-    const baselineHousehold =
-      households?.find(
-        (household) =>
-          household.id === simulations?.[0]?.populationId &&
-          household.countryId === report.countryId
-      ) ?? null;
-    const policyV1 = convertPoliciesToV1Format(policies);
+    const reproductionSimulations: HouseholdReproduction[] = (simulations ?? []).map(
+      (simulation, index) => {
+        const household =
+          households?.find(
+            (candidate) =>
+              candidate.id === simulation.populationId && candidate.countryId === report.countryId
+          ) ?? null;
+        const policy = policies?.find(
+          (candidate) =>
+            candidate.id === simulation.policyId &&
+            (!candidate.countryId || candidate.countryId === report.countryId)
+        );
+        const output = simulation.output as Partial<HouseholdCalculationResult> | null;
+        return {
+          role: index === 0 ? 'baseline' : 'reform',
+          household,
+          policy: policy ? convertPoliciesToV1Format([policy]).baseline.data : null,
+          spmConfig: output?.spm_config,
+          spmProvenance: output?.spm_provenance,
+          policyengineVersion:
+            output?.policyengine_bundle?.policyengine_version ??
+            output?.spm_provenance?.runtime_versions?.policyengine ??
+            null,
+          modelVersion:
+            output?.policyengine_bundle?.model_version ??
+            output?.spm_provenance?.runtime_versions?.[`policyengine-${report.countryId}`] ??
+            null,
+        };
+      }
+    );
     return (
       <HouseholdReproducibility
         countryId={report.countryId}
-        policy={policyV1}
-        household={baselineHousehold}
-        region={report.countryId}
-        dataset={null}
-        policyengineVersion={viewModel.getResolvedPolicyengineVersion()}
+        year={report.year}
+        simulations={reproductionSimulations}
       />
     );
   }
@@ -201,10 +255,40 @@ export function HouseholdReportOutput({
 
   // 4. Show error if any simulation has error status
   if (isError) {
-    return <ErrorPage error={new Error(viewModel.getErrorMessage())} />;
+    const hasUnavailableYear = simulations?.some(
+      (simulation) =>
+        simulation.status === 'error' && simulation.errorCode === 'SPM_YEAR_UNAVAILABLE'
+    );
+    return (
+      <ErrorPage
+        error={new Error(viewModel.getErrorMessage())}
+        recovery={
+          viewModel.hasCorrectiveSPMError() && onEditHousehold
+            ? {
+                label: hasUnavailableYear ? 'Edit report year' : 'Edit household inputs',
+                description: hasUnavailableYear
+                  ? 'Open report setup, choose Edit report, and select a year supported by the SPM artifact. Then update the report to calculate again.'
+                  : 'Open report setup, choose Edit report, and edit the affected household to correct its SPM settings, geography, or adult composition. Then update the report to calculate again.',
+                onClick: onEditHousehold,
+              }
+            : undefined
+        }
+      />
+    );
   }
 
   // 5. Show loading if calculation is pending (for output-dependent tabs)
+  if (isPending && calculationReadinessError) {
+    return (
+      <Stack gap="md">
+        <Text role="status">{calculationReadinessError}</Text>
+        {!modelReadinessError && householdReadinessError && onEditHousehold && (
+          <Button onClick={onEditHousehold}>Edit household inputs</Button>
+        )}
+      </Stack>
+    );
+  }
+
   if (isPending) {
     const displayStatusLabel = getDisplayStatus('pending');
     const message = progressMessage || `${displayStatusLabel} household simulations...`;
@@ -225,17 +309,22 @@ export function HouseholdReportOutput({
 
     const OutputTabRenderer = OUTPUT_TABS[normalizedSubpage];
     if (OutputTabRenderer) {
-      return OutputTabRenderer({
-        report,
-        simulations,
-        policies,
-        userPolicies,
-        households,
-        userHouseholds,
-        output,
-        policyLabels,
-        activeView,
-      });
+      return (
+        <>
+          {OutputTabRenderer({
+            report,
+            simulations,
+            policies,
+            userPolicies,
+            households,
+            userHouseholds,
+            output,
+            policyLabels,
+            activeView,
+          })}
+          <SPMMethodologyFootnote output={output} />
+        </>
+      );
     }
   }
 

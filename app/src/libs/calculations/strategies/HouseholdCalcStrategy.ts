@@ -1,5 +1,6 @@
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import { fetchHouseholdCalculationWithBundle } from '@/api/householdCalculation';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
+import { householdCalculationError } from '@/utils/householdCalculationError';
 import { CalcExecutionStrategy, RefetchConfig } from './types';
 
 /**
@@ -26,7 +27,7 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
 
     try {
       // Call API once and await the full result
-      const result = await fetchHouseholdCalculation(
+      const result = await fetchHouseholdCalculationWithBundle(
         params.countryId,
         params.populationId,
         policyId
@@ -42,14 +43,9 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
       console.error('[HouseholdCalcStrategy.execute] Calculation failed:', error);
 
       // Return error status with proper CalcError
-      const errorMessage = error instanceof Error ? error.message : 'Household calculation failed';
       return {
         status: 'error',
-        error: {
-          code: 'HOUSEHOLD_CALC_FAILED',
-          message: errorMessage,
-          retryable: true, // Household calculations can be retried
-        },
+        error: householdCalculationError(error),
         metadata, // Use provided metadata even for errors
       };
     }

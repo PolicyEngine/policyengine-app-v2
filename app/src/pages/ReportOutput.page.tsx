@@ -274,6 +274,7 @@ export default function ReportOutputPage({
           activeView={activeView}
           isLoading={dataLoading}
           error={dataError}
+          onEditHousehold={!isSharedView ? handleView : undefined}
         />
       );
     }

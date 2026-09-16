@@ -38,6 +38,7 @@ import {
   removeVariableFromEntity,
   resolveEntity,
 } from '@/utils/VariableResolver';
+import SPMGeographyChoice from './SPMGeographyChoice';
 import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
 
@@ -309,6 +310,14 @@ export default function HouseholdBuilderForm({
 
   return (
     <Stack gap="lg">
+      <SPMGeographyChoice
+        household={household}
+        year={year}
+        metadata={metadata}
+        onChange={onChange}
+        disabled={disabled}
+        isReadOnly={isReadOnly}
+      />
       {/* Floating notification when variable added to different entity */}
       {warningMessage && (
         <div

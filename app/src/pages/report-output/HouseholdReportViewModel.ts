@@ -1,3 +1,4 @@
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
 import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
 import type {
   HouseholdCalculationData,
@@ -9,6 +10,7 @@ import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { isCorrectiveSPMError } from '@/utils/householdCalculationError';
 
 /**
  * View Model for HouseholdReportOutput
@@ -41,11 +43,11 @@ export class HouseholdReportViewModel {
     }
 
     const isSimulationComplete = (simulation: Simulation): boolean =>
-      simulation.status === 'complete' ||
-      (simulation.output !== null && simulation.output !== undefined);
+      simulation.status !== 'error' &&
+      (simulation.status === 'complete' ||
+        (simulation.output !== null && simulation.output !== undefined));
 
-    const isSimulationError = (simulation: Simulation): boolean =>
-      simulation.status === 'error' && simulation.output === null;
+    const isSimulationError = (simulation: Simulation): boolean => simulation.status === 'error';
 
     return {
       // Treat any non-error simulation without persisted output as pending.
@@ -90,7 +92,7 @@ export class HouseholdReportViewModel {
       return false;
     }
 
-    if (!this.simulationStates.isPending) {
+    if (!this.simulationStates.isPending || this.simulationStates.isError) {
       return false;
     }
 
@@ -108,7 +110,18 @@ export class HouseholdReportViewModel {
       return 'Calculation failed';
     }
 
-    return errorSims.map((s) => `Simulation ${s.id}: Failed to calculate`).join('\n');
+    return errorSims
+      .map((simulation) => {
+        const code = simulation.errorCode ? `[${simulation.errorCode}] ` : '';
+        return `Simulation ${simulation.id}: ${code}${simulation.errorMessage || 'Failed to calculate'}`;
+      })
+      .join('\n');
+  }
+
+  hasCorrectiveSPMError(): boolean {
+    return !!this.simulations?.some(
+      (simulation) => simulation.status === 'error' && isCorrectiveSPMError(simulation.errorCode)
+    );
   }
 
   /**
@@ -130,6 +143,8 @@ export class HouseholdReportViewModel {
       )
       .map(({ simulation, householdData }) => ({
         id: simulation.id,
+        spmConfig: (simulation.output as HouseholdCalculationResult)?.spm_config,
+        spmProvenance: (simulation.output as HouseholdCalculationResult)?.spm_provenance,
         countryId: this.report!.countryId,
         householdData,
       }));

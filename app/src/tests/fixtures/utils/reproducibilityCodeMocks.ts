@@ -366,3 +366,31 @@ export const EXPECTED_IMPORTS = {
   REFORM_IMPORT: 'from policyengine_core.reforms import Reform',
   NUMPY_IMPORT: 'import numpy as np',
 } as const;
+
+export const MULTI_YEAR_HOUSEHOLD = Household.fromV1CreationPayload({
+  country_id: TEST_COUNTRIES.US,
+  data: {
+    people: {
+      'true-null-person': {
+        age: { 2023: 34, 2024: null },
+        employment_income: { 2024: 50000 },
+      },
+    },
+    households: {
+      'false-household': {
+        members: ['true-null-person'],
+        county_fips: { 2023: '06037', 2024: null },
+        state_code: { 2024: 'CA' },
+      },
+    },
+  },
+});
+
+export const POLICY_WITH_STRING_INFINITY: PolicyV1Format = {
+  baseline: {
+    data: {
+      'gov.irs.credits.ctc.phase_out.threshold.joint': { '2024-01-01.2100-12-31': 'Infinity' },
+    },
+  },
+  reform: { data: {} },
+};

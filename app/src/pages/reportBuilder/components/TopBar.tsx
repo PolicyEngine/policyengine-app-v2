@@ -77,6 +77,7 @@ export function TopBar({ children, actions }: TopBarProps) {
       <div
         style={{
           display: 'flex',
+          flexWrap: 'wrap',
           alignItems: 'center',
           gap: spacing.sm,
         }}
