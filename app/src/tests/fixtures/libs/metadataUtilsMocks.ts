@@ -16,10 +16,10 @@ export const EXPECTED_LABELS = {
   STATE: 'State',
   REGION: 'Region',
   AGE: 'Age',
-  EMPLOYMENT_INCOME: 'Employment Income',
+  EMPLOYMENT_INCOME: 'Employment income',
   BRMA: 'Broad Rental Market Area',
-  LOCAL_AUTHORITY: 'Local Authority',
-  HOUSEHOLD_INCOME: 'Household Income',
+  LOCAL_AUTHORITY: 'Local authority',
+  HOUSEHOLD_INCOME: 'Household income',
 } as const;
 
 export const mockMetadataPayload = (overrides?: any): MetadataApiPayload => ({

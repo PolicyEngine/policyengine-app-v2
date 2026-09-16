@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 
 /**
- * Embeds the 2025 Year in Review app from GitHub Pages
+ * Embeds the 2025 year in review app from GitHub Pages
  */
 export default function YearInReviewPage() {
   const { countryId } = useParams<{ countryId: string }>();
@@ -12,7 +12,7 @@ export default function YearInReviewPage() {
   return (
     <iframe
       src={embedUrl}
-      title="PolicyEngine 2025 Year in Review"
+      title="PolicyEngine 2025 year in review"
       style={{
         width: '100%',
         height: '100vh',

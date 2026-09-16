@@ -32,7 +32,7 @@ export const mockPopulationStateWithHousehold: PopulationStateProps = {
 };
 
 export const mockPopulationStateWithGeography: PopulationStateProps = {
-  label: 'National Households',
+  label: null,
   type: 'geography',
   household: null,
   geography: {

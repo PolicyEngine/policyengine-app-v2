@@ -1,8 +1,8 @@
-# Ingredient CRUD Patterns
+# Ingredient CRUD patterns
 
 This skill documents the standard patterns for ingredient list pages (Policies, Reports, Simulations, Populations). All ingredient pages follow the same structure for consistency.
 
-## Page Structure Overview
+## Page structure overview
 
 Every ingredient page has:
 1. **Data fetching** via React Query hooks
@@ -12,7 +12,7 @@ Every ingredient page has:
 5. **`IngredientReadView` component** for rendering
 6. **`RenameIngredientModal`** for rename functionality
 
-## Required Imports
+## Required imports
 
 ```tsx
 import { useState } from 'react';
@@ -27,7 +27,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatDate } from '@/utils/dateUtils';
 ```
 
-## Standard Page Template
+## Standard page template
 
 ```tsx
 export default function [Ingredient]sPage() {
@@ -146,9 +146,9 @@ export default function [Ingredient]sPage() {
 }
 ```
 
-## Column Types
+## Column types
 
-### Text Column
+### Text column
 ```tsx
 {
   key: 'fieldName',
@@ -160,7 +160,7 @@ export default function [Ingredient]sPage() {
 { text: 'Display value' } as TextValue
 ```
 
-### Link Column
+### Link column
 ```tsx
 {
   key: 'fieldName',
@@ -172,7 +172,7 @@ export default function [Ingredient]sPage() {
 { text: 'Link text', url: '/path/to/resource' } as LinkValue
 ```
 
-### Bullets Column
+### Bullets column
 For multi-line details (e.g., simulation info, population details):
 ```tsx
 {
@@ -191,7 +191,7 @@ For multi-line details (e.g., simulation info, population details):
 } as BulletsValue
 ```
 
-### Menu Column (Actions)
+### Menu column (actions)
 ```tsx
 {
   key: 'actions',
@@ -208,9 +208,9 @@ For multi-line details (e.g., simulation info, population details):
 }
 ```
 
-## Data Transformation Patterns
+## Data transformation patterns
 
-### Basic Transformation
+### Basic transformation
 ```tsx
 const transformedData: IngredientRecord[] = data?.map((item) => ({
   id: item.association.id?.toString() || item.association.policyId.toString(),
@@ -225,7 +225,7 @@ const transformedData: IngredientRecord[] = data?.map((item) => ({
 })) || [];
 ```
 
-### With Computed Values
+### With computed values
 ```tsx
 const transformedData: IngredientRecord[] = data?.map((item) => {
   const paramCount = countPolicyModifications(item.policy);
@@ -240,7 +240,7 @@ const transformedData: IngredientRecord[] = data?.map((item) => {
 }) || [];
 ```
 
-### Combining Multiple Data Sources
+### Combining multiple data sources
 ```tsx
 // For pages like Populations that combine households + geographies
 const householdRecords: IngredientRecord[] = householdData?.map(/* ... */) || [];
@@ -248,15 +248,15 @@ const geographicRecords: IngredientRecord[] = geographicData?.map(/* ... */) || 
 const transformedData = [...householdRecords, ...geographicRecords];
 ```
 
-## Rename Modal Integration
+## Rename modal integration
 
-### Modal State Pattern
+### Modal state pattern
 ```tsx
 const [renamingId, setRenamingId] = useState<string | null>(null);
 const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
 ```
 
-### Opening the Modal
+### Opening the modal
 ```tsx
 const handleOpenRename = (userAssociationId: string) => {
   setRenamingId(userAssociationId);
@@ -264,7 +264,7 @@ const handleOpenRename = (userAssociationId: string) => {
 };
 ```
 
-### Handling Rename
+### Handling rename
 ```tsx
 const handleRename = async (newLabel: string) => {
   if (!renamingId) return;
@@ -281,13 +281,13 @@ const handleRename = async (newLabel: string) => {
 };
 ```
 
-### Getting Current Label
+### Getting current label
 ```tsx
 const renamingItem = data?.find((item) => item.association.id === renamingId);
 const currentLabel = renamingItem?.association.label || `Policy #${renamingItem?.association.policyId}`;
 ```
 
-## IngredientReadView Props
+## `IngredientReadView` props
 
 ```tsx
 interface IngredientReadViewProps {
@@ -309,7 +309,7 @@ interface IngredientReadViewProps {
 }
 ```
 
-## Error Logging Convention
+## Error logging convention
 
 Always prefix console errors with the component name:
 ```tsx
@@ -318,7 +318,7 @@ console.error('[ReportsPage] Failed to rename report:', error);
 console.error('[SimulationsPage] Failed to rename simulation:', error);
 ```
 
-## Existing Ingredient Pages
+## Existing ingredient pages
 
 | Page | Ingredients | Special Features |
 |------|-------------|------------------|
@@ -327,7 +327,7 @@ console.error('[SimulationsPage] Failed to rename simulation:', error);
 | `Simulations.page.tsx` | Simulations | Policy + Population text columns |
 | `Populations.page.tsx` | Households + Geographies | Combined data sources, bullets for details |
 
-## Anti-Patterns
+## Anti-patterns
 
 ### Don't
 ```tsx

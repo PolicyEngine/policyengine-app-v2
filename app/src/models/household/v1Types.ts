@@ -1,8 +1,10 @@
+import type { SPMSelection } from '@/types/spm';
 import type { HouseholdScalar } from './appTypes';
 
 export interface V1HouseholdMetadataEnvelope {
   id: string;
   country_id: string;
+  spm?: SPMSelection;
   label?: string | null;
   api_version: string;
   household_json: V1HouseholdData;
@@ -37,6 +39,7 @@ export type V1HouseholdGroupData = V1HouseholdMemberGroup & {
 
 export interface V1HouseholdCreateEnvelope {
   country_id: string;
+  spm?: SPMSelection;
   data: V1HouseholdData;
   label?: string;
 }

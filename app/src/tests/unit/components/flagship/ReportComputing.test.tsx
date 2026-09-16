@@ -1,34 +1,77 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
-import {
-  ReportComputing,
-  ReportUnresolvable,
-  ReportWaiting,
-} from '@/components/flagship/ReportComputing';
+import { ReportComputingScreen, ReportUnresolvable } from '@/components/flagship/ReportComputing';
+import type { ReportStage } from '@/libs/flagship/reportStages';
 
-describe('ReportComputing', () => {
-  test('given progress then the status, percent, and what is coming render once', () => {
-    render(<ReportComputing message="Computing society-wide impacts…" progress={42.4} />);
+const stages: ReportStage[] = [
+  { id: 'report', label: 'Loading the report', state: 'done' },
+  { id: 'reform', label: 'Loading the reform', detail: '1 provision', state: 'done' },
+  {
+    id: 'run',
+    label: 'Running the society-wide calculation',
+    detail: 'In queue, position 2',
+    state: 'active',
+  },
+  { id: 'validate', label: 'Checking the data behind the estimate', state: 'pending' },
+];
 
-    expect(screen.getByText('Computing society-wide impacts…')).toBeInTheDocument();
-    expect(screen.getByText('42%')).toBeInTheDocument();
+const provision = {
+  path: 'gov.irs.credits.ctc.amount.base[0].amount',
+  breadcrumb: 'IRS → Credits → Child Tax Credit → Amount → Bracket 1 → Amount',
+  unit: 'currency-USD',
+  baselineValue: 2200,
+  value: 2500,
+};
+
+describe('ReportComputingScreen', () => {
+  test('given a run in progress then the reform, the active stage, and its detail render', () => {
+    render(
+      <ReportComputingScreen
+        title="CTC to $2,500"
+        sourceNote="Hand-built draft"
+        baselineLine="Baseline: current law · 2026 · Population: United States (nationwide)"
+        provisions={[provision]}
+        stages={stages}
+        progress={35}
+      />
+    );
+
+    expect(screen.getByRole('heading', { name: 'CTC to $2,500' })).toBeInTheDocument();
+    expect(screen.getByText(/Bracket 1/)).toBeInTheDocument();
+    expect(screen.getAllByText('Running the society-wide calculation')).toHaveLength(2);
+    expect(screen.getByText('In queue, position 2')).toBeInTheDocument();
+    expect(screen.getByText(/35%/)).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(screen.getByText(/validation checks below run independently/i)).toBeInTheDocument();
   });
 
-  test('given no progress yet then no percent or bar renders', () => {
-    render(<ReportComputing message="Queued" />);
+  test('given the reform is still loading then it says so instead of claiming no provisions', () => {
+    render(
+      <ReportComputingScreen
+        title="Impact report"
+        baselineLine="Baseline: current law · 2026"
+        provisions={null}
+        stages={stages.map((s) => ({ ...s, state: s.id === 'report' ? 'active' : 'pending' }))}
+      />
+    );
 
-    expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+    expect(screen.getByText('Loading the reform…')).toBeInTheDocument();
+    expect(screen.queryByText(/unavailable/)).not.toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
-});
 
-describe('ReportWaiting', () => {
-  test('given a dependent section then it names what follows the run', () => {
-    render(<ReportWaiting what="District impacts" />);
+  test('given children then they render below the stages', () => {
+    render(
+      <ReportComputingScreen
+        title="Impact report"
+        baselineLine="Baseline: current law · 2026"
+        provisions={[provision]}
+        stages={stages}
+      >
+        <div>Validation goes here</div>
+      </ReportComputingScreen>
+    );
 
-    expect(screen.getByText(/District impacts follow once the nationwide run/)).toBeInTheDocument();
+    expect(screen.getByText('Validation goes here')).toBeInTheDocument();
   });
 });
 

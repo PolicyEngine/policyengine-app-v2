@@ -86,14 +86,18 @@ export class CalcOrchestrator {
     this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);
 
     // CRITICAL DECISION POINT: Household vs Economy
-    if (initialStatus.status === 'complete') {
+    if (
+      initialStatus.status === 'complete' ||
+      (metadata.calcType === 'household' && initialStatus.status === 'error')
+    ) {
       // HOUSEHOLD CASE: Calculation completed synchronously
-      trackSimulationCompleted({ calcType: metadata.calcType, countryId: config.countryId });
-      await this.resultPersister.persist(initialStatus, config.countryId, config.year);
-
-      // Notify manager to cleanup this orchestrator
-      if (this.manager) {
-        this.manager.cleanup(config.calcId);
+      try {
+        if (initialStatus.status === 'complete') {
+          trackSimulationCompleted({ calcType: metadata.calcType, countryId: config.countryId });
+        }
+        await this.resultPersister.persist(initialStatus, config.countryId, config.year);
+      } finally {
+        this.manager?.cleanup(config.calcId, config.targetType);
       }
 
       return;
@@ -133,7 +137,7 @@ export class CalcOrchestrator {
       );
 
       if (this.manager) {
-        this.manager.cleanup(calcId);
+        this.manager.cleanup(calcId, _metadata.targetType);
       }
       return;
     }
@@ -169,7 +173,7 @@ export class CalcOrchestrator {
 
             // Notify manager to remove this orchestrator
             if (this.manager) {
-              this.manager.cleanup(calcId);
+              this.manager.cleanup(calcId, _metadata.targetType);
             }
           });
 
@@ -185,7 +189,7 @@ export class CalcOrchestrator {
 
         // Notify manager to remove this orchestrator
         if (this.manager) {
-          this.manager.cleanup(calcId);
+          this.manager.cleanup(calcId, _metadata.targetType);
         }
       }
     });
@@ -234,7 +238,9 @@ export class CalcOrchestrator {
     const populationType = sim1.populationType || 'geography';
 
     if (populationType === 'household') {
-      populationId = config.populations.household1?.id || sim1.populationId || '';
+      // The saved simulation identifies its immutable household. A stale builder
+      // object must never substitute the baseline household for the reform.
+      populationId = sim1.populationId || config.populations.household1?.id || '';
     } else {
       const geography = config.populations.geography1;
       // geographyId now contains the FULL prefixed value like "constituency/Sheffield Central"

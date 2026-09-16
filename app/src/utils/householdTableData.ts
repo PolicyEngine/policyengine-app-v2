@@ -2,7 +2,7 @@ import type { Household } from '@/models/Household';
 
 export interface HouseholdInputRow {
   category: string; // "Person 1", "Household", etc.
-  label: string; // "Age", "Employment Income"
+  label: string; // "Age", "Employment income"
   paramName: string; // "age", "employment_income"
   value: any;
 }
@@ -23,9 +23,6 @@ export function extractHouseholdInputs(household: Household): HouseholdInputRow[
  * Format parameter name to human-readable label
  */
 function formatParameterLabel(paramName: string): string {
-  // Convert snake_case to Title Case
-  return paramName
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  const label = paramName.replace(/_/g, ' ');
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }

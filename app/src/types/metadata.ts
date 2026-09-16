@@ -1,4 +1,5 @@
 import { UK_REGION_TYPES, US_REGION_TYPES } from './regionTypes';
+import type { SPMMetadata } from './spm';
 
 /**
  * Region entry from API metadata
@@ -36,6 +37,7 @@ export interface MetadataApiPayload {
       filtered: Record<string, any>;
     };
     version: string;
+    spm?: SPMMetadata;
   };
 }
 
@@ -57,6 +59,8 @@ export interface ParameterTreeNode {
 
 export interface MetadataState {
   currentCountry: string | null;
+  /** Only this request may resolve the current country's model information. */
+  currentRequestId?: string;
   loading: boolean;
   error: string | null;
   /** Download progress percentage (0-100) for metadata fetch */
@@ -78,6 +82,7 @@ export interface MetadataState {
     filtered: Record<string, any>;
   };
   version: string | null;
+  spm?: SPMMetadata;
 
   // Computed parameter tree for policy creation UI (built when metadata is fetched)
   parameterTree: ParameterTreeNode | null;

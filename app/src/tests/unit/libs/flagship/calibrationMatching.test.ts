@@ -51,13 +51,13 @@ describe('geographyForRegion', () => {
 describe('dashboardTargetsUrl', () => {
   test('given a source and level then the targets page is filtered by both', () => {
     expect(dashboardTargetsUrl({ source: 'usda_snap', level: 'state' })).toBe(
-      'https://calibration-diagnostics.vercel.app/calibration/dashboard/populace/targets?source=usda_snap&level=state'
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?source=usda_snap&level=state'
     );
   });
 
   test('given no filters then the bare targets page returns', () => {
     expect(dashboardTargetsUrl({})).toBe(
-      'https://calibration-diagnostics.vercel.app/calibration/dashboard/populace/targets'
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets'
     );
   });
 });

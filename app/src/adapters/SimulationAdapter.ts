@@ -75,6 +75,7 @@ export class SimulationAdapter {
       isCreated: true,
       output: parsedOutput,
       status: this.mapApiStatusToSimulationStatus(metadata.status),
+      ...this.parseErrorMessage(metadata.error_message),
     };
 
     return simulation;
@@ -135,16 +136,35 @@ export class SimulationAdapter {
   /**
    * Creates payload for marking a simulation as errored
    */
-  static toErrorPayload(id: number, errorMessage?: string): SimulationSetOutputPayload {
+  static toErrorPayload(
+    id: number,
+    errorMessage?: string,
+    errorCode?: string
+  ): SimulationSetOutputPayload {
     const payload: SimulationSetOutputPayload = {
       id,
       output: null,
       status: 'error',
     };
     if (errorMessage) {
-      payload.error_message = errorMessage;
+      // The API persists error_message, but has no error_code field. A readable
+      // prefix preserves the code without changing the service's payload schema.
+      payload.error_message = errorCode ? `[${errorCode}] ${errorMessage}` : errorMessage;
     }
     return payload;
+  }
+
+  private static parseErrorMessage(message?: string | null): {
+    errorMessage?: string;
+    errorCode?: string;
+  } {
+    if (!message) {
+      return {};
+    }
+    const structured = /^\[([A-Z][A-Z0-9_]+)\] ([\s\S]*)$/.exec(message);
+    return structured
+      ? { errorCode: structured[1], errorMessage: structured[2] }
+      : { errorMessage: message };
   }
 
   /**

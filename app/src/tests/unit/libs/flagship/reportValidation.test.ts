@@ -24,6 +24,7 @@ describe('isLiveValidationSettled', () => {
 
   test('given both checks resolved, even to unavailable, then it is settled', () => {
     expect(isLiveValidationSettled({ calibration: null, programs: [] })).toBe(true);
+    expect(isLiveValidationSettled({ calibration: null, programs: null })).toBe(true);
   });
 });
 
@@ -42,6 +43,13 @@ describe('snapshotFromLive', () => {
 
     expect(snapshot.calibration).toBeNull();
     expect(snapshot.mapModelVersion).toBe('');
+    expect(snapshot.scorecard).toEqual({ programs: [] });
+  });
+
+  test('given the scorecard was unavailable then the pin records no programs rather than none', () => {
+    const snapshot = snapshotFromLive({ calibration: null, programs: null }, MATCHED_AT);
+
+    expect(snapshot.scorecard).toBeNull();
   });
 });
 

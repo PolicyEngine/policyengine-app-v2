@@ -1,4 +1,4 @@
-# Chart and Visualization Standards
+# Chart and visualization standards
 
 This skill ensures consistent chart styling across PolicyEngine visualizations.
 

@@ -1,6 +1,7 @@
 import { type CountryId } from '@/libs/countries';
 import type { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
+import { getSPMSelectionError, type SPMModelMetadata } from './spmSelection';
 
 /**
  * Validation result type
@@ -272,10 +273,16 @@ export const HouseholdValidation = {
   isReadyForSimulation(
     household: HouseholdModel,
     countryId: CountryId,
-    year: string
+    year: string,
+    metadata?: SPMModelMetadata
   ): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
+
+    const spmError = getSPMSelectionError(household, year, metadata);
+    if (spmError) {
+      errors.push({ code: 'SPM_SELECTION_REQUIRED', message: spmError, field: 'spm' });
+    }
 
     // Must have at least one person
     if (household.personCount === 0) {

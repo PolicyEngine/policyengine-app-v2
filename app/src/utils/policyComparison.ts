@@ -81,9 +81,9 @@ export function determinePolicyColumns(
       return [
         {
           policies: [currentLaw],
-          label: 'Current Law / Baseline / Reform',
+          label: 'Current law / Baseline / Reform',
           policyLabels: [
-            currentLaw.label || 'Current Law',
+            currentLaw.label || 'Current law',
             baseline.label || 'Baseline',
             reform.label || 'Reform',
           ],
@@ -96,8 +96,8 @@ export function determinePolicyColumns(
       return [
         {
           policies: [currentLaw],
-          label: 'Current Law / Baseline',
-          policyLabels: [currentLaw.label || 'Current Law', baseline.label || 'Baseline'],
+          label: 'Current law / Baseline',
+          policyLabels: [currentLaw.label || 'Current law', baseline.label || 'Baseline'],
         },
         {
           policies: [reform],
@@ -112,8 +112,8 @@ export function determinePolicyColumns(
       return [
         {
           policies: [currentLaw],
-          label: 'Current Law / Reform',
-          policyLabels: [currentLaw.label || 'Current Law', reform.label || 'Reform'],
+          label: 'Current law / Reform',
+          policyLabels: [currentLaw.label || 'Current law', reform.label || 'Reform'],
         },
         {
           policies: [baseline],
@@ -128,8 +128,8 @@ export function determinePolicyColumns(
       return [
         {
           policies: [currentLaw],
-          label: 'Current Law',
-          policyLabels: [currentLaw.label || 'Current Law'],
+          label: 'Current law',
+          policyLabels: [currentLaw.label || 'Current law'],
         },
         {
           policies: [baseline],
@@ -143,8 +143,8 @@ export function determinePolicyColumns(
     return [
       {
         policies: [currentLaw],
-        label: 'Current Law',
-        policyLabels: [currentLaw.label || 'Current Law'],
+        label: 'Current law',
+        policyLabels: [currentLaw.label || 'Current law'],
       },
       {
         policies: [baseline],
@@ -189,8 +189,8 @@ export function determinePolicyColumns(
   if (currentLaw) {
     columns.push({
       policies: [currentLaw],
-      label: 'Current Law',
-      policyLabels: [currentLaw.label || 'Current Law'],
+      label: 'Current law',
+      policyLabels: [currentLaw.label || 'Current law'],
     });
   }
   if (baseline) {

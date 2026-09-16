@@ -154,7 +154,7 @@ export default function IframeContent({
                 borderRadius: spacing.radius.element,
               }}
             >
-              Open Calculator in New Tab
+              Open calculator in new tab
             </a>
           </div>
         </div>

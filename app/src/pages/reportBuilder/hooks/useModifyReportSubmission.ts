@@ -21,6 +21,7 @@ import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
+import type { SimulationStateProps } from '@/types/pathwayState';
 import { ReportBuilderState } from '../types';
 import { createReportSimulations } from '../utils/createReportSimulations';
 import { useReportIngredientAvailability } from './useReportIngredientAvailability';
@@ -38,6 +39,7 @@ interface UseModifyReportSubmissionReturn {
   isSavingNew: boolean;
   isReplacing: boolean;
   isReportSubmissionBlocked: boolean;
+  submissionError: Error | null;
 }
 
 export function useModifyReportSubmission({
@@ -50,6 +52,7 @@ export function useModifyReportSubmission({
   const manager = useCalcOrchestratorManager();
   const updateReportAssociation = useUpdateReportAssociation();
   const queryClient = useQueryClient();
+  const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const [isSavingNew, setIsSavingNew] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false);
   const { isReportConfigured } = useReportIngredientAvailability(reportState);
@@ -60,10 +63,11 @@ export function useModifyReportSubmission({
    * Returns the created simulation IDs, domain-model simulations, and report payload.
    */
   const createSimulationsAndReport = useCallback(async () => {
-    const { simulationIds, simulations } = await createReportSimulations({
+    const { simulationIds, simulations, simulationStates } = await createReportSimulations({
       simulationStates: reportState.simulations,
       countryId,
       currentLawId,
+      reportYear: reportState.year,
     });
 
     const reportPayload = ReportAdapter.toCreationPayload({
@@ -73,7 +77,7 @@ export function useModifyReportSubmission({
       apiVersion: null,
     } as Report);
 
-    return { simulationIds, simulations, reportPayload };
+    return { simulationIds, simulations, simulationStates, reportPayload };
   }, [reportState, countryId, currentLawId]);
 
   /**
@@ -81,7 +85,12 @@ export function useModifyReportSubmission({
    * Mirrors the logic in useCreateReport.onSuccess.
    */
   const startCalculation = useCallback(
-    async (report: Report, simulations: (Simulation | null)[]) => {
+    async (
+      report: Report,
+      simulations: (Simulation | null)[],
+      simulationStates: SimulationStateProps[]
+    ) => {
+      queryClient.setQueryData(reportKeys.byId(String(report.id)), report);
       const simulation1 = simulations[0];
       if (!simulation1) {
         return;
@@ -96,11 +105,15 @@ export function useModifyReportSubmission({
             .startCalculation({
               calcId: sim.id!,
               targetType: 'simulation',
+              reportId: String(report.id),
               countryId: report.countryId,
               year: report.year,
               simulations: { simulation1: sim, simulation2: null },
               populations: {
-                household1: reportState.simulations[0]?.population?.household || null,
+                household1:
+                  simulationStates.find(
+                    (candidate) => candidate.population?.household?.id === sim.populationId
+                  )?.population?.household || null,
                 household2: null,
                 geography1: null,
                 geography2: null,
@@ -126,13 +139,13 @@ export function useModifyReportSubmission({
           populations: {
             household1: null,
             household2: null,
-            geography1: reportState.simulations[0]?.population?.geography || null,
+            geography1: simulationStates[0]?.population?.geography || null,
             geography2: null,
           },
         });
       }
     },
-    [manager, reportState]
+    [manager, queryClient]
   );
 
   /**
@@ -145,9 +158,10 @@ export function useModifyReportSubmission({
         return;
       }
       setIsSavingNew(true);
+      setSubmissionError(null);
 
       try {
-        const { simulations, reportPayload } = await createSimulationsAndReport();
+        const { simulations, simulationStates, reportPayload } = await createSimulationsAndReport();
 
         const result = await createReportAndAssociateWithUser({
           countryId,
@@ -159,10 +173,13 @@ export function useModifyReportSubmission({
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
-        await startCalculation(result.report, simulations);
+        await startCalculation(result.report, simulations, simulationStates);
         onSuccess(result.userReport.id);
       } catch (error) {
         console.error('[useModifyReportSubmission] Save as new failed:', error);
+        setSubmissionError(
+          error instanceof Error ? error : new Error('Unable to save this report.')
+        );
         setIsSavingNew(false);
       }
     },
@@ -187,9 +204,10 @@ export function useModifyReportSubmission({
       return;
     }
     setIsReplacing(true);
+    setSubmissionError(null);
 
     try {
-      const { simulations, reportPayload } = await createSimulationsAndReport();
+      const { simulations, simulationStates, reportPayload } = await createSimulationsAndReport();
 
       const reportMetadata = await createBaseReport(countryId, reportPayload);
       const report = ReportAdapter.fromMetadata(reportMetadata);
@@ -202,10 +220,13 @@ export function useModifyReportSubmission({
       queryClient.invalidateQueries({ queryKey: reportKeys.all });
       queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
-      await startCalculation(report, simulations);
+      await startCalculation(report, simulations, simulationStates);
       onSuccess(existingUserReportId);
     } catch (error) {
       console.error('[useModifyReportSubmission] Replace failed:', error);
+      setSubmissionError(
+        error instanceof Error ? error : new Error('Unable to update this report.')
+      );
       setIsReplacing(false);
     }
   }, [
@@ -227,5 +248,6 @@ export function useModifyReportSubmission({
     isSavingNew,
     isReplacing,
     isReportSubmissionBlocked,
+    submissionError,
   };
 }

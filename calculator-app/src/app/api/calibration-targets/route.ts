@@ -15,7 +15,7 @@ export const maxDuration = 60;
 
 const BASE_URL =
   process.env.CALIBRATION_API_URL ??
-  "https://calibration-diagnostics.vercel.app/calibration/dashboard/api/populace";
+  "https://calibration-diagnostics.vercel.app/calibration/dashboard/api/microcosm";
 const PAGE_SIZE = 500;
 const MAX_PAGES = 40;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;

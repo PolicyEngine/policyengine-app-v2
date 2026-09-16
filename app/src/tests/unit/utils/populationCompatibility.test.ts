@@ -77,12 +77,12 @@ describe('populationCompatibility', () => {
   });
 
   describe('getPopulationLabel', () => {
-    it('given null population then returns Unknown Household(s)', () => {
+    it('given null population then returns Unknown household(s)', () => {
       // When
       const result = getPopulationLabel(null);
 
       // Then
-      expect(result).toBe('Unknown Household(s)');
+      expect(result).toBe('Unknown household(s)');
     });
 
     it('given population with label then returns label', () => {
@@ -145,7 +145,7 @@ describe('populationCompatibility', () => {
       expect(result).toBe('Custom Label');
     });
 
-    it('given empty population then returns Unknown Household(s)', () => {
+    it('given empty population then returns Unknown household(s)', () => {
       // Given
       const population = mockPopulationEmpty();
 
@@ -153,17 +153,17 @@ describe('populationCompatibility', () => {
       const result = getPopulationLabel(population);
 
       // Then
-      expect(result).toBe('Unknown Household(s)');
+      expect(result).toBe('Unknown household(s)');
     });
   });
 
   describe('getSimulationLabel', () => {
-    it('given null simulation then returns Unknown Simulation', () => {
+    it('given null simulation then returns Unknown simulation', () => {
       // When
       const result = getSimulationLabel(null);
 
       // Then
-      expect(result).toBe('Unknown Simulation');
+      expect(result).toBe('Unknown simulation');
     });
 
     it('given simulation with label then returns label', () => {
@@ -200,7 +200,7 @@ describe('populationCompatibility', () => {
       expect(result).toBe('Custom Simulation');
     });
 
-    it('given simulation with no label or ID then returns Unknown Simulation', () => {
+    it('given simulation with no label or ID then returns Unknown simulation', () => {
       // Given
       const simulation = mockSimulationWithId(undefined);
 
@@ -208,7 +208,7 @@ describe('populationCompatibility', () => {
       const result = getSimulationLabel(simulation);
 
       // Then
-      expect(result).toBe('Unknown Simulation');
+      expect(result).toBe('Unknown simulation');
     });
   });
 });

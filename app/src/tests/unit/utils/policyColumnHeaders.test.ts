@@ -31,7 +31,7 @@ describe('policyColumnHeaders', () => {
       const result = getPolicyLabel(undefined, []);
 
       // Then
-      expect(result).toBe('Unnamed Policy');
+      expect(result).toBe('Unnamed policy');
     });
 
     test('given policy without label then returns default label', () => {
@@ -42,7 +42,7 @@ describe('policyColumnHeaders', () => {
       const result = getPolicyLabel(policyWithoutLabel, []);
 
       // Then
-      expect(result).toBe('Unnamed Policy');
+      expect(result).toBe('Unnamed policy');
     });
   });
 

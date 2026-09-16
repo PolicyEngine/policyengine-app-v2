@@ -25,4 +25,6 @@ export interface Simulation {
   isCreated: boolean; // Always present, defaults to false
   output?: unknown | null; // Calculation result (for household simulations)
   status?: 'pending' | 'complete' | 'error'; // Calculation status (matches API)
+  errorMessage?: string; // Persisted calculation failure, including legacy plain messages
+  errorCode?: string; // API code recovered from the persisted error message
 }

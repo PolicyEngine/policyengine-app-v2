@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { IconHome } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import PathwayView from '@/components/common/PathwayView';
+import HouseholdSaveError from '@/components/household/HouseholdSaveError';
 import { Group, Spinner, Stack, Text } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -21,6 +22,7 @@ import { HouseholdCreationContent } from '@/pages/reportBuilder/modals/populatio
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
+import { getModelMetadataError } from '@/utils/spmSelection';
 
 interface HouseholdBuilderViewProps {
   population: PopulationStateProps;
@@ -99,24 +101,9 @@ function buildViewHeader(
   );
 }
 
-export default function HouseholdBuilderView({
-  population,
-  onSubmitSuccess,
-  onBack,
-}: HouseholdBuilderViewProps) {
-  const currentCountryId = useCurrentCountry();
+export default function HouseholdBuilderView(props: HouseholdBuilderViewProps) {
   const reportYear = useReportYear();
-
-  // Get metadata-driven options
-  const basicInputFields = useSelector(getBasicInputFields);
-  const metadata = useSelector((state: RootState) => state.metadata);
-  const { loading, error } = metadata;
-
-  // Get all basic non-person fields dynamically (country-agnostic)
-  // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically
-  const basicNonPersonFields = Object.entries(basicInputFields)
-    .filter(([key]) => key !== 'person')
-    .flatMap(([, fields]) => fields);
+  const { onBack } = props;
 
   // Error boundary: Show error if no report year available
   if (!reportYear) {
@@ -125,7 +112,7 @@ export default function HouseholdBuilderView({
         title="Create household"
         content={
           <Stack align="center" gap="md" className="tw:p-xl">
-            <p className="tw:text-red-600 tw:font-semibold">Configuration Error</p>
+            <p className="tw:text-red-600 tw:font-semibold">Configuration error</p>
             <p className="tw:text-gray-500 tw:text-center">
               No report year available. Please return to the report creation page and select a year
               before creating a household.
@@ -140,6 +127,23 @@ export default function HouseholdBuilderView({
     );
   }
 
+  return <HouseholdBuilderForYear {...props} reportYear={reportYear} />;
+}
+
+function HouseholdBuilderForYear({
+  population,
+  onSubmitSuccess,
+  onBack,
+  reportYear,
+}: HouseholdBuilderViewProps & { reportYear: string }) {
+  const currentCountryId = useCurrentCountry();
+  const basicInputFields = useSelector(getBasicInputFields);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const { loading } = metadata;
+  const basicNonPersonFields = Object.entries(basicInputFields)
+    .filter(([key]) => key !== 'person')
+    .flatMap(([, fields]) => fields);
+
   // Initialize household with "you" if none exists
   const [household, setLocalHousehold] = useState<HouseholdModel>(() => {
     if (population?.household) {
@@ -153,6 +157,7 @@ export default function HouseholdBuilderView({
     typeof HouseholdValidation.isReadyForSimulation
   > | null>(null);
   const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
+  const [saveError, setSaveError] = useState<Error | null>(null);
 
   const composition = household.deriveBuilderComposition(reportYear);
   const maritalStatus = composition.maritalStatus;
@@ -163,12 +168,12 @@ export default function HouseholdBuilderView({
     setValidation(null);
     const timeoutId = setTimeout(() => {
       setValidation(
-        HouseholdValidation.isReadyForSimulation(household, currentCountryId, reportYear)
+        HouseholdValidation.isReadyForSimulation(household, currentCountryId, reportYear, metadata)
       );
     }, 400);
 
     return () => clearTimeout(timeoutId);
-  }, [currentCountryId, household, reportYear]);
+  }, [currentCountryId, household, reportYear, metadata]);
 
   // Handler for marital status change - directly modifies household
   const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
@@ -186,46 +191,31 @@ export default function HouseholdBuilderView({
     setLocalHousehold((prev) => prev.withLabel(label.trim() ? label : null));
   };
 
-  // Show error state if metadata failed to load
-  if (error) {
-    return (
-      <PathwayView
-        title="Create household"
-        content={
-          <Stack align="center" gap="md" className="tw:p-xl">
-            <p className="tw:text-red-600 tw:font-semibold">Failed to Load Required Data</p>
-            <p className="tw:text-gray-500 tw:text-center">
-              Unable to load household configuration data. Please refresh the page and try again.
-            </p>
-          </Stack>
-        }
-        buttonPreset="cancel-only"
-      />
-    );
-  }
-
   const handleSubmit = useCallback(async () => {
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(
       household,
       currentCountryId,
-      reportYear
+      reportYear,
+      metadata
     );
+    setValidation(validation);
     if (!validation.isValid) {
       return;
     }
 
     const payload = household.toV1CreationPayload();
 
+    setSaveError(null);
     try {
       const result = await createHousehold(payload);
 
       const householdId = result.result.household_id;
       onSubmitSuccess(householdId, household.withId(householdId));
     } catch (err) {
-      // Error is handled by the mutation
+      setSaveError(err instanceof Error ? err : new Error('Unable to save household.'));
     }
-  }, [createHousehold, currentCountryId, household, onSubmitSuccess, reportYear]);
+  }, [createHousehold, currentCountryId, household, onSubmitSuccess, reportYear, metadata]);
 
   const requestSubmit = useCallback(() => {
     if (!household.label?.trim()) {
@@ -236,7 +226,8 @@ export default function HouseholdBuilderView({
     void handleSubmit();
   }, [handleSubmit, household.label]);
 
-  const canProceed = validation?.isValid ?? false;
+  const canProceed =
+    (validation?.isValid ?? false) && !getModelMetadataError(currentCountryId, metadata);
   const viewTitle = population?.household ? 'Edit household' : 'Create household';
   const primaryActionLabel = population?.household ? 'Save household' : 'Create household';
 
@@ -260,6 +251,15 @@ export default function HouseholdBuilderView({
         handleHouseholdLabelChange,
         composition.people.length
       )}
+
+      <HouseholdSaveError
+        error={saveError}
+        onResetSPM={() => {
+          setLocalHousehold(household.withSPM(undefined));
+          setValidation(null);
+          setSaveError(null);
+        }}
+      />
 
       <HouseholdCreationContent
         householdDraft={household}

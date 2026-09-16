@@ -346,6 +346,7 @@ export function IngredientSectionFull({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
+                      aria-label={`Swap ${type}`}
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         onBrowseMore?.();
@@ -366,9 +367,7 @@ export function IngredientSectionFull({
                       <IconTransfer size={14} />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    Swap {type === 'population' ? 'household(s)' : type}
-                  </TooltipContent>
+                  <TooltipContent side="bottom">Swap {type}</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>

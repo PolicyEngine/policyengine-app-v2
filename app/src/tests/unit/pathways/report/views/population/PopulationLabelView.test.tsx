@@ -59,7 +59,7 @@ describe('PopulationLabelView', () => {
   });
 
   describe('Default labels', () => {
-    test('given household population then shows Custom Household default', () => {
+    test('given household population then shows Custom household default', () => {
       // When
       render(
         <PopulationLabelView
@@ -71,7 +71,7 @@ describe('PopulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('Custom Household');
+      expect(screen.getByRole('textbox')).toHaveValue('Custom household');
     });
 
     test('given geography population then shows geography-based label', () => {
@@ -86,7 +86,7 @@ describe('PopulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('National Households');
+      expect(screen.getByRole('textbox')).toHaveValue('National households');
     });
 
     test('given existing label then shows that label', () => {

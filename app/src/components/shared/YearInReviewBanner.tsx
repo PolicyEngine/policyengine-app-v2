@@ -73,7 +73,7 @@ export default function YearInReviewBanner() {
             color: colors.white,
           }}
         >
-          Explore our 2025 Year in Review
+          Explore our 2025 year in review
         </Text>
         <Text
           style={{

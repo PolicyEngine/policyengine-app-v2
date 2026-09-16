@@ -1,7 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { vi } from 'vitest';
+import { Household } from '@/models/Household';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
+import { hydrateReportBuilderState } from '@/pages/reportBuilder/utils/hydrateReportBuilderState';
 import metadataReducer from '@/reducers/metadataReducer';
+import { ownershipHydrationData } from '@/tests/fixtures/spm/reportBuilderOwnershipMocks';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 // Test constants
 export const TEST_SIMULATION_IDS = {
@@ -155,4 +159,49 @@ export function setupDefaultMocks() {
     callbacks?.onSuccess?.({ userReport: { id: 'user-report-new' } });
     return Promise.resolve();
   });
+}
+
+export const CORRECTED_REPORT_YEAR = '2023';
+export function mockDraftHouseholdSimulation(countryId: 'us' | 'uk' = 'us') {
+  return {
+    ...mockSingleSimReportState.simulations[0],
+    countryId,
+    population: {
+      label: TEST_LABELS.BASELINE,
+      type: 'household' as const,
+      household: Household.starter(countryId, CORRECTED_REPORT_YEAR),
+      householdNeedsCreation: true,
+      geography: null,
+    },
+  };
+}
+
+export function mixedPopulationReportState(
+  householdFirst: boolean,
+  source: 'draft' | 'hydrated' = 'draft'
+): ReportBuilderState {
+  if (source === 'hydrated') {
+    const data = ownershipHydrationData('mixed-population-report');
+    const geography = mockTwoSimReportState.simulations[0].population.geography!;
+    const simulations: Simulation[] = data.simulations.map((simulation, index) =>
+      index === (householdFirst ? 1 : 0)
+        ? { ...simulation, populationId: geography.geographyId, populationType: 'geography' }
+        : simulation
+    );
+    return hydrateReportBuilderState({
+      ...data,
+      simulations,
+      geographies: [geography],
+      currentLawId: CURRENT_LAW_ID,
+    });
+  }
+  const householdSimulation = mockDraftHouseholdSimulation();
+  const geographySimulation = mockTwoSimReportState.simulations[1];
+  return {
+    ...mockTwoSimReportState,
+    year: CORRECTED_REPORT_YEAR,
+    simulations: householdFirst
+      ? [householdSimulation, geographySimulation]
+      : [geographySimulation, householdSimulation],
+  };
 }

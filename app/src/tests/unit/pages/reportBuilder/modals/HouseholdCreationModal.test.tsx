@@ -11,6 +11,10 @@ const MODAL_TEST_TIMEOUT_MS = 20_000;
 
 const mockReduxState = {
   metadata: {
+    currentCountry: 'us',
+    loading: false,
+    error: null,
+    version: 'test-model',
     basicInputs: [],
     variables: {},
     entities: {},

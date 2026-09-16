@@ -70,7 +70,7 @@ export interface CalibrationMatches {
 }
 
 export const CALIBRATION_DASHBOARD_URL =
-  'https://calibration-diagnostics.vercel.app/calibration/dashboard/populace/targets';
+  'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets';
 
 /**
  * The dashboard's targets page filtered the way it accepts: by source and
