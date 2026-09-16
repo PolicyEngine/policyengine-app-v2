@@ -6,7 +6,7 @@
  * area — the sidebar itself always shows the parameter search + tree.
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   IconChevronDown,
   IconChevronRight,
@@ -31,6 +31,8 @@ import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 import { modalStyles } from '../../styles';
 import { ParameterSidebarProps } from './types';
 
+const VISIBLE_CHILDREN_VIEWPORT_FRACTION = 0.5;
+
 export function ParameterSidebar({
   parameterTree,
   metadataLoading,
@@ -47,6 +49,57 @@ export function ParameterSidebar({
   const hasOverview = activeTab !== undefined && onTabChange !== undefined;
   const colorConfig = INGREDIENT_COLORS.policy;
   const [searchOpen, setSearchOpen] = useState(false);
+  const treeScrollRef = useRef<HTMLDivElement>(null);
+  const folderButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const childGroupRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const pendingExpansionRef = useRef<string | null>(null);
+
+  const handleMenuItemClick = useCallback(
+    (name: string, hasChildren: boolean, isExpanded: boolean) => {
+      if (hasChildren && !isExpanded) {
+        pendingExpansionRef.current = name;
+      }
+      onMenuItemClick(name);
+    },
+    [onMenuItemClick]
+  );
+
+  useLayoutEffect(() => {
+    const pendingExpansion = pendingExpansionRef.current;
+    if (!pendingExpansion || !expandedMenuItems.has(pendingExpansion)) {
+      return;
+    }
+    pendingExpansionRef.current = null;
+
+    const treeScroll = treeScrollRef.current;
+    const folderButton = folderButtonRefs.current.get(pendingExpansion);
+    const childGroup = childGroupRefs.current.get(pendingExpansion);
+    if (!treeScroll || !folderButton || !childGroup) {
+      return;
+    }
+
+    const treeBounds = treeScroll.getBoundingClientRect();
+    const folderBounds = folderButton.getBoundingClientRect();
+    const childBounds = childGroup.getBoundingClientRect();
+    const treeHeight = treeBounds.bottom - treeBounds.top;
+    const desiredChildBottom = Math.min(
+      childBounds.bottom,
+      folderBounds.bottom + treeHeight * VISIBLE_CHILDREN_VIEWPORT_FRACTION
+    );
+
+    if (folderBounds.top < treeBounds.top) {
+      treeScroll.scrollTop += folderBounds.top - treeBounds.top;
+      return;
+    }
+
+    if (desiredChildBottom > treeBounds.bottom) {
+      const availableScrollBeforeFolderIsHidden = folderBounds.top - treeBounds.top;
+      treeScroll.scrollTop += Math.min(
+        desiredChildBottom - treeBounds.bottom,
+        availableScrollBeforeFolderIsHidden
+      );
+    }
+  }, [expandedMenuItems]);
 
   // Filter search results
   const filteredSearchResults = useMemo(() => {
@@ -71,8 +124,16 @@ export function ParameterSidebar({
           return (
             <div key={item.name}>
               <button
+                ref={(element) => {
+                  if (element && hasChildren) {
+                    folderButtonRefs.current.set(item.name, element);
+                  } else {
+                    folderButtonRefs.current.delete(item.name);
+                  }
+                }}
                 type="button"
-                onClick={() => onMenuItemClick(item.name)}
+                aria-expanded={hasChildren ? isExpanded : undefined}
+                onClick={() => handleMenuItemClick(item.name, hasChildren, isExpanded)}
                 style={{
                   all: 'unset',
                   cursor: 'pointer',
@@ -107,13 +168,26 @@ export function ParameterSidebar({
                 </span>
               </button>
               {hasChildren && isExpanded && (
-                <div style={{ paddingLeft: 16 }}>{renderMenuItems(item.children!)}</div>
+                <div
+                  ref={(element) => {
+                    if (element) {
+                      childGroupRefs.current.set(item.name, element);
+                    } else {
+                      childGroupRefs.current.delete(item.name);
+                    }
+                  }}
+                  role="group"
+                  aria-label={`${item.label} parameters`}
+                  style={{ paddingLeft: 16 }}
+                >
+                  {renderMenuItems(item.children!)}
+                </div>
               )}
             </div>
           );
         });
     },
-    [activeTab, selectedParam?.parameter, expandedMenuItems, onMenuItemClick, colorConfig]
+    [activeTab, selectedParam?.parameter, expandedMenuItems, handleMenuItemClick, colorConfig]
   );
 
   // Memoize the rendered tree
@@ -223,7 +297,13 @@ export function ParameterSidebar({
             </PopoverContent>
           </Popover>
         </div>
-        <div className="tw:flex-1 tw:min-h-0" style={{ overflowY: 'scroll' }}>
+        <div
+          ref={treeScrollRef}
+          role="region"
+          aria-label="Policy parameter tree"
+          className="tw:flex-1 tw:min-h-0"
+          style={{ overflowY: 'scroll' }}
+        >
           <div style={{ padding: spacing.sm }}>
             {metadataLoading || !parameterTree ? (
               <Stack gap="xs">
