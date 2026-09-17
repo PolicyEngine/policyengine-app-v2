@@ -1,5 +1,14 @@
 [
   {
+    "title": "2025 SPM poverty: what Census reported, and what threshold growth did to it",
+    "description": "Census put 2025 SPM poverty at 13.1 percent, up 0.1 point, with thresholds rising 4.4 to 6.3 percent against 2.6 percent inflation. The numbers by age, housing tenure and state, what an SPM threshold is, and the rates with thresholds held at 2024 values: 12.3 percent, down 0.7.",
+    "date": "2026-09-15",
+    "tags": ["us", "technical"],
+    "authors": ["max-ghenis"],
+    "filename": "2025-spm-poverty-at-2024-thresholds.md",
+    "image": "2025-spm-poverty-at-2024-thresholds/cover.webp"
+  },
+  {
     "title": "Who bears the AI shock? Distributional and fiscal incidence in the UK",
     "description": "PolicyEngine traces AI employment, wage and capital shocks through the UK tax-benefit system, estimating the budgetary and distributional impacts across incidence scenarios.",
     "date": "2026-08-04",
