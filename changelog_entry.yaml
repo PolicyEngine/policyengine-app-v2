@@ -24,3 +24,5 @@
 - Make report-year corrections save new household inputs for the selected period without aging, inflation adjustments, or changes to historical households and policy dates
 - Block reports that mix households and geographies before saving, retain corrective SPM errors in earnings and marginal tax rate views without automatic retries, and show invalid saved reports as load errors
 - Match a report's scorecard context by the model variables the reform reaches, the same walk as calibration, and say how near the reform each program sits; SPM poverty joins the programs the scorecard can measure
+- Replace on-demand external-estimate search with related baseline and reform comparisons from the scorecard, preserving periods, units, caveats, and computation provenance
+- Present reports with a concise reform cover, linked section summaries, and compact economic charts grouped by household incomes, poverty, and inequality

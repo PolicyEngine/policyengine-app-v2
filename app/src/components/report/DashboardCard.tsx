@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { IconArrowsMinimize, IconDownload } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
+import { ChartContainer } from '@/components/ChartContainer';
 import { Text } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -16,6 +17,9 @@ export const SHRUNKEN_CARD_HEIGHT = 200;
 export type ExpandDirection = 'down-right' | 'down-left' | 'up-right' | 'up-left';
 
 interface DashboardCardProps {
+  alwaysExpanded?: boolean;
+  hidden?: boolean;
+  staticTitle?: string;
   mode: 'expanded' | 'shrunken';
   zIndex: number;
   expandDirection: ExpandDirection;
@@ -73,7 +77,7 @@ type Phase =
   | 'pre-collapse' // expanded content fading out
   | 'collapsing'; // card resizing back to cell dimensions
 
-export default function DashboardCard({
+function AnimatedDashboardCard({
   mode,
   zIndex,
   expandDirection,
@@ -438,5 +442,39 @@ export default function DashboardCard({
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function DashboardCard(props: DashboardCardProps) {
+  if (props.hidden) {
+    return null;
+  }
+  if (!props.alwaysExpanded) {
+    return <AnimatedDashboardCard {...props} />;
+  }
+  return (
+    <section
+      style={{
+        minWidth: 0,
+      }}
+    >
+      <ChartContainer
+        title={props.staticTitle || props.expandedTitle || ''}
+        downloadFilename={props.downloadFilename}
+        csvFilename={props.csvFilename}
+        csvData={props.csvData}
+      >
+        {props.expandedControls && (
+          <div
+            style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm }}
+          >
+            {props.expandedControls}
+          </div>
+        )}
+        <div style={{ height: 'clamp(210px, calc((100vh - 620px) / 2), 280px)', minWidth: 0 }}>
+          {props.expandedContent}
+        </div>
+      </ChartContainer>
+    </section>
   );
 }

@@ -9,11 +9,11 @@ import {
   ModelValidationRow,
   PROGRAM_LABELS,
   SCORECARD_COMPARISON_URL,
-  SCORECARD_METHOD_URL,
   SCORECARD_URL,
   ScorecardMatches,
   scorecardMatchesForPaths,
 } from '@/libs/flagship/modelValidation';
+import { ScorecardClaimCard } from './ScorecardComparisons';
 
 /**
  * The two validation surfaces for a bill report:
@@ -33,6 +33,15 @@ function compactMoney(value: number): string {
     return `${sign}$${(abs / 1e6).toFixed(1)}M`;
   }
   return `${sign}$${Math.round(abs).toLocaleString()}`;
+}
+
+function metricLabel(row: ModelValidationRow): string {
+  if (row.metric.endsWith('_count') && row.unitConcept?.replaceAll(' ', '_') === 'tax_units') {
+    return row.metric === 'eligible_count'
+      ? 'Eligible tax units (proxy)'
+      : `${row.metric.replaceAll('_count', '').replaceAll('_', ' ')} tax units`;
+  }
+  return METRIC_LABELS[row.metric] ?? row.metric.replaceAll('_', ' ');
 }
 
 function metricValue(row: ModelValidationRow, value: number): string {
@@ -184,7 +193,11 @@ export function BillValidationSection({
                       href={claim.sourceUrl}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: colors.primary[700] }}
+                      style={{
+                        color: colors.primary[700],
+                        textDecoration: 'underline',
+                        textUnderlineOffset: '3px',
+                      }}
                     >
                       source
                     </a>
@@ -279,7 +292,13 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
   return trackRecord;
 }
 
-export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTrackRecord }) {
+export function ModelTrackRecordSection({
+  trackRecord,
+  embedded = false,
+}: {
+  trackRecord: ModelTrackRecord;
+  embedded?: boolean;
+}) {
   if (trackRecord === null) {
     return (
       <SectionCard>
@@ -289,7 +308,11 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
             href={SCORECARD_URL}
             target="_blank"
             rel="noreferrer"
-            style={{ color: colors.primary[700] }}
+            style={{
+              color: colors.primary[700],
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px',
+            }}
           >
             PolicyEngine scorecard
           </a>{' '}
@@ -325,7 +348,11 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
             href={SCORECARD_COMPARISON_URL}
             target="_blank"
             rel="noreferrer"
-            style={{ color: colors.primary[700] }}
+            style={{
+              color: colors.primary[700],
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px',
+            }}
           >
             PolicyEngine scorecard
           </a>
@@ -335,153 +362,70 @@ export function ModelTrackRecordSection({ trackRecord }: { trackRecord: ModelTra
     );
   }
 
-  // The external sources behind the rows, named once with their pages.
-  const sources = [
-    ...new Map(
-      rows
-        .filter((row) => row.sourceName || row.sourceUrl)
-        .map((row) => [row.source, { name: row.sourceName ?? row.source, url: row.sourceUrl }])
-    ).values(),
-  ];
-
-  return (
-    <SectionCard>
-      <SectionTitle>
-        Program context —{' '}
-        {programs.map((match) => PROGRAM_LABELS[match.program] ?? match.program).join(', ')}
-      </SectionTitle>
-      <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        How the model&apos;s baseline representation of the programs this reform moves compares with
-        independent external measurement, nearest program first. This is credibility context for the
-        ingredients behind the estimate — not a check of this reform&apos;s numbers. Matched through
-        the model
-        {trackRecord.modelVersion ? ` at policyengine-us ${trackRecord.modelVersion}` : ''}. From
-        the{' '}
-        <a
-          href={SCORECARD_COMPARISON_URL}
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: colors.primary[700] }}
-        >
-          PolicyEngine scorecard
-        </a>
-        {' ('}
-        <a
-          href={SCORECARD_METHOD_URL}
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: colors.primary[700] }}
-        >
-          sources and method
-        </a>
-        ). &ldquo;Held out&rdquo; means the dataset was not calibrated to that comparison.
-        {sources.length > 0 && (
-          <>
-            {' '}
-            External figures from{' '}
-            {sources.map((source, index) => (
-              <span key={source.name}>
-                {index > 0 ? ', ' : ''}
-                {source.url ? (
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: colors.primary[700] }}
-                  >
-                    {source.name}
-                  </a>
-                ) : (
-                  source.name
-                )}
-              </span>
-            ))}
-            .
-          </>
-        )}
-      </Text>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th style={headCellStyle}>Metric</th>
-              <th style={headCellStyle}>External</th>
-              <th style={headCellStyle}>PolicyEngine</th>
-              <th style={headCellStyle}>Ratio</th>
-              <th style={headCellStyle} />
-            </tr>
-          </thead>
-          <tbody>
-            {programs.map((match) => (
-              <ProgramRows
-                key={match.program}
-                match={match}
-                rows={rows.filter((row) => row.program === match.program)}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </SectionCard>
+  const cards = (
+    <Stack
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+        gap: spacing.md,
+        alignItems: 'start',
+      }}
+    >
+      {rows.map((row) => {
+        const program = programs.find((match) => match.program === row.program)!;
+        return (
+          <ScorecardClaimCard
+            key={`${row.source}-${row.program}-${row.metric}`}
+            presentation={{
+              title: `${PROGRAM_LABELS[row.program] ?? row.program} — ${metricLabel(row)}`,
+              sourceName: row.sourceName ?? row.source,
+              externalPeriod: row.period ?? 'Period not recorded',
+              modelPeriod: row.pePeriod ?? 'Period not recorded',
+              externalValue: metricValue(row, row.externalValue),
+              peValue: metricValue(row, row.peValue),
+            }}
+            row={{
+              claim_id: `${row.source}-${row.program}-${row.metric}`,
+              country: 'US',
+              geography: 'US',
+              name: metricLabel(row),
+              source: row.source,
+              url: row.sourceUrl ?? undefined,
+              metric: row.metric,
+              unit_concept: row.unitConcept ?? '',
+              period: row.period ?? '',
+              reform_framework: 'baseline',
+              reform_key: 'baseline',
+              external_value: row.externalValue,
+              calibration_relationship: row.heldOut ? 'held_out' : 'consumed_as_target',
+              matchBasis: 'variable',
+              diagnosis: row.diagnosis ? { title: row.diagnosis } : null,
+              latest: {
+                value: row.peValue,
+                status: row.status,
+                construction: row.construction ?? undefined,
+                engine_version: row.engineVersion ?? undefined,
+                data_bundle: row.dataBundle ?? undefined,
+                annotations: [
+                  `${RING_LABELS[program.ring]} · ${describeDepth(program.depth)}`,
+                  `Matched at policyengine-us ${trackRecord.modelVersion}.`,
+                  ...(row.notes ?? []).filter((note) => !note.startsWith('The 2026 column')),
+                  ...(row.calibrationBasis ? [row.calibrationBasis] : []),
+                ],
+                ratio: row.ratio,
+              },
+            }}
+          />
+        );
+      })}
+    </Stack>
   );
-}
-
-/**
- * One program's comparison rows under a heading that says how near the
- * reform the program sits, in the calibration card's words.
- */
-function ProgramRows({
-  match,
-  rows,
-}: {
-  match: ScorecardMatches['programs'][number];
-  rows: ModelValidationRow[];
-}) {
-  return (
-    <>
-      <tr>
-        <td
-          colSpan={5}
-          style={{
-            ...cellStyle,
-            paddingTop: spacing.sm,
-            fontWeight: typography.fontWeight.medium,
-          }}
-          title={`Computed from ${match.variable.replaceAll('_', ' ')}`}
-        >
-          {PROGRAM_LABELS[match.program] ?? match.program}{' '}
-          <span style={{ color: colors.text.secondary, fontWeight: typography.fontWeight.normal }}>
-            · {RING_LABELS[match.ring]} · {describeDepth(match.depth)}
-          </span>
-        </td>
-      </tr>
-      {rows.map((row) => (
-        <tr key={`${row.program}-${row.metric}`}>
-          <td style={cellStyle}>{METRIC_LABELS[row.metric] ?? row.metric.replaceAll('_', ' ')}</td>
-          <td style={cellStyle}>
-            {row.sourceUrl ? (
-              <a
-                href={row.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                title={row.sourceName ?? row.source}
-                style={{ color: colors.primary[700] }}
-              >
-                {metricValue(row, row.externalValue)}
-              </a>
-            ) : (
-              metricValue(row, row.externalValue)
-            )}
-          </td>
-          <td style={cellStyle}>{metricValue(row, row.peValue)}</td>
-          <td style={cellStyle}>{row.ratio.toFixed(2)}×</td>
-          <td style={{ ...cellStyle, fontSize: typography.fontSize.xs }}>
-            <span style={{ color: row.heldOut ? colors.primary[700] : colors.text.secondary }}>
-              {row.heldOut ? 'held out' : 'calibrated'}
-            </span>
-          </td>
-        </tr>
-      ))}
-    </>
+  return embedded ? (
+    cards
+  ) : (
+    <SectionCard>
+      <SectionTitle>Baseline comparisons</SectionTitle>
+      {cards}
+    </SectionCard>
   );
 }

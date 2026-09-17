@@ -111,25 +111,18 @@ describe('ModelTrackRecordSection', () => {
       />
     );
 
-    expect(screen.getByText(/Program context — SNAP, Refundable CTC/)).toBeInTheDocument();
-    expect(screen.getByText(/at policyengine-us 1\.808\.0/)).toBeInTheDocument();
+    expect(screen.getByText('Baseline comparisons')).toBeInTheDocument();
+    expect(screen.getByText('SNAP — Eligible people')).toBeInTheDocument();
+    expect(screen.getByText('Refundable CTC — Eligibility rate')).toBeInTheDocument();
+    expect(screen.getAllByText(/at policyengine-us 1\.808\.0/)).toHaveLength(2);
     expect(screen.getByText(/Primary · reads the parameter directly/)).toBeInTheDocument();
     expect(screen.getByText(/Mechanism · 2 formula steps from the parameter/)).toBeInTheDocument();
-    expect(screen.getByText('Eligible people')).toBeInTheDocument();
-    expect(screen.getByText('Eligibility rate')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '69.1M' })).toHaveAttribute(
+    expect(screen.getByText('69.1M')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Read source' })[0]).toHaveAttribute(
       'href',
       'https://apps.urban.org/features/state-safety-net/'
     );
-    expect(
-      screen.getByRole('link', { name: /Urban Institute — State of the Safety Net 2025/ })
-    ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'PolicyEngine scorecard' })).toHaveAttribute(
-      'href',
-      'https://www.policyengine.org/scorecard?view=scorecard'
-    );
-    expect(screen.getByText('0.96×')).toBeInTheDocument();
-    expect(screen.getByText('held out')).toBeInTheDocument();
-    expect(screen.getByText('calibrated')).toBeInTheDocument();
+    expect(screen.getByText(/was not used to calibrate/)).toBeInTheDocument();
+    expect(screen.getByText(/not an independent holdout/)).toBeInTheDocument();
   });
 });

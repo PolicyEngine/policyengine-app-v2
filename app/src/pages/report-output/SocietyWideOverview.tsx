@@ -59,8 +59,10 @@ import PovertyImpactByGenderSubPage from './poverty-impact/PovertyImpactByGender
 import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubPage';
 
 interface SocietyWideOverviewProps {
+  groupedCharts?: boolean;
   output: SocietyWideReportOutput;
   showCongressionalCard?: boolean;
+  initialCard?: 'budget' | 'winners' | 'poverty' | 'decile';
 }
 
 // Fixed size for icon containers to ensure square aspect ratio
@@ -454,7 +456,9 @@ function CongressionalDistrictCard({
   gridGap,
   header,
   onToggleMode,
+  standalone = false,
 }: {
+  standalone?: boolean;
   output: SocietyWideReportOutput;
   mode: 'expanded' | 'shrunken';
   zIndex: number;
@@ -652,6 +656,95 @@ function CongressionalDistrictCard({
     savedErrorSummary.errorDistrictCount + (isOutcomeMode ? payloadOutcomeData.missingCount : 0);
   const mapErrorStates = savedErrorSummary.errorStateAbbrs;
 
+  // Standalone report tabs use normal document flow, not an expanding grid overlay.
+  if (standalone) {
+    return (
+      <Stack
+        style={{
+          gap: spacing.lg,
+          minWidth: 0,
+          padding: spacing.lg,
+          border: `1px solid ${colors.border.light}`,
+          borderRadius: spacing.radius.container,
+          background: colors.background.primary,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: spacing.md,
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+          }}
+        >
+          <MapTypeToggle value={mapVisualizationType} onChange={setMapVisualizationType} />
+          <SegmentedControl
+            value={congressionalMode}
+            onValueChange={(value) => setCongressionalMode(value as CongressionalMode)}
+            size="xs"
+            options={CONGRESSIONAL_MODE_OPTIONS}
+          />
+        </div>
+        {visibleErrorCount > 0 && (
+          <Text size="sm" c={colors.text.secondary}>
+            {visibleErrorCount} congressional districts are missing{' '}
+            {isOutcomeMode ? 'outcome' : 'impact'} data.
+          </Text>
+        )}
+        {mapData.length > 0 ? (
+          <USDistrictChoroplethMap
+            data={mapData}
+            visualizationType={mapVisualizationType}
+            config={{ ...mapConfig, height: 420 }}
+            focusState={stateCode ?? undefined}
+            errorStates={mapErrorStates}
+          />
+        ) : (
+          <Text>No congressional district {isOutcomeMode ? 'outcome ' : ''}data available</Text>
+        )}
+        {mapData.length > 0 && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
+              gap: spacing.xl,
+            }}
+          >
+            {isOutcomeMode ? (
+              <>
+                <DistrictListColumn
+                  items={top5}
+                  header={listHeaders.top}
+                  formatValue={rankingFormatValue}
+                />
+                <DistrictListColumn
+                  items={bottom5}
+                  header={listHeaders.bottom}
+                  formatValue={rankingFormatValue}
+                />
+              </>
+            ) : (
+              <>
+                <DistrictRankColumn
+                  items={top5}
+                  gainHeader={signedHeaders.topGain}
+                  lossHeader={signedHeaders.topLoss}
+                  formatValue={rankingFormatValue}
+                />
+                <DistrictRankColumn
+                  items={bottom5}
+                  gainHeader={signedHeaders.bottomGain}
+                  lossHeader={signedHeaders.bottomLoss}
+                  formatValue={rankingFormatValue}
+                />
+              </>
+            )}
+          </div>
+        )}
+      </Stack>
+    );
+  }
+
   return (
     <DashboardCard
       mode={mode}
@@ -800,13 +893,15 @@ function CongressionalDistrictCard({
 export default function SocietyWideOverview({
   output,
   showCongressionalCard,
+  initialCard,
+  groupedCharts = false,
 }: SocietyWideOverviewProps) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const symbol = currencySymbol(countryId);
   const reportYear = useReportYear();
   const isNoOp = isSocietyWideReportNoOp(output);
-  const [expandedCard, setExpandedCard] = useState<CardKey | null>(null);
+  const [expandedCard, setExpandedCard] = useState<CardKey | null>(initialCard ?? null);
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
   const [povertyDepth, setPovertyDepth] = useState<PovertyDepth>('regular');
   const [povertyBreakdown, setPovertyBreakdown] = useState<PovertyBreakdown>('by-age');
@@ -948,20 +1043,22 @@ export default function SocietyWideOverview({
   const povertyChart = (() => {
     if (povertyDepth === 'regular') {
       if (povertyBreakdown === 'by-age') {
-        return <PovertyImpactByAgeSubPage output={output} fillHeight />;
+        return <PovertyImpactByAgeSubPage output={output} compact={groupedCharts} fillHeight />;
       }
       if (povertyBreakdown === 'by-gender') {
-        return <PovertyImpactByGenderSubPage output={output} fillHeight />;
+        return <PovertyImpactByGenderSubPage output={output} compact={groupedCharts} fillHeight />;
       }
       if (povertyBreakdown === 'by-race') {
-        return <PovertyImpactByRaceSubPage output={output} fillHeight />;
+        return <PovertyImpactByRaceSubPage output={output} compact={groupedCharts} fillHeight />;
       }
     }
     if (povertyBreakdown === 'by-age') {
-      return <DeepPovertyImpactByAgeSubPage output={output} fillHeight />;
+      return <DeepPovertyImpactByAgeSubPage output={output} compact={groupedCharts} fillHeight />;
     }
     if (povertyBreakdown === 'by-gender') {
-      return <DeepPovertyImpactByGenderSubPage output={output} fillHeight />;
+      return (
+        <DeepPovertyImpactByGenderSubPage output={output} compact={groupedCharts} fillHeight />
+      );
     }
     return null;
   })();
@@ -1055,9 +1152,76 @@ export default function SocietyWideOverview({
   return (
     <Stack gap="lg">
       {isNoOp && <NoOpReportCallout year={reportYear} />}
-      <div className="tw:grid tw:grid-cols-2" style={{ gap: GRID_GAP }}>
+      {groupedCharts && (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: spacing['2xl'],
+            padding: `${spacing.md} ${spacing.lg}`,
+            background: colors.primary[50],
+            borderRadius: spacing.radius.container,
+          }}
+        >
+          <div>
+            <Text size="sm">
+              {budgetaryImpact < 0
+                ? 'Annual government cost'
+                : budgetaryImpact > 0
+                  ? 'Annual government savings'
+                  : 'Annual budget change'}
+            </Text>
+            <strong style={{ fontSize: typography.fontSize['2xl'], color: colors.primary[900] }}>
+              {budgetValue}
+            </strong>
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: spacing.xl }}>
+            {(countryId === 'us'
+              ? [
+                  ['Federal tax revenues', federalTaxImpact],
+                  ['State and local tax revenues', stateTaxImpact],
+                  ['Benefit spending', spendingImpact],
+                ]
+              : [
+                  ['Tax revenues', output.budget.tax_revenue_impact],
+                  ['Benefit spending', spendingImpact],
+                ]
+            ).map(([label, value]) => (
+              <div key={String(label)}>
+                <Text size="xs" c="dimmed">
+                  {label}
+                </Text>
+                <Text size="sm">
+                  {Number(value) > 0 ? '+' : Number(value) < 0 ? '−' : ''}
+                  {formatCurrencyAbbr(Math.abs(Number(value)), countryId, {
+                    maximumFractionDigits: 1,
+                  })}
+                </Text>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div
+        className={groupedCharts ? undefined : 'tw:grid tw:grid-cols-2'}
+        style={{
+          gap: GRID_GAP,
+          ...(groupedCharts
+            ? {
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 370px), 1fr))',
+                gap: spacing.lg,
+              }
+            : {}),
+        }}
+      >
         {/* Budgetary Impact — full width hero */}
         <DashboardCard
+          alwaysExpanded={groupedCharts}
+          staticTitle="Budgetary impact"
+          hidden={groupedCharts}
           mode={modeOf('budget')}
           zIndex={zOf('budget')}
           expandDirection="down-right"
@@ -1161,8 +1325,17 @@ export default function SocietyWideOverview({
           onToggleMode={() => toggle('budget')}
         />
 
+        {groupedCharts && (
+          <Text
+            style={{ gridColumn: '1 / -1', margin: 0, fontWeight: typography.fontWeight.semibold }}
+          >
+            Household incomes
+          </Text>
+        )}
         {/* Decile Impacts */}
         <DashboardCard
+          alwaysExpanded={groupedCharts}
+          staticTitle="Income change by decile"
           mode={modeOf('decile')}
           zIndex={zOf('decile')}
           expandDirection="down-right"
@@ -1229,9 +1402,17 @@ export default function SocietyWideOverview({
           csvData={decileCsvData}
           expandedContent={
             decileMode === 'absolute' ? (
-              <DistributionalImpactIncomeAverageSubPage output={output} fillHeight />
+              <DistributionalImpactIncomeAverageSubPage
+                output={output}
+                compact={groupedCharts}
+                fillHeight
+              />
             ) : (
-              <DistributionalImpactIncomeRelativeSubPage output={output} fillHeight />
+              <DistributionalImpactIncomeRelativeSubPage
+                output={output}
+                compact={groupedCharts}
+                fillHeight
+              />
             )
           }
           onToggleMode={() => toggle('decile')}
@@ -1239,6 +1420,8 @@ export default function SocietyWideOverview({
 
         {/* Winners and Losers */}
         <DashboardCard
+          alwaysExpanded={groupedCharts}
+          staticTitle="Winners and losers"
           mode={modeOf('winners')}
           zIndex={zOf('winners')}
           expandDirection="down-left"
@@ -1333,12 +1516,23 @@ export default function SocietyWideOverview({
           downloadFilename="winners-losers-income-decile.svg"
           csvFilename="winners-losers-income-decile.csv"
           csvData={getWinnersLosersCsvRows(output)}
-          expandedContent={<WinnersLosersIncomeDecileSubPage output={output} fillHeight />}
+          expandedContent={
+            <WinnersLosersIncomeDecileSubPage output={output} compact={groupedCharts} fillHeight />
+          }
           onToggleMode={() => toggle('winners')}
         />
 
+        {groupedCharts && (
+          <Text
+            style={{ gridColumn: '1 / -1', margin: 0, fontWeight: typography.fontWeight.semibold }}
+          >
+            Poverty and inequality
+          </Text>
+        )}
         {/* Poverty Impact */}
         <DashboardCard
+          alwaysExpanded={groupedCharts}
+          staticTitle="Poverty impact"
           mode={modeOf('poverty')}
           zIndex={zOf('poverty')}
           expandDirection="down-right"
@@ -1394,6 +1588,8 @@ export default function SocietyWideOverview({
 
         {/* Inequality Impact */}
         <DashboardCard
+          alwaysExpanded={groupedCharts}
+          staticTitle="Inequality impact"
           mode={modeOf('inequality')}
           zIndex={zOf('inequality')}
           expandDirection="down-left"
@@ -1423,7 +1619,9 @@ export default function SocietyWideOverview({
           downloadFilename="inequality-impact.svg"
           csvFilename="inequality-impact.csv"
           csvData={getInequalityCsvRows(output)}
-          expandedContent={<InequalityImpactSubPage output={output} fillHeight />}
+          expandedContent={
+            <InequalityImpactSubPage output={output} compact={groupedCharts} fillHeight />
+          }
           onToggleMode={() => toggle('inequality')}
         />
 
@@ -1453,45 +1651,15 @@ export function StandaloneCongressionalDistrictCard({
 }: {
   output: SocietyWideReportOutput;
 }) {
-  // Opens expanded (it is the section's only card) and collapses to the
-  // dashboard summary on demand, like the card does on the overview grid.
-  const [mode, setMode] = useState<'expanded' | 'shrunken'>('expanded');
-  const header = (
-    <Group gap="md" align="center">
-      <div
-        style={{
-          width: SECONDARY_ICON_SIZE,
-          height: SECONDARY_ICON_SIZE,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.gray[100],
-          borderRadius: spacing.xs,
-          flexShrink: 0,
-        }}
-      >
-        <IconMap size={20} color={colors.gray[700]} stroke={1.5} />
-      </div>
-      <Text
-        style={{
-          fontSize: typography.fontSize.base,
-          fontWeight: typography.fontWeight.semibold,
-          color: colors.text.primary,
-        }}
-      >
-        Congressional district impact
-      </Text>
-    </Group>
-  );
-
   return (
     <CongressionalDistrictCard
       output={output}
-      mode={mode}
+      standalone
+      mode="expanded"
       zIndex={1}
       gridGap={GRID_GAP}
-      header={header}
-      onToggleMode={() => setMode((prev) => (prev === 'expanded' ? 'shrunken' : 'expanded'))}
+      header={null}
+      onToggleMode={() => {}}
     />
   );
 }

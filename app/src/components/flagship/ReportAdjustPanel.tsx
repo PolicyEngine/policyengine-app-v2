@@ -238,10 +238,6 @@ export default function ReportAdjustPanel({
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          Reuses a matching saved reform or saves your version as a new one, then runs a fresh
-          report.
-        </Text>
       </Stack>
     </SidePanel>
   );
