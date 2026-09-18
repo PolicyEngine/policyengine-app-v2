@@ -691,56 +691,64 @@ function CongressionalDistrictCard({
             {isOutcomeMode ? 'outcome' : 'impact'} data.
           </Text>
         )}
-        {mapData.length > 0 ? (
-          <USDistrictChoroplethMap
-            data={mapData}
-            visualizationType={mapVisualizationType}
-            config={{ ...mapConfig, height: 340 }}
-            focusState={stateCode ?? undefined}
-            errorStates={mapErrorStates}
-          />
-        ) : (
-          <Text>No congressional district {isOutcomeMode ? 'outcome ' : ''}data available</Text>
-        )}
-        {mapData.length > 0 && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
-              gap: spacing.xl,
-            }}
-          >
-            {isOutcomeMode ? (
-              <>
-                <DistrictListColumn
-                  items={top5}
-                  header={listHeaders.top}
-                  formatValue={rankingFormatValue}
-                />
-                <DistrictListColumn
-                  items={bottom5}
-                  header={listHeaders.bottom}
-                  formatValue={rankingFormatValue}
-                />
-              </>
+        <div
+          style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xl, alignItems: 'flex-start' }}
+        >
+          <div style={{ flex: '1 1 600px', minWidth: 0 }}>
+            {mapData.length > 0 ? (
+              <USDistrictChoroplethMap
+                data={mapData}
+                visualizationType={mapVisualizationType}
+                config={{ ...mapConfig, height: 460 }}
+                focusState={stateCode ?? undefined}
+                errorStates={mapErrorStates}
+              />
             ) : (
-              <>
-                <DistrictRankColumn
-                  items={top5}
-                  gainHeader={signedHeaders.topGain}
-                  lossHeader={signedHeaders.topLoss}
-                  formatValue={rankingFormatValue}
-                />
-                <DistrictRankColumn
-                  items={bottom5}
-                  gainHeader={signedHeaders.bottomGain}
-                  lossHeader={signedHeaders.bottomLoss}
-                  formatValue={rankingFormatValue}
-                />
-              </>
+              <Text>No congressional district {isOutcomeMode ? 'outcome ' : ''}data available</Text>
             )}
           </div>
-        )}
+          {mapData.length > 0 && (
+            <div
+              style={{
+                flex: '1 1 220px',
+                minWidth: 0,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
+                gap: spacing.xl,
+              }}
+            >
+              {isOutcomeMode ? (
+                <>
+                  <DistrictListColumn
+                    items={top5}
+                    header={listHeaders.top}
+                    formatValue={rankingFormatValue}
+                  />
+                  <DistrictListColumn
+                    items={bottom5}
+                    header={listHeaders.bottom}
+                    formatValue={rankingFormatValue}
+                  />
+                </>
+              ) : (
+                <>
+                  <DistrictRankColumn
+                    items={top5}
+                    gainHeader={signedHeaders.topGain}
+                    lossHeader={signedHeaders.topLoss}
+                    formatValue={rankingFormatValue}
+                  />
+                  <DistrictRankColumn
+                    items={bottom5}
+                    gainHeader={signedHeaders.bottomGain}
+                    lossHeader={signedHeaders.bottomLoss}
+                    formatValue={rankingFormatValue}
+                  />
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </Stack>
     );
   }
