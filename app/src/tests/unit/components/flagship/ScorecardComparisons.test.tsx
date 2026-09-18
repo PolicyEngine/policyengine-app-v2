@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@test-utils';
+import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import { ScorecardComparisonResults } from '@/components/flagship/ScorecardComparisons';
 import {
@@ -65,9 +65,11 @@ describe('scorecard evidence presentation', () => {
         }}
       />
     );
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Utah/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText(/Utah credits claimed before limiting/)).toBeInTheDocument();
     expect(screen.getByText(/Modeled Utah credit actually usable/)).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
   test('given an undocumented reform then explicitly identifies missing before-and-after rules', () => {
     render(
@@ -80,7 +82,6 @@ describe('scorecard evidence presentation', () => {
       />
     );
     expect(screen.getByText(/does not supply a complete before-and-after/)).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
   test('given a reform card then policy details are collapsed until opened', async () => {
     render(

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { IconExternalLink } from '@tabler/icons-react';
 import { Stack, Text } from '@/components/ui';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
 import { SCORECARD_URL } from '@/libs/flagship/modelValidation';
 import {
@@ -303,7 +304,9 @@ const baselineDescriptions: Record<string, string[][]> = {
 export function ScorecardClaimCard({
   row,
   presentation,
+  showDetails = false,
 }: {
+  showDetails?: boolean;
   row: RelatedScorecardClaim;
   presentation?: {
     title: string;
@@ -319,6 +322,97 @@ export function ScorecardClaimCard({
   const sourceName =
     presentation?.sourceName ?? sourceNames[row.source] ?? human(row.source).toUpperCase();
   const sourceUrl = safeUrl(row.url);
+  if (row.reform_framework === 'baseline' && !showDetails) {
+    const title = presentation?.title ?? displayTitle(row.name);
+    const published =
+      presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept);
+    const modeled = presentation?.peValue ?? claimValue(latest?.value, row.unit_concept);
+    const gap =
+      typeof latest?.value === 'number' &&
+      typeof row.external_value === 'number' &&
+      row.external_value !== 0
+        ? `${(((latest.value - row.external_value) / Math.abs(row.external_value)) * 100).toFixed(1)}%`
+        : '—';
+    return (
+      <div style={{ ...cardStyle, overflowX: 'auto' }}>
+        <table
+          style={{ width: '100%', borderCollapse: 'collapse', fontSize: typography.fontSize.sm }}
+        >
+          <thead>
+            <tr>
+              {['Comparison', 'Published estimate', 'PolicyEngine estimate', 'Gap'].map((label) => (
+                <th
+                  key={label}
+                  style={{
+                    padding: spacing.sm,
+                    textAlign: label === 'Comparison' ? 'left' : 'right',
+                    fontWeight: typography.fontWeight.medium,
+                  }}
+                >
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderTop: `1px solid ${colors.border.light}` }}>
+              <td style={{ padding: spacing.sm, width: '40%' }}>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      style={{
+                        ...linkStyle,
+                        background: 'none',
+                        border: 0,
+                        padding: 0,
+                        font: 'inherit',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {title}
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent
+                    aria-describedby={undefined}
+                    style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
+                  >
+                    <DialogTitle>Baseline comparison</DialogTitle>
+                    <ScorecardClaimCard row={row} presentation={presentation} showDetails />
+                  </DialogContent>
+                </Dialog>
+                <Text style={{ ...detailStyle, margin: 0 }}>
+                  {sourceName} · {human(row.geography)}
+                </Text>
+                {sourceUrl && (
+                  <a href={sourceUrl} target="_blank" rel="noreferrer" style={linkStyle}>
+                    Read source
+                  </a>
+                )}
+              </td>
+              <td style={{ padding: spacing.sm, textAlign: 'right' }}>
+                {published}
+                <Text style={{ ...detailStyle, margin: 0 }}>
+                  {presentation?.externalPeriod ?? claimPeriod(row)}
+                </Text>
+              </td>
+              <td style={{ padding: spacing.sm, textAlign: 'right' }}>
+                {modeled}
+                <Text style={{ ...detailStyle, margin: 0 }}>
+                  {presentation?.modelPeriod ?? modelPeriod(row)}
+                </Text>
+              </td>
+              <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                {gap}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
   return (
     <Stack style={cardStyle}>
       <EvidenceHeader
@@ -502,7 +596,9 @@ export function ScorecardComparisonResults({
               View scorecard <IconExternalLink size={16} aria-hidden="true" />
             </a>
           </div>
-          <Text style={{ ...detailStyle, margin: 0 }}>{description}</Text>
+          {title !== 'Baseline comparisons' && (
+            <Text style={{ ...detailStyle, margin: 0 }}>{description}</Text>
+          )}
           {title === 'Related reform comparisons' && reportContext}
           {title === 'Baseline comparisons' && baselineContent}
           {feedStatus && <Text style={detailStyle}>{feedStatus}</Text>}
@@ -510,7 +606,10 @@ export function ScorecardComparisonResults({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+                gridTemplateColumns:
+                  title === 'Baseline comparisons'
+                    ? 'minmax(0, 1fr)'
+                    : 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
                 gap: spacing.md,
                 alignItems: 'start',
               }}

@@ -366,7 +366,7 @@ export function ModelTrackRecordSection({
     <Stack
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+        gridTemplateColumns: 'minmax(0, 1fr)',
         gap: spacing.md,
         alignItems: 'start',
       }}

@@ -114,15 +114,12 @@ describe('ModelTrackRecordSection', () => {
     expect(screen.getByText('Baseline comparisons')).toBeInTheDocument();
     expect(screen.getByText('SNAP — Eligible people')).toBeInTheDocument();
     expect(screen.getByText('Refundable CTC — Eligibility rate')).toBeInTheDocument();
-    expect(screen.getAllByText(/at policyengine-us 1\.808\.0/)).toHaveLength(2);
-    expect(screen.getByText(/Primary · reads the parameter directly/)).toBeInTheDocument();
-    expect(screen.getByText(/Mechanism · 2 formula steps from the parameter/)).toBeInTheDocument();
+    expect(screen.getAllByRole('table')).toHaveLength(2);
+    expect(screen.queryByText(/formula steps/)).not.toBeInTheDocument();
     expect(screen.getByText('69.1M')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Read source' })[0]).toHaveAttribute(
       'href',
       'https://apps.urban.org/features/state-safety-net/'
     );
-    expect(screen.getByText(/was not used to calibrate/)).toBeInTheDocument();
-    expect(screen.getByText(/not an independent holdout/)).toBeInTheDocument();
   });
 });
