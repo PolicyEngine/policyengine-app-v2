@@ -20,10 +20,10 @@ describe('scorecard evidence presentation', () => {
       />
     );
     expect(screen.getByText(/not a validation of this report/)).toBeInTheDocument();
-    expect(screen.getByText('PolicyEngine scorecard estimate')).toBeInTheDocument();
+    expect(screen.getByText('PolicyEngine estimate')).toBeInTheDocument();
     expect(screen.getByText(/2026 · fiscal year/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText('Different stacking baseline')).toBeInTheDocument();
-    expect(screen.getByText(/3 claims in this country/)).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Find external estimates/ })
     ).not.toBeInTheDocument();
@@ -38,6 +38,7 @@ describe('scorecard evidence presentation', () => {
         }}
       />
     );
+    fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText(/JCT’s July 2025 Senate bill comparison/)).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '$1,000', hidden: true })).toBeInTheDocument();
     expect(screen.getByText(/broad CTC expansion from an expiry baseline/)).toBeInTheDocument();
@@ -52,6 +53,7 @@ describe('scorecard evidence presentation', () => {
         }}
       />
     );
+    fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText(/This run adds the CTC changes after/)).toBeInTheDocument();
     expect(screen.queryByText(/This run keeps other enacted tax changes/)).not.toBeInTheDocument();
   });
@@ -81,6 +83,7 @@ describe('scorecard evidence presentation', () => {
         }}
       />
     );
+    fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText(/does not supply a complete before-and-after/)).toBeInTheDocument();
   });
   test('given a reform card then policy details are collapsed until opened', async () => {
@@ -93,7 +96,9 @@ describe('scorecard evidence presentation', () => {
         }}
       />
     );
-    expect(screen.getByRole('table', { hidden: true })).not.toBeVisible();
+    expect(screen.getByRole('table')).toBeVisible();
+    await userEvent.click(screen.getByRole('button'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     await userEvent.click(screen.getByText('Compared policy and baseline'));
     expect(screen.getByRole('table')).toBeVisible();
   });

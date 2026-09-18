@@ -322,8 +322,10 @@ export function ScorecardClaimCard({
   const sourceName =
     presentation?.sourceName ?? sourceNames[row.source] ?? human(row.source).toUpperCase();
   const sourceUrl = safeUrl(row.url);
-  if (row.reform_framework === 'baseline' && !showDetails) {
-    const title = presentation?.title ?? displayTitle(row.name);
+  if (!showDetails) {
+    const title =
+      presentation?.title ??
+      (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name));
     const published =
       presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept);
     const modeled = presentation?.peValue ?? claimValue(latest?.value, row.unit_concept);
@@ -378,7 +380,11 @@ export function ScorecardClaimCard({
                     aria-describedby={undefined}
                     style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
                   >
-                    <DialogTitle>Baseline comparison</DialogTitle>
+                    <DialogTitle>
+                      {row.reform_framework === 'baseline'
+                        ? 'Baseline comparison'
+                        : 'Related reform comparison'}
+                    </DialogTitle>
                     <ScorecardClaimCard row={row} presentation={presentation} showDetails />
                   </DialogContent>
                 </Dialog>
@@ -606,10 +612,7 @@ export function ScorecardComparisonResults({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns:
-                  title === 'Baseline comparisons'
-                    ? 'minmax(0, 1fr)'
-                    : 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+                gridTemplateColumns: 'minmax(0, 1fr)',
                 gap: spacing.md,
                 alignItems: 'start',
               }}
