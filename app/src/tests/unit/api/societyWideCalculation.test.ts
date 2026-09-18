@@ -330,7 +330,7 @@ describe('societyWide API', () => {
       expect((global.fetch as any).mock.calls[0][0]).not.toContain('include_district_breakdowns');
     });
 
-    test('given explicit dataset parameter then includes it in URL', async () => {
+    test('given stale dataset parameter then omits it from the URL', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
@@ -344,7 +344,7 @@ describe('societyWide API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=custom_dataset`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',

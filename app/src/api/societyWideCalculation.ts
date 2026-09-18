@@ -15,7 +15,6 @@ export interface PolicyEngineBundle {
 export interface SocietyWideCalculationParams {
   region: string; // "us" for US nationwide, "state/ca" for US states, or another API v1 region code
   time_period: string; // Four-digit year
-  dataset?: string; // Optional dataset parameter; defaults to API's default dataset
 }
 
 export interface SocietyWideCalculationResponse {
@@ -57,11 +56,13 @@ export async function fetchSocietyWideCalculation(
 ): Promise<SocietyWideCalculationResponse> {
   const queryParams = new URLSearchParams();
 
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) {
-      queryParams.append(key, String(value));
+  Object.entries({ region: params.region, time_period: params.time_period }).forEach(
+    ([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, String(value));
+      }
     }
-  });
+  );
 
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
