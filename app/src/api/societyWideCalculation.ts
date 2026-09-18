@@ -17,6 +17,11 @@ export interface SocietyWideCalculationParams {
   time_period: string; // Four-digit year
 }
 
+const SOCIETY_WIDE_QUERY_KEYS: ReadonlyArray<keyof SocietyWideCalculationParams> = [
+  'region',
+  'time_period',
+];
+
 export interface SocietyWideCalculationResponse {
   status: 'computing' | 'ok' | 'error';
   queue_position?: number;
@@ -56,13 +61,12 @@ export async function fetchSocietyWideCalculation(
 ): Promise<SocietyWideCalculationResponse> {
   const queryParams = new URLSearchParams();
 
-  Object.entries({ region: params.region, time_period: params.time_period }).forEach(
-    ([key, value]) => {
-      if (value !== undefined) {
-        queryParams.append(key, String(value));
-      }
+  SOCIETY_WIDE_QUERY_KEYS.forEach((key) => {
+    const value = params[key];
+    if (value !== undefined) {
+      queryParams.append(key, String(value));
     }
-  );
+  });
 
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
