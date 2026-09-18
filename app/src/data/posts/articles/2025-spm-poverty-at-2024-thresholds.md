@@ -20,13 +20,13 @@ Census prints rates for children, adults 18 to 64 and people 65 and over. We com
 
 | SPM poverty rate, percent |       2024[^2] |          2025 | Change, points |
 | ------------------------- | -------------: | ------------: | -------------: |
-| All people                |           13.0 | 13.11 (±0.19) |           +0.1 |
+| All people                |   13.0 (±0.18) | 13.11 (±0.19) |           +0.1 |
 | Under 4                   | 14.95 (±0.58)† | 14.13 (±0.57) |          −0.8† |
 | Under 6                   | 14.50 (±0.50)† | 14.15 (±0.52) |          −0.4† |
-| Under 18                  |           13.5 | 13.39 (±0.34) |           −0.1 |
+| Under 18                  |   13.5 (±0.30) | 13.39 (±0.34) |           −0.1 |
 | 6 to 17                   | 12.84 (±0.34)† | 13.06 (±0.39) |          +0.2† |
-| 18 to 64                  |           12.2 | 12.28 (±0.20) |           +0.1 |
-| 65 and over               |           15.1 | 15.38 (±0.32) |           +0.2 |
+| 18 to 64                  |   12.2 (±0.18) | 12.28 (±0.20) |           +0.1 |
+| 65 and over               |   15.1 (±0.30) | 15.38 (±0.32) |           +0.2 |
 | 75 and over               | 16.49 (±0.48)† | 16.57 (±0.47) |          +0.1† |
 
 Children under 6 have higher rates than older children, and people 75 and over have the highest rate of any group. The point estimate for children under 4 fell 0.8 points, with standard errors of 0.6 points on each year's figure, and the rate for children 6 to 17 rose 0.2. Census restated 2024 on Vintage 2025 population controls in this report, which moves the 2024 child rate to 13.5 from the 13.4 in its [August working paper](https://www.census.gov/library/working-papers/2026/demo/sehsd-wp2026-17.html).
@@ -78,6 +78,6 @@ The [SPM threshold calculator](/us/spm-calculator) computes the 2025 threshold f
 
 <div style="text-align: center; margin: 24px 0;"><a class="cta-button" href="/us/spm-calculator">Compute your SPM threshold →</a></div>
 
-[^2]: Census publishes 2024 rates for all people, children, adults 18 to 64 and people 65 and over, restated on Vintage 2025 population controls. For the finer age groups, marked †, we computed 2024 from the [2025 CPS ASEC public-use file](https://www2.census.gov/programs-surveys/cps/datasets/2025/march/asecpub25csv.zip), which carries the earlier weights, with standard errors from its replicate weights. On that file the four published groups come to 12.93, 13.35, 12.16 and 14.95 percent, 0.1 to 0.2 points below the restated figures, so the † changes sit on a slightly different basis from the others.
+[^2]: Census publishes 2024 rates for all people, children, adults 18 to 64 and people 65 and over, restated on Vintage 2025 population controls; for those rows the ± figure converts the 90 percent margin of error in Table 4 to a standard error, dividing by 1.645. For the finer age groups, marked †, we computed 2024 from the [2025 CPS ASEC public-use file](https://www2.census.gov/programs-surveys/cps/datasets/2025/march/asecpub25csv.zip), which carries the earlier weights, with standard errors from its replicate weights. On that file the four published groups come to 12.93, 13.35, 12.16 and 14.95 percent, 0.1 to 0.2 points below the restated figures, so the † changes sit on a slightly different basis from the others.
 
 [^1]: Table 11 of P60-290 prints the 2024 renter threshold as $37,231, which is BLS's corrected 2023 value; the corrected 2024 renter threshold is $39,220, the base for the 6.3 percent growth BLS reports for 2025. We use the BLS value, and the 2025 thresholds in the public-use microdata match BLS. We reported the discrepancy to Census.
