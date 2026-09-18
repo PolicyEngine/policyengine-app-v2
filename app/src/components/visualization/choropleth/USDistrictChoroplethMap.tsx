@@ -524,7 +524,7 @@ export function USDistrictChoroplethMap({
       >
         <Button
           variant="outline"
-          size="icon"
+          size="icon-xs"
           aria-label="Zoom in"
           disabled={view.zoom >= 20}
           onClick={() =>
@@ -535,7 +535,7 @@ export function USDistrictChoroplethMap({
         </Button>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-xs"
           aria-label="Zoom out"
           disabled={view.zoom <= 0.5}
           onClick={() =>
@@ -544,7 +544,7 @@ export function USDistrictChoroplethMap({
         >
           −
         </Button>
-        <Button variant="outline" size="sm" onClick={() => setView(initialView)}>
+        <Button variant="outline" size="xs" onClick={() => setView(initialView)}>
           Reset view
         </Button>
       </div>
