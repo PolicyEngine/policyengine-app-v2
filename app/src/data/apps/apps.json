@@ -676,5 +676,31 @@
     "source": "https://policyengine.github.io/snap-district-map/",
     "tags": ["us", "policy"],
     "countryId": "us"
+  },
+  {
+    "type": "iframe",
+    "slug": "child-poverty-impact-dashboard",
+    "title": "Child poverty impact dashboard",
+    "description": "Estimate how federal and state tax and benefit reforms — Child Tax Credits, EITCs, child allowances, dependent exemptions, and SNAP — would affect child poverty, household incomes, and state budgets in all 50 states and DC, using PolicyEngine microsimulation.",
+    "source": "https://child-poverty-impact-dashboard-sigma.vercel.app/",
+    "tags": ["us", "featured", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "child-poverty-impact-dashboard.png",
+    "date": "2026-09-15 12:00:00",
+    "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
+    "slug": "futa-wage-base-dashboard",
+    "title": "FUTA taxable wage base dashboard",
+    "description": "Estimates the federal revenue from raising the FUTA taxable wage base from $7,000 (unchanged since 1983) to $43,000 in 2026, roughly the median annual wage, and indexing it to inflation: $317 billion over ten years, with year-by-year results, validation against IRS collections, and a downloadable CSV, using PolicyEngine microsimulation.",
+    "source": "https://futa-wage-base-dashboard.vercel.app/",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "futa-wage-base-dashboard-adjusted.png",
+    "date": "2026-09-17 12:00:00",
+    "authors": ["david-trimmer"]
   }
 ]

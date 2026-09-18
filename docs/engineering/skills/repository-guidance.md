@@ -117,8 +117,6 @@ External PolicyEngine Next.js apps are stitched into `policyengine.org` as **Nex
 1. `website/src/data/appZoneRoutes.ts` — add a `{ source, destination }` entry. `appZoneRewrites` flattens this into the deep-path rewrite pair and feeds `beforeFiles` in `website/next.config.ts`.
 2. The zone repo — set `basePath: '/us/<slug>'` (path-mounted) or `assetPrefix: '/_zones/<slug>'` (root-served). The zone's route configuration must match the host rewrite.
 
-`changelog_entry.yaml` gets the user-facing line.
-
 Why not `website/vercel.json`? It retains a few legacy zone rewrites and host-only routes, but multizone is the source of truth going forward — new entries will collide with the website's own `beforeFiles` ordering and bypass the multizone audit CI. Adding to `appZoneRoutes.ts` is the only path that gets validated by `app-zone-shell-audit` and `multizone-tracking-audit`. The `guard-vercel-zone-rewrites` workflow fails the PR if a new country-prefixed `*.vercel.app` rewrite slips into `website/vercel.json`.
 
 Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/PolicyEngine/policyengine-app-v2/pull/1047), [#1027 multizone apps registry](https://github.com/PolicyEngine/policyengine-app-v2/pull/1027).

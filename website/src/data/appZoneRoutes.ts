@@ -146,6 +146,16 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://tanf-calculator.vercel.app/us/tanf-calculator",
   },
   {
+    source: "/us/child-poverty-impact-dashboard",
+    destination:
+      "https://child-poverty-impact-dashboard-sigma.vercel.app/us/child-poverty-impact-dashboard",
+  },
+  {
+    source: "/us/futa-wage-base-dashboard",
+    destination:
+      "https://futa-wage-base-dashboard.vercel.app/us/futa-wage-base-dashboard",
+  },
+  {
     source: "/ai-beliefs",
     destination: "https://ai-beliefs.vercel.app/ai-beliefs",
   },
