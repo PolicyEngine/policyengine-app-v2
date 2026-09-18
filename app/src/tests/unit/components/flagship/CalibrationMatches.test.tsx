@@ -44,37 +44,23 @@ describe('CalibrationMatchSection', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  test('given matches then each variable renders with its reach, fit, and worst target', () => {
+  test('shows each target with its period, values, gap and source link', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
-
     expect(screen.getByText('Refundable Child Tax Credit')).toBeInTheDocument();
-    expect(screen.getAllByText(/mechanism · 3 formula steps from the parameter/i)).toHaveLength(2);
-    expect(screen.getByText('4.0%')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' })).toHaveLength(2);
-    expect(screen.getByText(/-6.0%/)).toBeInTheDocument();
-    expect(screen.getByText(/release populace-us-2024/)).toBeInTheDocument();
-  });
-
-  test('given matches then View targets links to the filtered dashboard while counts are plain text', () => {
-    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
-
-    expect(screen.queryByRole('link', { name: '2' })).not.toBeInTheDocument();
-    expect(screen.getAllByText('2 calibration targets').length).toBeGreaterThan(0);
-    const worst = screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' });
-    expect(worst[0]).toHaveAttribute(
-      'href',
-      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?source=irs_soi&level=national'
-    );
+    expect(screen.getByText('940,000')).toBeInTheDocument();
+    expect(screen.getByText('1,020,000')).toBeInTheDocument();
+    expect(screen.getByText('-6.0%')).toBeInTheDocument();
+    expect(screen.getAllByText('2024')).toHaveLength(3);
+    expect(
+      screen.getByRole('link', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
+    ).toHaveAttribute('href', expect.stringContaining('source=irs_soi&level=national'));
+    expect(
+      screen.queryByText(/formula steps|How to interpret|Worth a look/i)
+    ).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'View targets' })[0]).toHaveAttribute(
       'href',
       expect.stringContaining('source=irs_soi&level=national')
     );
-  });
-
-  test('given a variable far off then it is called out above the table', () => {
-    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
-
-    expect(screen.getByText(/worth a look: Child Tax Credit is more than 25/i)).toBeInTheDocument();
   });
 
   test('given a pin that is still current then the card says when it was pinned', () => {

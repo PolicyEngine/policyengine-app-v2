@@ -5,7 +5,6 @@ import {
   CalibrationMatches,
   calibrationMatchesForPaths,
   CalibrationRing,
-  CalibrationTargetRow,
   dashboardTargetsUrl,
   geographyForRegion,
 } from '@/libs/flagship/calibrationMatching';
@@ -14,7 +13,6 @@ import {
   cardStyle,
   detailStyle,
   EvidenceHeader,
-  EvidenceValues,
   linkStyle,
   panelStyle,
   summaryStyle,
@@ -59,12 +57,6 @@ function humanize(variable: string): string {
   };
   const label = labels[variable] ?? variable.replaceAll('_', ' ');
   return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-function worstLabel(row: CalibrationTargetRow): string {
-  const source = row.sourceLabel ?? row.source;
-  const where = row.level === 'national' ? 'US' : row.geography;
-  return `${source} · ${where}`;
 }
 
 function SectionCard({ children }: { children: React.ReactNode }) {
@@ -197,8 +189,6 @@ export function CalibrationMatchSection({
     );
   }
 
-  const attention = matches.matches.filter((m) => m.meanAbsRelativeError > ATTENTION_ERROR);
-
   return (
     <SectionCard>
       <EvidenceHeader
@@ -207,23 +197,14 @@ export function CalibrationMatchSection({
         linkLabel="View dashboard"
       />
       <Text style={detailStyle}>
-        How closely the model’s data matches the administrative totals used to calibrate it {where}.
-        Smaller gaps mean a closer fit. {matches.matches.length} measures ·{' '}
-        {matches.matches.reduce((sum, match) => sum + match.targetCount, 0)} targets · largest
-        average gap{' '}
-        {percent(Math.max(...matches.matches.map((match) => match.meanAbsRelativeError)))}.
+        {matches.matches.length} measures ·{' '}
+        {matches.matches.reduce((sum, match) => sum + match.targetCount, 0)} calibration targets ·{' '}
+        {matches.geography}
       </Text>
-      {attention.length > 0 && (
-        <Text style={detailStyle}>
-          Worth a look: {attention.map((m) => humanize(m.variable)).join(', ')}{' '}
-          {attention.length === 1 ? 'is' : 'are'} more than {percent(ATTENTION_ERROR)} off on
-          average.
-        </Text>
-      )}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+          gridTemplateColumns: 'minmax(0, 1fr)',
           gap: spacing.md,
           alignItems: 'start',
         }}
@@ -236,80 +217,80 @@ export function CalibrationMatchSection({
               href={dashboardTargetsUrl({ source: match.worst.source, level })}
               linkLabel="View targets"
             />
-            <EvidenceValues
-              left={{
-                label: 'Average absolute gap',
-                value: percent(match.meanAbsRelativeError),
-                note: `${match.targetCount} calibration targets`,
-              }}
-              right={{
-                label: 'Largest target gap',
-                value:
-                  match.worst.relativeError === null
-                    ? 'Unavailable'
-                    : percent(match.worst.relativeError),
-                note: match.worst.period
-                  ? `Target period: ${match.worst.period}`
-                  : 'Target period not recorded',
-              }}
-            />
-            <details style={detailStyle}>
-              <summary style={summaryStyle}>How to interpret these gaps</summary>
-              <Stack style={{ gap: spacing.sm }}>
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  {RING_LABELS[match.ring]} · {describeDepth(match.depth)}
-                </Text>
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  Compares modeled {humanize(match.variable).toLowerCase()} with {match.targetCount}{' '}
-                  administrative targets used to fit the dataset. This measures the existing
-                  program, before your reform.
-                </Text>
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  <strong>Target with the largest gap:</strong> {match.worst.name}
-                </Text>
-                <Text style={detailStyle}>
-                  The average uses the size of each target as its weight. The largest gap compares
-                  the model with one target; a negative value means the model is below that target.
-                </Text>
-                <Text style={detailStyle}>
-                  Largest-gap target:{' '}
-                  <DashboardLink
-                    source={match.worst.source}
-                    level={match.worst.level}
-                    title={match.worst.name}
-                  >
-                    {worstLabel(match.worst)}
-                  </DashboardLink>
-                  .
-                </Text>
-                <Text style={detailStyle}>{match.worst.name}</Text>
-                {match.worst.sourceUrl && (
-                  <a
-                    href={match.worst.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={linkStyle}
-                  >
-                    Read source
-                  </a>
-                )}
-                <Text style={detailStyle}>
-                  These targets were used to fit the data. A close match measures calibration fit,
-                  not independent validation of this reform.
-                </Text>
-              </Stack>
-            </details>
+            <div style={{ overflowX: 'auto' }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: typography.fontSize.sm,
+                }}
+              >
+                <thead>
+                  <tr>
+                    {['Target', 'Period', 'Target value', 'Model value', 'Gap'].map((label) => (
+                      <th
+                        key={label}
+                        style={{
+                          textAlign: label === 'Target' ? 'left' : 'right',
+                          padding: spacing.sm,
+                          fontWeight: typography.fontWeight.medium,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {match.targets.map((target) => (
+                    <tr key={target.name} style={{ borderTop: `1px solid ${colors.border.light}` }}>
+                      <td style={{ padding: spacing.sm, maxWidth: 360, overflowWrap: 'anywhere' }}>
+                        <a
+                          href={
+                            target.sourceUrl ||
+                            dashboardTargetsUrl({ source: target.source, level: target.level })
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          style={linkStyle}
+                        >
+                          {target.name}
+                        </a>
+                        <Text style={{ ...detailStyle, margin: 0 }}>
+                          {target.sourceLabel ?? target.source} · {target.geography}
+                          {target.measure ? ` · ${target.measure}` : ''}
+                        </Text>
+                      </td>
+                      <td style={{ padding: spacing.sm, textAlign: 'right' }}>
+                        {target.period ?? '—'}
+                      </td>
+                      <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {target.target === null
+                          ? '—'
+                          : target.target.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {target.estimate === null
+                          ? '—'
+                          : target.estimate.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {target.relativeError === null ? '—' : percent(target.relativeError)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Stack>
         ))}
       </div>
       <details style={detailStyle}>
-        <summary style={summaryStyle}>Data release and matching method</summary>
+        <summary style={summaryStyle}>Data release</summary>
         <Text style={detailStyle}>
           {matches.releaseId ? `Data release ${matches.releaseId}` : 'Release not recorded'}
           {matches.modelVersion ? ` · Matched at policyengine-us ${matches.modelVersion}` : ''}.
-        </Text>
-        <Text style={detailStyle}>
-          Variables are ordered by their distance from the changed parameter in the model.
         </Text>
       </details>
       {pin && <PinNote pin={pin} />}
