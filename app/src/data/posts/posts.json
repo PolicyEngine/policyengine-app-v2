@@ -1,5 +1,14 @@
 [
   {
+    "title": "Our 2025 poverty prediction, graded",
+    "description": "PolicyEngine registered a 2025 SPM poverty prediction before the Census release: up 0.2 points overall, up 0.9 for children, down 0.5 for people 65 and over. Census reported +0.1, −0.1 and +0.2. The grade, and where the child and senior misses came from: the model has more children and fewer seniors near the line than the survey, and its resource growth by age runs the other way.",
+    "date": "2026-09-17",
+    "tags": ["us", "technical", "featured"],
+    "authors": ["max-ghenis"],
+    "filename": "2025-spm-poverty-prediction.md",
+    "image": "2025-spm-poverty-prediction/cover.webp"
+  },
+  {
     "title": "Who bears the AI shock? Distributional and fiscal incidence in the UK",
     "description": "PolicyEngine traces AI employment, wage and capital shocks through the UK tax-benefit system, estimating the budgetary and distributional impacts across incidence scenarios.",
     "date": "2026-08-04",
