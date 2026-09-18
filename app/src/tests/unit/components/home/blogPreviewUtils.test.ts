@@ -49,3 +49,21 @@ describe('formatPostDate', () => {
     expect(result).toBe('Jan 12, 2026');
   });
 });
+
+describe('formatPostDate month style', () => {
+  test('given date-only string then long month reads as the same calendar day', () => {
+    // When
+    const result = formatPostDate('2026-09-15', 'long');
+
+    // Then
+    expect(result).toBe('September 15, 2026');
+  });
+
+  test('given date-only string then short month is the default', () => {
+    // When
+    const result = formatPostDate('2026-09-15');
+
+    // Then
+    expect(result).toBe('Sep 15, 2026');
+  });
+});
