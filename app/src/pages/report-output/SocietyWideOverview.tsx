@@ -695,7 +695,7 @@ function CongressionalDistrictCard({
           <USDistrictChoroplethMap
             data={mapData}
             visualizationType={mapVisualizationType}
-            config={{ ...mapConfig, height: 420 }}
+            config={{ ...mapConfig, height: 340 }}
             focusState={stateCode ?? undefined}
             errorStates={mapErrorStates}
           />
@@ -1152,57 +1152,6 @@ export default function SocietyWideOverview({
   return (
     <Stack gap="lg">
       {isNoOp && <NoOpReportCallout year={reportYear} />}
-      {groupedCharts && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: spacing['2xl'],
-            padding: `${spacing.md} ${spacing.lg}`,
-            background: colors.primary[50],
-            borderRadius: spacing.radius.container,
-          }}
-        >
-          <div>
-            <Text size="sm">
-              {budgetaryImpact < 0
-                ? 'Annual government cost'
-                : budgetaryImpact > 0
-                  ? 'Annual government savings'
-                  : 'Annual budget change'}
-            </Text>
-            <strong style={{ fontSize: typography.fontSize['2xl'], color: colors.primary[900] }}>
-              {budgetValue}
-            </strong>
-          </div>
-          <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: spacing.xl }}>
-            {(countryId === 'us'
-              ? [
-                  ['Federal tax revenues', federalTaxImpact],
-                  ['State and local tax revenues', stateTaxImpact],
-                  ['Benefit spending', spendingImpact],
-                ]
-              : [
-                  ['Tax revenues', output.budget.tax_revenue_impact],
-                  ['Benefit spending', spendingImpact],
-                ]
-            ).map(([label, value]) => (
-              <div key={String(label)}>
-                <Text size="xs" c="dimmed">
-                  {label}
-                </Text>
-                <Text size="sm">
-                  {Number(value) > 0 ? '+' : Number(value) < 0 ? '−' : ''}
-                  {formatCurrencyAbbr(Math.abs(Number(value)), countryId, {
-                    maximumFractionDigits: 1,
-                  })}
-                </Text>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div
         className={groupedCharts ? undefined : 'tw:grid tw:grid-cols-2'}
@@ -1211,7 +1160,8 @@ export default function SocietyWideOverview({
           ...(groupedCharts
             ? {
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 370px), 1fr))',
+                // Each group has two charts; prevent empty extra columns on wide screens.
+                gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, max(370px, calc((100% - ${spacing.lg}) / 2))), 1fr))`,
                 gap: spacing.lg,
               }
             : {}),
@@ -1221,7 +1171,6 @@ export default function SocietyWideOverview({
         <DashboardCard
           alwaysExpanded={groupedCharts}
           staticTitle="Budgetary impact"
-          hidden={groupedCharts}
           mode={modeOf('budget')}
           zIndex={zOf('budget')}
           expandDirection="down-right"
@@ -1325,13 +1274,6 @@ export default function SocietyWideOverview({
           onToggleMode={() => toggle('budget')}
         />
 
-        {groupedCharts && (
-          <Text
-            style={{ gridColumn: '1 / -1', margin: 0, fontWeight: typography.fontWeight.semibold }}
-          >
-            Household incomes
-          </Text>
-        )}
         {/* Decile Impacts */}
         <DashboardCard
           alwaysExpanded={groupedCharts}
@@ -1522,13 +1464,6 @@ export default function SocietyWideOverview({
           onToggleMode={() => toggle('winners')}
         />
 
-        {groupedCharts && (
-          <Text
-            style={{ gridColumn: '1 / -1', margin: 0, fontWeight: typography.fontWeight.semibold }}
-          >
-            Poverty and inequality
-          </Text>
-        )}
         {/* Poverty Impact */}
         <DashboardCard
           alwaysExpanded={groupedCharts}

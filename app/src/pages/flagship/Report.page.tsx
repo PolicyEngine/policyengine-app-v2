@@ -277,12 +277,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           display: 'flex',
           flexDirection: 'column',
           gap: spacing.xl,
-          borderRadius: activeTab === 'policy' ? spacing.radius.feature : undefined,
-          padding: activeTab === 'policy' ? `${spacing['4xl']} ${spacing['2xl']}` : 0,
-          background:
-            activeTab === 'policy'
-              ? `linear-gradient(105deg, ${colors.primary[900]} 0%, ${colors.primary[800]} 55%, ${colors.primary[700]} 100%)`
-              : undefined,
+          borderRadius: spacing.radius.feature,
+          padding: `${spacing['4xl']} ${spacing['2xl']}`,
+          background: `linear-gradient(105deg, ${colors.primary[900]} 0%, ${colors.primary[800]} 55%, ${colors.primary[700]} 100%)`,
         }}
       >
         <Title
@@ -290,53 +287,48 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           style={{
             margin: 0,
             maxWidth: '32ch',
-            color: activeTab === 'policy' ? colors.text.inverse : colors.primary[900],
-            fontSize:
-              activeTab === 'policy'
-                ? `clamp(${typography.fontSize['3xl']}, 3.5vw, ${spacing['4xl']})`
-                : typography.fontSize['2xl'],
+            color: colors.text.inverse,
+            fontSize: `clamp(${typography.fontSize['3xl']}, 3.5vw, ${spacing['4xl']})`,
             lineHeight: typography.lineHeight.tight,
             letterSpacing: '-0.035em',
           }}
         >
           {coverTitle}
         </Title>
-        {activeTab === 'policy' && (
-          <Stack style={{ gap: spacing.sm }}>
-            {customBaselineLabel && (
-              <Text style={{ margin: 0, color: colors.primary[100] }}>
-                Compared with: {customBaselineLabel}
-              </Text>
-            )}
-            {meta?.provisions.map((provision) => (
-              <Text
-                key={provision.path}
-                style={{
-                  margin: 0,
-                  color: colors.primary[100],
-                  fontSize: typography.fontSize.lg,
-                  lineHeight: typography.lineHeight.relaxed,
-                }}
-              >
-                {provision.path.startsWith('gov.irs.credits.ctc.amount.base')
-                  ? 'Maximum credit per child'
-                  : provision.breadcrumb || provision.path}
-                :{' '}
-                <strong style={{ color: colors.text.inverse }}>
-                  {formatValue(provision.baselineValue, provision.unit)} →{' '}
-                  {formatValue(provision.value, provision.unit)}
-                </strong>
-              </Text>
-            ))}
-            {meta?.sourceNote && (
-              <Text
-                style={{ margin: 0, color: colors.primary[100], fontSize: typography.fontSize.sm }}
-              >
-                {meta.sourceNote}
-              </Text>
-            )}
-          </Stack>
-        )}
+        <Stack style={{ gap: spacing.sm }}>
+          {customBaselineLabel && (
+            <Text style={{ margin: 0, color: colors.primary[100] }}>
+              Compared with: {customBaselineLabel}
+            </Text>
+          )}
+          {meta?.provisions.map((provision) => (
+            <Text
+              key={provision.path}
+              style={{
+                margin: 0,
+                color: colors.primary[100],
+                fontSize: typography.fontSize.lg,
+                lineHeight: typography.lineHeight.relaxed,
+              }}
+            >
+              {provision.path.startsWith('gov.irs.credits.ctc.amount.base')
+                ? 'Maximum credit per child'
+                : provision.breadcrumb || provision.path}
+              :{' '}
+              <strong style={{ color: colors.text.inverse }}>
+                {formatValue(provision.baselineValue, provision.unit)} →{' '}
+                {formatValue(provision.value, provision.unit)}
+              </strong>
+            </Text>
+          ))}
+          {meta?.sourceNote && (
+            <Text
+              style={{ margin: 0, color: colors.primary[100], fontSize: typography.fontSize.sm }}
+            >
+              {meta.sourceNote}
+            </Text>
+          )}
+        </Stack>
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} style={{ gap: spacing.xl }}>

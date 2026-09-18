@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconArrowsMinimize, IconDownload } from '@tabler/icons-react';
+import { IconArrowsMaximize, IconArrowsMinimize, IconDownload } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 import { ChartContainer } from '@/components/ChartContainer';
 import { Text } from '@/components/ui';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { colors, spacing } from '@/designTokens';
 import { typography } from '@/designTokens/typography';
@@ -445,36 +446,82 @@ function AnimatedDashboardCard({
   );
 }
 
+function OpenDashboardCard(props: DashboardCardProps) {
+  const [focused, setFocused] = useState(false);
+  const title = props.staticTitle || props.expandedTitle || '';
+  const chart = (enlarged: boolean) => (
+    <ChartContainer
+      title={title}
+      downloadFilename={props.downloadFilename}
+      csvFilename={props.csvFilename}
+      csvData={props.csvData}
+      headerActions={
+        !enlarged && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Expand ${title}`}
+                onClick={() => setFocused(true)}
+              >
+                <IconArrowsMaximize size={18} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Expand chart</TooltipContent>
+          </Tooltip>
+        )
+      }
+    >
+      {props.expandedControls && (
+        <div
+          style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm }}
+        >
+          {props.expandedControls}
+        </div>
+      )}
+      <div
+        style={{
+          height: enlarged
+            ? 'min(65dvh, 720px)'
+            : props.colSpan === 2
+              ? '280px'
+              : 'clamp(210px, calc((100vh - 620px) / 2), 280px)',
+          minWidth: 0,
+        }}
+      >
+        {props.expandedContent}
+      </div>
+    </ChartContainer>
+  );
+  return (
+    <section style={{ minWidth: 0, gridColumn: props.colSpan === 2 ? '1 / -1' : undefined }}>
+      {chart(false)}
+      <Dialog open={focused} onOpenChange={setFocused}>
+        <DialogContent
+          aria-describedby={undefined}
+          style={{
+            width: 'calc(100vw - 48px)',
+            maxWidth: '1440px',
+            maxHeight: 'calc(100dvh - 48px)',
+            overflowY: 'auto',
+          }}
+        >
+          <DialogTitle className="tw:sr-only">{title}</DialogTitle>
+          <div style={{ paddingTop: spacing.lg }}>{chart(true)}</div>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
 export default function DashboardCard(props: DashboardCardProps) {
   if (props.hidden) {
     return null;
   }
-  if (!props.alwaysExpanded) {
-    return <AnimatedDashboardCard {...props} />;
-  }
-  return (
-    <section
-      style={{
-        minWidth: 0,
-      }}
-    >
-      <ChartContainer
-        title={props.staticTitle || props.expandedTitle || ''}
-        downloadFilename={props.downloadFilename}
-        csvFilename={props.csvFilename}
-        csvData={props.csvData}
-      >
-        {props.expandedControls && (
-          <div
-            style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm }}
-          >
-            {props.expandedControls}
-          </div>
-        )}
-        <div style={{ height: 'clamp(210px, calc((100vh - 620px) / 2), 280px)', minWidth: 0 }}>
-          {props.expandedContent}
-        </div>
-      </ChartContainer>
-    </section>
+  return props.alwaysExpanded ? (
+    <OpenDashboardCard {...props} />
+  ) : (
+    <AnimatedDashboardCard {...props} />
   );
 }
