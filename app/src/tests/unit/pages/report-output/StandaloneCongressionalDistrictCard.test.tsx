@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { StandaloneCongressionalDistrictCard } from '@/pages/report-output/SocietyWideOverview';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -12,7 +12,9 @@ vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
 }));
 
 vi.mock('@/components/visualization/USDistrictChoroplethMap', () => ({
-  USDistrictChoroplethMap: vi.fn(() => <div data-testid="district-map" />),
+  USDistrictChoroplethMap: vi.fn(({ visualizationType }) => (
+    <div role="img" aria-label={`${visualizationType} district map`} />
+  )),
 }));
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -40,17 +42,13 @@ describe('StandaloneCongressionalDistrictCard', () => {
     });
   });
 
-  test('given the flagship districts section then the card opens expanded and collapses on demand', () => {
+  test('given the districts tab then one map is visible and its view can be changed without expanding a card', async () => {
     render(<StandaloneCongressionalDistrictCard output={output as any} />);
-
-    const collapse = screen.getByRole('button', { name: 'Collapse' });
-    fireEvent.click(collapse);
-
-    expect(screen.getByRole('button', { name: 'See detailed analysis' })).toBeInTheDocument();
+    expect(screen.getAllByRole('img')).toHaveLength(1);
+    expect(screen.getByRole('img', { name: 'geographic district map' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Collapse' })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'See detailed analysis' }));
-
-    expect(screen.getByRole('button', { name: 'Collapse' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('tab', { name: 'Hex grid' }));
+    expect(screen.getByRole('img', { name: 'hex district map' })).toBeVisible();
+    expect(screen.getByText('Biggest gains (absolute)')).toBeVisible();
   });
 });

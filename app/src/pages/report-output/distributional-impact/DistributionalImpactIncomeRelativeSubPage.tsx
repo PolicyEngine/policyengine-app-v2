@@ -14,6 +14,7 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import ChartExplanation from '@/components/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -36,12 +37,14 @@ interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
+  compact?: boolean;
 }
 
 export default function DistributionalImpactIncomeRelativeSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
+  compact = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -127,7 +130,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value="Relative change in household income"
+          value={compact ? 'Income change (%)' : 'Relative change in household income'}
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
@@ -154,7 +157,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          {description}
+          <ChartExplanation compact={compact}>{description}</ChartExplanation>
         </div>
       </div>
     );

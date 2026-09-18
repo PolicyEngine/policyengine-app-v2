@@ -3,6 +3,7 @@ import { Bar, BarChart, Label, ResponsiveContainer, Tooltip, XAxis, YAxis } from
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { TOOLTIP_STYLE } from '@/components/charts';
+import ChartExplanation from '@/components/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -23,6 +24,7 @@ interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
+  compact?: boolean;
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -81,6 +83,7 @@ export default function WinnersLosersIncomeDecileSubPage({
   output,
   chartHeight: _chartHeight,
   fillHeight = false,
+  compact = false,
 }: Props) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -104,8 +107,8 @@ export default function WinnersLosersIncomeDecileSubPage({
   ];
 
   // Compute tight chart heights
-  const allBarHeight = 42;
-  const gapHeight = 8;
+  const allBarHeight = compact ? 28 : 42;
+  const gapHeight = compact ? 4 : 8;
   const decileHeight = decileData.length * (BAR_SIZE + 1) + 50;
 
   // Generate chart title
@@ -185,7 +188,7 @@ export default function WinnersLosersIncomeDecileSubPage({
         stackOffset="expand"
         barSize={BAR_SIZE}
         barCategoryGap={1}
-        margin={{ top: 0, right: 10, bottom: 40, left: 40 }}
+        margin={{ top: 0, right: 10, bottom: compact ? 0 : 40, left: compact ? 10 : 40 }}
       >
         <XAxis
           type="number"
@@ -193,12 +196,14 @@ export default function WinnersLosersIncomeDecileSubPage({
           tickLine={false}
           tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
         >
-          <Label
-            value="Population share"
-            position="bottom"
-            offset={20}
-            style={RECHARTS_FONT_STYLE}
-          />
+          {!compact && (
+            <Label
+              value="Population share"
+              position="bottom"
+              offset={20}
+              style={RECHARTS_FONT_STYLE}
+            />
+          )}
         </XAxis>
         <YAxis
           type="category"
@@ -284,7 +289,9 @@ export default function WinnersLosersIncomeDecileSubPage({
           </div>
           {legend}
         </div>
-        <div style={{ flexShrink: 0 }}>{description}</div>
+        <div style={{ flexShrink: 0 }}>
+          <ChartExplanation compact={compact}>{description}</ChartExplanation>
+        </div>
       </div>
     );
   }

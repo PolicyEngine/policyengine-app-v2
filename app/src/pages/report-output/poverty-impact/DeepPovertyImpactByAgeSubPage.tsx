@@ -14,6 +14,7 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import ChartExplanation from '@/components/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -36,12 +37,14 @@ interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
+  compact?: boolean;
 }
 
 export default function DeepPovertyImpactByAgeSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
+  compact = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -142,7 +145,12 @@ export default function DeepPovertyImpactByAgeSubPage({
   const barChart = (
     <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+      <XAxis
+        dataKey="name"
+        tick={RECHARTS_FONT_STYLE}
+        interval={compact ? 0 : undefined}
+        tickFormatter={(value) => (compact && value === 'Working-age adults' ? 'Adults' : value)}
+      />
       <YAxis
         ticks={yTicks}
         domain={[yTicks[0], yTicks[yTicks.length - 1]]}
@@ -152,7 +160,7 @@ export default function DeepPovertyImpactByAgeSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value="Relative change in deep poverty rate"
+          value={compact ? 'Deep poverty change (%)' : 'Relative change in deep poverty rate'}
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
@@ -185,7 +193,7 @@ export default function DeepPovertyImpactByAgeSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          {descriptionText}
+          <ChartExplanation compact={compact}>{descriptionText}</ChartExplanation>
         </div>
       </div>
     );

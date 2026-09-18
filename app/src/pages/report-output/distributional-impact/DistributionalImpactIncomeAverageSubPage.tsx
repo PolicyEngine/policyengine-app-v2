@@ -14,6 +14,7 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import ChartExplanation from '@/components/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -35,13 +36,17 @@ import { getDecileAverageCsvRows } from './distributionalChartUtils';
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
+  title?: string;
   fillHeight?: boolean;
+  compact?: boolean;
 }
 
 export default function DistributionalImpactIncomeAverageSubPage({
   output,
   chartHeight: chartHeightProp,
+  title,
   fillHeight = false,
+  compact = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -137,7 +142,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value="Absolute change in household income"
+          value={compact ? 'Income change' : 'Absolute change in household income'}
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
@@ -164,7 +169,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          {description}
+          <ChartExplanation compact={compact}>{description}</ChartExplanation>
         </div>
       </div>
     );
@@ -172,7 +177,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
 
   return (
     <ChartContainer
-      title={getChartTitle()}
+      title={title ?? getChartTitle()}
       downloadFilename="distributional-impact-income-average.svg"
       csvFilename="distributional-impact-income-average.csv"
       csvData={getDecileAverageCsvRows(output)}
