@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { fireEvent, render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import { CalibrationMatchSection } from '@/components/flagship/CalibrationMatches';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
@@ -47,13 +47,13 @@ describe('CalibrationMatchSection', () => {
   test('shows each target with its period, values, gap and source link', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
     expect(screen.getByText('Refundable Child Tax Credit')).toBeInTheDocument();
-    expect(screen.getByText('940,000')).toBeInTheDocument();
-    expect(screen.getByText('1,020,000')).toBeInTheDocument();
+    expect(screen.getByText('940K')).toBeInTheDocument();
+    expect(screen.getAllByText('1M')[0]).toBeInTheDocument();
     expect(screen.getByText('-6.0%')).toBeInTheDocument();
     expect(screen.getAllByText('2024')).toHaveLength(3);
     expect(
-      screen.getByRole('link', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
-    ).toHaveAttribute('href', expect.stringContaining('source=irs_soi&level=national'));
+      screen.getByRole('button', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
+    ).toBeInTheDocument();
     expect(
       screen.queryByText(/formula steps|How to interpret|Worth a look/i)
     ).not.toBeInTheDocument();
@@ -61,6 +61,16 @@ describe('CalibrationMatchSection', () => {
       'href',
       expect.stringContaining('source=irs_soi&level=national')
     );
+  });
+
+  test('clicking a target opens its exact values', () => {
+    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
+    );
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('940,000')).toBeInTheDocument();
+    expect(screen.getByText('1,000,000')).toBeInTheDocument();
   });
 
   test('given a pin that is still current then the card says when it was pinned', () => {

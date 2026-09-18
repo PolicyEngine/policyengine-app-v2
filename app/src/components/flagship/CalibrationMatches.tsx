@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Spinner, Stack, Text } from '@/components/ui';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
 import {
   CalibrationMatches,
@@ -196,11 +197,6 @@ export function CalibrationMatchSection({
         href={dashboardTargetsUrl({ level })}
         linkLabel="View dashboard"
       />
-      <Text style={detailStyle}>
-        {matches.matches.length} measures ·{' '}
-        {matches.matches.reduce((sum, match) => sum + match.targetCount, 0)} calibration targets ·{' '}
-        {matches.geography}
-      </Text>
       <div
         style={{
           display: 'grid',
@@ -246,17 +242,83 @@ export function CalibrationMatchSection({
                   {match.targets.map((target) => (
                     <tr key={target.name} style={{ borderTop: `1px solid ${colors.border.light}` }}>
                       <td style={{ padding: spacing.sm, maxWidth: 360, overflowWrap: 'anywhere' }}>
-                        <a
-                          href={
-                            target.sourceUrl ||
-                            dashboardTargetsUrl({ source: target.source, level: target.level })
-                          }
-                          target="_blank"
-                          rel="noreferrer"
-                          style={linkStyle}
-                        >
-                          {target.name}
-                        </a>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button
+                              type="button"
+                              style={{
+                                ...linkStyle,
+                                background: 'none',
+                                border: 0,
+                                padding: 0,
+                                textAlign: 'left',
+                                font: 'inherit',
+                                overflowWrap: 'anywhere',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {target.name}
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent aria-describedby={undefined}>
+                            <DialogTitle>Calibration target</DialogTitle>
+                            <Text style={{ ...detailStyle, overflowWrap: 'anywhere' }}>
+                              {target.name}
+                            </Text>
+                            <dl
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'auto 1fr',
+                                gap: spacing.sm,
+                                margin: 0,
+                                fontSize: typography.fontSize.sm,
+                              }}
+                            >
+                              {[
+                                ['Source', target.sourceLabel ?? target.source],
+                                ['Geography', target.geography],
+                                ['Period', target.period ?? '—'],
+                                ['Measure', target.measure ?? '—'],
+                                [
+                                  'Target value',
+                                  target.target?.toLocaleString('en-US', {
+                                    maximumFractionDigits: 2,
+                                  }) ?? '—',
+                                ],
+                                [
+                                  'Model value',
+                                  target.estimate?.toLocaleString('en-US', {
+                                    maximumFractionDigits: 2,
+                                  }) ?? '—',
+                                ],
+                                [
+                                  'Gap',
+                                  target.relativeError === null
+                                    ? '—'
+                                    : percent(target.relativeError),
+                                ],
+                              ].map(([label, value]) => (
+                                <div key={label} style={{ display: 'contents' }}>
+                                  <dt>{label}</dt>
+                                  <dd style={{ margin: 0 }}>{value}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                            {target.sourceUrl && (
+                              <a
+                                href={target.sourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={linkStyle}
+                              >
+                                Read source
+                              </a>
+                            )}
+                            <DashboardLink source={target.source} level={target.level}>
+                              View target group in dashboard
+                            </DashboardLink>
+                          </DialogContent>
+                        </Dialog>
                         <Text style={{ ...detailStyle, margin: 0 }}>
                           {target.sourceLabel ?? target.source} · {target.geography}
                           {target.measure ? ` · ${target.measure}` : ''}
@@ -268,12 +330,18 @@ export function CalibrationMatchSection({
                       <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {target.target === null
                           ? '—'
-                          : target.target.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                          : target.target.toLocaleString('en-US', {
+                              notation: 'compact',
+                              maximumFractionDigits: 1,
+                            })}
                       </td>
                       <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {target.estimate === null
                           ? '—'
-                          : target.estimate.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                          : target.estimate.toLocaleString('en-US', {
+                              notation: 'compact',
+                              maximumFractionDigits: 1,
+                            })}
                       </td>
                       <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {target.relativeError === null ? '—' : percent(target.relativeError)}
