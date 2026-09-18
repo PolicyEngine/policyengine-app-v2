@@ -88,8 +88,13 @@ interface FlagshipReportPageProps {
  */
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
   const [activeTab, setActiveTab] = useState('policy');
-  function openReportSection(section: string) {
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set(['policy']));
+  function selectTab(section: string) {
+    setVisitedTabs((visited) => (visited.has(section) ? visited : new Set([...visited, section])));
     setActiveTab(section);
+  }
+  function openReportSection(section: string) {
+    selectTab(section);
     requestAnimationFrame(() => {
       const tab = document.querySelector<HTMLButtonElement>('[role="tab"][data-state="active"]');
       tab?.focus();
@@ -331,7 +336,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         </Stack>
       </header>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} style={{ gap: spacing.xl }}>
+      <Tabs value={activeTab} onValueChange={selectTab} style={{ gap: spacing.xl }}>
         <TabsList
           aria-label="Report sections"
           variant="line"
@@ -358,99 +363,134 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             </TabsTrigger>
           ))}
         </TabsList>
-        <TabsContent value="policy">
-          <Stack style={{ gap: spacing.xl }}>
-            <ReportContents
-              output={output}
-              countryId={countryId}
-              districtAvailable={showUSDistricts || countryId === 'uk'}
-              onOpen={openReportSection}
-            />
-          </Stack>
-        </TabsContent>
-        <TabsContent value="economy">
-          <Stack style={{ gap: spacing.md }}>
-            <SocietyWideOverview output={output} showCongressionalCard={false} groupedCharts />
-          </Stack>
-        </TabsContent>
-        <TabsContent value="districts">
-          <Stack style={{ gap: spacing.md }}>
-            <SectionHeading id="districts" title="Districts" />
-            {output && showUSDistricts && (
-              <CongressionalDistrictDataProvider
-                reformPolicyId={reformPolicyId ?? ''}
-                baselinePolicyId={baselinePolicyId ?? ''}
-                year={report?.year ?? ''}
-                region={region}
-              >
-                <StandaloneCongressionalDistrictCard output={output} />
-              </CongressionalDistrictDataProvider>
-            )}
-            {output && !showUSDistricts && countryId === 'uk' && (
-              <ConstituencySubPage output={output} />
-            )}
-            {output && !showUSDistricts && countryId !== 'uk' && (
-              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                District-level impacts are not available for this report's scope.
-              </Text>
-            )}
-          </Stack>
-        </TabsContent>
-        <TabsContent value="household">
-          <Stack style={{ gap: spacing.md }}>
-            <SectionHeading id="household" title="Household" />
-            <Stack
-              style={{
-                gap: spacing.md,
-                padding: spacing.lg,
-                border: `1px dashed ${colors.border.light}`,
-                borderRadius: 12,
-                alignItems: 'flex-start',
-              }}
-            >
-              <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-                <IconHome size={18} color={colors.text.secondary} />
-                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-                  No household attached to this report yet.
-                </Text>
-              </Stack>
-              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                See how this reform changes taxes and benefits for a specific family — build a
-                household and it will appear here alongside the nationwide results.
-              </Text>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => nav.push(`/${countryId}/households`)}
-              >
-                <IconPlus size={14} />
-                Add a household
-              </Button>
+        <TabsContent
+          value="policy"
+          forceMount
+          hidden={activeTab !== 'policy'}
+          style={{ display: activeTab === 'policy' ? undefined : 'none' }}
+        >
+          {visitedTabs.has('policy') && (
+            <Stack style={{ gap: spacing.xl }}>
+              <ReportContents
+                output={output}
+                countryId={countryId}
+                districtAvailable={showUSDistricts || countryId === 'uk'}
+                onOpen={openReportSection}
+              />
             </Stack>
-          </Stack>
+          )}
         </TabsContent>
-        <TabsContent value="validation">
-          <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
-            <SectionHeading id="validation" title="Validation" />
-            {dataChecks}
-            <ScorecardComparisons
-              reportContext={
-                meta && meta.provisions.length > 0 ? (
-                  <Stack style={{ gap: spacing.sm }}>
-                    <Text style={{ fontWeight: typography.fontWeight.semibold }}>
-                      Your reform · {report?.year}
-                    </Text>
-                    <ProvisionList provisions={meta.provisions} />
-                  </Stack>
-                ) : (
-                  <Text>Before-and-after details for your reform are unavailable.</Text>
-                )
-              }
-              baselineContent={<ModelTrackRecordSection trackRecord={trackRecord} embedded />}
-              countryId={countryId}
-              paths={meta?.provisions.map((p) => p.path) ?? []}
-            />
-          </Stack>
+        <TabsContent
+          value="economy"
+          forceMount
+          hidden={activeTab !== 'economy'}
+          style={{ display: activeTab === 'economy' ? undefined : 'none' }}
+        >
+          {visitedTabs.has('economy') && (
+            <Stack style={{ gap: spacing.md }}>
+              <SocietyWideOverview output={output} showCongressionalCard={false} groupedCharts />
+            </Stack>
+          )}
+        </TabsContent>
+        <TabsContent
+          value="districts"
+          forceMount
+          hidden={activeTab !== 'districts'}
+          style={{ display: activeTab === 'districts' ? undefined : 'none' }}
+        >
+          {visitedTabs.has('districts') && (
+            <Stack style={{ gap: spacing.md }}>
+              <SectionHeading id="districts" title="Districts" />
+              {output && showUSDistricts && (
+                <CongressionalDistrictDataProvider
+                  reformPolicyId={reformPolicyId ?? ''}
+                  baselinePolicyId={baselinePolicyId ?? ''}
+                  year={report?.year ?? ''}
+                  region={region}
+                >
+                  <StandaloneCongressionalDistrictCard output={output} />
+                </CongressionalDistrictDataProvider>
+              )}
+              {output && !showUSDistricts && countryId === 'uk' && (
+                <ConstituencySubPage output={output} />
+              )}
+              {output && !showUSDistricts && countryId !== 'uk' && (
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  District-level impacts are not available for this report's scope.
+                </Text>
+              )}
+            </Stack>
+          )}
+        </TabsContent>
+        <TabsContent
+          value="household"
+          forceMount
+          hidden={activeTab !== 'household'}
+          style={{ display: activeTab === 'household' ? undefined : 'none' }}
+        >
+          {visitedTabs.has('household') && (
+            <Stack style={{ gap: spacing.md }}>
+              <SectionHeading id="household" title="Household" />
+              <Stack
+                style={{
+                  gap: spacing.md,
+                  padding: spacing.lg,
+                  border: `1px dashed ${colors.border.light}`,
+                  borderRadius: 12,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+                  <IconHome size={18} color={colors.text.secondary} />
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
+                    No household attached to this report yet.
+                  </Text>
+                </Stack>
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  See how this reform changes taxes and benefits for a specific family — build a
+                  household and it will appear here alongside the nationwide results.
+                </Text>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => nav.push(`/${countryId}/households`)}
+                >
+                  <IconPlus size={14} />
+                  Add a household
+                </Button>
+              </Stack>
+            </Stack>
+          )}
+        </TabsContent>
+        <TabsContent
+          value="validation"
+          forceMount
+          hidden={activeTab !== 'validation'}
+          style={{ display: activeTab === 'validation' ? undefined : 'none' }}
+        >
+          {visitedTabs.has('validation') && (
+            <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
+              <SectionHeading id="validation" title="Validation" />
+              {dataChecks}
+              <ScorecardComparisons
+                reportContext={
+                  meta && meta.provisions.length > 0 ? (
+                    <Stack style={{ gap: spacing.sm }}>
+                      <Text style={{ fontWeight: typography.fontWeight.semibold }}>
+                        Your reform · {report?.year}
+                      </Text>
+                      <ProvisionList provisions={meta.provisions} />
+                    </Stack>
+                  ) : (
+                    <Text>Before-and-after details for your reform are unavailable.</Text>
+                  )
+                }
+                baselineContent={<ModelTrackRecordSection trackRecord={trackRecord} embedded />}
+                countryId={countryId}
+                paths={meta?.provisions.map((p) => p.path) ?? []}
+              />
+            </Stack>
+          )}
         </TabsContent>
       </Tabs>
     </Stack>
