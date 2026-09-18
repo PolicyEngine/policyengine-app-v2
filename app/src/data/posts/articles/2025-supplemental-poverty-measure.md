@@ -39,7 +39,7 @@ A family's tenure selects which of the three thresholds applies to it, and the r
 
 Census publishes state rates as three-year averages, because a single year of the Current Population Survey is too small a sample for most states. The 2023 to 2025 average for all people ranges from 6.4 percent in Maine to 19.0 percent in Louisiana, with California at 17.8, Mississippi at 16.8 and Florida at 16.4 ([Table 17](https://www2.census.gov/programs-surveys/demo/tables/p60/290/table_17_spm_opm_state.xlsx)).
 
-![SPM poverty by state, 2023 to 2025 average](/assets/posts/2025-spm-poverty-at-2024-thresholds/state-spm-2023-2025.png)
+![SPM poverty by state, 2023 to 2025 average](/assets/posts/2025-supplemental-poverty-measure/state-spm-2023-2025.png)
 
 ## At 2024 thresholds
 
@@ -52,7 +52,7 @@ We recomputed the 2025 rates with the national thresholds held at their 2024 val
 | 18 to 64                  |           12.2 |          12.28 |                           11.55 |                             11.53 |
 | 65 and over               |           15.1 |          15.38 |                           14.66 |                             14.62 |
 
-![SPM poverty from 2024 to 2025 for all people, children, adults 18 to 64 and people 65 and over: the 2024 rate, the change in resources measured against prices, the change from threshold growth beyond CPI-U, and the published 2025 rate](/assets/posts/2025-spm-poverty-at-2024-thresholds/spm-waterfall-2024-2025.png)
+![SPM poverty from 2024 to 2025 for all people, children, adults 18 to 64 and people 65 and over: the 2024 rate, the change in resources measured against prices, the change from threshold growth beyond CPI-U, and the published 2025 rate](/assets/posts/2025-supplemental-poverty-measure/spm-waterfall-2024-2025.png)
 
 Threshold growth beyond CPI-U accounts for 0.80 points of the 2025 rate for all people, 1.08 points for children, 0.73 for people 18 to 64 and 0.72 for people 65 and over. On the anchored basis, SPM poverty fell from 13.0 percent in 2024 to 12.3 in 2025, and child poverty fell from 13.5 to 12.3. The youngest children carry the largest effect: 1.23 points (±0.20) for children under 4 and 1.20 (±0.17) for children under 6, against 1.03 (±0.12) for ages 6 to 17 and 0.75 (±0.10) for people 75 and over.
 
@@ -62,7 +62,7 @@ The chained variant grows the 2024 thresholds by [C-CPI-U](https://data.bls.gov/
 
 By state, the threshold effect ranges from zero in Nebraska to 1.7 points in Alabama, and it exceeds twice its standard error in 28 of the 51 states. New York (1.5 points), Montana (1.5), Indiana (1.4), Delaware (1.4) and Arizona (1.4) follow Alabama; Maine, Kansas, Washington, Minnesota and Wisconsin sit at 0.2 points or less. The effect counts the people whose resources fall between the anchored threshold and the published one, so it depends on how many of a state's residents sit in that band. These are single-year estimates, with standard errors of 0.1 to 0.7 points.[^3]
 
-![Points added to 2025 SPM poverty by threshold growth beyond CPI-U, by state](/assets/posts/2025-spm-poverty-at-2024-thresholds/state-threshold-effect.png)
+![Points added to 2025 SPM poverty by threshold growth beyond CPI-U, by state](/assets/posts/2025-supplemental-poverty-measure/state-threshold-effect.png)
 
 The published and anchored series answer different questions. BLS designs the SPM thresholds to move with what families near the middle spend on necessities, so the published series asks whether resources kept pace with that standard. The anchored series holds the standard fixed in real terms and asks whether resources kept pace with prices. In 2025 the two answers differ by 0.8 points, one year's threshold growth beyond inflation. The anchoring scales the national base only; the 2025 rent indices Census used for each area stay in place.
 
