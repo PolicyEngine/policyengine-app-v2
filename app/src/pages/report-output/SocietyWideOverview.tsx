@@ -699,6 +699,7 @@ function CongressionalDistrictCard({
               <USDistrictChoroplethMap
                 data={mapData}
                 visualizationType={mapVisualizationType}
+                reportNavigation
                 config={{ ...mapConfig, height: 460 }}
                 focusState={stateCode ?? undefined}
                 errorStates={mapErrorStates}

@@ -34,7 +34,9 @@ describe('USDistrictChoroplethMap', () => {
   });
 
   test('trackpad pinch zooms the map and reset restores the initial view', async () => {
-    const { container } = render(<USDistrictChoroplethMap data={MOCK_DISTRICT_CHOROPLETH_DATA} />);
+    const { container } = render(
+      <USDistrictChoroplethMap data={MOCK_DISTRICT_CHOROPLETH_DATA} reportNavigation />
+    );
     await screen.findByRole('button', { name: 'Zoom in' });
     const group = container.querySelector('.rsm-zoomable-group')!;
     const initialTransform = group.getAttribute('transform');
@@ -46,6 +48,16 @@ describe('USDistrictChoroplethMap', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Reset view' }));
     await waitFor(() => expect(group.getAttribute('transform')).toBe(initialTransform));
+  });
+
+  test('legacy maps do not enable rebuild navigation', async () => {
+    const { container } = render(<USDistrictChoroplethMap data={MOCK_DISTRICT_CHOROPLETH_DATA} />);
+    await waitFor(() => expect(container.querySelector('.rsm-zoomable-group')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Zoom in' })).not.toBeInTheDocument();
+    const group = container.querySelector('.rsm-zoomable-group')!;
+    const original = group.getAttribute('transform');
+    fireEvent.wheel(group, { deltaY: -50, ctrlKey: true, clientX: 400, clientY: 200 });
+    expect(group.getAttribute('transform')).toBe(original);
   });
 
   test('given empty data then renders no data message', async () => {

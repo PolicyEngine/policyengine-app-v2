@@ -322,6 +322,7 @@ export function USDistrictChoroplethMap({
   visualizationType = 'geographic',
   exportRef,
   errorStates,
+  reportNavigation = false,
 }: USDistrictChoroplethMapProps) {
   const uniqueId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -501,7 +502,7 @@ export function USDistrictChoroplethMap({
       ref={mergedRef}
       className="tw:flex tw:items-stretch"
       style={{
-        height: fullConfig.height,
+        height: reportNavigation ? fullConfig.height : '100%',
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
@@ -509,45 +510,47 @@ export function USDistrictChoroplethMap({
         position: 'relative',
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          top: spacing.sm,
-          left: spacing.sm,
-          zIndex: 1,
-          display: 'flex',
-          gap: spacing.xs,
-          background: colors.background.primary,
-          borderRadius: spacing.radius.container,
-          padding: spacing.xs,
-        }}
-      >
-        <Button
-          variant="outline"
-          size="icon-xs"
-          aria-label="Zoom in"
-          disabled={view.zoom >= 20}
-          onClick={() =>
-            setView((current) => ({ ...current, zoom: Math.min(20, current.zoom * 1.5) }))
-          }
+      {reportNavigation && (
+        <div
+          style={{
+            position: 'absolute',
+            top: spacing.sm,
+            left: spacing.sm,
+            zIndex: 1,
+            display: 'flex',
+            gap: spacing.xs,
+            background: colors.background.primary,
+            borderRadius: spacing.radius.container,
+            padding: spacing.xs,
+          }}
         >
-          +
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-xs"
-          aria-label="Zoom out"
-          disabled={view.zoom <= 0.5}
-          onClick={() =>
-            setView((current) => ({ ...current, zoom: Math.max(0.5, current.zoom / 1.5) }))
-          }
-        >
-          −
-        </Button>
-        <Button variant="outline" size="xs" onClick={() => setView(initialView)}>
-          Reset view
-        </Button>
-      </div>
+          <Button
+            variant="outline"
+            size="icon-xs"
+            aria-label="Zoom in"
+            disabled={view.zoom >= 20}
+            onClick={() =>
+              setView((current) => ({ ...current, zoom: Math.min(20, current.zoom * 1.5) }))
+            }
+          >
+            +
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-xs"
+            aria-label="Zoom out"
+            disabled={view.zoom <= 0.5}
+            onClick={() =>
+              setView((current) => ({ ...current, zoom: Math.max(0.5, current.zoom / 1.5) }))
+            }
+          >
+            −
+          </Button>
+          <Button variant="outline" size="xs" onClick={() => setView(initialView)}>
+            Reset view
+          </Button>
+        </div>
+      )}
       {/* Map */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <ComposableMap
@@ -555,22 +558,32 @@ export function USDistrictChoroplethMap({
           projectionConfig={
             isHexMap && hexFit
               ? { center: hexFit.center, scale: hexFit.scale }
-              : { scale: Math.min(950, fullConfig.height * 1.8) }
+              : reportNavigation
+                ? { scale: Math.min(950, fullConfig.height * 1.8) }
+                : undefined
           }
           width={SVG_WIDTH}
           height={fullConfig.height}
           style={{ width: '100%', height: '100%' }}
         >
           <ZoomableGroup
-            center={view.center}
-            zoom={view.zoom}
+            center={reportNavigation ? view.center : initialView.center}
+            zoom={reportNavigation ? view.zoom : initialView.zoom}
             // Browsers report trackpad pinch gestures as Ctrl+wheel.
-            filterZoomEvent={(event) => {
-              // react-simple-maps types this as SVGElement, but passes the native event.
-              const input = event as unknown as MouseEvent;
-              return (!input.ctrlKey || input.type === 'wheel') && !input.button;
-            }}
-            onMoveEnd={({ coordinates, zoom }) => setView({ center: coordinates, zoom })}
+            filterZoomEvent={
+              reportNavigation
+                ? (event) => {
+                    // react-simple-maps types this as SVGElement, but passes the native event.
+                    const input = event as unknown as MouseEvent;
+                    return (!input.ctrlKey || input.type === 'wheel') && !input.button;
+                  }
+                : undefined
+            }
+            onMoveEnd={
+              reportNavigation
+                ? ({ coordinates, zoom }) => setView({ center: coordinates, zoom })
+                : undefined
+            }
             minZoom={0.5}
             maxZoom={20}
           >
