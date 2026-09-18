@@ -10,7 +10,7 @@ BLS [produces the thresholds](https://www.bls.gov/pir/spmhome.htm) from the Cons
 
 Shelter costs differ by housing situation, so BLS publishes three thresholds. For 2025 they are $41,701 for renters, $41,323 for owners with a mortgage and $34,326 for owners without one, up 6.3, 5.3 and 4.4 percent from 2024.[^1] BLS [attributes](https://www.bls.gov/pir/spm/spm_thresholds_2025.htm) part of the growth to prices: the index for the threshold's components rose 3.4 percent in 2025, against 2.6 percent for CPI-U. The remainder reflects the spending data, as the five-year window moved forward a year.
 
-Census adapts the national threshold to each family. A three-parameter equivalence scale adjusts it for the number of adults and children, and a geographic adjustment moves the housing share with local rents, using five-year American Community Survey median rents for two-bedroom units in 341 metropolitan and nonmetropolitan areas ([technical documentation](https://www2.census.gov/programs-surveys/supplemental-poverty-measure/datasets/spm/spm_techdoc.pdf), section 4.2).
+Census adapts the national threshold to each family. A three-parameter equivalence scale adjusts it for the number of adults and children, and a geographic adjustment moves the housing share with local rents, using five-year American Community Survey median rents for two-bedroom units in 341 metropolitan and nonmetropolitan areas ([technical documentation](https://www2.census.gov/programs-surveys/supplemental-poverty-measure/datasets/spm/spm_techdoc.pdf), section 4.2). Our [SPM threshold calculator](/us/spm-calculator) applies the same steps to any family and area.
 
 The base moves with what families spend in real terms, so the threshold rises when middle-income families spend more on necessities even if prices hold still. Census updates the official poverty thresholds by CPI-U alone: the 2025 official threshold for two adults and two children is $32,649, up 2.6 percent from $31,812 ([Table 11](https://www2.census.gov/programs-surveys/demo/tables/p60/290/table_11_spm_thresh.xlsx)).
 
@@ -18,18 +18,18 @@ The base moves with what families spend in real terms, so the threshold rises wh
 
 Census prints rates for children, adults 18 to 64 and people 65 and over. We computed finer age groups from the [2026 CPS ASEC public-use file](https://www2.census.gov/programs-surveys/cps/datasets/2026/march/asecpub26csv.zip), with standard errors from its 160 [replicate weights](https://cps.ipums.org/cps/repwt.shtml).
 
-| SPM poverty rate, percent | 2024 (P60-290) |          2025 | Change, points |
+| SPM poverty rate, percent |       2024[^2] |          2025 | Change, points |
 | ------------------------- | -------------: | ------------: | -------------: |
 | All people                |           13.0 | 13.11 (±0.19) |           +0.1 |
-| Under 4                   |                | 14.13 (±0.57) |                |
-| Under 6                   |                | 14.15 (±0.52) |                |
+| Under 4                   | 14.95 (±0.58)† | 14.13 (±0.57) |          −0.8† |
+| Under 6                   | 14.50 (±0.50)† | 14.15 (±0.52) |          −0.4† |
 | Under 18                  |           13.5 | 13.39 (±0.34) |           −0.1 |
-| 6 to 17                   |                | 13.06 (±0.39) |                |
+| 6 to 17                   | 12.84 (±0.34)† | 13.06 (±0.39) |          +0.2† |
 | 18 to 64                  |           12.2 | 12.28 (±0.20) |           +0.1 |
 | 65 and over               |           15.1 | 15.38 (±0.32) |           +0.2 |
-| 75 and over               |                | 16.57 (±0.47) |                |
+| 75 and over               | 16.49 (±0.48)† | 16.57 (±0.47) |          +0.1† |
 
-Children under 6 have higher rates than older children, and people 75 and over have the highest rate of any group. Census restated 2024 on Vintage 2025 population controls in this report, which moves the 2024 child rate to 13.5 from the 13.4 in its [August working paper](https://www.census.gov/library/working-papers/2026/demo/sehsd-wp2026-17.html).
+Children under 6 have higher rates than older children, and people 75 and over have the highest rate of any group. The point estimate for children under 4 fell 0.8 points, with standard errors of 0.6 points on each year's figure, and the rate for children 6 to 17 rose 0.2. Census restated 2024 on Vintage 2025 population controls in this report, which moves the 2024 child rate to 13.5 from the 13.4 in its [August working paper](https://www.census.gov/library/working-papers/2026/demo/sehsd-wp2026-17.html).
 
 ## By housing tenure
 
@@ -74,6 +74,10 @@ The published and anchored series answer different questions. BLS designs the SP
 - Price indexes: BLS [CPI-U](https://data.bls.gov/timeseries/CUUR0000SA0) and [C-CPI-U](https://data.bls.gov/timeseries/SUUR0000SA0).
 - Code and outputs, in the [spm-threshold-paper repository](https://github.com/PolicyEngine/spm-threshold-paper/pull/8): `replicate_and_anchor.py` (replication and the anchored recomputation), `state_age_anchored.py` (states and detailed ages, with replicate-weight standard errors), `state_tile_map.py` (both maps), and the JSON and CSV results they produce.
 
-[spm-calculator](/us/spm-calculator) computes the 2025 threshold for any family and area, and projects later years.
+The [SPM threshold calculator](/us/spm-calculator) computes the 2025 threshold for any family and area and projects it forward; its [methods paper](/us/spm-calculator/paper) documents how.
+
+<div style="text-align: center; margin: 24px 0;"><a class="cta-button" href="/us/spm-calculator">Compute your SPM threshold →</a></div>
+
+[^2]: Census publishes 2024 rates for all people, children, adults 18 to 64 and people 65 and over, restated on Vintage 2025 population controls. For the finer age groups, marked †, we computed 2024 from the [2025 CPS ASEC public-use file](https://www2.census.gov/programs-surveys/cps/datasets/2025/march/asecpub25csv.zip), which carries the earlier weights, with standard errors from its replicate weights. On that file the four published groups come to 12.93, 13.35, 12.16 and 14.95 percent, 0.1 to 0.2 points below the restated figures, so the † changes sit on a slightly different basis from the others.
 
 [^1]: Table 11 of P60-290 prints the 2024 renter threshold as $37,231, which is BLS's corrected 2023 value; the corrected 2024 renter threshold is $39,220, the base for the 6.3 percent growth BLS reports for 2025. We use the BLS value, and the 2025 thresholds in the public-use microdata match BLS. We reported the discrepancy to Census.

@@ -1,8 +1,8 @@
 [
   {
-    "title": "2025 SPM poverty: what Census reported, and what threshold growth did to it",
-    "description": "Census put 2025 SPM poverty at 13.1 percent, up 0.1 point, with thresholds rising 4.4 to 6.3 percent against 2.6 percent inflation. The numbers by age, housing tenure and state, what an SPM threshold is, and the rates with thresholds held at 2024 values: 12.3 percent, down 0.7.",
-    "date": "2026-09-15",
+    "title": "2025 Supplemental Poverty Measure: what Census reported, and what threshold growth did to it",
+    "description": "Census reported 13.1 percent SPM poverty in 2025, up 0.1 point from 2024. We show the rate by age, housing tenure, and state, and find it would have fallen 0.7 points if thresholds rose with inflation.",
+    "date": "2026-09-18",
     "tags": ["us", "technical"],
     "authors": ["max-ghenis"],
     "filename": "2025-spm-poverty-at-2024-thresholds.md",
