@@ -25,6 +25,9 @@ interface DashboardCardProps {
   zIndex: number;
   expandDirection: ExpandDirection;
   expandedContent: React.ReactNode;
+  /** Optional full-detail chart used only by the rebuild expansion dialog. */
+  focusedContent?: React.ReactNode;
+  focusedChartHeight?: number;
   onToggleMode?: () => void;
   gridGap?: number;
 
@@ -483,14 +486,14 @@ function OpenDashboardCard(props: DashboardCardProps) {
       <div
         style={{
           height: enlarged
-            ? 'min(65dvh, 720px)'
+            ? `min(55dvh, ${props.focusedChartHeight ?? 440}px)`
             : props.colSpan === 2
               ? '280px'
               : 'clamp(210px, calc((100vh - 620px) / 2), 280px)',
           minWidth: 0,
         }}
       >
-        {props.expandedContent}
+        {enlarged ? (props.focusedContent ?? props.expandedContent) : props.expandedContent}
       </div>
     </ChartContainer>
   );
@@ -501,8 +504,8 @@ function OpenDashboardCard(props: DashboardCardProps) {
         <DialogContent
           aria-describedby={undefined}
           style={{
-            width: 'calc(100vw - 48px)',
-            maxWidth: '1440px',
+            width: `calc(100vw - ${spacing['4xl']})`,
+            maxWidth: spacing.layout.container,
             maxHeight: 'calc(100dvh - 48px)',
             overflowY: 'auto',
           }}

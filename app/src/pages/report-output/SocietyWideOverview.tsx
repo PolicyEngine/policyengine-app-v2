@@ -1287,6 +1287,13 @@ export default function SocietyWideOverview({
         <DashboardCard
           alwaysExpanded={groupedCharts}
           staticTitle="Income change by decile"
+          focusedContent={
+            decileMode === 'absolute' ? (
+              <DistributionalImpactIncomeAverageSubPage output={output} fillHeight />
+            ) : (
+              <DistributionalImpactIncomeRelativeSubPage output={output} fillHeight />
+            )
+          }
           mode={modeOf('decile')}
           zIndex={zOf('decile')}
           expandDirection="down-right"
@@ -1373,6 +1380,8 @@ export default function SocietyWideOverview({
         <DashboardCard
           alwaysExpanded={groupedCharts}
           staticTitle="Winners and losers"
+          focusedChartHeight={340}
+          focusedContent={<WinnersLosersIncomeDecileSubPage output={output} fillHeight />}
           mode={modeOf('winners')}
           zIndex={zOf('winners')}
           expandDirection="down-left"
@@ -1477,6 +1486,21 @@ export default function SocietyWideOverview({
         <DashboardCard
           alwaysExpanded={groupedCharts}
           staticTitle="Poverty impact"
+          focusedContent={
+            povertyDepth === 'regular' ? (
+              povertyBreakdown === 'by-age' ? (
+                <PovertyImpactByAgeSubPage output={output} fillHeight />
+              ) : povertyBreakdown === 'by-gender' ? (
+                <PovertyImpactByGenderSubPage output={output} fillHeight />
+              ) : (
+                <PovertyImpactByRaceSubPage output={output} fillHeight />
+              )
+            ) : povertyBreakdown === 'by-age' ? (
+              <DeepPovertyImpactByAgeSubPage output={output} fillHeight />
+            ) : (
+              <DeepPovertyImpactByGenderSubPage output={output} fillHeight />
+            )
+          }
           mode={modeOf('poverty')}
           zIndex={zOf('poverty')}
           expandDirection="down-right"
@@ -1534,6 +1558,7 @@ export default function SocietyWideOverview({
         <DashboardCard
           alwaysExpanded={groupedCharts}
           staticTitle="Inequality impact"
+          focusedContent={<InequalityImpactSubPage output={output} fillHeight />}
           mode={modeOf('inequality')}
           zIndex={zOf('inequality')}
           expandDirection="down-left"
