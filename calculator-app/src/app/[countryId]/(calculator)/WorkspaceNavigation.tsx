@@ -1,5 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import BillReportPage from "@/pages/flagship/BillReport.page";
 import { useMemo } from "react";
 import {
   NavigationProvider,
@@ -13,11 +15,16 @@ import StandardLayout from "@/components/StandardLayout";
 import FlagshipGate from "./FlagshipGate";
 import { isWorkspaceTransition, workspaceRoute } from "./workspaceRoutes";
 
+// Keep the browser-only chart stack out of SSR, as in the direct report route.
+const ReportPage = dynamic(() => import("@/pages/flagship/Report.page"), {
+  ssr: false,
+});
+
 const screens = { ask: AskPage, build: BuildPage, reforms: ReformsPage };
 
 /** Switch client-only workspace screens without waiting for a server route payload.
  * Next's native history integration updates pathname/search and preserves back/forward.
- * Report routes, country switches, and legacy screens still use the normal router.
+ * Country switches and legacy screens still use the normal router.
  */
 export default function WorkspaceNavigation({
   children,
@@ -48,18 +55,22 @@ export default function WorkspaceNavigation({
     [router],
   );
   const route = workspaceRoute(pathname);
-  const Screen = route ? screens[route.screen as keyof typeof screens] : null;
+  let content = children;
+  if (route) {
+    if (route.screen === "bill") {
+      content = <BillReportPage key={route.id} billId={route.id} />;
+    } else if (route.screen === "report") {
+      content = <ReportPage key={route.id} userReportId={route.id} />;
+    } else {
+      const Screen = screens[route.screen];
+      content = <Screen />;
+    }
+  }
 
   return (
     <NavigationProvider value={navigation}>
       <StandardLayout>
-        {Screen ? (
-          <FlagshipGate>
-            <Screen />
-          </FlagshipGate>
-        ) : (
-          children
-        )}
+        {route ? <FlagshipGate>{content}</FlagshipGate> : children}
       </StandardLayout>
     </NavigationProvider>
   );
