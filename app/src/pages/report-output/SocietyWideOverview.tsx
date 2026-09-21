@@ -1558,7 +1558,7 @@ export default function SocietyWideOverview({
         <DashboardCard
           alwaysExpanded={groupedCharts}
           staticTitle="Inequality impact"
-          focusedContent={<InequalityImpactSubPage output={output} fillHeight />}
+          focusedContent={<InequalityImpactSubPage output={output} trimAxisZeros fillHeight />}
           mode={modeOf('inequality')}
           zIndex={zOf('inequality')}
           expandDirection="down-left"
@@ -1589,7 +1589,12 @@ export default function SocietyWideOverview({
           csvFilename="inequality-impact.csv"
           csvData={getInequalityCsvRows(output)}
           expandedContent={
-            <InequalityImpactSubPage output={output} compact={groupedCharts} fillHeight />
+            <InequalityImpactSubPage
+              output={output}
+              compact={groupedCharts}
+              trimAxisZeros={groupedCharts}
+              fillHeight
+            />
           }
           onToggleMode={() => toggle('inequality')}
         />

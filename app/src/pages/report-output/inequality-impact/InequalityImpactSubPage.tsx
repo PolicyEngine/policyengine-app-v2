@@ -37,6 +37,7 @@ interface Props {
   chartHeight?: number;
   fillHeight?: boolean;
   compact?: boolean;
+  trimAxisZeros?: boolean;
 }
 
 export default function InequalityImpactSubPage({
@@ -44,6 +45,7 @@ export default function InequalityImpactSubPage({
   chartHeight: chartHeightProp,
   fillHeight = false,
   compact = false,
+  trimAxisZeros = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -129,7 +131,10 @@ export default function InequalityImpactSubPage({
   const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
   const yTicks = getNiceTicks(yDomain);
 
-  const yTickFormatter = (v: number) => `${(v * 100).toFixed(ytickPrecision)}%`;
+  const yTickFormatter = (v: number) => {
+    const rounded = (v * 100).toFixed(ytickPrecision);
+    return `${trimAxisZeros ? Number(rounded) : rounded}%`;
+  };
   const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
 
   const barChart = (
