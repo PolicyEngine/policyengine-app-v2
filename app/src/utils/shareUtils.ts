@@ -24,7 +24,12 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
  * Uses URL-safe characters: + → -, / → _, removes = padding.
  */
 export function encodeShareData(data: ReportIngredientsInput): string {
-  const json = JSON.stringify(data);
+  // Escape non-Latin1 characters so btoa accepts Unicode labels. JSON.parse
+  // restores them, preserving compatibility with existing shared links.
+  const json = JSON.stringify(data).replace(
+    /[\u0100-\uffff]/g,
+    (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
   const base64 = btoa(json);
   // Make URL-safe: replace + with -, / with _, remove = padding
   const urlSafe = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
