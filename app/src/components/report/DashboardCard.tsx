@@ -502,6 +502,7 @@ function OpenDashboardCard(props: DashboardCardProps) {
       {chart(false)}
       <Dialog open={focused} onOpenChange={setFocused}>
         <DialogContent
+          className="report-chart-dialog"
           aria-describedby={undefined}
           style={{
             width: `calc(100vw - ${spacing['4xl']})`,
