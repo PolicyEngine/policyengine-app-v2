@@ -59,6 +59,30 @@ describe('DashboardCard', () => {
     vi.clearAllMocks();
   });
 
+  test('given a rebuild card then expanding shows its full-detail chart in a bounded dialog', () => {
+    render(
+      <DashboardCard
+        alwaysExpanded
+        mode="expanded"
+        zIndex={1}
+        expandDirection="down-right"
+        staticTitle="Winners and losers"
+        shrunkenHeader={null}
+        expandedContent={<div>Compact chart</div>}
+        focusedContent={<div>Full chart labels</div>}
+        focusedChartHeight={340}
+      />
+    );
+    expect(screen.queryByText('Full chart labels')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand Winners and losers' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Full chart labels');
+    expect(screen.getByText('Full chart labels').parentElement).toHaveStyle({
+      height: 'min(55dvh, 340px)',
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getByText('Compact chart')).toBeInTheDocument();
+  });
+
   test('given expanded downloads then toolbar buttons download CSV and SVG with analytics', async () => {
     const csvData = [
       ['Metric', 'Value'],

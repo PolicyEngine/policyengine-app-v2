@@ -83,6 +83,8 @@ export type PartialChoroplethMapConfig = Partial<ChoroplethMapConfig> & {
  * Props for the USDistrictChoroplethMap component
  */
 export interface USDistrictChoroplethMapProps {
+  /** Opt-in report rebuild sizing and navigation; legacy callers retain their defaults. */
+  reportNavigation?: boolean;
   /** Array of data points to visualize */
   data: ChoroplethDataPoint[];
   /** Configuration for the map */

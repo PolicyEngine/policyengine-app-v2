@@ -192,3 +192,8 @@ export const createUserReportWithoutReportId = (): UserReport =>
     reportId: undefined as unknown as string,
     countryId: TEST_COUNTRIES.US,
   }) as UserReport;
+
+export const UNICODE_SHARE_DATA: ReportIngredientsInput = {
+  ...VALID_SHARE_DATA,
+  userReport: { ...VALID_SHARE_DATA.userReport, label: 'Family — £75,000 · 家庭 🏠' },
+};

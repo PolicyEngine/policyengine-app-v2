@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -16,6 +16,16 @@ export function useRunFlagshipReport() {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Warm the report's chart bundle while the user is reviewing the reform.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void import('@/pages/flagship/Report.page').catch(() => {
+        // Navigation retries the normal import if preloading fails.
+      });
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const run = async (
     title: string,

@@ -1,9 +1,9 @@
 import { createSelector } from '@reduxjs/toolkit';
 import Fuse, { IFuseOptions } from 'fuse.js';
-import { priorFactor } from '@/libs/searchPriors';
 import type { RootState } from '@/store';
 import { ParameterMetadata, ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
-import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import { formatLabelParts, getHierarchicalLabels } from '../utils/parameterLabels';
+import { priorFactor } from './searchPriors';
 
 /**
  * Universal parameter search for the flagship shell.

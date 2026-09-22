@@ -15,6 +15,7 @@ import {
   MOCK_USER_SIMULATIONS,
   TEST_BASE_REPORT_IDS,
   TEST_USER_REPORT_IDS,
+  UNICODE_SHARE_DATA,
   VALID_HOUSEHOLD_SHARE_DATA,
   VALID_SHARE_DATA,
 } from '@/tests/fixtures/utils/shareUtilsMocks';
@@ -30,6 +31,14 @@ import {
 
 describe('shareUtils', () => {
   describe('encodeShareData / decodeShareData', () => {
+    test('preserves Unicode labels without breaking existing decoders', () => {
+      const encoded = encodeShareData(UNICODE_SHARE_DATA);
+      expect(decodeShareData(encoded)).toEqual(UNICODE_SHARE_DATA);
+      expect(JSON.parse(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')))).toEqual(
+        UNICODE_SHARE_DATA
+      );
+    });
+
     test('given valid share data then encodes and decodes back to original', () => {
       // When
       const encoded = encodeShareData(VALID_SHARE_DATA);
