@@ -54,6 +54,12 @@ const DEV_TOOL_CARDS = [
     description:
       "Check the current status and availability of PolicyEngine API endpoints.",
   },
+  {
+    slug: "multizone-routing",
+    title: "Multizone routing strategy",
+    description:
+      "Review interactive app routes and collect team input on iframe, rewrite, and multizone ownership.",
+  },
 ];
 
 export const metadata: Metadata = {
