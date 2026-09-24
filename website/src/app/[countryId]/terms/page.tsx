@@ -1,11 +1,28 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import LegalPageLayout, {
   LegalSection,
 } from "@/components/static/LegalPageLayout";
+import { VALID_COUNTRIES, type CountryId } from "@/lib/countries";
 
 export const metadata: Metadata = {
   title: "Terms of service",
 };
+
+// Whose laws govern these Terms (9.1) on each country's site. This is legal
+// text, so it is kept apart from display names. Typing it by CountryId means
+// adding a country fails typecheck until its governing law is chosen here.
+const GOVERNING_LAW_BY_COUNTRY: Record<CountryId, string> = {
+  us: "the United States",
+  uk: "the United Kingdom",
+  ca: "Canada",
+  ng: "Nigeria",
+  il: "Israel",
+};
+
+function isCountryId(countryId: string): countryId is CountryId {
+  return (VALID_COUNTRIES as readonly string[]).includes(countryId);
+}
 
 const TERMS_HISTORY_URL =
   "https://github.com/PolicyEngine/policyengine-app-v2/commits/main/website/src/app/%5BcountryId%5D/terms/page.tsx";
@@ -16,7 +33,7 @@ const V1_TERMS_HISTORY_URL =
 
 function buildSections(
   apiTermsPath: string,
-  countryName: string,
+  governingLaw: string,
 ): LegalSection[] {
   return [
     {
@@ -154,7 +171,7 @@ function buildSections(
       content: (
         <p>
           9.1 These Terms shall be governed by and construed in accordance with
-          the laws of {countryName}.
+          the laws of {governingLaw}.
         </p>
       ),
     },
@@ -207,6 +224,12 @@ function buildSections(
               privacy policy and links to this page&apos;s change history,
               including versions before March 2026.
             </li>
+            <li>
+              2026-09-24: Section 9.1 of the Canadian, Nigerian, and Israeli
+              versions of these Terms now names the laws of Canada, Nigeria, and
+              Israel respectively. It previously named the United Kingdom for
+              all three.
+            </li>
           </ul>
         </>
       ),
@@ -220,11 +243,17 @@ export default async function TermsPage({
   params: Promise<{ countryId: string }>;
 }) {
   const { countryId } = await params;
-  const countryName =
-    countryId === "us" ? "the United States" : "the United Kingdom";
+  // The country layout already 404s unknown ids. Checking again here means
+  // this page can never fall back to another country's governing law.
+  if (!isCountryId(countryId)) {
+    notFound();
+  }
   // household-api-docs serves API terms only for the US and the UK.
   const apiTermsPath = `/${countryId === "uk" ? "uk" : "us"}/api/terms`;
-  const sections = buildSections(apiTermsPath, countryName);
+  const sections = buildSections(
+    apiTermsPath,
+    GOVERNING_LAW_BY_COUNTRY[countryId],
+  );
 
   return <LegalPageLayout title="Terms of service" sections={sections} />;
 }

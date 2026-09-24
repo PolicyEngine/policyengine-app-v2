@@ -1,6 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, test } from "vitest";
+import { notFound } from "next/navigation";
+import { describe, expect, test, vi } from "vitest";
 import TermsPage from "../../app/[countryId]/terms/page";
+import { VALID_COUNTRIES } from "@/lib/countries";
+
+vi.mock("next/navigation", () => ({
+  notFound: vi.fn(() => {
+    throw new Error("NEXT_NOT_FOUND");
+  }),
+}));
 
 async function renderTerms(countryId: string) {
   const el = await TermsPage({ params: Promise.resolve({ countryId }) });
@@ -96,6 +104,46 @@ describe("terms page licensing", () => {
     await renderTerms("us");
     expect(
       screen.getByText(/^\d{4}-\d{2}-\d{2}: Section 3 now recognizes/),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("terms page governing law", () => {
+  const GOVERNING_LAW: Record<string, string> = {
+    us: "the United States",
+    uk: "the United Kingdom",
+    ca: "Canada",
+    ng: "Nigeria",
+    il: "Israel",
+  };
+
+  test("covers every country the site serves", () => {
+    expect(Object.keys(GOVERNING_LAW).sort()).toEqual(
+      [...VALID_COUNTRIES].sort(),
+    );
+  });
+
+  test.each(Object.entries(GOVERNING_LAW))(
+    "%s terms are governed by the laws of %s",
+    async (countryId, law) => {
+      await renderTerms(countryId);
+      expect(screen.getByText(/^9\.1 /)).toHaveTextContent(
+        `9.1 These Terms shall be governed by and construed in accordance with the laws of ${law}.`,
+      );
+    },
+  );
+
+  test("404s rather than fall back to another country's law", async () => {
+    await expect(renderTerms("fr")).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(notFound).toHaveBeenCalled();
+  });
+
+  test("records the governing-law change in the changelog", async () => {
+    await renderTerms("us");
+    expect(
+      screen.getByText(
+        /^\d{4}-\d{2}-\d{2}: Section 9\.1 of the Canadian, Nigerian, and Israeli versions/,
+      ),
     ).toBeInTheDocument();
   });
 });
