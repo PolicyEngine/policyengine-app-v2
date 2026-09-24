@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   title: "Privacy policy",
 };
 
+const PRIVACY_HISTORY_URL =
+  "https://github.com/PolicyEngine/policyengine-app-v2/commits/main/website/src/app/%5BcountryId%5D/privacy/page.tsx";
+const LEGACY_PRIVACY_HISTORY_URL =
+  "https://github.com/PolicyEngine/policyengine-app-v2/commits/main/app/src/pages/Privacy.page.tsx";
+const V1_PRIVACY_HISTORY_URL =
+  "https://github.com/PolicyEngine/policyengine-app/commits/main/src/pages/PrivacyPage.jsx";
+
 const sections: LegalSection[] = [
   {
     heading: "How does PolicyEngine use my data?",
@@ -58,20 +65,46 @@ const sections: LegalSection[] = [
   {
     heading: "Changes to this privacy policy",
     content: (
-      <p>
-        We may update this privacy policy at any time in order to reflect, for
-        example, changes to our practices or for other operational legal or
-        regulatory reasons. We will update this page with a changelog, and the
-        full history of changes is be available on our{" "}
-        <a
-          href="https://github.com/policyengine/policyengine-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          GitHub repository
-        </a>
-        .
-      </p>
+      <>
+        <p>
+          We may update this privacy policy at any time in order to reflect, for
+          example, changes to our practices or for other operational, legal, or
+          regulatory reasons. We will update this page with a changelog, and the
+          full history of changes is available on our{" "}
+          <a
+            href={PRIVACY_HISTORY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub repository
+          </a>
+          , with versions before March 2026 in{" "}
+          <a
+            href={LEGACY_PRIVACY_HISTORY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            an earlier file in the same repository
+          </a>{" "}
+          and our archived{" "}
+          <a
+            href={V1_PRIVACY_HISTORY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            policyengine-app repository
+          </a>
+          .
+        </p>
+        <p>Changelog:</p>
+        <ul className="tw:list-disc">
+          <li>
+            2026-09-24: This section now links to this page&apos;s change
+            history, including versions before March 2026, rather than to the
+            home page of the archived policyengine-app repository.
+          </li>
+        </ul>
+      </>
     ),
   },
 ];
