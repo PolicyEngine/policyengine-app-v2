@@ -8,7 +8,8 @@ The `app/` directory contains the legacy Vite build. Some parts have been ported
 
 - Website components: `home/`, `shared/static/`, `Footer.tsx`, `FooterSubscribe.tsx`, `blog/BlogPostCard.tsx`, `blog/BlogPostGrid.tsx`, `blog/ResearchFilters.tsx`
   - Note: `homeHeader/` and `shared/HomeHeader.tsx` were also ported to `website/src/components/Header.tsx`, but the calculator-app still renders `HomeHeader` via `StandardLayout`, so these remain editable in `app/`. Keep the calculator header in sync with the website header when the website one changes.
-- Website pages: `Home`, `Research`, `Blog`, `Team`, `Supporters`, `Donate`, `Privacy`, `Terms`, `Brand*`, `Citations`, `AppPage`
+- Website pages: `Home`, `Research`, `Blog`, `Team`, `Supporters`, `Donate`, `Brand*`, `Citations`, `AppPage`
+  - The `Privacy` and `Terms` copies and `shared/static/LegalPageLayout.tsx` have been deleted from `app/`. The legal pages live only in `website/src/app/[countryId]/privacy/` and `website/src/app/[countryId]/terms/`.
 - Production website routing — new rewrites go in `website/next.config.ts`, not `website/vercel.json`
 
 **Still active in `app/` (safe to modify):**
@@ -18,7 +19,7 @@ The `app/` directory contains the legacy Vite build. Some parts have been ported
 - `app/src/data/` — shared data files (posts.json, citations.json, apps.json, authors.json)
 - `app/public/assets/` — shared static assets
 
-CI will warn if a PR modifies website-specific files in `app/`.
+CI fails if a PR adds or modifies website-specific files in `app/`. Deleting a ported copy is allowed once nothing in `app/` still imports or routes to it.
 
 ## Visual standards
 

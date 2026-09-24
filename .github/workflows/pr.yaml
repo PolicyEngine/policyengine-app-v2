@@ -18,8 +18,11 @@ jobs:
 
       - name: Check for website-related changes to app/
         run: |
-          # Get files changed in this PR (vs base branch)
-          ALL_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          # Get files changed in this PR (vs base branch). --diff-filter=d
+          # leaves out deleted files: removing a ported copy from app/ is
+          # the point of the migration, so only additions and edits are
+          # blocked below.
+          ALL_CHANGED=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}...HEAD)
 
           # Website-specific paths in app/ that have been ported to website/
           # and should no longer be modified in app/.

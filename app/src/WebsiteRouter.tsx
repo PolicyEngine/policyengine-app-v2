@@ -25,11 +25,9 @@ const CitationsPage = lazy(() => import('./pages/Citations.page'));
 const ClaudePluginsPage = lazy(() => import('./pages/ClaudePlugins.page'));
 const DonatePage = lazy(() => import('./pages/Donate.page'));
 const OrgLogosEmbedPage = lazy(() => import('./pages/embed/OrgLogosEmbed.page'));
-const PrivacyPage = lazy(() => import('./pages/Privacy.page'));
 const ResearchPage = lazy(() => import('./pages/Research.page'));
 const SupportersPage = lazy(() => import('./pages/Supporters.page'));
 const TeamPage = lazy(() => import('./pages/Team.page'));
-const TermsPage = lazy(() => import('./pages/Terms.page'));
 const YearInReviewPage = lazy(() => import('./pages/YearInReview.page'));
 
 // Redirect component for legacy /blog/:postName URLs
@@ -78,14 +76,6 @@ const router = createBrowserRouter(
                 {
                   path: 'team',
                   element: <TeamPage />,
-                },
-                {
-                  path: 'privacy',
-                  element: <PrivacyPage />,
-                },
-                {
-                  path: 'terms',
-                  element: <TermsPage />,
                 },
                 {
                   path: 'methodology',
