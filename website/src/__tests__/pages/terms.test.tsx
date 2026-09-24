@@ -16,6 +16,15 @@ describe("terms page licensing", () => {
     );
   });
 
+  test("disclaims advice without limiting the purposes of use", async () => {
+    await renderTerms("us");
+    const clause = screen.getByText(/^2\.1 /);
+    expect(clause).toHaveTextContent(
+      /do not constitute legal, tax, or financial advice/,
+    );
+    expect(clause).not.toHaveTextContent(/purposes only/);
+  });
+
   test("does not treat openly licensed material as unowned", async () => {
     await renderTerms("us");
     expect(screen.getByText(/^3\.1 /)).toHaveTextContent(
@@ -41,11 +50,14 @@ describe("terms page licensing", () => {
     await renderTerms("us");
     const clause = screen.getByText(/^3\.4 /);
     expect(clause).toHaveTextContent(
-      /claims no rights.*in the laws and regulations that legislatures and governments make/,
+      /claims no rights in the laws and regulations that legislatures and governments make/,
+    );
+    expect(clause).toHaveTextContent(
+      /does not assert database rights against anyone who extracts or reuses them, including from PolicyEngine's parameter files/,
     );
     expect(clause).toHaveTextContent(/other values set by or under those laws/);
     expect(clause).toHaveTextContent(
-      /does not change the license that applies to the code, documentation, or parameter files/,
+      /does not change the license that applies to copying or adapting the code, documentation, or parameter files themselves/,
     );
   });
 
@@ -95,7 +107,7 @@ describe("terms page licensing", () => {
   test("records the licensing change in the changelog", async () => {
     await renderTerms("us");
     expect(
-      screen.getByText(/^\d{4}-\d{2}-\d{2}: Section 3 now recognizes/),
+      screen.getByText(/^\d{4}-\d{2}-\d{2}: Section 2\.1 now states/),
     ).toBeInTheDocument();
   });
 });
