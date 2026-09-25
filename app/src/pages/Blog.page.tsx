@@ -11,6 +11,7 @@ import { blogSpacing } from '@/components/blog/blogStyles';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
 import { NotebookRenderer } from '@/components/blog/NotebookRenderer';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
+import { formatPostDate } from '@/components/home/blogPreviewUtils';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { Container, Spinner, Text } from '@/components/ui';
 import OptimisedImage from '@/components/ui/OptimisedImage';
@@ -109,11 +110,7 @@ export default function BlogPage() {
   }, [post?.filename, isNotebook]);
 
   // Format date
-  const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = formatPostDate(post.date, 'long');
 
   if (loading) {
     return (

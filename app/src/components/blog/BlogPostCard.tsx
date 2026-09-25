@@ -1,5 +1,6 @@
 import { IconArrowRight } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { formatPostDate } from '@/components/home/blogPreviewUtils';
 import { Text } from '@/components/ui';
 import OptimisedImage from '@/components/ui/OptimisedImage';
 import { locationLabels, topicLabels } from '@/data/posts/postTransformers';
@@ -16,11 +17,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
     ? `/${item.countryId}/${item.slug}`
     : `/${countryId}/research/${item.slug}`;
 
-  const formattedDate = new Date(item.date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const formattedDate = formatPostDate(item.date);
 
   const displayTags = item.tags
     .filter((tag) => topicLabels[tag] || locationLabels[tag])
