@@ -59,6 +59,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
   },
   {
+    source: "/uk/middle-east-war-living-standards",
+    destination:
+      "https://uk-energy-shock-impact.vercel.app/uk/middle-east-war-living-standards",
+  },
+  {
     source: "/uk/free-childcare-reform",
     destination:
       "https://free-childcare-reform.vercel.app/uk/free-childcare-reform",
