@@ -1,6 +1,6 @@
 "use client";
 
-import WorkspaceNavigation from "./WorkspaceNavigation";
+import StandardLayout from "@/components/StandardLayout";
 
 /**
  * Shared calculator shell for extracted calculator routes.
@@ -13,7 +13,7 @@ export default function CalculatorLayout({
 }) {
   return (
     <>
-      <WorkspaceNavigation>{children}</WorkspaceNavigation>
+      <StandardLayout>{children}</StandardLayout>
       <div id="fullscreen-portal" />
     </>
   );

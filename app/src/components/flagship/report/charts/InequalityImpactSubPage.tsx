@@ -5,7 +5,6 @@ import {
   CartesianGrid,
   Cell,
   Label,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -14,12 +13,14 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import ChartExplanation from '@/components/flagship/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { getInequalityCsvRows } from '@/pages/report-output/inequality-impact/inequalityChartUtils';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
@@ -28,20 +29,23 @@ import {
   getYAxisLayout,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
-import { formatNumber, formatPercent } from '@/utils/formatters';
+import { formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
-import { getPovertyByAgeCsvRows } from './povertyChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
+  compact?: boolean;
+  trimAxisZeros?: boolean;
 }
 
-export default function PovertyImpactByAgeSubPage({
+export default function InequalityImpactSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
+  compact = false,
+  trimAxisZeros = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -50,76 +54,76 @@ export default function PovertyImpactByAgeSubPage({
   const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  const povertyImpact = output.poverty.poverty;
+  const giniImpact = output.inequality.gini;
+  const top10Impact = output.inequality.top_10_pct_share;
+  const top1Impact = output.inequality.top_1_pct_share;
 
-  // Calculate changes for each age group
-  const childPovertyChange = povertyImpact.child.reform / povertyImpact.child.baseline - 1;
-  const adultPovertyChange = povertyImpact.adult.reform / povertyImpact.adult.baseline - 1;
-  const seniorPovertyChange = povertyImpact.senior.reform / povertyImpact.senior.baseline - 1;
-  const totalPovertyChange = povertyImpact.all.reform / povertyImpact.all.baseline - 1;
-
-  const povertyChanges = [
-    childPovertyChange,
-    adultPovertyChange,
-    seniorPovertyChange,
-    totalPovertyChange,
+  const labels = ['Gini index', 'Top 10% share', 'Top 1% share'];
+  const metricChanges = [
+    giniImpact.reform / giniImpact.baseline - 1,
+    top10Impact.reform / top10Impact.baseline - 1,
+    top1Impact.reform / top1Impact.baseline - 1,
   ];
-  const povertyLabels = ['Children', 'Working-age adults', 'Seniors', 'All'];
-  const labelToKey: Record<string, keyof typeof povertyImpact> = {
-    Children: 'child',
-    'Working-age adults': 'adult',
-    Seniors: 'senior',
-    All: 'all',
-  };
+
+  // Calculate precision for display
+  const yvaluePrecision = Math.max(1, precision(metricChanges, 100));
+  const ytickPrecision = precision(metricChanges.concat(0), 10);
 
   const formatPer = (n: number) =>
     formatPercent(n, countryId, {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
+      minimumFractionDigits: yvaluePrecision,
     });
 
   // Generate hover message
   const hoverMessage = (x: string) => {
-    const obj = `the percentage of ${x === 'All' ? 'people' : x.toLowerCase()} in poverty`;
-    const baseline = povertyImpact[labelToKey[x]].baseline;
-    const reform = povertyImpact[labelToKey[x]].reform;
+    let obj: string;
+    let baseline: number;
+    let reform: number;
+    let formatter: (n: number) => string;
+
+    if (x === 'Gini index') {
+      obj = 'the Gini index of net income';
+      baseline = giniImpact.baseline;
+      reform = giniImpact.reform;
+      formatter = (n) => n.toFixed(3);
+    } else if (x === 'Top 10% share') {
+      obj = 'the share of total net income held by people in the top 10% of households';
+      baseline = top10Impact.baseline;
+      reform = top10Impact.reform;
+      formatter = formatPer;
+    } else {
+      obj = 'the share of total net income held by people in the top 1% of households';
+      baseline = top1Impact.baseline;
+      reform = top1Impact.reform;
+      formatter = formatPer;
+    }
+
     const change = reform / baseline - 1;
     return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
       baseline,
       reform,
-      formatter: formatPer,
+      formatter,
     });
   };
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = povertyImpact.all.baseline;
-    const reform = povertyImpact.all.reform;
-    const relativeChange = reform / baseline - 1;
-    const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
-    const objectTerm = 'the poverty rate';
-    const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
-      maximumFractionDigits: 1,
-    });
-    const absTerm = formatNumber(absoluteChange, countryId, {
-      maximumFractionDigits: 2,
-    });
-    const term2 = `${relTerm} (${absTerm}pp)`;
-    const signTerm = relativeChange > 0 ? 'increase' : 'decrease';
+    const signTerm =
+      metricChanges[0] > 0 && metricChanges[1] > 0 && metricChanges[2] > 0
+        ? 'increase'
+        : metricChanges[0] < 0 && metricChanges[1] < 0 && metricChanges[2] < 0
+          ? 'decrease'
+          : 'have an ambiguous effect on';
     const region = regionName(metadata);
     const regionPhrase = region ? ` in ${region}` : '';
-
-    if (absTerm === '0') {
-      return `This reform would have no effect on ${objectTerm}${regionPhrase}`;
-    }
-    return `This reform would ${signTerm} ${objectTerm}${regionPhrase} by ${term2}`;
+    return `This reform would ${signTerm} income inequality${regionPhrase}`;
   };
 
   // Recharts data
-  const chartData = povertyLabels.map((label, i) => ({
+  const chartData = labels.map((label, i) => ({
     name: label,
-    value: povertyChanges[i],
-    label: (povertyChanges[i] >= 0 ? '+' : '') + formatPer(povertyChanges[i]),
+    value: metricChanges[i],
+    label: (metricChanges[i] >= 0 ? '+' : '') + formatPer(metricChanges[i]),
     hoverText: hoverMessage(label),
   }));
 
@@ -127,16 +131,11 @@ export default function PovertyImpactByAgeSubPage({
   const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
   const yTicks = getNiceTicks(yDomain);
 
-  const yTickFormatter = (v: number) => `${(v * 100).toFixed(1)}%`;
+  const yTickFormatter = (v: number) => {
+    const rounded = (v * 100).toFixed(ytickPrecision);
+    return `${trimAxisZeros ? Number(rounded) : rounded}%`;
+  };
   const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
-
-  // Description text
-  const povertyMeasure =
-    countryId === 'uk'
-      ? 'absolute poverty before housing costs'
-      : 'the Supplemental Poverty Measure';
-  const unitTerm = countryId === 'uk' ? 'resource units' : 'households';
-  const description = `PolicyEngine reports the impact to ${povertyMeasure}. The poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below their poverty threshold.`;
 
   const barChart = (
     <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
@@ -151,14 +150,13 @@ export default function PovertyImpactByAgeSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value="Relative change in poverty rate"
+          value="Relative change"
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
           style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
         />
       </YAxis>
-      <ReferenceLine y={0} stroke={colors.gray[600]} strokeWidth={1} />
       <Tooltip content={<ImpactTooltip />} />
       <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
         {chartData.map((entry, index) => (
@@ -168,9 +166,10 @@ export default function PovertyImpactByAgeSubPage({
     </BarChart>
   );
 
-  const descriptionText = (
+  const inequalityDescription = (
     <Text size="sm" c="dimmed">
-      {description}
+      PolicyEngine reports income inequality based on the distribution of net income after taxes and
+      transfers.
     </Text>
   );
 
@@ -184,7 +183,7 @@ export default function PovertyImpactByAgeSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          {descriptionText}
+          <ChartExplanation compact={compact}>{inequalityDescription}</ChartExplanation>
         </div>
       </div>
     );
@@ -193,16 +192,16 @@ export default function PovertyImpactByAgeSubPage({
   return (
     <ChartContainer
       title={getChartTitle()}
-      downloadFilename="poverty-impact-by-age.svg"
-      csvFilename="poverty-impact-by-age.csv"
-      csvData={getPovertyByAgeCsvRows(output)}
+      downloadFilename="inequality-impact.svg"
+      csvFilename="inequality-impact.csv"
+      csvData={getInequalityCsvRows(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}
         </ResponsiveContainer>
         <ChartWatermark />
-        {descriptionText}
+        {inequalityDescription}
       </Stack>
     </ChartContainer>
   );

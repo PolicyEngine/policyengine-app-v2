@@ -13,7 +13,6 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
-import ChartExplanation from '@/components/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -36,16 +35,12 @@ interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
-  compact?: boolean;
-  trimAxisZeros?: boolean;
 }
 
 export default function InequalityImpactSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
-  compact = false,
-  trimAxisZeros = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -131,10 +126,7 @@ export default function InequalityImpactSubPage({
   const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
   const yTicks = getNiceTicks(yDomain);
 
-  const yTickFormatter = (v: number) => {
-    const rounded = (v * 100).toFixed(ytickPrecision);
-    return `${trimAxisZeros ? Number(rounded) : rounded}%`;
-  };
+  const yTickFormatter = (v: number) => `${(v * 100).toFixed(ytickPrecision)}%`;
   const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
 
   const barChart = (
@@ -183,7 +175,7 @@ export default function InequalityImpactSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          <ChartExplanation compact={compact}>{inequalityDescription}</ChartExplanation>
+          {inequalityDescription}
         </div>
       </div>
     );

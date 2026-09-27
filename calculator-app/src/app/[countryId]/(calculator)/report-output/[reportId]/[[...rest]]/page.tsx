@@ -1,12 +1,7 @@
 "use client";
 
 import { use } from "react";
-import dynamic from "next/dynamic";
-
-// Report charts depend on browser APIs provided by Plotly.
-const ReportOutputPage = dynamic(() => import("@/pages/ReportOutput.page"), {
-  ssr: false,
-});
+import ReportOutputPage from "@/pages/ReportOutput.page";
 
 export default function ReportOutputRoute({
   params,

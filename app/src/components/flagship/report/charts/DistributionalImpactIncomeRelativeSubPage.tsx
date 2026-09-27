@@ -14,34 +14,37 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import ChartExplanation from '@/components/flagship/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { getDecileRelativeCsvRows } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
-import { absoluteChangeMessage } from '@/utils/chartMessages';
+import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
   getClampedChartHeight,
   getNiceTicks,
   getYAxisLayout,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
-import { currencySymbol, formatCurrency, ordinal, precision } from '@/utils/formatters';
+import { formatPercent, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
-import { getDecileAverageCsvRows } from './distributionalChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
+  compact?: boolean;
 }
 
-export default function DistributionalImpactIncomeAverageSubPage({
+export default function DistributionalImpactIncomeRelativeSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
+  compact = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -50,48 +53,40 @@ export default function DistributionalImpactIncomeAverageSubPage({
   const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data - object with keys "1", "2", ..., "10"
-  const decileAverage = output.decile.average;
+  const decileRelative = output.decile.relative;
 
   // Convert to arrays for plotting
-  const xArray = Object.keys(decileAverage);
-  const yArray = Object.values(decileAverage);
+  const xArray = Object.keys(decileRelative);
+  const yArray = Object.values(decileRelative);
 
   // Calculate precision for value display
-  let yvaluePrecision = precision(yArray, 1);
-  if (yvaluePrecision > 0) {
-    yvaluePrecision = Math.max(2, yvaluePrecision);
-  }
+  const yvaluePrecision = Math.max(1, precision(yArray, 100));
 
-  // Formatter for currency display
-  const formatCur = (y: number) =>
-    formatCurrency(y, countryId, {
+  // Formatter for percentage display
+  const formatPer = (n: number) =>
+    formatPercent(n, countryId, {
       minimumFractionDigits: yvaluePrecision,
-      maximumFractionDigits: yvaluePrecision,
     });
 
   // Generate hover message
-  const hoverMessage = (x: string, y: number) =>
-    absoluteChangeMessage(
-      'This reform',
-      `the income of households in the ${ordinal(Number(x))} decile`,
-      y,
-      0,
-      formatCur
-    );
+  const hoverMessage = (x: string, y: number) => {
+    const obj = `the income of households in the ${ordinal(Number(x))} decile`;
+    return relativeChangeMessage('This reform', obj, y, 0.001, countryId);
+  };
 
   // Generate chart title
   const getChartTitle = () => {
-    const averageChange = -output.budget.budgetary_impact / output.budget.households;
+    const relativeChange = -output.budget.budgetary_impact / output.budget.baseline_net_income;
     const term1 = 'the net income of households';
-    const term2 = formatCurrency(Math.abs(averageChange), countryId, {
-      maximumFractionDigits: 0,
+    const term2 = formatPercent(Math.abs(relativeChange), countryId, {
+      maximumFractionDigits: 1,
     });
-    const signTerm = averageChange > 0 ? 'increase' : 'decrease';
+    const signTerm = relativeChange > 0 ? 'increase' : 'decrease';
 
     const region = regionName(metadata);
     const regionPhrase = region ? ` in ${region}` : '';
 
-    if (averageChange === 0) {
+    if (relativeChange === 0) {
       return `This reform would have no effect on ${term1}${regionPhrase} on average`;
     }
     return `This reform would ${signTerm} ${term1} by ${term2}${regionPhrase} on average`;
@@ -101,7 +96,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
   const chartData = xArray.map((x, i) => ({
     name: x,
     value: yArray[i],
-    label: formatCur(yArray[i]),
+    label: (yArray[i] >= 0 ? '+' : '') + formatPer(yArray[i]),
     hoverText: hoverMessage(x, yArray[i]),
   }));
 
@@ -109,9 +104,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
   const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
   const yTicks = getNiceTicks(yDomain);
 
-  const prefix = currencySymbol(countryId);
-
-  const yTickFormatter = (v: number) => `${prefix}${v.toLocaleString()}`;
+  const yTickFormatter = (v: number) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`;
   const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
 
   // Description text
@@ -137,7 +130,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value="Absolute change in household income"
+          value={compact ? 'Income change (%)' : 'Relative change in household income'}
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
@@ -164,7 +157,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          {description}
+          <ChartExplanation compact={compact}>{description}</ChartExplanation>
         </div>
       </div>
     );
@@ -173,9 +166,9 @@ export default function DistributionalImpactIncomeAverageSubPage({
   return (
     <ChartContainer
       title={getChartTitle()}
-      downloadFilename="distributional-impact-income-average.svg"
-      csvFilename="distributional-impact-income-average.csv"
-      csvData={getDecileAverageCsvRows(output)}
+      downloadFilename="distributional-impact-income-relative.svg"
+      csvFilename="distributional-impact-income-relative.csv"
+      csvData={getDecileRelativeCsvRows(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

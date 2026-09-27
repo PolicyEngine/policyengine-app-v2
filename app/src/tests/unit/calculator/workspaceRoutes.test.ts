@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   isWorkspaceTransition,
   workspaceRoute,
-} from '../../../../../calculator-app/src/app/[countryId]/(calculator)/workspaceRoutes';
+} from '../../../../../calculator-app/src/app/[countryId]/(workspace)/workspaceRoutes';
 
 describe('workspace navigation boundary', () => {
   test.each(['ask', 'build', 'reforms'])(

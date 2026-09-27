@@ -15,7 +15,6 @@ import { downloadChartAsSvg, downloadCsv, type CsvData } from '@/utils/chartUtil
 
 interface ChartContainerProps {
   children: ReactNode;
-  headerActions?: ReactNode;
   title: string;
   /** When set, renders a download button that exports the chart as SVG */
   downloadFilename?: string;
@@ -35,7 +34,6 @@ interface ChartContainerProps {
  */
 export function ChartContainer({
   children,
-  headerActions,
   title,
   downloadFilename,
   csvData,
@@ -50,9 +48,8 @@ export function ChartContainer({
         <Text size="lg" fw={typography.fontWeight.medium} className="tw:flex-1 tw:break-words">
           {title}
         </Text>
-        {(downloadFilename || hasCsvDownload || headerActions) && (
+        {(downloadFilename || hasCsvDownload) && (
           <Group gap="xs" wrap="nowrap" className="tw:shrink-0">
-            {headerActions}
             {hasCsvDownload && (
               <Tooltip>
                 <TooltipTrigger asChild>

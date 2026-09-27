@@ -24,7 +24,7 @@ const screens = { ask: AskPage, build: BuildPage, reforms: ReformsPage };
 
 /** Switch client-only workspace screens without waiting for a server route payload.
  * Next's native history integration updates pathname/search and preserves back/forward.
- * Country switches and legacy screens still use the normal router.
+ * Country switches and routes outside this group still use the normal router.
  */
 export default function WorkspaceNavigation({
   children,

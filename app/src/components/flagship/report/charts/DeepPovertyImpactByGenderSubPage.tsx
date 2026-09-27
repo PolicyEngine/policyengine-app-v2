@@ -14,12 +14,14 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import ChartExplanation from '@/components/flagship/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { getPovertyByGenderCsvRows } from '@/pages/report-output/poverty-impact/povertyChartUtils';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
@@ -30,18 +32,19 @@ import {
 } from '@/utils/chartUtils';
 import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
-import { getPovertyByAgeCsvRows } from './povertyChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
+  compact?: boolean;
 }
 
-export default function PovertyImpactByAgeSubPage({
+export default function DeepPovertyImpactByGenderSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
+  compact = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -50,25 +53,22 @@ export default function PovertyImpactByAgeSubPage({
   const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  const povertyImpact = output.poverty.poverty;
+  const genderImpact = output.poverty_by_gender?.deep_poverty || {
+    male: { baseline: 0, reform: 0 },
+    female: { baseline: 0, reform: 0 },
+  };
+  const allImpact = output.poverty.deep_poverty;
 
-  // Calculate changes for each age group
-  const childPovertyChange = povertyImpact.child.reform / povertyImpact.child.baseline - 1;
-  const adultPovertyChange = povertyImpact.adult.reform / povertyImpact.adult.baseline - 1;
-  const seniorPovertyChange = povertyImpact.senior.reform / povertyImpact.senior.baseline - 1;
-  const totalPovertyChange = povertyImpact.all.reform / povertyImpact.all.baseline - 1;
+  // Calculate changes for each gender
+  const malePovertyChange = genderImpact.male.reform / genderImpact.male.baseline - 1;
+  const femalePovertyChange = genderImpact.female.reform / genderImpact.female.baseline - 1;
+  const totalPovertyChange = allImpact.all.reform / allImpact.all.baseline - 1;
 
-  const povertyChanges = [
-    childPovertyChange,
-    adultPovertyChange,
-    seniorPovertyChange,
-    totalPovertyChange,
-  ];
-  const povertyLabels = ['Children', 'Working-age adults', 'Seniors', 'All'];
-  const labelToKey: Record<string, keyof typeof povertyImpact> = {
-    Children: 'child',
-    'Working-age adults': 'adult',
-    Seniors: 'senior',
+  const povertyChanges = [malePovertyChange, femalePovertyChange, totalPovertyChange];
+  const povertyLabels = ['Male', 'Female', 'All'];
+  const labelToKey: Record<string, 'male' | 'female' | 'all'> = {
+    Male: 'male',
+    Female: 'female',
     All: 'all',
   };
 
@@ -80,9 +80,15 @@ export default function PovertyImpactByAgeSubPage({
 
   // Generate hover message
   const hoverMessage = (x: string) => {
-    const obj = `the percentage of ${x === 'All' ? 'people' : x.toLowerCase()} in poverty`;
-    const baseline = povertyImpact[labelToKey[x]].baseline;
-    const reform = povertyImpact[labelToKey[x]].reform;
+    const genderMap: Record<string, string> = { male: 'men', female: 'women' };
+    const obj = `the percentage of ${
+      x === 'All' ? 'people' : genderMap[x.toLowerCase()]
+    } in deep poverty`;
+    const key = labelToKey[x];
+    const baseline =
+      x === 'All' ? allImpact.all.baseline : genderImpact[key as 'male' | 'female'].baseline;
+    const reform =
+      x === 'All' ? allImpact.all.reform : genderImpact[key as 'male' | 'female'].reform;
     const change = reform / baseline - 1;
     return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
       baseline,
@@ -93,11 +99,11 @@ export default function PovertyImpactByAgeSubPage({
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = povertyImpact.all.baseline;
-    const reform = povertyImpact.all.reform;
+    const baseline = allImpact.all.baseline;
+    const reform = allImpact.all.reform;
     const relativeChange = reform / baseline - 1;
     const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
-    const objectTerm = 'the poverty rate';
+    const objectTerm = 'the deep poverty rate';
     const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
       maximumFractionDigits: 1,
     });
@@ -136,7 +142,7 @@ export default function PovertyImpactByAgeSubPage({
       ? 'absolute poverty before housing costs'
       : 'the Supplemental Poverty Measure';
   const unitTerm = countryId === 'uk' ? 'resource units' : 'households';
-  const description = `PolicyEngine reports the impact to ${povertyMeasure}. The poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below their poverty threshold.`;
+  const description = `PolicyEngine reports the impact to ${povertyMeasure}. The deep poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below half their poverty threshold.`;
 
   const barChart = (
     <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
@@ -151,7 +157,7 @@ export default function PovertyImpactByAgeSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value="Relative change in poverty rate"
+          value={compact ? 'Deep poverty change (%)' : 'Relative change in deep poverty rate'}
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
@@ -184,7 +190,7 @@ export default function PovertyImpactByAgeSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          {descriptionText}
+          <ChartExplanation compact={compact}>{descriptionText}</ChartExplanation>
         </div>
       </div>
     );
@@ -193,9 +199,9 @@ export default function PovertyImpactByAgeSubPage({
   return (
     <ChartContainer
       title={getChartTitle()}
-      downloadFilename="poverty-impact-by-age.svg"
-      csvFilename="poverty-impact-by-age.csv"
-      csvData={getPovertyByAgeCsvRows(output)}
+      downloadFilename="deep-poverty-impact-by-gender.svg"
+      csvFilename="deep-poverty-impact-by-gender.csv"
+      csvData={getPovertyByGenderCsvRows(output, 'deep_poverty')}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

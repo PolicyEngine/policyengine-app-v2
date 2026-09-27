@@ -127,6 +127,8 @@ export default function HouseholdOverview({
   const [breakdownOpen, setBreakdownOpen] = useState(true);
   const [earningsOpen, setEarningsOpen] = useState(activeView === 'earnings-variation');
   const [mtrOpen, setMtrOpen] = useState(activeView === 'marginal-tax-rates');
+  const [hasOpenedEarnings, setHasOpenedEarnings] = useState(activeView === 'earnings-variation');
+  const [hasOpenedMtr, setHasOpenedMtr] = useState(activeView === 'marginal-tax-rates');
   const metadata = useSelector((state: RootState) => state.metadata);
 
   useEffect(() => {
@@ -135,9 +137,11 @@ export default function HouseholdOverview({
     }
     if (activeView === 'earnings-variation') {
       setEarningsOpen(true);
+      setHasOpenedEarnings(true);
     }
     if (activeView === 'marginal-tax-rates') {
       setMtrOpen(true);
+      setHasOpenedMtr(true);
     }
   }, [activeView]);
 
@@ -205,6 +209,26 @@ export default function HouseholdOverview({
 
   const hasAnalysisInputs = !!simulations?.length && !!policies?.length;
 
+  const toggleEarnings = () => {
+    setEarningsOpen((previous) => {
+      const next = !previous;
+      if (next) {
+        setHasOpenedEarnings(true);
+      }
+      return next;
+    });
+  };
+
+  const toggleMtr = () => {
+    setMtrOpen((previous) => {
+      const next = !previous;
+      if (next) {
+        setHasOpenedMtr(true);
+      }
+      return next;
+    });
+  };
+
   return (
     <Stack className="tw:gap-xl">
       {/* Hero Section - Net Income */}
@@ -258,15 +282,14 @@ export default function HouseholdOverview({
         </Text>
       </ExpandableSection>
 
-      {/* Mount both analyses immediately; their shared query deduplicates the calculation. */}
       <ExpandableSection
         title="Varying your earnings"
-        summary="See how household outcomes change as earnings vary."
+        summary="Load and inspect how household outcomes move as earnings change across a wider range."
         isOpen={earningsOpen}
-        onToggle={() => setEarningsOpen((previous) => !previous)}
-        keepMounted
+        onToggle={toggleEarnings}
+        keepMounted={hasOpenedEarnings}
       >
-        {hasAnalysisInputs ? (
+        {hasOpenedEarnings && hasAnalysisInputs ? (
           <EarningsVariationSubPage
             baseline={baseline}
             reform={reform}
@@ -275,19 +298,21 @@ export default function HouseholdOverview({
           />
         ) : (
           <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
-            This analysis is unavailable because the household or policy inputs are incomplete.
+            {!hasAnalysisInputs
+              ? 'This analysis is unavailable because the household or policy inputs are incomplete.'
+              : 'Open this section to start loading the chart.'}
           </Text>
         )}
       </ExpandableSection>
 
       <ExpandableSection
         title="Marginal tax rates"
-        summary="See how much of each additional dollar earned goes to taxes and reduced benefits."
+        summary="Load the marginal-tax-rate curve for this household and compare it with the earnings analysis."
         isOpen={mtrOpen}
-        onToggle={() => setMtrOpen((previous) => !previous)}
-        keepMounted
+        onToggle={toggleMtr}
+        keepMounted={hasOpenedMtr}
       >
-        {hasAnalysisInputs ? (
+        {hasOpenedMtr && hasAnalysisInputs ? (
           <MarginalTaxRatesSubPage
             baseline={baseline}
             reform={reform}
@@ -296,7 +321,9 @@ export default function HouseholdOverview({
           />
         ) : (
           <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
-            This analysis is unavailable because the household or policy inputs are incomplete.
+            {!hasAnalysisInputs
+              ? 'This analysis is unavailable because the household or policy inputs are incomplete.'
+              : 'Open this section to start loading the chart.'}
           </Text>
         )}
       </ExpandableSection>

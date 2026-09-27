@@ -8,6 +8,8 @@ import {
   useCalibrationMatches,
 } from '@/components/flagship/CalibrationMatches';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
+import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import ReportContents from '@/components/flagship/ReportContents';
@@ -42,9 +44,6 @@ import { readReportMeta } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import ErrorPage from '@/pages/report-output/ErrorPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
-import SocietyWideOverview, {
-  StandaloneCongressionalDistrictCard,
-} from '@/pages/report-output/SocietyWideOverview';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { formatValue } from '@/utils/parameterValues';
@@ -388,7 +387,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         >
           {visitedTabs.has('economy') && (
             <Stack style={{ gap: spacing.md }}>
-              <SocietyWideOverview output={output} showCongressionalCard={false} groupedCharts />
+              <EconomicImpactCharts output={output} />
             </Stack>
           )}
         </TabsContent>
@@ -408,7 +407,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                   year={report?.year ?? ''}
                   region={region}
                 >
-                  <StandaloneCongressionalDistrictCard output={output} />
+                  <DistrictImpactCard output={output} />
                 </CongressionalDistrictDataProvider>
               )}
               {output && !showUSDistricts && countryId === 'uk' && (

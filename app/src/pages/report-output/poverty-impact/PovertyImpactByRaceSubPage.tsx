@@ -13,7 +13,6 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
-import ChartExplanation from '@/components/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -36,14 +35,12 @@ interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
-  compact?: boolean;
 }
 
 export default function PovertyImpactByRaceSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
-  compact = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -154,7 +151,7 @@ export default function PovertyImpactByRaceSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value={compact ? 'Poverty change (%)' : 'Relative change in poverty rate'}
+          value="Relative change in poverty rate"
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
@@ -186,7 +183,7 @@ export default function PovertyImpactByRaceSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          <ChartExplanation compact={compact}>{descriptionText}</ChartExplanation>
+          {descriptionText}
         </div>
       </div>
     );

@@ -14,12 +14,14 @@ import {
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import ChartExplanation from '@/components/flagship/report/ChartExplanation';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { getPovertyByAgeCsvRows } from '@/pages/report-output/poverty-impact/povertyChartUtils';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
@@ -30,18 +32,19 @@ import {
 } from '@/utils/chartUtils';
 import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
-import { getPovertyByAgeCsvRows } from './povertyChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
+  compact?: boolean;
 }
 
 export default function PovertyImpactByAgeSubPage({
   output,
   chartHeight: chartHeightProp,
   fillHeight = false,
+  compact = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -141,7 +144,12 @@ export default function PovertyImpactByAgeSubPage({
   const barChart = (
     <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+      <XAxis
+        dataKey="name"
+        tick={RECHARTS_FONT_STYLE}
+        interval={compact ? 0 : undefined}
+        tickFormatter={(value) => (compact && value === 'Working-age adults' ? 'Adults' : value)}
+      />
       <YAxis
         ticks={yTicks}
         domain={[yTicks[0], yTicks[yTicks.length - 1]]}
@@ -151,7 +159,7 @@ export default function PovertyImpactByAgeSubPage({
         width={yAxis.yAxisWidth}
       >
         <Label
-          value="Relative change in poverty rate"
+          value={compact ? 'Poverty change (%)' : 'Relative change in poverty rate'}
           angle={-90}
           position="center"
           dx={yAxis.labelDx}
@@ -184,7 +192,7 @@ export default function PovertyImpactByAgeSubPage({
         </div>
         <div style={{ flexShrink: 0 }}>
           <ChartWatermark />
-          {descriptionText}
+          <ChartExplanation compact={compact}>{descriptionText}</ChartExplanation>
         </div>
       </div>
     );
