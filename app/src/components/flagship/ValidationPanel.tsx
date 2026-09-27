@@ -260,6 +260,11 @@ export function trackRecordPrograms(trackRecord: ModelTrackRecord): string[] | n
   return trackRecord ? trackRecord.programs.map((match) => match.program) : trackRecord;
 }
 
+/** Whether ModelTrackRecordSection renders anything for this track record. */
+export function hasTrackRecordContent(trackRecord: ModelTrackRecord): boolean {
+  return !trackRecord || trackRecord.programs.length > 0 || trackRecord.reachedCount > 0;
+}
+
 /**
  * Fetches the track record as soon as the paths are known — call this
  * at page level, not inside a tab panel, so the request runs in
@@ -333,11 +338,11 @@ export function ModelTrackRecordSection({
       </SectionCard>
     );
   }
+  if (!hasTrackRecordContent(trackRecord)) {
+    return null;
+  }
   const { programs, rows } = trackRecord;
   if (programs.length === 0) {
-    if (trackRecord.reachedCount === 0) {
-      return null;
-    }
     // Silence would read as "fine". State credits are the usual case: the
     // scorecard measures federal programs and poverty, not state credits.
     return (

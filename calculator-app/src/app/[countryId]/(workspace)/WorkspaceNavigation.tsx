@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import BillReportPage from "@/pages/flagship/BillReport.page";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import {
   NavigationProvider,
   useAppNavigate,
@@ -12,6 +13,7 @@ import AskPage from "@/pages/flagship/Ask.page";
 import BuildPage from "@/pages/flagship/Build.page";
 import ReformsPage from "@/pages/flagship/Reforms.page";
 import StandardLayout from "@/components/StandardLayout";
+import WorkspaceError from "./error";
 import FlagshipGate from "./FlagshipGate";
 import { isWorkspaceTransition, workspaceRoute } from "./workspaceRoutes";
 
@@ -54,6 +56,7 @@ export default function WorkspaceNavigation({
     }),
     [router],
   );
+  const [attempt, setAttempt] = useState(0);
   const route = workspaceRoute(pathname);
   let content = children;
   if (route) {
@@ -70,7 +73,24 @@ export default function WorkspaceNavigation({
   return (
     <NavigationProvider value={navigation}>
       <StandardLayout>
-        {route ? <FlagshipGate>{content}</FlagshipGate> : children}
+        {route ? (
+          <FlagshipGate>
+            {/* Screens rendered here bypass the segment's error.tsx, which only wraps children. */}
+            <ErrorBoundary
+              key={`${pathname}:${attempt}`}
+              fallback={(error) => (
+                <WorkspaceError
+                  error={error}
+                  reset={() => setAttempt((count) => count + 1)}
+                />
+              )}
+            >
+              {content}
+            </ErrorBoundary>
+          </FlagshipGate>
+        ) : (
+          children
+        )}
       </StandardLayout>
     </NavigationProvider>
   );

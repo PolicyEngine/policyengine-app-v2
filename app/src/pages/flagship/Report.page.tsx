@@ -15,6 +15,7 @@ import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import ReportContents from '@/components/flagship/ReportContents';
 import ScorecardComparisons from '@/components/flagship/ScorecardComparisons';
 import {
+  hasTrackRecordContent,
   ModelTrackRecordSection,
   trackRecordPrograms,
   useModelTrackRecord,
@@ -484,7 +485,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                     <Text>Before-and-after details for your reform are unavailable.</Text>
                   )
                 }
-                baselineContent={<ModelTrackRecordSection trackRecord={trackRecord} embedded />}
+                baselineContent={
+                  hasTrackRecordContent(trackRecord) && (
+                    <ModelTrackRecordSection trackRecord={trackRecord} embedded />
+                  )
+                }
                 countryId={countryId}
                 paths={meta?.provisions.map((p) => p.path) ?? []}
               />

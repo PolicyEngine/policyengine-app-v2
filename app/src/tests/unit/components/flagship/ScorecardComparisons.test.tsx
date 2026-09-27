@@ -9,6 +9,17 @@ import {
 } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 
 describe('scorecard evidence presentation', () => {
+  test('given no baseline rows and no baseline content then says none were found', () => {
+    render(
+      <ScorecardComparisonResults
+        result={{ built: null, unmappedCount: 0, rows: [] }}
+        baselineContent={false}
+      />
+    );
+    expect(
+      screen.getByText(/No linked baseline comparisons were found in the published scorecard feed/)
+    ).toBeInTheDocument();
+  });
   test('given a related reform then shows source-policy counterparts, periods, baseline caveats and no search button', () => {
     render(
       <ScorecardComparisonResults

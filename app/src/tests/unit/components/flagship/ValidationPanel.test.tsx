@@ -2,6 +2,7 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import {
   BillValidationSection,
+  hasTrackRecordContent,
   ModelTrackRecordSection,
 } from '@/components/flagship/ValidationPanel';
 
@@ -121,5 +122,21 @@ describe('ModelTrackRecordSection', () => {
       'href',
       'https://apps.urban.org/features/state-safety-net/'
     );
+  });
+});
+
+describe('hasTrackRecordContent', () => {
+  test('given loading, unavailable, or reached variables then the section has content', () => {
+    expect(hasTrackRecordContent(undefined)).toBe(true);
+    expect(hasTrackRecordContent(null)).toBe(true);
+    expect(
+      hasTrackRecordContent({ modelVersion: '1.808.0', reachedCount: 30, programs: [], rows: [] })
+    ).toBe(true);
+  });
+
+  test('given the reform reaches nothing then the section has no content', () => {
+    expect(
+      hasTrackRecordContent({ modelVersion: '1.808.0', reachedCount: 0, programs: [], rows: [] })
+    ).toBe(false);
   });
 });
