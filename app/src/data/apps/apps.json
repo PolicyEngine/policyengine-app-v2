@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "middle-east-war-living-standards",
+    "title": "Impact of the Middle East war on UK living standards",
+    "description": "Estimate how energy, fuel and food price rises from the Middle East conflict and Strait of Hormuz disruption affect UK households in 2027-28, and compare ten policy responses, modelled with PolicyEngine UK.",
+    "source": "https://uk-energy-shock-impact.vercel.app/uk/middle-east-war-living-standards",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "middle-east-war-living-standards.jpg",
+    "date": "2026-09-25 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "free-childcare-reform",
     "title": "Free childcare hours and a 75% subsidy",
     "description": "Estimate the cost and household impact of 15 free childcare hours from 9 months plus a 75% subsidy replacing Tax-Free Childcare, modelled with PolicyEngine UK.",
