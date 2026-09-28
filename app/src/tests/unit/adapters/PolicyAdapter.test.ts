@@ -70,6 +70,45 @@ describe('PolicyAdapter', () => {
       // Then
       expect(result.countryId).toBe(TEST_COUNTRIES.UK);
     });
+
+    it('given legacy string values then casts them to typed policy values', () => {
+      // Given
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          numeric_parameter: { '2024-01-01.2024-12-31': '3000' },
+          boolean_parameter: { '2024-01-01.2024-12-31': 'false' },
+        },
+      });
+
+      // When
+      const result = PolicyAdapter.fromMetadata(metadata);
+
+      // Then
+      expect(result.parameters).toEqual([
+        {
+          name: 'numeric_parameter',
+          values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 3000 }],
+        },
+        {
+          name: 'boolean_parameter',
+          values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: false }],
+        },
+      ]);
+    });
+
+    it('given a non-finite stored value then rejects the policy', () => {
+      // Given
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          numeric_parameter: { '2024-01-01.2024-12-31': Number.POSITIVE_INFINITY },
+        },
+      });
+
+      // When / Then
+      expect(() => PolicyAdapter.fromMetadata(metadata)).toThrow(
+        'Policy parameter values must be finite: Infinity'
+      );
+    });
   });
 
   describe('toCreationPayload', () => {
@@ -115,6 +154,53 @@ describe('PolicyAdapter', () => {
       expect(payload).toEqual({
         data: {},
       });
+    });
+
+    it('given a legacy string in runtime state then casts it before serialization', () => {
+      // Given
+      const policy = mockPolicy({
+        parameters: [
+          {
+            name: 'tax_rate',
+            values: [
+              {
+                startDate: '2024-01-01',
+                endDate: '2024-12-31',
+                value: '0.25' as unknown as number,
+              },
+            ],
+          },
+        ],
+      });
+
+      // When
+      const payload = PolicyAdapter.toCreationPayload(policy);
+
+      // Then
+      expect(payload.data.tax_rate['2024-01-01.2024-12-31']).toBe(0.25);
+    });
+
+    it('given an invalid runtime value then refuses to serialize the policy', () => {
+      // Given
+      const policy = mockPolicy({
+        parameters: [
+          {
+            name: 'tax_rate',
+            values: [
+              {
+                startDate: '2024-01-01',
+                endDate: '2024-12-31',
+                value: Number.NaN,
+              },
+            ],
+          },
+        ],
+      });
+
+      // When / Then
+      expect(() => PolicyAdapter.toCreationPayload(policy)).toThrow(
+        'Policy parameter values must be finite: NaN'
+      );
     });
   });
 });

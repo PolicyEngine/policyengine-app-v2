@@ -475,7 +475,7 @@ export function PolicyCreationModal({
 
     const paramToChart = policyParameters.find((p) => p.name === selectedParam.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
-      const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
+      const userIntervals = new ValueIntervalCollection(paramToChart.values);
       for (const interval of userIntervals.getIntervals()) {
         reformValues.addInterval(interval);
       }

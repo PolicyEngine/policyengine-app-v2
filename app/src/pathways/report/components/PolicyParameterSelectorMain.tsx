@@ -40,7 +40,7 @@ export default function PolicyParameterSelectorMain({
     const paramToChart = getParameterByName(policy, param.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
       // Don't replace - instead, overlay user intervals on top of base values
-      const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
+      const userIntervals = new ValueIntervalCollection(paramToChart.values);
 
       // Add each user interval to the reform (which already contains base values)
       // addInterval() will properly handle overlaps and merge/split intervals as needed

@@ -14,5 +14,23 @@ export interface PolicyMetadataParams {
 }
 
 export interface PolicyMetadataParamValues {
-  [dateRange: string]: any;
+  [dateRange: string]: unknown;
+}
+
+export type PolicyParameterValue =
+  | string
+  | number
+  | boolean
+  | null
+  | PolicyParameterValue[]
+  | { [key: string]: PolicyParameterValue };
+
+export type PolicyInputValue = number | boolean;
+
+export interface SerializedPolicyMetadataParams {
+  [param: string]: SerializedPolicyMetadataParamValues;
+}
+
+export interface SerializedPolicyMetadataParamValues {
+  [dateRange: string]: PolicyParameterValue;
 }
