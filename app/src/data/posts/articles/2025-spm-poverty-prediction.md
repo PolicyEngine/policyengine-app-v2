@@ -28,9 +28,9 @@ Two things move a poverty rate between years: the thresholds, and the resources 
 | Under 18    |             +1.40 |            −0.54 |              +1.09 |             −1.15 |
 | 65 and over |             +0.27 |            −0.79 |              +0.71 |             −0.47 |
 
-For children the model erred the same way on both parts. Threshold growth pulled 1.40 points of children into poverty in the model against 1.09 in the survey, and resource growth lifted 0.54 points out against 1.15. For people 65 and over both errors ran the other way: thresholds added 0.27 points in the model against 0.71, and resources removed 0.79 against 0.47. For all people the two errors largely cancel.
+For children the model erred the same way on both parts. Threshold growth pulled 1.40 points of children into poverty in the model against 1.09 in the survey, and resource growth lifted 0.54 points out against 1.15. For people 65 and over both errors ran the other way: thresholds added 0.27 points in the model against 0.71, and resources removed 0.79 against 0.47. For all people the two errors partly offset.
 
-The threshold columns count people whose 2025 resources fall between the old line, carried forward with inflation, and the new one. The same rise in the thresholds catches fewer people 65 and over in the model than in the survey: the model has fewer seniors just under the line. It catches more children, but most of that gap comes from how the model grew their resources, as the reruns below show. The model's poverty levels also differ from Census: 16.6 percent of children and 10.9 percent of people 65 and over in 2025, against 13.4 and 15.4.
+The threshold columns count people whose 2025 resources fall between the old line, carried forward with inflation, and the new one. The same rise in the thresholds catches fewer people 65 and over in the model than in the survey: the model has fewer seniors just under the line. It catches more children as well, though that gap shrinks when the model grows self-employment income with wages, as the reruns below show. The model's poverty levels also differ from Census: 16.6 percent of children and 10.9 percent of people 65 and over in 2025, against 13.4 and 15.4.
 
 The resource columns measure what changed in families' resources at a fixed real line. Among people whose 2024 resources fell between 75 and 150 percent of their threshold, the model raised the median SPM unit's resources by 4.6 percent into 2025: 3.7 percent for children and 7.7 percent for people 65 and over.[^3] In the [2025 CPS ASEC file](https://www2.census.gov/programs-surveys/cps/datasets/2025/march/asecpub25csv.zip), which covers calendar 2024, one common growth rate applied to every unit's resources reproduces Census's 2025 figure at 4.9 percent for all people, 5.5 percent for children and 4.1 percent for people 65 and over.[^3] The two are different statistics, a median for the same units and a common rate for a cross-section, so they show the direction of the gap by age group and not its size. The model gave children less resource growth than seniors; the survey's figures imply the reverse.
 
@@ -40,26 +40,30 @@ A simpler forecast would have done better this year. Taking the 2025 CPS ASEC fi
 
 ## Which growth rates mattered
 
-The model carries each 2024 record to 2025 by multiplying its income by the growth of a national total. For four sources, that differs from what people in the survey saw:
+The model carries each 2024 record to 2025 by multiplying its income by the growth of a national total. For three sources, that differs from what people in the survey saw:
 
-- **Social Security.** The total the model uses rose 8.3 percent, so every beneficiary's benefit rose 8.3 percent. The cost-of-living adjustment was 2.5 percent, and in the survey benefits per recipient rose 3.5 percent at the 2024 age mix.
+- **Social Security.** The total the model uses rose 8.3 percent, so every beneficiary's benefit rose 8.3 percent. The cost-of-living adjustment was 2.5 percent, and in the survey benefits per recipient 66 and over rose 4.0 percent at the 2024 age mix.
 - **Pensions and retirement distributions** rose 19.5 percent per person, with CBO's projection of taxable pension income. In the survey, pensions and annuities per recipient 65 and over rose 3.7 percent at the median.
 - **Self-employment income** fell 5.8 percent per person, with CBO's projection of business income. In the survey it rose 8.7 percent at the median.
-- **Wages** rose 4.9 percent for every worker. In the survey, wages grew at about the same rate at every wage level, but faster for workers in families with low resources relative to their threshold: 6.6 percent in the bottom tenth.
 
-We reran 2025 changing each of these: Social Security at the cost-of-living adjustment, pensions at consumer price inflation, self-employment income with wages, and wages by the survey's growth for each tenth of family resources relative to the threshold.[^7]
+Wages rose 4.9 percent for every worker, and in the survey wages grew at about the same rate at every wage level. Ranked instead by family resources relative to the threshold, the bottom tenth of earners saw 6.6 percent, but that difference is within the survey's sampling error.
 
-| 2025 run                                 | All people | Under 18 | 65 and over |
-| ---------------------------------------- | ---------: | -------: | ----------: |
-| Census                                   |      +0.07 |    −0.06 |       +0.24 |
-| Registered                               |      +0.22 |    +0.86 |       −0.52 |
-| Social Security and pensions changed     |      +0.47 |    +0.98 |       +0.21 |
-| Self-employment changed                  |      +0.01 |    +0.47 |       −0.59 |
-| Wages by family resources                |      +0.09 |    +0.71 |       −0.59 |
-| Wages by wage level, for comparison      |      +0.24 |    +0.85 |       −0.52 |
-| All four changes                         |      +0.10 |    +0.42 |       +0.06 |
+We reran 2025 with Social Security at the cost-of-living adjustment or the survey's 4.0 percent, pensions at consumer price inflation and self-employment income growing with wages, and, as a sensitivity check, with wages growing by the survey's rate for each tenth of family resources.[^7]
 
-With all four changes, the all-people change comes within 0.03 points of Census, the child miss halves, and the senior miss falls from 0.76 to 0.18 points. Growing Social Security at the survey's 3.5 percent instead of the cost-of-living adjustment lowers the senior change by about 0.1 points. For seniors, the rest of the gap is the one the threshold columns show: fewer seniors just under the line. For children, about half a point remains. One candidate is a shift no growth rate can reproduce: in the survey, the share of children living with a noncitizen fell from 17.9 to 16.4 percent, which at 2024 poverty rates lowers child poverty by about 0.2 points. Census marks none of its changes as statistically significant, so these reruns show which assumptions matter, not their right values.
+| 2025 run                                          | All people | Under 18 | 65 and over |
+| ------------------------------------------------- | ---------: | -------: | ----------: |
+| Census                                            |      +0.07 |    −0.06 |       +0.24 |
+| Registered                                        |      +0.22 |    +0.86 |       −0.52 |
+| Social Security and pensions changed              |      +0.47 |    +0.98 |       +0.21 |
+| Self-employment changed                           |      +0.01 |    +0.47 |       −0.59 |
+| All three changed, Social Security at 2.5 percent |      +0.25 |    +0.57 |       +0.15 |
+| All three changed, Social Security at 4.0 percent |      +0.17 |    +0.53 |       −0.02 |
+| Wages by wage level                               |      +0.24 |    +0.85 |       −0.52 |
+| Wages by family resources                         |      +0.09 |    +0.71 |       −0.59 |
+
+Changing the three sources cuts the child miss by about a third, from 0.92 points to 0.6, and the senior miss from 0.76 points to between 0.09 and 0.26, depending on the Social Security rate. At the survey's 4.0 percent, the resource column for people 65 and over matches the survey (−0.43 against −0.47), and what remains is on the threshold side: the model still has fewer seniors just under the line. Growing wages by family resources would lower the child change further, to +0.42 with the three changes, but it rests on differences within sampling error. For all people, the three changes leave the change 0.1 to 0.2 points above Census, about where the registered prediction was, so the close all-people result owed something to errors that offset.
+
+For children, about 0.6 points remain. One candidate no growth rate can reproduce: in the survey, the share of children living with a noncitizen fell from 17.9 to 16.4 percent, which at 2024 poverty rates lowers child poverty by about 0.2 points. The change could reflect who answered the survey as well as who lives in the country. Census marks none of its changes as statistically significant, so these reruns show which assumptions matter, not their right values.
 
 ## How the number was built
 
