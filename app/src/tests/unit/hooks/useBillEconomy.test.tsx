@@ -87,6 +87,19 @@ describe('useBillEconomy', () => {
     expect(result.current.message).toBe('Worker lost');
   });
 
+  test('given the request fails then only the API message is reported', async () => {
+    mockFetchSocietyWide.mockRejectedValue(
+      new Error(
+        'Society-wide calculation failed (502): {"status": "error", "message": "Simulation failed", "result": null}'
+      )
+    );
+
+    const { result } = renderHook(() => useBillEconomy(BILL), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('error'));
+    expect(result.current.message).toBe('Simulation failed');
+  });
+
   test('given the policy cannot be created then the error is reported', async () => {
     mockCreatePolicy.mockRejectedValue(new Error('Failed to create policy'));
 

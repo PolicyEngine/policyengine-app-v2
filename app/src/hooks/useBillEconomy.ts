@@ -24,6 +24,16 @@ export interface BillEconomy {
   retry: () => void;
 }
 
+/** The API's own message from a failed request, without the status and JSON wrapper. */
+function readableError(message: string): string {
+  const body = message.match(/\{.*\}\s*$/s)?.[0];
+  try {
+    return body ? (JSON.parse(body).message ?? message) : message;
+  } catch {
+    return message;
+  }
+}
+
 /** A state bill is scored on its state's data; a federal bill nationwide. */
 export function billRegion(bill: Pick<TrackedBill, 'state'>, countryId: string): string {
   return bill.state ? `state/${bill.state.toLowerCase()}` : countryId;
@@ -98,7 +108,9 @@ export function useBillEconomy(
     status,
     message:
       status === 'error'
-        ? (economy.data?.error?.message ?? 'The calculation could not be started.')
+        ? economy.data?.error?.message
+          ? readableError(economy.data.error.message)
+          : 'The calculation could not be started.'
         : economy.data?.message,
     queuePosition: economy.data?.queuePosition,
     reformPolicyId,
