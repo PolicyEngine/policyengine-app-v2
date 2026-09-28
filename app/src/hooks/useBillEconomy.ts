@@ -26,7 +26,7 @@ export interface BillEconomy {
 
 /** The API's own message from a failed request, without the status and JSON wrapper. */
 function readableError(message: string): string {
-  const body = message.match(/\{.*\}\s*$/s)?.[0];
+  const body = message.match(/\{[\s\S]*\}\s*$/)?.[0];
   try {
     return body ? (JSON.parse(body).message ?? message) : message;
   } catch {
