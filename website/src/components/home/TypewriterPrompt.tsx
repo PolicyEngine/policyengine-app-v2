@@ -13,160 +13,168 @@ export interface PromptData {
   loserPct: number; // fraction that lose (remainder are unaffected)
 }
 
+// Winner/loser shares are computed against the PolicyEngine 2026 baseline by
+// the policyengine-prompt-impacts package. Regenerate via:
+//   policyengine-prompt-impacts run --country all --tsx prompts.tsx
+// See https://github.com/PolicyEngine/policyengine-prompt-impacts.
 const UK_PROMPTS: PromptData[] = [
   {
     text: "the impact of raising the basic rate to 25p",
     winnerPct: 0,
-    loserPct: 0.65,
+    loserPct: 0.71,
   },
   {
-    text: "how a £2,000 UBI would affect child poverty",
-    winnerPct: 0.75,
-    loserPct: 0.2,
+    text: "the poverty impact of a £40/week universal child benefit",
+    winnerPct: 0.23,
+    loserPct: 0,
   },
   {
-    text: "who gains from abolishing the personal allowance",
+    text: "who loses from abolishing the personal allowance",
     winnerPct: 0,
-    loserPct: 0.85,
+    loserPct: 0.88,
   },
-  { text: "revenue from a 50p additional rate", winnerPct: 0, loserPct: 0.02 },
+  {
+    text: "revenue from a 50p additional rate",
+    winnerPct: 0,
+    loserPct: 0.02,
+  },
   {
     text: "how removing the benefit cap affects single parents",
-    winnerPct: 0.05,
+    winnerPct: 0.009,
     loserPct: 0,
   },
   {
-    text: "whether Universal Credit cuts push families into poverty",
+    text: "the poverty impact of cutting the UC standard allowance by £10/week",
     winnerPct: 0,
-    loserPct: 0.3,
+    loserPct: 0.19,
   },
   {
-    text: "how reducing the UC taper rate to 45% helps workers",
-    winnerPct: 0.25,
+    text: "how reducing the UC taper rate to 45% affects workers",
+    winnerPct: 0.09,
     loserPct: 0,
   },
   {
-    text: "who loses from means-testing the state pension",
+    text: "who loses from a 5% cut to the state pension",
     winnerPct: 0,
-    loserPct: 0.4,
+    loserPct: 0.25,
   },
   {
     text: "how raising NI thresholds affects low-income workers",
-    winnerPct: 0.45,
+    winnerPct: 0.55,
     loserPct: 0,
   },
   {
-    text: "the marginal tax rate cliff at Universal Credit taper",
-    winnerPct: 0,
-    loserPct: 0.15,
+    text: "who gains from doubling the UC work allowance",
+    winnerPct: 0.07,
+    loserPct: 0,
   },
   {
     text: "the poverty impact of a £25/week child benefit increase",
-    winnerPct: 0.35,
+    winnerPct: 0.23,
     loserPct: 0,
   },
   {
-    text: "how scrapping the two-child limit affects large families",
-    winnerPct: 0.08,
+    text: "the cost of doubling child benefit",
+    winnerPct: 0.23,
     loserPct: 0,
   },
   {
     text: "how raising the higher rate threshold affects middle earners",
-    winnerPct: 0.2,
+    winnerPct: 0.18,
     loserPct: 0,
   },
   {
-    text: "who benefits from tapering the higher rate threshold",
+    text: "who loses from lowering the higher rate threshold to £40,000",
     winnerPct: 0,
-    loserPct: 0.15,
+    loserPct: 0.28,
   },
   {
     text: "how doubling the marriage allowance affects couples",
-    winnerPct: 0.12,
+    winnerPct: 0.08,
     loserPct: 0,
   },
   {
     text: "the impact of lowering the additional rate threshold",
     winnerPct: 0,
-    loserPct: 0.05,
+    loserPct: 0.03,
   },
 ];
 
 const US_PROMPTS: PromptData[] = [
   {
     text: "how tripling the standard deduction affects median income",
-    winnerPct: 0.7,
+    winnerPct: 0.62,
     loserPct: 0,
   },
   {
     text: "the poverty impact of expanding the Child Tax Credit",
-    winnerPct: 0.35,
+    winnerPct: 0.14,
     loserPct: 0,
   },
   {
     text: "the distributional impact of expanding the EITC",
-    winnerPct: 0.3,
+    winnerPct: 0.14,
     loserPct: 0,
   },
   {
-    text: "the impact of removing the SALT cap on high earners",
-    winnerPct: 0.15,
+    text: "the distributional impact of removing the SALT cap",
+    winnerPct: 0.02,
     loserPct: 0,
   },
   {
-    text: "the cost of making the standard deduction universal",
-    winnerPct: 0.45,
-    loserPct: 0.1,
+    text: "the cost of making the Child Tax Credit fully refundable",
+    winnerPct: 0.09,
+    loserPct: 0,
   },
   {
     text: "the poverty impact of doubling SNAP benefits",
-    winnerPct: 0.2,
+    winnerPct: 0.16,
     loserPct: 0,
   },
   {
-    text: "how a flat tax at 25% compares to the current system",
-    winnerPct: 0.4,
-    loserPct: 0.4,
+    text: "the impact of raising all income tax rates by 5 points",
+    winnerPct: 0,
+    loserPct: 0.63,
   },
   {
     text: "who pays more from eliminating the payroll tax cap",
     winnerPct: 0,
-    loserPct: 0.06,
+    loserPct: 0.04,
   },
   {
     text: "how raising the top rate to 45% affects revenue",
     winnerPct: 0,
-    loserPct: 0.03,
+    loserPct: 0.008,
   },
   {
-    text: "who benefits from expanding the Child and Dependent Care Credit",
-    winnerPct: 0.25,
+    text: "who benefits from doubling the Child and Dependent Care Credit",
+    winnerPct: 0.03,
     loserPct: 0,
   },
   {
-    text: "how increasing SSI benefits affects poverty",
-    winnerPct: 0.15,
+    text: "how raising SSI benefits by 25% affects poverty",
+    winnerPct: 0.04,
     loserPct: 0,
   },
   {
-    text: "how capping itemized deductions at $50,000 affects revenue",
+    text: "the revenue from lowering the SALT cap to $10,000",
     winnerPct: 0,
-    loserPct: 0.12,
+    loserPct: 0.06,
   },
   {
-    text: "the impact of restoring the expanded CTC permanently",
-    winnerPct: 0.35,
+    text: "the impact of restoring the expanded Child Tax Credit",
+    winnerPct: 0.1,
     loserPct: 0,
   },
   {
-    text: "who benefits from expanding Medicaid eligibility",
-    winnerPct: 0.12,
+    text: "who benefits from the senior bonus deduction",
+    winnerPct: 0.13,
     loserPct: 0,
   },
   {
-    text: "the impact of making the TCJA provisions permanent",
-    winnerPct: 0.6,
-    loserPct: 0.05,
+    text: "who benefits from the no-tax-on-tips deduction",
+    winnerPct: 0.004,
+    loserPct: 0,
   },
 ];
 
