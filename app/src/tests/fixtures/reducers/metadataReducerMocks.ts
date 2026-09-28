@@ -52,6 +52,7 @@ export const MOCK_VARIABLES = {
 // Mock parameters
 export const MOCK_PARAMETERS = {
   [TEST_PARAMETER_KEY]: {
+    type: 'parameter' as const,
     parameter: TEST_PARAMETER_KEY,
     label: TEST_PARAMETER_LABEL,
     unit: 'currency-USD',
@@ -60,11 +61,21 @@ export const MOCK_PARAMETERS = {
     household: false,
   },
   'gov.benefit.child_benefit': {
+    type: 'parameter' as const,
     parameter: 'gov.benefit.child_benefit',
     label: 'Child Benefit',
     unit: 'currency-USD',
     values: { [CURRENT_YEAR]: 1000 },
     economy: false,
+    household: true,
+  },
+  'gov.irs.credits.ctc.amount.base': {
+    type: 'parameter' as const,
+    parameter: 'gov.irs.credits.ctc.amount.base',
+    label: 'Child tax credit base amount',
+    unit: 'currency-USD',
+    values: { '2026-01-01': 2800 },
+    economy: true,
     household: true,
   },
 };

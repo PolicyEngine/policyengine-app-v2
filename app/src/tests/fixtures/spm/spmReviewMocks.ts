@@ -15,6 +15,15 @@ export const reviewMetadata = {
     marginal_tax_rate: { entity: 'person', label: 'Marginal tax rate' },
     household_net_income: { entity: 'household', label: 'Net income' },
   },
+  parameters: {
+    'gov.irs.credits.ctc.amount.base': {
+      label: 'Child tax credit base amount',
+      type: 'parameter' as const,
+      parameter: 'gov.irs.credits.ctc.amount.base',
+      unit: 'currency-USD',
+      values: { '2026-01-01': 2800 },
+    },
+  },
   entities: { person: { plural: 'people' }, household: { plural: 'households' } },
 };
 

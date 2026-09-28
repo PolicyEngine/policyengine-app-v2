@@ -44,7 +44,12 @@ export const mockLoadedMetadataState: MetadataState = {
     age: { label: 'Age', unit: 'year' },
   },
   parameters: {
-    tax_rate: { label: 'Tax Rate', values: { [CURRENT_YEAR]: 0.25 } },
+    tax_rate: {
+      type: 'parameter',
+      parameter: 'tax_rate',
+      label: 'Tax Rate',
+      values: { [CURRENT_YEAR]: 0.25 },
+    },
   },
   entities: {
     person: { label: 'Person', plural: 'People' },

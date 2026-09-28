@@ -1,8 +1,10 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import type { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import type { PolicyCreationPayload } from '@/types/payloads';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
@@ -187,6 +189,7 @@ export function isPolicyWithAssociation(obj: unknown): obj is UserPolicyWithAsso
 
 export const useUserPolicies = (userId: string) => {
   const country = useCurrentCountry();
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
 
   // First, get the associations (filtered by current country)
   const {
@@ -207,7 +210,7 @@ export const useUserPolicies = (userId: string) => {
       queryFn: async () => {
         try {
           const metadata = await fetchPolicyById(country, policyId.toString());
-          return PolicyAdapter.fromMetadata(metadata);
+          return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
         } catch (error) {
           // Add context to help debug which policy failed
           const message =

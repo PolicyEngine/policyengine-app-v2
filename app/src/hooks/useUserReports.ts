@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
@@ -9,6 +10,7 @@ import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
+import type { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -64,6 +66,7 @@ export interface EnhancedUserReport {
  */
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const queryClient = useQueryClient();
   const { data: regions } = useRegions(country);
 
@@ -149,7 +152,7 @@ export const useUserReports = (userId: string) => {
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
+      return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -357,6 +360,7 @@ export const useUserReports = (userId: string) => {
  * @returns Complete report data including UserReport, base Report, and all related entities
  */
 export const useUserReportById = (userReportId: string, options?: { enabled?: boolean }) => {
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const queryClient = useQueryClient();
   const country = useCurrentCountry();
   const isEnabled = options?.enabled !== false;
@@ -424,7 +428,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
+      return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
     enabled: isEnabled && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,

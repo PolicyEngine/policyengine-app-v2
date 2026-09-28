@@ -202,7 +202,7 @@ export function PolicyCreationModal({
       const changes = p.values.map((interval, index) => ({
         index,
         period: formatPeriod(interval.startDate, interval.endDate),
-        value: formatParameterValue(interval.value, metadata?.unit),
+        value: formatParameterValue(interval.value, metadata?.unit ?? undefined),
       }));
 
       return {
@@ -327,7 +327,10 @@ export function PolicyCreationModal({
         parameters: policyParameters,
       };
 
-      const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+      const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
+        policyData as Policy,
+        parameters
+      );
 
       try {
         const result = await createPolicyWithLabel(payload, resolvedLabel || undefined);
@@ -349,6 +352,7 @@ export function PolicyCreationModal({
       createPolicyWithLabel,
       onPolicyCreated,
       onClose,
+      parameters,
     ]
   );
 
@@ -382,7 +386,10 @@ export function PolicyCreationModal({
     setAssociationLookupError(null);
 
     const policyData: Partial<Policy> = { parameters: policyParameters };
-    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
+      policyData as Policy,
+      parameters
+    );
 
     try {
       const association = await resolveInitialPolicyAssociation();
@@ -426,6 +433,7 @@ export function PolicyCreationModal({
     updatePolicyAssociation,
     onPolicyCreated,
     onClose,
+    parameters,
   ]);
 
   const runPendingUnnamedAction = useCallback(() => {

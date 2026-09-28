@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
@@ -6,6 +7,7 @@ import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
+import type { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -36,6 +38,7 @@ export interface FlagshipReportData {
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const direct = isApiReportId(id);
 
   const legacy = useUserReportById(id, { enabled: !direct && !!id });
@@ -64,7 +67,7 @@ export function useFlagshipReport(id: string): FlagshipReportData {
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
     queryFn: async (policyId) =>
-      PolicyAdapter.fromMetadata(await fetchPolicyById(country, policyId)),
+      PolicyAdapter.fromMetadata(await fetchPolicyById(country, policyId), parameterMetadata),
     enabled: direct && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,

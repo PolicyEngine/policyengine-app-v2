@@ -71,7 +71,8 @@ export default function PolicySubmitView({
     }
 
     const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
-      policyData as Policy
+      policyData as Policy,
+      metadata.parameters
     );
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {

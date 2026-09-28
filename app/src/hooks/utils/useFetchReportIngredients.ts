@@ -11,6 +11,7 @@
  * and returns the fully-hydrated base ingredients.
  */
 
+import { useSelector } from 'react-redux';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
@@ -23,6 +24,7 @@ import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/qu
 import { buildCanonicalGeography, type SavedGeographySelection } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { Region } from '@/models/region';
+import type { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -161,6 +163,7 @@ export function useFetchReportIngredients(
 ): ReportIngredientsResult {
   const isEnabled = options?.enabled !== false && input !== null;
   const currentCountry = useCurrentCountry();
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   // Use country from input if available (for shared reports), otherwise use current country
   const country = input?.userReport.countryId ?? currentCountry;
   const { data: regions } = useRegions(country, {
@@ -210,7 +213,7 @@ export function useFetchReportIngredients(
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
+      return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
     enabled: isEnabled && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,

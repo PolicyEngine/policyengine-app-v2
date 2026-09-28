@@ -1,5 +1,7 @@
+import type { ParameterMetadataCollection } from './metadata/parameterMetadata';
 import { UK_REGION_TYPES, US_REGION_TYPES } from './regionTypes';
 import type { SPMMetadata } from './spm';
+import type { ValuesList } from './subIngredients/valueInterval';
 
 /**
  * Region entry from API metadata
@@ -22,7 +24,7 @@ export interface MetadataApiPayload {
   message: string | null;
   result: {
     variables: Record<string, any>;
-    parameters: Record<string, any>;
+    parameters: ParameterMetadataCollection;
     entities: Record<string, any>;
     variableModules: Record<string, any>;
     economy_options: {
@@ -52,7 +54,7 @@ export interface ParameterTreeNode {
   description?: string | null;
   unit?: string | null;
   period?: string | null;
-  values?: Record<string, any>;
+  values?: ValuesList;
   economy?: boolean;
   household?: boolean;
 }
@@ -67,7 +69,7 @@ export interface MetadataState {
   progress: number;
 
   variables: Record<string, any>;
-  parameters: Record<string, any>;
+  parameters: ParameterMetadataCollection;
   entities: Record<string, any>;
   variableModules: Record<string, any>;
   economyOptions: {

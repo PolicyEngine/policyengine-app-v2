@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import {
+  mockParameterMetadata,
   mockPolicy,
   mockPolicyMetadata,
   mockPolicyMetadataMultipleParams,
@@ -10,13 +11,15 @@ import {
 } from '@/tests/fixtures/adapters/PolicyAdapterMocks';
 
 describe('PolicyAdapter', () => {
+  const parameterMetadata = mockParameterMetadata();
+
   describe('fromMetadata', () => {
     it('given policy metadata then converts to Policy', () => {
       // Given
       const metadata = mockPolicyMetadata();
 
       // When
-      const result = PolicyAdapter.fromMetadata(metadata);
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
 
       // Then
       expect(result).toEqual({
@@ -40,7 +43,7 @@ describe('PolicyAdapter', () => {
       const metadata = mockPolicyMetadataMultipleParams();
 
       // When
-      const result = PolicyAdapter.fromMetadata(metadata);
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
 
       // Then
       expect(result.parameters).toHaveLength(2);
@@ -54,7 +57,7 @@ describe('PolicyAdapter', () => {
       const metadata = mockPolicyMetadata({ policy_json: {} });
 
       // When
-      const result = PolicyAdapter.fromMetadata(metadata);
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
 
       // Then
       expect(result.parameters).toEqual([]);
@@ -65,7 +68,7 @@ describe('PolicyAdapter', () => {
       const metadata = mockPolicyMetadata({ country_id: TEST_COUNTRIES.UK });
 
       // When
-      const result = PolicyAdapter.fromMetadata(metadata);
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
 
       // Then
       expect(result.countryId).toBe(TEST_COUNTRIES.UK);
@@ -81,7 +84,7 @@ describe('PolicyAdapter', () => {
       });
 
       // When
-      const result = PolicyAdapter.fromMetadata(metadata);
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
 
       // Then
       expect(result.parameters).toEqual([
@@ -105,8 +108,72 @@ describe('PolicyAdapter', () => {
       });
 
       // When / Then
-      expect(() => PolicyAdapter.fromMetadata(metadata)).toThrow(
-        'Policy parameter values must be finite: Infinity'
+      expect(() => PolicyAdapter.fromMetadata(metadata, parameterMetadata)).toThrow(
+        'Policy parameter numeric_parameter values must be finite: Infinity'
+      );
+    });
+
+    it('given a numeric-looking string parameter then preserves it as text', () => {
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          string_parameter: { '2024-01-01.2024-12-31': '00123' },
+        },
+      });
+
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
+
+      expect(result.parameters?.[0].values[0].value).toBe('00123');
+    });
+
+    it('given structured values then coerces each field from its metadata shape', () => {
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          structured_parameter: {
+            '2024-01-01.2024-12-31': {
+              amount: '2.5',
+              enabled: 'false',
+              code: '00456',
+              bands: ['3', 4],
+            },
+          },
+        },
+      });
+
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
+
+      expect(result.parameters?.[0].values[0].value).toEqual({
+        amount: 2.5,
+        enabled: false,
+        code: '00456',
+        bands: [3, 4],
+      });
+    });
+
+    it('given a policy parameter absent from metadata then rejects it', () => {
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          unknown_parameter: { '2024-01-01.2024-12-31': 1 },
+        },
+      });
+
+      expect(() => PolicyAdapter.fromMetadata(metadata, parameterMetadata)).toThrow(
+        'Missing parameter metadata for unknown_parameter'
+      );
+    });
+
+    it('given parameter metadata without typed values then rejects the policy', () => {
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          tax_rate: { '2024-01-01.2024-12-31': 0.25 },
+        },
+      });
+      const incompleteParameterMetadata = {
+        ...parameterMetadata,
+        tax_rate: { ...parameterMetadata.tax_rate, values: undefined },
+      };
+
+      expect(() => PolicyAdapter.fromMetadata(metadata, incompleteParameterMetadata)).toThrow(
+        'Parameter metadata for tax_rate has no typed values'
       );
     });
   });
@@ -117,7 +184,7 @@ describe('PolicyAdapter', () => {
       const policy = mockPolicy();
 
       // When
-      const payload = PolicyAdapter.toCreationPayload(policy);
+      const payload = PolicyAdapter.toCreationPayload(policy, parameterMetadata);
 
       // Then
       expect(payload).toEqual({
@@ -135,7 +202,7 @@ describe('PolicyAdapter', () => {
       const policy = mockPolicy({ parameters: [] });
 
       // When
-      const payload = PolicyAdapter.toCreationPayload(policy);
+      const payload = PolicyAdapter.toCreationPayload(policy, parameterMetadata);
 
       // Then
       expect(payload).toEqual({
@@ -148,7 +215,7 @@ describe('PolicyAdapter', () => {
       const policy = mockPolicy({ parameters: undefined });
 
       // When
-      const payload = PolicyAdapter.toCreationPayload(policy);
+      const payload = PolicyAdapter.toCreationPayload(policy, parameterMetadata);
 
       // Then
       expect(payload).toEqual({
@@ -174,7 +241,7 @@ describe('PolicyAdapter', () => {
       });
 
       // When
-      const payload = PolicyAdapter.toCreationPayload(policy);
+      const payload = PolicyAdapter.toCreationPayload(policy, parameterMetadata);
 
       // Then
       expect(payload.data.tax_rate['2024-01-01.2024-12-31']).toBe(0.25);
@@ -198,8 +265,29 @@ describe('PolicyAdapter', () => {
       });
 
       // When / Then
-      expect(() => PolicyAdapter.toCreationPayload(policy)).toThrow(
-        'Policy parameter values must be finite: NaN'
+      expect(() => PolicyAdapter.toCreationPayload(policy, parameterMetadata)).toThrow(
+        'Policy parameter tax_rate values must be finite: NaN'
+      );
+    });
+
+    it('given malformed numeric input then refuses to serialize the policy', () => {
+      const policy = mockPolicy({
+        parameters: [
+          {
+            name: 'tax_rate',
+            values: [
+              {
+                startDate: '2024-01-01',
+                endDate: '2024-12-31',
+                value: 'not-a-number',
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(() => PolicyAdapter.toCreationPayload(policy, parameterMetadata)).toThrow(
+        'Invalid numeric policy parameter tax_rate value: not-a-number'
       );
     });
   });

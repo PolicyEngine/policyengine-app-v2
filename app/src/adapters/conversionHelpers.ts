@@ -1,4 +1,5 @@
 import { ReportOutput } from '@/types/ingredients/Report';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import {
   PolicyMetadataParams,
   PolicyMetadataParamValues,
@@ -6,15 +7,18 @@ import {
 } from '@/types/metadata/policyMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { coercePolicyParameterValue } from '@/utils/valueCoercion';
+import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/utils/valueCoercion';
 
 /**
  * Converts PolicyMetadataParamValues (with "startDate.endDate" keys) into ValueInterval array
  * Copied from src/libs/policyParameterTransform.ts
  */
 export function convertDateRangeMapToValueIntervals(
-  paramValues: PolicyMetadataParamValues
+  parameterName: string,
+  paramValues: PolicyMetadataParamValues,
+  parameterMetadata: ParameterMetadataCollection
 ): ValueInterval[] {
+  const valueSpec = resolvePolicyParameterValueSpec(parameterName, parameterMetadata);
   return Object.entries(paramValues).map(([dateRange, value]) => {
     const [startDate, endDate] = dateRange.split('.');
 
@@ -27,7 +31,7 @@ export function convertDateRangeMapToValueIntervals(
     return {
       startDate,
       endDate,
-      value: coercePolicyParameterValue(value),
+      value: coercePolicyParameterValue(value, valueSpec, parameterName),
     };
   });
 }
@@ -36,9 +40,16 @@ export function convertDateRangeMapToValueIntervals(
  * Converts PolicyMetadata.policy_json into Parameter[] format
  * Copied from src/libs/policyParameterTransform.ts
  */
-export function convertPolicyJsonToParameters(policyJson: PolicyMetadataParams): Parameter[] {
+export function convertPolicyJsonToParameters(
+  policyJson: PolicyMetadataParams,
+  parameterMetadata: ParameterMetadataCollection
+): Parameter[] {
   return Object.entries(policyJson).map(([paramName, dateValueMap]) => {
-    const valueIntervals = convertDateRangeMapToValueIntervals(dateValueMap);
+    const valueIntervals = convertDateRangeMapToValueIntervals(
+      paramName,
+      dateValueMap,
+      parameterMetadata
+    );
 
     return {
       name: paramName,
@@ -51,15 +62,21 @@ export function convertPolicyJsonToParameters(policyJson: PolicyMetadataParams):
  * Converts Parameter[] to PolicyMetadataParams format for API payloads
  */
 export function convertParametersToPolicyJson(
-  parameters: Parameter[]
+  parameters: Parameter[],
+  parameterMetadata: ParameterMetadataCollection
 ): SerializedPolicyMetadataParams {
   const data: SerializedPolicyMetadataParams = {};
 
   parameters.forEach((param) => {
+    const valueSpec = resolvePolicyParameterValueSpec(param.name, parameterMetadata);
     data[param.name] = param.values.reduce(
       (acc, cur) => ({
         ...acc,
-        [`${cur.startDate}.${cur.endDate}`]: coercePolicyParameterValue(cur.value),
+        [`${cur.startDate}.${cur.endDate}`]: coercePolicyParameterValue(
+          cur.value,
+          valueSpec,
+          param.name
+        ),
       }),
       {}
     );

@@ -1,8 +1,20 @@
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { PolicyParameterValue } from '@/types/metadata/policyMetadata';
 
 type ValueType = 'float' | 'int' | 'bool' | 'Enum' | 'str' | string;
 
 const NUMERIC_VALUE_PATTERN = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+
+export type PolicyParameterValueSpec =
+  | { kind: 'number' }
+  | { kind: 'boolean' }
+  | { kind: 'string' }
+  | { kind: 'null' }
+  | { kind: 'array'; items: readonly PolicyParameterValueSpec[] }
+  | {
+      kind: 'object';
+      properties: Readonly<Record<string, PolicyParameterValueSpec>>;
+    };
 
 /**
  * Coerces a value based on the variable's valueType.
@@ -42,53 +54,90 @@ export function coerceByUnit(value: unknown, unit: string | null | undefined): n
   return toPolicyNumber(value);
 }
 
-/**
- * Validates and normalizes a policy value at API serialization/deserialization
- * boundaries. Numeric and boolean strings are cast while legitimate JSON text
- * and structured parameter values are preserved.
- */
-export function coercePolicyParameterValue(value: unknown): PolicyParameterValue {
-  if (value === null) {
-    return null;
+/** Resolve the required JSON value shape from typed current-law metadata. */
+export function resolvePolicyParameterValueSpec(
+  parameterName: string,
+  parameters: ParameterMetadataCollection
+): PolicyParameterValueSpec {
+  const metadata = parameters[parameterName];
+  if (!metadata || metadata.type !== 'parameter') {
+    throw new TypeError(`Missing parameter metadata for ${parameterName}`);
   }
 
-  if (typeof value === 'boolean') {
-    return value;
+  const references = Object.entries(metadata.values ?? {})
+    .sort(([firstDate], [secondDate]) => firstDate.localeCompare(secondDate))
+    .map(([, value]) => value);
+  if (references.length === 0) {
+    throw new TypeError(`Parameter metadata for ${parameterName} has no typed values`);
   }
 
-  if (typeof value === 'number') {
-    return toPolicyNumber(value);
+  const nonNullReferences = references.filter(
+    (value): value is Exclude<PolicyParameterValue, null> => value !== null
+  );
+  if (nonNullReferences.length === 0) {
+    return { kind: 'null' };
   }
 
-  if (typeof value === 'string') {
-    if (value === 'true' || value === 'false') {
-      return value === 'true';
+  const resolved = specFromReference(nonNullReferences[0], parameterName);
+  for (const reference of nonNullReferences.slice(1)) {
+    const candidate = specFromReference(reference, parameterName);
+    if (JSON.stringify(candidate) !== JSON.stringify(resolved)) {
+      throw new TypeError(`Parameter metadata for ${parameterName} has inconsistent value shapes`);
     }
-    if (NUMERIC_VALUE_PATTERN.test(value.trim())) {
-      return toPolicyNumber(value);
+  }
+  return resolved;
+}
+
+/** Coerce a policy value according to the exact parameter metadata schema. */
+export function coercePolicyParameterValue(
+  value: unknown,
+  spec: PolicyParameterValueSpec,
+  parameterName: string
+): PolicyParameterValue {
+  const context = `policy parameter ${parameterName}`;
+  switch (spec.kind) {
+    case 'number':
+      return toPolicyNumber(value, context);
+    case 'boolean':
+      return toPolicyBoolean(value, context);
+    case 'string':
+      if (typeof value !== 'string') {
+        throw new TypeError(`Invalid string ${context} value: ${String(value)}`);
+      }
+      return value;
+    case 'null':
+      if (value !== null) {
+        throw new TypeError(`Invalid null ${context} value: ${String(value)}`);
+      }
+      return null;
+    case 'array': {
+      if (!Array.isArray(value) || value.length !== spec.items.length) {
+        throw new TypeError(`Invalid array ${context} value: expected ${spec.items.length} items`);
+      }
+      return spec.items.map((itemSpec, index) =>
+        coercePolicyParameterValue(value[index], itemSpec, `${parameterName}[${index}]`)
+      );
     }
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(coercePolicyParameterValue);
-  }
-
-  if (typeof value === 'object') {
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype !== Object.prototype && prototype !== null) {
-      throw new TypeError('Policy parameter objects must be plain JSON objects');
+    case 'object': {
+      if (!isPlainObject(value)) {
+        throw new TypeError(`Invalid object ${context} value`);
+      }
+      const expectedKeys = Object.keys(spec.properties).sort();
+      const actualKeys = Object.keys(value).sort();
+      if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
+        throw new TypeError(`Invalid object ${context} keys: expected ${expectedKeys.join(', ')}`);
+      }
+      const result: Record<string, PolicyParameterValue> = {};
+      for (const key of expectedKeys) {
+        result[key] = coercePolicyParameterValue(
+          value[key],
+          spec.properties[key],
+          `${parameterName}.${key}`
+        );
+      }
+      return result;
     }
-
-    return Object.fromEntries(
-      Object.entries(value).map(([key, nestedValue]) => [
-        key,
-        coercePolicyParameterValue(nestedValue),
-      ])
-    );
   }
-
-  throw new TypeError(`Invalid policy parameter value: ${String(value)}`);
 }
 
 // --- Primitive coercion helpers ---
@@ -103,7 +152,7 @@ function toBoolean(value: unknown): boolean {
   return false;
 }
 
-function toPolicyBoolean(value: unknown): boolean {
+function toPolicyBoolean(value: unknown, context = 'policy parameter'): boolean {
   if (typeof value === 'boolean') {
     return value;
   }
@@ -113,15 +162,16 @@ function toPolicyBoolean(value: unknown): boolean {
   if (value === 'false' || value === 0) {
     return false;
   }
-  throw new TypeError(`Invalid boolean policy parameter value: ${String(value)}`);
+  throw new TypeError(`Invalid boolean ${context} value: ${String(value)}`);
 }
 
-function toPolicyNumber(value: unknown): number {
+function toPolicyNumber(value: unknown, context = 'policy parameter'): number {
   if (typeof value === 'number') {
     if (Number.isFinite(value)) {
       return value;
     }
-    throw new TypeError(`Policy parameter values must be finite: ${String(value)}`);
+    const subject = `${context.charAt(0).toUpperCase()}${context.slice(1)}`;
+    throw new TypeError(`${subject} values must be finite: ${String(value)}`);
   }
 
   if (typeof value === 'string' && NUMERIC_VALUE_PATTERN.test(value.trim())) {
@@ -131,7 +181,45 @@ function toPolicyNumber(value: unknown): number {
     }
   }
 
-  throw new TypeError(`Invalid numeric policy parameter value: ${String(value)}`);
+  throw new TypeError(`Invalid numeric ${context} value: ${String(value)}`);
+}
+
+function specFromReference(
+  value: PolicyParameterValue,
+  parameterName: string
+): PolicyParameterValueSpec {
+  if (value === null) {
+    return { kind: 'null' };
+  }
+  if (typeof value === 'number') {
+    toPolicyNumber(value, `metadata for ${parameterName}`);
+    return { kind: 'number' };
+  }
+  if (typeof value === 'boolean') {
+    return { kind: 'boolean' };
+  }
+  if (typeof value === 'string') {
+    return { kind: 'string' };
+  }
+  if (Array.isArray(value)) {
+    return {
+      kind: 'array',
+      items: value.map((item) => specFromReference(item, parameterName)),
+    };
+  }
+  const properties: Record<string, PolicyParameterValueSpec> = {};
+  for (const key of Object.keys(value).sort()) {
+    properties[key] = specFromReference(value[key], parameterName);
+  }
+  return { kind: 'object', properties };
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function toFloat(value: unknown): number {
