@@ -93,6 +93,32 @@ describe('fetchTrackerBills', () => {
     });
   });
 
+  test('given federal and state bills then only state bills carry a state code', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+
+    const responses: Record<string, any[]> = {
+      research: [
+        { id: 'us-hr1425', state: 'US', title: 'HR 1425' },
+        { id: 'dc-b26', state: 'dc', title: 'DC B26' },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const table = String(url).match(/rest\/v1\/(\w+)\?/)?.[1] ?? '';
+        return { ok: true, json: async () => responses[table] ?? [] };
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills!.map((bill) => [bill.id, bill.state])).toEqual([
+      ['us-hr1425', undefined],
+      ['dc-b26', 'DC'],
+    ]);
+  });
+
   test('given the model run moved past the validation snapshot then drift is flagged', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');

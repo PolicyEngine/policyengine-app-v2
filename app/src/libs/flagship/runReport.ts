@@ -62,6 +62,22 @@ export interface RunFlagshipReportArgs {
   reformId?: string | null;
 }
 
+/**
+ * Creates (or, since the API dedupes identical policies, finds) the reform
+ * policy for a set of provisions, effective from the current year.
+ */
+export async function createReformPolicy(
+  countryId: CountryId,
+  title: string,
+  provisions: Array<Pick<RunReportProvision, 'path' | 'value'>>
+): Promise<number> {
+  const data = Object.fromEntries(
+    provisions.map((p) => [p.path, { [`${CURRENT_YEAR}-01-01.${FOREVER}`]: p.value }])
+  );
+  const policyResponse = await createPolicy(countryId, { data, label: title || undefined });
+  return Number(policyResponse.result.policy_id);
+}
+
 export async function runFlagshipReport({
   countryId,
   title,
@@ -74,11 +90,7 @@ export async function runFlagshipReport({
     throw new Error('Cannot run a report with no provisions');
   }
 
-  const data = Object.fromEntries(
-    provisions.map((p) => [p.path, { [`${CURRENT_YEAR}-01-01.${FOREVER}`]: p.value }])
-  );
-  const policyResponse = await createPolicy(countryId, { data, label: title || undefined });
-  const reformPolicyId = Number(policyResponse.result.policy_id);
+  const reformPolicyId = await createReformPolicy(countryId, title, provisions);
 
   const [baseline, reform] = await Promise.all([
     createSimulation(countryId, {

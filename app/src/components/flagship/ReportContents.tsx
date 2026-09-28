@@ -19,21 +19,20 @@ function povertyChange(values: { baseline: number; reform: number }) {
   return `${magnitude < 0.1 ? '<0.1' : magnitude.toFixed(1)}% ${reform < baseline ? 'decrease' : 'increase'}`;
 }
 
-export default function ReportContents({
-  output,
-  countryId,
-  districtAvailable,
-  onOpen,
-}: {
-  output: SocietyWideReportOutput;
-  countryId: Parameters<typeof formatCurrencyAbbr>[1];
-  districtAvailable: boolean;
-  onOpen: (section: string) => void;
-}) {
+export interface ReportMetric {
+  value: string;
+  label: string;
+}
+
+/** The overview's headline numbers from a completed society-wide run. */
+export function reportMetrics(
+  output: SocietyWideReportOutput,
+  countryId: Parameters<typeof formatCurrencyAbbr>[1]
+): ReportMetric[] {
   const budget = output.budget.budgetary_impact;
   const distribution = output.intra_decile.all;
   const gains = distribution['Gain more than 5%'] + distribution['Gain less than 5%'];
-  const metrics = [
+  return [
     {
       value: Number.isFinite(budget)
         ? formatCurrencyAbbr(Math.abs(budget), countryId, { maximumFractionDigits: 1 })
@@ -54,6 +53,20 @@ export default function ReportContents({
       label: 'Child poverty · relative change',
     },
   ];
+}
+
+export default function ReportContents({
+  metrics,
+  metricsNote,
+  districtAvailable,
+  onOpen,
+}: {
+  metrics: ReportMetric[];
+  /** Shown under the headline numbers, e.g. that they are stored estimates. */
+  metricsNote?: React.ReactNode;
+  districtAvailable: boolean;
+  onOpen: (section: string) => void;
+}) {
   const sections = [
     {
       id: 'economy',
@@ -191,6 +204,17 @@ export default function ReportContents({
                       </span>
                     </span>
                   ))}
+                  {metricsNote && (
+                    <span
+                      style={{
+                        flexBasis: '100%',
+                        color: colors.text.secondary,
+                        fontSize: typography.fontSize.xs,
+                      }}
+                    >
+                      {metricsNote}
+                    </span>
+                  )}
                 </span>
               ) : (
                 <span
