@@ -1,0 +1,19 @@
+name: Multi-zone asset scoping
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - website/next.config.ts
+
+jobs:
+  check-assets:
+    name: Verify external app asset scoping
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check asset scoping
+        run: bash scripts/check-multizone-assets.sh
