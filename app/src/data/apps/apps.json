@@ -3,7 +3,7 @@
     "type": "iframe",
     "slug": "triple-lock",
     "title": "The State Pension triple lock and the Prime Minister's 2030 plan",
-    "description": "Estimate the cost, household impact and forecast uncertainty of the State Pension triple lock and the Prime Minister's plan to adjust it from April 2030, compared with a double lock, an earnings link and a CPI link, modelled with PolicyEngine UK.",
+    "description": "Cost, household impact and forecast uncertainty of the State Pension triple lock and the Prime Minister's April 2030 plan, modelled with PolicyEngine UK.",
     "source": "https://uk-triple-lock.vercel.app/uk/triple-lock",
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
