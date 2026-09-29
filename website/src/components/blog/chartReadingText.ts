@@ -4,7 +4,8 @@
  * imports so the article page can use it without loading Recharts.
  */
 
-const CHART_FENCE = /^```chart\n([\s\S]*?)^```$/gm;
+/** A ```chart fence; either fence line may carry trailing spaces or a CR. */
+export const CHART_FENCE = /^```chart[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
 const PROSE_FIELDS = ["title", "subtitle", "note", "source"];
 
 export function chartBlocksAsProse(markdown: string): string {
@@ -20,4 +21,10 @@ export function chartBlocksAsProse(markdown: string): string {
       return " ";
     }
   });
+}
+
+/** "N min read" at 200 words a minute. */
+export function readingTimeLabel(markdown: string): string {
+  const words = chartBlocksAsProse(markdown).trim().split(/\s+/).length;
+  return `${Math.ceil(words / 200)} min read`;
 }

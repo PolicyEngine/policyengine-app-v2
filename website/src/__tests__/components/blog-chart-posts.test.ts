@@ -8,14 +8,16 @@ import {
   niceTicks,
   parseBlogChartSpec,
 } from "@/components/blog/BlogChart";
-import { chartBlocksAsProse } from "@/components/blog/chartReadingText";
+import {
+  CHART_FENCE,
+  chartBlocksAsProse,
+  readingTimeLabel,
+} from "@/components/blog/chartReadingText";
 
 const ARTICLES = join(__dirname, "../../../../app/src/data/posts/articles");
 
 function chartFences(markdown: string): string[] {
-  return [...markdown.matchAll(/^```chart\n([\s\S]*?)^```$/gm)].map(
-    (m) => m[1],
-  );
+  return [...markdown.matchAll(CHART_FENCE)].map((m) => m[1]);
 }
 
 const posts = readdirSync(ARTICLES)
@@ -84,28 +86,54 @@ describe("SPM post figures", () => {
 });
 
 describe("reading time", () => {
-  const minutes = (markdown: string) =>
-    Math.ceil(chartBlocksAsProse(markdown).trim().split(/\s+/).length / 200);
-
   test("counts a chart block as its title, subtitle, note and source", () => {
     const block =
       '```chart\n{"type": "bar", "title": "One two", "subtitle": "three", "note": "four", "source": "five six", "data": [{"a": 1}]}\n```';
-    expect(
-      chartBlocksAsProse(`Intro.\n\n${block}\n`).trim().split(/\s+/),
-    ).toEqual(["Intro.", "One", "two", "three", "four", "five", "six"]);
+    const words = (md: string) => chartBlocksAsProse(md).trim().split(/\s+/);
+    expect(words(`Intro.\n\n${block}\n`)).toEqual([
+      "Intro.",
+      "One",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+    ]);
     expect(chartBlocksAsProse("```chart\n{broken\n```").trim()).toBe("");
+    // A closing fence with trailing spaces or a CR still ends the block, so
+    // the prose after it counts.
+    const loose = block.replace(/```$/, "```  ").replace(/\n/g, "\r\n");
+    expect(
+      words(`${loose}\r\nAfter the chart.\r\n\n\`\`\`js\nx\n\`\`\``),
+    ).toEqual(expect.arrayContaining(["After", "the", "chart.", "six"]));
   });
 
   // Replacing the PNGs with charts leaves each post's reading time as it was.
   test("keeps the SPM posts' reading times", () => {
     const text = (file: string) =>
       posts.find((p) => p.file === file)?.markdown ?? "";
-    expect(minutes(text("2025-supplemental-poverty-measure.md"))).toBe(10);
-    expect(minutes(text("2025-spm-poverty-prediction.md"))).toBe(13);
+    expect(readingTimeLabel(text("2025-supplemental-poverty-measure.md"))).toBe(
+      "10 min read",
+    );
+    expect(readingTimeLabel(text("2025-spm-poverty-prediction.md"))).toBe(
+      "13 min read",
+    );
   });
 });
 
 describe("niceTicks", () => {
+  test("gives a finite axis for values near the largest double", () => {
+    for (const v of [1.6e308, -1.6e308, Number.MAX_VALUE]) {
+      const { domain, ticks, decimals } = niceTicks([v]);
+      expect(domain.every(Number.isFinite)).toBe(true);
+      expect(domain[0]).toBeLessThanOrEqual(Math.min(0, v));
+      expect(domain[1]).toBeGreaterThanOrEqual(Math.max(0, v));
+      expect(() =>
+        ticks.map((t) => formatChartValue(t, { decimals })),
+      ).not.toThrow();
+    }
+  });
+
   test("gives a usable axis for spans too small to step through", () => {
     for (const v of [5e-324, 1e-300, 1e-12]) {
       const { domain, ticks, decimals } = niceTicks([v]);

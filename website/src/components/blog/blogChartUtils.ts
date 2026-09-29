@@ -46,8 +46,8 @@ export function niceTicks(
   values: number[],
   target = 4,
 ): { domain: [number, number]; ticks: number[]; decimals: number } {
-  const lo = Math.min(0, ...values);
-  const hi = Math.max(0, ...values);
+  const lo = values.reduce((a, b) => Math.min(a, b), 0);
+  const hi = values.reduce((a, b) => Math.max(a, b), 0);
   // A span under 1e-9 gets a unit axis: a smaller step underflows, or needs
   // more decimals than toFixed allows.
   const span = hi - lo >= 1e-9 ? hi - lo : 1;
@@ -58,6 +58,10 @@ export function niceTicks(
     10 * power;
   const start = Math.floor(lo / step) * step;
   const end = Math.ceil(hi / step) * step;
+  // Values near the largest double overflow when rounded out to a step.
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return { domain: [lo, hi], ticks: [lo, hi], decimals: 0 };
+  }
   const ticks = Array.from(
     { length: Math.round((end - start) / step) + 1 },
     (_, i) => Number((start + i * step).toPrecision(12)),
