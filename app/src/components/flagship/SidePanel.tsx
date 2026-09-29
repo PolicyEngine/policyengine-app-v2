@@ -12,7 +12,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
  * the same shape: a column beside the content, folding to a slim spine.
  * The chrome lives here once, and the column is real: the panel portals
  * into a slot that is a flex sibling of the shell's scrolling <main>
- * (see StandardLayout), so it runs the full height of the page by
+ * (see FlagshipShell), so it runs the full height of the page by
  * construction, never scrolls away with the content, and never wraps
  * beneath it. Where the slot does not exist (tests, the legacy shell)
  * the panel renders in place.
