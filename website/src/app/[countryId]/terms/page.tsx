@@ -198,7 +198,7 @@ function buildSections(
           <p>10.2 Changelog:</p>
           <ul className="tw:list-disc">
             <li>
-              2026-09-27: Section 2.1 now states that information and analysis
+              2026-09-29: Section 2.1 now states that information and analysis
               provided through the Service do not constitute legal, tax, or
               financial advice, and no longer describes the Service as provided
               for informational and educational purposes only. Section 3 now
