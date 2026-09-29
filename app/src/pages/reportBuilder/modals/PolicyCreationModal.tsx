@@ -97,7 +97,7 @@ export function PolicyCreationModal({
 
   // Get metadata from Redux state
   const metadata = useSelector((state: RootState) => state.metadata);
-  const { parameterTree, parameters, loading: metadataLoading } = metadata;
+  const { parameterTree, parameters: parameterMetadata, loading: metadataLoading } = metadata;
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
@@ -192,8 +192,8 @@ export function PolicyCreationModal({
   // Get modified parameter data for the Changes section
   const modifiedParams: ModifiedParam[] = useMemo(() => {
     return policyParameters.map((p) => {
-      const metadata = parameters[p.name];
-      const hierarchicalLabels = getHierarchicalLabels(p.name, parameters);
+      const metadata = parameterMetadata[p.name];
+      const hierarchicalLabels = getHierarchicalLabels(p.name, parameterMetadata);
       const displayLabel =
         hierarchicalLabels.length > 0
           ? formatLabelParts(hierarchicalLabels)
@@ -211,7 +211,7 @@ export function PolicyCreationModal({
         changes,
       };
     });
-  }, [policyParameters, parameters]);
+  }, [policyParameters, parameterMetadata]);
 
   // Get searchable parameters from memoized selector
   const searchableParameters = useSelector(selectSearchableParameters);
@@ -219,7 +219,7 @@ export function PolicyCreationModal({
   // Handle search selection - expand tree path and select parameter
   const handleSearchSelect = useCallback(
     (paramName: string) => {
-      const param = parameters[paramName];
+      const param = parameterMetadata[paramName];
       if (!param || param.type !== 'parameter') {
         return;
       }
@@ -239,13 +239,13 @@ export function PolicyCreationModal({
       // Auto-switch to parameters tab when selecting from search
       setActiveTab('parameters');
     },
-    [parameters, expandedMenuItems]
+    [parameterMetadata, expandedMenuItems]
   );
 
   // Handle menu item click
   const handleMenuItemClick = useCallback(
     (paramName: string) => {
-      const param = parameters[paramName];
+      const param = parameterMetadata[paramName];
       if (param && param.type === 'parameter') {
         setSelectedParam(param);
         setIntervals([]);
@@ -263,7 +263,7 @@ export function PolicyCreationModal({
         return newSet;
       });
     },
-    [parameters]
+    [parameterMetadata]
   );
 
   // Handle value submission
@@ -329,7 +329,7 @@ export function PolicyCreationModal({
 
       const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
         policyData as Policy,
-        parameters
+        parameterMetadata
       );
 
       try {
@@ -352,7 +352,7 @@ export function PolicyCreationModal({
       createPolicyWithLabel,
       onPolicyCreated,
       onClose,
-      parameters,
+      parameterMetadata,
     ]
   );
 
@@ -388,7 +388,7 @@ export function PolicyCreationModal({
     const policyData: Partial<Policy> = { parameters: policyParameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
       policyData as Policy,
-      parameters
+      parameterMetadata
     );
 
     try {
@@ -433,7 +433,7 @@ export function PolicyCreationModal({
     updatePolicyAssociation,
     onPolicyCreated,
     onClose,
-    parameters,
+    parameterMetadata,
   ]);
 
   const runPendingUnnamedAction = useCallback(() => {
