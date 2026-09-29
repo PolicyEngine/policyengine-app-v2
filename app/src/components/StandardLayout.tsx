@@ -14,8 +14,7 @@ import { useAppLocation } from '@/contexts/LocationContext';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { cn } from '@/lib/utils';
 import { isFlagshipShellEnabled } from '@/libs/featureFlags';
-import FlagshipSidebar from './flagship/FlagshipSidebar';
-import { SIDE_PANEL_SLOT_ID } from './flagship/SidePanel';
+import FlagshipShell from './flagship/FlagshipShell';
 import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';
 import Sidebar from './Sidebar';
@@ -40,24 +39,13 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
     return <>{children}</>;
   }
 
-  // Flagship shell: persistent left sidebar (brand, entry points,
-  // recent reforms) beside the content area. Ask is the landing view.
-  // The legacy layout is unchanged with the flag off.
+  // Flagship shell: persistent left sidebar (a drawer on narrow
+  // viewports) beside the content area. The legacy layout is unchanged
+  // with the flag off.
   if (isFlagshipShellEnabled()) {
     return (
       <LayoutProvider>
-        <div className="tw:h-screen tw:overflow-hidden tw:flex">
-          <FlagshipSidebar />
-          <main className="tw:flex-1 tw:min-w-0 tw:overflow-y-auto tw:overflow-x-hidden tw:p-[24px] tw:bg-gray-50">
-            {children}
-          </main>
-          {/* The right plane: SidePanel portals its content here, so the
-              panel is a real column of the shell — outside the scrolling
-              content, full height by construction — rather than a
-              floating box inside it. Empty (zero width) on pages
-              without a companion. */}
-          <div id={SIDE_PANEL_SLOT_ID} className="tw:shrink-0 tw:flex tw:h-full tw:bg-gray-50" />
-        </div>
+        <FlagshipShell>{children}</FlagshipShell>
       </LayoutProvider>
     );
   }

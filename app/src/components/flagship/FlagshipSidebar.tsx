@@ -15,21 +15,28 @@ import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-
-const PolicyEngineLogo = '/assets/logos/policyengine/teal.svg';
+import FlagshipBrand from './FlagshipBrand';
 
 const NAV_ITEMS = [
   { slug: 'build', label: 'Build', icon: IconAdjustments },
   { slug: 'reforms', label: 'Reforms', icon: IconGavel },
 ];
 
+interface FlagshipSidebarProps {
+  /** Called when an item navigates, so the narrow-viewport drawer can close. */
+  onNavigate?: () => void;
+}
+
 /**
  * The flagship shell's persistent left sidebar: brand, the entry
  * points, recent reforms, and the website links. Replaces both the
  * header nav and the Home launcher page — Build is the landing view
  * while the Ask page is paused.
+ *
+ * Below the sm breakpoint the shell shows it as a drawer under a top
+ * bar that carries the brand, so the sidebar's own brand hides there.
  */
-export default function FlagshipSidebar() {
+export default function FlagshipSidebar({ onNavigate }: FlagshipSidebarProps) {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const location = useAppLocation();
@@ -74,23 +81,18 @@ export default function FlagshipSidebar() {
         fontFamily: typography.fontFamily.primary,
       }}
     >
-      <button
-        type="button"
-        onClick={() => nav.push(`/${countryId}/build`)}
-        aria-label="PolicyEngine"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          padding: `${spacing.lg} ${spacing.lg} ${spacing.md}`,
-        }}
-      >
-        <img src={PolicyEngineLogo} alt="PolicyEngine" style={{ height: 22, width: 'auto' }} />
-      </button>
+      <FlagshipBrand
+        onNavigate={onNavigate}
+        className="tw:hidden tw:sm:flex"
+        style={{ padding: `${spacing.lg} ${spacing.lg} ${spacing.md}` }}
+      />
 
-      <Stack style={{ gap: 2, padding: `0 ${spacing.sm}` }} aria-label="Primary">
+      {/* In the drawer the brand is hidden, so the items need their own top inset. */}
+      <Stack
+        className="tw:pt-sm tw:sm:pt-0"
+        style={{ gap: 2, paddingInline: spacing.sm }}
+        aria-label="Primary"
+      >
         {NAV_ITEMS.map(({ slug, label, icon: Icon }) => {
           const active = pendingSlug
             ? pendingSlug === slug
@@ -101,6 +103,7 @@ export default function FlagshipSidebar() {
               type="button"
               onClick={() => {
                 setPendingSlug(slug);
+                onNavigate?.();
                 nav.push(`/${countryId}/${slug}`);
               }}
               aria-current={active ? 'page' : undefined}
@@ -146,7 +149,10 @@ export default function FlagshipSidebar() {
             <button
               key={reform.id}
               type="button"
-              onClick={() => nav.push(`/${countryId}/reforms?filter=yours`)}
+              onClick={() => {
+                onNavigate?.();
+                nav.push(`/${countryId}/reforms?filter=yours`);
+              }}
               style={{
                 border: 'none',
                 background: 'transparent',
