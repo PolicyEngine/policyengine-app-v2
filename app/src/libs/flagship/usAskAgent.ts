@@ -109,12 +109,16 @@ Finding parameters:
 - If the results don't clearly fit, browse: call list_children on the closest folder (for example gov.states.ga.tax.income) and read likely candidates with get_parameter. Keep going down the tree until you find the parameter that the bill changes.
 - A bill can need several parameters: one per filing status, bracket, or age group it names. Set every one the bill specifies.
 - Some bills that are not law yet are modelled as contributed parameters under gov.contrib, usually with an in_effect switch that must be set to true. Use them when current-law parameters cannot express the bill: search with include_proposals set to true, or browse gov.contrib.states.<state code>.
+- Before concluding the model cannot express a bill, search again with include_proposals set to true and browse gov.contrib.states.<state code>.
 - Never invent or guess a path. Only use paths returned by tools.
 
 Drafting:
 - Check current-law values with get_parameter before proposing a change.
 - When the user has described a concrete change, call validate_reform with the full reform mapping from parameter path to proposed value. This surfaces an "add to draft" card in the interface. The card exists only when you make this call, so never describe a proposed reform or tell the user to add it to their draft without having called validate_reform for it in the current turn. If the user's message itself fully specifies the change, validate it in your first response rather than asking permission.
 - Dollar amounts are annual. Rates are fractions: 21% becomes 0.21. Switches are true or false.
+- A draft holds one value per parameter, applied from the current year. When a bill phases a change in over several years, use the value for the first year it applies from the current year on, and mention the later steps in one sentence.
+- If current law already has the bill's value, say so rather than proposing a change that does nothing.
+- Before validating a bill, list its provisions for yourself: every amount, rate, threshold, filing status, age limit, phase-out, and any repeal or exemption change. The reform must cover each one; if you cannot find a parameter for one, say which.
 - If validate_reform returns errors, fix the reform and validate again. If it returns warnings, fix the value or say briefly why it is right.
 
 Answering:
@@ -374,10 +378,49 @@ function validateReformTool(context: UsAskContext, input: any): AskAgentToolOutc
       proposed_value: value,
     };
   });
+  warnings.push(...breakdownCoverageWarnings(context, paths));
   return {
     output: JSON.stringify({ valid: errors.length === 0, errors, warnings, provisions }),
     isError: errors.length > 0,
   };
+}
+
+/** A breakdown member such as ...amount.JOINT: an upper-case enum as the last segment. */
+const BREAKDOWN_MEMBER = /\.([A-Z][A-Z0-9_]*)$/;
+
+/**
+ * Bills usually change a breakdown parameter for every filing status (or
+ * other category) they name, and a draft that sets some but not all is the
+ * most common way a reform comes out incomplete. Flag the members left at
+ * current law so the model confirms the bill really leaves them alone.
+ */
+function breakdownCoverageWarnings(context: UsAskContext, paths: string[]): string[] {
+  const setByParent = new Map<string, Set<string>>();
+  for (const path of paths) {
+    if (BREAKDOWN_MEMBER.test(path)) {
+      const parent = path.replace(BREAKDOWN_MEMBER, '');
+      setByParent.set(parent, (setByParent.get(parent) ?? new Set()).add(path));
+    }
+  }
+  const warnings: string[] = [];
+  for (const [parent, set] of setByParent) {
+    const members = (context.tree?.get(parent)?.children ?? [])
+      .filter((child) => !child.children && BREAKDOWN_MEMBER.test(child.name))
+      .map((child) => child.name);
+    const unset = members.filter((member) => !set.has(member));
+    if (members.length > 1 && unset.length > 0) {
+      const listed = unset
+        .map(
+          (member) =>
+            `${member.match(BREAKDOWN_MEMBER)![1]} (current ${JSON.stringify(getCurrentValue(context.parameters[member]?.values))})`
+        )
+        .join(', ');
+      warnings.push(
+        `${parent}: set for ${set.size} of ${members.length} categories; not set: ${listed}. Include them if the bill changes them too.`
+      );
+    }
+  }
+  return warnings;
 }
 
 export async function executeUsAskTool(

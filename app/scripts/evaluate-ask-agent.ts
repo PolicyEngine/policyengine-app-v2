@@ -25,6 +25,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import {
   askAgentEvalPrompt,
   buildJudgePrompt,
+  caseValidityIssues,
   estimateCostUsd,
   extractProposedReform,
   gradeAskAgentCase,
@@ -54,6 +55,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(__dirname, '../src/tests/fixtures/libs');
 const CASES_PATH = path.join(FIXTURES, 'askAgentEvalCases.json');
 const BASELINE_PATH = path.join(FIXTURES, 'askAgentEvalBaseline.json');
+const EXCLUSIONS_PATH = path.join(FIXTURES, 'askAgentEvalExclusions.json');
 const RESULTS_DIR = path.join(__dirname, '../node_modules/.cache/policyengine/ask-eval');
 const CASE_TIMEOUT_MS = 240_000;
 const JUDGE_MODEL = 'claude-sonnet-5-5';
@@ -131,6 +133,20 @@ async function main(): Promise<void> {
     fetchReferences: createReferenceFetcher(),
   });
   const client = new Anthropic();
+  const exclusions: Record<string, string> = fs.existsSync(EXCLUSIONS_PATH)
+    ? JSON.parse(fs.readFileSync(EXCLUSIONS_PATH, 'utf-8'))
+    : {};
+  const runYearStart = `${new Date().getFullYear()}-01-01`;
+  const lawValue = (parameterPath: string) => {
+    const values = metadata.parameters[parameterPath]?.values ?? {};
+    const inEffect = Object.keys(values)
+      .filter((date) => date <= runYearStart)
+      .sort()
+      .pop();
+    return inEffect ? values[inEffect] : undefined;
+  };
+  const validityOf = (testCase: AskAgentEvalCase) =>
+    caseValidityIssues(testCase, lawValue, exclusions[testCase.id]);
 
   console.log(
     `Running ${cases.length} cases${judge ? ` with the ${JUDGE_MODEL} judge` : ''} as "${label}" · model ${config.model}` +
@@ -216,6 +232,8 @@ async function main(): Promise<void> {
       return {
         id: testCase.id,
         contrib: testCase.contrib,
+        validity: validityOf(testCase),
+        finalText: run.finalText,
         expectedPaths: Object.keys(testCase.expected).length,
         grade,
         ...(judge ? await judgeDraft(testCase, proposed, grade.allCorrect) : {}),
@@ -230,6 +248,7 @@ async function main(): Promise<void> {
       return {
         id: testCase.id,
         contrib: testCase.contrib,
+        validity: validityOf(testCase),
         expectedPaths: Object.keys(testCase.expected).length,
         grade: gradeAskAgentCase(testCase, null),
         validated: false,
@@ -258,7 +277,13 @@ async function main(): Promise<void> {
       const result = await runCase(testCase);
       spent += result.costUsd + (result.judgeCostUsd ?? 0);
       results.push(result);
-      const mark = result.error ? 'ERR' : result.grade.allCorrect ? 'ok ' : 'no ';
+      const mark = result.error
+        ? 'ERR'
+        : result.grade.allCorrect
+          ? 'ok '
+          : result.validity?.length
+            ? 'n/a'
+            : 'no ';
       console.log(
         `  ${mark} ${testCase.id.padEnd(22)} ${result.grade.valuesCorrect}/${result.grade.expectedPaths} values` +
           ` · ${result.usage.modelCalls} calls · $${result.costUsd.toFixed(3)}` +

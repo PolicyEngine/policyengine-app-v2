@@ -43,6 +43,10 @@ export interface AskAgentCaseGrade {
 export interface AskAgentCaseResult {
   id: string;
   contrib: boolean;
+  /** Reasons the case cannot be passed against today's model; empty when valid. */
+  validity?: CaseValidityIssue[];
+  /** The agent's final answer, kept for reading misses. */
+  finalText?: string;
   expectedPaths: number;
   grade: AskAgentCaseGrade;
   validated: boolean;
@@ -197,19 +201,24 @@ export function summarizeAskAgentResults(results: AskAgentCaseResult[]): AskAgen
 /**
  * Suites reported separately, never blended: contributed-parameter bills
  * need parameters search hides by default, and multi-provision bills are
- * a different task from one-parameter ones.
+ * a different task from one-parameter ones. The size suites cover valid
+ * cases only; cases that can't be passed against today's model get their
+ * own group.
  */
 export function groupAskAgentResults(
   results: AskAgentCaseResult[]
 ): Record<string, AskAgentCaseResult[]> {
+  const valid = results.filter((r) => !r.validity?.length);
   return {
     all: results,
-    'one parameter': results.filter((r) => !r.contrib && r.expectedPaths === 1),
-    '2 to 5 parameters': results.filter(
+    'valid cases': valid,
+    'one parameter': valid.filter((r) => !r.contrib && r.expectedPaths === 1),
+    '2 to 5 parameters': valid.filter(
       (r) => !r.contrib && r.expectedPaths >= 2 && r.expectedPaths <= 5
     ),
-    '6 or more parameters': results.filter((r) => !r.contrib && r.expectedPaths >= 6),
-    'contributed parameters': results.filter((r) => r.contrib),
+    '6 or more parameters': valid.filter((r) => !r.contrib && r.expectedPaths >= 6),
+    'contributed parameters': valid.filter((r) => r.contrib),
+    'invalid against current law': results.filter((r) => r.validity?.length),
   };
 }
 
@@ -284,4 +293,43 @@ export function parseJudgeVerdict(text: string): { verdict: JudgeVerdict; reason
     // Fall through to an unreadable verdict.
   }
   return { verdict: 'different', reason: 'Unreadable judge reply' };
+}
+
+export type CaseValidityIssue =
+  /** Every expected value already equals current law, so the reference changes nothing. */
+  | 'reference-matches-current-law'
+  /** Most expected values equal current law: the reference restates a whole schedule. */
+  | 'reference-mostly-current-law'
+  /** Reviewed by hand: the reference edits parameters today's model no longer uses. */
+  | 'reference-stale';
+
+/**
+ * Whether a tracker case can still be passed against today's model. Bills
+ * enacted since the tracker scored them, and references written against
+ * parameters the model has since stopped using, grade a correct draft as
+ * wrong; they are reported apart from the valid cases rather than dropped.
+ *
+ * `lawValue` is the current-law value in effect for the run year.
+ * `staleReason` comes from the reviewed exclusions list.
+ */
+export function caseValidityIssues(
+  testCase: AskAgentEvalCase,
+  lawValue: (path: string) => unknown,
+  staleReason?: string
+): CaseValidityIssue[] {
+  const paths = Object.keys(testCase.expected);
+  const unchanged = paths.filter((path) => {
+    const value = lawValue(path);
+    return value !== undefined && value !== null && sameReformValue(testCase.expected[path], value);
+  }).length;
+  const issues: CaseValidityIssue[] = [];
+  if (paths.length > 0 && unchanged === paths.length) {
+    issues.push('reference-matches-current-law');
+  } else if (paths.length >= 5 && unchanged / paths.length >= 0.8) {
+    issues.push('reference-mostly-current-law');
+  }
+  if (staleReason) {
+    issues.push('reference-stale');
+  }
+  return issues;
 }

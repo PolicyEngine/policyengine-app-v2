@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   askAgentEvalPrompt,
   buildJudgePrompt,
+  caseValidityIssues,
   estimateCostUsd,
   extractProposedReform,
   gradeAskAgentCase,
@@ -241,5 +242,35 @@ describe('judge', () => {
     });
     expect(parseJudgeVerdict('no json here').verdict).toBe('different');
     expect(parseJudgeVerdict('{"verdict": "maybe"}').verdict).toBe('different');
+  });
+});
+
+describe('caseValidityIssues', () => {
+  test('given a reference that equals current law then the case cannot be passed', () => {
+    expect(caseValidityIssues(CASE, (path) => CASE.expected[path])).toEqual([
+      'reference-matches-current-law',
+    ]);
+  });
+
+  test('given a reference that restates most of a schedule then it is flagged', () => {
+    const schedule: AskAgentEvalCase = {
+      ...CASE,
+      expected: { a: 1, b: 2, c: 3, d: 4, e: 5 },
+    };
+    const law: Record<string, number> = { a: 1, b: 2, c: 3, d: 4, e: 9 };
+
+    expect(caseValidityIssues(schedule, (path) => law[path])).toEqual([
+      'reference-mostly-current-law',
+    ]);
+  });
+
+  test('given a real change and no review note then the case is valid', () => {
+    expect(caseValidityIssues(CASE, () => 0.05)).toEqual([]);
+  });
+
+  test('given a reviewed stale reference then the reason is kept', () => {
+    expect(caseValidityIssues(CASE, () => 0.05, 'Uses a retired schedule')).toEqual([
+      'reference-stale',
+    ]);
   });
 });

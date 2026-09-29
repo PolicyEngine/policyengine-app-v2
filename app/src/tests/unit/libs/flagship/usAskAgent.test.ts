@@ -68,6 +68,30 @@ const METADATA: any = {
     household: true,
     values: { '2020-01-01': true },
   },
+  'gov.states.ga.tax.income.deductions': {
+    parameter: 'gov.states.ga.tax.income.deductions',
+    type: 'parameterNode',
+    label: 'Deductions',
+  },
+  'gov.states.ga.tax.income.deductions.standard': {
+    parameter: 'gov.states.ga.tax.income.deductions.standard',
+    type: 'parameterNode',
+    label: 'Standard deduction',
+  },
+  ...Object.fromEntries(
+    ['SINGLE', 'JOINT', 'SEPARATE'].map((status, i) => [
+      `gov.states.ga.tax.income.deductions.standard.${status}`,
+      {
+        parameter: `gov.states.ga.tax.income.deductions.standard.${status}`,
+        type: 'parameter',
+        label: status,
+        unit: 'currency-USD',
+        economy: true,
+        household: true,
+        values: { '2024-01-01': [12000, 24000, 12000][i] },
+      },
+    ])
+  ),
   'gov.contrib.states.ga.hb1001.in_effect': {
     parameter: 'gov.contrib.states.ga.hb1001.in_effect',
     type: 'parameter',
@@ -262,6 +286,28 @@ describe('agentic search tools', () => {
 
     expect(JSON.parse(folder.output).errors[0]).toContain('is a folder');
     expect(JSON.parse(switchValue.output).errors[0]).toContain('use true or false');
+  });
+
+  test('given some filing statuses of a parameter then validate_reform lists the rest', async () => {
+    const partial = await executeUsAskTool(full, 'validate_reform', {
+      reform: {
+        'gov.states.ga.tax.income.deductions.standard.SINGLE': 15000,
+        'gov.states.ga.tax.income.deductions.standard.JOINT': 30000,
+      },
+    });
+    const complete = await executeUsAskTool(full, 'validate_reform', {
+      reform: {
+        'gov.states.ga.tax.income.deductions.standard.SINGLE': 15000,
+        'gov.states.ga.tax.income.deductions.standard.JOINT': 30000,
+        'gov.states.ga.tax.income.deductions.standard.SEPARATE': 15000,
+      },
+    });
+
+    const warning = JSON.parse(partial.output).warnings[0];
+    expect(partial.isError).toBe(false);
+    expect(warning).toContain('set for 2 of 3 categories');
+    expect(warning).toContain('SEPARATE (current 12000)');
+    expect(JSON.parse(complete.output).warnings).toEqual([]);
   });
 
   test('given a mistyped path then validate_reform suggests close matches', async () => {
