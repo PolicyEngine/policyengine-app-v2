@@ -19,32 +19,51 @@ function povertyChange(values: { baseline: number; reform: number }) {
   return `${magnitude < 0.1 ? '<0.1' : magnitude.toFixed(1)}% ${reform < baseline ? 'decrease' : 'increase'}`;
 }
 
-export default function ReportContents({
-  output,
-  countryId,
-  districtAvailable,
-  onOpen,
-}: {
-  output: SocietyWideReportOutput;
-  countryId: Parameters<typeof formatCurrencyAbbr>[1];
-  districtAvailable: boolean;
-  onOpen: (section: string) => void;
-}) {
-  const budget = output.budget.budgetary_impact;
+export interface ReportMetric {
+  value: string;
+  label: string;
+}
+
+/**
+ * The overview's headline numbers from a completed society-wide run. A
+ * run on one state's data leads with that state's revenue, the figure
+ * state fiscal notes and the tracker report, rather than the combined
+ * federal and state budget effect.
+ */
+export function reportMetrics(
+  output: SocietyWideReportOutput,
+  countryId: Parameters<typeof formatCurrencyAbbr>[1],
+  { stateRevenue = false }: { stateRevenue?: boolean } = {}
+): ReportMetric[] {
   const distribution = output.intra_decile.all;
   const gains = distribution['Gain more than 5%'] + distribution['Gain less than 5%'];
-  const metrics = [
-    {
-      value: Number.isFinite(budget)
-        ? formatCurrencyAbbr(Math.abs(budget), countryId, { maximumFractionDigits: 1 })
-        : 'Unavailable',
-      label:
-        budget < 0
-          ? 'Annual government cost'
-          : budget > 0
-            ? 'Annual government savings'
-            : 'Annual budget change',
-    },
+  const budget = stateRevenue
+    ? output.budget.state_tax_revenue_impact
+    : output.budget.budgetary_impact;
+  const format = (value: number) =>
+    Number.isFinite(value)
+      ? formatCurrencyAbbr(Math.abs(value), countryId, { maximumFractionDigits: 1 })
+      : 'Unavailable';
+  return [
+    stateRevenue
+      ? {
+          value: format(budget),
+          label:
+            budget < 0
+              ? 'Annual state revenue loss'
+              : budget > 0
+                ? 'Annual state revenue gain'
+                : 'Annual state revenue change',
+        }
+      : {
+          value: format(budget),
+          label:
+            budget < 0
+              ? 'Annual government cost'
+              : budget > 0
+                ? 'Annual government savings'
+                : 'Annual budget change',
+        },
     {
       value: Number.isFinite(gains) ? `${(gains * 100).toFixed(1)}%` : 'Unavailable',
       label: 'Households gaining',
@@ -54,6 +73,20 @@ export default function ReportContents({
       label: 'Child poverty · relative change',
     },
   ];
+}
+
+export default function ReportContents({
+  metrics,
+  metricsNote,
+  districtAvailable,
+  onOpen,
+}: {
+  metrics: ReportMetric[];
+  /** Shown under the headline numbers, e.g. that they are stored estimates. */
+  metricsNote?: React.ReactNode;
+  districtAvailable: boolean;
+  onOpen: (section: string) => void;
+}) {
   const sections = [
     {
       id: 'economy',
@@ -191,6 +224,17 @@ export default function ReportContents({
                       </span>
                     </span>
                   ))}
+                  {metricsNote && (
+                    <span
+                      style={{
+                        flexBasis: '100%',
+                        color: colors.text.secondary,
+                        fontSize: typography.fontSize.xs,
+                      }}
+                    >
+                      {metricsNote}
+                    </span>
+                  )}
                 </span>
               ) : (
                 <span

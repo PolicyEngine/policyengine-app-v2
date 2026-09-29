@@ -302,7 +302,11 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       id: record.id,
       countryId: 'us',
       jurisdiction: STATE_NAMES[record.state] ?? record.state ?? 'Federal',
-      state: /^[a-z]{2}$/i.test(record.state ?? '') ? record.state.toUpperCase() : undefined,
+      // The tracker files federal bills under "US", which is not a state.
+      state:
+        /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
+          ? record.state.toUpperCase()
+          : undefined,
       title: record.title ?? record.id,
       status: status || 'Analyzed',
       summary: record.description ?? '',

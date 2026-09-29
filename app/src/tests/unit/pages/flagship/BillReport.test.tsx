@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { BillEconomy } from '@/hooks/useBillEconomy';
 import BillReportPage from '@/pages/flagship/BillReport.page';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
+import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalibrationMatchesForPaths = vi.fn();
 
@@ -24,64 +27,41 @@ vi.mock('@/api/billFeed', async (importOriginal) => {
   };
 });
 
-const DECILE_SHARES = {
-  gainMore5Pct: 0.2,
-  gainLess5Pct: 0.1,
-  noChange: 0.7,
-  loseLess5Pct: 0,
-  loseMore5Pct: 0,
-};
+const mockIsAlreadyCurrentLaw = vi.fn();
 
-const TRACKED_BILL = {
-  id: 'us-hr1425',
-  countryId: 'us',
-  jurisdiction: 'US',
-  title: 'HR 1425: Child Tax Credit to $5,000',
-  status: 'In committee',
-  summary: 'Raises the CTC to $5,000 per qualifying child.',
-  provisions: [],
-  keyFindings: ['External check (cost): within CRFB band.'],
-  sourceUrl: 'https://www.congress.gov/bill/119th-congress/house-bill/1425',
-  author: 'Rep. Mackenzie, Ryan [R-PA-7]',
-  date: '2026-07-06',
-  provenance: {
-    modelVersion: '1.729.3',
-    dataset: 'populace-us',
-    datasetVersion: '1.17.0',
-    computedAt: '2026-07-09T14:09:18Z',
-  },
-  validation: {
-    fiscalNoteEstimate: -230_000_000_000,
-    fiscalNoteUrl: 'https://www.cbo.gov/example',
-    peEstimate: -225_500_000_000,
-    targetRangeLow: -210_000_000_000,
-    targetRangeHigh: -250_000_000_000,
-    withinRange: true,
-    differencePct: 2,
-    discrepancyExplanation: 'The official score assumes a later effective date.',
-    externalAnalyses: [
-      { source: 'CRFB', url: 'https://www.crfb.org/example', estimate: -220_000_000_000 },
-    ],
-  },
-  impacts: { revenue: -225_500_000_000, povertyPercentChange: -14.3 },
-  impactData: {
-    budgetary: { stateRevenueImpact: -225_500_000_000, households: 163_000_000 },
-    poverty: { baselineRate: 0.169, reformRate: 0.145, percentChange: -14.3 },
-    childPoverty: { baselineRate: 0.166, reformRate: 0.099, percentChange: -39.9 },
-    winnersLosers: {
-      gainMore5Pct: 0.236,
-      gainLess5Pct: 0.199,
-      noChange: 0.565,
-      loseLess5Pct: 0,
-      loseMore5Pct: 0,
-      byDecile: { 1: DECILE_SHARES, 2: DECILE_SHARES },
-    },
-    decile: {
-      average: { 1: 198.7, 2: 544.3 },
-      relative: { 1: 0.0108, 2: 0.0164 },
-    },
-  },
-};
+vi.mock('@/libs/flagship/billMetrics', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/libs/flagship/billMetrics')>();
+  return {
+    ...actual,
+    isAlreadyCurrentLaw: (...args: Parameters<typeof actual.isAlreadyCurrentLaw>) =>
+      mockIsAlreadyCurrentLaw(...args) ?? actual.isAlreadyCurrentLaw(...args),
+  };
+});
+
+const mockUseBillEconomy = vi.fn();
+
+vi.mock('@/hooks/useBillEconomy', () => ({
+  useBillEconomy: (...args: unknown[]) => mockUseBillEconomy(...args),
+}));
+
+vi.mock('@/components/flagship/report/EconomicImpactCharts', () => ({
+  default: () => <div>Economic impact charts</div>,
+}));
+
+const mockRetry = vi.fn();
+
+function economy(overrides: Partial<BillEconomy> = {}): BillEconomy {
+  return {
+    output: null,
+    status: 'pending',
+    reformPolicyId: '98557',
+    baselinePolicyId: '2',
+    year: '2026',
+    region: 'us',
+    retry: mockRetry,
+    ...overrides,
+  };
+}
 
 function renderReport(billId = 'us-hr1425') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -96,19 +76,37 @@ describe('BillReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
+    mockUseBillEconomy.mockReturnValue(economy());
+    mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
+    mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
   });
 
-  test('given full impact data then the overview leads with all headline metrics', async () => {
+  test('given a bill then it uses the saved report sections', async () => {
     renderReport();
 
-    expect(await screen.findByText('−$225.5 billion')).toBeInTheDocument();
-    expect(screen.getByText('Child poverty change')).toBeInTheDocument();
-    expect(screen.getByText('16.6% → 9.9%')).toBeInTheDocument();
-    // The total household count is not a "households affected" figure
-    expect(screen.queryByText(/households affected/i)).not.toBeInTheDocument();
+    await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title });
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Overview',
+      'Economic impacts',
+      'Districts',
+      'Household',
+      'Validation',
+    ]);
+    expect(screen.getByText('US · In committee')).toBeInTheDocument();
   });
 
-  test('given the overview then summary, sponsor, date, and bill text link show', async () => {
+  test('given the full run is calculating then the overview leads with stored estimates', async () => {
+    renderReport();
+
+    expect(await screen.findByText('$225.5bn')).toBeInTheDocument();
+    expect(screen.getByText('Annual revenue loss')).toBeInTheDocument();
+    expect(screen.getByText('39.9% decrease')).toBeInTheDocument();
+    expect(
+      screen.getByText('Stored estimates from the legislative tracker · full results calculating')
+    ).toBeInTheDocument();
+  });
+
+  test('given the overview then summary, sponsor, date, bill text link, and verdict show', async () => {
     renderReport();
 
     expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
@@ -118,79 +116,75 @@ describe('BillReportPage', () => {
       'href',
       TRACKED_BILL.sourceUrl
     );
+    expect(screen.getAllByText(/Within fiscal-note range/).length).toBeGreaterThanOrEqual(1);
   });
 
-  test('given the budgetary and poverty tabs then their metrics render', async () => {
+  test('given the full run is calculating then economic impacts show its progress', async () => {
     const user = userEvent.setup();
+    mockUseBillEconomy.mockReturnValue(economy({ message: 'In queue (position 2)...' }));
     renderReport();
 
-    await user.click(await screen.findByRole('tab', { name: 'Budgetary impact' }));
-    expect(screen.getByText('Revenue change')).toBeInTheDocument();
-    expect(screen.getByText('Average per household')).toBeInTheDocument();
-    expect(screen.getByText('How the estimate compares')).toBeInTheDocument();
-    expect(screen.getByText(/single-year budgetary impact/i)).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
 
-    await user.click(screen.getByRole('tab', { name: 'Poverty impact' }));
-    expect(screen.getByText('Child poverty change')).toBeInTheDocument();
-    expect(screen.getByText('16.6% → 9.9%')).toBeInTheDocument();
+    expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
+    expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
+    expect(screen.queryByText('Economic impact charts')).not.toBeInTheDocument();
+    // The tracker's stored detail fills the wait.
+    expect(screen.getByText('Income change by decile')).toBeInTheDocument();
+    expect(screen.getByText('Winners and losers')).toBeInTheDocument();
     expect(screen.getByText('Poverty rate, before and after')).toBeInTheDocument();
-    expect(screen.getByText('Current law')).toBeInTheDocument();
   });
 
-  test('given the distribution tab then the chart toggles dollars and percent', async () => {
+  test('given the full results then the overview and charts use them', async () => {
     const user = userEvent.setup();
-    renderReport();
-
-    await user.click(await screen.findByRole('tab', { name: 'Distribution' }));
-    expect(screen.getByText('Average household income change by decile')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: 'Percent' }));
-    expect(screen.getByText('Relative household income change by decile')).toBeInTheDocument();
-  });
-
-  test('given the winners tab then outcome metrics and the decile chart render', async () => {
-    const user = userEvent.setup();
-    renderReport();
-
-    await user.click(await screen.findByRole('tab', { name: 'Winners and losers' }));
-
-    expect(screen.getByText('Households better off')).toBeInTheDocument();
-    expect(screen.getAllByText('No change').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Outcomes by income decile')).toBeInTheDocument();
-  });
-
-  test('given the notes tab then only provenance renders', async () => {
-    const user = userEvent.setup();
-    renderReport();
-
-    await user.click(await screen.findByRole('tab', { name: 'Notes and sources' }));
-
-    expect(screen.getByText(/policyengine-us 1\.729\.3/)).toBeInTheDocument();
-    expect(screen.getByText(/populace-us 1\.17\.0/)).toBeInTheDocument();
-    expect(screen.getByText(/Computed July 9, 2026/)).toBeInTheDocument();
-    // The findings prose reiterated the impact tabs — gone
-    expect(screen.queryByText(/CRFB band/)).not.toBeInTheDocument();
-  });
-
-  test('given validation data then the header shows the fiscal-note chip', async () => {
-    renderReport();
-
-    expect((await screen.findAllByText(/Within fiscal-note range/)).length).toBeGreaterThanOrEqual(
-      1
+    mockUseBillEconomy.mockReturnValue(
+      economy({ status: 'complete', output: createMockSocietyWideOutput() })
     );
+    renderReport();
+
+    expect(await screen.findByText('Annual government savings')).toBeInTheDocument();
+    expect(screen.getByText('13.3% decrease')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Stored estimates from the legislative tracker/)
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
   });
 
-  test('given the validation tab then external checks render with estimates', async () => {
+  test('given the full run fails then it says so and can retry', async () => {
+    const user = userEvent.setup();
+    mockUseBillEconomy.mockReturnValue(economy({ status: 'error', message: 'Worker lost' }));
+    renderReport();
+
+    expect(
+      await screen.findByText(
+        'Stored estimates from the legislative tracker · full results unavailable'
+      )
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByText('The full results could not be calculated.')).toBeInTheDocument();
+    expect(screen.getByText('Worker lost')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(mockRetry).toHaveBeenCalled();
+  });
+
+  test('given the validation tab then external checks and the tracker provenance render', async () => {
     const user = userEvent.setup();
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Validation' }));
 
     expect(screen.getByText('External checks for this bill')).toBeInTheDocument();
-    expect(screen.getByText('PolicyEngine estimate')).toBeInTheDocument();
     expect(screen.getByText('-$225.5B')).toBeInTheDocument();
     expect(screen.getByText('CRFB')).toBeInTheDocument();
     expect(screen.getByText(/later effective date/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Tracker estimate: policyengine-us 1.729.3 · populace-us 1.17.0 · computed July 9, 2026'
+      )
+    ).toBeInTheDocument();
   });
 
   test('given a state bill then its data check runs against that state and says so', async () => {
@@ -218,5 +212,55 @@ describe('BillReportPage', () => {
       'UT'
     );
     expect(await screen.findAllByText('IRS Statistics of Income · UT')).toHaveLength(2);
+  });
+
+  test('given metadata is still loading then the full run waits for it', async () => {
+    renderReport();
+
+    await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title });
+    expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: TRACKED_BILL.id }),
+      { enabled: false }
+    );
+  });
+
+  test('given a bill already in current law then no run starts and the tracker estimate stays', async () => {
+    const user = userEvent.setup();
+    mockIsAlreadyCurrentLaw.mockReturnValue(true);
+    renderReport();
+
+    expect(
+      await screen.findByText(
+        'Estimates from the legislative tracker, against the law before this bill'
+      )
+    ).toBeInTheDocument();
+    expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: TRACKED_BILL.id }),
+      { enabled: false }
+    );
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByText('This bill is already current law.')).toBeInTheDocument();
+    expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+  });
+
+  test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([{ ...TRACKED_BILL, provisions: [] }]);
+    renderReport();
+
+    expect(
+      await screen.findByText(
+        'Stored estimates from the legislative tracker · full results unavailable'
+      )
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByText(/provisions are mapped to model parameters yet/)).toBeInTheDocument();
+    expect(screen.queryByText('Calculating the full results…')).not.toBeInTheDocument();
+  });
+
+  test('given an unknown bill then says it is not in the feed', async () => {
+    renderReport('missing-bill');
+
+    expect(await screen.findByText('This bill is not in the current feed.')).toBeInTheDocument();
   });
 });
