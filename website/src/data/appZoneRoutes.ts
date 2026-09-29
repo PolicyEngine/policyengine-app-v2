@@ -277,6 +277,13 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination:
       "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
   },
+  // New slug for the OBBBA explorer. Proxied alongside the old one while the
+  // child moves its base path here; the old slug then 308s to this one.
+  {
+    source: "/us/obbba-households",
+    destination:
+      "https://obbba-household-by-household.vercel.app/us/obbba-households",
+  },
   {
     source: "/us/salternative",
     destination: "https://salt-amt-calculator.vercel.app/us/salternative",
