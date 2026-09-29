@@ -32,7 +32,7 @@ export interface AskChatHandlers {
   onChunk?: (text: string) => void;
   onToolStart?: (event: AskChatToolEvent) => void;
   onToolUse?: (event: AskChatToolEvent) => void;
-  onToolResult?: (event: { toolName: string; status: 'success' | 'error' }) => void;
+  onToolResult?: (event: { toolName: string; toolId: string; status: 'success' | 'error' }) => void;
   onSuggestions?: (suggestions: string[]) => void;
   onDone?: (done: AskChatDone) => void;
   onError?: (message: string) => void;
@@ -166,7 +166,11 @@ function dispatchFrame(frame: string, handlers: AskChatHandlers): void {
       });
       break;
     case 'tool_result':
-      handlers.onToolResult?.({ toolName: event.tool_name, status: event.status });
+      handlers.onToolResult?.({
+        toolName: event.tool_name,
+        toolId: event.tool_id,
+        status: event.status,
+      });
       break;
     case 'suggestions':
       handlers.onSuggestions?.(event.suggestions ?? []);

@@ -4,16 +4,15 @@ import {
 } from "@/libs/flagship/apiGate";
 import Anthropic from "@anthropic-ai/sdk";
 import {
-  buildUsAskContext,
+  buildUsAskContextFromMetadata,
+  createReferenceFetcher,
   executeUsAskTool,
+  US_ASK_DEFAULTS,
   US_ASK_SYSTEM_PROMPT,
   US_ASK_TOOLS,
   type UsAskContext,
 } from "@/libs/flagship/usAskAgent";
-import {
-  buildConceptClusters,
-  buildParameterSearchEntries,
-} from "@/libs/parameterSearch";
+import { runAskAgentLoop } from "@/libs/flagship/usAskLoop";
 
 // The US ask agent: Claude with deterministic parameter-search tools over
 // live policyengine-us metadata, streaming the same SSE event shapes as
@@ -30,8 +29,7 @@ export const maxDuration = 300;
 
 const METADATA_URL =
   process.env.US_METADATA_URL ?? "https://api.policyengine.org/us/metadata";
-const MODEL = process.env.US_ASK_MODEL ?? "claude-opus-5";
-const MAX_TOOL_TURNS = 10;
+const MODEL = process.env.US_ASK_MODEL ?? US_ASK_DEFAULTS.model;
 const CONTEXT_TTL_MS = 6 * 60 * 60 * 1000;
 
 let cachedContext: {
@@ -47,12 +45,9 @@ function getUsAskContext(): Promise<UsAskContext> {
         throw new Error(`US metadata fetch failed: ${response.status}`);
       }
       const payload = await response.json();
-      const parameters = payload?.result?.parameters ?? {};
-      return buildUsAskContext(
-        buildParameterSearchEntries(parameters),
-        buildConceptClusters(parameters),
-        parameters,
-      );
+      return buildUsAskContextFromMetadata(payload?.result?.parameters ?? {}, {
+        fetchReferences: createReferenceFetcher(),
+      });
     })();
     promise.catch(() => {
       // Don't poison the cache with a failed fetch.
@@ -88,7 +83,7 @@ export async function POST(request: Request): Promise<Response> {
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
-  const messages: Anthropic.MessageParam[] = (
+  const messages: Anthropic.Beta.BetaMessageParam[] = (
     Array.isArray(body?.messages) ? body.messages : []
   )
     .filter(
@@ -121,97 +116,73 @@ export async function POST(request: Request): Promise<Response> {
       const emit = (payload: unknown) =>
         controller.enqueue(encoder.encode(sse(payload)));
       try {
-        const turnMessages = [...messages];
-        let finalText = "";
-        for (let turn = 0; ; turn++) {
-          // Past the tool budget, force a prose wrap-up so the turn never
-          // ends tool-hungry with an empty answer.
-          const forceAnswer = turn >= MAX_TOOL_TURNS;
-          const modelStream = client.messages.stream({
-            model: MODEL,
-            max_tokens: 16000,
-            system: US_ASK_SYSTEM_PROMPT,
-            tools: US_ASK_TOOLS as unknown as Anthropic.ToolUnion[],
-            ...(forceAnswer ? { tool_choice: { type: "none" as const } } : {}),
-            messages: turnMessages,
-          });
-          modelStream.on("text", (delta) =>
-            emit({ type: "chunk", content: delta }),
-          );
-          const message = await modelStream.finalMessage();
-
-          if (message.stop_reason === "refusal") {
-            emit({
-              type: "error",
-              content: "The model declined this request.",
-            });
-            return;
-          }
-
-          finalText = message.content
-            .filter(
-              (block): block is Anthropic.TextBlock => block.type === "text",
-            )
-            .map((block) => block.text)
-            .join("");
-          const toolUses = message.content.filter(
-            (block): block is Anthropic.ToolUseBlock =>
-              block.type === "tool_use",
-          );
-          if (toolUses.length === 0 || forceAnswer) {
-            break;
-          }
-
-          // Thinking blocks must be echoed back unchanged, so push the
-          // full content, not just the text.
-          turnMessages.push({ role: "assistant", content: message.content });
-          const results: Anthropic.ToolResultBlockParam[] = [];
-          for (const toolUse of toolUses) {
-            emit({
-              type: "tool_start",
-              tool_name: toolUse.name,
-              tool_id: toolUse.id,
-            });
-            emit({
-              type: "tool_use",
-              tool_name: toolUse.name,
-              tool_id: toolUse.id,
-              tool_input: toolUse.input,
-              status: "pending",
-            });
-            const { output, isError } = executeUsAskTool(
-              context,
-              toolUse.name,
-              toolUse.input,
-            );
-            emit({
-              type: "tool_result",
-              tool_name: toolUse.name,
-              tool_id: toolUse.id,
-              status: isError ? "error" : "success",
-              result_summary:
-                output.length > 400 ? `${output.slice(0, 400)}...` : output,
-            });
-            results.push({
-              type: "tool_result",
-              tool_use_id: toolUse.id,
-              content: output,
-              is_error: isError,
-            });
-          }
-          turnMessages.push({ role: "user", content: results });
+        const result = await runAskAgentLoop({
+          client,
+          model: MODEL,
+          system: US_ASK_SYSTEM_PROMPT,
+          tools: US_ASK_TOOLS as unknown as Anthropic.Beta.BetaToolUnion[],
+          messages,
+          maxToolTurns: US_ASK_DEFAULTS.maxToolTurns,
+          effort: US_ASK_DEFAULTS.effort,
+          cachePrompt: US_ASK_DEFAULTS.cachePrompt,
+          fallbacks: US_ASK_DEFAULTS.fallbacks,
+          signal: request.signal,
+          executeTool: (name, input) => executeUsAskTool(context, name, input),
+          onEvent: (event) => {
+            if (event.type === "text") {
+              emit({ type: "chunk", content: event.delta });
+            } else if (event.type === "tool_start") {
+              emit({
+                type: "tool_start",
+                tool_name: event.name,
+                tool_id: event.id,
+              });
+              emit({
+                type: "tool_use",
+                tool_name: event.name,
+                tool_id: event.id,
+                tool_input: event.input,
+                status: "pending",
+              });
+            } else {
+              emit({
+                type: "tool_result",
+                tool_name: event.name,
+                tool_id: event.id,
+                status: event.isError ? "error" : "success",
+                result_summary:
+                  event.output.length > 400
+                    ? `${event.output.slice(0, 400)}...`
+                    : event.output,
+              });
+            }
+          },
+        });
+        if (result.stopReason === "aborted") {
+          return;
+        }
+        if (result.stopReason === "refusal") {
+          emit({ type: "error", content: "The model declined this request." });
+          return;
         }
         emit({
           type: "done",
-          content: finalText,
+          content: result.finalText,
           session_id: sessionId,
           model: MODEL,
           route: "us-ask",
           outcome: null,
-          stop_reason: null,
-          usage: {},
+          stop_reason: result.stopReason,
+          usage: {
+            model_calls: result.usage.modelCalls,
+            input_tokens: result.usage.inputTokens,
+            output_tokens: result.usage.outputTokens,
+            cache_read_input_tokens: result.usage.cacheReadTokens,
+            cache_creation_input_tokens: result.usage.cacheWriteTokens,
+          },
         });
-      } catch {
+      } catch (error) {
+        console.error("[us-ask] turn failed", error);
         emit({
           type: "error",
           content: "The US ask service hit an error — please try again.",
