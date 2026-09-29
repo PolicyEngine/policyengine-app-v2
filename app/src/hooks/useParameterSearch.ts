@@ -42,6 +42,7 @@ export function useParameterSearch(
         entries: index.entries,
         clusters: index.clusters,
         aliases: index.aliases,
+        stateNames: index.stateNames,
       } satisfies SearchWorkerRequest);
       return () => {
         instance.terminate();

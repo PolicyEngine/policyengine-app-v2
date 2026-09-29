@@ -139,3 +139,99 @@ export function buildLargeParameterCollection(
 
   return parameters;
 }
+
+/** States in the jurisdiction fixture, by the name their metadata node carries. */
+export const JURISDICTION_STATE_NAMES = {
+  ga: 'Georgia',
+  id: 'Idaho',
+  or: 'Oregon',
+  ny: 'New York',
+} as const;
+
+/** A no-income-tax state whose node the live metadata labels only with its code. */
+export const CODE_ONLY_STATE = 'fl';
+
+export const FEDERAL_CTC_PATH = 'gov.irs.credits.ctc.amount.adult_dependent';
+export const FEDERAL_TOP_RATE_PATH = 'gov.irs.income.bracket.rates.7';
+export const NYC_LOCAL_RATE_PATH = 'gov.local.ny.mamdani_income_tax.rate';
+export const MD_LOCAL_RATE_PATH = 'gov.local.md.flat_rate.rate';
+export const NY_STATE_RATE_PATH = 'gov.states.ny.tax.income.rate';
+export const CONTRIB_LOCAL_PATH = 'gov.contrib.local.nyc.stc.income_limit';
+
+/**
+ * Federal, state and local versions of the same programs, shaped like the
+ * live US tree: state leaves restate the program in their own label
+ * ("Oregon child tax credit amount") while federal leaves lean on their
+ * breadcrumb, which is what lets fuzzy scoring alone rank state copies
+ * above the federal original.
+ */
+export function buildJurisdictionParameterCollection(): ParameterMetadataCollection {
+  const parameters: ParameterMetadataCollection = {
+    'gov.irs': node('gov.irs', 'Internal Revenue Service (IRS)'),
+    'gov.irs.credits': node('gov.irs.credits', 'Credits'),
+    'gov.irs.credits.ctc': node('gov.irs.credits.ctc', 'Child Tax Credit'),
+    'gov.irs.credits.ctc.amount': node('gov.irs.credits.ctc.amount', 'Amount'),
+    [FEDERAL_CTC_PATH]: leaf(FEDERAL_CTC_PATH, 'Child tax credit for adult dependents'),
+    'gov.irs.income': node('gov.irs.income', 'income'),
+    'gov.irs.income.bracket': node('gov.irs.income.bracket', 'bracket'),
+    'gov.irs.income.bracket.rates': node(
+      'gov.irs.income.bracket.rates',
+      'Individual income tax rates'
+    ),
+    [FEDERAL_TOP_RATE_PATH]: leaf(FEDERAL_TOP_RATE_PATH, '7'),
+    'gov.states': node('gov.states', 'States'),
+    'gov.local': node('gov.local', 'Local'),
+    'gov.local.ny': node('gov.local.ny', 'ny'),
+    'gov.local.ny.mamdani_income_tax': node(
+      'gov.local.ny.mamdani_income_tax',
+      'Mamdani income tax'
+    ),
+    [NYC_LOCAL_RATE_PATH]: leaf(NYC_LOCAL_RATE_PATH, 'NYC income tax rate'),
+    'gov.local.md': node('gov.local.md', 'md'),
+    'gov.local.md.flat_rate': node('gov.local.md.flat_rate', 'Flat rate'),
+    [MD_LOCAL_RATE_PATH]: leaf(MD_LOCAL_RATE_PATH, 'County income tax rate'),
+    'gov.contrib.local': node('gov.contrib.local', 'Local'),
+    'gov.contrib.local.nyc': node('gov.contrib.local.nyc', 'nyc'),
+    'gov.contrib.local.nyc.stc': node('gov.contrib.local.nyc.stc', 'School tax credit'),
+    [CONTRIB_LOCAL_PATH]: leaf(CONTRIB_LOCAL_PATH, 'NYC income tax credit income limit'),
+    [`gov.states.${CODE_ONLY_STATE}`]: node(`gov.states.${CODE_ONLY_STATE}`, CODE_ONLY_STATE),
+  };
+
+  for (const [code, name] of Object.entries(JURISDICTION_STATE_NAMES)) {
+    const statePath = `gov.states.${code}`;
+    const ctcPath = `${statePath}.tax.income.credits.ctc.amount`;
+    const ratePath = `${statePath}.tax.income.rate`;
+    parameters[statePath] = node(statePath, name);
+    parameters[ctcPath] = leaf(ctcPath, `${name} child tax credit amount`);
+    parameters[ratePath] = leaf(ratePath, `${name} income tax rate`);
+  }
+
+  return parameters;
+}
+
+/**
+ * More best-matching state parameters than the re-rank candidate cap
+ * (4,000), inserted ahead of the lone federal parameter so index order
+ * alone would leave it outside the cap.
+ */
+export const CROWDED_FEDERAL_PATH = 'gov.irs.deductions.standard.amount';
+
+export function buildCrowdedStateParameterCollection(
+  perStateCount = 80
+): ParameterMetadataCollection {
+  const parameters: ParameterMetadataCollection = {};
+  for (const code of STATE_CODES) {
+    for (let index = 0; index < perStateCount; index += 1) {
+      const path = `gov.states.${code}.tax.income.deductions.standard.amount_${index}`;
+      parameters[path] = leaf(path, `${code} standard deduction amount ${index}`);
+    }
+  }
+  parameters['gov.irs'] = node('gov.irs', 'Internal Revenue Service (IRS)');
+  parameters['gov.irs.deductions'] = node('gov.irs.deductions', 'Deductions');
+  parameters['gov.irs.deductions.standard'] = node(
+    'gov.irs.deductions.standard',
+    'Standard deduction'
+  );
+  parameters[CROWDED_FEDERAL_PATH] = leaf(CROWDED_FEDERAL_PATH, 'Standard deduction amount');
+  return parameters;
+}
