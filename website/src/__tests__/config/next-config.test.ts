@@ -164,7 +164,9 @@ describe("OBBBA household explorer routes", () => {
 
     expect(
       beforeFiles.filter((rewrite) =>
-        /^\/us\/obbba-household-/.test(rewrite.source),
+        /^\/us\/(obbba-household-|obbba-scatter|obba-household-|ob3-households)/.test(
+          rewrite.source,
+        ),
       ),
     ).toEqual([]);
   });
