@@ -60,7 +60,9 @@ describe("formatChartValue", () => {
 
 describe("parseBlogChartSpec", () => {
   test("accepts a valid bar spec", () => {
-    expect(parseBlogChartSpec(JSON.stringify(SPEC))?.series).toHaveLength(2);
+    const spec = parseBlogChartSpec(JSON.stringify(SPEC));
+    expect(spec?.type).toBe("bar");
+    expect(spec?.type === "bar" && spec.series).toHaveLength(2);
   });
 
   test("rejects malformed or incomplete specs", () => {

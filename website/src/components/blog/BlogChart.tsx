@@ -9,6 +9,10 @@
  * Posts carry data, not styling. Styles are inline token variables because
  * the website's Tailwind build uses a prefix that ui-kit's utility classes lack.
  *
+ * Types: "bar" (below), "waterfall" (BlogWaterfallChart.tsx) and "stateMap"
+ * (BlogStateMap.tsx). Every type takes an optional "title", "subtitle" and
+ * "source"; an invalid spec renders nothing.
+ *
  * Spec (type "bar"):
  * {
  *   "type": "bar",
@@ -22,12 +26,12 @@
  * }
  */
 
+import type { ReactNode } from "react";
 import {
   AXIS_STYLE,
   GRID_STYLE,
   LEGEND_STYLE,
   TOOLTIP_STYLE,
-  chartColors,
 } from "@policyengine/ui-kit/charts";
 import { PolicyEngineWatermark } from "@policyengine/ui-kit/display";
 import {
@@ -43,7 +47,28 @@ import {
   YAxis,
 } from "recharts";
 
-type ChartColorName = Exclude<keyof typeof chartColors, "series">;
+import {
+  type BlogChartFormat,
+  type BlogChartRow,
+  type ChartColorName,
+  chartColor,
+  formatChartValue,
+  isRecord,
+  niceTicks,
+} from "./blogChartUtils";
+import {
+  type BlogStateMapSpec,
+  StateMapBody,
+  parseStateMapSpec,
+} from "./BlogStateMap";
+import {
+  type BlogWaterfallSpec,
+  WaterfallBody,
+  parseWaterfallSpec,
+} from "./BlogWaterfallChart";
+
+export { formatChartValue, niceTicks } from "./blogChartUtils";
+export type { BlogChartFormat } from "./blogChartUtils";
 
 export interface BlogChartSeries {
   key: string;
@@ -51,35 +76,37 @@ export interface BlogChartSeries {
   color?: ChartColorName;
 }
 
-export interface BlogChartFormat {
-  decimals?: number;
-  prefix?: string;
-  suffix?: string;
-  signed?: boolean;
-}
-
-export interface BlogChartSpec {
+export interface BlogBarChartSpec {
   type: "bar";
   title?: string;
   subtitle?: string;
   xKey: string;
   series: BlogChartSeries[];
-  data: Record<string, string | number>[];
+  data: BlogChartRow[];
   yLabel?: string;
   format?: BlogChartFormat;
   source?: string;
   height?: number;
 }
 
-export function formatChartValue(
-  value: number,
-  format: BlogChartFormat = {},
-): string {
-  const { decimals = 1, prefix = "", suffix = "", signed = false } = format;
-  const magnitude = Math.abs(value).toFixed(decimals);
-  const isZero = Number(magnitude) === 0;
-  const sign = value < 0 && !isZero ? "−" : signed && !isZero ? "+" : "";
-  return `${sign}${prefix}${magnitude}${suffix}`;
+export type BlogChartSpec =
+  | BlogBarChartSpec
+  | BlogWaterfallSpec
+  | BlogStateMapSpec;
+
+function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
+  if (s.type !== "bar" || typeof s.xKey !== "string") return null;
+  if (!Array.isArray(s.series) || s.series.length === 0) return null;
+  if (!Array.isArray(s.data) || s.data.length === 0) return null;
+  if (
+    !s.series.every(
+      (x) =>
+        isRecord(x) && typeof x.key === "string" && typeof x.name === "string",
+    )
+  ) {
+    return null;
+  }
+  return s as unknown as BlogBarChartSpec;
 }
 
 export function parseBlogChartSpec(raw: string): BlogChartSpec | null {
@@ -89,54 +116,17 @@ export function parseBlogChartSpec(raw: string): BlogChartSpec | null {
   } catch {
     return null;
   }
-  if (!spec || typeof spec !== "object") return null;
-  const s = spec as Partial<BlogChartSpec>;
-  if (s.type !== "bar" || typeof s.xKey !== "string") return null;
-  if (!Array.isArray(s.series) || s.series.length === 0) return null;
-  if (!Array.isArray(s.data) || s.data.length === 0) return null;
-  if (
-    !s.series.every(
-      (x) => x && typeof x.key === "string" && typeof x.name === "string",
-    )
-  ) {
-    return null;
+  if (!isRecord(spec)) return null;
+  switch (spec.type) {
+    case "bar":
+      return parseBarSpec(spec);
+    case "waterfall":
+      return parseWaterfallSpec(spec);
+    case "stateMap":
+      return parseStateMapSpec(spec);
+    default:
+      return null;
   }
-  return s as BlogChartSpec;
-}
-
-/**
- * Round the value range out to a step of 1, 2, 2.5 or 5 times a power of ten,
- * including zero, so tick labels land on round numbers.
- */
-export function niceTicks(
-  values: number[],
-  target = 4,
-): { domain: [number, number]; ticks: number[]; decimals: number } {
-  const lo = Math.min(0, ...values);
-  const hi = Math.max(0, ...values);
-  const span = hi - lo || 1;
-  const raw = span / target;
-  const power = Math.pow(10, Math.floor(Math.log10(raw)));
-  const step =
-    [1, 2, 2.5, 5, 10].map((m) => m * power).find((s) => s >= raw) ??
-    10 * power;
-  const start = Math.floor(lo / step) * step;
-  const end = Math.ceil(hi / step) * step;
-  const ticks: number[] = [];
-  for (let t = start; t <= end + step / 2; t += step)
-    ticks.push(Number(t.toFixed(10)));
-  const decimals = Math.max(
-    0,
-    -Math.floor(Math.log10(step) + 1e-9) + (step / power === 2.5 ? 1 : 0),
-  );
-  return { domain: [start, end], ticks, decimals };
-}
-
-function seriesColor(series: BlogChartSeries, index: number): string {
-  if (series.color && series.color in chartColors) {
-    return chartColors[series.color];
-  }
-  return chartColors.series[index % chartColors.series.length];
 }
 
 interface ValueLabelProps {
@@ -170,11 +160,7 @@ function ValueLabel({ x, y, width, height, value, format }: ValueLabelProps) {
   );
 }
 
-export function BlogChart({ data }: { data: string | string[] }) {
-  const raw = Array.isArray(data) ? data.join("") : data;
-  const spec = parseBlogChartSpec(raw);
-  if (!spec) return null;
-
+function BarBody({ spec }: { spec: BlogBarChartSpec }) {
   const format = spec.format ?? {};
   const hasNegative = spec.data.some((row) =>
     spec.series.some(
@@ -190,6 +176,75 @@ export function BlogChart({ data }: { data: string | string[] }) {
   const tickFormat = (v: number) =>
     formatChartValue(v, { ...format, decimals: axis.decimals });
 
+  return (
+    <ResponsiveContainer width="100%" height={spec.height ?? 360}>
+      <BarChart
+        data={spec.data}
+        margin={{ top: 24, right: 16, bottom: 8, left: 8 }}
+      >
+        <CartesianGrid {...GRID_STYLE} vertical={false} />
+        <XAxis
+          dataKey={spec.xKey}
+          tick={AXIS_STYLE}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          tick={AXIS_STYLE}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={tickFormat}
+          domain={axis.domain}
+          ticks={axis.ticks}
+          label={
+            spec.yLabel
+              ? {
+                  value: spec.yLabel,
+                  angle: -90,
+                  position: "insideLeft",
+                  style: { ...AXIS_STYLE, textAnchor: "middle" },
+                }
+              : undefined
+          }
+        />
+        {hasNegative && <ReferenceLine y={0} stroke="var(--border-dark)" />}
+        <Tooltip
+          {...TOOLTIP_STYLE}
+          cursor={{ fill: "var(--background-tertiary)" }}
+          formatter={(value, name) => [
+            formatChartValue(Number(value), format),
+            String(name),
+          ]}
+        />
+        <Legend {...LEGEND_STYLE} iconType="square" />
+        {spec.series.map((s, i) => (
+          <Bar
+            key={s.key}
+            dataKey={s.key}
+            name={s.name}
+            fill={chartColor(s.color, i)}
+            radius={[2, 2, 0, 0]}
+            isAnimationActive={false}
+          >
+            <LabelList
+              dataKey={s.key}
+              content={(props) => <ValueLabel {...props} format={format} />}
+            />
+          </Bar>
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+/** Title, subtitle, watermark and source around any chart body. */
+function ChartFigure({
+  spec,
+  children,
+}: {
+  spec: { title?: string; subtitle?: string; source?: string };
+  children: ReactNode;
+}) {
   return (
     <figure style={{ margin: "24px 0 32px" }}>
       {(spec.title || spec.subtitle) && (
@@ -223,63 +278,7 @@ export function BlogChart({ data }: { data: string | string[] }) {
           )}
         </div>
       )}
-      <ResponsiveContainer width="100%" height={spec.height ?? 360}>
-        <BarChart
-          data={spec.data}
-          margin={{ top: 24, right: 16, bottom: 8, left: 8 }}
-        >
-          <CartesianGrid {...GRID_STYLE} vertical={false} />
-          <XAxis
-            dataKey={spec.xKey}
-            tick={AXIS_STYLE}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={AXIS_STYLE}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={tickFormat}
-            domain={axis.domain}
-            ticks={axis.ticks}
-            label={
-              spec.yLabel
-                ? {
-                    value: spec.yLabel,
-                    angle: -90,
-                    position: "insideLeft",
-                    style: { ...AXIS_STYLE, textAnchor: "middle" },
-                  }
-                : undefined
-            }
-          />
-          {hasNegative && <ReferenceLine y={0} stroke="var(--border-dark)" />}
-          <Tooltip
-            {...TOOLTIP_STYLE}
-            cursor={{ fill: "var(--background-tertiary)" }}
-            formatter={(value, name) => [
-              formatChartValue(Number(value), format),
-              String(name),
-            ]}
-          />
-          <Legend {...LEGEND_STYLE} iconType="square" />
-          {spec.series.map((s, i) => (
-            <Bar
-              key={s.key}
-              dataKey={s.key}
-              name={s.name}
-              fill={seriesColor(s, i)}
-              radius={[2, 2, 0, 0]}
-              isAnimationActive={false}
-            >
-              <LabelList
-                dataKey={s.key}
-                content={(props) => <ValueLabel {...props} format={format} />}
-              />
-            </Bar>
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
+      {children}
       <PolicyEngineWatermark
         styles={{
           root: { display: "flex", justifyContent: "flex-end", marginTop: 4 },
@@ -297,5 +296,18 @@ export function BlogChart({ data }: { data: string | string[] }) {
         </figcaption>
       )}
     </figure>
+  );
+}
+
+export function BlogChart({ data }: { data: string | string[] }) {
+  const raw = Array.isArray(data) ? data.join("") : data;
+  const spec = parseBlogChartSpec(raw);
+  if (!spec) return null;
+  return (
+    <ChartFigure spec={spec}>
+      {spec.type === "bar" && <BarBody spec={spec} />}
+      {spec.type === "waterfall" && <WaterfallBody spec={spec} />}
+      {spec.type === "stateMap" && <StateMapBody spec={spec} />}
+    </ChartFigure>
   );
 }
