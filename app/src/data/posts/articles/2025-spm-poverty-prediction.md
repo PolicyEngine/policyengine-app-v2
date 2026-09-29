@@ -2,7 +2,49 @@ On September 11 we registered a prediction[^1] of the 2025 Supplemental Poverty 
 
 A [companion post](/us/research/2025-supplemental-poverty-measure) covers the release itself, including the rates by state and housing tenure.
 
-![2025 SPM poverty: the prediction registered September 11 against the Census release](/assets/posts/2025-spm-poverty-prediction/prediction-chart.png)
+```chart
+{
+  "type": "bar",
+  "title": "Change in SPM poverty rate from 2024 to 2025",
+  "subtitle": "Percentage points. PolicyEngine registered its prediction on September 11, four days before the Census release.",
+  "xKey": "group",
+  "series": [
+    {
+      "key": "census",
+      "name": "Census",
+      "color": "quinary"
+    },
+    {
+      "key": "registered",
+      "name": "PolicyEngine prediction",
+      "color": "primary"
+    }
+  ],
+  "data": [
+    {
+      "group": "All people",
+      "census": 0.07,
+      "registered": 0.22
+    },
+    {
+      "group": "Under 18",
+      "census": -0.06,
+      "registered": 0.86
+    },
+    {
+      "group": "65 and over",
+      "census": 0.24,
+      "registered": -0.52
+    }
+  ],
+  "format": {
+    "decimals": 2,
+    "suffix": " pp",
+    "signed": true
+  },
+  "source": "Sources: Census P60-290 Table 5 (rates to two decimals; changes are their differences); PolicyEngine prediction file registered September 11, 2026."
+}
+```
 
 ## The grade
 
