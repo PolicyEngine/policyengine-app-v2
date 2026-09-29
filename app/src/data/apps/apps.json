@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "triple-lock",
+    "title": "The State Pension triple lock and the Prime Minister's 2030 plan",
+    "description": "Estimate the cost, household impact and forecast uncertainty of the State Pension triple lock and the Prime Minister's plan to adjust it from April 2030, compared with a double lock, an earnings link and a CPI link, modelled with PolicyEngine UK.",
+    "source": "https://uk-triple-lock.vercel.app/uk/triple-lock",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-triple-lock.jpg",
+    "date": "2026-09-29 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "middle-east-war-living-standards",
     "title": "Impact of the Middle East war on UK living standards",
     "description": "Estimate how energy, fuel and food price rises from the Middle East conflict and Strait of Hormuz disruption affect UK households in 2027-28, and compare ten policy responses, modelled with PolicyEngine UK.",
