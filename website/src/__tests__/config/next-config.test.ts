@@ -157,6 +157,80 @@ describe("OBBBA household explorer routes", () => {
     }
   });
 
+  test("no longer proxies any old OBBBA slug", async () => {
+    // The old slugs redirect (below); Next evaluates redirects before
+    // beforeFiles rewrites, so a leftover proxy would be dead config.
+    const beforeFiles = await getBeforeFileRewrites();
+
+    expect(
+      beforeFiles.filter((rewrite) =>
+        /^\/us\/(obbba-household-|obbba-scatter|obba-household-|ob3-households)/.test(
+          rewrite.source,
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  test.each([
+    "/us/obbba-household-explorer",
+    "/us/obbba-household-by-household",
+    "/us/obbba-scatter",
+    "/us/obba-household-explorer",
+  ])("308s %s and its subpaths to /us/obbba-households", async (source) => {
+    const redirects = await getRedirects();
+
+    expect(redirects).toContainEqual({
+      source,
+      destination: "/us/obbba-households",
+      permanent: true,
+    });
+    expect(redirects).toContainEqual({
+      source: `${source}/:path*`,
+      destination: "/us/obbba-households/:path*",
+      permanent: true,
+    });
+  });
+
+  test.each([
+    "/us/research/obbba-household-explorer",
+    "/us/research/obbba-household-by-household",
+  ])("308s the mis-prefixed link %s to the tool", async (source) => {
+    const redirects = await getRedirects();
+
+    expect(redirects).toContainEqual({
+      source,
+      destination: "/us/obbba-households",
+      permanent: true,
+    });
+  });
+
+  test("keeps the ob3-households vanity alias temporary", async () => {
+    const redirects = await getRedirects();
+
+    expect(redirects).toContainEqual({
+      source: "/us/ob3-households",
+      destination: "/us/obbba-households",
+      permanent: false,
+    });
+    expect(redirects).toContainEqual({
+      source: "/us/ob3-households/:path*",
+      destination: "/us/obbba-households/:path*",
+      permanent: false,
+    });
+  });
+
+  test("never redirects away from /us/obbba-households", async () => {
+    const redirects = await getRedirects();
+
+    expect(
+      redirects.filter(
+        (redirect) =>
+          redirect.source === "/us/obbba-households" ||
+          redirect.source.startsWith("/us/obbba-households/"),
+      ),
+    ).toEqual([]);
+  });
+
   test("only redirects old OBBBA slugs to a path that is proxied", async () => {
     const beforeFiles = await getBeforeFileRewrites();
     const redirects = await getRedirects();

@@ -92,15 +92,45 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/research",
         permanent: true,
       },
+      // OBBBA household explorer: every older slug, and the misspelled or
+      // mis-prefixed links still published elsewhere, lands on
+      // /us/obbba-households (suffix and query kept). These run before the
+      // beforeFiles zone rewrites, so the old slugs are never proxied.
+      ...[
+        "/us/obbba-household-explorer",
+        "/us/obbba-household-by-household",
+        "/us/obbba-scatter",
+        // POPVOX Foundation's OBBBA case notes link this typo.
+        "/us/obba-household-explorer",
+      ].flatMap((source) => [
+        { source, destination: "/us/obbba-households", permanent: true },
+        {
+          source: `${source}/:path*`,
+          destination: "/us/obbba-households/:path*",
+          permanent: true,
+        },
+      ]),
+      // Tool slugs published as if they were research articles.
       {
-        source: "/us/obbba-household-by-household",
-        destination: "/us/obbba-household-explorer",
+        source: "/us/research/obbba-household-explorer",
+        destination: "/us/obbba-households",
         permanent: true,
       },
       {
-        source: "/us/obbba-household-by-household/:path*",
-        destination: "/us/obbba-household-explorer/:path*",
+        source: "/us/research/obbba-household-by-household",
+        destination: "/us/obbba-households",
         permanent: true,
+      },
+      // Vanity alias for the OB3 shorthand (temporary).
+      {
+        source: "/us/ob3-households",
+        destination: "/us/obbba-households",
+        permanent: false,
+      },
+      {
+        source: "/us/ob3-households/:path*",
+        destination: "/us/obbba-households/:path*",
+        permanent: false,
       },
       {
         source: "/us/aca-reforms-calculator",
@@ -133,11 +163,6 @@ const nextConfig: NextConfig = {
       {
         source: "/uk/ads-dashboard",
         destination: "/us/ads-dashboard",
-        permanent: true,
-      },
-      {
-        source: "/us/obbba-scatter",
-        destination: "/us/obbba-household-explorer",
         permanent: true,
       },
       {

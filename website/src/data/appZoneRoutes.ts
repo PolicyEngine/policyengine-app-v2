@@ -272,13 +272,7 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination:
       "https://2024-election-dashboard-omega.vercel.app/us/2024-election-calculator",
   },
-  {
-    source: "/us/obbba-household-explorer",
-    destination:
-      "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
-  },
-  // New slug for the OBBBA explorer. Proxied alongside the old one while the
-  // child moves its base path here; the old slug then 308s to this one.
+  // OBBBA household explorer. The older slugs 308 here (next.config.ts).
   {
     source: "/us/obbba-households",
     destination:

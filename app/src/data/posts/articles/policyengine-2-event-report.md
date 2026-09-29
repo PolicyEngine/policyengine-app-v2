@@ -54,7 +54,7 @@ PolicyEngine's estimates deviate an average of 12.3% from HMRC projections. Rais
 
 David Trimmer, Policy Research Fellow, and Daphne Hansell, Research Associate, demonstrated PolicyEngine US's household-level analysis tools through two recent applications.
 
-Trimmer presented the [household-by-household interactive](https://policyengine.github.io/obbba-household-by-household/) for the One Big Beautiful Bill Act (OBBBA), which allows users to explore the legislation's effects on over 40,000 representative households using PolicyEngine's Enhanced Current Population Survey data. The interactive's "Get Random Household" function reveals how the same policy affects different families across America's diverse population, with each household weighted by population representation.
+Trimmer presented the [household-by-household interactive](https://www.policyengine.org/us/obbba-households) for the One Big Beautiful Bill Act (OBBBA), which allows users to explore the legislation's effects on over 40,000 representative households using PolicyEngine's Enhanced Current Population Survey data. The interactive's "Get Random Household" function reveals how the same policy affects different families across America's diverse population, with each household weighted by population representation.
 
 Hansell demonstrated a tool for simulating the extension of enhanced premium tax credits, which expire after 2025. The tool shows how different extension scenarios affect health insurance subsidy impacts at the individual household level. These tools make policy impacts tangible by showing real effects on specific family types rather than aggregate statistics alone.
 

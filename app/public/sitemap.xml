@@ -1400,11 +1400,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://policyengine.org/us/obbba-household-explorer</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://policyengine.org/us/salternative</loc>
     <lastmod>2026-02-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -1422,7 +1417,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://policyengine.org/us/obbba-household-by-household</loc>
+    <loc>https://policyengine.org/us/obbba-households</loc>
     <lastmod>2025-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

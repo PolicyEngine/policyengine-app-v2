@@ -38,7 +38,7 @@ PolicyEngine builds open-source infrastructure for evidence-based policy analysi
 
 ### High-profile policy analysis
 
-When major legislation moves through Congress, we build custom tools to help the public understand impacts. Our [OBBBA household calculator](https://policyengine.github.io/obbba-household-by-household/) lets anyone see how reconciliation bill provisions affect their family.
+When major legislation moves through Congress, we build custom tools to help the public understand impacts. Our [OBBBA household calculator](https://www.policyengine.org/us/obbba-households) lets anyone see how reconciliation bill provisions affect their family.
 
 ![OBBBA household-by-household calculator](/assets/posts/us-giving-tuesday-2025/obbba.webp)
 
