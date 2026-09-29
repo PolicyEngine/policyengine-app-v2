@@ -126,3 +126,48 @@ describe("nextConfig redirects", () => {
     });
   });
 });
+
+describe("OBBBA household explorer routes", () => {
+  const ORIGIN = "https://obbba-household-by-household.vercel.app";
+
+  test("proxies the /us/obbba-households slug path-mounted to the child", async () => {
+    const beforeFiles = await getBeforeFileRewrites();
+
+    expect(beforeFiles).toContainEqual({
+      source: "/us/obbba-households",
+      destination: `${ORIGIN}/us/obbba-households`,
+    });
+    expect(beforeFiles).toContainEqual({
+      source: "/us/obbba-households/:path*",
+      destination: `${ORIGIN}/us/obbba-households/:path*`,
+    });
+  });
+
+  test("proxies every OBBBA slug to the same path on the child", async () => {
+    // The child is a SvelteKit app built for one base path; it only works
+    // when the public path and the proxied path match.
+    const beforeFiles = await getBeforeFileRewrites();
+    const obbba = beforeFiles.filter((rewrite) =>
+      rewrite.destination.startsWith(ORIGIN),
+    );
+
+    expect(obbba.length).toBeGreaterThan(0);
+    for (const rewrite of obbba) {
+      expect(rewrite.destination).toBe(`${ORIGIN}${rewrite.source}`);
+    }
+  });
+
+  test("only redirects old OBBBA slugs to a path that is proxied", async () => {
+    const beforeFiles = await getBeforeFileRewrites();
+    const redirects = await getRedirects();
+    const proxied = new Set(beforeFiles.map((rewrite) => rewrite.source));
+    const obbbaRedirects = redirects.filter((redirect) =>
+      redirect.destination.startsWith("/us/obbba-household"),
+    );
+
+    expect(obbbaRedirects.length).toBeGreaterThan(0);
+    for (const redirect of obbbaRedirects) {
+      expect(proxied).toContain(redirect.destination);
+    }
+  });
+});
