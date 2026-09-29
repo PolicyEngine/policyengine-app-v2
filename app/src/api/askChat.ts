@@ -43,10 +43,11 @@ export const US_ASK_ENDPOINT = '/api/us-ask/chat/message';
 
 /**
  * The chat endpoint for a country, or null when Ask should use the
- * keyword matcher. UK is on by default (live service); US is opt-in
- * (NEXT_PUBLIC_US_ASK=on) because its route needs a server-side
- * ANTHROPIC_API_KEY. Both routes only exist in the Next.js build, so
- * the Vite app keeps the keyword matcher either way.
+ * keyword matcher. The AI chat is paused, so both countries are opt-in:
+ * NEXT_PUBLIC_UK_CHAT=on for the UK chat service, NEXT_PUBLIC_US_ASK=on
+ * for the US agent (which also needs a server-side ANTHROPIC_API_KEY).
+ * Both routes only exist in the Next.js build, so the Vite app keeps the
+ * keyword matcher either way.
  *
  * Env reads must be static member expressions — Next.js inlines
  * process.env.NEXT_PUBLIC_* into the client bundle textually, so a
@@ -57,7 +58,7 @@ export function askChatEndpoint(countryId: string): string | null {
     const flag =
       (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_UK_CHAT) ||
       (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_UK_CHAT);
-    return flag === 'off' ? null : UK_CHAT_PROXY_ENDPOINT;
+    return flag === 'on' ? UK_CHAT_PROXY_ENDPOINT : null;
   }
   if (countryId === 'us') {
     const flag =

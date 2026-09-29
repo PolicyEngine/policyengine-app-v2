@@ -1,5 +1,6 @@
 import {
   flagshipApiDisabledResponse,
+  isAskChatEnabled,
   isFlagshipApiEnabled,
 } from "@/libs/flagship/apiGate";
 
@@ -25,7 +26,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ path: string[] }> },
 ): Promise<Response> {
-  if (!isFlagshipApiEnabled()) {
+  if (!isFlagshipApiEnabled() || !isAskChatEnabled("uk")) {
     return flagshipApiDisabledResponse();
   }
   const { path } = await params;

@@ -127,10 +127,10 @@ describe('askChatEndpoint', () => {
     vi.unstubAllEnvs();
   });
 
-  test('given uk then the UK proxy endpoint returns unless killed', () => {
-    expect(askChatEndpoint('uk')).toBe('/api/uk-chat/chat/message');
-    vi.stubEnv('NEXT_PUBLIC_UK_CHAT', 'off');
+  test('given uk then the UK chat endpoint is opt-in while the chat is paused', () => {
     expect(askChatEndpoint('uk')).toBeNull();
+    vi.stubEnv('NEXT_PUBLIC_UK_CHAT', 'on');
+    expect(askChatEndpoint('uk')).toBe('/api/uk-chat/chat/message');
   });
 
   test('given us then the ask agent endpoint is opt-in', () => {
