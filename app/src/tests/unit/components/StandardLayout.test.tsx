@@ -43,7 +43,7 @@ describe('StandardLayout', () => {
 
     // Then
     expect(screen.getByText('Sidebar')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Build' })).not.toBeInTheDocument();
   });
 
   test('given the flagship flag is on then the flagship sidebar replaces the legacy chrome', () => {
@@ -54,7 +54,7 @@ describe('StandardLayout', () => {
     renderWithCountry(withQueryClient(<StandardLayout>Page content</StandardLayout>), 'us');
 
     // Then
-    expect(screen.getByRole('button', { name: 'Ask' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Build' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reforms' })).toBeInTheDocument();
     expect(screen.queryByText('Sidebar')).not.toBeInTheDocument();
   });

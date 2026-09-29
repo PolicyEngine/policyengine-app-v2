@@ -5,21 +5,26 @@ import {
 } from '../../../../../calculator-app/src/app/[countryId]/(workspace)/workspaceRoutes';
 
 describe('workspace navigation boundary', () => {
-  test.each(['ask', 'build', 'reforms'])(
+  test.each(['build', 'reforms'])(
     'given the %s workspace screen then it can switch locally with query parameters',
     (screen) => {
-      expect(isWorkspaceTransition('/us/ask', `/us/${screen}?filter=yours`)).toBe(true);
+      expect(isWorkspaceTransition('/us/build', `/us/${screen}?filter=yours`)).toBe(true);
     }
   );
 
+  test('given the paused Ask page then it is not a workspace screen', () => {
+    expect(workspaceRoute('/us/ask')).toBeNull();
+    expect(isWorkspaceTransition('/us/build', '/us/ask')).toBe(false);
+  });
+
   test.each([
-    ['/us/ask', '/uk/build'],
-    ['/us/ask', '/us/report/bill'],
-    ['/us/ask', '/us/report/bill/us-hr904/extra'],
-    ['/us/ask', '/us/reforms/123'],
-    ['/us/ask', 'https://example.com/us/build'],
-    ['/us/ask', '//example.com/us/build'],
-    ['/us/ask', '/us/policies'],
+    ['/us/build', '/uk/build'],
+    ['/us/build', '/us/report/bill'],
+    ['/us/build', '/us/report/bill/us-hr904/extra'],
+    ['/us/build', '/us/reforms/123'],
+    ['/us/build', 'https://example.com/us/build'],
+    ['/us/build', '//example.com/us/build'],
+    ['/us/build', '/us/policies'],
   ])('given navigation from %s to %s then the normal router handles it', (from, to) => {
     expect(isWorkspaceTransition(from, to)).toBe(false);
   });

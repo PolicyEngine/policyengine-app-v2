@@ -81,8 +81,13 @@ function streamReplying(replay: (handlers: AskChatHandlers) => void) {
 
 describe('AskPage UK chat mode', () => {
   beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_UK_CHAT', 'on');
     clearDraftReform();
     mockStreamAskChatTurn.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   test('given a question then the streamed answer renders as markdown prose', async () => {

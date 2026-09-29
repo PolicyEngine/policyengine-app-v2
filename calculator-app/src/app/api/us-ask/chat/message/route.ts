@@ -1,5 +1,6 @@
 import {
   flagshipApiDisabledResponse,
+  isAskChatEnabled,
   isFlagshipApiEnabled,
 } from "@/libs/flagship/apiGate";
 import Anthropic from "@anthropic-ai/sdk";
@@ -75,7 +76,7 @@ function sse(payload: unknown): string {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  if (!isFlagshipApiEnabled()) {
+  if (!isFlagshipApiEnabled() || !isAskChatEnabled("us")) {
     return flagshipApiDisabledResponse();
   }
   if (!process.env.ANTHROPIC_API_KEY) {
