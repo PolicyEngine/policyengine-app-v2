@@ -50,6 +50,13 @@ interface NormalizedRow {
   heldOut: boolean;
   /** The model variables the PolicyEngine value was computed from. */
   policyengineVariables: string[];
+  pePeriod?: string | null;
+  construction?: string | null;
+  calibrationBasis?: string | null;
+  diagnosis?: string | null;
+  notes?: string[];
+  engineVersion?: string | null;
+  dataBundle?: string | null;
 }
 
 function stringList(value: unknown): string[] {
@@ -112,6 +119,18 @@ function normalize(payload: any): NormalizedRow[] {
         ratio: typeof row.ratio === "number" ? row.ratio : null,
         heldOut: row.calibration_relationship === "held_out",
         policyengineVariables: stringList(row.policyengine_variables),
+        pePeriod: row.pe_period ?? null,
+        construction: row.pe_construction ?? null,
+        calibrationBasis: row.calibration_basis ?? null,
+        diagnosis: row.diagnosis?.title ?? null,
+        notes: stringList(row.annotations)
+          .map((id) => payload.annotations?.[id]?.text)
+          .filter((text): text is string => typeof text === "string"),
+        engineVersion: payload.pe_bundle?.model_version ?? null,
+        dataBundle:
+          typeof payload.pe_bundle === "string"
+            ? payload.pe_bundle
+            : (payload.pe_bundle?.certified_data_build_id ?? null),
       });
     }
     // per-source shard shape: value / pe.value / relationship (+ row_defaults).
@@ -274,6 +293,13 @@ async function respond(
         ratio: row.ratio,
         heldOut: row.heldOut,
         policyengineVariables: row.policyengineVariables,
+        pePeriod: row.pePeriod,
+        construction: row.construction,
+        calibrationBasis: row.calibrationBasis,
+        diagnosis: row.diagnosis,
+        notes: row.notes,
+        engineVersion: row.engineVersion,
+        dataBundle: row.dataBundle,
       })),
     },
     { headers: { "Cache-Control": CACHE_CONTROL } },

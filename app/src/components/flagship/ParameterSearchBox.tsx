@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { useParameterSearch } from '@/hooks/useParameterSearch';
 import {
   createParameterSearchIndex,
   DEFAULT_SEARCH_FILTERS,
@@ -16,7 +17,6 @@ import {
   ParameterSearchEntry,
   ParameterSearchFilters,
   ParameterSearchIndex,
-  searchParameters,
 } from '@/libs/parameterSearch';
 
 interface ParameterSearchBoxProps {
@@ -43,6 +43,8 @@ interface ParameterSearchBoxProps {
    * sit on top of the very folder it just opened.
    */
   resultsInFlow?: boolean;
+  /** Search large indexes without blocking input. */
+  backgroundSearch?: boolean;
 }
 
 /**
@@ -205,6 +207,7 @@ export default function ParameterSearchBox({
   clusters = [],
   stateLabels = {},
   resultsInFlow = false,
+  backgroundSearch = false,
   index: providedIndex,
   labelFor,
 }: ParameterSearchBoxProps) {
@@ -233,10 +236,8 @@ export default function ParameterSearchBox({
         .sort((a, b) => a.label.localeCompare(b.label)),
     [entries, stateLabels]
   );
-  const groups = useMemo(
-    () => groupSearchResults(searchParameters(index, query, RESULT_LIMIT, filters)),
-    [index, query, filters]
-  );
+  const search = useParameterSearch(index, query, filters, RESULT_LIMIT, backgroundSearch);
+  const groups = useMemo(() => groupSearchResults(search.entries), [search.entries]);
   const folderView = useMemo(
     () => (browsing ? buildFolderView(entries, browsing.path) : null),
     [entries, browsing]
@@ -297,6 +298,9 @@ export default function ParameterSearchBox({
   );
 
   const select = (entry: ParameterSearchEntry) => {
+    if (!browsing && search.pending) {
+      return;
+    }
     onSelect(entry);
     setQuery('');
     setBrowsing(null);
@@ -316,7 +320,7 @@ export default function ParameterSearchBox({
       }
       return;
     }
-    if (!flatEntries.length) {
+    if ((!browsing && search.pending) || !flatEntries.length) {
       return;
     }
     if (event.key === 'ArrowDown') {
@@ -461,10 +465,30 @@ export default function ParameterSearchBox({
         />
       </div>
 
+      {backgroundSearch && (
+        <div
+          role="status"
+          style={{
+            minHeight: typography.fontSize.lg,
+            fontSize: typography.fontSize.xs,
+            color: colors.text.secondary,
+          }}
+        >
+          {!browsing &&
+            query.trim().length >= 2 &&
+            (search.pending
+              ? 'Searching…'
+              : flatEntries.length === 0
+                ? 'No matching parameters'
+                : '')}
+        </div>
+      )}
       {(browsing || flatEntries.length > 0) && (
         <div
           id="parameter-search-results"
           role="listbox"
+          aria-busy={!browsing && search.pending}
+          inert={!browsing && search.pending ? true : undefined}
           style={{
             ...(resultsInFlow
               ? { position: 'relative' }

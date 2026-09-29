@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { fireEvent, render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import { CalibrationMatchSection } from '@/components/flagship/CalibrationMatches';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
@@ -44,35 +44,33 @@ describe('CalibrationMatchSection', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  test('given matches then each variable renders with its reach, fit, and worst target', () => {
+  test('shows each target with its period, values, gap and source link', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
-
-    expect(screen.getByText('refundable ctc')).toBeInTheDocument();
-    expect(screen.getAllByText(/mechanism · 3 formula steps from the parameter/i)).toHaveLength(2);
-    expect(screen.getByText('4.0%')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' })).toHaveLength(2);
-    expect(screen.getByText(/-6.0%/)).toBeInTheDocument();
-    expect(screen.getByText(/release populace-us-2024/)).toBeInTheDocument();
-  });
-
-  test('given matches then worst targets and counts link to the dashboard filtered by source and level', () => {
-    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
-
-    const worst = screen.getAllByRole('link', { name: 'IRS Statistics of Income · US' });
-    expect(worst[0]).toHaveAttribute(
-      'href',
-      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?source=irs_soi&level=national'
-    );
-    expect(screen.getAllByRole('link', { name: '2' })[0]).toHaveAttribute(
+    expect(screen.getByText('Refundable Child Tax Credit')).toBeInTheDocument();
+    expect(screen.getByText('940K')).toBeInTheDocument();
+    expect(screen.getAllByText('1M')[0]).toBeInTheDocument();
+    expect(screen.getByText('-6.0%')).toBeInTheDocument();
+    expect(screen.getAllByText('2024')).toHaveLength(3);
+    expect(
+      screen.getByRole('button', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/formula steps|How to interpret|Worth a look/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'View targets' })[0]).toHaveAttribute(
       'href',
       expect.stringContaining('source=irs_soi&level=national')
     );
   });
 
-  test('given a variable far off then it is called out above the table', () => {
+  test('clicking a target opens its exact values', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
-
-    expect(screen.getByText(/worth a look: ctc is more than 25/i)).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
+    );
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('940,000')).toBeInTheDocument();
+    expect(screen.getByText('1,000,000')).toBeInTheDocument();
   });
 
   test('given a pin that is still current then the card says when it was pinned', () => {

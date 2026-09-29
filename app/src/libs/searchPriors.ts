@@ -24,6 +24,15 @@ export function getUsageCount(path: string): number {
   return usageCounts.get(path) ?? 0;
 }
 
+/** Transfer current ranking priors to the background search worker. */
+export function snapshotUsageCounts(): Map<string, number> {
+  return new Map(usageCounts);
+}
+
+export function restoreUsageCounts(counts: Map<string, number>): void {
+  usageCounts = new Map(counts);
+}
+
 /**
  * Multiplier applied to a fuzzy match score (lower is better): deep and
  * bracketed paths drift down, parameters used in real analyses float up.

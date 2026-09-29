@@ -61,10 +61,8 @@ export default function BuildPage() {
         <Stack
           style={{
             gap: spacing.lg,
-            // Closed, the search box sits in the middle of the workspace
-            // instead of riding above a wall of agency names.
-            minHeight: showTree ? undefined : '70vh',
-            justifyContent: showTree ? undefined : 'center',
+            // Results grow downwards without recentering the input on each keystroke.
+            paddingTop: spacing.xl,
           }}
         >
           <Stack style={{ gap: spacing.xs, textAlign: 'center' }}>
@@ -86,6 +84,7 @@ export default function BuildPage() {
               // Always in flow on this page: a floating list would
               // cover the tree when it is open.
               resultsInFlow
+              backgroundSearch
               currentValueFor={(entry) => {
                 const value = getCurrentValue(parameters?.[entry.path]?.values);
                 return value === undefined ? null : formatValue(value, entry.unit);

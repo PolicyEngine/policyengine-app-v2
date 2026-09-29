@@ -80,16 +80,18 @@ export async function runFlagshipReport({
   const policyResponse = await createPolicy(countryId, { data, label: title || undefined });
   const reformPolicyId = Number(policyResponse.result.policy_id);
 
-  const baseline = await createSimulation(countryId, {
-    population_id: countryId,
-    population_type: 'geography',
-    policy_id: currentLawId,
-  });
-  const reform = await createSimulation(countryId, {
-    population_id: countryId,
-    population_type: 'geography',
-    policy_id: reformPolicyId,
-  });
+  const [baseline, reform] = await Promise.all([
+    createSimulation(countryId, {
+      population_id: countryId,
+      population_type: 'geography',
+      policy_id: currentLawId,
+    }),
+    createSimulation(countryId, {
+      population_id: countryId,
+      population_type: 'geography',
+      policy_id: reformPolicyId,
+    }),
+  ]);
 
   const { metadata } = await createReportAndAssociateWithUser({
     countryId,

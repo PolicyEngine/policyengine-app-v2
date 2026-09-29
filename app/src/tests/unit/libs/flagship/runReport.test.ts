@@ -36,6 +36,37 @@ describe('runFlagshipReport', () => {
     });
   });
 
+  test('starts both simulations before either finishes and waits for both before creating the report', async () => {
+    let resolveBaseline!: (value: any) => void;
+    let resolveReform!: (value: any) => void;
+    mockCreateSimulation.mockReset();
+    mockCreateSimulation
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveBaseline = resolve;
+        })
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveReform = resolve;
+        })
+      );
+    const pending = runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+    });
+    await vi.waitFor(() => expect(mockCreateSimulation).toHaveBeenCalledTimes(2));
+    expect(mockCreateReportAndAssociate).not.toHaveBeenCalled();
+    resolveReform({ result: { simulation_id: '102' } });
+    await Promise.resolve();
+    expect(mockCreateReportAndAssociate).not.toHaveBeenCalled();
+    resolveBaseline({ result: { simulation_id: '101' } });
+    await expect(pending).resolves.toBe('55');
+  });
+
   test('given provisions then policy, both simulations, and report are created in order', async () => {
     const userReportId = await runFlagshipReport({
       countryId: 'us',

@@ -217,6 +217,6 @@ describe('BillReportPage', () => {
       [SNAP_STANDARD_DEDUCTION_PATH],
       'UT'
     );
-    expect(await screen.findByText(/administrative totals in UT/)).toBeInTheDocument();
+    expect(await screen.findAllByText('IRS Statistics of Income · UT')).toHaveLength(2);
   });
 });

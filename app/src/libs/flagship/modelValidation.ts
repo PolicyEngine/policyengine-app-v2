@@ -38,6 +38,13 @@ export interface ModelValidationRow {
   heldOut: boolean;
   /** The model variables the PolicyEngine value was computed from. */
   policyengineVariables: string[];
+  pePeriod?: string | null;
+  construction?: string | null;
+  calibrationBasis?: string | null;
+  diagnosis?: string | null;
+  notes?: string[];
+  engineVersion?: string | null;
+  dataBundle?: string | null;
 }
 
 export const SCORECARD_URL = 'https://www.policyengine.org/scorecard';
