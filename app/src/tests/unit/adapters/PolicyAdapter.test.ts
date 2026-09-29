@@ -99,7 +99,7 @@ describe('PolicyAdapter', () => {
       ]);
     });
 
-    it('given a non-finite stored value then rejects the policy', () => {
+    it('given JavaScript infinity then normalizes it to the JSON-safe marker', () => {
       // Given
       const metadata = mockPolicyMetadata({
         policy_json: {
@@ -107,10 +107,82 @@ describe('PolicyAdapter', () => {
         },
       });
 
+      // When
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
+
+      // Then
+      expect(result.parameters?.[0].values[0].value).toBe('Infinity');
+    });
+
+    it('given explicit positive and negative infinity markers then preserves them as numeric bounds', () => {
+      // Given
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          unbounded_numeric_parameter: {
+            '2024-01-01.2024-12-31': 'inf',
+            '2025-01-01.2025-12-31': '-inf',
+          },
+        },
+      });
+
+      // When
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
+
+      // Then
+      expect(result.parameters?.[0].values).toEqual([
+        { startDate: '2024-01-01', endDate: '2024-12-31', value: 'Infinity' },
+        { startDate: '2025-01-01', endDate: '2025-12-31', value: '-Infinity' },
+      ]);
+    });
+
+    it('given a variable-length list parameter then accepts a different valid list length', () => {
+      // Given
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          string_list_parameter: {
+            '2024-01-01.2024-12-31': ['first', 'second'],
+          },
+        },
+      });
+
+      // When
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
+
+      // Then
+      expect(result.parameters?.[0].values[0].value).toEqual(['first', 'second']);
+    });
+
+    it('given a list item with the wrong metadata type then rejects the policy', () => {
+      // Given
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          string_list_parameter: {
+            '2024-01-01.2024-12-31': ['first', 2],
+          },
+        },
+      });
+
       // When / Then
       expect(() => PolicyAdapter.fromMetadata(metadata, parameterMetadata)).toThrow(
-        'Policy parameter numeric_parameter values must be finite: Infinity'
+        'Invalid string policy parameter string_list_parameter[1] value: 2'
       );
+    });
+
+    it('given an empty current-law list then uses its list unit to validate string items', () => {
+      // Given
+      const metadata = mockPolicyMetadata({
+        policy_json: {
+          empty_string_list_parameter: {
+            '2024-01-01.2024-12-31': ['refundable_credit'],
+          },
+        },
+      });
+
+      // When
+      const result = PolicyAdapter.fromMetadata(metadata, parameterMetadata);
+
+      // Then
+      expect(result.parameters?.[0].values[0].value).toEqual(['refundable_credit']);
     });
 
     it('given a numeric-looking string parameter then preserves it as text', () => {
@@ -268,6 +340,38 @@ describe('PolicyAdapter', () => {
       expect(() => PolicyAdapter.toCreationPayload(policy, parameterMetadata)).toThrow(
         'Policy parameter tax_rate values must be finite: NaN'
       );
+    });
+
+    it('given JavaScript infinity bounds then serializes JSON-safe infinity markers', () => {
+      // Given
+      const policy = mockPolicy({
+        parameters: [
+          {
+            name: 'unbounded_numeric_parameter',
+            values: [
+              {
+                startDate: '2024-01-01',
+                endDate: '2024-12-31',
+                value: Number.POSITIVE_INFINITY,
+              },
+              {
+                startDate: '2025-01-01',
+                endDate: '2025-12-31',
+                value: Number.NEGATIVE_INFINITY,
+              },
+            ],
+          },
+        ],
+      });
+
+      // When
+      const payload = PolicyAdapter.toCreationPayload(policy, parameterMetadata);
+
+      // Then
+      expect(payload.data.unbounded_numeric_parameter).toEqual({
+        '2024-01-01.2024-12-31': 'Infinity',
+        '2025-01-01.2025-12-31': '-Infinity',
+      });
     });
 
     it('given malformed numeric input then refuses to serialize the policy', () => {

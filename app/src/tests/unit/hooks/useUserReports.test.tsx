@@ -1,7 +1,7 @@
 import React from 'react';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -19,8 +19,9 @@ import {
 } from '@/hooks/useUserReportAssociations';
 import { useUserReportById, useUserReports } from '@/hooks/useUserReports';
 import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssociations';
-import metadataReducer from '@/reducers/metadataReducer';
+import metadataReducer, { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { mockReport, mockReportMetadata } from '@/tests/fixtures/adapters/reportMocks';
+import { mockMetadataResponse } from '@/tests/fixtures/api/metadataMocks';
 import {
   mockUserReportList,
   TEST_LABEL,
@@ -260,6 +261,37 @@ describe('useUserReports', () => {
       expect(firstReport.report).toBeDefined();
       expect(firstReport.simulations).toBeDefined();
       expect(firstReport.policies).toBeDefined();
+    });
+
+    test('given parameter metadata is loading then waits to fetch policies until it is ready', async () => {
+      // Given
+      store.dispatch(fetchMetadataThunk.pending('metadata-request', 'us'));
+
+      // When
+      const { result } = renderHook(() => useUserReports(TEST_USER_ID), { wrapper });
+
+      // Then
+      await waitFor(() => {
+        expect(simulationApi.fetchSimulationById).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+      expect(policyApi.fetchPolicyById).not.toHaveBeenCalled();
+
+      act(() => {
+        store.dispatch(
+          fetchMetadataThunk.fulfilled(
+            { data: mockMetadataResponse, country: 'us' },
+            'metadata-request',
+            'us'
+          )
+        );
+      });
+
+      await waitFor(() => {
+        expect(policyApi.fetchPolicyById).toHaveBeenCalled();
+      });
     });
 
     test('given reports with household populations then includes household data', async () => {

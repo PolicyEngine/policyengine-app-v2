@@ -1,14 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useRegions } from '@/hooks/useRegions';
 import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -56,7 +55,8 @@ export interface EnhancedUserSimulation {
  */
 export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
-  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
   const queryClient = useQueryClient();
   const { data: regions } = useRegions(country);
 
@@ -119,7 +119,7 @@ export const useUserSimulations = (userId: string) => {
       const metadata = await fetchPolicyById(country, id);
       return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
-    enabled: policyIds.length > 0,
+    enabled: isParameterMetadataReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
   });
@@ -257,7 +257,8 @@ export const useUserSimulations = (userId: string) => {
 export const useUserSimulationById = (userId: string, simulationId: string) => {
   const queryClient = useQueryClient();
   const country = useCurrentCountry();
-  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
 
   // Try to get from React Query cache first
   const cachedSimulation = queryClient.getQueryData<Simulation>(simulationKeys.byId(simulationId));
@@ -286,7 +287,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
       const metadata = await fetchPolicyById(country, finalSimulation!.policyId!.toString());
       return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
-    enabled: !!finalSimulation?.policyId,
+    enabled: isParameterMetadataReady && !!finalSimulation?.policyId,
     staleTime: 5 * 60 * 1000,
   });
 

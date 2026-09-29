@@ -4,13 +4,17 @@ import type { PolicyParameterValue } from '@/types/metadata/policyMetadata';
 type ValueType = 'float' | 'int' | 'bool' | 'Enum' | 'str' | string;
 
 const NUMERIC_VALUE_PATTERN = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+const POSITIVE_INFINITY_MARKERS = new Set(['infinity', '+infinity', 'inf', '+inf']);
+const NEGATIVE_INFINITY_MARKERS = new Set(['-infinity', '-inf']);
+
+export type PolicyInfinity = 'Infinity' | '-Infinity';
 
 export type PolicyParameterValueSpec =
   | { kind: 'number' }
   | { kind: 'boolean' }
   | { kind: 'string' }
   | { kind: 'null' }
-  | { kind: 'array'; items: readonly PolicyParameterValueSpec[] }
+  | { kind: 'array'; item: PolicyParameterValueSpec }
   | {
       kind: 'object';
       properties: Readonly<Record<string, PolicyParameterValueSpec>>;
@@ -78,12 +82,11 @@ export function resolvePolicyParameterValueSpec(
     return { kind: 'null' };
   }
 
-  const resolved = specFromReference(nonNullReferences[0], parameterName);
+  const emptyArrayItemSpec = metadata.unit === 'list' ? ({ kind: 'string' } as const) : undefined;
+  let resolved = specFromReference(nonNullReferences[0], parameterName, emptyArrayItemSpec);
   for (const reference of nonNullReferences.slice(1)) {
-    const candidate = specFromReference(reference, parameterName);
-    if (JSON.stringify(candidate) !== JSON.stringify(resolved)) {
-      throw new TypeError(`Parameter metadata for ${parameterName} has inconsistent value shapes`);
-    }
+    const candidate = specFromReference(reference, parameterName, emptyArrayItemSpec);
+    resolved = mergeValueSpecs(resolved, candidate, parameterName);
   }
   return resolved;
 }
@@ -97,7 +100,7 @@ export function coercePolicyParameterValue(
   const context = `policy parameter ${parameterName}`;
   switch (spec.kind) {
     case 'number':
-      return toPolicyNumber(value, context);
+      return toPolicyNumericValue(value, context);
     case 'boolean':
       return toPolicyBoolean(value, context);
     case 'string':
@@ -111,11 +114,11 @@ export function coercePolicyParameterValue(
       }
       return null;
     case 'array': {
-      if (!Array.isArray(value) || value.length !== spec.items.length) {
-        throw new TypeError(`Invalid array ${context} value: expected ${spec.items.length} items`);
+      if (!Array.isArray(value)) {
+        throw new TypeError(`Invalid array ${context} value`);
       }
-      return spec.items.map((itemSpec, index) =>
-        coercePolicyParameterValue(value[index], itemSpec, `${parameterName}[${index}]`)
+      return value.map((item, index) =>
+        coercePolicyParameterValue(item, spec.item, `${parameterName}[${index}]`)
       );
     }
     case 'object': {
@@ -184,27 +187,74 @@ function toPolicyNumber(value: unknown, context = 'policy parameter'): number {
   throw new TypeError(`Invalid numeric ${context} value: ${String(value)}`);
 }
 
+function toPolicyNumericValue(
+  value: unknown,
+  context = 'policy parameter'
+): number | PolicyInfinity {
+  const infinity = normalizePolicyInfinity(value);
+  if (infinity !== null) {
+    return infinity;
+  }
+
+  return toPolicyNumber(value, context);
+}
+
+function normalizePolicyInfinity(value: unknown): PolicyInfinity | null {
+  if (value === Number.POSITIVE_INFINITY) {
+    return 'Infinity';
+  }
+  if (value === Number.NEGATIVE_INFINITY) {
+    return '-Infinity';
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (POSITIVE_INFINITY_MARKERS.has(normalized)) {
+    return 'Infinity';
+  }
+  if (NEGATIVE_INFINITY_MARKERS.has(normalized)) {
+    return '-Infinity';
+  }
+  return null;
+}
+
 function specFromReference(
   value: PolicyParameterValue,
-  parameterName: string
+  parameterName: string,
+  emptyArrayItemSpec?: PolicyParameterValueSpec
 ): PolicyParameterValueSpec {
   if (value === null) {
     return { kind: 'null' };
   }
   if (typeof value === 'number') {
-    toPolicyNumber(value, `metadata for ${parameterName}`);
+    toPolicyNumericValue(value, `metadata for ${parameterName}`);
     return { kind: 'number' };
   }
   if (typeof value === 'boolean') {
     return { kind: 'boolean' };
   }
   if (typeof value === 'string') {
+    if (normalizePolicyInfinity(value) !== null) {
+      return { kind: 'number' };
+    }
     return { kind: 'string' };
   }
   if (Array.isArray(value)) {
+    if (value.length === 0) {
+      if (emptyArrayItemSpec === undefined) {
+        throw new TypeError(`Parameter metadata for ${parameterName} has no typed array items`);
+      }
+      return { kind: 'array', item: emptyArrayItemSpec };
+    }
+    let item = specFromReference(value[0], parameterName);
+    for (const candidateValue of value.slice(1)) {
+      item = mergeValueSpecs(item, specFromReference(candidateValue, parameterName), parameterName);
+    }
     return {
       kind: 'array',
-      items: value.map((item) => specFromReference(item, parameterName)),
+      item,
     };
   }
   const properties: Record<string, PolicyParameterValueSpec> = {};
@@ -212,6 +262,39 @@ function specFromReference(
     properties[key] = specFromReference(value[key], parameterName);
   }
   return { kind: 'object', properties };
+}
+
+function mergeValueSpecs(
+  first: PolicyParameterValueSpec,
+  second: PolicyParameterValueSpec,
+  parameterName: string
+): PolicyParameterValueSpec {
+  if (first.kind !== second.kind) {
+    throw new TypeError(`Parameter metadata for ${parameterName} has inconsistent value shapes`);
+  }
+  if (first.kind === 'array' && second.kind === 'array') {
+    return {
+      kind: 'array',
+      item: mergeValueSpecs(first.item, second.item, parameterName),
+    };
+  }
+  if (first.kind === 'object' && second.kind === 'object') {
+    const firstKeys = Object.keys(first.properties).sort();
+    const secondKeys = Object.keys(second.properties).sort();
+    if (JSON.stringify(firstKeys) !== JSON.stringify(secondKeys)) {
+      throw new TypeError(`Parameter metadata for ${parameterName} has inconsistent value shapes`);
+    }
+    const properties: Record<string, PolicyParameterValueSpec> = {};
+    for (const key of firstKeys) {
+      properties[key] = mergeValueSpecs(
+        first.properties[key],
+        second.properties[key],
+        parameterName
+      );
+    }
+    return { kind: 'object', properties };
+  }
+  return first;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

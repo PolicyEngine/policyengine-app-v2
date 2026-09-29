@@ -1,16 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -66,7 +65,8 @@ export interface EnhancedUserReport {
  */
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
-  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
   const queryClient = useQueryClient();
   const { data: regions } = useRegions(country);
 
@@ -154,7 +154,7 @@ export const useUserReports = (userId: string) => {
       const metadata = await fetchPolicyById(country, id);
       return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
-    enabled: policyIds.length > 0,
+    enabled: isParameterMetadataReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
   });
@@ -360,9 +360,10 @@ export const useUserReports = (userId: string) => {
  * @returns Complete report data including UserReport, base Report, and all related entities
  */
 export const useUserReportById = (userReportId: string, options?: { enabled?: boolean }) => {
-  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const queryClient = useQueryClient();
   const country = useCurrentCountry();
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
   const isEnabled = options?.enabled !== false;
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId
@@ -430,7 +431,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
       const metadata = await fetchPolicyById(country, id);
       return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
-    enabled: isEnabled && policyIds.length > 0,
+    enabled: isEnabled && isParameterMetadataReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
   });

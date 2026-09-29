@@ -39,6 +39,17 @@ export const mockParameterMetadata = (): ParameterMetadataCollection => ({
     parameter: 'numeric_parameter',
     values: { '2024-01-01': 1 },
   },
+  unbounded_numeric_parameter: {
+    label: 'Unbounded numeric parameter',
+    type: 'parameter',
+    parameter: 'unbounded_numeric_parameter',
+    unit: 'currency-USD',
+    values: {
+      '1991-01-01': 'Infinity',
+      '2015-01-01': 1_000_000,
+      '2026-01-01': '-Infinity',
+    },
+  },
   boolean_parameter: {
     label: 'Boolean parameter',
     type: 'parameter',
@@ -64,6 +75,23 @@ export const mockParameterMetadata = (): ParameterMetadataCollection => ({
         bands: [1, 2],
       },
     },
+  },
+  string_list_parameter: {
+    label: 'String list parameter',
+    type: 'parameter',
+    parameter: 'string_list_parameter',
+    unit: 'list',
+    values: {
+      '2020-01-01': ['first'],
+      '2021-01-01': ['first', 'second', 'third'],
+    },
+  },
+  empty_string_list_parameter: {
+    label: 'Empty string list parameter',
+    type: 'parameter',
+    parameter: 'empty_string_list_parameter',
+    unit: 'list',
+    values: { '2024-01-01': [] },
   },
 });
 
