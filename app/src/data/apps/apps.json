@@ -604,15 +604,6 @@
   },
   {
     "type": "iframe",
-    "slug": "obbba-household-explorer",
-    "title": "OBBBA household impact explorer",
-    "description": "Interactive scatter plot to explore household-level impacts of the One Big Beautiful Bill Act",
-    "source": "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
-    "tags": ["us", "featured", "policy", "reconciliation"],
-    "countryId": "us"
-  },
-  {
-    "type": "iframe",
     "slug": "salternative",
     "title": "The SALTernative",
     "description": "Interactive calculator for modeling SALT deduction and AMT reform scenarios, with household and nationwide budget impacts",
@@ -661,10 +652,10 @@
   },
   {
     "type": "iframe",
-    "slug": "obbba-household-by-household",
+    "slug": "obbba-households",
     "title": "The One Big Beautiful Bill Act, household by household",
     "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
-    "source": "https://obbba-household-by-household.vercel.app/us/obbba-household-explorer",
+    "source": "https://obbba-household-by-household.vercel.app/us/obbba-households",
     "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,

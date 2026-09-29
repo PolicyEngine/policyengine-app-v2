@@ -1,6 +1,6 @@
-Following the Senate's July 1st passage of the One Big Beautiful Bill Act (OBBBA), we're launching the [**OBBBA Household Explorer**](../obbba-household-explorer) — an interactive dashboard that shows how this reconciliation bill would affect individual households across America.
+Following the Senate's July 1st passage of the One Big Beautiful Bill Act (OBBBA), we're launching the [**OBBBA Household Explorer**](../obbba-households) — an interactive dashboard that shows how this reconciliation bill would affect individual households across America.
 
-[**_Explore Households with our new tool here._**](../obbba-household-explorer)
+[**_Explore Households with our new tool here._**](../obbba-households)
 
 ## What the tool does
 
@@ -146,7 +146,7 @@ Whether examining a restaurant worker benefiting from tip exemptions, a family a
 
 ## Get started
 
-The OBBBA Household Explorer is available now at [**policyengine.org/us/obbba-household-explorer**](../obbba-household-explorer).
+The OBBBA Household Explorer is available now at [**policyengine.org/us/obbba-households**](../obbba-households).
 
 Start exploring by:
 
