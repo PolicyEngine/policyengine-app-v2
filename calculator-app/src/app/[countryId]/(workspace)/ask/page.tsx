@@ -1,12 +1,23 @@
 "use client";
 
-import AskPage from "@/pages/flagship/Ask.page";
-import FlagshipGate from "../FlagshipGate";
+import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function AskRoute() {
-  return (
-    <FlagshipGate>
-      <AskPage />
-    </FlagshipGate>
-  );
+/**
+ * The Ask page is paused while the AI assistant's scope is decided; old
+ * links land on Build, which has the same parameter search.
+ */
+export default function AskRoute({
+  params,
+}: {
+  params: Promise<{ countryId: string }>;
+}) {
+  const { countryId } = use(params);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(`/${countryId}/build`);
+  }, [router, countryId]);
+
+  return null;
 }

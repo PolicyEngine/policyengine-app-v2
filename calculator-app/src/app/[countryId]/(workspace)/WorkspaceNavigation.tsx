@@ -9,7 +9,6 @@ import {
   useAppNavigate,
 } from "@/contexts/NavigationContext";
 import { useAppPathname } from "@/contexts/LocationContext";
-import AskPage from "@/pages/flagship/Ask.page";
 import BuildPage from "@/pages/flagship/Build.page";
 import ReformsPage from "@/pages/flagship/Reforms.page";
 import StandardLayout from "@/components/StandardLayout";
@@ -22,7 +21,7 @@ const ReportPage = dynamic(() => import("@/pages/flagship/Report.page"), {
   ssr: false,
 });
 
-const screens = { ask: AskPage, build: BuildPage, reforms: ReformsPage };
+const screens = { build: BuildPage, reforms: ReformsPage };
 
 /** Switch client-only workspace screens without waiting for a server route payload.
  * Next's native history integration updates pathname/search and preserves back/forward.

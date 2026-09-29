@@ -11,7 +11,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useLocation: () => ({ pathname: '/us/ask', search: '' }),
+    useLocation: () => ({ pathname: '/us/build', search: '' }),
     useParams: () => ({ countryId: 'us' }),
   };
 });
@@ -31,7 +31,7 @@ function renderSidebar() {
       <FlagshipSidebar />
     </QueryClientProvider>,
     'us',
-    '/us/ask'
+    '/us/build'
   );
 }
 
@@ -40,16 +40,22 @@ describe('FlagshipSidebar', () => {
     mockFindByUser.mockResolvedValue([]);
     renderSidebar();
 
-    expect(screen.getByRole('button', { name: 'Ask' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Build' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reforms' })).toBeInTheDocument();
+  });
+
+  test('given the Ask page is paused then it has no nav item', () => {
+    mockFindByUser.mockResolvedValue([]);
+    renderSidebar();
+
+    expect(screen.queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
   });
 
   test('given the current route then its nav item is marked current', () => {
     mockFindByUser.mockResolvedValue([]);
     renderSidebar();
 
-    expect(screen.getByRole('button', { name: 'Ask' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: 'Build' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: 'Reforms' })).not.toHaveAttribute('aria-current');
   });
 
@@ -74,13 +80,13 @@ describe('FlagshipSidebar', () => {
     expect(screen.getByText('Untitled reform')).toBeInTheDocument();
   });
 
-  test('given the brand is clicked then it navigates to the Ask landing', async () => {
+  test('given the brand is clicked then it navigates to the Build landing', async () => {
     mockFindByUser.mockResolvedValue([]);
     const user = userEvent.setup();
     renderSidebar();
 
     await user.click(screen.getByRole('button', { name: 'PolicyEngine' }));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/us/ask');
+    expect(mockNavigate).toHaveBeenCalledWith('/us/build');
   });
 });

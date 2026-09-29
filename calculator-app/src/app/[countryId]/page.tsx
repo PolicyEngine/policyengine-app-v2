@@ -6,7 +6,7 @@ import { isFlagshipShellEnabled } from "@/libs/featureFlags";
 
 /**
  * Country index route — redirects to /:countryId/reports, or to the
- * flagship Ask page when the flagship shell flag is on.
+ * flagship Build page when the flagship shell flag is on (Ask is paused).
  * Mirrors the React Router <Navigate replace />.
  */
 export default function CountryIndexRoute({
@@ -18,7 +18,7 @@ export default function CountryIndexRoute({
   const router = useRouter();
 
   useEffect(() => {
-    const landing = isFlagshipShellEnabled() ? "ask" : "reports";
+    const landing = isFlagshipShellEnabled() ? "build" : "reports";
     router.replace(`/${countryId}/${landing}`);
   }, [router, countryId]);
 

@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  IconAdjustments,
-  IconDotsVertical,
-  IconGavel,
-  IconMessageCircle,
-} from '@tabler/icons-react';
+import { IconAdjustments, IconDotsVertical, IconGavel } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { getReformStore } from '@/api/reformStore';
 import {
@@ -24,7 +19,6 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 const PolicyEngineLogo = '/assets/logos/policyengine/teal.svg';
 
 const NAV_ITEMS = [
-  { slug: 'ask', label: 'Ask', icon: IconMessageCircle },
   { slug: 'build', label: 'Build', icon: IconAdjustments },
   { slug: 'reforms', label: 'Reforms', icon: IconGavel },
 ];
@@ -32,7 +26,8 @@ const NAV_ITEMS = [
 /**
  * The flagship shell's persistent left sidebar: brand, the entry
  * points, recent reforms, and the website links. Replaces both the
- * header nav and the Home launcher page — Ask is the landing view.
+ * header nav and the Home launcher page — Build is the landing view
+ * while the Ask page is paused.
  */
 export default function FlagshipSidebar() {
   const nav = useAppNavigate();
@@ -81,7 +76,7 @@ export default function FlagshipSidebar() {
     >
       <button
         type="button"
-        onClick={() => nav.push(`/${countryId}/ask`)}
+        onClick={() => nav.push(`/${countryId}/build`)}
         aria-label="PolicyEngine"
         style={{
           display: 'flex',
