@@ -16,7 +16,7 @@ function relativeChange(percentChange: number): string {
  * results arrive. Metrics the tracker did not store are left out.
  */
 export function storedBillMetrics(
-  bill: Pick<TrackedBill, 'impacts' | 'impactData'>,
+  bill: Pick<TrackedBill, 'state' | 'impacts' | 'impactData'>,
   countryId: Parameters<typeof formatCurrencyAbbr>[1]
 ): ReportMetric[] {
   const impact = bill.impactData;
@@ -26,12 +26,10 @@ export function storedBillMetrics(
   if (typeof revenue === 'number' && Number.isFinite(revenue)) {
     metrics.push({
       value: formatCurrencyAbbr(Math.abs(revenue), countryId, { maximumFractionDigits: 1 }),
-      label:
-        revenue < 0
-          ? 'Annual revenue loss'
-          : revenue > 0
-            ? 'Annual revenue gain'
-            : 'Annual revenue change',
+      // A state bill's stored figure is that state's revenue.
+      label: `Annual ${bill.state ? 'state ' : ''}revenue ${
+        revenue < 0 ? 'loss' : revenue > 0 ? 'gain' : 'change'
+      }`,
     });
   }
 
@@ -68,15 +66,38 @@ function sameValue(value: unknown, baselineValue: unknown): boolean {
 }
 
 /**
- * Whether every provision already matches current law, as for an enacted
- * bill. Scored against current law such a bill changes nothing, so its
- * only meaningful estimate is the tracker's, against the law before it.
+ * The values current law gives a parameter from `fromDate` on: the one in
+ * effect that day and every later scheduled change.
+ */
+export function lawValuesFrom(
+  values: Record<string, unknown> | undefined | null,
+  fromDate: string
+): unknown[] {
+  if (!values) {
+    return [];
+  }
+  const dates = Object.keys(values).sort();
+  const inEffect = dates.filter((date) => date <= fromDate).pop();
+  const later = dates.filter((date) => date > fromDate);
+  return [...(inEffect ? [inEffect] : []), ...later].map((date) => values[date]);
+}
+
+/**
+ * Whether every provision already matches current law for the whole run
+ * and beyond, as for an enacted bill. Scored against current law such a
+ * bill changes nothing, so its only meaningful estimate is the tracker's,
+ * against the law before it. A bill that freezes a value current law
+ * schedules to change does not count.
  */
 export function isAlreadyCurrentLaw(
-  provisions: Array<{ value: unknown; baselineValue: unknown }>
+  provisions: Array<{ value: unknown; lawValues: unknown[] }>
 ): boolean {
   return (
     provisions.length > 0 &&
-    provisions.every((provision) => sameValue(provision.value, provision.baselineValue))
+    provisions.every(
+      (provision) =>
+        provision.lawValues.length > 0 &&
+        provision.lawValues.every((lawValue) => sameValue(provision.value, lawValue))
+    )
   );
 }

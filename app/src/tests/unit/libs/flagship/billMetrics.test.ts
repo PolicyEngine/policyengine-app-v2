@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { isAlreadyCurrentLaw, storedBillMetrics } from '@/libs/flagship/billMetrics';
+import { isAlreadyCurrentLaw, lawValuesFrom, storedBillMetrics } from '@/libs/flagship/billMetrics';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 
 describe('storedBillMetrics', () => {
@@ -20,18 +20,33 @@ describe('storedBillMetrics', () => {
     ]);
   });
 
+  test('given a state bill then its stored revenue reads as state revenue', () => {
+    expect(storedBillMetrics({ state: 'UT', impacts: { revenue: -74_200_000 } }, 'us')).toEqual([
+      { value: '$74.2m', label: 'Annual state revenue loss' },
+    ]);
+  });
+
   test('given no stored impacts then returns no metrics', () => {
     expect(storedBillMetrics({}, 'us')).toEqual([]);
   });
 });
 
+describe('lawValuesFrom', () => {
+  test('given dated values then returns the value in effect and every later change', () => {
+    const values = { '2020-01-01': 0.05, '2025-01-01': 0.045, '2027-01-01': 0.04 };
+    expect(lawValuesFrom(values, '2026-01-01')).toEqual([0.045, 0.04]);
+    expect(lawValuesFrom(values, '2019-01-01')).toEqual([0.05, 0.045, 0.04]);
+    expect(lawValuesFrom(undefined, '2026-01-01')).toEqual([]);
+  });
+});
+
 describe('isAlreadyCurrentLaw', () => {
-  test('given every provision matches current law then the bill is already law', () => {
+  test('given every provision matches current law throughout then the bill is already law', () => {
     expect(
       isAlreadyCurrentLaw([
-        { value: 0.0445, baselineValue: 0.0445 },
-        { value: '250', baselineValue: 250 },
-        { value: true, baselineValue: true },
+        { value: 0.0445, lawValues: [0.0445] },
+        { value: '250', lawValues: [250, 250] },
+        { value: true, lawValues: [true] },
       ])
     ).toBe(true);
   });
@@ -39,15 +54,19 @@ describe('isAlreadyCurrentLaw', () => {
   test('given any provision changes current law then the bill is not yet law', () => {
     expect(
       isAlreadyCurrentLaw([
-        { value: 0.0445, baselineValue: 0.0445 },
-        { value: 5000, baselineValue: 2200 },
+        { value: 0.0445, lawValues: [0.0445] },
+        { value: 5000, lawValues: [2200] },
       ])
     ).toBe(false);
   });
 
-  test('given no provisions or unknown current values then the bill is not treated as law', () => {
+  test('given a bill that freezes a scheduled change then it is not already law', () => {
+    expect(isAlreadyCurrentLaw([{ value: 0.0445, lawValues: [0.0445, 0.04] }])).toBe(false);
+  });
+
+  test('given no provisions or unknown current law then the bill is not treated as law', () => {
     expect(isAlreadyCurrentLaw([])).toBe(false);
-    expect(isAlreadyCurrentLaw([{ value: undefined, baselineValue: undefined }])).toBe(false);
-    expect(isAlreadyCurrentLaw([{ value: false, baselineValue: undefined }])).toBe(false);
+    expect(isAlreadyCurrentLaw([{ value: 0.0445, lawValues: [] }])).toBe(false);
+    expect(isAlreadyCurrentLaw([{ value: false, lawValues: [undefined] }])).toBe(false);
   });
 });

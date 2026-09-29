@@ -4,17 +4,19 @@ import { useParams } from 'react-router-dom';
 import type { TrackedBill } from '@/api/billFeed';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import ReportView from '@/components/flagship/report/ReportView';
+import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
 import {
   BillValidationSection,
   useModelTrackRecord,
   ValidationChip,
 } from '@/components/flagship/ValidationPanel';
 import { Button, Spinner, Stack, Text } from '@/components/ui';
+import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { isAlreadyCurrentLaw, storedBillMetrics } from '@/libs/flagship/billMetrics';
+import { isAlreadyCurrentLaw, lawValuesFrom, storedBillMetrics } from '@/libs/flagship/billMetrics';
 import { RootState } from '@/store';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { getCurrentValue } from '@/utils/parameterValues';
@@ -96,45 +98,48 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
   );
 }
 
+/** Why a bill has, or does not yet have, full results. */
+type RunState = 'already-law' | 'no-provisions' | 'no-metadata' | BillEconomy['status'];
+
+const UNAVAILABLE_COPY: Partial<Record<RunState, { title: string; detail: string }>> = {
+  'already-law': {
+    title: 'This bill is already current law.',
+    detail:
+      "Scored against current law it changes nothing, so there are no full results to show. The estimates here are the legislative tracker's, against the law before the bill.",
+  },
+  'no-provisions': {
+    title: 'The full results cannot be calculated.',
+    detail: 'None of this bill’s provisions are mapped to model parameters yet.',
+  },
+  'no-metadata': {
+    title: 'The full results cannot be calculated.',
+    detail: 'The model’s parameters could not be loaded. Reload the page to try again.',
+  },
+};
+
+const STATUS_BOX = {
+  gap: spacing.sm,
+  padding: spacing.lg,
+  border: `1px dashed ${colors.border.light}`,
+  borderRadius: 12,
+} as const;
+
 /** Where the full run stands, for sections that need its results. */
-function FullResultsStatus({
-  economy,
-  alreadyCurrentLaw,
-}: {
-  economy: BillEconomy;
-  alreadyCurrentLaw: boolean;
-}) {
-  if (alreadyCurrentLaw) {
+function FullResultsStatus({ runState, economy }: { runState: RunState; economy: BillEconomy }) {
+  const unavailable = UNAVAILABLE_COPY[runState];
+  if (unavailable) {
     return (
-      <Stack
-        style={{
-          gap: spacing.sm,
-          padding: spacing.lg,
-          border: `1px dashed ${colors.border.light}`,
-          borderRadius: 12,
-        }}
-      >
+      <Stack style={STATUS_BOX}>
         <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-          This bill is already current law.
+          {unavailable.title}
         </Text>
-        <Caption>
-          Scored against current law it changes nothing, so there are no full results to show. The
-          overview shows the legislative tracker&apos;s estimate against the law before the bill.
-        </Caption>
+        <Caption>{unavailable.detail}</Caption>
       </Stack>
     );
   }
-  if (economy.status === 'error') {
+  if (runState === 'error') {
     return (
-      <Stack
-        style={{
-          gap: spacing.sm,
-          padding: spacing.lg,
-          border: `1px dashed ${colors.border.light}`,
-          borderRadius: 12,
-          alignItems: 'flex-start',
-        }}
-      >
+      <Stack style={{ ...STATUS_BOX, alignItems: 'flex-start' }}>
         <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
           The full results could not be calculated.
         </Text>
@@ -145,29 +150,29 @@ function FullResultsStatus({
       </Stack>
     );
   }
+  // Strategy messages end in an ellipsis; the caption adds its own stop.
+  const progress = economy.message?.replace(/[.…]+$/, '');
   return (
-    <Stack
-      role="status"
-      aria-live="polite"
-      style={{
-        gap: spacing.sm,
-        padding: spacing.lg,
-        border: `1px dashed ${colors.border.light}`,
-        borderRadius: 12,
-        alignItems: 'center',
-      }}
-    >
+    <Stack role="status" aria-live="polite" style={{ ...STATUS_BOX, alignItems: 'center' }}>
       <Spinner size="sm" />
       <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
         Calculating the full results…
       </Text>
       <Caption>
-        {economy.message ? `${economy.message}. ` : ''}A bill&apos;s first full run can take several
-        minutes; later visits load from the cache.
+        {progress ? `${progress}. ` : ''}A bill&apos;s first full run can take several minutes;
+        later visits load from the cache.
       </Caption>
     </Stack>
   );
 }
+
+const STORED_NOTE: Partial<Record<RunState, string>> = {
+  'already-law': 'Estimates from the legislative tracker, against the law before this bill',
+  'no-provisions': 'Stored estimates from the legislative tracker · full results unavailable',
+  'no-metadata': 'Stored estimates from the legislative tracker · full results unavailable',
+  error: 'Stored estimates from the legislative tracker · full results unavailable',
+  pending: 'Stored estimates from the legislative tracker · full results calculating',
+};
 
 /**
  * A tracked bill as a flagship report: the same layout as a saved report,
@@ -180,6 +185,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const metadataLoaded = useSelector((state: RootState) => state.metadata.version !== null);
+  const metadataError = useSelector((state: RootState) => state.metadata.error);
   const { bills, isLoading } = useTrackedBills(countryId);
 
   const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
@@ -199,12 +205,24 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   // An enacted bill already matches current law, so a run against current
   // law would score it as no change; keep the tracker's prior-law estimate.
-  const alreadyCurrentLaw = isAlreadyCurrentLaw(provisions);
+  const alreadyCurrentLaw = isAlreadyCurrentLaw(
+    (bill?.provisions ?? []).map((provision) => ({
+      value: provision.value,
+      lawValues: lawValuesFrom(parameters?.[provision.path]?.values, `${CURRENT_YEAR}-01-01`),
+    }))
+  );
 
   const billPaths = provisions.map((p) => p.path);
   const trackRecord = useModelTrackRecord(billPaths);
   // Wait for metadata so an enacted bill is recognized before any run starts.
   const economy = useBillEconomy(bill, { enabled: metadataLoaded && !alreadyCurrentLaw });
+  const runState: RunState = alreadyCurrentLaw
+    ? 'already-law'
+    : provisions.length === 0
+      ? 'no-provisions'
+      : metadataError && !metadataLoaded
+        ? 'no-metadata'
+        : economy.status;
   // A state bill's data check is against that state's calibration targets.
   const calibration = useCalibrationMatches(
     billPaths,
@@ -242,16 +260,16 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       region={economy.region}
       reformPolicyId={economy.reformPolicyId}
       baselinePolicyId={economy.baselinePolicyId}
-      output={alreadyCurrentLaw ? null : economy.output}
+      output={runState === 'complete' ? economy.output : null}
       storedMetrics={storedBillMetrics(bill, countryId)}
-      storedMetricsNote={
-        alreadyCurrentLaw
-          ? 'Estimates from the legislative tracker, against the law before this bill'
-          : economy.status === 'error'
-            ? 'Stored estimates from the legislative tracker · full results unavailable'
-            : 'Stored estimates from the legislative tracker · full results calculating'
+      storedMetricsNote={STORED_NOTE[runState]}
+      pending={<FullResultsStatus runState={runState} economy={economy} />}
+      economyPending={
+        <Stack style={{ gap: spacing.lg }}>
+          <FullResultsStatus runState={runState} economy={economy} />
+          <StoredImpactCharts impact={bill.impactData} />
+        </Stack>
       }
-      pending={<FullResultsStatus economy={economy} alreadyCurrentLaw={alreadyCurrentLaw} />}
       overviewLead={<BillOverviewLead bill={bill} />}
       calibration={calibration}
       trackRecord={trackRecord}

@@ -15,7 +15,7 @@ export const TRACKED_BILL: TrackedBill = {
   title: 'HR 1425: Child Tax Credit to $5,000',
   status: 'In committee',
   summary: 'Raises the CTC to $5,000 per qualifying child.',
-  provisions: [],
+  provisions: [{ path: 'gov.irs.credits.ctc.amount.base[0].amount', value: 5000 }],
   keyFindings: ['External check (cost): within CRFB band.'],
   sourceUrl: 'https://www.congress.gov/bill/119th-congress/house-bill/1425',
   author: 'Rep. Mackenzie, Ryan [R-PA-7]',

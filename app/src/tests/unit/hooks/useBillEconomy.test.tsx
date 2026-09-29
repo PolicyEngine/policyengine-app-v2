@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
@@ -107,6 +107,36 @@ describe('useBillEconomy', () => {
 
     await waitFor(() => expect(result.current.status).toBe('error'));
     expect(mockFetchSocietyWide).not.toHaveBeenCalled();
+  });
+
+  test('given the run failed then retrying runs it again', async () => {
+    const output = createMockSocietyWideOutput();
+    mockFetchSocietyWide
+      .mockResolvedValueOnce({ status: 'error', result: null, error: 'Worker lost' })
+      .mockResolvedValueOnce({ status: 'ok', result: output });
+
+    const { result } = renderHook(() => useBillEconomy(BILL), { wrapper });
+    await waitFor(() => expect(result.current.status).toBe('error'));
+
+    act(() => result.current.retry());
+
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(result.current.output).toBe(output);
+  });
+
+  test('given the policy could not be created then retrying creates it again', async () => {
+    mockCreatePolicy
+      .mockRejectedValueOnce(new Error('Failed to create policy'))
+      .mockResolvedValueOnce({ result: { policy_id: '98557' } });
+    mockFetchSocietyWide.mockResolvedValue({ status: 'ok', result: createMockSocietyWideOutput() });
+
+    const { result } = renderHook(() => useBillEconomy(BILL), { wrapper });
+    await waitFor(() => expect(result.current.status).toBe('error'));
+
+    act(() => result.current.retry());
+
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    expect(mockCreatePolicy).toHaveBeenCalledTimes(2);
   });
 
   test('given the run is disabled then no policy is created and nothing runs', async () => {

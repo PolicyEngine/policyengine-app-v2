@@ -27,6 +27,17 @@ vi.mock('@/api/billFeed', async (importOriginal) => {
   };
 });
 
+const mockIsAlreadyCurrentLaw = vi.fn();
+
+vi.mock('@/libs/flagship/billMetrics', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/libs/flagship/billMetrics')>();
+  return {
+    ...actual,
+    isAlreadyCurrentLaw: (...args: Parameters<typeof actual.isAlreadyCurrentLaw>) =>
+      mockIsAlreadyCurrentLaw(...args) ?? actual.isAlreadyCurrentLaw(...args),
+  };
+});
+
 const mockUseBillEconomy = vi.fn();
 
 vi.mock('@/hooks/useBillEconomy', () => ({
@@ -66,6 +77,8 @@ describe('BillReportPage', () => {
     vi.clearAllMocks();
     mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
     mockUseBillEconomy.mockReturnValue(economy());
+    mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
+    mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
   });
 
   test('given a bill then it uses the saved report sections', async () => {
@@ -108,14 +121,18 @@ describe('BillReportPage', () => {
 
   test('given the full run is calculating then economic impacts show its progress', async () => {
     const user = userEvent.setup();
-    mockUseBillEconomy.mockReturnValue(economy({ message: 'Position 2 in queue' }));
+    mockUseBillEconomy.mockReturnValue(economy({ message: 'In queue (position 2)...' }));
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
 
     expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
-    expect(screen.getByText(/Position 2 in queue/)).toBeInTheDocument();
+    expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
     expect(screen.queryByText('Economic impact charts')).not.toBeInTheDocument();
+    // The tracker's stored detail fills the wait.
+    expect(screen.getByText('Income change by decile')).toBeInTheDocument();
+    expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+    expect(screen.getByText('Poverty rate, before and after')).toBeInTheDocument();
   });
 
   test('given the full results then the overview and charts use them', async () => {
@@ -205,6 +222,40 @@ describe('BillReportPage', () => {
       expect.objectContaining({ id: TRACKED_BILL.id }),
       { enabled: false }
     );
+  });
+
+  test('given a bill already in current law then no run starts and the tracker estimate stays', async () => {
+    const user = userEvent.setup();
+    mockIsAlreadyCurrentLaw.mockReturnValue(true);
+    renderReport();
+
+    expect(
+      await screen.findByText(
+        'Estimates from the legislative tracker, against the law before this bill'
+      )
+    ).toBeInTheDocument();
+    expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: TRACKED_BILL.id }),
+      { enabled: false }
+    );
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByText('This bill is already current law.')).toBeInTheDocument();
+    expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+  });
+
+  test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([{ ...TRACKED_BILL, provisions: [] }]);
+    renderReport();
+
+    expect(
+      await screen.findByText(
+        'Stored estimates from the legislative tracker · full results unavailable'
+      )
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByText(/provisions are mapped to model parameters yet/)).toBeInTheDocument();
+    expect(screen.queryByText('Calculating the full results…')).not.toBeInTheDocument();
   });
 
   test('given an unknown bill then says it is not in the feed', async () => {

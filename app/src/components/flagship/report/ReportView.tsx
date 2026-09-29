@@ -83,6 +83,8 @@ export interface ReportViewProps {
   storedMetricsNote?: ReactNode;
   /** Shown in sections that need the full results while they calculate. */
   pending?: ReactNode;
+  /** Shown in economic impacts instead of `pending`, e.g. with stored estimates. */
+  economyPending?: ReactNode;
   /** Content above the overview's section cards, e.g. a bill's summary. */
   overviewLead?: ReactNode;
   /** Content below the overview's section cards, e.g. data provenance. */
@@ -113,6 +115,7 @@ export default function ReportView({
   storedMetrics,
   storedMetricsNote,
   pending,
+  economyPending = pending,
   overviewLead,
   overviewFooter,
   calibration,
@@ -144,7 +147,9 @@ export default function ReportView({
     year,
     region,
   });
-  const metrics = output ? reportMetrics(output, countryId) : (storedMetrics ?? []);
+  const metrics = output
+    ? reportMetrics(output, countryId, { stateRevenue: !!region?.startsWith('state/') })
+    : (storedMetrics ?? []);
 
   const tabPanel = (id: string, content: ReactNode) => (
     <TabsContent
@@ -275,7 +280,7 @@ export default function ReportView({
               {tabPanel(
                 'economy',
                 <Stack style={{ gap: spacing.md }}>
-                  {output ? <EconomicImpactCharts output={output} /> : pending}
+                  {output ? <EconomicImpactCharts output={output} /> : economyPending}
                 </Stack>
               )}
               {tabPanel(
