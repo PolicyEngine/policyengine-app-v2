@@ -123,11 +123,17 @@ describe("reading time", () => {
 
 describe("niceTicks", () => {
   test("gives a finite axis for values near the largest double", () => {
-    for (const v of [1.6e308, -1.6e308, Number.MAX_VALUE]) {
-      const { domain, ticks, decimals } = niceTicks([v]);
+    for (const values of [
+      [1.6e308],
+      [-1.6e308],
+      [Number.MAX_VALUE],
+      [-1.29e308, 1],
+      [-8e307, 9e307],
+    ]) {
+      const { domain, ticks, decimals } = niceTicks(values);
       expect(domain.every(Number.isFinite)).toBe(true);
-      expect(domain[0]).toBeLessThanOrEqual(Math.min(0, v));
-      expect(domain[1]).toBeGreaterThanOrEqual(Math.max(0, v));
+      expect(domain[0]).toBeLessThanOrEqual(Math.min(0, ...values));
+      expect(domain[1]).toBeGreaterThanOrEqual(Math.max(0, ...values));
       expect(() =>
         ticks.map((t) => formatChartValue(t, { decimals })),
       ).not.toThrow();

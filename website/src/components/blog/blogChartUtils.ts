@@ -59,7 +59,7 @@ export function niceTicks(
   const start = Math.floor(lo / step) * step;
   const end = Math.ceil(hi / step) * step;
   // Values near the largest double overflow when rounded out to a step.
-  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+  if (!Number.isFinite(end - start)) {
     return { domain: [lo, hi], ticks: [lo, hi], decimals: 0 };
   }
   const ticks = Array.from(
