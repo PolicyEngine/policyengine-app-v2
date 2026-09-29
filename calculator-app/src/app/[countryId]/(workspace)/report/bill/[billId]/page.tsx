@@ -1,8 +1,14 @@
 "use client";
 
 import { use } from "react";
-import BillReportPage from "@/pages/flagship/BillReport.page";
+import dynamic from "next/dynamic";
 import FlagshipGate from "../../../FlagshipGate";
+
+// Client-only: bill reports render the browser-only chart stack.
+const BillReportPage = dynamic(
+  () => import("@/pages/flagship/BillReport.page"),
+  { ssr: false },
+);
 
 export default function BillReportRoute({
   params,
