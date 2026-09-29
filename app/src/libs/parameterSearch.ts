@@ -26,11 +26,23 @@ export interface ParameterSearchEntry {
   description: string | null;
   /** Contributed/experimental parameter (gov.contrib.*) */
   isContrib: boolean;
-  /** Two-letter state code for state parameters (gov.states.xx.*, gov.contrib.states.xx.*) */
+  /**
+   * Two-letter state code for state parameters (gov.states.xx.*,
+   * gov.contrib.states.xx.*) and for local ones, which belong to their
+   * state (gov.local.xx.*)
+   */
   stateCode: string | null;
 }
 
-const STATE_PATH_PATTERN = /^gov\.(?:contrib\.)?states\.([a-z]{2})\./;
+const STATE_PATH_PATTERN = /^gov\.(?:contrib\.)?(?:states|local)\.([a-z]{2})\./;
+
+/**
+ * County and city parameters. Contributed ones (gov.contrib.local.nyc.*)
+ * carry no state code, so the path is the only sign they are not federal.
+ */
+function isLocalPath(path: string): boolean {
+  return path.startsWith('gov.local.') || path.startsWith('gov.contrib.local.');
+}
 
 export interface ParameterSearchFilters {
   /** Include gov.contrib.* experimental parameters (default false) */
@@ -48,7 +60,7 @@ function matchesFilters(entry: ParameterSearchEntry, filters: ParameterSearchFil
   if (!filters.includeContrib && entry.isContrib) {
     return false;
   }
-  if (filters.stateScope === 'federal' && entry.stateCode) {
+  if (filters.stateScope === 'federal' && (entry.stateCode || isLocalPath(entry.path))) {
     return false;
   }
   // A state selection means that state's parameters only — federal
@@ -68,6 +80,77 @@ export function listStateCodes(entries: ParameterSearchEntry[]): string[] {
   return [
     ...new Set(entries.map((e) => e.stateCode).filter((c): c is string => Boolean(c))),
   ].sort();
+}
+
+/** Lowercase letters-only form, so "California's" and "california" compare equal. */
+function plainWords(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z]+/g, ' ')
+    .trim();
+}
+
+/**
+ * State names as the metadata gives them (`gov.states.ny` → "New York"),
+ * keyed by their plain lowercase form. Nodes labelled only with their
+ * code ("fl") add nothing; a capitalized code still names them.
+ */
+export function buildStateNames(collection: ParameterMetadataCollection): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const [path, node] of Object.entries(collection)) {
+    const code = /^gov\.states\.([a-z]{2})$/.exec(path)?.[1];
+    const name = code && node?.label ? plainWords(node.label) : '';
+    if (code && name && name !== code) {
+      names.set(name, code);
+    }
+  }
+  return names;
+}
+
+/**
+ * The states a query names: by name ("new york", "california's") or by
+ * capitalized postal code ("NY"). Lowercase codes don't count — "in",
+ * "or" and "me" are words first. Longer names match first, so "west
+ * virginia" is not also read as Virginia.
+ */
+function statesNamedIn(query: string, canonical: string, index: ParameterSearchIndex): Set<string> {
+  const named = new Set<string>();
+  let text = ` ${plainWords(canonical)} `;
+  for (const [name, code] of index.stateNames) {
+    if (text.includes(` ${name} `)) {
+      named.add(code);
+      text = text.split(` ${name} `).join(' ');
+    }
+  }
+  for (const token of query.split(/[^A-Za-z]+/)) {
+    if (/^[A-Z]{2}$/.test(token) && index.stateCodes.has(token.toLowerCase())) {
+      named.add(token.toLowerCase());
+    }
+  }
+  return named;
+}
+
+/**
+ * Jurisdiction prior: parameters outside the query's jurisdiction — the
+ * named states (with their local parameters), or federal when no state
+ * is named — have their fuzzy score multiplied by this. State labels
+ * restate the program name ("Georgia child tax credit amount") where
+ * federal leaves lean on their breadcrumb, so fuzzy scoring alone ranks
+ * fifty state copies above the federal original.
+ *
+ * A multiplier rather than a hard tier, so a clearly better match still
+ * wins: a federal entry has to be a comparable match to outrank a state
+ * one, not just be federal. Local parameters get no further penalty
+ * below state ones — a query naming a county ("Harris County rides")
+ * is naming a local program.
+ */
+const OUT_OF_JURISDICTION_FACTOR = 3;
+
+function inQueryJurisdiction(entry: ParameterSearchEntry, namedStates: Set<string>): boolean {
+  if (namedStates.size > 0) {
+    return entry.stateCode !== null && namedStates.has(entry.stateCode);
+  }
+  return !entry.stateCode && !isLocalPath(entry.path);
 }
 
 const EXCLUDED_PATH_PATTERNS = ['taxsim', 'gov.abolitions', 'pycache'];
@@ -350,12 +433,17 @@ export interface ParameterSearchIndex {
   clusterByMember: Map<string, string[]>;
   /** Variant → canonical phrase (see buildConceptAliases). */
   aliases: Map<string, string>;
+  /** State name → code (see buildStateNames), longest name first. */
+  stateNames: Map<string, string>;
+  /** State codes the entries carry, for recognizing "NY"-style mentions. */
+  stateCodes: Set<string>;
 }
 
 export function createParameterSearchIndex(
   entries: ParameterSearchEntry[],
   clusters: string[][] = [],
-  aliases = new Map<string, string>()
+  aliases = new Map<string, string>(),
+  stateNames = new Map<string, string>()
 ): ParameterSearchIndex {
   const clusterByMember = new Map<string, string[]>();
   for (const cluster of clusters) {
@@ -380,6 +468,8 @@ export function createParameterSearchIndex(
     clusters,
     clusterByMember,
     aliases,
+    stateNames: new Map([...stateNames].sort(([a], [b]) => b.length - a.length)),
+    stateCodes: new Set(listStateCodes(entries)),
   };
 }
 
@@ -390,17 +480,28 @@ const RERANK_FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
   threshold: 1,
 };
 
+/** A fuzzy score (lower is better) adjusted by the path and jurisdiction priors. */
+function adjustedScore(
+  score: number | undefined,
+  entry: ParameterSearchEntry,
+  namedStates: Set<string>
+): number {
+  const jurisdiction = inQueryJurisdiction(entry, namedStates) ? 1 : OUT_OF_JURISDICTION_FACTOR;
+  return (score ?? 0.5) * priorFactor(entry.path) * jurisdiction;
+}
+
 /** Fuzzy-rank candidates, then adjust by the derived priors. */
 function rankWithPriors(
   candidates: ParameterSearchEntry[],
   query: string,
-  limit: number
+  limit: number,
+  namedStates: Set<string>
 ): ParameterSearchEntry[] {
   const ranked = new Fuse(candidates, RERANK_FUSE_OPTIONS)
     .search(query)
     .map((result) => ({
       entry: result.item,
-      adjusted: (result.score ?? 0.5) * priorFactor(result.item.path),
+      adjusted: adjustedScore(result.score, result.item, namedStates),
     }))
     .sort((a, b) => a.adjusted - b.adjusted)
     .slice(0, limit)
@@ -430,7 +531,7 @@ function rankWithPriors(
  *    Conversational filler ("why does the…") costs every entry equally,
  *    so full-sentence queries still land without any stopword list.
  * 2. Fuzzy re-rank of those candidates, adjusted by derived priors
- *    (path depth, bracket internals, live usage counts).
+ *    (path depth, bracket internals, live usage counts, jurisdiction).
  * 3. Slow path: only when nothing matches any token (e.g. typos), fall
  *    back to full fuzzy search.
  */
@@ -519,31 +620,30 @@ export function searchParameters(
     }
   }
 
+  const namedStates = statesNamedIn(query, trimmed, index);
+
   // Pass 2: keep entries within a tolerance band of the best coverage,
   // so exact-wording entries don't monopolize over close paraphrases.
-  // Best-coverage entries are collected first so the candidate cap can
-  // never crowd them out with partial matches.
+  // Best-coverage entries are collected first, and within each band the
+  // query's own jurisdiction first, so the candidate cap can never crowd
+  // them out — "standard deduction" alone matches thousands of state
+  // parameters.
   if (bestCoverage > 0) {
     const floor = Math.max(bestCoverage - 0.5, bestCoverage * 0.75, 0.6);
-    const candidates: ParameterSearchEntry[] = [];
+    // Best band in jurisdiction, best band outside, lower band in, lower band outside.
+    const buckets: ParameterSearchEntry[][] = [[], [], [], []];
     for (let i = 0; i < index.haystacks.length; i++) {
-      if (coverage[i] >= bestCoverage && candidates.length < RERANK_CANDIDATE_CAP) {
-        candidates.push(index.entries[i]);
+      if (coverage[i] >= floor) {
+        const entry = index.entries[i];
+        const band = coverage[i] >= bestCoverage ? 0 : 2;
+        buckets[band + (inQueryJurisdiction(entry, namedStates) ? 0 : 1)].push(entry);
       }
     }
-    for (let i = 0; i < index.haystacks.length; i++) {
-      if (
-        coverage[i] >= floor &&
-        coverage[i] < bestCoverage &&
-        candidates.length < RERANK_CANDIDATE_CAP
-      ) {
-        candidates.push(index.entries[i]);
-      }
-    }
+    const candidates = buckets.flat().slice(0, RERANK_CANDIDATE_CAP);
     if (candidates.length === 1) {
       return candidates;
     }
-    return rankWithPriors(candidates, trimmed, limit);
+    return rankWithPriors(candidates, trimmed, limit, namedStates);
   }
 
   // Typo fallback: full fuzzy search, filtered after ranking. Fetch a
@@ -552,7 +652,7 @@ export function searchParameters(
     .search(trimmed, { limit: limit * 10 })
     .map((result) => ({
       entry: result.item,
-      adjusted: (result.score ?? 0.5) * priorFactor(result.item.path),
+      adjusted: adjustedScore(result.score, result.item, namedStates),
     }))
     .filter((ranked) => matchesFilters(ranked.entry, filters))
     .sort((a, b) => a.adjusted - b.adjusted)
@@ -634,10 +734,16 @@ export const selectConceptAliases = createSelector(
     parameters ? buildConceptAliases(parameters) : new Map<string, string>()
 );
 
+export const selectStateNames = createSelector(
+  [(state: RootState) => state.metadata.parameters],
+  (parameters): Map<string, string> =>
+    parameters ? buildStateNames(parameters) : new Map<string, string>()
+);
+
 export const selectParameterSearchIndex = createSelector(
-  [selectParameterSearchEntries, selectConceptClusters, selectConceptAliases],
-  (entries, clusters, aliases): ParameterSearchIndex =>
-    createParameterSearchIndex(entries, clusters, aliases)
+  [selectParameterSearchEntries, selectConceptClusters, selectConceptAliases, selectStateNames],
+  (entries, clusters, aliases, stateNames): ParameterSearchIndex =>
+    createParameterSearchIndex(entries, clusters, aliases, stateNames)
 );
 
 export const selectParameterEntriesByPath = createSelector(

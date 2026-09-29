@@ -13,6 +13,7 @@ export type SearchWorkerRequest =
       entries: ParameterSearchEntry[];
       clusters: string[][];
       aliases: Map<string, string>;
+      stateNames: Map<string, string>;
     }
   | {
       type: 'search';
@@ -30,7 +31,7 @@ export interface SearchWorkerResponse {
 let index: ParameterSearchIndex;
 self.onmessage = ({ data }: MessageEvent<SearchWorkerRequest>) => {
   if (data.type === 'init') {
-    index = createParameterSearchIndex(data.entries, data.clusters, data.aliases);
+    index = createParameterSearchIndex(data.entries, data.clusters, data.aliases, data.stateNames);
   } else {
     restoreUsageCounts(data.usageCounts);
     self.postMessage({
