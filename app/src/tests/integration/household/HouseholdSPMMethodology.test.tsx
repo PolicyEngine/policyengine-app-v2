@@ -150,7 +150,10 @@ describe('SPM point and axes receipts in app-owned report methodology', () => {
       expect(screen.getByRole('main')).toContainElement(variation);
       expect(screen.getByRole('main')).toContainElement(point);
       const chrome = flagship
-        ? [screen.getByRole('button', { name: 'PolicyEngine' }).parentElement!]
+        ? // The brand sits in both the sidebar and the narrow-viewport top bar.
+          screen
+            .getAllByRole('button', { name: 'PolicyEngine' })
+            .map((brand) => brand.parentElement!)
         : Array.from(container.querySelectorAll('header, nav, aside, footer'));
       expect(chrome.length).toBeGreaterThan(0);
       chrome.forEach((element) => {
