@@ -26,7 +26,7 @@
  * }
  */
 
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import {
   AXIS_STYLE,
   GRID_STYLE,
@@ -53,8 +53,10 @@ import {
   type ChartColorName,
   chartColor,
   formatChartValue,
+  isFiniteNumber,
   isRecord,
   niceTicks,
+  validSharedFields,
 } from "./blogChartUtils";
 import {
   type BlogStateMapSpec,
@@ -106,6 +108,18 @@ function parseBarSpec(s: Record<string, unknown>): BlogBarChartSpec | null {
   ) {
     return null;
   }
+  const keys = (s.series as BlogChartSeries[]).map((x) => x.key);
+  const xKey = s.xKey;
+  if (
+    !s.data.every(
+      (row) =>
+        isRecord(row) &&
+        (typeof row[xKey] === "string" || isFiniteNumber(row[xKey])) &&
+        keys.every((k) => row[k] === undefined || isFiniteNumber(row[k])),
+    )
+  ) {
+    return null;
+  }
   return s as unknown as BlogBarChartSpec;
 }
 
@@ -116,7 +130,7 @@ export function parseBlogChartSpec(raw: string): BlogChartSpec | null {
   } catch {
     return null;
   }
-  if (!isRecord(spec)) return null;
+  if (!isRecord(spec) || !validSharedFields(spec)) return null;
   switch (spec.type) {
     case "bar":
       return parseBarSpec(spec);
@@ -245,12 +259,17 @@ function ChartFigure({
   spec: { title?: string; subtitle?: string; source?: string };
   children: ReactNode;
 }) {
+  const titleId = useId();
   return (
-    <figure style={{ margin: "24px 0 32px" }}>
+    <figure
+      aria-labelledby={spec.title ? titleId : undefined}
+      style={{ margin: "24px 0 32px" }}
+    >
       {(spec.title || spec.subtitle) && (
         <div style={{ marginBottom: 12 }}>
           {spec.title && (
             <h3
+              id={titleId}
               style={{
                 fontFamily: "var(--font-sans)",
                 fontSize: 16,

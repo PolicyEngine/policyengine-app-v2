@@ -1,3 +1,4 @@
+import { cloneElement, type ReactElement } from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 
@@ -7,6 +8,26 @@ import {
   parseBlogChartSpec,
 } from "@/components/blog/BlogChart";
 import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
+import { chartColor } from "@/components/blog/blogChartUtils";
+
+// jsdom has no layout, so give the responsive container a fixed size.
+vi.mock("recharts", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("recharts")>();
+  return {
+    ...mod,
+    ResponsiveContainer: ({
+      children,
+      height,
+    }: {
+      children: ReactElement<{ width?: number; height?: number }>;
+      height?: number | string;
+    }) =>
+      cloneElement(children, {
+        width: 600,
+        height: typeof height === "number" ? height : 360,
+      }),
+  };
+});
 
 const SPEC = {
   type: "bar",
@@ -81,6 +102,53 @@ describe("parseBlogChartSpec", () => {
       parseBlogChartSpec(JSON.stringify({ ...SPEC, series: [{ key: "a" }] })),
     ).toBeNull();
   });
+
+  // A spec that parses must render: these would otherwise throw in toFixed or
+  // in React, taking the whole article down rather than just the chart.
+  test("rejects shared fields and rows that would throw during render", () => {
+    const bad = [
+      { ...SPEC, format: { decimals: 101 } },
+      { ...SPEC, format: { decimals: -1 } },
+      { ...SPEC, format: { decimals: 1.5 } },
+      { ...SPEC, format: { suffix: 3 } },
+      { ...SPEC, format: "pp" },
+      { ...SPEC, title: { text: "x" } },
+      { ...SPEC, source: 7 },
+      { ...SPEC, height: -10 },
+      { ...SPEC, data: [null] },
+      { ...SPEC, data: [{ group: "All people", census: "0.07" }] },
+      { ...SPEC, data: [{ group: {}, census: 0.07 }] },
+    ];
+    for (const spec of bad) {
+      expect(parseBlogChartSpec(JSON.stringify(spec))).toBeNull();
+    }
+    expect(
+      parseBlogChartSpec(
+        JSON.stringify({ ...SPEC, data: [{ group: "All people" }] }),
+      ),
+    ).not.toBeNull();
+  });
+});
+
+describe("chartColor", () => {
+  test("resolves chart tokens and falls back to the series palette", () => {
+    expect(chartColor("primary", 3)).toBe("var(--chart-1)");
+    expect(chartColor("negative", 0)).toBe("var(--destructive)");
+    // --success is not defined on the website.
+    expect(chartColor("positive", 1)).toBe("var(--chart-2)");
+    expect(chartColor("series", 0)).toBe("var(--chart-1)");
+    expect(chartColor("constructor", 0)).toBe("var(--chart-1)");
+    expect(chartColor(undefined, 6)).toBe("var(--chart-2)");
+  });
+});
+
+describe("formatChartValue", () => {
+  test("clamps decimals to what toFixed accepts", () => {
+    expect(formatChartValue(1.5, { decimals: 500 })).toBe(
+      "1.50000000000000000000",
+    );
+    expect(formatChartValue(1.5, { decimals: -3 })).toBe("2");
+  });
 });
 
 describe("BlogChart", () => {
@@ -88,6 +156,39 @@ describe("BlogChart", () => {
     render(<BlogChart data={JSON.stringify(SPEC)} />);
     expect(screen.getByText(SPEC.title)).toBeInTheDocument();
     expect(screen.getByText(SPEC.source)).toBeInTheDocument();
+  });
+
+  test("draws the bars with signed labels on either side of zero, ticks and a legend", () => {
+    const { container } = render(<BlogChart data={JSON.stringify(SPEC)} />);
+    const texts = [...container.querySelectorAll("svg text")];
+    const label = (t: string) => texts.find((el) => el.textContent === t);
+    for (const t of ["+0.07", "+0.22", "−0.06", "+0.86"]) {
+      expect(label(t)).toBeDefined();
+    }
+    // Ticks carry the unit; value labels do not.
+    for (const t of ["−0.25 pp", "0.00 pp", "+1.00 pp"]) {
+      expect(label(t)).toBeDefined();
+    }
+    const zero = container.querySelector(
+      'line[stroke="var(--border-dark)"]',
+    ) as SVGLineElement;
+    const zeroY = Number(zero.getAttribute("y1"));
+    expect(Number(label("−0.06")?.getAttribute("y"))).toBeGreaterThan(zeroY);
+    expect(Number(label("+0.07")?.getAttribute("y"))).toBeLessThan(zeroY);
+    expect(container.querySelectorAll(".recharts-bar-rectangle")).toHaveLength(
+      4,
+    );
+    const legend = [
+      ...container.querySelectorAll(".recharts-legend-item-text"),
+    ].map((el) => el.textContent);
+    expect(legend).toEqual(["Census", "PolicyEngine prediction"]);
+  });
+
+  test("names the figure by its title", () => {
+    render(<BlogChart data={JSON.stringify(SPEC)} />);
+    expect(
+      screen.getByRole("figure", { name: SPEC.title }),
+    ).toBeInTheDocument();
   });
 
   test("renders nothing for an invalid spec", () => {
@@ -114,10 +215,11 @@ describe("MarkdownFormatter chart blocks", () => {
     });
   });
 
-  test("renders a chart fence as a chart, without the code-block frame", () => {
+  test("renders a chart fence as a chart, without the code-block frame", async () => {
     const markdown = "Intro.\n\n```chart\n" + JSON.stringify(SPEC) + "\n```\n";
     const { container } = render(<MarkdownFormatter markdown={markdown} />);
-    expect(screen.getByText(SPEC.title)).toBeInTheDocument();
+    // The chart module loads lazily.
+    expect(await screen.findByText(SPEC.title)).toBeInTheDocument();
     expect(container.querySelector("figure")).not.toBeNull();
     expect(screen.queryByText("chart")).toBeNull();
     expect(container.textContent).not.toContain('"xKey"');

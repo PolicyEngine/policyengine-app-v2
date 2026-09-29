@@ -26,7 +26,7 @@
  * no bound. Tiles print the value without the suffix; the tooltip adds it.
  */
 
-import { type CSSProperties, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import {
   LEGEND_STYLE,
   TOOLTIP_CONTAINER_STYLE,
@@ -202,14 +202,16 @@ function tooltipPosition(col: number, row: number): CSSProperties {
   const above = row > 0;
   const top = `${((above ? row : row + 1) / GRID_ROWS) * 100}%`;
   const y = above ? "calc(-100% - 6px)" : "6px";
-  if (col <= 1) {
+  // Tiles near either edge anchor the tooltip to that edge, so a long state
+  // name stays inside the map on a phone.
+  if (col <= 2) {
     return {
       top,
       left: `${(col / GRID_COLUMNS) * 100}%`,
       transform: `translateY(${y})`,
     };
   }
-  if (col >= GRID_COLUMNS - 2) {
+  if (col >= GRID_COLUMNS - 3) {
     return {
       top,
       right: `${((GRID_COLUMNS - 1 - col) / GRID_COLUMNS) * 100}%`,
@@ -226,6 +228,17 @@ function tooltipPosition(col: number, row: number): CSSProperties {
 export function StateMapBody({ spec }: { spec: BlogStateMapSpec }) {
   const [active, setActive] = useState<string | null>(null);
   const pointerType = useRef("mouse");
+  const mapRef = useRef<HTMLDivElement>(null);
+
+  // A tapped tooltip also closes on a tap anywhere outside the map.
+  useEffect(() => {
+    if (!active) return;
+    const close = (e: PointerEvent) => {
+      if (!mapRef.current?.contains(e.target as Node)) setActive(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [active]);
   const format = spec.format ?? {};
   const values = new Map(
     spec.data.map((row) => [
@@ -285,7 +298,10 @@ export function StateMapBody({ spec }: { spec: BlogStateMapSpec }) {
           ))}
         </ul>
       </div>
-      <div style={{ position: "relative", containerType: "inline-size" }}>
+      <div
+        ref={mapRef}
+        style={{ position: "relative", containerType: "inline-size" }}
+      >
         <div
           role="list"
           aria-label={spec.title}

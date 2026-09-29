@@ -20,7 +20,7 @@ import {
   blogSpacing,
   blogTypography,
 } from "./blogStyles";
-import { BlogChart } from "./BlogChart";
+import { LazyBlogChart } from "./LazyBlogChart";
 import { LazyPlot } from "./LazyPlot";
 import { isSafeHref } from "./safeHref";
 import { useDisplayCategory } from "./useDisplayCategory";
@@ -796,7 +796,7 @@ export function MarkdownFormatter({
         return <HighlightedBlock data={[childText]} />;
       }
       if (className === "language-chart") {
-        return <BlogChart data={childText} />;
+        return <LazyBlogChart data={childText} />;
       }
       if (className === "language-plotly") {
         return <PlotlyChartCode data={childText} />;

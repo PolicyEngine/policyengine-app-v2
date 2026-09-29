@@ -11,6 +11,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import type { AuthorsCollection, BlogPost, Notebook } from "@/types/blog";
+import { chartBlocksAsProse } from "@/components/blog/chartReadingText";
 import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
 import { NotebookRenderer } from "@/components/blog/NotebookRenderer";
 import { useDisplayCategory } from "@/components/blog/useDisplayCategory";
@@ -36,7 +37,7 @@ const authors = authorsData as AuthorsCollection;
 const SCROLL_OFFSET_PX = 72;
 
 function calculateReadingTime(text: string): string {
-  const words = text.trim().split(/\s+/).length;
+  const words = chartBlocksAsProse(text).trim().split(/\s+/).length;
   return `${Math.ceil(words / 200)} min read`;
 }
 

@@ -42,7 +42,7 @@ A [companion post](/us/research/2025-supplemental-poverty-measure) covers the re
     "suffix": " pp",
     "signed": true
   },
-  "source": "Sources: Census P60-290 Table 5 (changes to two decimals); PolicyEngine prediction file registered September 11, 2026."
+  "source": "Sources: Census P60-290 Table 5 (rates to two decimals; changes are their differences); PolicyEngine prediction file registered September 11, 2026."
 }
 ```
 

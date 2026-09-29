@@ -106,7 +106,9 @@ function isStep(step: unknown): step is BlogWaterfallStep {
     isRecord(step) &&
     typeof step.key === "string" &&
     typeof step.name === "string" &&
-    (step.kind === "level" || step.kind === "change")
+    (step.kind === "level" || step.kind === "change") &&
+    (step.legend === undefined || typeof step.legend === "string") &&
+    (step.color === undefined || typeof step.color === "string")
   );
 }
 
@@ -373,7 +375,7 @@ function WaterfallLegend({ panels }: { panels: WaterfallPanel[] }) {
         ...LEGEND_STYLE.wrapperStyle,
         listStyle: "none",
         margin: 0,
-        padding: 0,
+        padding: "8px 0 0",
         display: "flex",
         flexWrap: "wrap",
         justifyContent: "center",

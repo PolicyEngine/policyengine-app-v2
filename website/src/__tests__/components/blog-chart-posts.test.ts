@@ -8,6 +8,7 @@ import {
   niceTicks,
   parseBlogChartSpec,
 } from "@/components/blog/BlogChart";
+import { chartBlocksAsProse } from "@/components/blog/chartReadingText";
 
 const ARTICLES = join(__dirname, "../../../../app/src/data/posts/articles");
 
@@ -50,6 +51,57 @@ describe("chart blocks in posts", () => {
     expect(post?.markdown).not.toMatch(
       /2025-supplemental-poverty-measure\/.*\.png/,
     );
+  });
+});
+
+describe("SPM post figures", () => {
+  const post = posts.find(
+    (p) => p.file === "2025-supplemental-poverty-measure.md",
+  );
+  const [statesAvg, waterfall, effect] = chartFences(post?.markdown ?? "").map(
+    parseBlogChartSpec,
+  );
+  const rows = (spec: typeof statesAvg) =>
+    spec?.type === "stateMap"
+      ? Object.fromEntries(
+          spec.data.map((r) => [r[spec.stateKey], r[spec.valueKey]]),
+        )
+      : {};
+
+  // Spot checks against spm-threshold-paper's result files, so an edit to a
+  // published figure fails here as well as in review.
+  test("keeps the published values", () => {
+    expect(rows(statesAvg)).toMatchObject({ LA: 19.0, ME: 6.4, CA: 17.8 });
+    expect(rows(effect)).toMatchObject({ AL: 1.71, NE: 0.0, NY: 1.5 });
+    expect(waterfall?.type === "waterfall" && waterfall.data[0]).toEqual({
+      group: "All people",
+      y2024_census: 13.0,
+      resources_step: -0.6911,
+      threshold_step: 0.8028,
+      published_2025: 13.1117,
+    });
+  });
+});
+
+describe("reading time", () => {
+  const minutes = (markdown: string) =>
+    Math.ceil(chartBlocksAsProse(markdown).trim().split(/\s+/).length / 200);
+
+  test("counts a chart block as its title, subtitle, note and source", () => {
+    const block =
+      '```chart\n{"type": "bar", "title": "One two", "subtitle": "three", "note": "four", "source": "five six", "data": [{"a": 1}]}\n```';
+    expect(
+      chartBlocksAsProse(`Intro.\n\n${block}\n`).trim().split(/\s+/),
+    ).toEqual(["Intro.", "One", "two", "three", "four", "five", "six"]);
+    expect(chartBlocksAsProse("```chart\n{broken\n```").trim()).toBe("");
+  });
+
+  // Replacing the PNGs with charts leaves each post's reading time as it was.
+  test("keeps the SPM posts' reading times", () => {
+    const text = (file: string) =>
+      posts.find((p) => p.file === file)?.markdown ?? "";
+    expect(minutes(text("2025-supplemental-poverty-measure.md"))).toBe(10);
+    expect(minutes(text("2025-spm-poverty-prediction.md"))).toBe(13);
   });
 });
 

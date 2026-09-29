@@ -213,4 +213,41 @@ describe("BlogChart state map", () => {
     fireEvent.click(louisiana);
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
+
+  test("closes a tapped tooltip on a tap outside the map", () => {
+    render(<BlogChart data={JSON.stringify(SPEC)} />);
+    const alabama = screen.getByRole("listitem", { name: "Alabama: 14.4%" });
+    fireEvent.pointerDown(alabama, { pointerType: "touch" });
+    fireEvent.click(alabama);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Alabama");
+    fireEvent.pointerDown(screen.getByText(SPEC.title), {
+      pointerType: "touch",
+    });
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  test("anchors tooltips near either edge to that edge", () => {
+    render(
+      <BlogChart
+        data={JSON.stringify({
+          ...SPEC,
+          data: [...SPEC.data, { state: "DC", spm_pct: 15.7 }],
+        })}
+      />,
+    );
+    const mouse = { pointerType: "mouse" };
+    const dc = screen.getByRole("listitem", {
+      name: "District of Columbia: 15.7%",
+    });
+    fireEvent.pointerEnter(dc, mouse);
+    const tip = screen.getByRole("tooltip");
+    expect(tip.style.right).not.toBe("");
+    expect(tip.style.left).toBe("");
+    fireEvent.pointerLeave(dc, mouse);
+    fireEvent.pointerEnter(
+      screen.getByRole("listitem", { name: "Arizona: no data" }),
+      mouse,
+    );
+    expect(screen.getByRole("tooltip").style.left).toBe("9.090909090909092%");
+  });
 });

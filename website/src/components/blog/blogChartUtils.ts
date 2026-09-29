@@ -23,12 +23,16 @@ export function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+/** Most decimals a spec may ask for; toFixed throws past 100. */
+export const MAX_DECIMALS = 20;
+
 export function formatChartValue(
   value: number,
   format: BlogChartFormat = {},
 ): string {
   const { decimals = 1, prefix = "", suffix = "", signed = false } = format;
-  const magnitude = Math.abs(value).toFixed(decimals);
+  const digits = Math.min(MAX_DECIMALS, Math.max(0, Math.round(decimals)));
+  const magnitude = Math.abs(value).toFixed(digits);
   const isZero = Number(magnitude) === 0;
   const sign = value < 0 && !isZero ? "−" : signed && !isZero ? "+" : "";
   return `${sign}${prefix}${magnitude}${suffix}`;
@@ -65,11 +69,48 @@ export function niceTicks(
   return { domain: [start, end], ticks, decimals };
 }
 
-/** A named chart color token, or the series palette color at `index`. */
+/**
+ * Optional fields every chart type shares. A spec whose shared fields have the
+ * wrong type is rejected, so a bad block renders nothing rather than throwing.
+ */
+export function validSharedFields(s: Record<string, unknown>): boolean {
+  const optionalString = (v: unknown) =>
+    v === undefined || typeof v === "string";
+  if (
+    !["title", "subtitle", "source", "note", "yLabel"].every((k) =>
+      optionalString(s[k]),
+    )
+  ) {
+    return false;
+  }
+  if (s.height !== undefined && !(isFiniteNumber(s.height) && s.height > 0)) {
+    return false;
+  }
+  const { format } = s;
+  if (format === undefined) return true;
+  if (!isRecord(format)) return false;
+  const { decimals, prefix, suffix, signed } = format;
+  return (
+    (decimals === undefined ||
+      (Number.isInteger(decimals) &&
+        (decimals as number) >= 0 &&
+        (decimals as number) <= MAX_DECIMALS)) &&
+    optionalString(prefix) &&
+    optionalString(suffix) &&
+    (signed === undefined || typeof signed === "boolean")
+  );
+}
+
+/**
+ * A named chart color token, or the series palette color at `index`.
+ * "positive" maps to --success, which the website does not define, so it
+ * falls back to the series color too.
+ */
 export function chartColor(name: string | undefined, index: number): string {
   if (
     name &&
     name !== "series" &&
+    name !== "positive" &&
     Object.prototype.hasOwnProperty.call(chartColors, name)
   ) {
     return chartColors[name as ChartColorName];
