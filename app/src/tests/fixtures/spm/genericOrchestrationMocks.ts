@@ -9,6 +9,7 @@ import {
   REPRODUCTION_SIMULATIONS,
 } from '@/tests/fixtures/pages/report-output/reproduce-in-python/householdSPMReproductionMocks';
 import type { CalcStartConfig } from '@/types/calculation';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import type { ReportSetOutputPayload, SimulationSetOutputPayload } from '@/types/payloads';
@@ -26,6 +27,15 @@ export const GENERIC_POLICIES = REPRODUCTION_POLICIES.map((policy, index) => ({
   ...policy,
   id: GENERIC_POLICY_IDS[index],
 }));
+export const GENERIC_PARAMETER_METADATA: ParameterMetadataCollection = {
+  'gov.irs.credits.ctc.amount.base': {
+    label: 'Child tax credit base amount',
+    type: 'parameter',
+    parameter: 'gov.irs.credits.ctc.amount.base',
+    unit: 'currency-USD',
+    values: { '2026-01-01': 2800 },
+  },
+};
 export const GENERIC_ENVELOPES: HouseholdCalculationResult[] = REPRODUCTION_SIMULATIONS.map(
   (simulation, index) => ({
     ...(simulation.output as HouseholdCalculationResult),

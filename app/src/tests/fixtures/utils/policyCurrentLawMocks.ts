@@ -1,5 +1,6 @@
 import type { MetadataState } from '@/types/metadata';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import type { PolicyParameterValue } from '@/types/metadata/policyMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 
 export const TEST_PARAMETER_NAMES = {
@@ -61,7 +62,7 @@ export function createParameter(
   name: string,
   startDate: string,
   endDate: string,
-  value: unknown
+  value: PolicyParameterValue
 ): Parameter {
   return {
     name,

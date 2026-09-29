@@ -4,6 +4,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
@@ -36,6 +37,8 @@ export interface FlagshipReportData {
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
   const direct = isApiReportId(id);
 
   const legacy = useUserReportById(id, { enabled: !direct && !!id });
@@ -64,8 +67,8 @@ export function useFlagshipReport(id: string): FlagshipReportData {
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
     queryFn: async (policyId) =>
-      PolicyAdapter.fromMetadata(await fetchPolicyById(country, policyId)),
-    enabled: direct && policyIds.length > 0,
+      PolicyAdapter.fromMetadata(await fetchPolicyById(country, policyId), parameterMetadata),
+    enabled: direct && isParameterMetadataReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
   });

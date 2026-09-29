@@ -9,6 +9,7 @@ import { REPRODUCTION_CONFIGS } from '@/tests/fixtures/pages/report-output/repro
 import {
   GENERIC_ENVELOPES,
   GENERIC_HOUSEHOLD_IDS,
+  GENERIC_PARAMETER_METADATA,
   GENERIC_POLICIES,
   GENERIC_POLICY_IDS,
   GenericOrchestrationHTTP,
@@ -89,7 +90,7 @@ export class ReportYearRecoveryHTTP extends GenericOrchestrationHTTP {
     id: policy.id!,
     country_id: 'us',
     api_version: 'synthetic',
-    policy_json: PolicyAdapter.toCreationPayload(policy).data,
+    policy_json: PolicyAdapter.toCreationPayload(policy, GENERIC_PARAMETER_METADATA).data,
     policy_hash: `synthetic-policy-${policy.id}`,
   }));
   readonly originalReport: ReportMetadata = {

@@ -14,6 +14,7 @@ import { colors, spacing } from '@/designTokens';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import type { PolicyParameterValue } from '@/types/metadata/policyMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { Parameter } from '@/types/subIngredients/parameter';
 import {
@@ -83,7 +84,7 @@ export function PolicyCreationContent({
     const reformValues = new ValueIntervalCollection(baseValues);
     const paramToChart = policyParameters.find((p) => p.name === selectedParam.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
-      const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
+      const userIntervals = new ValueIntervalCollection(paramToChart.values);
       for (const interval of userIntervals.getIntervals()) {
         reformValues.addInterval(interval);
       }
@@ -116,7 +117,7 @@ export function PolicyCreationContent({
   };
 
   // Format a value for display
-  const formatValue = (value: number | string | boolean): string => {
+  const formatValue = (value: PolicyParameterValue): string => {
     if (typeof value === 'boolean') {
       return value ? 'Yes' : 'No';
     }
@@ -130,7 +131,10 @@ export function PolicyCreationContent({
         maximumFractionDigits: 0,
       });
     }
-    return String(value);
+    if (typeof value === 'string') {
+      return value;
+    }
+    return JSON.stringify(value);
   };
 
   // Remove a change from the current parameter

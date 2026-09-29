@@ -15,6 +15,7 @@ import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
+import type { PolicyParameterValue } from '@/types/metadata/policyMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { trackPolicyCreated } from '@/utils/analytics';
@@ -30,6 +31,19 @@ interface PolicySubmitViewProps {
   onSubmitSuccess: (policyId: string) => void;
   onBack?: () => void;
   onCancel?: () => void;
+}
+
+function formatPolicyParameterValue(value: PolicyParameterValue): string | number {
+  if (typeof value === 'number' || typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'True' : 'False';
+  }
+  if (value === null) {
+    return 'null';
+  }
+  return JSON.stringify(value);
 }
 
 export default function PolicySubmitView({
@@ -57,7 +71,8 @@ export default function PolicySubmitView({
     }
 
     const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
-      policyData as Policy
+      policyData as Policy,
+      metadata.parameters
     );
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
@@ -86,7 +101,7 @@ export default function PolicySubmitView({
             subItems: policy.parameters.map((param) => {
               const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
                 dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-                value: valueInterval.value,
+                value: formatPolicyParameterValue(valueInterval.value),
               }));
 
               return {

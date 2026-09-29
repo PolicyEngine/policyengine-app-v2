@@ -107,6 +107,8 @@ describe('fetchMetadata', () => {
     const result = await fetchMetadata(mockCountryId);
 
     expect(result).toEqual(mockCustomResponse);
-    expect(result.result.parameters[TEST_PARAMETER_KEY]).toBe(TEST_PARAMETER_VALUE);
+    expect(result.result.parameters[TEST_PARAMETER_KEY]?.values?.['2024-01-01']).toBe(
+      TEST_PARAMETER_VALUE
+    );
   });
 });

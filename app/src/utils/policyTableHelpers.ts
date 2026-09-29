@@ -72,7 +72,7 @@ export function getParameterValueFromPolicy(
  * Format a parameter value with appropriate unit formatting
  * Always uses 1 decimal place for consistency across all columns
  */
-export function formatParameterValue(value: any, unit?: string): string {
+export function formatParameterValue(value: any, unit?: string | null): string {
   if (typeof value === 'number') {
     const DECIMAL_PRECISION = 1;
 

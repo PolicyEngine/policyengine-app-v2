@@ -3,8 +3,9 @@ import type { ValuesList } from '@/types/subIngredients/valueInterval';
 // Based on what the API currently exposes
 export interface ParameterMetadata {
   label: string;
-  type: 'parameter' | 'parameterNode' | any; // TODO: Add more types as needed
+  type: 'parameter' | 'parameterNode';
   parameter: string; // Dot-separated path to parameter; often used as 'name' elsewhere in app
+  indexInModule?: number;
   description?: string | null;
   unit?: string | null;
   period?: string | null; // TODO: Specify period values

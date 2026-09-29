@@ -8,6 +8,8 @@ export const mockMetadataResponse: MetadataApiPayload = {
   result: {
     parameters: {
       income_tax: {
+        type: 'parameter',
+        parameter: 'income_tax',
         description: 'Income tax',
         label: 'Income tax',
         unit: 'currency-GBP',
@@ -17,6 +19,8 @@ export const mockMetadataResponse: MetadataApiPayload = {
         },
       },
       national_insurance: {
+        type: 'parameter',
+        parameter: 'national_insurance',
         description: 'National Insurance contributions',
         label: 'National Insurance',
         unit: 'currency-GBP',
@@ -123,7 +127,14 @@ export const mockCustomResponse: MetadataApiPayload = {
   status: 'ok',
   message: null,
   result: {
-    parameters: { [TEST_PARAMETER_KEY]: TEST_PARAMETER_VALUE },
+    parameters: {
+      [TEST_PARAMETER_KEY]: {
+        type: 'parameter',
+        parameter: TEST_PARAMETER_KEY,
+        label: TEST_PARAMETER_KEY,
+        values: { '2024-01-01': TEST_PARAMETER_VALUE },
+      },
+    },
     variables: {},
     entities: {},
     variableModules: {},

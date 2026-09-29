@@ -78,12 +78,16 @@ export default function EarningsVariationSubPage({
 
   // Convert policies to API format
   const baselinePolicyData = useMemo(
-    () => (baselinePolicy ? PolicyAdapter.toCreationPayload(baselinePolicy).data : {}),
-    [baselinePolicy]
+    () =>
+      baselinePolicy
+        ? PolicyAdapter.toCreationPayload(baselinePolicy, metadata.parameters).data
+        : {},
+    [baselinePolicy, metadata.parameters]
   );
   const reformPolicyData = useMemo(
-    () => (reformPolicy ? PolicyAdapter.toCreationPayload(reformPolicy).data : {}),
-    [reformPolicy]
+    () =>
+      reformPolicy ? PolicyAdapter.toCreationPayload(reformPolicy, metadata.parameters).data : {},
+    [reformPolicy, metadata.parameters]
   );
   const shouldFetchInternally = !providedBaselineVariation;
 

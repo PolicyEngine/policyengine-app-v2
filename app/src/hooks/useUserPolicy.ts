@@ -3,6 +3,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { Policy } from '@/types/ingredients/Policy';
 import type { PolicyCreationPayload } from '@/types/payloads';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
@@ -187,6 +188,8 @@ export function isPolicyWithAssociation(obj: unknown): obj is UserPolicyWithAsso
 
 export const useUserPolicies = (userId: string) => {
   const country = useCurrentCountry();
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
 
   // First, get the associations (filtered by current country)
   const {
@@ -207,7 +210,7 @@ export const useUserPolicies = (userId: string) => {
       queryFn: async () => {
         try {
           const metadata = await fetchPolicyById(country, policyId.toString());
-          return PolicyAdapter.fromMetadata(metadata);
+          return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
         } catch (error) {
           // Add context to help debug which policy failed
           const message =
@@ -218,7 +221,7 @@ export const useUserPolicies = (userId: string) => {
           throw new Error(message);
         }
       },
-      enabled: !!associations, // Only run when associations are loaded
+      enabled: !!associations && isParameterMetadataReady,
       staleTime: 5 * 60 * 1000,
       structuralSharing: false,
     })),

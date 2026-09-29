@@ -5,6 +5,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { buildCanonicalGeography } from '@/models/geography';
@@ -64,6 +65,8 @@ export interface EnhancedUserReport {
  */
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
   const queryClient = useQueryClient();
   const { data: regions } = useRegions(country);
 
@@ -149,9 +152,9 @@ export const useUserReports = (userId: string) => {
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
+      return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
-    enabled: policyIds.length > 0,
+    enabled: isParameterMetadataReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
   });
@@ -359,6 +362,8 @@ export const useUserReports = (userId: string) => {
 export const useUserReportById = (userReportId: string, options?: { enabled?: boolean }) => {
   const queryClient = useQueryClient();
   const country = useCurrentCountry();
+  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
+    useParameterMetadata(country);
   const isEnabled = options?.enabled !== false;
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId
@@ -424,9 +429,9 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
+      return PolicyAdapter.fromMetadata(metadata, parameterMetadata);
     },
-    enabled: isEnabled && policyIds.length > 0,
+    enabled: isEnabled && isParameterMetadataReady && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
   });
