@@ -59,7 +59,7 @@ export function PolicyDetailsDrawer({
       const changes = (param.values || []).map((interval, index) => ({
         index,
         period: formatPeriod(interval.startDate, interval.endDate),
-        value: formatParameterValue(interval.value, metadata?.unit ?? undefined),
+        value: formatParameterValue(interval.value, metadata?.unit),
       }));
       return { paramName: param.name, label: displayLabel, changes };
     });
