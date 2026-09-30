@@ -5,7 +5,8 @@ This skill ensures consistent chart styling across PolicyEngine visualizations.
 ## Chart libraries
 
 - **Recharts** (default) — used for all standard charts (bar, line, area, stacked bar)
-- **Plotly** (exceptions only) — choropleth maps, hexagonal maps, waterfall charts, blog/notebook embedded JSON
+- **Plotly** (exceptions only) — choropleth maps, hexagonal maps, waterfall charts, notebook embedded JSON, and legacy blog posts
+- **Blog posts on policyengine.org** — ` ```chart ` blocks, rendered by the website with Recharts and the ui-kit chart defaults (see [Blog post charts](#blog-post-charts))
 
 ## Recharts chart pattern
 
@@ -210,14 +211,14 @@ const description = (
 
 These charts remain on Plotly (`react-plotly.js`):
 
-| Chart                                 | Reason                                         |
-| ------------------------------------- | ---------------------------------------------- |
-| `USDistrictChoroplethMap.tsx`         | No Recharts geo support                        |
-| `HexagonalMap.tsx`                    | Custom scatter with hex markers                |
-| `BudgetaryImpactSubPage.tsx`          | Waterfall chart (no native Recharts waterfall) |
-| `BudgetaryImpactByProgramSubPage.tsx` | Waterfall chart                                |
-| `MarkdownFormatter.tsx`               | Blog posts embed native Plotly JSON            |
-| `NotebookRenderer.tsx`                | Notebooks embed native Plotly JSON             |
+| Chart                                 | Reason                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------ |
+| `USDistrictChoroplethMap.tsx`         | No Recharts geo support                                                  |
+| `HexagonalMap.tsx`                    | Custom scatter with hex markers                                          |
+| `BudgetaryImpactSubPage.tsx`          | Waterfall chart (no native Recharts waterfall)                           |
+| `BudgetaryImpactByProgramSubPage.tsx` | Waterfall chart                                                          |
+| `MarkdownFormatter.tsx`               | Legacy posts embed native Plotly JSON; new posts use ` ```chart ` blocks |
+| `NotebookRenderer.tsx`                | Notebooks embed native Plotly JSON                                       |
 
 For these files, continue using the Plotly patterns:
 
@@ -236,6 +237,26 @@ import {
   style={{ width: "100%", height: chartHeight }}
 />;
 ```
+
+## Blog post charts
+
+Posts draw charts as ` ```chart ` fenced blocks holding a JSON spec. The website's
+`website/src/components/blog/BlogChart.tsx` renders them with Recharts, Inter, the
+`--chart-*` color tokens, the shared axis, grid, tooltip and legend styles, and the
+PolicyEngine watermark. Types: `bar`, `waterfall` (`BlogWaterfallChart.tsx`) and `stateMap`
+(`BlogStateMap.tsx`); each file's header comment documents its spec.
+
+- Put data and labels in the spec, never styling. Pick series colors by token name
+  (`primary` … `quinary`).
+- Do not add matplotlib PNGs or Plotly JSON to new posts.
+- `website/src/__tests__/components/blog-chart-posts.test.ts` fails CI when a post's chart
+  block does not parse. Keep the chart's numbers identical to the tables and text beside it.
+- The website builds Tailwind with the `tw:` prefix, so ui-kit components that rely on
+  unprefixed utility classes render unstyled there. Style blog chart parts inline with the
+  `:root` token variables (`--chart-1`, `--foreground`, `--muted-foreground`, `--border`,
+  `--font-sans`).
+- For a newsletter or social image of a chart, screenshot the chart as the live post renders
+  it (headless Chromium at 2x) instead of re-plotting it.
 
 ## Anti-patterns
 
