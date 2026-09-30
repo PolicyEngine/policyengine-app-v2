@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getArticleContent, getAllSlugs, getPostBySlug } from "@/lib/articles";
 import { encodeJsonForScript } from "@/lib/encodeJsonForScript";
 import { isNotebookFile } from "@/lib/notebookUtils";
+import { toPostIsoDate } from "@/lib/postDate";
 import ArticleClient from "./ArticleClient";
 
 /**
@@ -38,7 +39,7 @@ export async function generateMetadata({
       title: post.title,
       description: post.description,
       type: "article",
-      publishedTime: post.date,
+      publishedTime: toPostIsoDate(post.date),
       ...(imageUrl ? { images: [imageUrl] } : {}),
     },
     twitter: {
@@ -80,7 +81,7 @@ export default async function ArticlePage({
     "@type": "Article",
     headline: post.title,
     description: post.description,
-    datePublished: post.date,
+    datePublished: toPostIsoDate(post.date),
     author: post.authors.map((name) => ({ "@type": "Person", name })),
     publisher: {
       "@type": "Organization",

@@ -59,6 +59,7 @@ import {
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import authorsData from "@/data/posts/authors.json";
 import { buildAuthorFilterOptions } from "@/lib/authorFilterOptions";
+import { formatPostDate } from "@/lib/postDate";
 import {
   searchResearchItems,
   type ResearchSearchIndexEntry,
@@ -137,11 +138,7 @@ export function BlogPostCard({
     ? `/${item.countryId}/${item.slug}`
     : `/${countryId}/research/${item.slug}`;
 
-  const formattedDate = new Date(item.date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const formattedDate = formatPostDate(item.date, "short");
 
   const displayTags = item.tags
     .filter((tag) => topicLabels[tag] || locationLabels[tag])

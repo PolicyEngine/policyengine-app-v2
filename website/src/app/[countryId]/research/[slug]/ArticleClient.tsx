@@ -25,6 +25,7 @@ import {
   topicLabels,
 } from "@/data/posts/postTransformers";
 import { extractMarkdownFromNotebook } from "@/lib/notebookUtils";
+import { formatPostDate } from "@/lib/postDate";
 import authorsData from "@/data/posts/authors.json";
 import {
   colors,
@@ -71,11 +72,7 @@ export default function ArticleClient({
     return { markdown: content, notebook: null };
   }, [content, isNotebook]);
 
-  const formattedDate = new Date(post.date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = formatPostDate(post.date, "long");
 
   const imageUrl = post.image
     ? post.image.startsWith("http")
