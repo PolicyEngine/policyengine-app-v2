@@ -1,0 +1,361 @@
+{
+  "baseline": {
+    "recordedAt": "2026-09-29",
+    "metadataVersion": "1.764.6",
+    "config": {
+      "model": "claude-opus-5",
+      "cachePrompt": false,
+      "fallbacks": false,
+      "maxToolTurns": 10
+    },
+    "suites": {
+      "all": {
+        "cases": 75,
+        "errors": 1,
+        "allCorrectRate": 0.37333333333333335,
+        "exactRate": 0.3333333333333333,
+        "pathRecall": 0.5605986765986767,
+        "valueAccuracy": 0.4610058578058578,
+        "judgedEquivalentRate": 0.5,
+        "judgedPartialRate": 0.25675675675675674,
+        "meanModelCalls": 4.733333333333333,
+        "meanCostUsd": 0.15968420000000003,
+        "totalCostUsd": 11.976315000000001,
+        "medianLatencyMs": 22786
+      },
+      "one parameter": {
+        "cases": 17,
+        "errors": 0,
+        "allCorrectRate": 0.8823529411764706,
+        "exactRate": 0.8235294117647058,
+        "pathRecall": 1,
+        "valueAccuracy": 0.8823529411764706,
+        "judgedEquivalentRate": 0.8823529411764706,
+        "judgedPartialRate": 0,
+        "meanModelCalls": 4.117647058823529,
+        "meanCostUsd": 0.06565882352941177,
+        "totalCostUsd": 1.1162,
+        "medianLatencyMs": 10929
+      },
+      "2 to 5 parameters": {
+        "cases": 21,
+        "errors": 0,
+        "allCorrectRate": 0.38095238095238093,
+        "exactRate": 0.3333333333333333,
+        "pathRecall": 0.7523809523809524,
+        "valueAccuracy": 0.5746031746031746,
+        "judgedEquivalentRate": 0.6190476190476191,
+        "judgedPartialRate": 0.23809523809523808,
+        "meanModelCalls": 4.714285714285714,
+        "meanCostUsd": 0.13757595238095238,
+        "totalCostUsd": 2.889095,
+        "medianLatencyMs": 20096
+      },
+      "6 or more parameters": {
+        "cases": 18,
+        "errors": 1,
+        "allCorrectRate": 0.2777777777777778,
+        "exactRate": 0.2222222222222222,
+        "pathRecall": 0.5136055969389303,
+        "valueAccuracy": 0.4171540371540371,
+        "judgedEquivalentRate": 0.4117647058823529,
+        "judgedPartialRate": 0.29411764705882354,
+        "meanModelCalls": 4.944444444444445,
+        "meanCostUsd": 0.2231530555555556,
+        "totalCostUsd": 4.016755000000001,
+        "medianLatencyMs": 28715.5
+      },
+      "contributed parameters": {
+        "cases": 19,
+        "errors": 0,
+        "allCorrectRate": 0,
+        "exactRate": 0,
+        "pathRecall": 0,
+        "valueAccuracy": 0,
+        "judgedEquivalentRate": 0.10526315789473684,
+        "judgedPartialRate": 0.47368421052631576,
+        "meanModelCalls": 5.105263157894737,
+        "meanCostUsd": 0.2081192105263158,
+        "totalCostUsd": 3.954265,
+        "medianLatencyMs": 36762
+      }
+    }
+  },
+  "upgraded": {
+    "recordedAt": "2026-09-29",
+    "metadataVersion": "1.764.6",
+    "config": {
+      "model": "claude-opus-5-5",
+      "effort": "medium",
+      "cachePrompt": true,
+      "fallbacks": true,
+      "maxToolTurns": 12
+    },
+    "suites": {
+      "all": {
+        "cases": 75,
+        "errors": 0,
+        "allCorrectRate": 0.64,
+        "exactRate": 0.49333333333333335,
+        "pathRecall": 0.7950300430300428,
+        "valueAccuracy": 0.7222266422266421,
+        "judgedEquivalentRate": 0.7333333333333333,
+        "judgedPartialRate": 0.10666666666666667,
+        "meanModelCalls": 5.64,
+        "meanCostUsd": 0.06551563999999999,
+        "totalCostUsd": 4.913672999999999,
+        "medianLatencyMs": 16992
+      },
+      "one parameter": {
+        "cases": 17,
+        "errors": 0,
+        "allCorrectRate": 0.9411764705882353,
+        "exactRate": 0.8823529411764706,
+        "pathRecall": 1,
+        "valueAccuracy": 0.9411764705882353,
+        "judgedEquivalentRate": 0.9411764705882353,
+        "judgedPartialRate": 0,
+        "meanModelCalls": 4.0588235294117645,
+        "meanCostUsd": 0.030625105882352944,
+        "totalCostUsd": 0.5206268000000001,
+        "medianLatencyMs": 10481
+      },
+      "2 to 5 parameters": {
+        "cases": 21,
+        "errors": 0,
+        "allCorrectRate": 0.5714285714285714,
+        "exactRate": 0.47619047619047616,
+        "pathRecall": 0.834920634920635,
+        "valueAccuracy": 0.6888888888888889,
+        "judgedEquivalentRate": 0.7142857142857143,
+        "judgedPartialRate": 0.14285714285714285,
+        "meanModelCalls": 5.333333333333333,
+        "meanCostUsd": 0.053863123809523815,
+        "totalCostUsd": 1.1311256,
+        "medianLatencyMs": 18673
+      },
+      "6 or more parameters": {
+        "cases": 18,
+        "errors": 0,
+        "allCorrectRate": 0.2777777777777778,
+        "exactRate": 0.2222222222222222,
+        "pathRecall": 0.5290272956939623,
+        "valueAccuracy": 0.45557397224063895,
+        "judgedEquivalentRate": 0.4444444444444444,
+        "judgedPartialRate": 0.16666666666666666,
+        "meanModelCalls": 7.333333333333333,
+        "meanCostUsd": 0.12056677777777776,
+        "totalCostUsd": 2.1702019999999997,
+        "medianLatencyMs": 27188.5
+      },
+      "contributed parameters": {
+        "cases": 19,
+        "errors": 0,
+        "allCorrectRate": 0.7894736842105263,
+        "exactRate": 0.42105263157894735,
+        "pathRecall": 0.8195488721804511,
+        "valueAccuracy": 0.8157894736842105,
+        "judgedEquivalentRate": 0.8421052631578947,
+        "judgedPartialRate": 0.10526315789473684,
+        "meanModelCalls": 5.7894736842105265,
+        "meanCostUsd": 0.05745887368421053,
+        "totalCostUsd": 1.0917186,
+        "medianLatencyMs": 16199
+      }
+    }
+  },
+  "upgraded-v2": {
+    "recordedAt": "2026-09-29",
+    "metadataVersion": "1.764.6",
+    "config": {
+      "model": "claude-opus-5-5",
+      "effort": "medium",
+      "cachePrompt": true,
+      "fallbacks": true,
+      "maxToolTurns": 12
+    },
+    "suites": {
+      "all": {
+        "cases": 75,
+        "errors": 0,
+        "allCorrectRate": 0.68,
+        "exactRate": 0.52,
+        "pathRecall": 0.76814118014118,
+        "valueAccuracy": 0.7245566085566085,
+        "judgedEquivalentRate": 0.76,
+        "judgedPartialRate": 0.10666666666666667,
+        "meanModelCalls": 5.373333333333333,
+        "meanCostUsd": 0.06362200266666665,
+        "totalCostUsd": 4.771650199999999,
+        "medianLatencyMs": 15071
+      },
+      "one parameter": {
+        "cases": 17,
+        "errors": 0,
+        "allCorrectRate": 0.8823529411764706,
+        "exactRate": 0.8235294117647058,
+        "pathRecall": 0.8823529411764706,
+        "valueAccuracy": 0.8823529411764706,
+        "judgedEquivalentRate": 0.8823529411764706,
+        "judgedPartialRate": 0,
+        "meanModelCalls": 3.6470588235294117,
+        "meanCostUsd": 0.028230776470588234,
+        "totalCostUsd": 0.4799232,
+        "medianLatencyMs": 8063
+      },
+      "2 to 5 parameters": {
+        "cases": 21,
+        "errors": 0,
+        "allCorrectRate": 0.6190476190476191,
+        "exactRate": 0.5238095238095238,
+        "pathRecall": 0.8126984126984127,
+        "valueAccuracy": 0.7142857142857143,
+        "judgedEquivalentRate": 0.8095238095238095,
+        "judgedPartialRate": 0.09523809523809523,
+        "meanModelCalls": 5,
+        "meanCostUsd": 0.05223571428571428,
+        "totalCostUsd": 1.0969499999999999,
+        "medianLatencyMs": 16563
+      },
+      "6 or more parameters": {
+        "cases": 18,
+        "errors": 0,
+        "allCorrectRate": 0.3888888888888889,
+        "exactRate": 0.2222222222222222,
+        "pathRecall": 0.5302178802178802,
+        "valueAccuracy": 0.4634303134303134,
+        "judgedEquivalentRate": 0.5,
+        "judgedPartialRate": 0.2222222222222222,
+        "meanModelCalls": 7.555555555555555,
+        "meanCostUsd": 0.12438458888888887,
+        "totalCostUsd": 2.2389225999999995,
+        "medianLatencyMs": 29219
+      },
+      "contributed parameters": {
+        "cases": 19,
+        "errors": 0,
+        "allCorrectRate": 0.8421052631578947,
+        "exactRate": 0.5263157894736842,
+        "pathRecall": 0.8421052631578947,
+        "valueAccuracy": 0.8421052631578947,
+        "judgedEquivalentRate": 0.8421052631578947,
+        "judgedPartialRate": 0.10526315789473684,
+        "meanModelCalls": 5.2631578947368425,
+        "meanCostUsd": 0.05030812631578948,
+        "totalCostUsd": 0.9558544000000001,
+        "medianLatencyMs": 12538
+      }
+    }
+  },
+  "upgraded-v3": {
+    "recordedAt": "2026-09-29",
+    "metadataVersion": "1.764.6",
+    "config": {
+      "model": "claude-opus-5-5",
+      "effort": "medium",
+      "cachePrompt": true,
+      "fallbacks": true,
+      "maxToolTurns": 12
+    },
+    "suites": {
+      "all": {
+        "cases": 75,
+        "errors": 0,
+        "allCorrectRate": 0.6533333333333333,
+        "exactRate": 0.49333333333333335,
+        "pathRecall": 0.7564268684268683,
+        "valueAccuracy": 0.7226710866710867,
+        "judgedEquivalentRate": 0.7733333333333333,
+        "judgedPartialRate": 0.08,
+        "meanModelCalls": 5.506666666666667,
+        "meanCostUsd": 0.06344718133333331,
+        "totalCostUsd": 4.758538599999999,
+        "medianLatencyMs": 18016
+      },
+      "valid cases": {
+        "cases": 62,
+        "errors": 0,
+        "allCorrectRate": 0.7580645161290323,
+        "exactRate": 0.5645161290322581,
+        "pathRecall": 0.8761858213471115,
+        "valueAccuracy": 0.8405832518735745,
+        "judgedEquivalentRate": 0.8870967741935484,
+        "judgedPartialRate": 0.08064516129032258,
+        "meanModelCalls": 5.419354838709677,
+        "meanCostUsd": 0.05929219354838707,
+        "totalCostUsd": 3.6761159999999986,
+        "medianLatencyMs": 18043
+      },
+      "one parameter": {
+        "cases": 14,
+        "errors": 0,
+        "allCorrectRate": 1,
+        "exactRate": 0.9285714285714286,
+        "pathRecall": 1,
+        "valueAccuracy": 1,
+        "judgedEquivalentRate": 1,
+        "judgedPartialRate": 0,
+        "meanModelCalls": 3.642857142857143,
+        "meanCostUsd": 0.02878765714285714,
+        "totalCostUsd": 0.4030272,
+        "medianLatencyMs": 11364.5
+      },
+      "2 to 5 parameters": {
+        "cases": 18,
+        "errors": 0,
+        "allCorrectRate": 0.6666666666666666,
+        "exactRate": 0.5555555555555556,
+        "pathRecall": 0.837037037037037,
+        "valueAccuracy": 0.7777777777777778,
+        "judgedEquivalentRate": 0.8888888888888888,
+        "judgedPartialRate": 0.1111111111111111,
+        "meanModelCalls": 5.444444444444445,
+        "meanCostUsd": 0.05724793333333332,
+        "totalCostUsd": 1.0304627999999998,
+        "medianLatencyMs": 17813
+      },
+      "6 or more parameters": {
+        "cases": 11,
+        "errors": 0,
+        "allCorrectRate": 0.45454545454545453,
+        "exactRate": 0.36363636363636365,
+        "pathRecall": 0.8415322051685689,
+        "valueAccuracy": 0.7378328741965106,
+        "judgedEquivalentRate": 0.7272727272727273,
+        "judgedPartialRate": 0.18181818181818182,
+        "meanModelCalls": 6.818181818181818,
+        "meanCostUsd": 0.10334716363636363,
+        "totalCostUsd": 1.1368188,
+        "medianLatencyMs": 26705
+      },
+      "contributed parameters": {
+        "cases": 19,
+        "errors": 0,
+        "allCorrectRate": 0.8421052631578947,
+        "exactRate": 0.42105263157894735,
+        "pathRecall": 0.8421052631578947,
+        "valueAccuracy": 0.8421052631578947,
+        "judgedEquivalentRate": 0.8947368421052632,
+        "judgedPartialRate": 0.05263157894736842,
+        "meanModelCalls": 5.894736842105263,
+        "meanCostUsd": 0.058200378947368424,
+        "totalCostUsd": 1.1058072,
+        "medianLatencyMs": 19357
+      },
+      "invalid against current law": {
+        "cases": 13,
+        "errors": 0,
+        "allCorrectRate": 0.15384615384615385,
+        "exactRate": 0.15384615384615385,
+        "pathRecall": 0.1852687852687853,
+        "valueAccuracy": 0.1603207603207603,
+        "judgedEquivalentRate": 0.23076923076923078,
+        "judgedPartialRate": 0.07692307692307693,
+        "meanModelCalls": 5.923076923076923,
+        "meanCostUsd": 0.08326327692307693,
+        "totalCostUsd": 1.0824226000000001,
+        "medianLatencyMs": 14286
+      }
+    }
+  }
+}

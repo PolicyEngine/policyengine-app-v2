@@ -14,6 +14,7 @@
     "generate-prerender": "tsx scripts/generate-prerender.ts",
     "generate-sitemap": "tsx scripts/generate-sitemap.ts",
     "evaluate-search": "tsx scripts/evaluate-parameter-search.ts",
+    "evaluate-ask": "tsx scripts/evaluate-ask-agent.ts",
     "refresh-search-eval-cases": "tsx scripts/refresh-parameter-search-cases.ts",
     "build-parameter-dependencies": "python3 scripts/build-parameter-dependency-map.py",
     "build-with-types": "tsc --noEmit && vite build",
@@ -72,6 +73,7 @@
     "wordwrapjs": "^5.1.1"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
     "@eslint/js": "^9.29.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.2",
     "@storybook/addon-essentials": "^8.6.14",
