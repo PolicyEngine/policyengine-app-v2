@@ -256,8 +256,8 @@ its spec.
   with tests before the post uses it.
 - `website/src/__tests__/components/blog-chart-posts.test.ts` fails CI when a post's chart
   block does not parse. Keep the chart's numbers identical to the tables and text beside it.
-- The legacy `app/src/components/blog/MarkdownFormatter.tsx` renders only ` ```plotly `
-  blocks; a ` ```chart ` block shows there as raw code.
+- The legacy `app/src/components/blog/MarkdownFormatter.tsx` draws charts only from
+  ` ```plotly ` blocks; a ` ```chart ` block shows there as a JSON code block labeled `chart`.
 - The website builds Tailwind with the `tw:` prefix, so ui-kit components that rely on
   unprefixed utility classes render unstyled there. Style blog chart parts inline with the
   `:root` token variables (`--chart-1`, `--foreground`, `--muted-foreground`, `--border`,
