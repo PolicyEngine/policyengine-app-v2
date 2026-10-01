@@ -307,8 +307,10 @@ describe('actual report year selector corrects saved SPM inputs before calculati
         expect(envelope.result.people.you.age).toEqual({
           [SUPPORTED_YEAR]: index === 0 ? 40 : 41,
         });
-        expect(envelope.spm_config).toEqual(CORRECTED_HOUSEHOLD_PAYLOADS[index].spm);
         expect(envelope.spm_provenance?.years).toEqual([SUPPORTED_YEAR]);
+        expect(envelope.spm_provenance?.forecast_sha256).toBe(
+          CORRECTED_HOUSEHOLD_PAYLOADS[index].spm?.forecast_content_sha256
+        );
         expect(await fetchPolicyById('us', simulation.policyId!)).toEqual(originalPolicies[index]);
       }
       render(providers(<ReopenedReport userReportId={savedUserReportId} />));
@@ -436,7 +438,9 @@ describe('actual report year selector corrects saved SPM inputs before calculati
           policyId: GENERIC_POLICY_IDS[index],
         });
         const envelope = simulation.output as HouseholdCalculationResult;
-        expect(envelope.spm_config).toEqual(CORRECTED_HOUSEHOLD_PAYLOADS[1].spm);
+        expect(envelope.spm_provenance?.forecast_sha256).toBe(
+          CORRECTED_HOUSEHOLD_PAYLOADS[1].spm?.forecast_content_sha256
+        );
         expect(envelope.result.people.you.employment_income).toEqual({ [SUPPORTED_YEAR]: 62000 });
         expect(envelope.result.households!.household.county_fips).toEqual({
           [SUPPORTED_YEAR]: '06037',

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { SPM_COMPARISON_RECEIPT, SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import {
   buildSPMProvenanceDisplayRows,
+  buildSPMSelectionFromProvenance,
   parseOptionalSPMCalculationProvenance,
   parseRequiredSPMComparisonCalculationProvenance,
   parseSPMComparisonProvenance,
@@ -93,45 +94,17 @@ describe('SPM wire contracts', () => {
     });
   });
 
-  test('given matching calculation fields then parses the selection and receipt together', () => {
-    const spmConfig = {
-      geography_kind: 'national',
-      geography_id: null,
-      forecast_content_sha256: SPM_RECEIPT.forecast_sha256,
-      scenario: SPM_RECEIPT.scenario,
-      county_vintage: '2020',
-      as_of: SPM_RECEIPT.as_of,
-    };
+  test('given a completed calculation then parses its receipt without a sibling config', () => {
     expect(
       parseOptionalSPMCalculationProvenance({
-        spm_config: spmConfig,
         spm_provenance: SPM_RECEIPT,
       })
-    ).toEqual({ spm_config: spmConfig, spm_provenance: SPM_RECEIPT });
+    ).toEqual({ spm_provenance: SPM_RECEIPT });
   });
 
-  test('given a mismatched receipt then rejects the calculation fields', () => {
+  test('given a superseded sibling config then rejects the completed calculation', () => {
     expect(() =>
       parseOptionalSPMCalculationProvenance({
-        spm_config: {
-          geography_kind: 'county',
-          geography_id: null,
-          forecast_content_sha256: SPM_RECEIPT.forecast_sha256,
-          scenario: SPM_RECEIPT.scenario,
-          county_vintage: '2020',
-          as_of: SPM_RECEIPT.as_of,
-        },
-        spm_provenance: SPM_RECEIPT,
-      })
-    ).toThrow('does not match');
-  });
-
-  test('given US society-wide output then requires a comparison receipt and selection', () => {
-    expect(() => parseRequiredSPMComparisonCalculationProvenance({ budget: {} })).toThrow(
-      'requires spm_config and spm_provenance'
-    );
-    expect(
-      parseRequiredSPMComparisonCalculationProvenance({
         spm_config: {
           geography_kind: 'national',
           geography_id: null,
@@ -140,18 +113,32 @@ describe('SPM wire contracts', () => {
           county_vintage: '2020',
           as_of: SPM_RECEIPT.as_of,
         },
+        spm_provenance: SPM_RECEIPT,
+      })
+    ).toThrow('must not include spm_config');
+  });
+
+  test('given US society-wide output then requires only a comparison receipt', () => {
+    expect(() => parseRequiredSPMComparisonCalculationProvenance({ budget: {} })).toThrow(
+      'requires spm_provenance'
+    );
+    expect(
+      parseRequiredSPMComparisonCalculationProvenance({
         spm_provenance: SPM_COMPARISON_RECEIPT,
       })
     ).toEqual({
-      spm_config: {
-        geography_kind: 'national',
-        geography_id: null,
-        forecast_content_sha256: SPM_RECEIPT.forecast_sha256,
-        scenario: SPM_RECEIPT.scenario,
-        county_vintage: '2020',
-        as_of: SPM_RECEIPT.as_of,
-      },
       spm_provenance: SPM_COMPARISON_RECEIPT,
+    });
+  });
+
+  test('given an individual receipt then rebuilds the fully pinned request selection', () => {
+    expect(buildSPMSelectionFromProvenance(SPM_RECEIPT)).toEqual({
+      geography_kind: 'national',
+      geography_id: null,
+      forecast_content_sha256: SPM_RECEIPT.forecast_sha256,
+      scenario: SPM_RECEIPT.scenario,
+      county_vintage: '2020',
+      as_of: SPM_RECEIPT.as_of,
     });
   });
 });

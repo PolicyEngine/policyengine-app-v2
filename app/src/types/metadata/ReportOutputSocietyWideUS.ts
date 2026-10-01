@@ -1,8 +1,7 @@
-import type { ResolvedSPMSelection, SPMComparisonProvenance } from '@/types/spm';
+import type { SPMComparisonProvenance } from '@/types/spm';
 import { USCongressionalDistrictBreakdown } from './ReportOutputSocietyWideByCongressionalDistrict';
 
 export interface ReportOutputSocietyWideUS {
-  spm_config: ResolvedSPMSelection;
   spm_provenance: SPMComparisonProvenance;
   budget: {
     baseline_net_income: number;

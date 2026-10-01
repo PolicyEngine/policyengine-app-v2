@@ -4,7 +4,7 @@ import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { ResolvedSPMSelection, SPMProvenance, SPMRuntimeVersions } from '@/types/spm';
+import type { SPMProvenance, SPMRuntimeVersions } from '@/types/spm';
 
 export const REPRODUCTION_YEAR = '2026';
 // Synthetic artifact hashes and package versions; never published artifact pins.
@@ -22,11 +22,11 @@ export const REPRODUCTION_RUNTIME_VERSIONS = [
     'spm-calculator': '6.2.0',
   },
 ];
-export const REPRODUCTION_CONFIGS: ResolvedSPMSelection[] = [
+const REPRODUCTION_PROVENANCE_FIELDS = [
   {
     geography_kind: 'national',
     geography_id: null,
-    forecast_content_sha256: 'c'.repeat(64),
+    forecast_sha256: 'c'.repeat(64),
     scenario: 'baseline-null-false',
     county_vintage: '2020',
     as_of: '2026-08-01',
@@ -34,37 +34,21 @@ export const REPRODUCTION_CONFIGS: ResolvedSPMSelection[] = [
   {
     geography_kind: 'county',
     geography_id: null,
-    forecast_content_sha256: 'd'.repeat(64),
+    forecast_sha256: 'd'.repeat(64),
     scenario: 'county-alternative',
     county_vintage: '2020',
     as_of: '2026-09-01',
   },
-];
+] as const;
 
-function buildReproductionReceipt(index: number): SPMProvenance {
-  const config = REPRODUCTION_CONFIGS[index];
-  const common = {
+export const REPRODUCTION_RECEIPTS: SPMProvenance[] = REPRODUCTION_PROVENANCE_FIELDS.map(
+  (fields, index) => ({
     ...SPM_RECEIPT,
-    forecast_sha256: config.forecast_content_sha256,
-    scenario: config.scenario,
-    county_vintage: config.county_vintage,
-    as_of: config.as_of,
+    ...fields,
     years: [REPRODUCTION_YEAR],
     runtime_versions: { ...REPRODUCTION_RUNTIME_VERSIONS[index] },
-  };
-  if (config.geography_kind === 'metro') {
-    return {
-      ...common,
-      geography_kind: config.geography_kind,
-      geography_id: config.geography_id,
-    };
-  }
-  return {
-    ...common,
-    geography_kind: config.geography_kind,
-    geography_id: null,
-  };
-}
+  })
+);
 export const REPRODUCTION_HOUSEHOLDS = ['baseline', 'reform'].map((role, index) =>
   Household.fromAppInput({
     id: `household-${role}`,
@@ -110,8 +94,7 @@ export const REPRODUCTION_SIMULATIONS: Simulation[] = ['baseline', 'reform'].map
   status: 'complete',
   output: {
     result: { people: {} },
-    spm_config: REPRODUCTION_CONFIGS[index],
-    spm_provenance: buildReproductionReceipt(index),
+    spm_provenance: REPRODUCTION_RECEIPTS[index],
     policyengine_bundle: {
       policyengine_version: index === 0 ? '9.1.0' : '9.2.0',
       model_version: index === 0 ? '8.1.0' : '8.2.0',

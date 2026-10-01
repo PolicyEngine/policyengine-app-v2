@@ -13,7 +13,11 @@ import {
   cleanPythonPackageHouseholdNullValuesForYear,
 } from '@/models/household/pythonPackageCodec';
 import type { PythonPackageHouseholdSituation } from '@/models/household/pythonPackageTypes';
-import type { ResolvedSPMSelection, SPMProvenance, SPMSelection } from '@/types/spm';
+import {
+  buildSPMSelectionFromProvenance,
+  type SPMProvenance,
+  type SPMSelection,
+} from '@/types/spm';
 
 // Default year fallback - use the app's current year constant
 const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
@@ -24,7 +28,6 @@ export interface HouseholdReproduction {
   role: 'baseline' | 'reform';
   household: Household | null;
   policy: Record<string, any> | null;
-  spmConfig?: ResolvedSPMSelection;
   spmProvenance?: SPMProvenance;
   policyengineVersion?: string | null;
   modelVersion?: string | null;
@@ -319,7 +322,7 @@ function getSituationCode(
   household: Household | null,
   earningVariation: boolean,
   role: 'baseline' | 'reform' = 'reform',
-  spmConfig: SPMSelection | undefined = household?.spm
+  spmSelection: SPMSelection | undefined = household?.spm
 ): string[] {
   if (type !== 'household') {
     return [];
@@ -336,8 +339,8 @@ function getSituationCode(
     lines.push(`    reform=${role},`);
   }
 
-  if (spmConfig) {
-    const spm = Object.entries(spmConfig)
+  if (spmSelection) {
+    const spm = Object.entries(spmSelection)
       .filter(([, value]) => value !== undefined)
       .map(
         ([key, value]) =>
@@ -355,7 +358,7 @@ function getSituationCode(
     'print(output)'
   );
 
-  if (countryId === 'us' && spmConfig) {
+  if (countryId === 'us' && spmSelection) {
     lines.push(
       '',
       '# Calculate SPM outputs before reading the receipt.',
@@ -367,7 +370,6 @@ function getSituationCode(
       ']',
       'for variable in spm_variables:',
       `    print(variable, simulation.calculate(variable, ${year}))`,
-      'print("spm_config", simulation.spm_config)',
       'print("spm_provenance", simulation.spm_provenance())'
     );
   }
@@ -386,19 +388,10 @@ export function getHouseholdReproductionUnavailableReason(
   if (!year || !Number.isInteger(year)) {
     return 'This report has no saved calculation year. Exact reproduction is unavailable.';
   }
-  const { spmConfig, spmProvenance } = reproduction;
-  if (countryId === 'us' && (reproduction.household.spm || spmConfig || spmProvenance)) {
-    if (
-      !spmProvenance ||
-      !spmConfig ||
-      spmConfig.forecast_content_sha256 !== spmProvenance.forecast_sha256 ||
-      spmConfig.scenario !== spmProvenance.scenario ||
-      spmConfig.geography_kind !== spmProvenance.geography_kind ||
-      spmConfig.geography_id !== spmProvenance.geography_id ||
-      spmConfig.county_vintage !== spmProvenance.county_vintage ||
-      spmConfig.as_of !== spmProvenance.as_of
-    ) {
-      return 'This simulation has no matching resolved SPM settings and receipt. Complete its calculation to save the artifact identity needed for exact reproduction.';
+  const { spmProvenance } = reproduction;
+  if (countryId === 'us' && (reproduction.household.spm || spmProvenance)) {
+    if (!spmProvenance) {
+      return 'This simulation has no SPM receipt. Complete its calculation to save the artifact identity needed for exact reproduction.';
     }
     if (!spmProvenance.years.includes(String(year))) {
       return "This simulation's SPM receipt does not cover the saved calculation year. Calculate it again before generating exact reproduction code.";
@@ -426,7 +419,7 @@ export function getHouseholdReproducibilityCode(
   year: number | null,
   earningVariation: boolean = false
 ): string[] {
-  const { role, household, policy, spmConfig, spmProvenance } = reproduction;
+  const { role, household, policy, spmProvenance } = reproduction;
   if (getHouseholdReproductionUnavailableReason(countryId, reproduction, year)) {
     return [];
   }
@@ -455,7 +448,7 @@ export function getHouseholdReproducibilityCode(
       header.unshift(`%pip install ${modelPin}`, '');
     }
   }
-  if (countryId === 'us' && spmConfig) {
+  if (countryId === 'us' && spmProvenance) {
     for (const packageName of SPM_ADDITIONAL_RUNTIME_PACKAGES) {
       header[0] += ` "${packageName}==${reproduction.spmProvenance!.runtime_versions[packageName]}"`;
     }
@@ -475,7 +468,7 @@ export function getHouseholdReproducibilityCode(
       household,
       earningVariation,
       role,
-      spmConfig
+      spmProvenance ? buildSPMSelectionFromProvenance(spmProvenance) : household?.spm
     ),
   ];
 }

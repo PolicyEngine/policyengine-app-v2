@@ -8,7 +8,6 @@ import {
   NATIONAL_SPM,
   RESOLVED_CANONICAL_METADATA,
   RESOLVED_LEGACY_METADATA,
-  RESOLVED_NATIONAL_SPM,
   SPM_RECEIPT,
   SPM_TEST_YEAR,
   stateOnlyHousehold,
@@ -99,7 +98,6 @@ describe('SPM geography choice', () => {
           {
             countryId: 'us',
             householdData: { people: {} },
-            spmConfig: RESOLVED_NATIONAL_SPM,
             spmProvenance: SPM_RECEIPT,
           },
         ]}

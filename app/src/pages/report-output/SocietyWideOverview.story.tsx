@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
-import { RESOLVED_NATIONAL_SPM, SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
+import { SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import SocietyWideOverview from './SocietyWideOverview';
 
@@ -36,7 +36,6 @@ function buildMockOutput(overrides: {
   } = overrides;
 
   return {
-    spm_config: RESOLVED_NATIONAL_SPM,
     spm_provenance: SPM_COMPARISON_RECEIPT,
     budget: {
       baseline_net_income: 12_000_000_000_000,

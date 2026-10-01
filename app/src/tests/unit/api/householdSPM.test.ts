@@ -3,12 +3,7 @@ import { createHousehold, fetchHouseholdById } from '@/api/household';
 import { fetchHouseholdCalculationWithBundle } from '@/api/householdCalculation';
 import { fetchHouseholdVariationWithProvenance } from '@/api/householdVariation';
 import { Household } from '@/models/Household';
-import {
-  NATIONAL_SPM,
-  RESOLVED_NATIONAL_SPM,
-  SPM_RECEIPT,
-  stateOnlyHousehold,
-} from '@/tests/fixtures/spm/spmMocks';
+import { NATIONAL_SPM, SPM_RECEIPT, stateOnlyHousehold } from '@/tests/fixtures/spm/spmMocks';
 
 function mockResponse(body: unknown) {
   const mockFetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status: 200 }));
@@ -70,7 +65,6 @@ describe('SPM request and response plumbing', () => {
     mockResponse({
       status: 'ok',
       result: { people: {} },
-      spm_config: RESOLVED_NATIONAL_SPM,
       spm_provenance: SPM_RECEIPT,
     });
     const result = await fetchHouseholdCalculationWithBundle(
@@ -79,7 +73,6 @@ describe('SPM request and response plumbing', () => {
       'reform-policy'
     );
     expect(JSON.parse(JSON.stringify(result))).toMatchObject({
-      spm_config: RESOLVED_NATIONAL_SPM,
       spm_provenance: SPM_RECEIPT,
     });
   });
@@ -88,7 +81,6 @@ describe('SPM request and response plumbing', () => {
     const mockFetch = mockResponse({
       status: 'ok',
       result: { people: {} },
-      spm_config: RESOLVED_NATIONAL_SPM,
       spm_provenance: SPM_RECEIPT,
     });
     const household = stateOnlyHousehold().toV1CreationPayload().data;
@@ -114,7 +106,6 @@ describe('SPM request and response plumbing', () => {
     mockResponse({
       status: 'ok',
       result: { people: {} },
-      spm_config: RESOLVED_NATIONAL_SPM,
       spm_provenance: {
         forecast_id: 'legacy-forecast',
         forecast_sha256: 'a'.repeat(64),
@@ -129,5 +120,18 @@ describe('SPM request and response plumbing', () => {
     });
 
     await expect(request()).rejects.toThrow('Invalid SPM provenance');
+  });
+
+  test('given a completed response with the superseded sibling config then rejects it', async () => {
+    mockResponse({
+      status: 'ok',
+      result: { people: {} },
+      spm_config: { geography_kind: 'national' },
+      spm_provenance: SPM_RECEIPT,
+    });
+
+    await expect(
+      fetchHouseholdCalculationWithBundle('us', 'saved-household', 'reform-policy')
+    ).rejects.toThrow('must not include spm_config');
   });
 });

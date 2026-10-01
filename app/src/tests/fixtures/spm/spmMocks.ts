@@ -1,7 +1,6 @@
 import { Household } from '@/models/Household';
 import { createMockStateWithData } from '@/tests/fixtures/reducers/metadataReducerMocks';
 import type {
-  ResolvedSPMSelection,
   SPMComparisonProvenance,
   SPMMetadata,
   SPMProvenance,
@@ -30,14 +29,6 @@ export const SPM_RECEIPT: SPMProvenance = {
     'policyengine-us': '8.1.0',
     'spm-calculator': '6.1.0',
   },
-};
-export const RESOLVED_NATIONAL_SPM: ResolvedSPMSelection = {
-  geography_kind: 'national',
-  geography_id: null,
-  forecast_content_sha256: SPM_RECEIPT.forecast_sha256,
-  scenario: SPM_RECEIPT.scenario,
-  county_vintage: '2020',
-  as_of: SPM_RECEIPT.as_of,
 };
 export const SPM_COMPARISON_RECEIPT: SPMComparisonProvenance = {
   schema_version: 'canonical-spm-comparison-v2',

@@ -3,9 +3,9 @@ import { describe, expect, test, vi } from 'vitest';
 import type { HouseholdCalculationResult } from '@/api/householdCalculation';
 import { HouseholdReportOutput } from '@/pages/report-output/HouseholdReportOutput';
 import {
-  REPRODUCTION_CONFIGS,
   REPRODUCTION_HOUSEHOLDS,
   REPRODUCTION_POLICIES,
+  REPRODUCTION_RECEIPTS,
   REPRODUCTION_REPORT,
   REPRODUCTION_RUNTIME_VERSIONS,
   REPRODUCTION_SIMULATIONS,
@@ -61,7 +61,7 @@ describe('Household report Python reproduction', () => {
       );
       expect(code).toContain(`"policyengine[us]==${versions.policyengine}"`);
       expect(code).toContain(`reform=${role.toLowerCase()},`);
-      expect(code).toContain(REPRODUCTION_CONFIGS[index].forecast_content_sha256);
+      expect(code).toContain(REPRODUCTION_RECEIPTS[index].forecast_sha256);
       expect(code).toContain('simulation.spm_provenance()');
     }
   });
@@ -103,13 +103,13 @@ describe('Household report Python reproduction', () => {
     expect(baseline).toContain('"geography_kind": "national"');
     expect(reform).toContain('"geography_kind": "county"');
     for (const [index, code] of [baseline, reform].entries()) {
-      expect(code).toContain(REPRODUCTION_CONFIGS[index].forecast_content_sha256);
-      expect(code).toContain(REPRODUCTION_CONFIGS[index].scenario);
-      expect(code).toContain(REPRODUCTION_CONFIGS[index].as_of);
+      expect(code).toContain(REPRODUCTION_RECEIPTS[index].forecast_sha256);
+      expect(code).toContain(REPRODUCTION_RECEIPTS[index].scenario);
+      expect(code).toContain(REPRODUCTION_RECEIPTS[index].as_of);
       expect(code).toContain('"spm_unit_spm_threshold"');
       expect(code).toContain('"spm_unit_net_income"');
       expect(code).toContain('"spm_unit_is_in_spm_poverty"');
-      expect(code).toContain('simulation.spm_config');
+      expect(code).not.toContain('print("spm_config"');
       expect(code).toContain('simulation.spm_provenance()');
       expect(code.indexOf('simulation.spm_provenance()')).toBeGreaterThan(
         code.indexOf('print(variable, simulation.calculate(variable, 2026))')
@@ -152,31 +152,7 @@ describe('Household report Python reproduction', () => {
     expect(codeFor('Reform')).toContain('reform=reform,');
   });
   test.each([
-    [
-      'missing resolved SPM settings',
-      { spm_config: undefined },
-      /no matching resolved SPM settings and receipt/,
-    ],
-    [
-      'missing SPM receipt',
-      { spm_provenance: undefined },
-      /no matching resolved SPM settings and receipt/,
-    ],
-    [
-      'mismatched artifact identity',
-      { spm_config: REPRODUCTION_CONFIGS[1] },
-      /no matching resolved SPM settings and receipt/,
-    ],
-    [
-      'mismatched nullable selection field',
-      {
-        spm_config: {
-          ...REPRODUCTION_CONFIGS[0],
-          as_of: null,
-        },
-      },
-      /no matching resolved SPM settings and receipt/,
-    ],
+    ['missing SPM receipt', { spm_provenance: undefined }, /no SPM receipt/],
     [
       'receipt missing the saved calculation year',
       {

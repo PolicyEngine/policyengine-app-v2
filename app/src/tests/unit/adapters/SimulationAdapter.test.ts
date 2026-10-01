@@ -12,7 +12,7 @@ import {
   TEST_POPULATION_IDS,
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/adapters/SimulationAdapterMocks';
-import { RESOLVED_NATIONAL_SPM, SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
+import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 
 describe('SimulationAdapter', () => {
   describe('fromMetadata', () => {
@@ -152,13 +152,13 @@ describe('SimulationAdapter', () => {
       expect(result.output).toBe('invalid-json');
     });
 
-    it('given persisted household output with legacy SPM provenance then marks it pending', () => {
+    it('given persisted household output with the superseded sibling config then marks it pending', () => {
       const result = SimulationAdapter.fromMetadata(
         mockSimulationMetadata({
           output: {
             result: { people: {} },
-            spm_config: RESOLVED_NATIONAL_SPM,
-            spm_provenance: { ...SPM_RECEIPT, schema_version: 'legacy' },
+            spm_config: { geography_kind: 'national' },
+            spm_provenance: SPM_RECEIPT,
           },
         })
       );

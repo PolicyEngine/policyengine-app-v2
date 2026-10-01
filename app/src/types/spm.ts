@@ -11,16 +11,6 @@ export type SPMSelection = {
   | { geography_kind: 'metro'; geography_id: string }
 );
 
-export type ResolvedSPMSelection = {
-  forecast_content_sha256: string;
-  scenario: string;
-  county_vintage: '2020';
-  as_of: string | null;
-} & (
-  | { geography_kind: 'national' | 'county'; geography_id: null }
-  | { geography_kind: 'metro'; geography_id: string }
-);
-
 export interface SPMMetadata {
   available: boolean;
   defaults?: SPMSelection;
@@ -63,12 +53,10 @@ export interface SPMComparisonProvenance {
 }
 
 export interface SPMCalculationProvenance {
-  spm_config: ResolvedSPMSelection;
   spm_provenance: SPMProvenance;
 }
 
 export interface SPMComparisonCalculationProvenance {
-  spm_config: ResolvedSPMSelection;
   spm_provenance: SPMComparisonProvenance;
 }
 
@@ -247,47 +235,6 @@ export function parseSPMSelection(value: unknown): SPMSelection {
   }
 }
 
-/** Parse the fully resolved settings stored beside a completed SPM receipt. */
-export function parseResolvedSPMSelection(value: unknown): ResolvedSPMSelection {
-  try {
-    const record = requireRecord(value, 'Resolved SPM selection');
-    requireExactKeys(record, SELECTION_KEYS, 'Resolved SPM selection');
-    for (const key of SELECTION_KEYS) {
-      if (!(key in record)) {
-        throw new Error(`Resolved SPM selection must include ${key}`);
-      }
-    }
-    const digest = requireString(record.forecast_content_sha256, 'SPM forecast digest');
-    if (!SHA256_PATTERN.test(digest)) {
-      throw new Error('SPM forecast digest must be a lowercase SHA-256 value');
-    }
-    if (record.county_vintage !== '2020') {
-      throw new Error('SPM county vintage must be 2020');
-    }
-    const common = {
-      forecast_content_sha256: digest,
-      scenario: requireString(record.scenario, 'SPM scenario'),
-      county_vintage: '2020' as const,
-      as_of: requireNullableDate(record.as_of, 'SPM as-of date'),
-    };
-    const geographyKind = requireGeographyKind(record.geography_kind, 'SPM geography kind');
-    if (geographyKind === 'metro') {
-      return {
-        ...common,
-        geography_kind: geographyKind,
-        geography_id: requireString(record.geography_id, 'SPM metro identifier'),
-      };
-    }
-    if (record.geography_id !== null) {
-      throw new Error('SPM geography identifier must be null outside metro calculations');
-    }
-    return { ...common, geography_kind: geographyKind, geography_id: null };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : 'unknown error';
-    throw new Error(`Invalid resolved SPM selection: ${detail}`);
-  }
-}
-
 /** Parse the compact, versioned SPM receipt and reject legacy diagnostic payloads. */
 export function parseSPMProvenance(value: unknown): SPMProvenance {
   try {
@@ -371,60 +318,61 @@ export function parseSPMComparisonProvenance(value: unknown): SPMComparisonProve
   }
 }
 
-function assertSelectionMatchesReceipt(
-  selection: ResolvedSPMSelection,
-  receipt: SPMProvenance
-): void {
-  const mismatched =
-    selection.geography_kind !== receipt.geography_kind ||
-    selection.geography_id !== receipt.geography_id ||
-    selection.forecast_content_sha256 !== receipt.forecast_sha256 ||
-    selection.scenario !== receipt.scenario ||
-    selection.county_vintage !== receipt.county_vintage ||
-    selection.as_of !== receipt.as_of;
-  if (mismatched) {
-    throw new Error('SPM selection does not match the calculation receipt');
-  }
-}
-
 function hasOwn(record: Record<string, unknown>, key: string): boolean {
   return Object.hasOwn(record, key);
 }
 
-/** Parse optional SPM fields from a household calculation envelope. */
+/** Parse an optional compact receipt while rejecting the superseded sibling config. */
 export function parseOptionalSPMCalculationProvenance(
   value: unknown
 ): SPMCalculationProvenance | null {
   const record = requireRecord(value, 'Household calculation');
-  const hasConfig = hasOwn(record, 'spm_config') && record.spm_config !== undefined;
   const hasProvenance = hasOwn(record, 'spm_provenance') && record.spm_provenance !== undefined;
-  if (!hasConfig && !hasProvenance) {
+  if (hasOwn(record, 'spm_config')) {
+    throw new Error('Completed SPM calculations must not include spm_config');
+  }
+  if (!hasProvenance) {
     return null;
   }
-  if (!hasConfig || !hasProvenance) {
-    throw new Error('SPM calculation requires spm_config and spm_provenance together');
-  }
-  const spmConfig = parseResolvedSPMSelection(record.spm_config);
   const spmProvenance = parseSPMProvenance(record.spm_provenance);
-  assertSelectionMatchesReceipt(spmConfig, spmProvenance);
-  return { spm_config: spmConfig, spm_provenance: spmProvenance };
+  return { spm_provenance: spmProvenance };
 }
 
-/** Parse required SPM fields from a completed US society-wide result. */
+/** Parse the required compact receipt from a completed US society-wide result. */
 export function parseRequiredSPMComparisonCalculationProvenance(
   value: unknown
 ): SPMComparisonCalculationProvenance {
   const record = requireRecord(value, 'US society-wide calculation');
-  const hasConfig = hasOwn(record, 'spm_config') && record.spm_config !== undefined;
   const hasProvenance = hasOwn(record, 'spm_provenance') && record.spm_provenance !== undefined;
-  if (!hasConfig || !hasProvenance) {
-    throw new Error('US society-wide calculation requires spm_config and spm_provenance');
+  if (hasOwn(record, 'spm_config')) {
+    throw new Error('Completed US society-wide calculations must not include spm_config');
   }
-  const spmConfig = parseResolvedSPMSelection(record.spm_config);
+  if (!hasProvenance) {
+    throw new Error('US society-wide calculation requires spm_provenance');
+  }
   const spmProvenance = parseSPMComparisonProvenance(record.spm_provenance);
-  assertSelectionMatchesReceipt(spmConfig, spmProvenance.baseline.receipt);
-  assertSelectionMatchesReceipt(spmConfig, spmProvenance.reform.receipt);
-  return { spm_config: spmConfig, spm_provenance: spmProvenance };
+  return { spm_provenance: spmProvenance };
+}
+
+/** Build a fully pinned request selection from the compact calculation receipt. */
+export function buildSPMSelectionFromProvenance(receipt: SPMProvenance): SPMSelection {
+  if (receipt.county_vintage !== '2020') {
+    throw new Error(`Unsupported SPM county vintage: ${receipt.county_vintage}`);
+  }
+  const common = {
+    forecast_content_sha256: receipt.forecast_sha256,
+    scenario: receipt.scenario,
+    county_vintage: '2020' as const,
+    as_of: receipt.as_of,
+  };
+  if (receipt.geography_kind === 'metro') {
+    return {
+      ...common,
+      geography_kind: receipt.geography_kind,
+      geography_id: receipt.geography_id,
+    };
+  }
+  return { ...common, geography_kind: receipt.geography_kind, geography_id: null };
 }
 
 /** Build the concise, human-readable fields shown for a calculation receipt. */

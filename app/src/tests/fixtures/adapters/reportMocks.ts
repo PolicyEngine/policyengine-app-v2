@@ -1,4 +1,4 @@
-import { RESOLVED_NATIONAL_SPM, SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
+import { SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
@@ -6,7 +6,6 @@ import { ReportCreationPayload } from '@/types/payloads/ReportCreationPayload';
 import { ReportSetOutputPayload } from '@/types/payloads/ReportSetOutputPayload';
 
 export const mockReportOutput: ReportOutputSocietyWideUS = {
-  spm_config: RESOLVED_NATIONAL_SPM,
   spm_provenance: SPM_COMPARISON_RECEIPT,
   budget: {
     baseline_net_income: 1000000,

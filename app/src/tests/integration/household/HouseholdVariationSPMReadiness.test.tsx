@@ -81,7 +81,6 @@ beforeEach(() => {
       JSON.stringify({
         status: 'ok',
         result: axes.householdData,
-        spm_config: axes.spmConfig,
         spm_provenance: axes.spmProvenance,
       })
     );

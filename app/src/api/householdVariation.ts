@@ -2,7 +2,6 @@ import { BASE_URL } from '@/constants';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
 import {
   parseOptionalSPMCalculationProvenance,
-  type ResolvedSPMSelection,
   type SPMProvenance,
   type SPMSelection,
 } from '@/types/spm';
@@ -12,7 +11,6 @@ export interface HouseholdVariationResponse {
   status: 'ok' | 'error';
   result: HouseholdCalculationData | null;
   error?: string;
-  spm_config?: ResolvedSPMSelection;
   spm_provenance?: SPMProvenance;
 }
 

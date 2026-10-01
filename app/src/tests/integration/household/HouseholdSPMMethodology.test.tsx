@@ -51,7 +51,6 @@ describe('SPM point and axes receipts in app-owned report methodology', () => {
           JSON.stringify({
             status: 'ok',
             result: axes.householdData,
-            spm_config: axes.spmConfig,
             spm_provenance: axes.spmProvenance,
           })
         );
@@ -102,7 +101,6 @@ describe('SPM point and axes receipts in app-owned report methodology', () => {
           output: {
             status: 'ok' as const,
             result: point.householdData,
-            spm_config: point.spmConfig,
             spm_provenance: point.spmProvenance,
           },
         };

@@ -219,7 +219,6 @@ export function HouseholdReportOutput({
           role: index === 0 ? 'baseline' : 'reform',
           household,
           policy: policy ? convertPoliciesToV1Format([policy]).baseline.data : null,
-          spmConfig: output?.spm_config,
           spmProvenance: output?.spm_provenance,
           policyengineVersion:
             output?.policyengine_bundle?.policyengine_version ??

@@ -1,5 +1,5 @@
 import type { CountryId } from '@/libs/countries';
-import type { ResolvedSPMSelection, SPMProvenance } from '@/types/spm';
+import type { SPMProvenance } from '@/types/spm';
 
 export type HouseholdCalculationScalar = string | number | boolean | null;
 export type HouseholdCalculationArray = string[] | number[] | boolean[];
@@ -38,7 +38,6 @@ export interface HouseholdCalculationData {
 }
 
 export interface HouseholdCalculationOutput {
-  spmConfig?: ResolvedSPMSelection;
   spmProvenance?: SPMProvenance;
   id?: string;
   countryId: CountryId;

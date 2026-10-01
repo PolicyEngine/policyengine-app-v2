@@ -1,11 +1,7 @@
 import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
-import {
-  parseOptionalSPMCalculationProvenance,
-  type ResolvedSPMSelection,
-  type SPMProvenance,
-} from '@/types/spm';
+import { parseOptionalSPMCalculationProvenance, type SPMProvenance } from '@/types/spm';
 import { householdAPIError, householdAPIErrorFromBody } from './householdError';
 
 export interface HouseholdCalculationResponse {
@@ -13,14 +9,12 @@ export interface HouseholdCalculationResponse {
   result: HouseholdCalculationData | null;
   error?: string;
   policyengine_bundle?: PolicyEngineBundle | null;
-  spm_config?: ResolvedSPMSelection;
   spm_provenance?: SPMProvenance;
 }
 
 export interface HouseholdCalculationResult {
   result: HouseholdCalculationData;
   policyengine_bundle?: PolicyEngineBundle | null;
-  spm_config?: ResolvedSPMSelection;
   spm_provenance?: SPMProvenance;
 }
 
