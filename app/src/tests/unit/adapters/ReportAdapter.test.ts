@@ -100,6 +100,22 @@ describe('ReportAdapter', () => {
       expect(result.status).toBe('pending');
     });
 
+    test('given persisted US economy output without compact SPM provenance then marks it pending', () => {
+      const {
+        spm_config: _config,
+        spm_provenance: _provenance,
+        ...legacyOutput
+      } = mockReportOutput;
+      const result = ReportAdapter.fromMetadata({
+        ...mockReportMetadata,
+        status: 'complete',
+        output: JSON.stringify(legacyOutput),
+      });
+
+      expect(result.status).toBe('pending');
+      expect(result.output).toBeNull();
+    });
+
     test('given metadata with run timestamps then maps them as base report execution metadata', () => {
       const metadata = {
         ...mockReportMetadata,

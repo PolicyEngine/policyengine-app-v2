@@ -131,6 +131,27 @@ describe('societyWide API', () => {
       expect(result.result?.budget.budgetary_impact).toBe(75000);
     });
 
+    test('given legacy US SPM provenance then rejects the completed response', async () => {
+      const response = mockSuccessResponse({
+        ...mockCompletedResponse,
+        result: {
+          ...mockCompletedResponse.result!,
+          spm_provenance: {
+            baseline: [],
+            reform: [],
+          },
+        },
+      });
+      (global.fetch as any).mockResolvedValue(response);
+
+      await expect(
+        fetchSocietyWideCalculation(TEST_COUNTRIES.US, '123', '456', {
+          region: 'us',
+          time_period: CURRENT_YEAR,
+        })
+      ).rejects.toThrow('Invalid SPM comparison provenance');
+    });
+
     test('given completed status with policyengine bundle then merges bundle into result', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;

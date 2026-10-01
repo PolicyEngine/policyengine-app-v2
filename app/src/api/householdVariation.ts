@@ -1,13 +1,18 @@
 import { BASE_URL } from '@/constants';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
-import type { SPMProvenance, SPMSelection } from '@/types/spm';
+import {
+  parseOptionalSPMCalculationProvenance,
+  type ResolvedSPMSelection,
+  type SPMProvenance,
+  type SPMSelection,
+} from '@/types/spm';
 import { householdAPIError, householdAPIErrorFromBody } from './householdError';
 
 export interface HouseholdVariationResponse {
   status: 'ok' | 'error';
   result: HouseholdCalculationData | null;
   error?: string;
-  spm_config?: SPMSelection;
+  spm_config?: ResolvedSPMSelection;
   spm_provenance?: SPMProvenance;
 }
 
@@ -52,13 +57,16 @@ export async function fetchHouseholdVariationWithProvenance(
       );
     }
 
-    const data: HouseholdVariationResponse = await response.json();
+    const rawData: unknown = await response.json();
+    const data = rawData as HouseholdVariationResponse;
 
     if (data.status === 'error' || !data.result) {
-      throw householdAPIErrorFromBody(data, 'Household variation calculation failed');
+      throw householdAPIErrorFromBody(rawData, 'Household variation calculation failed');
     }
 
-    return { ...data, result: data.result };
+    const parsedSPM = parseOptionalSPMCalculationProvenance(rawData);
+
+    return { ...data, ...parsedSPM, result: data.result };
   } catch (error) {
     clearTimeout(timeoutId);
 

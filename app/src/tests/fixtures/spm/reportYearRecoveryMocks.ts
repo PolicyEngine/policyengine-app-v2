@@ -17,6 +17,7 @@ import {
 import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
+import type { SPMProvenance } from '@/types/spm';
 
 export const ORIGINAL_YEAR = '2026';
 export const SUPPORTED_YEAR = '2023';
@@ -188,6 +189,27 @@ export class ReportYearRecoveryHTTP extends GenericOrchestrationHTTP {
         const householdData = JSON.parse(
           JSON.stringify(storedHousehold.household_json)
         ) as HouseholdCalculationResult['result'];
+        const resolvedConfig = REPRODUCTION_CONFIGS[index];
+        const provenanceCommon = {
+          ...GENERIC_ENVELOPES[index].spm_provenance!,
+          forecast_sha256: resolvedConfig.forecast_content_sha256,
+          scenario: resolvedConfig.scenario,
+          county_vintage: resolvedConfig.county_vintage,
+          as_of: resolvedConfig.as_of,
+          years: [SUPPORTED_YEAR],
+        };
+        const spmProvenance: SPMProvenance =
+          resolvedConfig.geography_kind === 'metro'
+            ? {
+                ...provenanceCommon,
+                geography_kind: resolvedConfig.geography_kind,
+                geography_id: resolvedConfig.geography_id,
+              }
+            : {
+                ...provenanceCommon,
+                geography_kind: resolvedConfig.geography_kind,
+                geography_id: null,
+              };
         const envelope: HouseholdCalculationResult = {
           ...GENERIC_ENVELOPES[index],
           result: {
@@ -199,14 +221,8 @@ export class ReportYearRecoveryHTTP extends GenericOrchestrationHTTP {
               },
             },
           },
-          spm_config: storedHousehold.spm,
-          spm_provenance: {
-            ...GENERIC_ENVELOPES[index].spm_provenance!,
-            forecast_sha256: storedHousehold.spm!.forecast_content_sha256!,
-            scenario: storedHousehold.spm!.scenario!,
-            geography_kind: storedHousehold.spm!.geography_kind,
-            years: { [SUPPORTED_YEAR]: { source: 'forecast' } },
-          },
+          spm_config: resolvedConfig,
+          spm_provenance: spmProvenance,
         };
         return new Response(JSON.stringify({ status: 'ok', ...envelope }));
       }

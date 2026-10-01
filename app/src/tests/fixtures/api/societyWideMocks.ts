@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
+import { RESOLVED_NATIONAL_SPM, SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test IDs and constants
@@ -52,6 +53,8 @@ export const mockErrorResponse = (status: number) => ({
 
 // Mock US report output
 export const mockUSReportOutput: ReportOutputSocietyWideUS = {
+  spm_config: RESOLVED_NATIONAL_SPM,
+  spm_provenance: SPM_COMPARISON_RECEIPT,
   budget: {
     baseline_net_income: 1000000,
     benefit_spending_impact: -50000,

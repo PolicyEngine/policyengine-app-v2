@@ -1,4 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
+import { RESOLVED_NATIONAL_SPM, SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import { ReportOutput } from '@/types/ingredients/Report';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
@@ -13,6 +14,8 @@ export const TEST_TIMESTAMP_UPDATED = `${CURRENT_YEAR}-01-15T10:30:00.000Z`;
 
 // Create a minimal valid US report output
 export const MOCK_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
+  spm_config: RESOLVED_NATIONAL_SPM,
+  spm_provenance: SPM_COMPARISON_RECEIPT,
   budget: {
     baseline_net_income: 2500000,
     benefit_spending_impact: -50000,
@@ -107,6 +110,8 @@ export const MOCK_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
 };
 
 export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
+  spm_config: RESOLVED_NATIONAL_SPM,
+  spm_provenance: SPM_COMPARISON_RECEIPT,
   budget: {
     baseline_net_income: 1000000,
     benefit_spending_impact: -25000,

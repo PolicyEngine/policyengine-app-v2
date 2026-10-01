@@ -2,7 +2,13 @@ import metadataReducer from '@/reducers/metadataReducer';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { NATIONAL_SPM, SPM_RECEIPT, SPM_TEST_YEAR, stateOnlyHousehold } from './spmMocks';
+import {
+  NATIONAL_SPM,
+  RESOLVED_NATIONAL_SPM,
+  SPM_RECEIPT,
+  SPM_TEST_YEAR,
+  stateOnlyHousehold,
+} from './spmMocks';
 
 // Synthetic inputs/receipts for UI integration tests; never published artifacts or results.
 export const reviewMetadata = {
@@ -58,7 +64,7 @@ export function reviewOutput(
   return {
     id: `review-${role}`,
     countryId: 'us',
-    spmConfig: NATIONAL_SPM,
+    spmConfig: RESOLVED_NATIONAL_SPM,
     spmProvenance: { ...SPM_RECEIPT, forecast_id: `test-${role}-${variation ? 'axes' : 'point'}` },
     householdData: {
       people: { you: { employment_income: value(30000), marginal_tax_rate: value(0.2) } },

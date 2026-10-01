@@ -227,7 +227,7 @@ export function HouseholdReportOutput({
             null,
           modelVersion:
             output?.policyengine_bundle?.model_version ??
-            output?.spm_provenance?.runtime_versions?.[`policyengine-${report.countryId}`] ??
+            output?.spm_provenance?.runtime_versions?.['policyengine-us'] ??
             null,
         };
       }

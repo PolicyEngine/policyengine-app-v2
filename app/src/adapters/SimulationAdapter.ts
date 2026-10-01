@@ -1,6 +1,7 @@
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/payloads';
+import { parseOptionalSPMCalculationProvenance } from '@/types/spm';
 
 /**
  * Adapter for converting between Simulation and API formats
@@ -64,6 +65,21 @@ export class SimulationAdapter {
       }
     }
 
+    let status = this.mapApiStatusToSimulationStatus(metadata.status);
+    if (
+      metadata.population_type === 'household' &&
+      status === 'complete' &&
+      this.hasSPMCalculationFields(parsedOutput)
+    ) {
+      try {
+        const parsedSPM = parseOptionalSPMCalculationProvenance(parsedOutput);
+        parsedOutput = { ...(parsedOutput as Record<string, unknown>), ...parsedSPM };
+      } catch {
+        parsedOutput = null;
+        status = 'pending';
+      }
+    }
+
     const simulation = {
       id: String(metadata.id),
       countryId: metadata.country_id,
@@ -74,11 +90,20 @@ export class SimulationAdapter {
       label: null,
       isCreated: true,
       output: parsedOutput,
-      status: this.mapApiStatusToSimulationStatus(metadata.status),
+      status,
       ...this.parseErrorMessage(metadata.error_message),
     };
 
     return simulation;
+  }
+
+  private static hasSPMCalculationFields(value: unknown): boolean {
+    return (
+      !!value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      ('spm_config' in value || 'spm_provenance' in value)
+    );
   }
 
   /**

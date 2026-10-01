@@ -1,6 +1,7 @@
 import { BASE_URL } from '@/constants';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
+import { parseRequiredSPMComparisonCalculationProvenance } from '@/types/spm';
 
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
@@ -95,5 +96,9 @@ export async function fetchSocietyWideCalculation(
   }
 
   const data: SocietyWideCalculationResponse = await response.json();
+  if (countryId === 'us' && data.status === 'ok' && data.result) {
+    const spm = parseRequiredSPMComparisonCalculationProvenance(data.result);
+    data.result = { ...data.result, ...spm } as ReportOutputSocietyWideUS;
+  }
   return mergePolicyEngineBundle(data);
 }
