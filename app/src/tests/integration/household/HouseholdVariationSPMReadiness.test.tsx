@@ -72,18 +72,19 @@ beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   savedHousehold = stateOnlyHousehold();
   fetchMock.mockReset();
-  fetchMock.mockImplementation(async (url: string) =>
-    url.endsWith('/calculate-full')
-      ? new Response(
-          JSON.stringify({
-            status: 'ok',
-            result: reviewOutput('baseline', true).householdData,
-            spm_config: savedHousehold.spm,
-            spm_provenance: reviewOutput('baseline', true).spmProvenance,
-          })
-        )
-      : householdResponse()
-  );
+  fetchMock.mockImplementation(async (url: string) => {
+    if (!url.endsWith('/calculate-full')) {
+      return householdResponse();
+    }
+    const axes = reviewOutput('baseline', true, savedHousehold.spm?.geography_kind ?? 'national');
+    return new Response(
+      JSON.stringify({
+        status: 'ok',
+        result: axes.householdData,
+        spm_provenance: axes.spmProvenance,
+      })
+    );
+  });
   vi.stubGlobal('fetch', fetchMock);
 });
 afterEach(() => {

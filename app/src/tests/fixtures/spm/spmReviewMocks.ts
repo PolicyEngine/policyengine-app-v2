@@ -2,6 +2,7 @@ import metadataReducer from '@/reducers/metadataReducer';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import type { SPMGeographyKind, SPMProvenance } from '@/types/spm';
 import { NATIONAL_SPM, SPM_RECEIPT, SPM_TEST_YEAR, stateOnlyHousehold } from './spmMocks';
 
 // Synthetic inputs/receipts for UI integration tests; never published artifacts or results.
@@ -48,9 +49,24 @@ export const spmSaveErrors = [
   { code: 'SPM_GEOGRAPHY_REQUIRED', message: 'An explicit county FIPS code is required.' },
 ];
 
+function reviewSPMProvenance(
+  role: 'baseline' | 'reform',
+  variation: boolean,
+  geographyKind: SPMGeographyKind
+): SPMProvenance {
+  const common = {
+    ...SPM_RECEIPT,
+    forecast_id: `test-${role}-${variation ? 'axes' : 'point'}`,
+  };
+  return geographyKind === 'metro'
+    ? { ...common, geography_kind: geographyKind, geography_id: '35620' }
+    : { ...common, geography_kind: geographyKind, geography_id: null };
+}
+
 export function reviewOutput(
   role: 'baseline' | 'reform',
-  variation = false
+  variation = false,
+  geographyKind: SPMGeographyKind = 'national'
 ): HouseholdCalculationOutput {
   const value = (point: number) => ({
     [SPM_TEST_YEAR]: variation ? Array(401).fill(point) : point,
@@ -58,8 +74,7 @@ export function reviewOutput(
   return {
     id: `review-${role}`,
     countryId: 'us',
-    spmConfig: NATIONAL_SPM,
-    spmProvenance: { ...SPM_RECEIPT, forecast_id: `test-${role}-${variation ? 'axes' : 'point'}` },
+    spmProvenance: reviewSPMProvenance(role, variation, geographyKind),
     householdData: {
       people: { you: { employment_income: value(30000), marginal_tax_rate: value(0.2) } },
       households: { household: { members: ['you'], household_net_income: value(25000) } },

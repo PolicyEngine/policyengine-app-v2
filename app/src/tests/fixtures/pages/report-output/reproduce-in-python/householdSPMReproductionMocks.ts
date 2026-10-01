@@ -4,7 +4,7 @@ import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { SPMSelection } from '@/types/spm';
+import type { SPMProvenance, SPMRuntimeVersions } from '@/types/spm';
 
 export const REPRODUCTION_YEAR = '2026';
 // Synthetic artifact hashes and package versions; never published artifact pins.
@@ -22,20 +22,33 @@ export const REPRODUCTION_RUNTIME_VERSIONS = [
     'spm-calculator': '6.2.0',
   },
 ];
-export const REPRODUCTION_CONFIGS: SPMSelection[] = [
+const REPRODUCTION_PROVENANCE_FIELDS = [
   {
     geography_kind: 'national',
-    forecast_content_sha256: 'c'.repeat(64),
+    geography_id: null,
+    forecast_sha256: 'c'.repeat(64),
     scenario: 'baseline-null-false',
+    county_vintage: '2020',
     as_of: '2026-08-01',
   },
   {
     geography_kind: 'county',
-    forecast_content_sha256: 'd'.repeat(64),
+    geography_id: null,
+    forecast_sha256: 'd'.repeat(64),
     scenario: 'county-alternative',
+    county_vintage: '2020',
     as_of: '2026-09-01',
   },
-];
+] as const;
+
+export const REPRODUCTION_RECEIPTS: SPMProvenance[] = REPRODUCTION_PROVENANCE_FIELDS.map(
+  (fields, index) => ({
+    ...SPM_RECEIPT,
+    ...fields,
+    years: [REPRODUCTION_YEAR],
+    runtime_versions: { ...REPRODUCTION_RUNTIME_VERSIONS[index] },
+  })
+);
 export const REPRODUCTION_HOUSEHOLDS = ['baseline', 'reform'].map((role, index) =>
   Household.fromAppInput({
     id: `household-${role}`,
@@ -81,17 +94,7 @@ export const REPRODUCTION_SIMULATIONS: Simulation[] = ['baseline', 'reform'].map
   status: 'complete',
   output: {
     result: { people: {} },
-    spm_config: REPRODUCTION_CONFIGS[index],
-    spm_provenance: {
-      ...SPM_RECEIPT,
-      forecast_sha256: REPRODUCTION_CONFIGS[index].forecast_content_sha256!,
-      scenario: REPRODUCTION_CONFIGS[index].scenario!,
-      geography_kind: REPRODUCTION_CONFIGS[index].geography_kind,
-      runtime_versions: {
-        'policyengine-core': REPRODUCTION_RUNTIME_VERSIONS[index]['policyengine-core'],
-        'spm-calculator': REPRODUCTION_RUNTIME_VERSIONS[index]['spm-calculator'],
-      },
-    },
+    spm_provenance: REPRODUCTION_RECEIPTS[index],
     policyengine_bundle: {
       policyengine_version: index === 0 ? '9.1.0' : '9.2.0',
       model_version: index === 0 ? '8.1.0' : '8.2.0',
@@ -124,7 +127,7 @@ export function reproductionSimulationsWithOutput(
   ];
 }
 
-export function reproductionSimulationsWithoutBundle(wrapperInstalled: boolean): Simulation[] {
+export function reproductionSimulationsWithoutBundle(): Simulation[] {
   return REPRODUCTION_SIMULATIONS.map((simulation, index) => {
     const output = simulation.output as HouseholdCalculationResult;
     return {
@@ -134,12 +137,7 @@ export function reproductionSimulationsWithoutBundle(wrapperInstalled: boolean):
         policyengine_bundle: null,
         spm_provenance: {
           ...output.spm_provenance!,
-          runtime_versions: {
-            ...REPRODUCTION_RUNTIME_VERSIONS[index],
-            policyengine: wrapperInstalled
-              ? REPRODUCTION_RUNTIME_VERSIONS[index].policyengine
-              : null,
-          },
+          runtime_versions: { ...REPRODUCTION_RUNTIME_VERSIONS[index] },
         },
       },
     };
@@ -147,7 +145,7 @@ export function reproductionSimulationsWithoutBundle(wrapperInstalled: boolean):
 }
 
 export function reproductionSimulationsWithRuntimeVersions(
-  versions: Record<string, string | null>
+  versions: Partial<SPMRuntimeVersions>
 ): Simulation[] {
   const output = REPRODUCTION_SIMULATIONS[0].output as HouseholdCalculationResult;
   return reproductionSimulationsWithOutput({

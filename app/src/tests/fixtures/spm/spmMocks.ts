@@ -1,6 +1,11 @@
 import { Household } from '@/models/Household';
 import { createMockStateWithData } from '@/tests/fixtures/reducers/metadataReducerMocks';
-import type { SPMMetadata, SPMProvenance, SPMSelection } from '@/types/spm';
+import type {
+  SPMComparisonProvenance,
+  SPMMetadata,
+  SPMProvenance,
+  SPMSelection,
+} from '@/types/spm';
 
 export const SPM_TEST_YEAR = '2026';
 export const NATIONAL_SPM: SPMSelection = { geography_kind: 'national' };
@@ -9,15 +14,26 @@ export const CANONICAL_SPM_METADATA: SPMMetadata = { available: true };
 export const RESOLVED_CANONICAL_METADATA = createMockStateWithData({ spm: CANONICAL_SPM_METADATA });
 export const RESOLVED_LEGACY_METADATA = createMockStateWithData();
 export const SPM_RECEIPT: SPMProvenance = {
+  schema_version: 'canonical-spm-provenance-v2',
   forecast_id: 'test-canonical-forecast',
   forecast_sha256: 'a'.repeat(64),
   scenario: 'test-baseline',
   geography_kind: 'national',
-  runtime_versions: { 'policyengine-us': 'test-version' },
-  years: { '2026': { source: 'forecast' } },
-  geographies: [{ geography_kind: 'national' }],
-  composition_method: 'test-classified-adults',
-  storage_method: 'test-artifact',
+  geography_id: null,
+  county_vintage: '2020',
+  as_of: '2026-08-01',
+  years: ['2026'],
+  runtime_versions: {
+    policyengine: '9.1.0',
+    'policyengine-core': '7.1.0',
+    'policyengine-us': '8.1.0',
+    'spm-calculator': '6.1.0',
+  },
+};
+export const SPM_COMPARISON_RECEIPT: SPMComparisonProvenance = {
+  schema_version: 'canonical-spm-comparison-v2',
+  baseline: { receipt: SPM_RECEIPT, execution_count: 20 },
+  reform: { receipt: SPM_RECEIPT, execution_count: 20 },
 };
 export function stateOnlyHousehold() {
   return Household.starter('us', SPM_TEST_YEAR).setGroupVariableAtYear(

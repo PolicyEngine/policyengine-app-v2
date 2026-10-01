@@ -2,6 +2,7 @@ import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload } from '@/types/payloads/ReportCreationPayload';
 import { ReportSetOutputPayload } from '@/types/payloads/ReportSetOutputPayload';
+import { parseRequiredSPMComparisonCalculationProvenance } from '@/types/spm';
 import { convertJsonToReportOutput, convertReportOutputToJson } from './conversionHelpers';
 
 /**
@@ -37,18 +38,43 @@ export class ReportAdapter {
       ? [String(metadata.simulation_1_id), String(metadata.simulation_2_id)]
       : [String(metadata.simulation_1_id)];
 
+    let output = convertJsonToReportOutput(metadata.output) as Report['output'];
+    let status = this.mapApiStatusToReportStatus(metadata.status);
+    if (metadata.country_id === 'us' && status === 'complete' && this.isSocietyWideOutput(output)) {
+      try {
+        const spm = parseRequiredSPMComparisonCalculationProvenance(output);
+        output = {
+          ...(output as unknown as Record<string, unknown>),
+          ...spm,
+        } as Report['output'];
+      } catch {
+        output = null;
+        status = 'pending';
+      }
+    }
+
     return {
       id: String(metadata.id),
       countryId: metadata.country_id,
       year: metadata.year,
       apiVersion: metadata.api_version,
       simulationIds,
-      status: this.mapApiStatusToReportStatus(metadata.status),
+      status,
       ...(metadata.requested_at ? { requestedAt: metadata.requested_at } : {}),
       ...(metadata.started_at ? { startedAt: metadata.started_at } : {}),
       ...(metadata.finished_at ? { finishedAt: metadata.finished_at } : {}),
-      output: convertJsonToReportOutput(metadata.output) as any, // Can be economy or household output
+      output,
     };
+  }
+
+  private static isSocietyWideOutput(value: unknown): boolean {
+    return (
+      !!value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      'budget' in value &&
+      'decile' in value
+    );
   }
 
   /**

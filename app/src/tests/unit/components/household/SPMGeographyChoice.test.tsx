@@ -92,21 +92,23 @@ describe('SPM geography choice', () => {
   });
 
   test('given a receipt then methodology shows the returned provenance', () => {
-    render(
+    const { container } = render(
       <SPMMethodologyFootnote
         output={[
           {
             countryId: 'us',
             householdData: { people: {} },
-            spmConfig: NATIONAL_SPM,
             spmProvenance: SPM_RECEIPT,
           },
         ]}
       />
     );
     expect(screen.getByText('Supplemental Poverty Measure methodology')).toBeInTheDocument();
-    expect(screen.getByText(/Forecast: test-canonical-forecast/)).toBeInTheDocument();
-    expect(screen.getByText(/"forecast_sha256"/)).toHaveTextContent(SPM_RECEIPT.forecast_sha256);
+    expect(screen.getByText(SPM_RECEIPT.forecast_id)).toBeInTheDocument();
+    expect(screen.getByText('Forecast digest')).toBeInTheDocument();
+    expect(screen.getByText(SPM_RECEIPT.forecast_sha256)).toBeInTheDocument();
+    expect(container.querySelector('pre')).not.toBeInTheDocument();
+    expect(screen.queryByText('forecast_sha256')).not.toBeInTheDocument();
     expect(screen.queryByRole('banner')).not.toBeInTheDocument();
   });
 });

@@ -98,7 +98,6 @@ export function useHouseholdVariation({
         id: householdId,
         countryId: countryId as (typeof countryIds)[number],
         householdData: calculation.result,
-        spmConfig: calculation.spm_config,
         spmProvenance: calculation.spm_provenance,
       };
       return result;

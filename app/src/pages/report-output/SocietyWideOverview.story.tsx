@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
+import { SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import SocietyWideOverview from './SocietyWideOverview';
 
@@ -35,6 +36,7 @@ function buildMockOutput(overrides: {
   } = overrides;
 
   return {
+    spm_provenance: SPM_COMPARISON_RECEIPT,
     budget: {
       baseline_net_income: 12_000_000_000_000,
       benefit_spending_impact: budgetaryImpact > 0 ? -budgetaryImpact * 0.4 : budgetaryImpact * 0.6,
