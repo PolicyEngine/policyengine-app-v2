@@ -4,7 +4,7 @@ import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { ResolvedSPMSelection, SPMProvenance } from '@/types/spm';
+import type { ResolvedSPMSelection, SPMProvenance, SPMRuntimeVersions } from '@/types/spm';
 
 export const REPRODUCTION_YEAR = '2026';
 // Synthetic artifact hashes and package versions; never published artifact pins.
@@ -162,7 +162,7 @@ export function reproductionSimulationsWithoutBundle(): Simulation[] {
 }
 
 export function reproductionSimulationsWithRuntimeVersions(
-  versions: Record<string, string | null>
+  versions: Partial<SPMRuntimeVersions>
 ): Simulation[] {
   const output = REPRODUCTION_SIMULATIONS[0].output as HouseholdCalculationResult;
   return reproductionSimulationsWithOutput({

@@ -66,24 +66,6 @@ describe('Household report Python reproduction', () => {
     }
   });
 
-  test.each(['policyengine', 'policyengine-core', 'policyengine-us', 'spm-calculator'])(
-    'given no recorded %s version then withholds exact code for that simulation',
-    (packageName) => {
-      renderReport(
-        REPRODUCTION_POLICIES,
-        reproductionSimulationsWithRuntimeVersions({ [packageName]: null })
-      );
-      const baseline = within(screen.getByRole('region', { name: 'Baseline simulation' }));
-      expect(baseline.getByRole('status')).toHaveTextContent(
-        `no recorded version for ${packageName}`
-      );
-      expect(
-        baseline.queryByRole('button', { name: 'Copy code to clipboard' })
-      ).not.toBeInTheDocument();
-      expect(codeFor('Reform')).toContain('policyengine-core==7.2.0');
-    }
-  );
-
   test.each(['policyengine-us', 'policyengine'])(
     'given a conflicting recorded %s version then explains why exact reproduction is unavailable',
     (packageName) => {

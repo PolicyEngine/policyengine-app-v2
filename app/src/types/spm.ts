@@ -28,10 +28,10 @@ export interface SPMMetadata {
 }
 
 export interface SPMRuntimeVersions {
-  policyengine: string | null;
-  'policyengine-core': string | null;
-  'policyengine-us': string | null;
-  'spm-calculator': string | null;
+  policyengine: string;
+  'policyengine-core': string;
+  'policyengine-us': string;
+  'spm-calculator': string;
 }
 
 interface SPMProvenanceBase {
@@ -134,13 +134,6 @@ function requireString(value: unknown, label: string): string {
   return value;
 }
 
-function requireNullableString(value: unknown, label: string): string | null {
-  if (value === null) {
-    return null;
-  }
-  return requireString(value, label);
-}
-
 function requireNullableDate(value: unknown, label: string): string | null {
   if (value === null) {
     return null;
@@ -173,13 +166,10 @@ function parseRuntimeVersions(value: unknown): SPMRuntimeVersions {
     }
   }
   return {
-    policyengine: requireNullableString(record.policyengine, 'policyengine version'),
-    'policyengine-core': requireNullableString(
-      record['policyengine-core'],
-      'policyengine-core version'
-    ),
-    'policyengine-us': requireNullableString(record['policyengine-us'], 'policyengine-us version'),
-    'spm-calculator': requireNullableString(record['spm-calculator'], 'spm-calculator version'),
+    policyengine: requireString(record.policyengine, 'policyengine version'),
+    'policyengine-core': requireString(record['policyengine-core'], 'policyengine-core version'),
+    'policyengine-us': requireString(record['policyengine-us'], 'policyengine-us version'),
+    'spm-calculator': requireString(record['spm-calculator'], 'spm-calculator version'),
   };
 }
 
@@ -460,19 +450,19 @@ export function buildSPMProvenanceDisplayRows(receipt: SPMProvenance): SPMProven
     { label: 'Forecast digest', value: receipt.forecast_sha256 },
     {
       label: 'PolicyEngine version',
-      value: receipt.runtime_versions.policyengine ?? 'Not recorded',
+      value: receipt.runtime_versions.policyengine,
     },
     {
       label: 'PolicyEngine Core version',
-      value: receipt.runtime_versions['policyengine-core'] ?? 'Not recorded',
+      value: receipt.runtime_versions['policyengine-core'],
     },
     {
       label: 'PolicyEngine US version',
-      value: receipt.runtime_versions['policyengine-us'] ?? 'Not recorded',
+      value: receipt.runtime_versions['policyengine-us'],
     },
     {
       label: 'SPM Calculator version',
-      value: receipt.runtime_versions['spm-calculator'] ?? 'Not recorded',
+      value: receipt.runtime_versions['spm-calculator'],
     }
   );
   return rows;

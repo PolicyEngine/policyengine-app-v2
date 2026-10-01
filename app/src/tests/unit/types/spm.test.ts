@@ -49,6 +49,18 @@ describe('SPM wire contracts', () => {
     expect(() => parseSPMProvenance(value)).toThrow('Invalid SPM provenance');
   });
 
+  test.each(['policyengine', 'policyengine-core', 'policyengine-us', 'spm-calculator'] as const)(
+    'given a null %s runtime version then rejects the receipt',
+    (packageName) => {
+      expect(() =>
+        parseSPMProvenance({
+          ...SPM_RECEIPT,
+          runtime_versions: { ...SPM_RECEIPT.runtime_versions, [packageName]: null },
+        })
+      ).toThrow('Invalid SPM provenance');
+    }
+  );
+
   test('given canonical comparison provenance then parses both execution receipts', () => {
     expect(parseSPMComparisonProvenance(SPM_COMPARISON_RECEIPT)).toEqual(SPM_COMPARISON_RECEIPT);
   });

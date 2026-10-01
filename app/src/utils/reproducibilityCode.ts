@@ -32,12 +32,6 @@ export interface HouseholdReproduction {
 
 // These distributions own the calculation runtime and canonical SPM formulas.
 // Country releases can allow a range of core versions, so pin the returned receipt.
-const SPM_RUNTIME_PACKAGES = [
-  'policyengine',
-  'policyengine-core',
-  'policyengine-us',
-  'spm-calculator',
-] as const;
 const SPM_ADDITIONAL_RUNTIME_PACKAGES = ['policyengine-core', 'spm-calculator'] as const;
 
 // Maps region prefixes (from metadata) to HuggingFace subfolder names.
@@ -410,10 +404,6 @@ export function getHouseholdReproductionUnavailableReason(
       return "This simulation's SPM receipt does not cover the saved calculation year. Calculate it again before generating exact reproduction code.";
     }
     const runtimeVersions = spmProvenance.runtime_versions;
-    const missingPackages = SPM_RUNTIME_PACKAGES.filter((name) => !runtimeVersions[name]);
-    if (missingPackages.length > 0) {
-      return `This simulation has no recorded version for ${missingPackages.join(' and ')}. Exact reproduction is unavailable until its calculation saves these runtime versions.`;
-    }
     const recordedModelVersion = runtimeVersions['policyengine-us'];
     const recordedWrapperVersion = runtimeVersions.policyengine;
     if (
