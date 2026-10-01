@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { SPM_COMPARISON_RECEIPT, SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import {
+  buildSPMProvenanceDisplayRows,
   parseOptionalSPMCalculationProvenance,
   parseRequiredSPMComparisonCalculationProvenance,
   parseSPMComparisonProvenance,
@@ -11,6 +12,22 @@ import {
 describe('SPM wire contracts', () => {
   test('given canonical individual provenance then parses every explicit field', () => {
     expect(parseSPMProvenance(SPM_RECEIPT)).toEqual(SPM_RECEIPT);
+  });
+
+  test('given compact provenance then builds only the approved display rows', () => {
+    const rows = buildSPMProvenanceDisplayRows(SPM_RECEIPT);
+
+    expect(rows).toContainEqual({ label: 'Forecast', value: SPM_RECEIPT.forecast_id });
+    expect(rows).toContainEqual({
+      label: 'Forecast digest',
+      value: SPM_RECEIPT.forecast_sha256,
+    });
+    expect(rows).toContainEqual({
+      label: 'SPM Calculator version',
+      value: SPM_RECEIPT.runtime_versions['spm-calculator'],
+    });
+    expect(rows.map((row) => row.label)).not.toContain('Median diagnostics');
+    expect(rows.map((row) => row.label)).not.toContain('Geography mapping');
   });
 
   test.each([

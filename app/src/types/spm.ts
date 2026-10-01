@@ -72,6 +72,11 @@ export interface SPMComparisonCalculationProvenance {
   spm_provenance: SPMComparisonProvenance;
 }
 
+export interface SPMProvenanceDisplayRow {
+  label: string;
+  value: string;
+}
+
 const SELECTION_KEYS = new Set([
   'geography_kind',
   'geography_id',
@@ -393,7 +398,7 @@ function assertSelectionMatchesReceipt(
 }
 
 function hasOwn(record: Record<string, unknown>, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(record, key);
+  return Object.hasOwn(record, key);
 }
 
 /** Parse optional SPM fields from a household calculation envelope. */
@@ -430,4 +435,45 @@ export function parseRequiredSPMComparisonCalculationProvenance(
   assertSelectionMatchesReceipt(spmConfig, spmProvenance.baseline.receipt);
   assertSelectionMatchesReceipt(spmConfig, spmProvenance.reform.receipt);
   return { spm_config: spmConfig, spm_provenance: spmProvenance };
+}
+
+/** Build the concise, human-readable fields shown for a calculation receipt. */
+export function buildSPMProvenanceDisplayRows(receipt: SPMProvenance): SPMProvenanceDisplayRow[] {
+  const geography =
+    receipt.geography_kind === 'national'
+      ? 'National'
+      : receipt.geography_kind === 'county'
+        ? 'County'
+        : 'Metropolitan area';
+  const rows: SPMProvenanceDisplayRow[] = [
+    { label: 'Forecast', value: receipt.forecast_id },
+    { label: 'Scenario', value: receipt.scenario },
+    { label: 'Geography', value: geography },
+  ];
+  if (receipt.geography_id !== null) {
+    rows.push({ label: 'Geography identifier', value: receipt.geography_id });
+  }
+  rows.push(
+    { label: 'County vintage', value: receipt.county_vintage },
+    { label: 'As of', value: receipt.as_of ?? 'Not specified' },
+    { label: 'Years', value: receipt.years.length > 0 ? receipt.years.join(', ') : 'None' },
+    { label: 'Forecast digest', value: receipt.forecast_sha256 },
+    {
+      label: 'PolicyEngine version',
+      value: receipt.runtime_versions.policyengine ?? 'Not recorded',
+    },
+    {
+      label: 'PolicyEngine Core version',
+      value: receipt.runtime_versions['policyengine-core'] ?? 'Not recorded',
+    },
+    {
+      label: 'PolicyEngine US version',
+      value: receipt.runtime_versions['policyengine-us'] ?? 'Not recorded',
+    },
+    {
+      label: 'SPM Calculator version',
+      value: receipt.runtime_versions['spm-calculator'] ?? 'Not recorded',
+    }
+  );
+  return rows;
 }
