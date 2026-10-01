@@ -1,5 +1,6 @@
 import { render, screen, userEvent, within } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
 import { HouseholdReportOutput } from '@/pages/report-output/HouseholdReportOutput';
 import {
   REPRODUCTION_CONFIGS,
@@ -47,32 +48,25 @@ function codeFor(role: 'Baseline' | 'Reform') {
 }
 
 describe('Household report Python reproduction', () => {
-  test.each([false, true])(
-    'given canonical receipts without a bundle and wrapper installed %s then pins each recorded runtime independently',
-    (wrapperInstalled) => {
-      renderReport(REPRODUCTION_POLICIES, reproductionSimulationsWithoutBundle(wrapperInstalled));
-      for (const [index, role] of (['Baseline', 'Reform'] as const).entries()) {
-        const code = codeFor(role);
-        const versions = REPRODUCTION_RUNTIME_VERSIONS[index];
-        expect(code).toContain(`"policyengine-us==${versions['policyengine-us']}"`);
-        expect(code).toContain(`"policyengine-core==${versions['policyengine-core']}"`);
-        expect(code).toContain(`"spm-calculator==${versions['spm-calculator']}"`);
-        expect(code).not.toContain(
-          `"policyengine-core==${REPRODUCTION_RUNTIME_VERSIONS[1 - index]['policyengine-core']}"`
-        );
-        if (wrapperInstalled) {
-          expect(code).toContain(`"policyengine[us]==${versions.policyengine}"`);
-        } else {
-          expect(code).not.toContain('policyengine[us]');
-        }
-        expect(code).toContain(`reform=${role.toLowerCase()},`);
-        expect(code).toContain(REPRODUCTION_CONFIGS[index].forecast_content_sha256);
-        expect(code).toContain('simulation.spm_provenance()');
-      }
+  test('given canonical receipts without a bundle then pins each recorded runtime independently', () => {
+    renderReport(REPRODUCTION_POLICIES, reproductionSimulationsWithoutBundle());
+    for (const [index, role] of (['Baseline', 'Reform'] as const).entries()) {
+      const code = codeFor(role);
+      const versions = REPRODUCTION_RUNTIME_VERSIONS[index];
+      expect(code).toContain(`"policyengine-us==${versions['policyengine-us']}"`);
+      expect(code).toContain(`"policyengine-core==${versions['policyengine-core']}"`);
+      expect(code).toContain(`"spm-calculator==${versions['spm-calculator']}"`);
+      expect(code).not.toContain(
+        `"policyengine-core==${REPRODUCTION_RUNTIME_VERSIONS[1 - index]['policyengine-core']}"`
+      );
+      expect(code).toContain(`"policyengine[us]==${versions.policyengine}"`);
+      expect(code).toContain(`reform=${role.toLowerCase()},`);
+      expect(code).toContain(REPRODUCTION_CONFIGS[index].forecast_content_sha256);
+      expect(code).toContain('simulation.spm_provenance()');
     }
-  );
+  });
 
-  test.each(['policyengine-core', 'spm-calculator'])(
+  test.each(['policyengine', 'policyengine-core', 'policyengine-us', 'spm-calculator'])(
     'given no recorded %s version then withholds exact code for that simulation',
     (packageName) => {
       renderReport(
@@ -177,16 +171,6 @@ describe('Household report Python reproduction', () => {
   });
   test.each([
     [
-      'missing bundle and model versions',
-      { policyengine_bundle: null },
-      /no resolved model version/,
-    ],
-    [
-      'wrapper without a resolved model version',
-      { policyengine_bundle: { policyengine_version: '9.1.0' } },
-      /no resolved model version/,
-    ],
-    [
       'missing resolved SPM settings',
       { spm_config: undefined },
       /no matching resolved SPM settings and receipt/,
@@ -200,6 +184,26 @@ describe('Household report Python reproduction', () => {
       'mismatched artifact identity',
       { spm_config: REPRODUCTION_CONFIGS[1] },
       /no matching resolved SPM settings and receipt/,
+    ],
+    [
+      'mismatched nullable selection field',
+      {
+        spm_config: {
+          ...REPRODUCTION_CONFIGS[0],
+          as_of: null,
+        },
+      },
+      /no matching resolved SPM settings and receipt/,
+    ],
+    [
+      'receipt missing the saved calculation year',
+      {
+        spm_provenance: {
+          ...(REPRODUCTION_SIMULATIONS[0].output as HouseholdCalculationResult).spm_provenance!,
+          years: ['2025'] as string[],
+        },
+      },
+      /does not cover the saved calculation year/,
     ],
   ] as const)(
     'given %s then withholds baseline code and preserves independent reform reproduction',

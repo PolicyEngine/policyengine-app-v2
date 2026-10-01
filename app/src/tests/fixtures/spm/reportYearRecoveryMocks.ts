@@ -17,7 +17,7 @@ import {
 import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
-import type { SPMProvenance } from '@/types/spm';
+import { parseResolvedSPMSelection, type SPMProvenance } from '@/types/spm';
 
 export const ORIGINAL_YEAR = '2026';
 export const SUPPORTED_YEAR = '2023';
@@ -189,7 +189,7 @@ export class ReportYearRecoveryHTTP extends GenericOrchestrationHTTP {
         const householdData = JSON.parse(
           JSON.stringify(storedHousehold.household_json)
         ) as HouseholdCalculationResult['result'];
-        const resolvedConfig = REPRODUCTION_CONFIGS[index];
+        const resolvedConfig = parseResolvedSPMSelection(storedHousehold.spm);
         const provenanceCommon = {
           ...GENERIC_ENVELOPES[index].spm_provenance!,
           forecast_sha256: resolvedConfig.forecast_content_sha256,

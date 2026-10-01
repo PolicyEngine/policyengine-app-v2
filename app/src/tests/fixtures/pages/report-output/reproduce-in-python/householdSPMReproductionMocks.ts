@@ -144,7 +144,7 @@ export function reproductionSimulationsWithOutput(
   ];
 }
 
-export function reproductionSimulationsWithoutBundle(wrapperInstalled: boolean): Simulation[] {
+export function reproductionSimulationsWithoutBundle(): Simulation[] {
   return REPRODUCTION_SIMULATIONS.map((simulation, index) => {
     const output = simulation.output as HouseholdCalculationResult;
     return {
@@ -154,12 +154,7 @@ export function reproductionSimulationsWithoutBundle(wrapperInstalled: boolean):
         policyengine_bundle: null,
         spm_provenance: {
           ...output.spm_provenance!,
-          runtime_versions: {
-            ...REPRODUCTION_RUNTIME_VERSIONS[index],
-            policyengine: wrapperInstalled
-              ? REPRODUCTION_RUNTIME_VERSIONS[index].policyengine
-              : null,
-          },
+          runtime_versions: { ...REPRODUCTION_RUNTIME_VERSIONS[index] },
         },
       },
     };

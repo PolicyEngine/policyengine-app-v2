@@ -13,7 +13,7 @@ import {
   cleanPythonPackageHouseholdNullValuesForYear,
 } from '@/models/household/pythonPackageCodec';
 import type { PythonPackageHouseholdSituation } from '@/models/household/pythonPackageTypes';
-import type { SPMProvenance, SPMSelection } from '@/types/spm';
+import type { ResolvedSPMSelection, SPMProvenance, SPMSelection } from '@/types/spm';
 
 // Default year fallback - use the app's current year constant
 const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
@@ -24,7 +24,7 @@ export interface HouseholdReproduction {
   role: 'baseline' | 'reform';
   household: Household | null;
   policy: Record<string, any> | null;
-  spmConfig?: SPMSelection;
+  spmConfig?: ResolvedSPMSelection;
   spmProvenance?: SPMProvenance;
   policyengineVersion?: string | null;
   modelVersion?: string | null;
@@ -32,7 +32,13 @@ export interface HouseholdReproduction {
 
 // These distributions own the calculation runtime and canonical SPM formulas.
 // Country releases can allow a range of core versions, so pin the returned receipt.
-const SPM_RUNTIME_PACKAGES = ['policyengine-core', 'spm-calculator'] as const;
+const SPM_RUNTIME_PACKAGES = [
+  'policyengine',
+  'policyengine-core',
+  'policyengine-us',
+  'spm-calculator',
+] as const;
+const SPM_ADDITIONAL_RUNTIME_PACKAGES = ['policyengine-core', 'spm-calculator'] as const;
 
 // Maps region prefixes (from metadata) to HuggingFace subfolder names.
 // Note: place/ is NOT included — places use the parent state's dataset + filtering.
@@ -386,36 +392,39 @@ export function getHouseholdReproductionUnavailableReason(
   if (!year || !Number.isInteger(year)) {
     return 'This report has no saved calculation year. Exact reproduction is unavailable.';
   }
-  if (!reproduction.modelVersion) {
-    return 'This simulation has no resolved model version. Complete its calculation to save the version needed for exact reproduction. Older reports may need to be calculated again.';
-  }
   const { spmConfig, spmProvenance } = reproduction;
   if (countryId === 'us' && (reproduction.household.spm || spmConfig || spmProvenance)) {
     if (
       !spmProvenance ||
-      !spmConfig?.forecast_content_sha256 ||
-      !spmConfig.scenario ||
-      spmConfig.forecast_content_sha256 !== spmProvenance?.forecast_sha256 ||
+      !spmConfig ||
+      spmConfig.forecast_content_sha256 !== spmProvenance.forecast_sha256 ||
       spmConfig.scenario !== spmProvenance.scenario ||
-      spmConfig.geography_kind !== spmProvenance.geography_kind
+      spmConfig.geography_kind !== spmProvenance.geography_kind ||
+      spmConfig.geography_id !== spmProvenance.geography_id ||
+      spmConfig.county_vintage !== spmProvenance.county_vintage ||
+      spmConfig.as_of !== spmProvenance.as_of
     ) {
       return 'This simulation has no matching resolved SPM settings and receipt. Complete its calculation to save the artifact identity needed for exact reproduction.';
     }
+    if (!spmProvenance.years.includes(String(year))) {
+      return "This simulation's SPM receipt does not cover the saved calculation year. Calculate it again before generating exact reproduction code.";
+    }
     const runtimeVersions = spmProvenance.runtime_versions;
-    const missingPackages = SPM_RUNTIME_PACKAGES.filter((name) => !runtimeVersions?.[name]);
+    const missingPackages = SPM_RUNTIME_PACKAGES.filter((name) => !runtimeVersions[name]);
     if (missingPackages.length > 0) {
       return `This simulation has no recorded version for ${missingPackages.join(' and ')}. Exact reproduction is unavailable until its calculation saves these runtime versions.`;
     }
-    const recordedModelVersion = runtimeVersions[`policyengine-${countryId}`];
+    const recordedModelVersion = runtimeVersions['policyengine-us'];
     const recordedWrapperVersion = runtimeVersions.policyengine;
     if (
-      (recordedModelVersion && recordedModelVersion !== reproduction.modelVersion) ||
-      (recordedWrapperVersion &&
-        reproduction.policyengineVersion &&
+      (reproduction.modelVersion && recordedModelVersion !== reproduction.modelVersion) ||
+      (reproduction.policyengineVersion &&
         recordedWrapperVersion !== reproduction.policyengineVersion)
     ) {
       return 'This simulation has conflicting package versions in its calculation metadata and SPM receipt. Exact reproduction is unavailable until they agree.';
     }
+  } else if (!reproduction.modelVersion) {
+    return 'This simulation has no resolved model version. Complete its calculation to save the version needed for exact reproduction. Older reports may need to be calculated again.';
   }
   return null;
 }
@@ -427,7 +436,7 @@ export function getHouseholdReproducibilityCode(
   year: number | null,
   earningVariation: boolean = false
 ): string[] {
-  const { role, household, policy, policyengineVersion, modelVersion, spmConfig } = reproduction;
+  const { role, household, policy, spmConfig, spmProvenance } = reproduction;
   if (getHouseholdReproductionUnavailableReason(countryId, reproduction, year)) {
     return [];
   }
@@ -435,6 +444,10 @@ export function getHouseholdReproducibilityCode(
     baseline: { data: role === 'baseline' ? policy : {} },
     reform: { data: role === 'reform' ? policy : {} },
   };
+  const policyengineVersion =
+    spmProvenance?.runtime_versions.policyengine ?? reproduction.policyengineVersion;
+  const modelVersion =
+    spmProvenance?.runtime_versions['policyengine-us'] ?? reproduction.modelVersion;
   const header = getHeaderCode(
     'household',
     countryId,
@@ -453,7 +466,7 @@ export function getHouseholdReproducibilityCode(
     }
   }
   if (countryId === 'us' && spmConfig) {
-    for (const packageName of SPM_RUNTIME_PACKAGES) {
+    for (const packageName of SPM_ADDITIONAL_RUNTIME_PACKAGES) {
       header[0] += ` "${packageName}==${reproduction.spmProvenance!.runtime_versions[packageName]}"`;
     }
   }

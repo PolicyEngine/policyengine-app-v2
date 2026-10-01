@@ -308,9 +308,7 @@ describe('actual report year selector corrects saved SPM inputs before calculati
           [SUPPORTED_YEAR]: index === 0 ? 40 : 41,
         });
         expect(envelope.spm_config).toEqual(CORRECTED_HOUSEHOLD_PAYLOADS[index].spm);
-        expect(envelope.spm_provenance?.years).toEqual({
-          [SUPPORTED_YEAR]: { source: 'forecast' },
-        });
+        expect(envelope.spm_provenance?.years).toEqual([SUPPORTED_YEAR]);
         expect(await fetchPolicyById('us', simulation.policyId!)).toEqual(originalPolicies[index]);
       }
       render(providers(<ReopenedReport userReportId={savedUserReportId} />));
