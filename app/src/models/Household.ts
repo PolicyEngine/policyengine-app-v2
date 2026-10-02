@@ -59,6 +59,12 @@ const BUILDER_PRIMARY_PERSON_NAME = 'you';
 const BUILDER_DEFAULT_PARTNER_NAME = 'your partner';
 const BUILDER_DEPENDENT_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth'];
 
+/**
+ * policyengine-uk person input naming the benefit unit's claimant and partner. Without it the
+ * model infers the couple from ages, so an adult dependant can be read as the partner.
+ */
+export const UK_CLAIMANT_OR_PARTNER_VARIABLE = 'is_claimant_or_partner';
+
 export interface PersonWithName extends AppHouseholdInputPerson {
   name: string;
 }
@@ -884,8 +890,14 @@ export class Household extends BaseModel<HouseholdModelData> {
       return BUILDER_DEFAULT_PARTNER_NAME;
     }
 
-    const adults = this.getAdults(year).map((person) => person.name);
-    return adults.find((personKey) => personKey !== resolvedPrimaryPersonKey) ?? null;
+    // Only an explicit partner counts. Age never makes one: a dependant aged 25 stays a dependant.
+    return (
+      this.getSortedPersonNames().find(
+        (personKey) =>
+          personKey !== resolvedPrimaryPersonKey &&
+          this.getPersonVariableAtYear(personKey, UK_CLAIMANT_OR_PARTNER_VARIABLE, year) === true
+      ) ?? null
+    );
   }
 
   getBuilderChildKeys(
@@ -924,6 +936,45 @@ export class Household extends BaseModel<HouseholdModelData> {
       maritalStatus: partnerKey ? 'married' : 'single',
       numChildren: childKeys.length,
     };
+  }
+
+  /**
+   * Benefit-unit roles of a UK builder household: "you" and the explicit partner are the
+   * claimant and partner, and every other member (a dependant of any age) is neither.
+   * Returns null for a household the builder did not make (no "you"), whose relationships the
+   * app does not know; policyengine-uk then infers them as before.
+   */
+  getBuilderClaimantRoles(year: string): Record<string, boolean> | null {
+    if (this.countryId !== 'uk' || !(BUILDER_PRIMARY_PERSON_NAME in this.appInputData.people)) {
+      return null;
+    }
+
+    const { primaryPersonKey, partnerKey } = this.deriveBuilderComposition(year);
+    return Object.fromEntries(
+      this.personNames.map((personKey) => [
+        personKey,
+        personKey === primaryPersonKey || personKey === partnerKey,
+      ])
+    );
+  }
+
+  /** Records getBuilderClaimantRoles for the year, keeping any value a person already has. */
+  withBuilderClaimantRoles(year: string): Household {
+    const roles = this.getBuilderClaimantRoles(year);
+    if (!roles) {
+      return this;
+    }
+
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const normalizedYear = normalizeYear(year);
+    for (const [personKey, isClaimantOrPartner] of Object.entries(roles)) {
+      const person = nextData.people[personKey];
+      if (getYearValue(person[UK_CLAIMANT_OR_PARTNER_VARIABLE], normalizedYear) === undefined) {
+        setYearValue(person, UK_CLAIMANT_OR_PARTNER_VARIABLE, normalizedYear, isClaimantOrPartner);
+      }
+    }
+
+    return this.withHouseholdData(nextData);
   }
 
   getHeadPersonName(year: string | null | undefined): string | null {
@@ -1175,9 +1226,16 @@ export class Household extends BaseModel<HouseholdModelData> {
       const parentIds = [composition.primaryPersonKey, composition.partnerKey].filter(
         Boolean
       ) as string[];
+      // Number new children after every dependant, including adult dependants the count excludes.
+      const dependantCount = composition.people.filter(
+        (personKey) => !parentIds.includes(personKey)
+      ).length;
 
-      for (let index = composition.childKeys.length; index < newCount; index += 1) {
-        const childKey = getUniqueBuilderPersonName(existingKeys, getBuilderDependentName(index));
+      for (let offset = 0; offset < newCount - composition.childKeys.length; offset += 1) {
+        const childKey = getUniqueBuilderPersonName(
+          existingKeys,
+          getBuilderDependentName(dependantCount + offset)
+        );
         existingKeys.add(childKey);
         nextHousehold = nextHousehold.addChild(childKey, BUILDER_DEFAULT_CHILD_AGE, parentIds, {
           employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,

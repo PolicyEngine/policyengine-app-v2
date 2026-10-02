@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createHousehold } from '@/api/household';
-import { Household } from '@/models/Household';
+import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
 import { createReportSimulations } from '@/pages/reportBuilder/utils/createReportSimulations';
+import {
+  BUILDER_PEOPLE,
+  ROLE_TEST_YEAR,
+  singleParentWithAdultDependant,
+  UK_METADATA_WITH_CLAIMANT_ROLES,
+  UK_METADATA_WITHOUT_CLAIMANT_ROLES,
+} from '@/tests/fixtures/models/builderClaimantRolesMocks';
 import {
   CORRECTED_REPORT_YEAR,
   CURRENT_LAW_ID,
@@ -224,5 +231,59 @@ describe('createReportSimulations', () => {
       })
     ).rejects.toThrow('Simulation creation returned no ID');
     expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
+  });
+
+  describe('given a UK draft household of a lone parent and their adult child', () => {
+    const CREATED_UK_HOUSEHOLD_ID = 'created-uk-household';
+    const ukDraftSimulation = () => ({
+      ...mockDraftHouseholdSimulation('uk'),
+      population: {
+        ...mockDraftHouseholdSimulation('uk').population,
+        household: singleParentWithAdultDependant(),
+      },
+    });
+    const createdPeople = () => vi.mocked(createHousehold).mock.calls[0][0].data.people;
+
+    beforeEach(() => {
+      vi.mocked(createHousehold).mockResolvedValue({
+        result: { household_id: CREATED_UK_HOUSEHOLD_ID },
+      });
+    });
+
+    test('given the model defines claimant roles then the household is saved with a single claimant', async () => {
+      const result = await createReportSimulations({
+        simulationStates: [ukDraftSimulation()] as any,
+        countryId: 'uk',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: ROLE_TEST_YEAR,
+        metadata: UK_METADATA_WITH_CLAIMANT_ROLES,
+      });
+
+      expect(createdPeople()[BUILDER_PEOPLE.YOU][UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual({
+        [ROLE_TEST_YEAR]: true,
+      });
+      expect(
+        createdPeople()[BUILDER_PEOPLE.FIRST_DEPENDANT][UK_CLAIMANT_OR_PARTNER_VARIABLE]
+      ).toEqual({ [ROLE_TEST_YEAR]: false });
+      const savedHousehold = result.simulationStates[0].population.household!;
+      expect(savedHousehold.id).toBe(CREATED_UK_HOUSEHOLD_ID);
+      expect(savedHousehold.toV1CreationPayload().data.people).toEqual(createdPeople());
+    });
+
+    test('given the model predates claimant roles then the household is saved unchanged', async () => {
+      const draft = ukDraftSimulation();
+
+      await createReportSimulations({
+        simulationStates: [draft] as any,
+        countryId: 'uk',
+        currentLawId: CURRENT_LAW_ID,
+        reportYear: ROLE_TEST_YEAR,
+        metadata: UK_METADATA_WITHOUT_CLAIMANT_ROLES,
+      });
+
+      expect(vi.mocked(createHousehold)).toHaveBeenCalledWith(
+        draft.population.household.toV1CreationPayload()
+      );
+    });
   });
 });

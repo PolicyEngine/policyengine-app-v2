@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { Household } from '@/models/Household';
+import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
+import {
+  BUILDER_PEOPLE,
+  coupleWithAdultDependant,
+  ROLE_TEST_YEAR,
+  ROLE_TEST_YEAR_NUMBER,
+  singleParentWithAdultDependant,
+} from '@/tests/fixtures/models/builderClaimantRolesMocks';
 import {
   createMockEmptyHouseholdData,
   createMockHouseholdData,
@@ -753,6 +760,120 @@ describe('Household', () => {
       });
 
       expect(householdA.isEqual(householdB)).toBe(false);
+    });
+  });
+
+  describe('builder claimant roles', () => {
+    const roleFor = (household: Household, personName: string) =>
+      household.getPersonVariableAtYear(
+        personName,
+        UK_CLAIMANT_OR_PARTNER_VARIABLE,
+        ROLE_TEST_YEAR
+      );
+
+    it('gives a lone parent with a dependant aged 25 a single claimant', () => {
+      expect(singleParentWithAdultDependant().getBuilderClaimantRoles(ROLE_TEST_YEAR)).toEqual({
+        [BUILDER_PEOPLE.YOU]: true,
+        [BUILDER_PEOPLE.FIRST_DEPENDANT]: false,
+      });
+    });
+
+    it('gives a couple with a dependant aged 25 a claimant and partner only', () => {
+      expect(coupleWithAdultDependant().getBuilderClaimantRoles(ROLE_TEST_YEAR)).toEqual({
+        [BUILDER_PEOPLE.YOU]: true,
+        [BUILDER_PEOPLE.PARTNER]: true,
+        [BUILDER_PEOPLE.FIRST_DEPENDANT]: false,
+      });
+    });
+
+    it('gives no roles for households outside the UK builder', () => {
+      const usHousehold = singleParentWithAdultDependant('us');
+      const ukHouseholdWithoutYou = Household.empty('uk', ROLE_TEST_YEAR)
+        .addAdult('claimant', 50)
+        .addAdult('adult child', 25);
+
+      expect(usHousehold.getBuilderClaimantRoles(ROLE_TEST_YEAR)).toBeNull();
+      expect(ukHouseholdWithoutYou.getBuilderClaimantRoles(ROLE_TEST_YEAR)).toBeNull();
+      expect(usHousehold.withBuilderClaimantRoles(ROLE_TEST_YEAR)).toBe(usHousehold);
+      expect(ukHouseholdWithoutYou.withBuilderClaimantRoles(ROLE_TEST_YEAR)).toBe(
+        ukHouseholdWithoutYou
+      );
+    });
+
+    it('records the roles for the year without touching other years or inputs', () => {
+      const household = coupleWithAdultDependant()
+        .setPersonVariableAtYear(BUILDER_PEOPLE.YOU, UK_CLAIMANT_OR_PARTNER_VARIABLE, '2025', false)
+        .withBuilderClaimantRoles(ROLE_TEST_YEAR);
+
+      expect(household.householdData.people[BUILDER_PEOPLE.YOU]).toEqual({
+        age: { [ROLE_TEST_YEAR]: 50 },
+        employment_income: { [ROLE_TEST_YEAR]: 0 },
+        [UK_CLAIMANT_OR_PARTNER_VARIABLE]: { 2025: false, [ROLE_TEST_YEAR]: true },
+      });
+      expect(roleFor(household, BUILDER_PEOPLE.PARTNER)).toBe(true);
+      expect(roleFor(household, BUILDER_PEOPLE.FIRST_DEPENDANT)).toBe(false);
+    });
+
+    it('keeps a role a person already has for the year', () => {
+      const household = coupleWithAdultDependant()
+        .setPersonVariableAtYear(
+          BUILDER_PEOPLE.PARTNER,
+          UK_CLAIMANT_OR_PARTNER_VARIABLE,
+          ROLE_TEST_YEAR,
+          false
+        )
+        .withBuilderClaimantRoles(ROLE_TEST_YEAR);
+
+      expect(roleFor(household, BUILDER_PEOPLE.PARTNER)).toBe(false);
+    });
+
+    it('sends the roles in the v1 creation payload', () => {
+      const payload = singleParentWithAdultDependant()
+        .withBuilderClaimantRoles(ROLE_TEST_YEAR)
+        .toV1CreationPayload();
+
+      expect(payload.data.people[BUILDER_PEOPLE.YOU][UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual({
+        [ROLE_TEST_YEAR]: true,
+      });
+      expect(
+        payload.data.people[BUILDER_PEOPLE.FIRST_DEPENDANT][UK_CLAIMANT_OR_PARTNER_VARIABLE]
+      ).toEqual({ [ROLE_TEST_YEAR]: false });
+      expect(payload.data.benunits).toEqual({
+        'your benefit unit': { members: [BUILDER_PEOPLE.YOU, BUILDER_PEOPLE.FIRST_DEPENDANT] },
+      });
+    });
+
+    it('sends the same roles in the Python package situation', () => {
+      const household = coupleWithAdultDependant().withBuilderClaimantRoles(ROLE_TEST_YEAR);
+      const v1People = household.toV1CreationPayload().data.people;
+      const pythonPeople = household.toPythonPackage().people;
+
+      for (const personName of household.personNames) {
+        expect(pythonPeople[personName][UK_CLAIMANT_OR_PARTNER_VARIABLE]).toEqual(
+          v1People[personName][UK_CLAIMANT_OR_PARTNER_VARIABLE]
+        );
+      }
+    });
+
+    it('keeps the roles and the composition through a saved-household round trip', () => {
+      const household = singleParentWithAdultDependant().withBuilderClaimantRoles(ROLE_TEST_YEAR);
+      const payload = household.toV1CreationPayload();
+      const saved = Household.fromV1Metadata({
+        id: 'saved-household',
+        country_id: payload.country_id,
+        label: null,
+        api_version: '0.0.0',
+        household_json: payload.data,
+        household_hash: 'hash',
+      });
+
+      expect(saved.year).toBe(ROLE_TEST_YEAR_NUMBER);
+      expect(saved.householdData).toEqual(household.householdData);
+      expect(saved.toV1CreationPayload()).toEqual(payload);
+      expect(saved.deriveBuilderComposition(ROLE_TEST_YEAR)).toEqual(
+        household.deriveBuilderComposition(ROLE_TEST_YEAR)
+      );
+      expect(saved.withBuilderClaimantRoles(ROLE_TEST_YEAR).isEqual(saved)).toBe(true);
     });
   });
 });
