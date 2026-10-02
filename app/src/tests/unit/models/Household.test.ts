@@ -3,6 +3,7 @@ import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
 import {
   BUILDER_PEOPLE,
   coupleWithAdultDependant,
+  householdWithSeparateClaimant,
   ROLE_TEST_YEAR,
   ROLE_TEST_YEAR_NUMBER,
   singleParentWithAdultDependant,
@@ -798,6 +799,29 @@ describe('Household', () => {
       expect(ukHouseholdWithoutYou.withBuilderClaimantRoles(ROLE_TEST_YEAR)).toBe(
         ukHouseholdWithoutYou
       );
+    });
+
+    it.each([
+      ['an unflagged adult', { age: 40 }],
+      ['a 17-year-old claiming separately', { age: 17 }],
+    ])('gives no roles when %s has their own benefit unit', (_case, separateClaimant) => {
+      const household = householdWithSeparateClaimant(separateClaimant);
+
+      expect(household.getBuilderClaimantRoles(ROLE_TEST_YEAR)).toBeNull();
+      expect(household.withBuilderClaimantRoles(ROLE_TEST_YEAR)).toBe(household);
+    });
+
+    it('gives no roles when someone is outside the benefit unit', () => {
+      const household = singleParentWithAdultDependant();
+      const outsideUnit = Household.fromAppInput({
+        ...household.toAppInput(),
+        householdData: {
+          ...household.householdData,
+          benunits: { 'your benefit unit': { members: [BUILDER_PEOPLE.YOU] } },
+        },
+      });
+
+      expect(outsideUnit.getBuilderClaimantRoles(ROLE_TEST_YEAR)).toBeNull();
     });
 
     it('records the roles for the year without touching other years or inputs', () => {

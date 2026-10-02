@@ -4,7 +4,9 @@ import {
   BUILDER_AGES,
   BUILDER_PEOPLE,
   coupleWithAdultDependant,
+  householdWithSeparateClaimant,
   ROLE_TEST_YEAR,
+  SEPARATE_CLAIMANT,
   singleParentWithAdultDependant,
 } from '@/tests/fixtures/models/builderClaimantRolesMocks';
 
@@ -148,5 +150,51 @@ describe('Household builder composition methods', () => {
       .setPersonVariableAtYear('alex', UK_CLAIMANT_OR_PARTNER_VARIABLE, '2025', true);
 
     expect(household.getBuilderPartnerKey(ROLE_TEST_YEAR)).toBeNull();
+  });
+
+  describe('given a flagged claimant in another benefit unit', () => {
+    const household = () =>
+      householdWithSeparateClaimant({ age: 17, isClaimantOrPartner: true }, true);
+
+    test('then they are not read as the partner', () => {
+      expect(household().deriveBuilderComposition(ROLE_TEST_YEAR)).toEqual(
+        expect.objectContaining({ partnerKey: null, maritalStatus: 'single' })
+      );
+    });
+
+    test('then choosing single keeps them and their benefit unit', () => {
+      const updated = household().withBuilderMaritalStatus(ROLE_TEST_YEAR, 'single');
+
+      expect(updated.personNames).toContain(SEPARATE_CLAIMANT);
+      expect(updated.getGroupMembers('benunits', 'their benefit unit')).toEqual([
+        SEPARATE_CLAIMANT,
+      ]);
+    });
+
+    test('then choosing married adds a partner beside "you" and keeps them', () => {
+      const updated = household().withBuilderMaritalStatus(ROLE_TEST_YEAR, 'married');
+
+      expect(updated.getBuilderPartnerKey(ROLE_TEST_YEAR)).toBe(BUILDER_PEOPLE.PARTNER);
+      expect(updated.personNames).toContain(SEPARATE_CLAIMANT);
+    });
+  });
+
+  test('given a dependant ordinal is skipped then a new child is numbered after the highest one', () => {
+    const household = Household.starter('uk', ROLE_TEST_YEAR)
+      .withBuilderChildCount(ROLE_TEST_YEAR, 2)
+      .setPersonVariableAtYear(
+        BUILDER_PEOPLE.SECOND_DEPENDANT,
+        'age',
+        ROLE_TEST_YEAR,
+        BUILDER_AGES.ADULT_DEPENDANT
+      )
+      .withBuilderChildCount(ROLE_TEST_YEAR, 0)
+      .withBuilderChildCount(ROLE_TEST_YEAR, 1);
+
+    expect(household.getSortedPersonNames()).toEqual([
+      BUILDER_PEOPLE.YOU,
+      BUILDER_PEOPLE.SECOND_DEPENDANT,
+      'your third dependent',
+    ]);
   });
 });

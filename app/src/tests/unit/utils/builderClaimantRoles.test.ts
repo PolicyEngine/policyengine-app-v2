@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
 import {
   BUILDER_PEOPLE,
+  householdWithSeparateClaimant,
   ROLE_TEST_YEAR,
   singleParentWithAdultDependant,
   UK_METADATA_WITH_CLAIMANT_ROLES,
@@ -58,6 +59,37 @@ describe('withSupportedBuilderClaimantRoles', () => {
     expect(JSON.stringify(result.toV1CreationPayload())).not.toContain(
       UK_CLAIMANT_OR_PARTNER_VARIABLE
     );
+  });
+
+  test('given the UK model predates the variable then roles a household already carries are removed', () => {
+    const household = singleParentWithAdultDependant().withBuilderClaimantRoles(ROLE_TEST_YEAR);
+
+    const result = withSupportedBuilderClaimantRoles(
+      household,
+      UK_METADATA_WITHOUT_CLAIMANT_ROLES,
+      ROLE_TEST_YEAR
+    );
+
+    expect(JSON.stringify(result.toV1CreationPayload())).not.toContain(
+      UK_CLAIMANT_OR_PARTNER_VARIABLE
+    );
+    expect(result.householdData).toEqual(singleParentWithAdultDependant().householdData);
+  });
+
+  test('given model information for another country then roles a household carries are kept', () => {
+    const household = singleParentWithAdultDependant().withBuilderClaimantRoles(ROLE_TEST_YEAR);
+
+    expect(
+      withSupportedBuilderClaimantRoles(household, US_METADATA_WITH_CLAIMANT_ROLES, ROLE_TEST_YEAR)
+    ).toBe(household);
+  });
+
+  test('given a household with two benefit units then no roles are added', () => {
+    const household = householdWithSeparateClaimant({ age: 40 });
+
+    expect(
+      withSupportedBuilderClaimantRoles(household, UK_METADATA_WITH_CLAIMANT_ROLES, ROLE_TEST_YEAR)
+    ).toBe(household);
   });
 
   test('given a US household then no UK roles are added', () => {

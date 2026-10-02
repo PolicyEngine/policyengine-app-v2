@@ -6,6 +6,8 @@ import { UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
 import HouseholdBuilderView from '@/pathways/report/views/population/HouseholdBuilderView';
 import {
   BUILDER_PEOPLE,
+  CREATED_HOUSEHOLD_ID,
+  mockCreatedHouseholdResponse,
   ROLE_TEST_YEAR,
   singleParentWithAdultDependant,
   UK_METADATA_WITH_CLAIMANT_ROLES,
@@ -23,7 +25,6 @@ vi.mock('react-redux', async (importOriginal) => ({
 vi.mock('@/hooks/useReportYear', () => ({ useReportYear: () => ROLE_TEST_YEAR }));
 
 const mockFetch = vi.fn();
-const CREATED_HOUSEHOLD_ID = 'created-uk-household';
 
 function renderUKBuilder(onSubmitSuccess = vi.fn()) {
   const client = new QueryClient({
@@ -60,11 +61,7 @@ describe('UK household builder claimant roles through the builder view', () => {
     mockMetadata = ukBuilderMetadata(UK_METADATA_WITH_CLAIMANT_ROLES);
     vi.stubGlobal('fetch', mockFetch);
     mockFetch.mockReset();
-    mockFetch.mockResolvedValue(
-      new Response(JSON.stringify({ result: { household_id: CREATED_HOUSEHOLD_ID } }), {
-        status: 200,
-      })
-    );
+    mockFetch.mockImplementation(async () => mockCreatedHouseholdResponse());
     vi.spyOn(LocalStorageHouseholdStore.prototype, 'create').mockImplementation(
       async (association) => ({ ...association, id: 'uk-association' }) as any
     );

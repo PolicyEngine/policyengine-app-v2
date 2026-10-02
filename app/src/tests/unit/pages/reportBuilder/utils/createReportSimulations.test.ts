@@ -4,6 +4,7 @@ import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
 import { createReportSimulations } from '@/pages/reportBuilder/utils/createReportSimulations';
 import {
   BUILDER_PEOPLE,
+  CREATED_HOUSEHOLD_ID,
   ROLE_TEST_YEAR,
   singleParentWithAdultDependant,
   UK_METADATA_WITH_CLAIMANT_ROLES,
@@ -234,7 +235,6 @@ describe('createReportSimulations', () => {
   });
 
   describe('given a UK draft household of a lone parent and their adult child', () => {
-    const CREATED_UK_HOUSEHOLD_ID = 'created-uk-household';
     const ukDraftSimulation = () => ({
       ...mockDraftHouseholdSimulation('uk'),
       population: {
@@ -246,7 +246,7 @@ describe('createReportSimulations', () => {
 
     beforeEach(() => {
       vi.mocked(createHousehold).mockResolvedValue({
-        result: { household_id: CREATED_UK_HOUSEHOLD_ID },
+        result: { household_id: CREATED_HOUSEHOLD_ID },
       });
     });
 
@@ -266,7 +266,7 @@ describe('createReportSimulations', () => {
         createdPeople()[BUILDER_PEOPLE.FIRST_DEPENDANT][UK_CLAIMANT_OR_PARTNER_VARIABLE]
       ).toEqual({ [ROLE_TEST_YEAR]: false });
       const savedHousehold = result.simulationStates[0].population.household!;
-      expect(savedHousehold.id).toBe(CREATED_UK_HOUSEHOLD_ID);
+      expect(savedHousehold.id).toBe(CREATED_HOUSEHOLD_ID);
       expect(savedHousehold.toV1CreationPayload().data.people).toEqual(createdPeople());
     });
 

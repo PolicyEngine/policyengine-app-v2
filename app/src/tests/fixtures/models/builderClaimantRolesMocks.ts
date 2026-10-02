@@ -1,5 +1,6 @@
 import type { CountryId } from '@/libs/countries';
 import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
+import type { AppHouseholdInputPerson } from '@/models/household/appTypes';
 import metadataReducer from '@/reducers/metadataReducer';
 import type { MetadataState } from '@/types/metadata';
 import type { ClaimantRoleModelMetadata } from '@/utils/builderClaimantRoles';
@@ -96,4 +97,53 @@ export function coupleWithAdultDependant(countryId: CountryId = 'uk'): Household
   return singleParentWithAdultDependant(countryId)
     .withBuilderMaritalStatus(ROLE_TEST_YEAR, 'married')
     .setPersonVariableAtYear(BUILDER_PEOPLE.PARTNER, 'age', ROLE_TEST_YEAR, BUILDER_AGES.PARTNER);
+}
+
+export const SEPARATE_CLAIMANT = 'other claimant';
+
+/**
+ * A saved UK household with two benefit units: "you" (50) alone in one, and a separate claimant
+ * alone in another, as a household made outside the builder can be.
+ */
+export function householdWithSeparateClaimant(
+  separateClaimant: { age: number; isClaimantOrPartner?: boolean },
+  youIsClaimantOrPartner?: boolean
+): Household {
+  const person = (
+    age: number,
+    isClaimantOrPartner: boolean | undefined
+  ): AppHouseholdInputPerson =>
+    isClaimantOrPartner === undefined
+      ? { age: { [ROLE_TEST_YEAR]: age } }
+      : {
+          age: { [ROLE_TEST_YEAR]: age },
+          [UK_CLAIMANT_OR_PARTNER_VARIABLE]: { [ROLE_TEST_YEAR]: isClaimantOrPartner },
+        };
+
+  return Household.fromAppInput({
+    countryId: 'uk',
+    year: ROLE_TEST_YEAR_NUMBER,
+    householdData: {
+      people: {
+        [BUILDER_PEOPLE.YOU]: person(BUILDER_AGES.PARENT, youIsClaimantOrPartner),
+        [SEPARATE_CLAIMANT]: person(separateClaimant.age, separateClaimant.isClaimantOrPartner),
+      },
+      households: {
+        'your household': { members: [BUILDER_PEOPLE.YOU, SEPARATE_CLAIMANT] },
+      },
+      benunits: {
+        'your benefit unit': { members: [BUILDER_PEOPLE.YOU] },
+        'their benefit unit': { members: [SEPARATE_CLAIMANT] },
+      },
+    },
+  });
+}
+
+export const CREATED_HOUSEHOLD_ID = 'created-uk-household';
+
+/** The v1 API's response to a household creation request. */
+export function mockCreatedHouseholdResponse(): Response {
+  return new Response(JSON.stringify({ result: { household_id: CREATED_HOUSEHOLD_ID } }), {
+    status: 200,
+  });
 }

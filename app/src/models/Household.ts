@@ -357,6 +357,34 @@ function getBuilderDependentName(index: number): string {
   return `your ${BUILDER_DEPENDENT_ORDINALS[index] || `${index + 1}th`} dependent`;
 }
 
+/** The index getBuilderDependentName gave this name, or -1 for any other name. */
+function getBuilderDependentIndex(personKey: string): number {
+  const ordinal = /^your (\S+) dependent$/.exec(personKey)?.[1];
+  if (!ordinal) {
+    return -1;
+  }
+
+  const namedIndex = BUILDER_DEPENDENT_ORDINALS.indexOf(ordinal);
+  if (namedIndex !== -1) {
+    return namedIndex;
+  }
+
+  const numbered = /^(\d+)th$/.exec(ordinal)?.[1];
+  return numbered ? Number(numbered) - 1 : -1;
+}
+
+/** Everyone who shares a group with the person, the person included. */
+function getGroupMatesOf(
+  groups: AppHouseholdInputGroupMap | undefined,
+  personKey: string
+): Set<string> {
+  return new Set(
+    Object.values(groups ?? {})
+      .filter((group) => group.members.includes(personKey))
+      .flatMap((group) => group.members)
+  );
+}
+
 function getUniqueBuilderPersonName(existingKeys: Set<string>, preferredName: string): string {
   if (!existingKeys.has(preferredName)) {
     return preferredName;
@@ -891,10 +919,14 @@ export class Household extends BaseModel<HouseholdModelData> {
     }
 
     // Only an explicit partner counts. Age never makes one: a dependant aged 25 stays a dependant.
+    // A claimant-or-partner flag names the partner only inside the primary person's benefit unit;
+    // a flagged member of another unit is that unit's own claimant.
+    const benefitUnitMates = getGroupMatesOf(this.appInputData.benunits, resolvedPrimaryPersonKey);
     return (
       this.getSortedPersonNames().find(
         (personKey) =>
           personKey !== resolvedPrimaryPersonKey &&
+          benefitUnitMates.has(personKey) &&
           this.getPersonVariableAtYear(personKey, UK_CLAIMANT_OR_PARTNER_VARIABLE, year) === true
       ) ?? null
     );
@@ -941,11 +973,21 @@ export class Household extends BaseModel<HouseholdModelData> {
   /**
    * Benefit-unit roles of a UK builder household: "you" and the explicit partner are the
    * claimant and partner, and every other member (a dependant of any age) is neither.
-   * Returns null for a household the builder did not make (no "you"), whose relationships the
-   * app does not know; policyengine-uk then infers them as before.
+   *
+   * Returns null unless the household has the builder's structure: a person named "you" and one
+   * benefit unit holding everyone. Roles are all or nothing: policyengine-core gives anyone
+   * without an input the variable's default (false), not its formula, so roles for one unit
+   * would make another unit's claimant a non-claimant. Without roles, policyengine-uk infers
+   * them as before.
    */
   getBuilderClaimantRoles(year: string): Record<string, boolean> | null {
-    if (this.countryId !== 'uk' || !(BUILDER_PRIMARY_PERSON_NAME in this.appInputData.people)) {
+    const benefitUnits = Object.values(this.appInputData.benunits ?? {});
+    const hasBuilderStructure =
+      this.countryId === 'uk' &&
+      BUILDER_PRIMARY_PERSON_NAME in this.appInputData.people &&
+      benefitUnits.length === 1 &&
+      this.personNames.every((personKey) => benefitUnits[0].members.includes(personKey));
+    if (!hasBuilderStructure) {
       return null;
     }
 
@@ -1226,15 +1268,18 @@ export class Household extends BaseModel<HouseholdModelData> {
       const parentIds = [composition.primaryPersonKey, composition.partnerKey].filter(
         Boolean
       ) as string[];
-      // Number new children after every dependant, including adult dependants the count excludes.
-      const dependantCount = composition.people.filter(
-        (personKey) => !parentIds.includes(personKey)
-      ).length;
+      // Number new children after every dependant, including adult dependants the count excludes,
+      // and after the highest dependant ordinal in use, so a gap never produces "... dependent 2".
+      const dependants = composition.people.filter((personKey) => !parentIds.includes(personKey));
+      const firstNewIndex = Math.max(
+        dependants.length,
+        ...dependants.map((personKey) => getBuilderDependentIndex(personKey) + 1)
+      );
 
       for (let offset = 0; offset < newCount - composition.childKeys.length; offset += 1) {
         const childKey = getUniqueBuilderPersonName(
           existingKeys,
-          getBuilderDependentName(dependantCount + offset)
+          getBuilderDependentName(firstNewIndex + offset)
         );
         existingKeys.add(childKey);
         nextHousehold = nextHousehold.addChild(childKey, BUILDER_DEFAULT_CHILD_AGE, parentIds, {

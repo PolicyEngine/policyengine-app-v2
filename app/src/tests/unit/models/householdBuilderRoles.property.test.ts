@@ -4,6 +4,7 @@ import { Household, UK_CLAIMANT_OR_PARTNER_VARIABLE } from '@/models/Household';
 import {
   BUILDER_PEOPLE,
   ROLE_TEST_YEAR,
+  SEPARATE_CLAIMANT,
   UK_METADATA_WITHOUT_CLAIMANT_ROLES,
 } from '@/tests/fixtures/models/builderClaimantRolesMocks';
 import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
@@ -62,6 +63,41 @@ const builderHouseholdArbitrary = fc
 const ukBuilderHouseholdArbitrary = builderHouseholdArbitrary.filter(
   (household) => household.countryId === 'uk'
 );
+
+const optionalRoleArbitrary = fc.option(fc.boolean(), { nil: undefined });
+
+/** Adds a claimant in a benefit unit of their own, as a household saved outside the builder can have. */
+function withSeparateClaimant(
+  household: Household,
+  age: number,
+  isClaimantOrPartner: boolean | undefined
+): Household {
+  const data = household.householdData;
+  data.people[SEPARATE_CLAIMANT] = {
+    age: { [ROLE_TEST_YEAR]: age },
+    ...(isClaimantOrPartner === undefined
+      ? {}
+      : { [UK_CLAIMANT_OR_PARTNER_VARIABLE]: { [ROLE_TEST_YEAR]: isClaimantOrPartner } }),
+  };
+  data.benunits = { ...data.benunits, 'their benefit unit': { members: [SEPARATE_CLAIMANT] } };
+  return Household.fromAppInput({ ...household.toAppInput(), householdData: data });
+}
+
+/** UK builder households beside a separate claimant, any of whom may already carry a role. */
+const multiUnitHouseholdArbitrary = fc
+  .record({
+    household: ukBuilderHouseholdArbitrary,
+    recordRoles: fc.boolean(),
+    age: ageArbitrary,
+    isClaimantOrPartner: optionalRoleArbitrary,
+  })
+  .map(({ household, recordRoles, age, isClaimantOrPartner }) =>
+    withSeparateClaimant(
+      recordRoles ? household.withBuilderClaimantRoles(ROLE_TEST_YEAR) : household,
+      age,
+      isClaimantOrPartner
+    )
+  );
 
 describe('household builder roles properties', () => {
   test('the partner is exactly the explicit partner, whatever anyone’s age', () => {
@@ -160,17 +196,69 @@ describe('household builder roles properties', () => {
     );
   });
 
-  test('without the variable in the model information, every household saves unchanged', () => {
+  test('without the variable in the model information, no household sends a role', () => {
     fc.assert(
-      fc.property(builderHouseholdArbitrary, (household) => {
-        expect(
-          withSupportedBuilderClaimantRoles(
-            household,
+      fc.property(
+        fc.oneof(ukBuilderHouseholdArbitrary, multiUnitHouseholdArbitrary),
+        fc.boolean(),
+        (household, recordRoles) => {
+          const saved = withSupportedBuilderClaimantRoles(
+            recordRoles ? household.withBuilderClaimantRoles(ROLE_TEST_YEAR) : household,
             UK_METADATA_WITHOUT_CLAIMANT_ROLES,
             ROLE_TEST_YEAR
-          )
-        ).toBe(household);
+          );
+
+          expect(JSON.stringify(saved.toV1CreationPayload())).not.toContain(
+            UK_CLAIMANT_OR_PARTNER_VARIABLE
+          );
+        }
+      )
+    );
+  });
+
+  test('a claimant in another benefit unit is never the partner, and choosing single keeps them', () => {
+    fc.assert(
+      fc.property(multiUnitHouseholdArbitrary, (household) => {
+        const single = household.withBuilderMaritalStatus(ROLE_TEST_YEAR, 'single');
+
+        expect(household.getBuilderPartnerKey(ROLE_TEST_YEAR)).not.toBe(SEPARATE_CLAIMANT);
+        expect(single.personNames).toContain(SEPARATE_CLAIMANT);
       })
+    );
+  });
+
+  test('a household with more than one benefit unit gets no generated roles', () => {
+    fc.assert(
+      fc.property(multiUnitHouseholdArbitrary, (household) => {
+        expect(household.getBuilderClaimantRoles(ROLE_TEST_YEAR)).toBeNull();
+        expect(household.withBuilderClaimantRoles(ROLE_TEST_YEAR)).toBe(household);
+      })
+    );
+  });
+
+  test('roles recorded, then edited in the builder, then recorded again match the composition', () => {
+    fc.assert(
+      fc.property(
+        ukBuilderHouseholdArbitrary,
+        fc.array(builderActionArbitrary, { maxLength: 12 }),
+        (household, laterActions) => {
+          const edited = laterActions
+            .reduce(applyBuilderAction, household.withBuilderClaimantRoles(ROLE_TEST_YEAR))
+            .withBuilderClaimantRoles(ROLE_TEST_YEAR);
+          const recorded = Object.fromEntries(
+            edited.personNames.map((personName) => [
+              personName,
+              edited.getPersonVariableAtYear(
+                personName,
+                UK_CLAIMANT_OR_PARTNER_VARIABLE,
+                ROLE_TEST_YEAR
+              ),
+            ])
+          );
+
+          expect(recorded).toEqual(edited.getBuilderClaimantRoles(ROLE_TEST_YEAR));
+        }
+      )
     );
   });
 
