@@ -65,6 +65,12 @@ const BUILDER_DEPENDENT_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth
  */
 export const UK_CLAIMANT_OR_PARTNER_VARIABLE = 'is_claimant_or_partner';
 
+/** The unit whose members the builder's partner and child controls manage, by country. */
+const BUILDER_FAMILY_GROUPS: Partial<Record<CountryId, HouseholdGroupAppKey>> = {
+  uk: 'benunits',
+  us: 'taxUnits',
+};
+
 export interface PersonWithName extends AppHouseholdInputPerson {
   name: string;
 }
@@ -153,7 +159,8 @@ function ensureGroupCollection(
   return householdData[entityName] as Record<string, AppHouseholdInputGroup>;
 }
 
-function addPersonToFirstGroup(
+/** Adds the person to the group holding "you" (the builder's own unit), else the first group. */
+function addPersonToBuilderGroup(
   groupMap: Record<string, AppHouseholdInputGroup>,
   defaultGroupName: string,
   personKey: string
@@ -162,9 +169,11 @@ function addPersonToFirstGroup(
     groupMap[defaultGroupName] = { members: [] };
   }
 
-  const firstGroup = Object.values(groupMap)[0];
-  if (!firstGroup.members.includes(personKey)) {
-    firstGroup.members.push(personKey);
+  const groups = Object.values(groupMap);
+  const builderGroup =
+    groups.find((group) => group.members.includes(BUILDER_PRIMARY_PERSON_NAME)) ?? groups[0];
+  if (!builderGroup.members.includes(personKey)) {
+    builderGroup.members.push(personKey);
   }
 }
 
@@ -426,7 +435,7 @@ function applyDefaultHouseholdGroups(
   householdData: AppHouseholdInputData,
   personKey: string
 ): void {
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'households'),
     'your household',
     personKey
@@ -438,13 +447,17 @@ function applyUSDefaultGroups(
   personKey: string,
   personType: 'adult' | 'child'
 ): void {
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'taxUnits'),
     'your tax unit',
     personKey
   );
-  addPersonToFirstGroup(ensureGroupCollection(householdData, 'families'), 'your family', personKey);
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
+    ensureGroupCollection(householdData, 'families'),
+    'your family',
+    personKey
+  );
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'spmUnits'),
     'your household',
     personKey
@@ -459,7 +472,7 @@ function applyUSDefaultGroups(
 }
 
 function applyUKDefaultGroups(householdData: AppHouseholdInputData, personKey: string): void {
-  addPersonToFirstGroup(
+  addPersonToBuilderGroup(
     ensureGroupCollection(householdData, 'benunits'),
     'your benefit unit',
     personKey
@@ -919,15 +932,22 @@ export class Household extends BaseModel<HouseholdModelData> {
     }
 
     // Only an explicit partner counts. Age never makes one: a dependant aged 25 stays a dependant.
-    // A claimant-or-partner flag names the partner only inside the primary person's benefit unit;
-    // a flagged member of another unit is that unit's own claimant.
-    const benefitUnitMates = getGroupMatesOf(this.appInputData.benunits, resolvedPrimaryPersonKey);
+    // A claimant-or-partner flag names a partner only when the primary person is flagged as a
+    // claimant too, and only inside their own family unit: a flagged member of another unit is
+    // that unit's own claimant.
+    const familyMembers = this.getBuilderFamilyMembers(resolvedPrimaryPersonKey);
+    const isFlaggedClaimantOrPartner = (personKey: string) =>
+      this.getPersonVariableAtYear(personKey, UK_CLAIMANT_OR_PARTNER_VARIABLE, year) === true;
+    if (!familyMembers || !isFlaggedClaimantOrPartner(resolvedPrimaryPersonKey)) {
+      return null;
+    }
+
     return (
       this.getSortedPersonNames().find(
         (personKey) =>
           personKey !== resolvedPrimaryPersonKey &&
-          benefitUnitMates.has(personKey) &&
-          this.getPersonVariableAtYear(personKey, UK_CLAIMANT_OR_PARTNER_VARIABLE, year) === true
+          familyMembers.has(personKey) &&
+          isFlaggedClaimantOrPartner(personKey)
       ) ?? null
     );
   }
@@ -940,6 +960,9 @@ export class Household extends BaseModel<HouseholdModelData> {
     const resolvedPrimaryPersonKey = primaryPersonKey ?? this.getBuilderPrimaryPersonKey(year);
     const resolvedPartnerKey =
       partnerKey ?? this.getBuilderPartnerKey(year, resolvedPrimaryPersonKey);
+    const familyMembers = resolvedPrimaryPersonKey
+      ? this.getBuilderFamilyMembers(resolvedPrimaryPersonKey)
+      : null;
 
     return Household.sortPersonNames(
       Object.entries(this.appInputData.people)
@@ -947,11 +970,28 @@ export class Household extends BaseModel<HouseholdModelData> {
           if (personKey === resolvedPrimaryPersonKey || personKey === resolvedPartnerKey) {
             return false;
           }
+          if (familyMembers && !familyMembers.has(personKey)) {
+            return false;
+          }
 
           return isManagedBuilderChild(person, year);
         })
         .map(([personKey]) => personKey)
     );
+  }
+
+  /**
+   * Members of the primary person's own family unit (UK benefit unit, US tax unit). The builder's
+   * partner and child controls manage only these; members of another unit belong to that unit's
+   * own claimant. Null when the country has no such unit or the primary person is in none, and
+   * then the whole household counts.
+   */
+  private getBuilderFamilyMembers(primaryPersonKey: string): Set<string> | null {
+    const groupKey = BUILDER_FAMILY_GROUPS[this.countryId];
+    const members = groupKey
+      ? getGroupMatesOf(getGroupCollectionFromData(this.appInputData, groupKey), primaryPersonKey)
+      : new Set<string>();
+    return members.size > 0 ? members : null;
   }
 
   deriveBuilderComposition(year: string): HouseholdBuilderComposition {
@@ -1268,12 +1308,18 @@ export class Household extends BaseModel<HouseholdModelData> {
       const parentIds = [composition.primaryPersonKey, composition.partnerKey].filter(
         Boolean
       ) as string[];
-      // Number new children after every dependant, including adult dependants the count excludes,
-      // and after the highest dependant ordinal in use, so a gap never produces "... dependent 2".
-      const dependants = composition.people.filter((personKey) => !parentIds.includes(personKey));
+      // Number new children after every dependant in the family unit, adult dependants included,
+      // and after the highest dependant ordinal anyone uses, so names never collide or repeat.
+      const familyMembers = composition.primaryPersonKey
+        ? this.getBuilderFamilyMembers(composition.primaryPersonKey)
+        : null;
+      const dependantCount = composition.people.filter(
+        (personKey) =>
+          !parentIds.includes(personKey) && (!familyMembers || familyMembers.has(personKey))
+      ).length;
       const firstNewIndex = Math.max(
-        dependants.length,
-        ...dependants.map((personKey) => getBuilderDependentIndex(personKey) + 1)
+        dependantCount,
+        ...composition.people.map((personKey) => getBuilderDependentIndex(personKey) + 1)
       );
 
       for (let offset = 0; offset < newCount - composition.childKeys.length; offset += 1) {

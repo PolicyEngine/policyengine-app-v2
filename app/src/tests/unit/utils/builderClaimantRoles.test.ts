@@ -5,6 +5,7 @@ import {
   householdWithSeparateClaimant,
   ROLE_TEST_YEAR,
   singleParentWithAdultDependant,
+  UK_METADATA_LOADING,
   UK_METADATA_WITH_CLAIMANT_ROLES,
   UK_METADATA_WITHOUT_CLAIMANT_ROLES,
   US_METADATA_WITH_CLAIMANT_ROLES,
@@ -74,6 +75,14 @@ describe('withSupportedBuilderClaimantRoles', () => {
       UK_CLAIMANT_OR_PARTNER_VARIABLE
     );
     expect(result.householdData).toEqual(singleParentWithAdultDependant().householdData);
+  });
+
+  test('given UK model information is still loading then roles a household carries are kept', () => {
+    const household = singleParentWithAdultDependant().withBuilderClaimantRoles(ROLE_TEST_YEAR);
+
+    expect(withSupportedBuilderClaimantRoles(household, UK_METADATA_LOADING, ROLE_TEST_YEAR)).toBe(
+      household
+    );
   });
 
   test('given model information for another country then roles a household carries are kept', () => {

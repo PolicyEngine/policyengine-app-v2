@@ -70,7 +70,8 @@ const optionalRoleArbitrary = fc.option(fc.boolean(), { nil: undefined });
 function withSeparateClaimant(
   household: Household,
   age: number,
-  isClaimantOrPartner: boolean | undefined
+  isClaimantOrPartner: boolean | undefined,
+  separateUnitFirst: boolean
 ): Household {
   const data = household.householdData;
   data.people[SEPARATE_CLAIMANT] = {
@@ -79,7 +80,14 @@ function withSeparateClaimant(
       ? {}
       : { [UK_CLAIMANT_OR_PARTNER_VARIABLE]: { [ROLE_TEST_YEAR]: isClaimantOrPartner } }),
   };
-  data.benunits = { ...data.benunits, 'their benefit unit': { members: [SEPARATE_CLAIMANT] } };
+  const theirUnit = { 'their benefit unit': { members: [SEPARATE_CLAIMANT] } };
+  data.benunits = separateUnitFirst
+    ? { ...theirUnit, ...data.benunits }
+    : { ...data.benunits, ...theirUnit };
+  const [householdName, householdGroup] = Object.entries(data.households ?? {})[0];
+  data.households = {
+    [householdName]: { ...householdGroup, members: [...householdGroup.members, SEPARATE_CLAIMANT] },
+  };
   return Household.fromAppInput({ ...household.toAppInput(), householdData: data });
 }
 
@@ -90,12 +98,14 @@ const multiUnitHouseholdArbitrary = fc
     recordRoles: fc.boolean(),
     age: ageArbitrary,
     isClaimantOrPartner: optionalRoleArbitrary,
+    separateUnitFirst: fc.boolean(),
   })
-  .map(({ household, recordRoles, age, isClaimantOrPartner }) =>
+  .map(({ household, recordRoles, age, isClaimantOrPartner, separateUnitFirst }) =>
     withSeparateClaimant(
       recordRoles ? household.withBuilderClaimantRoles(ROLE_TEST_YEAR) : household,
       age,
-      isClaimantOrPartner
+      isClaimantOrPartner,
+      separateUnitFirst
     )
   );
 
@@ -224,6 +234,27 @@ describe('household builder roles properties', () => {
         expect(household.getBuilderPartnerKey(ROLE_TEST_YEAR)).not.toBe(SEPARATE_CLAIMANT);
         expect(single.personNames).toContain(SEPARATE_CLAIMANT);
       })
+    );
+  });
+
+  test('builder edits never touch another benefit unit, and new members join the unit of "you"', () => {
+    fc.assert(
+      fc.property(
+        multiUnitHouseholdArbitrary,
+        fc.array(builderActionArbitrary, { maxLength: 12 }),
+        (household, actions) => {
+          const edited = actions.reduce(applyBuilderAction, household);
+          const yourUnit = edited.getGroupMembers('benunits', 'your benefit unit');
+
+          expect(edited.getGroupMembers('benunits', 'their benefit unit')).toEqual([
+            SEPARATE_CLAIMANT,
+          ]);
+          expect([...yourUnit, SEPARATE_CLAIMANT].sort()).toEqual([...edited.personNames].sort());
+          expect(edited.deriveBuilderComposition(ROLE_TEST_YEAR).childKeys).not.toContain(
+            SEPARATE_CLAIMANT
+          );
+        }
+      )
     );
   });
 

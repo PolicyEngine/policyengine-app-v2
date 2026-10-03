@@ -1,7 +1,11 @@
 import { UK_CLAIMANT_OR_PARTNER_VARIABLE, type Household } from '@/models/Household';
 import type { MetadataState } from '@/types/metadata';
+import { getModelMetadataError } from './spmSelection';
 
-export type ClaimantRoleModelMetadata = Pick<MetadataState, 'currentCountry' | 'variables'>;
+export type ClaimantRoleModelMetadata = Pick<
+  MetadataState,
+  'currentCountry' | 'loading' | 'error' | 'version' | 'variables'
+>;
 
 function withoutClaimantRoles(household: Household): Household {
   const people = household.people;
@@ -21,14 +25,15 @@ function withoutClaimantRoles(household: Household): Household {
  * policyengine-core rejects a situation that names a variable its model lacks. So when the loaded
  * model information for the household's country defines the variable, a UK builder household
  * gets its roles; when it does not, any roles the household already carries are removed. Until
- * model information for the household's country has loaded, the household is left unchanged.
+ * model information for the household's country has loaded without error, the household is left
+ * unchanged.
  */
 export function withSupportedBuilderClaimantRoles(
   household: Household,
   metadata: ClaimantRoleModelMetadata | undefined,
   year: string | number | null = household.year
 ): Household {
-  if (metadata?.currentCountry !== household.countryId) {
+  if (!metadata || getModelMetadataError(household.countryId, metadata)) {
     return household;
   }
 

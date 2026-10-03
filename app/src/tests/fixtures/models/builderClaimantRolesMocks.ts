@@ -25,6 +25,9 @@ export const BUILDER_AGES = {
 /** Model information whose UK model defines is_claimant_or_partner. */
 export const UK_METADATA_WITH_CLAIMANT_ROLES: ClaimantRoleModelMetadata = {
   currentCountry: 'uk',
+  loading: false,
+  error: null,
+  version: 'test-model',
   variables: {
     age: { name: 'age', entity: 'person', valueType: 'float', isInputVariable: true },
     [UK_CLAIMANT_OR_PARTNER_VARIABLE]: {
@@ -40,6 +43,9 @@ export const UK_METADATA_WITH_CLAIMANT_ROLES: ClaimantRoleModelMetadata = {
 /** Model information for a UK model that predates is_claimant_or_partner. */
 export const UK_METADATA_WITHOUT_CLAIMANT_ROLES: ClaimantRoleModelMetadata = {
   currentCountry: 'uk',
+  loading: false,
+  error: null,
+  version: 'test-model',
   variables: {
     age: { name: 'age', entity: 'person', valueType: 'float', isInputVariable: true },
   },
@@ -69,6 +75,15 @@ export function ukBuilderMetadata(claimantRoles: ClaimantRoleModelMetadata): Met
     },
   };
 }
+
+/** UK model information still loading: the store holds no variables yet. */
+export const UK_METADATA_LOADING: ClaimantRoleModelMetadata = {
+  currentCountry: 'uk',
+  loading: true,
+  error: null,
+  version: null,
+  variables: {},
+};
 
 /** Model information loaded for another country than the household's. */
 export const US_METADATA_WITH_CLAIMANT_ROLES: ClaimantRoleModelMetadata = {
@@ -107,8 +122,11 @@ export const SEPARATE_CLAIMANT = 'other claimant';
  */
 export function householdWithSeparateClaimant(
   separateClaimant: { age: number; isClaimantOrPartner?: boolean },
-  youIsClaimantOrPartner?: boolean
+  youIsClaimantOrPartner?: boolean,
+  separateUnitFirst = false
 ): Household {
+  const yourUnit = { 'your benefit unit': { members: [BUILDER_PEOPLE.YOU] } };
+  const theirUnit = { 'their benefit unit': { members: [SEPARATE_CLAIMANT] } };
   const person = (
     age: number,
     isClaimantOrPartner: boolean | undefined
@@ -131,10 +149,7 @@ export function householdWithSeparateClaimant(
       households: {
         'your household': { members: [BUILDER_PEOPLE.YOU, SEPARATE_CLAIMANT] },
       },
-      benunits: {
-        'your benefit unit': { members: [BUILDER_PEOPLE.YOU] },
-        'their benefit unit': { members: [SEPARATE_CLAIMANT] },
-      },
+      benunits: separateUnitFirst ? { ...theirUnit, ...yourUnit } : { ...yourUnit, ...theirUnit },
     },
   });
 }
