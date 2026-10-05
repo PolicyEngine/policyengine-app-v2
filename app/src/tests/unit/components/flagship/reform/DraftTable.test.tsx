@@ -117,35 +117,66 @@ describe('DraftTable', () => {
     expect(screen.getByText('by year')).toBeInTheDocument();
   });
 
-  test('given a lone parameter is opened then its values show once, with current law above', async () => {
+  test('given a lone parameter is opened then its value shows once, under current law', async () => {
     const user = userEvent.setup();
     render(<TableHarness />);
 
     await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-    // The row's own input gives way to the grid: one input for 2026, not two.
-    expect(document.querySelectorAll(`[data-path="${CTC_PATH}"] input`)).toHaveLength(5);
+    // The row's own input gives way to the editor: one input, not two.
+    expect(document.querySelectorAll(`[data-path="${CTC_PATH}"] input`)).toHaveLength(1);
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
       'Current law',
       'Your reform',
     ]);
-    expect(rowValue(CTC_PATH)).toBe(cell('Child tax credit base amount, 2026'));
+    expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
   });
 
-  test('given custom dates and history then each opens on its button, one at a time', async () => {
+  test('given custom dates then a range is set for the chosen member', async () => {
     const user = userEvent.setup();
     render(<TableHarness />);
     await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
 
-    const dates = screen.getByRole('button', { name: /custom dates/i });
-    const history = screen.getByRole('button', { name: /history/i });
-    await user.click(dates);
-    expect(dates).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText(/dates for/i)).toHaveTextContent('Dates for Single');
+    await user.click(screen.getByRole('tab', { name: 'Custom dates' }));
+    await user.selectOptions(screen.getByLabelText('For'), JOINT_PATH);
+    const section = screen.getByRole('region', { name: 'New value' });
+    fireEvent.change(within(section).getByRole('spinbutton'), { target: { value: '35000' } });
+    await user.click(screen.getByRole('button', { name: 'Add change' }));
 
+    expect(provision(JOINT_PATH)?.intervals).toEqual([
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 35000 },
+    ]);
+    expect(screen.getByText('2026-01-01 to 2026-12-31')).toBeInTheDocument();
+  });
+
+  test('given the editor then what the parameter is and its past values come after it', async () => {
+    const user = userEvent.setup();
+    render(<TableHarness />);
+    await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+
+    const regions = screen
+      .getAllByRole('region')
+      .map((region) => region.getAttribute('aria-label'));
+    expect(regions).toEqual(['New value', 'About this parameter']);
+    const history = screen.getByRole('button', { name: /show past values/i });
     await user.click(history);
-    expect(dates).toHaveAttribute('aria-expanded', 'false');
     expect(history).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('given a pick then its row opens and the open one closes', () => {
+    render(<TableHarness />);
+    act(() => focusProvision(SINGLE_PATH));
+    expect(
+      screen.getByRole('button', { name: 'Close Standard deduction amount' })
+    ).toBeInTheDocument();
+
+    act(() => focusProvision(CTC_PATH));
+
+    expect(
+      screen.getByRole('button', { name: 'Open Standard deduction amount' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close Base amount' })).toBeInTheDocument();
+    expect(rowValue(CTC_PATH)).toHaveFocus();
   });
 
   test('given a pick lands on a lone parameter then its value is focused', () => {

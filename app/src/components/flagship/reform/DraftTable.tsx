@@ -75,14 +75,15 @@ function whenLabel(provision: DraftProvision, year: number): { text: string; acc
 /**
  * The reform as a table: one row per parameter — or per breakdown, its
  * members together — with current law, the new value typed in place,
- * and when it applies. A row opens to its year-by-year values. Picks
- * from the add bar land here with their value focused.
+ * and when it applies. A pick opens its row — one open at a time — to
+ * the ways of setting its value, with the value focused.
  */
 export default function DraftTable({ draft }: { draft: DraftReform }) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draftable = useSelector(selectAddableParameterPaths);
   const focus = useProvisionFocus();
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  // One row open at a time: the one being worked on.
+  const [openKey, setOpenKey] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<string | null>(null);
   const year = draftYear(draft);
@@ -114,15 +115,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
   }, [draft.provisions, groupFor]);
 
   const toggle = (key: string, open?: boolean) =>
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (open ?? !next.has(key)) {
-        next.add(key);
-      } else {
-        next.delete(key);
-      }
-      return next;
-    });
+    setOpenKey((current) => ((open ?? current !== key) ? key : null));
 
   // Focus the pending pick's value, selected so typing replaces it — or
   // the switch a yes/no parameter shows instead. False while its control
@@ -146,7 +139,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
     }
   };
 
-  // A pick lands on its row: breakdowns and schedules open to their grid.
+  // A pick lands on its row, opened to its ways of setting the value.
   useEffect(() => {
     if (!focus) {
       return;
@@ -158,12 +151,13 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
       return;
     }
     pendingFocus.current = focus.path;
-    if (row.group || row.provisions.some(provisionVariesOverTime)) {
+    if (openKey === row.key) {
+      applyPendingFocus();
+    } else {
+      // Its grid lands on the next render, below. Focusing now would
+      // take the closed row's own input, which opening removes.
       toggle(row.key, true);
     }
-    // A row's own input is already here; an opening grid lands on the
-    // next render, below.
-    applyPendingFocus();
     // Only a new pick should move focus, not every draft change.
   }, [focus?.nonce]);
 
@@ -219,7 +213,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
       )}
 
       {rows.map((row, index) => {
-        const open = expanded.has(row.key);
+        const open = openKey === row.key;
         const lone = row.group ? null : row.provisions[0];
         const { name, context } = lone
           ? provisionName(lone)
@@ -352,7 +346,10 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                     }}
                   >
                     {lone
-                      ? 'by year'
+                      ? // Before metadata loads, a single value shows as text.
+                        provisionVariesOverTime(lone)
+                        ? 'by year'
+                        : formatValue(lone.value, lone.unit)
                       : changedCount > 0
                         ? `${changedCount} of ${row.group!.members.length} changed`
                         : 'set values'}
