@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { IconArrowBackUp, IconChartLine, IconChevronDown } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { Button, SegmentedControl } from '@/components/ui';
@@ -15,15 +15,16 @@ import {
   provisionVariesOverTime,
   setDraftProvisionIntervals,
 } from '@/libs/draftReform';
+import { periodLabel } from '@/libs/flagship/draftLabels';
 import { humanizeSegment, ParameterGroup } from '@/libs/flagship/parameterGroups';
 import { getDateRange } from '@/libs/metadataUtils';
 import { selectParameterEntriesByPath } from '@/libs/parameterSearch';
 import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/ChangesCard';
-import { HistoricalValuesCard } from '@/pages/reportBuilder/modals/policyCreation/HistoricalValuesCard';
-import { DateValueSelectorV6 } from '@/pages/reportBuilder/modals/policyCreation/valueSelectors';
 import { RootState } from '@/store';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
+import CustomDatesEditor from './CustomDatesEditor';
+import PastValuesChart from './PastValuesChart';
 import ValueGrid from './ValueGrid';
 
 interface ProvisionDetailsProps {
@@ -56,17 +57,6 @@ function fitsGrid(provision: DraftProvision | undefined): boolean {
     (interval) => isYearStart(interval.startDate) && isYearEnd(interval.endDate)
   );
 }
-
-const selectStyle: React.CSSProperties = {
-  height: 32,
-  padding: `0 ${spacing.sm}`,
-  border: `1px solid ${colors.border.light}`,
-  borderRadius: spacing.radius.container,
-  background: colors.background.primary,
-  fontSize: typography.fontSize.sm,
-  fontFamily: typography.fontFamily.primary,
-  color: colors.text.primary,
-};
 
 /**
  * A reform row opened up, in the order the work goes: set the new value
@@ -103,24 +93,6 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   });
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  // The policy editor's date-range setter keeps its own working state.
-  const [pending, setPending] = useState<ValueInterval[]>([]);
-  const [startDate, setStartDate] = useState(`${year}-01-01`);
-  const [endDate, setEndDate] = useState(`${year}-12-31`);
-
-  // The date setter re-reads its value whenever this changes, so it must
-  // change only with the draft — not on every keystroke's render.
-  const policy = useMemo(
-    () => ({
-      label: draft.label,
-      parameters: draft.provisions.filter(provisionChanged).map((provision) => ({
-        name: provision.path,
-        values: provisionIntervals(provision),
-      })),
-    }),
-    [draft.label, draft.provisions]
-  );
-
   if (!parameters) {
     return null;
   }
@@ -129,6 +101,19 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     const values = parameters[memberPath]?.values;
     const value = values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : null;
     return value ?? null;
+  };
+  const baselineOn = (memberPath: string, date: string) => {
+    const values = parameters[memberPath]?.values;
+    return (values ? new ValueIntervalCollection(values).getValueAtDate(date) : null) ?? null;
+  };
+  const valueOn = (memberPath: string, date: string) => {
+    const provision = provisionFor(memberPath);
+    if (!provision || !provisionChanged(provision)) {
+      return baselineOn(memberPath, date);
+    }
+    const reform = new ValueIntervalCollection(parameters[memberPath]?.values ?? {});
+    provisionIntervals(provision).forEach((interval) => reform.addInterval(interval));
+    return reform.getValueAtDate(date) ?? baselineOn(memberPath, date);
   };
   const valueAt = (memberPath: string, at: number) => {
     const provision = provisionFor(memberPath);
@@ -180,9 +165,12 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     focusedProvision && provisionChanged(focusedProvision)
       ? provisionIntervals(focusedProvision)
       : [];
-  const unit = focusedParam?.unit ?? null;
   const memberLabel = members.find((member) => member.path === focused)?.label ?? '';
   const chartLabel = group ? `${group.label} · ${memberLabel.toLowerCase()}` : members[0].label;
+  // A breakdown says what it is once, for all its members, which
+  // seldom carry a description of their own.
+  const description =
+    (group ? parameters[group.key]?.description : null) || focusedParam?.description;
   const anyChanged = members.some((member) => {
     const provision = provisionFor(member.path);
     return provision ? provisionChanged(provision) : false;
@@ -192,14 +180,28 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const reformValues = new ValueIntervalCollection(baseValues);
   focusedIntervals.forEach((interval) => reformValues.addInterval(interval));
 
-  const changes = focusedIntervals.map((interval, index) => ({
-    index,
-    period:
-      interval.endDate === FOREVER
-        ? `${interval.startDate} on`
-        : `${interval.startDate} to ${interval.endDate}`,
-    value: formatValue(interval.value, unit),
-  }));
+  // Every member's changes, each named when the row is a breakdown.
+  const modifiedMembers = members.flatMap((member) => {
+    const provision = provisionFor(member.path);
+    if (!provision || !provisionChanged(provision)) {
+      return [];
+    }
+    const memberUnit = parameters[member.path]?.unit ?? null;
+    return [
+      {
+        paramName: member.path,
+        label: member.label,
+        changes: provisionIntervals(provision).map((interval, index) => {
+          const period = periodLabel(interval);
+          return {
+            index,
+            period: group ? `${member.label}: ${period}` : period,
+            value: formatValue(interval.value, memberUnit),
+          };
+        }),
+      },
+    ];
+  });
 
   const sectionLabel: React.CSSProperties = {
     fontSize: typography.fontSize.sm,
@@ -251,60 +253,22 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         </div>
 
         {mode === 'dates' ? (
-          focusedParam && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-              {group && (
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: spacing.sm,
-                    fontSize: typography.fontSize.sm,
-                    color: colors.text.secondary,
-                  }}
-                >
-                  For
-                  <select
-                    value={focused}
-                    onChange={(event) => setFocusedPath(event.target.value)}
-                    style={selectStyle}
-                  >
-                    {members.map((member) => (
-                      <option key={member.path} value={member.path}>
-                        {member.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <DateValueSelectorV6
-                // A fresh setter per member, so its value starts at theirs.
-                key={focused}
-                param={focusedParam}
-                policy={policy}
-                reportYear={String(year)}
-                minDate={minDate}
-                maxDate={maxDate}
-                intervals={pending}
-                setIntervals={setPending}
-                startDate={startDate}
-                setStartDate={setStartDate}
-                endDate={endDate}
-                setEndDate={setEndDate}
-              />
-              <div>
-                <Button
-                  size="sm"
-                  disabled={pending.length === 0}
-                  onClick={() => {
-                    pending.forEach((interval) => addInterval(focused, interval));
-                  }}
-                >
-                  Add change
-                </Button>
-              </div>
-            </div>
-          )
+          <CustomDatesEditor
+            members={members}
+            parameters={parameters}
+            defaultStart={`${year}-01-01`}
+            minDate={minDate}
+            maxDate={maxDate}
+            valueOn={valueOn}
+            baselineOn={baselineOn}
+            onAdd={(startDate, endDate, values) =>
+              Object.entries(values).forEach(([memberPath, value]) =>
+                addInterval(memberPath, { startDate, endDate, value })
+              )
+            }
+            focusedPath={focused}
+            onFocus={setFocusedPath}
+          />
         ) : (
           <ValueGrid
             members={members}
@@ -337,15 +301,18 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         )}
       </section>
 
-      {mode === 'dates' && changes.length > 0 && (
+      {mode === 'dates' && modifiedMembers.length > 0 && (
         <ChangesCard
-          modifiedParams={[{ paramName: focused, label: chartLabel, changes }]}
-          onRemoveChange={(memberPath, index) =>
-            writeIntervals(
-              memberPath,
-              focusedIntervals.filter((_, i) => i !== index)
-            )
-          }
+          modifiedParams={modifiedMembers}
+          onRemoveChange={(memberPath, index) => {
+            const provision = provisionFor(memberPath);
+            if (provision) {
+              writeIntervals(
+                memberPath,
+                provisionIntervals(provision).filter((_, i) => i !== index)
+              );
+            }
+          }}
         />
       )}
 
@@ -356,7 +323,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
           style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}
         >
           <span style={sectionLabel}>About this parameter</span>
-          {focusedParam.description && (
+          {description && (
             <p
               style={{
                 margin: 0,
@@ -365,7 +332,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
                 color: colors.text.secondary,
               }}
             >
-              {focusedParam.description}
+              {description}
             </p>
           )}
           <div>
@@ -378,7 +345,6 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             >
               <IconChartLine />
               {historyOpen ? 'Hide' : 'Show'} past values
-              {group ? ` of ${memberLabel.toLowerCase()}` : ''}
               <IconChevronDown
                 style={{
                   transform: historyOpen ? 'rotate(180deg)' : undefined,
@@ -387,14 +353,49 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               />
             </Button>
           </div>
-          {historyOpen && (
-            <HistoricalValuesCard
-              // The chart titles itself from the label, which for a
-              // breakdown member is its raw segment ("SINGLE").
-              selectedParam={{ ...focusedParam, label: chartLabel }}
+          {historyOpen && group && (
+            // Every member's history is a click away, not only the one in focus.
+            <div
+              role="group"
+              aria-label="Past values of"
+              style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}
+            >
+              {members.map((member) => {
+                const chosen = member.path === focused;
+                return (
+                  <button
+                    key={member.path}
+                    type="button"
+                    aria-pressed={chosen}
+                    onClick={() => setFocusedPath(member.path)}
+                    className="tw:cursor-pointer tw:transition-colors tw:hover:border-primary-500"
+                    style={{
+                      padding: `2px ${spacing.sm}`,
+                      border: `1px solid ${chosen ? colors.primary[500] : colors.border.light}`,
+                      borderRadius: 999,
+                      background: chosen ? colors.primary[50] : colors.background.primary,
+                      fontSize: typography.fontSize.xs,
+                      fontWeight: chosen
+                        ? typography.fontWeight.medium
+                        : typography.fontWeight.normal,
+                      fontFamily: typography.fontFamily.primary,
+                      color: chosen ? colors.primary[700] : colors.text.secondary,
+                    }}
+                  >
+                    {member.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {historyOpen && focusedParam && (
+            <PastValuesChart
+              // The chart reads the label, which for a breakdown member is
+              // its raw segment ("SINGLE").
+              param={{ ...focusedParam, label: chartLabel }}
               baseValues={baseValues}
-              reformValues={reformValues}
-              policyLabel={draft.label || 'Your reform'}
+              reformValues={focusedIntervals.length > 0 ? reformValues : undefined}
+              reformLabel={draft.label || 'Your reform'}
             />
           )}
         </section>

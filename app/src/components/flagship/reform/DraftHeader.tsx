@@ -1,8 +1,16 @@
-import { IconChartBar } from '@tabler/icons-react';
+import { IconCalendarEvent, IconChartBar, IconUsers } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
-import { Button } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -31,21 +39,73 @@ const SOURCE_NOTES: Record<string, string> = {
   tool: 'Drafted from a tool',
 };
 
-const selectStyle: React.CSSProperties = {
-  height: 36,
-  padding: `0 ${spacing.sm}`,
-  border: `1px solid ${colors.border.light}`,
-  borderRadius: spacing.radius.container,
-  background: colors.background.primary,
-  fontSize: typography.fontSize.sm,
-  fontFamily: typography.fontFamily.primary,
-  color: colors.text.primary,
-};
+interface HeaderOption {
+  value: string;
+  label: string;
+  /** Shown, but not yet choosable. */
+  soon?: boolean;
+}
 
 /**
- * The reform's title bar: its name, the run's year and population, and
- * the verbs — save it, throw it away, or run the report. One row, so
- * the reform below has the page.
+ * A setting of the run as a dropdown that reads at a glance: its icon,
+ * what it sets, and the choice — "Year 2026" — at the height of the
+ * buttons beside it, with a menu that opens below.
+ */
+function HeaderSelect({
+  label,
+  icon,
+  value,
+  onValueChange,
+  options,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  value: string;
+  onValueChange: (value: string) => void;
+  options: HeaderOption[];
+}) {
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger
+        aria-label={label}
+        className="tw:w-auto tw:cursor-pointer tw:bg-white tw:transition-colors tw:hover:border-primary-500"
+        style={{ gap: spacing.sm, fontFamily: typography.fontFamily.primary }}
+      >
+        <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
+          {icon}
+        </span>
+        <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+          {label}
+        </span>
+        <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
+          <SelectValue />
+        </span>
+      </SelectTrigger>
+      <SelectContent position="popper" align="start" style={{ minWidth: 180 }}>
+        {options.map((option) => (
+          <SelectItem
+            key={option.value}
+            value={option.value}
+            disabled={option.soon}
+            className="tw:cursor-pointer"
+          >
+            {option.label}
+            {option.soon && (
+              <Badge variant="secondary" style={{ marginLeft: spacing.sm }}>
+                Soon
+              </Badge>
+            )}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+/**
+ * The reform's title bar: its name, then one toolbar — the run's year
+ * and population on the left, the verbs (throw it away, save it, run the
+ * report) on the right — so the reform below has the page.
  */
 export default function DraftHeader({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
@@ -84,53 +144,56 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
 
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+      <input
+        value={draft.label}
+        onChange={(event) => setDraftLabel(event.target.value)}
+        placeholder="Untitled reform"
+        aria-label="Reform name"
+        className="tw:w-full tw:rounded-md tw:border tw:border-transparent tw:bg-transparent tw:hover:border-border-light tw:focus:border-primary-500 tw:focus:bg-white tw:focus:outline-none"
+        style={{
+          marginLeft: `-${spacing.sm}`,
+          padding: `2px ${spacing.sm}`,
+          fontSize: typography.fontSize['2xl'],
+          fontWeight: typography.fontWeight.semibold,
+          fontFamily: typography.fontFamily.primary,
+          color: colors.text.primary,
+        }}
+      />
+
+      {/* What the run covers on the left; what to do with the reform on the right. */}
       <div
         style={{
           display: 'flex',
-          alignItems: 'flex-end',
+          alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: spacing.md,
+          gap: spacing.sm,
         }}
       >
-        <div style={{ flex: '1 1 280px', minWidth: 0 }}>
-          <input
-            value={draft.label}
-            onChange={(event) => setDraftLabel(event.target.value)}
-            placeholder="Untitled reform"
-            aria-label="Reform name"
-            className="tw:w-full tw:rounded-md tw:border tw:border-transparent tw:bg-transparent tw:hover:border-border-light tw:focus:border-primary-500 tw:focus:bg-white tw:focus:outline-none"
-            style={{
-              marginLeft: `-${spacing.sm}`,
-              padding: `2px ${spacing.sm}`,
-              fontSize: typography.fontSize['2xl'],
-              fontWeight: typography.fontWeight.semibold,
-              fontFamily: typography.fontFamily.primary,
-              color: colors.text.primary,
-            }}
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
+          <HeaderSelect
+            label="Year"
+            icon={<IconCalendarEvent size={16} />}
+            value={String(year)}
+            onValueChange={(next) => setDraftYear(Number(next))}
+            options={yearOptions.map((option) => ({
+              value: String(option),
+              label: String(option),
+            }))}
+          />
+          <HeaderSelect
+            label="Population"
+            icon={<IconUsers size={16} />}
+            value="national"
+            // Household analysis arrives with the run bridge.
+            onValueChange={() => {}}
+            options={[
+              { value: 'national', label: 'Nationwide' },
+              { value: 'household', label: 'A household', soon: true },
+            ]}
           />
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
-          <select
-            aria-label="Year"
-            value={year}
-            onChange={(event) => setDraftYear(Number(event.target.value))}
-            style={selectStyle}
-          >
-            {yearOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          <select aria-label="Population" value="national" style={selectStyle} onChange={() => {}}>
-            <option value="national">Nationwide</option>
-            {/* Household analysis arrives with the run bridge. */}
-            <option value="household" disabled>
-              A household (soon)
-            </option>
-          </select>
           <Button variant="ghost" onClick={() => clearDraftReform()}>
             Discard
           </Button>

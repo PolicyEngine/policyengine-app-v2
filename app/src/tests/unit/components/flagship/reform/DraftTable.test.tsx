@@ -77,8 +77,8 @@ describe('DraftTable', () => {
     render(<TableHarness />);
 
     const open = screen.getByRole('button', { name: 'Open Standard deduction amount' });
-    expect(open).toHaveTextContent('3 values');
-    expect(screen.getByRole('button', { name: 'set values' })).toBeInTheDocument();
+    expect(open).toHaveTextContent(/^Standard deduction amount$/);
+    expect(screen.getByRole('button', { name: 'No values changed yet' })).toBeInTheDocument();
   });
 
   test('given a breakdown is opened then every member is in its grid and editing one adds it', async () => {
@@ -98,7 +98,9 @@ describe('DraftTable', () => {
     ]);
     expect(screen.getByText('was $32,200')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Close Standard deduction amount' }));
-    expect(screen.getByRole('button', { name: '1 of 3 changed' })).toBeInTheDocument();
+    // Closed, the row names what changed and when.
+    expect(screen.getByRole('button', { name: 'Joint $35,000' })).toBeInTheDocument();
+    expect(screen.getByText('from 2026')).toBeInTheDocument();
   });
 
   test('given by year then one year changes alone and the row says so', async () => {
@@ -114,7 +116,8 @@ describe('DraftTable', () => {
       { startDate: '2027-01-01', endDate: '2027-12-31', value: 17000 },
     ]);
     await user.click(screen.getByRole('button', { name: 'Close Standard deduction amount' }));
-    expect(screen.getByText('by year')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Single $17,000' })).toBeInTheDocument();
+    expect(screen.getByText('2027 only')).toBeInTheDocument();
   });
 
   test('given a lone parameter is opened then its value shows once, under current law', async () => {
@@ -132,21 +135,44 @@ describe('DraftTable', () => {
     expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
   });
 
-  test('given custom dates then a range is set for the chosen member', async () => {
+  test('given custom dates then every member is set over the same range together', async () => {
     const user = userEvent.setup();
     render(<TableHarness />);
     await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
 
     await user.click(screen.getByRole('tab', { name: 'Custom dates' }));
-    await user.selectOptions(screen.getByLabelText('For'), JOINT_PATH);
-    const section = screen.getByRole('region', { name: 'New value' });
-    fireEvent.change(within(section).getByRole('spinbutton'), { target: { value: '35000' } });
+    expect(
+      screen.getByRole('columnheader', { name: 'Jan 1, 2026 – Dec 31, 2026' })
+    ).toBeInTheDocument();
+    fireEvent.change(cell('Single, 2026'), { target: { value: '18000' } });
+    fireEvent.change(cell('Joint, 2026'), { target: { value: '36000' } });
+    await user.click(screen.getByRole('button', { name: 'Add change to 2 values' }));
+
+    const range = { startDate: '2026-01-01', endDate: '2026-12-31' };
+    expect(provision(SINGLE_PATH)?.intervals).toEqual([{ ...range, value: 18000 }]);
+    expect(provision(JOINT_PATH)?.intervals).toEqual([{ ...range, value: 36000 }]);
+    expect(screen.getByText('Joint: 2026 only')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add change' })).toBeDisabled();
+  });
+
+  test('given custom dates then a mid-year start with no end is two picks', async () => {
+    const user = userEvent.setup();
+    render(<TableHarness />);
+    await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+    await user.click(screen.getByRole('tab', { name: 'Custom dates' }));
+
+    await user.click(screen.getByRole('button', { name: 'From: Jan 1, 2026' }));
+    await user.click(screen.getByRole('button', { name: 'Jul 1, 2026' }));
+    await user.click(screen.getByRole('button', { name: 'To: Dec 31, 2026' }));
+    await user.click(screen.getByRole('button', { name: 'No end date' }));
+    expect(screen.getByRole('columnheader', { name: 'Jul 1, 2026 onward' })).toBeInTheDocument();
+    fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '2500' } });
     await user.click(screen.getByRole('button', { name: 'Add change' }));
 
-    expect(provision(JOINT_PATH)?.intervals).toEqual([
-      { startDate: '2026-01-01', endDate: '2026-12-31', value: 35000 },
+    expect(provision(CTC_PATH)?.intervals).toEqual([
+      { startDate: '2026-07-01', endDate: FOREVER, value: 2500 },
     ]);
-    expect(screen.getByText('2026-01-01 to 2026-12-31')).toBeInTheDocument();
+    expect(screen.getByText('from Jul 1, 2026')).toBeInTheDocument();
   });
 
   test('given the editor then what the parameter is and its past values come after it', async () => {
@@ -161,6 +187,23 @@ describe('DraftTable', () => {
     const history = screen.getByRole('button', { name: /show past values/i });
     await user.click(history);
     expect(history).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('given a breakdown then its past values can be shown for any member', async () => {
+    const user = userEvent.setup();
+    render(<TableHarness />);
+    await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
+
+    await user.click(screen.getByRole('button', { name: /show past values/i }));
+    const members = within(screen.getByRole('group', { name: 'Past values of' }));
+    expect(members.getAllByRole('button').map((chip) => chip.textContent)).toEqual([
+      'Single',
+      'Joint',
+      'Head of household',
+    ]);
+    await user.click(members.getByRole('button', { name: 'Joint' }));
+
+    expect(members.getByRole('button', { name: 'Joint' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('given a pick then its row opens and the open one closes', () => {

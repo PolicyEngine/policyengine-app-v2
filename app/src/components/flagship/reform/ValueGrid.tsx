@@ -1,8 +1,8 @@
 import { colors, spacing, typography } from '@/designTokens';
 import { isEditableValue, sameParameterValue } from '@/libs/draftReform';
-import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { formatValue } from '@/utils/parameterValues';
+import ValueInput from './ValueInput';
 
 export interface ValueGridMember {
   path: string;
@@ -13,6 +13,8 @@ interface ValueGridProps {
   members: ValueGridMember[];
   /** One column per year; with `openEnded`, the last runs on from its year. */
   years: number[];
+  /** Column headings in place of the years, e.g. a date range. */
+  headers?: string[];
   openEnded: boolean;
   parameters: ParameterMetadataCollection;
   /** The value in effect: the reform's where it sets one, current law otherwise. */
@@ -47,6 +49,7 @@ const cellPadding = `${spacing.xs} ${spacing.xs}`;
 export default function ValueGrid({
   members,
   years,
+  headers,
   openEnded,
   parameters,
   valueAt,
@@ -58,7 +61,7 @@ export default function ValueGrid({
   const lone = members.length === 1;
   const lastIndex = years.length - 1;
   const header = (year: number, index: number) =>
-    openEnded && index === lastIndex ? `${year}+` : String(year);
+    headers?.[index] ?? (openEnded && index === lastIndex ? `${year}+` : String(year));
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -197,7 +200,7 @@ export default function ValueGrid({
                         }}
                       >
                         {isEditableValue(baseline) ? (
-                          <ValueInputBox
+                          <ValueInput
                             param={param}
                             value={value}
                             onChange={(next) => onChange(member.path, year, next)}

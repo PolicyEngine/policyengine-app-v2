@@ -1,4 +1,7 @@
+import dayjs from 'dayjs';
+import { FOREVER } from '@/constants';
 import type { DraftProvision } from '@/libs/draftReform';
+import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { humanizeSegment } from './parameterGroups';
 
 /** Breakdown members need their parent to make sense alone. */
@@ -32,16 +35,6 @@ export function provisionName(provision: Pick<DraftProvision, 'breadcrumb' | 'pa
   return { name, context };
 }
 
-/** The breadcrumb's tail above a group's members, as row context. */
-export function groupContext(breadcrumb: string): string {
-  const parts = breadcrumb.split(' → ');
-  const bracket = parts.length > 2 && /^Bracket \d+$/.test(parts[parts.length - 2].trim());
-  return parts
-    .slice(0, bracket ? -3 : -2)
-    .slice(-2)
-    .join(' · ');
-}
-
 /**
  * A change as a reader says it: "$1,700 → $2,500", or for a set of
  * variables, what the reform takes out and puts in.
@@ -62,4 +55,44 @@ export function describeChange(
     return parts.length ? parts.join('; ') : 'no change';
   }
   return `${formatScalar(baseline)} → ${formatScalar(value)}`;
+}
+
+const isYearStart = (date: string) => date.endsWith('-01-01');
+const isYearEnd = (date: string) => date.endsWith('-12-31');
+const day = (date: string) => dayjs(date).format('MMM D, YYYY');
+const startLabel = (date: string) => (isYearStart(date) ? date.slice(0, 4) : day(date));
+
+/** When one change applies: "from 2027", "2027 only", "2027–2029", or its dates. */
+export function periodLabel({ startDate, endDate }: Pick<ValueInterval, 'startDate' | 'endDate'>) {
+  if (endDate === FOREVER) {
+    return `from ${startLabel(startDate)}`;
+  }
+  if (isYearStart(startDate) && isYearEnd(endDate)) {
+    const [from, to] = [startDate.slice(0, 4), endDate.slice(0, 4)];
+    return from === to ? `${from} only` : `${from}–${to}`;
+  }
+  return `${day(startDate)} – ${day(endDate)}`;
+}
+
+/**
+ * A provision's changes in brief, as its row says them: the new value
+ * and when it applies — "$2,500", "2026 only" — or for a schedule, its
+ * first and last values and how many steps it takes.
+ */
+export function summarizeIntervals(
+  intervals: ValueInterval[],
+  formatScalar: (value: unknown) => string
+): { value: string; when: string } {
+  if (intervals.length === 0) {
+    return { value: '', when: '' };
+  }
+  const [first, last] = [intervals[0], intervals[intervals.length - 1]];
+  if (intervals.length === 1) {
+    return { value: formatScalar(first.value), when: periodLabel(first) };
+  }
+  const [from, to] = [formatScalar(first.value), formatScalar(last.value)];
+  return {
+    value: from === to ? from : `${from} → ${to}`,
+    when: `${intervals.length} periods from ${startLabel(first.startDate)}`,
+  };
 }

@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import DraftHeader from '@/components/flagship/reform/DraftHeader';
 import {
   addDraftProvision,
@@ -9,6 +9,9 @@ import {
   startDraftReform,
   useDraftReform,
 } from '@/libs/draftReform';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
+import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockCreate = vi.fn();
 
@@ -45,11 +48,45 @@ describe('DraftHeader', () => {
     });
   });
 
+  afterEach(() => {
+    store.dispatch(clearMetadata());
+  });
+
   test('given a draft then its name and run read at the top', () => {
     renderHeader();
 
     expect(screen.getByLabelText('Reform name')).toHaveAttribute('placeholder', 'Untitled reform');
     expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
+  });
+
+  test('given a year is chosen then the draft and its run take it', async () => {
+    // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+    Element.prototype.scrollIntoView ??= vi.fn();
+    Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+    seedDeductionMetadata();
+    const user = userEvent.setup();
+    renderHeader();
+
+    await user.click(screen.getByRole('combobox', { name: 'Year' }));
+    await user.click(await screen.findByRole('option', { name: '2027' }));
+
+    expect(getDraftReform()?.year).toBe(2027);
+    expect(screen.getByRole('button', { name: /run 2027 report/i })).toBeInTheDocument();
+  });
+
+  test('given a household population then it shows, but waits', async () => {
+    Element.prototype.scrollIntoView ??= vi.fn();
+    Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+    const user = userEvent.setup();
+    renderHeader();
+
+    expect(screen.getByRole('combobox', { name: 'Population' })).toHaveTextContent('Nationwide');
+    await user.click(screen.getByRole('combobox', { name: 'Population' }));
+
+    expect(await screen.findByRole('option', { name: /a household/i })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
   });
 
   test('given the name is typed then the draft takes it', async () => {

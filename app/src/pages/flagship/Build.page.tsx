@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import AddParameterBar from '@/components/flagship/reform/AddParameterBar';
+import AddParameterBar, { ParametersLoading } from '@/components/flagship/reform/AddParameterBar';
 import DraftHeader from '@/components/flagship/reform/DraftHeader';
 import DraftTable from '@/components/flagship/reform/DraftTable';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
@@ -8,7 +8,7 @@ import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
 import { focusProvision } from '@/libs/flagship/draftEditorFocus';
-import { ParameterSearchEntry } from '@/libs/parameterSearch';
+import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 
 /**
@@ -25,6 +25,10 @@ export default function BuildPage() {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draft = useDraftReform();
   const current = draft && draft.countryId === countryId ? draft : null;
+  // Until the index is in, the add bar has nothing to search and the
+  // table can't group breakdowns (their members would show apart, then
+  // merge), so the page waits on one loader rather than two.
+  const loading = useSelector(selectParameterSearchEntries).length === 0;
 
   const pick = (entry: ParameterSearchEntry) => {
     addDraftProvision(
@@ -53,8 +57,14 @@ export default function BuildPage() {
         {current ? (
           <>
             <DraftHeader draft={current} />
-            <AddParameterBar onPick={pick} />
-            <DraftTable draft={current} />
+            {loading ? (
+              <ParametersLoading />
+            ) : (
+              <>
+                <AddParameterBar onPick={pick} />
+                <DraftTable draft={current} />
+              </>
+            )}
           </>
         ) : (
           <>

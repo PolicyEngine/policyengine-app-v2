@@ -8,18 +8,19 @@ import {
   draftYear,
   isEditableValue,
   provisionChanged,
+  provisionIntervals,
   provisionVariesOverTime,
   removeDraftProvision,
   setDraftProvisionValueFrom,
 } from '@/libs/draftReform';
 import { useProvisionFocus } from '@/libs/flagship/draftEditorFocus';
-import { groupContext, provisionName } from '@/libs/flagship/draftLabels';
+import { provisionName, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { ParameterGroup, parameterGroup } from '@/libs/flagship/parameterGroups';
 import { selectAddableParameterPaths } from '@/libs/parameterSearch';
-import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionDetails from './ProvisionDetails';
+import ValueInput from './ValueInput';
 
 interface DraftRow {
   /** The breakdown's path, or the lone parameter's own */
@@ -60,16 +61,45 @@ function Chip({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** When a lone provision applies, as the row says it. */
-function whenLabel(provision: DraftProvision, year: number): { text: string; accent: boolean } {
-  if (!provisionChanged(provision)) {
-    return { text: 'unchanged', accent: false };
-  }
-  if (provisionVariesOverTime(provision)) {
-    const count = provision.intervals!.length;
-    return { text: `${count} change${count === 1 ? '' : 's'}`, accent: true };
-  }
-  return { text: `from ${provision.intervals?.[0]?.startDate.slice(0, 4) ?? year}`, accent: true };
+/** A provision's change in brief: its new value and when it applies. */
+const summarize = (provision: DraftProvision) =>
+  summarizeIntervals(provisionIntervals(provision), (value) => formatValue(value, provision.unit));
+
+/** A row's value as text that opens the row: a schedule, or a breakdown's changes. */
+function SummaryButton({
+  children,
+  title,
+  accent,
+  onClick,
+}: {
+  children: React.ReactNode;
+  title?: string;
+  accent: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className="tw:cursor-pointer tw:underline-offset-2 tw:hover:underline"
+      style={{
+        ...truncate,
+        display: 'block',
+        maxWidth: '100%',
+        padding: 0,
+        border: 'none',
+        background: 'transparent',
+        textAlign: 'left',
+        fontSize: typography.fontSize.sm,
+        fontWeight: accent ? typography.fontWeight.medium : typography.fontWeight.normal,
+        fontFamily: typography.fontFamily.primary,
+        color: accent ? colors.primary[700] : colors.text.tertiary,
+      }}
+    >
+      {children}
+    </button>
+  );
 }
 
 /**
@@ -217,24 +247,22 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
         const lone = row.group ? null : row.provisions[0];
         const { name, context } = lone
           ? provisionName(lone)
-          : {
-              name: row.group!.label,
-              context: [
-                groupContext(row.provisions[0].breadcrumb || row.provisions[0].path),
-                `${row.group!.members.length} values`,
-              ]
-                .filter(Boolean)
-                .join(' · '),
-            };
-        const changedCount = row.provisions.filter(provisionChanged).length;
-        const varies = row.provisions.some(provisionVariesOverTime);
+          : // A breakdown's name says enough; its members show when opened.
+            { name: row.group!.label, context: '' };
         const param = lone ? parameters?.[lone.path] : undefined;
-        const baselineText = lone ? formatValue(lone.baselineValue, lone.unit) : 'varies';
-        const when = lone
-          ? whenLabel(lone, year)
-          : changedCount === 0
-            ? { text: 'unchanged', accent: false }
-            : { text: varies ? 'by year' : `from ${year}`, accent: true };
+        const changed = row.provisions.filter(provisionChanged).map((provision) => ({
+          provision,
+          ...summarize(provision),
+        }));
+        // A breakdown names each changed member and its new value.
+        const memberLabel = (path: string) =>
+          row.group?.members.find((member) => member.path === path)?.label ?? path;
+        const groupSummary = changed
+          .map(({ provision, value }) => `${memberLabel(provision.path)} ${value}`)
+          .join(' · ');
+        const whens = [...new Set(changed.map(({ when }) => when))];
+        const when = whens.length === 1 ? whens[0] : whens.length > 1 ? 'mixed dates' : '';
+        const baselineText = lone ? formatValue(lone.baselineValue, lone.unit) : '';
 
         return (
           <Fragment key={row.key}>
@@ -282,90 +310,86 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
               </button>
 
               {/* Open, the row is a heading: its details below show every value. */}
-              <span
-                className={WIDE_ONLY}
-                title={open ? undefined : baselineText}
-                style={{
-                  ...truncate,
-                  fontSize: typography.fontSize.sm,
-                  color: colors.text.secondary,
-                }}
-              >
-                {open ? null : baselineText}
-              </span>
-
-              <div style={{ minWidth: 0 }}>
-                {open ? null : lone && !isEditableValue(lone.baselineValue) ? (
-                  // Only numbers and switches can be offered; this one came
-                  // from an older saved reform.
+              {lone ? (
+                <>
                   <span
-                    title={baselineText}
+                    className={WIDE_ONLY}
+                    title={open ? undefined : baselineText}
                     style={{
                       ...truncate,
-                      display: 'block',
-                      fontSize: typography.fontSize.xs,
-                      color: colors.text.tertiary,
-                    }}
-                  >
-                    Can&apos;t be changed here
-                  </span>
-                ) : lone && !provisionVariesOverTime(lone) && param ? (
-                  <div
-                    data-path={lone.path}
-                    // Changed reads tinted, as in the grid; current law reads quieter.
-                    className={provisionChanged(lone) ? undefined : 'tw:[&_input]:text-gray-500'}
-                    style={{
-                      borderRadius: spacing.radius.container,
-                      boxShadow: provisionChanged(lone)
-                        ? `0 0 0 2px ${colors.primary[200]}`
-                        : undefined,
-                      background: provisionChanged(lone) ? colors.primary[50] : undefined,
-                    }}
-                  >
-                    <ValueInputBox
-                      param={param}
-                      value={lone.value}
-                      onChange={(next) =>
-                        setDraftProvisionValueFrom(draft.countryId, lone, year, next)
-                      }
-                    />
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => toggle(row.key, true)}
-                    className="tw:cursor-pointer tw:underline-offset-2 tw:hover:underline"
-                    style={{
-                      padding: 0,
-                      border: 'none',
-                      background: 'transparent',
                       fontSize: typography.fontSize.sm,
-                      fontWeight: typography.fontWeight.medium,
-                      fontFamily: typography.fontFamily.primary,
-                      color: changedCount > 0 ? colors.primary[700] : colors.text.secondary,
+                      color: colors.text.secondary,
                     }}
                   >
-                    {lone
-                      ? // Before metadata loads, a single value shows as text.
-                        provisionVariesOverTime(lone)
-                        ? 'by year'
-                        : formatValue(lone.value, lone.unit)
-                      : changedCount > 0
-                        ? `${changedCount} of ${row.group!.members.length} changed`
-                        : 'set values'}
-                  </button>
-                )}
-              </div>
-
-              <span className={WIDE_ONLY}>
-                {open ? null : when.accent ? (
-                  <Chip>{when.text}</Chip>
-                ) : (
-                  <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-                    {when.text}
+                    {open ? null : baselineText}
                   </span>
-                )}
-              </span>
+
+                  <div style={{ minWidth: 0 }}>
+                    {open ? null : !isEditableValue(lone.baselineValue) ? (
+                      // Only numbers and switches can be offered; this one came
+                      // from an older saved reform.
+                      <span
+                        title={baselineText}
+                        style={{
+                          ...truncate,
+                          display: 'block',
+                          fontSize: typography.fontSize.xs,
+                          color: colors.text.tertiary,
+                        }}
+                      >
+                        Can&apos;t be changed here
+                      </span>
+                    ) : !provisionVariesOverTime(lone) && param ? (
+                      <div
+                        data-path={lone.path}
+                        // Changed reads tinted, as in the grid; current law reads quieter.
+                        className={
+                          provisionChanged(lone) ? undefined : 'tw:[&_input]:text-gray-500'
+                        }
+                        style={{
+                          borderRadius: spacing.radius.container,
+                          boxShadow: provisionChanged(lone)
+                            ? `0 0 0 2px ${colors.primary[200]}`
+                            : undefined,
+                          background: provisionChanged(lone) ? colors.primary[50] : undefined,
+                        }}
+                      >
+                        <ValueInput
+                          param={param}
+                          value={lone.value}
+                          onChange={(next) =>
+                            setDraftProvisionValueFrom(draft.countryId, lone, year, next)
+                          }
+                        />
+                      </div>
+                    ) : (
+                      // A schedule, or a value before metadata loads: its
+                      // summary, which opens the row.
+                      <SummaryButton
+                        onClick={() => toggle(row.key, true)}
+                        title={changed[0]?.value}
+                        accent={changed.length > 0}
+                      >
+                        {changed[0]?.value || formatValue(lone.value, lone.unit)}
+                      </SummaryButton>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="tw:@min-[640px]:col-span-2" style={{ minWidth: 0 }}>
+                  {open ? null : (
+                    <SummaryButton
+                      onClick={() => toggle(row.key, true)}
+                      title={groupSummary || undefined}
+                      accent={changed.length > 0}
+                    >
+                      {groupSummary || 'No values changed yet'}
+                    </SummaryButton>
+                  )}
+                </div>
+              )}
+
+              <span className={WIDE_ONLY}>{open || !when ? null : <Chip>{when}</Chip>}</span>
 
               <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                 <button

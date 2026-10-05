@@ -35,6 +35,33 @@ interface AddParameterBarProps {
  * out of the way the moment a parameter is picked — the reform below
  * stays the page.
  */
+/**
+ * The parameter index takes a moment on the US tree. The page shows
+ * this once, in the add bar's own footprint, so nothing jumps when the
+ * bar and the reform below it arrive.
+ */
+export function ParametersLoading() {
+  return (
+    <div
+      aria-live="polite"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.sm,
+        padding: `${spacing.lg} ${spacing.xl}`,
+        border: `1px dashed ${colors.border.medium}`,
+        borderRadius: spacing.radius.feature,
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+      }}
+    >
+      <Spinner size="sm" />
+      Loading parameters…
+    </div>
+  );
+}
+
 export default function AddParameterBar({ onPick, autoFocus = false }: AddParameterBarProps) {
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
@@ -89,27 +116,7 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
   };
 
   if (entries.length === 0) {
-    // The index takes a moment on the US tree — say so with something
-    // moving, in the bar's own footprint so the page does not jump.
-    return (
-      <div
-        role="status"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing.sm,
-          padding: `${spacing.lg} ${spacing.xl}`,
-          border: `1px dashed ${colors.border.medium}`,
-          borderRadius: spacing.radius.feature,
-          fontSize: typography.fontSize.sm,
-          color: colors.text.secondary,
-        }}
-      >
-        <Spinner size="sm" />
-        Loading the parameter index…
-      </div>
-    );
+    return <ParametersLoading />;
   }
 
   return (
