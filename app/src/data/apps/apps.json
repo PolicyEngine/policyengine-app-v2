@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "triple-lock",
+    "title": "The Burnham plan and the triple lock",
+    "description": "The Burnham plan against the State Pension triple lock to 2039-40: the budget impact and its range, forecast paths, and who pays, from full PolicyEngine UK runs.",
+    "source": "https://uk-triple-lock.vercel.app/uk/triple-lock",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-triple-lock.jpg",
+    "date": "2026-09-29 15:00:00",
+    "authors": ["vahid-ahmadi", "max-ghenis"]
+  },
+  {
+    "type": "iframe",
     "slug": "middle-east-war-living-standards",
     "title": "Impact of the Middle East war on UK living standards",
     "description": "Estimate how energy, fuel and food price rises from the Middle East conflict and Strait of Hormuz disruption affect UK households in 2027-28, and compare ten policy responses, modelled with PolicyEngine UK.",
