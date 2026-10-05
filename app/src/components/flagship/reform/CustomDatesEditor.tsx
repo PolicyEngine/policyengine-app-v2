@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { BracketLayout } from '@/libs/flagship/parameterGroups';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import BracketTable from './BracketTable';
 import PolicyDatePicker, { DatePreset, formatPolicyDate } from './PolicyDatePicker';
 import ValueGrid, { ValueGridMember } from './ValueGrid';
 
@@ -20,6 +22,8 @@ interface CustomDatesEditorProps {
   onAdd: (startDate: string, endDate: string, values: Record<string, any>) => void;
   focusedPath: string;
   onFocus: (path: string) => void;
+  /** A schedule's brackets, shown as its table rather than a list. */
+  brackets?: BracketLayout;
 }
 
 const fieldLabel: React.CSSProperties = {
@@ -45,6 +49,7 @@ export default function CustomDatesEditor({
   onAdd,
   focusedPath,
   onFocus,
+  brackets,
 }: CustomDatesEditorProps) {
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(dayjs(defaultStart).endOf('year').format('YYYY-MM-DD'));
@@ -122,18 +127,31 @@ export default function CustomDatesEditor({
         </div>
       </div>
 
-      <ValueGrid
-        members={members}
-        years={[Number(startDate.slice(0, 4))]}
-        headers={[rangeLabel]}
-        openEnded={false}
-        parameters={parameters}
-        valueAt={(path) => (path in typed ? typed[path] : valueOn(path, startDate))}
-        baselineAt={(path) => baselineOn(path, startDate)}
-        onChange={(path, _year, value) => setTyped((current) => ({ ...current, [path]: value }))}
-        focusedPath={focusedPath}
-        onFocus={onFocus}
-      />
+      {brackets ? (
+        <BracketTable
+          brackets={brackets}
+          members={members}
+          period={rangeLabel}
+          parameters={parameters}
+          valueAt={(path) => (path in typed ? typed[path] : valueOn(path, startDate))}
+          baselineAt={(path) => baselineOn(path, startDate)}
+          onChange={(path, value) => setTyped((current) => ({ ...current, [path]: value }))}
+          onFocus={onFocus}
+        />
+      ) : (
+        <ValueGrid
+          members={members}
+          years={[Number(startDate.slice(0, 4))]}
+          headers={[rangeLabel]}
+          openEnded={false}
+          parameters={parameters}
+          valueAt={(path) => (path in typed ? typed[path] : valueOn(path, startDate))}
+          baselineAt={(path) => baselineOn(path, startDate)}
+          onChange={(path, _year, value) => setTyped((current) => ({ ...current, [path]: value }))}
+          focusedPath={focusedPath}
+          onFocus={onFocus}
+        />
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
         <Button

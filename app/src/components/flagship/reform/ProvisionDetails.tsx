@@ -23,6 +23,7 @@ import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/Changes
 import { RootState } from '@/store';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
+import BracketTable from './BracketTable';
 import CustomDatesEditor from './CustomDatesEditor';
 import PastValuesChart from './PastValuesChart';
 import ValueGrid from './ValueGrid';
@@ -92,6 +93,8 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : 'one';
   });
   const [historyOpen, setHistoryOpen] = useState(false);
+  // The year a schedule's brackets show by year; one value is the report year.
+  const [scheduleTab, setScheduleTab] = useState(year);
 
   if (!parameters) {
     return null;
@@ -149,6 +152,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
 
   const years =
     mode === 'byYear' ? Array.from({ length: YEAR_COLUMNS }, (_, i) => year + i) : [year];
+  const scheduleYear = mode === 'byYear' && years.includes(scheduleTab) ? scheduleTab : year;
   const onCellChange = (memberPath: string, at: number, value: any) => {
     const lastColumn = at === years[years.length - 1];
     addInterval(memberPath, {
@@ -268,7 +272,37 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             }
             focusedPath={focused}
             onFocus={setFocusedPath}
+            brackets={group?.brackets}
           />
+        ) : group?.brackets ? (
+          // A schedule shows as its brackets, one year at a time: a
+          // table a bracket per row is too wide to repeat across years.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+            {mode === 'byYear' && (
+              <div>
+                <SegmentedControl
+                  value={String(scheduleYear)}
+                  onValueChange={(value) => setScheduleTab(Number(value))}
+                  options={years.map((at, index) => ({
+                    label: index === years.length - 1 ? `${at}+` : String(at),
+                    value: String(at),
+                  }))}
+                  size="xs"
+                  className="tw:[&>button]:bg-transparent"
+                />
+              </div>
+            )}
+            <BracketTable
+              brackets={group.brackets}
+              members={members}
+              period={String(scheduleYear)}
+              parameters={parameters}
+              valueAt={(memberPath) => valueAt(memberPath, scheduleYear)}
+              baselineAt={(memberPath) => baselineAt(memberPath, scheduleYear)}
+              onChange={(memberPath, value) => onCellChange(memberPath, scheduleYear, value)}
+              onFocus={setFocusedPath}
+            />
+          </div>
         ) : (
           <ValueGrid
             members={members}

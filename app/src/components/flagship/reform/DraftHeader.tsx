@@ -20,6 +20,7 @@ import {
   DraftReform,
   draftToReform,
   draftYear,
+  provisionAdjusts,
   provisionsForYear,
   setDraftLabel,
   setDraftYear,
@@ -141,6 +142,12 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
   });
 
   const empty = draft.provisions.length === 0;
+  // The report models what the reform changes: a parameter added but
+  // left at current law stays in the draft, out of the run.
+  const adjusted = draft.provisions.filter((provision) =>
+    provisionAdjusts(provision, parameters?.[provision.path]?.values)
+  );
+  const leftOut = draft.provisions.length - adjusted.length;
 
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
@@ -210,18 +217,34 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
                 draft.label || 'Draft reform',
                 SOURCE_NOTES[draft.source] ?? 'Draft reform',
                 // Described as they stand in the year the report simulates.
-                provisionsForYear(draft.provisions, year, currentLawAt),
+                provisionsForYear(adjusted, year, currentLawAt),
                 undefined,
                 year
               )
             }
-            disabled={empty || runReport.isRunning}
+            disabled={adjusted.length === 0 || runReport.isRunning}
+            title={!empty && adjusted.length === 0 ? 'Change a value to run the report' : undefined}
           >
             <IconChartBar size={16} />
             {runReport.isRunning ? 'Starting report…' : `Run ${year} report`}
           </Button>
         </div>
       </div>
+
+      {!empty && leftOut > 0 && (
+        <p
+          style={{
+            margin: 0,
+            textAlign: 'right',
+            fontSize: typography.fontSize.xs,
+            color: colors.text.tertiary,
+          }}
+        >
+          {adjusted.length === 0
+            ? 'Nothing is changed yet. Change a value to run the report.'
+            : `${leftOut} unchanged parameter${leftOut === 1 ? ' is' : 's are'} left out of the report.`}
+        </p>
+      )}
 
       {(runReport.error || saveMutation.isError) && (
         <p

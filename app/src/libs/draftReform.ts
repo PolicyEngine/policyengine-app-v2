@@ -96,6 +96,42 @@ export function provisionChanged(
   );
 }
 
+/** Same value, allowing for the float noise a percentage box leaves (7.65 / 100). */
+function sameInEffect(a: unknown, b: unknown): boolean {
+  if (typeof a === 'number' && typeof b === 'number') {
+    return Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b));
+  }
+  return sameParameterValue(a, b);
+}
+
+/**
+ * Whether the provision changes anything a simulation would see: some
+ * value it sets differs from current law on some day it covers. A value
+ * typed back to current law changes nothing; one held where current law
+ * moves on (a frozen amount) does. Without current law to compare, any
+ * set value counts.
+ */
+export function provisionAdjusts(
+  provision: Pick<DraftProvision, 'value' | 'baselineValue' | 'intervals'>,
+  currentLaw: Record<string, unknown> | undefined
+): boolean {
+  if (!provisionChanged(provision)) {
+    return false;
+  }
+  if (!currentLaw) {
+    return true;
+  }
+  const baseline = new ValueIntervalCollection(currentLaw as Record<string, any>);
+  const changeDates = Object.keys(currentLaw);
+  return provisionIntervals(provision).some((interval) =>
+    [
+      interval.startDate,
+      // Every day current law changes inside the interval, too.
+      ...changeDates.filter((date) => date > interval.startDate && date <= interval.endDate),
+    ].some((date) => !sameInEffect(interval.value, baseline.getValueAtDate(date)))
+  );
+}
+
 /** Numbers and yes/no switches: the values a number box or switch sets. */
 export function isEditableValue(value: unknown): boolean {
   return typeof value === 'number' || typeof value === 'boolean';

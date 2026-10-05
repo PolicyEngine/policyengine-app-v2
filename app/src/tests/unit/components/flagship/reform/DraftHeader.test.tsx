@@ -14,6 +14,11 @@ import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockCreate = vi.fn();
+const mockRun = vi.fn();
+
+vi.mock('@/hooks/useRunFlagshipReport', () => ({
+  useRunFlagshipReport: () => ({ run: mockRun, isRunning: false, error: null }),
+}));
 
 vi.mock('@/api/reformStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/reformStore')>();
@@ -56,7 +61,38 @@ describe('DraftHeader', () => {
     renderHeader();
 
     expect(screen.getByLabelText('Reform name')).toHaveAttribute('placeholder', 'Untitled reform');
-    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeInTheDocument();
+  });
+
+  test('given nothing changed yet then the run waits for a change', () => {
+    renderHeader();
+
+    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    expect(screen.getByText(/change a value to run the report/i)).toBeInTheDocument();
+  });
+
+  test('given some parameters left unchanged then the run leaves them out', async () => {
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    renderHeader();
+
+    expect(
+      screen.getByText('1 unchanged parameter is left out of the report.')
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+    const provisions = mockRun.mock.calls[0][2];
+    expect(provisions.map((provision: { path: string }) => provision.path)).toEqual([
+      'gov.irs.credits.eitc.max',
+    ]);
+    // The draft keeps the unchanged one, to change later.
+    expect(getDraftReform()?.provisions).toHaveLength(2);
   });
 
   test('given a year is chosen then the draft and its run take it', async () => {

@@ -17,6 +17,7 @@ import {
   CTC_PATH,
   JOINT_PATH,
   LIST_PATH,
+  PHASE_IN_RATE_PATH,
   seedDeductionMetadata,
   SINGLE_PATH,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
@@ -204,6 +205,72 @@ describe('DraftTable', () => {
     await user.click(members.getByRole('button', { name: 'Joint' }));
 
     expect(members.getByRole('button', { name: 'Joint' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  describe('given a schedule of brackets', () => {
+    const PHASE_IN = {
+      path: PHASE_IN_RATE_PATH,
+      breadcrumb: 'IRS → Credits → EITC → Phase-in rate → Bracket 2 → Amount',
+      unit: '/1',
+      baselineValue: 0.34,
+      value: 0.34,
+    };
+    const openSchedule = async (user: ReturnType<typeof userEvent.setup>) => {
+      addDraftProvision('us', PHASE_IN);
+      render(<TableHarness />);
+      await user.click(
+        screen.getByRole('button', { name: 'Open EITC phase-in rate by number of children' })
+      );
+    };
+
+    test('then it opens as a table, a bracket per row, each threshold beside its rate', async () => {
+      const user = userEvent.setup();
+      await openSchedule(user);
+
+      expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
+        'Bracket 1',
+        'Bracket 2',
+      ]);
+      expect(screen.getAllByRole('columnheader').map((col) => col.textContent)).toEqual([
+        '',
+        'Threshold (children)',
+        'Rate',
+      ]);
+      fireEvent.change(cell('Bracket 2 · rate, 2026'), { target: { value: '36' } });
+
+      expect(provision(PHASE_IN_RATE_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: FOREVER, value: 0.36 },
+      ]);
+      expect(screen.getByText('was 34%')).toBeInTheDocument();
+    });
+
+    test('then by year shows one year at a time, and a year changes alone', async () => {
+      const user = userEvent.setup();
+      await openSchedule(user);
+
+      await user.click(screen.getByRole('tab', { name: 'By year' }));
+      await user.click(screen.getByRole('tab', { name: '2028' }));
+      fireEvent.change(cell('Bracket 2 · rate, 2028'), { target: { value: '40' } });
+
+      expect(provision(PHASE_IN_RATE_PATH)?.intervals).toEqual([
+        { startDate: '2028-01-01', endDate: '2028-12-31', value: 0.4 },
+      ]);
+    });
+
+    test('then custom dates set the schedule over one range', async () => {
+      const user = userEvent.setup();
+      await openSchedule(user);
+
+      await user.click(screen.getByRole('tab', { name: 'Custom dates' }));
+      fireEvent.change(cell('Bracket 2 · rate, Jan 1, 2026 – Dec 31, 2026'), {
+        target: { value: '38' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Add change' }));
+
+      expect(provision(PHASE_IN_RATE_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 0.38 },
+      ]);
+    });
   });
 
   test('given a pick then its row opens and the open one closes', () => {

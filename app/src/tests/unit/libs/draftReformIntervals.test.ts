@@ -7,6 +7,7 @@ import {
   getDraftReform,
   isEditableValue,
   loadReformIntoDraft,
+  provisionAdjusts,
   provisionChanged,
   provisionIntervals,
   provisionsForYear,
@@ -169,5 +170,46 @@ describe('draft provisions over time', () => {
     setDraftYear(2027);
 
     expect(getDraftReform()!.provisions[0].value).toBe(17000);
+  });
+});
+
+describe('provisionAdjusts', () => {
+  const CURRENT_LAW = { '2025-01-01': 15750, '2026-01-01': 16100, '2027-01-01': 16500 };
+  const withIntervals = (intervals: any[]) => ({ ...SINGLE, intervals });
+
+  test('given a parameter left at current law then it changes nothing', () => {
+    expect(provisionAdjusts(SINGLE, CURRENT_LAW)).toBe(false);
+  });
+
+  test('given a value typed back to current law then it changes nothing', () => {
+    const typedBack = withIntervals([
+      { startDate: '2026-01-01', endDate: '2026-12-31', value: 16100 },
+    ]);
+
+    expect(provisionAdjusts(typedBack, CURRENT_LAW)).toBe(false);
+  });
+
+  test('given a value held while current law moves on then it changes something', () => {
+    // 16,100 from 2026 on matches 2026, but freezes the 2027 rise.
+    const frozen = withIntervals([{ startDate: '2026-01-01', endDate: FOREVER, value: 16100 }]);
+
+    expect(provisionAdjusts(frozen, CURRENT_LAW)).toBe(true);
+  });
+
+  test('given a rate typed as a percentage then float noise is no change', () => {
+    const rate = {
+      path: 'gov.irs.credits.eitc.phase_in_rate[0].amount',
+      breadcrumb: '',
+      unit: '/1',
+      baselineValue: 0.0765,
+      value: 0.0765,
+      intervals: [{ startDate: '2026-01-01', endDate: '2026-12-31', value: 7.65 / 100 }],
+    };
+
+    expect(provisionAdjusts(rate, { '2026-01-01': 0.0765 })).toBe(false);
+  });
+
+  test('given no current law to compare then any set value counts', () => {
+    expect(provisionAdjusts({ ...SINGLE, value: 18000 }, undefined)).toBe(true);
   });
 });

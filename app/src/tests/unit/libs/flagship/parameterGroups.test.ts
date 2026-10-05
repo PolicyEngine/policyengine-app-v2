@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { humanizeSegment, parameterGroup } from '@/libs/flagship/parameterGroups';
+import {
+  bracketFieldLabel,
+  humanizeSegment,
+  parameterGroup,
+} from '@/libs/flagship/parameterGroups';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
 const node = (path: string, label: string) => ({
@@ -43,10 +47,38 @@ describe('parameterGroup', () => {
 
     expect(group?.label).toBe('EITC maximum');
     expect(group?.members.map((m) => m.label)).toEqual([
-      'Bracket 1 · amount',
       'Bracket 1 · threshold',
+      'Bracket 1 · amount',
       'Bracket 2 · amount',
     ]);
+  });
+
+  test('given a schedule then it lays out as brackets, each threshold first', () => {
+    const group = parameterGroup('gov.irs.credits.eitc.max[1].amount', PARAMETERS, DRAFTABLE);
+
+    expect(group?.brackets).toEqual({
+      fields: ['threshold', 'amount'],
+      rows: [
+        {
+          index: 0,
+          cells: {
+            threshold: 'gov.irs.credits.eitc.max[0].threshold',
+            amount: 'gov.irs.credits.eitc.max[0].amount',
+          },
+        },
+        { index: 1, cells: { amount: 'gov.irs.credits.eitc.max[1].amount' } },
+      ],
+    });
+  });
+
+  test('given a breakdown then it has no bracket layout', () => {
+    const group = parameterGroup(
+      'gov.irs.deductions.standard.amount.SINGLE',
+      PARAMETERS,
+      DRAFTABLE
+    );
+
+    expect(group?.brackets).toBeUndefined();
   });
 
   test('given household sizes then they sort by number', () => {
@@ -67,5 +99,14 @@ describe('humanizeSegment', () => {
   test('given a shouted enum then it reads as a phrase; sentence case stays', () => {
     expect(humanizeSegment('HEAD_OF_HOUSEHOLD')).toBe('Head of household');
     expect(humanizeSegment('Standard deduction')).toBe('Standard deduction');
+  });
+});
+
+describe('bracketFieldLabel', () => {
+  test('given a threshold then a threshold; a rate amount then a rate', () => {
+    expect(bracketFieldLabel('threshold', 'child')).toBe('threshold');
+    expect(bracketFieldLabel('amount', '/1')).toBe('rate');
+    expect(bracketFieldLabel('rate', '/1')).toBe('rate');
+    expect(bracketFieldLabel('amount', 'currency-USD')).toBe('amount');
   });
 });

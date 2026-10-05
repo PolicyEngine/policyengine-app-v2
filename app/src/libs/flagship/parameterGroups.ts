@@ -13,12 +13,25 @@ export interface ParameterGroupMember {
   label: string;
 }
 
+/**
+ * A schedule's members as its brackets: one row per bracket, a cell per
+ * field — its threshold, and its rate or amount — so the editor shows
+ * the schedule as a table rather than a list of loose values.
+ */
+export interface BracketLayout {
+  /** Columns, threshold first, then "amount" or "rate". */
+  fields: string[];
+  rows: Array<{ index: number; cells: Record<string, string> }>;
+}
+
 export interface ParameterGroup {
   /** The split setting's own path — the same for every member, so it keys the group. */
   key: string;
   /** The setting the members split, e.g. "Standard deduction amount" */
   label: string;
   members: ParameterGroupMember[];
+  /** Set for a schedule of brackets only; breakdowns have none. */
+  brackets?: BracketLayout;
 }
 
 /** An enum member (SINGLE, HEAD_OF_HOUSEHOLD) or a size (1, 2, …) as a path segment. */
@@ -34,6 +47,14 @@ export function humanizeSegment(text: string): string {
   }
   const lower = spaced.toLowerCase();
   return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+/** A bracket field as a reader says it: its threshold, or its rate where the amount is one. */
+export function bracketFieldLabel(field: string, unit: string | null | undefined): string {
+  if (field === 'rate' || (field === 'amount' && unit === '/1')) {
+    return 'rate';
+  }
+  return humanizeSegment(field).toLowerCase();
 }
 
 function labelFor(path: string, parameters: ParameterMetadataCollection): string {
@@ -74,16 +95,32 @@ export function parameterGroup(
           path: candidate,
           index,
           field: match[2],
-          label: `Bracket ${index + 1} · ${humanizeSegment(match[2]).toLowerCase()}`,
+          label: `Bracket ${index + 1} · ${bracketFieldLabel(match[2], parameters[candidate]?.unit)}`,
         });
       }
     }
-    members.sort((a, b) => a.index - b.index || a.field.localeCompare(b.field));
+    // A bracket's threshold comes first, as a schedule reads.
+    const fieldOrder = (field: string) => (field === 'threshold' ? 0 : 1);
+    members.sort(
+      (a, b) =>
+        a.index - b.index ||
+        fieldOrder(a.field) - fieldOrder(b.field) ||
+        a.field.localeCompare(b.field)
+    );
+    const rows = new Map<number, Record<string, string>>();
+    for (const member of members) {
+      rows.set(member.index, { ...rows.get(member.index), [member.field]: member.path });
+    }
+    const fields = [...new Set(members.map((member) => member.field))];
     return members.length > 1
       ? {
           key: root,
           label: labelFor(root, parameters),
           members: members.map(({ path: memberPath, label }) => ({ path: memberPath, label })),
+          brackets: {
+            fields,
+            rows: [...rows].map(([index, cells]) => ({ index, cells })),
+          },
         }
       : null;
   }
