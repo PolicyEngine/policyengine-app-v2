@@ -1,13 +1,14 @@
 import { useSyncExternalStore } from 'react';
-import { FOREVER } from '@/constants';
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { getCurrentValue } from '@/utils/parameterValues';
 
 /**
  * The draft reform being composed in the flagship shell.
  *
- * Ask and Build both add provisions here; the ReformPreviewCard edits
+ * Ask and Build both add provisions here; Build's reform table edits
  * values inline; saving materializes it into the reform store. Persisted
  * in localStorage so it survives navigation between the flagship pages
  * (which are separate Next.js routes).
@@ -19,6 +20,13 @@ export interface DraftProvision {
   baselineValue: any;
   /** The proposed new value; starts equal to baseline until edited */
   value: any;
+  /**
+   * Dated changes, when the reform varies over time: each interval sets
+   * the parameter for its dates, and current law holds outside them.
+   * When present they replace `value`, which then only mirrors the value
+   * in effect for the draft's year so single-value readers stay right.
+   */
+  intervals?: ValueInterval[];
 }
 
 /**
@@ -44,6 +52,70 @@ export interface DraftReform {
    * it, so a new draft never inherits how the last one was left.
    */
   startedAt?: number;
+  /** The year the report simulates; the current year when unset. */
+  year?: number;
+}
+
+/** The year a draft's report simulates. */
+export function draftYear(draft: Pick<DraftReform, 'year'> | null | undefined): number {
+  return draft?.year ?? Number(CURRENT_YEAR);
+}
+
+/**
+ * The provision as dated intervals — its own when it varies over time,
+ * otherwise its single value from the current year onward (the shape
+ * reports and saved reforms have always used).
+ */
+export function provisionIntervals(
+  provision: Pick<DraftProvision, 'value' | 'intervals'>
+): ValueInterval[] {
+  if (provision.intervals && provision.intervals.length > 0) {
+    return provision.intervals;
+  }
+  return [{ startDate: `${CURRENT_YEAR}-01-01`, endDate: FOREVER, value: provision.value }];
+}
+
+/**
+ * Whether two parameter values are the same — by content, since list
+ * values come back from storage as new arrays.
+ */
+export function sameParameterValue(a: unknown, b: unknown): boolean {
+  if (a === b) {
+    return true;
+  }
+  return typeof a === 'object' && typeof b === 'object' && JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** True once the provision differs from current law. */
+export function provisionChanged(
+  provision: Pick<DraftProvision, 'value' | 'baselineValue' | 'intervals'>
+): boolean {
+  return (
+    Boolean(provision.intervals?.length) ||
+    !sameParameterValue(provision.value, provision.baselineValue)
+  );
+}
+
+/** Numbers and yes/no switches: the values a number box or switch sets. */
+export function isEditableValue(value: unknown): boolean {
+  return typeof value === 'number' || typeof value === 'boolean';
+}
+
+/** True when the provision's intervals amount to more than one value from one date. */
+export function provisionVariesOverTime(provision: Pick<DraftProvision, 'intervals'>): boolean {
+  const intervals = provision.intervals ?? [];
+  return intervals.length > 1 || (intervals.length === 1 && intervals[0].endDate !== FOREVER);
+}
+
+/** The proposed value in effect on 1 January of `year`, or null where current law holds. */
+export function provisionValueInYear(
+  provision: Pick<DraftProvision, 'value' | 'intervals'>,
+  year: number
+): any {
+  const value = new ValueIntervalCollection(provisionIntervals(provision)).getValueAtDate(
+    `${year}-01-01`
+  );
+  return value === undefined ? null : value;
 }
 
 const STORAGE_KEY = 'pe-draft-reform';
@@ -161,7 +233,94 @@ export function updateDraftProvisionValue(path: string, value: any): void {
   }
   writeDraft({
     ...draft,
-    provisions: draft.provisions.map((p) => (p.path === path ? { ...p, value } : p)),
+    // A single value replaces any dated changes: one value, from now on.
+    provisions: draft.provisions.map((p) =>
+      p.path === path ? { ...p, value, intervals: undefined } : p
+    ),
+  });
+}
+
+/**
+ * Sets a provision's dated changes, adding the provision first when it is
+ * not in the draft yet (editing a sibling in a breakdown grid adds it).
+ * An empty list resets the provision to current law.
+ */
+export function setDraftProvisionIntervals(
+  countryId: CountryId,
+  provision: Omit<DraftProvision, 'intervals'>,
+  intervals: ValueInterval[]
+): void {
+  addDraftProvision(countryId, provision);
+  const draft = getSnapshot();
+  if (!draft) {
+    return;
+  }
+  const year = draftYear(draft);
+  writeDraft({
+    ...draft,
+    provisions: draft.provisions.map((p) => {
+      if (p.path !== provision.path) {
+        return p;
+      }
+      if (intervals.length === 0) {
+        return { ...p, value: p.baselineValue, intervals: undefined };
+      }
+      const inYear = provisionValueInYear({ value: p.value, intervals }, year);
+      return { ...p, intervals, value: inYear ?? p.baselineValue };
+    }),
+  });
+}
+
+/**
+ * Sets one value from 1 January of `year` onward, over whatever dated
+ * changes come before it — the inline edit and the grid's one-value mode.
+ */
+export function setDraftProvisionValueFrom(
+  countryId: CountryId,
+  provision: Omit<DraftProvision, 'intervals'> & { intervals?: ValueInterval[] },
+  year: number,
+  value: any
+): void {
+  const collection = new ValueIntervalCollection(
+    provisionChanged(provision) ? provisionIntervals(provision) : []
+  );
+  collection.addInterval({ startDate: `${year}-01-01`, endDate: FOREVER, value });
+  setDraftProvisionIntervals(countryId, provision, collection.getIntervals());
+}
+
+export function setDraftYear(year: number): void {
+  const draft = getSnapshot();
+  if (!draft) {
+    return;
+  }
+  writeDraft({
+    ...draft,
+    year,
+    // Dated provisions mirror the value in effect for the draft's year.
+    provisions: draft.provisions.map((p) =>
+      p.intervals?.length ? { ...p, value: provisionValueInYear(p, year) ?? p.baselineValue } : p
+    ),
+  });
+}
+
+/**
+ * The provisions as they stand in one year — current law then, and the
+ * reform's value then — so a report's "current law → new value" lines
+ * describe the year it simulates, not the year a value was typed.
+ */
+export function provisionsForYear(
+  provisions: DraftProvision[],
+  year: number,
+  currentLawAt: (path: string, year: number) => any
+): DraftProvision[] {
+  return provisions.map((p) => {
+    const baseline = currentLawAt(p.path, year) ?? p.baselineValue;
+    const changed = provisionChanged(p);
+    return {
+      ...p,
+      baselineValue: baseline,
+      value: changed ? (provisionValueInYear(p, year) ?? baseline) : baseline,
+    };
   });
 }
 
@@ -205,12 +364,18 @@ export function loadReformIntoDraft(
     population: { scope: 'national' },
     provisions: reform.parameters.map((parameter) => {
       const { breadcrumb, unit, baselineValue } = resolve(parameter.name);
+      const single =
+        parameter.values.length === 1 &&
+        parameter.values[0].startDate === `${CURRENT_YEAR}-01-01` &&
+        parameter.values[0].endDate === FOREVER;
       return {
         path: parameter.name,
         breadcrumb,
         unit,
         baselineValue,
         value: parameter.values[0]?.value ?? baselineValue,
+        // Anything but one value from this year on keeps its dates.
+        ...(!single && parameter.values.length > 0 && { intervals: parameter.values }),
       };
     }),
     source: reform.provenance.source,
@@ -240,20 +405,13 @@ export function draftToReform(
   draft: DraftReform,
   userId: string
 ): Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> {
-  const year = new Date().getFullYear();
   return {
     userId,
     countryId: draft.countryId,
     label: draft.label || null,
     parameters: draft.provisions.map((provision) => ({
       name: provision.path,
-      values: [
-        {
-          startDate: `${year}-01-01`,
-          endDate: FOREVER,
-          value: provision.value,
-        },
-      ],
+      values: provisionIntervals(provision),
     })),
     baseline: 'current-law',
     provenance: { source: draft.source, ref: draft.sourceRef },

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   IconArrowLeft,
+  IconCheck,
   IconChevronRight,
   IconFolder,
   IconInfoCircle,
@@ -18,6 +19,7 @@ import {
   ParameterSearchFilters,
   ParameterSearchIndex,
 } from '@/libs/parameterSearch';
+import ScopePicker from './ScopePicker';
 
 interface ParameterSearchBoxProps {
   entries: ParameterSearchEntry[];
@@ -45,6 +47,26 @@ interface ParameterSearchBoxProps {
   resultsInFlow?: boolean;
   /** Search large indexes without blocking input. */
   backgroundSearch?: boolean;
+  /** Told whether anything is typed or a folder is open, so the page can make room. */
+  onActiveChange?: (active: boolean) => void;
+  /**
+   * Opens a result's folder somewhere else — the page's own browser —
+   * instead of in place. The query stays, so coming back to search
+   * finds the same results.
+   */
+  onOpenFolder?: (path: string) => void;
+  /**
+   * Keep the query and results after a pick, so several parameters can
+   * come from one search. Picked rows are marked with `inDraft`.
+   */
+  keepResultsOnSelect?: boolean;
+  /** Marks rows already in the draft. */
+  inDraft?: (path: string) => boolean;
+  /** Keep results (and their empty state) out of view — the picker is not in use. */
+  hideResults?: boolean;
+  /** Extra controls at the end of the filter row, e.g. a Browse toggle. */
+  filterActions?: React.ReactNode;
+  autoFocus?: boolean;
 }
 
 /**
@@ -110,15 +132,65 @@ const controlShell: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: spacing.xs,
-  padding: `4px ${spacing.sm}`,
+  padding: `0 ${spacing.sm}`,
   border: `1px solid ${colors.border.light}`,
-  borderRadius: 8,
+  borderRadius: spacing.radius.container,
   background: colors.background.primary,
   fontSize: typography.fontSize.xs,
   fontFamily: typography.fontFamily.primary,
   color: colors.text.secondary,
   height: 30,
 };
+
+const sectionLabel: React.CSSProperties = {
+  padding: `${spacing.sm} ${spacing.lg} ${spacing.xs}`,
+  fontSize: typography.fontSize.xs,
+  fontFamily: typography.fontFamily.primary,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.tertiary,
+};
+
+/**
+ * A folder breadcrumb with its own name emphasized: the ancestors give
+ * context and truncate first, the last segment is what opens.
+ */
+function FolderName({
+  breadcrumb,
+  highlighted = false,
+}: {
+  breadcrumb: string;
+  highlighted?: boolean;
+}) {
+  const segments = breadcrumb.split(' → ');
+  const name = segments[segments.length - 1];
+  const ancestors = segments.slice(0, -1).join(' → ');
+  return (
+    <span style={{ display: 'flex', minWidth: 0, gap: 4 }}>
+      {ancestors && (
+        <span
+          style={{
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontWeight: typography.fontWeight.normal,
+          }}
+        >
+          {ancestors} →
+        </span>
+      )}
+      <span
+        style={{
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+          color: highlighted ? colors.primary[700] : colors.text.primary,
+        }}
+      >
+        {name}
+      </span>
+    </span>
+  );
+}
 
 function capitalizeFirst(text: string): string {
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
@@ -169,9 +241,30 @@ function buildFolderView(entries: ParameterSearchEntry[], path: string) {
   };
 }
 
-function EntryBadges({ entry }: { entry: ParameterSearchEntry }) {
+function EntryBadges({
+  entry,
+  inDraft = false,
+}: {
+  entry: ParameterSearchEntry;
+  inDraft?: boolean;
+}) {
   return (
     <span style={{ display: 'flex', gap: spacing.xs, flexShrink: 0 }}>
+      {inDraft && (
+        <span
+          style={{
+            ...badgeStyle,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 2,
+            color: colors.text.inverse,
+            background: colors.primary[500],
+          }}
+        >
+          <IconCheck size={10} aria-hidden />
+          in draft
+        </span>
+      )}
       {entry.stateCode && (
         <span
           style={{
@@ -210,6 +303,13 @@ export default function ParameterSearchBox({
   backgroundSearch = false,
   index: providedIndex,
   labelFor,
+  onActiveChange,
+  onOpenFolder,
+  keepResultsOnSelect = false,
+  inDraft,
+  hideResults = false,
+  filterActions,
+  autoFocus = false,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
   const [highlighted, setHighlighted] = useState(0);
@@ -298,13 +398,24 @@ export default function ParameterSearchBox({
   );
 
   const select = (entry: ParameterSearchEntry) => {
-    if (!browsing && search.pending) {
+    if (!browsing && search.stale) {
       return;
     }
     onSelect(entry);
+    if (keepResultsOnSelect) {
+      return;
+    }
     setQuery('');
     setBrowsing(null);
     setHighlighted(0);
+  };
+
+  // Pointing at a folder takes the row highlight away: a highlighted row
+  // right under a hovered folder header reads as one block, as if both
+  // were the target. The arrow keys bring the highlight back.
+  const hoverFolder = (path: string) => {
+    setHoveredFolder(path);
+    setHighlighted(-1);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -320,7 +431,7 @@ export default function ParameterSearchBox({
       }
       return;
     }
-    if ((!browsing && search.pending) || !flatEntries.length) {
+    if ((!browsing && search.stale) || !flatEntries.length) {
       return;
     }
     if (event.key === 'ArrowDown') {
@@ -331,6 +442,10 @@ export default function ParameterSearchBox({
       setHighlighted((current) => Math.max(current - 1, 0));
     } else if (event.key === 'Enter') {
       event.preventDefault();
+      // Nothing is highlighted while a folder is pointed at.
+      if (highlighted < 0) {
+        return;
+      }
       // The list can shrink under a stale highlight (a filter change);
       // clamp rather than select past the end.
       select(flatEntries[Math.min(highlighted, flatEntries.length - 1)]);
@@ -339,48 +454,117 @@ export default function ParameterSearchBox({
 
   let runningIndex = -1;
 
+  const active = query.trim().length > 0 || browsing !== null;
+  const noMatches =
+    !hideResults &&
+    !browsing &&
+    query.trim().length >= 2 &&
+    !search.pending &&
+    flatEntries.length === 0;
+  // Where the search looked, so an empty or widened result says why.
+  const scopePhrase =
+    filters.stateScope === 'all'
+      ? ''
+      : filters.stateScope === 'federal'
+        ? ' at the federal level'
+        : ` in ${stateLabels[filters.stateScope] ?? filters.stateScope.toUpperCase()}`;
+  // Nothing matched the filters, so the results come from a wider search:
+  // say what was relaxed, and offer to make it the filter.
+  const widened = (() => {
+    const wider = search.widenedFilters;
+    if (!wider || hideResults || browsing || flatEntries.length === 0) {
+      return null;
+    }
+    const scopeChanged = wider.stateScope !== filters.stateScope;
+    const contribChanged = wider.includeContrib && !filters.includeContrib;
+    const missed = [
+      scopeChanged ? scopePhrase.trim() : null,
+      contribChanged ? 'among current-law parameters' : null,
+    ]
+      .filter(Boolean)
+      .join(' or ');
+    const shown = `${contribChanged ? 'contributed parameters' : 'matches'}${
+      scopeChanged ? ' from all jurisdictions' : ''
+    }`;
+    return {
+      filters: wider,
+      message: `No matches ${missed}. Showing ${shown}.`,
+      action:
+        scopeChanged && contribChanged
+          ? 'Use these filters'
+          : scopeChanged
+            ? 'Search all jurisdictions'
+            : 'Include contributed',
+    };
+  })();
+  useEffect(() => {
+    onActiveChange?.(active);
+  }, [active, onActiveChange]);
+
   return (
     <div style={{ position: 'relative' }}>
+      <div
+        // Border and ring live in classes so focus can restyle them; an
+        // inline border would pin its color.
+        className="tw:border tw:border-border-light tw:shadow-sm tw:transition-shadow tw:focus-within:border-primary-500 tw:focus-within:ring-4 tw:focus-within:ring-primary-50"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing.md,
+          padding: `${spacing.lg} ${spacing.xl}`,
+          borderRadius: spacing.radius.feature,
+          background: colors.background.primary,
+        }}
+      >
+        <IconSearch size={20} color={colors.primary[500]} style={{ flexShrink: 0 }} />
+        <input
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setBrowsing(null);
+            setHighlighted(0);
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          aria-label="Search parameters"
+          autoFocus={autoFocus}
+          role="combobox"
+          aria-expanded={Boolean(browsing) || flatEntries.length > 0}
+          aria-controls="parameter-search-results"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            border: 'none',
+            outline: 'none',
+            fontSize: typography.fontSize.lg,
+            fontFamily: typography.fontFamily.primary,
+            color: colors.text.primary,
+            background: 'transparent',
+          }}
+        />
+      </div>
+
+      {/* Filters sit under the bar: they refine a search, so they read
+          after it rather than competing with it for first glance. */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: spacing.sm,
-          marginBottom: spacing.sm,
+          marginTop: spacing.sm,
           flexWrap: 'wrap',
         }}
       >
         {stateOptions.length > 0 && (
-          <label style={controlShell}>
-            Scope
-            <select
-              value={filters.stateScope}
-              onChange={(event) => {
-                setFilters({ ...filters, stateScope: event.target.value });
-                setHighlighted(0);
-              }}
-              aria-label="State scope"
-              style={{
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                fontSize: typography.fontSize.xs,
-                fontFamily: typography.fontFamily.primary,
-                color: colors.text.primary,
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all">All jurisdictions</option>
-              <option value="federal">Federal only</option>
-              <optgroup label="States">
-                {stateOptions.map((option) => (
-                  <option key={option.code} value={option.code}>
-                    {option.label}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          </label>
+          <ScopePicker
+            value={filters.stateScope}
+            onChange={(stateScope) => {
+              setFilters({ ...filters, stateScope });
+              setHighlighted(0);
+            }}
+            states={stateOptions}
+            triggerStyle={controlShell}
+          />
         )}
         <div style={controlShell}>
           <label
@@ -389,6 +573,7 @@ export default function ParameterSearchBox({
               alignItems: 'center',
               gap: spacing.xs,
               cursor: 'pointer',
+              whiteSpace: 'nowrap',
             }}
           >
             <input
@@ -401,7 +586,7 @@ export default function ParameterSearchBox({
               aria-label="Include contributed parameters"
               style={{ accentColor: colors.primary[500], width: 13, height: 13, margin: 0 }}
             />
-            Contributed
+            Include contributed
           </label>
           {/* Outside the label: a control inside it would toggle the filter. */}
           <Tooltip>
@@ -427,75 +612,113 @@ export default function ParameterSearchBox({
             </TooltipContent>
           </Tooltip>
         </div>
+        {backgroundSearch && (
+          <div
+            role="status"
+            style={{
+              marginLeft: 'auto',
+              fontSize: typography.fontSize.xs,
+              color: colors.text.secondary,
+            }}
+          >
+            {!browsing &&
+              query.trim().length >= 2 &&
+              (search.pending ? (
+                'Searching…'
+              ) : flatEntries.length === 0 ? (
+                // Announced here; the empty state below says it visibly.
+                <span className="tw:sr-only">No matching parameters</span>
+              ) : (
+                ''
+              ))}
+          </div>
+        )}
+        {filterActions && (
+          <div style={{ marginLeft: backgroundSearch ? undefined : 'auto' }}>{filterActions}</div>
+        )}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing.sm,
-          padding: `${spacing.md} ${spacing.lg}`,
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: 10,
-          background: colors.background.primary,
-        }}
-      >
-        <IconSearch size={18} color={colors.text.secondary} style={{ flexShrink: 0 }} />
-        <input
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setBrowsing(null);
-            setHighlighted(0);
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          aria-label="Search parameters"
-          role="combobox"
-          aria-expanded={Boolean(browsing) || flatEntries.length > 0}
-          aria-controls="parameter-search-results"
-          style={{
-            flex: 1,
-            border: 'none',
-            outline: 'none',
-            fontSize: typography.fontSize.base,
-            fontFamily: typography.fontFamily.primary,
-            background: 'transparent',
-          }}
-        />
-      </div>
-
-      {backgroundSearch && (
+      {noMatches && (
         <div
-          role="status"
           style={{
-            minHeight: typography.fontSize.lg,
-            fontSize: typography.fontSize.xs,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: spacing.sm,
+            marginTop: spacing.md,
+            padding: `${spacing['2xl']} ${spacing.lg}`,
+            border: `1px dashed ${colors.border.medium}`,
+            borderRadius: spacing.radius.feature,
+            textAlign: 'center',
+            fontSize: typography.fontSize.sm,
+            fontFamily: typography.fontFamily.primary,
             color: colors.text.secondary,
           }}
         >
-          {!browsing &&
-            query.trim().length >= 2 &&
-            (search.pending
-              ? 'Searching…'
-              : flatEntries.length === 0
-                ? 'No matching parameters'
-                : '')}
+          <span>
+            No parameters match{' '}
+            <strong style={{ color: colors.text.primary }}>“{query.trim()}”</strong>
+            {scopePhrase}.
+          </span>
+          <span style={{ fontSize: typography.fontSize.xs }}>
+            Nothing matches anywhere else either — check the spelling, or try fewer words.
+          </span>
         </div>
       )}
-      {(browsing || flatEntries.length > 0) && (
+
+      {widened && (
+        <div
+          role="note"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: `${spacing.xs} ${spacing.md}`,
+            marginTop: spacing.md,
+            padding: `${spacing.sm} ${spacing.md}`,
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: spacing.radius.container,
+            background: colors.gray[50],
+            fontSize: typography.fontSize.sm,
+            fontFamily: typography.fontFamily.primary,
+            color: colors.text.secondary,
+          }}
+        >
+          <span>{widened.message}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setFilters(widened.filters);
+              setHighlighted(0);
+            }}
+            className="tw:cursor-pointer tw:underline-offset-2 tw:hover:underline"
+            style={{
+              padding: 0,
+              border: 'none',
+              background: 'transparent',
+              font: 'inherit',
+              fontWeight: typography.fontWeight.medium,
+              color: colors.primary[600],
+            }}
+          >
+            {widened.action}
+          </button>
+        </div>
+      )}
+
+      {!hideResults && (browsing || flatEntries.length > 0) && (
         <div
           id="parameter-search-results"
           role="listbox"
           aria-busy={!browsing && search.pending}
-          inert={!browsing && search.pending ? true : undefined}
+          inert={!browsing && search.stale ? true : undefined}
           style={{
             ...(resultsInFlow
               ? { position: 'relative' }
               : { position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20 }),
-            marginTop: spacing.xs,
+            marginTop: spacing.md,
             border: `1px solid ${colors.border.light}`,
-            borderRadius: 10,
+            borderRadius: spacing.radius.feature,
             background: colors.background.primary,
             boxShadow: resultsInFlow ? 'none' : '0 8px 24px rgba(20, 32, 31, 0.12)',
             // In flow the page scrolls, so the list can take most of the
@@ -553,14 +776,20 @@ export default function ParameterSearchBox({
                     flexWrap: 'wrap',
                   }}
                 >
-                  <IconFolder size={13} style={{ flexShrink: 0 }} />
+                  <IconFolder size={14} style={{ flexShrink: 0, color: colors.primary[600] }} />
                   {crumbs.length > 0 ? (
                     crumbs.map((crumb, idx) => (
                       <span
                         key={crumb.path}
                         style={{ display: 'flex', alignItems: 'center', gap: 4 }}
                       >
-                        {idx > 0 && <span aria-hidden>→</span>}
+                        {idx > 0 && (
+                          <IconChevronRight
+                            size={11}
+                            aria-hidden
+                            style={{ color: colors.text.tertiary }}
+                          />
+                        )}
                         {idx < crumbs.length - 1 ? (
                           <button
                             type="button"
@@ -568,9 +797,9 @@ export default function ParameterSearchBox({
                               setBrowsing({ path: crumb.path, folder: crumb.label });
                               setHighlighted(0);
                             }}
-                            onMouseEnter={() => setHoveredFolder(crumb.path)}
+                            onMouseEnter={() => hoverFolder(crumb.path)}
                             onMouseLeave={() => setHoveredFolder(null)}
-                            onFocus={() => setHoveredFolder(crumb.path)}
+                            onFocus={() => hoverFolder(crumb.path)}
                             onBlur={() => setHoveredFolder(null)}
                             title={`Open ${crumb.label}`}
                             style={{
@@ -579,11 +808,13 @@ export default function ParameterSearchBox({
                               background: 'transparent',
                               cursor: 'pointer',
                               font: 'inherit',
+                              // Ancestors read as links: each one opens.
                               color:
                                 hoveredFolder === crumb.path
                                   ? colors.primary[700]
-                                  : colors.text.secondary,
+                                  : colors.primary[600],
                               textDecoration: hoveredFolder === crumb.path ? 'underline' : 'none',
+                              textUnderlineOffset: 2,
                             }}
                           >
                             {crumb.label}
@@ -620,6 +851,7 @@ export default function ParameterSearchBox({
               >
                 {browsing.path}
               </div>
+              {(folderView?.direct.length ?? 0) > 0 && <div style={sectionLabel}>Parameters</div>}
               {(folderView?.direct ?? []).map((entry, i) => (
                 <button
                   key={entry.path}
@@ -689,11 +921,12 @@ export default function ParameterSearchBox({
                           {currentValueFor(entry)}
                         </span>
                       )}
-                      <EntryBadges entry={entry} />
+                      <EntryBadges entry={entry} inDraft={inDraft?.(entry.path)} />
                     </span>
                   </div>
                 </button>
               ))}
+              {(folderView?.subfolders.length ?? 0) > 0 && <div style={sectionLabel}>Folders</div>}
               {(folderView?.subfolders ?? []).map((sub) => {
                 const fromLookup = labelFor?.(sub.path);
                 const name = fromLookup
@@ -712,9 +945,9 @@ export default function ParameterSearchBox({
                       setBrowsing({ path: sub.path, folder: name });
                       setHighlighted(0);
                     }}
-                    onMouseEnter={() => setHoveredFolder(sub.path)}
+                    onMouseEnter={() => hoverFolder(sub.path)}
                     onMouseLeave={() => setHoveredFolder(null)}
-                    onFocus={() => setHoveredFolder(sub.path)}
+                    onFocus={() => hoverFolder(sub.path)}
                     onBlur={() => setHoveredFolder(null)}
                     aria-label={`Open ${name}`}
                     style={{
@@ -733,7 +966,7 @@ export default function ParameterSearchBox({
                       color: isHovered ? colors.primary[700] : colors.text.primary,
                     }}
                   >
-                    <IconFolder size={14} style={{ flexShrink: 0, color: colors.text.secondary }} />
+                    <IconFolder size={14} style={{ flexShrink: 0, color: colors.primary[600] }} />
                     <span
                       style={{
                         flex: 1,
@@ -757,9 +990,10 @@ export default function ParameterSearchBox({
                     </span>
                     {/* The constant affordance: folders open, rows add. */}
                     <IconChevronRight
-                      size={12}
+                      size={13}
                       style={{
                         flexShrink: 0,
+                        color: colors.primary[600],
                         transform: isHovered ? 'translateX(2px)' : undefined,
                         transition: 'transform 120ms ease',
                       }}
@@ -770,7 +1004,7 @@ export default function ParameterSearchBox({
             </>
           )}
           {!browsing &&
-            groups.map((group) => {
+            groups.map((group, groupIndex) => {
               const isFolder = group.entries.length > 1 && group.folder;
               return (
                 <div key={group.folder || group.entries[0].path}>
@@ -780,22 +1014,25 @@ export default function ParameterSearchBox({
                       const headerStyle: React.CSSProperties = {
                         display: 'flex',
                         alignItems: 'center',
-                        gap: spacing.xs,
+                        gap: spacing.sm,
                         width: '100%',
-                        padding: `${spacing.sm} ${spacing.lg} ${spacing.xs}`,
+                        padding: `${spacing.sm} ${spacing.lg}`,
                         fontSize: typography.fontSize.xs,
                         fontFamily: typography.fontFamily.primary,
                         fontWeight: typography.fontWeight.semibold,
                         color: colors.text.secondary,
                         textAlign: 'left',
+                        background: colors.gray[50],
+                        // The list's own border already tops the first band.
+                        borderTop: groupIndex === 0 ? 'none' : `1px solid ${colors.border.light}`,
                       };
                       // Only a folder with a resolvable path can be
-                      // browsed; otherwise the header stays the label it was.
+                      // browsed; otherwise the header stays a label.
                       if (!folderPath) {
                         return (
                           <div style={headerStyle}>
-                            <IconFolder size={13} />
-                            {group.folder}
+                            <IconFolder size={14} style={{ flexShrink: 0 }} />
+                            <FolderName breadcrumb={group.folder} />
                           </div>
                         );
                       }
@@ -807,42 +1044,53 @@ export default function ParameterSearchBox({
                         <button
                           type="button"
                           onClick={() => {
-                            setBrowsing({ path: folderPath, folder: group.folder });
                             setHighlighted(0);
+                            if (onOpenFolder) {
+                              onOpenFolder(folderPath);
+                              return;
+                            }
+                            setBrowsing({ path: folderPath, folder: group.folder });
                           }}
-                          onMouseEnter={() => setHoveredFolder(group.folder)}
+                          onMouseEnter={() => hoverFolder(group.folder)}
                           onMouseLeave={() => setHoveredFolder(null)}
-                          onFocus={() => setHoveredFolder(group.folder)}
+                          onFocus={() => hoverFolder(group.folder)}
                           onBlur={() => setHoveredFolder(null)}
-                          title="Show everything in this folder"
                           aria-label={`Browse ${group.folder}`}
                           style={{
                             ...headerStyle,
                             border: 'none',
+                            borderTop: headerStyle.borderTop,
                             cursor: 'pointer',
-                            color: isHovered ? colors.primary[700] : colors.text.secondary,
-                            background: isHovered ? colors.primary[50] : 'transparent',
+                            background: isHovered ? colors.primary[50] : colors.gray[50],
                           }}
                         >
-                          <IconFolder size={13} />
+                          <IconFolder
+                            size={14}
+                            style={{ flexShrink: 0, color: colors.primary[600] }}
+                          />
+                          <FolderName breadcrumb={group.folder} highlighted={isHovered} />
+                          {/* Said in words, not just a chevron: a header
+                              otherwise reads as a label, not a way in. */}
                           <span
                             style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              flexShrink: 0,
+                              marginLeft: 'auto',
+                              fontWeight: typography.fontWeight.medium,
+                              color: isHovered ? colors.primary[700] : colors.primary[600],
                             }}
                           >
-                            {group.folder}
+                            Open folder
+                            <IconChevronRight
+                              size={13}
+                              style={{
+                                transform: isHovered ? 'translateX(2px)' : undefined,
+                                transition: 'transform 120ms ease',
+                              }}
+                            />
                           </span>
-                          {/* The constant affordance: folders open, rows add. */}
-                          <IconChevronRight
-                            size={12}
-                            style={{
-                              flexShrink: 0,
-                              transform: isHovered ? 'translateX(2px)' : undefined,
-                              transition: 'transform 120ms ease',
-                            }}
-                          />
                         </button>
                       );
                     })()}
@@ -921,7 +1169,7 @@ export default function ParameterSearchBox({
                                 {currentValueFor(entry)}
                               </span>
                             )}
-                            <EntryBadges entry={entry} />
+                            <EntryBadges entry={entry} inDraft={inDraft?.(entry.path)} />
                           </span>
                         </div>
                         <div

@@ -31,7 +31,8 @@ export function useRunFlagshipReport() {
     title: string,
     sourceNote: string,
     provisions: RunReportProvision[],
-    reformId?: string | null
+    reformId?: string | null,
+    year?: number
   ) => {
     if (isRunning) {
       return;
@@ -50,6 +51,7 @@ export function useRunFlagshipReport() {
         provisions,
         currentLawId: Number(currentLawId),
         reformId,
+        year,
       });
       nav.push(`/${countryId}/report/${userReportId}`);
     } catch {

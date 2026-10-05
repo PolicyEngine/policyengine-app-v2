@@ -3,6 +3,7 @@ import Fuse, { IFuseOptions } from 'fuse.js';
 import type { RootState } from '@/store';
 import { ParameterMetadata, ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { formatLabelParts, getHierarchicalLabels } from '../utils/parameterLabels';
+import { getCurrentValue } from '../utils/parameterValues';
 import { priorFactor } from './searchPriors';
 
 /**
@@ -56,7 +57,10 @@ export const DEFAULT_SEARCH_FILTERS: ParameterSearchFilters = {
   stateScope: 'all',
 };
 
-function matchesFilters(entry: ParameterSearchEntry, filters: ParameterSearchFilters): boolean {
+export function matchesFilters(
+  entry: ParameterSearchEntry,
+  filters: ParameterSearchFilters
+): boolean {
   if (!filters.includeContrib && entry.isContrib) {
     return false;
   }
@@ -539,7 +543,8 @@ export function searchParameters(
   index: ParameterSearchIndex,
   query: string,
   limit = 10,
-  filters: ParameterSearchFilters = DEFAULT_SEARCH_FILTERS
+  filters: ParameterSearchFilters = DEFAULT_SEARCH_FILTERS,
+  { fuzzyFallback = true }: { fuzzyFallback?: boolean } = {}
 ): ParameterSearchEntry[] {
   const trimmed = canonicalizeQuery(query, index.aliases);
   if (trimmed.length < 2) {
@@ -646,18 +651,83 @@ export function searchParameters(
     return rankWithPriors(candidates, trimmed, limit, namedStates);
   }
 
-  // Typo fallback: full fuzzy search, filtered after ranking. Fetch a
-  // padded window so filtering still leaves up to `limit` results.
-  const fallback = index.fuse
-    .search(trimmed, { limit: limit * 10 })
+  if (!fuzzyFallback) {
+    return [];
+  }
+  return fuzzyMatches(index, trimmed, limit, namedStates)
+    .filter((entry) => matchesFilters(entry, filters))
+    .slice(0, limit);
+}
+
+/**
+ * Typo fallback: full fuzzy search over the whole index, ranked but not
+ * yet filtered. A padded window, so filtering still leaves up to `limit`.
+ * The expensive path — callers reach it only when no entry contains any
+ * query word.
+ */
+function fuzzyMatches(
+  index: ParameterSearchIndex,
+  canonicalQuery: string,
+  limit: number,
+  namedStates: Set<string>
+): ParameterSearchEntry[] {
+  return index.fuse
+    .search(canonicalQuery, { limit: limit * 10 })
     .map((result) => ({
       entry: result.item,
       adjusted: adjustedScore(result.score, result.item, namedStates),
     }))
-    .filter((ranked) => matchesFilters(ranked.entry, filters))
     .sort((a, b) => a.adjusted - b.adjusted)
-    .slice(0, limit);
-  return fallback.map((ranked) => ranked.entry);
+    .map((ranked) => ranked.entry);
+}
+
+export interface WidenedSearchResult {
+  entries: ParameterSearchEntry[];
+  /** The filters the entries satisfy — wider than asked when nothing matched. */
+  filters: ParameterSearchFilters;
+}
+
+/**
+ * Search, and when the filters leave nothing, search again with them
+ * relaxed — the state scope first, then contributed parameters — so a
+ * narrow filter shows where the matches are instead of a blank. The
+ * caller compares `filters` with what it asked for to say so.
+ *
+ * Word matching runs for every filter set before any fuzzy matching:
+ * the fuzzy pass is the slow one, so it runs once at most, and its
+ * ranking is reused for each filter set.
+ */
+export function searchParametersWidening(
+  index: ParameterSearchIndex,
+  query: string,
+  limit = 10,
+  filters: ParameterSearchFilters = DEFAULT_SEARCH_FILTERS
+): WidenedSearchResult {
+  const trimmed = canonicalizeQuery(query, index.aliases);
+  if (trimmed.length < 2) {
+    return { entries: [], filters };
+  }
+  const attempts: ParameterSearchFilters[] = [filters];
+  if (filters.stateScope !== 'all') {
+    attempts.push({ ...filters, stateScope: 'all' });
+  }
+  if (!filters.includeContrib) {
+    attempts.push({ stateScope: 'all', includeContrib: true });
+  }
+  for (const attempt of attempts) {
+    const found = searchParameters(index, query, limit, attempt, { fuzzyFallback: false });
+    if (found.length > 0) {
+      return { entries: found, filters: attempt };
+    }
+  }
+  const fuzzy = fuzzyMatches(index, trimmed, limit, statesNamedIn(query, trimmed, index));
+  for (const attempt of attempts) {
+    const kept = fuzzy.filter((entry) => matchesFilters(entry, attempt)).slice(0, limit);
+    if (kept.length > 0) {
+      return { entries: kept, filters: attempt };
+    }
+  }
+  return { entries: [], filters };
 }
 
 export interface ParameterSearchGroup {
@@ -717,10 +787,29 @@ export function countHiddenByFilters(
  * load and shared by every consumer (Build page now; the agent's locate
  * stage later).
  */
+/**
+ * Whether a reform can set this value: a number (an "Infinity" threshold
+ * included) or a yes/no switch. Lists of variable names and other text
+ * values are left out of what the app offers to change.
+ */
+export function isDraftableValue(value: unknown): boolean {
+  return (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    value === 'Infinity' ||
+    value === '-Infinity'
+  );
+}
+
+/** The parameters the app offers to search, browse, and change. */
 export const selectParameterSearchEntries = createSelector(
   [(state: RootState) => state.metadata.parameters],
   (parameters): ParameterSearchEntry[] =>
-    parameters ? buildParameterSearchEntries(parameters) : []
+    parameters
+      ? buildParameterSearchEntries(parameters).filter((entry) =>
+          isDraftableValue(getCurrentValue(parameters[entry.path]?.values))
+        )
+      : []
 );
 
 export const selectConceptClusters = createSelector(

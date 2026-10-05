@@ -387,6 +387,8 @@ export default function ReformsPage() {
       addDraftProvision(countryId, provision, 'bill', bill.id)
     );
     setDraftLabel(bill.title);
+    // The draft is Build's page now, not a panel beside this one.
+    nav.push(`/${countryId}/build`);
   };
 
   const isDirty = (reform: Reform) =>

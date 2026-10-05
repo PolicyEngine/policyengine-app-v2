@@ -3,6 +3,7 @@ import { createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
  * The run bridge: turns a set of provisions (from a draft reform or a
@@ -18,6 +19,8 @@ export interface RunReportProvision {
   unit: string | null;
   baselineValue: any;
   value: any;
+  /** Dated changes, when the provision varies over time (see DraftProvision). */
+  intervals?: ValueInterval[];
 }
 
 /** Provenance shown in the flagship report header, stashed per report. */
@@ -60,20 +63,39 @@ export interface RunFlagshipReportArgs {
   currentLawId: number;
   /** Saved reform this run came from, for the central report record. */
   reformId?: string | null;
+  /** The year to simulate; the current year when unset. */
+  year?: number;
+}
+
+/**
+ * The API's per-parameter period map: each dated change keyed
+ * "start.end", or the single value from the current year onward.
+ */
+export function provisionPeriods(
+  provision: Pick<RunReportProvision, 'value' | 'intervals'>
+): Record<string, any> {
+  if (provision.intervals && provision.intervals.length > 0) {
+    return Object.fromEntries(
+      provision.intervals.map((interval) => [
+        `${interval.startDate}.${interval.endDate}`,
+        interval.value,
+      ])
+    );
+  }
+  return { [`${CURRENT_YEAR}-01-01.${FOREVER}`]: provision.value };
 }
 
 /**
  * Creates (or, since the API dedupes identical policies, finds) the reform
- * policy for a set of provisions, effective from the current year.
+ * policy for a set of provisions — each with its dated changes, or its
+ * single value from the current year onward.
  */
 export async function createReformPolicy(
   countryId: CountryId,
   title: string,
-  provisions: Array<Pick<RunReportProvision, 'path' | 'value'>>
+  provisions: Array<Pick<RunReportProvision, 'path' | 'value' | 'intervals'>>
 ): Promise<number> {
-  const data = Object.fromEntries(
-    provisions.map((p) => [p.path, { [`${CURRENT_YEAR}-01-01.${FOREVER}`]: p.value }])
-  );
+  const data = Object.fromEntries(provisions.map((p) => [p.path, provisionPeriods(p)]));
   const policyResponse = await createPolicy(countryId, { data, label: title || undefined });
   return Number(policyResponse.result.policy_id);
 }
@@ -85,6 +107,7 @@ export async function runFlagshipReport({
   provisions,
   currentLawId,
   reformId,
+  year = Number(CURRENT_YEAR),
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -112,7 +135,7 @@ export async function runFlagshipReport({
     payload: {
       simulation_1_id: Number(baseline.result.simulation_id),
       simulation_2_id: Number(reform.result.simulation_id),
-      year: CURRENT_YEAR,
+      year: String(year),
     },
   });
 
@@ -136,7 +159,7 @@ export async function runFlagshipReport({
       title: title || null,
       sourceNote: sourceNote || null,
       provisions,
-      year: CURRENT_YEAR,
+      year: String(year),
       reformId: reformId ?? null,
     });
   } catch {
