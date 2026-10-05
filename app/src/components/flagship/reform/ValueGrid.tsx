@@ -28,11 +28,21 @@ const sameValue = (a: any, b: any) =>
     ? Math.abs(a - b) < 1e-9
     : sameParameterValue(a, b);
 
+const labelCell: React.CSSProperties = {
+  textAlign: 'left',
+  fontWeight: typography.fontWeight.normal,
+  whiteSpace: 'nowrap',
+  verticalAlign: 'top',
+};
+
+const cellPadding = `${spacing.xs} ${spacing.xs}`;
+
 /**
- * Members down, years across: the values a reform sets, edited in place.
- * Every cell starts at what is in effect, so the grid reads as the
- * schedule itself; cells that differ from current law are tinted, and
- * hovering one says what current law has there.
+ * Years across, values down, edited in place. Every cell starts at what
+ * is in effect, so the grid reads as the schedule itself, and changed
+ * cells are tinted. A lone parameter shows current law as its own row
+ * above; a breakdown has a row per member, so each changed cell says
+ * what it was underneath instead.
  */
 export default function ValueGrid({
   members,
@@ -45,14 +55,17 @@ export default function ValueGrid({
   focusedPath,
   onFocus,
 }: ValueGridProps) {
+  const lone = members.length === 1;
+  const lastIndex = years.length - 1;
   const header = (year: number, index: number) =>
-    openEnded && index === years.length - 1 ? `${year} on` : String(year);
+    openEnded && index === lastIndex ? `${year}+` : String(year);
 
   return (
     <div style={{ overflowX: 'auto' }}>
       <table
         style={{
-          width: '100%',
+          // One column stays input-sized rather than spanning the card.
+          width: years.length > 1 ? '100%' : 'auto',
           borderCollapse: 'collapse',
           fontSize: typography.fontSize.sm,
           fontFamily: typography.fontFamily.primary,
@@ -60,11 +73,12 @@ export default function ValueGrid({
       >
         <thead>
           <tr>
-            <th style={{ width: members.length > 1 ? '26%' : 0 }} />
+            <th style={{ width: lone ? 96 : years.length > 1 ? '24%' : undefined }} />
             {years.map((year, index) => (
               <th
                 key={year}
                 scope="col"
+                title={openEnded && index === lastIndex ? `${year} and later` : undefined}
                 style={{
                   padding: `0 ${spacing.xs} ${spacing.xs}`,
                   textAlign: 'left',
@@ -80,6 +94,36 @@ export default function ValueGrid({
           </tr>
         </thead>
         <tbody>
+          {lone && parameters[members[0].path] && (
+            <tr>
+              <th
+                scope="row"
+                style={{
+                  ...labelCell,
+                  padding: `${spacing.xs} ${spacing.md} ${spacing.sm} 0`,
+                  fontSize: typography.fontSize.xs,
+                  color: colors.text.secondary,
+                }}
+              >
+                Current law
+              </th>
+              {years.map((year) => (
+                <td
+                  key={year}
+                  style={{
+                    padding: `${spacing.xs} ${spacing.xs} ${spacing.sm}`,
+                    color: colors.text.secondary,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatValue(
+                    baselineAt(members[0].path, year),
+                    parameters[members[0].path].unit ?? null
+                  )}
+                </td>
+              ))}
+            </tr>
+          )}
           {members.map((member) => {
             const param = parameters[member.path];
             if (!param) {
@@ -90,18 +134,22 @@ export default function ValueGrid({
               <tr
                 key={member.path}
                 style={{
-                  borderTop: `1px solid ${colors.border.light}`,
-                  background: focused && members.length > 1 ? colors.gray[50] : undefined,
+                  borderTop: lone ? undefined : `1px solid ${colors.border.light}`,
                 }}
               >
                 <th
                   scope="row"
                   style={{
-                    padding: `${spacing.xs} ${spacing.sm} ${spacing.xs} 0`,
-                    textAlign: 'left',
+                    ...labelCell,
+                    // Level with the text inside the 36px inputs.
+                    padding: `${spacing.md} ${spacing.md} ${spacing.xs} 0`,
+                    fontSize: lone ? typography.fontSize.xs : typography.fontSize.sm,
+                    color: lone ? colors.text.secondary : undefined,
                   }}
                 >
-                  {members.length > 1 && (
+                  {lone ? (
+                    'Your reform'
+                  ) : (
                     <button
                       type="button"
                       onClick={() => onFocus(member.path)}
@@ -127,19 +175,23 @@ export default function ValueGrid({
                   const value = valueAt(member.path, year);
                   const baseline = baselineAt(member.path, year);
                   const changed = !sameValue(value, baseline);
+                  const baselineText = formatValue(baseline, param.unit ?? null);
                   return (
                     <td
                       key={year}
-                      title={`Current law: ${formatValue(baseline, param.unit ?? null)}`}
-                      style={{ padding: `${spacing.xs} ${spacing.xs}`, minWidth: 92 }}
+                      title={`Current law: ${baselineText}`}
+                      style={{ padding: cellPadding, minWidth: 96, verticalAlign: 'top' }}
                     >
                       <div
                         aria-label={`${member.label}, ${year}`}
                         data-path={member.path}
                         onFocusCapture={() => onFocus(member.path)}
+                        // Current-law cells read quieter, so the changes stand out.
+                        className={changed ? undefined : 'tw:[&_input]:text-gray-500'}
                         style={{
+                          // A fixed width, or the input's 100% widens the table.
+                          width: years.length > 1 ? undefined : 200,
                           borderRadius: spacing.radius.container,
-                          // A changed cell is tinted, so the reform reads at a glance.
                           boxShadow: changed ? `0 0 0 2px ${colors.primary[200]}` : undefined,
                           background: changed ? colors.primary[50] : undefined,
                         }}
@@ -151,7 +203,6 @@ export default function ValueGrid({
                             onChange={(next) => onChange(member.path, year, next)}
                           />
                         ) : (
-                          // A list of variable names: shown, not set, here.
                           <span
                             style={{
                               display: 'block',
@@ -162,10 +213,23 @@ export default function ValueGrid({
                               color: colors.text.secondary,
                             }}
                           >
-                            {formatValue(baseline, param.unit ?? null)}
+                            {baselineText}
                           </span>
                         )}
                       </div>
+                      {!lone && changed && (
+                        <span
+                          style={{
+                            display: 'block',
+                            marginTop: 2,
+                            fontSize: typography.fontSize.xs,
+                            color: colors.text.tertiary,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          was {baselineText}
+                        </span>
+                      )}
                     </td>
                   );
                 })}

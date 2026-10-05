@@ -96,6 +96,8 @@ describe('DraftTable', () => {
     expect(provision(JOINT_PATH)?.intervals).toEqual([
       { startDate: '2026-01-01', endDate: FOREVER, value: 35000 },
     ]);
+    expect(screen.getByText('was $32,200')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close Standard deduction amount' }));
     expect(screen.getByRole('button', { name: '1 of 3 changed' })).toBeInTheDocument();
   });
 
@@ -111,7 +113,39 @@ describe('DraftTable', () => {
     expect(provision(SINGLE_PATH)?.intervals).toEqual([
       { startDate: '2027-01-01', endDate: '2027-12-31', value: 17000 },
     ]);
+    await user.click(screen.getByRole('button', { name: 'Close Standard deduction amount' }));
     expect(screen.getByText('by year')).toBeInTheDocument();
+  });
+
+  test('given a lone parameter is opened then its values show once, with current law above', async () => {
+    const user = userEvent.setup();
+    render(<TableHarness />);
+
+    await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+
+    // The row's own input gives way to the grid: one input for 2026, not two.
+    expect(document.querySelectorAll(`[data-path="${CTC_PATH}"] input`)).toHaveLength(5);
+    expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
+      'Current law',
+      'Your reform',
+    ]);
+    expect(rowValue(CTC_PATH)).toBe(cell('Child tax credit base amount, 2026'));
+  });
+
+  test('given custom dates and history then each opens on its button, one at a time', async () => {
+    const user = userEvent.setup();
+    render(<TableHarness />);
+    await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
+
+    const dates = screen.getByRole('button', { name: /custom dates/i });
+    const history = screen.getByRole('button', { name: /history/i });
+    await user.click(dates);
+    expect(dates).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText(/dates for/i)).toHaveTextContent('Dates for Single');
+
+    await user.click(history);
+    expect(dates).toHaveAttribute('aria-expanded', 'false');
+    expect(history).toHaveAttribute('aria-expanded', 'true');
   });
 
   test('given a pick lands on a lone parameter then its value is focused', () => {

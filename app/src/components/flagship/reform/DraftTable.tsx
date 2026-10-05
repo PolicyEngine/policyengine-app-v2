@@ -42,16 +42,16 @@ const truncate: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-function Chip({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
+function Chip({ children }: { children: React.ReactNode }) {
   return (
     <span
       style={{
         display: 'inline-block',
         padding: `1px ${spacing.sm}`,
         borderRadius: 999,
-        background: accent ? colors.primary[50] : colors.gray[100],
+        background: colors.primary[50],
         fontSize: typography.fontSize.xs,
-        color: accent ? colors.primary[700] : colors.text.secondary,
+        color: colors.primary[700],
         whiteSpace: 'nowrap',
       }}
     >
@@ -63,7 +63,7 @@ function Chip({ children, accent = false }: { children: React.ReactNode; accent?
 /** When a lone provision applies, as the row says it. */
 function whenLabel(provision: DraftProvision, year: number): { text: string; accent: boolean } {
   if (!provisionChanged(provision)) {
-    return { text: 'current law', accent: false };
+    return { text: 'unchanged', accent: false };
   }
   if (provisionVariesOverTime(provision)) {
     const count = provision.intervals!.length;
@@ -239,7 +239,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
         const when = lone
           ? whenLabel(lone, year)
           : changedCount === 0
-            ? { text: 'current law', accent: false }
+            ? { text: 'unchanged', accent: false }
             : { text: varies ? 'by year' : `from ${year}`, accent: true };
 
         return (
@@ -287,20 +287,21 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                 )}
               </button>
 
+              {/* Open, the row is a heading: its details below show every value. */}
               <span
                 className={WIDE_ONLY}
-                title={baselineText}
+                title={open ? undefined : baselineText}
                 style={{
                   ...truncate,
                   fontSize: typography.fontSize.sm,
                   color: colors.text.secondary,
                 }}
               >
-                {baselineText}
+                {open ? null : baselineText}
               </span>
 
               <div style={{ minWidth: 0 }}>
-                {lone && !isEditableValue(lone.baselineValue) ? (
+                {open ? null : lone && !isEditableValue(lone.baselineValue) ? (
                   // Only numbers and switches can be offered; this one came
                   // from an older saved reform.
                   <span
@@ -315,7 +316,18 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                     Can&apos;t be changed here
                   </span>
                 ) : lone && !provisionVariesOverTime(lone) && param ? (
-                  <div data-path={lone.path}>
+                  <div
+                    data-path={lone.path}
+                    // Changed reads tinted, as in the grid; current law reads quieter.
+                    className={provisionChanged(lone) ? undefined : 'tw:[&_input]:text-gray-500'}
+                    style={{
+                      borderRadius: spacing.radius.container,
+                      boxShadow: provisionChanged(lone)
+                        ? `0 0 0 2px ${colors.primary[200]}`
+                        : undefined,
+                      background: provisionChanged(lone) ? colors.primary[50] : undefined,
+                    }}
+                  >
                     <ValueInputBox
                       param={param}
                       value={lone.value}
@@ -349,7 +361,13 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
               </div>
 
               <span className={WIDE_ONLY}>
-                <Chip accent={when.accent}>{when.text}</Chip>
+                {open ? null : when.accent ? (
+                  <Chip>{when.text}</Chip>
+                ) : (
+                  <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+                    {when.text}
+                  </span>
+                )}
               </span>
 
               <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>

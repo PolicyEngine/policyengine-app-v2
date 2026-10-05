@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IconArrowBackUp, IconCalendarEvent, IconChartLine } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { Button, SegmentedControl } from '@/components/ui';
 import { FOREVER } from '@/constants';
@@ -36,6 +37,7 @@ interface ProvisionDetailsProps {
 }
 
 type GridMode = 'one' | 'byYear';
+type Section = 'dates' | 'history' | null;
 
 const GRID_MODES = [
   { label: 'One value', value: 'one' },
@@ -44,12 +46,6 @@ const GRID_MODES = [
 
 /** Columns in the by-year grid; the last runs on from its year. */
 const YEAR_COLUMNS = 5;
-
-const disclosureStyle: React.CSSProperties = {
-  fontSize: typography.fontSize.sm,
-  fontWeight: typography.fontWeight.medium,
-  color: colors.primary[700],
-};
 
 const UNIT_NAMES: Record<string, string> = {
   'currency-USD': 'US dollars',
@@ -94,6 +90,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const [pending, setPending] = useState<ValueInterval[]>([]);
   const [startDate, setStartDate] = useState(`${year}-01-01`);
   const [endDate, setEndDate] = useState(`${year}-12-31`);
+  const [section, setSection] = useState<Section>(null);
 
   if (!parameters) {
     return null;
@@ -168,40 +165,64 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
 
   const meta = [
     UNIT_NAMES[unit ?? ''] ?? (unit ? humanizeSegment(unit) : null),
-    lastChanged ? `last changed ${lastChanged}` : null,
+    lastChanged ? `Last changed ${lastChanged}` : null,
   ]
     .filter(Boolean)
     .join(' · ');
+
+  const changes = focusedIntervals.map((interval, index) => ({
+    index,
+    period:
+      interval.endDate === FOREVER
+        ? `${interval.startDate.slice(0, 4)} on`
+        : interval.startDate.slice(0, 4) === interval.endDate.slice(0, 4)
+          ? interval.startDate.slice(0, 4)
+          : `${interval.startDate} to ${interval.endDate}`,
+    value: formatValue(interval.value, unit),
+  }));
+  const toggleSection = (next: Section) =>
+    setSection((current) => (current === next ? null : next));
 
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: spacing.lg,
+        gap: spacing.md,
         fontFamily: typography.fontFamily.primary,
       }}
     >
       {(focusedParam?.description || meta) && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: typography.fontSize.sm,
-            lineHeight: typography.lineHeight.relaxed,
-            color: colors.text.secondary,
-          }}
-        >
-          {focusedParam?.description}
-          {focusedParam?.description && meta ? ' ' : ''}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {focusedParam?.description && (
+            <p
+              style={{
+                margin: 0,
+                fontSize: typography.fontSize.sm,
+                lineHeight: typography.lineHeight.relaxed,
+                color: colors.text.primary,
+              }}
+            >
+              {focusedParam.description}
+            </p>
+          )}
           {meta && (
-            <span style={{ color: colors.text.tertiary }}>
-              {focusedParam?.description ? `(${meta})` : humanizeSegment(meta)}
+            <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+              {meta}
             </span>
           )}
-        </p>
+        </div>
       )}
 
-      <section>
+      <section
+        aria-label="Values"
+        style={{
+          padding: spacing.md,
+          border: `1px solid ${colors.border.light}`,
+          borderRadius: spacing.radius.container,
+          background: colors.background.primary,
+        }}
+      >
         <div
           style={{
             display: 'flex',
@@ -211,16 +232,23 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             marginBottom: spacing.sm,
           }}
         >
-          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-            {mode === 'one'
-              ? `Applies from ${year} on.`
-              : `One column per year; the last applies from ${years[years.length - 1]} on.`}
+          <span
+            style={{
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.text.primary,
+            }}
+          >
+            Values
           </span>
           <SegmentedControl
             value={mode}
             onValueChange={(value) => setMode(value as GridMode)}
             options={GRID_MODES}
             size="xs"
+            // Unstyled buttons default to white here, so the idle option
+            // read as chosen too.
+            className="tw:[&>button]:bg-transparent"
           />
         </div>
         <ValueGrid
@@ -236,92 +264,106 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         />
       </section>
 
-      <details>
-        <summary className="tw:cursor-pointer" style={disclosureStyle}>
-          Custom date range{group ? ` for ${memberLabel.toLowerCase()}` : ''}
-        </summary>
-        <div style={{ marginTop: spacing.md }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: spacing.sm,
+        }}
+      >
+        <div style={{ display: 'flex', gap: spacing.xs }}>
+          <Button
+            variant={section === 'dates' ? 'secondary' : 'ghost'}
+            size="sm"
+            aria-expanded={section === 'dates'}
+            onClick={() => toggleSection('dates')}
+          >
+            <IconCalendarEvent />
+            Custom dates
+            {changes.length > 0 && (
+              <span style={{ color: colors.text.tertiary }}>({changes.length})</span>
+            )}
+          </Button>
           {focusedParam && (
-            <ValueSetterCard
-              selectedParam={focusedParam}
-              localPolicy={{
-                label: draft.label,
-                parameters: draft.provisions.filter(provisionChanged).map((provision) => ({
-                  name: provision.path,
-                  values: provisionIntervals(provision),
-                })),
-              }}
-              reportYear={String(year)}
-              minDate={minDate}
-              maxDate={maxDate}
-              valueSetterMode={setterMode}
-              intervals={pending}
-              startDate={startDate}
-              endDate={endDate}
-              onModeChange={setSetterMode}
-              onIntervalsChange={setPending}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              onSubmit={() => {
-                pending.forEach((interval) => addInterval(focused, interval));
-                setPending([]);
-              }}
+            <Button
+              variant={section === 'history' ? 'secondary' : 'ghost'}
+              size="sm"
+              aria-expanded={section === 'history'}
+              onClick={() => toggleSection('history')}
+            >
+              <IconChartLine />
+              History
+            </Button>
+          )}
+        </div>
+        {focusedProvision && provisionChanged(focusedProvision) && (
+          <Button variant="ghost" size="sm" onClick={() => writeIntervals(focused, [])}>
+            <IconArrowBackUp />
+            Reset {group ? `${memberLabel.toLowerCase()} ` : ''}to current law
+          </Button>
+        )}
+      </div>
+
+      {section && group && (
+        <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          {section === 'dates' ? 'Dates' : 'History'} for{' '}
+          <strong style={{ color: colors.text.primary }}>{memberLabel}</strong> — choose another row
+          in the grid to switch.
+        </span>
+      )}
+
+      {section === 'dates' && focusedParam && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <ValueSetterCard
+            selectedParam={focusedParam}
+            localPolicy={{
+              label: draft.label,
+              parameters: draft.provisions.filter(provisionChanged).map((provision) => ({
+                name: provision.path,
+                values: provisionIntervals(provision),
+              })),
+            }}
+            reportYear={String(year)}
+            minDate={minDate}
+            maxDate={maxDate}
+            valueSetterMode={setterMode}
+            intervals={pending}
+            startDate={startDate}
+            endDate={endDate}
+            onModeChange={setSetterMode}
+            onIntervalsChange={setPending}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onSubmit={() => {
+              pending.forEach((interval) => addInterval(focused, interval));
+              setPending([]);
+            }}
+          />
+          {changes.length > 0 && (
+            <ChangesCard
+              modifiedParams={[{ paramName: focused, label: chartLabel, changes }]}
+              onRemoveChange={(memberPath, index) =>
+                writeIntervals(
+                  memberPath,
+                  focusedIntervals.filter((_, i) => i !== index)
+                )
+              }
             />
           )}
         </div>
-      </details>
+      )}
 
-      {focusedIntervals.length > 0 && (
-        <ChangesCard
-          modifiedParams={[
-            {
-              paramName: focused,
-              label: chartLabel,
-              changes: focusedIntervals.map((interval, index) => ({
-                index,
-                period:
-                  interval.endDate === FOREVER
-                    ? `${interval.startDate.slice(0, 4)} on`
-                    : interval.startDate.slice(0, 4) === interval.endDate.slice(0, 4)
-                      ? interval.startDate.slice(0, 4)
-                      : `${interval.startDate} to ${interval.endDate}`,
-                value: formatValue(interval.value, unit),
-              })),
-            },
-          ]}
-          onRemoveChange={(memberPath, index) =>
-            writeIntervals(
-              memberPath,
-              focusedIntervals.filter((_, i) => i !== index)
-            )
-          }
+      {section === 'history' && focusedParam && (
+        <HistoricalValuesCard
+          // The chart titles itself from the label, which for a breakdown
+          // member is its raw segment ("SINGLE").
+          selectedParam={{ ...focusedParam, label: chartLabel }}
+          baseValues={baseValues}
+          reformValues={reformValues}
+          policyLabel={draft.label || 'Your reform'}
         />
-      )}
-
-      {focusedParam && (
-        <details>
-          <summary className="tw:cursor-pointer" style={disclosureStyle}>
-            History{group ? ` of ${memberLabel.toLowerCase()}` : ''}
-          </summary>
-          <div style={{ marginTop: spacing.md }}>
-            <HistoricalValuesCard
-              // The chart titles itself from the label, which for a
-              // breakdown member is its raw segment ("SINGLE").
-              selectedParam={{ ...focusedParam, label: chartLabel }}
-              baseValues={baseValues}
-              reformValues={reformValues}
-              policyLabel={draft.label || 'Your reform'}
-            />
-          </div>
-        </details>
-      )}
-
-      {focusedProvision && provisionChanged(focusedProvision) && (
-        <div>
-          <Button variant="outline" size="sm" onClick={() => writeIntervals(focused, [])}>
-            Reset {group ? `${memberLabel.toLowerCase()} ` : ''}to current law
-          </Button>
-        </div>
       )}
     </div>
   );
