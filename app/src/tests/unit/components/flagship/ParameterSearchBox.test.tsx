@@ -390,7 +390,7 @@ describe('ParameterSearchBox', () => {
     expect(screen.getByText(/no parameters match/i)).toHaveTextContent('zzzz quantum flux');
   });
 
-  test('given a scope with no match then results from all jurisdictions show under a note', async () => {
+  test('given a scope with no match then other jurisdictions wait until asked for', async () => {
     // Given
     const user = userEvent.setup();
     render(
@@ -401,14 +401,37 @@ describe('ParameterSearchBox', () => {
     // When
     await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'utah');
 
-    // Then
+    // Then — the note says so, and the matches elsewhere are not shown yet
     const note = screen.getByRole('note');
-    expect(note).toHaveTextContent(/no matches at the federal level/i);
-    expect(screen.getByText('Utah → Income tax → Child tax credit → Amount')).toBeInTheDocument();
+    expect(note).toHaveTextContent('No matches for “utah” at the federal level.');
+    expect(note).toHaveTextContent('1 found in all jurisdictions');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByText('Utah → Income tax → Child tax credit → Amount')).toBeNull();
 
-    // And the note's action makes the wider scope the filter
+    // And the note's action makes the wider scope the filter, and shows them
     await user.click(screen.getByRole('button', { name: /search all jurisdictions/i }));
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'State scope: All jurisdictions' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Utah → Income tax → Child tax credit → Amount')).toBeInTheDocument();
+  });
+
+  test('given only wider matches then enter widens the search instead of picking one', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <ParameterSearchBox entries={ENTRIES} onSelect={onSelect} stateLabels={{ ut: 'Utah' }} />
+    );
+    await chooseScope(user, /^federal only/i);
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'utah');
+
+    // When
+    await user.keyboard('{Enter}');
+
+    // Then
+    expect(onSelect).not.toHaveBeenCalled();
     expect(
       screen.getByRole('button', { name: 'State scope: All jurisdictions' })
     ).toBeInTheDocument();

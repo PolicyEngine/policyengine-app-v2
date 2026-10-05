@@ -397,6 +397,17 @@ export default function ParameterSearchBox({
     [browsing, folderView, groups]
   );
 
+  // Nothing matched the filters, so the results on hand come from a
+  // wider search. They wait until asked for: the scope chosen is the
+  // scope shown.
+  const widerOnly = !browsing && Boolean(search.widenedFilters);
+  const applyWider = () => {
+    if (search.widenedFilters) {
+      setFilters(search.widenedFilters);
+      setHighlighted(0);
+    }
+  };
+
   const select = (entry: ParameterSearchEntry) => {
     if (!browsing && search.stale) {
       return;
@@ -428,6 +439,14 @@ export default function ParameterSearchBox({
         setHighlighted(0);
       } else {
         setQuery('');
+      }
+      return;
+    }
+    // With only wider results on hand, Enter widens the search.
+    if (widerOnly) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        applyWider();
       }
       return;
     }
@@ -468,8 +487,7 @@ export default function ParameterSearchBox({
       : filters.stateScope === 'federal'
         ? ' at the federal level'
         : ` in ${stateLabels[filters.stateScope] ?? filters.stateScope.toUpperCase()}`;
-  // Nothing matched the filters, so the results come from a wider search:
-  // say what was relaxed, and offer to make it the filter.
+  // Say what found nothing, and offer the wider search that found some.
   const widened = (() => {
     const wider = search.widenedFilters;
     if (!wider || hideResults || browsing || flatEntries.length === 0) {
@@ -483,12 +501,17 @@ export default function ParameterSearchBox({
     ]
       .filter(Boolean)
       .join(' or ');
-    const shown = `${contribChanged ? 'contributed parameters' : 'matches'}${
-      scopeChanged ? ' from all jurisdictions' : ''
-    }`;
+    const count =
+      flatEntries.length >= RESULT_LIMIT ? `${RESULT_LIMIT}+` : String(flatEntries.length);
     return {
-      filters: wider,
-      message: `No matches ${missed}. Showing ${shown}.`,
+      message: `No matches for “${query.trim()}” ${missed}.`,
+      found: `${count} found ${
+        scopeChanged && contribChanged
+          ? 'with both'
+          : scopeChanged
+            ? 'in all jurisdictions'
+            : 'among contributed parameters'
+      }`,
       action:
         scopeChanged && contribChanged
           ? 'Use these filters'
@@ -687,10 +710,7 @@ export default function ParameterSearchBox({
           <span>{widened.message}</span>
           <button
             type="button"
-            onClick={() => {
-              setFilters(widened.filters);
-              setHighlighted(0);
-            }}
+            onClick={applyWider}
             className="tw:cursor-pointer tw:underline-offset-2 tw:hover:underline"
             style={{
               padding: 0,
@@ -703,10 +723,13 @@ export default function ParameterSearchBox({
           >
             {widened.action}
           </button>
+          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+            {widened.found}
+          </span>
         </div>
       )}
 
-      {!hideResults && (browsing || flatEntries.length > 0) && (
+      {!hideResults && (browsing || (flatEntries.length > 0 && !widerOnly)) && (
         <div
           id="parameter-search-results"
           role="listbox"

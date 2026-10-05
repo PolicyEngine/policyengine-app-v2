@@ -245,10 +245,8 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
       {rows.map((row, index) => {
         const open = openKey === row.key;
         const lone = row.group ? null : row.provisions[0];
-        const { name, context } = lone
-          ? provisionName(lone)
-          : // A breakdown's name says enough; its members show when opened.
-            { name: row.group!.label, context: '' };
+        // A row is its name alone; where it sits in the tree is on hover.
+        const name = lone ? provisionName(lone) : row.group!.label;
         const param = lone ? parameters?.[lone.path] : undefined;
         const changed = row.provisions.filter(provisionChanged).map((provision) => ({
           provision,
@@ -302,11 +300,6 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                 >
                   {name}
                 </span>
-                {context && (
-                  <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-                    {context}
-                  </span>
-                )}
               </button>
 
               {/* Open, the row is a heading: its details below show every value. */}

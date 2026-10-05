@@ -8,31 +8,19 @@ import { humanizeSegment } from './parameterGroups';
 const MEMBER_SEGMENT = /^([A-Z][A-Z0-9 _]*|\d+)$/;
 
 /**
- * A provision's display name and the place it sits, from its breadcrumb:
- * "Child tax credit amount" in "IRS · Credits". Breakdown members and
- * bracket fields borrow their parent — "Amount" alone says nothing.
+ * A provision's display name, from its breadcrumb: "Child tax credit
+ * amount". Breakdown members and bracket fields borrow their parent —
+ * "Amount" alone says nothing.
  */
-export function provisionName(provision: Pick<DraftProvision, 'breadcrumb' | 'path'>): {
-  name: string;
-  context: string;
-} {
+export function provisionName(provision: Pick<DraftProvision, 'breadcrumb' | 'path'>): string {
   const parts = (provision.breadcrumb || provision.path).split(' → ');
   const last = parts[parts.length - 1] ?? provision.path;
   if (parts.length > 2 && /^Bracket \d+$/.test(parts[parts.length - 2].trim())) {
-    return {
-      name: `${humanizeSegment(parts[parts.length - 3])} · ${parts[parts.length - 2]} ${last.toLowerCase()}`,
-      context: parts.slice(0, -3).slice(-2).join(' · '),
-    };
+    return `${humanizeSegment(parts[parts.length - 3])} · ${parts[parts.length - 2]} ${last.toLowerCase()}`;
   }
-  const memberOf = parts.length > 1 && MEMBER_SEGMENT.test(last.trim());
-  const name = memberOf
+  return parts.length > 1 && MEMBER_SEGMENT.test(last.trim())
     ? `${humanizeSegment(parts[parts.length - 2])} · ${humanizeSegment(last)}`
     : humanizeSegment(last);
-  const context = parts
-    .slice(0, memberOf ? -2 : -1)
-    .slice(-2)
-    .join(' · ');
-  return { name, context };
 }
 
 /**

@@ -29,7 +29,7 @@ describe('provisionName', () => {
         path: 'gov.irs.deductions.standard.amount.SINGLE',
         breadcrumb: 'IRS → Deductions → Standard → Amount → SINGLE',
       })
-    ).toEqual({ name: 'Amount · Single', context: 'Deductions · Standard' });
+    ).toBe('Amount · Single');
   });
 
   test('given a bracket field then it names the schedule and the bracket', () => {
@@ -37,7 +37,7 @@ describe('provisionName', () => {
       provisionName({
         path: 'gov.irs.credits.eitc.max[1].amount',
         breadcrumb: 'IRS → Credits → EITC maximum → Bracket 2 → Amount',
-      }).name
+      })
     ).toBe('EITC maximum · Bracket 2 amount');
   });
 });
