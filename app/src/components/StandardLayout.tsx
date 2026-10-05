@@ -39,9 +39,8 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
     return <>{children}</>;
   }
 
-  // Flagship shell: persistent left sidebar (a drawer on narrow
-  // viewports) beside the content area. The legacy layout is unchanged
-  // with the flag off.
+  // Flagship shell: a slim top bar over the content area. The legacy
+  // layout is unchanged with the flag off.
   if (isFlagshipShellEnabled()) {
     return (
       <LayoutProvider>

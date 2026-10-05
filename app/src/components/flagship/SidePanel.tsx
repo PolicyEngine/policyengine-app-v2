@@ -59,6 +59,11 @@ interface SidePanelProps {
    * navigation would spring a deliberately folded panel back open.
    */
   storageKey?: string;
+  /**
+   * The open panel's width; the draft widens while a provision is being
+   * edited, so the editor sits in the column instead of over the page.
+   */
+  width?: number;
   children: React.ReactNode;
 }
 
@@ -94,6 +99,7 @@ export default function SidePanel({
   accent = false,
   defaultOpen = true,
   storageKey,
+  width = PANEL_WIDTH,
   children,
 }: SidePanelProps) {
   const [open, setOpenState] = useState(() => readStoredOpen(storageKey, defaultOpen));
@@ -169,7 +175,7 @@ export default function SidePanel({
       style={{
         // Narrow shells keep only the spine's width; the open panel
         // floats over the content instead of squeezing it.
-        width: open && !overlay ? PANEL_WIDTH : SPINE_WIDTH,
+        width: open && !overlay ? width : SPINE_WIDTH,
         transition: reduceMotion ? undefined : `width ${WIDTH_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
         height: '100%',
         position: 'relative',
@@ -193,7 +199,8 @@ export default function SidePanel({
                 ...surface,
               }
             : { position: 'absolute', top: 0, left: 0, height: '100%' }),
-          width: PANEL_WIDTH,
+          // Floating on narrow shells, a wide panel never outgrows the window.
+          width: overlay ? `min(${width}px, 100vw)` : width,
           minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
