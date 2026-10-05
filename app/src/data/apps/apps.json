@@ -2,7 +2,7 @@
   {
     "type": "iframe",
     "slug": "targeted-energy-discount",
-    "title": "Targeted energy discount: who would the Resolution Foundation's proposal reach?",
+    "title": "Targeted energy bill discount analysis dashboard",
     "description": "Estimate the cost, reach and distributional effects of the Resolution Foundation's proposed energy bill discount for households on means-tested benefits or whose highest earner has income below £24,000, modelled with PolicyEngine UK.",
     "source": "https://uk-targeted-energy-discount.vercel.app/uk/targeted-energy-discount",
     "tags": ["uk", "featured", "policy", "interactives"],
