@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, userEvent, within } from '@test-utils';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import DraftTable from '@/components/flagship/reform/DraftTable';
 import { FOREVER } from '@/constants';
 import {
@@ -15,6 +15,7 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   CTC_PATH,
+  EXEMPTION_PATH,
   JOINT_PATH,
   LIST_PATH,
   PHASE_IN_RATE_PATH,
@@ -270,6 +271,77 @@ describe('DraftTable', () => {
       expect(provision(PHASE_IN_RATE_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 0.38 },
       ]);
+    });
+  });
+
+  describe('given a value set from one year on', () => {
+    beforeEach(() => {
+      // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+    });
+
+    test('then an unindexed amount holds by default, and can grow with an index', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+
+      const after = screen.getByRole('combobox', { name: 'After 2026' });
+      expect(after).toHaveTextContent('Stays at this value');
+      await user.click(after);
+      await user.click(await screen.findByRole('option', { name: 'Grows with CPI-U' }));
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      expect(provision(CTC_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 3000 },
+        { startDate: '2027-01-01', endDate: FOREVER, value: 3090 },
+      ]);
+      await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
+      expect(screen.getByText('from 2026 · CPI-U')).toHaveAttribute(
+        'title',
+        'from 2026, grows with CPI-U'
+      );
+    });
+
+    test('then an amount current law indexes keeps growing as current law does', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 5000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+
+      expect(screen.getByRole('combobox', { name: 'After 2026' })).toHaveTextContent(
+        'Grows as current law does'
+      );
+      fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
+
+      // 6,000 grows as 5,000 → 5,100 does: 2%.
+      expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
+        { startDate: '2027-01-01', endDate: FOREVER, value: 6120 },
+      ]);
+    });
+
+    test('then a rate has no growth to offer', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: PHASE_IN_RATE_PATH,
+        breadcrumb: 'IRS → Credits → EITC → Phase-in rate → Bracket 2 → Amount',
+        unit: '/1',
+        baselineValue: 0.34,
+        value: 0.34,
+      });
+      render(<TableHarness />);
+      await user.click(
+        screen.getByRole('button', { name: 'Open EITC phase-in rate by number of children' })
+      );
+
+      expect(screen.queryByRole('combobox', { name: 'After 2026' })).not.toBeInTheDocument();
     });
   });
 

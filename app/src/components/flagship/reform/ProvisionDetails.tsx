@@ -17,6 +17,14 @@ import {
 } from '@/libs/draftReform';
 import { periodLabel } from '@/libs/flagship/draftLabels';
 import { humanizeSegment, ParameterGroup } from '@/libs/flagship/parameterGroups';
+import {
+  alreadyGrows,
+  canGrow,
+  Growth,
+  growthOf,
+  growthOptions,
+  setValueFromYear,
+} from '@/libs/flagship/uprating';
 import { getDateRange } from '@/libs/metadataUtils';
 import { selectParameterEntriesByPath } from '@/libs/parameterSearch';
 import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/ChangesCard';
@@ -25,6 +33,7 @@ import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/v
 import { formatValue } from '@/utils/parameterValues';
 import BracketTable from './BracketTable';
 import CustomDatesEditor from './CustomDatesEditor';
+import GrowthControl from './GrowthControl';
 import PastValuesChart from './PastValuesChart';
 import ValueGrid from './ValueGrid';
 
@@ -85,6 +94,10 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   // show, a schedule, or else one value.
   const [mode, setMode] = useState<EditMode>(() => {
     const provisions = members.map((member) => provisionFor(member.path));
+    // A value that grows reads as one value and how it moves.
+    if (provisions.some((provision) => provision?.growth && provision.growth !== 'fixed')) {
+      return 'one';
+    }
     if (!provisions.every(fitsGrid)) {
       return 'dates';
     }
@@ -93,6 +106,20 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : 'one';
   });
   const [historyOpen, setHistoryOpen] = useState(false);
+  // How one value moves after its year: the draft's choice, else the
+  // default of the first money member (grow as current law, if it does).
+  const [growthChoice, setGrowthChoice] = useState<Growth>(() => {
+    // The first set money member says how values move; none set, the default.
+    const money = members.filter((member) => canGrow(parameters?.[member.path]));
+    const set =
+      money.find((member) => provisionFor(member.path)?.growth) ??
+      money.find((member) => {
+        const provision = provisionFor(member.path);
+        return provision ? provisionChanged(provision) : false;
+      }) ??
+      money[0];
+    return set ? growthOf(provisionFor(set.path), parameters?.[set.path]) : 'fixed';
+  });
   // The year a schedule's brackets show by year; one value is the report year.
   const [scheduleTab, setScheduleTab] = useState(year);
 
@@ -153,7 +180,52 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const years =
     mode === 'byYear' ? Array.from({ length: YEAR_COLUMNS }, (_, i) => year + i) : [year];
   const scheduleYear = mode === 'byYear' && years.includes(scheduleTab) ? scheduleTab : year;
+  const lastYear = Number(maxDate.slice(0, 4));
+  // A member grows only if it is money, and as current law only if current law does.
+  const memberGrowth = (memberPath: string, choice: Growth): Growth => {
+    const param = parameters[memberPath];
+    if (!canGrow(param) || (choice === 'current_law' && !alreadyGrows(param))) {
+      return 'fixed';
+    }
+    return choice;
+  };
+  const setOneValue = (memberPath: string, value: any, choice: Growth) => {
+    const provision = provisionFor(memberPath) ?? baseProvision(memberPath);
+    if (!provision) {
+      return;
+    }
+    setValueFromYear({
+      countryId: draft.countryId,
+      provision,
+      year,
+      value,
+      growth: memberGrowth(memberPath, choice),
+      param: parameters[memberPath],
+      parameters,
+      lastYear,
+    });
+  };
+  const growthMenu = growthOptions(
+    draft.countryId,
+    members.map((member) => parameters[member.path]),
+    parameters
+  );
+  const changeGrowth = (choice: Growth) => {
+    setGrowthChoice(choice);
+    // Values already set move the new way from their year on.
+    members.forEach((member) => {
+      const provision = provisionFor(member.path);
+      if (provision && provisionChanged(provision) && canGrow(parameters[member.path])) {
+        setOneValue(member.path, valueAt(member.path, year), choice);
+      }
+    });
+  };
+
   const onCellChange = (memberPath: string, at: number, value: any) => {
+    if (mode === 'one') {
+      setOneValue(memberPath, value, growthChoice);
+      return;
+    }
     const lastColumn = at === years[years.length - 1];
     addInterval(memberPath, {
       startDate: `${at}-01-01`,
@@ -314,6 +386,15 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             onChange={onCellChange}
             focusedPath={focused}
             onFocus={setFocusedPath}
+          />
+        )}
+
+        {mode === 'one' && growthMenu.length > 0 && (
+          <GrowthControl
+            year={year}
+            value={growthChoice}
+            options={growthMenu}
+            onChange={changeGrowth}
           />
         )}
 

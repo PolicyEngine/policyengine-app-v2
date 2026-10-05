@@ -27,6 +27,12 @@ export interface DraftProvision {
    * in effect for the draft's year so single-value readers stay right.
    */
   intervals?: ValueInterval[];
+  /**
+   * How a value set from one year on moves after it — 'fixed',
+   * 'current_law', or an index's parameter path (see uprating). Set by
+   * the one-value editor; a schedule set by year or dates has none.
+   */
+  growth?: string;
 }
 
 /**
@@ -320,7 +326,9 @@ export function updateDraftProvisionValue(path: string, value: any): void {
 export function setDraftProvisionIntervals(
   countryId: CountryId,
   provision: Omit<DraftProvision, 'intervals'>,
-  intervals: ValueInterval[]
+  intervals: ValueInterval[],
+  /** The growth the intervals follow; omitted, a hand-set schedule clears it. */
+  growth?: string
 ): void {
   addDraftProvision(countryId, provision);
   const draft = getSnapshot();
@@ -335,10 +343,10 @@ export function setDraftProvisionIntervals(
         return p;
       }
       if (intervals.length === 0) {
-        return { ...p, value: p.baselineValue, intervals: undefined };
+        return { ...p, value: p.baselineValue, intervals: undefined, growth: undefined };
       }
       const inYear = provisionValueInYear({ value: p.value, intervals }, year);
-      return { ...p, intervals, value: inYear ?? p.baselineValue };
+      return { ...p, intervals, value: inYear ?? p.baselineValue, growth };
     }),
   });
 }
