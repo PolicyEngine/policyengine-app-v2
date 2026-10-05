@@ -219,7 +219,8 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
                 // Described as they stand in the year the report simulates.
                 provisionsForYear(adjusted, year, currentLawAt),
                 undefined,
-                year
+                year,
+                true
               )
             }
             disabled={adjusted.length === 0 || runReport.isRunning}

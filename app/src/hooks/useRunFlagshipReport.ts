@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { markDraftRun } from '@/libs/draftReform';
 import { runFlagshipReport, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 
@@ -32,7 +33,9 @@ export function useRunFlagshipReport() {
     sourceNote: string,
     provisions: RunReportProvision[],
     reformId?: string | null,
-    year?: number
+    year?: number,
+    /** A run from the draft hands the draft over: its report clears it. */
+    fromDraft = false
   ) => {
     if (isRunning) {
       return;
@@ -53,6 +56,9 @@ export function useRunFlagshipReport() {
         reformId,
         year,
       });
+      if (fromDraft) {
+        markDraftRun(userReportId);
+      }
       nav.push(`/${countryId}/report/${userReportId}`);
     } catch {
       setError('Could not start the report. Try again.');

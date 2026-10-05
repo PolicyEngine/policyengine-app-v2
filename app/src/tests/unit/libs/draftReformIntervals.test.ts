@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import {
+  addDraftProvision,
+  clearDraftAfterRun,
   clearDraftReform,
   draftToReform,
   draftYear,
   getDraftReform,
   isEditableValue,
+  loadProvisionsIntoDraft,
   loadReformIntoDraft,
+  markDraftRun,
   provisionAdjusts,
   provisionChanged,
   provisionIntervals,
@@ -211,5 +215,41 @@ describe('provisionAdjusts', () => {
 
   test('given no current law to compare then any set value counts', () => {
     expect(provisionAdjusts({ ...SINGLE, value: 18000 }, undefined)).toBe(true);
+  });
+});
+
+describe('a run hands the draft over to its report', () => {
+  beforeEach(() => {
+    clearDraftReform();
+    addDraftProvision('us', { ...SINGLE, value: 18000 });
+  });
+
+  test('given its report opens then the draft clears, so Build starts blank', () => {
+    markDraftRun('report-1');
+
+    clearDraftAfterRun('report-1');
+
+    expect(getDraftReform()).toBeNull();
+  });
+
+  test('given another report opens then the draft stays', () => {
+    markDraftRun('report-1');
+
+    clearDraftAfterRun('report-2');
+
+    expect(getDraftReform()?.provisions).toHaveLength(1);
+  });
+
+  test("given edit after a run then the report's reform is the draft again", () => {
+    clearDraftReform();
+
+    loadProvisionsIntoDraft('us', [{ ...SINGLE, value: 18000 }], { label: 'Bigger', year: 2027 });
+
+    expect(getDraftReform()).toMatchObject({
+      countryId: 'us',
+      label: 'Bigger',
+      year: 2027,
+      provisions: [{ path: SINGLE.path, value: 18000 }],
+    });
   });
 });

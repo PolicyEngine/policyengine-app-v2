@@ -74,4 +74,38 @@ describe('ValueInput', () => {
 
     expect(onCommit).toHaveBeenLastCalledWith(0.08);
   });
+
+  test('given a new value is finished then a check says it is kept', async () => {
+    const user = userEvent.setup();
+    render(<Harness unit="currency-USD" initial={12} onCommit={vi.fn()} />);
+    const box = screen.getByRole('spinbutton');
+
+    await user.clear(box);
+    await user.type(box, '15');
+    await user.tab();
+
+    expect(screen.getByRole('status')).toHaveTextContent('Saved');
+  });
+
+  test('given Enter then the edit finishes and is confirmed', async () => {
+    const user = userEvent.setup();
+    render(<Harness unit="currency-USD" initial={12} onCommit={vi.fn()} />);
+    const box = screen.getByRole('spinbutton');
+
+    await user.clear(box);
+    await user.type(box, '20{Enter}');
+
+    expect(box).not.toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('Saved');
+  });
+
+  test('given a visit without a change then nothing claims to be saved', async () => {
+    const user = userEvent.setup();
+    render(<Harness unit="currency-USD" initial={12} onCommit={vi.fn()} />);
+
+    await user.click(screen.getByRole('spinbutton'));
+    await user.tab();
+
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
 });

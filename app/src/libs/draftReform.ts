@@ -225,6 +225,42 @@ export function clearDraftReform(): void {
   writeDraft(null);
 }
 
+/**
+ * The report a run from the draft started. Running hands the draft over
+ * to its report: the report's page clears it on opening — not the run
+ * itself, which would blank Build while the report loads — so going
+ * back to Build starts fresh.
+ */
+let runReportId: string | null = null;
+
+export function markDraftRun(userReportId: string): void {
+  runReportId = userReportId;
+}
+
+export function clearDraftAfterRun(userReportId: string): void {
+  if (userReportId && runReportId === userReportId) {
+    runReportId = null;
+    clearDraftReform();
+  }
+}
+
+/** A report's reform back in the draft, to edit and run again. */
+export function loadProvisionsIntoDraft(
+  countryId: CountryId,
+  provisions: DraftProvision[],
+  options: { label?: string; year?: number } = {}
+): void {
+  writeDraft({
+    countryId,
+    label: options.label ?? '',
+    provisions: provisions.map((provision) => ({ ...provision })),
+    population: { scope: 'national' },
+    source: 'manual',
+    startedAt: Date.now(),
+    ...(options.year ? { year: options.year } : {}),
+  });
+}
+
 export function startDraftReform(
   countryId: CountryId,
   source: ReformSource,
