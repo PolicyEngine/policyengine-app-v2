@@ -4,9 +4,12 @@ import {
   alreadyGrows,
   canGrow,
   defaultGrowth,
+  defaultRounding,
   grownIntervals,
   growthOf,
   growthOptions,
+  growthTiming,
+  roundValue,
 } from '@/libs/flagship/uprating';
 import { ParameterMetadata, ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
@@ -101,5 +104,78 @@ describe('growthOf', () => {
     expect(
       growthOf({ value: 18000, baselineValue: 16100, growth: 'gov.bls.cpi.cpi_u' }, indexed)
     ).toBe('gov.bls.cpi.cpi_u');
+  });
+});
+
+describe('growth timing', () => {
+  const CPI = 'gov.bls.cpi.cpi_u';
+
+  test('given no choice then it moves the year after it is set, from that year', () => {
+    expect(growthTiming(2026)).toEqual({ start: 2027, base: 2026 });
+  });
+
+  test('given a start before the value moves then it waits until the year after', () => {
+    expect(growthTiming(2026, { start: 2025, base: 2020 })).toEqual({ start: 2027, base: 2020 });
+    expect(growthTiming(2026, { start: 2028, base: 2030 })).toEqual({ start: 2028, base: 2027 });
+  });
+
+  test('given a later start then the amount holds until it', () => {
+    const values = grownIntervals(1000, 2026, 2028, CPI, SCHEDULED, PARAMETERS, {
+      start: 2028,
+      base: 2026,
+    }).map((interval) => interval.value);
+
+    expect(values).toEqual([1000, 1000, 1061]);
+  });
+
+  test('given an earlier base year then the first growth carries the years since it', () => {
+    const values = grownIntervals(1000, 2027, 2028, CPI, SCHEDULED, PARAMETERS, {
+      start: 2028,
+      base: 2026,
+    }).map((interval) => interval.value);
+
+    // 2028 is 106.09 over the 2026 base of 100: two years of growth at once.
+    expect(values).toEqual([1000, 1061]);
+  });
+});
+
+describe('rounding', () => {
+  test('given a step and a direction then values land on its multiples', () => {
+    expect(roundValue(17437, { roundTo: 50, round: 'down' })).toBe(17400);
+    expect(roundValue(17437, { roundTo: 50, round: 'nearest' })).toBe(17450);
+    expect(roundValue(17401, { roundTo: 50, round: 'up' })).toBe(17450);
+    expect(roundValue(17400, { roundTo: 50, round: 'down' })).toBe(17400);
+    expect(roundValue(12.346, { roundTo: 0.01, round: 'nearest' })).toBe(12.35);
+  });
+
+  test('given an amount current law indexes then the step its projections land on, rounded down', () => {
+    const indexed = param('currency-USD', {
+      '2026-01-01': 16100,
+      '2027-01-01': 16550,
+      '2028-01-01': 16950,
+      '2029-01-01': 17400,
+    });
+
+    expect(defaultRounding(indexed)).toEqual({ roundTo: 50, round: 'down' });
+  });
+
+  test('given an amount current law holds then whole units, or cents for cents', () => {
+    expect(defaultRounding(SCHEDULED, 2500)).toEqual({ roundTo: 1, round: 'nearest' });
+    expect(defaultRounding(SCHEDULED, 2.75)).toEqual({ roundTo: 0.01, round: 'nearest' });
+  });
+
+  test('given a rounding then the grown years round, the amount itself does not', () => {
+    const values = grownIntervals(
+      1005,
+      2026,
+      2027,
+      'gov.bls.cpi.cpi_u',
+      SCHEDULED,
+      PARAMETERS,
+      growthTiming(2026),
+      { roundTo: 100, round: 'down' }
+    ).map((interval) => interval.value);
+
+    expect(values).toEqual([1005, 1000]);
   });
 });

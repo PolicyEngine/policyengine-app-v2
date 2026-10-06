@@ -33,6 +33,14 @@ export interface DraftProvision {
    * the one-value editor; a schedule set by year or dates has none.
    */
   growth?: string;
+  /** With a growth: the first year the value moves (default: the year after it is set). */
+  growthStart?: number;
+  /** With a growth: the year whose index level it moves from (default: the year it is set). */
+  growthBase?: number;
+  /** With a growth: grown values round to a multiple of this… */
+  growthRoundTo?: number;
+  /** …up, down, or to the nearest. */
+  growthRound?: 'nearest' | 'down' | 'up';
 }
 
 /**
@@ -328,7 +336,14 @@ export function setDraftProvisionIntervals(
   provision: Omit<DraftProvision, 'intervals'>,
   intervals: ValueInterval[],
   /** The growth the intervals follow; omitted, a hand-set schedule clears it. */
-  growth?: string
+  growth?: string,
+  /** When that growth applies, and how its values round, if it moves the value. */
+  timing?: {
+    start: number;
+    base: number;
+    roundTo?: number;
+    round?: 'nearest' | 'down' | 'up';
+  }
 ): void {
   addDraftProvision(countryId, provision);
   const draft = getSnapshot();
@@ -343,10 +358,28 @@ export function setDraftProvisionIntervals(
         return p;
       }
       if (intervals.length === 0) {
-        return { ...p, value: p.baselineValue, intervals: undefined, growth: undefined };
+        return {
+          ...p,
+          value: p.baselineValue,
+          intervals: undefined,
+          growth: undefined,
+          growthStart: undefined,
+          growthBase: undefined,
+          growthRoundTo: undefined,
+          growthRound: undefined,
+        };
       }
       const inYear = provisionValueInYear({ value: p.value, intervals }, year);
-      return { ...p, intervals, value: inYear ?? p.baselineValue, growth };
+      return {
+        ...p,
+        intervals,
+        value: inYear ?? p.baselineValue,
+        growth,
+        growthStart: timing?.start,
+        growthBase: timing?.base,
+        growthRoundTo: timing?.roundTo,
+        growthRound: timing?.round,
+      };
     }),
   });
 }

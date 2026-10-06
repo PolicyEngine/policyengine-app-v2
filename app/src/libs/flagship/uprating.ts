@@ -156,14 +156,109 @@ const at = (series: ValueIntervalCollection, year: number) => {
   return typeof value === 'number' ? value : null;
 };
 
-/** Whole units for whole amounts, cents otherwise. */
-const roundLike = (value: number, like: number) =>
-  Number.isInteger(like) ? Math.round(value) : Math.round(value * 100) / 100;
+export type RoundMode = 'nearest' | 'down' | 'up';
+
+/**
+ * How grown values round: to a multiple of `roundTo` — up, down, or to
+ * the nearest — as laws round indexed amounts ("rounded to the next
+ * lowest multiple of $50").
+ */
+export interface GrowthRounding {
+  roundTo: number;
+  round: RoundMode;
+}
+
+/** Steps current law's own projections are tested against, largest first. */
+const STEPS = [10000, 5000, 1000, 500, 100, 50, 25, 10, 5];
+
+/**
+ * The rounding a value starts with: for an amount current law indexes,
+ * the step its projected values all land on, rounded down as most indexed
+ * amounts are; otherwise whole units — or cents, for an amount with cents.
+ */
+export function defaultRounding(
+  param: ParameterMetadata | undefined,
+  amount?: number
+): GrowthRounding {
+  if (alreadyGrows(param)) {
+    const thisYear = Number(CURRENT_YEAR);
+    const ahead = Object.entries(param?.values ?? {})
+      .filter(([date]) => Number(date.slice(0, 4)) > thisYear)
+      .map(([, value]) => value)
+      .filter((value): value is number => typeof value === 'number' && value !== 0);
+    const step = STEPS.find((candidate) =>
+      ahead.every((value) => Math.abs(value / candidate - Math.round(value / candidate)) < 1e-9)
+    );
+    if (step && ahead.length > 0) {
+      return { roundTo: step, round: 'down' };
+    }
+  }
+  return {
+    roundTo: amount !== undefined && !Number.isInteger(amount) ? 0.01 : 1,
+    round: 'nearest',
+  };
+}
+
+export function growthRounding(
+  chosen: Partial<GrowthRounding> | null | undefined,
+  param: ParameterMetadata | undefined,
+  amount?: number
+): GrowthRounding {
+  const fallback = defaultRounding(param, amount);
+  return { roundTo: chosen?.roundTo ?? fallback.roundTo, round: chosen?.round ?? fallback.round };
+}
+
+export function roundValue(value: number, { roundTo, round }: GrowthRounding): number {
+  const steps = value / roundTo;
+  // A hair of tolerance, so 2050.0000001 rounds down to 2,050, not 2,000.
+  const whole =
+    round === 'down'
+      ? Math.floor(steps + 1e-9)
+      : round === 'up'
+        ? Math.ceil(steps - 1e-9)
+        : Math.round(steps);
+  return Number((whole * roundTo).toFixed(2));
+}
+
+/**
+ * When growth applies: the first year the value moves (`start`), and the
+ * year whose index level it moves from (`base`). A law that says "$2,500,
+ * adjusted for inflation after 2027 from a 2026 base" is start 2028,
+ * base 2026. By default it moves the year after it is set, from that year.
+ */
+export interface GrowthTiming {
+  start: number;
+  base: number;
+}
+
+export function growthTiming(
+  startYear: number,
+  chosen?: Partial<GrowthTiming> | null
+): GrowthTiming {
+  // Never before the value's own first year moves; the base before that.
+  const start = Math.max(chosen?.start ?? startYear + 1, startYear + 1);
+  const base = Math.min(chosen?.base ?? startYear, start - 1);
+  return { start, base };
+}
+
+/** The years a series has a level for, to offer as base years. */
+export function seriesYears(
+  growth: Growth,
+  param: ParameterMetadata | undefined,
+  parameters: ParameterMetadataCollection
+): number[] {
+  const values = growth === 'current_law' ? param?.values : parameters[growth]?.values;
+  return [...new Set(Object.keys(values ?? {}).map((date) => Number(date.slice(0, 4))))].sort(
+    (a, b) => a - b
+  );
+}
 
 /**
  * The intervals a value from `startYear` on takes under a growth: one
- * open-ended interval when fixed, else a value a year — the start value
- * scaled as the series grows — to `lastYear`, held from then on.
+ * open-ended interval when fixed; else a value a year to `lastYear`, held
+ * from then on — the amount itself until growth starts, then the amount
+ * scaled by the series' level that year over its level in the base year,
+ * rounded as chosen.
  */
 export function grownIntervals(
   value: number,
@@ -171,7 +266,9 @@ export function grownIntervals(
   lastYear: number,
   growth: Growth,
   param: ParameterMetadata | undefined,
-  parameters: ParameterMetadataCollection
+  parameters: ParameterMetadataCollection,
+  timing: GrowthTiming = growthTiming(startYear),
+  rounding: GrowthRounding = defaultRounding(undefined, value)
 ): ValueInterval[] {
   const fixed = [{ startDate: `${startYear}-01-01`, endDate: FOREVER, value }];
   if (growth === 'fixed' || lastYear <= startYear) {
@@ -179,7 +276,7 @@ export function grownIntervals(
   }
   const seriesValues = growth === 'current_law' ? param?.values : parameters[growth]?.values;
   const series = new ValueIntervalCollection(seriesValues ?? {});
-  const base = at(series, startYear);
+  const base = at(series, timing.base);
   if (!base) {
     return fixed;
   }
@@ -189,15 +286,15 @@ export function grownIntervals(
     intervals.push({
       startDate: `${year}-01-01`,
       endDate: year === lastYear ? FOREVER : `${year}-12-31`,
-      value: year === startYear ? value : roundLike((value * level) / base, value),
+      value: year < timing.start ? value : roundValue((value * level) / base, rounding),
     });
   }
   return intervals;
 }
 
 /**
- * Sets a provision's value from `year` on, moving after it by `growth`.
- * Changes before `year` stay; everything from it is rewritten.
+ * Sets a provision's value from `year` on, moving after it by `growth`
+ * and `timing`. Changes before `year` stay; everything from it is rewritten.
  */
 export function setValueFromYear({
   countryId,
@@ -205,6 +302,8 @@ export function setValueFromYear({
   year,
   value,
   growth,
+  timing,
+  rounding,
   param,
   parameters,
   lastYear,
@@ -214,21 +313,44 @@ export function setValueFromYear({
   year: number;
   value: any;
   growth: Growth;
+  /** Omitted, the provision's own timing, else the default. */
+  timing?: Partial<GrowthTiming>;
+  /** Omitted, the provision's own rounding, else the parameter's default. */
+  rounding?: Partial<GrowthRounding>;
   param: ParameterMetadata | undefined;
   parameters: ParameterMetadataCollection;
   lastYear: number;
 }): void {
   const effective = typeof value === 'number' && canGrow(param) ? growth : 'fixed';
+  const when = growthTiming(
+    year,
+    timing ?? { start: provision.growthStart, base: provision.growthBase }
+  );
+  const rounded = growthRounding(
+    rounding ?? { roundTo: provision.growthRoundTo, round: provision.growthRound },
+    param,
+    typeof value === 'number' ? value : undefined
+  );
   const collection = new ValueIntervalCollection(
     provisionChanged(provision) ? provisionIntervals(provision) : []
   );
-  for (const interval of grownIntervals(value, year, lastYear, effective, param, parameters)) {
+  for (const interval of grownIntervals(
+    value,
+    year,
+    lastYear,
+    effective,
+    param,
+    parameters,
+    when,
+    rounded
+  )) {
     collection.addInterval(interval);
   }
   setDraftProvisionIntervals(
     countryId,
     provision,
     collection.getIntervals(),
-    canGrow(param) ? effective : undefined
+    canGrow(param) ? effective : undefined,
+    effective === 'fixed' ? undefined : { ...when, ...rounded }
   );
 }

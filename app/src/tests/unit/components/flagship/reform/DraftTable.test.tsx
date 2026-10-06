@@ -94,6 +94,7 @@ describe('DraftTable', () => {
       'Single',
       'Joint',
       'Head of household',
+      'After 2026',
     ]);
     expect(provision(JOINT_PATH)?.intervals).toEqual([
       { startDate: '2026-01-01', endDate: FOREVER, value: 35000 },
@@ -133,6 +134,7 @@ describe('DraftTable', () => {
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
       'Current law',
       'Your reform',
+      'After 2026',
     ]);
     expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
   });
@@ -320,11 +322,74 @@ describe('DraftTable', () => {
       );
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
-      // 6,000 grows as 5,000 → 5,100 does: 2%.
+      // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
+      // to $100, the step current law's projected values all land on.
       expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 6120 },
+        { startDate: '2027-01-01', endDate: FOREVER, value: 6100 },
       ]);
+      expect(screen.getByRole('combobox', { name: 'Rounding' })).toHaveTextContent('down to');
+      expect(screen.getByRole('combobox', { name: 'Rounding step' })).toHaveTextContent('$100');
+    });
+
+    test('then the years after preview what the growth makes of it', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      await user.click(screen.getByRole('combobox', { name: 'After 2026' }));
+      await user.click(await screen.findByRole('option', { name: 'Grows with CPI-U' }));
+
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      // CPI-U goes 100 → 103 from 2026 to 2027, the model's last year here.
+      expect(screen.getByLabelText('Child tax credit base amount, 2027')).toHaveTextContent(
+        '$3,090'
+      );
+      expect(
+        screen.getByText('From 2027: $3,000 × CPI-U that year ÷ CPI-U in 2026.')
+      ).toBeInTheDocument();
+    });
+
+    test('then a later start holds the value until it, measured from the base year', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 5000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+      fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
+
+      // The model runs to 2027 here, so 2027 is the only later start.
+      expect(screen.getByRole('combobox', { name: 'Indexing starts' })).toHaveTextContent('2027');
+      expect(screen.getByRole('combobox', { name: 'Base year' })).toHaveTextContent('2026');
+      expect(provision(EXEMPTION_PATH)).toMatchObject({ growthStart: 2027, growthBase: 2026 });
+    });
+
+    test('then the rounding can change, and the values follow', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      await user.click(screen.getByRole('combobox', { name: 'After 2026' }));
+      await user.click(await screen.findByRole('option', { name: 'Grows with CPI-U' }));
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      await user.click(screen.getByRole('combobox', { name: 'Rounding step' }));
+      await user.click(await screen.findByRole('option', { name: '$50' }));
+      await user.click(screen.getByRole('combobox', { name: 'Rounding' }));
+      await user.click(await screen.findByRole('option', { name: 'down to' }));
+
+      // 3,000 × 1.03 = 3,090, down to a multiple of $50.
+      expect(provision(CTC_PATH)?.intervals?.[1]).toMatchObject({ value: 3050 });
+      expect(provision(CTC_PATH)).toMatchObject({ growthRoundTo: 50, growthRound: 'down' });
+      expect(
+        screen.getByText(
+          'From 2027: $3,000 × CPI-U that year ÷ CPI-U in 2026, rounded down to a multiple of $50.'
+        )
+      ).toBeInTheDocument();
     });
 
     test('then a rate has no growth to offer', async () => {

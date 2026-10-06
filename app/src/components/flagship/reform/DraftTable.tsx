@@ -67,6 +67,15 @@ function Chip({ children, title }: { children: React.ReactNode; title?: string }
 }
 
 /** A provision's change in brief: its new value and when it applies. */
+/** ", from 2028 on a 2026 base" — only when growth doesn't start the year after, from that year. */
+function timingNote(provision: DraftProvision, startYear: number): string {
+  const { growthStart, growthBase } = provision;
+  if (!growthStart || (growthStart === startYear + 1 && growthBase === startYear)) {
+    return '';
+  }
+  return `, from ${growthStart} on a ${growthBase} base`;
+}
+
 /** A provision's change in brief: its new value and when it applies — and how it grows. */
 const summarize = (
   provision: DraftProvision,
@@ -80,7 +89,7 @@ const summarize = (
       value: formatValue(intervals[0].value, provision.unit),
       // The chip is narrow: "from 2026 · CPI-U", in full on hover.
       when: `${from} · ${growthPhrase(provision.growth, countryId, true)}`,
-      whenFull: `${from}, ${growth}`,
+      whenFull: `${from}, ${growth}${timingNote(provision, Number(intervals[0].startDate.slice(0, 4)))}`,
     };
   }
   return summarizeIntervals(intervals, (value) => formatValue(value, provision.unit));
