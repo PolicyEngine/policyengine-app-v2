@@ -94,7 +94,7 @@ describe('DraftTable', () => {
       'Single',
       'Joint',
       'Head of household',
-      'After 2026',
+      'Later years',
     ]);
     expect(provision(JOINT_PATH)?.intervals).toEqual([
       { startDate: '2026-01-01', endDate: FOREVER, value: 35000 },
@@ -134,7 +134,7 @@ describe('DraftTable', () => {
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
       'Current law',
       'Your reform',
-      'After 2026',
+      'Later years',
     ]);
     expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
   });
@@ -288,10 +288,10 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-      const after = screen.getByRole('combobox', { name: 'After 2026' });
-      expect(after).toHaveTextContent('Stays at this value');
+      const after = screen.getByRole('combobox', { name: 'Later years' });
+      expect(after).toHaveTextContent('Same as 2026');
       await user.click(after);
-      await user.click(await screen.findByRole('option', { name: 'Grows with CPI-U' }));
+      await user.click(await screen.findByRole('option', { name: 'Grow with CPI-U' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
       expect(provision(CTC_PATH)?.intervals).toEqual([
@@ -305,7 +305,7 @@ describe('DraftTable', () => {
       );
     });
 
-    test('then an amount current law indexes keeps growing as current law does', async () => {
+    test('then an amount current law indexes stays the same unless set to grow at its rate', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', {
         path: EXEMPTION_PATH,
@@ -317,10 +317,15 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
 
-      expect(screen.getByRole('combobox', { name: 'After 2026' })).toHaveTextContent(
-        'Grows as current law does'
-      );
+      const later = screen.getByRole('combobox', { name: 'Later years' });
+      expect(later).toHaveTextContent('Same as 2026');
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
+      expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: FOREVER, value: 6000 },
+      ]);
+
+      await user.click(later);
+      await user.click(await screen.findByRole('option', { name: "Grow at current law's rate" }));
 
       // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
       // to $100, the step current law's projected values all land on.
@@ -336,8 +341,8 @@ describe('DraftTable', () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'After 2026' }));
-      await user.click(await screen.findByRole('option', { name: 'Grows with CPI-U' }));
+      await user.click(screen.getByRole('combobox', { name: 'Later years' }));
+      await user.click(await screen.findByRole('option', { name: 'Grow with CPI-U' }));
 
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
@@ -361,6 +366,8 @@ describe('DraftTable', () => {
       });
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+      await user.click(screen.getByRole('combobox', { name: 'Later years' }));
+      await user.click(await screen.findByRole('option', { name: "Grow at current law's rate" }));
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // The model runs to 2027 here, so 2027 is the only later start.
@@ -373,8 +380,8 @@ describe('DraftTable', () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'After 2026' }));
-      await user.click(await screen.findByRole('option', { name: 'Grows with CPI-U' }));
+      await user.click(screen.getByRole('combobox', { name: 'Later years' }));
+      await user.click(await screen.findByRole('option', { name: 'Grow with CPI-U' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
       await user.click(screen.getByRole('combobox', { name: 'Rounding step' }));
@@ -406,7 +413,7 @@ describe('DraftTable', () => {
         screen.getByRole('button', { name: 'Open EITC phase-in rate by number of children' })
       );
 
-      expect(screen.queryByRole('combobox', { name: 'After 2026' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: 'Later years' })).not.toBeInTheDocument();
     });
   });
 

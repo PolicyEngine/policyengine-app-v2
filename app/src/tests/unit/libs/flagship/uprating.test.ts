@@ -3,7 +3,6 @@ import { FOREVER } from '@/constants';
 import {
   alreadyGrows,
   canGrow,
-  defaultGrowth,
   defaultRounding,
   grownIntervals,
   growthOf,
@@ -43,27 +42,17 @@ describe('who can grow', () => {
     );
     expect(alreadyGrows(SCHEDULED)).toBe(false);
   });
-
-  test('given an indexed amount then it keeps growing by default; others hold', () => {
-    const indexedValues = { ...INDEXED_VALUES, '2029-01-01': 17400 };
-    const indexed = param('currency-USD', indexedValues);
-
-    expect(defaultGrowth(indexed)).toBe('current_law');
-    expect(defaultGrowth(SCHEDULED)).toBe('fixed');
-    expect(defaultGrowth(param('/1', indexedValues))).toBe('fixed');
-  });
 });
 
 describe('growthOptions', () => {
   test('given no money among the parameters then there is nothing to offer', () => {
-    expect(growthOptions('us', [param('/1', {})], PARAMETERS)).toEqual([]);
+    expect(growthOptions('us', [param('/1', {})], PARAMETERS, 2026)).toEqual([]);
   });
 
   test('given money then hold, and the indexes the metadata carries', () => {
-    expect(growthOptions('us', [SCHEDULED], PARAMETERS).map((option) => option.label)).toEqual([
-      'Stays at this value',
-      'Grows with CPI-U',
-    ]);
+    expect(
+      growthOptions('us', [SCHEDULED], PARAMETERS, 2026).map((option) => option.label)
+    ).toEqual(['Same as 2026', 'Grow with CPI-U']);
   });
 });
 
@@ -92,18 +81,22 @@ describe('grownIntervals', () => {
 describe('growthOf', () => {
   const indexed = param('currency-USD', { ...INDEXED_VALUES, '2029-01-01': 17400 });
 
-  test('given a value not set yet then the parameter default applies', () => {
-    expect(growthOf({ value: 16100, baselineValue: 16100 }, indexed)).toBe('current_law');
+  test('given no choice then later years keep the value, indexed or not', () => {
+    expect(growthOf({}, indexed)).toBe('fixed');
+    expect(growthOf(undefined, SCHEDULED)).toBe('fixed');
   });
 
-  test('given a value set before growth existed then it stays the fixed value it holds', () => {
-    expect(growthOf({ value: 18000, baselineValue: 16100 }, indexed)).toBe('fixed');
+  test('given a chosen growth then it holds; a rate never grows', () => {
+    expect(growthOf({ growth: 'gov.bls.cpi.cpi_u' }, indexed)).toBe('gov.bls.cpi.cpi_u');
+    expect(growthOf({ growth: 'gov.bls.cpi.cpi_u' }, param('/1', {}))).toBe('fixed');
   });
 
-  test('given a chosen growth then it holds', () => {
-    expect(
-      growthOf({ value: 18000, baselineValue: 16100, growth: 'gov.bls.cpi.cpi_u' }, indexed)
-    ).toBe('gov.bls.cpi.cpi_u');
+  test("given an indexed amount then current law's rate is on offer, but not the default", () => {
+    expect(growthOptions('us', [indexed], PARAMETERS, 2026).map((option) => option.label)).toEqual([
+      'Same as 2026',
+      "Grow at current law's rate",
+      'Grow with CPI-U',
+    ]);
   });
 });
 

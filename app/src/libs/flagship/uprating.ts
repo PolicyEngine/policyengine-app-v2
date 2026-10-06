@@ -82,27 +82,16 @@ export function alreadyGrows(param: Pick<ParameterMetadata, 'values'> | undefine
   return years.size >= 3;
 }
 
-/** The growth a money parameter takes unless the user picks another. */
-export function defaultGrowth(param: ParameterMetadata | undefined): Growth {
-  return canGrow(param) && alreadyGrows(param) ? 'current_law' : 'fixed';
-}
-
 /**
- * A provision's growth: the one chosen; else, for a value already set
- * without one (before growth existed, or from a bill), the fixed value it
- * holds; else, for a value not yet set, its parameter's default.
+ * A provision's growth: the one chosen, else the same value every later
+ * year — what a reform value has always meant, and what the run sends
+ * unless the user picks a growth.
  */
 export function growthOf(
-  provision: Pick<DraftProvision, 'growth' | 'value' | 'baselineValue' | 'intervals'> | undefined,
+  provision: Pick<DraftProvision, 'growth'> | undefined,
   param: ParameterMetadata | undefined
 ): Growth {
-  if (!canGrow(param)) {
-    return 'fixed';
-  }
-  if (provision?.growth) {
-    return provision.growth;
-  }
-  return provision && provisionChanged(provision) ? 'fixed' : defaultGrowth(param);
+  return canGrow(param) ? (provision?.growth ?? 'fixed') : 'fixed';
 }
 
 export function availableIndexes(
@@ -114,24 +103,25 @@ export function availableIndexes(
   );
 }
 
-/** The menu of ways a value can move, for the parameters at hand. */
+/** The menu of what later years do, for the parameters at hand and the year a value is set. */
 export function growthOptions(
   countryId: string,
   params: Array<ParameterMetadata | undefined>,
-  parameters: ParameterMetadataCollection
+  parameters: ParameterMetadataCollection,
+  year: number
 ): Array<{ value: Growth; label: string }> {
   const money = params.filter(canGrow);
   if (money.length === 0) {
     return [];
   }
   return [
-    { value: 'fixed', label: 'Stays at this value' },
+    { value: 'fixed', label: `Same as ${year}` },
     ...(money.some(alreadyGrows)
-      ? [{ value: 'current_law', label: 'Grows as current law does' }]
+      ? [{ value: 'current_law', label: "Grow at current law's rate" }]
       : []),
     ...availableIndexes(countryId, parameters).map((index) => ({
       value: index.path,
-      label: `Grows with ${index.label}`,
+      label: `Grow with ${index.label}`,
     })),
   ];
 }
