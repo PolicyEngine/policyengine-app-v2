@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { IconHome, IconPlus } from '@tabler/icons-react';
-import { useSelector } from 'react-redux';
+import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
   CalibrationMatchSection,
@@ -9,6 +9,7 @@ import {
 import ProvisionList from '@/components/flagship/ProvisionList';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
+import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
   reportMetrics,
@@ -35,12 +36,9 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
-import { describeChange } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
-import { RootState } from '@/store';
-import { formatValue } from '@/utils/parameterValues';
 
 const SECTIONS = [
   { id: 'policy', label: 'Overview' },
@@ -74,6 +72,17 @@ export interface ReportViewProps {
   /** e.g. "Utah · Introduced" for bills, "Hand-built draft" for drafts. */
   sourceNote: string;
   provisions: RunReportProvision[];
+  /**
+   * The overview's list of changes, before and after, when the source
+   * wrote them up — a tracked bill's as scored. Without them, the list
+   * reads the provisions against today's law.
+   */
+  changes?: BillChange[];
+  /**
+   * The results compare with the law before the reform, which today's
+   * values already include — an enacted bill scored before it passed.
+   */
+  priorLawBaseline?: boolean;
   customBaselineLabel?: string | null;
   year: string;
   region?: string;
@@ -109,6 +118,8 @@ export default function ReportView({
   heading = title,
   sourceNote,
   provisions,
+  changes,
+  priorLawBaseline = false,
   customBaselineLabel,
   year,
   region,
@@ -126,8 +137,6 @@ export default function ReportView({
   trackRecord,
   validationLead,
 }: ReportViewProps) {
-  const variables = useSelector((state: RootState) => state.metadata.variables);
-  const variableLabel = (name: string) => variables?.[name]?.label ?? name;
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const [activeTab, setActiveTab] = useState('policy');
@@ -208,30 +217,6 @@ export default function ReportView({
                     Compared with: {customBaselineLabel}
                   </Text>
                 )}
-                {provisions.map((provision) => (
-                  <Text
-                    key={provision.path}
-                    style={{
-                      margin: 0,
-                      color: colors.primary[100],
-                      fontSize: typography.fontSize.lg,
-                      lineHeight: typography.lineHeight.relaxed,
-                    }}
-                  >
-                    {provision.path.startsWith('gov.irs.credits.ctc.amount.base')
-                      ? 'Maximum credit per child'
-                      : provision.breadcrumb || provision.path}
-                    :{' '}
-                    <strong style={{ color: colors.text.inverse }}>
-                      {describeChange(
-                        provision.baselineValue,
-                        provision.value,
-                        (value) => formatValue(value, provision.unit),
-                        variableLabel
-                      )}
-                    </strong>
-                  </Text>
-                ))}
                 {sourceNote && (
                   <Text
                     style={{
@@ -277,6 +262,11 @@ export default function ReportView({
                 'policy',
                 <Stack style={{ gap: spacing.xl }}>
                   {overviewLead}
+                  <ReportChanges
+                    provisions={provisions}
+                    changes={changes}
+                    priorLawBaseline={priorLawBaseline}
+                  />
                   <ReportContents
                     metrics={metrics}
                     metricsNote={output ? undefined : storedMetricsNote}
@@ -370,7 +360,10 @@ export default function ReportView({
                           <Text style={{ fontWeight: typography.fontWeight.semibold }}>
                             Your reform · {year}
                           </Text>
-                          <ProvisionList provisions={provisions} />
+                          <ProvisionList
+                            provisions={provisions}
+                            sameValueNote={priorLawBaseline ? '' : undefined}
+                          />
                         </Stack>
                       ) : (
                         <Text>Before-and-after details for your reform are unavailable.</Text>

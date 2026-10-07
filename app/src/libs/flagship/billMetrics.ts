@@ -71,14 +71,16 @@ function sameValue(value: unknown, baselineValue: unknown): boolean {
  */
 export function lawValuesFrom(
   values: Record<string, unknown> | undefined | null,
-  fromDate: string
+  fromDate: string,
+  /** The last day to read, for a value the bill sets for a while only. */
+  toDate?: string
 ): unknown[] {
   if (!values) {
     return [];
   }
   const dates = Object.keys(values).sort();
   const inEffect = dates.filter((date) => date <= fromDate).pop();
-  const later = dates.filter((date) => date > fromDate);
+  const later = dates.filter((date) => date > fromDate && (!toDate || date <= toDate));
   return [...(inEffect ? [inEffect] : []), ...later].map((date) => values[date]);
 }
 

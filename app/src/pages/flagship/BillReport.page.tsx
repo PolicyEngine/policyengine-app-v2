@@ -1,7 +1,7 @@
 import { IconCalendar, IconExternalLink, IconUser } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import type { TrackedBill } from '@/api/billFeed';
+import { billRunYear, type TrackedBill } from '@/api/billFeed';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import ReportView from '@/components/flagship/report/ReportView';
 import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
@@ -11,15 +11,13 @@ import {
   ValidationChip,
 } from '@/components/flagship/ValidationPanel';
 import { Button, Spinner, Stack, Text } from '@/components/ui';
-import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { isAlreadyCurrentLaw, lawValuesFrom, storedBillMetrics } from '@/libs/flagship/billMetrics';
+import { storedBillMetrics } from '@/libs/flagship/billMetrics';
+import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
 import { RootState } from '@/store';
-import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
-import { getCurrentValue } from '@/utils/parameterValues';
 
 interface BillReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
@@ -190,27 +188,16 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
 
-  const provisions = (bill?.provisions ?? []).map((provision) => {
-    const metadata = parameters?.[provision.path];
-    return {
-      path: provision.path,
-      breadcrumb: metadata
-        ? formatLabelParts(getHierarchicalLabels(provision.path, parameters))
-        : (provision.fallbackBreadcrumb ?? provision.path),
-      unit: metadata?.unit ?? null,
-      baselineValue: getCurrentValue(metadata?.values),
-      value: provision.value,
-    };
-  });
+  // A bill from a later year runs, and reads against the law, in its first year.
+  const runYear = billRunYear(bill?.provisions ?? []);
 
   // An enacted bill already matches current law, so a run against current
-  // law would score it as no change; keep the tracker's prior-law estimate.
-  const alreadyCurrentLaw = isAlreadyCurrentLaw(
-    (bill?.provisions ?? []).map((provision) => ({
-      value: provision.value,
-      lawValues: lawValuesFrom(parameters?.[provision.path]?.values, `${CURRENT_YEAR}-01-01`),
-    }))
-  );
+  // law would score it as no change; keep the tracker's prior-law estimate,
+  // and read its changes against the law the tracker compared it with.
+  const alreadyCurrentLaw = billAlreadyCurrentLaw(bill?.provisions ?? [], parameters, runYear);
+  const provisions = billReportProvisions(bill?.provisions ?? [], parameters, runYear, {
+    priorLaw: alreadyCurrentLaw,
+  });
 
   const billPaths = provisions.map((p) => p.path);
   const trackRecord = useModelTrackRecord(billPaths);
@@ -254,8 +241,12 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   return (
     <ReportView
       title={bill.title}
-      sourceNote={`${bill.jurisdiction} · ${bill.status}`}
+      // The title says which bill; no place-and-status line under it.
+      sourceNote=""
       provisions={provisions}
+      // The changes as scored: once a bill is law, today's values include it.
+      changes={bill.changes}
+      priorLawBaseline={alreadyCurrentLaw}
       year={economy.year}
       region={economy.region}
       reformPolicyId={economy.reformPolicyId}

@@ -19,9 +19,16 @@ export interface ProvisionListItem {
  * quiet context underneath, and states the change as current law → new
  * value. When the provision matches current law (enacted bills), the
  * arrow would be meaningless, so the row shows the single value with a
- * "current law" note instead.
+ * "current law" note instead — or, for a bill scored against the law
+ * before it, the value alone (an empty note).
  */
-export default function ProvisionList({ provisions }: { provisions: ProvisionListItem[] }) {
+export default function ProvisionList({
+  provisions,
+  sameValueNote = 'current law',
+}: {
+  provisions: ProvisionListItem[];
+  sameValueNote?: string;
+}) {
   const variables = useSelector((state: RootState) => state.metadata.variables);
   const variableLabel = (name: string) => variables?.[name]?.label ?? name;
   return (
@@ -109,7 +116,9 @@ export default function ProvisionList({ provisions }: { provisions: ProvisionLis
                   >
                     {proposed}
                   </span>{' '}
-                  <span style={{ fontSize: typography.fontSize.xs }}>current law</span>
+                  {sameValueNote && (
+                    <span style={{ fontSize: typography.fontSize.xs }}>{sameValueNote}</span>
+                  )}
                 </>
               ) : (
                 <>

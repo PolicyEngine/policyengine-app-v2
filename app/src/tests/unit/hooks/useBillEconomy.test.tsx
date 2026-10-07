@@ -63,6 +63,34 @@ describe('useBillEconomy', () => {
     expect(result.current.baselinePolicyId).toBe('2');
   });
 
+  test('given a bill from a later year then it runs in that year with its own dates', async () => {
+    mockFetchSocietyWide.mockResolvedValue({ status: 'ok', result: createMockSocietyWideOutput() });
+    const later = {
+      ...BILL,
+      provisions: [
+        {
+          path: 'gov.states.ut.tax.income.rate',
+          value: 0.044,
+          intervals: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 0.044 }],
+        },
+      ],
+    };
+
+    const { result } = renderHook(() => useBillEconomy(later), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    // A 2027 change scored in 2026 would show an effect the bill does not have then.
+    expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
+      data: { 'gov.states.ut.tax.income.rate': { '2027-01-01.2100-12-31': 0.044 } },
+      label: 'Utah SB60',
+    });
+    expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '98557', '2', {
+      region: 'state/ut',
+      time_period: '2027',
+    });
+    expect(result.current.year).toBe('2027');
+  });
+
   test('given the run is queued then it stays pending with the queue message', async () => {
     mockFetchSocietyWide.mockResolvedValue({
       status: 'computing',

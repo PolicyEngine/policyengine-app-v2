@@ -1,4 +1,6 @@
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
  * The bill feed behind the Reforms surface.
@@ -11,9 +13,35 @@ import { CountryId } from '@/libs/countries';
  */
 export interface TrackedBillProvision {
   path: string;
+  /** The value in effect when the bill's run year starts (see billRunYear). */
   value: any;
+  /** Every dated value the bill sets, as scored; absent for an undated value. */
+  intervals?: ValueInterval[];
+  /**
+   * The law the tracker compared the bill with, by the same dates
+   * (reform_impacts.baseline_params), when it stored it. Once a bill is
+   * law, today's values include it, so only this says what it changed.
+   */
+  baselineIntervals?: ValueInterval[];
   /** Used when the parameter is missing from loaded metadata. */
   fallbackBreadcrumb?: string;
+}
+
+/**
+ * One change as the tracker described it when it scored the bill: what
+ * the law was then and what the bill makes it. Once a bill is enacted,
+ * today's parameter values already include it, so only these say what
+ * it changed.
+ */
+export interface BillChange {
+  label: string;
+  /** The law before the bill, as the tracker wrote it, e.g. "5.09%". */
+  before: string;
+  /** The bill's value, e.g. "4.99%" or "Under 7 (2026) to Under 16 (2035)". */
+  after: string;
+  explanation?: string;
+  /** Where in the bill, e.g. "Section 1, amending C.G.S. § 12-700". */
+  section?: string;
 }
 
 /** Shares of households by outcome, as fractions of 1. */
@@ -74,6 +102,8 @@ export interface TrackedBill {
   status: string;
   summary: string;
   provisions: TrackedBillProvision[];
+  /** The changes as scored, before and after, when the tracker wrote them up. */
+  changes?: BillChange[];
   /** Headline findings from the tracker's analysis, when available. */
   keyFindings?: string[];
   legiscanUrl?: string;
@@ -204,15 +234,151 @@ const STATE_NAMES: Record<string, string> = {
   WY: 'Wyoming',
 };
 
-/** Reform-params dict ({path: {"date.date": value}} or {path: value}) → provisions. */
-export function provisionsFromReformParams(reformParams: unknown): TrackedBillProvision[] {
+/**
+ * A tracker period key as dates: "2026-01-01.2026-12-31", a lone start
+ * date, or a bare year ("2026", which the tracker reads as from Jan 1).
+ */
+function periodDates(key: string): { startDate: string; endDate: string } {
+  const [start, endDate] = key.split('.');
+  return {
+    startDate: /^\d{4}$/.test(start) ? `${start}-01-01` : start,
+    endDate: endDate || FOREVER,
+  };
+}
+
+/** The value a set of dated values holds on a date, if any covers it. */
+export function intervalValueAt(intervals: ValueInterval[], date: string): unknown {
+  return intervals.find((interval) => interval.startDate <= date && date <= interval.endDate)
+    ?.value;
+}
+
+/**
+ * The year a bill's full run scores: this year, or the year the bill
+ * first takes effect when that is later — a bill from 2027 changes
+ * nothing in 2026.
+ */
+export function billRunYear(provisions: Array<Pick<TrackedBillProvision, 'intervals'>>): number {
+  const starts = provisions.flatMap((provision) =>
+    (provision.intervals ?? []).map((interval) => Number(interval.startDate.slice(0, 4)))
+  );
+  return Math.max(Number(CURRENT_YEAR), starts.length > 0 ? Math.min(...starts) : 0);
+}
+
+/** A parameter path as the model's metadata and the API name it. */
+const modelPath = (path: string) => path.replace(/\.brackets\[/g, '[');
+
+/** A tracker params value ({"date.date": value} or a bare value) as dated values. */
+function datedValues(raw: unknown): ValueInterval[] | undefined {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return undefined;
+  }
+  return Object.entries(raw)
+    .map(([key, value]) => ({ ...periodDates(key), value: value as any }))
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
+/**
+ * Reform-params dict ({path: {"date.date": value}} or {path: value}) →
+ * provisions, each with every dated value it sets. Keys starting with "_"
+ * are the tracker's run settings ("_use_reform"), not parameters, and
+ * scale paths lose the tracker's ".brackets" ("rates.brackets[0].rate"
+ * is "rates[0].rate" in the model's metadata and the API). The baseline
+ * params, in the same shape, are the law the tracker compared with.
+ */
+export function provisionsFromReformParams(
+  reformParams: unknown,
+  baselineParams?: unknown
+): TrackedBillProvision[] {
   if (!reformParams || typeof reformParams !== 'object') {
     return [];
   }
-  return Object.entries(reformParams as Record<string, any>).map(([path, raw]) => {
-    const value =
-      raw && typeof raw === 'object' && !Array.isArray(raw) ? Object.values(raw)[0] : raw;
-    return { path, value };
+  const params = reformParams as Record<string, any>;
+  const baselines = new Map(
+    baselineParams && typeof baselineParams === 'object'
+      ? Object.entries(baselineParams as Record<string, unknown>).map(([path, raw]) => [
+          modelPath(path),
+          datedValues(raw) ?? [
+            { startDate: `${CURRENT_YEAR}-01-01`, endDate: FOREVER, value: raw as any },
+          ],
+        ])
+      : []
+  );
+  const parsed: TrackedBillProvision[] = Object.entries(params)
+    .filter(([path]) => !path.startsWith('_'))
+    .map(([path, raw]) => {
+      const intervals = datedValues(raw);
+      const baselineIntervals = baselines.get(modelPath(path));
+      return {
+        path: modelPath(path),
+        value: intervals ? intervals[0]?.value : raw,
+        ...(intervals ? { intervals } : {}),
+        ...(baselineIntervals ? { baselineIntervals } : {}),
+      };
+    });
+  // The tracker can turn a bill's model change on by name ("_use_reform":
+  // "ut_hb210"); the API turns it on with its switch, so add the switch
+  // when the reform leaves it out.
+  const reformName = typeof params._use_reform === 'string' ? params._use_reform : '';
+  const [, state, bill] = reformName.match(/^([a-z]{2})_([a-z0-9_]+)$/) ?? [];
+  if (state && !parsed.some((provision) => provision.path.endsWith('.in_effect'))) {
+    const starts = parsed.flatMap((provision) => provision.intervals ?? []);
+    const startDate = starts.reduce(
+      (earliest, interval) => (interval.startDate < earliest ? interval.startDate : earliest),
+      `${CURRENT_YEAR}-01-01`
+    );
+    parsed.push({
+      path: `gov.contrib.states.${state}.${bill}.in_effect`,
+      value: true,
+      intervals: [{ startDate, endDate: FOREVER, value: true }],
+    });
+  }
+  const runStart = `${billRunYear(parsed)}-01-01`;
+  return parsed.map((provision) => {
+    if (!provision.intervals) {
+      return provision;
+    }
+    const inRunYear = intervalValueAt(provision.intervals, runStart);
+    return { ...provision, value: inRunYear === undefined ? provision.value : inRunYear };
+  });
+}
+
+/**
+ * The tracker's write-up of a bill's changes (reform_impacts.provisions:
+ * [{label, baseline, reform, explanation, bill_section}], stored as a list or as its
+ * JSON) → the changes it scored. Entries missing a label or a value drop.
+ */
+export function changesFromTrackerProvisions(raw: unknown): BillChange[] {
+  let list = raw;
+  if (typeof raw === 'string') {
+    try {
+      list = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  const text = (value: unknown) =>
+    typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+  return list.flatMap((entry): BillChange[] => {
+    const label = text(entry?.label);
+    const before = text(entry?.baseline);
+    const after = text(entry?.reform);
+    if (!label || !before || !after) {
+      return [];
+    }
+    const explanation = text(entry?.explanation);
+    const section = text(entry?.bill_section);
+    return [
+      {
+        label,
+        before,
+        after,
+        ...(explanation ? { explanation } : {}),
+        ...(section ? { section } : {}),
+      },
+    ];
   });
 }
 
@@ -270,23 +436,27 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
  * null when the feed is not configured (callers fall back to samples).
  */
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
-  const [research, impacts, processed, validations] = await Promise.all([
+  const [research, impacts, processed, validations, baselines] = await Promise.all([
     trackerSelect('research', '*'),
     trackerSelect(
       'reform_impacts',
-      'id,reform_params,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
+      'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
     ),
     trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
     trackerSelect(
       'validation_metadata',
       'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against'
     ),
+    // The law each bill was compared with. Read on its own, so a tracker
+    // without the column yet still serves the rest of the feed.
+    trackerSelect('reform_impacts', 'id,baseline_params').catch(() => null),
   ]);
   if (!research) {
     return null;
   }
 
   const impactsById = new Map((impacts ?? []).map((impact) => [impact.id, impact]));
+  const baselineById = new Map((baselines ?? []).map((row) => [row.id, row.baseline_params]));
   const validationById = new Map((validations ?? []).map((row) => [row.id, row]));
   const processedByKey = new Map(
     (processed ?? []).map((bill) => [
@@ -310,7 +480,8 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       title: record.title ?? record.id,
       status: status || 'Analyzed',
       summary: record.description ?? '',
-      provisions: provisionsFromReformParams(impact?.reform_params),
+      provisions: provisionsFromReformParams(impact?.reform_params, baselineById.get(record.id)),
+      changes: changesFromTrackerProvisions(impact?.provisions),
       keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
       legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
       sourceUrl: record.url ?? undefined,

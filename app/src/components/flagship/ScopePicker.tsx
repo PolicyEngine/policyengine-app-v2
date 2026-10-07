@@ -26,6 +26,10 @@ interface ScopePickerProps {
   states: ScopeOption[];
   /** Trigger styling shared with the neighboring filter controls */
   triggerStyle: React.CSSProperties;
+  /** How many items each option holds, keyed by option code, e.g. bills per state */
+  counts?: Record<string, number>;
+  /** The trigger's accessible name before its value, e.g. "State scope" */
+  label?: string;
 }
 
 const JURISDICTIONS: ScopeOption[] = [
@@ -57,7 +61,14 @@ export function scopeFilter(value: string, search: string, keywords?: string[]):
  * The search scope as a filterable list: fifty-odd states are too many to
  * scan in a native select, so typing narrows them by name or code.
  */
-export default function ScopePicker({ value, onChange, states, triggerStyle }: ScopePickerProps) {
+export default function ScopePicker({
+  value,
+  onChange,
+  states,
+  triggerStyle,
+  counts,
+  label = 'State scope',
+}: ScopePickerProps) {
   const [open, setOpen] = useState(false);
   const current =
     JURISDICTIONS.find((option) => option.code === value) ??
@@ -80,6 +91,18 @@ export default function ScopePicker({ value, onChange, states, triggerStyle }: S
     >
       <span>{option.label}</span>
       <span style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+        {counts?.[option.code] !== undefined && (
+          <span
+            style={{
+              minWidth: 18,
+              textAlign: 'right',
+              fontSize: typography.fontSize.xs,
+              color: colors.text.secondary,
+            }}
+          >
+            {counts[option.code]}
+          </span>
+        )}
         {showCode && (
           <span
             style={{
@@ -108,7 +131,7 @@ export default function ScopePicker({ value, onChange, states, triggerStyle }: S
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`State scope: ${currentLabel}`}
+          aria-label={`${label}: ${currentLabel}`}
           className="tw:hover:border-border-medium"
           style={{ ...triggerStyle, cursor: 'pointer' }}
         >
