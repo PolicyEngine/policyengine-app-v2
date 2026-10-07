@@ -73,6 +73,26 @@ function Legend({ items }: { items: ReadonlyArray<{ label: string; color: string
   );
 }
 
+type PovertyRates = NonNullable<NonNullable<TrackedBill['impactData']>['poverty']>;
+
+/** A poverty rate's relative change in percent: stored, or from the rates. */
+function povertyPercentChange(rates: PovertyRates | undefined): number | null {
+  if (typeof rates?.percentChange === 'number') {
+    return rates.percentChange;
+  }
+  if (
+    typeof rates?.baselineRate === 'number' &&
+    typeof rates?.reformRate === 'number' &&
+    rates.baselineRate > 0
+  ) {
+    return ((rates.reformRate - rates.baselineRate) / rates.baselineRate) * 100;
+  }
+  return null;
+}
+
+const signedPercent = (value: number) =>
+  `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(1)}%`;
+
 /**
  * The legislative tracker's stored distributional and poverty results for
  * a bill, in the same chart cards as a report's economic impacts. Shown
@@ -95,14 +115,14 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
       ]
     : [];
 
+  // The change only, not the rates before and after.
   const povertyRows = [
     { group: 'All people', rates: impact?.poverty },
     { group: 'Children', rates: impact?.childPoverty },
-  ].flatMap(({ group, rates }) =>
-    typeof rates?.baselineRate === 'number' && typeof rates?.reformRate === 'number'
-      ? [{ group, baseline: rates.baselineRate * 100, reform: rates.reformRate * 100 }]
-      : []
-  );
+  ].flatMap(({ group, rates }) => {
+    const change = povertyPercentChange(rates);
+    return change === null ? [] : [{ group, change }];
+  });
 
   if (average.length + relative.length + winnersRows.length + povertyRows.length === 0) {
     return null;
@@ -227,23 +247,9 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
       )}
 
       {povertyRows.length > 0 && (
-        <ReportChartCard
-          title="Poverty rate, before and after"
-          controls={
-            <Legend
-              items={[
-                { label: 'Current law', color: colors.gray[400] },
-                { label: 'With this bill', color: colors.primary[500] },
-              ]}
-            />
-          }
-        >
+        <ReportChartCard title="Poverty rate change">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={povertyRows}
-              margin={{ top: 20, right: 8, bottom: 4, left: 8 }}
-              barGap={6}
-            >
+            <BarChart data={povertyRows} margin={{ top: 20, right: 8, bottom: 4, left: 8 }}>
               <XAxis
                 dataKey="group"
                 tickLine={false}
@@ -251,34 +257,30 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
                 tick={AXIS_TICK}
               />
               <YAxis
-                tickFormatter={(value: number) => `${value.toFixed(0)}%`}
+                tickFormatter={(value: number) => `${value.toFixed(1)}%`}
                 tickLine={false}
                 axisLine={false}
                 tick={AXIS_TICK}
-                width={44}
+                width={52}
               />
               <Tooltip
-                formatter={(value, name) => [
-                  `${Number(value ?? 0).toFixed(1)}%`,
-                  name === 'baseline' ? 'Current law' : 'With this bill',
-                ]}
+                formatter={(value) => [signedPercent(Number(value ?? 0)), 'Relative change']}
                 cursor={{ fill: colors.gray[50] }}
               />
-              <Bar dataKey="baseline" fill={colors.gray[400]} radius={[3, 3, 0, 0]}>
+              <Bar dataKey="change" radius={[3, 3, 0, 0]}>
                 <LabelList
-                  dataKey="baseline"
+                  dataKey="change"
                   position="top"
-                  formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
+                  formatter={(value) => signedPercent(Number(value ?? 0))}
                   style={{ fontSize: 12, fill: colors.text.secondary }}
                 />
-              </Bar>
-              <Bar dataKey="reform" fill={colors.primary[500]} radius={[3, 3, 0, 0]}>
-                <LabelList
-                  dataKey="reform"
-                  position="top"
-                  formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
-                  style={{ fontSize: 12, fill: colors.text.primary }}
-                />
+                {povertyRows.map((row) => (
+                  <Cell
+                    key={row.group}
+                    // Less poverty is the gain, as more income is in the decile chart.
+                    fill={row.change <= 0 ? colors.primary[500] : colors.gray[600]}
+                  />
+                ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>

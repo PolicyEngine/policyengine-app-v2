@@ -159,7 +159,10 @@ describe('BillReportPage', () => {
     // The tracker's stored detail fills the wait.
     expect(screen.getByText('Income change by decile')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
-    expect(screen.getByText('Poverty rate, before and after')).toBeInTheDocument();
+    expect(screen.getByText('Poverty rate change')).toBeInTheDocument();
+    // The change only: the rates before and after (16.9% → 14.5%) stay out.
+    expect(screen.queryByText('16.9%')).not.toBeInTheDocument();
+    expect(screen.queryByText('Current law')).not.toBeInTheDocument();
   });
 
   test('given the full results then the overview and charts use them', async () => {

@@ -484,10 +484,6 @@ export default function ReformsPage() {
     const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
     const worseOff = winners && ((winners.loseMore5Pct ?? 0) + (winners.loseLess5Pct ?? 0)) * 100;
     const poverty = impact?.poverty;
-    const povertyDetail =
-      typeof poverty?.baselineRate === 'number' && typeof poverty?.reformRate === 'number'
-        ? `${(poverty.baselineRate * 100).toFixed(1)}% → ${(poverty.reformRate * 100).toFixed(1)}%`
-        : undefined;
     const revenue = selectedBill.impacts?.revenue ?? impact?.budgetary?.stateRevenueImpact;
     const money = (value: number) => {
       const { display, label } = formatBudgetaryImpact(value);
@@ -525,7 +521,6 @@ export default function ReformsPage() {
                 <StatTile
                   value={`${poverty.percentChange > 0 ? '+' : '−'}${Math.abs(poverty.percentChange).toFixed(1)}%`}
                   label="poverty rate change"
-                  detail={povertyDetail}
                 />
               )}
               {typeof betterOff === 'number' && betterOff > 0 && (
