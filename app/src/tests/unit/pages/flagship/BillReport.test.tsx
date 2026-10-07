@@ -82,6 +82,8 @@ describe('BillReportPage', () => {
     mockUseBillEconomy.mockReturnValue(economy());
     mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
+    // Tests that seed metadata must not leave it loaded for the next one.
+    store.dispatch(clearMetadata());
   });
 
   test('given a bill then it uses the saved report sections', async () => {
@@ -99,14 +101,34 @@ describe('BillReportPage', () => {
     expect(screen.queryByText('US · In committee')).not.toBeInTheDocument();
   });
 
-  test('given the full run is calculating then the overview leads with stored estimates', async () => {
+  test('given the page opens then the overview leads with stored estimates', async () => {
     renderReport();
 
     expect(await screen.findByText('$225.5bn')).toBeInTheDocument();
     expect(screen.getByText('Annual revenue loss')).toBeInTheDocument();
     expect(screen.getByText('39.9% decrease')).toBeInTheDocument();
+    expect(screen.getByText('Stored estimates from the legislative tracker')).toBeInTheDocument();
+  });
+
+  test('given the page and its tabs open then no full run starts until asked', async () => {
+    const user = userEvent.setup();
+    seedDeductionMetadata();
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
     expect(
-      screen.getByText('Stored estimates from the legislative tracker · full results calculating')
+      within(screen.getByRole('tabpanel')).getByText('The full results are not calculated yet.')
+    ).toBeInTheDocument();
+    expect(mockUseBillEconomy).not.toHaveBeenCalledWith(expect.anything(), { enabled: true });
+
+    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
+    expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: TRACKED_BILL.id }),
+      { enabled: true }
+    );
+    expect(
+      within(screen.getByRole('tabpanel')).getByText('Calculating the full results…')
     ).toBeInTheDocument();
   });
 
@@ -129,6 +151,7 @@ describe('BillReportPage', () => {
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
 
     expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
     expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
@@ -146,14 +169,16 @@ describe('BillReportPage', () => {
     );
     renderReport();
 
-    expect(await screen.findByText('Annual government savings')).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
+    expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(screen.getByText('Annual government savings')).toBeInTheDocument();
     expect(screen.getByText('13.3% decrease')).toBeInTheDocument();
     expect(
       screen.queryByText(/Stored estimates from the legislative tracker/)
     ).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
-    expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
   });
 
   test('given the full run fails then it says so and can retry', async () => {
@@ -161,17 +186,18 @@ describe('BillReportPage', () => {
     mockUseBillEconomy.mockReturnValue(economy({ status: 'error', message: 'Worker lost' }));
     renderReport();
 
-    expect(
-      await screen.findByText(
-        'Stored estimates from the legislative tracker · full results unavailable'
-      )
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
     expect(screen.getByText('The full results could not be calculated.')).toBeInTheDocument();
     expect(screen.getByText('Worker lost')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(mockRetry).toHaveBeenCalled();
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(
+      screen.getByText('Stored estimates from the legislative tracker · full results unavailable')
+    ).toBeInTheDocument();
   });
 
   test('given the validation tab then external checks and the tracker provenance render', async () => {
@@ -219,9 +245,11 @@ describe('BillReportPage', () => {
   });
 
   test('given metadata is still loading then the full run waits for it', async () => {
+    const user = userEvent.setup();
     renderReport();
 
-    await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title });
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
     expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: TRACKED_BILL.id }),
       { enabled: false }

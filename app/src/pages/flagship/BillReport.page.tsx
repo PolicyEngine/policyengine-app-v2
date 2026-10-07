@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { IconCalendar, IconExternalLink, IconUser } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -97,7 +98,12 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
 }
 
 /** Why a bill has, or does not yet have, full results. */
-type RunState = 'already-law' | 'no-provisions' | 'no-metadata' | BillEconomy['status'];
+type RunState =
+  | 'already-law'
+  | 'no-provisions'
+  | 'no-metadata'
+  | 'not-started'
+  | BillEconomy['status'];
 
 const UNAVAILABLE_COPY: Partial<Record<RunState, { title: string; detail: string }>> = {
   'already-law': {
@@ -123,7 +129,15 @@ const STATUS_BOX = {
 } as const;
 
 /** Where the full run stands, for sections that need its results. */
-function FullResultsStatus({ runState, economy }: { runState: RunState; economy: BillEconomy }) {
+function FullResultsStatus({
+  runState,
+  economy,
+  onStart,
+}: {
+  runState: RunState;
+  economy: BillEconomy;
+  onStart: () => void;
+}) {
   const unavailable = UNAVAILABLE_COPY[runState];
   if (unavailable) {
     return (
@@ -132,6 +146,22 @@ function FullResultsStatus({ runState, economy }: { runState: RunState; economy:
           {unavailable.title}
         </Text>
         <Caption>{unavailable.detail}</Caption>
+      </Stack>
+    );
+  }
+  if (runState === 'not-started') {
+    return (
+      <Stack style={{ ...STATUS_BOX, alignItems: 'flex-start' }}>
+        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
+          The full results are not calculated yet.
+        </Text>
+        <Caption>
+          The estimates here are the legislative tracker&apos;s. A full run scores the bill with
+          today&apos;s model and can take several minutes.
+        </Caption>
+        <Button size="sm" onClick={onStart}>
+          Calculate full results
+        </Button>
       </Stack>
     );
   }
@@ -168,14 +198,16 @@ const STORED_NOTE: Partial<Record<RunState, string>> = {
   'already-law': 'Estimates from the legislative tracker, against the law before this bill',
   'no-provisions': 'Stored estimates from the legislative tracker · full results unavailable',
   'no-metadata': 'Stored estimates from the legislative tracker · full results unavailable',
+  'not-started': 'Stored estimates from the legislative tracker',
   error: 'Stored estimates from the legislative tracker · full results unavailable',
   pending: 'Stored estimates from the legislative tracker · full results calculating',
 };
 
 /**
  * A tracked bill as a flagship report: the same layout as a saved report,
- * opening on the tracker's stored headline numbers while the full
- * society-wide results calculate, then filling in every section.
+ * opening on the tracker's stored headline numbers. The full society-wide
+ * results calculate only when the reader asks — opening the page, or one
+ * of its tabs, starts no run — and then fill in every section.
  */
 export default function BillReportPage({ billId: propId }: BillReportPageProps) {
   const params = useParams<{ billId: string }>();
@@ -185,6 +217,9 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const metadataLoaded = useSelector((state: RootState) => state.metadata.version !== null);
   const metadataError = useSelector((state: RootState) => state.metadata.error);
   const { bills, isLoading } = useTrackedBills(countryId);
+  // The bill whose full run the reader started; another bill starts unrun.
+  const [runRequestedFor, setRunRequestedFor] = useState<string | null>(null);
+  const runRequested = runRequestedFor === billId;
 
   const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
 
@@ -201,15 +236,21 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   const billPaths = provisions.map((p) => p.path);
   const trackRecord = useModelTrackRecord(billPaths);
-  // Wait for metadata so an enacted bill is recognized before any run starts.
-  const economy = useBillEconomy(bill, { enabled: metadataLoaded && !alreadyCurrentLaw });
+  // Only a reader's request starts the run, and it waits for metadata so an
+  // enacted bill is recognized before any run starts.
+  const economy = useBillEconomy(bill, {
+    enabled: runRequested && metadataLoaded && !alreadyCurrentLaw,
+  });
   const runState: RunState = alreadyCurrentLaw
     ? 'already-law'
     : provisions.length === 0
       ? 'no-provisions'
       : metadataError && !metadataLoaded
         ? 'no-metadata'
-        : economy.status;
+        : !runRequested
+          ? 'not-started'
+          : economy.status;
+  const startRun = () => setRunRequestedFor(billId);
   // A state bill's data check is against that state's calibration targets.
   const calibration = useCalibrationMatches(
     billPaths,
@@ -254,10 +295,10 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       output={runState === 'complete' ? economy.output : null}
       storedMetrics={storedBillMetrics(bill, countryId)}
       storedMetricsNote={STORED_NOTE[runState]}
-      pending={<FullResultsStatus runState={runState} economy={economy} />}
+      pending={<FullResultsStatus runState={runState} economy={economy} onStart={startRun} />}
       economyPending={
         <Stack style={{ gap: spacing.lg }}>
-          <FullResultsStatus runState={runState} economy={economy} />
+          <FullResultsStatus runState={runState} economy={economy} onStart={startRun} />
           <StoredImpactCharts impact={bill.impactData} />
         </Stack>
       }
