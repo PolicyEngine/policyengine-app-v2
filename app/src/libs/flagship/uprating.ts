@@ -83,15 +83,29 @@ export function alreadyGrows(param: Pick<ParameterMetadata, 'values'> | undefine
 }
 
 /**
- * A provision's growth: the one chosen, else the same value every later
- * year — what a reform value has always meant, and what the run sends
- * unless the user picks a growth.
+ * How a new value on a money parameter is indexed unless the user picks
+ * otherwise: at current law's rate where current law indexes it, else not.
+ */
+export function defaultGrowth(param: ParameterMetadata | undefined): Growth {
+  return canGrow(param) && alreadyGrows(param) ? 'current_law' : 'fixed';
+}
+
+/**
+ * A provision's indexing: the one chosen; else, for a value already set
+ * without one (before indexing existed, or from a bill), none — the fixed
+ * value it holds; else, for a value not yet set, its parameter's default.
  */
 export function growthOf(
-  provision: Pick<DraftProvision, 'growth'> | undefined,
+  provision: Pick<DraftProvision, 'growth' | 'value' | 'baselineValue' | 'intervals'> | undefined,
   param: ParameterMetadata | undefined
 ): Growth {
-  return canGrow(param) ? (provision?.growth ?? 'fixed') : 'fixed';
+  if (!canGrow(param)) {
+    return 'fixed';
+  }
+  if (provision?.growth) {
+    return provision.growth;
+  }
+  return provision && provisionChanged(provision) ? 'fixed' : defaultGrowth(param);
 }
 
 export function availableIndexes(
@@ -103,42 +117,40 @@ export function availableIndexes(
   );
 }
 
-/** The menu of what later years do, for the parameters at hand and the year a value is set. */
+/** The menu of how a value is indexed, for the parameters at hand. */
 export function growthOptions(
   countryId: string,
   params: Array<ParameterMetadata | undefined>,
-  parameters: ParameterMetadataCollection,
-  year: number
+  parameters: ParameterMetadataCollection
 ): Array<{ value: Growth; label: string }> {
   const money = params.filter(canGrow);
   if (money.length === 0) {
     return [];
   }
   return [
-    { value: 'fixed', label: `Same as ${year}` },
-    ...(money.some(alreadyGrows)
-      ? [{ value: 'current_law', label: "Grow at current law's rate" }]
-      : []),
+    { value: 'fixed', label: 'None' },
+    ...(money.some(alreadyGrows) ? [{ value: 'current_law', label: "Current law's rate" }] : []),
     ...availableIndexes(countryId, parameters).map((index) => ({
       value: index.path,
-      label: `Grow with ${index.label}`,
+      label: index.label,
     })),
   ];
 }
 
 /**
- * How a value grows, for a row's summary: "grows with CPI-U" — or, for
- * the narrow "When" chip, just "CPI-U" or "indexed". Empty when it stays put.
+ * How a value is indexed, for a row's summary: "indexed to CPI-U" — or,
+ * for the narrow "When" chip, just "CPI-U" or "indexed". Empty when it
+ * is not indexed.
  */
 export function growthPhrase(growth: Growth | undefined, countryId: string, short = false): string {
   if (!growth || growth === 'fixed') {
     return '';
   }
   if (growth === 'current_law') {
-    return short ? 'indexed' : 'grows as current law does';
+    return short ? 'indexed' : "indexed at current law's rate";
   }
   const index = (INDEXES[countryId] ?? []).find((candidate) => candidate.path === growth);
-  return short ? (index?.short ?? 'indexed') : `grows with ${index?.label ?? growth}`;
+  return short ? (index?.short ?? 'indexed') : `indexed to ${index?.label ?? growth}`;
 }
 
 const at = (series: ValueIntervalCollection, year: number) => {

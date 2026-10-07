@@ -94,7 +94,7 @@ describe('DraftTable', () => {
       'Single',
       'Joint',
       'Head of household',
-      'Later years',
+      'Indexing',
     ]);
     expect(provision(JOINT_PATH)?.intervals).toEqual([
       { startDate: '2026-01-01', endDate: FOREVER, value: 35000 },
@@ -134,7 +134,7 @@ describe('DraftTable', () => {
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
       'Current law',
       'Your reform',
-      'Later years',
+      'Indexing',
     ]);
     expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
   });
@@ -288,10 +288,10 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-      const after = screen.getByRole('combobox', { name: 'Later years' });
-      expect(after).toHaveTextContent('Same as 2026');
+      const after = screen.getByRole('combobox', { name: 'Indexing' });
+      expect(after).toHaveTextContent('None');
       await user.click(after);
-      await user.click(await screen.findByRole('option', { name: 'Grow with CPI-U' }));
+      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
       expect(provision(CTC_PATH)?.intervals).toEqual([
@@ -301,11 +301,11 @@ describe('DraftTable', () => {
       await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
       expect(screen.getByText('from 2026 · CPI-U')).toHaveAttribute(
         'title',
-        'from 2026, grows with CPI-U'
+        'from 2026, indexed to CPI-U'
       );
     });
 
-    test('then an amount current law indexes stays the same unless set to grow at its rate', async () => {
+    test("then an amount current law indexes is indexed at current law's rate by default", async () => {
       const user = userEvent.setup();
       addDraftProvision('us', {
         path: EXEMPTION_PATH,
@@ -317,15 +317,10 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
 
-      const later = screen.getByRole('combobox', { name: 'Later years' });
-      expect(later).toHaveTextContent('Same as 2026');
+      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
+        "Current law's rate"
+      );
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
-      expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
-        { startDate: '2026-01-01', endDate: FOREVER, value: 6000 },
-      ]);
-
-      await user.click(later);
-      await user.click(await screen.findByRole('option', { name: "Grow at current law's rate" }));
 
       // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
       // to $100, the step current law's projected values all land on.
@@ -337,12 +332,27 @@ describe('DraftTable', () => {
       expect(screen.getByRole('combobox', { name: 'Rounding step' })).toHaveTextContent('$100');
     });
 
+    test('then a value set before indexing existed shows none, as it runs', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 6000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+
+      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent('None');
+    });
+
     test('then the years after preview what the growth makes of it', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'Later years' }));
-      await user.click(await screen.findByRole('option', { name: 'Grow with CPI-U' }));
+      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
+      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
 
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
@@ -366,8 +376,8 @@ describe('DraftTable', () => {
       });
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'Later years' }));
-      await user.click(await screen.findByRole('option', { name: "Grow at current law's rate" }));
+      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
+      await user.click(await screen.findByRole('option', { name: "Current law's rate" }));
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // The model runs to 2027 here, so 2027 is the only later start.
@@ -380,8 +390,8 @@ describe('DraftTable', () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'Later years' }));
-      await user.click(await screen.findByRole('option', { name: 'Grow with CPI-U' }));
+      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
+      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
       await user.click(screen.getByRole('combobox', { name: 'Rounding step' }));
@@ -413,7 +423,7 @@ describe('DraftTable', () => {
         screen.getByRole('button', { name: 'Open EITC phase-in rate by number of children' })
       );
 
-      expect(screen.queryByRole('combobox', { name: 'Later years' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: 'Indexing' })).not.toBeInTheDocument();
     });
   });
 

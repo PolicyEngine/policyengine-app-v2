@@ -114,7 +114,8 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : 'one';
   });
   const [historyOpen, setHistoryOpen] = useState(false);
-  // What later years do: the draft's choice, else the same value.
+  // How the value is indexed: the draft's choice, else the first money
+  // member's default (current law's rate, where current law indexes it).
   const [growthChoice, setGrowthChoice] = useState<Growth>(() => {
     // The first set money member says how values move; none set, the default.
     const money = members.filter((member) => canGrow(parameters?.[member.path]));
@@ -239,8 +240,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const growthMenu = growthOptions(
     draft.countryId,
     members.map((member) => parameters[member.path]),
-    parameters,
-    year
+    parameters
   );
   const changeGrowth = (choice: Growth, when: GrowthTiming, rounding: GrowthRounding) => {
     setGrowthChoice(choice);
@@ -259,7 +259,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const growthRow =
     mode === 'one' && growthMenu.length > 0 && moneyMember
       ? {
-          label: 'Later years',
+          label: 'Indexing',
           content: (
             <GrowthControl
               year={year}

@@ -76,14 +76,14 @@ function hint(props: GrowthControlProps): string {
   const { value, options, timing, amountText, rounding, currency } = props;
   if (value === 'fixed') {
     return options.some((option) => option.value === 'current_law')
-      ? `Every later year keeps the ${props.year} value. Current law would grow it.`
+      ? `Every later year keeps the ${props.year} value. Current law would index it.`
       : `Every later year keeps the ${props.year} value.`;
   }
   const rounded = roundingPhrase(rounding, currency);
   if (value === 'current_law') {
-    return `From ${timing.start}, ${amountText} grows as current law grows it from ${timing.base}${rounded}.`;
+    return `From ${timing.start}, ${amountText} grows at current law's rate from ${timing.base}${rounded}.`;
   }
-  const index = options.find((option) => option.value === value)?.label.replace(/^Grow with /, '');
+  const index = options.find((option) => option.value === value)?.label;
   return `From ${timing.start}: ${amountText} × ${index} that year ÷ ${index} in ${timing.base}${rounded}.`;
 }
 
@@ -114,7 +114,7 @@ export default function GrowthControl(props: GrowthControlProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
         <MiniSelect
-          label="Later years"
+          label="Indexing"
           value={value}
           options={options}
           onChange={(next) => onChange(next, timing, rounding)}
