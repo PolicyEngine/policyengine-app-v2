@@ -65,7 +65,6 @@ describe('SPM request and response plumbing', () => {
     mockResponse({
       status: 'ok',
       result: { people: {} },
-      spm_config: NATIONAL_SPM,
       spm_provenance: SPM_RECEIPT,
     });
     const result = await fetchHouseholdCalculationWithBundle(
@@ -74,7 +73,6 @@ describe('SPM request and response plumbing', () => {
       'reform-policy'
     );
     expect(JSON.parse(JSON.stringify(result))).toMatchObject({
-      spm_config: NATIONAL_SPM,
       spm_provenance: SPM_RECEIPT,
     });
   });
@@ -83,7 +81,6 @@ describe('SPM request and response plumbing', () => {
     const mockFetch = mockResponse({
       status: 'ok',
       result: { people: {} },
-      spm_config: NATIONAL_SPM,
       spm_provenance: SPM_RECEIPT,
     });
     const household = stateOnlyHousehold().toV1CreationPayload().data;
@@ -94,5 +91,47 @@ describe('SPM request and response plumbing', () => {
       spm: NATIONAL_SPM,
     });
     expect(result.spm_provenance).toEqual(SPM_RECEIPT);
+  });
+
+  test.each([
+    {
+      label: 'point calculation',
+      request: () => fetchHouseholdCalculationWithBundle('us', 'saved-household', 'reform-policy'),
+    },
+    {
+      label: 'earnings variation',
+      request: () => fetchHouseholdVariationWithProvenance('us', { people: {} }, {}, NATIONAL_SPM),
+    },
+  ])('given legacy receipt in a $label then rejects the response', async ({ request }) => {
+    mockResponse({
+      status: 'ok',
+      result: { people: {} },
+      spm_provenance: {
+        forecast_id: 'legacy-forecast',
+        forecast_sha256: 'a'.repeat(64),
+        scenario: 'legacy',
+        geography_kind: 'national',
+        years: { '2026': { source: 'forecast' } },
+        runtime_versions: {},
+        geographies: [],
+        composition_method: 'legacy',
+        storage_method: 'legacy',
+      },
+    });
+
+    await expect(request()).rejects.toThrow('Invalid SPM provenance');
+  });
+
+  test('given a completed response with the superseded sibling config then rejects it', async () => {
+    mockResponse({
+      status: 'ok',
+      result: { people: {} },
+      spm_config: { geography_kind: 'national' },
+      spm_provenance: SPM_RECEIPT,
+    });
+
+    await expect(
+      fetchHouseholdCalculationWithBundle('us', 'saved-household', 'reform-policy')
+    ).rejects.toThrow('must not include spm_config');
   });
 });

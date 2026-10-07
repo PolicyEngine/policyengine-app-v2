@@ -1,3 +1,4 @@
+import { SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { MetadataRegionEntry, MetadataState } from '@/types/metadata';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { US_REGION_TYPES } from '@/types/regionTypes';
@@ -52,6 +53,7 @@ export const MOCK_CONGRESSIONAL_DISTRICT_REGIONS: MetadataRegionEntry[] = [
  * Mock US report output with congressional district impact data
  */
 export const MOCK_US_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
+  spm_provenance: SPM_COMPARISON_RECEIPT,
   congressional_district_impact: {
     districts: [
       {

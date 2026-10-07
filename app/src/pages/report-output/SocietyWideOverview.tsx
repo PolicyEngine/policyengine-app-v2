@@ -13,6 +13,7 @@ import { normalizeDistrictId } from '@/adapters/congressional-district/congressi
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
+import SPMComparisonMethodology from '@/components/report/SPMComparisonMethodology';
 import { Group, SegmentedControl, Stack, Text } from '@/components/ui';
 import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
 import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
@@ -1439,6 +1440,9 @@ export default function SocietyWideOverview({
           />
         )}
       </div>
+      {'spm_provenance' in output && (
+        <SPMComparisonMethodology provenance={output.spm_provenance} />
+      )}
     </Stack>
   );
 }

@@ -139,14 +139,13 @@ async function hydrateAndVerifyReceipts() {
         role: index === 0 ? 'baseline' : 'reform',
         household: GENERIC_HOUSEHOLDS[index],
         policy: convertPoliciesToV1Format([GENERIC_POLICIES[index]]).baseline.data,
-        spmConfig: output.spm_config,
         spmProvenance: output.spm_provenance,
         modelVersion: output.policyengine_bundle!.model_version,
         policyengineVersion: output.policyengine_bundle!.policyengine_version,
       },
       Number(report.year)
     ).join('\n');
-    expect(code).toContain(output.spm_config!.forecast_content_sha256);
+    expect(code).toContain(output.spm_provenance!.forecast_sha256);
     expect(code).toContain(`policyengine-us==${output.policyengine_bundle!.model_version}`);
     expect(code).toContain(`reform=${index === 0 ? 'baseline' : 'reform'},`);
     expect(code).toContain('simulation.spm_provenance()');

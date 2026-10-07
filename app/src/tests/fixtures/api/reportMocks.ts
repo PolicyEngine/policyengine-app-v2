@@ -1,4 +1,5 @@
 import { ReportAdapter } from '@/adapters/ReportAdapter';
+import { SPM_COMPARISON_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
@@ -28,6 +29,7 @@ export const MOCK_HOUSEHOLD_RESULT = {
 
 // Complete mock for US society-wide result
 export const MOCK_ECONOMY_RESULT: ReportOutputSocietyWideUS = {
+  spm_provenance: SPM_COMPARISON_RECEIPT,
   budget: {
     baseline_net_income: 1000000,
     benefit_spending_impact: -50000,
