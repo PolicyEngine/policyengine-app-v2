@@ -153,14 +153,16 @@ function FullResultsStatus({
     return (
       <Stack style={{ ...STATUS_BOX, alignItems: 'flex-start' }}>
         <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-          The full results are not calculated yet.
+          The full results are not loaded.
         </Text>
+        {/* Whether they exist is unknown until asked: another reader may have run the bill. */}
         <Caption>
-          The estimates here are the legislative tracker&apos;s. A full run scores the bill with
-          today&apos;s model and can take several minutes.
+          This page shows the legislative tracker&apos;s stored estimates. The full results score
+          the bill with today&apos;s model. If no one has run this bill yet, that takes several
+          minutes.
         </Caption>
         <Button size="sm" onClick={onStart}>
-          Calculate full results
+          Load full results
         </Button>
       </Stack>
     );

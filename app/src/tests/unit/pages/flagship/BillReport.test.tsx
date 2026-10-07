@@ -118,11 +118,11 @@ describe('BillReportPage', () => {
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
     await user.click(screen.getByRole('tab', { name: 'Districts' }));
     expect(
-      within(screen.getByRole('tabpanel')).getByText('The full results are not calculated yet.')
+      within(screen.getByRole('tabpanel')).getByText('The full results are not loaded.')
     ).toBeInTheDocument();
     expect(mockUseBillEconomy).not.toHaveBeenCalledWith(expect.anything(), { enabled: true });
 
-    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
     expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: TRACKED_BILL.id }),
       { enabled: true }
@@ -151,7 +151,7 @@ describe('BillReportPage', () => {
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
-    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
 
     expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
     expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
@@ -170,7 +170,7 @@ describe('BillReportPage', () => {
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
-    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
     expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Overview' }));
@@ -187,7 +187,7 @@ describe('BillReportPage', () => {
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
-    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
     expect(screen.getByText('The full results could not be calculated.')).toBeInTheDocument();
     expect(screen.getByText('Worker lost')).toBeInTheDocument();
 
@@ -249,7 +249,7 @@ describe('BillReportPage', () => {
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
-    await user.click(screen.getByRole('button', { name: 'Calculate full results' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
     expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: TRACKED_BILL.id }),
       { enabled: false }
