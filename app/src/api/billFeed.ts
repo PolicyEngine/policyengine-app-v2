@@ -432,6 +432,25 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
 }
 
 /**
+ * Whether a tracker research entry is a reform the Reforms tab can show:
+ * a bill, or a blog post that carries a reform to score. Dashboards and
+ * tools (the OBBBA Household Explorer, MyFriendBen) are apps, and a blog
+ * post without reform params is prose only.
+ */
+function isScorableReform(record: any, impact: any): boolean {
+  if (!record.type || record.type === 'bill') {
+    return true;
+  }
+  const params = impact?.reform_params;
+  return (
+    record.type === 'blog' &&
+    !!params &&
+    typeof params === 'object' &&
+    Object.keys(params).length > 0
+  );
+}
+
+/**
  * Fetches analyzed bills from the tracker's Supabase project. Returns
  * null when the feed is not configured (callers fall back to samples).
  */
@@ -465,41 +484,43 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
     ])
   );
 
-  return research.map((record): TrackedBill => {
-    const impact = impactsById.get(record.id);
-    const status = processedByKey.get(record.id)?.status;
-    return {
-      id: record.id,
-      countryId: 'us',
-      jurisdiction: STATE_NAMES[record.state] ?? record.state ?? 'Federal',
-      // The tracker files federal bills under "US", which is not a state.
-      state:
-        /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
-          ? record.state.toUpperCase()
+  return research
+    .filter((record) => isScorableReform(record, impactsById.get(record.id)))
+    .map((record): TrackedBill => {
+      const impact = impactsById.get(record.id);
+      const status = processedByKey.get(record.id)?.status;
+      return {
+        id: record.id,
+        countryId: 'us',
+        jurisdiction: STATE_NAMES[record.state] ?? record.state ?? 'Federal',
+        // The tracker files federal bills under "US", which is not a state.
+        state:
+          /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
+            ? record.state.toUpperCase()
+            : undefined,
+        title: record.title ?? record.id,
+        status: status || 'Analyzed',
+        summary: record.description ?? '',
+        provisions: provisionsFromReformParams(impact?.reform_params, baselineById.get(record.id)),
+        changes: changesFromTrackerProvisions(impact?.provisions),
+        keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
+        legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
+        sourceUrl: record.url ?? undefined,
+        author: record.author ?? undefined,
+        date: record.date ?? undefined,
+        provenance: impact
+          ? {
+              modelVersion: impact.policyengine_us_version ?? undefined,
+              dataset: impact.dataset_name ?? undefined,
+              datasetVersion: impact.dataset_version ?? undefined,
+              computedAt: impact.computed_at ?? undefined,
+            }
           : undefined,
-      title: record.title ?? record.id,
-      status: status || 'Analyzed',
-      summary: record.description ?? '',
-      provisions: provisionsFromReformParams(impact?.reform_params, baselineById.get(record.id)),
-      changes: changesFromTrackerProvisions(impact?.provisions),
-      keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
-      legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
-      sourceUrl: record.url ?? undefined,
-      author: record.author ?? undefined,
-      date: record.date ?? undefined,
-      provenance: impact
-        ? {
-            modelVersion: impact.policyengine_us_version ?? undefined,
-            dataset: impact.dataset_name ?? undefined,
-            datasetVersion: impact.dataset_version ?? undefined,
-            computedAt: impact.computed_at ?? undefined,
-          }
-        : undefined,
-      validation: extractValidation(validationById.get(record.id), impact),
-      impacts: extractImpacts(impact),
-      impactData: extractImpactData(impact),
-    };
-  });
+        validation: extractValidation(validationById.get(record.id), impact),
+        impacts: extractImpacts(impact),
+        impactData: extractImpactData(impact),
+      };
+    });
 }
 
 /**

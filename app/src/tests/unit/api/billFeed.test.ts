@@ -285,6 +285,36 @@ describe('fetchTrackerBills', () => {
     ]);
   });
 
+  test('given dashboards, tools, and blog posts then only reforms to score are listed', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    const rows: Record<string, any[]> = {
+      research: [
+        { id: 'ut-hb290', type: 'bill', state: 'UT', title: 'UT HB 290' },
+        { id: 'obbba-explorer', type: 'dashboard', state: 'US', title: 'OBBBA Household Explorer' },
+        { id: 'nc-myfriendben', type: 'tool', state: 'NC', title: 'MyFriendBen' },
+        { id: 'ut-sb60', type: 'blog', state: 'UT', title: 'Utah SB60' },
+        { id: 'la-flat-tax', type: 'blog', state: 'LA', title: 'Louisiana flat tax' },
+      ],
+      reform_impacts: [
+        { id: 'ut-hb290', reform_params: { 'gov.states.ut.tax.income.rate': 0.0445 } },
+        { id: 'ut-sb60', reform_params: { 'gov.states.ut.tax.income.rate': 0.0445 } },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const table = String(url).match(/rest\/v1\/(\w+)\?/)?.[1] ?? '';
+        return { ok: true, json: async () => rows[table] ?? [] };
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    // A blog post with a reform to score stays; one without it is prose only.
+    expect(bills!.map((bill) => bill.id)).toEqual(['ut-hb290', 'ut-sb60']);
+  });
+
   test('given the tracker stores baseline params then the bills carry them', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
