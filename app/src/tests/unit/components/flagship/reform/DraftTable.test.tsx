@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, userEvent, within } from '@test-utils';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import DraftTable from '@/components/flagship/reform/DraftTable';
 import { FOREVER } from '@/constants';
 import {
@@ -15,6 +15,7 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   CTC_PATH,
+  EXEMPTION_PATH,
   JOINT_PATH,
   LIST_PATH,
   PHASE_IN_RATE_PATH,
@@ -93,6 +94,7 @@ describe('DraftTable', () => {
       'Single',
       'Joint',
       'Head of household',
+      'Indexing',
     ]);
     expect(provision(JOINT_PATH)?.intervals).toEqual([
       { startDate: '2026-01-01', endDate: FOREVER, value: 35000 },
@@ -132,6 +134,7 @@ describe('DraftTable', () => {
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
       'Current law',
       'Your reform',
+      'Indexing',
     ]);
     expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
   });
@@ -270,6 +273,157 @@ describe('DraftTable', () => {
       expect(provision(PHASE_IN_RATE_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 0.38 },
       ]);
+    });
+  });
+
+  describe('given a value set from one year on', () => {
+    beforeEach(() => {
+      // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+    });
+
+    test('then an unindexed amount holds by default, and can grow with an index', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+
+      const after = screen.getByRole('combobox', { name: 'Indexing' });
+      expect(after).toHaveTextContent('None');
+      await user.click(after);
+      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      expect(provision(CTC_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 3000 },
+        { startDate: '2027-01-01', endDate: FOREVER, value: 3090 },
+      ]);
+      await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
+      expect(screen.getByText('from 2026 · CPI-U')).toHaveAttribute(
+        'title',
+        'from 2026, indexed to CPI-U'
+      );
+    });
+
+    test("then an amount current law indexes is indexed at current law's rate by default", async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 5000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+
+      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
+        "Current law's rate"
+      );
+      fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
+
+      // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
+      // to $100, the step current law's projected values all land on.
+      expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
+        { startDate: '2027-01-01', endDate: FOREVER, value: 6100 },
+      ]);
+      expect(screen.getByRole('combobox', { name: 'Rounding' })).toHaveTextContent('down to');
+      expect(screen.getByRole('combobox', { name: 'Rounding step' })).toHaveTextContent('$100');
+    });
+
+    test('then a value set before indexing existed shows none, as it runs', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 6000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+
+      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent('None');
+    });
+
+    test('then the years after preview what the growth makes of it', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
+      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
+
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      // CPI-U goes 100 → 103 from 2026 to 2027, the model's last year here.
+      expect(screen.getByLabelText('Child tax credit base amount, 2027')).toHaveTextContent(
+        '$3,090'
+      );
+      expect(
+        screen.getByText('From 2027: $3,000 × CPI-U that year ÷ CPI-U in 2026.')
+      ).toBeInTheDocument();
+    });
+
+    test('then a later start holds the value until it, measured from the base year', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 5000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
+      await user.click(await screen.findByRole('option', { name: "Current law's rate" }));
+      fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
+
+      // The model runs to 2027 here, so 2027 is the only later start.
+      expect(screen.getByRole('combobox', { name: 'Indexing starts' })).toHaveTextContent('2027');
+      expect(screen.getByRole('combobox', { name: 'Base year' })).toHaveTextContent('2026');
+      expect(provision(EXEMPTION_PATH)).toMatchObject({ growthStart: 2027, growthBase: 2026 });
+    });
+
+    test('then the rounding can change, and the values follow', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
+      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      await user.click(screen.getByRole('combobox', { name: 'Rounding step' }));
+      await user.click(await screen.findByRole('option', { name: '$50' }));
+      await user.click(screen.getByRole('combobox', { name: 'Rounding' }));
+      await user.click(await screen.findByRole('option', { name: 'down to' }));
+
+      // 3,000 × 1.03 = 3,090, down to a multiple of $50.
+      expect(provision(CTC_PATH)?.intervals?.[1]).toMatchObject({ value: 3050 });
+      expect(provision(CTC_PATH)).toMatchObject({ growthRoundTo: 50, growthRound: 'down' });
+      expect(
+        screen.getByText(
+          'From 2027: $3,000 × CPI-U that year ÷ CPI-U in 2026, rounded down to a multiple of $50.'
+        )
+      ).toBeInTheDocument();
+    });
+
+    test('then a rate has no growth to offer', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: PHASE_IN_RATE_PATH,
+        breadcrumb: 'IRS → Credits → EITC → Phase-in rate → Bracket 2 → Amount',
+        unit: '/1',
+        baselineValue: 0.34,
+        value: 0.34,
+      });
+      render(<TableHarness />);
+      await user.click(
+        screen.getByRole('button', { name: 'Open EITC phase-in rate by number of children' })
+      );
+
+      expect(screen.queryByRole('combobox', { name: 'Indexing' })).not.toBeInTheDocument();
     });
   });
 
