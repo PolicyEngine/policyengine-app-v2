@@ -120,7 +120,7 @@
     "featured": true
   },
   {
-    "title": "Booker announces Keep Your Pay Act to \"provide wallet relief\" and put more money in your pocket",
+    "title": "What they're saying: Booker announces Keep Your Pay Act to \"provide wallet relief\" and \"put more money in your pocket\"",
     "outlet": "U.S. Senate (Booker)",
     "date": "2026-03-20",
     "url": "https://www.booker.senate.gov/news/press/what-theyre-saying-booker-announces-keep-your-pay-act-to-provide-wallet-relief-and-put-more-money-in-your-pocket",
@@ -155,8 +155,8 @@
     "featured": true
   },
   {
-    "title": "Rhode Island House Committee on Finance H. 7127, Governor's proposed Child Tax Credit",
-    "outlet": "Rhode Island General Assembly",
+    "title": "Informational testimony on Rhode Island H. 7127, Governor's budget Article 5, Sections 5 and 6",
+    "outlet": "Prenatal-to-3 Policy Impact Center (Vanderbilt University)",
     "date": "2026-02-26",
     "url": "https://www.rilegislature.gov/Special/comdoc/House%20Finance%202026/03-03-2026--H7127~Article%205~~Sections%205%20and%206--Cory_Worrall--FIN.pdf",
     "image": "ri-legislature-h7127.webp",
@@ -166,7 +166,7 @@
     "title": "The inflation hangover: how the post-pandemic price surge reshaped affordability in America",
     "outlet": "Common Sense Institute",
     "date": "2026-03-17",
-    "url": "https://www.commonsenseinstituteus.org/ResearchUploads/CSI%20Report%20-%20State%20Affordability.pdf",
+    "url": "https://commonsenseinstituteus.org/research/the-inflation-hangover-how-the-post-pandemic-price-surge-reshaped-affordability-in-america-copy/",
     "image": "csi-inflation.webp",
     "tags": ["us", "policy"]
   },
@@ -235,7 +235,7 @@
     "tags": ["uk", "policy"]
   },
   {
-    "title": "Why Land Value Tax and a Universal Basic Income are even better together",
+    "title": "Universal land dividend: why land value tax and a universal basic income are even better together",
     "outlet": "Progress and Poverty Institute",
     "date": "2024-05-21",
     "url": "https://progressandpovertyinstitute.org/universal-land-dividend-why-land-value-tax-and-a-universal-basic-income-are-even-better-together/",
@@ -275,7 +275,7 @@
     "tags": ["uk", "tax"]
   },
   {
-    "title": "An analysis of gubernatorial candidate Ethan Penner's tax reform plan",
+    "title": "An analysis of gubernatorial candidate Ethan Penner's tax reform proposal",
     "outlet": "American Enterprise Institute",
     "date": "2025-09-17",
     "url": "https://www.aei.org/wp-content/uploads/2025/09/Analysis-of-the-Penner-Tax-Plan-1.pdf",
@@ -339,7 +339,7 @@
     "tags": ["uk", "tax"]
   },
   {
-    "title": "Hawai'i's unnecessary benefit cliff: how one small policy change could deliver $45M per year in SNAP benefits",
+    "title": "Hawaiʻi's unnecessary benefit cliff: how one small policy change could deliver tens of millions in federally-funded SNAP benefits",
     "outlet": "UHERO (University of Hawai'i)",
     "date": "2024-09-23",
     "url": "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
@@ -347,7 +347,7 @@
     "tags": ["us", "policy"]
   },
   {
-    "title": "Paying for progress",
+    "title": "Paying for progress: a blueprint to cut costs, boost growth, and expand American opportunity",
     "outlet": "Progressive Policy Institute",
     "date": "2024-07-23",
     "url": "https://www.progressivepolicy.org/wp-content/uploads/2024/08/PayingForProgress-2024.pdf",
@@ -363,7 +363,7 @@
     "tags": ["us", "tax"]
   },
   {
-    "title": "Sen. Gounardes: my Working Families Tax Credit is the best way to help New York families",
+    "title": "Sen. Gounardes: my Working Families Tax Credit is the best way to reduce poverty and support families",
     "outlet": "New York State Senate",
     "date": "2025-01-06",
     "url": "https://www.nysenate.gov/newsroom/press-releases/2025/andrew-gounardes/sen-gounardes-my-working-families-tax-credit-best-way",
@@ -387,7 +387,7 @@
     "tags": ["us", "policy"]
   },
   {
-    "title": "Historical post-tax income estimates using the Current Population Survey",
+    "title": "Historical post-tax income estimates using the Current Population Survey Annual Social and Economic Supplement Tax Model",
     "outlet": "U.S. Census Bureau",
     "date": "2024-09-10",
     "url": "https://www2.census.gov/library/working-papers/2024/demo/sehsd-wp2024-23.pdf",
@@ -419,10 +419,10 @@
     "tags": ["uk", "technical"]
   },
   {
-    "title": "Testimony of Commissioner Gary P. Jenkins",
+    "title": "A universal basic income for New York City's low-income residents",
     "outlet": "New York City Council",
     "date": "2022-05-03",
-    "url": "https://legistar.council.nyc.gov/View.ashx?GUID=D359072E-068C-436F-9580-BC73D593AC03&ID=10879223&M=F",
+    "url": "https://legistar.council.nyc.gov/View.ashx?GUID=D359072E-068C-436F-9580-BC73D593AC03&ID=10879223&M=F#page=104",
     "image": "nyc-council-jenkins.webp",
     "tags": ["us", "policy"]
   },
@@ -483,7 +483,7 @@
     "tags": ["us", "policy"]
   },
   {
-    "title": "Disentangling in-work and child tax credits to address improper payments",
+    "title": "Disentangling in-work and child tax credits to address improper payments: an incremental approach to comprehensive reform",
     "outlet": "Niskanen Center",
     "date": "2025-03-26",
     "url": "https://www.niskanencenter.org/disentangling-in-work-and-child-tax-credits-to-address-improper-payments/",
@@ -491,7 +491,7 @@
     "tags": ["us", "tax"]
   },
   {
-    "title": "How to phase out Arkansas's work-punishing personal income tax",
+    "title": "Pathway to prosperity: how to phase out Arkansas's work-punishing personal income tax",
     "outlet": "Opportunity Arkansas",
     "date": "2023-11-09",
     "url": "https://www.opportunityarkansas.org/wp-content/uploads/2024/11/Income-Tax-Reform-paper_DIGITAL_11-17-2023.pdf",
@@ -534,7 +534,7 @@
     "title": "What's behind declining birth rates in the U.S.?",
     "outlet": "Federal Reserve Bank of Atlanta",
     "date": "2026-05-13",
-    "url": "https://www.atlantafed.org/-/media/Project/Atlanta/FRBA/Documents/research/publication/working-paper/2026/05/13/05-whats-behind-declining-birth-rates-in-the-us.pdf",
+    "url": "https://doi.org/10.29338/wp2026-05",
     "image": "atlanta-fed-declining-birth-rates.jpg",
     "tags": ["us", "policy"]
   },
@@ -571,7 +571,7 @@
     "tags": ["us", "tax"]
   },
   {
-    "title": "Making every dollar count: benefits protection strategies in Illinois guaranteed income pilots",
+    "title": "Making every dollar count: a closer look at benefits protection strategies implemented by guaranteed income pilots in Illinois",
     "outlet": "University of Chicago Inclusive Economy Lab",
     "date": "2024-07-30",
     "url": "https://urbanlabs.uchicago.edu/attachments/fc728a5fe2d51ac58e8d2500275a5c1ebcefa0a1/store/343b09a7a87c07b637df12c393a105dad2a448901a9e0c0a57064b2cb900/Benefits+Case+Study_Final.pdf",
