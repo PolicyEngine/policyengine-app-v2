@@ -105,7 +105,7 @@
   {
     "title": "Research and analysis for the Maine Real Estate Property Tax Relief Task Force",
     "outlet": "Progress and Poverty Institute",
-    "date": "2026-05-01",
+    "date": "2026-06-05",
     "url": "https://legislature.maine.gov/doc/12515",
     "image": "ppi-maine-property-tax.webp",
     "tags": ["us", "tax"]
@@ -131,7 +131,7 @@
   {
     "title": "Break glass: a plan for the next economic shock",
     "outlet": "Committee for a Responsible Federal Budget",
-    "date": "2026-03-06",
+    "date": "2026-03-10",
     "url": "https://www.crfb.org/papers/break-glass-plan-next-economic-shock",
     "image": "crfb-break-glass.webp",
     "tags": ["us", "policy"]
@@ -139,7 +139,7 @@
   {
     "title": "Agent-based macroeconomics for the UK's seventh carbon budget",
     "outlet": "arXiv",
-    "date": "2026-03-13",
+    "date": "2026-02-17",
     "url": "https://arxiv.org/pdf/2602.15607",
     "image": "arxiv-carbon-budget.webp",
     "tags": ["uk", "policy"],
@@ -157,7 +157,7 @@
   {
     "title": "Rhode Island House Committee on Finance H. 7127, Governor's proposed Child Tax Credit",
     "outlet": "Rhode Island General Assembly",
-    "date": "2026-03-02",
+    "date": "2026-02-26",
     "url": "https://www.rilegislature.gov/Special/comdoc/House%20Finance%202026/03-03-2026--H7127~Article%205~~Sections%205%20and%206--Cory_Worrall--FIN.pdf",
     "image": "ri-legislature-h7127.webp",
     "tags": ["us", "tax"]
@@ -173,7 +173,7 @@
   {
     "title": "How we're improving tax calculations in partnership with PolicyEngine",
     "outlet": "Living Wage Institute",
-    "date": "2026-02-15",
+    "date": "2026-03-03",
     "url": "https://www.livingwage.institute/post/how-we-re-improving-tax-calculations-in-partnership-with-policyengine",
     "image": "lwi-tax-calculations.webp",
     "tags": ["us", "policy"]
@@ -181,7 +181,7 @@
   {
     "title": "Rashida Tlaib's plan to combat poverty",
     "outlet": "Jacobin",
-    "date": "2025-11-01",
+    "date": "2025-11-23",
     "url": "https://jacobin.com/2025/11/tlaib-poverty-inequality-reduction-legislation",
     "image": "jacobin-tlaib.webp",
     "tags": ["us", "policy"]
@@ -205,7 +205,7 @@
   {
     "title": "AI in regulatory design and delivery: governing with artificial intelligence",
     "outlet": "OECD",
-    "date": "2025-06-01",
+    "date": "2025-09-18",
     "url": "https://www.oecd.org/en/publications/governing-with-artificial-intelligence_795de142-en/full-report/ai-in-regulatory-design-and-delivery_128691e6.html",
     "image": "oecd-ai-governance.webp",
     "tags": ["global", "technical"]
@@ -237,7 +237,7 @@
   {
     "title": "Why Land Value Tax and a Universal Basic Income are even better together",
     "outlet": "Progress and Poverty Institute",
-    "date": "2024-01-01",
+    "date": "2024-05-21",
     "url": "https://progressandpovertyinstitute.org/universal-land-dividend-why-land-value-tax-and-a-universal-basic-income-are-even-better-together/",
     "image": "ppi-lvt-ubi.webp",
     "tags": ["uk", "policy"]
@@ -245,7 +245,7 @@
   {
     "title": "The macroeconomic effect of the UK's 2022 cost-of-living payments",
     "outlet": "London School of Economics (CFM)",
-    "date": "2023-11-30",
+    "date": "2023-05-31",
     "url": "https://www.lse.ac.uk/CFM/assets/pdf/CFM-Discussion-Papers-2023/CFMDP2023-16-Paper.pdf",
     "image": "lse-cost-of-living.webp",
     "tags": ["uk", "policy"]
@@ -253,7 +253,7 @@
   {
     "title": "Labour's National Insurance overhaul could make workers £3,000 worse-off, bombshell research claims",
     "outlet": "GB News",
-    "date": "2024-10-27",
+    "date": "2024-10-28",
     "url": "https://www.gbnews.com/money/budget-workers-national-insurance-tax",
     "image": "gbnews-nic.webp",
     "tags": ["uk", "tax"]
@@ -261,7 +261,7 @@
   {
     "title": "Workers face pay hit under Reeves's National Insurance plans",
     "outlet": "The Telegraph",
-    "date": "2025-05-30",
+    "date": "2024-10-28",
     "url": "https://www.telegraph.co.uk/money/tax/workers-face-3000-pay-cut-under-reeves-national-insurance/",
     "image": "telegraph-nic.webp",
     "tags": ["uk", "tax"]
@@ -277,7 +277,7 @@
   {
     "title": "An analysis of gubernatorial candidate Ethan Penner's tax reform plan",
     "outlet": "American Enterprise Institute",
-    "date": "2025-09-01",
+    "date": "2025-09-17",
     "url": "https://www.aei.org/wp-content/uploads/2025/09/Analysis-of-the-Penner-Tax-Plan-1.pdf",
     "image": "aei-penner.webp",
     "tags": ["us", "tax"]
@@ -349,7 +349,7 @@
   {
     "title": "Paying for progress",
     "outlet": "Progressive Policy Institute",
-    "date": "2024-08-22",
+    "date": "2024-07-23",
     "url": "https://www.progressivepolicy.org/wp-content/uploads/2024/08/PayingForProgress-2024.pdf",
     "image": "ppi-paying-progress.webp",
     "tags": ["us", "policy"]
@@ -357,7 +357,7 @@
   {
     "title": "Sen. Gounardes' Working Families Tax Credit would benefit every part of New York State",
     "outlet": "New York State Senate",
-    "date": "2025-03-26",
+    "date": "2025-03-27",
     "url": "https://www.nysenate.gov/newsroom/press-releases/2025/andrew-gounardes/sen-gounardes-working-families-tax-credit-would",
     "image": "nysenate-gounardes.webp",
     "tags": ["us", "tax"]
@@ -365,7 +365,7 @@
   {
     "title": "Sen. Gounardes: my Working Families Tax Credit is the best way to help New York families",
     "outlet": "New York State Senate",
-    "date": "2025-01-05",
+    "date": "2025-01-06",
     "url": "https://www.nysenate.gov/newsroom/press-releases/2025/andrew-gounardes/sen-gounardes-my-working-families-tax-credit-best-way",
     "image": "nysenate-gounardes-2.webp",
     "tags": ["us", "tax"]
@@ -373,7 +373,7 @@
   {
     "title": "Oxfam's love affair with 'inequality'",
     "outlet": "The Wall Street Journal",
-    "date": "2023-03-20",
+    "date": "2024-01-23",
     "url": "https://www.wsj.com/opinion/oxfams-inequality-report-obscures-how-life-for-the-poor-has-improved-0e1bd13e",
     "image": "wsj-oxfam.webp",
     "tags": ["us", "policy"]
@@ -389,7 +389,7 @@
   {
     "title": "Historical post-tax income estimates using the Current Population Survey",
     "outlet": "U.S. Census Bureau",
-    "date": "2024-01-01",
+    "date": "2024-09-10",
     "url": "https://www2.census.gov/library/working-papers/2024/demo/sehsd-wp2024-23.pdf",
     "image": "census-post-tax.webp",
     "tags": ["us", "technical"]
@@ -397,7 +397,7 @@
   {
     "title": "NIESR UK living standards review 2025",
     "outlet": "National Institute of Economic and Social Research",
-    "date": "2025-03-01",
+    "date": "2025-03-12",
     "url": "https://niesr.ac.uk/wp-content/uploads/2025/03/JC871-NIESR-UK-Living-Standards-Review-2025-final-version.pdf",
     "image": "niesr-living-standards.webp",
     "tags": ["uk", "policy"]
@@ -413,7 +413,7 @@
   {
     "title": "Enhancing, localising and democratising tax-benefit policy analysis",
     "outlet": "Nuffield Foundation",
-    "date": "2024-09-01",
+    "date": "2024-08-20",
     "url": "https://www.nuffieldfoundation.org/project/enhancing-localising-and-democratising-tax-benefit-policy-analysis",
     "image": "nuffield-tax-benefit.webp",
     "tags": ["uk", "technical"]
@@ -421,7 +421,7 @@
   {
     "title": "Testimony of Commissioner Gary P. Jenkins",
     "outlet": "New York City Council",
-    "date": "2022-05-02",
+    "date": "2022-05-03",
     "url": "https://legistar.council.nyc.gov/View.ashx?GUID=D359072E-068C-436F-9580-BC73D593AC03&ID=10879223&M=F",
     "image": "nyc-council-jenkins.webp",
     "tags": ["us", "policy"]
@@ -429,7 +429,7 @@
   {
     "title": "Building a stronger foundation for American families: options for Child Tax Credit reform",
     "outlet": "Niskanen Center",
-    "date": "2024-02-29",
+    "date": "2024-03-25",
     "url": "https://www.niskanencenter.org/building-a-stronger-foundation-for-american-families-options-for-child-tax-credit-reform/",
     "image": "niskanen-ctc.webp",
     "tags": ["us", "tax"]
@@ -437,7 +437,7 @@
   {
     "title": "EPPC policy memo calls for federal action on tax relief for parents",
     "outlet": "Ethics & Public Policy Center",
-    "date": "2024-10-01",
+    "date": "2024-10-16",
     "url": "https://eppc.org/news/eppc-policy-memo-calls-for-federal-action-on-tax-relief-for-parents/",
     "image": "eppc-ctc-memo.webp",
     "tags": ["us", "tax"]
@@ -445,7 +445,7 @@
   {
     "title": "Free money: the feasibility of implementing a universal basic income in the United States",
     "outlet": "University of South Carolina",
-    "date": "2023-04-30",
+    "date": "2023-04-19",
     "url": "https://scholarcommons.sc.edu/senior_theses/587/",
     "image": "usc-ubi.webp",
     "tags": ["us", "policy"]
@@ -453,7 +453,7 @@
   {
     "title": "Rhode Island child tax credit would be bold, simple, and fiscally responsible",
     "outlet": "Niskanen Center",
-    "date": "2026-01-12",
+    "date": "2026-01-13",
     "url": "https://www.niskanencenter.org/rhode-island-child-tax-credit-would-be-bold-simple-and-fiscally-responsible/",
     "image": "niskanen-ri-ctc.webp",
     "tags": ["us", "tax"]
@@ -461,7 +461,7 @@
   {
     "title": "Which states benefit most from the SALT deduction?",
     "outlet": "Bipartisan Policy Center",
-    "date": "2025-05-15",
+    "date": "2025-05-16",
     "url": "https://bipartisanpolicy.org/explainer/which-states-benefit-most-from-the-salt-deduction/",
     "image": "bpc-salt.webp",
     "tags": ["us", "tax"]
@@ -469,7 +469,7 @@
   {
     "title": "A more equitable tax system is possible",
     "outlet": "Roosevelt Institute",
-    "date": "2025-04-21",
+    "date": "2025-04-29",
     "url": "https://rooseveltinstitute.org/blog/more-equitable-tax-is-possible/",
     "image": "roosevelt-tax.webp",
     "tags": ["us", "tax"]
@@ -477,7 +477,7 @@
   {
     "title": "Newborn needs: the case for an American baby bonus",
     "outlet": "Niskanen Center",
-    "date": "2025-04-21",
+    "date": "2025-04-22",
     "url": "https://www.niskanencenter.org/newborn-needs-the-case-for-an-american-baby-bonus/",
     "image": "niskanen-baby-bonus.webp",
     "tags": ["us", "policy"]
@@ -493,7 +493,7 @@
   {
     "title": "How to phase out Arkansas's work-punishing personal income tax",
     "outlet": "Opportunity Arkansas",
-    "date": "2024-10-31",
+    "date": "2023-11-09",
     "url": "https://www.opportunityarkansas.org/wp-content/uploads/2024/11/Income-Tax-Reform-paper_DIGITAL_11-17-2023.pdf",
     "image": "opportunity-ar-tax.webp",
     "tags": ["us", "tax"]
@@ -501,7 +501,7 @@
   {
     "title": "DCTC passes in the first budget vote!",
     "outlet": "Mother's Outreach Network",
-    "date": "2024-05-29",
+    "date": "2024-05-30",
     "url": "https://mothersoutreachnetwork.org/dctc-passes-in-the-first-budget-vote/",
     "image": "mon-dctc-vote.webp",
     "tags": ["us", "policy"]
@@ -509,7 +509,7 @@
   {
     "title": "Report on the District Child Tax Credit proposal",
     "outlet": "Mother's Outreach Network",
-    "date": "2023-06-30",
+    "date": "2023-04-02",
     "url": "https://mothersoutreachnetwork.org/dc-tax-credit-proposal/",
     "image": "mon-dc-report.webp",
     "tags": ["us", "policy"]
@@ -517,7 +517,7 @@
   {
     "title": "CTC calculator",
     "outlet": "The Gerald Huff Fund for Humanity",
-    "date": "2024-01-01",
+    "date": "2024-12-18",
     "url": "https://fundforhumanity.org/ctc-calculator/",
     "image": "fundforhumanity-ctc.webp",
     "tags": ["us", "policy"]
@@ -525,7 +525,7 @@
   {
     "title": "One page primer: Child Tax Credit",
     "outlet": "DC Guaranteed Income Coalition",
-    "date": "2023-01-01",
+    "date": "2025-06-15",
     "url": "https://dcgicoalition.org/one-page-primer-child-tax-credit/",
     "image": "dcgi-ctc.webp",
     "tags": ["us", "policy"]
@@ -581,7 +581,7 @@
   {
     "title": "Basic income and AI-induced unemployment",
     "outlet": "Adam Smith Institute",
-    "date": "2024-05-03",
+    "date": "2023-05-03",
     "url": "https://www.adamsmith.org/blog/basic-income-and-ai-induced-unemployment",
     "image": "adam-smith-basic-income-ai-unemployment.jpg",
     "tags": ["uk", "policy"]
