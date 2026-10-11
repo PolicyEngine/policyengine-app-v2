@@ -9,6 +9,31 @@ import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
 
+/** Columns that show from the small breakpoint up; below it the values stack under the name. */
+const WIDE_ONLY = 'tw:hidden tw:sm:table-cell';
+
+const headerCell: React.CSSProperties = {
+  padding: `0 ${spacing.md} ${spacing.sm}`,
+  textAlign: 'right',
+  fontSize: typography.fontSize.xs,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.secondary,
+  whiteSpace: 'nowrap',
+};
+
+const bodyCell: React.CSSProperties = {
+  padding: `${spacing.md} ${spacing.md}`,
+  verticalAlign: 'top',
+};
+
+/** Before and after: right-aligned like the numbers they mostly are, wrapping when long. */
+const valueCell: React.CSSProperties = {
+  textAlign: 'right',
+  minWidth: 88,
+  maxWidth: 220,
+  fontVariantNumeric: 'tabular-nums',
+};
+
 interface ChangeRow {
   key: string;
   name: string;
@@ -23,10 +48,11 @@ interface ChangeRow {
 }
 
 /**
- * What the reform changes, a row each: the change's name, what it does,
- * and its value before and after. A tracked bill's rows are the changes
- * as the tracker scored them; otherwise each provision reads against
- * today's law, with the parameter's own description as its detail.
+ * What the reform changes, as a table: a row each with the change's
+ * name and what it does, then its value before and after. A tracked
+ * bill's rows are the changes as the tracker scored them; otherwise
+ * each provision reads against today's law, with the parameter's own
+ * description as its detail.
  *
  * An enacted bill without the tracker's rows is the exception: its
  * results compare with the law before it, but today's values already
@@ -132,81 +158,125 @@ export default function ReportChanges({
         // The tracker's write-up needs no metadata; rows read from parameters do.
         <ProvisionSkeleton count={rows.length} />
       ) : (
-        <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-          {rows.map((row, index) => (
-            <li
-              key={row.key}
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'baseline',
-                justifyContent: 'space-between',
-                columnGap: spacing.xl,
-                rowGap: spacing.xs,
-                padding: `${spacing.md} 0`,
-                borderTop: index > 0 ? `1px solid ${colors.border.light}` : 'none',
-              }}
-            >
-              <div
-                style={{
-                  flex: '1 1 320px',
-                  minWidth: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: typography.fontSize.sm,
-                    fontWeight: typography.fontWeight.medium,
-                    color: colors.text.primary,
-                  }}
-                >
-                  {row.name}
-                </span>
-                {row.detail && (
-                  <span
+        <div style={{ overflowX: 'auto' }}>
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: typography.fontSize.sm,
+              fontFamily: typography.fontFamily.primary,
+            }}
+          >
+            <thead>
+              <tr>
+                <th scope="col" style={{ ...headerCell, textAlign: 'left', paddingLeft: 0 }}>
+                  Change
+                </th>
+                <th scope="col" className={WIDE_ONLY} style={headerCell}>
+                  Before
+                </th>
+                <th scope="col" className={WIDE_ONLY} style={{ ...headerCell, paddingRight: 0 }}>
+                  After
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.key} style={{ borderTop: `1px solid ${colors.border.light}` }}>
+                  <th
+                    scope="row"
                     style={{
-                      fontSize: typography.fontSize.sm,
-                      lineHeight: typography.lineHeight.relaxed,
-                      color: colors.text.secondary,
+                      ...bodyCell,
+                      paddingLeft: 0,
+                      textAlign: 'left',
+                      fontWeight: typography.fontWeight.normal,
                     }}
                   >
-                    {row.detail}
-                  </span>
-                )}
-                {row.section && (
-                  <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-                    {row.section}
-                  </span>
-                )}
-              </div>
-              <div
-                style={{
-                  flex: '0 1 auto',
-                  maxWidth: '100%',
-                  fontSize: typography.fontSize.sm,
-                  color: colors.text.secondary,
-                  textAlign: 'right',
-                }}
-              >
-                {row.before !== undefined && <>{row.before} → </>}
-                <span
-                  style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}
-                >
-                  {row.after}
-                </span>
-                {/* For a bill scored against the law before it, today's law is no "before". */}
-                {row.currentLaw && !priorLawBaseline && (
-                  <span style={{ marginLeft: spacing.xs, fontSize: typography.fontSize.xs }}>
-                    current law
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+                    <span
+                      style={{
+                        display: 'block',
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.primary,
+                      }}
+                    >
+                      {row.name}
+                    </span>
+                    {row.detail && (
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: 2,
+                          lineHeight: typography.lineHeight.relaxed,
+                          color: colors.text.secondary,
+                        }}
+                      >
+                        {row.detail}
+                      </span>
+                    )}
+                    {row.section && (
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: 2,
+                          fontSize: typography.fontSize.xs,
+                          color: colors.text.tertiary,
+                        }}
+                      >
+                        {row.section}
+                      </span>
+                    )}
+                    {/* Narrow screens: the values under the name, not in columns. */}
+                    <span
+                      className="tw:block tw:sm:hidden"
+                      style={{ marginTop: spacing.xs, color: colors.text.secondary }}
+                    >
+                      {row.before ?? '—'} →{' '}
+                      <span
+                        style={{
+                          color: colors.primary[700],
+                          fontWeight: typography.fontWeight.semibold,
+                        }}
+                      >
+                        {row.after}
+                      </span>
+                    </span>
+                  </th>
+                  <td
+                    className={WIDE_ONLY}
+                    style={{ ...bodyCell, ...valueCell, color: colors.text.secondary }}
+                  >
+                    {row.before ?? '—'}
+                  </td>
+                  <td
+                    className={WIDE_ONLY}
+                    style={{
+                      ...bodyCell,
+                      ...valueCell,
+                      paddingRight: 0,
+                      color: colors.primary[700],
+                      fontWeight: typography.fontWeight.semibold,
+                    }}
+                  >
+                    {row.after}
+                    {/* For a bill scored against the law before it, today's law is no "before". */}
+                    {row.currentLaw && !priorLawBaseline && (
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: typography.fontSize.xs,
+                          fontWeight: typography.fontWeight.normal,
+                          color: colors.text.secondary,
+                        }}
+                      >
+                        current law
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

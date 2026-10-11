@@ -301,7 +301,17 @@ describe('BillReportPage', () => {
       within(list).getByText('Raises the credit for each qualifying child.')
     ).toBeInTheDocument();
     expect(within(list).getByText('Section 2')).toBeInTheDocument();
-    expect(list).toHaveTextContent('$2,200 → $5,000');
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['$2,200', '$5,000']);
+    expect(
+      within(list)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent)
+    ).toEqual(['Change', 'Before', 'After']);
     // The top box keeps the title only.
     const cover = screen.getByRole('heading', { level: 1 }).closest('header')!;
     expect(cover).not.toHaveTextContent('→');
@@ -332,10 +342,15 @@ describe('BillReportPage', () => {
     // The parameter's own description is the detail.
     expect(within(list).getByText('Maximum credit per qualifying child.')).toBeInTheDocument();
     // Its results compare with the law before it, so today's law is not its "before".
-    expect(within(list).getByText('$2,200')).toBeInTheDocument();
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    // No "before" is known: the cell says so rather than inventing one.
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['—', '$2,200']);
     expect(list).not.toHaveTextContent(/current law|now law/);
     expect(list).toHaveTextContent(/compare them with the law before the bill/);
-    expect(list).not.toHaveTextContent('→');
     store.dispatch(clearMetadata());
   });
 
@@ -357,7 +372,12 @@ describe('BillReportPage', () => {
     renderReport();
 
     const list = await screen.findByRole('region', { name: 'Policy changes' });
-    expect(list).toHaveTextContent('$2,000 → $2,200');
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['$2,000', '$2,200']);
     expect(list).not.toHaveTextContent(/compare them with the law before the bill/);
     store.dispatch(clearMetadata());
   });
