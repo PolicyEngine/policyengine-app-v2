@@ -11,6 +11,7 @@ import { RunReportProvision } from '@/libs/flagship/runReport';
 import { Reform } from '@/types/ingredients/Reform';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
+import ProvisionSkeleton from './ProvisionSkeleton';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
@@ -19,6 +20,8 @@ interface ReportAdjustPanelProps {
   title: string;
   sourceNote: string;
   provisions: RunReportProvision[];
+  /** The parameters' names and units are still loading: placeholders, not raw paths. */
+  loading?: boolean;
 }
 
 /** True when the reform's parameter set is exactly the given provisions. */
@@ -46,6 +49,7 @@ export default function ReportAdjustPanel({
   title,
   sourceNote,
   provisions,
+  loading = false,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const countryId = useCurrentCountry();
@@ -123,110 +127,116 @@ export default function ReportAdjustPanel({
       meta={`${active.length} provision${active.length === 1 ? '' : 's'}`}
       defaultOpen={false}
     >
-      <Stack style={{ gap: 0 }}>
-        {active.map((provision) => (
-          <Stack
-            key={provision.path}
-            style={{
-              gap: spacing.xs,
-              padding: `${spacing.sm} ${spacing.lg}`,
-              borderBottom: `1px solid ${colors.border.light}`,
-            }}
-          >
+      {loading ? (
+        <div style={{ padding: `0 ${spacing.lg}` }}>
+          <ProvisionSkeleton count={active.length} />
+        </div>
+      ) : (
+        <Stack style={{ gap: 0 }}>
+          {active.map((provision) => (
             <Stack
+              key={provision.path}
               style={{
-                flexDirection: 'row',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: spacing.sm,
+                gap: spacing.xs,
+                padding: `${spacing.sm} ${spacing.lg}`,
+                borderBottom: `1px solid ${colors.border.light}`,
               }}
             >
-              <Text
-                title={provision.breadcrumb || provision.path}
+              <Stack
                 style={{
-                  fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.primary,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: spacing.sm,
                 }}
               >
-                {formatCompactBreadcrumb(provision.breadcrumb || provision.path)}
-              </Text>
-              <button
-                type="button"
-                onClick={() => setRemoved((current) => new Set([...current, provision.path]))}
-                aria-label={`Remove ${provision.breadcrumb || provision.path}`}
+                <Text
+                  title={provision.breadcrumb || provision.path}
+                  style={{
+                    fontSize: typography.fontSize.sm,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.primary,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatCompactBreadcrumb(provision.breadcrumb || provision.path)}
+                </Text>
+                <button
+                  type="button"
+                  onClick={() => setRemoved((current) => new Set([...current, provision.path]))}
+                  aria-label={`Remove ${provision.breadcrumb || provision.path}`}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    color: colors.text.secondary,
+                    padding: 2,
+                    flexShrink: 0,
+                  }}
+                >
+                  <IconX size={14} />
+                </button>
+              </Stack>
+              <Stack
                 style={{
-                  border: 'none',
-                  background: 'none',
-                  cursor: 'pointer',
-                  color: colors.text.secondary,
-                  padding: 2,
-                  flexShrink: 0,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                  flexWrap: 'wrap',
                 }}
               >
-                <IconX size={14} />
-              </button>
+                <Text
+                  style={{
+                    fontSize: typography.fontSize.sm,
+                    color: colors.text.secondary,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatValue(provision.baselineValue, provision.unit)} →
+                </Text>
+                <ValueInput
+                  value={values[provision.path]}
+                  onChange={(next) =>
+                    setValues((current) => ({ ...current, [provision.path]: next }))
+                  }
+                  ariaLabel={`Adjusted value for ${provision.path}`}
+                />
+              </Stack>
             </Stack>
-            <Stack
+          ))}
+          {active.length === 0 && (
+            <Text
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.sm,
-                flexWrap: 'wrap',
+                fontSize: typography.fontSize.sm,
+                color: colors.text.secondary,
+                padding: `${spacing.md} ${spacing.lg}`,
               }}
             >
-              <Text
-                style={{
-                  fontSize: typography.fontSize.sm,
-                  color: colors.text.secondary,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {formatValue(provision.baselineValue, provision.unit)} →
-              </Text>
-              <ValueInput
-                value={values[provision.path]}
-                onChange={(next) =>
-                  setValues((current) => ({ ...current, [provision.path]: next }))
-                }
-                ariaLabel={`Adjusted value for ${provision.path}`}
-              />
-            </Stack>
-          </Stack>
-        ))}
-        {active.length === 0 && (
-          <Text
-            style={{
-              fontSize: typography.fontSize.sm,
-              color: colors.text.secondary,
-              padding: `${spacing.md} ${spacing.lg}`,
-            }}
-          >
-            All provisions removed — restore some to recompute.
-          </Text>
-        )}
-        {removed.size > 0 && (
-          <button
-            type="button"
-            onClick={() => setRemoved(new Set())}
-            style={{
-              border: 'none',
-              background: 'none',
-              cursor: 'pointer',
-              color: colors.text.secondary,
-              fontSize: typography.fontSize.xs,
-              fontFamily: typography.fontFamily.primary,
-              padding: `${spacing.sm} ${spacing.lg}`,
-              textAlign: 'left',
-            }}
-          >
-            Restore {removed.size} removed provision{removed.size === 1 ? '' : 's'}
-          </button>
-        )}
-      </Stack>
+              All provisions removed — restore some to recompute.
+            </Text>
+          )}
+          {removed.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setRemoved(new Set())}
+              style={{
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                color: colors.text.secondary,
+                fontSize: typography.fontSize.xs,
+                fontFamily: typography.fontFamily.primary,
+                padding: `${spacing.sm} ${spacing.lg}`,
+                textAlign: 'left',
+              }}
+            >
+              Restore {removed.size} removed provision{removed.size === 1 ? '' : 's'}
+            </button>
+          )}
+        </Stack>
+      )}
 
       <Stack style={{ gap: spacing.sm, padding: spacing.lg }}>
         {(reconcileError || runReport.error) && (

@@ -1,6 +1,7 @@
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import type { BillChange } from '@/api/billFeed';
+import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import { colors, spacing, typography } from '@/designTokens';
 import { sameParameterValue } from '@/libs/draftReform';
 import { describeChange, provisionName } from '@/libs/flagship/draftLabels';
@@ -36,9 +37,12 @@ export default function ReportChanges({
   provisions,
   changes,
   priorLawBaseline = false,
+  loading = false,
 }: {
   provisions: RunReportProvision[];
   changes?: BillChange[];
+  /** The parameters' names and units are still loading: placeholders, not raw paths. */
+  loading?: boolean;
   /** The results compare with the law before the reform, which today's values include. */
   priorLawBaseline?: boolean;
 }) {
@@ -109,93 +113,101 @@ export default function ReportChanges({
         <IconAdjustmentsHorizontal size={24} stroke={1.5} color={colors.primary[700]} aria-hidden />
         Policy changes
       </h2>
-      {priorLawBaseline && !scored && rows.some((row) => row.before === undefined) && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: typography.fontSize.sm,
-            lineHeight: typography.lineHeight.relaxed,
-            color: colors.text.secondary,
-          }}
-        >
-          The values this bill sets. The estimates compare them with the law before the bill.
-        </p>
-      )}
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-        {rows.map((row, index) => (
-          <li
-            key={row.key}
+      {!(loading && !scored) &&
+        priorLawBaseline &&
+        !scored &&
+        rows.some((row) => row.before === undefined) && (
+          <p
             style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'baseline',
-              justifyContent: 'space-between',
-              columnGap: spacing.xl,
-              rowGap: spacing.xs,
-              padding: `${spacing.md} 0`,
-              borderTop: index > 0 ? `1px solid ${colors.border.light}` : 'none',
+              margin: 0,
+              fontSize: typography.fontSize.sm,
+              lineHeight: typography.lineHeight.relaxed,
+              color: colors.text.secondary,
             }}
           >
-            <div
+            The values this bill sets. The estimates compare them with the law before the bill.
+          </p>
+        )}
+      {loading && !scored ? (
+        // The tracker's write-up needs no metadata; rows read from parameters do.
+        <ProvisionSkeleton count={rows.length} />
+      ) : (
+        <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+          {rows.map((row, index) => (
+            <li
+              key={row.key}
               style={{
-                flex: '1 1 320px',
-                minWidth: 0,
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
+                flexWrap: 'wrap',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                columnGap: spacing.xl,
+                rowGap: spacing.xs,
+                padding: `${spacing.md} 0`,
+                borderTop: index > 0 ? `1px solid ${colors.border.light}` : 'none',
               }}
             >
-              <span
+              <div
                 style={{
-                  fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.primary,
+                  flex: '1 1 320px',
+                  minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
                 }}
               >
-                {row.name}
-              </span>
-              {row.detail && (
                 <span
                   style={{
                     fontSize: typography.fontSize.sm,
-                    lineHeight: typography.lineHeight.relaxed,
-                    color: colors.text.secondary,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.primary,
                   }}
                 >
-                  {row.detail}
+                  {row.name}
                 </span>
-              )}
-              {row.section && (
-                <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-                  {row.section}
-                </span>
-              )}
-            </div>
-            <div
-              style={{
-                flex: '0 1 auto',
-                maxWidth: '100%',
-                fontSize: typography.fontSize.sm,
-                color: colors.text.secondary,
-                textAlign: 'right',
-              }}
-            >
-              {row.before !== undefined && <>{row.before} → </>}
-              <span
-                style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}
+                {row.detail && (
+                  <span
+                    style={{
+                      fontSize: typography.fontSize.sm,
+                      lineHeight: typography.lineHeight.relaxed,
+                      color: colors.text.secondary,
+                    }}
+                  >
+                    {row.detail}
+                  </span>
+                )}
+                {row.section && (
+                  <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+                    {row.section}
+                  </span>
+                )}
+              </div>
+              <div
+                style={{
+                  flex: '0 1 auto',
+                  maxWidth: '100%',
+                  fontSize: typography.fontSize.sm,
+                  color: colors.text.secondary,
+                  textAlign: 'right',
+                }}
               >
-                {row.after}
-              </span>
-              {/* For a bill scored against the law before it, today's law is no "before". */}
-              {row.currentLaw && !priorLawBaseline && (
-                <span style={{ marginLeft: spacing.xs, fontSize: typography.fontSize.xs }}>
-                  current law
+                {row.before !== undefined && <>{row.before} → </>}
+                <span
+                  style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}
+                >
+                  {row.after}
                 </span>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
+                {/* For a bill scored against the law before it, today's law is no "before". */}
+                {row.currentLaw && !priorLawBaseline && (
+                  <span style={{ marginLeft: spacing.xs, fontSize: typography.fontSize.xs }}>
+                    current law
+                  </span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

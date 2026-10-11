@@ -307,6 +307,17 @@ describe('BillReportPage', () => {
     expect(cover).not.toHaveTextContent('→');
   });
 
+  test('given the metadata is still loading then provisions show placeholders, not paths', async () => {
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    expect(
+      within(list).getByRole('status', { name: 'Loading parameter names' })
+    ).toBeInTheDocument();
+    // No raw path such as "gov.irs.credits.ctc.amount.base[0].amount" while it loads.
+    expect(list).not.toHaveTextContent(/gov\./);
+  });
+
   test('given an enacted bill without a write-up then its values read alone, not as current law', async () => {
     seedDeductionMetadata();
     mockIsAlreadyCurrentLaw.mockReturnValue(true);

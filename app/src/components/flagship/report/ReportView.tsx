@@ -7,6 +7,7 @@ import {
   type CalibrationPin,
 } from '@/components/flagship/CalibrationMatches';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
@@ -83,6 +84,11 @@ export interface ReportViewProps {
    * values already include — an enacted bill scored before it passed.
    */
   priorLawBaseline?: boolean;
+  /**
+   * The parameters' names and units are still loading. Lists of
+   * provisions show placeholders meanwhile, not raw parameter paths.
+   */
+  provisionsLoading?: boolean;
   customBaselineLabel?: string | null;
   year: string;
   region?: string;
@@ -120,6 +126,7 @@ export default function ReportView({
   provisions,
   changes,
   priorLawBaseline = false,
+  provisionsLoading = false,
   customBaselineLabel,
   year,
   region,
@@ -266,6 +273,7 @@ export default function ReportView({
                     provisions={provisions}
                     changes={changes}
                     priorLawBaseline={priorLawBaseline}
+                    loading={provisionsLoading}
                   />
                   <ReportContents
                     metrics={metrics}
@@ -360,10 +368,14 @@ export default function ReportView({
                           <Text style={{ fontWeight: typography.fontWeight.semibold }}>
                             Your reform · {year}
                           </Text>
-                          <ProvisionList
-                            provisions={provisions}
-                            sameValueNote={priorLawBaseline ? '' : undefined}
-                          />
+                          {provisionsLoading ? (
+                            <ProvisionSkeleton count={provisions.length} />
+                          ) : (
+                            <ProvisionList
+                              provisions={provisions}
+                              sameValueNote={priorLawBaseline ? '' : undefined}
+                            />
+                          )}
                         </Stack>
                       ) : (
                         <Text>Before-and-after details for your reform are unavailable.</Text>
@@ -382,7 +394,12 @@ export default function ReportView({
             </Tabs>
           </Stack>
         </div>
-        <ReportAdjustPanel title={title} sourceNote={sourceNote} provisions={provisions} />
+        <ReportAdjustPanel
+          title={title}
+          sourceNote={sourceNote}
+          provisions={provisions}
+          loading={provisionsLoading}
+        />
       </div>
     </div>
   );

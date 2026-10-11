@@ -290,6 +290,8 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       // The changes as scored: once a bill is law, today's values include it.
       changes={bill.changes}
       priorLawBaseline={alreadyCurrentLaw}
+      // Until the metadata arrives, provisions have no names or units.
+      provisionsLoading={!metadataLoaded && !metadataError}
       year={economy.year}
       region={economy.region}
       reformPolicyId={economy.reformPolicyId}
