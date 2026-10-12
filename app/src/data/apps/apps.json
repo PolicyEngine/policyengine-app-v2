@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "childcare-100k-threshold",
+    "title": "Scrapping the childcare cliff edge",
+    "description": "Estimate the cost of removing the £100,000 income limit on the 30 funded hours and Tax-Free Childcare, who gains, and how a family's income changes at the cliff, modelled with PolicyEngine UK.",
+    "source": "https://uk-childcare-100k-threshold.vercel.app/uk/childcare-100k-threshold",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "childcare-100k-threshold.jpg",
+    "date": "2026-10-12 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "targeted-energy-discount",
     "title": "Targeted energy bill discount analysis dashboard",
     "description": "Estimate the cost, reach and distributional effects of the Resolution Foundation's proposed targeted energy bill discount, modelled with PolicyEngine UK.",
