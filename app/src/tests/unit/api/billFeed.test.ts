@@ -202,7 +202,7 @@ describe('fetchTrackerBillDistricts', () => {
   test('given stored districts then they read in the API breakdown shape, for that bill only', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    const fetchMock = vi.fn(async () => ({
+    const fetchMock = vi.fn(async (_url: string) => ({
       ok: true,
       json: async () => [
         {
