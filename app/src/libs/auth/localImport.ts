@@ -495,6 +495,10 @@ export async function runLocalImport({
 
         const skippedMap: Record<string, string> = {};
         for (const entry of result.skipped ?? []) {
+          // Items the server could not parse may come back without a client_ref.
+          if (entry.client_ref === null) {
+            continue;
+          }
           skippedMap[entry.client_ref] = entry.reason;
           const item = chunk.find((candidate) => candidate.clientRef === entry.client_ref);
           item?.aliases.forEach((alias) => {

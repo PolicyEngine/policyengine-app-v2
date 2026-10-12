@@ -293,6 +293,30 @@ describe('runLocalImport', () => {
     expect(countImportableItems(PE_USER_ID)).toBe(0);
   });
 
+  test('given a skipped item without a client_ref then it is reported but not recorded', async () => {
+    // Given
+    seedLocalData();
+    const { fetchMock, context } = createTestApiContext();
+    const respond = importResponder();
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      const response = await respond(url, init);
+      const payload = await response.json();
+      payload.result.skipped.push({ client_ref: null, reason: 'invalid' });
+      return okResponse(payload.result);
+    });
+
+    // When
+    const summary = await runLocalImport({
+      client: context.client,
+      userId: PE_USER_ID,
+      materialize: async () => V1_IDS.MATERIALIZED_REFORM,
+    });
+
+    // Then
+    expect(summary.skipped).toContainEqual({ client_ref: null, reason: 'invalid' });
+    expect(readImportSkipped(PE_USER_ID)).not.toHaveProperty('null');
+  });
+
   test('given more than 500 items then they go in several requests', async () => {
     // Given
     seedManySimulations(600);

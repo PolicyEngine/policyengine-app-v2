@@ -232,7 +232,8 @@ export interface ImportRequestBody {
 }
 
 export interface ImportSkippedItem {
-  client_ref: string;
+  /** Null when the server could not parse the item at all. */
+  client_ref: string | null;
   reason: string;
 }
 
