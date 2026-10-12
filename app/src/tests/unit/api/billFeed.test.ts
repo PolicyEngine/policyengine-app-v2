@@ -163,6 +163,14 @@ describe('changesFromTrackerProvisions', () => {
     ]);
   });
 
+  test('given a named parameter then it is kept in the model’s path form', () => {
+    const [change] = changesFromTrackerProvisions([
+      { ...ENTRY, parameter: 'gov.states.ny.tax.income.main.{filing_status}.brackets[7].rate' },
+    ]);
+
+    expect(change.parameter).toBe('gov.states.ny.tax.income.main.{filing_status}[7].rate');
+  });
+
   test('given the write-up stored as JSON then it reads the same', () => {
     expect(changesFromTrackerProvisions(JSON.stringify([ENTRY]))).toHaveLength(1);
   });

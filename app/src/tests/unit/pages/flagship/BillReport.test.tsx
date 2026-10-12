@@ -306,12 +306,12 @@ describe('BillReportPage', () => {
       within(row)
         .getAllByRole('cell')
         .map((cell) => cell.textContent)
-    ).toEqual(['$2,200', '$5,000']);
+    ).toEqual(['$2,200', '$5,000', 'Jan 1, 2026', 'No end date']);
     expect(
       within(list)
         .getAllByRole('columnheader')
         .map((cell) => cell.textContent)
-    ).toEqual(['Change', 'Before', 'After']);
+    ).toEqual(['Change', 'Before', 'After', 'Start', 'End']);
     // The top box keeps the title only.
     const cover = screen.getByRole('heading', { level: 1 }).closest('header')!;
     expect(cover).not.toHaveTextContent('→');
@@ -348,7 +348,7 @@ describe('BillReportPage', () => {
       within(row)
         .getAllByRole('cell')
         .map((cell) => cell.textContent)
-    ).toEqual(['—', '$2,200']);
+    ).toEqual(['—', '$2,200', 'Jan 1, 2026', 'No end date']);
     expect(list).not.toHaveTextContent(/current law|now law/);
     expect(list).toHaveTextContent(/compare them with the law before the bill/);
     store.dispatch(clearMetadata());
@@ -377,9 +377,47 @@ describe('BillReportPage', () => {
       within(row)
         .getAllByRole('cell')
         .map((cell) => cell.textContent)
-    ).toEqual(['$2,000', '$2,200']);
+    ).toEqual(['$2,000', '$2,200', 'Jan 1, 2026', 'No end date']);
     expect(list).not.toHaveTextContent(/compare them with the law before the bill/);
     store.dispatch(clearMetadata());
+  });
+
+  test('given dated provisions then each tracker row takes the dates of the parameter it names', async () => {
+    const dated = (path: string, startDate: string, endDate: string, value: number) => ({
+      path,
+      value,
+      intervals: [{ startDate, endDate, value }],
+    });
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        provisions: [
+          dated('gov.states.ny.tax.income.main.single[7].rate', '2026-01-01', '2026-12-31', 0.108),
+          dated('gov.states.ny.tax.income.main.joint[7].rate', '2026-01-01', '2026-12-31', 0.108),
+          dated('gov.states.ny.tax.income.credits.eitc.match', '2027-01-01', '2100-12-31', 0.35),
+        ],
+        changes: [
+          {
+            label: 'Top rate',
+            before: '10.30%',
+            after: '10.80%',
+            parameter: 'gov.states.ny.tax.income.main.{filing_status}[7].rate',
+          },
+          { label: 'EITC match', before: '30%', after: '35%' },
+        ],
+      },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    const cells = (name: RegExp) =>
+      within(within(list).getByRole('row', { name }))
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent);
+    // "{filing_status}" matches every filing status the bill sets.
+    expect(cells(/Top rate/)).toEqual(['10.30%', '10.80%', 'Jan 1, 2026', 'Dec 31, 2026']);
+    // No parameter named, and the provisions' dates differ: none are claimed.
+    expect(cells(/EITC match/)).toEqual(['30%', '35%', '—', '—']);
   });
 
   test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {

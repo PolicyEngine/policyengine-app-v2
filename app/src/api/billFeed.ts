@@ -42,6 +42,11 @@ export interface BillChange {
   explanation?: string;
   /** Where in the bill, e.g. "Section 1, amending C.G.S. § 12-700". */
   section?: string;
+  /**
+   * The model parameter the change sets, when the tracker named it; it
+   * can hold a placeholder ("main.{filing_status}.brackets[7].rate").
+   */
+  parameter?: string;
 }
 
 /** Shares of households by outcome, as fractions of 1. */
@@ -370,6 +375,7 @@ export function changesFromTrackerProvisions(raw: unknown): BillChange[] {
     }
     const explanation = text(entry?.explanation);
     const section = text(entry?.bill_section);
+    const parameter = text(entry?.parameter);
     return [
       {
         label,
@@ -377,6 +383,7 @@ export function changesFromTrackerProvisions(raw: unknown): BillChange[] {
         after,
         ...(explanation ? { explanation } : {}),
         ...(section ? { section } : {}),
+        ...(parameter ? { parameter: modelPath(parameter) } : {}),
       },
     ];
   });

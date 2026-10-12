@@ -1,7 +1,9 @@
+import dayjs from 'dayjs';
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import type { BillChange } from '@/api/billFeed';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { sameParameterValue } from '@/libs/draftReform';
 import { describeChange, provisionName } from '@/libs/flagship/draftLabels';
@@ -11,6 +13,8 @@ import { formatValue } from '@/utils/parameterValues';
 
 /** Columns that show from the small breakpoint up; below it the values stack under the name. */
 const WIDE_ONLY = 'tw:hidden tw:sm:table-cell';
+/** The date columns need more room: they show from the medium breakpoint up. */
+const DATES_WIDE = 'tw:hidden tw:md:table-cell';
 
 const headerCell: React.CSSProperties = {
   padding: `0 ${spacing.md} ${spacing.sm}`,
@@ -34,6 +38,13 @@ const valueCell: React.CSSProperties = {
   fontVariantNumeric: 'tabular-nums',
 };
 
+const dateCell: React.CSSProperties = {
+  textAlign: 'right',
+  whiteSpace: 'nowrap',
+  color: colors.text.secondary,
+  fontVariantNumeric: 'tabular-nums',
+};
+
 interface ChangeRow {
   key: string;
   name: string;
@@ -45,7 +56,44 @@ interface ChangeRow {
   after: string;
   /** The value is today's law already, so there is no "before" to show. */
   currentLaw?: boolean;
+  /** When the change applies (ISO dates); absent when it cannot be told. */
+  dates?: ChangeDates;
 }
+
+interface ChangeDates {
+  start: string;
+  end: string;
+}
+
+/**
+ * When a provision's change applies: its first dated value's start to
+ * its last one's end — or, undated, from this year on, as it runs.
+ */
+function provisionDates(provision: Pick<RunReportProvision, 'intervals'>): ChangeDates {
+  const intervals = provision.intervals ?? [];
+  if (intervals.length === 0) {
+    return { start: `${CURRENT_YEAR}-01-01`, end: FOREVER };
+  }
+  return {
+    start: intervals.reduce(
+      (min, i) => (i.startDate < min ? i.startDate : min),
+      intervals[0].startDate
+    ),
+    end: intervals.reduce((max, i) => (i.endDate > max ? i.endDate : max), intervals[0].endDate),
+  };
+}
+
+/** Whether a tracker parameter, which can hold "{filing_status}", names this path. */
+function namesPath(parameter: string, path: string): boolean {
+  const pattern = parameter
+    .split(/\{[^}]+\}/)
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('[^.]+');
+  return new RegExp(`^${pattern}$`).test(path);
+}
+
+const dateText = (date: string) => dayjs(date).format('MMM D, YYYY');
+const endText = (date: string) => (date === FOREVER ? 'No end date' : dateText(date));
 
 /**
  * What the reform changes, as a table: a row each with the change's
@@ -77,6 +125,27 @@ export default function ReportChanges({
   const variableLabel = (name: string) => variables?.[name]?.label ?? name;
 
   const scored = Boolean(changes && changes.length > 0);
+  // A tracker row has no dates of its own: it takes those of the parameter
+  // it names, or the bill's when every provision shares one range.
+  const allDates = provisions.map(provisionDates);
+  const sharedDates =
+    allDates.length > 0 &&
+    allDates.every((d) => d.start === allDates[0].start && d.end === allDates[0].end)
+      ? allDates[0]
+      : undefined;
+  const changeDates = (change: BillChange): ChangeDates | undefined => {
+    const named = change.parameter
+      ? provisions.filter((provision) => namesPath(change.parameter!, provision.path))
+      : [];
+    if (named.length > 0) {
+      const dates = named.map(provisionDates);
+      return {
+        start: dates.reduce((min, d) => (d.start < min ? d.start : min), dates[0].start),
+        end: dates.reduce((max, d) => (d.end > max ? d.end : max), dates[0].end),
+      };
+    }
+    return sharedDates;
+  };
   const rows: ChangeRow[] =
     changes && changes.length > 0
       ? changes.map((change, index) => ({
@@ -86,6 +155,7 @@ export default function ReportChanges({
           section: change.section,
           before: change.before,
           after: change.after,
+          dates: changeDates(change),
         }))
       : provisions.map((provision) => {
           const format = (value: unknown) => formatValue(value, provision.unit);
@@ -103,6 +173,7 @@ export default function ReportChanges({
               ? describeChange(provision.baselineValue, provision.value, String, variableLabel)
               : format(provision.value),
             currentLaw,
+            dates: provisionDates(provision),
           };
         });
 
@@ -175,8 +246,14 @@ export default function ReportChanges({
                 <th scope="col" className={WIDE_ONLY} style={headerCell}>
                   Before
                 </th>
-                <th scope="col" className={WIDE_ONLY} style={{ ...headerCell, paddingRight: 0 }}>
+                <th scope="col" className={WIDE_ONLY} style={headerCell}>
                   After
+                </th>
+                <th scope="col" className={DATES_WIDE} style={headerCell}>
+                  Start
+                </th>
+                <th scope="col" className={DATES_WIDE} style={{ ...headerCell, paddingRight: 0 }}>
+                  End
                 </th>
               </tr>
             </thead>
@@ -240,6 +317,21 @@ export default function ReportChanges({
                         {row.after}
                       </span>
                     </span>
+                    {/* Below the medium breakpoint the dates fold in too. */}
+                    {row.dates && (
+                      <span
+                        className="tw:block tw:md:hidden"
+                        style={{
+                          marginTop: 2,
+                          fontSize: typography.fontSize.xs,
+                          color: colors.text.secondary,
+                        }}
+                      >
+                        {row.dates.end === FOREVER
+                          ? `From ${dateText(row.dates.start)}`
+                          : `${dateText(row.dates.start)} – ${dateText(row.dates.end)}`}
+                      </span>
+                    )}
                   </th>
                   <td
                     className={WIDE_ONLY}
@@ -252,7 +344,6 @@ export default function ReportChanges({
                     style={{
                       ...bodyCell,
                       ...valueCell,
-                      paddingRight: 0,
                       color: colors.primary[700],
                       fontWeight: typography.fontWeight.semibold,
                     }}
@@ -271,6 +362,12 @@ export default function ReportChanges({
                         current law
                       </span>
                     )}
+                  </td>
+                  <td className={DATES_WIDE} style={{ ...bodyCell, ...dateCell }}>
+                    {row.dates ? dateText(row.dates.start) : '—'}
+                  </td>
+                  <td className={DATES_WIDE} style={{ ...bodyCell, ...dateCell, paddingRight: 0 }}>
+                    {row.dates ? endText(row.dates.end) : '—'}
                   </td>
                 </tr>
               ))}
