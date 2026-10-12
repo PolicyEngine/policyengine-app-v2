@@ -1,17 +1,45 @@
-// Import auth hook here in future; for now, mocked out below
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { ApiReportStore, LocalStorageReportStore } from '../api/reportAssociation';
+import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
+import {
+  ApiReportStore,
+  LocalStorageReportStore,
+  type UserReportStore,
+} from '../api/reportAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { reportAssociationKeys } from '../libs/queryKeys';
 import { UserReport } from '../types/ingredients/UserReport';
 
-const apiReportStore = new ApiReportStore();
-const localReportStore = new LocalStorageReportStore();
+// Created on first use rather than at import, so modules (and test mocks)
+// that load this hook do not construct storage eagerly.
+let localReportStore: LocalStorageReportStore | null = null;
+const getLocalReportStore = () => (localReportStore ??= new LocalStorageReportStore());
+
+type ReportAssociationStoreSelection = {
+  store: UserReportStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+  /** False while the session is being restored; queries wait. */
+  ready: boolean;
+};
+
+export const useReportAssociationStoreForMode = (): ReportAssociationStoreSelection => {
+  const backend = useAssociationBackend();
+  return useMemo(
+    () =>
+      backend.mode === 'api'
+        ? {
+            store: new ApiReportStore(backend, getLocalReportStore()),
+            config: queryConfig.api,
+            ready: true,
+          }
+        : { store: getLocalReportStore(), config: queryConfig.localStorage, ready: backend.ready },
+    [backend]
+  );
+};
 
 export const useUserReportStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiReportStore : localReportStore;
+  return useReportAssociationStoreForMode().store;
 };
 
 /**
@@ -25,42 +53,37 @@ export const useUserReportStore = () => {
  * For full report data with simulations and outputs, use useUserReports
  */
 export const useReportAssociationsByUser = (userId: string) => {
-  const store = useUserReportStore();
+  const { store, config, ready } = useReportAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: reportAssociationKeys.byUser(userId, countryId),
     queryFn: () => store.findByUser(userId, countryId),
     ...config,
+    enabled: ready,
   });
 };
 
 export const useReportAssociation = (userId: string, reportId: string) => {
-  const store = useUserReportStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config, ready } = useReportAssociationStoreForMode();
 
   return useQuery({
     queryKey: reportAssociationKeys.specific(userId, reportId),
     queryFn: () => store.findById(userId, reportId),
     ...config,
+    enabled: ready,
   });
 };
 
 export const useReportAssociationById = (userReportId: string, options?: { enabled?: boolean }) => {
-  const store = useUserReportStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config, ready } = useReportAssociationStoreForMode();
   const isEnabled = options?.enabled !== false;
 
   return useQuery({
     queryKey: reportAssociationKeys.byUserReportId(userReportId),
     queryFn: () => store.findByUserReportId(userReportId),
     ...config,
-    enabled: isEnabled,
+    enabled: ready && isEnabled,
   });
 };
 
@@ -69,7 +92,8 @@ export const useReportAssociationById = (userReportId: string, options?: { enabl
  *
  * Supports two modes:
  * - Without id: generates a new id (use for new reports)
- * - With id: uses the provided id (use for saving shared reports with a specific id)
+ * - With id: in localStorage, saves under the provided id (shared-report
+ *   saves); account storage always assigns its own id
  */
 export const useCreateReportAssociation = () => {
   const store = useUserReportStore();
@@ -79,12 +103,13 @@ export const useCreateReportAssociation = () => {
     mutationFn: (
       userReport: Omit<UserReport, 'createdAt'> | Omit<UserReport, 'id' | 'createdAt'>
     ) => {
-      // If id is provided, use createWithId for idempotent save
-      if ('id' in userReport && userReport.id) {
+      // If id is provided and the store keeps caller IDs, save under it (idempotent)
+      if ('id' in userReport && userReport.id && store.createWithId) {
         return store.createWithId(userReport as Omit<UserReport, 'createdAt'>);
       }
-      // Otherwise, generate a new id
-      return store.create(userReport as Omit<UserReport, 'id' | 'createdAt'>);
+      // Otherwise the store assigns the id
+      const { id: _id, ...fields } = userReport as Partial<UserReport>;
+      return store.create(fields as Omit<UserReport, 'id' | 'createdAt'>);
     },
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries

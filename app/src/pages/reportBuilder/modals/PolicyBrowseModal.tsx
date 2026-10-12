@@ -10,9 +10,9 @@ import { useSelector } from 'react-redux';
 import { Group } from '@/components/ui/Group';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
-import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { RootState } from '@/store';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
@@ -40,7 +40,7 @@ export function PolicyBrowseModal({
   onCreateNew,
   onEditPolicy,
 }: PolicyBrowseModalProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useCurrentUserId();
   const { data: policies, isLoading } = useUserPolicies(userId);
   const { parameterTree, parameters } = useSelector((state: RootState) => state.metadata);
   const updatePolicyAssociation = useUpdatePolicyAssociation();

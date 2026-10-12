@@ -4,11 +4,12 @@ import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns'
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import type { EditorMode } from '@/pages/reportBuilder/modals/policyCreation/types';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import { PolicyStateProps } from '@/types/pathwayState';
@@ -17,7 +18,7 @@ import { formatDate } from '@/utils/dateUtils';
 import { getUserPolicyAvailability } from '@/utils/ingredientAvailability';
 
 export default function PoliciesPage() {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const userId = useCurrentUserId();
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();

@@ -1,37 +1,52 @@
+import { toLegacyId } from '@/api/v2Associations';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { UserSimulationCreationPayload } from '@/types/payloads';
+import type {
+  AssociationCountryId,
+  UserSimulationCreateBody,
+  UserSimulationItem,
+  UserSimulationPatchBody,
+} from '@/types/v2User';
 
 /**
- * Adapter for converting between UserSimulation and API formats
+ * Converts between UserSimulation and the `/v2/user-simulations` wire
+ * format. `simulationId` is the v1 simulation ID (`legacy_simulation_id`).
  */
 export class UserSimulationAdapter {
-  /**
-   * Convert UserSimulation to API creation payload
-   */
   static toCreationPayload(
-    userSimulation: Omit<UserSimulation, 'id' | 'createdAt'>
-  ): UserSimulationCreationPayload {
+    userSimulation: Pick<UserSimulation, 'simulationId' | 'label'>,
+    countryId: AssociationCountryId
+  ): UserSimulationCreateBody {
     return {
-      userId: userSimulation.userId.toString(),
-      simulationId: userSimulation.simulationId.toString(),
-      countryId: userSimulation.countryId,
-      label: userSimulation.label,
-      updatedAt: userSimulation.updatedAt || new Date().toISOString(),
+      country_id: countryId,
+      legacy_simulation_id: toLegacyId(userSimulation.simulationId, 'simulation'),
+      ...(userSimulation.label ? { name: userSimulation.label } : {}),
     };
   }
 
-  /**
-   * Convert API response to UserSimulation
-   */
-  static fromApiResponse(apiData: any): UserSimulation {
+  static toUpdatePayload(updates: Partial<UserSimulation>): UserSimulationPatchBody {
+    const body: UserSimulationPatchBody = {};
+    if ('label' in updates) {
+      body.name = updates.label || null;
+    }
+    if (updates.simulationId !== undefined) {
+      body.legacy_simulation_id = toLegacyId(updates.simulationId, 'simulation');
+    }
+    return body;
+  }
+
+  static hasLegacySimulation(item: UserSimulationItem): boolean {
+    return item.legacy_simulation_id !== null && item.legacy_simulation_id !== undefined;
+  }
+
+  static fromApiItem(item: UserSimulationItem): UserSimulation {
     return {
-      id: apiData.id,
-      userId: apiData.userId,
-      simulationId: apiData.simulationId,
-      countryId: apiData.countryId,
-      label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
+      id: item.id,
+      userId: item.user_id,
+      simulationId: String(item.legacy_simulation_id),
+      countryId: item.country_id,
+      label: item.name ?? undefined,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
       isCreated: true,
     };
   }

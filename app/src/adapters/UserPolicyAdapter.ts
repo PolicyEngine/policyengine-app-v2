@@ -1,45 +1,54 @@
+import { toLegacyId } from '@/api/v2Associations';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserPolicyCreationMetadata,
-  UserPolicyMetadata,
-} from '@/types/metadata/userPolicyMetadata';
+import type {
+  AssociationCountryId,
+  UserPolicyCreateBody,
+  UserPolicyItem,
+  UserPolicyPatchBody,
+} from '@/types/v2User';
 
 /**
- * Adapter for converting between UserPolicy and API formats
+ * Converts between UserPolicy and the `/v2/user-policies` wire format.
+ * The association's `id` is the server UUID; `policyId` is the v1 policy
+ * ID (`legacy_policy_id`) as a string. No user ID is ever sent.
  */
 export class UserPolicyAdapter {
-  /**
-   * Convert UserPolicy to API creation payload
-   * Handles camelCase to snake_case conversion
-   * Note: API endpoint doesn't exist yet
-   */
   static toCreationPayload(
-    userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>
-  ): UserPolicyCreationMetadata {
+    userPolicy: Pick<UserPolicy, 'policyId' | 'label'>,
+    countryId: AssociationCountryId
+  ): UserPolicyCreateBody {
     return {
-      user_id: String(userPolicy.userId),
-      policy_id: String(userPolicy.policyId),
-      country_id: userPolicy.countryId,
-      label: userPolicy.label,
-      updated_at: userPolicy.updatedAt || new Date().toISOString(),
+      country_id: countryId,
+      legacy_policy_id: toLegacyId(userPolicy.policyId, 'policy'),
+      ...(userPolicy.label ? { name: userPolicy.label } : {}),
     };
   }
 
-  /**
-   * Convert API response to UserPolicy
-   * Handles snake_case to camelCase conversion
-   * Explicitly coerces IDs to strings to handle JSON.parse type mismatches
-   * Note: API endpoint doesn't exist yet
-   */
-  static fromApiResponse(apiData: UserPolicyMetadata): UserPolicy {
+  static toUpdatePayload(updates: Partial<UserPolicy>): UserPolicyPatchBody {
+    const body: UserPolicyPatchBody = {};
+    if ('label' in updates) {
+      body.name = updates.label || null;
+    }
+    if (updates.policyId !== undefined) {
+      body.legacy_policy_id = toLegacyId(updates.policyId, 'policy');
+    }
+    return body;
+  }
+
+  /** Rows without a v1 policy (v2-only) cannot be shown by this app yet. */
+  static hasLegacyPolicy(item: UserPolicyItem): boolean {
+    return item.legacy_policy_id !== null && item.legacy_policy_id !== undefined;
+  }
+
+  static fromApiItem(item: UserPolicyItem): UserPolicy {
     return {
-      id: String(apiData.policy_id),
-      userId: String(apiData.user_id),
-      policyId: String(apiData.policy_id),
-      countryId: apiData.country_id,
-      label: apiData.label ?? undefined,
-      createdAt: apiData.created_at,
-      updatedAt: apiData.updated_at,
+      id: item.id,
+      userId: item.user_id,
+      policyId: String(item.legacy_policy_id),
+      countryId: item.country_id,
+      label: item.name ?? undefined,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
       isCreated: true,
     };
   }

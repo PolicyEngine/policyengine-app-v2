@@ -3,16 +3,16 @@ import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns'
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function SimulationsPage() {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const userId = useCurrentUserId();
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();

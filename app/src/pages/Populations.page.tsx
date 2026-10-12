@@ -3,12 +3,12 @@ import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/compo
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateGeographicAssociation, useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { countryIds } from '@/libs/countries';
 import { getCountryDisplayName, getGeographyRegionTypeLabel } from '@/models/geography';
 import { Household } from '@/models/Household';
@@ -21,7 +21,7 @@ import {
 } from '@/utils/ingredientAvailability';
 
 export default function PopulationsPage() {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const userId = useCurrentUserId();
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
   const countryId = useCurrentCountry();
 

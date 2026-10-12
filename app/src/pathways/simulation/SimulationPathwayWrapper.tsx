@@ -8,7 +8,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import FullScreenPortal from '@/components/FullScreenPortal';
-import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -16,6 +15,7 @@ import { useRegions } from '@/hooks/useRegions';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { CURRENT_LAW_LABEL } from '@/pages/reportBuilder/currentLaw';
 import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
@@ -81,7 +81,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   );
 
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
-  const userId = MOCK_USER_ID.toString();
+  const userId = useCurrentUserId();
   const { data: userPolicies } = useUserPolicies(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
   const { data: userGeographics } = useUserGeographics(userId);

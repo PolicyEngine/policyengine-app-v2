@@ -17,11 +17,11 @@ import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineI
 import { Group } from '@/components/ui/Group';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
-import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { Geography } from '@/types/ingredients/Geography';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
@@ -57,7 +57,7 @@ export function PopulationBrowseModal({
   allowedPopulationType,
 }: PopulationBrowseModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const userId = MOCK_USER_ID.toString();
+  const userId = useCurrentUserId();
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
   const { data: regions = [] } = useRegions(countryId);
 

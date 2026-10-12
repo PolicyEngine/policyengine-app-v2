@@ -6,8 +6,8 @@
 
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 
 type SetupAction = 'createNew' | 'loadExisting' | 'selectCurrentLaw';
 
@@ -30,7 +30,7 @@ export default function SimulationPolicySetupView({
   onBack,
   onCancel,
 }: SimulationPolicySetupViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useCurrentUserId();
   const { data: userPolicies } = useUserPolicies(userId);
   const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
 

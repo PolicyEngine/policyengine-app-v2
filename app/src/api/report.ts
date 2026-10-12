@@ -1,5 +1,5 @@
 import { ReportAdapter } from '@/adapters/ReportAdapter';
-import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
+import { LocalStorageReportStore, type UserReportStore } from '@/api/reportAssociation';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { Report } from '@/types/ingredients/Report';
@@ -129,6 +129,11 @@ export interface CreateReportWithAssociationParams {
   payload: ReportCreationPayload;
   userId: string | number;
   label?: string;
+  /**
+   * Where the association is saved: the account store when signed in
+   * (see useUserReportStore), localStorage otherwise (the default).
+   */
+  reportStore?: UserReportStore;
 }
 
 /**
@@ -161,10 +166,8 @@ export async function createReportAndAssociateWithUser(
   // 2. Convert to domain model (ensures id is string, proper field names)
   const report = ReportAdapter.fromMetadata(reportMetadata);
 
-  // 3. Determine which store to use (localStorage vs API)
-  // TODO: Get isLoggedIn from auth context
-  const isLoggedIn = false;
-  const reportStore = isLoggedIn ? new ApiReportStore() : new LocalStorageReportStore();
+  // 3. Save the association where the caller's session keeps saved work
+  const reportStore = params.reportStore ?? new LocalStorageReportStore();
 
   // 4. Create UserReport association
   const userReport = await reportStore.create({

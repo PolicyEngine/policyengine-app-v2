@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import type { RootState } from '@/store';
 import {
   hasRequiredSimulationIngredients,
@@ -30,7 +30,7 @@ export function useReportIngredientAvailability(reportState: ReportBuilderState)
   const spmSelectionError = useReportSPMSelectionError(reportState);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
-  const userId = MOCK_USER_ID.toString();
+  const userId = useCurrentUserId();
   const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
 

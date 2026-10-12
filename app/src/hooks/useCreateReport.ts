@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
-import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { countryIds } from '@/libs/countries';
 import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import type { Household } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
+import { useUserReportStore } from './useUserReportAssociations';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: (typeof countryIds)[number];
@@ -44,7 +45,8 @@ export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
   const manager = useCalcOrchestratorManager();
 
-  const userId = MOCK_USER_ID;
+  const userId = useCurrentUserId();
+  const reportStore = useUserReportStore();
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -62,6 +64,7 @@ export function useCreateReport(reportLabel?: string) {
         payload,
         userId,
         label: reportLabel,
+        reportStore,
       });
 
       if (import.meta.env.DEV) {

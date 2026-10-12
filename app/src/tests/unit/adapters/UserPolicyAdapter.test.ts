@@ -1,174 +1,71 @@
 import { describe, expect, test } from 'vitest';
 import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
 import {
-  mockUserPolicyApiResponse,
-  mockUserPolicyCreationPayload,
-  mockUserPolicyUS,
-  mockUserPolicyWithoutOptionalFields,
-  TEST_COUNTRIES,
-  TEST_LABELS,
-  TEST_POLICY_IDS,
-  TEST_TIMESTAMPS,
-  TEST_USER_IDS,
-} from '@/tests/fixtures';
-import { UserPolicy } from '@/types/ingredients/UserPolicy';
+  ASSOCIATION_IDS,
+  LEGACY_IDS,
+  PE_USER_ID,
+  policyItem,
+  TIMESTAMPS,
+} from '@/tests/fixtures/api/v2UserMocks';
 
 describe('UserPolicyAdapter', () => {
-  describe('toCreationPayload', () => {
-    test('given UserPolicy with all fields then creates proper payload', () => {
-      // Given
-      const userPolicy: Omit<UserPolicy, 'id' | 'createdAt'> = {
-        userId: TEST_USER_IDS.USER_123,
-        policyId: TEST_POLICY_IDS.POLICY_789,
-        countryId: TEST_COUNTRIES.US,
-        label: TEST_LABELS.MY_POLICY,
-        updatedAt: TEST_TIMESTAMPS.UPDATED_AT,
-        isCreated: true,
-      };
+  test('given a policy association then the creation payload carries the numeric v1 id and no user id', () => {
+    // When
+    const payload = UserPolicyAdapter.toCreationPayload(
+      { policyId: String(LEGACY_IDS.POLICY), label: 'My reform' },
+      'uk'
+    );
 
-      // When
-      const result = UserPolicyAdapter.toCreationPayload(userPolicy);
-
-      // Then
-      expect(result).toEqual(mockUserPolicyCreationPayload);
-    });
-
-    test('given UserPolicy without updatedAt then generates timestamp', () => {
-      // Given
-      const userPolicy: Omit<UserPolicy, 'id' | 'createdAt'> = {
-        userId: TEST_USER_IDS.USER_123,
-        policyId: TEST_POLICY_IDS.POLICY_789,
-        countryId: TEST_COUNTRIES.US,
-        label: TEST_LABELS.MY_POLICY,
-        isCreated: true,
-      };
-
-      // When
-      const result = UserPolicyAdapter.toCreationPayload(userPolicy);
-
-      // Then
-      expect(result.user_id).toBe(TEST_USER_IDS.USER_123);
-      expect(result.policy_id).toBe(TEST_POLICY_IDS.POLICY_789);
-      expect(result.country_id).toBe(TEST_COUNTRIES.US);
-      expect(result.label).toBe(TEST_LABELS.MY_POLICY);
-      expect(result.updated_at).toBeDefined();
-      expect(new Date(result.updated_at as string).toISOString()).toBe(result.updated_at);
-    });
-
-    test('given UserPolicy with numeric IDs then converts to strings', () => {
-      // Given
-      const userPolicy: Omit<UserPolicy, 'id' | 'createdAt'> = {
-        userId: 123 as any,
-        policyId: 456 as any,
-        countryId: TEST_COUNTRIES.US,
-        label: TEST_LABELS.MY_POLICY,
-        isCreated: true,
-      };
-
-      // When
-      const result = UserPolicyAdapter.toCreationPayload(userPolicy);
-
-      // Then
-      expect(result.user_id).toBe('123');
-      expect(result.policy_id).toBe('456');
-      expect(result.country_id).toBe(TEST_COUNTRIES.US);
-    });
-
-    test('given UserPolicy without label then includes undefined label', () => {
-      // Given
-      const userPolicy = mockUserPolicyWithoutOptionalFields;
-
-      // When
-      const result = UserPolicyAdapter.toCreationPayload(userPolicy);
-
-      // Then
-      expect(result.label).toBeUndefined();
-      expect(result.country_id).toBe(TEST_COUNTRIES.US);
-    });
-
-    test('given UserPolicy with UK country then preserves country ID', () => {
-      // Given
-      const userPolicy: Omit<UserPolicy, 'id' | 'createdAt'> = {
-        userId: TEST_USER_IDS.USER_123,
-        policyId: TEST_POLICY_IDS.POLICY_ABC,
-        countryId: TEST_COUNTRIES.UK,
-        label: TEST_LABELS.MY_POLICY,
-        isCreated: true,
-      };
-
-      // When
-      const result = UserPolicyAdapter.toCreationPayload(userPolicy);
-
-      // Then
-      expect(result.country_id).toBe(TEST_COUNTRIES.UK);
+    // Then
+    expect(payload).toEqual({
+      country_id: 'uk',
+      legacy_policy_id: LEGACY_IDS.POLICY,
+      name: 'My reform',
     });
   });
 
-  describe('fromApiResponse', () => {
-    test('given API response with all fields then creates UserPolicy', () => {
-      // Given
-      const apiData = mockUserPolicyApiResponse;
+  test('given no label then the creation payload omits the name', () => {
+    // When
+    const payload = UserPolicyAdapter.toCreationPayload({ policyId: '12' }, 'us');
 
-      // When
-      const result = UserPolicyAdapter.fromApiResponse(apiData);
+    // Then
+    expect(payload).toEqual({ country_id: 'us', legacy_policy_id: 12 });
+  });
 
-      // Then
-      expect(result).toEqual(mockUserPolicyUS);
+  test('given a non-numeric policy id then building the payload throws', () => {
+    expect(() => UserPolicyAdapter.toCreationPayload({ policyId: 'policy-789' }, 'us')).toThrow();
+  });
+
+  test('given updates then only supplied fields are patched', () => {
+    expect(UserPolicyAdapter.toUpdatePayload({ label: 'Renamed' })).toEqual({ name: 'Renamed' });
+    expect(UserPolicyAdapter.toUpdatePayload({ policyId: '7' })).toEqual({ legacy_policy_id: 7 });
+    expect(UserPolicyAdapter.toUpdatePayload({ label: '' })).toEqual({ name: null });
+    expect(UserPolicyAdapter.toUpdatePayload({})).toEqual({});
+  });
+
+  test('given an API item then it maps to a UserPolicy with the UUID as id', () => {
+    // When
+    const policy = UserPolicyAdapter.fromApiItem(policyItem({ name: 'My reform' }));
+
+    // Then
+    expect(policy).toEqual({
+      id: ASSOCIATION_IDS.POLICY,
+      userId: PE_USER_ID,
+      policyId: String(LEGACY_IDS.POLICY),
+      countryId: 'us',
+      label: 'My reform',
+      createdAt: TIMESTAMPS.CREATED,
+      updatedAt: TIMESTAMPS.UPDATED,
+      isCreated: true,
     });
+  });
 
-    test('given API response without optional fields then creates UserPolicy with defaults', () => {
-      // Given
-      const apiData = {
-        policy_id: TEST_POLICY_IDS.POLICY_789,
-        user_id: TEST_USER_IDS.USER_123,
-        country_id: TEST_COUNTRIES.US,
-      };
+  test('given an item without a name then the label is undefined', () => {
+    expect(UserPolicyAdapter.fromApiItem(policyItem()).label).toBeUndefined();
+  });
 
-      // When
-      const result = UserPolicyAdapter.fromApiResponse(apiData);
-
-      // Then
-      expect(result.id).toBe(TEST_POLICY_IDS.POLICY_789);
-      expect(result.userId).toBe(TEST_USER_IDS.USER_123);
-      expect(result.policyId).toBe(TEST_POLICY_IDS.POLICY_789);
-      expect(result.countryId).toBe(TEST_COUNTRIES.US);
-      expect(result.label).toBeUndefined();
-      expect(result.createdAt).toBeUndefined();
-      expect(result.updatedAt).toBeUndefined();
-      expect(result.isCreated).toBe(true);
-    });
-
-    test('given API response with null label then converts to undefined', () => {
-      // Given
-      const apiData = {
-        policy_id: TEST_POLICY_IDS.POLICY_789,
-        user_id: TEST_USER_IDS.USER_123,
-        country_id: TEST_COUNTRIES.US,
-        label: null,
-        created_at: TEST_TIMESTAMPS.CREATED_AT,
-        updated_at: TEST_TIMESTAMPS.UPDATED_AT,
-      };
-
-      // When
-      const result = UserPolicyAdapter.fromApiResponse(apiData);
-
-      // Then
-      expect(result.label).toBeUndefined();
-      expect(result.countryId).toBe(TEST_COUNTRIES.US);
-    });
-
-    test('given API response with UK country then preserves country ID', () => {
-      // Given
-      const apiData = {
-        ...mockUserPolicyApiResponse,
-        country_id: TEST_COUNTRIES.UK,
-      };
-
-      // When
-      const result = UserPolicyAdapter.fromApiResponse(apiData);
-
-      // Then
-      expect(result.countryId).toBe(TEST_COUNTRIES.UK);
-    });
+  test('given a v2-only row then it has no legacy policy', () => {
+    expect(UserPolicyAdapter.hasLegacyPolicy(policyItem({ legacy_policy_id: null }))).toBe(false);
+    expect(UserPolicyAdapter.hasLegacyPolicy(policyItem())).toBe(true);
   });
 });

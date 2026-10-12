@@ -1,5 +1,6 @@
 import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
-import { UserSimulationCreationPayload } from '@/types/payloads';
+import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
+import { isAssociationCountry, type UserSimulationItem } from '@/types/v2User';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
@@ -7,99 +8,65 @@ export interface UserSimulationStore {
   findByUser: (userId: string, countryId?: string) => Promise<UserSimulation[]>;
   findById: (userId: string, simulationId: string) => Promise<UserSimulation | null>;
   update: (userSimulationId: string, updates: Partial<UserSimulation>) => Promise<UserSimulation>;
-  // The below are not yet implemented, but keeping for future use
-  // delete(userSimulationId: string): Promise<void>;
+  delete: (userSimulationId: string) => Promise<void>;
 }
 
+/**
+ * Account storage: `/v2/user-simulations` on the PolicyEngine API. The
+ * server stamps the signed-in user onto each row; `userId` arguments are
+ * never sent.
+ */
 export class ApiSimulationStore implements UserSimulationStore {
-  // TODO: Modify value to match to-be-created API endpoint structure
-  private readonly BASE_URL = '/api/user-simulation-associations';
+  private readonly routes: AccountAssociationRoutes<UserSimulationItem>;
+
+  constructor(context: ApiStoreContext) {
+    this.routes = new AccountAssociationRoutes(context, 'user-simulations', 'UserSimulation');
+  }
 
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
-    const payload: UserSimulationCreationPayload =
-      UserSimulationAdapter.toCreationPayload(simulation);
-
-    const response = await fetch(`${this.BASE_URL}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create simulation association');
-    }
-
-    const apiResponse = await response.json();
-    return UserSimulationAdapter.fromApiResponse(apiResponse);
-  }
-
-  async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch user associations');
-    }
-
-    const apiResponses = await response.json();
-
-    // Convert each API response to UserSimulation and filter by country if specified
-    const simulations = apiResponses.map((apiData: any) =>
-      UserSimulationAdapter.fromApiResponse(apiData)
+    const countryId = isAssociationCountry(simulation.countryId)
+      ? simulation.countryId
+      : this.routes.countryId;
+    const item = await this.routes.create(
+      UserSimulationAdapter.toCreationPayload(simulation, countryId)
     );
-    return countryId
-      ? simulations.filter((s: UserSimulation) => s.countryId === countryId)
-      : simulations;
+    return UserSimulationAdapter.fromApiItem(item);
   }
 
-  async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+  async findByUser(_userId: string, countryId?: string): Promise<UserSimulation[]> {
+    if (countryId && countryId !== this.routes.countryId) {
+      return [];
+    }
+    const items = await this.routes.list();
+    return items
+      .filter(UserSimulationAdapter.hasLegacySimulation)
+      .map(UserSimulationAdapter.fromApiItem);
+  }
 
-    if (response.status === 404) {
+  async findById(_userId: string, simulationId: string): Promise<UserSimulation | null> {
+    if (!isLegacyId(simulationId)) {
       return null;
     }
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch association');
-    }
-
-    const apiData = await response.json();
-    return UserSimulationAdapter.fromApiResponse(apiData);
+    const item = await this.routes.findFirst({ legacy_simulation_id: simulationId });
+    return item && UserSimulationAdapter.hasLegacySimulation(item)
+      ? UserSimulationAdapter.fromApiItem(item)
+      : null;
   }
 
   async update(
-    _userSimulationId: string,
-    _updates: Partial<UserSimulation>
+    userSimulationId: string,
+    updates: Partial<UserSimulation>
   ): Promise<UserSimulation> {
-    // TODO: Implement when backend API endpoint is available
-    // Expected endpoint: PUT /api/user-simulation-associations/:userSimulationId
-    // Expected payload: UserSimulationUpdatePayload (to be created)
-
-    console.warn(
-      '[ApiSimulationStore.update] API endpoint not yet implemented. ' +
-        'This method will be activated when user authentication is added.'
+    const item = await this.routes.patch(
+      userSimulationId,
+      UserSimulationAdapter.toUpdatePayload(updates)
     );
-
-    throw new Error(
-      'Simulation updates via API are not yet supported. ' +
-        'Please ensure you are using localStorage mode.'
-    );
+    return UserSimulationAdapter.fromApiItem(item);
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, simulationId: string): Promise<void> {
-    const response = await fetch(`/api/user-simulation-associations/${userId}/${simulationId}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete association');
-    }
+  delete(userSimulationId: string): Promise<void> {
+    return this.routes.delete(userSimulationId);
   }
-  */
 }
 
 export class LocalStorageSimulationStore implements UserSimulationStore {
@@ -179,14 +146,7 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
     return updated;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, simulationId: string): Promise<void> {
-    const simulations = this.getStoredSimulations();
-    const filtered = simulations.filter(
-      a => !(a.userId === userId && a.simulationId === simulationId)
-    );
-    this.setStoredSimulations(filtered);
+  async delete(userSimulationId: string): Promise<void> {
+    this.setStoredSimulations(this.getStoredSimulations().filter((s) => s.id !== userSimulationId));
   }
-  */
 }

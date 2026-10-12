@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
-import { MOCK_USER_ID } from '@/constants';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { useCurrentCountry } from './useCurrentCountry';
 import { useCreatePolicyAssociation } from './useUserPolicy';
@@ -12,7 +12,7 @@ interface CreatePolicyVariables {
 
 export function useCreatePolicy(policyLabel?: string) {
   const countryId = useCurrentCountry();
-  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
+  const userId = useCurrentUserId();
   const createAssociation = useCreatePolicyAssociation();
 
   const mutation = useMutation({
@@ -21,9 +21,8 @@ export function useCreatePolicy(policyLabel?: string) {
       const resolvedLabel = label ?? policyLabel;
 
       try {
-        // Create association with current user (or anonymous for session storage)
-        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
-
+        // File the association under the current user (the account when
+        // signed in, localStorage otherwise)
         await createAssociation.mutateAsync({
           userId,
           policyId: data.result.policy_id,

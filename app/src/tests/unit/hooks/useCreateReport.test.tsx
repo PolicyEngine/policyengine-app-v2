@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createReportAndAssociateWithUser } from '@/api/report';
+import { LocalStorageReportStore } from '@/api/reportAssociation';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { mockReport } from '@/tests/fixtures/adapters/reportMocks';
 // Removed - old calculation manager mocks no longer needed
@@ -123,6 +124,8 @@ describe('useCreateReport', () => {
           payload: mockReportCreationPayload,
           userId: 'anonymous',
           label: TEST_LABEL,
+          // Signed out, the association is saved in localStorage
+          reportStore: expect.any(LocalStorageReportStore),
         });
       });
     });
@@ -143,6 +146,7 @@ describe('useCreateReport', () => {
           payload: mockReportCreationPayload,
           userId: 'anonymous',
           label: undefined,
+          reportStore: expect.any(LocalStorageReportStore),
         });
       });
     });

@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
-import { MOCK_USER_ID } from '@/constants';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { countryIds } from '@/libs/countries';
 import type { HouseholdCreationPayload } from '@/types/payloads';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
@@ -11,7 +11,7 @@ interface CreateHouseholdVariables {
 }
 
 export function useCreateHousehold(householdLabel?: string) {
-  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
+  const userId = useCurrentUserId();
   const createAssociation = useCreateHouseholdAssociation();
 
   const mutation = useMutation({
@@ -20,9 +20,8 @@ export function useCreateHousehold(householdLabel?: string) {
       const resolvedLabel = label ?? householdLabel ?? payload.label;
 
       try {
-        // Create association with current user (or anonymous for session storage)
-        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
-
+        // File the association under the current user (the account when
+        // signed in, localStorage otherwise)
         await createAssociation.mutateAsync({
           userId,
           householdId: data.result.household_id,

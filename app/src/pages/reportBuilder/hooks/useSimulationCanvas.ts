@@ -12,11 +12,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
-import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { Geography } from '@/types/ingredients/Geography';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
@@ -61,7 +61,7 @@ const REGION_LOAD_TIMEOUT_MS = 10_000;
 
 export function useSimulationCanvas({ reportState, setReportState }: UseSimulationCanvasArgs) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const userId = MOCK_USER_ID.toString();
+  const userId = useCurrentUserId();
   const {
     data: policies,
     isLoading: policiesLoading,

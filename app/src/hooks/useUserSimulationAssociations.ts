@@ -1,17 +1,45 @@
-// Import auth hook here in future; for now, mocked out below
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { ApiSimulationStore, LocalStorageSimulationStore } from '../api/simulationAssociation';
+import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
+import {
+  ApiSimulationStore,
+  LocalStorageSimulationStore,
+  type UserSimulationStore,
+} from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys } from '../libs/queryKeys';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
-const apiSimulationStore = new ApiSimulationStore();
-const localSimulationStore = new LocalStorageSimulationStore();
+// Created on first use rather than at import, so modules (and test mocks)
+// that load this hook do not construct storage eagerly.
+let localSimulationStore: LocalStorageSimulationStore | null = null;
+const getLocalSimulationStore = () => (localSimulationStore ??= new LocalStorageSimulationStore());
+
+type SimulationAssociationStoreSelection = {
+  store: UserSimulationStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+  /** False while the session is being restored; queries wait. */
+  ready: boolean;
+};
+
+export const useSimulationAssociationStoreForMode = (): SimulationAssociationStoreSelection => {
+  const backend = useAssociationBackend();
+  return useMemo(
+    () =>
+      backend.mode === 'api'
+        ? { store: new ApiSimulationStore(backend), config: queryConfig.api, ready: true }
+        : {
+            store: getLocalSimulationStore(),
+            config: queryConfig.localStorage,
+            ready: backend.ready,
+          },
+    [backend]
+  );
+};
 
 export const useUserSimulationStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiSimulationStore : localSimulationStore;
+  return useSimulationAssociationStoreForMode().store;
 };
 
 /**
@@ -25,28 +53,25 @@ export const useUserSimulationStore = () => {
  * For full simulation data with policies and households, use useUserSimulations
  */
 export const useSimulationAssociationsByUser = (userId: string) => {
-  const store = useUserSimulationStore();
+  const { store, config, ready } = useSimulationAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: simulationAssociationKeys.byUser(userId, countryId),
     queryFn: () => store.findByUser(userId, countryId),
     ...config,
+    enabled: ready,
   });
 };
 
 export const useSimulationAssociation = (userId: string, simulationId: string) => {
-  const store = useUserSimulationStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config, ready } = useSimulationAssociationStoreForMode();
 
   return useQuery({
     queryKey: simulationAssociationKeys.specific(userId, simulationId),
     queryFn: () => store.findById(userId, simulationId),
     ...config,
+    enabled: ready,
   });
 };
 

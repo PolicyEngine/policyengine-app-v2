@@ -89,10 +89,13 @@ vi.mock('@/pages/reportBuilder/hooks/useReportIngredientAvailability', () => ({
 
 const mockMutateAsync = vi.fn().mockResolvedValue({});
 
+const mockReportStore = { create: vi.fn() };
+
 vi.mock('@/hooks/useUserReportAssociations', () => ({
   useUpdateReportAssociation: () => ({
     mutateAsync: mockMutateAsync,
   }),
+  useUserReportStore: () => mockReportStore,
 }));
 
 vi.mock('@/contexts/CalcOrchestratorContext', () => ({

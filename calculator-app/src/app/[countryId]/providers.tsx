@@ -9,6 +9,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { CalcOrchestratorProvider } from "@/contexts/CalcOrchestratorContext";
 import { useCurrentCountry } from "@/hooks/useCurrentCountry";
 import { useFetchMetadata } from "@/hooks/useMetadata";
+import { AuthProvider } from "@/libs/auth/AuthProvider";
 import { setCurrentCountry } from "@/reducers/metadataReducer";
 import { AppDispatch, store } from "@/store";
 import { cacheMonitor } from "@/utils/cacheMonitor";
@@ -57,11 +58,15 @@ export function CalculatorProviders({
           }}
         >
           <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <CalcOrchestratorProvider>
-                <MetadataBootstrap>{children}</MetadataBootstrap>
-              </CalcOrchestratorProvider>
-            </TooltipProvider>
+            {/* Sign-in is inert (status 'disabled') unless
+                NEXT_PUBLIC_AUTH_ENABLED=true and Auth0 is configured. */}
+            <AuthProvider>
+              <TooltipProvider>
+                <CalcOrchestratorProvider>
+                  <MetadataBootstrap>{children}</MetadataBootstrap>
+                </CalcOrchestratorProvider>
+              </TooltipProvider>
+            </AuthProvider>
           </QueryClientProvider>
         </QueryNormalizerProvider>
       </Provider>

@@ -1,5 +1,7 @@
 import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
+import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import { isAssociationCountry, type UserHouseholdItem } from '@/types/v2User';
 
 export interface UserHouseholdStore {
   create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
@@ -9,95 +11,65 @@ export interface UserHouseholdStore {
     userHouseholdId: string,
     updates: Partial<UserHouseholdPopulation>
   ) => Promise<UserHouseholdPopulation>;
-  // The below are not yet implemented, but keeping for future use
-  // delete(userId: string, householdId: string): Promise<void>;
+  delete: (userHouseholdId: string) => Promise<void>;
 }
 
+/**
+ * Account storage: `/v2/user-households` on the PolicyEngine API. The
+ * server stamps the signed-in user onto each row; `userId` arguments are
+ * never sent.
+ */
 export class ApiHouseholdStore implements UserHouseholdStore {
-  // TODO: Modify value to match to-be-created API endpoint structure
-  private readonly BASE_URL = '/api/user-household-associations';
+  private readonly routes: AccountAssociationRoutes<UserHouseholdItem>;
+
+  constructor(context: ApiStoreContext) {
+    this.routes = new AccountAssociationRoutes(context, 'user-households', 'UserHousehold');
+  }
 
   async create(association: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
-    const payload = UserHouseholdAdapter.toCreationPayload(association);
-
-    const response = await fetch(`${this.BASE_URL}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create household association');
-    }
-
-    const apiResponse = await response.json();
-    return UserHouseholdAdapter.fromApiResponse(apiResponse);
+    const countryId = isAssociationCountry(association.countryId)
+      ? association.countryId
+      : this.routes.countryId;
+    const item = await this.routes.create(
+      UserHouseholdAdapter.toCreationPayload(association, countryId)
+    );
+    return UserHouseholdAdapter.fromApiItem(item);
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<UserHouseholdPopulation[]> {
-    const url = countryId
-      ? `${this.BASE_URL}/user/${userId}?country_id=${countryId}`
-      : `${this.BASE_URL}/user/${userId}`;
-
-    const response = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch user households');
+  async findByUser(_userId: string, countryId?: string): Promise<UserHouseholdPopulation[]> {
+    if (countryId && countryId !== this.routes.countryId) {
+      return [];
     }
-
-    const apiResponses = await response.json();
-    return apiResponses.map((apiData: any) => UserHouseholdAdapter.fromApiResponse(apiData));
+    const items = await this.routes.list();
+    return items
+      .filter(UserHouseholdAdapter.hasLegacyHousehold)
+      .map(UserHouseholdAdapter.fromApiItem);
   }
 
-  async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (response.status === 404) {
+  async findById(_userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
+    if (!isLegacyId(householdId)) {
       return null;
     }
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch association');
-    }
-
-    const apiData = await response.json();
-    return UserHouseholdAdapter.fromApiResponse(apiData);
+    const item = await this.routes.findFirst({ legacy_household_id: householdId });
+    return item && UserHouseholdAdapter.hasLegacyHousehold(item)
+      ? UserHouseholdAdapter.fromApiItem(item)
+      : null;
   }
 
   async update(
-    _userHouseholdId: string,
-    _updates: Partial<UserHouseholdPopulation>
+    userHouseholdId: string,
+    updates: Partial<UserHouseholdPopulation>
   ): Promise<UserHouseholdPopulation> {
-    // TODO: Implement when backend API endpoint is available
-    // Expected endpoint: PUT /api/user-household-associations/:userHouseholdId
-    // Expected payload: UserHouseholdUpdatePayload (to be created)
-
-    console.warn(
-      '[ApiHouseholdStore.update] API endpoint not yet implemented. ' +
-        'This method will be activated when user authentication is added.'
+    const item = await this.routes.patch(
+      userHouseholdId,
+      UserHouseholdAdapter.toUpdatePayload(updates)
     );
-
-    throw new Error(
-      'Household updates via API are not yet supported. ' +
-        'Please ensure you are using localStorage mode.'
-    );
+    return UserHouseholdAdapter.fromApiItem(item);
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, householdId: string): Promise<void> {
-    const response = await fetch(`/api/user-population-households/${userId}/${householdId}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete association');
-    }
+  delete(userHouseholdId: string): Promise<void> {
+    return this.routes.delete(userHouseholdId);
   }
-  */
 }
 
 export class LocalStorageHouseholdStore implements UserHouseholdStore {
@@ -165,19 +137,9 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
     return updated;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, householdId: string): Promise<void> {
-    const households = this.getStoredHouseholds();
-    const filtered = households.filter(a => !(a.userId === userId && a.householdId === householdId));
-    
-    if (filtered.length === households.length) {
-      throw new Error('Association not found');
-    }
-
-    this.setStoredHouseholds(filtered);
+  async delete(userHouseholdId: string): Promise<void> {
+    this.setStoredHouseholds(this.getStoredHouseholds().filter((h) => h.id !== userHouseholdId));
   }
-  */
 
   private getStoredHouseholds(): UserHouseholdPopulation[] {
     try {

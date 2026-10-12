@@ -1,0 +1,132 @@
+import { renderHook } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
+import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
+import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
+import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { MOCK_USER_ID } from '@/constants';
+import { CountryProvider } from '@/contexts/CountryContext';
+import { useHouseholdAssociationStoreForMode } from '@/hooks/useUserHousehold';
+import { usePolicyAssociationStoreForMode } from '@/hooks/useUserPolicy';
+import { useReportAssociationStoreForMode } from '@/hooks/useUserReportAssociations';
+import { useSimulationAssociationStoreForMode } from '@/hooks/useUserSimulationAssociations';
+import type { AuthContextValue, AuthStatus } from '@/libs/auth/AuthContext';
+import {
+  selectAssociationBackend,
+  useAssociationBackend,
+  useCurrentUserId,
+} from '@/libs/auth/useAssociationBackend';
+import type { CountryId } from '@/libs/countries';
+import { mockMeItem, PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  AuthTestProvider,
+  makeAuthValue,
+  signedInAuthValue,
+} from '@/tests/fixtures/libs/auth/authMocks';
+
+function wrapperFor(auth: AuthContextValue, countryId: CountryId) {
+  return ({ children }: { children: React.ReactNode }) => (
+    <CountryProvider value={countryId}>
+      <AuthTestProvider value={auth}>{children}</AuthTestProvider>
+    </CountryProvider>
+  );
+}
+
+describe('selectAssociationBackend', () => {
+  const statuses: AuthStatus[] = ['disabled', 'loading', 'anonymous', 'authenticated'];
+  const countries: CountryId[] = ['us', 'uk', 'ca', 'ng', 'il'];
+
+  test.each(statuses.flatMap((status) => countries.map((country) => [status, country] as const)))(
+    'given status %s in %s then account storage is used only when signed in to US or UK',
+    (status, countryId) => {
+      const expected =
+        status === 'authenticated' && (countryId === 'us' || countryId === 'uk')
+          ? 'api'
+          : 'localStorage';
+      expect(selectAssociationBackend({ status, user: mockMeItem, countryId })).toBe(expected);
+    }
+  );
+
+  test('given a session whose PolicyEngine user has not loaded then localStorage is used', () => {
+    expect(selectAssociationBackend({ status: 'authenticated', user: null, countryId: 'us' })).toBe(
+      'localStorage'
+    );
+  });
+});
+
+describe('useAssociationBackend', () => {
+  test('given a signed-in US session then saved work is filed under the PolicyEngine user', () => {
+    const { result } = renderHook(() => useAssociationBackend(), {
+      wrapper: wrapperFor(signedInAuthValue(), 'us'),
+    });
+
+    expect(result.current.mode).toBe('api');
+    expect(result.current.userId).toBe(PE_USER_ID);
+    expect(result.current.ready).toBe(true);
+  });
+
+  test('given a signed-in Canada session then saved work stays local under the local user', () => {
+    const { result } = renderHook(() => useCurrentUserId(), {
+      wrapper: wrapperFor(signedInAuthValue(), 'ca'),
+    });
+
+    expect(result.current).toBe(MOCK_USER_ID);
+  });
+
+  test('given the session is still loading then queries are told to wait', () => {
+    const { result } = renderHook(() => useAssociationBackend(), {
+      wrapper: wrapperFor(makeAuthValue({ status: 'loading' }), 'us'),
+    });
+
+    expect(result.current.mode).toBe('localStorage');
+    expect(result.current.ready).toBe(false);
+  });
+
+  test('given no auth provider then sign-in is disabled and storage is local', () => {
+    const { result } = renderHook(() => useAssociationBackend('us'));
+
+    expect(result.current.mode).toBe('localStorage');
+    expect(result.current.userId).toBe(MOCK_USER_ID);
+    expect(result.current.ready).toBe(true);
+  });
+});
+
+describe('association store selection', () => {
+  test('given a signed-in UK session then every association hook uses the account stores', () => {
+    const wrapper = wrapperFor(signedInAuthValue(), 'uk');
+
+    expect(
+      renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(ApiPolicyStore);
+    expect(
+      renderHook(() => useHouseholdAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(ApiHouseholdStore);
+    expect(
+      renderHook(() => useSimulationAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(ApiSimulationStore);
+    expect(
+      renderHook(() => useReportAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(ApiReportStore);
+  });
+
+  test.each([
+    ['signed out in the US', makeAuthValue({ status: 'anonymous' }), 'us'],
+    ['sign-in disabled', makeAuthValue({ status: 'disabled' }), 'uk'],
+    ['signed in in Nigeria', signedInAuthValue(), 'ng'],
+  ] as const)('given %s then every association hook uses localStorage', (_, auth, countryId) => {
+    const wrapper = wrapperFor(auth, countryId);
+
+    expect(
+      renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(LocalStoragePolicyStore);
+    expect(
+      renderHook(() => useHouseholdAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(LocalStorageHouseholdStore);
+    expect(
+      renderHook(() => useSimulationAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(LocalStorageSimulationStore);
+    expect(
+      renderHook(() => useReportAssociationStoreForMode(), { wrapper }).result.current.store
+    ).toBeInstanceOf(LocalStorageReportStore);
+  });
+});

@@ -6,7 +6,6 @@
 
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
 import {
   isGeographicMetadataWithAssociation,
   UserGeographicMetadataWithAssociation,
@@ -17,6 +16,7 @@ import {
   UserHouseholdMetadataWithAssociation,
   useUserHouseholds,
 } from '@/hooks/useUserHousehold';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { getCountryDisplayName } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
@@ -56,7 +56,7 @@ export default function PopulationExistingView({
   onBack,
   onCancel,
 }: PopulationExistingViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useCurrentUserId();
 
   // Fetch household populations
   const {
