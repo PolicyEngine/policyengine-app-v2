@@ -1,5 +1,14 @@
 [
   {
+    "title": "PolicyEngine's microsimulation package published in the Journal of Open Source Software",
+    "description": "The peer-reviewed paper describing policyengine, the open-source Python package for UK and US tax-benefit microsimulation that powers PolicyEngine, is now published in JOSS.",
+    "date": "2026-10-12 12:00:00",
+    "tags": ["uk", "us", "org", "technical"],
+    "authors": ["vahid-ahmadi"],
+    "filename": "policyengine-joss-paper.md",
+    "image": "policyengine-joss-paper/cover.webp"
+  },
+  {
     "title": "Our 2025 poverty prediction, graded",
     "description": "PolicyEngine registered a 2025 SPM poverty prediction before the Census release: up 0.2 points overall, up 0.9 for children, down 0.5 for people 65 and over. Census reported +0.1, −0.1 and +0.2. The grade, and where the misses came from: the model grew Social Security, pensions and self-employment income per person at national rates. Rerunning it with rates closer to the survey's removes most of the senior miss and about a third of the child miss.",
     "date": "2026-09-29 08:00:00",
