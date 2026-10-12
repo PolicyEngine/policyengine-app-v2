@@ -63,6 +63,30 @@ export const DEDUCTION_PARAMETERS = {
   ...phaseIn(0, 'amount', '/1', 0.0765),
   ...phaseIn(1, 'threshold', 'child', 1),
   ...phaseIn(1, 'amount', '/1', 0.34),
+  // An inflation index, and an amount current law grows with it.
+  'gov.bls.cpi.cpi_u': {
+    parameter: 'gov.bls.cpi.cpi_u',
+    label: 'CPI-U',
+    type: 'parameter',
+    unit: 'currency-USD',
+    economy: false,
+    household: true,
+    values: { '2026-01-01': 100, '2027-01-01': 103, '2028-01-01': 106 },
+  },
+  'gov.irs.income.exemption.amount': {
+    parameter: 'gov.irs.income.exemption.amount',
+    label: 'Personal exemption amount',
+    type: 'parameter',
+    unit: 'currency-USD',
+    economy: true,
+    household: true,
+    values: {
+      '2026-01-01': 5000,
+      '2027-01-01': 5100,
+      '2028-01-01': 5200,
+      '2029-01-01': 5300,
+    },
+  },
   ...deduction('SINGLE', 'SINGLE', 16100),
   ...deduction('JOINT', 'JOINT', 32200),
   ...deduction('HEAD_OF_HOUSEHOLD', 'HEAD OF HOUSEHOLD', 24150),
@@ -73,6 +97,7 @@ export const JOINT_PATH = 'gov.irs.deductions.standard.amount.JOINT';
 export const CTC_PATH = 'gov.irs.credits.ctc.amount.base';
 export const LIST_PATH = 'gov.irs.credits.ctc.refundable.social_security.add';
 export const PHASE_IN_RATE_PATH = 'gov.irs.credits.eitc.phase_in_rate[1].amount';
+export const EXEMPTION_PATH = 'gov.irs.income.exemption.amount';
 
 /** Loads the fixture parameters into the app store, as a metadata fetch would. */
 export function seedDeductionMetadata() {

@@ -17,6 +17,8 @@ interface BracketTableProps {
   baselineAt: (path: string) => any;
   onChange: (path: string, value: any) => void;
   onFocus: (path: string) => void;
+  /** A row under the brackets, e.g. how the schedule grows after its year. */
+  footer?: { label: string; content: React.ReactNode };
 }
 
 /** What a threshold counts, where the box alone can't say: $ and % show in it. */
@@ -68,6 +70,7 @@ export default function BracketTable({
   baselineAt,
   onChange,
   onFocus,
+  footer,
 }: BracketTableProps) {
   const pathOf = (field: string) => brackets.rows.find((row) => row.cells[field])?.cells[field];
   const unitOf = (field: string) => {
@@ -188,6 +191,26 @@ export default function BracketTable({
               })}
             </tr>
           ))}
+          {footer && (
+            <tr style={{ borderTop: `1px solid ${colors.border.light}` }}>
+              <th
+                scope="row"
+                style={{
+                  padding: `${spacing.md} ${spacing.lg} ${spacing.xs} 0`,
+                  textAlign: 'left',
+                  verticalAlign: 'top',
+                  fontWeight: typography.fontWeight.normal,
+                  color: colors.text.secondary,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {footer.label}
+              </th>
+              <td colSpan={brackets.fields.length} style={{ padding: spacing.xs }}>
+                {footer.content}
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

@@ -11,11 +11,12 @@ import {
   provisionIntervals,
   provisionVariesOverTime,
   removeDraftProvision,
-  setDraftProvisionValueFrom,
 } from '@/libs/draftReform';
 import { useProvisionFocus } from '@/libs/flagship/draftEditorFocus';
 import { provisionName, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { ParameterGroup, parameterGroup } from '@/libs/flagship/parameterGroups';
+import { growthOf, growthPhrase, setValueFromYear } from '@/libs/flagship/uprating';
+import { getDateRange } from '@/libs/metadataUtils';
 import { selectAddableParameterPaths } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
@@ -32,7 +33,7 @@ interface DraftRow {
 // Narrow tables drop the current-law and when columns; the row's
 // details still have both.
 const ROW_GRID =
-  'tw:grid tw:items-center tw:gap-3 tw:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_100px_64px]';
+  'tw:grid tw:items-center tw:gap-3 tw:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_136px_64px]';
 const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
 
 /** One line, cut with an ellipsis: list values run to dozens of names. */
@@ -43,11 +44,15 @@ const truncate: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-function Chip({ children }: { children: React.ReactNode }) {
+function Chip({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
     <span
+      title={title}
       style={{
+        ...truncate,
         display: 'inline-block',
+        maxWidth: '100%',
+        verticalAlign: 'middle',
         padding: `1px ${spacing.sm}`,
         borderRadius: 999,
         background: colors.primary[50],
@@ -62,8 +67,33 @@ function Chip({ children }: { children: React.ReactNode }) {
 }
 
 /** A provision's change in brief: its new value and when it applies. */
-const summarize = (provision: DraftProvision) =>
-  summarizeIntervals(provisionIntervals(provision), (value) => formatValue(value, provision.unit));
+/** ", from 2028 on a 2026 base" — only when growth doesn't start the year after, from that year. */
+function timingNote(provision: DraftProvision, startYear: number): string {
+  const { growthStart, growthBase } = provision;
+  if (!growthStart || (growthStart === startYear + 1 && growthBase === startYear)) {
+    return '';
+  }
+  return `, from ${growthStart} on a ${growthBase} base`;
+}
+
+/** A provision's change in brief: its new value and when it applies — and how it grows. */
+const summarize = (
+  provision: DraftProvision,
+  countryId: string
+): { value: string; when: string; whenFull?: string } => {
+  const intervals = provisionIntervals(provision);
+  const growth = growthPhrase(provision.growth, countryId);
+  if (growth && intervals.length > 0) {
+    const from = `from ${intervals[0].startDate.slice(0, 4)}`;
+    return {
+      value: formatValue(intervals[0].value, provision.unit),
+      // The chip is narrow: "from 2026 · CPI-U", in full on hover.
+      when: `${from} · ${growthPhrase(provision.growth, countryId, true)}`,
+      whenFull: `${from}, ${growth}${timingNote(provision, Number(intervals[0].startDate.slice(0, 4)))}`,
+    };
+  }
+  return summarizeIntervals(intervals, (value) => formatValue(value, provision.unit));
+};
 
 /** A row's value as text that opens the row: a schedule, or a breakdown's changes. */
 function SummaryButton({
@@ -111,6 +141,7 @@ function SummaryButton({
 export default function DraftTable({ draft }: { draft: DraftReform }) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draftable = useSelector(selectAddableParameterPaths);
+  const lastYear = Number(useSelector(getDateRange).maxDate.slice(0, 4));
   const focus = useProvisionFocus();
   // One row open at a time: the one being worked on.
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -250,7 +281,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
         const param = lone ? parameters?.[lone.path] : undefined;
         const changed = row.provisions.filter(provisionChanged).map((provision) => ({
           provision,
-          ...summarize(provision),
+          ...summarize(provision, draft.countryId),
         }));
         // A breakdown names each changed member and its new value.
         const memberLabel = (path: string) =>
@@ -260,6 +291,8 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
           .join(' · ');
         const whens = [...new Set(changed.map(({ when }) => when))];
         const when = whens.length === 1 ? whens[0] : whens.length > 1 ? 'mixed dates' : '';
+        const whenTitle =
+          whens.length === 1 ? (changed.find((c) => c.when === when)?.whenFull ?? when) : when;
         const baselineText = lone ? formatValue(lone.baselineValue, lone.unit) : '';
 
         return (
@@ -332,7 +365,11 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                       >
                         Can&apos;t be changed here
                       </span>
-                    ) : !provisionVariesOverTime(lone) && param ? (
+                    ) : // A value that grows still edits in place: the box sets
+                    // where it starts.
+                    (!provisionVariesOverTime(lone) ||
+                        growthPhrase(lone.growth, draft.countryId)) &&
+                      param ? (
                       <div
                         data-path={lone.path}
                         // Changed reads tinted, as in the grid; current law reads quieter.
@@ -351,7 +388,16 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                           param={param}
                           value={lone.value}
                           onChange={(next) =>
-                            setDraftProvisionValueFrom(draft.countryId, lone, year, next)
+                            setValueFromYear({
+                              countryId: draft.countryId,
+                              provision: lone,
+                              year,
+                              value: next,
+                              growth: growthOf(lone, param),
+                              param,
+                              parameters: parameters ?? {},
+                              lastYear,
+                            })
                           }
                         />
                       </div>
@@ -382,7 +428,9 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                 </div>
               )}
 
-              <span className={WIDE_ONLY}>{open || !when ? null : <Chip>{when}</Chip>}</span>
+              <span className={WIDE_ONLY}>
+                {open || !when ? null : <Chip title={whenTitle}>{when}</Chip>}
+              </span>
 
               <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                 <button
