@@ -1,17 +1,20 @@
+import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
+import { resolveImportedId } from '@/libs/auth/importedIds';
 import { CountryId } from '@/libs/countries';
 import {
   ReportValidationSnapshot,
   validationFromWire,
   validationToWire,
 } from '@/libs/flagship/reportValidation';
-import { RunReportProvision } from '@/libs/flagship/runReport';
+import type { RunReportProvision } from '@/libs/flagship/runReport';
+import type { ReportProvisionWire, UserReportCreateBody, UserReportItem } from '@/types/v2User';
 
 /**
- * Store for flagship report records: a pointer to the computed output
- * on the PolicyEngine API plus the provenance snapshot for the report
- * header. Central Supabase-backed store first, localStorage fallback
- * when it is unconfigured — same resilience pattern as the reform
- * store.
+ * Store for flagship report records: a pointer to the computed output on
+ * the PolicyEngine API plus the provenance snapshot for the report
+ * header. Signed out (and outside the US and UK) records live in
+ * localStorage; signed in, a record is the account's `/v2/user-reports`
+ * row for the report, carrying the v3 fields.
  */
 export interface FlagshipReportRecord {
   id: string;
@@ -22,7 +25,8 @@ export interface FlagshipReportRecord {
   title: string | null;
   sourceNote: string | null;
   provisions: RunReportProvision[];
-  year: string;
+  /** The simulated year; localStorage records only (the report itself carries it). */
+  year?: string;
   createdAt: string;
   /** Saved reform this report came from, when known. */
   reformId?: string | null;
@@ -42,134 +46,125 @@ export interface FlagshipReportStore {
   saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
 }
 
-class ReportStoreUnavailableError extends Error {
-  constructor() {
-    super('Report store unavailable');
-    this.name = 'ReportStoreUnavailableError';
-  }
+/** Provisions on the wire: snake_case, dated changes as start_date/end_date. */
+export function provisionsToWire(provisions: RunReportProvision[]): ReportProvisionWire[] {
+  return provisions.map((provision) => ({
+    path: provision.path,
+    breadcrumb: provision.breadcrumb,
+    unit: provision.unit ?? null,
+    baseline_value: provision.baselineValue ?? null,
+    value: provision.value ?? null,
+    intervals:
+      provision.intervals && provision.intervals.length > 0
+        ? provision.intervals.map((interval) => ({
+            start_date: interval.startDate,
+            end_date: interval.endDate,
+            value: interval.value ?? null,
+          }))
+        : null,
+  }));
 }
 
-function throwIfUnavailable(response: Response): void {
-  if (response.status === 503 || response.status === 404) {
-    throw new ReportStoreUnavailableError();
-  }
+export function provisionsFromWire(
+  wire: ReportProvisionWire[] | null | undefined
+): RunReportProvision[] {
+  return (wire ?? []).map((provision) => ({
+    path: provision.path,
+    breadcrumb: provision.breadcrumb,
+    unit: provision.unit ?? null,
+    baselineValue: provision.baseline_value,
+    value: provision.value,
+    ...(provision.intervals && provision.intervals.length > 0
+      ? {
+          intervals: provision.intervals.map((interval) => ({
+            startDate: interval.start_date,
+            endDate: interval.end_date,
+            value: interval.value as any,
+          })),
+        }
+      : {}),
+  }));
 }
 
-function fromMetadata(data: any): FlagshipReportRecord {
+export function recordFromItem(item: UserReportItem): FlagshipReportRecord {
   return {
-    id: data.id,
-    userId: data.user_id,
-    countryId: data.country_id,
-    apiReportId: data.api_report_id,
-    title: data.title,
-    sourceNote: data.source_note,
-    provisions: (data.provisions ?? []).map((p: any) => ({
-      path: p.path,
-      breadcrumb: p.breadcrumb,
-      unit: p.unit ?? null,
-      baselineValue: p.baseline_value,
-      value: p.value,
-    })),
-    year: data.year,
-    createdAt: data.created_at,
-    reformId: data.reform_id ?? null,
-    validation: validationFromWire(data.validation),
+    id: item.id,
+    userId: item.user_id,
+    countryId: item.country_id,
+    apiReportId: String(item.legacy_report_id),
+    title: item.name,
+    sourceNote: item.source_note,
+    provisions: provisionsFromWire(item.provisions),
+    createdAt: item.created_at,
+    reformId: item.user_policy_id,
+    validation: validationFromWire(item.validation),
   };
 }
 
+/** Flagship report records as the account's `/v2/user-reports` rows. */
 export class ApiFlagshipReportStore implements FlagshipReportStore {
-  private readonly BASE_URL = '/api/reports';
+  private readonly routes: AccountAssociationRoutes<UserReportItem>;
 
-  async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
-    const response = await fetch(this.BASE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: report.userId,
-        country_id: report.countryId,
-        api_report_id: report.apiReportId,
-        title: report.title,
-        source_note: report.sourceNote,
-        provisions: report.provisions.map((p) => ({
-          path: p.path,
-          breadcrumb: p.breadcrumb,
-          unit: p.unit,
-          baseline_value: p.baselineValue,
-          value: p.value,
-        })),
-        year: report.year,
-        reform_id: report.reformId ?? null,
-      }),
-    });
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to save the report record');
-    }
-    return fromMetadata(await response.json());
+  constructor(private readonly context: ApiStoreContext) {
+    this.routes = new AccountAssociationRoutes(context, 'user-reports', 'Report');
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
-    const params = new URLSearchParams({ user_id: userId });
-    if (countryId) {
-      params.set('country_id', countryId);
+  async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
+    // The reform link must be one of this account's rows: a UUID, or a
+    // local reform ID this browser imported.
+    const userPolicyId = report.reformId
+      ? resolveImportedId(this.context.userId, report.reformId)
+      : null;
+    const body: UserReportCreateBody = {
+      country_id: this.context.countryId,
+      legacy_report_id: Number(report.apiReportId),
+      name: report.title || null,
+      source_note: report.sourceNote || null,
+      provisions: provisionsToWire(report.provisions),
+      ...(userPolicyId ? { user_policy_id: userPolicyId } : {}),
+      last_run_at: new Date().toISOString(),
+    };
+    return recordFromItem(await this.routes.create(body));
+  }
+
+  async findByUser(_userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
+    if (countryId && countryId !== this.context.countryId) {
+      return [];
     }
-    const response = await fetch(`${this.BASE_URL}?${params}`);
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to load reports');
-    }
-    return ((await response.json()) as any[]).map(fromMetadata);
+    const items = await this.routes.list();
+    return items.filter((item) => isLegacyId(item.legacy_report_id)).map(recordFromItem);
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
-    const response = await fetch(`${this.BASE_URL}/${id}`);
-    if (response.status === 404) {
-      return null;
-    }
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to load the report');
-    }
-    return fromMetadata(await response.json());
+    const item = await this.routes.get(id);
+    return item && isLegacyId(item.legacy_report_id) ? recordFromItem(item) : null;
   }
 
   async findByApiReportId(
-    userId: string,
+    _userId: string,
     apiReportId: string
   ): Promise<FlagshipReportRecord | null> {
-    const params = new URLSearchParams({ user_id: userId, api_report_id: apiReportId });
-    const response = await fetch(`${this.BASE_URL}?${params}`);
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to load the report');
+    if (!isLegacyId(apiReportId)) {
+      return null;
     }
-    const records = ((await response.json()) as any[]).map(fromMetadata);
-    return records[0] ?? null;
+    const item = await this.routes.findFirst({ legacy_report_id: apiReportId });
+    return item ? recordFromItem(item) : null;
   }
 
   async saveValidation(
     id: string,
     snapshot: ReportValidationSnapshot
   ): Promise<FlagshipReportRecord> {
-    const response = await fetch(`${this.BASE_URL}/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ validation: validationToWire(snapshot) }),
-    });
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to save the validation snapshot');
-    }
-    return fromMetadata(await response.json());
+    return recordFromItem(await this.routes.patch(id, { validation: validationToWire(snapshot) }));
   }
 }
 
-const LOCAL_KEY = 'pe-flagship-reports';
+export const FLAGSHIP_REPORTS_KEY = 'pe-flagship-reports';
 
 export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   private read(): FlagshipReportRecord[] {
     try {
-      return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]');
+      return JSON.parse(localStorage.getItem(FLAGSHIP_REPORTS_KEY) ?? '[]');
     } catch {
       return [];
     }
@@ -177,7 +172,7 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
 
   private write(records: FlagshipReportRecord[]): void {
     try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(records));
+      localStorage.setItem(FLAGSHIP_REPORTS_KEY, JSON.stringify(records));
     } catch {
       // Reports simply won't persist locally.
     }
@@ -230,54 +225,7 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   }
 }
 
-let centralUnavailable = false;
-
-class ResilientFlagshipReportStore implements FlagshipReportStore {
-  constructor(
-    private readonly api: FlagshipReportStore = new ApiFlagshipReportStore(),
-    private readonly local: FlagshipReportStore = new LocalStorageFlagshipReportStore()
-  ) {}
-
-  private async withFallback<T>(run: (store: FlagshipReportStore) => Promise<T>): Promise<T> {
-    if (!centralUnavailable) {
-      try {
-        return await run(this.api);
-      } catch (error) {
-        if (!(error instanceof ReportStoreUnavailableError)) {
-          throw error;
-        }
-        centralUnavailable = true;
-      }
-    }
-    return run(this.local);
-  }
-
-  create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
-    return this.withFallback((store) => store.create(report));
-  }
-
-  findByUser(userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
-    return this.withFallback((store) => store.findByUser(userId, countryId));
-  }
-
-  findById(id: string): Promise<FlagshipReportRecord | null> {
-    return this.withFallback((store) => store.findById(id));
-  }
-
-  findByApiReportId(userId: string, apiReportId: string): Promise<FlagshipReportRecord | null> {
-    return this.withFallback((store) => store.findByApiReportId(userId, apiReportId));
-  }
-
-  saveValidation(id: string, snapshot: ReportValidationSnapshot): Promise<FlagshipReportRecord> {
-    return this.withFallback((store) => store.saveValidation(id, snapshot));
-  }
-}
-
-/** Test hook: reset the remembered central-store availability. */
-export function resetFlagshipReportStoreAvailability(): void {
-  centralUnavailable = false;
-}
-
-export function getFlagshipReportStore(): FlagshipReportStore {
-  return new ResilientFlagshipReportStore();
+/** The report store for a session: the account's when given one, else localStorage. */
+export function getFlagshipReportStore(account?: ApiStoreContext | null): FlagshipReportStore {
+  return account ? new ApiFlagshipReportStore(account) : new LocalStorageFlagshipReportStore();
 }

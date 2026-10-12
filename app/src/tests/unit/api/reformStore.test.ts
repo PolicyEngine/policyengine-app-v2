@@ -1,16 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ReformAdapter } from '@/adapters/ReformAdapter';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ApiReformStore,
+  getReformStore,
   LocalStorageReformStore,
-  resetReformStoreAvailabilityForTesting,
-  ResilientReformStore,
+  parametersFromPolicyJson,
 } from '@/api/reformStore';
+import {
+  ASSOCIATION_IDS,
+  createTestApiContext,
+  fetchCall,
+  itemResponse,
+  noContentResponse,
+  pageResponse,
+  PE_USER_ID,
+  policyItem,
+} from '@/tests/fixtures/api/v2UserMocks';
 import type { Reform } from '@/types/ingredients/Reform';
-import type { ReformMetadata } from '@/types/metadata/reformMetadata';
-
-// Mock fetch
-global.fetch = vi.fn();
 
 const mockReformInput: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> = {
   userId: 'user-123',
@@ -26,142 +31,199 @@ const mockReformInput: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> = {
   provenance: { source: 'chat', ref: 'session-1', confidence: 'exact' },
 };
 
-const mockApiResponse: ReformMetadata = {
-  id: 'rf-1',
-  user_id: 'user-123',
-  country_id: 'us',
-  label: 'CTC to $3,600 for children under 6',
-  policy_id: null,
-  parameters: [
-    {
-      name: 'gov.irs.credits.ctc.amount.base[0]',
-      values: [{ start_date: '2026-01-01', end_date: '2026-12-31', value: 3600 }],
-    },
-  ],
-  baseline: 'current-law',
-  provenance: { source: 'chat', ref: 'session-1', confidence: 'exact' },
-  created_at: '2026-08-01T00:00:00Z',
-  updated_at: '2026-08-01T00:00:00Z',
+const MATERIALIZED_POLICY_ID = 95762;
+const REPLACEMENT_POLICY_ID = 95800;
+
+const POLICY_JSON = {
+  'gov.irs.credits.ctc.amount.base[0]': { '2026-01-01.2026-12-31': 3600 },
 };
 
-describe('ReformAdapter', () => {
-  it('given a reform, when converted to a creation payload, then keys are snake_case', () => {
-    const payload = ReformAdapter.toCreationPayload(mockReformInput);
+function apiReformStore(countryId: 'us' | 'uk' = 'us') {
+  const { fetchMock, context } = createTestApiContext(countryId);
+  const materializePolicy = vi.fn().mockResolvedValue(MATERIALIZED_POLICY_ID);
+  const fetchPolicyJson = vi.fn().mockResolvedValue(POLICY_JSON);
+  const store = new ApiReformStore(context, { materializePolicy, fetchPolicyJson });
+  return { store, fetchMock, materializePolicy, fetchPolicyJson };
+}
 
-    expect(payload.user_id).toBe('user-123');
-    expect(payload.country_id).toBe('us');
-    expect(payload.parameters[0].values[0]).toEqual({
-      start_date: '2026-01-01',
-      end_date: '2026-12-31',
-      value: 3600,
-    });
-    expect(payload.provenance).toEqual({ source: 'chat', ref: 'session-1', confidence: 'exact' });
-  });
-
-  it('given an API response, when converted to a Reform, then keys are camelCase and ids are strings', () => {
-    const reform = ReformAdapter.fromApiResponse(mockApiResponse);
-
-    expect(reform.id).toBe('rf-1');
-    expect(reform.userId).toBe('user-123');
-    expect(reform.policyId).toBeUndefined();
-    expect(reform.parameters[0].values[0]).toEqual({
-      startDate: '2026-01-01',
-      endDate: '2026-12-31',
-      value: 3600,
-    });
-    expect(reform.provenance.source).toBe('chat');
-  });
-
-  it('given partial updates, when converted to an update payload, then only provided fields are included', () => {
-    const payload = ReformAdapter.toUpdatePayload({ label: 'Renamed' });
-
-    expect(payload).toEqual({ label: 'Renamed' });
-  });
+const reformRow = policyItem({
+  id: ASSOCIATION_IDS.REFORM,
+  legacy_policy_id: MATERIALIZED_POLICY_ID,
+  name: 'CTC to $3,600 for children under 6',
+  baseline: 'current-law',
+  provenance: { source: 'chat', ref: 'session-1', confidence: 'exact' },
 });
 
 describe('ApiReformStore', () => {
-  let store: ApiReformStore;
-
   beforeEach(() => {
-    store = new ApiReformStore();
-    vi.clearAllMocks();
+    localStorage.clear();
   });
 
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
+  it('given a reform, when created, then its parameters become a v1 policy and the row links to it', async () => {
+    // Given
+    const { store, fetchMock, materializePolicy } = apiReformStore();
+    fetchMock.mockResolvedValue(itemResponse(reformRow, 201));
 
-  it('given a reform, when created, then POSTs snake_case payload and returns the parsed reform', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiResponse,
+    // When
+    const created = await store.create(mockReformInput);
+
+    // Then
+    expect(materializePolicy).toHaveBeenCalledWith(
+      'us',
+      mockReformInput.label,
+      mockReformInput.parameters
+    );
+    const call = fetchCall(fetchMock);
+    expect(call.path).toBe('/v2/user-policies');
+    expect(call.body).toEqual({
+      country_id: 'us',
+      legacy_policy_id: MATERIALIZED_POLICY_ID,
+      name: 'CTC to $3,600 for children under 6',
+      baseline: 'current-law',
+      provenance: { source: 'chat', ref: 'session-1', confidence: 'exact' },
     });
-
-    const result = await store.create(mockReformInput);
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      '/api/reforms',
-      expect.objectContaining({ method: 'POST' })
-    );
-    const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
-    expect(body.user_id).toBe('user-123');
-    expect(result.id).toBe('rf-1');
-  });
-
-  it('given a user id and country, when finding by user, then passes both as query params', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => [mockApiResponse],
+    expect(created).toMatchObject({
+      id: ASSOCIATION_IDS.REFORM,
+      userId: PE_USER_ID,
+      policyId: String(MATERIALIZED_POLICY_ID),
+      parameters: mockReformInput.parameters,
     });
+  });
 
-    const result = await store.findByUser('user-123', 'us');
+  it('given a reform already materialized, when created, then no new policy is made', async () => {
+    // Given
+    const { store, fetchMock, materializePolicy } = apiReformStore();
+    fetchMock.mockResolvedValue(itemResponse(reformRow, 201));
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      '/api/reforms?user_id=user-123&country_id=us',
-      expect.anything()
+    // When
+    await store.create({ ...mockReformInput, policyId: '42' });
+
+    // Then
+    expect(materializePolicy).not.toHaveBeenCalled();
+    expect(fetchCall(fetchMock).body.legacy_policy_id).toBe(42);
+  });
+
+  it('given saved rows, when listed, then parameters are rebuilt from each v1 policy', async () => {
+    // Given
+    const { store, fetchMock, fetchPolicyJson } = apiReformStore();
+    fetchMock.mockResolvedValue(
+      pageResponse([reformRow, policyItem({ id: 'v2-only', legacy_policy_id: null })])
     );
-    expect(result).toHaveLength(1);
-    expect(result[0].userId).toBe('user-123');
-  });
 
-  it('given a missing reform, when finding by id, then returns null on 404', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 404 });
+    // When
+    const reforms = await store.findByUser(PE_USER_ID, 'us');
 
-    const result = await store.findById('rf-missing');
-
-    expect(result).toBeNull();
-  });
-
-  it('given a failing API, when creating, then throws', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 500 });
-
-    await expect(store.create(mockReformInput)).rejects.toThrow('Failed to create reform');
-  });
-
-  it('given updates, when updating, then PATCHes and returns the parsed reform', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ...mockApiResponse, label: 'Renamed' }),
+    // Then
+    expect(fetchPolicyJson).toHaveBeenCalledWith('us', String(MATERIALIZED_POLICY_ID));
+    expect(reforms).toHaveLength(1);
+    expect(reforms[0].parameters).toEqual(mockReformInput.parameters);
+    expect(reforms[0].provenance).toEqual({
+      source: 'chat',
+      ref: 'session-1',
+      confidence: 'exact',
     });
-
-    const result = await store.update('rf-1', { label: 'Renamed' });
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      '/api/reforms/rf-1',
-      expect.objectContaining({ method: 'PATCH' })
-    );
-    expect(result.label).toBe('Renamed');
   });
 
-  it('given a reform id, when deleting, then issues DELETE', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: true });
+  it('given a row without provenance, when read, then it reads as a hand-built current-law reform', async () => {
+    // Given
+    const { store, fetchMock } = apiReformStore();
+    fetchMock.mockResolvedValue(itemResponse(policyItem({ id: ASSOCIATION_IDS.REFORM })));
 
-    await store.delete('rf-1');
+    // When
+    const reform = await store.findById(ASSOCIATION_IDS.REFORM);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      '/api/reforms/rf-1',
-      expect.objectContaining({ method: 'DELETE' })
+    // Then
+    expect(reform?.baseline).toBe('current-law');
+    expect(reform?.provenance).toEqual({ source: 'manual' });
+  });
+
+  it('given parameter edits, when updated, then a new v1 policy is made and the row repointed', async () => {
+    // Given
+    const { store, fetchMock, materializePolicy } = apiReformStore();
+    materializePolicy.mockResolvedValue(REPLACEMENT_POLICY_ID);
+    fetchMock.mockResolvedValue(
+      itemResponse({ ...reformRow, name: 'Renamed', legacy_policy_id: REPLACEMENT_POLICY_ID })
     );
+    const parameters = [
+      {
+        name: 'gov.irs.credits.ctc.amount.base[0]',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 4000 }],
+      },
+    ];
+
+    // When
+    const updated = await store.update(ASSOCIATION_IDS.REFORM, { label: 'Renamed', parameters });
+
+    // Then
+    const call = fetchCall(fetchMock);
+    expect(call.method).toBe('PATCH');
+    expect(call.path).toBe(`/v2/user-policies/${ASSOCIATION_IDS.REFORM}`);
+    expect(call.body).toEqual({ name: 'Renamed', legacy_policy_id: REPLACEMENT_POLICY_ID });
+    expect(updated.parameters).toEqual(parameters);
+    expect(updated.policyId).toBe(String(REPLACEMENT_POLICY_ID));
+  });
+
+  it('given only a rename, when updated, then no policy is made and only the name is patched', async () => {
+    // Given
+    const { store, fetchMock, materializePolicy } = apiReformStore();
+    fetchMock.mockResolvedValue(itemResponse({ ...reformRow, name: 'Renamed' }));
+
+    // When
+    await store.update(ASSOCIATION_IDS.REFORM, { label: 'Renamed' });
+
+    // Then
+    expect(materializePolicy).not.toHaveBeenCalled();
+    expect(fetchCall(fetchMock).body).toEqual({ name: 'Renamed' });
+  });
+
+  it('given a reform kept only in this browser, when saved signed in, then it is added to the account', async () => {
+    // Given
+    const local = await new LocalStorageReformStore().create(mockReformInput);
+    const { store, fetchMock, materializePolicy } = apiReformStore();
+    fetchMock.mockResolvedValue(itemResponse({ ...reformRow, name: 'Renamed' }, 201));
+
+    // When
+    const saved = await store.update(local.id!, { label: 'Renamed' });
+
+    // Then
+    expect(materializePolicy).toHaveBeenCalledWith('us', 'Renamed', mockReformInput.parameters);
+    const call = fetchCall(fetchMock);
+    expect(call.method).toBe('POST');
+    expect(call.body).toMatchObject({ name: 'Renamed', legacy_policy_id: MATERIALIZED_POLICY_ID });
+    expect(saved.id).toBe(ASSOCIATION_IDS.REFORM);
+  });
+
+  it('given a reform, when deleted, then its row is deleted', async () => {
+    // Given
+    const { store, fetchMock } = apiReformStore();
+    fetchMock.mockResolvedValue(noContentResponse());
+
+    // When
+    await store.delete(ASSOCIATION_IDS.REFORM);
+
+    // Then
+    expect(fetchCall(fetchMock).method).toBe('DELETE');
+  });
+});
+
+describe('parametersFromPolicyJson', () => {
+  it('given no metadata, then the stored values are used as-is', () => {
+    expect(parametersFromPolicyJson({ 'gov.example': { '2026-01-01.2100-12-31': true } })).toEqual([
+      {
+        name: 'gov.example',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: true }],
+      },
+    ]);
+  });
+});
+
+describe('getReformStore', () => {
+  it('given no account, then reforms stay in localStorage', () => {
+    expect(getReformStore(null)).toBeInstanceOf(LocalStorageReformStore);
+  });
+
+  it('given an account, then reforms go to the account', () => {
+    expect(getReformStore(createTestApiContext().context)).toBeInstanceOf(ApiReformStore);
   });
 });
 
@@ -215,72 +277,6 @@ describe('LocalStorageReformStore', () => {
 
     await store.delete(created.id!);
 
-    expect(await store.findById(created.id!)).toBeNull();
-  });
-});
-
-describe('ResilientReformStore', () => {
-  let store: ResilientReformStore;
-
-  beforeEach(() => {
-    store = new ResilientReformStore();
-    localStorage.clear();
-    vi.clearAllMocks();
-    resetReformStoreAvailabilityForTesting();
-  });
-
-  it('given the API is healthy, when creating, then the central store is used', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => mockApiResponse });
-
-    const result = await store.create(mockReformInput);
-
-    expect(result.id).toBe('rf-1');
-    expect(await new LocalStorageReformStore().findByUser('user-123')).toHaveLength(0);
-  });
-
-  it('given the API returns 503, when creating, then it falls back to localStorage', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 503 });
-
-    const result = await store.create(mockReformInput);
-
-    expect(result.id).toMatch(/^rf-/);
-    expect(await new LocalStorageReformStore().findByUser('user-123')).toHaveLength(1);
-  });
-
-  it('given a prior 503, when reading later, then localStorage is used without retrying the API', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 503 });
-    await store.create(mockReformInput);
-    (global.fetch as any).mockClear();
-
-    const reforms = await store.findByUser('user-123', 'us');
-
-    expect(reforms).toHaveLength(1);
-    expect(global.fetch).not.toHaveBeenCalled();
-  });
-
-  it('given the collection endpoint is absent (404), when listing, then it falls back to localStorage', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 404 });
-
-    const reforms = await store.findByUser('user-123');
-
-    expect(reforms).toEqual([]);
-  });
-
-  it('given a real server error (500), when creating, then it surfaces instead of falling back', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 500 });
-
-    await expect(store.create(mockReformInput)).rejects.toThrow('Failed to create reform');
-    expect(await new LocalStorageReformStore().findByUser('user-123')).toHaveLength(0);
-  });
-
-  it('given a fallback save then update and delete keep working against localStorage', async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false, status: 503 });
-    const created = await store.create(mockReformInput);
-
-    const updated = await store.update(created.id!, { label: 'Renamed' });
-    expect(updated.label).toBe('Renamed');
-
-    await store.delete(created.id!);
     expect(await store.findById(created.id!)).toBeNull();
   });
 });

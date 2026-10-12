@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getFlagshipReportStore } from '@/api/flagshipReportStore';
+import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import {
   isLiveValidationSettled,
   LiveValidation,
@@ -26,6 +26,7 @@ export function useReportValidationSnapshot(
   apiReportId: string | undefined,
   live: LiveValidation
 ): ReportValidationState {
+  const { store, ready } = useFlagshipReportStore();
   const [snapshot, setSnapshot] = useState<ReportValidationSnapshot | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);
   const pinned = useRef(false);
@@ -35,10 +36,10 @@ export function useReportValidationSnapshot(
     pinned.current = false;
     setSnapshot(null);
     setRecordId(null);
-    if (!apiReportId) {
+    if (!apiReportId || !ready) {
       return;
     }
-    getFlagshipReportStore()
+    store
       .findByApiReportId(userId, apiReportId)
       .then((record) => {
         if (cancelled || !record) {
@@ -56,7 +57,7 @@ export function useReportValidationSnapshot(
     return () => {
       cancelled = true;
     };
-  }, [userId, apiReportId]);
+  }, [store, ready, userId, apiReportId]);
 
   const settled = isLiveValidationSettled(live);
   useEffect(() => {
@@ -65,7 +66,7 @@ export function useReportValidationSnapshot(
     }
     pinned.current = true;
     const fresh = snapshotFromLive(live);
-    getFlagshipReportStore()
+    store
       .saveValidation(recordId, fresh)
       .then((record) => setSnapshot(record.validation ?? fresh))
       .catch(() => {

@@ -1,7 +1,6 @@
 import { IconCalendarEvent, IconChartBar, IconUsers } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { getReformStore } from '@/api/reformStore';
 import {
   Badge,
   Button,
@@ -11,10 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
+import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
+import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import {
   clearDraftReform,
   DraftReform,
@@ -112,6 +112,8 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
+  const reformStore = useReformStore();
+  const userId = useCurrentUserId();
   const taxYears = useSelector(getTaxYears);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const currentLawAt = (path: string, at: number) => {
@@ -123,16 +125,15 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const store = getReformStore();
-      const payload = draftToReform(draft, MOCK_USER_ID);
+      const payload = draftToReform(draft, userId);
       if (draft.editingReformId) {
-        return store.update(draft.editingReformId, {
+        return reformStore.update(draft.editingReformId, {
           label: payload.label,
           parameters: payload.parameters,
           provenance: payload.provenance,
         });
       }
-      return store.create(payload);
+      return reformStore.create(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reforms'] });

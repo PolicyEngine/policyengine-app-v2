@@ -14,19 +14,20 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { TrackedBill } from '@/api/billFeed';
-import { getReformStore } from '@/api/reformStore';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { FOREVER, MOCK_USER_ID } from '@/constants';
+import { FOREVER } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
+import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
 import {
   addDraftProvision,
   clearDraftReform,
@@ -236,6 +237,8 @@ export default function ReformsPage() {
   const [editedValues, setEditedValues] = useState<Record<string, any>>({});
 
   const runReport = useRunFlagshipReport();
+  const reformStore = useReformStore();
+  const { userId, ready: storeReady } = useAssociationBackend();
   const {
     bills,
     isConfigured: billsConfigured,
@@ -248,15 +251,16 @@ export default function ReformsPage() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ['reforms', MOCK_USER_ID, countryId],
-    queryFn: () => getReformStore().findByUser(MOCK_USER_ID, countryId),
+    queryKey: ['reforms', userId, countryId],
+    queryFn: () => reformStore.findByUser(userId, countryId),
+    enabled: storeReady,
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
 
   const saveMutation = useMutation({
     mutationFn: (reform: Reform) =>
-      getReformStore().update(reform.id!, {
+      reformStore.update(reform.id!, {
         label: editedLabel || null,
         parameters: reform.parameters.map((parameter) => ({
           name: parameter.name,
@@ -273,7 +277,7 @@ export default function ReformsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (reformId: string) => getReformStore().delete(reformId),
+    mutationFn: (reformId: string) => reformStore.delete(reformId),
     onSuccess: () => {
       setSelectedId(null);
       invalidate();
@@ -282,7 +286,7 @@ export default function ReformsPage() {
 
   const duplicateMutation = useMutation({
     mutationFn: (reform: Reform) =>
-      getReformStore().create({
+      reformStore.create({
         userId: reform.userId,
         countryId: reform.countryId,
         label: `${reform.label || 'Untitled reform'} (copy)`,

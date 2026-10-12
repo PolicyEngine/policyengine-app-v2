@@ -1,5 +1,6 @@
+import type { FlagshipReportStore } from '@/api/flagshipReportStore';
 import { createPolicy } from '@/api/policy';
-import { createReportAndAssociateWithUser } from '@/api/report';
+import { createReport, createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
@@ -32,11 +33,11 @@ export interface FlagshipReportMeta {
   createdAt: string;
 }
 
-const META_KEY = 'pe-flagship-report-meta';
+export const REPORT_META_KEY = 'pe-flagship-report-meta';
 
 function readAllMeta(): Record<string, FlagshipReportMeta> {
   try {
-    return JSON.parse(localStorage.getItem(META_KEY) ?? '{}');
+    return JSON.parse(localStorage.getItem(REPORT_META_KEY) ?? '{}');
   } catch {
     return {};
   }
@@ -44,7 +45,10 @@ function readAllMeta(): Record<string, FlagshipReportMeta> {
 
 export function saveReportMeta(userReportId: string, meta: FlagshipReportMeta): void {
   try {
-    localStorage.setItem(META_KEY, JSON.stringify({ ...readAllMeta(), [userReportId]: meta }));
+    localStorage.setItem(
+      REPORT_META_KEY,
+      JSON.stringify({ ...readAllMeta(), [userReportId]: meta })
+    );
   } catch {
     // Provenance header simply won't show if storage is unavailable.
   }
@@ -65,6 +69,13 @@ export interface RunFlagshipReportArgs {
   reformId?: string | null;
   /** The year to simulate; the current year when unset. */
   year?: number;
+  /**
+   * Signed in (US/UK): the account's report store and user. The run then
+   * writes exactly one `/v2/user-reports` row — with the title, source
+   * note, provisions and reform link — instead of the localStorage
+   * association and record.
+   */
+  account?: { reportStore: FlagshipReportStore; userId: string } | null;
 }
 
 /**
@@ -108,6 +119,7 @@ export async function runFlagshipReport({
   currentLawId,
   reformId,
   year = Number(CURRENT_YEAR),
+  account,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -128,15 +140,42 @@ export async function runFlagshipReport({
     }),
   ]);
 
+  const payload = {
+    simulation_1_id: Number(baseline.result.simulation_id),
+    simulation_2_id: Number(reform.result.simulation_id),
+    year: String(year),
+  };
+
+  if (account) {
+    // Signed in: the account's row is the report's only association. It is
+    // written right after the v1 report exists, and a failure fails the
+    // run, so a report that opens is a report that was saved.
+    const reportMetadata = await createReport(countryId, payload);
+    const reportId = String(reportMetadata.id);
+    saveReportMeta(reportId, {
+      title,
+      sourceNote,
+      provisions,
+      createdAt: new Date().toISOString(),
+    });
+    await account.reportStore.create({
+      userId: account.userId,
+      countryId,
+      apiReportId: reportId,
+      title: title || null,
+      sourceNote: sourceNote || null,
+      provisions,
+      year: String(year),
+      reformId: reformId ?? null,
+    });
+    return reportId;
+  }
+
   const { metadata } = await createReportAndAssociateWithUser({
     countryId,
     userId: MOCK_USER_ID,
     label: title || undefined,
-    payload: {
-      simulation_1_id: Number(baseline.result.simulation_id),
-      simulation_2_id: Number(reform.result.simulation_id),
-      year: String(year),
-    },
+    payload,
   });
 
   const reportId = String(metadata.baseReportId);
@@ -147,12 +186,11 @@ export async function runFlagshipReport({
     createdAt: new Date().toISOString(),
   });
 
-  // Record the report centrally (pointer + provenance; never outputs).
-  // Best-effort: the run already succeeded, and the store falls back to
-  // localStorage when the database is unconfigured.
+  // Record the report locally (pointer + provenance; never outputs).
+  // Best-effort: the run already succeeded.
   try {
-    const { getFlagshipReportStore } = await import('@/api/flagshipReportStore');
-    await getFlagshipReportStore().create({
+    const { LocalStorageFlagshipReportStore } = await import('@/api/flagshipReportStore');
+    await new LocalStorageFlagshipReportStore().create({
       userId: MOCK_USER_ID,
       countryId,
       apiReportId: String(metadata.baseReportId),

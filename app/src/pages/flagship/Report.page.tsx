@@ -9,10 +9,10 @@ import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Spinner, Stack, Text, Title } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
+import { useAccountReportRecord, useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
@@ -41,13 +41,27 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // A local association id from another browser resolves to nothing.
   const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  // Provenance: the local stash from the run, else rebuilt from the reform
-  // policy so a shared link validates like the original.
+  const { userId: storeUserId } = useFlagshipReportStore();
+  const apiReportId =
+    report?.id !== undefined && report?.id !== null ? String(report.id) : undefined;
+  // Signed in, the account's record carries the provenance to every device.
+  const accountRecord = useAccountReportRecord(apiReportId);
+  // Provenance: the local stash from the run, else the account's record,
+  // else rebuilt from the reform policy so a shared link validates like
+  // the original.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
   // Without metadata the rebuilt provisions would show raw paths and no
   // baseline, so they count as still loading until it arrives.
   const meta =
     readReportMeta(userReportId) ??
+    (accountRecord && accountRecord.provisions.length > 0
+      ? {
+          title: accountRecord.title ?? '',
+          sourceNote: accountRecord.sourceNote ?? '',
+          provisions: accountRecord.provisions,
+          createdAt: accountRecord.createdAt,
+        }
+      : null) ??
     (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
@@ -106,11 +120,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
   // The store keys records by the API report id as a string.
-  const pin = useReportValidationSnapshot(
-    MOCK_USER_ID,
-    report?.id !== undefined && report?.id !== null ? String(report.id) : undefined,
-    { calibration, programs: trackRecordPrograms(trackRecord) }
-  );
+  const pin = useReportValidationSnapshot(storeUserId, apiReportId, {
+    calibration,
+    programs: trackRecordPrograms(trackRecord),
+  });
 
   const title = meta?.title || report?.label || 'Impact report';
 

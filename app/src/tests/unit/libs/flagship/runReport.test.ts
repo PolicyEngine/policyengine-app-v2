@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { FlagshipReportStore } from '@/api/flagshipReportStore';
 import { readReportMeta, runFlagshipReport } from '@/libs/flagship/runReport';
 
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
 const mockCreateReportAndAssociate = vi.fn();
+const mockCreateReport = vi.fn();
 
 vi.mock('@/api/policy', () => ({
   createPolicy: (...args: any[]) => mockCreatePolicy(...args),
@@ -13,7 +15,11 @@ vi.mock('@/api/simulation', () => ({
 }));
 vi.mock('@/api/report', () => ({
   createReportAndAssociateWithUser: (...args: any[]) => mockCreateReportAndAssociate(...args),
+  createReport: (...args: any[]) => mockCreateReport(...args),
 }));
+
+const ACCOUNT_USER_ID = '7c1e5a8e-2b1f-4c55-9a3e-1f2d3c4b5a69';
+const REFORM_ROW_ID = '55555555-5555-4555-8555-555555555555';
 
 const PROVISION = {
   path: 'gov.irs.credits.ctc.amount.base[0].amount',
@@ -34,6 +40,7 @@ describe('runFlagshipReport', () => {
     mockCreateReportAndAssociate.mockResolvedValue({
       metadata: { baseReportId: '55', userReportId: 'sur-abc', countryId: 'us' },
     });
+    mockCreateReport.mockResolvedValue({ id: 56, country_id: 'us', year: '2026' });
   });
 
   test('starts both simulations before either finishes and waits for both before creating the report', async () => {
@@ -127,5 +134,93 @@ describe('runFlagshipReport', () => {
       })
     ).rejects.toThrow(/no provisions/);
     expect(mockCreatePolicy).not.toHaveBeenCalled();
+  });
+
+  test('given a signed-out run then the local association and local record are written', async () => {
+    // When
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: 'Federal · Introduced',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      reformId: 'rf-local1',
+    });
+
+    // Then
+    expect(mockCreateReportAndAssociate).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'anonymous', label: 'CTC expansion' })
+    );
+    expect(mockCreateReport).not.toHaveBeenCalled();
+    const records = JSON.parse(localStorage.getItem('pe-flagship-reports') ?? '[]');
+    expect(records).toEqual([
+      expect.objectContaining({
+        userId: 'anonymous',
+        apiReportId: '55',
+        title: 'CTC expansion',
+        reformId: 'rf-local1',
+      }),
+    ]);
+  });
+
+  test('given a signed-in run then exactly one account association is written', async () => {
+    // Given
+    const accountStore = {
+      create: vi.fn().mockResolvedValue({ id: 'row-1' }),
+    } as unknown as FlagshipReportStore;
+
+    // When
+    const reportId = await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: 'Federal · Introduced',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      reformId: REFORM_ROW_ID,
+      year: 2027,
+      account: { reportStore: accountStore, userId: ACCOUNT_USER_ID },
+    });
+
+    // Then
+    expect(reportId).toBe('56');
+    expect(mockCreateReport).toHaveBeenCalledWith('us', {
+      simulation_1_id: 101,
+      simulation_2_id: 102,
+      year: '2027',
+    });
+    expect(mockCreateReportAndAssociate).not.toHaveBeenCalled();
+    expect(accountStore.create).toHaveBeenCalledTimes(1);
+    expect(accountStore.create).toHaveBeenCalledWith({
+      userId: ACCOUNT_USER_ID,
+      countryId: 'us',
+      apiReportId: '56',
+      title: 'CTC expansion',
+      sourceNote: 'Federal · Introduced',
+      provisions: [PROVISION],
+      year: '2027',
+      reformId: REFORM_ROW_ID,
+    });
+    expect(localStorage.getItem('pe-flagship-reports')).toBeNull();
+    expect(localStorage.getItem('user-report-associations')).toBeNull();
+    expect(readReportMeta('56')?.title).toBe('CTC expansion');
+  });
+
+  test('given the account association fails then the signed-in run fails', async () => {
+    // Given
+    const accountStore = {
+      create: vi.fn().mockRejectedValue(new Error('Saved work is temporarily unavailable.')),
+    } as unknown as FlagshipReportStore;
+
+    // When / Then
+    await expect(
+      runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        account: { reportStore: accountStore, userId: ACCOUNT_USER_ID },
+      })
+    ).rejects.toThrow('Saved work is temporarily unavailable.');
   });
 });

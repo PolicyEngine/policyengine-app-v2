@@ -1,1 +1,0 @@
-ALTER TABLE "reports" ADD COLUMN "validation" jsonb;

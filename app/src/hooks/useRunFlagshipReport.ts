@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
 import { runFlagshipReport, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -15,6 +16,7 @@ export function useRunFlagshipReport() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const reportStore = useFlagshipReportStore();
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +57,9 @@ export function useRunFlagshipReport() {
         currentLawId: Number(currentLawId),
         reformId,
         year,
+        account: reportStore.isAccount
+          ? { reportStore: reportStore.store, userId: reportStore.userId }
+          : null,
       });
       if (fromDraft) {
         markDraftRun(userReportId);
