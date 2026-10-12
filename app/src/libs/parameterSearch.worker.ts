@@ -1,6 +1,6 @@
 import {
   createParameterSearchIndex,
-  searchParameters,
+  searchParametersWidening,
   type ParameterSearchEntry,
   type ParameterSearchFilters,
   type ParameterSearchIndex,
@@ -13,6 +13,7 @@ export type SearchWorkerRequest =
       entries: ParameterSearchEntry[];
       clusters: string[][];
       aliases: Map<string, string>;
+      stateNames: Map<string, string>;
     }
   | {
       type: 'search';
@@ -25,17 +26,21 @@ export type SearchWorkerRequest =
 export interface SearchWorkerResponse {
   id: number;
   entries: ParameterSearchEntry[];
+  /** Filters the entries satisfy, when wider than requested. */
+  widenedFilters?: ParameterSearchFilters;
 }
 
 let index: ParameterSearchIndex;
 self.onmessage = ({ data }: MessageEvent<SearchWorkerRequest>) => {
   if (data.type === 'init') {
-    index = createParameterSearchIndex(data.entries, data.clusters, data.aliases);
+    index = createParameterSearchIndex(data.entries, data.clusters, data.aliases, data.stateNames);
   } else {
     restoreUsageCounts(data.usageCounts);
+    const result = searchParametersWidening(index, data.query, data.limit, data.filters);
     self.postMessage({
       id: data.id,
-      entries: searchParameters(index, data.query, data.limit, data.filters),
+      entries: result.entries,
+      widenedFilters: result.filters === data.filters ? undefined : result.filters,
     } satisfies SearchWorkerResponse);
   }
 };

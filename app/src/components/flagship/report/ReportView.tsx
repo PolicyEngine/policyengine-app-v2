@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { IconHome, IconPlus } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
   CalibrationMatchSection,
@@ -34,9 +35,11 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
+import { describeChange } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
+import { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
 
 const SECTIONS = [
@@ -123,6 +126,8 @@ export default function ReportView({
   trackRecord,
   validationLead,
 }: ReportViewProps) {
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+  const variableLabel = (name: string) => variables?.[name]?.label ?? name;
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const [activeTab, setActiveTab] = useState('policy');
@@ -218,8 +223,12 @@ export default function ReportView({
                       : provision.breadcrumb || provision.path}
                     :{' '}
                     <strong style={{ color: colors.text.inverse }}>
-                      {formatValue(provision.baselineValue, provision.unit)} →{' '}
-                      {formatValue(provision.value, provision.unit)}
+                      {describeChange(
+                        provision.baselineValue,
+                        provision.value,
+                        (value) => formatValue(value, provision.unit),
+                        variableLabel
+                      )}
                     </strong>
                   </Text>
                 ))}

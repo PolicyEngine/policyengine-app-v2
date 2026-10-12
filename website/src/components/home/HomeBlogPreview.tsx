@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Container, Group, Text } from "@/components/ui";
 import OptimisedImage from "@/components/ui/OptimisedImage";
+import { formatPostDate } from "@/lib/postDate";
 import { cn } from "@/lib/utils";
 import { colors, spacing, typography } from "@/designTokens";
 import {
@@ -22,17 +23,6 @@ function getItemImageUrl(item: ResearchItem): string {
     return item.image;
   }
   return `/assets/posts/${item.image}`;
-}
-
-function formatItemDate(dateStr: string): string {
-  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
-    ? `${dateStr}T12:00:00`
-    : dateStr;
-  return new Date(normalized).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function getItemHref(item: ResearchItem, countryId: string): string {
@@ -83,7 +73,7 @@ interface PrimaryCardProps {
 
 function PrimaryCard({ item, countryId, flex }: PrimaryCardProps) {
   const imageUrl = getItemImageUrl(item);
-  const date = formatItemDate(item.date);
+  const date = formatPostDate(item.date, "short");
   const cta = item.isApp ? "Open" : "Read more";
 
   return (
@@ -149,7 +139,7 @@ interface SecondaryCardProps {
 
 function SecondaryCard({ item, countryId }: SecondaryCardProps) {
   const imageUrl = getItemImageUrl(item);
-  const date = formatItemDate(item.date);
+  const date = formatPostDate(item.date, "short");
   const cta = item.isApp ? "Open" : "Read";
 
   return (

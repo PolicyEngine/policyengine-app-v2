@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportView from '@/components/flagship/report/ReportView';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
@@ -14,9 +15,9 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta } from '@/libs/flagship/runReport';
-import ErrorPage from '@/pages/report-output/ErrorPage';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
@@ -50,6 +51,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
+
+  // The run handed its draft over to this report; Build starts fresh.
+  useEffect(() => {
+    clearDraftAfterRun(userReportId);
+  }, [userReportId]);
 
   const calcConfigs = useMemo(() => {
     // Wait for the reform simulation too: starting on the baseline alone
@@ -155,7 +161,19 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           <Title order={1} style={{ margin: 0 }}>
             {title}
           </Title>
-          <ErrorPage error={new Error(calcStatus.error?.message || 'Calculation failed')} />
+          <ReportCalculationError
+            message={calcStatus.error?.message}
+            // The reform comes back as a draft to edit; without it, Build starts blank.
+            onEdit={
+              meta?.provisions.length && report
+                ? () =>
+                    loadProvisionsIntoDraft(report.countryId, meta.provisions, {
+                      label: meta.title === 'Draft reform' ? '' : meta.title,
+                      year: Number(report.year) || undefined,
+                    })
+                : undefined
+            }
+          />
         </Stack>
       );
     }

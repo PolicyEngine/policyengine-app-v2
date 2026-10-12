@@ -1,5 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderWithCountry, screen } from '@test-utils';
+import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import StandardLayout from '@/components/StandardLayout';
 import { setFlagshipShellEnabled } from '@/libs/featureFlags';
@@ -8,17 +7,9 @@ vi.mock('@/components/Sidebar', () => ({
   default: () => <div>Sidebar</div>,
 }));
 
-vi.mock('@/api/reformStore', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/api/reformStore')>();
-  return {
-    ...actual,
-    getReformStore: () => ({ findByUser: async () => [] }),
-  };
-});
-
-function withQueryClient(children: React.ReactNode) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+function renderFlagshipShell() {
+  setFlagshipShellEnabled(true);
+  return renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'us', '/us/build');
 }
 
 describe('StandardLayout', () => {
@@ -43,19 +34,44 @@ describe('StandardLayout', () => {
 
     // Then
     expect(screen.getByText('Sidebar')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Build' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument();
   });
 
-  test('given the flagship flag is on then the flagship sidebar replaces the legacy chrome', () => {
+  test('given the flagship flag is on then the flagship top bar replaces the legacy chrome', () => {
     // Given
     setFlagshipShellEnabled(true);
 
     // When
-    renderWithCountry(withQueryClient(<StandardLayout>Page content</StandardLayout>), 'us');
+    renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'us');
 
     // Then
-    expect(screen.getByRole('button', { name: 'Ask' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Build' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reforms' })).toBeInTheDocument();
     expect(screen.queryByText('Sidebar')).not.toBeInTheDocument();
+  });
+
+  test('given the flagship shell then navigation sits in a top bar with no drawer to open', () => {
+    // When
+    renderFlagshipShell();
+
+    // Then
+    expect(screen.getByRole('banner')).toContainElement(
+      screen.getByRole('button', { name: 'Build' })
+    );
+    expect(screen.queryByRole('button', { name: /navigation/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('main')).toHaveTextContent('Page content');
+  });
+
+  test('given a section in the top bar is clicked then it is marked current', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderFlagshipShell();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Reforms' }));
+
+    // Then
+    expect(screen.getByRole('button', { name: 'Reforms' })).toHaveAttribute('aria-current', 'page');
   });
 });

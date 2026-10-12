@@ -1,5 +1,8 @@
+import { useSelector } from 'react-redux';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { describeChange } from '@/libs/flagship/draftLabels';
+import { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
 
 export interface ProvisionListItem {
@@ -19,6 +22,8 @@ export interface ProvisionListItem {
  * "current law" note instead.
  */
 export default function ProvisionList({ provisions }: { provisions: ProvisionListItem[] }) {
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+  const variableLabel = (name: string) => variables?.[name]?.label ?? name;
   return (
     <div
       style={{
@@ -34,6 +39,11 @@ export default function ProvisionList({ provisions }: { provisions: ProvisionLis
         const baseline = formatValue(provision.baselineValue, provision.unit);
         const proposed = formatValue(provision.value, provision.unit);
         const unchanged = baseline === proposed;
+        // A set of variables reads as what it takes out and puts in.
+        const listChange =
+          Array.isArray(provision.value) && !unchanged
+            ? describeChange(provision.baselineValue, provision.value, String, variableLabel)
+            : null;
 
         return (
           <div
@@ -82,7 +92,13 @@ export default function ProvisionList({ provisions }: { provisions: ProvisionLis
                 textAlign: 'right',
               }}
             >
-              {unchanged ? (
+              {listChange ? (
+                <span
+                  style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}
+                >
+                  {listChange}
+                </span>
+              ) : unchanged ? (
                 <>
                   <span
                     style={{

@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "targeted-energy-discount",
+    "title": "Targeted energy bill discount analysis dashboard",
+    "description": "Estimate the cost, reach and distributional effects of the Resolution Foundation's proposed targeted energy bill discount, modelled with PolicyEngine UK.",
+    "source": "https://uk-targeted-energy-discount.vercel.app/uk/targeted-energy-discount",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "targeted-energy-discount.jpg",
+    "date": "2026-10-05 12:00:00",
+    "authors": ["maria-juaristi", "vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "triple-lock",
     "title": "The Burnham plan and the triple lock",
     "description": "The Burnham plan against the State Pension triple lock to 2039-40: the budget impact and its range, forecast paths, and who pays, from full PolicyEngine UK runs.",

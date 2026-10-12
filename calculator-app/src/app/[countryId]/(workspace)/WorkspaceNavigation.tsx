@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import BillReportPage from "@/pages/flagship/BillReport.page";
 import { useMemo, useState } from "react";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import {
@@ -9,7 +8,6 @@ import {
   useAppNavigate,
 } from "@/contexts/NavigationContext";
 import { useAppPathname } from "@/contexts/LocationContext";
-import AskPage from "@/pages/flagship/Ask.page";
 import BuildPage from "@/pages/flagship/Build.page";
 import ReformsPage from "@/pages/flagship/Reforms.page";
 import StandardLayout from "@/components/StandardLayout";
@@ -17,12 +15,17 @@ import WorkspaceError from "./error";
 import FlagshipGate from "./FlagshipGate";
 import { isWorkspaceTransition, workspaceRoute } from "./workspaceRoutes";
 
-// Keep the browser-only chart stack out of SSR, as in the direct report route.
+// Keep the browser-only chart stack out of SSR, as in the direct report
+// routes. Bill reports render the same charts as saved reports.
 const ReportPage = dynamic(() => import("@/pages/flagship/Report.page"), {
   ssr: false,
 });
+const BillReportPage = dynamic(
+  () => import("@/pages/flagship/BillReport.page"),
+  { ssr: false },
+);
 
-const screens = { ask: AskPage, build: BuildPage, reforms: ReformsPage };
+const screens = { build: BuildPage, reforms: ReformsPage };
 
 /** Switch client-only workspace screens without waiting for a server route payload.
  * Next's native history integration updates pathname/search and preserves back/forward.

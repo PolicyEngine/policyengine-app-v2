@@ -13,7 +13,6 @@ import {
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import { isFlagshipShellEnabled } from './libs/featureFlags';
-import AskPage from './pages/flagship/Ask.page';
 import BillReportPage from './pages/flagship/BillReport.page';
 import BuildPage from './pages/flagship/Build.page';
 import ReformsPage from './pages/flagship/Reforms.page';
@@ -132,13 +131,14 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <Navigate to={isFlagshipShellEnabled() ? 'ask' : 'reports'} replace />,
+                  element: <Navigate to={isFlagshipShellEnabled() ? 'build' : 'reports'} replace />,
                 },
                 // Flagship shell routes (feature-flagged; see libs/featureFlags.ts)
                 ...(isFlagshipShellEnabled()
                   ? [
-                      { path: 'home', element: <Navigate to="../ask" replace /> },
-                      { path: 'ask', element: <AskPage /> },
+                      // Ask is paused; its links land on Build.
+                      { path: 'home', element: <Navigate to="../build" replace /> },
+                      { path: 'ask', element: <Navigate to="../build" replace /> },
                       { path: 'build', element: <BuildPage /> },
                       { path: 'reforms', element: <ReformsPage /> },
                       { path: 'tracker', element: <LegacyReformsRedirect /> },

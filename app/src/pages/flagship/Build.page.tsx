@@ -1,159 +1,80 @@
-import { useState } from 'react';
-import { IconChevronDown } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
-import ParameterTreeBrowser from '@/components/flagship/ParameterTreeBrowser';
+import AddParameterBar, { ParametersLoading } from '@/components/flagship/reform/AddParameterBar';
+import DraftHeader from '@/components/flagship/reform/DraftHeader';
+import DraftTable from '@/components/flagship/reform/DraftTable';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
-import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { colors, spacing, typography } from '@/designTokens';
+import { Title } from '@/components/ui';
+import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
-import { getStateLabels } from '@/libs/metadataUtils';
-import {
-  ParameterSearchEntry,
-  selectAddableParameterPaths,
-  selectConceptClusters,
-  selectParameterEntriesByPath,
-  selectParameterSearchEntries,
-  selectParameterSearchIndex,
-} from '@/libs/parameterSearch';
+import { focusProvision } from '@/libs/flagship/draftEditorFocus';
+import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
-import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 /**
- * Build — the power-user entry point of the flagship shell.
+ * Build — the reform is the page.
  *
- * Search and the full policy tree sit side by side: search for speed,
- * browse for discovery. Either way one click adds the parameter to
- * the draft with its baseline — edit the value there.
+ * Its name, year, and run sit at the top; one bar adds parameters
+ * (search, or browse the policy tree); the reform itself is a table
+ * below, each parameter's new value typed in place and opened up for
+ * year-by-year and breakdown values. Picking a parameter lands on its
+ * value, so finding and setting it are one motion.
  */
 export default function BuildPage() {
   const countryId = useCurrentCountry();
-  const entries = useSelector(selectParameterSearchEntries);
-  const clusters = useSelector(selectConceptClusters);
-  const stateLabels = useSelector(getStateLabels);
-  // Store-memoized: survives navigation, so Build mounts don't rebuild it.
-  const searchIndex = useSelector(selectParameterSearchIndex);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const parameterTree = useSelector((state: RootState) => state.metadata.parameterTree);
   const draft = useDraftReform();
-  // Search is the surface; the tree is the fallback for when you do not
-  // know what the thing is called, so it stays out of the way until asked for.
-  const [showTree, setShowTree] = useState(false);
+  const current = draft && draft.countryId === countryId ? draft : null;
+  // Until the index is in, the add bar has nothing to search and the
+  // table can't group breakdowns (their members would show apart, then
+  // merge), so the page waits on one loader rather than two.
+  const loading = useSelector(selectParameterSearchEntries).length === 0;
 
-  // Store-memoized like the index: built once per metadata load, not
-  // per navigation or render.
-  const entriesByPath = useSelector(selectParameterEntriesByPath);
-  const addablePaths = useSelector(selectAddableParameterPaths);
-  const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
-
-  const addEntry = (entry: ParameterSearchEntry) => {
+  const pick = (entry: ParameterSearchEntry) => {
     addDraftProvision(
       countryId,
       provisionFromSearchEntry(entry, parameters?.[entry.path]?.values),
       'manual'
     );
+    focusProvision(entry.path);
   };
 
   return (
-    <WorkspaceLayout>
-      <Stack style={{ gap: spacing.lg }}>
-        <Stack
-          style={{
-            gap: spacing.lg,
-            // Results grow downwards without recentering the input on each keystroke.
-            paddingTop: spacing.xl,
-          }}
-        >
-          <Stack style={{ gap: spacing.xs, textAlign: 'center' }}>
-            <Title order={1}>Build a reform</Title>
-            <Text style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
-              Search {entries.length > 0 ? entries.length.toLocaleString() : 'every'} parameter
-              {entries.length > 0 ? 's' : ''} — click one to add it to your draft.
-            </Text>
-          </Stack>
-
-          {entries.length > 0 ? (
-            <ParameterSearchBox
-              entries={entries}
-              clusters={clusters}
-              stateLabels={stateLabels}
-              index={searchIndex}
-              onSelect={addEntry}
-              labelFor={(path) => parameters?.[path]?.label ?? null}
-              // Always in flow on this page: a floating list would
-              // cover the tree when it is open.
-              resultsInFlow
-              backgroundSearch
-              currentValueFor={(entry) => {
-                const value = getCurrentValue(parameters?.[entry.path]?.values);
-                return value === undefined ? null : formatValue(value, entry.unit);
-              }}
-            />
-          ) : (
-            // The index takes a moment on the US tree — say so with
-            // something moving, so the wait reads as work rather than
-            // an empty page.
-            <Stack
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: spacing.sm,
-              }}
-            >
-              <Spinner size="sm" />
-              <Text style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
-                Loading the parameter index…
-              </Text>
-            </Stack>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <Button
-              variant="ghost"
-              onClick={() => setShowTree((open) => !open)}
-              aria-expanded={showTree}
-              aria-controls="policy-tree"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                fontSize: typography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                fontWeight: typography.fontWeight.semibold,
-                color: colors.text.secondary,
-              }}
-            >
-              <IconChevronDown
-                size={14}
-                style={{
-                  transform: showTree ? 'rotate(180deg)' : undefined,
-                  transition: 'transform 160ms ease',
-                }}
-              />
-              {showTree ? 'Hide the policy tree' : 'Or browse the policy tree'}
-            </Button>
-          </div>
-        </Stack>
-
-        {showTree && (
-          <div id="policy-tree">
-            <ParameterTreeBrowser
-              tree={parameterTree}
-              addablePaths={addablePaths}
-              draftPaths={draftPaths}
-              onSelectLeaf={(path) => {
-                const entry = entriesByPath.get(path);
-                if (entry) {
-                  addEntry(entry);
-                }
-              }}
-            />
-          </div>
+    <WorkspaceLayout wide>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: spacing.xl,
+          width: '100%',
+          maxWidth: 880,
+          margin: '0 auto',
+          // An empty page centers its one question; a reform starts at the top.
+          paddingTop: current ? spacing.lg : '16vh',
+          paddingBottom: spacing['4xl'],
+        }}
+      >
+        {current ? (
+          <>
+            <DraftHeader draft={current} />
+            {loading ? (
+              <ParametersLoading />
+            ) : (
+              <>
+                <AddParameterBar onPick={pick} />
+                <DraftTable draft={current} />
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <Title order={1} style={{ letterSpacing: '-0.02em', textAlign: 'center' }}>
+              Build a reform
+            </Title>
+            <AddParameterBar onPick={pick} autoFocus />
+          </>
         )}
-      </Stack>
+      </div>
     </WorkspaceLayout>
   );
 }

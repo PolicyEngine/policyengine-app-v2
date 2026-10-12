@@ -3,6 +3,7 @@ import {
   buildConceptAliases,
   buildConceptClusters,
   buildParameterSearchEntries,
+  buildStateNames,
   canonicalizeQuery,
   countHiddenByFilters,
   createParameterSearchIndex,
@@ -13,8 +14,19 @@ import {
   searchParameters,
 } from '@/libs/parameterSearch';
 import {
+  buildCrowdedStateParameterCollection,
+  buildJurisdictionParameterCollection,
   buildLargeParameterCollection,
   buildSearchQualityParameterCollection,
+  CODE_ONLY_STATE,
+  CONTRIB_LOCAL_PATH,
+  CROWDED_FEDERAL_PATH,
+  FEDERAL_CTC_PATH,
+  FEDERAL_TOP_RATE_PATH,
+  JURISDICTION_STATE_NAMES,
+  MD_LOCAL_RATE_PATH,
+  NY_STATE_RATE_PATH,
+  NYC_LOCAL_RATE_PATH,
 } from '@/tests/fixtures/libs/parameterSearchMocks';
 
 const SMALL_COLLECTION = {
@@ -390,5 +402,95 @@ describe('concept aliases', () => {
     expect(canonicalizeQuery('CTC amount', aliases)).toBe('child tax credit amount');
     // Already spelled out: unchanged, so both forms rank identically.
     expect(canonicalizeQuery('child tax credit amount', aliases)).toBe('child tax credit amount');
+  });
+});
+
+describe('jurisdiction scope and ranking', () => {
+  const parameters = buildJurisdictionParameterCollection();
+  const entries = buildParameterSearchEntries(parameters);
+  const index = createParameterSearchIndex(entries, [], new Map(), buildStateNames(parameters));
+  const ALL = { includeContrib: false, stateScope: 'all' };
+  const FEDERAL = { includeContrib: false, stateScope: 'federal' };
+
+  it('given a local parameter then it is attributed to its state', () => {
+    const local = entries.find((e) => e.path === NYC_LOCAL_RATE_PATH);
+
+    expect(local?.stateCode).toBe('ny');
+  });
+
+  it('given federal-only scope then local parameters are excluded', () => {
+    const results = searchParameters(index, 'income tax rate', 20, FEDERAL);
+
+    expect(results.map((r) => r.path)).toContain(FEDERAL_TOP_RATE_PATH);
+    expect(results.map((r) => r.path)).not.toContain(NYC_LOCAL_RATE_PATH);
+    expect(results.map((r) => r.path)).not.toContain(MD_LOCAL_RATE_PATH);
+  });
+
+  it('given federal-only scope with contributed opted in then stateless local reforms stay out', () => {
+    const results = searchParameters(index, 'nyc income tax credit income limit', 20, {
+      includeContrib: true,
+      stateScope: 'federal',
+    });
+
+    expect(results.map((r) => r.path)).not.toContain(CONTRIB_LOCAL_PATH);
+  });
+
+  it("given a state scope then that state's local parameters are included", () => {
+    const results = searchParameters(index, 'income tax rate', 20, {
+      includeContrib: false,
+      stateScope: 'ny',
+    });
+
+    expect(results.map((r) => r.path)).toEqual(
+      expect.arrayContaining([NY_STATE_RATE_PATH, NYC_LOCAL_RATE_PATH])
+    );
+  });
+
+  it('given all jurisdictions and a program name naming no state then the federal parameter ranks first', () => {
+    const results = searchParameters(index, 'child tax credit', 10, ALL);
+
+    expect(results[0]?.path).toBe(FEDERAL_CTC_PATH);
+  });
+
+  it("given a query naming a state then that state's parameter ranks first", () => {
+    const results = searchParameters(index, 'Oregon child tax credit', 10, ALL);
+
+    expect(results[0]?.stateCode).toBe('or');
+  });
+
+  it('given a capitalized postal code then it names the state', () => {
+    const results = searchParameters(index, 'OR child tax credit', 10, ALL);
+
+    expect(results[0]?.stateCode).toBe('or');
+  });
+
+  it('given "in" and "or" as ordinary words then no state is named', () => {
+    const results = searchParameters(index, 'child tax credit in or out of work', 10, ALL);
+
+    expect(results[0]?.path).toBe(FEDERAL_CTC_PATH);
+  });
+
+  it('given more state matches than the re-rank cap then the federal parameter is still ranked', () => {
+    const crowded = buildCrowdedStateParameterCollection();
+    const crowdedIndex = createParameterSearchIndex(buildParameterSearchEntries(crowded));
+
+    const results = searchParameters(crowdedIndex, 'standard deduction', 10, ALL);
+
+    expect(results.map((r) => r.path)).toContain(CROWDED_FEDERAL_PATH);
+  });
+});
+
+describe('buildStateNames', () => {
+  it('given state nodes then their names map to their codes', () => {
+    const names = buildStateNames(buildJurisdictionParameterCollection());
+
+    expect(names.get('new york')).toBe('ny');
+    expect(names.size).toBe(Object.keys(JURISDICTION_STATE_NAMES).length);
+  });
+
+  it('given a state node labelled only with its code then it adds no name', () => {
+    const names = buildStateNames(buildJurisdictionParameterCollection());
+
+    expect([...names.values()]).not.toContain(CODE_ONLY_STATE);
   });
 });

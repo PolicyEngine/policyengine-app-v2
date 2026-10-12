@@ -11,6 +11,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import type { AuthorsCollection, BlogPost, Notebook } from "@/types/blog";
+import { readingTimeLabel } from "@/components/blog/chartReadingText";
 import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
 import { NotebookRenderer } from "@/components/blog/NotebookRenderer";
 import { useDisplayCategory } from "@/components/blog/useDisplayCategory";
@@ -24,6 +25,7 @@ import {
   topicLabels,
 } from "@/data/posts/postTransformers";
 import { extractMarkdownFromNotebook } from "@/lib/notebookUtils";
+import { formatPostDate } from "@/lib/postDate";
 import authorsData from "@/data/posts/authors.json";
 import {
   colors,
@@ -34,11 +36,6 @@ import {
 const authors = authorsData as AuthorsCollection;
 
 const SCROLL_OFFSET_PX = 72;
-
-function calculateReadingTime(text: string): string {
-  const words = text.trim().split(/\s+/).length;
-  return `${Math.ceil(words / 200)} min read`;
-}
 
 function formatAuthorName(authorId: string): string {
   return authorId
@@ -75,11 +72,7 @@ export default function ArticleClient({
     return { markdown: content, notebook: null };
   }, [content, isNotebook]);
 
-  const formattedDate = new Date(post.date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = formatPostDate(post.date, "long");
 
   const imageUrl = post.image
     ? post.image.startsWith("http")
@@ -146,7 +139,7 @@ function PostHeading({
   countryId: string;
   displayCategory: string;
 }) {
-  const readingTime = calculateReadingTime(markdown);
+  const readingTime = readingTimeLabel(markdown);
 
   if (displayCategory === "desktop") {
     return (

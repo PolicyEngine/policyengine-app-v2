@@ -20,6 +20,7 @@ import {
   blogSpacing,
   blogTypography,
 } from "./blogStyles";
+import { LazyBlogChart } from "./LazyBlogChart";
 import { LazyPlot } from "./LazyPlot";
 import { isSafeHref } from "./safeHref";
 import { useDisplayCategory } from "./useDisplayCategory";
@@ -794,6 +795,9 @@ export function MarkdownFormatter({
       if (className === "language-highlighted-block") {
         return <HighlightedBlock data={[childText]} />;
       }
+      if (className === "language-chart") {
+        return <LazyBlogChart data={childText} />;
+      }
       if (className === "language-plotly") {
         return <PlotlyChartCode data={childText} />;
       }
@@ -825,6 +829,11 @@ export function MarkdownFormatter({
       const language = (
         codeChild as React.ReactElement<{ className?: string }>
       )?.props?.className?.replace("language-", "");
+
+      // Chart blocks render their own figure, without the code-block frame.
+      if (language === "chart") {
+        return <>{children}</>;
+      }
 
       return (
         <div

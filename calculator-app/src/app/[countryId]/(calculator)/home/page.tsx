@@ -3,7 +3,7 @@
 import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-/** The Home launcher is gone — Ask is the landing view. */
+/** The Home launcher is gone — Build is the landing view while Ask is paused. */
 export default function HomeRoute({
   params,
 }: {
@@ -13,7 +13,7 @@ export default function HomeRoute({
   const router = useRouter();
 
   useEffect(() => {
-    router.replace(`/${countryId}/ask`);
+    router.replace(`/${countryId}/build`);
   }, [router, countryId]);
 
   return null;

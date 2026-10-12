@@ -23,6 +23,7 @@ import {
   buildConceptAliases,
   buildConceptClusters,
   buildParameterSearchEntries,
+  buildStateNames,
   createParameterSearchIndex,
   DEFAULT_SEARCH_FILTERS,
   searchParameters,
@@ -94,7 +95,7 @@ async function main(): Promise<void> {
   const entries = buildParameterSearchEntries(parameters);
   const clusters = buildConceptClusters(parameters);
   const aliases = buildConceptAliases(parameters);
-  const index = createParameterSearchIndex(entries, clusters, aliases);
+  const index = createParameterSearchIndex(entries, clusters, aliases, buildStateNames(parameters));
   const buildMs = performance.now() - buildStart;
 
   console.log(`\n${country.toUpperCase()} · model ${version}`);

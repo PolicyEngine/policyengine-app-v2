@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getPostsSorted } from "@/data/posts/postTransformers";
+import { toPostIsoDate } from "@/lib/postDate";
 
 const BASE_URL = "https://www.policyengine.org";
 
@@ -51,7 +52,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     for (const country of targetCountries) {
       entries.push({
         url: `${BASE_URL}/${country}/research/${slug}`,
-        lastModified: new Date(post.date),
+        lastModified: toPostIsoDate(post.date, "date"),
         changeFrequency: "monthly",
         priority: 0.7,
       });

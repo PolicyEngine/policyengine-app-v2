@@ -511,7 +511,7 @@ export default function AskPage() {
           ? countryId === 'uk'
             ? 'Answers computed live by the PolicyEngine UK model'
             : 'AI drafting against the policyengine-us parameters — impacts compute when you run the report'
-          : 'Keyword matching today — AI drafting lands with the hosted analysis service'
+          : 'Matches your description to PolicyEngine parameters — pick one to start a draft'
       }
     />
   );
