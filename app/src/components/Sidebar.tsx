@@ -8,6 +8,7 @@ import {
   IconMail,
   IconPlus,
   IconScale,
+  IconUserCircle,
   IconUsers,
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui';
@@ -15,6 +16,7 @@ import { WEBSITE_URL } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { colors, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
@@ -28,6 +30,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useAppLocation();
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
+  const { status: authStatus } = useAuthStatus();
 
   // All internal navigation paths include the country prefix for consistency with v1 app
   const navItems = [
@@ -68,6 +71,17 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   ];
 
   const accountItems = [
+    // The account page exists only where sign-in is enabled.
+    ...(authStatus === 'disabled'
+      ? []
+      : [
+          {
+            label: 'Account settings',
+            icon: IconUserCircle,
+            path: `/${countryId}/account`,
+            external: false,
+          },
+        ]),
     {
       label: 'Contact support',
       icon: IconMail,

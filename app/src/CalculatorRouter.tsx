@@ -13,6 +13,7 @@ import {
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import { isFlagshipShellEnabled } from './libs/featureFlags';
+import AccountPage from './pages/Account.page';
 import BillReportPage from './pages/flagship/BillReport.page';
 import BuildPage from './pages/flagship/Build.page';
 import ReformsPage from './pages/flagship/Reforms.page';
@@ -173,7 +174,7 @@ const router = createBrowserRouter(
                 },
                 {
                   path: 'account',
-                  element: <div>Account settings page</div>,
+                  element: <AccountPage />,
                 },
               ],
             },

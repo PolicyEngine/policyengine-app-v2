@@ -12,6 +12,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDraftReform } from '@/libs/draftReform';
+import AuthMenu from '../auth/AuthMenu';
 import FlagshipBrand from './FlagshipBrand';
 
 const NAV_ITEMS = [
@@ -173,6 +174,9 @@ export default function FlagshipTopBar() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Sign in / user menu; renders nothing unless sign-in is enabled. */}
+      <AuthMenu />
     </header>
   );
 }
