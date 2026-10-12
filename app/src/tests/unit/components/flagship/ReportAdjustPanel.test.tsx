@@ -69,7 +69,7 @@ describe('ReportAdjustPanel', () => {
   test('given the panel then provisions are editable and recompute waits for a change', async () => {
     await renderPanel();
 
-    expect(screen.getByLabelText(/adjusted value for gov\.irs/i)).toHaveValue(2500);
+    expect(screen.getByLabelText(/new value for maximum credit per child/i)).toHaveValue(2500);
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
   });
 
@@ -78,7 +78,7 @@ describe('ReportAdjustPanel', () => {
     const user = userEvent.setup();
     await renderPanel();
 
-    const input = screen.getByLabelText(/adjusted value for gov\.irs/i);
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
     await user.clear(input);
     await user.type(input, '3600');
     await user.click(screen.getByRole('button', { name: /recompute/i }));
@@ -116,7 +116,7 @@ describe('ReportAdjustPanel', () => {
     const user = userEvent.setup();
     await renderPanel();
 
-    const input = screen.getByLabelText(/adjusted value for gov\.irs/i);
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
     await user.clear(input);
     await user.type(input, '3600');
     await user.click(screen.getByRole('button', { name: /recompute/i }));
@@ -133,7 +133,7 @@ describe('ReportAdjustPanel', () => {
     const user = userEvent.setup();
     await renderPanel();
 
-    await user.click(screen.getByRole('button', { name: /remove USDA/i }));
+    await user.click(screen.getByRole('button', { name: /remove maximum allotment/i }));
     await user.click(screen.getByRole('button', { name: /recompute/i }));
 
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
@@ -146,14 +146,14 @@ describe('ReportAdjustPanel', () => {
     const user = userEvent.setup();
     await renderPanel();
 
-    await user.click(screen.getByRole('button', { name: /remove IRS/i }));
-    await user.click(screen.getByRole('button', { name: /remove USDA/i }));
+    await user.click(screen.getByRole('button', { name: /remove maximum credit per child/i }));
+    await user.click(screen.getByRole('button', { name: /remove maximum allotment/i }));
 
     expect(screen.getByText(/all provisions removed/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
 
     await user.click(screen.getByRole('button', { name: /restore 2 removed provisions/i }));
-    expect(screen.getByLabelText(/adjusted value for gov\.irs/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/new value for maximum credit per child/i)).toBeInTheDocument();
   });
 
   test('given collapse then the panel shrinks to the adjust tab and reopens', async () => {

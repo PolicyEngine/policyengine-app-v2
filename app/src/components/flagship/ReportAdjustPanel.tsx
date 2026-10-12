@@ -7,9 +7,9 @@ import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
+import { reportProvisionName } from '@/libs/flagship/draftLabels';
 import { RunReportProvision } from '@/libs/flagship/runReport';
 import { Reform } from '@/types/ingredients/Reform';
-import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionSkeleton from './ProvisionSkeleton';
 import SidePanel from './SidePanel';
@@ -23,6 +23,11 @@ interface ReportAdjustPanelProps {
   /** The parameters' names and units are still loading: placeholders, not raw paths. */
   loading?: boolean;
 }
+
+const VALUE_LABEL = {
+  fontSize: typography.fontSize.xs,
+  color: colors.text.tertiary,
+} as const;
 
 /** True when the reform's parameter set is exactly the given provisions. */
 function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
@@ -133,79 +138,81 @@ export default function ReportAdjustPanel({
         </div>
       ) : (
         <Stack style={{ gap: 0 }}>
-          {active.map((provision) => (
-            <Stack
-              key={provision.path}
-              style={{
-                gap: spacing.xs,
-                padding: `${spacing.sm} ${spacing.lg}`,
-                borderBottom: `1px solid ${colors.border.light}`,
-              }}
-            >
+          {active.map((provision) => {
+            const name = reportProvisionName(provision);
+            return (
               <Stack
+                key={provision.path}
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
                   gap: spacing.sm,
+                  padding: `${spacing.md} ${spacing.lg}`,
+                  borderBottom: `1px solid ${colors.border.light}`,
                 }}
               >
-                <Text
-                  title={provision.breadcrumb || provision.path}
+                <Stack
                   style={{
-                    fontSize: typography.fontSize.sm,
-                    fontWeight: typography.fontWeight.medium,
-                    color: colors.text.primary,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: spacing.sm,
                   }}
                 >
-                  {formatCompactBreadcrumb(provision.breadcrumb || provision.path)}
-                </Text>
-                <button
-                  type="button"
-                  onClick={() => setRemoved((current) => new Set([...current, provision.path]))}
-                  aria-label={`Remove ${provision.breadcrumb || provision.path}`}
+                  {/* The name in full, wrapping; the parameter's place in the tree on hover. */}
+                  <Text
+                    title={provision.breadcrumb || provision.path}
+                    style={{
+                      fontSize: typography.fontSize.sm,
+                      fontWeight: typography.fontWeight.medium,
+                      lineHeight: typography.lineHeight.tight,
+                      color: colors.text.primary,
+                    }}
+                  >
+                    {name}
+                  </Text>
+                  <button
+                    type="button"
+                    onClick={() => setRemoved((current) => new Set([...current, provision.path]))}
+                    aria-label={`Remove ${name}`}
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      cursor: 'pointer',
+                      color: colors.text.secondary,
+                      padding: 2,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <IconX size={14} />
+                  </button>
+                </Stack>
+                {/* Before and after on their own lines, as the report's table reads them. */}
+                <div
                   style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: colors.text.secondary,
-                    padding: 2,
-                    flexShrink: 0,
+                    display: 'grid',
+                    gridTemplateColumns: 'auto 1fr',
+                    alignItems: 'center',
+                    columnGap: spacing.md,
+                    rowGap: spacing.xs,
                   }}
                 >
-                  <IconX size={14} />
-                </button>
+                  <Text style={VALUE_LABEL}>Before</Text>
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                    {formatValue(provision.baselineValue, provision.unit)}
+                  </Text>
+                  <Text style={VALUE_LABEL}>After</Text>
+                  <div>
+                    <ValueInput
+                      value={values[provision.path]}
+                      onChange={(next) =>
+                        setValues((current) => ({ ...current, [provision.path]: next }))
+                      }
+                      ariaLabel={`New value for ${name}`}
+                    />
+                  </div>
+                </div>
               </Stack>
-              <Stack
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.sm,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: typography.fontSize.sm,
-                    color: colors.text.secondary,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {formatValue(provision.baselineValue, provision.unit)} →
-                </Text>
-                <ValueInput
-                  value={values[provision.path]}
-                  onChange={(next) =>
-                    setValues((current) => ({ ...current, [provision.path]: next }))
-                  }
-                  ariaLabel={`Adjusted value for ${provision.path}`}
-                />
-              </Stack>
-            </Stack>
-          ))}
+            );
+          })}
           {active.length === 0 && (
             <Text
               style={{

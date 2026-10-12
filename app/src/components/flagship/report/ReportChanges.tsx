@@ -6,7 +6,7 @@ import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { sameParameterValue } from '@/libs/draftReform';
-import { describeChange, provisionName } from '@/libs/flagship/draftLabels';
+import { describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
@@ -163,9 +163,7 @@ export default function ReportChanges({
           const list = Array.isArray(provision.value) && !currentLaw;
           return {
             key: provision.path,
-            name: provision.path.startsWith('gov.irs.credits.ctc.amount.base')
-              ? 'Maximum credit per child'
-              : provisionName(provision),
+            name: reportProvisionName(provision),
             detail: parameters?.[provision.path]?.description ?? undefined,
             // A set of variables reads as what it takes out and puts in.
             before: currentLaw || list ? undefined : format(provision.baselineValue),
