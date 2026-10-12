@@ -4,6 +4,9 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import DistrictImpactCard, {
+  type CongressionalMode,
+} from '@/components/flagship/report/DistrictImpactCard';
 import ReportView from '@/components/flagship/report/ReportView';
 import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
 import {
@@ -12,9 +15,11 @@ import {
   ValidationChip,
 } from '@/components/flagship/ValidationPanel';
 import { Button, Spinner, Stack, Text } from '@/components/ui';
+import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
@@ -121,6 +126,9 @@ const UNAVAILABLE_COPY: Partial<Record<RunState, { title: string; detail: string
   },
 };
 
+/** The tracker stores no relative income change by district, so that view is left out. */
+const STORED_DISTRICT_MODES: CongressionalMode[] = ['absolute', 'winner-pct', 'loser-pct'];
+
 const STATUS_BOX = {
   gap: spacing.sm,
   padding: spacing.lg,
@@ -224,6 +232,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const runRequested = runRequestedFor === billId;
 
   const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
+  const { data: storedDistricts } = useStoredBillDistricts(bill?.id);
 
   // A bill from a later year runs, and reads against the law, in its first year.
   const runYear = billRunYear(bill?.provisions ?? []);
@@ -304,6 +313,22 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
         <Stack style={{ gap: spacing.lg }}>
           <FullResultsStatus runState={runState} economy={economy} onStart={startRun} />
           <StoredImpactCharts impact={bill.impactData} />
+        </Stack>
+      }
+      districtsPending={
+        <Stack style={{ gap: spacing.lg }}>
+          <FullResultsStatus runState={runState} economy={economy} onStart={startRun} />
+          {storedDistricts && storedDistricts.length > 0 && (
+            // The tracker's districts, until the full results bring their own.
+            <CongressionalDistrictDataProvider
+              reformPolicyId=""
+              baselinePolicyId=""
+              year={economy.year}
+              region={economy.region}
+            >
+              <DistrictImpactCard districts={storedDistricts} modes={STORED_DISTRICT_MODES} />
+            </CongressionalDistrictDataProvider>
+          )}
         </Stack>
       }
       overviewLead={<BillOverviewLead bill={bill} />}

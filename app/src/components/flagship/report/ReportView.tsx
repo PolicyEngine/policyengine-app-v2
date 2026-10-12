@@ -103,6 +103,8 @@ export interface ReportViewProps {
   pending?: ReactNode;
   /** Shown in economic impacts instead of `pending`, e.g. with stored estimates. */
   economyPending?: ReactNode;
+  /** Shown in districts instead of `pending`, e.g. with stored district estimates. */
+  districtsPending?: ReactNode;
   /** Content above the overview's section cards, e.g. a bill's summary. */
   overviewLead?: ReactNode;
   /** Content below the overview's section cards, e.g. data provenance. */
@@ -137,6 +139,7 @@ export default function ReportView({
   storedMetricsNote,
   pending,
   economyPending = pending,
+  districtsPending = pending,
   overviewLead,
   overviewFooter,
   calibration,
@@ -161,6 +164,11 @@ export default function ReportView({
     });
   }
 
+  // Whether the report's scope has districts at all, results loaded or not:
+  // nationwide or one state. showUSDistricts also needs the run's policies.
+  const districtScope =
+    countryId === 'us' &&
+    (!region || region.toLowerCase() === 'us' || region.toLowerCase().startsWith('state/'));
   const showUSDistricts = canShowCongressionalDistrictImpactCard({
     countryId,
     reformPolicyId,
@@ -278,7 +286,7 @@ export default function ReportView({
                   <ReportContents
                     metrics={metrics}
                     metricsNote={output ? undefined : storedMetricsNote}
-                    districtAvailable={showUSDistricts || countryId === 'uk'}
+                    districtAvailable={districtScope || countryId === 'uk'}
                     onOpen={openReportSection}
                   />
                   {overviewFooter}
@@ -294,7 +302,7 @@ export default function ReportView({
                 'districts',
                 <Stack style={{ gap: spacing.md }}>
                   <SectionHeading id="districts" title="Districts" />
-                  {!output && pending}
+                  {!output && districtsPending}
                   {output && showUSDistricts && (
                     <CongressionalDistrictDataProvider
                       reformPolicyId={reformPolicyId ?? ''}

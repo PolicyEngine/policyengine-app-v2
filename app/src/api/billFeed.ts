@@ -168,12 +168,18 @@ function trackerConfig(): { url: string; anonKey: string } | null {
   return url && anonKey ? { url, anonKey } : null;
 }
 
-async function trackerSelect(table: string, select: string): Promise<any[] | null> {
+async function trackerSelect(
+  table: string,
+  select: string,
+  /** A PostgREST row filter, e.g. "id=eq.ks-hb2620". */
+  filter?: string
+): Promise<any[] | null> {
   const config = trackerConfig();
   if (!config) {
     return null;
   }
-  const response = await fetch(`${config.url}/rest/v1/${table}?select=${select}`, {
+  const query = `select=${select}${filter ? `&${filter}` : ''}`;
+  const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
     headers: {
       apikey: config.anonKey,
       Authorization: `Bearer ${config.anonKey}`,
@@ -436,6 +442,55 @@ function extractImpactData(impact: any): TrackedBill['impactData'] {
     data.decile = impact.decile_impact;
   }
   return Object.keys(data).length > 0 ? data : undefined;
+}
+
+/** One district's stored result, in the API's district-breakdown shape. */
+export interface StoredDistrictImpact {
+  /** "KS-01", as the API and the district map name it. */
+  district: string;
+  average_household_income_change: number;
+  winner_percentage?: number;
+  loser_percentage?: number;
+}
+
+/**
+ * The tracker's stored congressional-district results for one bill
+ * (reform_impacts.district_impacts: {"KS-1": {avgBenefit, winnersShare,
+ * losersShare, ...}}). Fetched for a single bill, as its report opens:
+ * every bill's districts would weigh down the whole feed. Null when the
+ * feed is not configured or the bill has none.
+ */
+export async function fetchTrackerBillDistricts(
+  billId: string
+): Promise<StoredDistrictImpact[] | null> {
+  const rows = await trackerSelect(
+    'reform_impacts',
+    'district_impacts',
+    `id=eq.${encodeURIComponent(billId)}`
+  );
+  const raw = rows?.[0]?.district_impacts;
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const districts = Object.entries(raw as Record<string, any>).flatMap(
+    ([key, entry]): StoredDistrictImpact[] => {
+      const [state, number] = key.split('-');
+      if (!state || !/^\d+$/.test(number ?? '') || typeof entry?.avgBenefit !== 'number') {
+        return [];
+      }
+      return [
+        {
+          district: `${state.toUpperCase()}-${number.padStart(2, '0')}`,
+          average_household_income_change: entry.avgBenefit,
+          ...(typeof entry.winnersShare === 'number'
+            ? { winner_percentage: entry.winnersShare }
+            : {}),
+          ...(typeof entry.losersShare === 'number' ? { loser_percentage: entry.losersShare } : {}),
+        },
+      ];
+    }
+  );
+  return districts.length > 0 ? districts : null;
 }
 
 /**

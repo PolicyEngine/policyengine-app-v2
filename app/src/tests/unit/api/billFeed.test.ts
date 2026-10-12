@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   billRunYear,
   changesFromTrackerProvisions,
+  fetchTrackerBillDistricts,
   fetchTrackerBills,
   provisionsFromReformParams,
 } from '@/api/billFeed';
@@ -189,6 +190,55 @@ describe('changesFromTrackerProvisions', () => {
     expect(changesFromTrackerProvisions('[]')).toEqual([]);
     expect(changesFromTrackerProvisions('not json')).toEqual([]);
     expect(changesFromTrackerProvisions(null)).toEqual([]);
+  });
+});
+
+describe('fetchTrackerBillDistricts', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  test('given stored districts then they read in the API breakdown shape, for that bill only', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => [
+        {
+          district_impacts: {
+            'KS-1': { avgBenefit: 5, winnersShare: 0.04, losersShare: 0, districtName: 'CD 1' },
+            'KS-12': { avgBenefit: -2.5 },
+            bogus: { avgBenefit: 1 },
+          },
+        },
+      ],
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const districts = await fetchTrackerBillDistricts('ks-hb2620');
+
+    expect(String(fetchMock.mock.calls[0][0])).toContain('id=eq.ks-hb2620');
+    expect(districts).toEqual([
+      {
+        district: 'KS-01',
+        average_household_income_change: 5,
+        winner_percentage: 0.04,
+        loser_percentage: 0,
+      },
+      { district: 'KS-12', average_household_income_change: -2.5 },
+    ]);
+  });
+
+  test('given no stored districts then there are none', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, json: async () => [{ district_impacts: null }] }))
+    );
+
+    expect(await fetchTrackerBillDistricts('us-hr1425')).toBeNull();
   });
 });
 

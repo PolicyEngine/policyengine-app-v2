@@ -21,14 +21,24 @@ vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => {
 });
 
 const mockFetchTrackerBills = vi.fn();
+const mockFetchTrackerBillDistricts = vi.fn();
 
 vi.mock('@/api/billFeed', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/billFeed')>();
   return {
     ...actual,
     fetchTrackerBills: () => mockFetchTrackerBills(),
+    fetchTrackerBillDistricts: (id: string) => mockFetchTrackerBillDistricts(id),
   };
 });
+
+vi.mock('@/components/flagship/report/DistrictImpactCard', () => ({
+  default: ({ districts, modes }: { districts?: unknown[]; modes?: string[] }) => (
+    <div>
+      District map: {districts?.length ?? 'full results'} · {modes?.join(', ') ?? 'all views'}
+    </div>
+  ),
+}));
 
 const mockIsAlreadyCurrentLaw = vi.fn();
 
@@ -79,6 +89,7 @@ describe('BillReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
+    mockFetchTrackerBillDistricts.mockResolvedValue(null);
     mockUseBillEconomy.mockReturnValue(economy());
     mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
@@ -418,6 +429,29 @@ describe('BillReportPage', () => {
     expect(cells(/Top rate/)).toEqual(['10.30%', '10.80%', 'Jan 1, 2026', 'Dec 31, 2026']);
     // No parameter named, and the provisions' dates differ: none are claimed.
     expect(cells(/EITC match/)).toEqual(['30%', '35%', '—', '—']);
+  });
+
+  test('given stored districts then the districts tab maps them until the full results load', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBillDistricts.mockResolvedValue([
+      { district: 'KS-01', average_household_income_change: 5, winner_percentage: 0.04 },
+      { district: 'KS-02', average_household_income_change: 3, winner_percentage: 0.02 },
+    ]);
+    renderReport();
+
+    // The overview says districts are there, though no full run has started.
+    expect(
+      await screen.findByText('Compare income changes across districts on a map.')
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(within(panel).getByText('The full results are not loaded.')).toBeInTheDocument();
+    // No relative change is stored, so that view is not offered.
+    expect(
+      await within(panel).findByText('District map: 2 · absolute, winner-pct, loser-pct')
+    ).toBeInTheDocument();
+    expect(mockFetchTrackerBillDistricts).toHaveBeenCalledWith(TRACKED_BILL.id);
   });
 
   test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {
