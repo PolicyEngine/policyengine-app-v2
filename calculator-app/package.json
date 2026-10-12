@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
+    "@auth0/auth0-react": "2.27.0",
     "@neondatabase/serverless": "^1.1.0",
     "@normy/react-query": "^0.20.0",
     "@policyengine/ui-kit": "^0.4.0",

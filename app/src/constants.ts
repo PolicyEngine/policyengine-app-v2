@@ -1,5 +1,12 @@
 export const FOREVER = '2100-12-31';
-export const BASE_URL = 'https://api.policyengine.org';
+// PolicyEngine API origin. Builds set VITE_API_URL (Vite) or
+// NEXT_PUBLIC_API_URL (calculator-app, mapped onto VITE_API_URL in
+// next.config.ts) so staging talks to the staging API; production falls
+// back to the public API.
+export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://api.policyengine.org').replace(
+  /\/+$/,
+  ''
+);
 export const CURRENT_YEAR = '2026';
 
 // Certified default US microdata dataset URI, pinned to the revision that
@@ -47,7 +54,9 @@ export function getParamDefinitionDate(year?: string): string {
 }
 
 /**
- * Mock user ID used for anonymous/unauthenticated users
- * TODO: Replace with actual user ID from auth context when authentication is implemented
+ * User ID that localStorage associations are filed under. Signed-out
+ * visitors (and every country without account storage) use it; it is
+ * never sent to the API. Signed-in users get their PolicyEngine user ID
+ * from useCurrentUserId() instead.
  */
 export const MOCK_USER_ID = 'anonymous';
