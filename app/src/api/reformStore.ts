@@ -155,6 +155,14 @@ function provenanceToWire(provenance: ReformProvenance): ProvenanceWire {
   };
 }
 
+/**
+ * Whether an account policy row is a v3 reform. Reforms always carry
+ * provenance; policies saved from the legacy builder never do.
+ */
+function isAccountReform(item: UserPolicyItem): boolean {
+  return isLegacyId(item.legacy_policy_id) && item.provenance !== null;
+}
+
 function provenanceFromWire(wire: ProvenanceWire | null): ReformProvenance {
   if (!wire) {
     return { source: 'manual' };
@@ -243,13 +251,13 @@ export class ApiReformStore implements ReformStore {
     if (countryId && countryId !== this.context.countryId) {
       return [];
     }
-    const items = (await this.routes.list()).filter((item) => isLegacyId(item.legacy_policy_id));
+    const items = (await this.routes.list()).filter(isAccountReform);
     return Promise.all(items.map((item) => this.toReform(item)));
   }
 
   async findById(reformId: string): Promise<Reform | null> {
     const item = await this.routes.get(reformId);
-    return item && isLegacyId(item.legacy_policy_id) ? this.toReform(item) : null;
+    return item && isAccountReform(item) ? this.toReform(item) : null;
   }
 
   async update(reformId: string, updates: ReformUpdates): Promise<Reform> {

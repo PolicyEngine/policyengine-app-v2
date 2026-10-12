@@ -107,7 +107,11 @@ describe('ApiReformStore', () => {
     // Given
     const { store, fetchMock, fetchPolicyJson } = apiReformStore();
     fetchMock.mockResolvedValue(
-      pageResponse([reformRow, policyItem({ id: 'v2-only', legacy_policy_id: null })])
+      pageResponse([
+        reformRow,
+        policyItem({ id: 'v2-only', legacy_policy_id: null }),
+        policyItem({ id: 'legacy-builder-policy', provenance: null }),
+      ])
     );
 
     // When
@@ -124,10 +128,32 @@ describe('ApiReformStore', () => {
     });
   });
 
-  it('given a row without provenance, when read, then it reads as a hand-built current-law reform', async () => {
+  it('given a policy saved from the legacy builder (no provenance), when read, then it is not a reform', async () => {
     // Given
     const { store, fetchMock } = apiReformStore();
-    fetchMock.mockResolvedValue(itemResponse(policyItem({ id: ASSOCIATION_IDS.REFORM })));
+    fetchMock.mockResolvedValue(
+      itemResponse(policyItem({ id: ASSOCIATION_IDS.REFORM, provenance: null }))
+    );
+
+    // When
+    const reform = await store.findById(ASSOCIATION_IDS.REFORM);
+
+    // Then
+    expect(reform).toBeNull();
+  });
+
+  it('given a reform row without a baseline, when read, then it reads as a current-law reform', async () => {
+    // Given
+    const { store, fetchMock } = apiReformStore();
+    fetchMock.mockResolvedValue(
+      itemResponse(
+        policyItem({
+          id: ASSOCIATION_IDS.REFORM,
+          baseline: null,
+          provenance: { source: 'manual', ref: null, confidence: null },
+        })
+      )
+    );
 
     // When
     const reform = await store.findById(ASSOCIATION_IDS.REFORM);
