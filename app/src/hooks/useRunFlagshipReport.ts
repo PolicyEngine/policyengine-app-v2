@@ -34,8 +34,15 @@ export function useRunFlagshipReport() {
     provisions: RunReportProvision[],
     reformId?: string | null,
     year?: number,
-    /** A run from the draft hands the draft over: its report clears it. */
-    fromDraft = false
+    {
+      fromDraft = false,
+      region,
+    }: {
+      /** A run from the draft hands the draft over: its report clears it. */
+      fromDraft?: boolean;
+      /** A state or congressional district ("state/ca"); the whole country when unset. */
+      region?: string;
+    } = {}
   ) => {
     if (isRunning) {
       return;
@@ -55,6 +62,7 @@ export function useRunFlagshipReport() {
         currentLawId: Number(currentLawId),
         reformId,
         year,
+        region,
       });
       if (fromDraft) {
         markDraftRun(userReportId);

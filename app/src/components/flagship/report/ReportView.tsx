@@ -13,6 +13,7 @@ import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCha
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
+  leadsWithStateRevenue,
   reportMetrics,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
@@ -72,6 +73,8 @@ export interface ReportViewProps {
   heading?: string;
   /** e.g. "Utah · Introduced" for bills, "Hand-built draft" for drafts. */
   sourceNote: string;
+  /** Who the report ran on, when not the whole country, e.g. "California". */
+  populationLabel?: string;
   provisions: RunReportProvision[];
   /**
    * The overview's list of changes, before and after, when the source
@@ -125,6 +128,7 @@ export default function ReportView({
   title,
   heading = title,
   sourceNote,
+  populationLabel,
   provisions,
   changes,
   priorLawBaseline = false,
@@ -177,7 +181,9 @@ export default function ReportView({
     region,
   });
   const metrics = output
-    ? reportMetrics(output, countryId, { stateRevenue: !!region?.startsWith('state/') })
+    ? reportMetrics(output, countryId, {
+        stateRevenue: leadsWithStateRevenue(region, provisions),
+      })
     : (storedMetrics ?? []);
 
   const tabPanel = (id: string, content: ReactNode) => (
@@ -232,7 +238,7 @@ export default function ReportView({
                     Compared with: {customBaselineLabel}
                   </Text>
                 )}
-                {sourceNote && (
+                {[populationLabel, sourceNote].filter(Boolean).length > 0 && (
                   <Text
                     style={{
                       margin: 0,
@@ -240,7 +246,7 @@ export default function ReportView({
                       fontSize: typography.fontSize.sm,
                     }}
                   >
-                    {sourceNote}
+                    {[populationLabel, sourceNote].filter(Boolean).join(' · ')}
                   </Text>
                 )}
               </Stack>
@@ -407,6 +413,8 @@ export default function ReportView({
           sourceNote={sourceNote}
           provisions={provisions}
           loading={provisionsLoading}
+          region={region}
+          year={year}
         />
       </div>
     </div>

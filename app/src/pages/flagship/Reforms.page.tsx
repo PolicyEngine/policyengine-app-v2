@@ -25,6 +25,7 @@ import { FOREVER, MOCK_USER_ID } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
+import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
@@ -563,7 +564,9 @@ export default function ReformsPage() {
                     '',
                     provisions,
                     null,
-                    billRunYear(selectedBill.provisions)
+                    billRunYear(selectedBill.provisions),
+                    // A state bill runs on its state, as its own report does.
+                    { region: billRegion(selectedBill, countryId) }
                   )
                 }
                 disabled={runReport.isRunning || provisions.length === 0}

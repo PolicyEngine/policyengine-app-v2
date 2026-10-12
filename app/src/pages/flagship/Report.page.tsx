@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportView from '@/components/flagship/report/ReportView';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
@@ -41,6 +42,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // A local association id from another browser resolves to nothing.
   const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   // Provenance: the local stash from the run, else rebuilt from the reform
   // policy so a shared link validates like the original.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
@@ -102,6 +104,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     ? baselinePolicy.label || 'Custom baseline policy'
     : null;
   const region = simulations?.[0]?.populationId;
+  // A report on part of the country names it on the cover: "California".
+  const regionLabel =
+    region && report && region !== report.countryId
+      ? populationLabel(region, economyRegions)
+      : undefined;
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
@@ -129,6 +136,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           title={title}
           sourceNote={meta?.sourceNote || ''}
           provisions={meta?.provisions ?? []}
+          region={region}
+          year={report?.year}
         />
       </div>
     </div>
@@ -170,6 +179,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                     loadProvisionsIntoDraft(report.countryId, meta.provisions, {
                       label: meta.title === 'Draft reform' ? '' : meta.title,
                       year: Number(report.year) || undefined,
+                      // Back in Build on the population it ran on.
+                      region: region && region !== report.countryId ? region : undefined,
                     })
                 : undefined
             }
@@ -209,6 +220,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       title={title}
       heading={coverTitle}
       sourceNote={meta?.sourceNote || ''}
+      populationLabel={regionLabel}
       provisions={meta?.provisions ?? []}
       customBaselineLabel={customBaselineLabel}
       year={report?.year ?? ''}

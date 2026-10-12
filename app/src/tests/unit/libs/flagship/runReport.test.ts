@@ -101,6 +101,28 @@ describe('runFlagshipReport', () => {
     );
   });
 
+  test('given a state or district then both simulations run on it', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      region: 'congressional_district/CA-01',
+    });
+
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+      population_id: 'congressional_district/CA-01',
+      population_type: 'geography',
+      policy_id: 2,
+    });
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+      population_id: 'congressional_district/CA-01',
+      population_type: 'geography',
+      policy_id: 77,
+    });
+  });
+
   test('given a run then provenance is stashed under the API report id', async () => {
     await runFlagshipReport({
       countryId: 'us',

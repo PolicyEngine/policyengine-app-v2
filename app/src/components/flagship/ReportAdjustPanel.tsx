@@ -25,6 +25,10 @@ interface ReportAdjustPanelProps {
   provisions: RunReportProvision[];
   /** The parameters' names and units are still loading: placeholders, not raw paths. */
   loading?: boolean;
+  /** The report's population ("state/ca"), so a recompute runs on it too. */
+  region?: string;
+  /** The report's year, so a recompute simulates the same year. */
+  year?: string;
 }
 
 /** True when the reform's parameter set is exactly the given provisions. */
@@ -53,6 +57,8 @@ export default function ReportAdjustPanel({
   sourceNote,
   provisions,
   loading = false,
+  region,
+  year,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const countryId = useCurrentCountry();
@@ -116,7 +122,17 @@ export default function ReportAdjustPanel({
         runTitle = created.label || `${title} (adjusted)`;
       }
 
-      await runReport.run(runTitle, sourceNote, adjusted, reformId);
+      await runReport.run(
+        runTitle,
+        sourceNote,
+        adjusted,
+        reformId,
+        year ? Number(year) : undefined,
+        {
+          // The whole country is the API's region for it, not a part of it.
+          region: region && region !== countryId ? region : undefined,
+        }
+      );
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
     } finally {

@@ -11,7 +11,10 @@ import {
 } from '@/libs/draftReform';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import {
+  seedDeductionMetadata,
+  US_REGIONS,
+} from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockCreate = vi.fn();
 const mockRun = vi.fn();
@@ -109,19 +112,55 @@ describe('DraftHeader', () => {
     expect(screen.getByRole('button', { name: /run 2027 report/i })).toBeInTheDocument();
   });
 
-  test('given a household population then it shows, but waits', async () => {
-    Element.prototype.scrollIntoView ??= vi.fn();
-    Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+  test('given the population picker then a household shows, but waits', async () => {
     const user = userEvent.setup();
     renderHeader();
 
-    expect(screen.getByRole('combobox', { name: 'Population' })).toHaveTextContent('Nationwide');
-    await user.click(screen.getByRole('combobox', { name: 'Population' }));
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
 
     expect(await screen.findByRole('option', { name: /a household/i })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
+  });
+
+  test('given a state is chosen then the draft and its run take it', async () => {
+    const user = userEvent.setup();
+    seedDeductionMetadata({ regions: US_REGIONS });
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+    await user.click(await screen.findByRole('option', { name: /California/ }));
+
+    expect(getDraftReform()?.population).toEqual({ scope: 'national', region: 'state/ca' });
+    expect(screen.getByRole('button', { name: 'Population: California' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+    expect(mockRun.mock.calls[0][5]).toEqual({ fromDraft: true, region: 'state/ca' });
+  });
+
+  test('given a search then congressional districts join the list', async () => {
+    const user = userEvent.setup();
+    seedDeductionMetadata({ regions: US_REGIONS });
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+    // 436 districts would swamp the list; none show until something is typed.
+    expect(screen.queryByRole('option', { name: /California's 1st/ })).not.toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText('Find a state or district…'), 'CA-01');
+    await user.click(await screen.findByRole('option', { name: /California's 1st/ }));
+
+    expect(getDraftReform()?.population?.region).toBe('congressional_district/CA-01');
+    expect(
+      screen.getByRole('button', { name: "Population: California's 1st" })
+    ).toBeInTheDocument();
   });
 
   test('given the name is typed then the draft takes it', async () => {

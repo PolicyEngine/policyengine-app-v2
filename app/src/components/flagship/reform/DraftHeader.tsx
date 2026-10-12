@@ -1,4 +1,4 @@
-import { IconCalendarEvent, IconChartBar, IconUsers } from '@tabler/icons-react';
+import { IconCalendarEvent, IconChartBar } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
@@ -23,11 +23,13 @@ import {
   provisionAdjusts,
   provisionsForYear,
   setDraftLabel,
+  setDraftPopulation,
   setDraftYear,
 } from '@/libs/draftReform';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import PopulationPicker from './PopulationPicker';
 
 /**
  * How the draft came about, for the report's own record. This is
@@ -141,6 +143,10 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
     },
   });
 
+  // Who the report runs on: the whole country, a state, or a congressional district.
+  const region = draft.population?.region;
+  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+
   const empty = draft.provisions.length === 0;
   // The report models what the reform changes: a parameter added but
   // left at current law stays in the draft, out of the run.
@@ -187,16 +193,10 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
               label: String(option),
             }))}
           />
-          <HeaderSelect
-            label="Population"
-            icon={<IconUsers size={16} />}
-            value="national"
-            // Household analysis arrives with the run bridge.
-            onValueChange={() => {}}
-            options={[
-              { value: 'national', label: 'Nationwide' },
-              { value: 'household', label: 'A household', soon: true },
-            ]}
+          <PopulationPicker
+            value={region ?? ''}
+            onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
+            regions={regions}
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
@@ -219,7 +219,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
                 provisionsForYear(adjusted, year, currentLawAt),
                 undefined,
                 year,
-                true
+                { fromDraft: true, region }
               )
             }
             disabled={adjusted.length === 0 || runReport.isRunning}

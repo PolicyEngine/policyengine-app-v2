@@ -44,7 +44,7 @@ const PROVISIONS = [
   },
 ];
 
-async function renderPanel() {
+async function renderPanel({ region, year }: { region?: string; year?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
     <QueryClientProvider client={queryClient}>
@@ -52,6 +52,8 @@ async function renderPanel() {
         title="CTC expansion"
         sourceNote="Federal · Introduced"
         provisions={PROVISIONS}
+        region={region}
+        year={year}
       />
     </QueryClientProvider>
   );
@@ -74,6 +76,36 @@ describe('ReportAdjustPanel', () => {
     expect(screen.getByText('was $2,000')).toBeInTheDocument();
     expect(screen.queryByText('Before')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+  });
+
+  test('given a state report from a later year then recompute runs there, that year', async () => {
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const user = userEvent.setup();
+    await renderPanel({ region: 'state/va', year: '2027' });
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    const [, , , , year, options] = mockRun.mock.calls[0];
+    expect(year).toBe(2027);
+    expect(options).toEqual({ region: 'state/va' });
+  });
+
+  test('given a nationwide report then recompute stays nationwide', async () => {
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const user = userEvent.setup();
+    await renderPanel({ region: 'us', year: '2026' });
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockRun.mock.calls[0][5]).toEqual({ region: undefined });
   });
 
   test('given no matching reform then recompute saves a new one and runs linked to it', async () => {
