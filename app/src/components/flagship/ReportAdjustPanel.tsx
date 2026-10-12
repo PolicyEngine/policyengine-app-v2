@@ -7,11 +7,14 @@ import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
+import { sameParameterValue } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
 import { RunReportProvision } from '@/libs/flagship/runReport';
 import { Reform } from '@/types/ingredients/Reform';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionSkeleton from './ProvisionSkeleton';
+import NumberInput from './reform/ValueInput';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
 
@@ -23,11 +26,6 @@ interface ReportAdjustPanelProps {
   /** The parameters' names and units are still loading: placeholders, not raw paths. */
   loading?: boolean;
 }
-
-const VALUE_LABEL = {
-  fontSize: typography.fontSize.xs,
-  color: colors.text.tertiary,
-} as const;
 
 /** True when the reform's parameter set is exactly the given provisions. */
 function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
@@ -185,22 +183,16 @@ export default function ReportAdjustPanel({
                     <IconX size={14} />
                   </button>
                 </Stack>
-                {/* Before and after on their own lines, as the report's table reads them. */}
+                {/* The value to edit; what it was, quietly beside it, as Build shows it. */}
                 <div
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'auto 1fr',
+                    display: 'flex',
                     alignItems: 'center',
-                    columnGap: spacing.md,
-                    rowGap: spacing.xs,
+                    flexWrap: 'wrap',
+                    gap: spacing.sm,
                   }}
                 >
-                  <Text style={VALUE_LABEL}>Before</Text>
-                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                    {formatValue(provision.baselineValue, provision.unit)}
-                  </Text>
-                  <Text style={VALUE_LABEL}>After</Text>
-                  <div>
+                  {typeof values[provision.path] === 'boolean' ? (
                     <ValueInput
                       value={values[provision.path]}
                       onChange={(next) =>
@@ -208,7 +200,24 @@ export default function ReportAdjustPanel({
                       }
                       ariaLabel={`New value for ${name}`}
                     />
-                  </div>
+                  ) : (
+                    // Build's box: rates as percentages, amounts with their currency.
+                    <div style={{ width: 150 }}>
+                      <NumberInput
+                        param={{ unit: provision.unit } as ParameterMetadata}
+                        value={values[provision.path]}
+                        onChange={(next) =>
+                          setValues((current) => ({ ...current, [provision.path]: next }))
+                        }
+                        ariaLabel={`New value for ${name}`}
+                      />
+                    </div>
+                  )}
+                  {!sameParameterValue(values[provision.path], provision.baselineValue) && (
+                    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+                      was {formatValue(provision.baselineValue, provision.unit)}
+                    </Text>
+                  )}
                 </div>
               </Stack>
             );

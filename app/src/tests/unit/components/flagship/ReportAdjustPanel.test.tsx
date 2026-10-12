@@ -70,6 +70,9 @@ describe('ReportAdjustPanel', () => {
     await renderPanel();
 
     expect(screen.getByLabelText(/new value for maximum credit per child/i)).toHaveValue(2500);
+    // What it was reads beside the editor, with no Before and After labels.
+    expect(screen.getByText('was $2,000')).toBeInTheDocument();
+    expect(screen.queryByText('Before')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
   });
 
