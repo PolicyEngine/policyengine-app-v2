@@ -53,7 +53,7 @@ export function formatValue(value: any, unit: string | null): string {
     return '—';
   }
   if (typeof value === 'boolean') {
-    return value ? 'on' : 'off';
+    return value ? 'true' : 'false';
   }
   if (typeof value === 'number' && unit?.startsWith('currency-')) {
     const currency = unit === 'currency-GBP' ? '£' : '$';
