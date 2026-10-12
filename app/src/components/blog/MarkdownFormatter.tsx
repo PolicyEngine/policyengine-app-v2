@@ -322,6 +322,94 @@ export function PlotlyChartCode({
 /**
  * Main MarkdownFormatter Component
  */
+/* ------------------------------------------------------------------ */
+/*  Copy button for code blocks                                        */
+/* ------------------------------------------------------------------ */
+
+/** Copies the code block's text, e.g. a citation, and says so for two seconds. */
+function CopyCodeButton({ getText }: { getText: () => string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(getText());
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          setCopied(false);
+        }
+      }}
+      aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+      style={{
+        fontSize: blogTypography.smallMobile,
+        color: blogColors.textTertiary,
+        padding: blogSpacing.padding.code,
+        backgroundColor: blogColors.backgroundCodeLabel,
+        border: 'none',
+        borderLeft: `1px solid ${blogColors.borderDark}`,
+        cursor: 'pointer',
+      }}
+    >
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+}
+
+/** A code block's frame with a copy button and, when given, its language label. */
+function CodeBlockFrame({ language, children }: { language?: string; children: React.ReactNode }) {
+  const bodyRef = useRef<HTMLDivElement>(null);
+  return (
+    <div
+      style={{
+        margin: `${blogSpacing.marginBottom.code}px 0`,
+        overflow: 'hidden',
+        backgroundColor: blogColors.backgroundCode,
+        border: `1px solid ${blogColors.borderMedium}`,
+        boxShadow: blogShadows.codeBlock,
+        position: 'relative',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          display: 'flex',
+          borderBottom: `1px solid ${blogColors.borderDark}`,
+        }}
+      >
+        {language && (
+          <div
+            style={{
+              fontSize: blogTypography.smallMobile,
+              color: blogColors.textTertiary,
+              padding: blogSpacing.padding.code,
+              backgroundColor: blogColors.backgroundCodeLabel,
+              borderRadius: blogRadius.none,
+              borderLeft: `1px solid ${blogColors.borderDark}`,
+            }}
+          >
+            {language}
+          </div>
+        )}
+        <CopyCodeButton getText={() => bodyRef.current?.innerText.trim() ?? ''} />
+      </div>
+      <div
+        ref={bodyRef}
+        style={{
+          padding: blogSpacing.padding.codeBlock,
+          whiteSpace: 'pre-wrap',
+          overflowX: 'auto',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function MarkdownFormatter({
   markdown,
   backgroundColor,
@@ -949,38 +1037,11 @@ export function MarkdownFormatter({
       const language =
         typeof codeClassName === 'string' ? codeClassName.replace('language-', '') : undefined;
 
-      return (
-        <div
-          style={{
-            margin: `${blogSpacing.marginBottom.code}px 0`,
-            overflow: 'hidden',
-            backgroundColor: blogColors.backgroundCode,
-            border: `1px solid ${blogColors.borderMedium}`,
-            boxShadow: blogShadows.codeBlock,
-            position: 'relative',
-          }}
-        >
-          {language && language !== 'highlighted-block' && language !== 'plotly' && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                fontSize: blogTypography.smallMobile,
-                color: blogColors.textTertiary,
-                padding: blogSpacing.padding.code,
-                backgroundColor: blogColors.backgroundCodeLabel,
-                borderRadius: blogRadius.none,
-                borderLeft: `1px solid ${blogColors.borderDark}`,
-                borderBottom: `1px solid ${blogColors.borderDark}`,
-              }}
-            >
-              {language}
-            </div>
-          )}
-          <div style={{ padding: blogSpacing.padding.codeBlock }}>{children}</div>
-        </div>
-      );
+      const label =
+        language && language !== 'highlighted-block' && language !== 'plotly'
+          ? language
+          : undefined;
+      return <CodeBlockFrame language={label}>{children}</CodeBlockFrame>;
     },
   };
 
