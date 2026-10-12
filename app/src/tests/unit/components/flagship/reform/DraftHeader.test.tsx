@@ -82,9 +82,8 @@ describe('DraftHeader', () => {
     });
     renderHeader();
 
-    expect(
-      screen.getByText('1 unchanged parameter is left out of the report.')
-    ).toBeInTheDocument();
+    // The run leaves the unchanged one out without saying so.
+    expect(screen.queryByText(/left out of the report/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
 
     const provisions = mockRun.mock.calls[0][2];
