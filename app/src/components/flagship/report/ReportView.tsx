@@ -10,9 +10,11 @@ import ProvisionList from '@/components/flagship/ProvisionList';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
+import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
+  leadsWithStateRevenue,
   reportMetrics,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
@@ -40,6 +42,7 @@ import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
+import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
 
 const SECTIONS = [
   { id: 'policy', label: 'Overview' },
@@ -70,8 +73,13 @@ export interface ReportViewProps {
   title: string;
   /** The cover heading; defaults to the title. */
   heading?: string;
-  /** e.g. "Utah · Introduced" for bills, "Hand-built draft" for drafts. */
+  /** How the reform came about, e.g. "Hand-built"; carried to the adjust panel's runs. */
   sourceNote: string;
+  /**
+   * Who the report ran on, e.g. "Nationwide" or "California". With it, the
+   * cover reads the population and the year under the title: "California · 2026".
+   */
+  populationLabel?: string;
   provisions: RunReportProvision[];
   /**
    * The overview's list of changes, before and after, when the source
@@ -125,6 +133,7 @@ export default function ReportView({
   title,
   heading = title,
   sourceNote,
+  populationLabel,
   provisions,
   changes,
   priorLawBaseline = false,
@@ -177,7 +186,9 @@ export default function ReportView({
     region,
   });
   const metrics = output
-    ? reportMetrics(output, countryId, { stateRevenue: !!region?.startsWith('state/') })
+    ? reportMetrics(output, countryId, {
+        stateRevenue: leadsWithStateRevenue(region, provisions),
+      })
     : (storedMetrics ?? []);
 
   const tabPanel = (id: string, content: ReactNode) => (
@@ -185,6 +196,8 @@ export default function ReportView({
       value={id}
       forceMount
       hidden={activeTab !== id}
+      // Shown again, a section fades in rather than snapping into place.
+      className="tw:motion-safe:fade-in-soft"
       style={{ display: activeTab === id ? undefined : 'none' }}
     >
       {visitedTabs.has(id) && content}
@@ -232,7 +245,7 @@ export default function ReportView({
                     Compared with: {customBaselineLabel}
                   </Text>
                 )}
-                {sourceNote && (
+                {populationLabel && (
                   <Text
                     style={{
                       margin: 0,
@@ -240,7 +253,7 @@ export default function ReportView({
                       fontSize: typography.fontSize.sm,
                     }}
                   >
-                    {sourceNote}
+                    {[populationLabel, year].filter(Boolean).join(' · ')}
                   </Text>
                 )}
               </Stack>
@@ -276,6 +289,10 @@ export default function ReportView({
               {tabPanel(
                 'policy',
                 <Stack style={{ gap: spacing.xl }}>
+                  {/* Said first, before a page of results that all read "no change". */}
+                  {output && isSocietyWideReportNoOp(output) && (
+                    <NoChangeNotice year={year} provisions={provisions} />
+                  )}
                   {overviewLead}
                   <ReportChanges
                     provisions={provisions}
@@ -407,6 +424,8 @@ export default function ReportView({
           sourceNote={sourceNote}
           provisions={provisions}
           loading={provisionsLoading}
+          region={region}
+          year={year}
         />
       </div>
     </div>

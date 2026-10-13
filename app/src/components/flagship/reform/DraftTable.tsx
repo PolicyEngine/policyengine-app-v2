@@ -95,6 +95,16 @@ const summarize = (
   return summarizeIntervals(intervals, (value) => formatValue(value, provision.unit));
 };
 
+/**
+ * A change that starts in another year than the report's: the row's box
+ * edits from the report year, so it would split the change in two. Its
+ * summary opens the editor, which keeps the start.
+ */
+const startsInOtherYear = (provision: DraftProvision, year: number) => {
+  const start = provision.intervals?.[0]?.startDate;
+  return !!start && Number(start.slice(0, 4)) !== year;
+};
+
 /** A row's value as text that opens the row: a schedule, or a breakdown's changes. */
 function SummaryButton({
   children,
@@ -138,7 +148,14 @@ function SummaryButton({
  * and when it applies. A pick opens its row — one open at a time — to
  * the ways of setting its value, with the value focused.
  */
-export default function DraftTable({ draft }: { draft: DraftReform }) {
+export default function DraftTable({
+  draft,
+  addRow,
+}: {
+  draft: DraftReform;
+  /** The table's last row: where the next parameter is added. */
+  addRow?: React.ReactNode;
+}) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draftable = useSelector(selectAddableParameterPaths);
   const lastYear = Number(useSelector(getDateRange).maxDate.slice(0, 4));
@@ -177,6 +194,27 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
 
   const toggle = (key: string, open?: boolean) =>
     setOpenKey((current) => ((open ?? current !== key) ? key : null));
+
+  /**
+   * A click anywhere on a row opens or closes it — its name, its current
+   * law, the space between — except on a control, which keeps its own job:
+   * the value box, the switch, the summary, the row's own buttons.
+   */
+  const onRowClick = (key: string) => (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(
+        'button, input, select, textarea, a, label, [role="switch"], [role="combobox"]'
+      )
+    ) {
+      return;
+    }
+    // A drag to select text is not a click on the row.
+    if (window.getSelection()?.toString()) {
+      return;
+    }
+    toggle(key);
+  };
 
   // Focus the pending pick's value, selected so typing replaces it — or
   // the switch a yes/no parameter shows instead. False while its control
@@ -254,7 +292,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
         </span>
         <span style={headerCell}>New value</span>
         <span className={WIDE_ONLY} style={headerCell}>
-          When
+          Effective
         </span>
         <span />
       </div>
@@ -269,7 +307,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
             color: colors.text.secondary,
           }}
         >
-          No parameters yet — add one above.
+          No parameters yet.
         </p>
       )}
 
@@ -297,8 +335,11 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
 
         return (
           <Fragment key={row.key}>
+            {/* A mouse shortcut: the name and the arrow are the row's keyboard controls. */}
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
-              className={ROW_GRID}
+              className={`${ROW_GRID} tw:cursor-pointer ${open ? '' : 'tw:hover:bg-gray-50'}`}
+              onClick={onRowClick(row.key)}
               style={{
                 padding: `${spacing.sm} ${spacing.lg}`,
                 borderTop: index > 0 ? `1px solid ${colors.border.light}` : undefined,
@@ -335,23 +376,31 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                 </span>
               </button>
 
-              {/* Open, the row is a heading: its details below show every value. */}
+              {/* Open, the row keeps its columns, read-only: the details below edit them. */}
               {lone ? (
                 <>
                   <span
                     className={WIDE_ONLY}
-                    title={open ? undefined : baselineText}
+                    title={baselineText}
                     style={{
                       ...truncate,
                       fontSize: typography.fontSize.sm,
                       color: colors.text.secondary,
                     }}
                   >
-                    {open ? null : baselineText}
+                    {baselineText}
                   </span>
 
                   <div style={{ minWidth: 0 }}>
-                    {open ? null : !isEditableValue(lone.baselineValue) ? (
+                    {open ? (
+                      <SummaryButton
+                        onClick={() => toggle(row.key, true)}
+                        title={changed[0]?.value}
+                        accent={changed.length > 0}
+                      >
+                        {changed[0]?.value || formatValue(lone.value, lone.unit)}
+                      </SummaryButton>
+                    ) : !isEditableValue(lone.baselineValue) ? (
                       // Only numbers and switches can be offered; this one came
                       // from an older saved reform.
                       <span
@@ -366,9 +415,10 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                         Can&apos;t be changed here
                       </span>
                     ) : // A value that grows still edits in place: the box sets
-                    // where it starts.
+                    // where it starts — unless it starts in another year.
                     (!provisionVariesOverTime(lone) ||
                         growthPhrase(lone.growth, draft.countryId)) &&
+                      !startsInOtherYear(lone, year) &&
                       param ? (
                       <div
                         data-path={lone.path}
@@ -415,8 +465,10 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                   </div>
                 </>
               ) : (
-                <div className="tw:@min-[640px]:col-span-2" style={{ minWidth: 0 }}>
-                  {open ? null : (
+                <>
+                  {/* A breakdown has a value for each member: its details list them. */}
+                  <span className={WIDE_ONLY} />
+                  <div style={{ minWidth: 0 }}>
                     <SummaryButton
                       onClick={() => toggle(row.key, true)}
                       title={groupSummary || undefined}
@@ -424,12 +476,12 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                     >
                       {groupSummary || 'No values changed yet'}
                     </SummaryButton>
-                  )}
-                </div>
+                  </div>
+                </>
               )}
 
               <span className={WIDE_ONLY}>
-                {open || !when ? null : <Chip title={whenTitle}>{when}</Chip>}
+                {when ? <Chip title={whenTitle}>{when}</Chip> : null}
               </span>
 
               <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
@@ -495,6 +547,19 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
           </Fragment>
         );
       })}
+
+      {addRow && (
+        <div
+          style={{
+            padding: `${spacing.md} ${spacing.lg}`,
+            borderTop: `1px solid ${colors.border.light}`,
+            borderRadius: `0 0 ${spacing.radius.feature} ${spacing.radius.feature}`,
+            background: colors.gray[50],
+          }}
+        >
+          {addRow}
+        </div>
+      )}
     </div>
   );
 }

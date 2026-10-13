@@ -50,6 +50,12 @@ export interface DraftProvision {
  */
 export interface DraftPopulation {
   scope: 'national' | 'household';
+  /**
+   * Part of the country, as the API names it: a state ("state/ca") or a
+   * congressional district ("congressional_district/CA-01"). Absent for
+   * the whole country.
+   */
+  region?: string;
 }
 
 export interface DraftReform {
@@ -262,13 +268,13 @@ export function clearDraftAfterRun(userReportId: string): void {
 export function loadProvisionsIntoDraft(
   countryId: CountryId,
   provisions: DraftProvision[],
-  options: { label?: string; year?: number } = {}
+  options: { label?: string; year?: number; region?: string } = {}
 ): void {
   writeDraft({
     countryId,
     label: options.label ?? '',
     provisions: provisions.map((provision) => ({ ...provision })),
-    population: { scope: 'national' },
+    population: { scope: 'national', ...(options.region ? { region: options.region } : {}) },
     source: 'manual',
     startedAt: Date.now(),
     ...(options.year ? { year: options.year } : {}),

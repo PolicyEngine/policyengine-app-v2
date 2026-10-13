@@ -440,6 +440,7 @@ export default function DistrictImpactCard({
       >
         <MapTypeToggle value={mapVisualizationType} onChange={setMapVisualizationType} />
         <SegmentedControl
+          animated
           value={congressionalMode}
           onValueChange={(value) => setCongressionalMode(value as CongressionalMode)}
           size="xs"

@@ -16,6 +16,8 @@ export interface BillEconomy {
   status: 'pending' | 'complete' | 'error';
   message?: string;
   queuePosition?: number;
+  /** 0–100 while pending: the calculation strategy's estimate from typical run times. */
+  progress?: number;
   reformPolicyId?: string;
   baselinePolicyId?: string;
   year: string;
@@ -114,6 +116,7 @@ export function useBillEconomy(
           : 'The calculation could not be started.'
         : economy.data?.message,
     queuePosition: economy.data?.queuePosition,
+    progress: economy.data?.progress,
     reformPolicyId,
     baselinePolicyId,
     year,

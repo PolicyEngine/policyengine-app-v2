@@ -65,6 +65,12 @@ export interface RunFlagshipReportArgs {
   reformId?: string | null;
   /** The year to simulate; the current year when unset. */
   year?: number;
+  /**
+   * The population: a state or congressional district as the API names
+   * it ("state/ca", "congressional_district/CA-01"); the whole country
+   * when unset.
+   */
+  region?: string;
 }
 
 /**
@@ -108,6 +114,7 @@ export async function runFlagshipReport({
   currentLawId,
   reformId,
   year = Number(CURRENT_YEAR),
+  region,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -117,12 +124,12 @@ export async function runFlagshipReport({
 
   const [baseline, reform] = await Promise.all([
     createSimulation(countryId, {
-      population_id: countryId,
+      population_id: region ?? countryId,
       population_type: 'geography',
       policy_id: currentLawId,
     }),
     createSimulation(countryId, {
-      population_id: countryId,
+      population_id: region ?? countryId,
       population_type: 'geography',
       policy_id: reformPolicyId,
     }),

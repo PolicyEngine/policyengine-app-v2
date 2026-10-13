@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, waitFor } from '@test-utils';
+import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import DraftHeader from '@/components/flagship/reform/DraftHeader';
+import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import {
   addDraftProvision,
   clearDraftReform,
@@ -11,7 +11,10 @@ import {
 } from '@/libs/draftReform';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import {
+  seedDeductionMetadata,
+  US_REGIONS,
+} from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockCreate = vi.fn();
 const mockRun = vi.fn();
@@ -27,7 +30,12 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
 
 function HeaderHarness() {
   const draft = useDraftReform();
-  return draft ? <DraftHeader draft={draft} /> : null;
+  return draft ? (
+    <>
+      <DraftHeader draft={draft} />
+      <DraftRunBar draft={draft} />
+    </>
+  ) : null;
 }
 
 function renderHeader() {
@@ -57,18 +65,39 @@ describe('DraftHeader', () => {
     store.dispatch(clearMetadata());
   });
 
-  test('given a draft then its name and run read at the top', () => {
+  test('given a draft then its name leads, and the bar under it holds the year, the population and the verbs', () => {
     renderHeader();
 
-    expect(screen.getByLabelText('Reform name')).toHaveAttribute('placeholder', 'Untitled reform');
-    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeInTheDocument();
+    const header = screen.getByRole('banner');
+    // The name reads as a title until clicked: empty, it asks for one.
+    expect(within(header).getByRole('button', { name: 'Rename the reform' })).toHaveTextContent(
+      'Name your reform'
+    );
+    expect(within(header).queryByRole('combobox', { name: /year/i })).not.toBeInTheDocument();
+    expect(within(header).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+
+    const bar = screen.getByRole('region', { name: 'Reform actions' });
+    expect(within(bar).getByRole('combobox', { name: /year/i })).toBeInTheDocument();
+    expect(
+      within(bar).getByRole('button', { name: /population: nationwide/i })
+    ).toBeInTheDocument();
+    // Discard and Save sit left of the run.
+    const verbs = within(bar)
+      .getAllByRole('button')
+      .map((button) => button.textContent?.trim())
+      .filter(
+        (text) => text === 'Discard' || text === 'Save' || /^Run 2026 report$/.test(text ?? '')
+      );
+    expect(verbs).toEqual(['Discard', 'Save', 'Run 2026 report']);
+    // It stays in view at the bottom of the window while the reform is long.
+    expect(bar).toHaveStyle({ position: 'sticky', bottom: '0px' });
   });
 
   test('given nothing changed yet then the run waits for a change', () => {
     renderHeader();
 
     expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
-    expect(screen.getByText(/change a value to run the report/i)).toBeInTheDocument();
+    expect(screen.getByText(/adjust at least one value to run the report/i)).toBeInTheDocument();
   });
 
   test('given some parameters left unchanged then the run leaves them out', async () => {
@@ -109,14 +138,11 @@ describe('DraftHeader', () => {
     expect(screen.getByRole('button', { name: /run 2027 report/i })).toBeInTheDocument();
   });
 
-  test('given a household population then it shows, but waits', async () => {
-    Element.prototype.scrollIntoView ??= vi.fn();
-    Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+  test('given the population picker then a household shows, but waits', async () => {
     const user = userEvent.setup();
     renderHeader();
 
-    expect(screen.getByRole('combobox', { name: 'Population' })).toHaveTextContent('Nationwide');
-    await user.click(screen.getByRole('combobox', { name: 'Population' }));
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
 
     expect(await screen.findByRole('option', { name: /a household/i })).toHaveAttribute(
       'aria-disabled',
@@ -124,10 +150,65 @@ describe('DraftHeader', () => {
     );
   });
 
+  test('given a state is chosen then the draft and its run take it', async () => {
+    const user = userEvent.setup();
+    seedDeductionMetadata({ regions: US_REGIONS });
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+    await user.click(await screen.findByRole('option', { name: /California/ }));
+
+    expect(getDraftReform()?.population).toEqual({ scope: 'national', region: 'state/ca' });
+    expect(screen.getByRole('button', { name: 'Population: California' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+    expect(mockRun.mock.calls[0][5]).toEqual({ fromDraft: true, region: 'state/ca' });
+  });
+
+  test('given a search then congressional districts join the list', async () => {
+    const user = userEvent.setup();
+    seedDeductionMetadata({ regions: US_REGIONS });
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+    // 436 districts would swamp the list; none show until something is typed.
+    expect(screen.queryByRole('option', { name: /California's 1st/ })).not.toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText('Find a state or district…'), 'CA-01');
+    await user.click(await screen.findByRole('option', { name: /California's 1st/ }));
+
+    expect(getDraftReform()?.population?.region).toBe('congressional_district/CA-01');
+    expect(
+      screen.getByRole('button', { name: "Population: California's 1st" })
+    ).toBeInTheDocument();
+  });
+
+  test('given the name is clicked then it opens to typing, and Enter closes it', async () => {
+    const user = userEvent.setup();
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Rename the reform' }));
+    const input = screen.getByLabelText('Reform name');
+    expect(input).toHaveFocus();
+    await user.type(input, 'Bigger CTC{Enter}');
+
+    expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rename the reform' })).toHaveTextContent(
+      'Bigger CTC'
+    );
+  });
+
   test('given the name is typed then the draft takes it', async () => {
     const user = userEvent.setup();
     renderHeader();
 
+    await user.click(screen.getByRole('button', { name: 'Rename the reform' }));
     await user.type(screen.getByLabelText('Reform name'), 'CTC expansion');
 
     expect(getDraftReform()?.label).toBe('CTC expansion');
