@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconCalendar, IconExternalLink, IconUser } from '@tabler/icons-react';
+import { IconCalendar, IconExternalLink } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
@@ -47,7 +47,7 @@ function Caption({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The bill's summary, sponsor, analysis date, bill text, and validation verdict. */
+/** The bill's summary, analysis date, bill text, and validation verdict. */
 function BillOverviewLead({ bill }: { bill: TrackedBill }) {
   const billTextUrl = bill.sourceUrl ?? bill.legiscanUrl;
   return (
@@ -64,16 +64,10 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
           {bill.summary}
         </Text>
       )}
-      {(bill.author || bill.date || billTextUrl) && (
+      {(bill.date || billTextUrl) && (
         <Stack
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}
         >
-          {bill.author && (
-            <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <IconUser size={13} color={colors.text.secondary} />
-              <Caption>Sponsored by {bill.author}</Caption>
-            </Stack>
-          )}
           {bill.date && (
             <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
               <IconCalendar size={13} color={colors.text.secondary} />

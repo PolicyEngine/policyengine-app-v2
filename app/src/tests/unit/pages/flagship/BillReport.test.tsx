@@ -143,11 +143,12 @@ describe('BillReportPage', () => {
     ).toBeInTheDocument();
   });
 
-  test('given the overview then summary, sponsor, date, bill text link, and verdict show', async () => {
+  test('given the overview then summary, date, bill text link, and verdict show', async () => {
     renderReport();
 
     expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
-    expect(screen.getByText(/Sponsored by Rep\. Mackenzie/)).toBeInTheDocument();
+    // The tracker's author field is a post's author as often as a sponsor; it isn't shown.
+    expect(screen.queryByText(/Sponsored by/)).not.toBeInTheDocument();
     expect(screen.getByText(/Analyzed July 6, 2026/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /bill text/i })).toHaveAttribute(
       'href',
