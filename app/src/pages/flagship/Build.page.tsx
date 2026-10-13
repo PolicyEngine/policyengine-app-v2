@@ -14,12 +14,13 @@ import { RootState } from '@/store';
 /**
  * Build — the reform is the page.
  *
- * Its name and year sit at the top; one bar adds parameters (search, or
- * browse the policy tree); the reform itself is a table below, each
+ * Its name sits at the top; the reform itself is a table, each
  * parameter's new value typed in place and opened up for year-by-year
- * and breakdown values. Picking a parameter lands on its value, so
- * finding and setting it are one motion. Who the report runs on and the
- * run come last, in a bar that stays in view under the reform.
+ * and breakdown values. The table's last row adds another parameter
+ * (search, or browse the policy tree); an empty draft asks for the first
+ * in the middle of the page. Picking a parameter lands on its value, so
+ * finding and setting it are one motion. The year, who the report runs
+ * on and the run come last, in a bar that stays in view under the reform.
  */
 export default function BuildPage() {
   const countryId = useCurrentCountry();
@@ -61,10 +62,9 @@ export default function BuildPage() {
             {loading ? (
               <ParametersLoading />
             ) : (
-              <>
-                <AddParameterBar onPick={pick} />
-                <DraftTable draft={current} />
-              </>
+              // The next parameter is added at the foot of the reform, where
+              // the last one ends: a reform takes as many as it needs.
+              <DraftTable draft={current} addRow={<AddParameterBar onPick={pick} inTable />} />
             )}
             <DraftRunBar draft={current} />
           </>
