@@ -364,7 +364,8 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     <Select value={String(fromYear)} onValueChange={(next) => changeFromYear(Number(next))}>
       <SelectTrigger
         aria-label="Applies from"
-        size="sm"
+        // As tall as the value boxes beside and below it.
+        size="default"
         className="tw:w-auto tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
         style={{ fontFamily: typography.fontFamily.primary }}
       >

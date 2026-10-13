@@ -475,7 +475,9 @@ describe('DraftTable', () => {
       ]);
       // The column is 2025, against current law in 2025.
       expect(screen.getByLabelText('Child tax credit base amount, 2025')).toBeInTheDocument();
-      expect(screen.getByText('2,000')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('region', { name: 'New value' })).getByText('$2,000')
+      ).toBeInTheDocument();
 
       // Closed, the row reads its summary, not a 2026 box that would split it.
       await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
