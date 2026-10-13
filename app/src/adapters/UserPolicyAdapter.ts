@@ -40,6 +40,15 @@ export class UserPolicyAdapter {
     return item.legacy_policy_id !== null && item.legacy_policy_id !== undefined;
   }
 
+  /**
+   * Whether the row is a v3 reform rather than a policy saved from the
+   * legacy builder: reforms always carry provenance, builder policies
+   * never do. Each list shows only its own kind, as when signed out.
+   */
+  static isReform(item: UserPolicyItem): boolean {
+    return item.provenance !== null && item.provenance !== undefined;
+  }
+
   static fromApiItem(item: UserPolicyItem): UserPolicy {
     return {
       id: item.id,

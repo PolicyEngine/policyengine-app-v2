@@ -39,7 +39,13 @@ export class ApiPolicyStore implements UserPolicyStore {
       return [];
     }
     const items = await this.routes.list();
-    return items.filter(UserPolicyAdapter.hasLegacyPolicy).map(UserPolicyAdapter.fromApiItem);
+    // v3 reforms share the account's policy rows but belong to the reform
+    // list (see UserPolicyAdapter.isReform); lookups by ID still find them.
+    return items
+      .filter(
+        (item) => UserPolicyAdapter.hasLegacyPolicy(item) && !UserPolicyAdapter.isReform(item)
+      )
+      .map(UserPolicyAdapter.fromApiItem);
   }
 
   /** The association for a v1 policy ID (the oldest, as localStorage returns the first). */

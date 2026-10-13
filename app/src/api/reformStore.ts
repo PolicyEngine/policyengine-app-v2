@@ -1,4 +1,5 @@
 import { convertDateRangeMapToValueIntervals } from '@/adapters/conversionHelpers';
+import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
 import { fetchPolicyById } from '@/api/policy';
 import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
 import { createReformPolicy } from '@/libs/flagship/runReport';
@@ -149,12 +150,9 @@ function provenanceToWire(provenance: ReformProvenance): ProvenanceWire {
   };
 }
 
-/**
- * Whether an account policy row is a v3 reform. Reforms always carry
- * provenance; policies saved from the legacy builder never do.
- */
+/** Whether an account policy row is a v3 reform this app can show. */
 function isAccountReform(item: UserPolicyItem): boolean {
-  return isLegacyId(item.legacy_policy_id) && item.provenance !== null;
+  return isLegacyId(item.legacy_policy_id) && UserPolicyAdapter.isReform(item);
 }
 
 function provenanceFromWire(wire: ProvenanceWire | null): ReformProvenance {

@@ -96,6 +96,49 @@ describe('ApiPolicyStore', () => {
     expect(policies.map((policy) => policy.id)).toEqual([ASSOCIATION_IDS.POLICY]);
   });
 
+  test('given a v3 reform among the rows then the policies list leaves it out, as when signed out', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      pageResponse([
+        policyItem(),
+        policyItem({
+          id: ASSOCIATION_IDS.REFORM,
+          legacy_policy_id: 95800,
+          provenance: { source: 'chat', ref: null, confidence: null },
+          baseline: 'current-law',
+        }),
+      ])
+    );
+    const store = new ApiPolicyStore(context);
+
+    // When
+    const policies = await store.findByUser(PE_USER_ID, 'us');
+
+    // Then
+    expect(policies.map((policy) => policy.id)).toEqual([ASSOCIATION_IDS.POLICY]);
+  });
+
+  test('given a v3 reform then a lookup by its v1 policy id still finds it', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      pageResponse([
+        policyItem({
+          id: ASSOCIATION_IDS.REFORM,
+          provenance: { source: 'chat', ref: null, confidence: null },
+        }),
+      ])
+    );
+    const store = new ApiPolicyStore(context);
+
+    // When
+    const found = await store.findById(PE_USER_ID, String(LEGACY_IDS.POLICY));
+
+    // Then
+    expect(found?.id).toBe(ASSOCIATION_IDS.REFORM);
+  });
+
   test('given another country then findByUser returns nothing without a request', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext('us');
