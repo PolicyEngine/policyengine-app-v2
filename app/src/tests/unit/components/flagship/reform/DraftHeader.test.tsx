@@ -71,7 +71,7 @@ describe('DraftHeader', () => {
     renderHeader();
 
     expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
-    expect(screen.getByText(/change a value to run the report/i)).toBeInTheDocument();
+    expect(screen.getByText(/adjust at least one value to run the report/i)).toBeInTheDocument();
   });
 
   test('given some parameters left unchanged then the run leaves them out', async () => {

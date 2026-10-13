@@ -223,7 +223,11 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
               )
             }
             disabled={adjusted.length === 0 || runReport.isRunning}
-            title={!empty && adjusted.length === 0 ? 'Change a value to run the report' : undefined}
+            title={
+              !empty && adjusted.length === 0
+                ? 'Adjust at least one value from current law to run the report'
+                : undefined
+            }
           >
             <IconChartBar size={16} />
             {runReport.isRunning ? 'Starting report…' : `Run ${year} report`}
@@ -241,7 +245,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
             color: colors.text.tertiary,
           }}
         >
-          Nothing is changed yet. Change a value to run the report.
+          No values differ from current law yet. Adjust at least one value to run the report.
         </p>
       )}
 
