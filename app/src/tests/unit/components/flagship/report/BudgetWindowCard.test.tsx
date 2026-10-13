@@ -3,6 +3,7 @@ import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BudgetWindowResponse } from '@/api/budgetWindow';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
+import { budgetWindowQueryKey } from '@/hooks/useBudgetWindow';
 
 const mockFetchBudgetWindow = vi.fn();
 
@@ -36,8 +37,7 @@ const COMPLETE: BudgetWindowResponse = {
   progress: 100,
 };
 
-function renderCard(region?: string) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderCard(region?: string, queryClient = newQueryClient()) {
   return render(
     <QueryClientProvider client={queryClient}>
       <BudgetWindowCard
@@ -49,6 +49,10 @@ function renderCard(region?: string) {
       />
     </QueryClientProvider>
   );
+}
+
+function newQueryClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
 
 async function pick(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
@@ -145,6 +149,20 @@ describe('BudgetWindowCard', () => {
 
     expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Calculate 5-year budget' })).toBeEnabled();
+  });
+
+  test('given a window already calculated then it shows again on return, without a new run', async () => {
+    const queryClient = newQueryClient();
+    queryClient.setQueryData(
+      budgetWindowQueryKey('us', '123', '2', { region: 'us', startYear: 2026, windowSize: 10 }),
+      COMPLETE
+    );
+
+    renderCard(undefined, queryClient);
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Calculated' })).toBeDisabled();
+    expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
   });
 
   test('given a failed window then the error shows with a retry', async () => {

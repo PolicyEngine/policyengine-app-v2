@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import type { BudgetWindowParams, BudgetWindowYear } from '@/api/budgetWindow';
 import RunProgress from '@/components/flagship/report/RunProgress';
@@ -14,7 +15,7 @@ import {
   Title,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { useBudgetWindow } from '@/hooks/useBudgetWindow';
+import { budgetWindowQueryKey, useBudgetWindow } from '@/hooks/useBudgetWindow';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { formatCurrencyAbbr } from '@/utils/formatters';
 
@@ -115,7 +116,21 @@ export default function BudgetWindowCard({
     .sort((a, b) => a - b);
   const [startYear, setStartYear] = useState(reportYear);
   const [windowSize, setWindowSize] = useState(DEFAULT_WINDOW);
-  const [requested, setRequested] = useState<BudgetWindowParams | null>(null);
+  // Back on the tab, a window already asked for picks up where it was:
+  // its result, or its run, still being checked on.
+  const queryClient = useQueryClient();
+  const [requested, setRequested] = useState<BudgetWindowParams | null>(() => {
+    const initial = {
+      region: region ?? countryId,
+      startYear: reportYear,
+      windowSize: DEFAULT_WINDOW,
+    };
+    return queryClient.getQueryData(
+      budgetWindowQueryKey(countryId, reformPolicyId, baselinePolicyId, initial)
+    )
+      ? initial
+      : null;
+  });
 
   const budget = useBudgetWindow(
     countryId,
