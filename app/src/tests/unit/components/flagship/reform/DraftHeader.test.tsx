@@ -71,7 +71,7 @@ describe('DraftHeader', () => {
     const header = screen.getByRole('banner');
     expect(within(header).getByLabelText('Reform name')).toHaveAttribute(
       'placeholder',
-      'Untitled reform'
+      'Name your reform'
     );
     expect(within(header).queryByRole('combobox', { name: /year/i })).not.toBeInTheDocument();
     expect(within(header).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
@@ -187,6 +187,15 @@ describe('DraftHeader', () => {
     expect(
       screen.getByRole('button', { name: "Population: California's 1st" })
     ).toBeInTheDocument();
+  });
+
+  test('given the pencil then the name is ready to type', async () => {
+    const user = userEvent.setup();
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Rename the reform' }));
+
+    expect(screen.getByLabelText('Reform name')).toHaveFocus();
   });
 
   test('given the name is typed then the draft takes it', async () => {
