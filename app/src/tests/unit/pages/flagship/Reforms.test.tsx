@@ -23,6 +23,12 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
   };
 });
 
+const mockRun = vi.fn();
+
+vi.mock('@/hooks/useRunFlagshipReport', () => ({
+  useRunFlagshipReport: () => ({ run: mockRun, isRunning: false, error: null }),
+}));
+
 const mockFetchTrackerBills = vi.fn();
 
 vi.mock('@/api/billFeed', async (importOriginal) => {
@@ -326,6 +332,20 @@ describe('ReformsPage', () => {
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
     expect(mockUpdate.mock.calls[0][1].parameters[0].values[0].value).toBe(4000);
+  });
+
+  test('given view full impact report in the reform detail then the run links the saved reform', async () => {
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    await user.click(screen.getByRole('button', { name: /view full impact report/i }));
+
+    expect(mockRun).toHaveBeenCalledTimes(1);
+    const [runTitle, , , reformId] = mockRun.mock.calls[0];
+    expect(runTitle).toBe('CTC to $3,600 for children under 6');
+    expect(reformId).toBe('rf-1');
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {

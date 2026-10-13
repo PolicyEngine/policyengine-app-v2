@@ -693,7 +693,9 @@ export default function ReformsPage() {
                 runReport.run(
                   selectedReform.label || 'Untitled reform',
                   SOURCE_LABELS[selectedReform.provenance.source],
-                  reformProvisions(selectedReform)
+                  reformProvisions(selectedReform),
+                  // Links the report record to the saved reform it came from.
+                  selectedReform.id
                 )
               }
               disabled={runReport.isRunning}
