@@ -166,10 +166,11 @@ describe('BillReportPage', () => {
     await user.click(screen.getByRole('button', { name: 'Load full results' }));
 
     expect(screen.getByText('Calculating the full results')).toBeInTheDocument();
-    // A bar, with the queue position under it and the estimate it follows.
+    // A bar, with the queue position under it.
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(screen.getByText('In queue (position 2)')).toBeInTheDocument();
-    expect(screen.getByText(/Estimated from typical run times/)).toBeInTheDocument();
+    expect(screen.getByText('Later visits load from the cache.')).toBeInTheDocument();
+    expect(screen.queryByText(/Estimated from typical run times/)).not.toBeInTheDocument();
     expect(screen.queryByText('Economic impact charts')).not.toBeInTheDocument();
     // The tracker's stored detail fills the wait.
     expect(screen.getByText('Income change by decile')).toBeInTheDocument();

@@ -14,18 +14,12 @@ function useElapsed(): number {
   return now - started;
 }
 
-/** "about 6 minutes" for the caption. */
-const minutesText = (ms: number) => {
-  const minutes = Math.max(1, Math.round(ms / 60000));
-  return `${minutes} minute${minutes === 1 ? '' : 's'}`;
-};
-
 /**
  * A society-wide run in progress, as a bar: what is running, how long it
  * has taken, and how far along a typical run of this size would be. The
  * API reports no stages for a single-year run, so the bar follows the
  * run's typical duration (the calculation strategy's estimate, held short
- * of the end until the results arrive) — and the caption says so.
+ * of the end until the results arrive).
  */
 export default function RunProgress({
   title,
@@ -94,10 +88,11 @@ export default function RunProgress({
           {detail}
         </Text>
       )}
-      <Text style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        Estimated from typical run times: a run like this usually takes up to{' '}
-        {minutesText(expectedMs)}.{note ? ` ${note}` : ''}
-      </Text>
+      {note && (
+        <Text style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+          {note}
+        </Text>
+      )}
     </Stack>
   );
 }
