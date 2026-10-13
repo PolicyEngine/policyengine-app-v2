@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import AddParameterBar, { ParametersLoading } from '@/components/flagship/reform/AddParameterBar';
-import DraftHeader from '@/components/flagship/reform/DraftHeader';
+import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import DraftTable from '@/components/flagship/reform/DraftTable';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Title } from '@/components/ui';
@@ -14,11 +14,12 @@ import { RootState } from '@/store';
 /**
  * Build — the reform is the page.
  *
- * Its name, year, and run sit at the top; one bar adds parameters
- * (search, or browse the policy tree); the reform itself is a table
- * below, each parameter's new value typed in place and opened up for
- * year-by-year and breakdown values. Picking a parameter lands on its
- * value, so finding and setting it are one motion.
+ * Its name and year sit at the top; one bar adds parameters (search, or
+ * browse the policy tree); the reform itself is a table below, each
+ * parameter's new value typed in place and opened up for year-by-year
+ * and breakdown values. Picking a parameter lands on its value, so
+ * finding and setting it are one motion. Who the report runs on and the
+ * run come last, in a bar that stays in view under the reform.
  */
 export default function BuildPage() {
   const countryId = useCurrentCountry();
@@ -65,6 +66,7 @@ export default function BuildPage() {
                 <DraftTable draft={current} />
               </>
             )}
+            <DraftRunBar draft={current} />
           </>
         ) : (
           <>

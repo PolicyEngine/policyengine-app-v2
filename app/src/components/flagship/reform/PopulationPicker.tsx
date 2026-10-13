@@ -133,7 +133,11 @@ export default function PopulationPicker({ value, onChange, regions }: Populatio
           <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
             <IconUsers size={16} />
           </span>
-          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+          {/* On a phone the icon says it; the choice keeps the room. */}
+          <span
+            className="tw:hidden tw:sm:inline"
+            style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
+          >
             Population
           </span>
           <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
