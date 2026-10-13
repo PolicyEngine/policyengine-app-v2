@@ -7,7 +7,6 @@ import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress from '@/components/flagship/report/RunProgress';
-import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Spinner, Stack, Text, Title } from '@/components/ui';
@@ -123,26 +122,11 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const title = meta?.title || report?.label || 'Impact report';
 
+  // Until the results are in, the page is the wait (or what went wrong):
+  // adjusting a reform that has no results yet has nothing to adjust
+  // against, so the side panel comes with the finished report.
   const layout = (main: React.ReactNode) => (
-    <div style={{ width: '100%', minWidth: 0 }}>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: spacing['2xl'],
-          alignItems: 'flex-start',
-        }}
-      >
-        <div style={{ flex: '1 1 640px', minWidth: 0 }}>{main}</div>
-        <ReportAdjustPanel
-          title={title}
-          sourceNote={meta?.sourceNote || ''}
-          provisions={meta?.provisions ?? []}
-          region={region}
-          year={report?.year}
-        />
-      </div>
-    </div>
+    <div style={{ width: '100%', minWidth: 0 }}>{main}</div>
   );
 
   if (!output || isLoading || (!meta && !!reformPolicy)) {
