@@ -148,7 +148,14 @@ function SummaryButton({
  * and when it applies. A pick opens its row — one open at a time — to
  * the ways of setting its value, with the value focused.
  */
-export default function DraftTable({ draft }: { draft: DraftReform }) {
+export default function DraftTable({
+  draft,
+  addRow,
+}: {
+  draft: DraftReform;
+  /** The table's last row: where the next parameter is added. */
+  addRow?: React.ReactNode;
+}) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draftable = useSelector(selectAddableParameterPaths);
   const lastYear = Number(useSelector(getDateRange).maxDate.slice(0, 4));
@@ -279,7 +286,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
             color: colors.text.secondary,
           }}
         >
-          No parameters yet — add one above.
+          No parameters yet.
         </p>
       )}
 
@@ -516,6 +523,19 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
           </Fragment>
         );
       })}
+
+      {addRow && (
+        <div
+          style={{
+            padding: `${spacing.md} ${spacing.lg}`,
+            borderTop: `1px solid ${colors.border.light}`,
+            borderRadius: `0 0 ${spacing.radius.feature} ${spacing.radius.feature}`,
+            background: colors.gray[50],
+          }}
+        >
+          {addRow}
+        </div>
+      )}
     </div>
   );
 }
