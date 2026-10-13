@@ -2,6 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
+import {
+  seedDeductionMetadata,
+  US_REGIONS,
+} from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockRun = vi.fn();
 const mockFindByUser = vi.fn();
@@ -92,6 +98,23 @@ describe('ReportAdjustPanel', () => {
     const [, , , , year, options] = mockRun.mock.calls[0];
     expect(year).toBe(2027);
     expect(options).toEqual({ region: 'state/va' });
+  });
+
+  test('given another population is chosen then recompute runs on it', async () => {
+    seedDeductionMetadata({ regions: US_REGIONS });
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const user = userEvent.setup();
+    await renderPanel({ region: 'us', year: '2026' });
+
+    // Nothing changed yet: no recompute to offer.
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+    await user.click(await screen.findByRole('option', { name: /California/ }));
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockRun.mock.calls[0][5]).toEqual({ region: 'state/ca' });
+    store.dispatch(clearMetadata());
   });
 
   test('given a nationwide report then recompute stays nationwide', async () => {

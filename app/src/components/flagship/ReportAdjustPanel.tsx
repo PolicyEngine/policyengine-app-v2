@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IconChartBar, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Stack, Text } from '@/components/ui';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
@@ -10,10 +11,12 @@ import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { sameParameterValue } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
 import { RunReportProvision } from '@/libs/flagship/runReport';
+import { RootState } from '@/store';
 import { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionSkeleton from './ProvisionSkeleton';
+import PopulationPicker from './reform/PopulationPicker';
 import NumberInput from './reform/ValueInput';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
@@ -69,10 +72,17 @@ export default function ReportAdjustPanel({
   const [values, setValues] = useState<Record<string, any>>(() =>
     Object.fromEntries(provisions.map((provision) => [provision.path, provision.value]))
   );
+  // Who the recompute runs on: the report's population to start, any other on choice.
+  // The whole country is the API's region for it, not a part of it.
+  const reportRegion = region && region !== countryId ? region : undefined;
+  const [population, setPopulation] = useState<string | undefined>(reportRegion);
+  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
 
   const active = provisions.filter((provision) => !removed.has(provision.path));
   const isDirty =
-    removed.size > 0 || provisions.some((provision) => values[provision.path] !== provision.value);
+    removed.size > 0 ||
+    population !== reportRegion ||
+    provisions.some((provision) => values[provision.path] !== provision.value);
   const busy = isReconciling || runReport.isRunning;
 
   if (provisions.length === 0) {
@@ -128,10 +138,7 @@ export default function ReportAdjustPanel({
         adjusted,
         reformId,
         year ? Number(year) : undefined,
-        {
-          // The whole country is the API's region for it, not a part of it.
-          region: region && region !== countryId ? region : undefined,
-        }
+        { region: population }
       );
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
@@ -146,6 +153,15 @@ export default function ReportAdjustPanel({
       meta={`${active.length} provision${active.length === 1 ? '' : 's'}`}
       defaultOpen={false}
     >
+      {/* The population is adjustable too: the same reform, run on another place. */}
+      <div
+        style={{
+          padding: `${spacing.md} ${spacing.lg}`,
+          borderBottom: `1px solid ${colors.border.light}`,
+        }}
+      >
+        <PopulationPicker value={population ?? ''} onChange={setPopulation} regions={regions} />
+      </div>
       {loading ? (
         <div style={{ padding: `0 ${spacing.lg}` }}>
           <ProvisionSkeleton count={active.length} />
