@@ -27,6 +27,10 @@ interface ValueGridProps {
   previewYears?: number[];
   /** A row under the values, aligned to the grid, e.g. how a value grows after its year. */
   footer?: { label: string; content: React.ReactNode };
+  /** A row above the values, aligned to the grid, e.g. the year a value starts. */
+  lead?: { label: string; content: React.ReactNode };
+  /** Year headings over the columns; off where the lead row already says the year. */
+  showYearHeadings?: boolean;
 }
 
 const sameValue = (a: any, b: any) =>
@@ -64,6 +68,8 @@ export default function ValueGrid({
   onFocus,
   previewYears = [],
   footer,
+  lead,
+  showYearHeadings = true,
 }: ValueGridProps) {
   const lone = members.length === 1;
   const allYears = [...years, ...previewYears];
@@ -92,7 +98,7 @@ export default function ValueGrid({
           fontFamily: typography.fontFamily.primary,
         }}
       >
-        <thead>
+        <thead style={showYearHeadings ? undefined : { display: 'none' }}>
           <tr>
             <th style={{ width: lone ? 96 : wide ? '22%' : undefined }} />
             {allYears.map((year, index) => (
@@ -121,6 +127,28 @@ export default function ValueGrid({
           </tr>
         </thead>
         <tbody>
+          {lead && (
+            <tr>
+              <th
+                scope="row"
+                style={{
+                  ...labelCell,
+                  verticalAlign: 'middle',
+                  padding: `${spacing.xs} ${spacing.md} ${spacing.sm} 0`,
+                  fontSize: typography.fontSize.xs,
+                  color: colors.text.secondary,
+                }}
+              >
+                {lead.label}
+              </th>
+              <td
+                colSpan={allYears.length}
+                style={{ padding: `${spacing.xs} ${spacing.xs} ${spacing.sm}` }}
+              >
+                {lead.content}
+              </td>
+            </tr>
+          )}
           {lone && parameters[members[0].path] && (
             <tr>
               <th

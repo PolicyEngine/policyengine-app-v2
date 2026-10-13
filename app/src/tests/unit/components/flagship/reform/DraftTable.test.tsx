@@ -90,7 +90,9 @@ describe('DraftTable', () => {
     await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
     fireEvent.change(cell('Joint, 2026'), { target: { value: '35000' } });
 
+    // The start leads the grid; no year heads its one column.
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
+      'Applies from',
       'Single',
       'Joint',
       'Head of household',
@@ -131,9 +133,11 @@ describe('DraftTable', () => {
     // The row's own input gives way to the editor: one input, not two.
     expect(document.querySelectorAll(`[data-path="${CTC_PATH}"] input`)).toHaveLength(1);
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
+      'Applies from',
       'Current law',
       'Your reform',
     ]);
+    expect(screen.queryByRole('columnheader', { name: '2026' })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'New value' })).toHaveAttribute('data-state', 'active');
   });
 
