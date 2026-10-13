@@ -177,7 +177,7 @@ describe('DraftTable', () => {
     expect(screen.getByText('from Jul 1, 2026')).toBeInTheDocument();
   });
 
-  test('given the editor then what the parameter is and its past values come after it', async () => {
+  test('given the editor then its historic values come after it, without a description', async () => {
     const user = userEvent.setup();
     render(<TableHarness />);
     await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
@@ -185,7 +185,8 @@ describe('DraftTable', () => {
     const regions = screen
       .getAllByRole('region')
       .map((region) => region.getAttribute('aria-label'));
-    expect(regions).toEqual(['New value', 'About this parameter']);
+    expect(regions).toEqual(['New value', 'Historic values']);
+    expect(screen.queryByText('About this parameter')).not.toBeInTheDocument();
     const history = screen.getByRole('button', { name: /show historic values/i });
     await user.click(history);
     expect(history).toHaveAttribute('aria-expanded', 'true');
