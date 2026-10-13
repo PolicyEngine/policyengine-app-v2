@@ -406,6 +406,11 @@ describe('DraftTable', () => {
         { startDate: '2027-01-01', endDate: FOREVER, value: 3000 },
       ]);
       expect(screen.getByLabelText('Child tax credit base amount, 2027')).toBeInTheDocument();
+
+      // Closed, the row reads the new value and its start, not a 2026 box at current law.
+      await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
+      expect(screen.getByRole('button', { name: '$3,000' })).toBeInTheDocument();
+      expect(screen.getByText('from 2027')).toBeInTheDocument();
     });
 
     test('then a value set before indexing existed opens as one value', async () => {
