@@ -414,10 +414,6 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : [];
   const memberLabel = members.find((member) => member.path === focused)?.label ?? '';
   const chartLabel = group ? `${group.label} · ${memberLabel.toLowerCase()}` : members[0].label;
-  // A breakdown says what it is once, for all its members, which
-  // seldom carry a description of their own.
-  const description =
-    (group ? parameters[group.key]?.description : null) || focusedParam?.description;
   const anyChanged = members.some((member) => {
     const provision = provisionFor(member.path);
     return provision ? provisionChanged(provision) : false;
@@ -621,25 +617,12 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         />
       )}
 
-      {/* 2. What it is and how it has moved */}
+      {/* 2. How it has moved */}
       {focusedParam && (
         <section
-          aria-label="About this parameter"
+          aria-label="Historic values"
           style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}
         >
-          <span style={sectionLabel}>About this parameter</span>
-          {description && (
-            <p
-              style={{
-                margin: 0,
-                fontSize: typography.fontSize.sm,
-                lineHeight: typography.lineHeight.relaxed,
-                color: colors.text.secondary,
-              }}
-            >
-              {description}
-            </p>
-          )}
           <div>
             <Button
               variant="ghost"
