@@ -4,7 +4,7 @@ import {
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
-import { getDurationForCountry } from '@/constants/calculationDurations';
+import { getDurationForRegion } from '@/constants/calculationDurations';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
 
@@ -40,7 +40,12 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       );
 
       // Transform to unified status with provided metadata
-      return this.transformResponseWithMetadata(response, metadata, params.countryId);
+      return this.transformResponseWithMetadata(
+        response,
+        metadata,
+        params.countryId,
+        params.region
+      );
     } catch (error) {
       console.error('[SocietyWideCalcStrategy.execute] Calculation failed:', error);
       const errorMessage =
@@ -79,7 +84,8 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
   transformResponseWithMetadata(
     apiResponse: unknown,
     metadata: CalcMetadata,
-    countryId?: string
+    countryId?: string,
+    region?: string
   ): CalcStatus {
     const response = apiResponse as SocietyWideCalculationResponse;
 
@@ -87,12 +93,13 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
     if (response.status === 'computing') {
       // Calculate synthetic progress based on elapsed time (mimicking household calculations)
       const elapsed = Date.now() - metadata.startedAt;
-      const estimatedDuration = this.getEstimatedDuration(countryId);
+      const estimatedDuration = this.getEstimatedDuration(countryId, region);
       const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95%
 
       return {
         status: 'pending',
         progress,
+        estimatedDurationMs: estimatedDuration,
         queuePosition: response.queue_position,
         message: this.getComputingMessage(response.queue_position),
         metadata,
@@ -144,10 +151,10 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
   }
 
   /**
-   * Get estimated duration for society-wide calculations based on country
+   * Get estimated duration for society-wide calculations based on country and region
    * Uses shared constants from calculationDurations
    */
-  private getEstimatedDuration(countryId?: string): number {
-    return getDurationForCountry(countryId || 'us');
+  private getEstimatedDuration(countryId?: string, region?: string): number {
+    return getDurationForRegion(countryId || 'us', region);
   }
 }

@@ -88,6 +88,12 @@ export interface CalcStatus {
   queuePosition?: number;
 
   /**
+   * Typical duration of this calculation in milliseconds, for time-based
+   * progress. Set for pending society-wide calculations from their region.
+   */
+  estimatedDurationMs?: number;
+
+  /**
    * The calculation result (only present when status is 'complete')
    */
   result?: CalcResult;
