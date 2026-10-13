@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { IconCalendarEvent, IconChartBar, IconPencil } from '@tabler/icons-react';
+import {
+  IconCalendarEvent,
+  IconCalendarStats,
+  IconChartBar,
+  IconPencil,
+} from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
@@ -25,6 +30,7 @@ import {
   provisionsForYear,
   setDraftLabel,
   setDraftPopulation,
+  setDraftWindowYears,
   setDraftYear,
 } from '@/libs/draftReform';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -42,6 +48,9 @@ const SOURCE_NOTES: Record<string, string> = {
   bill: 'Drafted from a bill',
   tool: 'Drafted from a tool',
 };
+
+/** Budget spans offered: the year alone, or the common scoring windows. */
+const WINDOW_YEARS = [1, 3, 5, 10];
 
 interface HeaderOption {
   value: string;
@@ -204,6 +213,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   };
   const year = draftYear(draft);
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
+  // The budget's span from the report's year: the year alone, or a window
+  // scored a year at a time alongside the report.
+  const windowYears = draft.windowYears ?? 1;
+  const windowOptions = WINDOW_YEARS.map((years) => ({
+    value: String(years),
+    label: years === 1 ? `${year} only` : `${year}–${year + years - 1}`,
+  }));
 
   // Who the report runs on: the whole country, a state, or a congressional district.
   const region = draft.population?.region;
@@ -274,6 +290,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
               label: String(option),
             }))}
           />
+          <HeaderSelect
+            label="Budget years"
+            icon={<IconCalendarStats size={16} />}
+            value={String(windowYears)}
+            onValueChange={(next) => setDraftWindowYears(Number(next))}
+            options={windowOptions}
+          />
           <PopulationPicker
             value={region ?? ''}
             onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
@@ -308,7 +331,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
                 provisionsForYear(adjusted, year, currentLawAt),
                 undefined,
                 year,
-                { fromDraft: true, region }
+                { fromDraft: true, region, windowYears: draft.windowYears }
               )
             }
             disabled={adjusted.length === 0 || runReport.isRunning}

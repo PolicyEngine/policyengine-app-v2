@@ -224,6 +224,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       heading={coverTitle}
       sourceNote={meta?.sourceNote || ''}
       populationLabel={regionLabel ?? 'Nationwide'}
+      // A window asked for in Build opens running.
+      budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
       customBaselineLabel={customBaselineLabel}
       year={report?.year ?? ''}

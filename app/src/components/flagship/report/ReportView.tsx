@@ -81,6 +81,8 @@ export interface ReportViewProps {
    * cover reads the population and the year under the title: "California · 2026".
    */
   populationLabel?: string;
+  /** A budget window asked for with the run (in Build): its section opens running. */
+  budgetWindow?: { startYear: number; windowSize: number };
   provisions: RunReportProvision[];
   /**
    * The overview's list of changes, before and after, when the source
@@ -135,6 +137,7 @@ export default function ReportView({
   heading = title,
   sourceNote,
   populationLabel,
+  budgetWindow,
   provisions,
   changes,
   priorLawBaseline = false,
@@ -322,6 +325,7 @@ export default function ReportView({
                       baselinePolicyId={baselinePolicyId}
                       region={region}
                       year={year}
+                      initialWindow={budgetWindow}
                     />
                   )}
                 </Stack>

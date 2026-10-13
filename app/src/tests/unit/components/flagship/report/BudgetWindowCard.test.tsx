@@ -37,7 +37,11 @@ const COMPLETE: BudgetWindowResponse = {
   progress: 100,
 };
 
-function renderCard(region?: string, queryClient = newQueryClient()) {
+function renderCard(
+  region?: string,
+  queryClient = newQueryClient(),
+  initialWindow?: { startYear: number; windowSize: number }
+) {
   return render(
     <QueryClientProvider client={queryClient}>
       <BudgetWindowCard
@@ -46,6 +50,7 @@ function renderCard(region?: string, queryClient = newQueryClient()) {
         baselinePolicyId="2"
         region={region}
         year="2026"
+        initialWindow={initialWindow}
       />
     </QueryClientProvider>
   );
@@ -163,6 +168,25 @@ describe('BudgetWindowCard', () => {
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Calculated' })).toBeDisabled();
     expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
+  });
+
+  test('given a window asked for in Build then it opens running, without a click', async () => {
+    mockFetchBudgetWindow.mockResolvedValue({
+      status: 'computing',
+      message: 'Scoring 2026, 2027 + 3 more (0 of 5 complete)...',
+      result: null,
+      progress: 0,
+    });
+
+    renderCard(undefined, newQueryClient(), { startYear: 2026, windowSize: 5 });
+
+    expect(await screen.findByText('Calculating the 2026–2030 budget')).toBeInTheDocument();
+    expect(mockFetchBudgetWindow).toHaveBeenCalledWith('us', '123', '2', {
+      region: 'us',
+      startYear: 2026,
+      windowSize: 5,
+    });
+    expect(screen.getByRole('combobox', { name: 'Window length' })).toHaveTextContent('5 years');
   });
 
   test('given a failed window then the error shows with a retry', async () => {

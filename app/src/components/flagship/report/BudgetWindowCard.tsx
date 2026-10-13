@@ -39,6 +39,8 @@ interface BudgetWindowCardProps {
   region?: string;
   /** The report's year, the window's default start. */
   year: string;
+  /** A window asked for with the run (in Build): the section opens on it, running. */
+  initialWindow?: { startYear: number; windowSize: number };
 }
 
 const headerCell: React.CSSProperties = {
@@ -106,6 +108,7 @@ export default function BudgetWindowCard({
   baselinePolicyId,
   region,
   year,
+  initialWindow,
 }: BudgetWindowCardProps) {
   const taxYears = useSelector(getTaxYears);
   const reportYear = Number(year);
@@ -114,12 +117,16 @@ export default function BudgetWindowCard({
   )
     .filter((option) => Number.isFinite(option))
     .sort((a, b) => a - b);
-  const [startYear, setStartYear] = useState(reportYear);
-  const [windowSize, setWindowSize] = useState(DEFAULT_WINDOW);
+  const [startYear, setStartYear] = useState(initialWindow?.startYear ?? reportYear);
+  const [windowSize, setWindowSize] = useState(initialWindow?.windowSize ?? DEFAULT_WINDOW);
   // Back on the tab, a window already asked for picks up where it was:
   // its result, or its run, still being checked on.
   const queryClient = useQueryClient();
   const [requested, setRequested] = useState<BudgetWindowParams | null>(() => {
+    // Asked for in Build: the reader already chose to run it.
+    if (initialWindow) {
+      return { region: region ?? countryId, ...initialWindow };
+    }
     const initial = {
       region: region ?? countryId,
       startYear: reportYear,
