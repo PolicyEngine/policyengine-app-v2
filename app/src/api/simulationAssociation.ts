@@ -122,7 +122,9 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
 
   /** The association by its own ID (`sus-…`). */
   async findByUserSimulationId(userSimulationId: string): Promise<UserSimulation | null> {
-    return this.getStoredSimulations().find((s) => s.id === userSimulationId) ?? null;
+    return (
+      this.getStoredSimulations().find((simulation) => simulation.id === userSimulationId) ?? null
+    );
   }
 
   private getStoredSimulations(): UserSimulation[] {

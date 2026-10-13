@@ -124,7 +124,7 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
 
   /** The association by its own ID (`suh-…`). */
   async findByUserHouseholdId(userHouseholdId: string): Promise<UserHouseholdPopulation | null> {
-    return this.getStoredHouseholds().find((h) => h.id === userHouseholdId) ?? null;
+    return this.getStoredHouseholds().find((household) => household.id === userHouseholdId) ?? null;
   }
 
   async update(

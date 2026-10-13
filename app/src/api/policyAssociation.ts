@@ -113,7 +113,7 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
 
   /** The association by its own ID (`sup-…`). */
   async findByUserPolicyId(userPolicyId: string): Promise<UserPolicy | null> {
-    return this.getStoredPolicies().find((p) => p.id === userPolicyId) ?? null;
+    return this.getStoredPolicies().find((policy) => policy.id === userPolicyId) ?? null;
   }
 
   private getStoredPolicies(): UserPolicy[] {
