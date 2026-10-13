@@ -1,6 +1,7 @@
 import { IconCalendarEvent, IconChartBar, IconUsers } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { BrowserOnlyIdError } from '@/api/v2Associations';
 import {
   Badge,
   Button,
@@ -252,7 +253,10 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           role="alert"
           style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.error }}
         >
-          {runReport.error ?? 'Could not save the reform. Try again.'}
+          {runReport.error ??
+            (saveMutation.error instanceof BrowserOnlyIdError
+              ? saveMutation.error.message
+              : 'Could not save the reform. Try again.')}
         </p>
       )}
     </header>

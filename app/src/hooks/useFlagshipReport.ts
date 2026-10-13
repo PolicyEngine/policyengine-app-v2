@@ -5,7 +5,6 @@ import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
-import { useUserReportById } from '@/hooks/useUserReports';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -15,8 +14,9 @@ import { extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
  * A flagship report URL carries the API report id, which anyone can
- * resolve. Links minted before that carry the local association id
- * ("sur-…"), which only the browser that ran the report can resolve.
+ * resolve. Links minted before that carried a legacy browser association
+ * id ("sur-…"); v3 does not read the legacy calculator's storage, so they
+ * no longer open.
  */
 export function isApiReportId(id: string): boolean {
   return /^\d+$/.test(id);
@@ -30,18 +30,16 @@ export interface FlagshipReportData {
 }
 
 /**
- * Resolves a flagship report by either id form. The API form fetches the
- * report, its simulations, and their policies straight from the
- * PolicyEngine API, so a shared link opens with full provenance on any
- * device; the association form keeps old links working.
+ * Resolves a flagship report by its API report id: the report, its
+ * simulations, and their policies come straight from the PolicyEngine
+ * API, so a shared link opens with full provenance on any device. Any
+ * other id resolves to nothing.
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();
   const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
     useParameterMetadata(country);
   const direct = isApiReportId(id);
-
-  const legacy = useUserReportById(id, { enabled: !direct && !!id });
 
   const { data: report, isLoading: reportLoading } = useQuery({
     queryKey: reportKeys.byId(id),
@@ -75,12 +73,7 @@ export function useFlagshipReport(id: string): FlagshipReportData {
   const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
 
   if (!direct) {
-    return {
-      report: legacy.report,
-      simulations: legacy.simulations,
-      policies: legacy.policies ?? [],
-      isLoading: legacy.isLoading,
-    };
+    return { report: undefined, simulations: [], policies: [], isLoading: false };
   }
   return {
     report,

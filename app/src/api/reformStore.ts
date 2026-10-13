@@ -209,9 +209,8 @@ export async function fetchV1PolicyJson(
 /**
  * Reforms in the account (`/v2/user-policies`). Parameter edits create a
  * new v1 policy and repoint the row (`legacy_policy_id`); a rename only
- * patches the name. Local `rf-` IDs follow the shared policy in
- * v2Associations: a reform saved while signed out is read from this
- * browser until it is changed, which saves it to the account.
+ * patches the name. Only account IDs open: a reform saved in this browser
+ * while signed out (`rf-…`) answers BrowserOnlyIdError.
  */
 export class ApiReformStore implements ReformStore {
   private readonly routes: AccountAssociationRoutes<UserPolicyItem>;
@@ -221,8 +220,7 @@ export class ApiReformStore implements ReformStore {
 
   constructor(
     private readonly context: ApiStoreContext,
-    options: ApiReformStoreOptions = {},
-    private readonly local: ReformStore = new LocalStorageReformStore()
+    options: ApiReformStoreOptions = {}
   ) {
     this.routes = new AccountAssociationRoutes(context, 'user-policies', 'Reform');
     this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
@@ -268,17 +266,11 @@ export class ApiReformStore implements ReformStore {
   }
 
   async findById(reformId: string): Promise<Reform | null> {
-    if (this.routes.isLocalOnly(reformId)) {
-      return this.local.findById(reformId);
-    }
     const item = await this.routes.get(reformId);
     return item && isAccountReform(item) ? this.toReform(item) : null;
   }
 
   async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
-    if (this.routes.isLocalOnly(reformId)) {
-      return this.saveLocalReform(reformId, updates);
-    }
     const body: UserPolicyPatchBody = {};
     if (updates.label !== undefined) {
       body.name = updates.label || null;
@@ -303,29 +295,7 @@ export class ApiReformStore implements ReformStore {
   }
 
   delete(reformId: string): Promise<void> {
-    return this.routes.isLocalOnly(reformId)
-      ? this.local.delete(reformId)
-      : this.routes.delete(reformId);
-  }
-
-  /**
-   * A reform that exists only in this browser (saved while signed out,
-   * never imported): changing it while signed in saves it, changed, to
-   * the account under its `rf-` ID, so a later import finds the row.
-   */
-  private async saveLocalReform(reformId: string, updates: ReformUpdates): Promise<Reform> {
-    const local = await this.routes.requireLocal(reformId, this.local.findById(reformId));
-    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...fields } = local;
-    const merged = {
-      ...fields,
-      ...updates,
-      userId: this.context.userId,
-      policyId: updates.parameters ? null : fields.policyId,
-    };
-    const body = await this.creationBody(merged);
-    const { country_id: _country, ...changes } = body;
-    const item = await this.routes.promote(reformId, body, changes);
-    return this.toReform(item, merged.parameters);
+    return this.routes.delete(reformId);
   }
 
   private async toReform(item: UserPolicyItem, knownParameters?: Parameter[]): Promise<Reform> {

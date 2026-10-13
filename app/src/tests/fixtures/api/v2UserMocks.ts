@@ -128,17 +128,17 @@ export function noContentResponse(): Response {
 }
 
 /** A fetch mock plus an API store context that uses it. */
-export function createTestApiContext(
-  countryId: 'us' | 'uk' = 'us',
-  userId: string = PE_USER_ID
-): { fetchMock: ReturnType<typeof vi.fn>; context: ApiStoreContext } {
+export function createTestApiContext(countryId: 'us' | 'uk' = 'us'): {
+  fetchMock: ReturnType<typeof vi.fn>;
+  context: ApiStoreContext;
+} {
   const fetchMock = vi.fn();
   const client = createV2UserClient({
     getAccessToken: async () => TEST_ACCESS_TOKEN,
     baseUrl: TEST_API_BASE,
     fetchImpl: fetchMock as unknown as typeof fetch,
   });
-  return { fetchMock, context: { client, countryId, userId } };
+  return { fetchMock, context: { client, countryId } };
 }
 
 /** The (url, init) of the nth fetch call, with the parsed URL and JSON body. */

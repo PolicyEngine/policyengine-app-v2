@@ -3,8 +3,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { ApiFlagshipReportStore, LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
+import { ApiReformStore, LocalStorageReformStore } from '@/api/reformStore';
 import { CountryProvider } from '@/contexts/CountryContext';
-import { useReformStore } from '@/hooks/useFlagshipStores';
+import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { store } from '@/store';
 import {
   ASSOCIATION_IDS,
@@ -13,7 +16,12 @@ import {
   PE_USER_ID,
   policyItem,
 } from '@/tests/fixtures/api/v2UserMocks';
-import { AuthTestProvider, signedInAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
+import {
+  AuthTestProvider,
+  makeAuthValue,
+  signedInAuthValue,
+  TEST_AUTH0_SUBJECT,
+} from '@/tests/fixtures/libs/auth/authMocks';
 
 const REFORM_POLICY_ID = 95762;
 const REFORM_ROW = policyItem({
@@ -48,6 +56,55 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+function wrapperFor(auth: AuthContextValue, countryId: 'us' | 'uk' | 'ca' = 'us') {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return ({ children }: { children: React.ReactNode }) => (
+    <ReduxProvider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <CountryProvider value={countryId}>
+          <AuthTestProvider value={auth}>{children}</AuthTestProvider>
+        </CountryProvider>
+      </QueryClientProvider>
+    </ReduxProvider>
+  );
+}
+
+describe('v3 store choice', () => {
+  test('given a signed-in session then reforms and reports go to the account, scoped by subject', () => {
+    // Given
+    const wrapper = wrapperFor(signedInAuthValue());
+
+    // When
+    const reforms = renderHook(() => useReformStore(), { wrapper }).result.current;
+    const reports = renderHook(() => useFlagshipReportStore(), { wrapper }).result.current;
+    const savedWork = renderHook(() => useV3SavedWork(), { wrapper }).result.current;
+
+    // Then
+    expect(reforms).toBeInstanceOf(ApiReformStore);
+    expect(reports.store).toBeInstanceOf(ApiFlagshipReportStore);
+    expect(reports.isAccount).toBe(true);
+    expect(savedWork.scope).toBe(`account:${TEST_AUTH0_SUBJECT}`);
+  });
+
+  test.each([
+    ['signed out', makeAuthValue(), 'us'],
+    ['sign-in disabled', makeAuthValue({ status: 'disabled' }), 'uk'],
+    ['signed in outside the US and UK', signedInAuthValue(), 'ca'],
+  ] as const)('given %s then reforms and reports stay in this browser', (_, auth, countryId) => {
+    // Given
+    const wrapper = wrapperFor(auth, countryId);
+
+    // When
+    const reforms = renderHook(() => useReformStore(), { wrapper }).result.current;
+    const reports = renderHook(() => useFlagshipReportStore(), { wrapper }).result.current;
+
+    // Then
+    expect(reforms).toBeInstanceOf(LocalStorageReformStore);
+    expect(reports.store).toBeInstanceOf(LocalStorageFlagshipReportStore);
+    expect(reports.scope).toBe('browser');
+  });
 });
 
 describe('useReformStore', () => {

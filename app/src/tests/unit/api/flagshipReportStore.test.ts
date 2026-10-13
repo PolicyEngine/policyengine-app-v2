@@ -7,7 +7,7 @@ import {
   provisionsFromWire,
   provisionsToWire,
 } from '@/api/flagshipReportStore';
-import { recordImportedIds, resolveImportedId } from '@/libs/auth/importedIds';
+import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { validationToWire } from '@/libs/flagship/reportValidation';
 import {
   ASSOCIATION_IDS,
@@ -166,16 +166,15 @@ describe('ApiFlagshipReportStore', () => {
     });
   });
 
-  test('given a local reform id then the link uses its imported account id, or is left out', async () => {
+  test('given a reform saved in this browser then the account row is not linked to it', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockImplementation(async () => itemResponse(reportItem(), 201));
-    recordImportedIds(PE_USER_ID, { 'rf-imported': ASSOCIATION_IDS.REFORM });
     const store = new ApiFlagshipReportStore(context);
 
     // When
-    await store.create({ ...newReport, reformId: 'rf-imported' });
-    await store.create({ ...newReport, reformId: 'rf-never-imported' });
+    await store.create({ ...newReport, reformId: ASSOCIATION_IDS.REFORM });
+    await store.create({ ...newReport, reformId: 'rf-browser1' });
 
     // Then
     expect(fetchCall(fetchMock, 0).body.user_policy_id).toBe(ASSOCIATION_IDS.REFORM);
@@ -236,49 +235,23 @@ describe('ApiFlagshipReportStore', () => {
   });
 });
 
-describe('ApiFlagshipReportStore with records kept only in this browser', () => {
+describe('ApiFlagshipReportStore with records saved in this browser', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  test('given an lfr- record never imported then it is read from this browser', async () => {
+  test('given an lfr- record saved while signed out then signed in it is refused, not read locally', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
-    const local = new LocalStorageFlagshipReportStore();
-    const localRecord = await local.create(newReport);
-    const store = new ApiFlagshipReportStore(context, local);
+    const localRecord = await new LocalStorageFlagshipReportStore().create(newReport);
+    const store = new ApiFlagshipReportStore(context);
 
-    // When
-    const found = await store.findById(localRecord.id);
-
-    // Then
-    expect(found?.title).toBe(newReport.title);
+    // When / Then
+    await expect(store.findById(localRecord.id)).rejects.toBeInstanceOf(BrowserOnlyIdError);
+    await expect(
+      store.saveValidation(localRecord.id, mockReportValidationSnapshot)
+    ).rejects.toBeInstanceOf(BrowserOnlyIdError);
     expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  test('given an lfr- record never imported then pinning validation saves it to the account', async () => {
-    // Given
-    const { fetchMock, context } = createTestApiContext();
-    const local = new LocalStorageFlagshipReportStore();
-    const localRecord = await local.create(newReport);
-    const wire = validationToWire(mockReportValidationSnapshot);
-    fetchMock.mockResolvedValue(
-      itemResponse(reportItem({ legacy_report_id: Number(API_REPORT_ID), validation: wire }), 201)
-    );
-    const store = new ApiFlagshipReportStore(context, local);
-
-    // When
-    await store.saveValidation(localRecord.id, mockReportValidationSnapshot);
-
-    // Then
-    const call = fetchCall(fetchMock);
-    expect(call.method).toBe('POST');
-    expect(call.body).toMatchObject({
-      legacy_report_id: Number(API_REPORT_ID),
-      validation: wire,
-      client_ref: localRecord.id,
-    });
-    expect(resolveImportedId(PE_USER_ID, localRecord.id)).toBe(ASSOCIATION_IDS.REPORT);
   });
 });
 

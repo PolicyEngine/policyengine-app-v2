@@ -245,12 +245,11 @@ export function ReportUnresolvable() {
           color: colors.text.primary,
         }}
       >
-        This link only opens in the browser that ran the report.
+        Report not found.
       </Text>
       <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        It carries a local report id. Reports run from now on carry a shareable id in their link;
-        ask for the link again from the browser that created this one, or run the reform afresh from
-        Build.
+        This is an old link that only worked in the browser that created it. Report links now carry
+        the report&apos;s number and open anywhere; run the reform again from Build to get one.
       </Text>
     </Card>
   );

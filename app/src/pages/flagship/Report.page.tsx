@@ -39,7 +39,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const params = useParams<{ userReportId: string }>();
   const userReportId = propId ?? params.userReportId ?? '';
   const { report, simulations, policies, isLoading } = useFlagshipReport(userReportId);
-  // A local association id from another browser resolves to nothing.
+  // Only API report ids open; an old browser-only "sur-" link is not found.
   const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const apiReportId =

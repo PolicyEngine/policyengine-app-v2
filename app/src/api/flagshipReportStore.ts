@@ -1,5 +1,9 @@
-import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
-import { resolveImportedId } from '@/libs/auth/importedIds';
+import {
+  AccountAssociationRoutes,
+  isAccountId,
+  isLegacyId,
+  type ApiStoreContext,
+} from '@/api/v2Associations';
 import { CountryId } from '@/libs/countries';
 import {
   ReportValidationSnapshot,
@@ -102,25 +106,21 @@ export function recordFromItem(item: UserReportItem): FlagshipReportRecord {
 }
 
 /**
- * Flagship report records as the account's `/v2/user-reports` rows. Local
- * `lfr-` IDs follow the shared policy in v2Associations.
+ * Flagship report records as the account's `/v2/user-reports` rows. Only
+ * account IDs open: a record saved in this browser while signed out
+ * (`lfr-…`) answers BrowserOnlyIdError.
  */
 export class ApiFlagshipReportStore implements FlagshipReportStore {
   private readonly routes: AccountAssociationRoutes<UserReportItem>;
 
-  constructor(
-    private readonly context: ApiStoreContext,
-    private readonly local: FlagshipReportStore = new LocalStorageFlagshipReportStore()
-  ) {
+  constructor(private readonly context: ApiStoreContext) {
     this.routes = new AccountAssociationRoutes(context, 'user-reports', 'Report');
   }
 
   private creationBody(report: NewFlagshipReport): UserReportCreateBody {
-    // The reform link must be one of this account's rows: a UUID, or a
-    // local reform ID this browser imported.
-    const userPolicyId = report.reformId
-      ? resolveImportedId(this.context.userId, report.reformId)
-      : null;
+    // The reform link must be one of this account's rows; a reform saved
+    // in this browser while signed out is not linked.
+    const userPolicyId = isAccountId(report.reformId) ? report.reformId : null;
     return {
       country_id: this.routes.writeCountry(report.countryId),
       legacy_report_id: Number(report.apiReportId),
@@ -145,9 +145,6 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
-    if (this.routes.isLocalOnly(id)) {
-      return this.local.findById(id);
-    }
     const item = await this.routes.get(id);
     return item && isLegacyId(item.legacy_report_id) ? recordFromItem(item) : null;
   }
@@ -167,13 +164,7 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     id: string,
     snapshot: ReportValidationSnapshot
   ): Promise<FlagshipReportRecord> {
-    const changes = { validation: validationToWire(snapshot) };
-    if (this.routes.isLocalOnly(id)) {
-      const record = await this.routes.requireLocal(id, this.local.findById(id));
-      const body = { ...this.creationBody(record), ...changes };
-      return recordFromItem(await this.routes.promote(id, body, changes));
-    }
-    return recordFromItem(await this.routes.patch(id, changes));
+    return recordFromItem(await this.routes.patch(id, { validation: validationToWire(snapshot) }));
   }
 }
 

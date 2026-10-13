@@ -1,6 +1,9 @@
-import type { FlagshipReportStore } from '@/api/flagshipReportStore';
+import {
+  LocalStorageFlagshipReportStore,
+  type FlagshipReportStore,
+} from '@/api/flagshipReportStore';
 import { createPolicy } from '@/api/policy';
-import { createReport, createReportAndAssociateWithUser } from '@/api/report';
+import { createReport } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
@@ -162,63 +165,36 @@ export async function runFlagshipReport({
     year: String(year),
   };
 
+  // The v1 report comes first; its ID is the report's link. Then exactly
+  // one record of it: the account's row when signed in, otherwise this
+  // browser's flagship record (v3 never writes the legacy report keys).
+  const reportMetadata = await createReport(countryId, payload);
+  const reportId = String(reportMetadata.id);
+  const meta = { title, sourceNote, provisions, createdAt: new Date().toISOString() };
+  const record = {
+    userId: MOCK_USER_ID,
+    countryId,
+    apiReportId: reportId,
+    title: title || null,
+    sourceNote: sourceNote || null,
+    provisions,
+    year: String(year),
+    reformId: reformId ?? null,
+  };
+
   if (accountReportStore) {
-    // Signed in: the account's row is the report's only association. It is
-    // written right after the v1 report exists, and a failure fails the
-    // run, so a report that opens is a report that was saved.
-    const reportMetadata = await createReport(countryId, payload);
-    const reportId = String(reportMetadata.id);
-    rememberAccountReportMeta(reportId, {
-      title,
-      sourceNote,
-      provisions,
-      createdAt: new Date().toISOString(),
-    });
-    await accountReportStore.create({
-      userId: MOCK_USER_ID,
-      countryId,
-      apiReportId: reportId,
-      title: title || null,
-      sourceNote: sourceNote || null,
-      provisions,
-      year: String(year),
-      reformId: reformId ?? null,
-    });
+    // A failure fails the run, so a report that opens is one that was saved.
+    rememberAccountReportMeta(reportId, meta);
+    await accountReportStore.create(record);
     return reportId;
   }
 
-  const { metadata } = await createReportAndAssociateWithUser({
-    countryId,
-    userId: MOCK_USER_ID,
-    label: title || undefined,
-    payload,
-  });
-
-  const reportId = String(metadata.baseReportId);
-  saveReportMeta(reportId, {
-    title,
-    sourceNote,
-    provisions,
-    createdAt: new Date().toISOString(),
-  });
-
-  // Record the report locally (pointer + provenance; never outputs).
-  // Best-effort: the run already succeeded.
+  saveReportMeta(reportId, meta);
+  // Best-effort: the run already succeeded, and the link opens without it.
   try {
-    const { LocalStorageFlagshipReportStore } = await import('@/api/flagshipReportStore');
-    await new LocalStorageFlagshipReportStore().create({
-      userId: MOCK_USER_ID,
-      countryId,
-      apiReportId: String(metadata.baseReportId),
-      title: title || null,
-      sourceNote: sourceNote || null,
-      provisions,
-      year: String(year),
-      reformId: reformId ?? null,
-    });
+    await new LocalStorageFlagshipReportStore().create(record);
   } catch {
-    // The report still opens via the local association.
+    // The report still opens by its v1 report ID.
   }
-
   return reportId;
 }

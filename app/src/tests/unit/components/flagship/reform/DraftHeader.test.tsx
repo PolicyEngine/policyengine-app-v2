@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { BrowserOnlyIdError } from '@/api/v2Associations';
 import DraftHeader from '@/components/flagship/reform/DraftHeader';
 import {
   addDraftProvision,
   clearDraftReform,
   getDraftReform,
+  loadReformIntoDraft,
   startDraftReform,
   useDraftReform,
 } from '@/libs/draftReform';
@@ -14,6 +16,7 @@ import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockCreate = vi.fn();
+const mockUpdate = vi.fn();
 const mockRun = vi.fn();
 
 vi.mock('@/hooks/useRunFlagshipReport', () => ({
@@ -22,7 +25,7 @@ vi.mock('@/hooks/useRunFlagshipReport', () => ({
 
 vi.mock('@/api/reformStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/reformStore')>();
-  return { ...actual, getReformStore: () => ({ create: mockCreate, update: vi.fn() }) };
+  return { ...actual, getReformStore: () => ({ create: mockCreate, update: mockUpdate }) };
 });
 
 function HeaderHarness() {
@@ -147,6 +150,40 @@ describe('DraftHeader', () => {
       ref: 'ask-keyword-v0',
     });
     await waitFor(() => expect(getDraftReform()).toBeNull());
+  });
+
+  test('given a reform saved on this browser is edited while signed in then saving explains why it cannot', async () => {
+    // Given: the account store refuses the browser ID
+    const user = userEvent.setup();
+    mockUpdate.mockRejectedValue(new BrowserOnlyIdError());
+    loadReformIntoDraft(
+      {
+        id: 'rf-browser1',
+        userId: 'anonymous',
+        countryId: 'us',
+        label: 'Saved signed out',
+        parameters: [
+          {
+            name: 'gov.irs.credits.ctc.amount.base',
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 }],
+          },
+        ],
+        baseline: 'current-law',
+        provenance: { source: 'manual' },
+      },
+      () => ({ breadcrumb: 'CTC', unit: 'currency-USD', baselineValue: 2000 })
+    );
+    renderHeader();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    // Then
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This was saved on this browser while signed out. Sign out to open it.'
+    );
+    expect(mockUpdate).toHaveBeenCalledWith('rf-browser1', expect.anything());
+    expect(getDraftReform()?.editingReformId).toBe('rf-browser1');
   });
 
   test('given discard then the draft clears without saving', async () => {

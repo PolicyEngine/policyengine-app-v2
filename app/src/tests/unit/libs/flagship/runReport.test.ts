@@ -10,7 +10,6 @@ import {
 
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
-const mockCreateReportAndAssociate = vi.fn();
 const mockCreateReport = vi.fn();
 
 vi.mock('@/api/policy', () => ({
@@ -20,9 +19,16 @@ vi.mock('@/api/simulation', () => ({
   createSimulation: (...args: any[]) => mockCreateSimulation(...args),
 }));
 vi.mock('@/api/report', () => ({
-  createReportAndAssociateWithUser: (...args: any[]) => mockCreateReportAndAssociate(...args),
   createReport: (...args: any[]) => mockCreateReport(...args),
 }));
+
+/** The localStorage keys the legacy calculator keeps its saved work under. */
+const LEGACY_KEYS = [
+  'user-policy-associations',
+  'user-population-households',
+  'user-simulation-associations',
+  'user-report-associations',
+];
 
 const REFORM_ROW_ID = '55555555-5555-4555-8555-555555555555';
 
@@ -42,10 +48,7 @@ describe('runFlagshipReport', () => {
     mockCreateSimulation
       .mockResolvedValueOnce({ result: { simulation_id: '101' } })
       .mockResolvedValueOnce({ result: { simulation_id: '102' } });
-    mockCreateReportAndAssociate.mockResolvedValue({
-      metadata: { baseReportId: '55', userReportId: 'sur-abc', countryId: 'us' },
-    });
-    mockCreateReport.mockResolvedValue({ id: 56, country_id: 'us', year: '2026' });
+    mockCreateReport.mockResolvedValue({ id: 55, country_id: 'us', year: '2026' });
   });
 
   test('starts both simulations before either finishes and waits for both before creating the report', async () => {
@@ -71,10 +74,10 @@ describe('runFlagshipReport', () => {
       currentLawId: 2,
     });
     await vi.waitFor(() => expect(mockCreateSimulation).toHaveBeenCalledTimes(2));
-    expect(mockCreateReportAndAssociate).not.toHaveBeenCalled();
+    expect(mockCreateReport).not.toHaveBeenCalled();
     resolveReform({ result: { simulation_id: '102' } });
     await Promise.resolve();
-    expect(mockCreateReportAndAssociate).not.toHaveBeenCalled();
+    expect(mockCreateReport).not.toHaveBeenCalled();
     resolveBaseline({ result: { simulation_id: '101' } });
     await expect(pending).resolves.toBe('55');
   });
@@ -105,12 +108,11 @@ describe('runFlagshipReport', () => {
       population_type: 'geography',
       policy_id: 77,
     });
-    expect(mockCreateReportAndAssociate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        countryId: 'us',
-        payload: { simulation_1_id: 101, simulation_2_id: 102, year: '2026' },
-      })
-    );
+    expect(mockCreateReport).toHaveBeenCalledWith('us', {
+      simulation_1_id: 101,
+      simulation_2_id: 102,
+      year: '2026',
+    });
   });
 
   test('given a run then provenance is stashed under the API report id', async () => {
@@ -141,7 +143,7 @@ describe('runFlagshipReport', () => {
     expect(mockCreatePolicy).not.toHaveBeenCalled();
   });
 
-  test('given a signed-out run then the local association and local record are written', async () => {
+  test('given a signed-out run then only the v3 keys are written, never the legacy ones', async () => {
     // When
     await runFlagshipReport({
       countryId: 'us',
@@ -153,10 +155,6 @@ describe('runFlagshipReport', () => {
     });
 
     // Then
-    expect(mockCreateReportAndAssociate).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'anonymous', label: 'CTC expansion' })
-    );
-    expect(mockCreateReport).not.toHaveBeenCalled();
     const records = JSON.parse(localStorage.getItem('pe-flagship-reports') ?? '[]');
     expect(records).toEqual([
       expect.objectContaining({
@@ -166,6 +164,10 @@ describe('runFlagshipReport', () => {
         reformId: 'rf-local1',
       }),
     ]);
+    expect(localStorage.getItem(REPORT_META_KEY)).not.toBeNull();
+    for (const legacyKey of LEGACY_KEYS) {
+      expect(localStorage.getItem(legacyKey)).toBeNull();
+    }
   });
 
   test('given a signed-in run then exactly one account association is written', async () => {
@@ -187,18 +189,17 @@ describe('runFlagshipReport', () => {
     });
 
     // Then
-    expect(reportId).toBe('56');
+    expect(reportId).toBe('55');
     expect(mockCreateReport).toHaveBeenCalledWith('us', {
       simulation_1_id: 101,
       simulation_2_id: 102,
       year: '2027',
     });
-    expect(mockCreateReportAndAssociate).not.toHaveBeenCalled();
     expect(accountStore.create).toHaveBeenCalledTimes(1);
     expect(accountStore.create).toHaveBeenCalledWith({
       userId: MOCK_USER_ID,
       countryId: 'us',
-      apiReportId: '56',
+      apiReportId: '55',
       title: 'CTC expansion',
       sourceNote: 'Federal · Introduced',
       provisions: [PROVISION],
@@ -206,8 +207,10 @@ describe('runFlagshipReport', () => {
       reformId: REFORM_ROW_ID,
     });
     expect(localStorage.getItem('pe-flagship-reports')).toBeNull();
-    expect(localStorage.getItem('user-report-associations')).toBeNull();
-    expect(readReportMeta('56')?.title).toBe('CTC expansion');
+    for (const legacyKey of LEGACY_KEYS) {
+      expect(localStorage.getItem(legacyKey)).toBeNull();
+    }
+    expect(readReportMeta('55')?.title).toBe('CTC expansion');
   });
 
   test('given a signed-in run then its provenance stays out of localStorage and goes on sign-out', async () => {
@@ -228,9 +231,9 @@ describe('runFlagshipReport', () => {
 
     // Then: the next person on this browser cannot find it
     expect(localStorage.getItem(REPORT_META_KEY)).toBeNull();
-    expect(readReportMeta('56')?.title).toBe('CTC expansion');
+    expect(readReportMeta('55')?.title).toBe('CTC expansion');
     forgetAccountReportMeta();
-    expect(readReportMeta('56')).toBeNull();
+    expect(readReportMeta('55')).toBeNull();
   });
 
   test('given the account association fails then the signed-in run fails', async () => {

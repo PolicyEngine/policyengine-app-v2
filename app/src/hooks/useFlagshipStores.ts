@@ -35,7 +35,7 @@ export function useV3SavedWork(): V3SavedWork {
     () =>
       status === 'signed_in' && subject && isAssociationCountry(countryId)
         ? {
-            account: { client, countryId, userId: subject },
+            account: { client, countryId },
             scope: `account:${subject}`,
           }
         : { account: null, scope: 'browser' },
