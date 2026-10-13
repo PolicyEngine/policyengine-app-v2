@@ -134,7 +134,7 @@ describe('DraftTable', () => {
       'Current law',
       'Your reform',
     ]);
-    expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
+    expect(screen.getByRole('tab', { name: 'New value' })).toHaveAttribute('data-state', 'active');
   });
 
   test('given custom dates then every member is set over the same range together', async () => {
@@ -292,7 +292,7 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-      expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute(
+      expect(screen.getByRole('tab', { name: 'New value' })).toHaveAttribute(
         'data-state',
         'active'
       );
@@ -337,7 +337,7 @@ describe('DraftTable', () => {
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
       await user.click(screen.getByRole('tab', { name: 'Indexed' }));
-      await user.click(screen.getByRole('tab', { name: 'One value' }));
+      await user.click(screen.getByRole('tab', { name: 'New value' }));
 
       expect(provision(CTC_PATH)?.intervals).toBeUndefined();
       expect(provision(CTC_PATH)?.growth).toBeUndefined();
@@ -350,14 +350,14 @@ describe('DraftTable', () => {
 
       await user.click(screen.getByRole('tab', { name: 'Indexed' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
-      await user.click(screen.getByRole('tab', { name: 'One value' }));
+      await user.click(screen.getByRole('tab', { name: 'New value' }));
 
       const intervals = provision(CTC_PATH)?.intervals ?? [];
       expect(intervals.at(-1)).toMatchObject({ endDate: FOREVER, value: 3000 });
       expect(intervals.every((interval) => interval.value === 3000)).toBe(true);
     });
 
-    test("then an amount current law indexes opens indexed at current law's rate", async () => {
+    test("then an amount current law indexes opens as a new value; Indexed starts at current law's rate", async () => {
       const user = userEvent.setup();
       addDraftProvision('us', {
         path: EXEMPTION_PATH,
@@ -369,7 +369,12 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
 
-      expect(screen.getByRole('tab', { name: 'Indexed' })).toHaveAttribute('data-state', 'active');
+      // A new value holds as set unless Indexed is chosen.
+      expect(screen.getByRole('tab', { name: 'New value' })).toHaveAttribute(
+        'data-state',
+        'active'
+      );
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
       expect(screen.getByText(/grows at current law's rate from 2026/)).toBeInTheDocument();
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
@@ -388,6 +393,21 @@ describe('DraftTable', () => {
       expect(screen.queryByRole('option', { name: 'None' })).not.toBeInTheDocument();
     });
 
+    test('then a new value can start in a later year, the years before at current law', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      await pick(user, 'Applies from', '2027');
+
+      // 2026 is current law again; the 3,000 runs from 2027.
+      expect(provision(CTC_PATH)?.intervals).toEqual([
+        { startDate: '2027-01-01', endDate: FOREVER, value: 3000 },
+      ]);
+      expect(screen.getByLabelText('Child tax credit base amount, 2027')).toBeInTheDocument();
+    });
+
     test('then a value set before indexing existed opens as one value', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', {
@@ -400,7 +420,7 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
 
-      expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute(
+      expect(screen.getByRole('tab', { name: 'New value' })).toHaveAttribute(
         'data-state',
         'active'
       );
@@ -434,6 +454,7 @@ describe('DraftTable', () => {
       });
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // The model runs to 2027 here, so 2027 is the only later start.
