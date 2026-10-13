@@ -15,7 +15,7 @@ import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSoc
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
-type CongressionalMode = 'absolute' | 'relative' | 'winner-pct' | 'loser-pct';
+export type CongressionalMode = 'absolute' | 'relative' | 'winner-pct' | 'loser-pct';
 const CONGRESSIONAL_MODE_OPTIONS = [
   { label: 'Absolute', value: 'absolute' as CongressionalMode },
   { label: 'Relative', value: 'relative' as CongressionalMode },
@@ -203,29 +203,56 @@ function DistrictListColumn({
  * the navigable map with top and bottom rankings alongside, in normal
  * document flow. Must be rendered inside a CongressionalDistrictDataProvider.
  */
-export default function DistrictImpactCard({ output }: { output: SocietyWideReportOutput }) {
+/** One district's results, in the shape the API's district breakdown uses. */
+export interface DistrictImpactRow {
+  district: string;
+  average_household_income_change: number;
+  /** Absent from the legislative tracker's stored districts. */
+  relative_household_income_change?: number;
+  winner_percentage?: number;
+  loser_percentage?: number;
+}
+
+export default function DistrictImpactCard({
+  output,
+  districts,
+  modes,
+}: {
+  /** The full results, whose district breakdown the card maps. */
+  output?: SocietyWideReportOutput;
+  /** Districts given directly, e.g. a bill's stored estimates, in place of `output`'s. */
+  districts?: DistrictImpactRow[];
+  /** The views to offer, e.g. without "Relative" where the data lacks it. */
+  modes?: CongressionalMode[];
+}) {
   const { labelLookup, stateCode } = useCongressionalDistrictData();
-  const [congressionalMode, setCongressionalMode] = useState<CongressionalMode>('absolute');
+  const modeOptions = modes
+    ? CONGRESSIONAL_MODE_OPTIONS.filter((option) => modes.includes(option.value))
+    : CONGRESSIONAL_MODE_OPTIONS;
+  const [congressionalMode, setCongressionalMode] = useState<CongressionalMode>(
+    modeOptions[0]?.value ?? 'absolute'
+  );
   const [mapVisualizationType, setMapVisualizationType] =
     useState<MapVisualizationType>('geographic');
   const isOutcomeMode = congressionalMode === 'winner-pct' || congressionalMode === 'loser-pct';
   const changeMetric = congressionalMode === 'relative' ? 'relative' : 'absolute';
   const outcomeMetric = congressionalMode === 'winner-pct' ? 'winner' : 'loser';
 
-  // Check if output already has district data (from nationwide calculation)
-  const savedDistricts = useMemo(() => {
-    if (!('congressional_district_impact' in output)) {
+  // Districts given directly, or the output's own breakdown (from the full calculation).
+  const savedDistricts = useMemo((): DistrictImpactRow[] | null => {
+    const source: DistrictImpactRow[] | undefined = districts
+      ? districts
+      : output && 'congressional_district_impact' in output
+        ? (output as ReportOutputSocietyWideUS).congressional_district_impact?.districts
+        : undefined;
+    if (!source) {
       return null;
     }
-    const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
-    if (!districtData?.districts) {
-      return null;
-    }
-    return districtData.districts.map((d) => ({
+    return source.map((d) => ({
       ...d,
       district: normalizeDistrictId(d.district),
     }));
-  }, [output]);
+  }, [districts, output]);
 
   const savedDistrictAvailability = useMemo(
     () =>
@@ -245,7 +272,7 @@ export default function DistrictImpactCard({ output }: { output: SocietyWideRepo
       value:
         changeMetric === 'absolute'
           ? item.average_household_income_change
-          : item.relative_household_income_change,
+          : (item.relative_household_income_change ?? 0),
     }));
   }, [changeMetric, labelLookup, savedDistricts]);
 
@@ -324,7 +351,7 @@ export default function DistrictImpactCard({ output }: { output: SocietyWideRepo
           value:
             changeMetric === 'absolute'
               ? d.average_household_income_change
-              : d.relative_household_income_change,
+              : (d.relative_household_income_change ?? 0),
         });
       }
     }
@@ -416,7 +443,7 @@ export default function DistrictImpactCard({ output }: { output: SocietyWideRepo
           value={congressionalMode}
           onValueChange={(value) => setCongressionalMode(value as CongressionalMode)}
           size="xs"
-          options={CONGRESSIONAL_MODE_OPTIONS}
+          options={modeOptions}
         />
       </div>
       {visibleErrorCount > 0 && (

@@ -43,8 +43,8 @@ describe('formatValue', () => {
     [2000, 'currency-USD', '$2,000'],
     [12570, 'currency-GBP', '£12,570'],
     [0.0445, '/1', '4.45%'],
-    [true, null, 'on'],
-    [false, null, 'off'],
+    [true, null, 'true'],
+    [false, null, 'false'],
     [undefined, null, '—'],
     ['text', null, 'text'],
   ])('given %s with unit %s then renders %s', (value, unit, expected) => {

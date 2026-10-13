@@ -70,6 +70,7 @@ const FEED_BILLS = [
     id: 'ut-hb-106',
     countryId: 'us' as const,
     jurisdiction: 'Utah',
+    state: 'UT',
     title: 'HB 106 — income tax rate reduction',
     status: 'Enacted',
     summary: 'Reduces the individual income tax rate from 4.55% to 4.45%.',
@@ -135,10 +136,22 @@ describe('ReformsPage', () => {
     renderReforms();
 
     expect(await screen.findByText(/HB 106/)).toBeInTheDocument();
-    // "Utah" appears as the card eyebrow and in the place filter
-    expect(screen.getAllByText('Utah').length).toBeGreaterThanOrEqual(2);
+    // "Utah" is the card's eyebrow; the place picker lists it only when open.
+    expect(screen.getByText('Utah')).toBeInTheDocument();
     // Cards, not accordions: no expanded actions yet
     expect(screen.queryByRole('button', { name: /open as draft reform/i })).not.toBeInTheDocument();
+  });
+
+  test('given a bill opens then no place-and-status line sits over its title', async () => {
+    const user = userEvent.setup();
+    renderReforms();
+
+    await user.click(await screen.findByText('Child tax credit expansion proposal'));
+
+    expect(
+      screen.getByRole('heading', { name: 'Child tax credit expansion proposal' })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Federal · Introduced/)).not.toBeInTheDocument();
   });
 
   test('given a bill card is clicked then its detail opens with actions', async () => {
@@ -178,10 +191,29 @@ describe('ReformsPage', () => {
     renderReforms();
 
     await screen.findByText(/HB 106/);
-    await user.selectOptions(screen.getByLabelText(/filter by state/i), 'Utah');
+    await user.click(screen.getByRole('button', { name: 'Place: All jurisdictions' }));
+    await user.click(await screen.findByRole('option', { name: /utah/i }));
 
+    expect(screen.getByRole('button', { name: 'Place: Utah' })).toBeInTheDocument();
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();
     expect(screen.queryByText('Child tax credit expansion proposal')).not.toBeInTheDocument();
+  });
+
+  test('given federal only then state bills leave, and each place says how many it holds', async () => {
+    const user = userEvent.setup();
+    renderReforms();
+
+    await screen.findByText(/HB 106/);
+    await user.click(screen.getByRole('button', { name: 'Place: All jurisdictions' }));
+    // Three bills: two federal, one in Utah.
+    expect(
+      await screen.findByRole('option', { name: /all jurisdictions\s*3/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /utah\s*1/i })).toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: /federal only\s*2/i }));
+
+    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+    expect(screen.getByText('Child tax credit expansion proposal')).toBeInTheDocument();
   });
 
   test('given a search then bill cards filter', async () => {

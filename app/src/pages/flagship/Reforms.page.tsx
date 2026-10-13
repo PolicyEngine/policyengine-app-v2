@@ -13,9 +13,10 @@ import {
 } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { TrackedBill } from '@/api/billFeed';
+import { billRunYear, TrackedBill } from '@/api/billFeed';
 import { getReformStore } from '@/api/reformStore';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import ScopePicker from '@/components/flagship/ScopePicker';
 import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
@@ -33,6 +34,7 @@ import {
   loadReformIntoDraft,
   setDraftLabel,
 } from '@/libs/draftReform';
+import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
@@ -54,6 +56,21 @@ type Tab = 'bills' | 'yours';
 
 /** Bills render in pages of this size; scrolling near the end reveals the next page. */
 const BILLS_PAGE_SIZE = 12;
+
+/** The list's filter controls — place and search — at one height and border. */
+const filterControl: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: spacing.xs,
+  height: 34,
+  padding: `0 ${spacing.md}`,
+  border: `1px solid ${colors.border.light}`,
+  borderRadius: spacing.radius.container,
+  background: colors.background.primary,
+  fontSize: typography.fontSize.sm,
+  fontFamily: typography.fontFamily.primary,
+  color: colors.text.secondary,
+};
 
 interface ProvisionView {
   path: string;
@@ -298,17 +315,14 @@ export default function ReformsPage() {
       ? formatLabelParts(getHierarchicalLabels(path, parameters))
       : (fallback ?? path);
 
-  const billProvisions = (bill: TrackedBill): ProvisionView[] =>
-    bill.provisions.map((provision) => {
-      const metadata = parameters?.[provision.path];
-      return {
-        path: provision.path,
-        breadcrumb: resolveBreadcrumb(provision.path, provision.fallbackBreadcrumb),
-        unit: metadata?.unit ?? null,
-        baselineValue: getCurrentValue(metadata?.values),
-        value: provision.value,
-      };
+  // Each with its dated values, read against the law in the bill's run year
+  // — or, for a bill that is law already, the law the tracker compared it with.
+  const billProvisions = (bill: TrackedBill) => {
+    const year = billRunYear(bill.provisions);
+    return billReportProvisions(bill.provisions, parameters, year, {
+      priorLaw: billAlreadyCurrentLaw(bill.provisions, parameters, year),
     });
+  };
 
   const reformProvisions = (reform: Reform): ProvisionView[] =>
     reform.parameters.map((parameter) => {
@@ -322,10 +336,30 @@ export default function ReformsPage() {
       };
     });
 
-  const places = useMemo(
-    () => [...new Set(bills.map((bill) => bill.jurisdiction))].sort((a, b) => a.localeCompare(b)),
-    [bills]
-  );
+  // Places with bills, for the place picker: the states by name, and how
+  // many bills each scope holds. Federal bills carry no state.
+  const { placeStates, placeCounts } = useMemo(() => {
+    const states = new Map<string, string>();
+    const counts: Record<string, number> = { all: bills.length, federal: 0 };
+    for (const bill of bills) {
+      const code = bill.state?.toLowerCase();
+      if (code) {
+        states.set(code, bill.jurisdiction);
+        counts[code] = (counts[code] ?? 0) + 1;
+      } else {
+        counts.federal += 1;
+      }
+    }
+    return {
+      placeStates: [...states]
+        .map(([code, label]) => ({ code, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+      placeCounts: counts,
+    };
+  }, [bills]);
+  const inPlace = (bill: TrackedBill) =>
+    placeFilter === 'all' ||
+    (placeFilter === 'federal' ? !bill.state : bill.state?.toLowerCase() === placeFilter);
 
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matches = (haystack: string) =>
@@ -333,9 +367,7 @@ export default function ReformsPage() {
 
   const visibleBills = bills
     .filter(
-      (bill) =>
-        (placeFilter === 'all' || bill.jurisdiction === placeFilter) &&
-        matches(`${bill.title} ${bill.jurisdiction} ${bill.summary}`)
+      (bill) => inPlace(bill) && matches(`${bill.title} ${bill.jurisdiction} ${bill.summary}`)
     )
     .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 
@@ -452,10 +484,6 @@ export default function ReformsPage() {
     const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
     const worseOff = winners && ((winners.loseMore5Pct ?? 0) + (winners.loseLess5Pct ?? 0)) * 100;
     const poverty = impact?.poverty;
-    const povertyDetail =
-      typeof poverty?.baselineRate === 'number' && typeof poverty?.reformRate === 'number'
-        ? `${(poverty.baselineRate * 100).toFixed(1)}% → ${(poverty.reformRate * 100).toFixed(1)}%`
-        : undefined;
     const revenue = selectedBill.impacts?.revenue ?? impact?.budgetary?.stateRevenueImpact;
     const money = (value: number) => {
       const { display, label } = formatBudgetaryImpact(value);
@@ -470,14 +498,9 @@ export default function ReformsPage() {
       <WorkspaceLayout>
         <Stack style={{ gap: spacing.lg }}>
           {backLink}
-          <Stack style={{ gap: spacing.xs }}>
-            <Eyebrow>
-              {selectedBill.jurisdiction} · {selectedBill.status}
-            </Eyebrow>
-            <Title order={1} style={{ margin: 0 }}>
-              {selectedBill.title}
-            </Title>
-          </Stack>
+          <Title order={1} style={{ margin: 0 }}>
+            {selectedBill.title}
+          </Title>
           {selectedBill.summary && (
             <Text
               style={{
@@ -498,7 +521,6 @@ export default function ReformsPage() {
                 <StatTile
                   value={`${poverty.percentChange > 0 ? '+' : '−'}${Math.abs(poverty.percentChange).toFixed(1)}%`}
                   label="poverty rate change"
-                  detail={povertyDetail}
                 />
               )}
               {typeof betterOff === 'number' && betterOff > 0 && (
@@ -510,7 +532,9 @@ export default function ReformsPage() {
             </Stack>
           )}
           {provisions.length > 0 ? (
-            <ProvisionList provisions={provisions} />
+            // A bill's value in today's law has passed, and was scored against the law
+            // before it, so "current law" would mislead; the value reads alone.
+            <ProvisionList provisions={provisions} sameValueNote="" />
           ) : (
             <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
               Parameter mapping for this bill hasn't been published yet — report and draft actions
@@ -533,10 +557,13 @@ export default function ReformsPage() {
             ) : (
               <Button
                 onClick={() =>
+                  // The title says which bill; no place-and-status line under it.
                   runReport.run(
                     selectedBill.title,
-                    `${selectedBill.jurisdiction} · ${selectedBill.status}`,
-                    provisions
+                    '',
+                    provisions,
+                    null,
+                    billRunYear(selectedBill.provisions)
                   )
                 }
                 disabled={runReport.isRunning || provisions.length === 0}
@@ -781,41 +808,17 @@ export default function ReformsPage() {
             );
           })}
           <div style={{ flex: 1 }} />
-          {tab === 'bills' && places.length > 1 && (
-            <select
+          {tab === 'bills' && placeStates.length + (placeCounts.federal > 0 ? 1 : 0) > 1 && (
+            <ScopePicker
+              label="Place"
               value={placeFilter}
-              onChange={(event) => setPlaceFilter(event.target.value)}
-              aria-label="Filter by state"
-              style={{
-                padding: `${spacing.xs} ${spacing.sm}`,
-                border: `1px solid ${colors.border.light}`,
-                borderRadius: 8,
-                fontSize: typography.fontSize.sm,
-                fontFamily: typography.fontFamily.primary,
-                background: colors.background.primary,
-                color: colors.text.primary,
-              }}
-            >
-              <option value="all">United States</option>
-              {places.map((place) => (
-                <option key={place} value={place}>
-                  {place}
-                </option>
-              ))}
-            </select>
+              onChange={setPlaceFilter}
+              states={placeStates}
+              counts={placeCounts}
+              triggerStyle={filterControl}
+            />
           )}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-              padding: `${spacing.xs} ${spacing.md}`,
-              border: `1px solid ${colors.border.light}`,
-              borderRadius: 8,
-              background: colors.background.primary,
-              width: 220,
-            }}
-          >
+          <div style={{ ...filterControl, width: 220 }}>
             <IconSearch size={14} color={colors.text.secondary} />
             <input
               value={query}

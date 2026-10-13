@@ -11,6 +11,8 @@ interface ValueInputProps {
   param: ParameterMetadata;
   value: any;
   onChange: (value: any) => void;
+  /** The box's name, where no labelled wrapper names it. */
+  ariaLabel?: string;
 }
 
 const CURRENCY_PREFIXES: Record<string, string> = {
@@ -38,14 +40,14 @@ function displayText(value: unknown, percentage: boolean): string {
  * or Enter) shows a check that the new value is kept. Yes/no values keep
  * the editor's switch.
  */
-export default function ValueInput({ param, value, onChange }: ValueInputProps) {
+export default function ValueInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
   if (param.unit === 'bool') {
     return <ValueInputBox param={param} value={value} onChange={onChange} />;
   }
-  return <NumberInput param={param} value={value} onChange={onChange} />;
+  return <NumberInput param={param} value={value} onChange={onChange} ariaLabel={ariaLabel} />;
 }
 
-function NumberInput({ param, value, onChange }: ValueInputProps) {
+function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
   const percentage = param.unit === '/1';
   const prefix = CURRENCY_PREFIXES[String(param.unit)] ?? '';
   // While focused, the box shows what is typed, even an empty field;
@@ -80,6 +82,7 @@ function NumberInput({ param, value, onChange }: ValueInputProps) {
       <Input
         type="number"
         min={0}
+        aria-label={ariaLabel}
         value={typed ?? displayText(value, percentage)}
         onFocus={() => {
           startValue.current = value;
