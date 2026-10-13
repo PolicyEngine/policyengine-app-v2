@@ -339,23 +339,31 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                 </span>
               </button>
 
-              {/* Open, the row is a heading: its details below show every value. */}
+              {/* Open, the row keeps its columns, read-only: the details below edit them. */}
               {lone ? (
                 <>
                   <span
                     className={WIDE_ONLY}
-                    title={open ? undefined : baselineText}
+                    title={baselineText}
                     style={{
                       ...truncate,
                       fontSize: typography.fontSize.sm,
                       color: colors.text.secondary,
                     }}
                   >
-                    {open ? null : baselineText}
+                    {baselineText}
                   </span>
 
                   <div style={{ minWidth: 0 }}>
-                    {open ? null : !isEditableValue(lone.baselineValue) ? (
+                    {open ? (
+                      <SummaryButton
+                        onClick={() => toggle(row.key, true)}
+                        title={changed[0]?.value}
+                        accent={changed.length > 0}
+                      >
+                        {changed[0]?.value || formatValue(lone.value, lone.unit)}
+                      </SummaryButton>
+                    ) : !isEditableValue(lone.baselineValue) ? (
                       // Only numbers and switches can be offered; this one came
                       // from an older saved reform.
                       <span
@@ -420,8 +428,10 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                   </div>
                 </>
               ) : (
-                <div className="tw:@min-[640px]:col-span-2" style={{ minWidth: 0 }}>
-                  {open ? null : (
+                <>
+                  {/* A breakdown has a value for each member: its details list them. */}
+                  <span className={WIDE_ONLY} />
+                  <div style={{ minWidth: 0 }}>
                     <SummaryButton
                       onClick={() => toggle(row.key, true)}
                       title={groupSummary || undefined}
@@ -429,12 +439,12 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                     >
                       {groupSummary || 'No values changed yet'}
                     </SummaryButton>
-                  )}
-                </div>
+                  </div>
+                </>
               )}
 
               <span className={WIDE_ONLY}>
-                {open || !when ? null : <Chip title={whenTitle}>{when}</Chip>}
+                {when ? <Chip title={whenTitle}>{when}</Chip> : null}
               </span>
 
               <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
