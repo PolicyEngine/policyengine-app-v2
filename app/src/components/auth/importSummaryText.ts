@@ -1,4 +1,5 @@
 import type { LocalImportSummary } from '@/libs/auth/localImport';
+import { IMPORT_SKIP_REASONS } from '@/types/v2User';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
 function items(count: number): string {
@@ -8,13 +9,19 @@ function items(count: number): string {
 /** Plain-language lines describing an import's outcome. */
 export function importSummaryLines(summary: LocalImportSummary): string[] {
   const lines = [`Saved ${items(summary.imported)} to your account.`];
-  if (summary.skipped.length > 0) {
+  const missing = summary.skipped.filter(
+    (note) => note.reason === IMPORT_SKIP_REASONS.UNKNOWN_LEGACY_REFERENCE
+  ).length;
+  const notAccepted = summary.skipped.length - missing + summary.invalid.length;
+  if (missing > 0) {
     lines.push(
-      `${items(summary.skipped.length)} could not be saved because what they refer to no longer exists.`
+      `${items(missing)} could not be saved because what ${
+        missing === 1 ? 'it refers' : 'they refer'
+      } to no longer exists.`
     );
   }
-  if (summary.invalid.length > 0) {
-    lines.push(`${items(summary.invalid.length)} could not be saved.`);
+  if (notAccepted > 0) {
+    lines.push(`${items(notAccepted)} could not be saved.`);
   }
   if (summary.unsupported.length > 0) {
     const countries = [

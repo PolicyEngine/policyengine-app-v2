@@ -231,6 +231,14 @@ export interface ImportRequestBody {
   reports?: ImportReportItem[];
 }
 
+/** Why the server skipped an import item (`skipped[].reason`). */
+export const IMPORT_SKIP_REASONS = {
+  /** The item did not validate; the server may not know its client_ref. */
+  INVALID: 'invalid',
+  /** The v1 artifact it points at does not exist in that country. */
+  UNKNOWN_LEGACY_REFERENCE: 'unknown_legacy_reference',
+} as const;
+
 export interface ImportSkippedItem {
   /** Null when the server could not parse the item at all. */
   client_ref: string | null;

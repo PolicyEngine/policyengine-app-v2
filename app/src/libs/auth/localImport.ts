@@ -15,6 +15,7 @@ import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation
 import type { UserReport } from '@/types/ingredients/UserReport';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import {
+  IMPORT_SKIP_REASONS,
   isAssociationCountry,
   type AssociationCountryId,
   type ImportHouseholdItem,
@@ -22,7 +23,6 @@ import {
   type ImportReportItem,
   type ImportRequestBody,
   type ImportSimulationItem,
-  type ImportSkippedItem,
 } from '@/types/v2User';
 import {
   IMPORT_SKIPPED_KEY,
@@ -46,8 +46,9 @@ import {
  * - Requests are per country and at most 500 items (and ~1 MB) each;
  *   policies go first so reports can reference reforms by `client_ref`.
  * - The returned id_map is kept per user, so old local links resolve;
- *   imported and skipped items are not offered again. Local data is
- *   never deleted.
+ *   imported and skipped items are not offered again. An item the server
+ *   neither saved nor named (it skips unparseable items without a
+ *   client_ref) counts as skipped too. Local data is never deleted.
  */
 
 export const LOCAL_STORAGE_KEYS = {
@@ -99,7 +100,8 @@ export interface LocalImportPlan {
 
 export interface LocalImportSummary {
   imported: number;
-  skipped: ImportSkippedItem[];
+  /** Items the server did not save; `reason` is one of IMPORT_SKIP_REASONS. */
+  skipped: LocalItemNote[];
   unsupported: LocalItemNote[];
   invalid: LocalItemNote[];
   failed: LocalItemNote[];
@@ -395,6 +397,7 @@ export function countImportableItems(userId: string): number {
   return planLocalImport(userId).items.length;
 }
 
+/** Whether this account has dismissed the import prompt in this browser. */
 export function isImportDeclined(userId: string): boolean {
   try {
     const declined = JSON.parse(localStorage.getItem(IMPORT_DECLINED_KEY) ?? '{}');
@@ -404,6 +407,11 @@ export function isImportDeclined(userId: string): boolean {
   }
 }
 
+/**
+ * Stops offering the import prompt to this account in this browser, after
+ * "Not now" or after an import ran. The account page still offers what
+ * is left.
+ */
 export function declineImport(userId: string): void {
   try {
     const declined = JSON.parse(localStorage.getItem(IMPORT_DECLINED_KEY) ?? '{}');
@@ -437,7 +445,7 @@ export async function runLocalImport({
 }: RunLocalImportOptions): Promise<LocalImportSummary> {
   const plan = planLocalImport(userId, snapshot);
   const failed: LocalItemNote[] = [];
-  const skipped: ImportSkippedItem[] = [];
+  const skipped: LocalItemNote[] = [];
   let imported = 0;
 
   // Reforms first need a v1 policy to point at.
@@ -493,20 +501,33 @@ export async function runLocalImport({
         recordImportedIds(userId, idMap);
         imported += chunk.filter((item) => result.id_map[item.clientRef]).length;
 
-        const skippedMap: Record<string, string> = {};
+        // Every item the server did not save is skipped: with the reason it
+        // gave, or as invalid when it could not name the item (unparseable
+        // items come back without a client_ref). Otherwise it would stay
+        // pending and the import would be offered again on every visit.
+        const reasons = new Map<string, string>();
         for (const entry of result.skipped ?? []) {
-          // Items the server could not parse may come back without a client_ref.
-          if (entry.client_ref === null) {
+          if (entry.client_ref !== null) {
+            reasons.set(entry.client_ref, entry.reason);
+          }
+        }
+        const skippedMap: Record<string, string> = {};
+        for (const item of chunk) {
+          if (result.id_map[item.clientRef]) {
             continue;
           }
-          skippedMap[entry.client_ref] = entry.reason;
-          const item = chunk.find((candidate) => candidate.clientRef === entry.client_ref);
-          item?.aliases.forEach((alias) => {
-            skippedMap[alias] = entry.reason;
+          const reason = reasons.get(item.clientRef) ?? IMPORT_SKIP_REASONS.INVALID;
+          for (const ref of [item.clientRef, ...item.aliases]) {
+            skippedMap[ref] = reason;
+          }
+          skipped.push({
+            kind: item.kind,
+            clientRef: item.clientRef,
+            countryId: item.countryId,
+            reason,
           });
         }
         recordImportSkipped(userId, skippedMap);
-        skipped.push(...(result.skipped ?? []));
       } catch (error) {
         // Later chunks may reference this one; leave the rest for a retry
         // (imports are idempotent per client_ref).

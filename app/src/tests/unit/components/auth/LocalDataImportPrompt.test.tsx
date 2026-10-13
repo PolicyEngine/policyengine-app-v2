@@ -4,7 +4,12 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import LocalDataImportPrompt from '@/components/auth/LocalDataImportPrompt';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { isImportDeclined } from '@/libs/auth/localImport';
-import { mockMeItem, okResponse, PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  errorResponse,
+  mockMeItem,
+  okResponse,
+  PE_USER_ID,
+} from '@/tests/fixtures/api/v2UserMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -104,5 +109,44 @@ describe('LocalDataImportPrompt', () => {
     expect(url).toBe('https://api.policyengine.org/v2/me/imports?country_id=us');
     expect(init.method).toBe('POST');
     expect(mockMeItem.id).toBe(PE_USER_ID);
+  });
+
+  test('given an import with a failed request then closing does not bring the prompt back', async () => {
+    // Given: the request fails, so every item is still pending afterwards
+    const user = userEvent.setup();
+    seedManySimulations(2);
+    fetchMock.mockImplementation(async () => errorResponse(503, 'Saved work is unavailable'));
+    const { unmount } = renderPrompt(signedInAuthValue());
+    await user.click(await screen.findByRole('button', { name: 'Save to my account' }));
+    await screen.findByText('2 items did not go through. You can try again later.');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    unmount();
+    renderPrompt(signedInAuthValue());
+
+    // Then
+    expect(isImportDeclined(PE_USER_ID)).toBe(true);
+    expect(screen.queryByText(/save the work on this device/i)).not.toBeInTheDocument();
+  });
+
+  test('given a finished import then "Done" is remembered too', async () => {
+    // Given
+    const user = userEvent.setup();
+    seedManySimulations(2);
+    fetchMock.mockImplementation(async () =>
+      okResponse({
+        id_map: { 'sus-0': 'uuid-0' },
+        skipped: [{ client_ref: null, reason: 'invalid' }],
+      })
+    );
+    renderPrompt(signedInAuthValue());
+    await user.click(await screen.findByRole('button', { name: 'Save to my account' }));
+
+    // When
+    await user.click(await screen.findByRole('button', { name: 'Done' }));
+
+    // Then
+    expect(isImportDeclined(PE_USER_ID)).toBe(true);
   });
 });

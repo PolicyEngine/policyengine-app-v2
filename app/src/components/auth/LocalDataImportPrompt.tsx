@@ -18,8 +18,9 @@ import { importSummaryLines } from './importSummaryText';
 /**
  * Offered once per account after signing in (US/UK), when this browser
  * holds saved work the account does not have yet. Saving copies it to
- * the account; nothing is deleted from the device. "Not now" is
- * remembered; the account page can still save it later.
+ * the account; nothing is deleted from the device. Closing the prompt,
+ * with "Not now" or after an import, is remembered; the account page can
+ * still save what is left.
  */
 export default function LocalDataImportPrompt() {
   const localImport = useLocalDataImport();
@@ -41,13 +42,13 @@ export default function LocalDataImportPrompt() {
   const running = localImport.state === 'running';
   const finished = localImport.state === 'done' && localImport.summary;
 
+  // Closing — "Not now", or after an import ran, whatever its outcome —
+  // stops the prompt for this account; the account page offers the rest.
   const close = () => {
     if (running) {
       return;
     }
-    if (localImport.state === 'idle') {
-      localImport.decline();
-    }
+    localImport.decline();
     setOpen(false);
   };
 
@@ -87,7 +88,7 @@ export default function LocalDataImportPrompt() {
 
         <DialogFooter>
           {finished ? (
-            <Button onClick={() => setOpen(false)}>Done</Button>
+            <Button onClick={close}>Done</Button>
           ) : (
             <>
               <Button variant="outline" onClick={close} disabled={running}>

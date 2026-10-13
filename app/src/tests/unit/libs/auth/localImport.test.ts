@@ -285,7 +285,12 @@ describe('runLocalImport', () => {
 
     // Then
     expect(summary.skipped).toEqual([
-      { client_ref: LOCAL_IDS.SIMULATION_US, reason: 'unknown_legacy_reference' },
+      {
+        kind: 'simulations',
+        clientRef: LOCAL_IDS.SIMULATION_US,
+        countryId: 'us',
+        reason: 'unknown_legacy_reference',
+      },
     ]);
     expect(readImportSkipped(PE_USER_ID)).toEqual({
       [LOCAL_IDS.SIMULATION_US]: 'unknown_legacy_reference',
@@ -293,14 +298,15 @@ describe('runLocalImport', () => {
     expect(countImportableItems(PE_USER_ID)).toBe(0);
   });
 
-  test('given a skipped item without a client_ref then it is reported but not recorded', async () => {
-    // Given
+  test('given an item the server skipped without naming it then it is recorded as invalid', async () => {
+    // Given: the server could not parse the simulation, so its skip has no client_ref
     seedLocalData();
     const { fetchMock, context } = createTestApiContext();
     const respond = importResponder();
     fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
       const response = await respond(url, init);
       const payload = await response.json();
+      delete payload.result.id_map[LOCAL_IDS.SIMULATION_US];
       payload.result.skipped.push({ client_ref: null, reason: 'invalid' });
       return okResponse(payload.result);
     });
@@ -312,9 +318,41 @@ describe('runLocalImport', () => {
       materialize: async () => V1_IDS.MATERIALIZED_REFORM,
     });
 
+    // Then: it counts once, is not pending any more, and no "null" ref is kept
+    expect(summary.skipped).toEqual([
+      {
+        kind: 'simulations',
+        clientRef: LOCAL_IDS.SIMULATION_US,
+        countryId: 'us',
+        reason: 'invalid',
+      },
+    ]);
+    expect(readImportSkipped(PE_USER_ID)).toEqual({ [LOCAL_IDS.SIMULATION_US]: 'invalid' });
+    expect(countImportableItems(PE_USER_ID)).toBe(0);
+  });
+
+  test('given an item missing from both id_map and skipped then it is not offered again', async () => {
+    // Given
+    seedLocalData();
+    const { fetchMock, context } = createTestApiContext();
+    const respond = importResponder();
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      const response = await respond(url, init);
+      const payload = await response.json();
+      delete payload.result.id_map[LOCAL_IDS.POLICY_US];
+      return okResponse(payload.result);
+    });
+
+    // When
+    const summary = await runLocalImport({
+      client: context.client,
+      userId: PE_USER_ID,
+      materialize: async () => V1_IDS.MATERIALIZED_REFORM,
+    });
+
     // Then
-    expect(summary.skipped).toContainEqual({ client_ref: null, reason: 'invalid' });
-    expect(readImportSkipped(PE_USER_ID)).not.toHaveProperty('null');
+    expect(summary.skipped.map((note) => note.clientRef)).toEqual([LOCAL_IDS.POLICY_US]);
+    expect(countImportableItems(PE_USER_ID)).toBe(0);
   });
 
   test('given more than 500 items then they go in several requests', async () => {
