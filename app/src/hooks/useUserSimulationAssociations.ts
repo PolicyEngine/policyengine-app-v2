@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
 import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
 import {
   ApiSimulationStore,
@@ -56,23 +57,27 @@ export const useSimulationAssociationsByUser = (userId: string) => {
   const { store, config, ready } = useSimulationAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useQuery({
-    queryKey: simulationAssociationKeys.byUser(userId, countryId),
-    queryFn: () => store.findByUser(userId, countryId),
-    ...config,
-    enabled: ready,
-  });
+  return useSessionGatedQuery(
+    {
+      queryKey: simulationAssociationKeys.byUser(userId, countryId),
+      queryFn: () => store.findByUser(userId, countryId),
+      ...config,
+    },
+    ready
+  );
 };
 
 export const useSimulationAssociation = (userId: string, simulationId: string) => {
   const { store, config, ready } = useSimulationAssociationStoreForMode();
 
-  return useQuery({
-    queryKey: simulationAssociationKeys.specific(userId, simulationId),
-    queryFn: () => store.findById(userId, simulationId),
-    ...config,
-    enabled: ready,
-  });
+  return useSessionGatedQuery(
+    {
+      queryKey: simulationAssociationKeys.specific(userId, simulationId),
+      queryFn: () => store.findById(userId, simulationId),
+      ...config,
+    },
+    ready
+  );
 };
 
 export const useCreateSimulationAssociation = () => {

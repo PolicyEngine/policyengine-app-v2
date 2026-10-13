@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { fetchHouseholdById } from '@/api/household';
 import type { UserHouseholdStore } from '@/api/householdAssociation';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
 import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
 import { Household } from '@/models/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
@@ -45,12 +46,14 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   const { store, config, ready } = useHouseholdAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useQuery({
-    queryKey: householdAssociationKeys.byUser(userId, countryId),
-    queryFn: () => store.findByUser(userId, countryId),
-    ...config,
-    enabled: ready,
-  });
+  return useSessionGatedQuery(
+    {
+      queryKey: householdAssociationKeys.byUser(userId, countryId),
+      queryFn: () => store.findByUser(userId, countryId),
+      ...config,
+    },
+    ready
+  );
 };
 
 export const useHouseholdAssociation = (
@@ -61,15 +64,18 @@ export const useHouseholdAssociation = (
   const { store, config, ready } = useHouseholdAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useQuery({
-    queryKey: householdAssociationKeys.specific(userId, householdId, countryId),
-    queryFn: async () => {
-      const association = await store.findById(userId, householdId);
-      return association?.countryId === countryId ? association : null;
+  return useSessionGatedQuery(
+    {
+      queryKey: householdAssociationKeys.specific(userId, householdId, countryId),
+      queryFn: async () => {
+        const association = await store.findById(userId, householdId);
+        return association?.countryId === countryId ? association : null;
+      },
+      ...config,
+      enabled: options?.enabled ?? true,
     },
-    ...config,
-    enabled: ready && (options?.enabled ?? true),
-  });
+    ready
+  );
 };
 
 export const useCreateHouseholdAssociation = () => {

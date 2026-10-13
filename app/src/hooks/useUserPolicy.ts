@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
+import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
 import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
 import { Policy } from '@/types/ingredients/Policy';
 import type { PolicyCreationPayload } from '@/types/payloads';
@@ -61,12 +62,14 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   const { store, config, ready } = usePolicyAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useQuery({
-    queryKey: policyAssociationKeys.byUser(userId, countryId),
-    queryFn: () => store.findByUser(userId, countryId),
-    ...config,
-    enabled: ready,
-  });
+  return useSessionGatedQuery(
+    {
+      queryKey: policyAssociationKeys.byUser(userId, countryId),
+      queryFn: () => store.findByUser(userId, countryId),
+      ...config,
+    },
+    ready
+  );
 };
 
 export const usePolicyAssociation = (
@@ -77,15 +80,18 @@ export const usePolicyAssociation = (
   const { store, config, ready } = usePolicyAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useQuery({
-    queryKey: policyAssociationKeys.specific(userId, policyId, countryId),
-    queryFn: async () => {
-      const association = await store.findById(userId, policyId);
-      return association?.countryId === countryId ? association : null;
+  return useSessionGatedQuery(
+    {
+      queryKey: policyAssociationKeys.specific(userId, policyId, countryId),
+      queryFn: async () => {
+        const association = await store.findById(userId, policyId);
+        return association?.countryId === countryId ? association : null;
+      },
+      ...config,
+      enabled: options?.enabled ?? true,
     },
-    ...config,
-    enabled: ready && (options?.enabled ?? true),
-  });
+    ready
+  );
 };
 
 export const useCreatePolicyAssociation = () => {

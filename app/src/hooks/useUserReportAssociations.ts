@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
 import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
 import {
   ApiReportStore,
@@ -56,35 +57,42 @@ export const useReportAssociationsByUser = (userId: string) => {
   const { store, config, ready } = useReportAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useQuery({
-    queryKey: reportAssociationKeys.byUser(userId, countryId),
-    queryFn: () => store.findByUser(userId, countryId),
-    ...config,
-    enabled: ready,
-  });
+  return useSessionGatedQuery(
+    {
+      queryKey: reportAssociationKeys.byUser(userId, countryId),
+      queryFn: () => store.findByUser(userId, countryId),
+      ...config,
+    },
+    ready
+  );
 };
 
 export const useReportAssociation = (userId: string, reportId: string) => {
   const { store, config, ready } = useReportAssociationStoreForMode();
 
-  return useQuery({
-    queryKey: reportAssociationKeys.specific(userId, reportId),
-    queryFn: () => store.findById(userId, reportId),
-    ...config,
-    enabled: ready,
-  });
+  return useSessionGatedQuery(
+    {
+      queryKey: reportAssociationKeys.specific(userId, reportId),
+      queryFn: () => store.findById(userId, reportId),
+      ...config,
+    },
+    ready
+  );
 };
 
 export const useReportAssociationById = (userReportId: string, options?: { enabled?: boolean }) => {
   const { store, config, ready } = useReportAssociationStoreForMode();
   const isEnabled = options?.enabled !== false;
 
-  return useQuery({
-    queryKey: reportAssociationKeys.byUserReportId(userReportId),
-    queryFn: () => store.findByUserReportId(userReportId),
-    ...config,
-    enabled: ready && isEnabled,
-  });
+  return useSessionGatedQuery(
+    {
+      queryKey: reportAssociationKeys.byUserReportId(userReportId),
+      queryFn: () => store.findByUserReportId(userReportId),
+      ...config,
+      enabled: isEnabled,
+    },
+    ready
+  );
 };
 
 /**
