@@ -1,6 +1,6 @@
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
 import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
-import { isAssociationCountry, type UserReportItem } from '@/types/v2User';
+import type { UserReportItem } from '@/types/v2User';
 import { UserReport } from '../types/ingredients/UserReport';
 
 export interface UserReportStore {
@@ -38,13 +38,9 @@ export class ApiReportStore implements UserReportStore {
     this.routes = new AccountAssociationRoutes(context, 'user-reports', 'UserReport');
   }
 
-  private countryOf(report: Pick<UserReport, 'countryId'>) {
-    return isAssociationCountry(report.countryId) ? report.countryId : this.routes.countryId;
-  }
-
   async create(report: Omit<UserReport, 'id' | 'createdAt'>): Promise<UserReport> {
     const item = await this.routes.create(
-      UserReportAdapter.toCreationPayload(report, this.countryOf(report))
+      UserReportAdapter.toCreationPayload(report, this.routes.writeCountry(report.countryId))
     );
     return UserReportAdapter.fromApiItem(item);
   }
@@ -89,7 +85,10 @@ export class ApiReportStore implements UserReportStore {
     if (this.routes.isLocalOnly(userReportId)) {
       const local = this.local.findByUserReportId(userReportId);
       const merged = { ...(await this.routes.requireLocal(userReportId, local)), ...updates };
-      const body = UserReportAdapter.toCreationPayload(merged, this.countryOf(merged));
+      const body = UserReportAdapter.toCreationPayload(
+        merged,
+        this.routes.writeCountry(merged.countryId)
+      );
       return UserReportAdapter.fromApiItem(await this.routes.promote(userReportId, body, changes));
     }
     return UserReportAdapter.fromApiItem(await this.routes.patch(userReportId, changes));

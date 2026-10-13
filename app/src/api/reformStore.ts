@@ -234,11 +234,12 @@ export class ApiReformStore implements ReformStore {
   private async creationBody(
     reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<UserPolicyCreateBody> {
+    const countryId = this.routes.writeCountry(reform.countryId);
     const legacyPolicyId = isLegacyId(reform.policyId)
       ? Number(reform.policyId)
-      : await this.materializePolicy(this.context.countryId, reform.label, reform.parameters);
+      : await this.materializePolicy(countryId, reform.label, reform.parameters);
     return {
-      country_id: this.context.countryId,
+      country_id: countryId,
       legacy_policy_id: legacyPolicyId,
       ...(reform.label ? { name: reform.label } : {}),
       baseline: reform.baseline,

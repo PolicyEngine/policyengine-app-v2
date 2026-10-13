@@ -213,6 +213,41 @@ describe('ApiPolicyStore', () => {
     expect(resolveImportedId(PE_USER_ID, localPolicy.id!)).toBe(ASSOCIATION_IDS.POLICY);
   });
 
+  test('given a UK item while the page is in the US then it is written, and recovered, in the UK', async () => {
+    // Given: the account already has this local UK policy (409), so the
+    // promote looks it up and patches it in the UK, where it created it
+    const { fetchMock, context } = createTestApiContext('us');
+    const local = new LocalStoragePolicyStore();
+    const localPolicy = await local.create({
+      userId: MOCK_USER_ID,
+      policyId: String(LEGACY_IDS.POLICY),
+      countryId: 'uk',
+      label: 'UK policy',
+    });
+    const ukRow = policyItem({ country_id: 'uk', client_ref: localPolicy.id! });
+    fetchMock
+      .mockResolvedValueOnce(errorResponse(409, 'client_ref already exists'))
+      .mockResolvedValueOnce(pageResponse([ukRow]))
+      .mockResolvedValueOnce(itemResponse({ ...ukRow, name: 'Renamed' }));
+    const store = new ApiPolicyStore(context, local);
+
+    // When
+    const renamed = await store.update(localPolicy.id!, { label: 'Renamed' });
+
+    // Then
+    const [create, list, patch] = [0, 1, 2].map((index) => fetchCall(fetchMock, index));
+    expect(create).toMatchObject({ method: 'POST', query: { country_id: 'uk' } });
+    expect(create.body.country_id).toBe('uk');
+    expect(list.method).toBe('GET');
+    expect(list.query.country_id).toBe('uk');
+    expect(patch).toMatchObject({
+      method: 'PATCH',
+      path: `/v2/user-policies/${ASSOCIATION_IDS.POLICY}`,
+      query: { country_id: 'uk' },
+    });
+    expect(renamed.label).toBe('Renamed');
+  });
+
   test("given a local sup- id never imported then deleting it deletes this browser's copy", async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();

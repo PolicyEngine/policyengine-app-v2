@@ -1,6 +1,11 @@
 import { isV2ApiError, V2ApiError, type V2Query, type V2UserClient } from '@/api/v2UserClient';
 import { recordImportedIds, resolveImportedId } from '@/libs/auth/importedIds';
-import type { AssociationCountryId, V2ItemResult, V2PageResult } from '@/types/v2User';
+import {
+  isAssociationCountry,
+  type AssociationCountryId,
+  type V2ItemResult,
+  type V2PageResult,
+} from '@/types/v2User';
 
 /**
  * Local IDs: how every account store treats the IDs it is handed.
@@ -80,6 +85,14 @@ export class AccountAssociationRoutes<TItem extends AccountRow> {
     return this.context.countryId;
   }
 
+  /**
+   * The country a write goes to: the item's own when it has account
+   * storage, otherwise the store's (the page's) country.
+   */
+  writeCountry(itemCountryId: unknown): AssociationCountryId {
+    return isAssociationCountry(itemCountryId) ? itemCountryId : this.context.countryId;
+  }
+
   async create<TBody extends { country_id: AssociationCountryId }>(body: TBody): Promise<TItem> {
     const result = await this.context.client.request<V2ItemResult<TItem>>('POST', this.path, {
       query: { country_id: body.country_id },
@@ -88,11 +101,12 @@ export class AccountAssociationRoutes<TItem extends AccountRow> {
     return result.item;
   }
 
-  list(filters: V2Query = {}): Promise<TItem[]> {
-    return this.context.client.listAll<TItem>(this.path, {
-      ...filters,
-      country_id: this.context.countryId,
-    });
+  /** Rows in `countryId` (default: the store's country). */
+  list(
+    filters: V2Query = {},
+    countryId: AssociationCountryId = this.context.countryId
+  ): Promise<TItem[]> {
+    return this.context.client.listAll<TItem>(this.path, { ...filters, country_id: countryId });
   }
 
   /** The first (oldest) row matching a list filter, or null. */
@@ -134,11 +148,17 @@ export class AccountAssociationRoutes<TItem extends AccountRow> {
       if (!isV2ApiError(error, 409)) {
         throw error;
       }
-      const existing = (await this.list()).find((row) => row.client_ref === localId);
+      // Look for it in the country it was created in.
+      const existing = (await this.list({}, body.country_id)).find(
+        (row) => row.client_ref === localId
+      );
       if (!existing) {
         throw error;
       }
-      item = Object.keys(changes).length > 0 ? await this.patch(existing.id, changes) : existing;
+      item =
+        Object.keys(changes).length > 0
+          ? await this.patch(existing.id, changes, body.country_id)
+          : existing;
     }
     recordImportedIds(this.context.userId, { [localId]: item.id });
     return item;
@@ -166,13 +186,17 @@ export class AccountAssociationRoutes<TItem extends AccountRow> {
   }
 
   /** Applies only the supplied fields; an empty patch just reads the row. */
-  async patch(id: string, body: object): Promise<TItem> {
+  async patch(
+    id: string,
+    body: object,
+    countryId: AssociationCountryId = this.context.countryId
+  ): Promise<TItem> {
     const accountId = this.requireId(id);
     const result = await this.context.client.request<V2ItemResult<TItem>>(
       Object.keys(body).length === 0 ? 'GET' : 'PATCH',
       `${this.path}/${encodeURIComponent(accountId)}`,
       {
-        query: { country_id: this.context.countryId },
+        query: { country_id: countryId },
         ...(Object.keys(body).length === 0 ? {} : { body }),
       }
     );

@@ -48,7 +48,10 @@ export const useUserSimulationStore = () => {
  *
  * For full simulation data with policies and households, use useUserSimulations
  */
-export const useSimulationAssociationsByUser = (userId: string) => {
+export const useSimulationAssociationsByUser = (
+  userId: string,
+  options?: { enabled?: boolean }
+) => {
   const { store, config, ready } = useSimulationAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
@@ -57,6 +60,7 @@ export const useSimulationAssociationsByUser = (userId: string) => {
       queryKey: simulationAssociationKeys.byUser(userId, countryId),
       queryFn: () => store.findByUser(userId, countryId),
       ...config,
+      enabled: options?.enabled ?? true,
     },
     ready
   );

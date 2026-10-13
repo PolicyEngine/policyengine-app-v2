@@ -41,7 +41,7 @@ export const useHouseholdAssociationStoreForMode =
 
 // This fetches only the user-household associations; see
 // 'useUserHouseholds' below to also fetch full household details
-export const useHouseholdAssociationsByUser = (userId: string) => {
+export const useHouseholdAssociationsByUser = (userId: string, options?: { enabled?: boolean }) => {
   const { store, config, ready } = useHouseholdAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
@@ -50,6 +50,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
       queryKey: householdAssociationKeys.byUser(userId, countryId),
       queryFn: () => store.findByUser(userId, countryId),
       ...config,
+      enabled: options?.enabled ?? true,
     },
     ready
   );

@@ -122,7 +122,7 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
       ? resolveImportedId(this.context.userId, report.reformId)
       : null;
     return {
-      country_id: this.context.countryId,
+      country_id: this.routes.writeCountry(report.countryId),
       legacy_report_id: Number(report.apiReportId),
       name: report.title || null,
       source_note: report.sourceNote || null,

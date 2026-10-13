@@ -1,6 +1,6 @@
 import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
 import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
-import { isAssociationCountry, type UserPolicyItem } from '@/types/v2User';
+import type { UserPolicyItem } from '@/types/v2User';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 export interface UserPolicyStore {
@@ -27,13 +27,9 @@ export class ApiPolicyStore implements UserPolicyStore {
     this.routes = new AccountAssociationRoutes(context, 'user-policies', 'UserPolicy');
   }
 
-  private countryOf(policy: Pick<UserPolicy, 'countryId'>) {
-    return isAssociationCountry(policy.countryId) ? policy.countryId : this.routes.countryId;
-  }
-
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
     const item = await this.routes.create(
-      UserPolicyAdapter.toCreationPayload(policy, this.countryOf(policy))
+      UserPolicyAdapter.toCreationPayload(policy, this.routes.writeCountry(policy.countryId))
     );
     return UserPolicyAdapter.fromApiItem(item);
   }
@@ -62,7 +58,10 @@ export class ApiPolicyStore implements UserPolicyStore {
     if (this.routes.isLocalOnly(userPolicyId)) {
       const local = this.local.findByUserPolicyId(userPolicyId);
       const merged = { ...(await this.routes.requireLocal(userPolicyId, local)), ...updates };
-      const body = UserPolicyAdapter.toCreationPayload(merged, this.countryOf(merged));
+      const body = UserPolicyAdapter.toCreationPayload(
+        merged,
+        this.routes.writeCountry(merged.countryId)
+      );
       return UserPolicyAdapter.fromApiItem(await this.routes.promote(userPolicyId, body, changes));
     }
     return UserPolicyAdapter.fromApiItem(await this.routes.patch(userPolicyId, changes));

@@ -52,7 +52,7 @@ export const usePolicyAssociationStoreForMode = (): SavedWorkStoreSelection<User
 
 // This fetches only the user-policy associations; see
 // 'useUserPolicies' below to also fetch full policy details
-export const usePolicyAssociationsByUser = (userId: string) => {
+export const usePolicyAssociationsByUser = (userId: string, options?: { enabled?: boolean }) => {
   const { store, config, ready } = usePolicyAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
@@ -61,6 +61,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
       queryKey: policyAssociationKeys.byUser(userId, countryId),
       queryFn: () => store.findByUser(userId, countryId),
       ...config,
+      enabled: options?.enabled ?? true,
     },
     ready
   );

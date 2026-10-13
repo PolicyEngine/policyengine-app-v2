@@ -182,6 +182,21 @@ describe('ApiFlagshipReportStore', () => {
     expect(fetchCall(fetchMock, 1).body).not.toHaveProperty('user_policy_id');
   });
 
+  test('given a UK run while the store is in the US then the row is written in the UK', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext('us');
+    fetchMock.mockResolvedValue(itemResponse(reportItem({ country_id: 'uk' }), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.create({ ...newReport, countryId: 'uk' });
+
+    // Then
+    const call = fetchCall(fetchMock);
+    expect(call.query).toEqual({ country_id: 'uk' });
+    expect(call.body.country_id).toBe('uk');
+  });
+
   test('given an API report id then findByApiReportId filters by legacy_report_id', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();

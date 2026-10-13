@@ -320,6 +320,37 @@ describe('ApiReformStore', () => {
     });
   });
 
+  it('given a UK reform while the page is in the US, when created, then it is written in the UK', async () => {
+    // Given
+    const { store, fetchMock, materializePolicy } = apiReformStore('us');
+    fetchMock.mockResolvedValue(itemResponse({ ...reformRow, country_id: 'uk' }, 201));
+
+    // When
+    await store.create({ ...mockReformInput, countryId: 'uk' });
+
+    // Then
+    expect(materializePolicy).toHaveBeenCalledWith(
+      'uk',
+      mockReformInput.label,
+      mockReformInput.parameters
+    );
+    const call = fetchCall(fetchMock);
+    expect(call.query).toEqual({ country_id: 'uk' });
+    expect(call.body.country_id).toBe('uk');
+  });
+
+  it('given a reform from a country without accounts, when created, then it is written in the page country', async () => {
+    // Given
+    const { store, fetchMock } = apiReformStore('uk');
+    fetchMock.mockResolvedValue(itemResponse({ ...reformRow, country_id: 'uk' }, 201));
+
+    // When
+    await store.create({ ...mockReformInput, countryId: 'ca' });
+
+    // Then
+    expect(fetchCall(fetchMock).body.country_id).toBe('uk');
+  });
+
   it('given a reform, when deleted, then its row is deleted', async () => {
     // Given
     const { store, fetchMock } = apiReformStore();

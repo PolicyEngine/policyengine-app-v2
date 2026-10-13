@@ -1,6 +1,6 @@
 import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
 import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
-import { isAssociationCountry, type UserSimulationItem } from '@/types/v2User';
+import type { UserSimulationItem } from '@/types/v2User';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
@@ -26,15 +26,12 @@ export class ApiSimulationStore implements UserSimulationStore {
     this.routes = new AccountAssociationRoutes(context, 'user-simulations', 'UserSimulation');
   }
 
-  private countryOf(simulation: Pick<UserSimulation, 'countryId'>) {
-    return isAssociationCountry(simulation.countryId)
-      ? simulation.countryId
-      : this.routes.countryId;
-  }
-
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
     const item = await this.routes.create(
-      UserSimulationAdapter.toCreationPayload(simulation, this.countryOf(simulation))
+      UserSimulationAdapter.toCreationPayload(
+        simulation,
+        this.routes.writeCountry(simulation.countryId)
+      )
     );
     return UserSimulationAdapter.fromApiItem(item);
   }
@@ -67,7 +64,10 @@ export class ApiSimulationStore implements UserSimulationStore {
     if (this.routes.isLocalOnly(userSimulationId)) {
       const local = this.local.findByUserSimulationId(userSimulationId);
       const merged = { ...(await this.routes.requireLocal(userSimulationId, local)), ...updates };
-      const body = UserSimulationAdapter.toCreationPayload(merged, this.countryOf(merged));
+      const body = UserSimulationAdapter.toCreationPayload(
+        merged,
+        this.routes.writeCountry(merged.countryId)
+      );
       return UserSimulationAdapter.fromApiItem(
         await this.routes.promote(userSimulationId, body, changes)
       );

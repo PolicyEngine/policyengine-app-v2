@@ -1,7 +1,7 @@
 import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
 import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { isAssociationCountry, type UserHouseholdItem } from '@/types/v2User';
+import type { UserHouseholdItem } from '@/types/v2User';
 
 export interface UserHouseholdStore {
   create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
@@ -29,13 +29,12 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     this.routes = new AccountAssociationRoutes(context, 'user-households', 'UserHousehold');
   }
 
-  private countryOf(household: Pick<UserHouseholdPopulation, 'countryId'>) {
-    return isAssociationCountry(household.countryId) ? household.countryId : this.routes.countryId;
-  }
-
   async create(association: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
     const item = await this.routes.create(
-      UserHouseholdAdapter.toCreationPayload(association, this.countryOf(association))
+      UserHouseholdAdapter.toCreationPayload(
+        association,
+        this.routes.writeCountry(association.countryId)
+      )
     );
     return UserHouseholdAdapter.fromApiItem(item);
   }
@@ -68,7 +67,10 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     if (this.routes.isLocalOnly(userHouseholdId)) {
       const local = this.local.findByUserHouseholdId(userHouseholdId);
       const merged = { ...(await this.routes.requireLocal(userHouseholdId, local)), ...updates };
-      const body = UserHouseholdAdapter.toCreationPayload(merged, this.countryOf(merged));
+      const body = UserHouseholdAdapter.toCreationPayload(
+        merged,
+        this.routes.writeCountry(merged.countryId)
+      );
       return UserHouseholdAdapter.fromApiItem(
         await this.routes.promote(userHouseholdId, body, changes)
       );
