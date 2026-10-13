@@ -1,0 +1,19 @@
+import { clearDraftReform } from '@/libs/draftReform';
+import { forgetAccountReportMeta } from '@/libs/flagship/runReport';
+
+/**
+ * What a signed-in session leaves in this browser beyond its account, and
+ * how signing out clears it, so the next person on a shared browser
+ * neither sees nor inherits it:
+ *
+ * - The report provenance stash from signed-in runs (kept in memory only).
+ * - The draft reform, which may hold an account reform loaded for editing.
+ *
+ * Import bookkeeping stays: it is filed per PolicyEngine user, maps only
+ * this browser's own local IDs, and lets old links resolve when the same
+ * person signs in again.
+ */
+export function clearSignedInSessionData(): void {
+  forgetAccountReportMeta();
+  clearDraftReform();
+}

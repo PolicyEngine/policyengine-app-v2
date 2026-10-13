@@ -16,6 +16,7 @@ import {
   type Auth0Config,
 } from './authConfig';
 import { AuthContext, authKeys, type AuthContextValue, type AuthStatus } from './AuthContext';
+import { clearSignedInSessionData } from './sessionData';
 
 /**
  * Social sign-on for the calculator. With sign-in off (or Auth0 not
@@ -219,6 +220,7 @@ function Auth0SessionBridge({
   );
 
   const signOut = useCallback(async () => {
+    clearSignedInSessionData();
     await logout({ logoutParams: { returnTo: `${window.location.origin}/${countryId}` } });
   }, [logout, countryId]);
 

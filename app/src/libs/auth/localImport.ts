@@ -29,6 +29,7 @@ import {
   IMPORTED_ID_MAP_KEY,
   readImportedIdMap,
   readImportSkipped,
+  readRefsImportedByAnyone,
   recordImportedIds,
   recordImportSkipped,
 } from './importedIds';
@@ -156,8 +157,10 @@ export function planLocalImport(
   userId: string,
   snapshot: LocalSnapshot = readLocalSnapshot()
 ): LocalImportPlan {
+  // Already handled for this account, or imported into another account
+  // that signed in on this browser (its items are that account's now).
   const handled = new Set([
-    ...Object.keys(readImportedIdMap(userId)),
+    ...readRefsImportedByAnyone(),
     ...Object.keys(readImportSkipped(userId)),
   ]);
   const items: PlannedImportItem[] = [];

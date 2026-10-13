@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportStore } from '@/api/flagshipReportStore';
-import { readReportMeta, runFlagshipReport } from '@/libs/flagship/runReport';
+import {
+  forgetAccountReportMeta,
+  readReportMeta,
+  REPORT_META_KEY,
+  runFlagshipReport,
+} from '@/libs/flagship/runReport';
 
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
@@ -203,6 +208,29 @@ describe('runFlagshipReport', () => {
     expect(localStorage.getItem('pe-flagship-reports')).toBeNull();
     expect(localStorage.getItem('user-report-associations')).toBeNull();
     expect(readReportMeta('56')?.title).toBe('CTC expansion');
+  });
+
+  test('given a signed-in run then its provenance stays out of localStorage and goes on sign-out', async () => {
+    // Given
+    const accountStore = {
+      create: vi.fn().mockResolvedValue({ id: 'row-1' }),
+    } as unknown as FlagshipReportStore;
+
+    // When
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: 'Federal · Introduced',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      account: { reportStore: accountStore, userId: ACCOUNT_USER_ID },
+    });
+
+    // Then: the next person on this browser cannot find it
+    expect(localStorage.getItem(REPORT_META_KEY)).toBeNull();
+    expect(readReportMeta('56')?.title).toBe('CTC expansion');
+    forgetAccountReportMeta();
+    expect(readReportMeta('56')).toBeNull();
   });
 
   test('given the account association fails then the signed-in run fails', async () => {

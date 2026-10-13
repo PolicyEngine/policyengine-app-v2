@@ -46,6 +46,19 @@ export function recordImportedIds(userId: string, idMap: Record<string, string>)
   writePerUser(IMPORTED_ID_MAP_KEY, all);
 }
 
+/**
+ * Local IDs any account has imported from this browser. Their items are
+ * that account's now, so the import does not offer them to someone else
+ * who signs in here.
+ */
+export function readRefsImportedByAnyone(): Set<string> {
+  return new Set(
+    Object.values(readPerUser<string>(IMPORTED_ID_MAP_KEY)).flatMap((idMap) =>
+      Object.keys(idMap ?? {})
+    )
+  );
+}
+
 export function readImportSkipped(userId: string): Record<string, string> {
   return { ...(readPerUser<string>(IMPORT_SKIPPED_KEY)[userId] ?? {}) };
 }

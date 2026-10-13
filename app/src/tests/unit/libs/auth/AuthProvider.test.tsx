@@ -2,11 +2,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { FlagshipReportStore } from '@/api/flagshipReportStore';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { AuthProvider, ME_RETRIES } from '@/libs/auth/AuthProvider';
 import type { CountryId } from '@/libs/countries';
+import { getDraftReform, startDraftReform } from '@/libs/draftReform';
+import { readReportMeta, runFlagshipReport } from '@/libs/flagship/runReport';
 import {
   errorResponse,
   itemResponse,
@@ -41,6 +44,19 @@ vi.mock('@auth0/auth0-react', () => ({
   }),
 }));
 
+const mockCreateReport = vi.hoisted(() => vi.fn());
+
+vi.mock('@/api/policy', () => ({
+  createPolicy: vi.fn().mockResolvedValue({ result: { policy_id: '77' } }),
+}));
+vi.mock('@/api/simulation', () => ({
+  createSimulation: vi.fn().mockResolvedValue({ result: { simulation_id: '101' } }),
+}));
+vi.mock('@/api/report', () => ({
+  createReport: mockCreateReport,
+  createReportAndAssociateWithUser: vi.fn(),
+}));
+
 const navigation = { push: vi.fn(), replace: vi.fn(), back: vi.fn() };
 const fetchMock = vi.fn();
 
@@ -56,6 +72,9 @@ function Probe() {
       </button>
       <button type="button" onClick={() => auth.retryAccount()}>
         Retry
+      </button>
+      <button type="button" onClick={() => auth.signOut()}>
+        Sign out
       </button>
     </div>
   );
@@ -278,5 +297,37 @@ describe('AuthProvider', () => {
     // Then
     expect(navigation.replace).toHaveBeenNthCalledWith(1, '/us/build');
     expect(navigation.replace).toHaveBeenNthCalledWith(2, '/us');
+  });
+
+  test('given sign out then what the session left in this browser is cleared first', async () => {
+    // Given: a signed-in run's provenance and an account reform loaded for editing
+    stubAuthEnv(true);
+    auth0.state.isAuthenticated = true;
+    auth0.state.user = { sub: 'google-oauth2|1234' };
+    fetchMock.mockResolvedValue(itemResponse(mockMeItem));
+    mockCreateReport.mockResolvedValue({ id: 56 });
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [{ path: 'gov.x', breadcrumb: 'X', unit: null, baselineValue: 1, value: 2 }],
+      currentLawId: 2,
+      account: {
+        reportStore: { create: vi.fn().mockResolvedValue({}) } as unknown as FlagshipReportStore,
+        userId: mockMeItem.id,
+      },
+    });
+    startDraftReform('us', 'manual');
+    renderProvider('us');
+
+    // When
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Sign out' }));
+
+    // Then
+    expect(readReportMeta('56')).toBeNull();
+    expect(getDraftReform()).toBeNull();
+    expect(auth0.logout).toHaveBeenCalledWith({
+      logoutParams: { returnTo: `${window.location.origin}/us` },
+    });
   });
 });

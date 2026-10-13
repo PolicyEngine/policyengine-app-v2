@@ -1,10 +1,11 @@
 /**
  * Where a report's provisions come from when the local stash is missing.
  *
- * `runFlagshipReport` stashes the provisions in localStorage under the
- * report id, which serves the browser that ran the report and nobody
- * else: a shared link, another device, or a cleared profile opens the
- * report with no provenance, and validation has nothing to match. The
+ * `runFlagshipReport` stashes the provisions under the report id (in
+ * localStorage signed out, in memory for a signed-in session), which
+ * serves the browser that ran the report and nobody else: a shared link,
+ * another device, or a cleared profile opens the report with no
+ * provenance, and validation has nothing to match. The
  * reform policy on the PolicyEngine API carries the same parameter
  * changes, so they are rebuilt from it here.
  */

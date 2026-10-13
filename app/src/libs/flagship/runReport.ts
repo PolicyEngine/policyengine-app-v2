@@ -35,6 +35,23 @@ export interface FlagshipReportMeta {
 
 export const REPORT_META_KEY = 'pe-flagship-report-meta';
 
+/**
+ * Provenance from signed-in runs. It is the account's (its record carries
+ * it to every device), so it is kept for this page session only, never in
+ * localStorage where the next person on this browser would find it, and
+ * is dropped on sign-out.
+ */
+const accountReportMeta = new Map<string, FlagshipReportMeta>();
+
+function rememberAccountReportMeta(reportId: string, meta: FlagshipReportMeta): void {
+  accountReportMeta.set(reportId, meta);
+}
+
+/** Drops the signed-in session's report provenance (on sign-out). */
+export function forgetAccountReportMeta(): void {
+  accountReportMeta.clear();
+}
+
 function readAllMeta(): Record<string, FlagshipReportMeta> {
   try {
     return JSON.parse(localStorage.getItem(REPORT_META_KEY) ?? '{}');
@@ -55,7 +72,7 @@ export function saveReportMeta(userReportId: string, meta: FlagshipReportMeta): 
 }
 
 export function readReportMeta(userReportId: string): FlagshipReportMeta | null {
-  return readAllMeta()[userReportId] ?? null;
+  return accountReportMeta.get(userReportId) ?? readAllMeta()[userReportId] ?? null;
 }
 
 export interface RunFlagshipReportArgs {
@@ -152,7 +169,7 @@ export async function runFlagshipReport({
     // run, so a report that opens is a report that was saved.
     const reportMetadata = await createReport(countryId, payload);
     const reportId = String(reportMetadata.id);
-    saveReportMeta(reportId, {
+    rememberAccountReportMeta(reportId, {
       title,
       sourceNote,
       provisions,
