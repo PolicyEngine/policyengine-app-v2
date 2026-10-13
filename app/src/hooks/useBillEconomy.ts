@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import type { TrackedBill } from '@/api/billFeed';
+import { billRunYear, type TrackedBill } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { createReformPolicy } from '@/libs/flagship/runReport';
@@ -53,6 +52,8 @@ export function useBillEconomy(
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const region = bill ? billRegion(bill, countryId) : countryId;
   const provisions = bill?.provisions ?? [];
+  // A bill from a later year is scored in its first year: earlier, it changes nothing.
+  const year = String(billRunYear(provisions));
 
   const policy = useQuery({
     queryKey: ['flagship-bill-policy', countryId, bill?.id, provisions],
@@ -75,7 +76,7 @@ export function useBillEconomy(
   );
 
   const economy = useQuery({
-    queryKey: ['flagship-bill-economy', countryId, reformPolicyId, baselinePolicyId, region],
+    queryKey: ['flagship-bill-economy', countryId, reformPolicyId, baselinePolicyId, region, year],
     queryFn: () =>
       strategy.execute(
         {
@@ -84,7 +85,7 @@ export function useBillEconomy(
           policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
           populationId: region,
           region,
-          year: CURRENT_YEAR,
+          year,
           calcId: metadata.calcId,
         },
         metadata
@@ -115,7 +116,7 @@ export function useBillEconomy(
     queuePosition: economy.data?.queuePosition,
     reformPolicyId,
     baselinePolicyId,
-    year: CURRENT_YEAR,
+    year,
     region,
     retry: () => {
       if (policy.isError) {

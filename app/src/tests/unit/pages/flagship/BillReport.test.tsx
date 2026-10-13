@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen, userEvent, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BillEconomy } from '@/hooks/useBillEconomy';
 import BillReportPage from '@/pages/flagship/BillReport.page';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
+import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -18,14 +21,24 @@ vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => {
 });
 
 const mockFetchTrackerBills = vi.fn();
+const mockFetchTrackerBillDistricts = vi.fn();
 
 vi.mock('@/api/billFeed', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/billFeed')>();
   return {
     ...actual,
     fetchTrackerBills: () => mockFetchTrackerBills(),
+    fetchTrackerBillDistricts: (id: string) => mockFetchTrackerBillDistricts(id),
   };
 });
+
+vi.mock('@/components/flagship/report/DistrictImpactCard', () => ({
+  default: ({ districts, modes }: { districts?: unknown[]; modes?: string[] }) => (
+    <div>
+      District map: {districts?.length ?? 'full results'} · {modes?.join(', ') ?? 'all views'}
+    </div>
+  ),
+}));
 
 const mockIsAlreadyCurrentLaw = vi.fn();
 
@@ -76,9 +89,12 @@ describe('BillReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
+    mockFetchTrackerBillDistricts.mockResolvedValue(null);
     mockUseBillEconomy.mockReturnValue(economy());
     mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
+    // Tests that seed metadata must not leave it loaded for the next one.
+    store.dispatch(clearMetadata());
   });
 
   test('given a bill then it uses the saved report sections', async () => {
@@ -92,17 +108,38 @@ describe('BillReportPage', () => {
       'Household',
       'Validation',
     ]);
-    expect(screen.getByText('US · In committee')).toBeInTheDocument();
+    // The title names the bill; no place-and-status line runs under it.
+    expect(screen.queryByText('US · In committee')).not.toBeInTheDocument();
   });
 
-  test('given the full run is calculating then the overview leads with stored estimates', async () => {
+  test('given the page opens then the overview leads with stored estimates', async () => {
     renderReport();
 
     expect(await screen.findByText('$225.5bn')).toBeInTheDocument();
     expect(screen.getByText('Annual revenue loss')).toBeInTheDocument();
     expect(screen.getByText('39.9% decrease')).toBeInTheDocument();
+    expect(screen.getByText('Stored estimates from the legislative tracker')).toBeInTheDocument();
+  });
+
+  test('given the page and its tabs open then no full run starts until asked', async () => {
+    const user = userEvent.setup();
+    seedDeductionMetadata();
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
     expect(
-      screen.getByText('Stored estimates from the legislative tracker · full results calculating')
+      within(screen.getByRole('tabpanel')).getByText('The full results are not loaded.')
+    ).toBeInTheDocument();
+    expect(mockUseBillEconomy).not.toHaveBeenCalledWith(expect.anything(), { enabled: true });
+
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+    expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: TRACKED_BILL.id }),
+      { enabled: true }
+    );
+    expect(
+      within(screen.getByRole('tabpanel')).getByText('Calculating the full results…')
     ).toBeInTheDocument();
   });
 
@@ -125,6 +162,7 @@ describe('BillReportPage', () => {
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
 
     expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
     expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
@@ -132,7 +170,10 @@ describe('BillReportPage', () => {
     // The tracker's stored detail fills the wait.
     expect(screen.getByText('Income change by decile')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
-    expect(screen.getByText('Poverty rate, before and after')).toBeInTheDocument();
+    expect(screen.getByText('Poverty rate change')).toBeInTheDocument();
+    // The change only: the rates before and after (16.9% → 14.5%) stay out.
+    expect(screen.queryByText('16.9%')).not.toBeInTheDocument();
+    expect(screen.queryByText('Current law')).not.toBeInTheDocument();
   });
 
   test('given the full results then the overview and charts use them', async () => {
@@ -142,14 +183,16 @@ describe('BillReportPage', () => {
     );
     renderReport();
 
-    expect(await screen.findByText('Annual government savings')).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+    expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(screen.getByText('Annual government savings')).toBeInTheDocument();
     expect(screen.getByText('13.3% decrease')).toBeInTheDocument();
     expect(
       screen.queryByText(/Stored estimates from the legislative tracker/)
     ).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
-    expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
   });
 
   test('given the full run fails then it says so and can retry', async () => {
@@ -157,17 +200,18 @@ describe('BillReportPage', () => {
     mockUseBillEconomy.mockReturnValue(economy({ status: 'error', message: 'Worker lost' }));
     renderReport();
 
-    expect(
-      await screen.findByText(
-        'Stored estimates from the legislative tracker · full results unavailable'
-      )
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
     expect(screen.getByText('The full results could not be calculated.')).toBeInTheDocument();
     expect(screen.getByText('Worker lost')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(mockRetry).toHaveBeenCalled();
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(
+      screen.getByText('Stored estimates from the legislative tracker · full results unavailable')
+    ).toBeInTheDocument();
   });
 
   test('given the validation tab then external checks and the tracker provenance render', async () => {
@@ -215,9 +259,11 @@ describe('BillReportPage', () => {
   });
 
   test('given metadata is still loading then the full run waits for it', async () => {
+    const user = userEvent.setup();
     renderReport();
 
-    await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title });
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
     expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: TRACKED_BILL.id }),
       { enabled: false }
@@ -241,6 +287,171 @@ describe('BillReportPage', () => {
     await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
     expect(screen.getByText('This bill is already current law.')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+  });
+
+  test('given the tracker wrote up the changes then the overview lists them as scored', async () => {
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        changes: [
+          {
+            label: 'Maximum credit per child',
+            before: '$2,200',
+            after: '$5,000',
+            explanation: 'Raises the credit for each qualifying child.',
+            section: 'Section 2',
+          },
+        ],
+      },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    expect(within(list).getByText('Maximum credit per child')).toBeInTheDocument();
+    expect(
+      within(list).getByText('Raises the credit for each qualifying child.')
+    ).toBeInTheDocument();
+    expect(within(list).getByText('Section 2')).toBeInTheDocument();
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['$2,200', '$5,000', 'Jan 1, 2026', 'No end date']);
+    expect(
+      within(list)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent)
+    ).toEqual(['Change', 'Before', 'After', 'Start', 'End']);
+    // The top box keeps the title only.
+    const cover = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    expect(cover).not.toHaveTextContent('→');
+  });
+
+  test('given the metadata is still loading then provisions show placeholders, not paths', async () => {
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    expect(
+      within(list).getByRole('status', { name: 'Loading parameter names' })
+    ).toBeInTheDocument();
+    // No raw path such as "gov.irs.credits.ctc.amount.base[0].amount" while it loads.
+    expect(list).not.toHaveTextContent(/gov\./);
+  });
+
+  test('given an enacted bill without a write-up then its values read alone, not as current law', async () => {
+    seedDeductionMetadata();
+    mockIsAlreadyCurrentLaw.mockReturnValue(true);
+    // Today's law already has the bill's $2,200.
+    mockFetchTrackerBills.mockResolvedValue([
+      { ...TRACKED_BILL, provisions: [{ path: 'gov.irs.credits.ctc.amount.base', value: 2200 }] },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    expect(within(list).getByText('Maximum credit per child')).toBeInTheDocument();
+    // The parameter's own description is the detail.
+    expect(within(list).getByText('Maximum credit per qualifying child.')).toBeInTheDocument();
+    // Its results compare with the law before it, so today's law is not its "before".
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    // No "before" is known: the cell says so rather than inventing one.
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['—', '$2,200', 'Jan 1, 2026', 'No end date']);
+    expect(list).not.toHaveTextContent(/current law|now law/);
+    expect(list).toHaveTextContent(/compare them with the law before the bill/);
+    store.dispatch(clearMetadata());
+  });
+
+  test('given an enacted bill with the tracker’s baseline then the overview shows what it changed from', async () => {
+    seedDeductionMetadata();
+    mockIsAlreadyCurrentLaw.mockReturnValue(true);
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        provisions: [
+          {
+            path: 'gov.irs.credits.ctc.amount.base',
+            value: 2200,
+            baselineIntervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
+          },
+        ],
+      },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['$2,000', '$2,200', 'Jan 1, 2026', 'No end date']);
+    expect(list).not.toHaveTextContent(/compare them with the law before the bill/);
+    store.dispatch(clearMetadata());
+  });
+
+  test('given dated provisions then each tracker row takes the dates of the parameter it names', async () => {
+    const dated = (path: string, startDate: string, endDate: string, value: number) => ({
+      path,
+      value,
+      intervals: [{ startDate, endDate, value }],
+    });
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        provisions: [
+          dated('gov.states.ny.tax.income.main.single[7].rate', '2026-01-01', '2026-12-31', 0.108),
+          dated('gov.states.ny.tax.income.main.joint[7].rate', '2026-01-01', '2026-12-31', 0.108),
+          dated('gov.states.ny.tax.income.credits.eitc.match', '2027-01-01', '2100-12-31', 0.35),
+        ],
+        changes: [
+          {
+            label: 'Top rate',
+            before: '10.30%',
+            after: '10.80%',
+            parameter: 'gov.states.ny.tax.income.main.{filing_status}[7].rate',
+          },
+          { label: 'EITC match', before: '30%', after: '35%' },
+        ],
+      },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    const cells = (name: RegExp) =>
+      within(within(list).getByRole('row', { name }))
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent);
+    // "{filing_status}" matches every filing status the bill sets.
+    expect(cells(/Top rate/)).toEqual(['10.30%', '10.80%', 'Jan 1, 2026', 'Dec 31, 2026']);
+    // No parameter named, and the provisions' dates differ: none are claimed.
+    expect(cells(/EITC match/)).toEqual(['30%', '35%', '—', '—']);
+  });
+
+  test('given stored districts then the districts tab maps them until the full results load', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBillDistricts.mockResolvedValue([
+      { district: 'KS-01', average_household_income_change: 5, winner_percentage: 0.04 },
+      { district: 'KS-02', average_household_income_change: 3, winner_percentage: 0.02 },
+    ]);
+    renderReport();
+
+    // The overview says districts are there, though no full run has started.
+    expect(
+      await screen.findByText('Compare income changes across districts on a map.')
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(within(panel).getByText('The full results are not loaded.')).toBeInTheDocument();
+    // No relative change is stored, so that view is not offered.
+    expect(
+      await within(panel).findByText('District map: 2 · absolute, winner-pct, loser-pct')
+    ).toBeInTheDocument();
+    expect(mockFetchTrackerBillDistricts).toHaveBeenCalledWith(TRACKED_BILL.id);
   });
 
   test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {

@@ -148,7 +148,6 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
   const adjusted = draft.provisions.filter((provision) =>
     provisionAdjusts(provision, parameters?.[provision.path]?.values)
   );
-  const leftOut = draft.provisions.length - adjusted.length;
 
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
@@ -233,7 +232,8 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
         </div>
       </div>
 
-      {!empty && leftOut > 0 && (
+      {/* Unchanged parameters still leave the run quietly; only "nothing changed" is said. */}
+      {!empty && adjusted.length === 0 && (
         <p
           style={{
             margin: 0,
@@ -242,9 +242,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
             color: colors.text.tertiary,
           }}
         >
-          {adjusted.length === 0
-            ? 'Nothing is changed yet. Change a value to run the report.'
-            : `${leftOut} unchanged parameter${leftOut === 1 ? ' is' : 's are'} left out of the report.`}
+          Nothing is changed yet. Change a value to run the report.
         </p>
       )}
 
