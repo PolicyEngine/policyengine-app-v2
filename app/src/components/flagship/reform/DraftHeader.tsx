@@ -1,4 +1,5 @@
-import { IconCalendarEvent, IconChartBar } from '@tabler/icons-react';
+import { useRef } from 'react';
+import { IconCalendarEvent, IconChartBar, IconPencil } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
@@ -111,23 +112,58 @@ function HeaderSelect({
  * come last, in the bar under the reform (DraftRunBar).
  */
 export default function DraftHeader({ draft }: { draft: DraftReform }) {
+  const nameRef = useRef<HTMLInputElement>(null);
+  const placeholder = 'Name your reform';
+  const named = draft.label.trim().length > 0;
+  // As wide as its text, so the pencil sits just after the name.
+  const width = `${Math.max((draft.label || placeholder).length, 8) + 2}ch`;
+
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-      <input
-        value={draft.label}
-        onChange={(event) => setDraftLabel(event.target.value)}
-        placeholder="Untitled reform"
-        aria-label="Reform name"
-        className="tw:w-full tw:rounded-md tw:border tw:border-transparent tw:bg-transparent tw:hover:border-border-light tw:focus:border-primary-500 tw:focus:bg-white tw:focus:outline-none"
-        style={{
-          marginLeft: `-${spacing.sm}`,
-          padding: `2px ${spacing.sm}`,
-          fontSize: typography.fontSize['2xl'],
-          fontWeight: typography.fontWeight.semibold,
-          fontFamily: typography.fontFamily.primary,
-          color: colors.text.primary,
-        }}
-      />
+      {/* The name reads as a title, but says it can be typed in: a pencil
+          beside it, and a dashed rule under it until it has a name. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs, minWidth: 0 }}>
+        <input
+          ref={nameRef}
+          value={draft.label}
+          onChange={(event) => setDraftLabel(event.target.value)}
+          placeholder={placeholder}
+          aria-label="Reform name"
+          className="tw:rounded-md tw:border tw:border-transparent tw:bg-transparent tw:hover:border-border-light tw:focus:border-primary-500 tw:focus:bg-white tw:focus:outline-none"
+          style={{
+            width,
+            maxWidth: '100%',
+            minWidth: 0,
+            marginLeft: `-${spacing.sm}`,
+            padding: `2px ${spacing.sm}`,
+            fontSize: typography.fontSize['2xl'],
+            fontWeight: typography.fontWeight.semibold,
+            fontFamily: typography.fontFamily.primary,
+            color: colors.text.primary,
+            ...(named ? {} : { borderBottom: `1px dashed ${colors.border.dark}` }),
+          }}
+        />
+        <button
+          type="button"
+          aria-label="Rename the reform"
+          title="Rename the reform"
+          onClick={() => {
+            nameRef.current?.focus();
+            nameRef.current?.select();
+          }}
+          className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100 tw:hover:text-primary-700"
+          style={{
+            display: 'inline-flex',
+            flexShrink: 0,
+            padding: spacing.xs,
+            border: 'none',
+            borderRadius: spacing.radius.container,
+            background: 'transparent',
+          }}
+        >
+          <IconPencil size={20} />
+        </button>
+      </div>
     </header>
   );
 }
