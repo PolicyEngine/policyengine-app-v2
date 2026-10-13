@@ -17,11 +17,12 @@ import type {
 /**
  * Store for the flagship app's reform objects.
  *
- * Signed out (and outside the US and UK) reforms live in localStorage.
- * Signed in, a reform is a row in the account's `/v2/user-policies`: its
- * parameters are materialized as a v1 policy (`POST /{country}/policy`,
- * which dedupes identical ones), and the row carries the policy ID, the
- * name, the baseline, and the provenance.
+ * Either way, saving a reform materializes its parameters as a v1 policy
+ * (`POST /{country}/policy`, which dedupes identical ones), and a save
+ * that cannot create the policy fails. Signed out (and outside the US and
+ * UK) the reform, with its policy ID, lives in localStorage. Signed in, it
+ * is a row in the account's `/v2/user-policies` carrying the policy ID,
+ * the name, the baseline, and the provenance.
  */
 export interface ReformStore {
   create: (reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Reform>;
@@ -38,10 +39,20 @@ export type ReformUpdates = Partial<
   Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>
 >;
 
+/** Reforms saved in this browser, each with the ID of its v1 policy. */
 export class LocalStorageReformStore implements ReformStore {
   private readonly STORAGE_KEY = 'reforms';
+  private readonly materializePolicy: MaterializeReformPolicy;
+
+  constructor(options: Pick<ApiReformStoreOptions, 'materializePolicy'> = {}) {
+    this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
+  }
 
   async create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
+    const policyId = isLegacyId(reform.policyId)
+      ? String(reform.policyId)
+      : String(await this.materializePolicy(reform.countryId, reform.label, reform.parameters));
+
     // Generate a unique ID for local storage
     // Format: "rf-[short-timestamp][random]"
     // Use base36 encoding for compactness
@@ -52,6 +63,7 @@ export class LocalStorageReformStore implements ReformStore {
     const now = new Date().toISOString();
     const newReform: Reform = {
       ...reform,
+      policyId,
       id: uniqueId,
       createdAt: now,
       updatedAt: now,
@@ -72,9 +84,25 @@ export class LocalStorageReformStore implements ReformStore {
   }
 
   async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
+    const existing = await this.findById(reformId);
+    if (!existing) {
+      throw new Error('Failed to update reform');
+    }
+    // Changed parameters are a new v1 policy; a rename keeps the policy.
+    const policyId =
+      updates.parameters !== undefined
+        ? String(
+            await this.materializePolicy(
+              existing.countryId,
+              updates.label !== undefined ? updates.label : existing.label,
+              updates.parameters
+            )
+          )
+        : (updates.policyId ?? existing.policyId);
+
+    // Read again after the request, so a change made meanwhile is kept.
     const reforms = this.getStoredReforms();
     const index = reforms.findIndex((r) => r.id === reformId);
-
     if (index === -1) {
       throw new Error('Failed to update reform');
     }
@@ -82,6 +110,7 @@ export class LocalStorageReformStore implements ReformStore {
     const updated: Reform = {
       ...reforms[index],
       ...updates,
+      policyId,
       updatedAt: new Date().toISOString(),
     };
     reforms[index] = updated;
@@ -168,15 +197,17 @@ function provenanceFromWire(wire: ProvenanceWire | null): ReformProvenance {
   };
 }
 
+/** Materializes parameters as a v1 policy; returns its ID. */
+export type MaterializeReformPolicy = (
+  countryId: string,
+  label: string | null | undefined,
+  parameters: Parameter[]
+) => Promise<number>;
+
 export interface ApiReformStoreOptions {
   /** Current parameter metadata, for coercing values read back from v1 policies. */
   getParameterMetadata?: () => ParameterMetadataCollection | null | undefined;
-  /** Materializes parameters as a v1 policy; returns its ID. */
-  materializePolicy?: (
-    countryId: string,
-    label: string | null | undefined,
-    parameters: Parameter[]
-  ) => Promise<number>;
+  materializePolicy?: MaterializeReformPolicy;
   /** Reads a v1 policy's parameter map. */
   fetchPolicyJson?: (countryId: string, policyId: string) => Promise<PolicyMetadataParams>;
 }
@@ -215,7 +246,7 @@ export async function fetchV1PolicyJson(
 export class ApiReformStore implements ReformStore {
   private readonly routes: AccountAssociationRoutes<UserPolicyItem>;
   private readonly getParameterMetadata: NonNullable<ApiReformStoreOptions['getParameterMetadata']>;
-  private readonly materializePolicy: NonNullable<ApiReformStoreOptions['materializePolicy']>;
+  private readonly materializePolicy: MaterializeReformPolicy;
   private readonly fetchPolicyJson: NonNullable<ApiReformStoreOptions['fetchPolicyJson']>;
 
   constructor(
@@ -329,5 +360,5 @@ export function getReformStore(
   account?: ApiStoreContext | null,
   options?: ApiReformStoreOptions
 ): ReformStore {
-  return account ? new ApiReformStore(account, options) : new LocalStorageReformStore();
+  return account ? new ApiReformStore(account, options) : new LocalStorageReformStore(options);
 }

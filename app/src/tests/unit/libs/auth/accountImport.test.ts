@@ -41,9 +41,12 @@ const REFORM_FIELDS: Omit<Reform, 'id' | 'createdAt' | 'updatedAt' | 'countryId'
   provenance: { source: 'manual' },
 };
 
-/** A US reform run as a report, a saved UK reform, and a Canada reform (not imported). */
+/** A US reform run as a report, a saved UK reform, and a Canada reform (not moved). */
 async function seedBrowserWork() {
-  const reforms = new LocalStorageReformStore();
+  // Saving a reform creates its v1 policy.
+  const reforms = new LocalStorageReformStore({
+    materializePolicy: async () => MATERIALIZED_POLICY_ID,
+  });
   const usReform = await reforms.create({ ...REFORM_FIELDS, countryId: 'us' });
   const ukReform = await reforms.create({
     ...REFORM_FIELDS,
@@ -118,10 +121,9 @@ describe('importBrowserWork', () => {
     const { usReform, ukReform, record } = await seedBrowserWork();
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockImplementation(acceptEverything);
-    const materialize = vi.fn().mockResolvedValue(MATERIALIZED_POLICY_ID);
 
     // When
-    const outcome = await importBrowserWork({ client: context.client, materialize });
+    const outcome = await importBrowserWork({ client: context.client });
 
     // Then
     expect(outcome).toEqual({
@@ -130,7 +132,6 @@ describe('importBrowserWork', () => {
       leftOnBrowser: 0,
       requestFailed: false,
     });
-    expect(materialize).toHaveBeenCalledTimes(1);
     const usImport = fetchCall(fetchMock, 0);
     expect(usImport.query).toEqual({ country_id: 'us' });
     expect(usImport.body.policies).toEqual([
@@ -163,7 +164,7 @@ describe('importBrowserWork', () => {
     fetchMock.mockImplementation(acceptEverything);
 
     // When
-    await importBrowserWork({ client: context.client, materialize: async () => 1 });
+    await importBrowserWork({ client: context.client });
 
     // Then
     const remaining = JSON.parse(localStorage.getItem('reforms') ?? '[]');
@@ -179,7 +180,7 @@ describe('importBrowserWork', () => {
     fetchMock.mockImplementation(acceptAllBut(ukReform.id));
 
     // When
-    const outcome = await importBrowserWork({ client: context.client, materialize: async () => 1 });
+    const outcome = await importBrowserWork({ client: context.client });
 
     // Then
     expect(outcome).toMatchObject({ reformsMoved: 1, reportsMoved: 1, leftOnBrowser: 1 });
@@ -190,7 +191,7 @@ describe('importBrowserWork', () => {
     // When: the next sign-in
     fetchMock.mockClear();
     fetchMock.mockImplementation(acceptEverything);
-    const next = await importBrowserWork({ client: context.client, materialize: async () => 1 });
+    const next = await importBrowserWork({ client: context.client });
 
     // Then
     expect(next).toMatchObject({ reformsMoved: 1, reportsMoved: 0, leftOnBrowser: 0 });
@@ -210,7 +211,7 @@ describe('importBrowserWork', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // When
-    const outcome = await importBrowserWork({ client: context.client, materialize: async () => 1 });
+    const outcome = await importBrowserWork({ client: context.client });
 
     // Then
     expect(outcome).toEqual({
@@ -230,11 +231,7 @@ describe('importBrowserWork', () => {
     fetchMock.mockImplementation(acceptEverything);
 
     // When
-    await importBrowserWork({
-      client: context.client,
-      firstCountryId: 'uk',
-      materialize: async () => 1,
-    });
+    await importBrowserWork({ client: context.client, firstCountryId: 'uk' });
 
     // Then
     expect(fetchCall(fetchMock, 0).query).toEqual({ country_id: 'uk' });
@@ -254,7 +251,7 @@ describe('importBrowserWork', () => {
     });
 
     // When
-    await importBrowserWork({ client: context.client, materialize: async () => 1 });
+    await importBrowserWork({ client: context.client });
 
     // Then
     expect([...readKeys].sort()).toEqual(
@@ -263,30 +260,33 @@ describe('importBrowserWork', () => {
     expect(LEGACY_KEYS.filter((key) => readKeys.has(key))).toEqual([]);
   });
 
-  test('given a reform that cannot get a v1 policy then it and its report stay for next time', async () => {
+  test('given a reform saved without a v1 policy by an earlier build then it is not sent and stays', async () => {
     // Given
-    const { usReform, ukReform, record } = await seedBrowserWork();
+    const { usReform } = await seedBrowserWork();
+    const stored = JSON.parse(localStorage.getItem('reforms') ?? '[]');
+    localStorage.setItem(
+      'reforms',
+      JSON.stringify(
+        stored.map((reform: Reform) =>
+          reform.id === usReform.id ? { ...reform, policyId: null } : reform
+        )
+      )
+    );
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockImplementation(acceptEverything);
 
     // When
-    const outcome = await importBrowserWork({
-      client: context.client,
-      materialize: async () => {
-        throw new Error('Failed to create policy');
-      },
-    });
+    const outcome = await importBrowserWork({ client: context.client });
 
-    // Then: only the UK reform, which already had its v1 policy, is sent
-    expect(outcome).toMatchObject({ reformsMoved: 1, reportsMoved: 0, leftOnBrowser: 2 });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchCall(fetchMock, 0).body).toEqual({
-      policies: [expect.objectContaining({ client_ref: ukReform.id })],
-      reports: [],
-    });
+    // Then
+    expect(outcome).toMatchObject({ reformsMoved: 1, reportsMoved: 1, leftOnBrowser: 0 });
+    const sentRefs = [0, 1].flatMap((call) =>
+      fetchCall(fetchMock, call).body.policies.map(
+        (item: { client_ref: string }) => item.client_ref
+      )
+    );
+    expect(sentRefs).not.toContain(usReform.id);
     expect(storedIds('reforms')).toContain(usReform.id);
-    expect(storedIds('pe-flagship-reports')).toEqual([record.id]);
-    expect(readReportMeta('615')).not.toBeNull();
   });
 });
 
@@ -299,7 +299,7 @@ describe('runSignInImport', () => {
     const notice = renderHook(() => useAccountImportNotice());
 
     // When
-    await act(() => runSignInImport({ client: context.client, materialize: async () => 1 }));
+    await act(() => runSignInImport({ client: context.client }));
 
     // Then
     expect(notice.result.current).toEqual({
@@ -316,7 +316,7 @@ describe('runSignInImport', () => {
     fetchMock.mockResolvedValue(errorResponse(503, 'Saved work is temporarily unavailable.'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const notice = renderHook(() => useAccountImportNotice());
-    await act(() => runSignInImport({ client: context.client, materialize: async () => 1 }));
+    await act(() => runSignInImport({ client: context.client }));
     expect(notice.result.current).toMatchObject({
       kind: 'failure',
       message:
@@ -342,7 +342,7 @@ describe('runSignInImport', () => {
     const notice = renderHook(() => useAccountImportNotice());
 
     // When
-    await act(() => runSignInImport({ client: context.client, materialize: async () => 1 }));
+    await act(() => runSignInImport({ client: context.client }));
 
     // Then
     expect(notice.result.current).toEqual({

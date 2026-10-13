@@ -305,6 +305,8 @@ export default function ReformsPage() {
         userId: reform.userId,
         countryId: reform.countryId,
         label: `${reform.label || 'Untitled reform'} (copy)`,
+        // The copy shares the original's v1 policy; nothing new to create.
+        policyId: reform.policyId,
         parameters: reform.parameters,
         baseline: reform.baseline,
         provenance: reform.provenance,

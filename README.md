@@ -71,6 +71,9 @@ build time (see `calculator-app/.env.example`), alongside
 
 - Signed in on the US or UK workspace, reforms and reports go to the
   account. Signed out, they stay in this browser, in v3's own keys.
+- Either way, saving a reform first creates its policy in the PolicyEngine
+  API, and running a report creates its simulations and report there. The
+  browser or the account keeps only the records that point at them.
 - Every sign-in moves the v3 reforms and reports saved on this browser
   while signed out into the account. Each item the account confirms is
   removed from the browser; anything else stays and is sent again at the

@@ -4,7 +4,6 @@ import {
   provisionsToWire,
   type FlagshipReportRecord,
 } from '@/api/flagshipReportStore';
-import { materializeReformPolicy } from '@/api/reformStore';
 import { isLegacyId } from '@/api/v2Associations';
 import { importToAccount } from '@/api/v2Me';
 import type { V2UserClient } from '@/api/v2UserClient';
@@ -28,6 +27,10 @@ import {
  * stays here and is sent again at the next sign-in. Only v3's own keys are
  * read. The server deduplicates by `client_ref` (the browser ID), so an
  * item sent again returns its existing ID.
+ *
+ * Browser reforms already carry their v1 policy (saving one creates it),
+ * so the import creates nothing in v1. A reform saved by an earlier build
+ * without a policy is not sent; it stays here until it is saved again.
  */
 
 /** The v3 keys the import reads; v3 never reads the legacy calculator's keys. */
@@ -61,7 +64,7 @@ function text(value: unknown): string | null {
 }
 
 type PlannedItem =
-  | { kind: 'policies'; clientRef: string; body: ImportPolicyItem; reform?: Reform }
+  | { kind: 'policies'; clientRef: string; body: ImportPolicyItem }
   | { kind: 'reports'; clientRef: string; body: ImportReportItem };
 
 /** This browser's v3 reforms and reports, per account country. */
@@ -72,7 +75,7 @@ function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
   const plan: Record<AssociationCountryId, PlannedItem[]> = { us: [], uk: [] };
 
   for (const reform of reforms) {
-    if (!reform.id || !isAssociationCountry(reform.countryId)) {
+    if (!reform.id || !isAssociationCountry(reform.countryId) || !isLegacyId(reform.policyId)) {
       continue;
     }
     plan[reform.countryId].push({
@@ -80,7 +83,7 @@ function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
       clientRef: reform.id,
       body: {
         client_ref: reform.id,
-        legacy_policy_id: isLegacyId(reform.policyId) ? Number(reform.policyId) : 0,
+        legacy_policy_id: Number(reform.policyId),
         name: text(reform.label),
         description: null,
         baseline: reform.baseline ?? null,
@@ -92,8 +95,6 @@ function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
             }
           : null,
       },
-      // Reforms without a v1 policy get one before the import.
-      ...(isLegacyId(reform.policyId) ? {} : { reform }),
     });
   }
 
@@ -203,7 +204,7 @@ function countryOrder(firstCountryId?: string): AssociationCountryId[] {
 export interface BrowserWorkImportOutcome {
   reformsMoved: number;
   reportsMoved: number;
-  /** Items still on this browser: skipped, held back, or not sent. */
+  /** Items still on this browser: skipped by the account, or not sent. */
   leftOnBrowser: number;
   /** True when an import request failed, which stops the run. */
   requestFailed: boolean;
@@ -217,21 +218,16 @@ export interface ImportBrowserWorkOptions {
    * country.
    */
   firstCountryId?: string;
-  /** Materializes a reform's parameters as a v1 policy (default: POST /{c}/policy). */
-  materialize?: (reform: Reform) => Promise<number>;
 }
 
 /**
  * Moves this browser's signed-out v3 work into the account, removing each
- * item the account confirms. A reform that cannot get a v1 policy stays,
- * and so do its reports, so they keep their link when they move later.
- * A failed request stops the run; everything not yet moved stays.
+ * item the account confirms. A failed request stops the run; everything
+ * not yet moved stays.
  */
 export async function importBrowserWork({
   client,
   firstCountryId,
-  materialize = (reform) =>
-    materializeReformPolicy(reform.countryId, reform.label, reform.parameters),
 }: ImportBrowserWorkOptions): Promise<BrowserWorkImportOutcome> {
   const plan = planBrowserWorkImport();
   const planned = ASSOCIATION_COUNTRY_IDS.reduce(
@@ -246,31 +242,7 @@ export async function importBrowserWork({
   };
 
   for (const countryId of countryOrder(firstCountryId)) {
-    const ready: PlannedItem[] = [];
-    const reformsLeft = new Set<string>();
-    for (const item of plan[countryId]) {
-      if (item.kind === 'policies' && item.reform) {
-        try {
-          const policyId = await materialize(item.reform);
-          ready.push({ ...item, body: { ...item.body, legacy_policy_id: policyId } });
-        } catch {
-          reformsLeft.add(item.clientRef);
-        }
-        continue;
-      }
-      ready.push(item);
-    }
-    // A report whose reform stays on this browser stays with it.
-    const items = ready.filter(
-      (item) =>
-        !(
-          item.kind === 'reports' &&
-          item.body.user_policy_client_ref &&
-          reformsLeft.has(item.body.user_policy_client_ref)
-        )
-    );
-
-    for (const body of chunkImportItems(items)) {
+    for (const body of chunkImportItems(plan[countryId])) {
       const result = await importToAccount(client, countryId, body).catch((error: unknown) => {
         console.error('[accountImport] Import request failed:', error);
         return null;

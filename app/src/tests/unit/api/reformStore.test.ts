@@ -210,7 +210,9 @@ describe('ApiReformStore', () => {
     'given a reform saved on this browser while signed out, when %s signed in, then it is refused',
     async (_, operate) => {
       // Given
-      const local = await new LocalStorageReformStore().create(mockReformInput);
+      const local = await new LocalStorageReformStore({
+        materializePolicy: async () => MATERIALIZED_POLICY_ID,
+      }).create(mockReformInput);
       const { store, fetchMock } = apiReformStore();
 
       // When / Then
@@ -321,9 +323,11 @@ describe('getReformStore', () => {
 
 describe('LocalStorageReformStore', () => {
   let store: LocalStorageReformStore;
+  let materializePolicy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    store = new LocalStorageReformStore();
+    materializePolicy = vi.fn().mockResolvedValue(MATERIALIZED_POLICY_ID);
+    store = new LocalStorageReformStore({ materializePolicy });
     localStorage.clear();
   });
 
@@ -340,6 +344,32 @@ describe('LocalStorageReformStore', () => {
     expect(byId?.label).toBe('CTC to $3,600 for children under 6');
   });
 
+  it('given a reform, when created, then its v1 policy is created and its ID kept in this browser', async () => {
+    const created = await store.create(mockReformInput);
+
+    expect(materializePolicy).toHaveBeenCalledWith(
+      'us',
+      mockReformInput.label,
+      mockReformInput.parameters
+    );
+    expect(created.policyId).toBe(String(MATERIALIZED_POLICY_ID));
+    expect((await store.findById(created.id!))?.policyId).toBe(String(MATERIALIZED_POLICY_ID));
+  });
+
+  it('given a reform that already has a v1 policy, when created, then no new policy is made', async () => {
+    const created = await store.create({ ...mockReformInput, policyId: '501' });
+
+    expect(materializePolicy).not.toHaveBeenCalled();
+    expect(created.policyId).toBe('501');
+  });
+
+  it('given the v1 policy cannot be created, when created, then the save fails and nothing is stored', async () => {
+    materializePolicy.mockRejectedValue(new Error('Failed to create policy'));
+
+    await expect(store.create(mockReformInput)).rejects.toThrow('Failed to create policy');
+    expect(await store.findByUser('user-123')).toEqual([]);
+  });
+
   it('given reforms from two countries, when filtering by country, then only matches are returned', async () => {
     await store.create(mockReformInput);
     await store.create({ ...mockReformInput, countryId: 'uk' });
@@ -349,13 +379,43 @@ describe('LocalStorageReformStore', () => {
     expect(usOnly[0].countryId).toBe('us');
   });
 
-  it('given an existing reform, when updated, then fields change and updatedAt advances', async () => {
+  it('given an existing reform, when renamed, then the label changes and the v1 policy stays', async () => {
     const created = await store.create(mockReformInput);
+    materializePolicy.mockClear();
 
     const updated = await store.update(created.id!, { label: 'Renamed' });
 
     expect(updated.label).toBe('Renamed');
     expect(updated.userId).toBe('user-123');
+    expect(updated.policyId).toBe(String(MATERIALIZED_POLICY_ID));
+    expect(materializePolicy).not.toHaveBeenCalled();
+  });
+
+  it('given an existing reform, when its parameters change, then it points at a new v1 policy', async () => {
+    const created = await store.create(mockReformInput);
+    materializePolicy.mockResolvedValue(REPLACEMENT_POLICY_ID);
+    const parameters = [
+      {
+        name: 'gov.irs.credits.ctc.amount.base[0]',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 4000 }],
+      },
+    ];
+
+    const updated = await store.update(created.id!, { parameters });
+
+    expect(materializePolicy).toHaveBeenLastCalledWith('us', mockReformInput.label, parameters);
+    expect(updated.policyId).toBe(String(REPLACEMENT_POLICY_ID));
+    expect((await store.findById(created.id!))?.parameters).toEqual(parameters);
+  });
+
+  it('given the new v1 policy cannot be created, when updated, then the stored reform is unchanged', async () => {
+    const created = await store.create(mockReformInput);
+    materializePolicy.mockRejectedValue(new Error('Failed to create policy'));
+
+    await expect(store.update(created.id!, { parameters: [] })).rejects.toThrow(
+      'Failed to create policy'
+    );
+    expect(await store.findById(created.id!)).toEqual(created);
   });
 
   it('given a missing reform, when updated, then throws', async () => {
