@@ -360,6 +360,25 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     // Indexing, if any, starts the year after the value does.
     setTimingChoice(when);
   };
+  const appliesFrom = (
+    <Select value={String(fromYear)} onValueChange={(next) => changeFromYear(Number(next))}>
+      <SelectTrigger
+        aria-label="Applies from"
+        size="sm"
+        className="tw:w-auto tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
+        style={{ fontFamily: typography.fontFamily.primary }}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent position="popper" align="start">
+        {fromOptions.map((option) => (
+          <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
+            {option}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
   const growthRow =
     mode === 'indexed' && canIndex && moneyMember
       ? {
@@ -503,28 +522,13 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
           />
         </div>
 
-        {(mode === 'one' || mode === 'indexed') && (
+        {/* One value's start leads its grid; above a schedule or a grown series, it stands apart. */}
+        {(mode === 'indexed' || (mode === 'one' && group?.brackets)) && (
           <label style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
             <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
               Applies from
             </span>
-            <Select value={String(fromYear)} onValueChange={(next) => changeFromYear(Number(next))}>
-              <SelectTrigger
-                aria-label="Applies from"
-                size="sm"
-                className="tw:w-auto tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
-                style={{ fontFamily: typography.fontFamily.primary }}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" align="start">
-                {fromOptions.map((option) => (
-                  <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {appliesFrom}
           </label>
         )}
 
@@ -589,6 +593,9 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             onFocus={setFocusedPath}
             previewYears={previewYears}
             footer={growthRow}
+            // One value: its start is the grid's first row, so no year heads the column.
+            lead={mode === 'one' ? { label: 'Applies from', content: appliesFrom } : undefined}
+            showYearHeadings={mode !== 'one'}
           />
         )}
 
