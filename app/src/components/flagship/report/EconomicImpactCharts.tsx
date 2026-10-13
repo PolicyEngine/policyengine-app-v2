@@ -13,7 +13,6 @@ import ReportChartCard from '@/components/flagship/report/ReportChartCard';
 import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useReportYear } from '@/hooks/useReportYear';
 import BudgetaryImpactSubPage from '@/pages/report-output/budgetary-impact/BudgetaryImpactSubPage';
 import { getBudgetCsvRows } from '@/pages/report-output/budgetary-impact/budgetChartUtils';
 import {
@@ -22,13 +21,11 @@ import {
   getWinnersLosersCsvRows,
 } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import { getInequalityCsvRows } from '@/pages/report-output/inequality-impact/inequalityChartUtils';
-import NoOpReportCallout from '@/pages/report-output/NoOpReportCallout';
 import {
   getPovertyByAgeCsvRows,
   getPovertyByGenderCsvRows,
   getPovertyByRaceCsvRows,
 } from '@/pages/report-output/poverty-impact/povertyChartUtils';
-import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
 
 type PovertyDepth = 'regular' | 'deep';
 type PovertyBreakdown = 'by-age' | 'by-gender' | 'by-race';
@@ -68,8 +65,6 @@ const DECILE_MODE_OPTIONS = [
  */
 export default function EconomicImpactCharts({ output }: { output: SocietyWideReportOutput }) {
   const countryId = useCurrentCountry();
-  const reportYear = useReportYear();
-  const isNoOp = isSocietyWideReportNoOp(output);
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
   const [povertyDepth, setPovertyDepth] = useState<PovertyDepth>('regular');
   const [povertyBreakdown, setPovertyBreakdown] = useState<PovertyBreakdown>('by-age');
@@ -126,8 +121,6 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
 
   return (
     <Stack gap="lg">
-      {isNoOp && <NoOpReportCallout year={reportYear} />}
-
       <div
         style={{
           display: 'grid',
