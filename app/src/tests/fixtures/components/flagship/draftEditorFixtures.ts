@@ -131,6 +131,7 @@ export function seedDeductionMetadata({
           economy_options: {
             region: regions,
             time_period: [
+              { name: 2025, label: '2025' },
               { name: 2026, label: '2026' },
               { name: 2027, label: '2027' },
             ],

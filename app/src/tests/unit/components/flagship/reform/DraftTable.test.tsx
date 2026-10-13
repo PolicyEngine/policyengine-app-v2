@@ -429,6 +429,27 @@ describe('DraftTable', () => {
       expect(screen.getByText('from 2027')).toBeInTheDocument();
     });
 
+    test('then a new value can start before the report year, read in that year', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+      await pick(user, 'Applies from', '2025');
+
+      expect(provision(CTC_PATH)?.intervals).toEqual([
+        { startDate: '2025-01-01', endDate: FOREVER, value: 3000 },
+      ]);
+      // The column is 2025, against current law in 2025.
+      expect(screen.getByLabelText('Child tax credit base amount, 2025')).toBeInTheDocument();
+      expect(screen.getByText('2,000')).toBeInTheDocument();
+
+      // Closed, the row reads its summary, not a 2026 box that would split it.
+      await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
+      expect(screen.getByRole('button', { name: '$3,000' })).toBeInTheDocument();
+      expect(screen.getByText('from 2025')).toBeInTheDocument();
+    });
+
     test('then a value set before indexing existed opens as one value', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', {
