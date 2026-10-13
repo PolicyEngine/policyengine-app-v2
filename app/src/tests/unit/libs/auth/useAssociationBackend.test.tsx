@@ -1,25 +1,17 @@
 import { renderHook } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
 import { CountryProvider } from '@/contexts/CountryContext';
-import { useHouseholdAssociationStoreForMode } from '@/hooks/useUserHousehold';
-import { usePolicyAssociationStoreForMode } from '@/hooks/useUserPolicy';
-import { useReportAssociationStoreForMode } from '@/hooks/useUserReportAssociations';
-import { useSimulationAssociationStoreForMode } from '@/hooks/useUserSimulationAssociations';
 import type { AuthContextValue, AuthStatus } from '@/libs/auth/AuthContext';
 import {
-  ACCOUNT_UNAVAILABLE_MESSAGE,
-  AccountUnavailableError,
   selectAssociationBackend,
-  UNAVAILABLE_ACCOUNT_USER_ID,
   useAssociationBackend,
   useCurrentUserId,
   type AssociationBackendMode,
 } from '@/libs/auth/useAssociationBackend';
 import type { CountryId } from '@/libs/countries';
-import { mockMeItem, pageResponse, PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
+import { mockMeItem, PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
 import {
-  accountErrorAuthValue,
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
@@ -95,31 +87,6 @@ describe('useAssociationBackend', () => {
     expect(result.current.ready).toBe(false);
   });
 
-  test('given the account could not be loaded then saved work neither loads nor saves', async () => {
-    // Given
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
-    const wrapper = wrapperFor(accountErrorAuthValue(), 'us');
-
-    // When
-    const backend = renderHook(() => useAssociationBackend(), { wrapper }).result.current;
-    const policyStore = renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result
-      .current.store;
-
-    // Then
-    expect(backend.mode).toBe('unavailable');
-    expect(backend.ready).toBe(true);
-    expect(backend.userId).toBe(UNAVAILABLE_ACCOUNT_USER_ID);
-    await expect(policyStore.findByUser(backend.userId, 'us')).rejects.toBeInstanceOf(
-      AccountUnavailableError
-    );
-    await expect(
-      policyStore.create({ userId: backend.userId, policyId: '95762', countryId: 'us' })
-    ).rejects.toThrow(ACCOUNT_UNAVAILABLE_MESSAGE);
-    expect(fetchMock).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
-  });
-
   test('given no auth provider then sign-in is disabled and storage is local', () => {
     const { result } = renderHook(() => useAssociationBackend('us'));
 
@@ -127,59 +94,4 @@ describe('useAssociationBackend', () => {
     expect(result.current.userId).toBe(MOCK_USER_ID);
     expect(result.current.ready).toBe(true);
   });
-});
-
-describe('association store selection', () => {
-  /** Lists saved work through every association hook's store. */
-  async function listThroughEveryStore(auth: AuthContextValue, countryId: CountryId) {
-    const wrapper = wrapperFor(auth, countryId);
-    const userId = renderHook(() => useCurrentUserId(), { wrapper }).result.current;
-    const stores = [
-      renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result.current.store,
-      renderHook(() => useHouseholdAssociationStoreForMode(), { wrapper }).result.current.store,
-      renderHook(() => useSimulationAssociationStoreForMode(), { wrapper }).result.current.store,
-      renderHook(() => useReportAssociationStoreForMode(), { wrapper }).result.current.store,
-    ];
-    return Promise.all(stores.map((store) => store.findByUser(userId, countryId)));
-  }
-
-  test('given a signed-in UK session then every association hook uses the account stores', async () => {
-    // Given
-    const fetchMock = vi.fn(async (_url: string) => pageResponse([]));
-    vi.stubGlobal('fetch', fetchMock);
-
-    // When
-    await listThroughEveryStore(signedInAuthValue(), 'uk');
-
-    // Then
-    const paths = fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
-    expect(paths).toEqual([
-      '/v2/user-policies',
-      '/v2/user-households',
-      '/v2/user-simulations',
-      '/v2/user-reports',
-    ]);
-    vi.unstubAllGlobals();
-  });
-
-  test.each([
-    ['signed out in the US', makeAuthValue({ status: 'anonymous' }), 'us'],
-    ['sign-in disabled', makeAuthValue({ status: 'disabled' }), 'uk'],
-    ['signed in in Nigeria', signedInAuthValue(), 'ng'],
-  ] as const)(
-    'given %s then every association hook uses localStorage',
-    async (_, auth, countryId) => {
-      // Given
-      const fetchMock = vi.fn();
-      vi.stubGlobal('fetch', fetchMock);
-
-      // When
-      const lists = await listThroughEveryStore(auth, countryId);
-
-      // Then
-      expect(lists).toEqual([[], [], [], []]);
-      expect(fetchMock).not.toHaveBeenCalled();
-      vi.unstubAllGlobals();
-    }
-  );
 });

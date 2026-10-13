@@ -1,16 +1,14 @@
 /**
- * Hook for saving a shared report to the user's saved work
+ * Hook for saving a shared report to user's localStorage
  *
  * When a user clicks "Save" on a shared report, this hook persists the
- * user associations from ReportIngredientsInput — to their account when
- * signed in (US/UK), to localStorage otherwise — making the report appear
- * in their reports list.
+ * user associations from ReportIngredientsInput to localStorage, making the report
+ * appear in their reports list.
  */
 
 import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
-import { useAssociationBackendResolver } from '@/libs/auth/useAssociationBackend';
 import { CountryId } from '@/libs/countries';
 import { Household } from '@/models/Household';
 import { RootState } from '@/store';
@@ -27,15 +25,13 @@ export type SaveResult = 'success' | 'partial' | 'already_saved' | null;
 type SharedSaveHouseholdDetails = Household;
 
 /**
- * Hook for saving a shared report and all its user associations
+ * Hook for saving a shared report and all its user associations to localStorage
  *
  * ReportIngredientsInput already contains user associations with IDs and labels.
- * This hook persists them to the current store.
+ * This hook simply persists them to localStorage.
  *
  * Features:
- * - Idempotent save: by userReportId in localStorage; signed in, by the
- *   report (`POST /v2/user-reports {legacy_report_id}` only when this
- *   account has not saved it yet)
+ * - Idempotent save using userReportId (won't create duplicates)
  * - Best-effort saving of ingredients (report save required, others optional)
  * - Skips current law policies (they're pre-defined, not user-created)
  */
@@ -46,7 +42,6 @@ export function useSaveSharedReport() {
   const createHouseholdAssociation = useCreateHouseholdAssociation();
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
-  const resolveBackend = useAssociationBackendResolver();
 
   // Get currentLawId to skip creating associations for current law policies
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
@@ -68,19 +63,11 @@ export function useSaveSharedReport() {
     _policies: Policy[] = [],
     _households: SharedSaveHouseholdDetails[] = []
   ): Promise<UserReport> => {
-    // Saved where the session settles: the account when signed in (even if
-    // the save was clicked while signing in), this browser when signed out.
-    const backend = await resolveBackend();
-    const { userId } = backend;
+    const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);
-    const findExisting = async () =>
-      (await reportStore.findByUserReportId(userReportId)) ??
-      (backend.mode !== 'localStorage'
-        ? await reportStore.findById(userId, shareData.userReport.reportId)
-        : null);
 
     // Idempotency check: see if this report is already saved
-    const existingReport = await findExisting();
+    const existingReport = await reportStore.findByUserReportId(userReportId);
     if (existingReport) {
       setResultWithTimeout('already_saved');
       return existingReport;
@@ -159,7 +146,7 @@ export function useSaveSharedReport() {
       });
     } catch (error) {
       // Handle race condition: if another save completed first
-      const existingAfterRace = await findExisting();
+      const existingAfterRace = await reportStore.findByUserReportId(userReportId);
       if (existingAfterRace) {
         setResultWithTimeout('already_saved');
         return existingAfterRace;

@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
-import { useAccountSaveFailure } from '@/hooks/useAccountSaveFailure';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
+import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { useCurrentCountry } from './useCurrentCountry';
 import { useCreatePolicyAssociation } from './useUserPolicy';
@@ -13,9 +12,8 @@ interface CreatePolicyVariables {
 
 export function useCreatePolicy(policyLabel?: string) {
   const countryId = useCurrentCountry();
-  const userId = useCurrentUserId();
+  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreatePolicyAssociation();
-  const reportAccountSaveFailure = useAccountSaveFailure();
 
   const mutation = useMutation({
     mutationFn: ({ payload }: CreatePolicyVariables) => createPolicy(countryId, payload),
@@ -23,8 +21,9 @@ export function useCreatePolicy(policyLabel?: string) {
       const resolvedLabel = label ?? policyLabel;
 
       try {
-        // File the association under the current user (the account when
-        // signed in, localStorage otherwise)
+        // Create association with current user (or anonymous for session storage)
+        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
+
         await createAssociation.mutateAsync({
           userId,
           policyId: data.result.policy_id,
@@ -34,9 +33,6 @@ export function useCreatePolicy(policyLabel?: string) {
         });
       } catch (error) {
         console.error('Policy created but association failed:', error);
-        // The builder carries on with the created policy; tell a signed-in
-        // user it is not in their account (unavailable, too large, down).
-        await reportAccountSaveFailure('policy', error);
       }
     },
   });

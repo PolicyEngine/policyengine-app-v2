@@ -6,7 +6,6 @@ import './app.css';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
-import SaveFailureNotice from '@/components/common/SaveFailureNotice';
 import DevTools from '@/components/DevTools';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalculatorRouter } from './CalculatorRouter';
@@ -33,7 +32,6 @@ export default function CalculatorApp() {
           <TooltipProvider>
             <CalcOrchestratorProvider>
               <CalculatorRouter />
-              <SaveFailureNotice />
               <DevTools />
             </CalcOrchestratorProvider>
           </TooltipProvider>

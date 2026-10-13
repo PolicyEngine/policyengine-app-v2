@@ -1,53 +1,39 @@
-import { toLegacyId } from '@/api/v2Associations';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import type {
-  AssociationCountryId,
-  UserHouseholdCreateBody,
-  UserHouseholdItem,
-  UserHouseholdPatchBody,
-} from '@/types/v2User';
 
 /**
- * Converts between UserHouseholdPopulation and the `/v2/user-households`
- * wire format. `householdId` is the v1 household ID (`legacy_household_id`).
+ * Adapter for converting between UserHouseholdPopulation and API formats
  */
 export class UserHouseholdAdapter {
-  static toCreationPayload(
-    userHousehold: Pick<UserHouseholdPopulation, 'householdId' | 'label'>,
-    countryId: AssociationCountryId
-  ): UserHouseholdCreateBody {
+  /**
+   * Convert UserHouseholdPopulation to API creation payload
+   * Note: This endpoint doesn't exist yet
+   */
+  static toCreationPayload(userHousehold: UserHouseholdPopulation): any {
     return {
-      country_id: countryId,
-      legacy_household_id: toLegacyId(userHousehold.householdId, 'household'),
-      ...(userHousehold.label ? { name: userHousehold.label } : {}),
+      user_id: userHousehold.userId,
+      household_id: userHousehold.householdId,
+      country_id: userHousehold.countryId,
+      label: userHousehold.label,
+      created_at: userHousehold.createdAt,
+      updated_at: userHousehold.updatedAt || new Date().toISOString(),
     };
   }
 
-  static toUpdatePayload(updates: Partial<UserHouseholdPopulation>): UserHouseholdPatchBody {
-    const body: UserHouseholdPatchBody = {};
-    if ('label' in updates) {
-      body.name = updates.label || null;
-    }
-    if (updates.householdId !== undefined) {
-      body.legacy_household_id = toLegacyId(updates.householdId, 'household');
-    }
-    return body;
-  }
-
-  static hasLegacyHousehold(item: UserHouseholdItem): boolean {
-    return item.legacy_household_id !== null && item.legacy_household_id !== undefined;
-  }
-
-  static fromApiItem(item: UserHouseholdItem): UserHouseholdPopulation {
+  /**
+   * Convert API response to UserHouseholdPopulation
+   * Note: This endpoint doesn't exist yet
+   * Explicitly coerces IDs to strings to handle JSON.parse type mismatches
+   */
+  static fromApiResponse(apiData: any): UserHouseholdPopulation {
     return {
       type: 'household' as const,
-      id: item.id,
-      userId: item.user_id,
-      householdId: String(item.legacy_household_id),
-      countryId: item.country_id,
-      label: item.name ?? undefined,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      id: String(apiData.household_id),
+      userId: String(apiData.user_id),
+      householdId: String(apiData.household_id),
+      countryId: apiData.country_id,
+      label: apiData.label,
+      createdAt: apiData.created_at,
+      updatedAt: apiData.updated_at,
       isCreated: true,
     };
   }

@@ -1,6 +1,210 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+
+// Mock fetch
+global.fetch = vi.fn();
+
+describe('ApiGeographicStore', () => {
+  let store: ApiGeographicStore;
+
+  const mockPopulation: UserGeographyPopulation = {
+    userId: 'user-123',
+    geographyId: 'geo-456',
+    countryId: 'us',
+    label: 'Test Geography',
+    type: 'geography',
+    scope: 'subnational',
+    createdAt: '2025-01-01T00:00:00Z',
+  };
+
+  const mockApiResponse = {
+    user_id: 'user-123',
+    geography_id: 'geo-456',
+    country_id: 'us',
+    label: 'Test Geography',
+    scope: 'subnational',
+    created_at: '2025-01-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
+  };
+
+  beforeEach(() => {
+    store = new ApiGeographicStore();
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  describe('create', () => {
+    it('given valid population then creates geographic association', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => mockApiResponse,
+      });
+
+      // When
+      const result = await store.create(mockPopulation);
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/user-geographic-associations',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toMatchObject({
+        userId: 'user-123',
+        geographyId: 'geo-456',
+        countryId: 'us',
+        label: 'Test Geography',
+        scope: 'subnational',
+      });
+    });
+
+    it('given API error then throws error', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // When/Then
+      await expect(store.create(mockPopulation)).rejects.toThrow(
+        'Failed to create geographic association'
+      );
+    });
+  });
+
+  describe('findByUser', () => {
+    it('given valid user ID then fetches user associations', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [mockApiResponse],
+      });
+
+      // When
+      const result = await store.findByUser('user-123');
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/user-geographic-associations/user/user-123',
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        userId: 'user-123',
+        geographyId: 'geo-456',
+        countryId: 'us',
+        label: 'Test Geography',
+        scope: 'subnational',
+      });
+    });
+
+    it('given API error then throws error', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // When/Then
+      await expect(store.findByUser('user-123')).rejects.toThrow(
+        'Failed to fetch user associations'
+      );
+    });
+  });
+
+  describe('findById', () => {
+    it('given valid IDs then fetches specific association', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => mockApiResponse,
+      });
+
+      // When
+      const result = await store.findById('user-123', 'geo-456');
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/user-geographic-associations/user-123/geo-456',
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toMatchObject({
+        userId: 'user-123',
+        geographyId: 'geo-456',
+        countryId: 'us',
+        label: 'Test Geography',
+        scope: 'subnational',
+      });
+    });
+
+    it('given 404 response then returns null', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      // When
+      const result = await store.findById('user-123', 'nonexistent');
+
+      // Then
+      expect(result).toBeNull();
+    });
+
+    it('given other error then throws error', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // When/Then
+      await expect(store.findById('user-123', 'geo-456')).rejects.toThrow(
+        'Failed to fetch association'
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('given update called then throws not supported error', async () => {
+      // Given & When & Then
+      await expect(store.update('user-123', 'geo-456', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
+    });
+
+    it('given update called then logs warning', async () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      try {
+        await store.update('user-123', 'geo-456', { label: 'Updated Label' });
+      } catch {
+        // Expected to throw
+      }
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('API endpoint not yet implemented')
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
+});
 
 describe('LocalStorageGeographicStore', () => {
   let store: LocalStorageGeographicStore;

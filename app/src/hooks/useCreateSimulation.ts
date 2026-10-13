@@ -1,23 +1,22 @@
 import { useMutation } from '@tanstack/react-query';
 import { createSimulation } from '@/api/simulation';
-import { useAccountSaveFailure } from '@/hooks/useAccountSaveFailure';
+import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { SimulationCreationPayload } from '@/types/payloads';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export function useCreateSimulation(simulationLabel?: string) {
   const country = useCurrentCountry();
-  const userId = useCurrentUserId();
+  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateSimulationAssociation();
-  const reportAccountSaveFailure = useAccountSaveFailure();
 
   const mutation = useMutation({
     mutationFn: (data: SimulationCreationPayload) => createSimulation(country, data),
     onSuccess: async (data) => {
       try {
-        // File the association under the current user (the account when
-        // signed in, localStorage otherwise)
+        // Create association with current user (or anonymous for session storage)
+        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
+
         await createAssociation.mutateAsync({
           userId,
           simulationId: data.result.simulation_id,
@@ -27,9 +26,6 @@ export function useCreateSimulation(simulationLabel?: string) {
         });
       } catch (error) {
         console.error('Simulation created but association failed:', error);
-        // The builder carries on with the created simulation; tell a signed-in
-        // user it is not in their account (unavailable, too large, down).
-        await reportAccountSaveFailure('simulation', error);
       }
     },
   });

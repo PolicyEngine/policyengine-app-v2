@@ -1,9 +1,213 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { LocalStorageHouseholdStore } from '@/api/householdAssociation';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
 import {
+  mockApiResponse,
+  mockApiResponseList,
   mockUserHouseholdPopulation,
   mockUserHouseholdPopulationList,
 } from '@/tests/fixtures/api/householdAssociationMocks';
+
+global.fetch = vi.fn();
+
+describe('ApiHouseholdStore', () => {
+  let store: ApiHouseholdStore;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    store = new ApiHouseholdStore();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('create', () => {
+    test('given valid household association then creates successfully', async () => {
+      // Given
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockApiResponse),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.create(mockUserHouseholdPopulation);
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/user-household-associations',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toMatchObject({
+        householdId: '123',
+        userId: 'user-456',
+        countryId: 'us',
+        label: 'My Test Household',
+      });
+    });
+
+    test('given API returns error then throws error', async () => {
+      // Given
+      const mockResponse = {
+        ok: false,
+        status: 400,
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When/Then
+      await expect(store.create(mockUserHouseholdPopulation)).rejects.toThrow(
+        'Failed to create household association'
+      );
+    });
+
+    test('given network error then propagates error', async () => {
+      // Given
+      const networkError = new Error('Network failure');
+      (global.fetch as any).mockRejectedValue(networkError);
+
+      // When/Then
+      await expect(store.create(mockUserHouseholdPopulation)).rejects.toThrow('Network failure');
+    });
+  });
+
+  describe('findByUser', () => {
+    test('given valid user ID then returns list of households', async () => {
+      // Given
+      const userId = 'user-456';
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockApiResponseList),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(userId);
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(`/api/user-household-associations/user/${userId}`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      expect(result).toEqual(mockUserHouseholdPopulationList);
+    });
+
+    test('given user with no households then returns empty array', async () => {
+      // Given
+      const userId = 'user-with-no-households';
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(userId);
+
+      // Then
+      expect(result).toEqual([]);
+    });
+
+    test('given API returns error then throws error', async () => {
+      // Given
+      const userId = 'user-456';
+      const mockResponse = {
+        ok: false,
+        status: 500,
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When/Then
+      await expect(store.findByUser(userId)).rejects.toThrow('Failed to fetch user households');
+    });
+  });
+
+  describe('findById', () => {
+    test('given valid user and household IDs then returns household', async () => {
+      // Given
+      const userId = 'user-456';
+      const householdId = 'household-123';
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue(mockApiResponse),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findById(userId, householdId);
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(
+        `/api/user-household-associations/${userId}/${householdId}`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      expect(result).toEqual(mockUserHouseholdPopulation);
+    });
+
+    test('given non-existent association then returns null', async () => {
+      // Given
+      const userId = 'user-456';
+      const householdId = 'non-existent';
+      const mockResponse = {
+        ok: false,
+        status: 404,
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findById(userId, householdId);
+
+      // Then
+      expect(result).toBeNull();
+    });
+
+    test('given server error then throws error', async () => {
+      // Given
+      const userId = 'user-456';
+      const householdId = 'household-123';
+      const mockResponse = {
+        ok: false,
+        status: 500,
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When/Then
+      await expect(store.findById(userId, householdId)).rejects.toThrow(
+        'Failed to fetch association'
+      );
+    });
+  });
+
+  describe('update', () => {
+    test('given update called then throws not supported error', async () => {
+      // Given & When & Then
+      await expect(store.update('suh-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
+    });
+
+    test('given update called then logs warning', async () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      try {
+        await store.update('suh-abc123', { label: 'Updated Label' });
+      } catch {
+        // Expected to throw
+      }
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('API endpoint not yet implemented')
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
+});
 
 describe('LocalStorageHouseholdStore', () => {
   let store: LocalStorageHouseholdStore;

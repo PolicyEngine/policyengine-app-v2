@@ -1,11 +1,183 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
+import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import {
+  mockErrorFetchResponse,
+  mockSimulation,
+  mockSimulationApiResponse,
   mockSimulationInput,
+  mockSuccessFetchResponse,
   TEST_LABELS,
   TEST_SIM_IDS,
   TEST_USER_IDS,
 } from '@/tests/fixtures/api/simulationAssociationMocks';
+
+// Mock the adapter
+vi.mock('@/adapters/UserSimulationAdapter');
+
+// Mock fetch
+global.fetch = vi.fn();
+
+describe('ApiSimulationStore', () => {
+  let store: ApiSimulationStore;
+
+  beforeEach(() => {
+    store = new ApiSimulationStore();
+    vi.clearAllMocks();
+    (UserSimulationAdapter.toCreationPayload as any).mockReturnValue(mockSimulationApiResponse());
+    (UserSimulationAdapter.fromApiResponse as any).mockReturnValue(mockSimulation());
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  describe('create', () => {
+    it('given valid simulation then creates simulation association', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessFetchResponse(mockSimulationApiResponse())
+      );
+
+      // When
+      const result = await store.create(mockSimulationInput());
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/user-simulation-associations',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mockSimulationApiResponse()),
+        })
+      );
+      expect(result).toEqual(mockSimulation());
+    });
+
+    it('given API error then throws error', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
+
+      // When/Then
+      await expect(store.create(mockSimulationInput())).rejects.toThrow(
+        'Failed to create simulation association'
+      );
+    });
+  });
+
+  describe('findByUser', () => {
+    it('given valid user ID then fetches user simulation associations', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [mockSimulationApiResponse()],
+      });
+
+      // When
+      const result = await store.findByUser(TEST_USER_IDS.USER_123);
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/user-simulation-associations/user/user-123',
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual([mockSimulation()]);
+    });
+
+    it('given API error then throws error', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // When/Then
+      await expect(store.findByUser(TEST_USER_IDS.USER_123)).rejects.toThrow(
+        'Failed to fetch user associations'
+      );
+    });
+  });
+
+  describe('findById', () => {
+    it('given valid IDs then fetches specific association', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => mockSimulationApiResponse(),
+      });
+
+      // When
+      const result = await store.findById(TEST_USER_IDS.USER_123, TEST_SIM_IDS.SIM_456);
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/user-simulation-associations/user-123/sim-456',
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual(mockSimulation());
+    });
+
+    it('given 404 response then returns null', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      // When
+      const result = await store.findById(TEST_USER_IDS.USER_123, 'nonexistent');
+
+      // Then
+      expect(result).toBeNull();
+    });
+
+    it('given other error then throws error', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // When/Then
+      await expect(store.findById(TEST_USER_IDS.USER_123, TEST_SIM_IDS.SIM_456)).rejects.toThrow(
+        'Failed to fetch association'
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('given update called then throws not supported error', async () => {
+      // Given & When & Then
+      await expect(store.update('sus-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
+    });
+
+    it('given update called then logs warning', async () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      try {
+        await store.update('sus-abc123', { label: 'Updated Label' });
+      } catch {
+        // Expected to throw
+      }
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('API endpoint not yet implemented')
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
+});
 
 describe('LocalStorageSimulationStore', () => {
   let store: LocalStorageSimulationStore;

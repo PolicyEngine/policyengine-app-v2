@@ -6,12 +6,12 @@
 
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
+import { MOCK_USER_ID } from '@/constants';
 import {
   isPolicyWithAssociation,
   UserPolicyWithAssociation,
   useUserPolicies,
 } from '@/hooks/useUserPolicy';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { getUserPolicyAvailability, isUserPolicySelectable } from '@/utils/ingredientAvailability';
 
@@ -30,7 +30,7 @@ export default function PolicyExistingView({
   onBack,
   onCancel,
 }: PolicyExistingViewProps) {
-  const userId = useCurrentUserId();
+  const userId = MOCK_USER_ID.toString();
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const userPolicies = data || [];

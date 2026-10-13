@@ -1,6 +1,5 @@
 import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
-import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
-import type { UserPolicyItem } from '@/types/v2User';
+import { UserPolicyCreationPayload } from '@/types/payloads';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 export interface UserPolicyStore {
@@ -8,76 +7,91 @@ export interface UserPolicyStore {
   findByUser: (userId: string, countryId?: string) => Promise<UserPolicy[]>;
   findById: (userId: string, policyId: string) => Promise<UserPolicy | null>;
   update: (userPolicyId: string, updates: Partial<UserPolicy>) => Promise<UserPolicy>;
-  delete: (userPolicyId: string) => Promise<void>;
+  // The below are not yet implemented, but keeping for future use
+  // delete(userPolicyId: string): Promise<void>;
 }
 
-/**
- * Account storage: `/v2/user-policies` on the PolicyEngine API. The server
- * stamps the signed-in user onto each row; the `userId` arguments exist
- * for the localStorage interface and are never sent. Local IDs follow the
- * shared policy in v2Associations.
- */
 export class ApiPolicyStore implements UserPolicyStore {
-  private readonly routes: AccountAssociationRoutes<UserPolicyItem>;
-
-  constructor(
-    context: ApiStoreContext,
-    private readonly local = new LocalStoragePolicyStore()
-  ) {
-    this.routes = new AccountAssociationRoutes(context, 'user-policies', 'UserPolicy');
-  }
+  // TODO: Modify value to match to-be-created API endpoint structure
+  private readonly BASE_URL = '/api/user-policy-associations';
 
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
-    const item = await this.routes.create(
-      UserPolicyAdapter.toCreationPayload(policy, this.routes.writeCountry(policy.countryId))
-    );
-    return UserPolicyAdapter.fromApiItem(item);
-  }
+    const payload: UserPolicyCreationPayload = UserPolicyAdapter.toCreationPayload(policy);
 
-  async findByUser(_userId: string, countryId?: string): Promise<UserPolicy[]> {
-    if (countryId && countryId !== this.routes.countryId) {
-      return [];
+    const response = await fetch(`${this.BASE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create policy association');
     }
-    const items = await this.routes.list();
-    // v3 reforms share the account's policy rows but belong to the reform
-    // list (see UserPolicyAdapter.isReform); lookups by ID still find them.
-    return items
-      .filter(
-        (item) => UserPolicyAdapter.hasLegacyPolicy(item) && !UserPolicyAdapter.isReform(item)
-      )
-      .map(UserPolicyAdapter.fromApiItem);
+
+    const apiResponse = await response.json();
+    return UserPolicyAdapter.fromApiResponse(apiResponse);
   }
 
-  /** The association for a v1 policy ID (the oldest, as localStorage returns the first). */
-  async findById(_userId: string, policyId: string): Promise<UserPolicy | null> {
-    if (!isLegacyId(policyId)) {
+  async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch user associations');
+    }
+
+    const apiResponses = await response.json();
+
+    // Convert each API response to UserPolicy and filter by country if specified
+    const policies = apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
+    return countryId ? policies.filter((p: UserPolicy) => p.countryId === countryId) : policies;
+  }
+
+  async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
+    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.status === 404) {
       return null;
     }
-    const item = await this.routes.findFirst({ legacy_policy_id: policyId });
-    return item && UserPolicyAdapter.hasLegacyPolicy(item)
-      ? UserPolicyAdapter.fromApiItem(item)
-      : null;
-  }
 
-  async update(userPolicyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
-    const changes = UserPolicyAdapter.toUpdatePayload(updates);
-    if (this.routes.isLocalOnly(userPolicyId)) {
-      const local = this.local.findByUserPolicyId(userPolicyId);
-      const merged = { ...(await this.routes.requireLocal(userPolicyId, local)), ...updates };
-      const body = UserPolicyAdapter.toCreationPayload(
-        merged,
-        this.routes.writeCountry(merged.countryId)
-      );
-      return UserPolicyAdapter.fromApiItem(await this.routes.promote(userPolicyId, body, changes));
+    if (!response.ok) {
+      throw new Error('Failed to fetch association');
     }
-    return UserPolicyAdapter.fromApiItem(await this.routes.patch(userPolicyId, changes));
+
+    const apiData = await response.json();
+    return UserPolicyAdapter.fromApiResponse(apiData);
   }
 
-  delete(userPolicyId: string): Promise<void> {
-    return this.routes.isLocalOnly(userPolicyId)
-      ? this.local.delete(userPolicyId)
-      : this.routes.delete(userPolicyId);
+  async update(_userPolicyId: string, _updates: Partial<UserPolicy>): Promise<UserPolicy> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-policy-associations/:userPolicyId
+    // Expected payload: UserPolicyUpdatePayload (to be created)
+
+    console.warn(
+      '[ApiPolicyStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
+
+    throw new Error(
+      'Policy updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
+    );
   }
+
+  // Not yet implemented, but keeping for future use
+  /*
+  async delete(userId: string, policyId: string): Promise<void> {
+    const response = await fetch(`/api/user-policy-associations/${userId}/${policyId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete association');
+    }
+  }
+  */
 }
 
 export class LocalStoragePolicyStore implements UserPolicyStore {
@@ -114,11 +128,6 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
     const policies = this.getStoredPolicies();
     return policies.find((p) => p.userId === userId && p.policyId === policyId) || null;
-  }
-
-  /** The association by its own ID (`sup-…`). */
-  async findByUserPolicyId(userPolicyId: string): Promise<UserPolicy | null> {
-    return this.getStoredPolicies().find((policy) => policy.id === userPolicyId) ?? null;
   }
 
   private getStoredPolicies(): UserPolicy[] {
@@ -173,7 +182,14 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
     return updated;
   }
 
-  async delete(userPolicyId: string): Promise<void> {
-    this.setStoredPolicies(this.getStoredPolicies().filter((policy) => policy.id !== userPolicyId));
+  // Not yet implemented, but keeping for future use
+  /*
+  async delete(userId: string, policyId: string): Promise<void> {
+    const policies = this.getStoredPolicies();
+    const filtered = policies.filter(
+      a => !(a.userId === userId && a.policyId === policyId)
+    );
+    this.setStoredPolicies(filtered);
   }
+  */
 }

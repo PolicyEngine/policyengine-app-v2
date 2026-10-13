@@ -11,7 +11,6 @@ import {
   useAssociationBackendResolver,
   type AssociationBackend,
 } from '@/libs/auth/useAssociationBackend';
-import { policyKeys } from '@/libs/queryKeys';
 import type { RootState } from '@/store';
 
 /**
@@ -21,6 +20,10 @@ import type { RootState } from '@/store';
  * rather than localStorage. The stores wait for the session to be
  * restored, so nothing is written to the wrong one while it is.
  */
+
+/** A v1 policy's raw parameter map (`policy_json`), per country. */
+const v1PolicyJsonKey = (countryId: string, policyId: string) =>
+  ['v1-policy-json', countryId, policyId] as const;
 
 /** How long a fetched v1 policy stays cached without a reader. */
 const V1_POLICY_JSON_GC_TIME = 30 * 60 * 1000;
@@ -59,7 +62,7 @@ export function useReformStore(): ReformStore {
         // rather than on every list of the account's reforms.
         fetchPolicyJson: (countryId, policyId) =>
           queryClient.fetchQuery({
-            queryKey: policyKeys.json(countryId, policyId),
+            queryKey: v1PolicyJsonKey(countryId, policyId),
             queryFn: () => fetchV1PolicyJson(countryId, policyId),
             staleTime: Infinity,
             gcTime: V1_POLICY_JSON_GC_TIME,

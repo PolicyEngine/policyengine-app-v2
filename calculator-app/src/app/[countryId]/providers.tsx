@@ -4,14 +4,11 @@ import { useEffect, useState } from "react";
 import { QueryNormalizerProvider } from "@normy/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider, useDispatch } from "react-redux";
-import LocalDataImportPrompt from "@/components/auth/LocalDataImportPrompt";
-import SaveFailureNotice from "@/components/common/SaveFailureNotice";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/contexts/AppContext";
 import { CalcOrchestratorProvider } from "@/contexts/CalcOrchestratorContext";
 import { useCurrentCountry } from "@/hooks/useCurrentCountry";
 import { useFetchMetadata } from "@/hooks/useMetadata";
-import { AuthProvider } from "@/libs/auth/AuthProvider";
 import { setCurrentCountry } from "@/reducers/metadataReducer";
 import { AppDispatch, store } from "@/store";
 import { cacheMonitor } from "@/utils/cacheMonitor";
@@ -60,17 +57,11 @@ export function CalculatorProviders({
           }}
         >
           <QueryClientProvider client={queryClient}>
-            {/* Sign-in is inert (status 'disabled') unless
-                NEXT_PUBLIC_AUTH_ENABLED=true and Auth0 is configured. */}
-            <AuthProvider>
-              <TooltipProvider>
-                <CalcOrchestratorProvider>
-                  <MetadataBootstrap>{children}</MetadataBootstrap>
-                  <LocalDataImportPrompt />
-                  <SaveFailureNotice />
-                </CalcOrchestratorProvider>
-              </TooltipProvider>
-            </AuthProvider>
+            <TooltipProvider>
+              <CalcOrchestratorProvider>
+                <MetadataBootstrap>{children}</MetadataBootstrap>
+              </CalcOrchestratorProvider>
+            </TooltipProvider>
           </QueryClientProvider>
         </QueryNormalizerProvider>
       </Provider>

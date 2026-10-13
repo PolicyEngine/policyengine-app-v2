@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
-import { MOCK_USER_ID } from '@/constants';
+import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
 import { queryConfig } from '@/libs/queryConfig';
@@ -10,52 +9,46 @@ import { buildCanonicalGeography } from '@/models/geography';
 import { Geography } from '@/types/ingredients/Geography';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
+const apiGeographicStore = new ApiGeographicStore();
 const localGeographicStore = new LocalStorageGeographicStore();
 
-/**
- * Saved geographies belong to the browser, not the account, so they are
- * always filed under the local user: signing in neither hides the ones
- * saved while signed out nor files new ones under the account's ID.
- */
-const GEOGRAPHY_OWNER = MOCK_USER_ID;
-
 type SavedGeographyAssociationStoreSelection = {
-  store: LocalStorageGeographicStore;
-  config: typeof queryConfig.localStorage;
+  store: ApiGeographicStore | LocalStorageGeographicStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
 };
 
 export const useUserGeographicStore = () => {
   return useSavedGeographyAssociationStoreForMode().store;
 };
 
-// Saved geographies stay in localStorage for everyone, signed in or not:
-// there is no account table for them (v3 picks from the canonical region
-// list and saves the geography on the simulation instead).
 export const useSavedGeographyAssociationStoreForMode =
-  (): SavedGeographyAssociationStoreSelection => ({
-    store: localGeographicStore,
-    config: queryConfig.localStorage,
-  });
+  (): SavedGeographyAssociationStoreSelection => {
+    const isLoggedIn = false; // TODO: Replace with actual auth check in future
+    return {
+      store: isLoggedIn ? apiGeographicStore : localGeographicStore,
+      config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+    };
+  };
 
 // `saved_geographies` controls persisted user geography rows.
 // Canonical `regions` remain a separate concern for lookup and shadow resolution.
-export const useGeographicAssociationsByUser = (_userId: string) => {
+export const useGeographicAssociationsByUser = (userId: string) => {
   const { store, config } = useSavedGeographyAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
   return useQuery({
-    queryKey: geographicAssociationKeys.byUser(GEOGRAPHY_OWNER, countryId),
-    queryFn: () => store.findByUser(GEOGRAPHY_OWNER, countryId),
+    queryKey: geographicAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
 
-export const useGeographicAssociation = (_userId: string, geographyId: string) => {
+export const useGeographicAssociation = (userId: string, geographyId: string) => {
   const { store, config } = useSavedGeographyAssociationStoreForMode();
 
   return useQuery({
-    queryKey: geographicAssociationKeys.specific(GEOGRAPHY_OWNER, geographyId),
-    queryFn: () => store.findById(GEOGRAPHY_OWNER, geographyId),
+    queryKey: geographicAssociationKeys.specific(userId, geographyId),
+    queryFn: () => store.findById(userId, geographyId),
     ...config,
   });
 };
@@ -66,7 +59,7 @@ export const useCreateGeographicAssociation = () => {
 
   return useMutation({
     mutationFn: (population: Omit<UserGeographyPopulation, 'createdAt' | 'type'>) =>
-      store.create({ ...population, userId: GEOGRAPHY_OWNER, type: 'geography' as const }),
+      store.create({ ...population, type: 'geography' as const }),
     onSuccess: (newPopulation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
@@ -91,14 +84,14 @@ export const useUpdateGeographicAssociation = () => {
 
   return useMutation({
     mutationFn: ({
+      userId,
       geographyId,
       updates,
     }: {
-      /** Accepted for symmetry with the other stores; geographies are always local. */
       userId: string;
       geographyId: string;
       updates: Partial<UserGeographyPopulation>;
-    }) => store.update(GEOGRAPHY_OWNER, geographyId, updates),
+    }) => store.update(userId, geographyId, updates),
 
     onSuccess: (updatedAssociation) => {
       // Invalidate all related queries to trigger refetch

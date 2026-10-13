@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
-import { MOCK_USER_ID } from '@/constants';
 import { useRegions } from '@/hooks/useRegions';
 import {
   useCreateGeographicAssociation,
@@ -24,9 +23,6 @@ import {
   TEST_IDS,
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
-
-// Saved geographies are always filed under the local user, whoever is signed in.
-const LOCAL_USER_ID = MOCK_USER_ID;
 
 // Mock useCurrentCountry hook
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -201,7 +197,7 @@ describe('useUserGeographic hooks', () => {
   describe('useGeographicAssociationsByUser', () => {
     test('given valid user ID when fetching associations then returns list', async () => {
       // Given
-      const userId = LOCAL_USER_ID;
+      const userId = TEST_IDS.USER_ID;
 
       // When
       const { result } = renderHook(() => useGeographicAssociationsByUser(userId), { wrapper });
@@ -223,7 +219,7 @@ describe('useUserGeographic hooks', () => {
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
-      const { result } = renderHook(() => useGeographicAssociationsByUser(LOCAL_USER_ID), {
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
         wrapper,
       });
 
@@ -245,24 +241,7 @@ describe('useUserGeographic hooks', () => {
       });
 
       const mockStore = (LocalStorageGeographicStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith(LOCAL_USER_ID, 'us');
-    });
-
-    test('given a signed-in account user id then geographies are still read for the local user', async () => {
-      // Given
-      const accountUserId = '7c1e5a8e-2b1f-4c55-9a3e-1f2d3c4b5a69';
-
-      // When
-      const { result } = renderHook(() => useGeographicAssociationsByUser(accountUserId), {
-        wrapper,
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-      const mockStore = (LocalStorageGeographicStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith(LOCAL_USER_ID, 'us');
+      expect(mockStore.findByUser).toHaveBeenCalledWith('', 'us');
     });
 
     test('given user with no associations then returns empty array', async () => {
@@ -271,7 +250,7 @@ describe('useUserGeographic hooks', () => {
       mockStore.findByUser.mockResolvedValue([]);
 
       // When
-      const { result } = renderHook(() => useGeographicAssociationsByUser(LOCAL_USER_ID), {
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
         wrapper,
       });
 
@@ -287,7 +266,7 @@ describe('useUserGeographic hooks', () => {
   describe('useGeographicAssociation', () => {
     test('given valid IDs when fetching specific association then returns data', async () => {
       // Given
-      const userId = LOCAL_USER_ID;
+      const userId = TEST_IDS.USER_ID;
       const geographyId = TEST_IDS.GEOGRAPHY_ID;
 
       // When
@@ -311,9 +290,10 @@ describe('useUserGeographic hooks', () => {
       mockStore.findById.mockResolvedValue(null);
 
       // When
-      const { result } = renderHook(() => useGeographicAssociation(LOCAL_USER_ID, 'non-existent'), {
-        wrapper,
-      });
+      const { result } = renderHook(
+        () => useGeographicAssociation(TEST_IDS.USER_ID, 'non-existent'),
+        { wrapper }
+      );
 
       // Then
       await waitFor(() => {
@@ -331,7 +311,7 @@ describe('useUserGeographic hooks', () => {
 
       // When
       const { result } = renderHook(
-        () => useGeographicAssociation(LOCAL_USER_ID, TEST_IDS.GEOGRAPHY_ID),
+        () => useGeographicAssociation(TEST_IDS.USER_ID, TEST_IDS.GEOGRAPHY_ID),
         { wrapper }
       );
 
@@ -349,7 +329,7 @@ describe('useUserGeographic hooks', () => {
       // Given
       const newAssociation = {
         id: TEST_IDS.GEOGRAPHY_ID,
-        userId: LOCAL_USER_ID,
+        userId: TEST_IDS.USER_ID,
         countryId: GEO_CONSTANTS.COUNTRY_US,
         scope: GEO_CONSTANTS.TYPE_NATIONAL,
         geographyId: GEO_CONSTANTS.COUNTRY_US,
@@ -372,7 +352,7 @@ describe('useUserGeographic hooks', () => {
 
       // Verify cache invalidation
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(LOCAL_USER_ID),
+        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(TEST_IDS.USER_ID),
       });
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_GEOGRAPHY(GEO_CONSTANTS.COUNTRY_US),
@@ -380,7 +360,7 @@ describe('useUserGeographic hooks', () => {
 
       // Verify cache update
       expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(LOCAL_USER_ID, GEO_CONSTANTS.COUNTRY_US),
+        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(TEST_IDS.USER_ID, GEO_CONSTANTS.COUNTRY_US),
         { ...newAssociation, type: 'geography' }
       );
     });
@@ -403,10 +383,7 @@ describe('useUserGeographic hooks', () => {
 
       // Then
       expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(
-          subnationalAssociation.userId,
-          GEO_CONSTANTS.REGION_CA
-        ),
+        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(TEST_IDS.USER_ID, GEO_CONSTANTS.REGION_CA),
         subnationalAssociation
       );
     });
@@ -422,7 +399,7 @@ describe('useUserGeographic hooks', () => {
       await expect(
         result.current.mutateAsync({
           id: TEST_IDS.GEOGRAPHY_ID,
-          userId: LOCAL_USER_ID,
+          userId: TEST_IDS.USER_ID,
           countryId: GEO_CONSTANTS.COUNTRY_US,
           scope: GEO_CONSTANTS.TYPE_NATIONAL,
           geographyId: GEO_CONSTANTS.COUNTRY_US,
@@ -440,7 +417,7 @@ describe('useUserGeographic hooks', () => {
 
       const association1 = {
         id: TEST_IDS.GEOGRAPHY_ID,
-        userId: LOCAL_USER_ID,
+        userId: TEST_IDS.USER_ID,
         countryId: GEO_CONSTANTS.COUNTRY_US,
         scope: GEO_CONSTANTS.TYPE_NATIONAL,
         geographyId: GEO_CONSTANTS.COUNTRY_US,
@@ -449,7 +426,7 @@ describe('useUserGeographic hooks', () => {
 
       const association2 = {
         id: TEST_IDS.GEOGRAPHY_ID_2,
-        userId: LOCAL_USER_ID,
+        userId: TEST_IDS.USER_ID,
         countryId: GEO_CONSTANTS.COUNTRY_UK,
         scope: GEO_CONSTANTS.TYPE_NATIONAL,
         geographyId: GEO_CONSTANTS.COUNTRY_UK,
@@ -476,18 +453,17 @@ describe('useUserGeographic hooks', () => {
       const { result } = renderHook(() => useUpdateGeographicAssociation(), { wrapper });
 
       await result.current.mutateAsync({
-        userId: LOCAL_USER_ID,
+        userId: TEST_IDS.USER_ID,
         geographyId: GEO_CONSTANTS.COUNTRY_US,
         updates: { label: 'Renamed Geography' },
       });
 
       const mockStore = (LocalStorageGeographicStore as any)();
-      expect(mockStore.update).toHaveBeenCalledWith(LOCAL_USER_ID, GEO_CONSTANTS.COUNTRY_US, {
+      expect(mockStore.update).toHaveBeenCalledWith(TEST_IDS.USER_ID, GEO_CONSTANTS.COUNTRY_US, {
         label: 'Renamed Geography',
       });
-      // Caches are keyed by the association the store returned.
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(mockUserGeographicAssociation.userId),
+        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(TEST_IDS.USER_ID),
       });
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_GEOGRAPHY(
@@ -496,7 +472,7 @@ describe('useUserGeographic hooks', () => {
       });
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(
-          mockUserGeographicAssociation.userId,
+          TEST_IDS.USER_ID,
           mockUserGeographicAssociation.geographyId
         ),
       });
@@ -506,7 +482,7 @@ describe('useUserGeographic hooks', () => {
   describe('query configuration', () => {
     test('given local storage mode then uses local storage config', async () => {
       // When
-      const { result } = renderHook(() => useGeographicAssociationsByUser(LOCAL_USER_ID), {
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
         wrapper,
       });
 
@@ -517,14 +493,14 @@ describe('useUserGeographic hooks', () => {
 
       // Local storage should have no stale time
       const queryState = queryClient.getQueryState(
-        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(LOCAL_USER_ID)
+        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(TEST_IDS.USER_ID)
       );
       expect(queryState).toBeDefined();
     });
 
     test('given refetch called then fetches fresh data', async () => {
       // Given
-      const { result } = renderHook(() => useGeographicAssociationsByUser(LOCAL_USER_ID), {
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
         wrapper,
       });
 
@@ -550,7 +526,7 @@ describe('useUserGeographic hooks', () => {
 
   describe('useUserGeographics', () => {
     test('given geography associations then it reconstructs canonical geography records', async () => {
-      const { result } = renderHook(() => useUserGeographics(LOCAL_USER_ID), { wrapper });
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -574,7 +550,7 @@ describe('useUserGeographic hooks', () => {
         error: new Error('regions unavailable'),
       } as ReturnType<typeof useRegions>);
 
-      const { result } = renderHook(() => useUserGeographics(LOCAL_USER_ID), { wrapper });
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -603,7 +579,7 @@ describe('useUserGeographic hooks', () => {
         },
       ]);
 
-      const { result } = renderHook(() => useUserGeographics(LOCAL_USER_ID), { wrapper });
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);

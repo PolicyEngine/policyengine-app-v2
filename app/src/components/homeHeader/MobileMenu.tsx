@@ -1,7 +1,6 @@
 import { IconMenu2 } from '@tabler/icons-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import AuthMenu from '../auth/AuthMenu';
 import CountrySelector from './CountrySelector';
 import { NavItemSetup } from './NavItem';
 
@@ -18,7 +17,6 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
       {/* Mobile Burger Menu with Country Selector */}
       <div className="tw:flex tw:lg:hidden tw:items-center" style={{ gap: spacing.md }}>
         <CountrySelector />
-        <AuthMenu variant="inverse" />
         <button
           type="button"
           className="tw:p-1 tw:rounded tw:bg-transparent tw:border-none tw:cursor-pointer"

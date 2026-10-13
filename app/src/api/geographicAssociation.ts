@@ -1,9 +1,6 @@
+import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
-/**
- * Saved geographies live in this browser's localStorage for everyone,
- * signed in or not; there is no account table for them.
- */
 export interface UserGeographicStore {
   create: (population: UserGeographyPopulation) => Promise<UserGeographyPopulation>;
   findByUser: (userId: string, countryId?: string) => Promise<UserGeographyPopulation[]>;
@@ -15,6 +12,97 @@ export interface UserGeographicStore {
   ) => Promise<UserGeographyPopulation>;
   // The below are not yet implemented, but keeping for future use
   // delete(userId: string, geographyId: string): Promise<void>;
+}
+
+export class ApiGeographicStore implements UserGeographicStore {
+  // TODO: Modify value to match to-be-created API endpoint structure
+  private readonly BASE_URL = '/api/user-geographic-associations';
+
+  async create(population: UserGeographyPopulation): Promise<UserGeographyPopulation> {
+    const payload = UserGeographicAdapter.toCreationPayload(population);
+
+    const response = await fetch(`${this.BASE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create geographic association');
+    }
+
+    const apiResponse = await response.json();
+    return UserGeographicAdapter.fromApiResponse(apiResponse);
+  }
+
+  async findByUser(userId: string, countryId?: string): Promise<UserGeographyPopulation[]> {
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch user associations');
+    }
+
+    const apiResponses = await response.json();
+
+    // Convert each API response to UserGeographyPopulation and filter by country if specified
+    const geographies = apiResponses.map((apiData: any) =>
+      UserGeographicAdapter.fromApiResponse(apiData)
+    );
+    return countryId
+      ? geographies.filter((g: UserGeographyPopulation) => g.countryId === countryId)
+      : geographies;
+  }
+
+  async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
+    const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch association');
+    }
+
+    const apiData = await response.json();
+    return UserGeographicAdapter.fromApiResponse(apiData);
+  }
+
+  async update(
+    _userId: string,
+    _geographyId: string,
+    _updates: Partial<UserGeographyPopulation>
+  ): Promise<UserGeographyPopulation> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-geographic-associations/:userId/:geographyId
+    // Expected payload: UserGeographicUpdatePayload (to be created)
+
+    console.warn(
+      '[ApiGeographicStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
+
+    throw new Error(
+      'Geographic population updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
+    );
+  }
+
+  // Not yet implemented, but keeping for future use
+  /*
+  async delete(userId: string, geographyId: string): Promise<void> {
+    const response = await fetch(`/api/user-geographic-associations/${userId}/${geographyId}`, {
+      method: 'DELETE',
+    });
+
+    if !response.ok) {
+      throw new Error('Failed to delete association');
+    }
+  }
+  */
 }
 
 export class LocalStorageGeographicStore implements UserGeographicStore {

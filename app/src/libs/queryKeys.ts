@@ -69,9 +69,6 @@ export const policyKeys = {
   all: ['policies'] as const,
   byId: (policyId: string) => [...policyKeys.all, 'policy_id', policyId] as const,
   byUser: (userId: string) => [...policyKeys.all, 'user_id', userId] as const,
-  /** A v1 policy's raw parameter map (`policy_json`), per country. */
-  json: (countryId: string, policyId: string) =>
-    [...policyKeys.all, 'policy_json', countryId, policyId] as const,
 };
 
 export const householdKeys = {

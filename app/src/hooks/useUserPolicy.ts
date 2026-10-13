@@ -1,28 +1,23 @@
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+// Import auth hook here in future; for now, mocked out below
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
-import type { StoreMethods } from '@/api/deferredStore';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
-import { useSavedWorkStore, type SavedWorkStoreSelection } from '@/hooks/utils/useSavedWorkStore';
-import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
-import { accountStoreContext, type AssociationBackend } from '@/libs/auth/useAssociationBackend';
 import { Policy } from '@/types/ingredients/Policy';
 import type { PolicyCreationPayload } from '@/types/payloads';
-import {
-  ApiPolicyStore,
-  LocalStoragePolicyStore,
-  type UserPolicyStore,
-} from '../api/policyAssociation';
+import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
+import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
 
+const apiPolicyStore = new ApiPolicyStore();
 const localPolicyStore = new LocalStoragePolicyStore();
 
-function policyStoreFor(backend: AssociationBackend): UserPolicyStore {
-  const account = accountStoreContext(backend);
-  return account ? new ApiPolicyStore(account) : localPolicyStore;
-}
+type PolicyAssociationStoreSelection = {
+  store: ApiPolicyStore | LocalStoragePolicyStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+};
 
 type PolicyAssociationQueryOptions = {
   enabled?: boolean;
@@ -39,32 +34,25 @@ export const useUserPolicyStore = () => {
   return usePolicyAssociationStoreForMode().store;
 };
 
-const POLICY_STORE_METHODS: StoreMethods<UserPolicyStore> = {
-  create: true,
-  findByUser: true,
-  findById: true,
-  update: true,
-  delete: true,
+export const usePolicyAssociationStoreForMode = (): PolicyAssociationStoreSelection => {
+  const isLoggedIn = false; // TODO: Replace with actual auth check in future
+  return {
+    store: isLoggedIn ? apiPolicyStore : localPolicyStore,
+    config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+  };
 };
-
-export const usePolicyAssociationStoreForMode = (): SavedWorkStoreSelection<UserPolicyStore> =>
-  useSavedWorkStore(policyStoreFor, POLICY_STORE_METHODS);
 
 // This fetches only the user-policy associations; see
 // 'useUserPolicies' below to also fetch full policy details
-export const usePolicyAssociationsByUser = (userId: string, options?: { enabled?: boolean }) => {
-  const { store, config, ready } = usePolicyAssociationStoreForMode();
+export const usePolicyAssociationsByUser = (userId: string) => {
+  const { store, config } = usePolicyAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useSessionGatedQuery(
-    {
-      queryKey: policyAssociationKeys.byUser(userId, countryId),
-      queryFn: () => store.findByUser(userId, countryId),
-      ...config,
-      enabled: options?.enabled ?? true,
-    },
-    ready
-  );
+  return useQuery({
+    queryKey: policyAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
+    ...config,
+  });
 };
 
 export const usePolicyAssociation = (
@@ -72,21 +60,18 @@ export const usePolicyAssociation = (
   policyId: string,
   options?: PolicyAssociationQueryOptions
 ) => {
-  const { store, config, ready } = usePolicyAssociationStoreForMode();
+  const { store, config } = usePolicyAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useSessionGatedQuery(
-    {
-      queryKey: policyAssociationKeys.specific(userId, policyId, countryId),
-      queryFn: async () => {
-        const association = await store.findById(userId, policyId);
-        return association?.countryId === countryId ? association : null;
-      },
-      ...config,
-      enabled: options?.enabled ?? true,
+  return useQuery({
+    queryKey: policyAssociationKeys.specific(userId, policyId, countryId),
+    queryFn: async () => {
+      const association = await store.findById(userId, policyId);
+      return association?.countryId === countryId ? association : null;
     },
-    ready
-  );
+    enabled: options?.enabled ?? true,
+    ...config,
+  });
 };
 
 export const useCreatePolicyAssociation = () => {

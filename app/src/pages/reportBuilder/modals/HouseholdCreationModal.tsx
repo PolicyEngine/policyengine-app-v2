@@ -8,11 +8,11 @@ import { Group } from '@/components/ui/Group';
 import { Spinner } from '@/components/ui/Spinner';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
+import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdAssociation, useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
@@ -49,7 +49,7 @@ export function HouseholdCreationModal({
   forceReadOnly = false,
 }: HouseholdCreationModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const userId = useCurrentUserId();
+  const userId = MOCK_USER_ID.toString();
   const metadata = useSelector((state: RootState) => state.metadata);
   const basicInputFields = useSelector(getBasicInputFields);
   const updateHouseholdAssociation = useUpdateHouseholdAssociation();

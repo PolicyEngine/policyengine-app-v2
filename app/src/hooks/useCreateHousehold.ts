@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
-import { useAccountSaveFailure } from '@/hooks/useAccountSaveFailure';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
+import { MOCK_USER_ID } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import type { HouseholdCreationPayload } from '@/types/payloads';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
@@ -12,9 +11,8 @@ interface CreateHouseholdVariables {
 }
 
 export function useCreateHousehold(householdLabel?: string) {
-  const userId = useCurrentUserId();
+  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateHouseholdAssociation();
-  const reportAccountSaveFailure = useAccountSaveFailure();
 
   const mutation = useMutation({
     mutationFn: ({ payload }: CreateHouseholdVariables) => createHousehold(payload),
@@ -22,8 +20,9 @@ export function useCreateHousehold(householdLabel?: string) {
       const resolvedLabel = label ?? householdLabel ?? payload.label;
 
       try {
-        // File the association under the current user (the account when
-        // signed in, localStorage otherwise)
+        // Create association with current user (or anonymous for session storage)
+        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
+
         await createAssociation.mutateAsync({
           userId,
           householdId: data.result.household_id,
@@ -32,9 +31,6 @@ export function useCreateHousehold(householdLabel?: string) {
         });
       } catch (error) {
         console.error('Household created but association failed:', error);
-        // The builder carries on with the created household; tell a signed-in
-        // user it is not in their account (unavailable, too large, down).
-        await reportAccountSaveFailure('household', error);
       }
     },
   });

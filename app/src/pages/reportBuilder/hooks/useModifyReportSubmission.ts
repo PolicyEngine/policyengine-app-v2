@@ -14,10 +14,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { ReportAdapter } from '@/adapters';
 import { createReport as createBaseReport, createReportAndAssociateWithUser } from '@/api/report';
+import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
-import { useUpdateReportAssociation, useUserReportStore } from '@/hooks/useUserReportAssociations';
-import { useUserSimulationStore } from '@/hooks/useUserSimulationAssociations';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
+import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
@@ -52,9 +51,6 @@ export function useModifyReportSubmission({
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const manager = useCalcOrchestratorManager();
   const updateReportAssociation = useUpdateReportAssociation();
-  const reportStore = useUserReportStore();
-  const simulationStore = useUserSimulationStore();
-  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
   const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const [isSavingNew, setIsSavingNew] = useState(false);
@@ -72,8 +68,6 @@ export function useModifyReportSubmission({
       countryId,
       currentLawId,
       reportYear: reportState.year,
-      simulationStore,
-      userId,
     });
 
     const reportPayload = ReportAdapter.toCreationPayload({
@@ -84,7 +78,7 @@ export function useModifyReportSubmission({
     } as Report);
 
     return { simulationIds, simulations, simulationStates, reportPayload };
-  }, [reportState, countryId, currentLawId, simulationStore, userId]);
+  }, [reportState, countryId, currentLawId]);
 
   /**
    * Shared logic: start calculation after a report is created.
@@ -172,9 +166,8 @@ export function useModifyReportSubmission({
         const result = await createReportAndAssociateWithUser({
           countryId,
           payload: reportPayload,
-          userId,
+          userId: MOCK_USER_ID,
           label: label || undefined,
-          reportStore,
         });
 
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
@@ -199,8 +192,6 @@ export function useModifyReportSubmission({
       queryClient,
       startCalculation,
       onSuccess,
-      userId,
-      reportStore,
     ]
   );
 

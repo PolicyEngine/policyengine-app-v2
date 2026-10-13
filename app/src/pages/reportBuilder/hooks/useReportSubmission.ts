@@ -14,8 +14,6 @@ import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ReportAdapter } from '@/adapters';
 import { useCreateReport } from '@/hooks/useCreateReport';
-import { useUserSimulationStore } from '@/hooks/useUserSimulationAssociations';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { trackReportStarted } from '@/utils/analytics';
@@ -57,8 +55,6 @@ export function useReportSubmission({
   const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
-  const simulationStore = useUserSimulationStore();
-  const userId = useCurrentUserId();
   const { isReportConfigured } = useReportIngredientAvailability(reportState);
 
   const handleSubmit = useCallback(async () => {
@@ -79,8 +75,6 @@ export function useReportSubmission({
         countryId,
         currentLawId,
         reportYear: reportState.year,
-        simulationStore,
-        userId,
       });
 
       journeyProfiler?.markEnd?.('report-submit-simulations', 'api-call');
@@ -146,8 +140,6 @@ export function useReportSubmission({
     currentLawId,
     createReport,
     onSuccess,
-    simulationStore,
-    userId,
   ]);
 
   return { handleSubmit, isSubmitting, isReportConfigured, submissionError };

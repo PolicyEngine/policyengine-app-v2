@@ -7,7 +7,6 @@ import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useRegions } from '@/hooks/useRegions';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
@@ -439,24 +438,11 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
 
-  // Step 5: The session's saved simulations, policies and households, to
-  // label this report's ingredients. They are listed for the current user
-  // (the cache key must match the store that answers), and only once the
-  // report's association has loaded.
-  const sessionUserId = useCurrentUserId();
-  const associationListOptions = { enabled: isEnabled && !!userReport };
-  const { data: simulationAssociations } = useSimulationAssociationsByUser(
-    sessionUserId,
-    associationListOptions
-  );
-  const { data: policyAssociations } = usePolicyAssociationsByUser(
-    sessionUserId,
-    associationListOptions
-  );
-  const { data: householdAssociations } = useHouseholdAssociationsByUser(
-    sessionUserId,
-    associationListOptions
-  );
+  // Step 5: Get user associations (only if we have userId)
+  const { data: simulationAssociations } = useSimulationAssociationsByUser(userId || '');
+
+  const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
+  const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
   const { data: regions } = useRegions(country);
 
   const matchedUserSimulations = simulationAssociations?.filter((sa) =>

@@ -1,23 +1,22 @@
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
-import type { StoreMethods } from '@/api/deferredStore';
+// Import auth hook here in future; for now, mocked out below
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchHouseholdById } from '@/api/household';
 import type { UserHouseholdStore } from '@/api/householdAssociation';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useSavedWorkStore, type SavedWorkStoreSelection } from '@/hooks/utils/useSavedWorkStore';
-import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
-import { accountStoreContext, type AssociationBackend } from '@/libs/auth/useAssociationBackend';
 import { Household } from '@/models/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
+import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
+const apiHouseholdStore = new ApiHouseholdStore();
 const localHouseholdStore = new LocalStorageHouseholdStore();
 
-function householdStoreFor(backend: AssociationBackend): UserHouseholdStore {
-  const account = accountStoreContext(backend);
-  return account ? new ApiHouseholdStore(account) : localHouseholdStore;
-}
+type HouseholdAssociationStoreSelection = {
+  store: ApiHouseholdStore | LocalStorageHouseholdStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+};
 
 type HouseholdAssociationQueryOptions = {
   enabled?: boolean;
@@ -27,33 +26,25 @@ export const useUserHouseholdStore = () => {
   return useHouseholdAssociationStoreForMode().store;
 };
 
-const HOUSEHOLD_STORE_METHODS: StoreMethods<UserHouseholdStore> = {
-  create: true,
-  findByUser: true,
-  findById: true,
-  update: true,
-  delete: true,
+export const useHouseholdAssociationStoreForMode = (): HouseholdAssociationStoreSelection => {
+  const isLoggedIn = false; // TODO: Replace with actual auth check in future
+  return {
+    store: isLoggedIn ? apiHouseholdStore : localHouseholdStore,
+    config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+  };
 };
-
-export const useHouseholdAssociationStoreForMode =
-  (): SavedWorkStoreSelection<UserHouseholdStore> =>
-    useSavedWorkStore(householdStoreFor, HOUSEHOLD_STORE_METHODS);
 
 // This fetches only the user-household associations; see
 // 'useUserHouseholds' below to also fetch full household details
-export const useHouseholdAssociationsByUser = (userId: string, options?: { enabled?: boolean }) => {
-  const { store, config, ready } = useHouseholdAssociationStoreForMode();
+export const useHouseholdAssociationsByUser = (userId: string) => {
+  const { store, config } = useHouseholdAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useSessionGatedQuery(
-    {
-      queryKey: householdAssociationKeys.byUser(userId, countryId),
-      queryFn: () => store.findByUser(userId, countryId),
-      ...config,
-      enabled: options?.enabled ?? true,
-    },
-    ready
-  );
+  return useQuery({
+    queryKey: householdAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
+    ...config,
+  });
 };
 
 export const useHouseholdAssociation = (
@@ -61,21 +52,18 @@ export const useHouseholdAssociation = (
   householdId: string,
   options?: HouseholdAssociationQueryOptions
 ) => {
-  const { store, config, ready } = useHouseholdAssociationStoreForMode();
+  const { store, config } = useHouseholdAssociationStoreForMode();
   const countryId = useCurrentCountry();
 
-  return useSessionGatedQuery(
-    {
-      queryKey: householdAssociationKeys.specific(userId, householdId, countryId),
-      queryFn: async () => {
-        const association = await store.findById(userId, householdId);
-        return association?.countryId === countryId ? association : null;
-      },
-      ...config,
-      enabled: options?.enabled ?? true,
+  return useQuery({
+    queryKey: householdAssociationKeys.specific(userId, householdId, countryId),
+    queryFn: async () => {
+      const association = await store.findById(userId, householdId);
+      return association?.countryId === countryId ? association : null;
     },
-    ready
-  );
+    enabled: options?.enabled ?? true,
+    ...config,
+  });
 };
 
 export const useCreateHouseholdAssociation = () => {

@@ -24,11 +24,11 @@ import { Group } from '@/components/ui/Group';
 import { Spinner } from '@/components/ui/Spinner';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
+import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePolicyAssociation, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { getDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
@@ -93,7 +93,7 @@ export function PolicyCreationModal({
   forceReadOnly = false,
 }: PolicyCreationModalProps) {
   const countryId = useCurrentCountry();
-  const userId = useCurrentUserId();
+  const userId = MOCK_USER_ID.toString();
 
   // Get metadata from Redux state
   const metadata = useSelector((state: RootState) => state.metadata);

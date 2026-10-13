@@ -1,7 +1,7 @@
 import { SimulationAdapter } from '@/adapters';
 import { createHousehold } from '@/api/household';
 import { createSimulation } from '@/api/simulation';
-import { LocalStorageSimulationStore, type UserSimulationStore } from '@/api/simulationAssociation';
+import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import type { Household } from '@/models/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -18,10 +18,6 @@ interface CreateReportSimulationsArgs {
   countryId: 'us' | 'uk';
   currentLawId: number;
   reportYear?: string;
-  /** Where simulation associations are saved (useUserSimulationStore); localStorage by default. */
-  simulationStore?: UserSimulationStore;
-  /** Who they are filed under (useCurrentUserId); the local user by default. */
-  userId?: string;
 }
 
 interface CreatedReportSimulations {
@@ -35,8 +31,6 @@ export async function createReportSimulations({
   countryId,
   currentLawId,
   reportYear,
-  simulationStore = new LocalStorageSimulationStore(),
-  userId = MOCK_USER_ID,
 }: CreateReportSimulationsArgs): Promise<CreatedReportSimulations> {
   const populationError = getReportPopulationError(simulationStates);
   if (populationError) {
@@ -87,6 +81,7 @@ export async function createReportSimulations({
     });
   }
 
+  const simulationStore = new LocalStorageSimulationStore();
   const simulationIds: string[] = [];
   const simulations: Simulation[] = [];
 
@@ -119,7 +114,7 @@ export async function createReportSimulations({
     }
 
     await simulationStore.create({
-      userId,
+      userId: MOCK_USER_ID,
       simulationId,
       countryId,
       label: simulationState.label ?? undefined,

@@ -13,12 +13,12 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { Stack } from '@/components/ui';
+import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReports } from '@/hooks/useUserReports';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { RootState } from '@/store';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
@@ -26,7 +26,7 @@ import { getReportConfigPath } from '@/utils/reportRouting';
 import { CURRENT_LAW_LABEL } from './reportBuilder/currentLaw';
 
 export default function ReportsPage() {
-  const userId = useCurrentUserId();
+  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const cacheMonitor = useCacheMonitor();

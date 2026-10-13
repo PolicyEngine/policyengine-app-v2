@@ -1,104 +1,136 @@
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
-import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
-import type { UserReportItem } from '@/types/v2User';
+import { UserReportCreationPayload } from '@/types/payloads';
 import { UserReport } from '../types/ingredients/UserReport';
 
 export interface UserReportStore {
   create: (report: Omit<UserReport, 'id' | 'createdAt'>) => Promise<UserReport>;
-  /**
-   * Saves under a caller-chosen ID where the store keeps caller IDs
-   * (shared-report saves in localStorage). The account assigns its own
-   * IDs, so there it is the same as create.
-   */
   createWithId: (report: Omit<UserReport, 'createdAt'>) => Promise<UserReport>;
   findByUser: (userId: string, countryId?: string) => Promise<UserReport[]>;
   findById: (userId: string, reportId: string) => Promise<UserReport | null>;
   findByUserReportId: (userReportId: string) => Promise<UserReport | null>;
   update: (userReportId: string, updates: Partial<UserReport>) => Promise<UserReport>;
-  delete: (userReportId: string) => Promise<void>;
+  // The below are not yet implemented, but keeping for future use
+  // delete(userReportId: string): Promise<void>;
 }
 
-/**
- * Account storage: `/v2/user-reports` on the PolicyEngine API. The server
- * stamps the signed-in user onto each row; `userId` arguments are never
- * sent.
- *
- * Report links are URL-addressable, so local IDs (`sur-…`) keep working
- * after sign-in, following the shared policy in v2Associations: imported
- * ones resolve to their account UUID; ones never imported are read from
- * this browser, and saved to the account when changed.
- */
 export class ApiReportStore implements UserReportStore {
-  private readonly routes: AccountAssociationRoutes<UserReportItem>;
-
-  constructor(
-    context: ApiStoreContext,
-    private readonly local: UserReportStore = new LocalStorageReportStore()
-  ) {
-    this.routes = new AccountAssociationRoutes(context, 'user-reports', 'UserReport');
-  }
+  // TODO: Modify value to match to-be-created API endpoint structure
+  private readonly BASE_URL = '/api/user-report-associations';
 
   async create(report: Omit<UserReport, 'id' | 'createdAt'>): Promise<UserReport> {
-    const item = await this.routes.create(
-      UserReportAdapter.toCreationPayload(report, this.routes.writeCountry(report.countryId))
-    );
-    return UserReportAdapter.fromApiItem(item);
-  }
+    const payload: UserReportCreationPayload = UserReportAdapter.toCreationPayload(report);
 
-  /** The account assigns association IDs, so the caller's ID is not kept. */
-  createWithId(report: Omit<UserReport, 'createdAt'>): Promise<UserReport> {
-    const { id: _callerId, ...fields } = report;
-    return this.create(fields);
-  }
+    const response = await fetch(`${this.BASE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-  async findByUser(_userId: string, countryId?: string): Promise<UserReport[]> {
-    if (countryId && countryId !== this.routes.countryId) {
-      return [];
+    if (!response.ok) {
+      throw new Error('Failed to create report association');
     }
-    const items = await this.routes.list();
-    return items.filter(UserReportAdapter.hasLegacyReport).map(UserReportAdapter.fromApiItem);
+
+    const apiResponse = await response.json();
+    return UserReportAdapter.fromApiResponse(apiResponse);
   }
 
-  /** The association for a v1 report ID (the oldest, as localStorage returns the first). */
-  async findById(_userId: string, reportId: string): Promise<UserReport | null> {
-    if (!isLegacyId(reportId)) {
+  // Added for interface consistency; may be removed when user auth is implemented
+  async createWithId(report: Omit<UserReport, 'createdAt'>): Promise<UserReport> {
+    // For API store, we pass the ID to the backend and let it handle idempotency
+    const payload: UserReportCreationPayload = UserReportAdapter.toCreationPayload(report);
+
+    const response = await fetch(`${this.BASE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, id: report.id }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create report association');
+    }
+
+    const apiResponse = await response.json();
+    return UserReportAdapter.fromApiResponse(apiResponse);
+  }
+
+  async findByUser(userId: string, countryId?: string): Promise<UserReport[]> {
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch user associations');
+    }
+
+    const apiResponses = await response.json();
+
+    // Convert each API response to UserReport and filter by country if specified
+    const reports = apiResponses.map((apiData: any) => UserReportAdapter.fromApiResponse(apiData));
+    return countryId ? reports.filter((r: UserReport) => r.countryId === countryId) : reports;
+  }
+
+  async findById(userId: string, reportId: string): Promise<UserReport | null> {
+    const response = await fetch(`${this.BASE_URL}/${userId}/${reportId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.status === 404) {
       return null;
     }
-    const item = await this.routes.findFirst({ legacy_report_id: reportId });
-    return item && UserReportAdapter.hasLegacyReport(item)
-      ? UserReportAdapter.fromApiItem(item)
-      : null;
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch association');
+    }
+
+    const apiData = await response.json();
+    return UserReportAdapter.fromApiResponse(apiData);
   }
 
+  // Note: This method relies on as-of-yet unimplemented API endpoint; will alter once available
   async findByUserReportId(userReportId: string): Promise<UserReport | null> {
-    if (this.routes.isLocalOnly(userReportId)) {
-      return this.local.findByUserReportId(userReportId);
+    const response = await fetch(`${this.BASE_URL}/${userReportId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.status === 404) {
+      return null;
     }
-    const item = await this.routes.get(userReportId);
-    return item && UserReportAdapter.hasLegacyReport(item)
-      ? UserReportAdapter.fromApiItem(item)
-      : null;
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user report');
+    }
+
+    const apiData = await response.json();
+    return UserReportAdapter.fromApiResponse(apiData);
   }
 
-  async update(userReportId: string, updates: Partial<UserReport>): Promise<UserReport> {
-    const changes = UserReportAdapter.toUpdatePayload(updates);
-    if (this.routes.isLocalOnly(userReportId)) {
-      const local = this.local.findByUserReportId(userReportId);
-      const merged = { ...(await this.routes.requireLocal(userReportId, local)), ...updates };
-      const body = UserReportAdapter.toCreationPayload(
-        merged,
-        this.routes.writeCountry(merged.countryId)
-      );
-      return UserReportAdapter.fromApiItem(await this.routes.promote(userReportId, body, changes));
-    }
-    return UserReportAdapter.fromApiItem(await this.routes.patch(userReportId, changes));
+  async update(_userReportId: string, _updates: Partial<UserReport>): Promise<UserReport> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-report-associations/:userReportId
+    // Expected payload: UserReportUpdatePayload (to be created)
+
+    console.warn(
+      '[ApiReportStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
+
+    throw new Error(
+      'Report updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
+    );
   }
 
-  delete(userReportId: string): Promise<void> {
-    return this.routes.isLocalOnly(userReportId)
-      ? this.local.delete(userReportId)
-      : this.routes.delete(userReportId);
+  // Not yet implemented, but keeping for future use
+  /*
+  async delete(userId: string, reportId: string): Promise<void> {
+    const response = await fetch(`/api/user-report-associations/${userId}/${reportId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete association');
+    }
   }
+  */
 }
 
 export class LocalStorageReportStore implements UserReportStore {
@@ -199,7 +231,14 @@ export class LocalStorageReportStore implements UserReportStore {
     return updated;
   }
 
-  async delete(userReportId: string): Promise<void> {
-    this.setStoredReports(this.getStoredReports().filter((report) => report.id !== userReportId));
+  // Not yet implemented, but keeping for future use
+  /*
+  async delete(userId: string, reportId: string): Promise<void> {
+    const reports = this.getStoredReports();
+    const filtered = reports.filter(
+      a => !(a.userId === userId && a.reportId === reportId)
+    );
+    this.setStoredReports(filtered);
   }
+  */
 }

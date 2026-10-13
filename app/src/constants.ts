@@ -54,9 +54,7 @@ export function getParamDefinitionDate(year?: string): string {
 }
 
 /**
- * User ID that localStorage associations are filed under. Signed-out
- * visitors (and every country without account storage) use it; it is
- * never sent to the API. Signed-in users get their PolicyEngine user ID
- * from useCurrentUserId() instead.
+ * Mock user ID used for anonymous/unauthenticated users
+ * TODO: Replace with actual user ID from auth context when authentication is implemented
  */
 export const MOCK_USER_ID = 'anonymous';
