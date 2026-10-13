@@ -69,8 +69,8 @@ describe('DraftHeader', () => {
     renderHeader();
 
     const header = screen.getByRole('banner');
-    expect(within(header).getByLabelText('Reform name')).toHaveAttribute(
-      'placeholder',
+    // The name reads as a title until clicked: empty, it asks for one.
+    expect(within(header).getByRole('button', { name: 'Rename the reform' })).toHaveTextContent(
       'Name your reform'
     );
     expect(within(header).queryByRole('combobox', { name: /year/i })).not.toBeInTheDocument();
@@ -189,19 +189,26 @@ describe('DraftHeader', () => {
     ).toBeInTheDocument();
   });
 
-  test('given the pencil then the name is ready to type', async () => {
+  test('given the name is clicked then it opens to typing, and Enter closes it', async () => {
     const user = userEvent.setup();
     renderHeader();
 
     await user.click(screen.getByRole('button', { name: 'Rename the reform' }));
+    const input = screen.getByLabelText('Reform name');
+    expect(input).toHaveFocus();
+    await user.type(input, 'Bigger CTC{Enter}');
 
-    expect(screen.getByLabelText('Reform name')).toHaveFocus();
+    expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rename the reform' })).toHaveTextContent(
+      'Bigger CTC'
+    );
   });
 
   test('given the name is typed then the draft takes it', async () => {
     const user = userEvent.setup();
     renderHeader();
 
+    await user.click(screen.getByRole('button', { name: 'Rename the reform' }));
     await user.type(screen.getByLabelText('Reform name'), 'CTC expansion');
 
     expect(getDraftReform()?.label).toBe('CTC expansion');

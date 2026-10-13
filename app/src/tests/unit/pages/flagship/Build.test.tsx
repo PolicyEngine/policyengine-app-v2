@@ -40,7 +40,7 @@ describe('BuildPage', () => {
     // Then
     expect(screen.getByRole('heading', { name: 'Build a reform' })).toBeInTheDocument();
     expect(screen.getAllByText('Loading parameters…')).toHaveLength(1);
-    expect(screen.queryByLabelText('Reform name')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rename the reform' })).not.toBeInTheDocument();
   });
 
   test('given a draft then the reform is the page: its header, the add bar, and its table', () => {
@@ -53,7 +53,7 @@ describe('BuildPage', () => {
     renderPage();
 
     // Then
-    expect(screen.getByLabelText('Reform name')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rename the reform' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /open base amount/i })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Build a reform' })).not.toBeInTheDocument();
   });
@@ -67,7 +67,7 @@ describe('BuildPage', () => {
     renderPage();
 
     // Then
-    expect(screen.getByLabelText('Reform name')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rename the reform' })).toBeInTheDocument();
     expect(screen.getAllByText('Loading parameters…')).toHaveLength(1);
     expect(screen.queryByRole('button', { name: /open base amount/i })).not.toBeInTheDocument();
   });

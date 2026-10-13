@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { IconCalendarEvent, IconChartBar, IconPencil } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -112,58 +112,73 @@ function HeaderSelect({
  * come last, in the bar under the reform (DraftRunBar).
  */
 export default function DraftHeader({ draft }: { draft: DraftReform }) {
-  const nameRef = useRef<HTMLInputElement>(null);
-  const placeholder = 'Name your reform';
+  const [editing, setEditing] = useState(false);
   const named = draft.label.trim().length > 0;
-  // As wide as its text, so the pencil sits just after the name.
-  const width = `${Math.max((draft.label || placeholder).length, 8) + 2}ch`;
+  const titleText: React.CSSProperties = {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.primary,
+    lineHeight: typography.lineHeight.tight,
+  };
 
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-      {/* The name reads as a title, but says it can be typed in: a pencil
-          beside it, and a dashed rule under it until it has a name. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs, minWidth: 0 }}>
+      {/* The name reads as a title with a pencil after it; a click opens it
+          to typing, and Enter, Escape or a click away closes it again. */}
+      {editing ? (
         <input
-          ref={nameRef}
+          // Opened by the reader's click: the cursor goes straight to the name.
+          autoFocus
           value={draft.label}
           onChange={(event) => setDraftLabel(event.target.value)}
-          placeholder={placeholder}
+          onFocus={(event) => event.target.select()}
+          onBlur={() => setEditing(false)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === 'Escape') {
+              event.currentTarget.blur();
+            }
+          }}
+          placeholder="Name your reform"
           aria-label="Reform name"
-          className="tw:rounded-md tw:border tw:border-transparent tw:bg-transparent tw:hover:border-border-light tw:focus:border-primary-500 tw:focus:bg-white tw:focus:outline-none"
+          className="tw:w-full tw:rounded-md tw:border tw:border-primary-500 tw:bg-white tw:focus:outline-none"
           style={{
-            width,
-            maxWidth: '100%',
-            minWidth: 0,
+            ...titleText,
             marginLeft: `-${spacing.sm}`,
             padding: `2px ${spacing.sm}`,
-            fontSize: typography.fontSize['2xl'],
-            fontWeight: typography.fontWeight.semibold,
-            fontFamily: typography.fontFamily.primary,
             color: colors.text.primary,
-            ...(named ? {} : { borderBottom: `1px dashed ${colors.border.dark}` }),
           }}
         />
+      ) : (
         <button
           type="button"
+          onClick={() => setEditing(true)}
           aria-label="Rename the reform"
           title="Rename the reform"
-          onClick={() => {
-            nameRef.current?.focus();
-            nameRef.current?.select();
-          }}
-          className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100 tw:hover:text-primary-700"
+          className="tw:group tw:cursor-pointer tw:rounded-md tw:border tw:border-transparent tw:hover:border-border-light"
           style={{
+            ...titleText,
             display: 'inline-flex',
-            flexShrink: 0,
-            padding: spacing.xs,
-            border: 'none',
-            borderRadius: spacing.radius.container,
+            alignItems: 'center',
+            alignSelf: 'flex-start',
+            gap: spacing.sm,
+            maxWidth: '100%',
+            marginLeft: `-${spacing.sm}`,
+            padding: `2px ${spacing.sm}`,
             background: 'transparent',
+            textAlign: 'left',
+            color: named ? colors.text.primary : colors.text.tertiary,
           }}
         >
-          <IconPencil size={20} />
+          <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            {named ? draft.label : 'Name your reform'}
+          </span>
+          <IconPencil
+            size={18}
+            aria-hidden
+            className="tw:shrink-0 tw:text-gray-500 tw:group-hover:text-primary-700"
+          />
         </button>
-      </div>
+      )}
     </header>
   );
 }
