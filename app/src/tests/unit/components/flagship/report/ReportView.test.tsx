@@ -1,0 +1,39 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
+import ReportView from '@/components/flagship/report/ReportView';
+
+function renderCover(populationLabel?: string) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ReportView
+        title="Bigger CTC"
+        sourceNote="Hand-built"
+        populationLabel={populationLabel}
+        provisions={[]}
+        year="2026"
+        output={null}
+        calibration={null}
+        trackRecord={null}
+      />
+    </QueryClientProvider>
+  );
+}
+
+describe('ReportView cover', () => {
+  test('given a population then the cover reads it and the year, not how the reform was made', () => {
+    renderCover('Delaware');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Bigger CTC' })).toBeInTheDocument();
+    expect(screen.getByText('Delaware · 2026')).toBeInTheDocument();
+    expect(screen.queryByText(/Hand-built/)).not.toBeInTheDocument();
+  });
+
+  test('given no population then the cover has no line under the title', () => {
+    renderCover();
+
+    expect(screen.queryByText(/· 2026/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Hand-built/)).not.toBeInTheDocument();
+  });
+});

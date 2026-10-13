@@ -106,7 +106,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     ? baselinePolicy.label || 'Custom baseline policy'
     : null;
   const region = simulations?.[0]?.populationId;
-  // A report on part of the country names it on the cover: "California".
+  // A report on part of the country names it: "California".
   const regionLabel =
     region && report && region !== report.countryId
       ? populationLabel(region, economyRegions)
@@ -239,7 +239,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       title={title}
       heading={coverTitle}
       sourceNote={meta?.sourceNote || ''}
-      populationLabel={regionLabel}
+      populationLabel={regionLabel ?? 'Nationwide'}
       provisions={meta?.provisions ?? []}
       customBaselineLabel={customBaselineLabel}
       year={report?.year ?? ''}

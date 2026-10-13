@@ -71,9 +71,12 @@ export interface ReportViewProps {
   title: string;
   /** The cover heading; defaults to the title. */
   heading?: string;
-  /** e.g. "Utah · Introduced" for bills, "Hand-built draft" for drafts. */
+  /** How the reform came about, e.g. "Hand-built"; carried to the adjust panel's runs. */
   sourceNote: string;
-  /** Who the report ran on, when not the whole country, e.g. "California". */
+  /**
+   * Who the report ran on, e.g. "Nationwide" or "California". With it, the
+   * cover reads the population and the year under the title: "California · 2026".
+   */
   populationLabel?: string;
   provisions: RunReportProvision[];
   /**
@@ -238,7 +241,7 @@ export default function ReportView({
                     Compared with: {customBaselineLabel}
                   </Text>
                 )}
-                {[populationLabel, sourceNote].filter(Boolean).length > 0 && (
+                {populationLabel && (
                   <Text
                     style={{
                       margin: 0,
@@ -246,7 +249,7 @@ export default function ReportView({
                       fontSize: typography.fontSize.sm,
                     }}
                   >
-                    {[populationLabel, sourceNote].filter(Boolean).join(' · ')}
+                    {[populationLabel, year].filter(Boolean).join(' · ')}
                   </Text>
                 )}
               </Stack>
