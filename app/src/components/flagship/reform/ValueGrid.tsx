@@ -2,7 +2,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { isEditableValue, sameParameterValue } from '@/libs/draftReform';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { formatValue } from '@/utils/parameterValues';
-import ValueInput from './ValueInput';
+import ValueInput, { ValueDisplay } from './ValueInput';
 
 export interface ValueGridMember {
   path: string;
@@ -72,10 +72,8 @@ export default function ValueGrid({
   const header = (year: number, index: number) => headers?.[index] ?? String(year);
   const wide = allYears.length > 1;
   const previewCell: React.CSSProperties = {
-    padding: `${spacing.md} ${spacing.sm} ${spacing.xs}`,
+    padding: cellPadding,
     verticalAlign: 'top',
-    whiteSpace: 'nowrap',
-    fontSize: typography.fontSize.sm,
   };
 
   return (
@@ -135,13 +133,13 @@ export default function ValueGrid({
                   style={{
                     padding: `${spacing.xs} ${spacing.xs} ${spacing.sm}`,
                     color: colors.text.secondary,
-                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {formatValue(
-                    baselineAt(members[0].path, year),
-                    parameters[members[0].path].unit ?? null
-                  )}
+                  {/* Laid out as the box below lays out its value, so the columns line up. */}
+                  <ValueDisplay
+                    param={parameters[members[0].path]}
+                    value={baselineAt(members[0].path, year)}
+                  />
                 </td>
               ))}
             </tr>
@@ -269,7 +267,8 @@ export default function ValueGrid({
                         fontWeight: changed ? typography.fontWeight.medium : undefined,
                       }}
                     >
-                      {formatValue(value, param.unit ?? null)}
+                      {/* As tall as the box beside it, and its digits where the box's sit. */}
+                      <ValueDisplay param={param} value={value} boxed />
                     </td>
                   );
                 })}

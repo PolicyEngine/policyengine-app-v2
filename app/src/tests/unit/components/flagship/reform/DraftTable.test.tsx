@@ -283,15 +283,30 @@ describe('DraftTable', () => {
       Element.prototype.hasPointerCapture ??= vi.fn(() => false);
     });
 
+    /** Opens the indexing pop-up from the grid's Indexing row. */
+    const openIndexing = async (user: ReturnType<typeof userEvent.setup>) =>
+      user.click(screen.getByRole('button', { name: /^(add|edit) indexing$/i }));
+
+    /** Picks an option in one of the pop-up's menus. */
+    const pick = async (user: ReturnType<typeof userEvent.setup>, menu: string, option: string) => {
+      await user.click(screen.getByRole('combobox', { name: menu }));
+      await user.click(await screen.findByRole('option', { name: option }));
+    };
+
+    /** Chooses an index in the pop-up and applies it. */
+    const applyIndex = async (user: ReturnType<typeof userEvent.setup>, option: string) => {
+      await openIndexing(user);
+      await pick(user, 'Indexing', option);
+      await user.click(screen.getByRole('button', { name: 'Apply' }));
+    };
+
     test('then an unindexed amount holds by default, and can grow with an index', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-      const after = screen.getByRole('combobox', { name: 'Indexing' });
-      expect(after).toHaveTextContent('None');
-      await user.click(after);
-      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
+      expect(screen.getByRole('button', { name: 'Add indexing' })).toBeInTheDocument();
+      await applyIndex(user, 'CPI-U');
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
       expect(provision(CTC_PATH)?.intervals).toEqual([
@@ -317,9 +332,7 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
 
-      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
-        "Current law's rate"
-      );
+      expect(screen.getByText(/grows at current law's rate from 2026/)).toBeInTheDocument();
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
@@ -328,6 +341,10 @@ describe('DraftTable', () => {
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
         { startDate: '2027-01-01', endDate: FOREVER, value: 6100 },
       ]);
+      await openIndexing(user);
+      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
+        "Current law's rate"
+      );
       expect(screen.getByRole('combobox', { name: 'Rounding' })).toHaveTextContent('down to');
       expect(screen.getByRole('combobox', { name: 'Rounding step' })).toHaveTextContent('$100');
     });
@@ -344,15 +361,45 @@ describe('DraftTable', () => {
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
 
-      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent('None');
+      expect(screen.getByRole('button', { name: 'Add indexing' })).toBeInTheDocument();
+      expect(screen.getByText(/Every later year keeps the 2026 value/)).toBeInTheDocument();
+    });
+
+    test('then applying an index to an amount still at current law grows its later years', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+
+      await applyIndex(user, 'CPI-U');
+
+      // Indexing a flat amount is itself the change: 2,200 × 1.03.
+      expect(provision(CTC_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 2200 },
+        { startDate: '2027-01-01', endDate: FOREVER, value: 2266 },
+      ]);
+      expect(screen.getByLabelText('Child tax credit base amount, 2027')).toHaveTextContent(
+        '$2,266'
+      );
+    });
+
+    test('then cancelling the pop-up changes nothing', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+
+      await openIndexing(user);
+      await pick(user, 'Indexing', 'CPI-U');
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+      expect(provision(CTC_PATH)?.intervals).toBeUndefined();
+      expect(screen.getByRole('button', { name: 'Add indexing' })).toBeInTheDocument();
     });
 
     test('then the years after preview what the growth makes of it', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
-      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
+      await applyIndex(user, 'CPI-U');
 
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
@@ -376,11 +423,11 @@ describe('DraftTable', () => {
       });
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
-      await user.click(await screen.findByRole('option', { name: "Current law's rate" }));
+      await applyIndex(user, "Current law's rate");
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // The model runs to 2027 here, so 2027 is the only later start.
+      await openIndexing(user);
       expect(screen.getByRole('combobox', { name: 'Indexing starts' })).toHaveTextContent('2027');
       expect(screen.getByRole('combobox', { name: 'Base year' })).toHaveTextContent('2026');
       expect(provision(EXEMPTION_PATH)).toMatchObject({ growthStart: 2027, growthBase: 2026 });
@@ -390,14 +437,13 @@ describe('DraftTable', () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
-      await user.click(await screen.findByRole('option', { name: 'CPI-U' }));
+      await applyIndex(user, 'CPI-U');
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
-      await user.click(screen.getByRole('combobox', { name: 'Rounding step' }));
-      await user.click(await screen.findByRole('option', { name: '$50' }));
-      await user.click(screen.getByRole('combobox', { name: 'Rounding' }));
-      await user.click(await screen.findByRole('option', { name: 'down to' }));
+      await openIndexing(user);
+      await pick(user, 'Rounding step', '$50');
+      await pick(user, 'Rounding', 'down to');
+      await user.click(screen.getByRole('button', { name: 'Apply' }));
 
       // 3,000 × 1.03 = 3,090, down to a multiple of $50.
       expect(provision(CTC_PATH)?.intervals?.[1]).toMatchObject({ value: 3050 });
@@ -423,7 +469,9 @@ describe('DraftTable', () => {
         screen.getByRole('button', { name: 'Open EITC phase-in rate by number of children' })
       );
 
-      expect(screen.queryByRole('combobox', { name: 'Indexing' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /^(add|edit) indexing$/i })
+      ).not.toBeInTheDocument();
     });
   });
 

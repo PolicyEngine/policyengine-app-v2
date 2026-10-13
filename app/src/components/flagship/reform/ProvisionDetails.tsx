@@ -246,10 +246,11 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     setGrowthChoice(choice);
     setTimingChoice(when);
     setRoundingChoice(rounding);
-    // Values already set move the new way from their year on.
+    // Every amount in the draft moves the new way from its year on — also
+    // one still at current law: indexing a flat amount is itself the change,
+    // and the later years then show what it grows to.
     members.forEach((member) => {
-      const provision = provisionFor(member.path);
-      if (provision && provisionChanged(provision) && canGrow(parameters[member.path])) {
+      if (provisionFor(member.path) && canGrow(parameters[member.path])) {
         setOneValue(member.path, valueAt(member.path, year), choice, when, rounding);
       }
     });
@@ -267,7 +268,9 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               value={growthChoice}
               options={growthMenu}
               timing={timing}
-              seriesYears={seriesYears(growthChoice, parameters[moneyMember.path], parameters)}
+              seriesYearsFor={(choice) =>
+                seriesYears(choice, parameters[moneyMember.path], parameters)
+              }
               amountText={
                 group
                   ? 'each amount'
