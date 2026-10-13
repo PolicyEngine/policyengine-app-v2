@@ -1,5 +1,6 @@
 "use client";
 
+import AccountImportNotice from "@/components/auth/AccountImportNotice";
 import { AuthProvider } from "@/libs/auth/AuthProvider";
 import WorkspaceNavigation from "./WorkspaceNavigation";
 
@@ -19,6 +20,7 @@ export default function WorkspaceLayout({
   return (
     <AuthProvider>
       <WorkspaceNavigation>{children}</WorkspaceNavigation>
+      <AccountImportNotice />
       <div id="fullscreen-portal" />
     </AuthProvider>
   );

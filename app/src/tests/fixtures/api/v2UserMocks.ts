@@ -1,31 +1,20 @@
 import { vi } from 'vitest';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient } from '@/api/v2UserClient';
-import type {
-  MeItem,
-  UserHouseholdItem,
-  UserPolicyItem,
-  UserReportItem,
-  UserSimulationItem,
-} from '@/types/v2User';
+import type { MeItem, UserPolicyItem, UserReportItem } from '@/types/v2User';
 
 export const TEST_API_BASE = 'https://api.test.policyengine.org';
 export const TEST_ACCESS_TOKEN = 'test-access-token';
 export const PE_USER_ID = '7c1e5a8e-2b1f-4c55-9a3e-1f2d3c4b5a69';
-export const OTHER_PE_USER_ID = '0b9a8c7d-6e5f-4a3b-8c2d-1e0f9a8b7c6d';
 
 export const ASSOCIATION_IDS = {
   POLICY: '11111111-1111-4111-8111-111111111111',
-  HOUSEHOLD: '22222222-2222-4222-8222-222222222222',
-  SIMULATION: '33333333-3333-4333-8333-333333333333',
   REPORT: '44444444-4444-4444-8444-444444444444',
   REFORM: '55555555-5555-4555-8555-555555555555',
 } as const;
 
 export const LEGACY_IDS = {
   POLICY: 95762,
-  HOUSEHOLD: 123,
-  SIMULATION: 613,
   REPORT: 615,
 } as const;
 
@@ -36,6 +25,7 @@ export const TIMESTAMPS = {
 
 export const mockMeItem: MeItem = {
   id: PE_USER_ID,
+  account_created: false,
   primary_country: 'us',
   first_name: 'Ada',
   last_name: 'Lovelace',
@@ -61,26 +51,6 @@ export function policyItem(overrides: Partial<UserPolicyItem> = {}): UserPolicyI
     legacy_policy_id: LEGACY_IDS.POLICY,
     baseline: null,
     provenance: null,
-    ...overrides,
-  };
-}
-
-export function householdItem(overrides: Partial<UserHouseholdItem> = {}): UserHouseholdItem {
-  return {
-    ...base,
-    id: ASSOCIATION_IDS.HOUSEHOLD,
-    household_id: null,
-    legacy_household_id: LEGACY_IDS.HOUSEHOLD,
-    ...overrides,
-  };
-}
-
-export function simulationItem(overrides: Partial<UserSimulationItem> = {}): UserSimulationItem {
-  return {
-    ...base,
-    id: ASSOCIATION_IDS.SIMULATION,
-    simulation_id: null,
-    legacy_simulation_id: LEGACY_IDS.SIMULATION,
     ...overrides,
   };
 }

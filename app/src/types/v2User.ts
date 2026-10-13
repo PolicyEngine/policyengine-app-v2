@@ -37,6 +37,8 @@ export interface V2PageResult<T> {
 export interface MeItem {
   /** The PolicyEngine user ID that owns every association. */
   id: string;
+  /** True only on the request that created this PolicyEngine user. */
+  account_created: boolean;
   primary_country: AssociationCountryId;
   first_name: string | null;
   last_name: string | null;
@@ -68,16 +70,6 @@ export interface UserPolicyItem extends AssociationItemBase {
   legacy_policy_id: number | null;
   baseline: BaselineWire | null;
   provenance: ProvenanceWire | null;
-}
-
-export interface UserHouseholdItem extends AssociationItemBase {
-  household_id: string | null;
-  legacy_household_id: number | null;
-}
-
-export interface UserSimulationItem extends AssociationItemBase {
-  simulation_id: string | null;
-  legacy_simulation_id: number | null;
 }
 
 export interface ReportIntervalWire {
@@ -126,30 +118,6 @@ export type UserPolicyPatchBody = Partial<
   >
 >;
 
-export interface UserHouseholdCreateBody {
-  country_id: AssociationCountryId;
-  legacy_household_id: number;
-  name?: string | null;
-  description?: string | null;
-  client_ref?: string | null;
-}
-
-export type UserHouseholdPatchBody = Partial<
-  Pick<UserHouseholdCreateBody, 'legacy_household_id' | 'name' | 'description'>
->;
-
-export interface UserSimulationCreateBody {
-  country_id: AssociationCountryId;
-  legacy_simulation_id: number;
-  name?: string | null;
-  description?: string | null;
-  client_ref?: string | null;
-}
-
-export type UserSimulationPatchBody = Partial<
-  Pick<UserSimulationCreateBody, 'legacy_simulation_id' | 'name' | 'description'>
->;
-
 export interface UserReportCreateBody {
   country_id: AssociationCountryId;
   legacy_report_id: number;
@@ -179,12 +147,12 @@ export type UserReportPatchBody = Partial<
 
 /* /v2/me/export */
 
+/** Everything saved to the account, in every country; downloaded as is. */
 export interface MeExportResult {
   user: MeItem;
   policies: UserPolicyItem[];
-  households: UserHouseholdItem[];
-  simulations: UserSimulationItem[];
   reports: UserReportItem[];
+  [otherRecords: string]: unknown;
 }
 
 /* /v2/me/imports */
@@ -196,20 +164,6 @@ export interface ImportPolicyItem {
   description: string | null;
   baseline: BaselineWire | null;
   provenance: ProvenanceWire | null;
-}
-
-export interface ImportHouseholdItem {
-  client_ref: string;
-  legacy_household_id: number;
-  name: string | null;
-  description: string | null;
-}
-
-export interface ImportSimulationItem {
-  client_ref: string;
-  legacy_simulation_id: number;
-  name: string | null;
-  description: string | null;
 }
 
 export interface ImportReportItem {
@@ -224,22 +178,11 @@ export interface ImportReportItem {
   last_run_at: string | null;
 }
 
+/** v3 imports its reforms (as policies) and its reports only. */
 export interface ImportRequestBody {
   policies?: ImportPolicyItem[];
-  households?: ImportHouseholdItem[];
-  simulations?: ImportSimulationItem[];
   reports?: ImportReportItem[];
 }
-
-/** Why the server skipped an import item (`skipped[].reason`). */
-export const IMPORT_SKIP_REASONS = {
-  /** The item did not validate; the server may not know its client_ref. */
-  INVALID: 'invalid',
-  /** The v1 artifact it points at does not exist in that country. */
-  UNKNOWN_LEGACY_REFERENCE: 'unknown_legacy_reference',
-  /** The account already holds an item under this client_ref in another country. */
-  CLIENT_REF_CONFLICT: 'client_ref_conflict',
-} as const;
 
 export interface ImportSkippedItem {
   /** Null when the server could not parse the item at all. */

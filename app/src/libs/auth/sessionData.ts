@@ -9,10 +9,8 @@ import { forgetAccountReportMeta } from '@/libs/flagship/runReport';
  * - The report provenance stash from signed-in runs (kept in memory only).
  * - The draft reform, which may hold an account reform loaded for editing.
  *
- * Import bookkeeping stays: it is filed per PolicyEngine user, maps only
- * this browser's own (signed-out) local IDs, and lets old links resolve
- * when the same person signs in again. It never decides what another
- * account is offered.
+ * Signed in, v3 writes nothing else to this browser: reforms and reports
+ * go to the account, and the browser's signed-out copies are untouched.
  */
 export function clearSignedInSessionData(): void {
   forgetAccountReportMeta();
