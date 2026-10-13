@@ -106,16 +106,11 @@ function HeaderSelect({
 }
 
 /**
- * The reform's title bar: its name, and the year the editor and the run
- * read the law in. What to do with the draft — who the report runs on,
- * discard, save, run — comes last, in the bar under the reform
- * (DraftRunBar).
+ * The reform's title: its name. The run's settings and what to do with
+ * the draft — the year, who the report runs on, discard, save, run —
+ * come last, in the bar under the reform (DraftRunBar).
  */
 export default function DraftHeader({ draft }: { draft: DraftReform }) {
-  const taxYears = useSelector(getTaxYears);
-  const year = draftYear(draft);
-  const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
-
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
       <input
@@ -133,27 +128,14 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           color: colors.text.primary,
         }}
       />
-
-      {/* The year leads, as the editor reads current law in it. */}
-      <div>
-        <HeaderSelect
-          label="Year"
-          icon={<IconCalendarEvent size={16} />}
-          value={String(year)}
-          onValueChange={(next) => setDraftYear(Number(next))}
-          options={yearOptions.map((option) => ({
-            value: String(option),
-            label: String(option),
-          }))}
-        />
-      </div>
     </header>
   );
 }
 
 /**
- * The last step, under the reform: who the report runs on on the left;
- * throwing the draft away, saving it and running it on the right. It
+ * The last step, under the reform: the run's year and who it runs on on
+ * the left; throwing the draft away, saving it and running it on the
+ * right. It
  * stays at the bottom of the window while the reform is longer than the
  * screen, so the run is never a scroll away, and settles in place under
  * the table once the table ends.
@@ -164,11 +146,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const runReport = useRunFlagshipReport();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const taxYears = useSelector(getTaxYears);
   const currentLawAt = (path: string, at: number) => {
     const values = parameters?.[path]?.values;
     return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
   };
   const year = draftYear(draft);
+  const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
 
   // Who the report runs on: the whole country, a state, or a congressional district.
   const region = draft.population?.region;
@@ -206,7 +190,9 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
       style={{
         position: 'sticky',
         bottom: 0,
-        zIndex: 10,
+        // Over the reform scrolling under it, but under the add bar (10),
+        // whose search results and policy tree open down over the page.
+        zIndex: 5,
         display: 'flex',
         flexDirection: 'column',
         gap: spacing.xs,
@@ -226,11 +212,23 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           gap: spacing.sm,
         }}
       >
-        <PopulationPicker
-          value={region ?? ''}
-          onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
-          regions={regions}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
+          <HeaderSelect
+            label="Year"
+            icon={<IconCalendarEvent size={16} />}
+            value={String(year)}
+            onValueChange={(next) => setDraftYear(Number(next))}
+            options={yearOptions.map((option) => ({
+              value: String(option),
+              label: String(option),
+            }))}
+          />
+          <PopulationPicker
+            value={region ?? ''}
+            onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
+            regions={regions}
+          />
+        </div>
         <div
           style={{
             display: 'flex',
