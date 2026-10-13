@@ -89,8 +89,10 @@ export default function ValueGrid({
     const baseline = baselineAt(member.path, year);
     const changed = !sameValue(value, baseline);
     const baselineText = formatValue(baseline, param.unit ?? null);
-    const pair = (label: string, content: React.ReactNode) => (
-      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+    // Three fields of one height, each labeled above: when it starts,
+    // current law (read-only, a quiet box), and the new value.
+    const field = (label: string, content: React.ReactNode) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <span
           style={{
             fontSize: typography.fontSize.xs,
@@ -108,21 +110,33 @@ export default function ValueGrid({
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          alignItems: 'center',
-          columnGap: spacing.xl,
-          rowGap: spacing.sm,
+          alignItems: 'flex-end',
+          gap: `${spacing.md} ${spacing.lg}`,
           fontFamily: typography.fontFamily.primary,
           fontSize: typography.fontSize.sm,
         }}
       >
-        {lead && pair(lead.label, lead.content)}
-        {pair(
+        {lead && field(lead.label, lead.content)}
+        {field(
           'Current law',
-          <span style={{ color: colors.text.secondary }}>
-            <ValueDisplay param={param} value={baseline} />
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: 36,
+              minWidth: 96,
+              padding: '0 12px',
+              borderRadius: spacing.radius.container,
+              background: colors.gray[100],
+              color: colors.text.secondary,
+              whiteSpace: 'nowrap',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {baselineText}
           </span>
         )}
-        {pair(
+        {field(
           'Your reform',
           <div
             aria-label={`${member.label}, ${year}`}
@@ -132,7 +146,7 @@ export default function ValueGrid({
             // Current law reads quieter, so a change stands out.
             className={changed ? undefined : 'tw:[&_input]:text-gray-500'}
             style={{
-              width: 200,
+              width: 180,
               borderRadius: spacing.radius.container,
               boxShadow: changed ? `0 0 0 2px ${colors.primary[200]}` : undefined,
               background: changed ? colors.primary[50] : undefined,
