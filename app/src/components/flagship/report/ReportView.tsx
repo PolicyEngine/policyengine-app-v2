@@ -195,6 +195,8 @@ export default function ReportView({
       value={id}
       forceMount
       hidden={activeTab !== id}
+      // Shown again, a section fades in rather than snapping into place.
+      className="tw:motion-safe:fade-in-soft"
       style={{ display: activeTab === id ? undefined : 'none' }}
     >
       {visitedTabs.has(id) && content}
