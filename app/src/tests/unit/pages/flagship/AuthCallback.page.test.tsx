@@ -8,12 +8,7 @@ import { dismissAccountImportNotice } from '@/libs/auth/accountImport';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 import AuthCallbackPage from '@/pages/flagship/AuthCallback.page';
-import {
-  errorResponse,
-  itemResponse,
-  mockMeItem,
-  okResponse,
-} from '@/tests/fixtures/api/v2UserMocks';
+import { errorResponse, okResponse } from '@/tests/fixtures/api/v2UserMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -42,34 +37,26 @@ function requestPaths(): string[] {
   return fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
 }
 
-/** Answers /v2/me with `accountCreated`, and imports with everything added. */
-function answer({
-  accountCreated,
-  imports = 'accept',
-}: {
-  accountCreated: boolean;
-  imports?: 'accept' | 'fail';
-}) {
+/** Answers imports with every reform added, or with a failure. */
+function answerImports(imports: 'accept' | 'fail') {
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
-    const path = new URL(url).pathname;
-    if (path === '/v2/me') {
-      return itemResponse({ ...mockMeItem, account_created: accountCreated });
+    if (new URL(url).pathname !== '/v2/me/imports') {
+      return new Response('', { status: 404 });
     }
-    if (path === '/v2/me/imports') {
-      if (imports === 'fail') {
-        return errorResponse(503, 'Saved work is temporarily unavailable.');
-      }
-      const body = JSON.parse(String(init.body));
-      return okResponse({
-        id_map: Object.fromEntries(
-          (body.policies ?? []).map((item: { client_ref: string }) => [item.client_ref, 'uuid-1'])
-        ),
-        skipped: [],
-      });
+    if (imports === 'fail') {
+      return errorResponse(503, 'Saved work is temporarily unavailable.');
     }
-    return new Response('', { status: 404 });
+    const body = JSON.parse(String(init.body));
+    return okResponse({
+      id_map: Object.fromEntries(
+        (body.policies ?? []).map((item: { client_ref: string }) => [item.client_ref, 'uuid-1'])
+      ),
+      skipped: [],
+    });
   });
 }
+
+const browserReformCount = () => JSON.parse(localStorage.getItem('reforms') ?? '[]').length;
 
 beforeEach(async () => {
   localStorage.clear();
@@ -94,63 +81,54 @@ afterEach(() => {
 });
 
 describe('AuthCallbackPage', () => {
-  test("given the sign-in created the account then this browser's v3 work is imported, then it returns", async () => {
+  test('given work saved on this browser then it moves to the account, then it returns', async () => {
     // Given
-    answer({ accountCreated: true });
+    answerImports('accept');
 
     // When
     renderCallback(signedInAuthValue());
 
     // Then
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
-    expect(requestPaths()).toEqual(['/v2/me', '/v2/me/imports']);
+    expect(requestPaths()).toEqual(['/v2/me/imports']);
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Added 1 reform and 0 reports saved on this browser to your account.'
+      'Moved 1 reform and 0 reports from this browser to your account.'
     );
+    expect(browserReformCount()).toBe(0);
   });
 
-  test('given an existing account signs in then nothing is imported', async () => {
+  test('given nothing saved on this browser then nothing is called', async () => {
     // Given
-    answer({ accountCreated: false });
+    localStorage.clear();
+    answerImports('accept');
 
     // When
     renderCallback(signedInAuthValue());
 
     // Then
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
-    expect(requestPaths()).toEqual(['/v2/me']);
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  test('given the import fails then the notice says the work is still here, with one Try again', async () => {
+  test('given the import fails then the work stays, and Try again moves it', async () => {
     // Given
-    answer({ accountCreated: true, imports: 'fail' });
+    answerImports('fail');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     const user = userEvent.setup();
     renderCallback(signedInAuthValue());
     expect(await screen.findByRole('alert')).toHaveTextContent(/still on this browser/);
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
+    expect(browserReformCount()).toBe(1);
 
     // When
-    answer({ accountCreated: false });
+    answerImports('accept');
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
-    // Then: the retry imports again; /v2/me is not asked again
-    expect(await screen.findByText(/^Added 1 reform/)).toBeInTheDocument();
-    expect(requestPaths().filter((path) => path === '/v2/me')).toHaveLength(1);
-    expect(requestPaths().filter((path) => path === '/v2/me/imports')).toHaveLength(2);
-  });
-
-  test('given /v2/me fails then it still returns, without an import', async () => {
-    // Given
-    fetchMock.mockResolvedValue(errorResponse(503, 'Saved work is temporarily unavailable.'));
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    // When
-    renderCallback(signedInAuthValue());
-
     // Then
-    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
-    expect(requestPaths()).toEqual(['/v2/me']);
+    expect(await screen.findByText(/^Moved 1 reform/)).toBeInTheDocument();
+    expect(requestPaths()).toEqual(['/v2/me/imports', '/v2/me/imports']);
+    expect(browserReformCount()).toBe(0);
   });
 
   test('given sign-in did not complete then the error shows and nothing is called', () => {

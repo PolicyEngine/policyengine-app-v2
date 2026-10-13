@@ -5,13 +5,12 @@ import { LocalStorageReformStore } from '@/api/reformStore';
 import { MOCK_USER_ID } from '@/constants';
 import {
   dismissAccountImportNotice,
-  IMPORT_FAILURE_MESSAGE,
   importBrowserWork,
-  importSuccessMessage,
-  runAccountCreationImport,
+  importOutcomeMessage,
+  runSignInImport,
   useAccountImportNotice,
 } from '@/libs/auth/accountImport';
-import { saveReportMeta } from '@/libs/flagship/runReport';
+import { readReportMeta, saveReportMeta } from '@/libs/flagship/runReport';
 import {
   createTestApiContext,
   errorResponse,
@@ -80,17 +79,29 @@ async function seedBrowserWork() {
   return { usReform, ukReform, record };
 }
 
-/** Answers each import with an id_map entry for every client_ref it was sent. */
-async function acceptEverything(_url: string, init: RequestInit) {
-  const body = JSON.parse(String(init.body));
-  const refs = [...(body.policies ?? []), ...(body.reports ?? [])].map(
-    (item: { client_ref: string }) => item.client_ref
-  );
-  return okResponse({
-    id_map: Object.fromEntries(refs.map((ref, index) => [ref, `uuid-${index}-${ref}`])),
-    skipped: [],
-  });
+/** Answers each import with an id_map entry for every client_ref it was sent, except `refusedRefs`. */
+function acceptAllBut(...refusedRefs: Array<string | undefined>) {
+  const refused = new Set(refusedRefs);
+  return async (_url: string, init: RequestInit) => {
+    const body = JSON.parse(String(init.body));
+    const refs: string[] = [...(body.policies ?? []), ...(body.reports ?? [])].map(
+      (item: { client_ref: string }) => item.client_ref
+    );
+    return okResponse({
+      id_map: Object.fromEntries(
+        refs.filter((ref) => !refused.has(ref)).map((ref, index) => [ref, `uuid-${index}-${ref}`])
+      ),
+      skipped: refs
+        .filter((ref) => refused.has(ref))
+        .map((ref) => ({ client_ref: ref, reason: 'unknown_legacy_reference' })),
+    });
+  };
 }
+
+const acceptEverything = acceptAllBut();
+
+const storedIds = (key: string) =>
+  JSON.parse(localStorage.getItem(key) ?? '[]').map((item: { id: string }) => item.id);
 
 beforeEach(() => {
   localStorage.clear();
@@ -113,7 +124,12 @@ describe('importBrowserWork', () => {
     const outcome = await importBrowserWork({ client: context.client, materialize });
 
     // Then
-    expect(outcome).toEqual({ reformsAdded: 2, reportsAdded: 1, notAdded: 0 });
+    expect(outcome).toEqual({
+      reformsMoved: 2,
+      reportsMoved: 1,
+      leftOnBrowser: 0,
+      requestFailed: false,
+    });
     expect(materialize).toHaveBeenCalledTimes(1);
     const usImport = fetchCall(fetchMock, 0);
     expect(usImport.query).toEqual({ country_id: 'us' });
@@ -140,6 +156,91 @@ describe('importBrowserWork', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  test('given everything moves then this browser keeps only work outside the US and UK', async () => {
+    // Given
+    await seedBrowserWork();
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(acceptEverything);
+
+    // When
+    await importBrowserWork({ client: context.client, materialize: async () => 1 });
+
+    // Then
+    const remaining = JSON.parse(localStorage.getItem('reforms') ?? '[]');
+    expect(remaining.map((reform: Reform) => reform.countryId)).toEqual(['ca']);
+    expect(storedIds('pe-flagship-reports')).toEqual([]);
+    expect(readReportMeta('615')).toBeNull();
+  });
+
+  test('given the account skips an item then only that item stays, and goes again next time', async () => {
+    // Given
+    const { usReform, ukReform, record } = await seedBrowserWork();
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(acceptAllBut(ukReform.id));
+
+    // When
+    const outcome = await importBrowserWork({ client: context.client, materialize: async () => 1 });
+
+    // Then
+    expect(outcome).toMatchObject({ reformsMoved: 1, reportsMoved: 1, leftOnBrowser: 1 });
+    expect(storedIds('reforms')).not.toContain(usReform.id);
+    expect(storedIds('reforms')).toContain(ukReform.id);
+    expect(storedIds('pe-flagship-reports')).not.toContain(record.id);
+
+    // When: the next sign-in
+    fetchMock.mockClear();
+    fetchMock.mockImplementation(acceptEverything);
+    const next = await importBrowserWork({ client: context.client, materialize: async () => 1 });
+
+    // Then
+    expect(next).toMatchObject({ reformsMoved: 1, reportsMoved: 0, leftOnBrowser: 0 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchCall(fetchMock, 0).body.policies).toEqual([
+      expect.objectContaining({ client_ref: ukReform.id }),
+    ]);
+  });
+
+  test('given a request fails then the run stops and only the work already moved is removed', async () => {
+    // Given
+    const { usReform, ukReform } = await seedBrowserWork();
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock
+      .mockImplementationOnce(acceptEverything)
+      .mockResolvedValueOnce(errorResponse(503, 'Saved work is temporarily unavailable.'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // When
+    const outcome = await importBrowserWork({ client: context.client, materialize: async () => 1 });
+
+    // Then
+    expect(outcome).toEqual({
+      reformsMoved: 1,
+      reportsMoved: 1,
+      leftOnBrowser: 1,
+      requestFailed: true,
+    });
+    expect(storedIds('reforms')).not.toContain(usReform.id);
+    expect(storedIds('reforms')).toContain(ukReform.id);
+  });
+
+  test('given the sign-in country then its work goes first', async () => {
+    // Given
+    await seedBrowserWork();
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(acceptEverything);
+
+    // When
+    await importBrowserWork({
+      client: context.client,
+      firstCountryId: 'uk',
+      materialize: async () => 1,
+    });
+
+    // Then
+    expect(fetchCall(fetchMock, 0).query).toEqual({ country_id: 'uk' });
+    expect(fetchCall(fetchMock, 1).query).toEqual({ country_id: 'us' });
+  });
+
   test('given the import runs then it reads only the v3 keys, never the legacy ones', async () => {
     // Given
     await seedBrowserWork();
@@ -162,9 +263,9 @@ describe('importBrowserWork', () => {
     expect(LEGACY_KEYS.filter((key) => readKeys.has(key))).toEqual([]);
   });
 
-  test('given a reform that cannot get a v1 policy then its report goes without the link', async () => {
+  test('given a reform that cannot get a v1 policy then it and its report stay for next time', async () => {
     // Given
-    const { record } = await seedBrowserWork();
+    const { usReform, ukReform, record } = await seedBrowserWork();
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockImplementation(acceptEverything);
 
@@ -176,15 +277,21 @@ describe('importBrowserWork', () => {
       },
     });
 
-    // Then
-    expect(outcome.notAdded).toBe(1);
-    const report = fetchCall(fetchMock, 0).body.reports[0];
-    expect(report).toMatchObject({ client_ref: record.id, user_policy_client_ref: null });
+    // Then: only the UK reform, which already had its v1 policy, is sent
+    expect(outcome).toMatchObject({ reformsMoved: 1, reportsMoved: 0, leftOnBrowser: 2 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchCall(fetchMock, 0).body).toEqual({
+      policies: [expect.objectContaining({ client_ref: ukReform.id })],
+      reports: [],
+    });
+    expect(storedIds('reforms')).toContain(usReform.id);
+    expect(storedIds('pe-flagship-reports')).toEqual([record.id]);
+    expect(readReportMeta('615')).not.toBeNull();
   });
 });
 
-describe('runAccountCreationImport', () => {
-  test('given it succeeds then the notice says what was added', async () => {
+describe('runSignInImport', () => {
+  test('given it succeeds then the notice says what moved', async () => {
     // Given
     await seedBrowserWork();
     const { fetchMock, context } = createTestApiContext();
@@ -192,30 +299,28 @@ describe('runAccountCreationImport', () => {
     const notice = renderHook(() => useAccountImportNotice());
 
     // When
-    await act(() =>
-      runAccountCreationImport({ client: context.client, materialize: async () => 1 })
-    );
+    await act(() => runSignInImport({ client: context.client, materialize: async () => 1 }));
 
     // Then
     expect(notice.result.current).toEqual({
       kind: 'success',
-      message: 'Added 2 reforms and 1 report saved on this browser to your account.',
+      message: 'Moved 2 reforms and 1 report from this browser to your account.',
       retry: null,
     });
   });
 
-  test('given it fails then the notice says the work is still here, and Try again runs it again', async () => {
+  test('given a request fails then the notice says the work is still here, and Try again moves it', async () => {
     // Given
     await seedBrowserWork();
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockResolvedValue(errorResponse(503, 'Saved work is temporarily unavailable.'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     const notice = renderHook(() => useAccountImportNotice());
-    await act(() =>
-      runAccountCreationImport({ client: context.client, materialize: async () => 1 })
-    );
+    await act(() => runSignInImport({ client: context.client, materialize: async () => 1 }));
     expect(notice.result.current).toMatchObject({
       kind: 'failure',
-      message: IMPORT_FAILURE_MESSAGE,
+      message:
+        'Your reforms and reports saved on this browser could not be moved to your account. They are still on this browser and will be tried again the next time you sign in.',
     });
 
     // When
@@ -226,7 +331,26 @@ describe('runAccountCreationImport', () => {
     });
 
     // Then
-    expect(notice.result.current?.message).toMatch(/^Added 2 reforms and 1 report/);
+    expect(notice.result.current?.message).toMatch(/^Moved 2 reforms and 1 report/);
+  });
+
+  test('given the account skips items then the notice warns, without Try again', async () => {
+    // Given
+    const { ukReform } = await seedBrowserWork();
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(acceptAllBut(ukReform.id));
+    const notice = renderHook(() => useAccountImportNotice());
+
+    // When
+    await act(() => runSignInImport({ client: context.client, materialize: async () => 1 }));
+
+    // Then
+    expect(notice.result.current).toEqual({
+      kind: 'warning',
+      message:
+        'Moved 1 reform and 1 report from this browser to your account. 1 item is still on this browser and will be tried again the next time you sign in.',
+      retry: null,
+    });
   });
 
   test('given nothing saved on this browser then nothing is sent and no notice shows', async () => {
@@ -235,7 +359,7 @@ describe('runAccountCreationImport', () => {
     const notice = renderHook(() => useAccountImportNotice());
 
     // When
-    await act(() => runAccountCreationImport({ client: context.client }));
+    await act(() => runSignInImport({ client: context.client }));
 
     // Then
     expect(fetchMock).not.toHaveBeenCalled();
@@ -243,10 +367,17 @@ describe('runAccountCreationImport', () => {
   });
 });
 
-describe('importSuccessMessage', () => {
-  test('given one of each and items left behind then the wording agrees with the counts', () => {
-    expect(importSuccessMessage({ reformsAdded: 1, reportsAdded: 1, notAdded: 1 })).toBe(
-      'Added 1 reform and 1 report saved on this browser to your account. 1 item could not be added and is still on this browser.'
+describe('importOutcomeMessage', () => {
+  test('given nothing moved and no request failed then the wording agrees with the count', () => {
+    expect(
+      importOutcomeMessage({
+        reformsMoved: 0,
+        reportsMoved: 0,
+        leftOnBrowser: 2,
+        requestFailed: false,
+      })
+    ).toBe(
+      '2 items saved on this browser could not be moved to your account. They are still on this browser and will be tried again the next time you sign in.'
     );
   });
 });

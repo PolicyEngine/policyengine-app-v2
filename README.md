@@ -71,9 +71,10 @@ build time (see `calculator-app/.env.example`), alongside
 
 - Signed in on the US or UK workspace, reforms and reports go to the
   account. Signed out, they stay in this browser, in v3's own keys.
-- The first sign-in, which creates the account, copies the v3 reforms and
-  reports saved on this browser while signed out into it; nothing is
-  removed from the browser. Existing accounts are not offered an import.
+- Every sign-in moves the v3 reforms and reports saved on this browser
+  while signed out into the account. Each item the account confirms is
+  removed from the browser; anything else stays and is sent again at the
+  next sign-in. Work outside the US and UK always stays in the browser.
 - The legacy calculator (policies, households, simulations and reports
   built outside the workspace) has no sign-in and keeps its saved work in
   localStorage, as before. v3 never reads or writes that storage.

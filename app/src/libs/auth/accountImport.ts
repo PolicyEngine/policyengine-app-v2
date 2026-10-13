@@ -21,12 +21,13 @@ import {
 } from '@/types/v2User';
 
 /**
- * The import at account creation: when a sign-in creates the PolicyEngine
- * account (`account_created` from `GET /v2/me`), the v3 reforms and
- * reports saved on this browser while signed out (US and UK) are copied
- * into it with `POST /v2/me/imports`. Only v3's own keys are read; the
- * browser copies stay for signed-out use. The server deduplicates by
- * `client_ref` (the browser ID), so running it again is safe.
+ * The import at sign-in: every sign-in moves the v3 reforms and reports
+ * saved on this browser while signed out (US and UK) into the account with
+ * `POST /v2/me/imports`. Each item the account confirms (its `client_ref`
+ * comes back in `id_map`) is removed from this browser; everything else
+ * stays here and is sent again at the next sign-in. Only v3's own keys are
+ * read. The server deduplicates by `client_ref` (the browser ID), so an
+ * item sent again returns its existing ID.
  */
 
 /** The v3 keys the import reads; v3 never reads the legacy calculator's keys. */
@@ -102,9 +103,6 @@ function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
     }
     const runMeta = meta[record.apiReportId];
     const provisions = record.provisions?.length ? record.provisions : runMeta?.provisions;
-    const reformImported = plan[record.countryId].some(
-      (item) => item.kind === 'policies' && item.clientRef === record.reformId
-    );
     plan[record.countryId].push({
       kind: 'reports',
       clientRef: record.id,
@@ -114,7 +112,10 @@ function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
         name: text(record.title) ?? text(runMeta?.title),
         description: null,
         // Linked to its reform by the reform's browser ID (its client_ref).
-        user_policy_client_ref: reformImported ? (record.reformId ?? null) : null,
+        // The account resolves it against reforms in the same request or
+        // moved at an earlier sign-in, and leaves the report unlinked
+        // when there is none.
+        user_policy_client_ref: text(record.reformId),
         source_note: text(record.sourceNote) ?? text(runMeta?.sourceNote),
         provisions: provisions?.length ? provisionsToWire(provisions) : null,
         validation: record.validation ? validationToWire(record.validation) : null,
@@ -123,6 +124,42 @@ function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
     });
   }
   return plan;
+}
+
+/**
+ * Removes the items the account confirmed from this browser: the reforms
+ * and report records with those IDs, and the run details of reports no
+ * remaining record points at. An item left behind by a failed write is
+ * sent again next time and answers its existing ID.
+ */
+function removeMovedItems(movedClientRefs: ReadonlySet<string>): void {
+  try {
+    const reforms = readArray<Reform>(REFORMS_KEY);
+    const keptReforms = reforms.filter((reform) => !(reform.id && movedClientRefs.has(reform.id)));
+    if (keptReforms.length !== reforms.length) {
+      localStorage.setItem(REFORMS_KEY, JSON.stringify(keptReforms));
+    }
+
+    const records = readArray<FlagshipReportRecord>(FLAGSHIP_REPORTS_KEY);
+    const keptRecords = records.filter((record) => !movedClientRefs.has(record.id));
+    if (keptRecords.length === records.length) {
+      return;
+    }
+    localStorage.setItem(FLAGSHIP_REPORTS_KEY, JSON.stringify(keptRecords));
+
+    const stillReferenced = new Set(keptRecords.map((record) => record.apiReportId));
+    const movedReportIds = records
+      .filter((record) => movedClientRefs.has(record.id))
+      .map((record) => record.apiReportId)
+      .filter((apiReportId) => !stillReferenced.has(apiReportId));
+    const meta = readObject<FlagshipReportMeta>(REPORT_META_KEY);
+    if (movedReportIds.some((apiReportId) => apiReportId in meta)) {
+      movedReportIds.forEach((apiReportId) => delete meta[apiReportId]);
+      localStorage.setItem(REPORT_META_KEY, JSON.stringify(meta));
+    }
+  } catch {
+    // Storage unavailable: the items stay and are sent again next time.
+  }
 }
 
 function byteLength(value: unknown): number {
@@ -156,73 +193,110 @@ function chunkImportItems(
   }));
 }
 
+/** The account countries, `firstCountryId` first. */
+function countryOrder(firstCountryId?: string): AssociationCountryId[] {
+  return isAssociationCountry(firstCountryId)
+    ? [firstCountryId, ...ASSOCIATION_COUNTRY_IDS.filter((id) => id !== firstCountryId)]
+    : [...ASSOCIATION_COUNTRY_IDS];
+}
+
 export interface BrowserWorkImportOutcome {
-  reformsAdded: number;
-  reportsAdded: number;
-  /** Items that were not added (the server skipped them, or a reform had no v1 policy). */
-  notAdded: number;
+  reformsMoved: number;
+  reportsMoved: number;
+  /** Items still on this browser: skipped, held back, or not sent. */
+  leftOnBrowser: number;
+  /** True when an import request failed, which stops the run. */
+  requestFailed: boolean;
 }
 
 export interface ImportBrowserWorkOptions {
   client: V2UserClient;
+  /**
+   * The country signed in from. Its items go first, so the request that
+   * creates the account on a first sign-in records it as the account's
+   * country.
+   */
+  firstCountryId?: string;
   /** Materializes a reform's parameters as a v1 policy (default: POST /{c}/policy). */
   materialize?: (reform: Reform) => Promise<number>;
 }
 
 /**
- * Copies this browser's signed-out v3 work into the account. Rejects when
- * a request fails; nothing is removed from this browser either way.
+ * Moves this browser's signed-out v3 work into the account, removing each
+ * item the account confirms. A reform that cannot get a v1 policy stays,
+ * and so do its reports, so they keep their link when they move later.
+ * A failed request stops the run; everything not yet moved stays.
  */
 export async function importBrowserWork({
   client,
+  firstCountryId,
   materialize = (reform) =>
     materializeReformPolicy(reform.countryId, reform.label, reform.parameters),
 }: ImportBrowserWorkOptions): Promise<BrowserWorkImportOutcome> {
-  const outcome: BrowserWorkImportOutcome = { reformsAdded: 0, reportsAdded: 0, notAdded: 0 };
   const plan = planBrowserWorkImport();
+  const planned = ASSOCIATION_COUNTRY_IDS.reduce(
+    (total, countryId) => total + plan[countryId].length,
+    0
+  );
+  const outcome: BrowserWorkImportOutcome = {
+    reformsMoved: 0,
+    reportsMoved: 0,
+    leftOnBrowser: planned,
+    requestFailed: false,
+  };
 
-  for (const countryId of ASSOCIATION_COUNTRY_IDS) {
+  for (const countryId of countryOrder(firstCountryId)) {
     const ready: PlannedItem[] = [];
-    const unmaterialized = new Set<string>();
+    const reformsLeft = new Set<string>();
     for (const item of plan[countryId]) {
       if (item.kind === 'policies' && item.reform) {
         try {
           const policyId = await materialize(item.reform);
           ready.push({ ...item, body: { ...item.body, legacy_policy_id: policyId } });
         } catch {
-          unmaterialized.add(item.clientRef);
-          outcome.notAdded += 1;
+          reformsLeft.add(item.clientRef);
         }
         continue;
       }
       ready.push(item);
     }
-    // A report keeps its reform link only when the reform is going too.
-    const items = ready.map((item) =>
-      item.kind === 'reports' &&
-      item.body.user_policy_client_ref &&
-      unmaterialized.has(item.body.user_policy_client_ref)
-        ? { ...item, body: { ...item.body, user_policy_client_ref: null } }
-        : item
+    // A report whose reform stays on this browser stays with it.
+    const items = ready.filter(
+      (item) =>
+        !(
+          item.kind === 'reports' &&
+          item.body.user_policy_client_ref &&
+          reformsLeft.has(item.body.user_policy_client_ref)
+        )
     );
 
     for (const body of chunkImportItems(items)) {
-      const result = await importToAccount(client, countryId, body);
-      const added = (refs: Array<{ client_ref: string }> | undefined) =>
-        (refs ?? []).filter((item) => result.id_map[item.client_ref]).length;
-      const reformsAdded = added(body.policies);
-      const reportsAdded = added(body.reports);
-      outcome.reformsAdded += reformsAdded;
-      outcome.reportsAdded += reportsAdded;
-      outcome.notAdded +=
-        (body.policies?.length ?? 0) + (body.reports?.length ?? 0) - reformsAdded - reportsAdded;
+      const result = await importToAccount(client, countryId, body).catch((error: unknown) => {
+        console.error('[accountImport] Import request failed:', error);
+        return null;
+      });
+      if (!result) {
+        outcome.requestFailed = true;
+        return outcome;
+      }
+      const moved = new Set(
+        [...(body.policies ?? []), ...(body.reports ?? [])]
+          .map((item) => item.client_ref)
+          .filter((clientRef) => result.id_map[clientRef])
+      );
+      removeMovedItems(moved);
+      const countMoved = (refs: Array<{ client_ref: string }> | undefined) =>
+        (refs ?? []).filter((item) => moved.has(item.client_ref)).length;
+      outcome.reformsMoved += countMoved(body.policies);
+      outcome.reportsMoved += countMoved(body.reports);
+      outcome.leftOnBrowser -= moved.size;
     }
   }
   return outcome;
 }
 
-/** Whether this browser holds any v3 work the import would copy. */
-function hasBrowserWorkToImport(): boolean {
+/** Whether this browser holds any v3 work the import would move. */
+export function hasBrowserWorkToImport(): boolean {
   const plan = planBrowserWorkImport();
   return ASSOCIATION_COUNTRY_IDS.some((countryId) => plan[countryId].length > 0);
 }
@@ -230,9 +304,9 @@ function hasBrowserWorkToImport(): boolean {
 /* The notice shown after the import, which outlives the callback page. */
 
 export interface AccountImportNotice {
-  kind: 'success' | 'failure';
+  kind: 'success' | 'warning' | 'failure';
   message: string;
-  /** Runs the import again; present after a failure. */
+  /** Runs the import again; present after a failed request. */
   retry: (() => void) | null;
 }
 
@@ -263,39 +337,50 @@ function count(amount: number, noun: string): string {
   return `${amount} ${noun}${amount === 1 ? '' : 's'}`;
 }
 
-/** "Added N reforms and M reports saved on this browser to your account." */
-export function importSuccessMessage(outcome: BrowserWorkImportOutcome): string {
-  const added = `Added ${count(outcome.reformsAdded, 'reform')} and ${count(
-    outcome.reportsAdded,
-    'report'
-  )} saved on this browser to your account.`;
-  return outcome.notAdded > 0
-    ? `${added} ${count(outcome.notAdded, 'item')} could not be added and ${
-        outcome.notAdded === 1 ? 'is' : 'are'
-      } still on this browser.`
-    : added;
-}
-
-export const IMPORT_FAILURE_MESSAGE =
-  'Your reforms and reports saved on this browser could not be added to your account. They are still on this browser.';
+const TRIED_AGAIN = 'will be tried again the next time you sign in';
 
 /**
- * Imports this browser's v3 work into a new account and publishes the
- * outcome as a notice. A failure offers "Try again", which runs the whole
- * import again.
+ * "Moved N reforms and M reports from this browser to your account.",
+ * plus how many items stay on this browser for the next sign-in.
  */
-export async function runAccountCreationImport(options: ImportBrowserWorkOptions): Promise<void> {
+export function importOutcomeMessage(outcome: BrowserWorkImportOutcome): string {
+  const movedAny = outcome.reformsMoved + outcome.reportsMoved > 0;
+  const moved = `Moved ${count(outcome.reformsMoved, 'reform')} and ${count(
+    outcome.reportsMoved,
+    'report'
+  )} from this browser to your account.`;
+  if (outcome.leftOnBrowser === 0) {
+    return moved;
+  }
+  if (!movedAny) {
+    return outcome.requestFailed
+      ? `Your reforms and reports saved on this browser could not be moved to your account. They are still on this browser and ${TRIED_AGAIN}.`
+      : `${count(outcome.leftOnBrowser, 'item')} saved on this browser could not be moved to your account. ${
+          outcome.leftOnBrowser === 1 ? 'It is' : 'They are'
+        } still on this browser and ${TRIED_AGAIN}.`;
+  }
+  return `${moved} ${count(outcome.leftOnBrowser, 'item')} ${
+    outcome.leftOnBrowser === 1 ? 'is' : 'are'
+  } still on this browser and ${TRIED_AGAIN}.`;
+}
+
+/**
+ * Moves this browser's v3 work into the account at sign-in and publishes
+ * the outcome as a notice. A failed request offers "Try again", which runs
+ * the import again for whatever is still on this browser.
+ */
+export async function runSignInImport(options: ImportBrowserWorkOptions): Promise<void> {
   if (!hasBrowserWorkToImport()) {
     return;
   }
+  const outcome = await importBrowserWork(options);
   const retry = () => {
     dismissAccountImportNotice();
-    void runAccountCreationImport(options);
+    void runSignInImport(options);
   };
-  try {
-    const outcome = await importBrowserWork(options);
-    publishNotice({ kind: 'success', message: importSuccessMessage(outcome), retry: null });
-  } catch {
-    publishNotice({ kind: 'failure', message: IMPORT_FAILURE_MESSAGE, retry });
-  }
+  publishNotice({
+    kind: outcome.leftOnBrowser === 0 ? 'success' : outcome.requestFailed ? 'failure' : 'warning',
+    message: importOutcomeMessage(outcome),
+    retry: outcome.requestFailed ? retry : null,
+  });
 }

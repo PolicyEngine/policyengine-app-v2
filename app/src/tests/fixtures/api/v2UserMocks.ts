@@ -25,7 +25,6 @@ export const TIMESTAMPS = {
 
 export const mockMeItem: MeItem = {
   id: PE_USER_ID,
-  account_created: false,
   primary_country: 'us',
   first_name: 'Ada',
   last_name: 'Lovelace',

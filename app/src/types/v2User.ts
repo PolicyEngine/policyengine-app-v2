@@ -37,8 +37,6 @@ export interface V2PageResult<T> {
 export interface MeItem {
   /** The PolicyEngine user ID that owns every association. */
   id: string;
-  /** True only on the request that created this PolicyEngine user. */
-  account_created: boolean;
   primary_country: AssociationCountryId;
   first_name: string | null;
   last_name: string | null;
