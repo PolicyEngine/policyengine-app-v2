@@ -39,7 +39,7 @@ import {
   seriesYears,
   setValueFromYear,
 } from '@/libs/flagship/uprating';
-import { getDateRange } from '@/libs/metadataUtils';
+import { getDateRange, getTaxYears } from '@/libs/metadataUtils';
 import { selectParameterEntriesByPath } from '@/libs/parameterSearch';
 import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/ChangesCard';
 import { RootState } from '@/store';
@@ -100,6 +100,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const entriesByPath = useSelector(selectParameterEntriesByPath);
   const { minDate, maxDate } = useSelector(getDateRange);
+  const taxYears = useSelector(getTaxYears);
   const year = draftYear(draft);
 
   const members = group?.members ?? [
@@ -143,15 +144,15 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     }
     return 'one';
   });
+  // Where the draft already starts its values, earliest first.
+  const startYears = members
+    .map((member) => provisionFor(member.path)?.intervals?.[0]?.startDate)
+    .filter((start): start is string => !!start)
+    .map((start) => Number(start.slice(0, 4)))
+    .sort((a, b) => a - b);
   // The year a new or indexed value starts: where the draft already
   // starts it, else the report year. The years before keep current law.
-  const [fromYear, setFromYear] = useState(() => {
-    const starts = members
-      .map((member) => provisionFor(member.path)?.intervals?.[0]?.startDate)
-      .filter((start): start is string => !!start)
-      .sort();
-    return starts.length > 0 ? Math.max(Number(starts[0].slice(0, 4)), year) : year;
-  });
+  const [fromYear, setFromYear] = useState(() => startYears[0] ?? year);
   // When it grows: the first set member's timing, else from the year after.
   const [timingChoice, setTimingChoice] = useState<GrowthTiming>(() => {
     const set = members.map((member) => provisionFor(member.path)).find((p) => p?.growthStart);
@@ -327,10 +328,17 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     }
     setMode(next);
   };
-  // A new value can start in a later year; the years before keep current law.
+  // A new value can start in any year the model scores, before the report
+  // year or after it; the years before it keep current law. An earlier
+  // start matters to a budget window that opens before the report year.
+  const firstYear = Math.min(
+    year,
+    startYears[0] ?? year,
+    ...taxYears.map((taxYear) => Number(taxYear.value)).filter(Number.isFinite)
+  );
   const fromOptions = Array.from(
-    { length: Math.max(Math.min(lastYear, year + 10) - year + 1, 1) },
-    (_, i) => year + i
+    { length: Math.max(Math.min(lastYear, year + 10) - firstYear + 1, 1) },
+    (_, i) => firstYear + i
   );
   const changeFromYear = (next: number) => {
     const when = growthTiming(next, {});

@@ -95,9 +95,15 @@ const summarize = (
   return summarizeIntervals(intervals, (value) => formatValue(value, provision.unit));
 };
 
-/** A change that starts after the report year: the box would edit the year before it. */
-const startsAfter = (provision: DraftProvision, year: number) =>
-  Number(provision.intervals?.[0]?.startDate.slice(0, 4)) > year;
+/**
+ * A change that starts in another year than the report's: the row's box
+ * edits from the report year, so it would split the change in two. Its
+ * summary opens the editor, which keeps the start.
+ */
+const startsInOtherYear = (provision: DraftProvision, year: number) => {
+  const start = provision.intervals?.[0]?.startDate;
+  return !!start && Number(start.slice(0, 4)) !== year;
+};
 
 /** A row's value as text that opens the row: a schedule, or a breakdown's changes. */
 function SummaryButton({
@@ -378,10 +384,10 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                         Can&apos;t be changed here
                       </span>
                     ) : // A value that grows still edits in place: the box sets
-                    // where it starts — unless it starts after the report year.
+                    // where it starts — unless it starts in another year.
                     (!provisionVariesOverTime(lone) ||
                         growthPhrase(lone.growth, draft.countryId)) &&
-                      !startsAfter(lone, year) &&
+                      !startsInOtherYear(lone, year) &&
                       param ? (
                       <div
                         data-path={lone.path}
