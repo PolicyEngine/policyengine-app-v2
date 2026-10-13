@@ -38,7 +38,7 @@ export default function AuthCallbackPage() {
     void (async () => {
       if (hasBrowserWorkToImport()) {
         setImporting(true);
-        await runSignInImport({ client, firstCountryId: countryId });
+        await runSignInImport({ client, signInCountryId: countryId });
       }
       nav.replace(returnTo);
     })();

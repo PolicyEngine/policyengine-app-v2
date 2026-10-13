@@ -1,7 +1,9 @@
 import { IconCalendarEvent, IconChartBar, IconUsers } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
+import { isV2ApiError } from '@/api/v2UserClient';
 import {
   Badge,
   Button,
@@ -29,6 +31,15 @@ import {
 } from '@/libs/draftReform';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
+
+/** The reform the draft edits is not in this session's store. */
+function isMissingFromStore(error: unknown): boolean {
+  return (
+    error instanceof BrowserOnlyIdError ||
+    error instanceof ReformNotFoundError ||
+    isV2ApiError(error, 404)
+  );
+}
 
 /**
  * How the draft came about, for the report's own record. This is
@@ -120,14 +131,22 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
 
   // Saving changes the reform the draft came from, or saves a new one.
+  // When that reform is no longer in this store (deleted, or saved in the
+  // other sign-in state), the draft is saved as a new reform instead.
   const saveReform = async () => {
     const payload = draftToReform(draft, MOCK_USER_ID);
     if (draft.editingReformId) {
-      return reformStore.update(draft.editingReformId, {
-        label: payload.label,
-        parameters: payload.parameters,
-        provenance: payload.provenance,
-      });
+      try {
+        return await reformStore.update(draft.editingReformId, {
+          label: payload.label,
+          parameters: payload.parameters,
+          provenance: payload.provenance,
+        });
+      } catch (error) {
+        if (!isMissingFromStore(error)) {
+          throw error;
+        }
+      }
     }
     return reformStore.create(payload);
   };
@@ -234,7 +253,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           </Button>
           <Button
             onClick={() => saveAndRunMutation.mutate()}
-            disabled={adjusted.length === 0 || starting}
+            disabled={adjusted.length === 0 || starting || saveMutation.isPending}
             title={!empty && adjusted.length === 0 ? 'Change a value to run the report' : undefined}
           >
             <IconChartBar size={16} />
@@ -262,10 +281,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           role="alert"
           style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.error }}
         >
-          {runReport.error ??
-            (saveError instanceof BrowserOnlyIdError
-              ? saveError.message
-              : 'Could not save the reform. Try again.')}
+          {saveError ? 'Could not save the reform. Try again.' : runReport.error}
         </p>
       )}
     </header>

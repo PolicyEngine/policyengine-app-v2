@@ -13,7 +13,7 @@ import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
-import { useAccountReportRecord } from '@/hooks/useFlagshipStores';
+import { useAccountReportRecord, useReportRecord } from '@/hooks/useFlagshipStores';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
@@ -46,6 +46,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     report?.id !== undefined && report?.id !== null ? String(report.id) : undefined;
   // Signed in, the account's record carries the provenance to every device.
   const accountRecord = useAccountReportRecord(apiReportId);
+  // This session's record names the saved reform the report was run from.
+  const reportRecord = useReportRecord(apiReportId);
   // Provenance: the local stash from the run, else the account's record,
   // else rebuilt from the reform policy so a shared link validates like
   // the original.
@@ -183,6 +185,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                     loadProvisionsIntoDraft(report.countryId, meta.provisions, {
                       label: meta.title === 'Draft reform' ? '' : meta.title,
                       year: Number(report.year) || undefined,
+                      // Saving the edit changes the reform it was run from.
+                      reformId: reportRecord?.reformId,
                     })
                 : undefined
             }

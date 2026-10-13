@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
+import { V2ApiError } from '@/api/v2UserClient';
 import DraftHeader from '@/components/flagship/reform/DraftHeader';
 import {
   addDraftProvision,
@@ -153,16 +155,57 @@ describe('DraftHeader', () => {
     await waitFor(() => expect(getDraftReform()).toBeNull());
   });
 
-  test('given a reform saved on this browser is edited while signed in then saving explains why it cannot', async () => {
-    // Given: the account store refuses the browser ID
+  test.each([
+    ['saved in the other sign-in state', () => new BrowserOnlyIdError()],
+    ['deleted from this browser', () => new ReformNotFoundError()],
+    ['deleted from the account', () => new V2ApiError(404, 'Reform not found.')],
+  ])(
+    'given the reform the draft edits was %s then saving saves it as a new reform',
+    async (_, missingError) => {
+      // Given
+      const user = userEvent.setup();
+      mockUpdate.mockRejectedValue(missingError());
+      mockCreate.mockResolvedValue({ id: 'rf-new' });
+      loadReformIntoDraft(
+        {
+          id: 'rf-gone',
+          userId: 'anonymous',
+          countryId: 'us',
+          label: 'Saved elsewhere',
+          parameters: [
+            {
+              name: 'gov.irs.credits.ctc.amount.base',
+              values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2500 }],
+            },
+          ],
+          baseline: 'current-law',
+          provenance: { source: 'manual' },
+        },
+        () => ({ breadcrumb: 'CTC', unit: 'currency-USD', baselineValue: 2000 })
+      );
+      renderHeader();
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+      // Then
+      await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+      expect(mockUpdate).toHaveBeenCalledWith('rf-gone', expect.anything());
+      expect(mockCreate.mock.calls[0][0]).toMatchObject({ label: 'Saved elsewhere' });
+      await waitFor(() => expect(getDraftReform()).toBeNull());
+    }
+  );
+
+  test('given another failure then saving reports it and keeps the draft', async () => {
+    // Given
     const user = userEvent.setup();
-    mockUpdate.mockRejectedValue(new BrowserOnlyIdError());
+    mockUpdate.mockRejectedValue(new V2ApiError(503, 'Saved work is temporarily unavailable.'));
     loadReformIntoDraft(
       {
-        id: 'rf-browser1',
+        id: 'rf-saved',
         userId: 'anonymous',
         countryId: 'us',
-        label: 'Saved signed out',
+        label: 'Saved',
         parameters: [
           {
             name: 'gov.irs.credits.ctc.amount.base',
@@ -181,10 +224,31 @@ describe('DraftHeader', () => {
 
     // Then
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'This was saved on this browser while signed out. Sign out to open it.'
+      'Could not save the reform. Try again.'
     );
-    expect(mockUpdate).toHaveBeenCalledWith('rf-browser1', expect.anything());
-    expect(getDraftReform()?.editingReformId).toBe('rf-browser1');
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(getDraftReform()?.editingReformId).toBe('rf-saved');
+  });
+
+  test('given a save is pending then save and run waits, so the reform is not saved twice', async () => {
+    // Given
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    mockCreate.mockReturnValue(new Promise(() => {}));
+    renderHeader();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    // Then
+    expect(screen.getByRole('button', { name: 'Save and run 2026 report' })).toBeDisabled();
+    expect(mockCreate).toHaveBeenCalledTimes(1);
   });
 
   test('given save and run then the reform is saved first and the report is linked to it', async () => {

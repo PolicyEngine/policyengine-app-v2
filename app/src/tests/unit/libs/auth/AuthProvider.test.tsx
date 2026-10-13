@@ -7,7 +7,7 @@ import { CountryProvider } from '@/contexts/CountryContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { AuthProvider, takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 import type { CountryId } from '@/libs/countries';
-import { getDraftReform, startDraftReform } from '@/libs/draftReform';
+import { clearDraftReform, getDraftReform, startDraftReform } from '@/libs/draftReform';
 import { readReportMeta, runFlagshipReport } from '@/libs/flagship/runReport';
 import { TEST_ACCESS_TOKEN } from '@/tests/fixtures/api/v2UserMocks';
 import {
@@ -75,7 +75,14 @@ function Probe() {
       </button>
       <button
         type="button"
-        onClick={async () => setToken((await auth.getAccessToken()) ?? 'no token')}
+        onClick={async () =>
+          setToken(
+            await auth.getAccessToken().then(
+              (accessToken) => accessToken ?? 'no token',
+              () => 'unreachable'
+            )
+          )
+        }
       >
         Get token
       </button>
@@ -95,6 +102,8 @@ function renderProvider(countryId: CountryId = 'us') {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
+  clearDraftReform();
   vi.stubGlobal('fetch', fetchMock);
   auth0.state.isLoading = false;
   auth0.state.isAuthenticated = false;
@@ -209,6 +218,7 @@ describe('AuthProvider', () => {
     auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
     auth0.getAccessTokenSilently.mockRejectedValue({ error: 'login_required' });
     renderProvider();
+    startDraftReform('us', 'manual');
 
     // When
     await userEvent.setup().click(screen.getByRole('button', { name: 'Get token' }));
@@ -218,6 +228,8 @@ describe('AuthProvider', () => {
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('signed_out'));
     expect(screen.getByTestId('session-ended')).toHaveTextContent('true');
     expect(screen.getByTestId('token')).toHaveTextContent('no token');
+    // The person still here keeps their unsaved draft.
+    expect(getDraftReform()).not.toBeNull();
   });
 
   test('given a token request that fails for another reason then the session stays signed in', async () => {
@@ -231,10 +243,65 @@ describe('AuthProvider', () => {
     // When
     await userEvent.setup().click(screen.getByRole('button', { name: 'Get token' }));
 
-    // Then
-    await waitFor(() => expect(screen.getByTestId('token')).toHaveTextContent('no token'));
+    // Then: the request is told sign-in could not be reached; the session stays
+    await waitFor(() => expect(screen.getByTestId('token')).toHaveTextContent('unreachable'));
     expect(auth0.logout).not.toHaveBeenCalled();
     expect(screen.getByTestId('status')).toHaveTextContent('signed_in');
+  });
+
+  test('given a draft left by a session that expired between visits then a signed-out load drops it', () => {
+    // Given: a signed-in visit that never signed out
+    stubAuthEnv(true);
+    auth0.state.isAuthenticated = true;
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
+    const signedInVisit = renderProvider();
+    startDraftReform('us', 'manual');
+    signedInVisit.unmount();
+
+    // When: the next visit finds the session gone
+    auth0.state.isAuthenticated = false;
+    auth0.state.user = undefined;
+    renderProvider();
+
+    // Then
+    expect(screen.getByTestId('status')).toHaveTextContent('signed_out');
+    expect(getDraftReform()).toBeNull();
+  });
+
+  test("given another account signs in then the previous account's draft is dropped", () => {
+    // Given
+    stubAuthEnv(true);
+    auth0.state.isAuthenticated = true;
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
+    const firstAccount = renderProvider();
+    startDraftReform('us', 'manual');
+    firstAccount.unmount();
+
+    // When
+    auth0.state.user = { sub: 'google-oauth2|someone-else' };
+    renderProvider();
+
+    // Then
+    expect(getDraftReform()).toBeNull();
+  });
+
+  test('given a signed-out draft then signing in keeps it, now as the account’s', () => {
+    // Given
+    stubAuthEnv(true);
+    startDraftReform('us', 'manual');
+    renderProvider().unmount();
+
+    // When
+    auth0.state.isAuthenticated = true;
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
+    renderProvider().unmount();
+
+    // Then: kept, and dropped if the next load finds no session
+    expect(getDraftReform()).not.toBeNull();
+    auth0.state.isAuthenticated = false;
+    auth0.state.user = undefined;
+    renderProvider();
+    expect(getDraftReform()).toBeNull();
   });
 
   test('given sign in then the redirect returns to the requested page via the country callback', async () => {
@@ -272,6 +339,22 @@ describe('AuthProvider', () => {
     expect(takeSignInReturnTo()).toBe('/us');
   });
 
+  test('given the redirect completes then the used code leaves the address bar', () => {
+    // Given
+    stubAuthEnv(true);
+    window.history.replaceState(null, '', '/us/callback?code=used-code&state=used-state');
+    renderProvider('us');
+    const { onRedirectCallback } = auth0.providerProps.mock.calls[0][0];
+
+    // When
+    act(() => onRedirectCallback({ returnTo: '/us/build' }));
+
+    // Then: a reload cannot replay it
+    expect(window.location.pathname).toBe('/us/callback');
+    expect(window.location.search).toBe('');
+    takeSignInReturnTo();
+  });
+
   test('given sign out then what the session left in this browser is cleared first', async () => {
     // Given: a signed-in run's provenance and an account reform loaded for editing
     stubAuthEnv(true);
@@ -297,6 +380,7 @@ describe('AuthProvider', () => {
     // Then
     expect(readReportMeta('56')).toBeNull();
     expect(getDraftReform()).toBeNull();
+    expect(localStorage.getItem('pe-draft-reform-owner')).toBeNull();
     expect(auth0.logout).toHaveBeenCalledWith({
       logoutParams: { returnTo: `${window.location.origin}/us` },
     });

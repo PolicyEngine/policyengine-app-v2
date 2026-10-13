@@ -259,11 +259,14 @@ export function clearDraftAfterRun(userReportId: string): void {
   }
 }
 
-/** A report's reform back in the draft, to edit and run again. */
+/**
+ * A report's reform back in the draft, to edit and run again. With the
+ * saved reform the report was run from, saving changes that reform.
+ */
 export function loadProvisionsIntoDraft(
   countryId: CountryId,
   provisions: DraftProvision[],
-  options: { label?: string; year?: number } = {}
+  options: { label?: string; year?: number; reformId?: string | null } = {}
 ): void {
   writeDraft({
     countryId,
@@ -273,6 +276,7 @@ export function loadProvisionsIntoDraft(
     source: 'manual',
     startedAt: Date.now(),
     ...(options.year ? { year: options.year } : {}),
+    ...(options.reformId ? { editingReformId: options.reformId } : {}),
   });
 }
 

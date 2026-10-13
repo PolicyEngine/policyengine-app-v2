@@ -124,6 +124,25 @@ describe('v2UserClient', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  test('given the token request itself fails then it says sign-in could not be reached', async () => {
+    // Given
+    const fetchMock = vi.fn();
+    const client = createV2UserClient({
+      getAccessToken: async () => {
+        throw new Error('timeout');
+      },
+      baseUrl: TEST_API_BASE,
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    // When / Then
+    await expect(client.request('GET', 'me')).rejects.toMatchObject({
+      status: 0,
+      message: 'Could not reach the sign-in service. Check your connection and try again.',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   test('given a network failure then it throws status 0', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();

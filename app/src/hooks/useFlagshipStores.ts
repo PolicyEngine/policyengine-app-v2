@@ -97,18 +97,30 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
 }
 
 /**
- * The account's record for an API report — its title, source note and
- * provisions — so a report opened on another device shows the same
- * header. Signed-in (US/UK) sessions only; null otherwise.
+ * This session's record of an API report — the account's when signed in
+ * (US/UK), this browser's otherwise — with its title, source note,
+ * provisions and the saved reform it was run from. Null when there is
+ * none (a report shared from elsewhere).
  */
-export function useAccountReportRecord(apiReportId: string | undefined) {
-  const { store, isAccount, scope } = useFlagshipReportStore();
+export function useReportRecord(apiReportId: string | undefined) {
+  const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
     queryKey: ['flagship-report-record', scope, apiReportId ?? ''],
     queryFn: () => store.findByApiReportId(MOCK_USER_ID, apiReportId!),
-    enabled: isAccount && !!apiReportId,
+    enabled: !!apiReportId,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
-  return isAccount ? (data ?? null) : null;
+  return data ?? null;
+}
+
+/**
+ * The account's record for an API report, so a report opened on another
+ * device shows the same header. Signed-in (US/UK) sessions only; null
+ * otherwise.
+ */
+export function useAccountReportRecord(apiReportId: string | undefined) {
+  const { isAccount } = useFlagshipReportStore();
+  const record = useReportRecord(apiReportId);
+  return isAccount ? record : null;
 }

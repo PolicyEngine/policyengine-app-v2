@@ -4,6 +4,7 @@ import {
   getReformStore,
   LocalStorageReformStore,
   parametersFromPolicyJson,
+  ReformNotFoundError,
 } from '@/api/reformStore';
 import {
   ASSOCIATION_IDS,
@@ -205,6 +206,11 @@ describe('ApiReformStore', () => {
   it.each([
     ['read', (store: ApiReformStore, id: string) => store.findById(id)],
     ['renamed', (store: ApiReformStore, id: string) => store.update(id, { label: 'Renamed' })],
+    [
+      'edited',
+      (store: ApiReformStore, id: string) =>
+        store.update(id, { parameters: mockReformInput.parameters }),
+    ],
     ['deleted', (store: ApiReformStore, id: string) => store.delete(id)],
   ])(
     'given a reform saved on this browser while signed out, when %s signed in, then it is refused',
@@ -213,13 +219,14 @@ describe('ApiReformStore', () => {
       const local = await new LocalStorageReformStore({
         materializePolicy: async () => MATERIALIZED_POLICY_ID,
       }).create(mockReformInput);
-      const { store, fetchMock } = apiReformStore();
+      const { store, fetchMock, materializePolicy } = apiReformStore();
 
-      // When / Then
+      // When / Then: refused before any v1 policy is made for it
       await expect(operate(store, local.id!)).rejects.toThrow(
         'This was saved on this browser while signed out. Sign out to open it.'
       );
       expect(fetchMock).not.toHaveBeenCalled();
+      expect(materializePolicy).not.toHaveBeenCalled();
       expect(await new LocalStorageReformStore().findById(local.id!)).not.toBeNull();
     }
   );
@@ -418,10 +425,11 @@ describe('LocalStorageReformStore', () => {
     expect(await store.findById(created.id!)).toEqual(created);
   });
 
-  it('given a missing reform, when updated, then throws', async () => {
-    await expect(store.update('rf-missing', { label: 'x' })).rejects.toThrow(
-      'Failed to update reform'
+  it('given a missing reform, when updated, then it says the reform is not here', async () => {
+    await expect(store.update('rf-missing', { label: 'x' })).rejects.toBeInstanceOf(
+      ReformNotFoundError
     );
+    expect(materializePolicy).not.toHaveBeenCalled();
   });
 
   it('given an existing reform, when deleted, then it is no longer retrievable', async () => {

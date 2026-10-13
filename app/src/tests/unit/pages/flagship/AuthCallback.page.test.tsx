@@ -8,7 +8,12 @@ import { dismissAccountImportNotice } from '@/libs/auth/accountImport';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 import AuthCallbackPage from '@/pages/flagship/AuthCallback.page';
-import { errorResponse, okResponse } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  errorResponse,
+  itemResponse,
+  mockMeItem,
+  okResponse,
+} from '@/tests/fixtures/api/v2UserMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -37,10 +42,14 @@ function requestPaths(): string[] {
   return fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
 }
 
-/** Answers imports with every reform added, or with a failure. */
+/** Answers /v2/me with the account, and imports with every reform added or with a failure. */
 function answerImports(imports: 'accept' | 'fail') {
   fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
-    if (new URL(url).pathname !== '/v2/me/imports') {
+    const path = new URL(url).pathname;
+    if (path === '/v2/me') {
+      return itemResponse(mockMeItem);
+    }
+    if (path !== '/v2/me/imports') {
       return new Response('', { status: 404 });
     }
     if (imports === 'fail') {
@@ -90,7 +99,8 @@ describe('AuthCallbackPage', () => {
 
     // Then
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
-    expect(requestPaths()).toEqual(['/v2/me/imports']);
+    // The account is set up in the sign-in country first.
+    expect(requestPaths()).toEqual(['/v2/me', '/v2/me/imports']);
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Moved 1 reform and 0 reports from this browser to your account.'
     );
@@ -127,7 +137,7 @@ describe('AuthCallbackPage', () => {
 
     // Then
     expect(await screen.findByText(/^Moved 1 reform/)).toBeInTheDocument();
-    expect(requestPaths()).toEqual(['/v2/me/imports', '/v2/me/imports']);
+    expect(requestPaths().filter((path) => path === '/v2/me/imports')).toHaveLength(2);
     expect(browserReformCount()).toBe(0);
   });
 

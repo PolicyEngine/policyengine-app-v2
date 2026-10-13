@@ -33,7 +33,10 @@ export interface AuthContextValue {
   /** Redirects to the hosted sign-in page; returns to `returnTo` (default: here). */
   signIn: (returnTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
-  /** An access token for the PolicyEngine API, or null when signed out. */
+  /**
+   * An access token for the PolicyEngine API, or null when signed out or
+   * the session has just ended. Rejects when sign-in cannot be reached.
+   */
   getAccessToken: () => Promise<string | null>;
 }
 

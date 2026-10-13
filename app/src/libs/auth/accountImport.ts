@@ -5,8 +5,9 @@ import {
   type FlagshipReportRecord,
 } from '@/api/flagshipReportStore';
 import { isLegacyId } from '@/api/v2Associations';
-import { importToAccount } from '@/api/v2Me';
+import { fetchMe, importToAccount } from '@/api/v2Me';
 import type { V2UserClient } from '@/api/v2UserClient';
+import { getDraftReform, setDraftEditingReform } from '@/libs/draftReform';
 import { validationToWire } from '@/libs/flagship/reportValidation';
 import { REPORT_META_KEY, type FlagshipReportMeta } from '@/libs/flagship/runReport';
 import type { Reform } from '@/types/ingredients/Reform';
@@ -194,11 +195,16 @@ function chunkImportItems(
   }));
 }
 
-/** The account countries, `firstCountryId` first. */
-function countryOrder(firstCountryId?: string): AssociationCountryId[] {
-  return isAssociationCountry(firstCountryId)
-    ? [firstCountryId, ...ASSOCIATION_COUNTRY_IDS.filter((id) => id !== firstCountryId)]
-    : [...ASSOCIATION_COUNTRY_IDS];
+/**
+ * Points the draft at the account copy of the browser reform it edits, so
+ * saving it after sign-in changes that reform rather than failing.
+ */
+function followMovedDraftReform(idMap: Record<string, string>): void {
+  const editingReformId = getDraftReform()?.editingReformId;
+  const accountId = editingReformId ? idMap[editingReformId] : undefined;
+  if (accountId) {
+    setDraftEditingReform(accountId);
+  }
 }
 
 export interface BrowserWorkImportOutcome {
@@ -213,11 +219,11 @@ export interface BrowserWorkImportOutcome {
 export interface ImportBrowserWorkOptions {
   client: V2UserClient;
   /**
-   * The country signed in from. Its items go first, so the request that
-   * creates the account on a first sign-in records it as the account's
-   * country.
+   * The country signed in from. The account is set up there before
+   * anything moves, so a first sign-in records it as the account's
+   * country whichever countries the browser's work is in.
    */
-  firstCountryId?: string;
+  signInCountryId?: string;
 }
 
 /**
@@ -227,7 +233,7 @@ export interface ImportBrowserWorkOptions {
  */
 export async function importBrowserWork({
   client,
-  firstCountryId,
+  signInCountryId,
 }: ImportBrowserWorkOptions): Promise<BrowserWorkImportOutcome> {
   const plan = planBrowserWorkImport();
   const planned = ASSOCIATION_COUNTRY_IDS.reduce(
@@ -241,7 +247,13 @@ export async function importBrowserWork({
     requestFailed: false,
   };
 
-  for (const countryId of countryOrder(firstCountryId)) {
+  if (planned > 0 && isAssociationCountry(signInCountryId)) {
+    // Creates the account in the sign-in country on a first sign-in. If
+    // it fails, the import below creates it instead.
+    await fetchMe(client, signInCountryId).catch(() => null);
+  }
+
+  for (const countryId of ASSOCIATION_COUNTRY_IDS) {
     for (const body of chunkImportItems(plan[countryId])) {
       const result = await importToAccount(client, countryId, body).catch((error: unknown) => {
         console.error('[accountImport] Import request failed:', error);
@@ -257,6 +269,7 @@ export async function importBrowserWork({
           .filter((clientRef) => result.id_map[clientRef])
       );
       removeMovedItems(moved);
+      followMovedDraftReform(result.id_map);
       const countMoved = (refs: Array<{ client_ref: string }> | undefined) =>
         (refs ?? []).filter((item) => moved.has(item.client_ref)).length;
       outcome.reformsMoved += countMoved(body.policies);

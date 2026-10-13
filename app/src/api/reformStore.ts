@@ -1,6 +1,12 @@
 import { convertDateRangeMapToValueIntervals } from '@/adapters/conversionHelpers';
 import { fetchPolicyById } from '@/api/policy';
-import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
+import {
+  AccountAssociationRoutes,
+  BrowserOnlyIdError,
+  isAccountId,
+  isLegacyId,
+  type ApiStoreContext,
+} from '@/api/v2Associations';
 import { createReformPolicy } from '@/libs/flagship/runReport';
 import { Reform, ReformBaseline, ReformProvenance } from '@/types/ingredients/Reform';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -38,6 +44,14 @@ export interface ReformStore {
 export type ReformUpdates = Partial<
   Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>
 >;
+
+/** The reform is not in this store: deleted, or saved in the other sign-in state. */
+export class ReformNotFoundError extends Error {
+  constructor() {
+    super('Failed to update reform');
+    this.name = 'ReformNotFoundError';
+  }
+}
 
 /** Reforms saved in this browser, each with the ID of its v1 policy. */
 export class LocalStorageReformStore implements ReformStore {
@@ -86,7 +100,7 @@ export class LocalStorageReformStore implements ReformStore {
   async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
     const existing = await this.findById(reformId);
     if (!existing) {
-      throw new Error('Failed to update reform');
+      throw new ReformNotFoundError();
     }
     // Changed parameters are a new v1 policy; a rename keeps the policy.
     const policyId =
@@ -104,7 +118,7 @@ export class LocalStorageReformStore implements ReformStore {
     const reforms = this.getStoredReforms();
     const index = reforms.findIndex((r) => r.id === reformId);
     if (index === -1) {
-      throw new Error('Failed to update reform');
+      throw new ReformNotFoundError();
     }
 
     const updated: Reform = {
@@ -302,6 +316,10 @@ export class ApiReformStore implements ReformStore {
   }
 
   async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
+    // Refuse a browser ID before creating a v1 policy for it.
+    if (!isAccountId(reformId)) {
+      throw new BrowserOnlyIdError();
+    }
     const body: UserPolicyPatchBody = {};
     if (updates.label !== undefined) {
       body.name = updates.label || null;

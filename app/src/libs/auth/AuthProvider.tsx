@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Auth0Provider, useAuth0, type AppState } from '@auth0/auth0-react';
 import { Spinner, Stack, Text } from '@/components/ui';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -13,7 +13,7 @@ import {
   type Auth0Config,
 } from './authConfig';
 import { AuthContext, type AuthContextValue } from './AuthContext';
-import { clearSignedInSessionData } from './sessionData';
+import { clearSignedInSessionData, endSignedInSession, settleDraftOwner } from './sessionData';
 
 /**
  * Social sign-on for the v3 workspace. With sign-in off (or Auth0 not
@@ -56,6 +56,9 @@ function Auth0SessionProvider({ config, children }: { config: Auth0Config; child
   const onRedirectCallback = useCallback(
     (appState?: AppState) => {
       signInReturnTo = safeReturnTo(appState?.returnTo, `/${countryId}`);
+      // Drop ?code&state (the SDK's default does), so reloading the
+      // callback page does not replay a code that is already used.
+      window.history.replaceState(window.history.state, '', window.location.pathname);
     },
     [countryId]
   );
@@ -137,9 +140,31 @@ function Auth0SessionBridge({
     logout,
   } = useAuth0();
   const [sessionEnded, setSessionEnded] = useState(false);
+  const sessionEndedHere = useRef(false);
+  const [draftOwnerSettled, setDraftOwnerSettled] = useState(false);
+
+  const subject = isAuthenticated ? stringClaim(user?.sub) : null;
+
+  // Whose draft this browser holds is settled before the workspace
+  // renders, and again on a sign-in. A session that ends in this page
+  // keeps the draft for the person still here (see endSignedInSession).
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+    if (subject) {
+      sessionEndedHere.current = false;
+      settleDraftOwner(subject);
+    } else if (!sessionEndedHere.current) {
+      settleDraftOwner(null);
+    }
+    setDraftOwnerSettled(true);
+  }, [isLoading, subject]);
 
   // A token that cannot be renewed ends the session: the user is signed
-  // out here (without a redirect) and invited to sign in again.
+  // out here (without a redirect) and invited to sign in again. Any other
+  // failure (a timeout, no network) leaves the session as it is and
+  // rejects, so the request reports that sign-in could not be reached.
   const getAccessToken = useCallback(async () => {
     try {
       const token = await getAccessTokenSilently({
@@ -147,11 +172,13 @@ function Auth0SessionBridge({
       });
       return token || null;
     } catch (caught) {
-      if (isSessionEndedError(caught)) {
-        setSessionEnded(true);
-        clearSignedInSessionData();
-        await logout({ openUrl: false });
+      if (!isSessionEndedError(caught)) {
+        throw caught;
       }
+      sessionEndedHere.current = true;
+      setSessionEnded(true);
+      endSignedInSession();
+      await logout({ openUrl: false });
       return null;
     }
   }, [getAccessTokenSilently, config.audience, logout]);
@@ -179,7 +206,6 @@ function Auth0SessionBridge({
     await logout({ logoutParams: { returnTo: `${window.location.origin}/${countryId}` } });
   }, [logout, countryId]);
 
-  const subject = isAuthenticated ? stringClaim(user?.sub) : null;
   const name = stringClaim(user?.name);
   const email = stringClaim(user?.email);
   const picture = stringClaim(user?.picture);
@@ -209,7 +235,7 @@ function Auth0SessionBridge({
     ]
   );
 
-  if (isLoading) {
+  if (isLoading || !draftOwnerSettled) {
     return <SessionRestoring />;
   }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

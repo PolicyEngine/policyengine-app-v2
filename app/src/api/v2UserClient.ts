@@ -59,6 +59,10 @@ export interface CreateV2UserClientOptions {
  * cover several causes on the server, so their messages name the likely
  * ones rather than asserting one.
  */
+/** The token request itself failed (no network, a timeout); the session may be fine. */
+const SIGN_IN_UNREACHABLE_MESSAGE =
+  'Could not reach the sign-in service. Check your connection and try again.';
+
 const STATUS_MESSAGES: Record<number, string> = {
   400: 'The request was not valid.',
   401: 'Your session has ended. Sign in again to continue.',
@@ -106,7 +110,7 @@ export function createV2UserClient({
     try {
       token = await getAccessToken();
     } catch {
-      token = null;
+      throw new V2ApiError(0, SIGN_IN_UNREACHABLE_MESSAGE);
     }
     if (!token) {
       throw new V2ApiError(401, STATUS_MESSAGES[401]);

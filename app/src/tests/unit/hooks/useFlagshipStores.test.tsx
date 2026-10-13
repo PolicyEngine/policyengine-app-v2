@@ -1,12 +1,17 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiFlagshipReportStore, LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
 import { ApiReformStore, LocalStorageReformStore } from '@/api/reformStore';
 import { CountryProvider } from '@/contexts/CountryContext';
-import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import {
+  useFlagshipReportStore,
+  useReformStore,
+  useReportRecord,
+  useV3SavedWork,
+} from '@/hooks/useFlagshipStores';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { store } from '@/store';
 import {
@@ -130,5 +135,31 @@ describe('useReformStore', () => {
     expect(first[0].parameters).toHaveLength(1);
     expect(second[0].parameters).toEqual(first[0].parameters);
     expect(v1PolicyRequests()).toBe(1);
+  });
+});
+
+describe('useReportRecord', () => {
+  test('given a signed-out run on this browser then its record names the reform it was run from', async () => {
+    // Given
+    localStorage.clear();
+    await new LocalStorageFlagshipReportStore().create({
+      userId: 'anonymous',
+      countryId: 'us',
+      apiReportId: '615',
+      title: 'CTC expansion',
+      sourceNote: null,
+      provisions: [],
+      year: '2026',
+      reformId: 'rf-ran',
+    });
+
+    // When
+    const { result } = renderHook(() => useReportRecord('615'), {
+      wrapper: wrapperFor(makeAuthValue()),
+    });
+
+    // Then
+    await waitFor(() => expect(result.current?.reformId).toBe('rf-ran'));
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

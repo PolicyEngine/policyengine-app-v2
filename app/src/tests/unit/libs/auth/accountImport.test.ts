@@ -10,11 +10,14 @@ import {
   runSignInImport,
   useAccountImportNotice,
 } from '@/libs/auth/accountImport';
+import { getDraftReform, setDraftEditingReform, startDraftReform } from '@/libs/draftReform';
 import { readReportMeta, saveReportMeta } from '@/libs/flagship/runReport';
 import {
   createTestApiContext,
   errorResponse,
   fetchCall,
+  itemResponse,
+  mockMeItem,
   okResponse,
 } from '@/tests/fixtures/api/v2UserMocks';
 import type { Reform } from '@/types/ingredients/Reform';
@@ -224,18 +227,55 @@ describe('importBrowserWork', () => {
     expect(storedIds('reforms')).toContain(ukReform.id);
   });
 
-  test('given the sign-in country then its work goes first', async () => {
+  test('given the sign-in country then the account is set up there before anything moves', async () => {
+    // Given: work in both countries, signing in on the UK calculator
+    await seedBrowserWork();
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+      new URL(url).pathname === '/v2/me' ? itemResponse(mockMeItem) : acceptEverything(url, init)
+    );
+
+    // When
+    await importBrowserWork({ client: context.client, signInCountryId: 'uk' });
+
+    // Then
+    expect(fetchCall(fetchMock, 0)).toMatchObject({ path: '/v2/me', query: { country_id: 'uk' } });
+    expect(fetchCall(fetchMock, 1)).toMatchObject({
+      path: '/v2/me/imports',
+      query: { country_id: 'us' },
+    });
+  });
+
+  test('given setting up the account fails then the work still moves', async () => {
     // Given
     await seedBrowserWork();
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+      new URL(url).pathname === '/v2/me'
+        ? errorResponse(503, 'Saved work is temporarily unavailable.')
+        : acceptEverything(url, init)
+    );
+
+    // When
+    const outcome = await importBrowserWork({ client: context.client, signInCountryId: 'uk' });
+
+    // Then
+    expect(outcome).toMatchObject({ reformsMoved: 2, reportsMoved: 1, leftOnBrowser: 0 });
+  });
+
+  test('given the draft edits a browser reform that moves then the draft follows it to the account', async () => {
+    // Given
+    const { ukReform } = await seedBrowserWork();
+    startDraftReform('uk', 'manual');
+    setDraftEditingReform(ukReform.id!);
     const { fetchMock, context } = createTestApiContext();
     fetchMock.mockImplementation(acceptEverything);
 
     // When
-    await importBrowserWork({ client: context.client, firstCountryId: 'uk' });
+    await importBrowserWork({ client: context.client });
 
-    // Then
-    expect(fetchCall(fetchMock, 0).query).toEqual({ country_id: 'uk' });
-    expect(fetchCall(fetchMock, 1).query).toEqual({ country_id: 'us' });
+    // Then: acceptEverything names it uuid-<index>-<client_ref>
+    expect(getDraftReform()?.editingReformId).toBe(`uuid-0-${ukReform.id}`);
   });
 
   test('given the import runs then it reads only the v3 keys, never the legacy ones', async () => {
@@ -254,8 +294,9 @@ describe('importBrowserWork', () => {
     await importBrowserWork({ client: context.client });
 
     // Then
+    // v3's saved work, and its draft (which follows a moved reform).
     expect([...readKeys].sort()).toEqual(
-      ['pe-flagship-report-meta', 'pe-flagship-reports', 'reforms'].sort()
+      ['pe-draft-reform', 'pe-flagship-report-meta', 'pe-flagship-reports', 'reforms'].sort()
     );
     expect(LEGACY_KEYS.filter((key) => readKeys.has(key))).toEqual([]);
   });
