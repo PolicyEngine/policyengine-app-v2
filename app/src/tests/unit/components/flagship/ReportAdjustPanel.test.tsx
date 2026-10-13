@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
+import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
@@ -23,6 +24,13 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
     ...actual,
     getReformStore: () => ({ findByUser: mockFindByUser, create: mockCreate }),
   };
+});
+
+const mockPush = vi.fn();
+
+vi.mock('@/contexts/NavigationContext', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/contexts/NavigationContext')>();
+  return { ...actual, useAppNavigate: () => ({ push: mockPush, replace: vi.fn(), back: vi.fn() }) };
 });
 
 vi.mock('react-router-dom', async () => {
@@ -121,6 +129,61 @@ describe('ReportAdjustPanel', () => {
     expect(screen.getByRole('button', { name: 'Population: Delaware' })).toBeInTheDocument();
     // Following the report is not a change to recompute.
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+  });
+
+  test('given Edit in Build then the reform as adjusted opens there as the draft', async () => {
+    clearDraftReform();
+    const user = userEvent.setup();
+    await renderPanel({ region: 'state/de', year: '2027' });
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /edit in build/i }));
+
+    expect(mockPush).toHaveBeenCalledWith('/us/build');
+    const draft = getDraftReform();
+    expect(draft).toMatchObject({
+      label: 'CTC expansion',
+      year: 2027,
+      population: { scope: 'national', region: 'state/de' },
+    });
+    expect(draft?.provisions.map((provision) => [provision.path, provision.value])).toEqual([
+      [PROVISIONS[0].path, 3600],
+      [PROVISIONS[1].path, 350],
+    ]);
+    clearDraftReform();
+  });
+
+  test('given a dated provision is edited then recompute runs the new value, not its dates', async () => {
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel
+          title="CTC expansion"
+          sourceNote=""
+          provisions={[
+            {
+              ...PROVISIONS[0],
+              intervals: [{ startDate: '2026-01-01', endDate: '2026-12-31', value: 2500 }],
+            },
+          ]}
+        />
+      </QueryClientProvider>
+    );
+    await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockRun.mock.calls[0][2]).toEqual([
+      expect.objectContaining({ value: 3600, intervals: undefined }),
+    ]);
   });
 
   test('given the reform is renamed then recompute saves and titles it with the name', async () => {

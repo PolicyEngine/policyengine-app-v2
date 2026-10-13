@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import { IconChartBar, IconX } from '@tabler/icons-react';
+import { IconChartBar, IconPencil, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Input, Stack, Text } from '@/components/ui';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { sameParameterValue } from '@/libs/draftReform';
+import { loadProvisionsIntoDraft, sameParameterValue } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
 import { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -64,6 +65,7 @@ export default function ReportAdjustPanel({
   year,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
   const [removed, setRemoved] = useState<Set<string>>(new Set());
@@ -102,14 +104,35 @@ export default function ReportAdjustPanel({
     return null;
   }
 
+  /**
+   * The provisions as the panel has them. A value edited here replaces the
+   * provision's own dates — one value, from the report's year on — or the
+   * run would keep the dates and ignore the edit.
+   */
+  const adjustedProvisions = () =>
+    active.map((provision) => {
+      const value = values[provision.path];
+      return sameParameterValue(value, provision.value)
+        ? { ...provision }
+        : { ...provision, value, intervals: undefined };
+    });
+
+  // Back to Build with the reform as the panel has it, to add to it there.
+  const editInBuild = () => {
+    const label = name.trim() || title;
+    loadProvisionsIntoDraft(countryId, adjustedProvisions(), {
+      label: label === 'Draft reform' ? '' : label,
+      year: year ? Number(year) : undefined,
+      region: population,
+    });
+    nav.push(`/${countryId}/build`);
+  };
+
   const recompute = async () => {
     setReconcileError(null);
     setIsReconciling(true);
     try {
-      const adjusted = active.map((provision) => ({
-        ...provision,
-        value: values[provision.path],
-      }));
+      const adjusted = adjustedProvisions();
 
       // Reconcile with saved reforms: reuse an exact match, otherwise
       // save the adjusted set as its own reform.
@@ -325,6 +348,10 @@ export default function ReportAdjustPanel({
         <Button onClick={recompute} disabled={!isDirty || busy || active.length === 0}>
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
+        </Button>
+        <Button variant="outline" onClick={editInBuild} disabled={busy || active.length === 0}>
+          <IconPencil size={16} />
+          Edit in Build
         </Button>
       </Stack>
     </SidePanel>
