@@ -5,6 +5,7 @@ import { QueryNormalizerProvider } from "@normy/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider, useDispatch } from "react-redux";
 import LocalDataImportPrompt from "@/components/auth/LocalDataImportPrompt";
+import SaveFailureNotice from "@/components/common/SaveFailureNotice";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/contexts/AppContext";
 import { CalcOrchestratorProvider } from "@/contexts/CalcOrchestratorContext";
@@ -66,6 +67,7 @@ export function CalculatorProviders({
                 <CalcOrchestratorProvider>
                   <MetadataBootstrap>{children}</MetadataBootstrap>
                   <LocalDataImportPrompt />
+                  <SaveFailureNotice />
                 </CalcOrchestratorProvider>
               </TooltipProvider>
             </AuthProvider>

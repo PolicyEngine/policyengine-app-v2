@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
 import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { countryIds } from '@/libs/countries';
+import { reportSaveFailure } from '@/libs/saveFailureNotice';
 import type { HouseholdCreationPayload } from '@/types/payloads';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 
@@ -30,6 +31,9 @@ export function useCreateHousehold(householdLabel?: string) {
         });
       } catch (error) {
         console.error('Household created but association failed:', error);
+        // The builder carries on with the created household; tell the user it
+        // is not in their saved work (account unavailable, too large, down).
+        reportSaveFailure('household', error);
       }
     },
   });

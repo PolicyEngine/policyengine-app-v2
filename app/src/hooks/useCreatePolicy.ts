@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
 import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
+import { reportSaveFailure } from '@/libs/saveFailureNotice';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { useCurrentCountry } from './useCurrentCountry';
 import { useCreatePolicyAssociation } from './useUserPolicy';
@@ -32,6 +33,9 @@ export function useCreatePolicy(policyLabel?: string) {
         });
       } catch (error) {
         console.error('Policy created but association failed:', error);
+        // The builder carries on with the created policy; tell the user it
+        // is not in their saved work (account unavailable, too large, down).
+        reportSaveFailure('policy', error);
       }
     },
   });
