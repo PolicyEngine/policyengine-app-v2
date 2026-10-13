@@ -3,6 +3,9 @@ import { render, renderWithCountry, screen, userEvent, waitFor } from '@test-uti
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import ReformsPage from '@/pages/flagship/Reforms.page';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
+import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockFindByUser = vi.fn();
@@ -368,6 +371,38 @@ describe('ReformsPage', () => {
     // Then: the whole schedule, not only its first value
     const provisions = mockRun.mock.calls[0][2];
     expect(provisions).toEqual([expect.objectContaining({ intervals: datedValues, value: 3000 })]);
+  });
+
+  test('given a saved reform that changes nothing then its report cannot run, and it says why', async () => {
+    // Given: current law already sets the base amount to $2,200 from 2026
+    seedDeductionMetadata();
+    try {
+      mockFindByUser.mockResolvedValue([
+        {
+          ...CHAT_REFORM,
+          parameters: [
+            {
+              name: 'gov.irs.credits.ctc.amount.base',
+              values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2200 }],
+            },
+          ],
+        },
+      ]);
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+
+      // When
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+      // Then
+      expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
+      expect(
+        screen.getByText(/nothing in this reform differs from current law/i)
+      ).toBeInTheDocument();
+      expect(mockRun).not.toHaveBeenCalled();
+    } finally {
+      store.dispatch(clearMetadata());
+    }
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {

@@ -156,4 +156,17 @@ describe('AccountPage', () => {
     expect(screen.queryByRole('button', { name: /delete my account/i })).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  test.each(['ca', 'ng', 'il'])(
+    'given a signed-out visitor in %s then the page points to the US and UK, with no sign-in',
+    (countryId) => {
+      renderPage(makeAuthValue(), countryId);
+
+      expect(
+        screen.getByText(/accounts store work for the us and uk calculators/i)
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument();
+    }
+  );
 });

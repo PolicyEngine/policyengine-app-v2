@@ -33,6 +33,7 @@ const LEGACY_KEYS = [
   'user-population-households',
   'user-simulation-associations',
   'user-report-associations',
+  'user-geographic-associations',
 ];
 
 const touchedKeys = new Set<string>();

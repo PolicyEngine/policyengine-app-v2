@@ -622,6 +622,14 @@ export default function ReformsPage() {
 
   // ---- Detail: one of your reforms ----
   if (selectedReform) {
+    // What the report would run, as Build runs it (dated changes
+    // included); a reform that changes nothing has no report to run.
+    const runProvisions = provisionsToRun(
+      reformToProvisions(selectedReform, provisionDetails),
+      Number(CURRENT_YEAR),
+      parameters
+    );
+    const changesNothing = !selectedReform.parametersUnavailable && runProvisions.length === 0;
     return (
       <WorkspaceLayout>
         <Stack style={{ gap: spacing.lg }}>
@@ -713,20 +721,18 @@ export default function ReformsPage() {
           >
             <Button
               onClick={() =>
-                // Run as Build runs it (dated changes included), and
-                // linked to the reform.
+                // Linked to the reform it runs.
                 runReport.run(
                   selectedReform.label || 'Untitled reform',
                   SOURCE_LABELS[selectedReform.provenance.source],
-                  provisionsToRun(
-                    reformToProvisions(selectedReform, provisionDetails),
-                    Number(CURRENT_YEAR),
-                    parameters
-                  ),
+                  runProvisions,
                   selectedReform.id
                 )
               }
-              disabled={runReport.isRunning || selectedReform.parametersUnavailable}
+              disabled={
+                runReport.isRunning || selectedReform.parametersUnavailable || changesNothing
+              }
+              title={changesNothing ? 'Change a value to run the report' : undefined}
             >
               <IconChartBar size={16} />
               {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
@@ -776,6 +782,13 @@ export default function ReformsPage() {
               </Text>
             )}
           </Stack>
+          {changesNothing && (
+            <Text
+              style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
+            >
+              Nothing in this reform differs from current law. Change a value to run the report.
+            </Text>
+          )}
         </Stack>
       </WorkspaceLayout>
     );

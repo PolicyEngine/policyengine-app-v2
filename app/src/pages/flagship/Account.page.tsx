@@ -97,6 +97,27 @@ export default function AccountPage() {
     );
   }
 
+  // Accounts are for the US and UK: elsewhere there is nothing to sign in to.
+  if (!isAssociationCountry(countryId)) {
+    return (
+      <PageShell>
+        <Text style={{ margin: 0 }}>
+          Accounts store work for the US and UK calculators. Work in the{' '}
+          {getCountryLabel(countryId)} calculator stays on this device. Manage your account from{' '}
+          <AppLink to="/us/account">the US calculator</AppLink> or{' '}
+          <AppLink to="/uk/account">the UK calculator</AppLink>.
+        </Text>
+        {auth.status === 'signed_in' && (
+          <div>
+            <Button variant="outline" onClick={() => auth.signOut()}>
+              Sign out
+            </Button>
+          </div>
+        )}
+      </PageShell>
+    );
+  }
+
   if (auth.status === 'signed_out') {
     return (
       <PageShell>
@@ -112,24 +133,6 @@ export default function AccountPage() {
             <Button onClick={() => auth.signIn()}>Sign in</Button>
           </CardContent>
         </Card>
-      </PageShell>
-    );
-  }
-
-  if (!isAssociationCountry(countryId)) {
-    return (
-      <PageShell>
-        <Text style={{ margin: 0 }}>
-          Accounts store work for the US and UK calculators. Work in the{' '}
-          {getCountryLabel(countryId)} calculator stays on this device. Manage your account from{' '}
-          <AppLink to="/us/account">the US calculator</AppLink> or{' '}
-          <AppLink to="/uk/account">the UK calculator</AppLink>.
-        </Text>
-        <div>
-          <Button variant="outline" onClick={() => auth.signOut()}>
-            Sign out
-          </Button>
-        </div>
       </PageShell>
     );
   }

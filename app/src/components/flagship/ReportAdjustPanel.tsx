@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { IconChartBar, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { Button, Stack, Text } from '@/components/ui';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { sameParameterValue } from '@/libs/draftReform';
+import { provisionAdjusts, sameParameterValue } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
 import { RunReportProvision } from '@/libs/flagship/runReport';
+import { RootState } from '@/store';
 import { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { formatValue } from '@/utils/parameterValues';
@@ -69,9 +71,17 @@ export default function ReportAdjustPanel({
     Object.fromEntries(provisions.map((provision) => [provision.path, provision.value]))
   );
 
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const active = provisions.filter((provision) => !removed.has(provision.path));
   const isDirty =
     removed.size > 0 || provisions.some((provision) => values[provision.path] !== provision.value);
+  // A recompute with nothing differing from current law has no report to run.
+  const changesLaw = active.some((provision) =>
+    provisionAdjusts(
+      { ...provision, value: values[provision.path] },
+      parameters?.[provision.path]?.values
+    )
+  );
   const busy = isReconciling || runReport.isRunning;
 
   if (provisions.length === 0) {
@@ -264,7 +274,12 @@ export default function ReportAdjustPanel({
             {reconcileError || runReport.error}
           </Text>
         )}
-        <Button onClick={recompute} disabled={!isDirty || busy || active.length === 0}>
+        {isDirty && active.length > 0 && !changesLaw && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+            Nothing differs from current law. Change a value to recompute.
+          </Text>
+        )}
+        <Button onClick={recompute} disabled={!isDirty || busy || !changesLaw}>
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>

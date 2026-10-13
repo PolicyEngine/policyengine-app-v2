@@ -178,6 +178,23 @@ describe('ReportAdjustPanel', () => {
     expect(screen.getByLabelText(/new value for maximum credit per child/i)).toBeInTheDocument();
   });
 
+  test('given every value is back at current law then recompute waits, and says why', async () => {
+    // Given
+    const user = userEvent.setup();
+    await renderPanel();
+
+    // When: one provision removed, the other set back to its current-law value
+    await user.click(screen.getByRole('button', { name: /remove maximum credit per child/i }));
+    const allotment = screen.getByLabelText(/new value for maximum allotment/i);
+    await user.clear(allotment);
+    await user.type(allotment, '300');
+
+    // Then
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+    expect(screen.getByText(/nothing differs from current law/i)).toBeInTheDocument();
+    expect(mockRun).not.toHaveBeenCalled();
+  });
+
   test('given collapse then the panel shrinks to the adjust tab and reopens', async () => {
     const user = userEvent.setup();
     await renderPanel();
