@@ -139,7 +139,7 @@ describe('BillReportPage', () => {
       { enabled: true }
     );
     expect(
-      within(screen.getByRole('tabpanel')).getByText('Calculating the full results…')
+      within(screen.getByRole('tabpanel')).getByText('Calculating the full results')
     ).toBeInTheDocument();
   });
 
@@ -164,8 +164,11 @@ describe('BillReportPage', () => {
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
     await user.click(screen.getByRole('button', { name: 'Load full results' }));
 
-    expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
-    expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
+    expect(screen.getByText('Calculating the full results')).toBeInTheDocument();
+    // A bar, with the queue position under it and the estimate it follows.
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('In queue (position 2)')).toBeInTheDocument();
+    expect(screen.getByText(/Estimated from typical run times/)).toBeInTheDocument();
     expect(screen.queryByText('Economic impact charts')).not.toBeInTheDocument();
     // The tracker's stored detail fills the wait.
     expect(screen.getByText('Income change by decile')).toBeInTheDocument();
@@ -466,7 +469,7 @@ describe('BillReportPage', () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
     expect(screen.getByText(/provisions are mapped to model parameters yet/)).toBeInTheDocument();
-    expect(screen.queryByText('Calculating the full results…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Calculating the full results')).not.toBeInTheDocument();
   });
 
   test('given an unknown bill then says it is not in the feed', async () => {

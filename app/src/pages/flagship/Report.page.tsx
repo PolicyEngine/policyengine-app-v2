@@ -6,11 +6,13 @@ import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches'
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportView from '@/components/flagship/report/ReportView';
+import RunProgress from '@/components/flagship/report/RunProgress';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Spinner, Stack, Text, Title } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
+import { getDurationForCountry } from '@/constants/calculationDurations';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
@@ -200,10 +202,27 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           alignItems: 'center',
         }}
       >
-        <Spinner size="sm" />
-        <Text style={{ margin: 0, color: colors.text.secondary }}>
-          {calcStatus.status === 'pending' ? 'Calculating report results…' : 'Loading report…'}
-        </Text>
+        {calcStatus.status === 'pending' ? (
+          <RunProgress
+            title={
+              regionLabel
+                ? `Calculating the results for ${regionLabel}`
+                : 'Calculating the nationwide results'
+            }
+            progress={calcStatus.progress}
+            detail={
+              typeof calcStatus.queuePosition === 'number' && calcStatus.queuePosition > 0
+                ? `In queue, position ${calcStatus.queuePosition}`
+                : undefined
+            }
+            expectedMs={getDurationForCountry(report?.countryId ?? 'us')}
+          />
+        ) : (
+          <>
+            <Spinner size="sm" />
+            <Text style={{ margin: 0, color: colors.text.secondary }}>Loading report…</Text>
+          </>
+        )}
       </Stack>
     );
   }
