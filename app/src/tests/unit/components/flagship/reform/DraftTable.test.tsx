@@ -98,7 +98,7 @@ describe('DraftTable', () => {
     expect(provision(JOINT_PATH)?.intervals).toEqual([
       { startDate: '2026-01-01', endDate: FOREVER, value: 35000 },
     ]);
-    expect(screen.getByText('was $32,200')).toBeInTheDocument();
+    expect(screen.getByText('Baseline: $32,200')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Close Standard deduction amount' }));
     // Closed, the row names what changed and when.
     expect(screen.getByRole('button', { name: 'Joint $35,000' })).toBeInTheDocument();
@@ -242,7 +242,7 @@ describe('DraftTable', () => {
       expect(provision(PHASE_IN_RATE_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: FOREVER, value: 0.36 },
       ]);
-      expect(screen.getByText('was 34%')).toBeInTheDocument();
+      expect(screen.getByText('Baseline: 34%')).toBeInTheDocument();
     });
 
     test('then by year shows one year at a time, and a year changes alone', async () => {

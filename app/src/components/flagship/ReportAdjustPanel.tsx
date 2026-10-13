@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IconChartBar, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
-import { Button, Stack, Text } from '@/components/ui';
+import { Button, Input, Stack, Text } from '@/components/ui';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -76,11 +76,24 @@ export default function ReportAdjustPanel({
   // The whole country is the API's region for it, not a part of it.
   const reportRegion = region && region !== countryId ? region : undefined;
   const [population, setPopulation] = useState<string | undefined>(reportRegion);
+  const [populationChosen, setPopulationChosen] = useState(false);
+  // The report's population can arrive after the panel does (its simulations
+  // load later); follow it until a population is chosen here.
+  useEffect(() => {
+    if (!populationChosen) {
+      setPopulation(reportRegion);
+    }
+  }, [reportRegion, populationChosen]);
+  // What the recomputed reform and its report are called: this report's
+  // name to start; left as is, the new one is "… (adjusted)".
+  const [name, setName] = useState(title);
+  const renamed = name.trim() !== '' && name.trim() !== title.trim();
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
 
   const active = provisions.filter((provision) => !removed.has(provision.path));
   const isDirty =
     removed.size > 0 ||
+    renamed ||
     population !== reportRegion ||
     provisions.some((provision) => values[provision.path] !== provision.value);
   const busy = isReconciling || runReport.isRunning;
@@ -104,16 +117,17 @@ export default function ReportAdjustPanel({
       const existing = await store.findByUser(MOCK_USER_ID, countryId);
       const match = existing.find((reform) => reformMatches(reform, adjusted));
 
+      const label = renamed ? name.trim() : `${title} (adjusted)`;
       let reformId: string;
       let runTitle: string;
       if (match) {
         reformId = match.id!;
-        runTitle = match.label || `${title} (adjusted)`;
+        runTitle = renamed ? label : match.label || label;
       } else {
         const created = await store.create({
           userId: MOCK_USER_ID,
           countryId,
-          label: `${title} (adjusted)`,
+          label,
           parameters: adjusted.map((provision) => ({
             name: provision.path,
             values: [
@@ -129,7 +143,7 @@ export default function ReportAdjustPanel({
         });
         queryClient.invalidateQueries({ queryKey: ['reforms'] });
         reformId = created.id!;
-        runTitle = created.label || `${title} (adjusted)`;
+        runTitle = created.label || label;
       }
 
       await runReport.run(
@@ -153,14 +167,30 @@ export default function ReportAdjustPanel({
       meta={`${active.length} provision${active.length === 1 ? '' : 's'}`}
       defaultOpen={false}
     >
-      {/* The population is adjustable too: the same reform, run on another place. */}
+      {/* The name and population are adjustable too: the same reform, named or run anew. */}
       <div
         style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: spacing.sm,
           padding: `${spacing.md} ${spacing.lg}`,
           borderBottom: `1px solid ${colors.border.light}`,
         }}
       >
-        <PopulationPicker value={population ?? ''} onChange={setPopulation} regions={regions} />
+        <label style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            Reform name
+          </span>
+          <Input value={name} onChange={(event) => setName(event.target.value)} />
+        </label>
+        <PopulationPicker
+          value={population ?? ''}
+          onChange={(next) => {
+            setPopulationChosen(true);
+            setPopulation(next);
+          }}
+          regions={regions}
+        />
       </div>
       {loading ? (
         <div style={{ padding: `0 ${spacing.lg}` }}>
@@ -247,7 +277,7 @@ export default function ReportAdjustPanel({
                   )}
                   {!sameParameterValue(values[provision.path], provision.baselineValue) && (
                     <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-                      was {formatValue(provision.baselineValue, provision.unit)}
+                      Baseline: {formatValue(provision.baselineValue, provision.unit)}
                     </Text>
                   )}
                 </div>

@@ -255,7 +255,7 @@ export default function ValueGrid({
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          was {baselineText}
+                          Baseline: {baselineText}
                         </span>
                       )}
                     </td>

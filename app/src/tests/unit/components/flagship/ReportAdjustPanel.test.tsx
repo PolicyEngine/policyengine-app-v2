@@ -79,7 +79,7 @@ describe('ReportAdjustPanel', () => {
 
     expect(screen.getByLabelText(/new value for maximum credit per child/i)).toHaveValue(2500);
     // What it was reads beside the editor, with no Before and After labels.
-    expect(screen.getByText('was $2,000')).toBeInTheDocument();
+    expect(screen.getByText('Baseline: $2,000')).toBeInTheDocument();
     expect(screen.queryByText('Before')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
   });
@@ -98,6 +98,46 @@ describe('ReportAdjustPanel', () => {
     const [, , , , year, options] = mockRun.mock.calls[0];
     expect(year).toBe(2027);
     expect(options).toEqual({ region: 'state/va' });
+  });
+
+  test('given the report population arrives after the panel then the panel follows it', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const panel = (region?: string) => (
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel
+          title="CTC expansion"
+          sourceNote=""
+          provisions={PROVISIONS}
+          region={region}
+        />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(panel(undefined));
+    await userEvent.setup().click(screen.getByRole('button', { name: /open adjust parameters/i }));
+    expect(screen.getByRole('button', { name: 'Population: Nationwide' })).toBeInTheDocument();
+
+    rerender(panel('state/de'));
+
+    expect(screen.getByRole('button', { name: 'Population: Delaware' })).toBeInTheDocument();
+    // Following the report is not a change to recompute.
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+  });
+
+  test('given the reform is renamed then recompute saves and titles it with the name', async () => {
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'Bigger CTC' });
+    const user = userEvent.setup();
+    await renderPanel();
+
+    const name = screen.getByRole('textbox', { name: 'Reform name' });
+    expect(name).toHaveValue('CTC expansion');
+    await user.clear(name);
+    await user.type(name, 'Bigger CTC');
+    // A new name alone is a change to recompute.
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ label: 'Bigger CTC' }));
+    expect(mockRun.mock.calls[0][0]).toBe('Bigger CTC');
   });
 
   test('given another population is chosen then recompute runs on it', async () => {

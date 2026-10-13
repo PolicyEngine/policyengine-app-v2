@@ -183,7 +183,7 @@ export default function BracketTable({
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        was {baselineText}
+                        Baseline: {baselineText}
                       </span>
                     )}
                   </td>
