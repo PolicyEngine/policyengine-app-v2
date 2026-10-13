@@ -199,6 +199,20 @@ describe('getFlagshipReportStore', () => {
     expect(findOwnedReportByApiReportId(API_REPORT_ID)).toBeNull();
   });
 
+  test('given the central store is busy (429) then that record is saved locally and the next create tries the API again', async () => {
+    fetchMock.mockResolvedValueOnce(mockErrorResponse(HTTP_STATUS.TOO_MANY_REQUESTS));
+    const busyRecord = await getFlagshipReportStore().create(mockNewReport);
+
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse({ ...mockReportRow, edit_token: EDIT_TOKEN }, HTTP_STATUS.CREATED)
+    );
+    const nextRecord = await getFlagshipReportStore().create(mockNewReport);
+
+    expect(busyRecord.id).toMatch(/^lfr-/);
+    expect(nextRecord.id).toBe(CENTRAL_REPORT_ID);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   test('given a pre-existing local record then it is found and pinned locally without a request', async () => {
     localStorage.setItem(LEGACY_REPORTS_KEY, JSON.stringify([legacyLocalReport]));
     const store = getFlagshipReportStore();

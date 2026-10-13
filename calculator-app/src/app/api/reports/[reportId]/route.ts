@@ -4,6 +4,7 @@ import {
 } from "@/libs/flagship/apiGate";
 import { eq } from "drizzle-orm";
 import { getDb, isDbConfigured } from "../../../../db";
+import { readJsonBody } from "../../../../db/limits";
 import { isUuid, presentsEditToken } from "../../../../db/ownership";
 import { reports } from "../../../../db/schema";
 import { reportRowToMetadata } from "../../../../db/serialize";
@@ -85,12 +86,11 @@ export async function PATCH(
     );
   }
 
-  let payload: any;
-  try {
-    payload = await request.json();
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
+  const parsed = await readJsonBody(request);
+  if ("error" in parsed) {
+    return json({ error: parsed.error }, parsed.status);
   }
+  const payload: any = parsed.body;
   if (!isValidationPayload(payload?.validation)) {
     return json({ error: "validation snapshot is required" }, 400);
   }

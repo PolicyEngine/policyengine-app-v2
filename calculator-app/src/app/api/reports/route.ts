@@ -6,6 +6,12 @@ import { desc, inArray } from "drizzle-orm";
 import { countryIds } from "@/libs/countries";
 import { getDb, isDbConfigured } from "../../../db";
 import {
+  invalidText,
+  newRowBudgetExhausted,
+  newRowBudgetResponse,
+  readJsonBody,
+} from "../../../db/limits";
+import {
   isUuid,
   issueEditToken,
   MAX_IDS_PER_REQUEST,
@@ -42,6 +48,12 @@ function validateCreationPayload(payload: any): string | null {
   }
   if (typeof payload.api_report_id !== "string" || !payload.api_report_id) {
     return "api_report_id is required";
+  }
+  const textError =
+    invalidText("title", payload.title) ??
+    invalidText("source_note", payload.source_note);
+  if (textError) {
+    return textError;
   }
   if (!Array.isArray(payload.provisions)) {
     return "provisions must be an array";
@@ -96,16 +108,19 @@ export async function POST(request: Request): Promise<Response> {
     return dbUnavailable();
   }
 
-  let payload: any;
-  try {
-    payload = await request.json();
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
+  const parsed = await readJsonBody(request);
+  if ("error" in parsed) {
+    return json({ error: parsed.error }, parsed.status);
   }
+  const payload: any = parsed.body;
 
   const validationError = validateCreationPayload(payload);
   if (validationError) {
     return json({ error: validationError }, 400);
+  }
+
+  if (await newRowBudgetExhausted(reports)) {
+    return newRowBudgetResponse();
   }
 
   const { token, hash } = await issueEditToken();

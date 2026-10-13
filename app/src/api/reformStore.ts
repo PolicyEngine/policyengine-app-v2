@@ -50,6 +50,18 @@ function throwIfUnavailable(response: Response): void {
   }
 }
 
+/**
+ * The central store took its limit of new reforms this minute (429). The
+ * resilient store saves that one reform locally and keeps using the
+ * central store.
+ */
+export class ReformStoreBusyError extends Error {
+  constructor() {
+    super('Reform store is taking no new reforms this minute');
+    this.name = 'ReformStoreBusyError';
+  }
+}
+
 /** Ids per batch read, so the query string stays well under URL limits. */
 const IDS_PER_REQUEST = 50;
 
@@ -71,6 +83,9 @@ export class ApiReformStore implements ReformStore {
 
     if (!response.ok) {
       throwIfUnavailable(response);
+      if (response.status === 429) {
+        throw new ReformStoreBusyError();
+      }
       throw new Error('Failed to create reform');
     }
 
@@ -295,11 +310,18 @@ export class ResilientReformStore implements ReformStore {
     return (await this.local.findById(reformId)) !== null;
   }
 
-  create(reform: NewReform): Promise<Reform> {
-    return this.withFallback(
-      (store) => store.create(reform),
-      (store) => store.create(reform)
-    );
+  async create(reform: NewReform): Promise<Reform> {
+    try {
+      return await this.withFallback(
+        (store) => store.create(reform),
+        (store) => store.create(reform)
+      );
+    } catch (error) {
+      if (error instanceof ReformStoreBusyError) {
+        return this.local.create(reform);
+      }
+      throw error;
+    }
   }
 
   async findMine(countryId?: string): Promise<Reform[]> {

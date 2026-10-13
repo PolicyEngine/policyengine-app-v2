@@ -50,3 +50,33 @@ export const IDENTIFYING_HEADERS = {
 };
 
 export const UNKNOWN_UUID = '00000000-0000-4000-8000-000000000000';
+
+const MINIMAL_ROWS = {
+  reforms: {
+    columns: 'country_id, parameters, provenance',
+    values: `'us', '[]', '{"source":"manual"}'`,
+  },
+  reports: {
+    columns: 'country_id, api_report_id, provisions, year',
+    values: `'us', '1', '[]', '2026'`,
+  },
+} as const;
+
+/** Inserts `count` minimal rows created `minutesAgo` minutes ago, as other visitors would. */
+export async function insertRowsCreatedAgo(
+  client: PGlite,
+  table: keyof typeof MINIMAL_ROWS,
+  count: number,
+  minutesAgo: number
+): Promise<void> {
+  const { columns, values } = MINIMAL_ROWS[table];
+  await client.exec(
+    `INSERT INTO ${table} (${columns}, created_at)
+     SELECT ${values}, now() - interval '${minutesAgo} minutes' FROM generate_series(1, ${count})`
+  );
+}
+
+/** A string of `length` characters, for free-text limit checks. */
+export function textOfLength(length: number): string {
+  return 'x'.repeat(length);
+}

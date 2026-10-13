@@ -1,5 +1,5 @@
 {
-  "id": "bbb3141f-a1ce-4e0a-889b-6535b0b51422",
+  "id": "e3af9e8e-a595-4984-a5a9-4f1ba9d2bf65",
   "prevId": "11a9cc4e-ef2d-4d24-89ed-a1f7d99ca271",
   "version": "7",
   "dialect": "postgresql",
@@ -79,7 +79,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "reforms_created_at_idx": {
+          "name": "reforms_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -166,7 +182,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "reports_created_at_idx": {
+          "name": "reports_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

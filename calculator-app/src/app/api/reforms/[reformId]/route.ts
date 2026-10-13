@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { reformBaselines, reformSources } from "@/types/ingredients/Reform";
 import type { ReformUpdateMetadata } from "@/types/metadata/reformMetadata";
 import { getDb, isDbConfigured } from "../../../../db";
+import { invalidText, readJsonBody } from "../../../../db/limits";
 import { isUuid, presentsEditToken } from "../../../../db/ownership";
 import { reforms } from "../../../../db/schema";
 import { reformRowToMetadata } from "../../../../db/serialize";
@@ -106,15 +107,18 @@ export async function PATCH(
     return denied;
   }
 
-  let payload: ReformUpdateMetadata;
-  try {
-    payload = await request.json();
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
+  const parsed = await readJsonBody(request);
+  if ("error" in parsed) {
+    return json({ error: parsed.error }, parsed.status);
   }
+  const payload = (parsed.body ?? {}) as ReformUpdateMetadata;
 
   const updates: Partial<typeof reforms.$inferInsert> = {};
   if (payload.label !== undefined) {
+    const labelError = invalidText("label", payload.label);
+    if (labelError) {
+      return json({ error: labelError }, 400);
+    }
     updates.label = payload.label;
   }
   if (payload.policy_id !== undefined) {

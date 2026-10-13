@@ -14,9 +14,11 @@ import {
   CLIENT_USER_AGENT,
   editTokenHeader,
   IDENTIFYING_HEADERS,
+  insertRowsCreatedAgo,
   legacyMigrationTags,
   OWNERSHIP_MIGRATION_TAG,
   sha256Hex,
+  textOfLength,
   UNKNOWN_UUID,
 } from '@/tests/fixtures/integration/flagshipDbFixtures';
 import type { Reform } from '@/types/ingredients/Reform';
@@ -33,6 +35,11 @@ import {
   GET as listReforms,
 } from '../../../../../calculator-app/src/app/api/reforms/route';
 import { setDbForTesting } from '../../../../../calculator-app/src/db';
+import {
+  MAX_BODY_BYTES,
+  MAX_TEXT_LENGTH,
+  NEW_ROWS_PER_MINUTE,
+} from '../../../../../calculator-app/src/db/limits';
 import * as schema from '../../../../../calculator-app/src/db/schema';
 
 let client: PGlite;
@@ -448,6 +455,115 @@ describe('GET/PATCH/DELETE /api/reforms/:id', () => {
   it('given a nonexistent reform then DELETE returns 404', async () => {
     const response = await deleteReform(deleteRequest('a'.repeat(64)), itemContext(UNKNOWN_UUID));
     expect(response.status).toBe(404);
+  });
+});
+
+describe('abuse limits', () => {
+  const oversizedParameters = [
+    {
+      name: 'gov.test.oversized',
+      values: [
+        { start_date: '2026-01-01', end_date: '2100-12-31', value: textOfLength(MAX_BODY_BYTES) },
+      ],
+    },
+  ];
+
+  it('given a body over the size limit then POST returns 413 and stores nothing', async () => {
+    const response = await createReform(
+      postRequest({ ...VALID_PAYLOAD, parameters: oversizedParameters })
+    );
+
+    expect(response.status).toBe(413);
+    const { rows } = await client.query<{ n: number }>('SELECT count(*)::int AS n FROM reforms');
+    expect(rows[0].n).toBe(0);
+  });
+
+  it('given a declared length over the limit then POST returns 413 before reading the body', async () => {
+    const response = await createReform(
+      postRequest(VALID_PAYLOAD, { 'content-length': String(MAX_BODY_BYTES + 1) })
+    );
+
+    expect(response.status).toBe(413);
+  });
+
+  it('given a label at the length limit then POST accepts it', async () => {
+    const created = await createAndParse({
+      ...VALID_PAYLOAD,
+      label: textOfLength(MAX_TEXT_LENGTH),
+    });
+
+    expect(created.label).toHaveLength(MAX_TEXT_LENGTH);
+  });
+
+  it.each([
+    ['a label over the length limit', textOfLength(MAX_TEXT_LENGTH + 1)],
+    ['a non-string label', 42],
+  ])('given %s then POST returns 400', async (_name, label) => {
+    const response = await createReform(postRequest({ ...VALID_PAYLOAD, label }));
+
+    expect(response.status).toBe(400);
+  });
+
+  it('given a body over the size limit then PATCH returns 413 and the reform is unchanged', async () => {
+    const created = await createAndParse();
+
+    const response = await patchReform(
+      patchRequest({ parameters: oversizedParameters }, created.edit_token),
+      itemContext(created.id)
+    );
+
+    expect(response.status).toBe(413);
+    expect((await list([created.id]))[0].parameters).toEqual(VALID_PAYLOAD.parameters);
+  });
+
+  it('given a label over the length limit then PATCH returns 400', async () => {
+    const created = await createAndParse();
+
+    const response = await patchReform(
+      patchRequest({ label: textOfLength(MAX_TEXT_LENGTH + 1) }, created.edit_token),
+      itemContext(created.id)
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it('given the new-row budget is used up this minute then POST returns 429 with Retry-After', async () => {
+    await insertRowsCreatedAgo(client, 'reforms', NEW_ROWS_PER_MINUTE, 0);
+
+    const response = await createReform(postRequest(VALID_PAYLOAD));
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toBe('60');
+    const { rows } = await client.query<{ n: number }>('SELECT count(*)::int AS n FROM reforms');
+    expect(rows[0].n).toBe(NEW_ROWS_PER_MINUTE);
+  });
+
+  it('given one row short of the budget then POST still creates the reform', async () => {
+    await insertRowsCreatedAgo(client, 'reforms', NEW_ROWS_PER_MINUTE - 1, 0);
+
+    const response = await createReform(postRequest(VALID_PAYLOAD));
+
+    expect(response.status).toBe(201);
+  });
+
+  it('given rows older than a minute then they do not count against the budget', async () => {
+    await insertRowsCreatedAgo(client, 'reforms', NEW_ROWS_PER_MINUTE, 2);
+
+    const response = await createReform(postRequest(VALID_PAYLOAD));
+
+    expect(response.status).toBe(201);
+  });
+
+  it('given the budget is used up then edits to existing reforms still work', async () => {
+    const created = await createAndParse();
+    await insertRowsCreatedAgo(client, 'reforms', NEW_ROWS_PER_MINUTE, 0);
+
+    const response = await patchReform(
+      patchRequest({ label: 'Still editable' }, created.edit_token),
+      itemContext(created.id)
+    );
+
+    expect(response.status).toBe(200);
   });
 });
 

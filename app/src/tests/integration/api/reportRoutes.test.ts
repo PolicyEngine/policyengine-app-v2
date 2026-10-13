@@ -12,7 +12,9 @@ import {
   CLIENT_USER_AGENT,
   editTokenHeader,
   IDENTIFYING_HEADERS,
+  insertRowsCreatedAgo,
   sha256Hex,
+  textOfLength,
   UNKNOWN_UUID,
 } from '@/tests/fixtures/integration/flagshipDbFixtures';
 import { API_REPORT_ID, CENTRAL_REFORM_ID } from '@/tests/fixtures/libs/flagship/ownedItemsMocks';
@@ -26,6 +28,11 @@ import {
   GET as listReports,
 } from '../../../../../calculator-app/src/app/api/reports/route';
 import { setDbForTesting } from '../../../../../calculator-app/src/db';
+import {
+  MAX_BODY_BYTES,
+  MAX_TEXT_LENGTH,
+  NEW_ROWS_PER_MINUTE,
+} from '../../../../../calculator-app/src/db/limits';
 import * as schema from '../../../../../calculator-app/src/db/schema';
 
 let client: PGlite;
@@ -141,6 +148,60 @@ describe('POST /api/reports', () => {
     const created = await createAndParse({ ...VALID_PAYLOAD, reform_id: CENTRAL_REFORM_ID });
 
     expect(created.reform_id).toBe(CENTRAL_REFORM_ID);
+  });
+});
+
+describe('abuse limits', () => {
+  it('given a body over the size limit then POST returns 413', async () => {
+    const response = await createReport(
+      postRequest({
+        ...VALID_PAYLOAD,
+        provisions: [{ ...VALID_PAYLOAD.provisions[0], breadcrumb: textOfLength(MAX_BODY_BYTES) }],
+      })
+    );
+
+    expect(response.status).toBe(413);
+  });
+
+  it.each([
+    [
+      'a title over the length limit',
+      { ...VALID_PAYLOAD, title: textOfLength(MAX_TEXT_LENGTH + 1) },
+    ],
+    [
+      'a source note over the length limit',
+      { ...VALID_PAYLOAD, source_note: textOfLength(MAX_TEXT_LENGTH + 1) },
+    ],
+    ['a non-string title', { ...VALID_PAYLOAD, title: { text: 'x' } }],
+  ])('given %s then POST returns 400', async (_name, payload) => {
+    const response = await createReport(postRequest(payload));
+
+    expect(response.status).toBe(400);
+  });
+
+  it('given the new-row budget is used up this minute then POST returns 429', async () => {
+    await insertRowsCreatedAgo(client, 'reports', NEW_ROWS_PER_MINUTE, 0);
+
+    const response = await createReport(postRequest(VALID_PAYLOAD));
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toBe('60');
+  });
+
+  it('given a body over the size limit then PATCH returns 413 and nothing is pinned', async () => {
+    const created = await createAndParse();
+
+    const response = await patchReport(
+      patchRequest(
+        { validation: { ...VALIDATION_BODY.validation, padding: textOfLength(MAX_BODY_BYTES) } },
+        created.edit_token
+      ),
+      itemContext(created.id)
+    );
+
+    expect(response.status).toBe(413);
+    const reread = await getReport(new Request('http://test'), itemContext(created.id));
+    expect((await reread.json()).validation).toBeNull();
   });
 });
 

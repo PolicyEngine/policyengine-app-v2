@@ -3,6 +3,7 @@ import { ReformAdapter } from '@/adapters/ReformAdapter';
 import {
   ApiReformStore,
   LocalStorageReformStore,
+  ReformStoreBusyError,
   resetReformStoreAvailabilityForTesting,
   ResilientReformStore,
 } from '@/api/reformStore';
@@ -150,6 +151,13 @@ describe('ApiReformStore', () => {
     const result = await store.findById(OTHER_CENTRAL_REFORM_ID);
 
     expect(result).toBeNull();
+  });
+
+  it('given the new-reform budget is used up (429), when creating, then throws ReformStoreBusyError', async () => {
+    fetchMock.mockResolvedValueOnce(mockErrorResponse(HTTP_STATUS.TOO_MANY_REQUESTS));
+
+    await expect(store.create(mockNewReform)).rejects.toThrow(ReformStoreBusyError);
+    expect(readOwnedItems('reforms')).toEqual([]);
   });
 
   it('given a failing API, when creating, then throws and indexes nothing', async () => {
@@ -355,6 +363,23 @@ describe('ResilientReformStore', () => {
 
     expect(await new LocalStorageReformStore().findById(legacyLocalReform.id)).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('given the API is busy (429), when creating, then that reform is saved locally and the next create tries the API again', async () => {
+    fetchMock.mockResolvedValueOnce(mockErrorResponse(HTTP_STATUS.TOO_MANY_REQUESTS));
+
+    const busySave = await store.create(mockNewReform);
+
+    expect(busySave.id).toMatch(/^rf-/);
+    expect(await new LocalStorageReformStore().findMine()).toHaveLength(1);
+
+    fetchMock.mockResolvedValueOnce(
+      mockJsonResponse(mockReformCreatedMetadata, HTTP_STATUS.CREATED)
+    );
+    const nextSave = await store.create(mockNewReform);
+
+    expect(nextSave.id).toBe(CENTRAL_REFORM_ID);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('given a real server error (500), when creating, then it surfaces instead of falling back', async () => {

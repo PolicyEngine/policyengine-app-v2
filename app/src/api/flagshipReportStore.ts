@@ -65,6 +65,14 @@ function throwIfUnavailable(response: Response): void {
   }
 }
 
+/** The central store took its limit of new records this minute (429). */
+class ReportStoreBusyError extends Error {
+  constructor() {
+    super('Report store is taking no new records this minute');
+    this.name = 'ReportStoreBusyError';
+  }
+}
+
 /** Ids per batch read, so the query string stays well under URL limits. */
 const IDS_PER_REQUEST = 50;
 
@@ -120,6 +128,9 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     });
     if (!response.ok) {
       throwIfUnavailable(response);
+      if (response.status === 429) {
+        throw new ReportStoreBusyError();
+      }
       throw new Error('Failed to save the report record');
     }
     const { edit_token: editToken, ...data } = await response.json();
@@ -284,8 +295,17 @@ class ResilientFlagshipReportStore implements FlagshipReportStore {
     return whenUnavailable(this.local);
   }
 
-  create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
-    return this.withFallback((store) => store.create(report));
+  // A busy central store (429) takes this one record locally and stays
+  // in use for the next.
+  async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
+    try {
+      return await this.withFallback((store) => store.create(report));
+    } catch (error) {
+      if (error instanceof ReportStoreBusyError) {
+        return this.local.create(report);
+      }
+      throw error;
+    }
   }
 
   // Records already in the localStorage fallback stay there with their

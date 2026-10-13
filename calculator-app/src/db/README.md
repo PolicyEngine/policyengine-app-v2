@@ -15,8 +15,7 @@ There is no sign-in yet, so the server stores no user identifier:
   sequential.
 - `POST` issues a random 256-bit edit token, returns it once as `edit_token`,
   and stores only its SHA-256 hash (`edit_token_hash`). `PATCH` and `DELETE`
-  require the token in the `X-Edit-Token` header; a missing or wrong token gets
-  403. See `ownership.ts`.
+  require the token in the `X-Edit-Token` header; a missing or wrong token gets 403. See `ownership.ts`.
 - The browser keeps the ids it created, with their tokens, in localStorage
   (`app/src/libs/flagship/ownedItems.ts`). Lists read that index and fetch the
   rows by id. Clearing site data loses the index: the rows stay readable by id,
@@ -25,6 +24,44 @@ There is no sign-in yet, so the server stores no user identifier:
   `user_id` (never written now, never returned) and have no token hash, so
   they are read-only. No browser index holds their ids, so they also drop out
   of every list; they stay readable by id.
+
+### Abuse limits
+
+In code (`limits.ts`), with no client identifier:
+
+- Request bodies over 256 KB get 413 (POST and PATCH).
+- `label`, `title` and `source_note` must be strings of at most 500
+  characters, or 400.
+- Each table takes at most 120 new rows per minute across all visitors; a
+  create over that gets 429 with `Retry-After: 60`. The client then saves that
+  one item to its localStorage fallback and keeps using the central store.
+  Edits are not counted.
+
+Per-client rate limiting belongs at Vercel's edge, where the firewall keys on
+the IP address and our handlers never see it. It is project configuration,
+not code, so create it on the Vercel project that receives visitors' requests
+for these routes. Roll it out in log mode first:
+
+```bash
+vercel firewall rules add "Flagship store writes" \
+  --condition '{"type":"path","op":"pre","value":"/api/reforms"}' \
+  --condition '{"type":"method","op":"inc","value":["POST","PATCH","DELETE"]}' \
+  --or \
+  --condition '{"type":"path","op":"pre","value":"/api/reports"}' \
+  --condition '{"type":"method","op":"inc","value":["POST","PATCH","DELETE"]}' \
+  --action rate_limit \
+  --rate-limit-window 60 \
+  --rate-limit-requests 30 \
+  --rate-limit-keys ip \
+  --rate-limit-action log \
+  --yes
+vercel firewall diff        # review, then publish from the dashboard or CLI
+```
+
+After a few days of traffic, check in the Firewall traffic view that the rule
+sees distinct client addresses (not one proxy address), then switch
+`--rate-limit-action` to `rate_limit` (429). Counters are per region.
+(`vercel firewall` needs a recent Vercel CLI; the dashboard works too.)
 
 ### Privacy
 
