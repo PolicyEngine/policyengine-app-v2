@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
-import {
-  ApiReportStore,
-  LocalStorageReportStore,
-  type UserReportStore,
-} from '@/api/reportAssociation';
+import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { recordImportedIds, resolveImportedId } from '@/libs/auth/importedIds';
@@ -405,7 +401,6 @@ describe('ApiReportStore', () => {
     });
 
     // Then
-    expect((store as UserReportStore).createWithId).toBeUndefined();
     expect(fetchCall(fetchMock).body).toEqual({
       country_id: 'us',
       legacy_report_id: LEGACY_IDS.REPORT,
@@ -413,6 +408,28 @@ describe('ApiReportStore', () => {
     });
     expect(created.id).toBe(ASSOCIATION_IDS.REPORT);
     expect(created.reportId).toBe(String(LEGACY_IDS.REPORT));
+  });
+
+  test('given a caller-chosen id then the account assigns its own instead', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(itemResponse(reportItem(), 201));
+    const store = new ApiReportStore(context);
+
+    // When
+    const created = await store.createWithId({
+      id: 'sur-shared1',
+      userId: MOCK_USER_ID,
+      reportId: String(LEGACY_IDS.REPORT),
+      countryId: 'us',
+    });
+
+    // Then
+    expect(fetchCall(fetchMock).body).toEqual({
+      country_id: 'us',
+      legacy_report_id: LEGACY_IDS.REPORT,
+    });
+    expect(created.id).toBe(ASSOCIATION_IDS.REPORT);
   });
 
   test('given an association uuid then findByUserReportId reads that row', async () => {

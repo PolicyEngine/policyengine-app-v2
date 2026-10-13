@@ -1,21 +1,15 @@
-import { useMemo } from 'react';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import type { StoreMethods } from '@/api/deferredStore';
 import { fetchHouseholdById } from '@/api/household';
 import type { UserHouseholdStore } from '@/api/householdAssociation';
-import { deferredHouseholdStore } from '@/api/settledStores';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useSavedWorkStore, type SavedWorkStoreSelection } from '@/hooks/utils/useSavedWorkStore';
 import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
-import {
-  accountStoreContext,
-  useAssociationBackend,
-  useAssociationBackendResolver,
-  type AssociationBackend,
-} from '@/libs/auth/useAssociationBackend';
+import { accountStoreContext, type AssociationBackend } from '@/libs/auth/useAssociationBackend';
 import { Household } from '@/models/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
-import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
 const localHouseholdStore = new LocalStorageHouseholdStore();
@@ -25,16 +19,6 @@ function householdStoreFor(backend: AssociationBackend): UserHouseholdStore {
   return account ? new ApiHouseholdStore(account) : localHouseholdStore;
 }
 
-type HouseholdAssociationStoreSelection = {
-  /** Waits for the session to be restored, so writes never go to the wrong store. */
-  store: UserHouseholdStore;
-  config: typeof queryConfig.api | typeof queryConfig.localStorage;
-  /** False while the session is being restored; queries wait. */
-  ready: boolean;
-  /** The store for the session once it is restored; `store` forwards to it. */
-  resolveStore: () => Promise<UserHouseholdStore>;
-};
-
 type HouseholdAssociationQueryOptions = {
   enabled?: boolean;
 };
@@ -43,19 +27,17 @@ export const useUserHouseholdStore = () => {
   return useHouseholdAssociationStoreForMode().store;
 };
 
-export const useHouseholdAssociationStoreForMode = (): HouseholdAssociationStoreSelection => {
-  const backend = useAssociationBackend();
-  const resolveBackend = useAssociationBackendResolver();
-  return useMemo(() => {
-    const resolveStore = async () => householdStoreFor(await resolveBackend());
-    return {
-      store: deferredHouseholdStore(resolveStore),
-      config: backend.mode === 'localStorage' ? queryConfig.localStorage : queryConfig.api,
-      ready: backend.ready,
-      resolveStore,
-    };
-  }, [backend, resolveBackend]);
+const HOUSEHOLD_STORE_METHODS: StoreMethods<UserHouseholdStore> = {
+  create: true,
+  findByUser: true,
+  findById: true,
+  update: true,
+  delete: true,
 };
+
+export const useHouseholdAssociationStoreForMode =
+  (): SavedWorkStoreSelection<UserHouseholdStore> =>
+    useSavedWorkStore(householdStoreFor, HOUSEHOLD_STORE_METHODS);
 
 // This fetches only the user-household associations; see
 // 'useUserHouseholds' below to also fetch full household details

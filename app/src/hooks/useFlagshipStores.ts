@@ -1,9 +1,10 @@
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import type { StoreMethods } from '@/api/deferredStore';
 import { getFlagshipReportStore, type FlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore, type ReformStore } from '@/api/reformStore';
-import { deferredFlagshipReportStore, deferredReformStore } from '@/api/settledStores';
+import { useSavedWorkStore } from '@/hooks/utils/useSavedWorkStore';
 import {
   accountStoreContext,
   useAssociationBackend,
@@ -11,7 +12,6 @@ import {
   type AssociationBackend,
 } from '@/libs/auth/useAssociationBackend';
 import type { RootState } from '@/store';
-import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
 /**
  * The flagship (v3) stores for the current session: the account's when
@@ -21,27 +21,39 @@ import type { ParameterMetadataCollection } from '@/types/metadata/parameterMeta
  * restored, so nothing is written to the wrong one while it is.
  */
 
-function accountReformStore(
-  backend: AssociationBackend,
-  getParameterMetadata: () => ParameterMetadataCollection | null | undefined
-): ReformStore {
-  return getReformStore(accountStoreContext(backend), { getParameterMetadata });
+const REFORM_STORE_METHODS: StoreMethods<ReformStore> = {
+  create: true,
+  findByUser: true,
+  findById: true,
+  update: true,
+  delete: true,
+};
+
+const FLAGSHIP_REPORT_STORE_METHODS: StoreMethods<FlagshipReportStore> = {
+  create: true,
+  findByUser: true,
+  findById: true,
+  findByApiReportId: true,
+  saveValidation: true,
+};
+
+function flagshipReportStoreFor(backend: AssociationBackend): FlagshipReportStore {
+  return getFlagshipReportStore(accountStoreContext(backend));
 }
 
 export function useReformStore(): ReformStore {
-  const resolveBackend = useAssociationBackendResolver();
   const parameters = useSelector((state: RootState) => state.metadata?.parameters);
   // Read through a ref so metadata arriving later does not rebuild the store.
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
-
-  return useMemo(
-    () =>
-      deferredReformStore(async () =>
-        accountReformStore(await resolveBackend(), () => parametersRef.current)
-      ),
-    [resolveBackend]
+  const reformStoreFor = useCallback(
+    (backend: AssociationBackend) =>
+      getReformStore(accountStoreContext(backend), {
+        getParameterMetadata: () => parametersRef.current,
+      }),
+    []
   );
+  return useSavedWorkStore(reformStoreFor, REFORM_STORE_METHODS).store;
 }
 
 /** Where a flagship run records its report. */
@@ -81,17 +93,16 @@ export interface FlagshipReportStoreSelection {
 export function useFlagshipReportStore(): FlagshipReportStoreSelection {
   const backend = useAssociationBackend();
   const resolveBackend = useAssociationBackendResolver();
+  const { store, ready } = useSavedWorkStore(flagshipReportStoreFor, FLAGSHIP_REPORT_STORE_METHODS);
   return useMemo(
     () => ({
-      store: deferredFlagshipReportStore(async () =>
-        getFlagshipReportStore(accountStoreContext(await resolveBackend()))
-      ),
+      store,
       isAccount: backend.mode !== 'localStorage',
       userId: backend.userId,
-      ready: backend.ready,
+      ready,
       resolveRunDestination: async () => flagshipRunDestination(await resolveBackend()),
     }),
-    [backend, resolveBackend]
+    [store, backend, ready, resolveBackend]
   );
 }
 

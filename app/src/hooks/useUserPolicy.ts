@@ -1,17 +1,12 @@
-import { useMemo } from 'react';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
+import type { StoreMethods } from '@/api/deferredStore';
 import { fetchPolicyById } from '@/api/policy';
-import { deferredPolicyStore } from '@/api/settledStores';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
+import { useSavedWorkStore, type SavedWorkStoreSelection } from '@/hooks/utils/useSavedWorkStore';
 import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
-import {
-  accountStoreContext,
-  useAssociationBackend,
-  useAssociationBackendResolver,
-  type AssociationBackend,
-} from '@/libs/auth/useAssociationBackend';
+import { accountStoreContext, type AssociationBackend } from '@/libs/auth/useAssociationBackend';
 import { Policy } from '@/types/ingredients/Policy';
 import type { PolicyCreationPayload } from '@/types/payloads';
 import {
@@ -19,7 +14,6 @@ import {
   LocalStoragePolicyStore,
   type UserPolicyStore,
 } from '../api/policyAssociation';
-import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
 
@@ -29,16 +23,6 @@ function policyStoreFor(backend: AssociationBackend): UserPolicyStore {
   const account = accountStoreContext(backend);
   return account ? new ApiPolicyStore(account) : localPolicyStore;
 }
-
-type PolicyAssociationStoreSelection = {
-  /** Waits for the session to be restored, so writes never go to the wrong store. */
-  store: UserPolicyStore;
-  config: typeof queryConfig.api | typeof queryConfig.localStorage;
-  /** False while the session is being restored; queries wait. */
-  ready: boolean;
-  /** The store for the session once it is restored; `store` forwards to it. */
-  resolveStore: () => Promise<UserPolicyStore>;
-};
 
 type PolicyAssociationQueryOptions = {
   enabled?: boolean;
@@ -55,19 +39,16 @@ export const useUserPolicyStore = () => {
   return usePolicyAssociationStoreForMode().store;
 };
 
-export const usePolicyAssociationStoreForMode = (): PolicyAssociationStoreSelection => {
-  const backend = useAssociationBackend();
-  const resolveBackend = useAssociationBackendResolver();
-  return useMemo(() => {
-    const resolveStore = async () => policyStoreFor(await resolveBackend());
-    return {
-      store: deferredPolicyStore(resolveStore),
-      config: backend.mode === 'localStorage' ? queryConfig.localStorage : queryConfig.api,
-      ready: backend.ready,
-      resolveStore,
-    };
-  }, [backend, resolveBackend]);
+const POLICY_STORE_METHODS: StoreMethods<UserPolicyStore> = {
+  create: true,
+  findByUser: true,
+  findById: true,
+  update: true,
+  delete: true,
 };
+
+export const usePolicyAssociationStoreForMode = (): SavedWorkStoreSelection<UserPolicyStore> =>
+  useSavedWorkStore(policyStoreFor, POLICY_STORE_METHODS);
 
 // This fetches only the user-policy associations; see
 // 'useUserPolicies' below to also fetch full policy details

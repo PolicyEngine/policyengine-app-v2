@@ -167,6 +167,8 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
   }
 
   async delete(userSimulationId: string): Promise<void> {
-    this.setStoredSimulations(this.getStoredSimulations().filter((s) => s.id !== userSimulationId));
+    this.setStoredSimulations(
+      this.getStoredSimulations().filter((simulation) => simulation.id !== userSimulationId)
+    );
   }
 }

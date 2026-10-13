@@ -6,10 +6,11 @@ import { UserReport } from '../types/ingredients/UserReport';
 export interface UserReportStore {
   create: (report: Omit<UserReport, 'id' | 'createdAt'>) => Promise<UserReport>;
   /**
-   * Saves under a caller-chosen ID (shared-report saves in localStorage).
-   * Account storage assigns its own IDs, so the API store omits it.
+   * Saves under a caller-chosen ID where the store keeps caller IDs
+   * (shared-report saves in localStorage). The account assigns its own
+   * IDs, so there it is the same as create.
    */
-  createWithId?: (report: Omit<UserReport, 'createdAt'>) => Promise<UserReport>;
+  createWithId: (report: Omit<UserReport, 'createdAt'>) => Promise<UserReport>;
   findByUser: (userId: string, countryId?: string) => Promise<UserReport[]>;
   findById: (userId: string, reportId: string) => Promise<UserReport | null>;
   findByUserReportId: (userReportId: string) => Promise<UserReport | null>;
@@ -46,6 +47,12 @@ export class ApiReportStore implements UserReportStore {
       UserReportAdapter.toCreationPayload(report, this.countryOf(report))
     );
     return UserReportAdapter.fromApiItem(item);
+  }
+
+  /** The account assigns association IDs, so the caller's ID is not kept. */
+  createWithId(report: Omit<UserReport, 'createdAt'>): Promise<UserReport> {
+    const { id: _callerId, ...fields } = report;
+    return this.create(fields);
   }
 
   async findByUser(_userId: string, countryId?: string): Promise<UserReport[]> {
@@ -194,6 +201,6 @@ export class LocalStorageReportStore implements UserReportStore {
   }
 
   async delete(userReportId: string): Promise<void> {
-    this.setStoredReports(this.getStoredReports().filter((r) => r.id !== userReportId));
+    this.setStoredReports(this.getStoredReports().filter((report) => report.id !== userReportId));
   }
 }

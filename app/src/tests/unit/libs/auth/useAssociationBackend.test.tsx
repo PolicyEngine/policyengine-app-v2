@@ -1,9 +1,5 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
-import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
-import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
-import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useHouseholdAssociationStoreForMode } from '@/hooks/useUserHousehold';
@@ -21,7 +17,7 @@ import {
   type AssociationBackendMode,
 } from '@/libs/auth/useAssociationBackend';
 import type { CountryId } from '@/libs/countries';
-import { mockMeItem, PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
+import { mockMeItem, pageResponse, PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
 import {
   accountErrorAuthValue,
   AuthTestProvider,
@@ -107,15 +103,13 @@ describe('useAssociationBackend', () => {
 
     // When
     const backend = renderHook(() => useAssociationBackend(), { wrapper }).result.current;
-    const selection = renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result
-      .current;
-    const policyStore = selection.store;
+    const policyStore = renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result
+      .current.store;
 
     // Then
     expect(backend.mode).toBe('unavailable');
     expect(backend.ready).toBe(true);
     expect(backend.userId).toBe(UNAVAILABLE_ACCOUNT_USER_ID);
-    expect(await selection.resolveStore()).toBeInstanceOf(ApiPolicyStore);
     await expect(policyStore.findByUser(backend.userId, 'us')).rejects.toBeInstanceOf(
       AccountUnavailableError
     );
@@ -136,34 +130,36 @@ describe('useAssociationBackend', () => {
 });
 
 describe('association store selection', () => {
-  async function resolvedStores(auth: AuthContextValue, countryId: CountryId) {
+  /** Lists saved work through every association hook's store. */
+  async function listThroughEveryStore(auth: AuthContextValue, countryId: CountryId) {
     const wrapper = wrapperFor(auth, countryId);
-    return Promise.all([
-      renderHook(() => usePolicyAssociationStoreForMode(), {
-        wrapper,
-      }).result.current.resolveStore(),
-      renderHook(() => useHouseholdAssociationStoreForMode(), {
-        wrapper,
-      }).result.current.resolveStore(),
-      renderHook(() => useSimulationAssociationStoreForMode(), {
-        wrapper,
-      }).result.current.resolveStore(),
-      renderHook(() => useReportAssociationStoreForMode(), {
-        wrapper,
-      }).result.current.resolveStore(),
-    ]);
+    const userId = renderHook(() => useCurrentUserId(), { wrapper }).result.current;
+    const stores = [
+      renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result.current.store,
+      renderHook(() => useHouseholdAssociationStoreForMode(), { wrapper }).result.current.store,
+      renderHook(() => useSimulationAssociationStoreForMode(), { wrapper }).result.current.store,
+      renderHook(() => useReportAssociationStoreForMode(), { wrapper }).result.current.store,
+    ];
+    return Promise.all(stores.map((store) => store.findByUser(userId, countryId)));
   }
 
   test('given a signed-in UK session then every association hook uses the account stores', async () => {
-    const [policies, households, simulations, reports] = await resolvedStores(
-      signedInAuthValue(),
-      'uk'
-    );
+    // Given
+    const fetchMock = vi.fn(async (_url: string) => pageResponse([]));
+    vi.stubGlobal('fetch', fetchMock);
 
-    expect(policies).toBeInstanceOf(ApiPolicyStore);
-    expect(households).toBeInstanceOf(ApiHouseholdStore);
-    expect(simulations).toBeInstanceOf(ApiSimulationStore);
-    expect(reports).toBeInstanceOf(ApiReportStore);
+    // When
+    await listThroughEveryStore(signedInAuthValue(), 'uk');
+
+    // Then
+    const paths = fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
+    expect(paths).toEqual([
+      '/v2/user-policies',
+      '/v2/user-households',
+      '/v2/user-simulations',
+      '/v2/user-reports',
+    ]);
+    vi.unstubAllGlobals();
   });
 
   test.each([
@@ -173,12 +169,17 @@ describe('association store selection', () => {
   ] as const)(
     'given %s then every association hook uses localStorage',
     async (_, auth, countryId) => {
-      const [policies, households, simulations, reports] = await resolvedStores(auth, countryId);
+      // Given
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
 
-      expect(policies).toBeInstanceOf(LocalStoragePolicyStore);
-      expect(households).toBeInstanceOf(LocalStorageHouseholdStore);
-      expect(simulations).toBeInstanceOf(LocalStorageSimulationStore);
-      expect(reports).toBeInstanceOf(LocalStorageReportStore);
+      // When
+      const lists = await listThroughEveryStore(auth, countryId);
+
+      // Then
+      expect(lists).toEqual([[], [], [], []]);
+      expect(fetchMock).not.toHaveBeenCalled();
+      vi.unstubAllGlobals();
     }
   );
 });

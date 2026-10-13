@@ -154,7 +154,9 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
   }
 
   async delete(userHouseholdId: string): Promise<void> {
-    this.setStoredHouseholds(this.getStoredHouseholds().filter((h) => h.id !== userHouseholdId));
+    this.setStoredHouseholds(
+      this.getStoredHouseholds().filter((household) => household.id !== userHouseholdId)
+    );
   }
 
   private getStoredHouseholds(): UserHouseholdPopulation[] {

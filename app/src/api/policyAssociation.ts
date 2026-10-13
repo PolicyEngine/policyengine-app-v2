@@ -169,6 +169,6 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
   }
 
   async delete(userPolicyId: string): Promise<void> {
-    this.setStoredPolicies(this.getStoredPolicies().filter((p) => p.id !== userPolicyId));
+    this.setStoredPolicies(this.getStoredPolicies().filter((policy) => policy.id !== userPolicyId));
   }
 }

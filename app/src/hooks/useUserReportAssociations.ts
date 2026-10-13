@@ -1,20 +1,14 @@
-import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deferredReportStore } from '@/api/settledStores';
+import type { StoreMethods } from '@/api/deferredStore';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useSavedWorkStore, type SavedWorkStoreSelection } from '@/hooks/utils/useSavedWorkStore';
 import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
-import {
-  accountStoreContext,
-  useAssociationBackend,
-  useAssociationBackendResolver,
-  type AssociationBackend,
-} from '@/libs/auth/useAssociationBackend';
+import { accountStoreContext, type AssociationBackend } from '@/libs/auth/useAssociationBackend';
 import {
   ApiReportStore,
   LocalStorageReportStore,
   type UserReportStore,
 } from '../api/reportAssociation';
-import { queryConfig } from '../libs/queryConfig';
 import { reportAssociationKeys } from '../libs/queryKeys';
 import { UserReport } from '../types/ingredients/UserReport';
 
@@ -28,29 +22,18 @@ function reportStoreFor(backend: AssociationBackend): UserReportStore {
   return account ? new ApiReportStore(account, getLocalReportStore()) : getLocalReportStore();
 }
 
-type ReportAssociationStoreSelection = {
-  /** Waits for the session to be restored, so writes never go to the wrong store. */
-  store: UserReportStore;
-  config: typeof queryConfig.api | typeof queryConfig.localStorage;
-  /** False while the session is being restored; queries wait. */
-  ready: boolean;
-  /** The store for the session once it is restored; `store` forwards to it. */
-  resolveStore: () => Promise<UserReportStore>;
+const REPORT_STORE_METHODS: StoreMethods<UserReportStore> = {
+  create: true,
+  createWithId: true,
+  findByUser: true,
+  findById: true,
+  findByUserReportId: true,
+  update: true,
+  delete: true,
 };
 
-export const useReportAssociationStoreForMode = (): ReportAssociationStoreSelection => {
-  const backend = useAssociationBackend();
-  const resolveBackend = useAssociationBackendResolver();
-  return useMemo(() => {
-    const resolveStore = async () => reportStoreFor(await resolveBackend());
-    return {
-      store: deferredReportStore(resolveStore),
-      config: backend.mode === 'localStorage' ? queryConfig.localStorage : queryConfig.api,
-      ready: backend.ready,
-      resolveStore,
-    };
-  }, [backend, resolveBackend]);
-};
+export const useReportAssociationStoreForMode = (): SavedWorkStoreSelection<UserReportStore> =>
+  useSavedWorkStore(reportStoreFor, REPORT_STORE_METHODS);
 
 export const useUserReportStore = () => {
   return useReportAssociationStoreForMode().store;
@@ -124,13 +107,12 @@ export const useCreateReportAssociation = () => {
     mutationFn: (
       userReport: Omit<UserReport, 'createdAt'> | Omit<UserReport, 'id' | 'createdAt'>
     ) => {
-      // If id is provided and the store keeps caller IDs, save under it (idempotent)
-      if ('id' in userReport && userReport.id && store.createWithId) {
-        return store.createWithId(userReport as Omit<UserReport, 'createdAt'>);
+      // With an id, save under it where the store keeps caller IDs (idempotent)
+      if ('id' in userReport && userReport.id) {
+        return store.createWithId({ ...userReport, id: userReport.id });
       }
       // Otherwise the store assigns the id
-      const { id: _id, ...fields } = userReport as Partial<UserReport>;
-      return store.create(fields as Omit<UserReport, 'id' | 'createdAt'>);
+      return store.create(userReport);
     },
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
