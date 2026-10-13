@@ -11,6 +11,7 @@ import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
+import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
@@ -42,6 +43,7 @@ import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
+import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
 
 const SECTIONS = [
   { id: 'policy', label: 'Overview' },
@@ -288,6 +290,10 @@ export default function ReportView({
               {tabPanel(
                 'policy',
                 <Stack style={{ gap: spacing.xl }}>
+                  {/* Said first, before a page of results that all read "no change". */}
+                  {output && isSocietyWideReportNoOp(output) && (
+                    <NoChangeNotice year={year} provisions={provisions} />
+                  )}
                   {overviewLead}
                   <ReportChanges
                     provisions={provisions}

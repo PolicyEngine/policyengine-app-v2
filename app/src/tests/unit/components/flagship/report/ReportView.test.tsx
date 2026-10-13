@@ -1,7 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import ReportView from '@/components/flagship/report/ReportView';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
+
+vi.mock('@/utils/isSocietyWideReportNoOp', () => ({
+  isSocietyWideReportNoOp: () => true,
+}));
 
 function renderCover(populationLabel?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -20,6 +25,30 @@ function renderCover(populationLabel?: string) {
     </QueryClientProvider>
   );
 }
+
+describe('ReportView overview', () => {
+  test('given a reform that changes nothing then the overview says so first', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Bigger CTC"
+          sourceNote="Hand-built"
+          provisions={[]}
+          year="2026"
+          output={createMockSocietyWideOutput()}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+
+    const panel = screen.getByRole('tabpanel');
+    expect(panel.querySelector('[aria-label="No change in this year"]')).toHaveTextContent(
+      'This reform changes nothing in 2026'
+    );
+  });
+});
 
 describe('ReportView cover', () => {
   test('given a population then the cover reads it and the year, not how the reform was made', () => {
