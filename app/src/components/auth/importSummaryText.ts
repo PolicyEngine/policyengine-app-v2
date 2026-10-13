@@ -9,15 +9,23 @@ function items(count: number): string {
 /** Plain-language lines describing an import's outcome. */
 export function importSummaryLines(summary: LocalImportSummary): string[] {
   const lines = [`Saved ${items(summary.imported)} to your account.`];
-  const missing = summary.skipped.filter(
-    (note) => note.reason === IMPORT_SKIP_REASONS.UNKNOWN_LEGACY_REFERENCE
-  ).length;
-  const notAccepted = summary.skipped.length - missing + summary.invalid.length;
+  const skippedFor = (reason: string) =>
+    summary.skipped.filter((note) => note.reason === reason).length;
+  const missing = skippedFor(IMPORT_SKIP_REASONS.UNKNOWN_LEGACY_REFERENCE);
+  const elsewhere = skippedFor(IMPORT_SKIP_REASONS.CLIENT_REF_CONFLICT);
+  const notAccepted = summary.skipped.length - missing - elsewhere + summary.invalid.length;
   if (missing > 0) {
     lines.push(
       `${items(missing)} could not be saved because what ${
         missing === 1 ? 'it refers' : 'they refer'
       } to no longer exists.`
+    );
+  }
+  if (elsewhere > 0) {
+    lines.push(
+      `${items(elsewhere)} could not be saved because your account already has ${
+        elsewhere === 1 ? 'it' : 'them'
+      } under another country.`
     );
   }
   if (notAccepted > 0) {

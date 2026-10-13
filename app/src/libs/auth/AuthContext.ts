@@ -73,6 +73,21 @@ export function useAuthStatus(): AuthContextValue {
   return useContext(AuthContext);
 }
 
+interface SessionWaiter {
+  resolve: (session: SettledSession) => void;
+  reject: (error: Error) => void;
+}
+
+/** What a wait for the session fails with when its provider goes away first. */
+export class SessionClosedError extends Error {
+  constructor() {
+    super(
+      'Sign-in was interrupted before your session was restored, so nothing was saved. Try again.'
+    );
+    this.name = 'SessionClosedError';
+  }
+}
+
 /**
  * `settledSession` for a provider whose state is `status` and `user`:
  * callers that ask while the session is loading are answered once it has
@@ -84,20 +99,32 @@ export function useSettledSession(
 ): () => Promise<SettledSession> {
   const latest = useRef({ status, user });
   latest.current = { status, user };
-  const waiting = useRef<Array<(session: SettledSession) => void>>([]);
+  const waiting = useRef<SessionWaiter[]>([]);
 
   useEffect(() => {
     if (status === 'loading') {
       return;
     }
-    const answer = waiting.current.splice(0);
-    answer.forEach((resolve) => resolve({ status, user }));
+    const answered = waiting.current.splice(0);
+    answered.forEach((waiter) => waiter.resolve({ status, user }));
   }, [status, user]);
+
+  // A provider that goes away mid-restore (e.g. a country switch remounts
+  // it) can never answer: its waiters fail instead of hanging forever.
+  useEffect(
+    () => () => {
+      const abandoned = waiting.current.splice(0);
+      abandoned.forEach((waiter) => waiter.reject(new SessionClosedError()));
+    },
+    []
+  );
 
   return useCallback(() => {
     const session = latest.current;
     if (session.status === 'loading') {
-      return new Promise<SettledSession>((resolve) => waiting.current.push(resolve));
+      return new Promise<SettledSession>((resolve, reject) =>
+        waiting.current.push({ resolve, reject })
+      );
     }
     return Promise.resolve({ status: session.status, user: session.user });
   }, []);

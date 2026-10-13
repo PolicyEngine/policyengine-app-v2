@@ -44,4 +44,24 @@ describe('importSummaryLines', () => {
     expect(lines.join(' ')).not.toMatch(/no longer exists/);
     expect(lines).toContain('1 item could not be saved.');
   });
+
+  test('given items the account already holds under another country then the summary says so', () => {
+    // When
+    const lines = importSummaryLines(
+      summary({
+        imported: 2,
+        skipped: [
+          note('sur-a', IMPORT_SKIP_REASONS.CLIENT_REF_CONFLICT),
+          note('sur-b', IMPORT_SKIP_REASONS.CLIENT_REF_CONFLICT),
+        ],
+      })
+    );
+
+    // Then
+    expect(lines).toEqual([
+      'Saved 2 items to your account.',
+      '2 items could not be saved because your account already has them under another country.',
+      'Nothing was removed from this device.',
+    ]);
+  });
 });

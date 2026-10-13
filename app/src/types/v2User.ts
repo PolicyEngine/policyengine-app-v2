@@ -237,6 +237,8 @@ export const IMPORT_SKIP_REASONS = {
   INVALID: 'invalid',
   /** The v1 artifact it points at does not exist in that country. */
   UNKNOWN_LEGACY_REFERENCE: 'unknown_legacy_reference',
+  /** The account already holds an item under this client_ref in another country. */
+  CLIENT_REF_CONFLICT: 'client_ref_conflict',
 } as const;
 
 export interface ImportSkippedItem {
