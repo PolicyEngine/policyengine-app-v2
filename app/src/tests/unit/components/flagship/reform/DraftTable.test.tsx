@@ -174,7 +174,22 @@ describe('DraftTable', () => {
     expect(provision(CTC_PATH)?.intervals).toEqual([
       { startDate: '2026-07-01', endDate: FOREVER, value: 2500 },
     ]);
-    expect(screen.getByText('from Jul 1, 2026')).toBeInTheDocument();
+    // The open row's When column, and the editor's list of changes.
+    expect(screen.getAllByText('from Jul 1, 2026')).toHaveLength(2);
+  });
+
+  test('given a row opens then it keeps its columns: current law, the new value and when', async () => {
+    const user = userEvent.setup();
+    render(<TableHarness />);
+    await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+    fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+
+    const row = screen.getByRole('button', { name: 'Close Base amount' }).parentElement!;
+    expect(within(row).getByText('$2,200')).toBeInTheDocument();
+    // Read-only here: the editor below is where it changes.
+    expect(within(row).getByRole('button', { name: '$3,000' })).toBeInTheDocument();
+    expect(within(row).queryByRole('textbox')).not.toBeInTheDocument();
+    expect(within(row).getByText('from 2026')).toBeInTheDocument();
   });
 
   test('given the editor then its historic values come after it, without a description', async () => {
