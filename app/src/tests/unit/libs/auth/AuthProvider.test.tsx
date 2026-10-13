@@ -1,22 +1,21 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportStore } from '@/api/flagshipReportStore';
 import { CountryProvider } from '@/contexts/CountryContext';
-import { NavigationProvider } from '@/contexts/NavigationContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
-import { AuthProvider, ME_RETRIES } from '@/libs/auth/AuthProvider';
+import { AuthProvider, takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 import type { CountryId } from '@/libs/countries';
 import { getDraftReform, startDraftReform } from '@/libs/draftReform';
 import { readReportMeta, runFlagshipReport } from '@/libs/flagship/runReport';
+import { TEST_ACCESS_TOKEN } from '@/tests/fixtures/api/v2UserMocks';
 import {
-  errorResponse,
-  itemResponse,
-  mockMeItem,
-  TEST_ACCESS_TOKEN,
-} from '@/tests/fixtures/api/v2UserMocks';
-import { stubAuthEnv, TEST_AUTH0_CONFIG } from '@/tests/fixtures/libs/auth/authMocks';
+  stubAuthEnv,
+  TEST_AUTH0_CONFIG,
+  TEST_AUTH0_SUBJECT,
+  TEST_PROFILE,
+} from '@/tests/fixtures/libs/auth/authMocks';
 
 const auth0 = vi.hoisted(() => ({
   state: {
@@ -54,44 +53,43 @@ vi.mock('@/api/simulation', () => ({
 }));
 vi.mock('@/api/report', () => ({
   createReport: mockCreateReport,
-  createReportAndAssociateWithUser: vi.fn(),
 }));
 
-const navigation = { push: vi.fn(), replace: vi.fn(), back: vi.fn() };
 const fetchMock = vi.fn();
 
 function Probe() {
   const auth = useAuthStatus();
+  const [token, setToken] = useState('');
   return (
     <div>
       <span data-testid="status">{auth.status}</span>
-      <span data-testid="user">{auth.user?.id ?? 'none'}</span>
-      <span data-testid="error">{auth.error?.message ?? 'none'}</span>
+      <span data-testid="subject">{auth.subject ?? 'none'}</span>
+      <span data-testid="name">{auth.profile?.name ?? 'none'}</span>
+      <span data-testid="session-ended">{String(auth.sessionEnded)}</span>
+      <span data-testid="token">{token}</span>
       <button type="button" onClick={() => auth.signIn('/us/reforms?filter=yours')}>
         Sign in
       </button>
-      <button type="button" onClick={() => auth.retryAccount()}>
-        Retry
-      </button>
       <button type="button" onClick={() => auth.signOut()}>
         Sign out
+      </button>
+      <button
+        type="button"
+        onClick={async () => setToken((await auth.getAccessToken()) ?? 'no token')}
+      >
+        Get token
       </button>
     </div>
   );
 }
 
 function renderProvider(countryId: CountryId = 'us') {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={queryClient}>
-      <CountryProvider value={countryId}>
-        <NavigationProvider value={navigation}>
-          <AuthProvider>
-            <Probe />
-          </AuthProvider>
-        </NavigationProvider>
-      </CountryProvider>
-    </QueryClientProvider>
+    <CountryProvider value={countryId}>
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    </CountryProvider>
   );
 }
 
@@ -103,6 +101,10 @@ beforeEach(() => {
   auth0.state.error = undefined;
   auth0.state.user = undefined;
   auth0.getAccessTokenSilently.mockResolvedValue(TEST_ACCESS_TOKEN);
+  auth0.logout.mockImplementation(async () => {
+    auth0.state.isAuthenticated = false;
+    auth0.state.user = undefined;
+  });
 });
 
 afterEach(() => {
@@ -159,7 +161,7 @@ describe('AuthProvider', () => {
     );
   });
 
-  test('given the session is being restored then status is loading', () => {
+  test('given Auth0 is restoring the session then a loading state renders instead of the workspace', () => {
     // Given
     stubAuthEnv(true);
     auth0.state.isLoading = true;
@@ -168,10 +170,11 @@ describe('AuthProvider', () => {
     renderProvider();
 
     // Then
-    expect(screen.getByTestId('status')).toHaveTextContent('loading');
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    expect(screen.queryByTestId('status')).not.toBeInTheDocument();
   });
 
-  test('given no session then status is anonymous', () => {
+  test('given no session then the workspace is signed out', () => {
     // Given
     stubAuthEnv(true);
 
@@ -179,88 +182,59 @@ describe('AuthProvider', () => {
     renderProvider();
 
     // Then
-    expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
+    expect(screen.getByTestId('status')).toHaveTextContent('signed_out');
+    expect(screen.getByTestId('subject')).toHaveTextContent('none');
+  });
+
+  test('given a session then it is signed in, with its identity from the ID token and no /v2/me call', () => {
+    // Given
+    stubAuthEnv(true);
+    auth0.state.isAuthenticated = true;
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT, ...TEST_PROFILE };
+
+    // When
+    renderProvider();
+
+    // Then
+    expect(screen.getByTestId('status')).toHaveTextContent('signed_in');
+    expect(screen.getByTestId('subject')).toHaveTextContent(TEST_AUTH0_SUBJECT);
+    expect(screen.getByTestId('name')).toHaveTextContent(TEST_PROFILE.name);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('given a session in the US then /v2/me loads the PolicyEngine user with the bearer token', async () => {
+  test('given a token that can no longer be renewed then the session ends and invites sign-in', async () => {
     // Given
     stubAuthEnv(true);
     auth0.state.isAuthenticated = true;
-    auth0.state.user = { sub: 'google-oauth2|1234', email: mockMeItem.email };
-    fetchMock.mockResolvedValue(itemResponse(mockMeItem));
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
+    auth0.getAccessTokenSilently.mockRejectedValue({ error: 'login_required' });
+    renderProvider();
 
     // When
-    renderProvider('us');
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Get token' }));
 
     // Then
-    expect(screen.getByTestId('status')).toHaveTextContent('loading');
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
-    expect(screen.getByTestId('user')).toHaveTextContent(mockMeItem.id);
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
-    expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
-    expect(auth0.getAccessTokenSilently).toHaveBeenCalledWith({
-      authorizationParams: { audience: TEST_AUTH0_CONFIG.audience },
-    });
+    expect(auth0.logout).toHaveBeenCalledWith({ openUrl: false });
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('signed_out'));
+    expect(screen.getByTestId('session-ended')).toHaveTextContent('true');
+    expect(screen.getByTestId('token')).toHaveTextContent('no token');
   });
 
-  test('given /v2/me keeps failing then the session reports an account error, not a signed-in user', async () => {
+  test('given a token request that fails for another reason then the session stays signed in', async () => {
     // Given
-    vi.useFakeTimers({ shouldAdvanceTime: true });
     stubAuthEnv(true);
     auth0.state.isAuthenticated = true;
-    auth0.state.user = { sub: 'google-oauth2|1234' };
-    fetchMock.mockImplementation(async () => errorResponse(503, 'Database unavailable'));
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
+    auth0.getAccessTokenSilently.mockRejectedValue({ error: 'timeout' });
+    renderProvider();
 
     // When
-    renderProvider('uk');
-    expect(screen.getByTestId('status')).toHaveTextContent('loading');
-    await vi.advanceTimersByTimeAsync(10_000);
-
-    // Then: every retry was spent before giving up
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('account_error'));
-    expect(fetchMock).toHaveBeenCalledTimes(1 + ME_RETRIES);
-    expect(screen.getByTestId('user')).toHaveTextContent('none');
-    expect(screen.getByTestId('error')).toHaveTextContent('Database unavailable');
-    vi.useRealTimers();
-  });
-
-  test('given an account error then retrying loads the PolicyEngine user', async () => {
-    // Given
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    stubAuthEnv(true);
-    auth0.state.isAuthenticated = true;
-    auth0.state.user = { sub: 'google-oauth2|1234' };
-    fetchMock.mockImplementation(async () => errorResponse(503, 'Database unavailable'));
-    renderProvider('us');
-    await vi.advanceTimersByTimeAsync(10_000);
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('account_error'));
-    vi.useRealTimers();
-
-    // When
-    fetchMock.mockImplementation(async () => itemResponse(mockMeItem));
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Retry' }));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Get token' }));
 
     // Then
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
-    expect(screen.getByTestId('user')).toHaveTextContent(mockMeItem.id);
-    expect(screen.getByTestId('error')).toHaveTextContent('none');
-  });
-
-  test('given a session in a country without account storage then /v2/me is not called', () => {
-    // Given
-    stubAuthEnv(true);
-    auth0.state.isAuthenticated = true;
-    auth0.state.user = { sub: 'google-oauth2|1234' };
-
-    // When
-    renderProvider('ca');
-
-    // Then
-    expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
-    expect(screen.getByTestId('user')).toHaveTextContent('none');
-    expect(fetchMock).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByTestId('token')).toHaveTextContent('no token'));
+    expect(auth0.logout).not.toHaveBeenCalled();
+    expect(screen.getByTestId('status')).toHaveTextContent('signed_in');
   });
 
   test('given sign in then the redirect returns to the requested page via the country callback', async () => {
@@ -269,42 +243,40 @@ describe('AuthProvider', () => {
     renderProvider('us');
 
     // When
-    screen.getByRole('button', { name: 'Sign in' }).click();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Sign in' }));
 
     // Then
-    await waitFor(() =>
-      expect(auth0.loginWithRedirect).toHaveBeenCalledWith({
-        appState: { returnTo: '/us/reforms?filter=yours' },
-        authorizationParams: {
-          audience: TEST_AUTH0_CONFIG.audience,
-          redirect_uri: `${window.location.origin}/us/callback`,
-          scope: 'openid profile email offline_access',
-        },
-      })
-    );
+    expect(auth0.loginWithRedirect).toHaveBeenCalledWith({
+      appState: { returnTo: '/us/reforms?filter=yours' },
+      authorizationParams: {
+        audience: TEST_AUTH0_CONFIG.audience,
+        redirect_uri: `${window.location.origin}/us/callback`,
+        scope: 'openid profile email offline_access',
+      },
+    });
   });
 
-  test('given the redirect completes then it navigates to the saved return path', () => {
+  test('given the redirect completes then the callback can read where sign-in started, once', () => {
     // Given
     stubAuthEnv(true);
     renderProvider('us');
     const { onRedirectCallback } = auth0.providerProps.mock.calls[0][0];
 
     // When
-    onRedirectCallback({ returnTo: '/us/build' });
-    onRedirectCallback({ returnTo: 'https://evil.example/' });
+    act(() => onRedirectCallback({ returnTo: '/us/build' }));
 
     // Then
-    expect(navigation.replace).toHaveBeenNthCalledWith(1, '/us/build');
-    expect(navigation.replace).toHaveBeenNthCalledWith(2, '/us');
+    expect(takeSignInReturnTo()).toBe('/us/build');
+    expect(takeSignInReturnTo()).toBeNull();
+    act(() => onRedirectCallback({ returnTo: 'https://evil.example/' }));
+    expect(takeSignInReturnTo()).toBe('/us');
   });
 
   test('given sign out then what the session left in this browser is cleared first', async () => {
     // Given: a signed-in run's provenance and an account reform loaded for editing
     stubAuthEnv(true);
     auth0.state.isAuthenticated = true;
-    auth0.state.user = { sub: 'google-oauth2|1234' };
-    fetchMock.mockResolvedValue(itemResponse(mockMeItem));
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
     mockCreateReport.mockResolvedValue({ id: 56 });
     await runFlagshipReport({
       countryId: 'us',
@@ -312,10 +284,9 @@ describe('AuthProvider', () => {
       sourceNote: '',
       provisions: [{ path: 'gov.x', breadcrumb: 'X', unit: null, baselineValue: 1, value: 2 }],
       currentLawId: 2,
-      account: {
-        reportStore: { create: vi.fn().mockResolvedValue({}) } as unknown as FlagshipReportStore,
-        userId: mockMeItem.id,
-      },
+      accountReportStore: {
+        create: vi.fn().mockResolvedValue({}),
+      } as unknown as FlagshipReportStore,
     });
     startDraftReform('us', 'manual');
     renderProvider('us');

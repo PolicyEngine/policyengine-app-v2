@@ -1,43 +1,33 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
-import { wasSignInRedirectHandled } from '@/libs/auth/AuthProvider';
-
-function hasSignInParams(search: string): boolean {
-  const params = new URLSearchParams(search);
-  return params.has('state') && (params.has('code') || params.has('error'));
-}
+import { takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 
 /**
  * Where Auth0 sends the browser after sign-in. The AuthProvider finishes
- * the code exchange and navigates to where sign-in started; this page
- * shows progress meanwhile, and the error when sign-in did not complete.
+ * the code exchange (showing its loading state meanwhile); this page then
+ * returns to where sign-in started, and shows the error when sign-in did
+ * not complete.
  */
 export default function AuthCallbackPage() {
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
   const { status, error } = useAuthStatus();
+  const finished = useRef(false);
 
   useEffect(() => {
-    if (status === 'disabled') {
-      nav.replace(`/${countryId}`);
+    if (finished.current || (status === 'signed_out' && error)) {
       return;
     }
-    // A visit without sign-in parameters (a reload, a bookmark) has nothing to finish.
-    if (
-      status !== 'loading' &&
-      !error &&
-      !wasSignInRedirectHandled() &&
-      !hasSignInParams(window.location.search)
-    ) {
-      nav.replace(`/${countryId}`);
-    }
+    finished.current = true;
+    const home = `/${countryId}`;
+    nav.replace(status === 'signed_in' ? (takeSignInReturnTo() ?? home) : home);
   }, [status, error, countryId, nav]);
 
-  if (error && status !== 'authenticated') {
+  if (status === 'signed_out' && error) {
     return (
       <Stack
         style={{

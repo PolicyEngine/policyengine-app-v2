@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { IconChartBar, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Stack, Text } from '@/components/ui';
-import { CURRENT_YEAR, FOREVER } from '@/constants';
+import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { RunReportProvision } from '@/libs/flagship/runReport';
 import { Reform } from '@/types/ingredients/Reform';
 import { formatCompactBreadcrumb } from '@/utils/parameterLabels';
@@ -55,7 +54,6 @@ export default function ReportAdjustPanel({
   const runReport = useRunFlagshipReport();
   const countryId = useCurrentCountry();
   const store = useReformStore();
-  const userId = useCurrentUserId();
   const queryClient = useQueryClient();
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
@@ -84,7 +82,7 @@ export default function ReportAdjustPanel({
 
       // Reconcile with saved reforms: reuse an exact match, otherwise
       // save the adjusted set as its own reform.
-      const existing = await store.findByUser(userId, countryId);
+      const existing = await store.findByUser(MOCK_USER_ID, countryId);
       const match = existing.find((reform) => reformMatches(reform, adjusted));
 
       let reformId: string;
@@ -94,7 +92,7 @@ export default function ReportAdjustPanel({
         runTitle = match.label || `${title} (adjusted)`;
       } else {
         const created = await store.create({
-          userId,
+          userId: MOCK_USER_ID,
           countryId,
           label: `${title} (adjusted)`,
           parameters: adjusted.map((provision) => ({

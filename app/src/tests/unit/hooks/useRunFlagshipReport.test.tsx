@@ -6,12 +6,9 @@ import { CountryProvider } from '@/contexts/CountryContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
-import { ACCOUNT_UNAVAILABLE_MESSAGE } from '@/libs/auth/useAssociationBackend';
 import { runFlagshipReport, type RunReportProvision } from '@/libs/flagship/runReport';
 import { store } from '@/store';
-import { PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
 import {
-  accountErrorAuthValue,
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
@@ -36,8 +33,7 @@ const PROVISIONS: RunReportProvision[] = [
   },
 ];
 
-function renderRun(initialAuth: AuthContextValue) {
-  let auth = initialAuth;
+function renderRun(auth: AuthContextValue) {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <ReduxProvider store={store}>
       <CountryProvider value="us">
@@ -49,14 +45,7 @@ function renderRun(initialAuth: AuthContextValue) {
       </CountryProvider>
     </ReduxProvider>
   );
-  const rendered = renderHook(() => useRunFlagshipReport(), { wrapper });
-  return {
-    ...rendered,
-    settle: (next: AuthContextValue) => {
-      auth = next;
-      rendered.rerender();
-    },
-  };
+  return renderHook(() => useRunFlagshipReport(), { wrapper });
 }
 
 beforeEach(() => {
@@ -65,54 +54,29 @@ beforeEach(() => {
 });
 
 describe('useRunFlagshipReport', () => {
-  test('given the account could not be loaded then the run is refused before anything is created', async () => {
+  test('given a signed-in session then the run records in the account', async () => {
     // Given
-    const { result } = renderRun(accountErrorAuthValue());
+    const { result } = renderRun(signedInAuthValue());
 
     // When
     await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
 
     // Then
-    expect(runFlagshipReport).not.toHaveBeenCalled();
-    expect(result.current.error).toBe(ACCOUNT_UNAVAILABLE_MESSAGE);
-    expect(result.current.isRunning).toBe(false);
-  });
-
-  test('given a run started while signing in then it is recorded in the account once signed in', async () => {
-    // Given
-    const { result, settle } = renderRun(makeAuthValue({ status: 'loading' }));
-    let running: Promise<void> | undefined;
-    act(() => {
-      running = result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS);
-    });
-    expect(runFlagshipReport).not.toHaveBeenCalled();
-
-    // When
-    act(() => settle(signedInAuthValue()));
-    await act(() => running!);
-
-    // Then
     expect(runFlagshipReport).toHaveBeenCalledTimes(1);
-    const { account } = vi.mocked(runFlagshipReport).mock.calls[0][0];
-    expect(account?.userId).toBe(PE_USER_ID);
-    expect(account?.reportStore).toBeInstanceOf(ApiFlagshipReportStore);
+    const { accountReportStore } = vi.mocked(runFlagshipReport).mock.calls[0][0];
+    expect(accountReportStore).toBeInstanceOf(ApiFlagshipReportStore);
   });
 
-  test('given a run started while the session restores then a signed-out visitor runs locally without an error', async () => {
+  test('given a signed-out session then the run records in this browser', async () => {
     // Given
-    const { result, settle } = renderRun(makeAuthValue({ status: 'loading' }));
-    let running: Promise<void> | undefined;
-    act(() => {
-      running = result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS);
-    });
+    const { result } = renderRun(makeAuthValue());
 
     // When
-    act(() => settle(makeAuthValue({ status: 'anonymous' })));
-    await act(() => running!);
+    await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
 
     // Then
     await waitFor(() => expect(runFlagshipReport).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(runFlagshipReport).mock.calls[0][0].account).toBeNull();
+    expect(vi.mocked(runFlagshipReport).mock.calls[0][0].accountReportStore).toBeNull();
     expect(result.current.error).toBeNull();
   });
 });

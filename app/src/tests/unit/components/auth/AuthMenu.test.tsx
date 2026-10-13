@@ -1,14 +1,14 @@
 import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import AuthMenu from '@/components/auth/AuthMenu';
+import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import HeaderActionButtons from '@/components/homeHeader/HeaderActionButtons';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
-import { mockMeItem } from '@/tests/fixtures/api/v2UserMocks';
 import {
-  accountErrorAuthValue,
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
+  TEST_PROFILE,
 } from '@/tests/fixtures/libs/auth/authMocks';
 
 function renderMenu(auth: AuthContextValue) {
@@ -19,19 +19,31 @@ function renderMenu(auth: AuthContextValue) {
   );
 }
 
-describe('AuthMenu', () => {
-  test('given sign-in is disabled then the header shows no sign-in control', () => {
+describe('legacy calculator pages', () => {
+  test('given the legacy header then it has no sign-in control', () => {
     // When
     render(<HeaderActionButtons />);
 
     // Then
     expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /account menu/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /country selector/i })).toBeInTheDocument();
   });
 
-  test('given the session is loading then nothing is shown', () => {
+  test('given the v3 top bar outside the workspace (no auth provider) then it has no sign-in control', () => {
     // When
-    renderMenu(makeAuthValue({ status: 'loading' }));
+    render(<FlagshipTopBar />);
+
+    // Then
+    expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /account menu/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('AuthMenu', () => {
+  test('given sign-in is disabled then nothing is shown', () => {
+    // When
+    renderMenu(makeAuthValue({ status: 'disabled' }));
 
     // Then
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -40,7 +52,7 @@ describe('AuthMenu', () => {
   test('given a signed-out visitor then "Sign in" starts sign-in', async () => {
     // Given
     const user = userEvent.setup();
-    const auth = makeAuthValue({ status: 'anonymous' });
+    const auth = makeAuthValue();
     renderMenu(auth);
 
     // When
@@ -48,9 +60,19 @@ describe('AuthMenu', () => {
 
     // Then
     expect(auth.signIn).toHaveBeenCalled();
+    expect(screen.queryByText(/your session ended/i)).not.toBeInTheDocument();
   });
 
-  test('given a signed-in user then the menu offers My account and Sign out', async () => {
+  test('given the session ended on its own then the menu invites signing in again', () => {
+    // When
+    renderMenu(makeAuthValue({ sessionEnded: true }));
+
+    // Then
+    expect(screen.getByText(/your session ended/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+  });
+
+  test('given a signed-in user then the menu shows the ID-token identity, My account and Sign out', async () => {
     // Given
     const user = userEvent.setup();
     const auth = signedInAuthValue();
@@ -60,40 +82,9 @@ describe('AuthMenu', () => {
     await user.click(screen.getByRole('button', { name: /account menu for ada lovelace/i }));
 
     // Then
-    expect(screen.getByText(mockMeItem.email!)).toBeInTheDocument();
+    expect(screen.getByText(TEST_PROFILE.email)).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
     await user.click(screen.getByRole('menuitem', { name: /sign out/i }));
-    expect(auth.signOut).toHaveBeenCalled();
-  });
-
-  test('given the account could not be loaded then the menu says so and offers Try again', async () => {
-    // Given
-    const user = userEvent.setup();
-    const auth = accountErrorAuthValue();
-    renderMenu(auth);
-
-    // When
-    await user.click(
-      screen.getByRole('button', { name: /account menu for ada lovelace \(account not loaded\)/i })
-    );
-
-    // Then
-    expect(screen.getByRole('alert')).toHaveTextContent(/could not load your account/i);
-    await user.click(screen.getByRole('menuitem', { name: /try again/i }));
-    expect(auth.retryAccount).toHaveBeenCalled();
-  });
-
-  test('given the account could not be loaded then Sign out is still offered', async () => {
-    // Given
-    const user = userEvent.setup();
-    const auth = accountErrorAuthValue();
-    renderMenu(auth);
-
-    // When
-    await user.click(screen.getByRole('button', { name: /account menu for/i }));
-    await user.click(screen.getByRole('menuitem', { name: /sign out/i }));
-
-    // Then
     expect(auth.signOut).toHaveBeenCalled();
   });
 });

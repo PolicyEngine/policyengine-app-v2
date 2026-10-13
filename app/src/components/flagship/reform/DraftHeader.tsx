@@ -10,11 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
+import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import {
   clearDraftReform,
   DraftReform,
@@ -113,7 +113,6 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
   const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
-  const userId = useCurrentUserId();
   const taxYears = useSelector(getTaxYears);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const currentLawAt = (path: string, at: number) => {
@@ -125,7 +124,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = draftToReform(draft, userId);
+      const payload = draftToReform(draft, MOCK_USER_ID);
       if (draft.editingReformId) {
         return reformStore.update(draft.editingReformId, {
           label: payload.label,

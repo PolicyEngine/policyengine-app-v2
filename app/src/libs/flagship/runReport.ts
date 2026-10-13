@@ -87,12 +87,11 @@ export interface RunFlagshipReportArgs {
   /** The year to simulate; the current year when unset. */
   year?: number;
   /**
-   * Signed in (US/UK): the account's report store and user. The run then
-   * writes exactly one `/v2/user-reports` row — with the title, source
-   * note, provisions and reform link — instead of the localStorage
-   * association and record.
+   * Signed in (US/UK): the account's report store. The run then writes
+   * exactly one `/v2/user-reports` row — with the title, source note,
+   * provisions and reform link — instead of the browser record.
    */
-  account?: { reportStore: FlagshipReportStore; userId: string } | null;
+  accountReportStore?: FlagshipReportStore | null;
 }
 
 /**
@@ -136,7 +135,7 @@ export async function runFlagshipReport({
   currentLawId,
   reformId,
   year = Number(CURRENT_YEAR),
-  account,
+  accountReportStore,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -163,7 +162,7 @@ export async function runFlagshipReport({
     year: String(year),
   };
 
-  if (account) {
+  if (accountReportStore) {
     // Signed in: the account's row is the report's only association. It is
     // written right after the v1 report exists, and a failure fails the
     // run, so a report that opens is a report that was saved.
@@ -175,8 +174,8 @@ export async function runFlagshipReport({
       provisions,
       createdAt: new Date().toISOString(),
     });
-    await account.reportStore.create({
-      userId: account.userId,
+    await accountReportStore.create({
+      userId: MOCK_USER_ID,
       countryId,
       apiReportId: reportId,
       title: title || null,

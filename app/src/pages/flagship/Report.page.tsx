@@ -9,10 +9,11 @@ import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Spinner, Stack, Text, Title } from '@/components/ui';
+import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
-import { useAccountReportRecord, useFlagshipReportStore } from '@/hooks/useFlagshipStores';
+import { useAccountReportRecord } from '@/hooks/useFlagshipStores';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
@@ -41,7 +42,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // A local association id from another browser resolves to nothing.
   const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const { userId: storeUserId } = useFlagshipReportStore();
   const apiReportId =
     report?.id !== undefined && report?.id !== null ? String(report.id) : undefined;
   // Signed in, the account's record carries the provenance to every device.
@@ -120,7 +120,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
   // The store keys records by the API report id as a string.
-  const pin = useReportValidationSnapshot(storeUserId, apiReportId, {
+  const pin = useReportValidationSnapshot(MOCK_USER_ID, apiReportId, {
     calibration,
     programs: trackRecordPrograms(trackRecord),
   });

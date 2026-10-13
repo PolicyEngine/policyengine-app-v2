@@ -19,15 +19,14 @@ import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { FOREVER } from '@/constants';
+import { FOREVER, MOCK_USER_ID } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useReformStore } from '@/hooks/useFlagshipStores';
+import { useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
 import {
   addDraftProvision,
   clearDraftReform,
@@ -238,7 +237,7 @@ export default function ReformsPage() {
 
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
-  const { userId, ready: storeReady } = useAssociationBackend();
+  const { scope } = useV3SavedWork();
   const {
     bills,
     isConfigured: billsConfigured,
@@ -251,9 +250,8 @@ export default function ReformsPage() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ['reforms', userId, countryId],
-    queryFn: () => reformStore.findByUser(userId, countryId),
-    enabled: storeReady,
+    queryKey: ['reforms', scope, countryId],
+    queryFn: () => reformStore.findByUser(MOCK_USER_ID, countryId),
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });

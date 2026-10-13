@@ -48,15 +48,6 @@ export function useRunFlagshipReport() {
     }
     setIsRunning(true);
     setError(null);
-    // Where the run's record goes is known once the session is restored:
-    // the account when signed in (never this browser while signing in),
-    // this browser when signed out.
-    const destination = await reportStore.resolveRunDestination();
-    if (destination.accountError) {
-      setError(destination.accountError.message);
-      setIsRunning(false);
-      return;
-    }
     try {
       const userReportId = await runFlagshipReport({
         countryId,
@@ -66,7 +57,8 @@ export function useRunFlagshipReport() {
         currentLawId: Number(currentLawId),
         reformId,
         year,
-        account: destination.account,
+        // Signed in, the run's record is the account's; otherwise this browser's.
+        accountReportStore: reportStore.isAccount ? reportStore.store : null,
       });
       if (fromDraft) {
         markDraftRun(userReportId);

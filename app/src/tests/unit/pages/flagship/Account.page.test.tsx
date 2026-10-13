@@ -2,15 +2,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
-import AccountPage from '@/pages/Account.page';
+import AccountPage from '@/pages/flagship/Account.page';
 import {
+  errorResponse,
+  itemResponse,
   mockMeItem,
   noContentResponse,
   okResponse,
   TEST_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
-  accountErrorAuthValue,
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
@@ -19,13 +20,21 @@ import {
 const fetchMock = vi.fn();
 
 function renderPage(auth: AuthContextValue, countryId = 'us') {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <AuthTestProvider value={auth}>
         <AccountPage />
       </AuthTestProvider>
     </QueryClientProvider>,
     countryId
+  );
+}
+
+/** Answers GET /v2/me with the user, and everything else with `other`. */
+function answerMe(other: () => Response = () => noContentResponse()) {
+  fetchMock.mockImplementation(async (url: string, init: RequestInit) =>
+    new URL(url).pathname === '/v2/me' && init.method === 'GET' ? itemResponse(mockMeItem) : other()
   );
 }
 
@@ -45,7 +54,7 @@ describe('AccountPage', () => {
   test('given a signed-out visitor then the page offers sign-in', async () => {
     // Given
     const user = userEvent.setup();
-    const auth = makeAuthValue({ status: 'anonymous' });
+    const auth = makeAuthValue();
     renderPage(auth);
 
     // When
@@ -53,14 +62,39 @@ describe('AccountPage', () => {
 
     // Then
     expect(auth.signIn).toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('given a signed-in user then their account details are shown', () => {
+  test('given a signed-in user then the page loads their PolicyEngine user from /v2/me', async () => {
+    // Given
+    answerMe();
+
+    // When
     renderPage(signedInAuthValue());
 
+    // Then
+    expect(await screen.findByText(mockMeItem.id)).toBeInTheDocument();
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
-    expect(screen.getByText(mockMeItem.email!)).toBeInTheDocument();
-    expect(screen.getByText(mockMeItem.id)).toBeInTheDocument();
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
+    expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
+  });
+
+  test('given /v2/me fails then the error shows with Try again, and nothing falls back', async () => {
+    // Given
+    fetchMock.mockResolvedValueOnce(errorResponse(503, 'Saved work is temporarily unavailable.'));
+    const user = userEvent.setup();
+    renderPage(signedInAuthValue());
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /could not load your PolicyEngine account: Saved work is temporarily unavailable/
+    );
+
+    // When
+    answerMe();
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(await screen.findByText(mockMeItem.id)).toBeInTheDocument();
   });
 
   test('given "Download my data" then the export is fetched with the session token', async () => {
@@ -74,17 +108,17 @@ describe('AccountPage', () => {
       writable: true,
       value: revokeObjectURL,
     });
-    fetchMock.mockResolvedValue(
+    answerMe(() =>
       okResponse({ user: mockMeItem, policies: [], households: [], simulations: [], reports: [] })
     );
     renderPage(signedInAuthValue());
 
     // When
-    await user.click(screen.getByRole('button', { name: /download my data/i }));
+    await user.click(await screen.findByRole('button', { name: /download my data/i }));
 
     // Then
     await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[1];
     expect(url).toBe('https://api.policyengine.org/v2/me/export?country_id=us');
     expect(init.headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:export');
@@ -94,11 +128,11 @@ describe('AccountPage', () => {
     // Given
     const user = userEvent.setup();
     const auth = signedInAuthValue();
-    fetchMock.mockResolvedValue(noContentResponse());
+    answerMe();
     renderPage(auth);
 
     // When
-    await user.click(screen.getByRole('button', { name: /delete my account/i }));
+    await user.click(await screen.findByRole('button', { name: /delete my account/i }));
     const confirm = await screen.findByRole('dialog');
     await user.click(
       Array.from(confirm.querySelectorAll('button')).find(
@@ -108,7 +142,7 @@ describe('AccountPage', () => {
 
     // Then
     await waitFor(() => expect(auth.signOut).toHaveBeenCalled());
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[1];
     expect(url).toBe('https://api.policyengine.org/v2/me?country_id=us');
     expect(init.method).toBe('DELETE');
   });
@@ -120,22 +154,6 @@ describe('AccountPage', () => {
       screen.getByText(/accounts store work for the us and uk calculators/i)
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete my account/i })).not.toBeInTheDocument();
-  });
-
-  test('given the account could not be loaded then the page offers Try again and Sign out', async () => {
-    // Given
-    const user = userEvent.setup();
-    const auth = accountErrorAuthValue();
-    renderPage(auth);
-
-    // When
-    await user.click(screen.getByRole('button', { name: 'Try again' }));
-
-    // Then
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /could not load your PolicyEngine account: Saved work is temporarily unavailable/
-    );
-    expect(auth.retryAccount).toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

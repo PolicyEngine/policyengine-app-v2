@@ -1,4 +1,4 @@
-import { IconAlertTriangle, IconLogout, IconRefresh, IconUserCircle } from '@tabler/icons-react';
+import { IconLogout, IconUserCircle } from '@tabler/icons-react';
 import {
   Button,
   DropdownMenu,
@@ -18,10 +18,9 @@ interface AuthMenuProps {
   variant?: 'default' | 'inverse';
 }
 
-/** The name or email to show for the signed-in user. */
-export function accountDisplayName(auth: Pick<AuthContextValue, 'user' | 'profile'>): string {
-  const fullName = [auth.user?.first_name, auth.user?.last_name].filter(Boolean).join(' ');
-  return fullName || auth.profile?.name || auth.user?.email || auth.profile?.email || 'Account';
+/** The name or email to show for the signed-in user (from the Auth0 ID token). */
+export function accountDisplayName(auth: Pick<AuthContextValue, 'profile'>): string {
+  return auth.profile?.name || auth.profile?.email || 'Account';
 }
 
 function initialOf(name: string): string {
@@ -29,11 +28,9 @@ function initialOf(name: string): string {
 }
 
 /**
- * Header control for sign-in: a "Sign in" button when signed out, the
- * user menu (My account, Sign out) when signed in, and nothing when
- * sign-in is disabled or the session is still being restored. When the
- * PolicyEngine account could not be loaded, the avatar carries a warning
- * and the menu says so, with "Try again" and "Sign out".
+ * The v3 header's sign-in control: "Sign in" when signed out (with a note
+ * when the last session ended on its own), the user menu (My account,
+ * Sign out) when signed in, and nothing when sign-in is disabled.
  */
 export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const auth = useAuthStatus();
@@ -41,46 +38,54 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const nav = useAppNavigate();
   const inverse = variant === 'inverse';
 
-  if (auth.status === 'disabled' || auth.status === 'loading') {
+  if (auth.status === 'disabled') {
     return null;
   }
 
-  if (auth.status === 'anonymous') {
+  if (auth.status === 'signed_out') {
     return (
-      <Button
-        size="sm"
-        variant={inverse ? 'outline' : 'default'}
-        onClick={() => auth.signIn()}
-        style={
-          inverse
-            ? {
-                background: 'transparent',
-                color: colors.text.inverse,
-                borderColor: colors.text.inverse,
-              }
-            : undefined
-        }
-      >
-        Sign in
-      </Button>
+      <div className="tw:flex tw:items-center tw:gap-2">
+        {auth.sessionEnded && (
+          <span
+            role="status"
+            style={{
+              fontSize: typography.fontSize.xs,
+              color: inverse ? colors.text.inverse : colors.text.secondary,
+            }}
+          >
+            Your session ended. Sign in again to keep saving to your account.
+          </span>
+        )}
+        <Button
+          size="sm"
+          variant={inverse ? 'outline' : 'default'}
+          onClick={() => auth.signIn()}
+          style={
+            inverse
+              ? {
+                  background: 'transparent',
+                  color: colors.text.inverse,
+                  borderColor: colors.text.inverse,
+                }
+              : undefined
+          }
+        >
+          Sign in
+        </Button>
+      </div>
     );
   }
 
   const name = accountDisplayName(auth);
-  const email = auth.user?.email ?? auth.profile?.email;
-  const accountUnavailable = auth.status === 'account_error';
+  const email = auth.profile?.email;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={
-            accountUnavailable
-              ? `Account menu for ${name} (account not loaded)`
-              : `Account menu for ${name}`
-          }
-          className="tw:relative tw:cursor-pointer tw:rounded-full tw:border-none tw:p-0"
+          aria-label={`Account menu for ${name}`}
+          className="tw:cursor-pointer tw:rounded-full tw:border-none tw:p-0"
           style={{ background: 'transparent', lineHeight: 0 }}
         >
           <span
@@ -98,20 +103,6 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
           >
             {initialOf(name)}
           </span>
-          {accountUnavailable && (
-            <span
-              aria-hidden
-              className="tw:absolute tw:rounded-full"
-              style={{
-                top: -2,
-                right: -2,
-                width: 10,
-                height: 10,
-                background: colors.error,
-                border: `2px solid ${inverse ? colors.primary[700] : colors.white}`,
-              }}
-            />
-          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ minWidth: 220 }}>
@@ -129,31 +120,6 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
             </div>
           )}
         </DropdownMenuLabel>
-        {accountUnavailable && (
-          <>
-            <DropdownMenuSeparator />
-            <div
-              role="alert"
-              className="tw:flex tw:gap-2"
-              style={{
-                padding: '6px 8px',
-                maxWidth: 260,
-                color: colors.error,
-                fontSize: typography.fontSize.xs,
-              }}
-            >
-              <IconAlertTriangle size={16} style={{ flexShrink: 0 }} aria-hidden />
-              <span>
-                We could not load your account, so saved work is unavailable. Nothing is saved until
-                it loads.
-              </span>
-            </div>
-            <DropdownMenuItem onSelect={() => auth.retryAccount()}>
-              <IconRefresh size={16} />
-              Try again
-            </DropdownMenuItem>
-          </>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => nav.push(`/${countryId}/account`)}>
           <IconUserCircle size={16} />

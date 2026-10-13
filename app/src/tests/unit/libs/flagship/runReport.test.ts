@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportStore } from '@/api/flagshipReportStore';
+import { MOCK_USER_ID } from '@/constants';
 import {
   forgetAccountReportMeta,
   readReportMeta,
@@ -23,7 +24,6 @@ vi.mock('@/api/report', () => ({
   createReport: (...args: any[]) => mockCreateReport(...args),
 }));
 
-const ACCOUNT_USER_ID = '7c1e5a8e-2b1f-4c55-9a3e-1f2d3c4b5a69';
 const REFORM_ROW_ID = '55555555-5555-4555-8555-555555555555';
 
 const PROVISION = {
@@ -183,7 +183,7 @@ describe('runFlagshipReport', () => {
       currentLawId: 2,
       reformId: REFORM_ROW_ID,
       year: 2027,
-      account: { reportStore: accountStore, userId: ACCOUNT_USER_ID },
+      accountReportStore: accountStore,
     });
 
     // Then
@@ -196,7 +196,7 @@ describe('runFlagshipReport', () => {
     expect(mockCreateReportAndAssociate).not.toHaveBeenCalled();
     expect(accountStore.create).toHaveBeenCalledTimes(1);
     expect(accountStore.create).toHaveBeenCalledWith({
-      userId: ACCOUNT_USER_ID,
+      userId: MOCK_USER_ID,
       countryId: 'us',
       apiReportId: '56',
       title: 'CTC expansion',
@@ -223,7 +223,7 @@ describe('runFlagshipReport', () => {
       sourceNote: 'Federal · Introduced',
       provisions: [PROVISION],
       currentLawId: 2,
-      account: { reportStore: accountStore, userId: ACCOUNT_USER_ID },
+      accountReportStore: accountStore,
     });
 
     // Then: the next person on this browser cannot find it
@@ -247,7 +247,7 @@ describe('runFlagshipReport', () => {
         sourceNote: '',
         provisions: [PROVISION],
         currentLawId: 2,
-        account: { reportStore: accountStore, userId: ACCOUNT_USER_ID },
+        accountReportStore: accountStore,
       })
     ).rejects.toThrow('Saved work is temporarily unavailable.');
   });

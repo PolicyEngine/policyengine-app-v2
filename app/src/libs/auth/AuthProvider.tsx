@@ -1,12 +1,9 @@
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Auth0Provider, useAuth0, type AppState } from '@auth0/auth0-react';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { fetchMe } from '@/api/v2Me';
-import { createV2UserClient } from '@/api/v2UserClient';
+import { Spinner, Stack, Text } from '@/components/ui';
 import { useCountryContext } from '@/contexts/CountryContext';
-import { useAppNavigate } from '@/contexts/NavigationContext';
+import { colors, spacing } from '@/designTokens';
 import { DEFAULT_COUNTRY } from '@/libs/countries';
-import { isAssociationCountry, type MeItem } from '@/types/v2User';
 import {
   AUTH_SCOPE,
   callbackPath,
@@ -15,25 +12,22 @@ import {
   safeReturnTo,
   type Auth0Config,
 } from './authConfig';
-import {
-  AuthContext,
-  authKeys,
-  useSettledSession,
-  type AuthContextValue,
-  type AuthStatus,
-} from './AuthContext';
+import { AuthContext, type AuthContextValue } from './AuthContext';
 import { clearSignedInSessionData } from './sessionData';
 
 /**
- * Social sign-on for the calculator. With sign-in off (or Auth0 not
- * configured) this renders its children unchanged and the app sees
+ * Social sign-on for the v3 workspace. With sign-in off (or Auth0 not
+ * configured) this renders its children unchanged and the workspace sees
  * status 'disabled'. Otherwise the browser session is managed by
- * @auth0/auth0-react: tokens stay in memory and are renewed with
- * rotating refresh tokens (falling back to silent re-authentication
- * against the Auth0 custom domain after a reload).
+ * @auth0/auth0-react: tokens stay in memory and are renewed with rotating
+ * refresh tokens (falling back to silent re-authentication against the
+ * Auth0 custom domain after a reload).
  *
- * Must sit inside the QueryClientProvider, CountryProvider and
- * NavigationProvider.
+ * While Auth0 restores the session the provider renders a loading state
+ * instead of its children, so the workspace only ever sees signed in or
+ * signed out.
+ *
+ * Must sit inside the CountryProvider.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const config = getAuth0Config();
@@ -43,24 +37,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <Auth0SessionProvider config={config}>{children}</Auth0SessionProvider>;
 }
 
-let redirectHandled = false;
+let signInReturnTo: string | null = null;
 
-/** Whether this page load has already finished a sign-in redirect. */
-export function wasSignInRedirectHandled(): boolean {
-  return redirectHandled;
+/**
+ * Where the sign-in that just completed started, once per sign-in. The
+ * callback page reads it to navigate on after setting up the account.
+ */
+export function takeSignInReturnTo(): string | null {
+  const returnTo = signInReturnTo;
+  signInReturnTo = null;
+  return returnTo;
 }
 
 function Auth0SessionProvider({ config, children }: { config: Auth0Config; children: ReactNode }) {
   const countryId = useCountryContext() ?? DEFAULT_COUNTRY;
-  const nav = useAppNavigate();
   const inBrowser = typeof window !== 'undefined';
 
   const onRedirectCallback = useCallback(
     (appState?: AppState) => {
-      redirectHandled = true;
-      nav.replace(safeReturnTo(appState?.returnTo, `/${countryId}`));
+      signInReturnTo = safeReturnTo(appState?.returnTo, `/${countryId}`);
     },
-    [nav, countryId]
+    [countryId]
   );
 
   return (
@@ -91,48 +88,34 @@ function stringClaim(value: unknown): string | null {
   return typeof value === 'string' && value ? value : null;
 }
 
-/** Attempts after the first before the PolicyEngine user counts as unavailable. */
-export const ME_RETRIES = 3;
+/** Auth0 errors meaning the session cannot be renewed without signing in again. */
+const SESSION_ENDED_ERRORS = new Set([
+  'login_required',
+  'consent_required',
+  'interaction_required',
+  'missing_refresh_token',
+  'invalid_grant',
+]);
 
-/** 1s, 2s, 4s between attempts (capped at 8s). */
-export function meRetryDelay(attempt: number): number {
-  return Math.min(1000 * 2 ** attempt, 8000);
+export function isSessionEndedError(error: unknown): boolean {
+  if (!error || typeof error !== 'object' || !('error' in error)) {
+    return false;
+  }
+  return SESSION_ENDED_ERRORS.has(String(error.error));
 }
 
-const MISSING_SUBJECT_MESSAGE = 'The sign-in session did not identify a user.';
-
-/**
- * Where the session stands. In the US and UK a signed-in session is only
- * 'authenticated' once its PolicyEngine user has loaded; while that is
- * in flight (retries included) it is 'loading', and once it has failed
- * it is 'account_error'.
- */
-export function sessionStatus({
-  isLoading,
-  isAuthenticated,
-  hasSubject,
-  meCountry,
-  me,
-}: {
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  hasSubject: boolean;
-  meCountry: string | null;
-  me: Pick<UseQueryResult<MeItem, Error>, 'data' | 'isError'>;
-}): AuthStatus {
-  if (isLoading) {
-    return 'loading';
-  }
-  if (!isAuthenticated) {
-    return 'anonymous';
-  }
-  if (!meCountry || me.data) {
-    return 'authenticated';
-  }
-  if (!hasSubject || me.isError) {
-    return 'account_error';
-  }
-  return 'loading';
+/** Shown in place of the workspace while Auth0 restores the session. */
+export function SessionRestoring() {
+  return (
+    <Stack
+      role="status"
+      aria-live="polite"
+      style={{ padding: spacing['3xl'], gap: spacing.md, alignItems: 'center' }}
+    >
+      <Spinner size="sm" />
+      <Text style={{ margin: 0, color: colors.text.secondary }}>Loading…</Text>
+    </Stack>
+  );
 }
 
 function Auth0SessionBridge({
@@ -147,67 +130,31 @@ function Auth0SessionBridge({
   const {
     isLoading,
     isAuthenticated,
-    error: auth0Error,
-    user: auth0User,
+    error,
+    user,
     getAccessTokenSilently,
     loginWithRedirect,
     logout,
   } = useAuth0();
+  const [sessionEnded, setSessionEnded] = useState(false);
 
+  // A token that cannot be renewed ends the session: the user is signed
+  // out here (without a redirect) and invited to sign in again.
   const getAccessToken = useCallback(async () => {
     try {
       const token = await getAccessTokenSilently({
         authorizationParams: { audience: config.audience },
       });
       return token || null;
-    } catch {
+    } catch (caught) {
+      if (isSessionEndedError(caught)) {
+        setSessionEnded(true);
+        clearSignedInSessionData();
+        await logout({ openUrl: false });
+      }
       return null;
     }
-  }, [getAccessTokenSilently, config.audience]);
-
-  const subject = stringClaim(auth0User?.sub);
-  const name = stringClaim(auth0User?.name);
-  const email = stringClaim(auth0User?.email);
-  const picture = stringClaim(auth0User?.picture);
-
-  // The PolicyEngine user behind the session. Fetched with the current
-  // country (us/uk) so a first sign-in provisions with it; elsewhere the
-  // session is still signed in but saved work stays local. Until it
-  // loads, saved work has nowhere to go, so a failure keeps retrying:
-  // with backoff at first, then whenever the window regains focus or
-  // the network comes back (and on retryAccount).
-  const meCountry = isAssociationCountry(countryId) ? countryId : null;
-  const meQuery = useQuery<MeItem, Error>({
-    queryKey: authKeys.me(subject ?? ''),
-    queryFn: () => fetchMe(createV2UserClient({ getAccessToken }), meCountry!),
-    enabled: isAuthenticated && !!subject && !!meCountry,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    retry: ME_RETRIES,
-    retryDelay: meRetryDelay,
-    refetchOnWindowFocus: (query) => query.state.status === 'error',
-    refetchOnReconnect: (query) => query.state.status === 'error',
-  });
-
-  const status = sessionStatus({
-    isLoading,
-    isAuthenticated,
-    hasSubject: !!subject,
-    meCountry,
-    me: meQuery,
-  });
-
-  const user = isAuthenticated ? (meQuery.data ?? null) : null;
-  const accountError =
-    status === 'account_error' ? (meQuery.error ?? new Error(MISSING_SUBJECT_MESSAGE)) : null;
-  const error = auth0Error ?? accountError;
-
-  const settledSession = useSettledSession(status, user);
-
-  const { refetch: refetchMe } = meQuery;
-  const retryAccount = useCallback(() => {
-    void refetchMe();
-  }, [refetchMe]);
+  }, [getAccessTokenSilently, config.audience, logout]);
 
   const signIn = useCallback(
     async (returnTo?: string) => {
@@ -232,33 +179,38 @@ function Auth0SessionBridge({
     await logout({ logoutParams: { returnTo: `${window.location.origin}/${countryId}` } });
   }, [logout, countryId]);
 
+  const subject = isAuthenticated ? stringClaim(user?.sub) : null;
+  const name = stringClaim(user?.name);
+  const email = stringClaim(user?.email);
+  const picture = stringClaim(user?.picture);
+
   const value = useMemo<AuthContextValue>(
     () => ({
-      status,
-      user,
+      status: isAuthenticated ? 'signed_in' : 'signed_out',
       profile: isAuthenticated ? { name, email, picture } : null,
-      error,
+      subject,
+      sessionEnded: !isAuthenticated && sessionEnded,
+      error: error ?? null,
       signIn,
       signOut,
-      retryAccount,
-      settledSession,
       getAccessToken,
     }),
     [
-      status,
-      user,
       isAuthenticated,
       name,
       email,
       picture,
+      subject,
+      sessionEnded,
       error,
       signIn,
       signOut,
-      retryAccount,
-      settledSession,
       getAccessToken,
     ]
   );
 
+  if (isLoading) {
+    return <SessionRestoring />;
+  }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

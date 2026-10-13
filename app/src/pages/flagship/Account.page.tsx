@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { IconDownload, IconTrash, IconUpload } from '@tabler/icons-react';
-import { deleteMe, exportMe } from '@/api/v2Me';
+import { IconDownload, IconTrash } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
+import { deleteMe, exportMe, fetchMe } from '@/api/v2Me';
 import { AppLink } from '@/components/AppLink';
 import { accountDisplayName } from '@/components/auth/AuthMenu';
-import { importSummaryLines } from '@/components/auth/importSummaryText';
 import {
   Button,
   Card,
@@ -24,11 +24,9 @@ import {
 } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useLocalDataImport } from '@/hooks/useLocalDataImport';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
-import { forgetImportState } from '@/libs/auth/localImport';
-import { useV2UserClient } from '@/libs/auth/useAssociationBackend';
-import { isAssociationCountry } from '@/types/v2User';
+import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { isAssociationCountry, type AssociationCountryId } from '@/types/v2User';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
 const EXPORT_FILE_NAME = 'policyengine-account-data.json';
@@ -83,19 +81,13 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
 }
 
 /**
- * The signed-in user's account: who they are, saving this device's work
- * to the account, downloading everything saved, and deleting the account.
+ * The v3 account page: who the signed-in user is, downloading everything
+ * saved to the account, and deleting the account. Reads the PolicyEngine
+ * user from `GET /v2/me` (the user menu uses the Auth0 ID token instead).
  */
 export default function AccountPage() {
   const auth = useAuthStatus();
   const countryId = useCurrentCountry();
-  const client = useV2UserClient();
-  const localImport = useLocalDataImport();
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (auth.status === 'disabled') {
     return (
@@ -105,26 +97,15 @@ export default function AccountPage() {
     );
   }
 
-  if (auth.status === 'loading') {
-    return (
-      <PageShell>
-        <Stack role="status" aria-live="polite" align="center" gap="md">
-          <Spinner size="sm" />
-          <Text style={{ margin: 0, color: colors.text.secondary }}>Loading your account…</Text>
-        </Stack>
-      </PageShell>
-    );
-  }
-
-  if (auth.status === 'anonymous') {
+  if (auth.status === 'signed_out') {
     return (
       <PageShell>
         <Card>
           <CardHeader>
             <CardTitle>Sign in to keep your work</CardTitle>
             <CardDescription>
-              Signed in, the policies, reports and reforms you save are kept in your account and
-              available on any device.
+              Signed in, the reforms and reports you save are kept in your account and available on
+              any device.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -153,16 +134,41 @@ export default function AccountPage() {
     );
   }
 
-  const user = auth.user;
-  if (!user) {
+  return <SignedInAccount countryId={countryId} />;
+}
+
+function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
+  const auth = useAuthStatus();
+  const client = useV2UserClient();
+  const me = useQuery({
+    queryKey: ['account', auth.subject, countryId],
+    queryFn: () => fetchMe(client, countryId),
+  });
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  if (me.isPending) {
+    return (
+      <PageShell>
+        <Stack role="status" aria-live="polite" align="center" gap="md">
+          <Spinner size="sm" />
+          <Text style={{ margin: 0, color: colors.text.secondary }}>Loading your account…</Text>
+        </Stack>
+      </PageShell>
+    );
+  }
+
+  if (me.isError) {
     return (
       <PageShell>
         <Text role="alert" style={{ margin: 0, color: colors.error }}>
-          We could not load your PolicyEngine account
-          {auth.error ? `: ${auth.error.message}` : '.'} Saved work is unavailable until it loads.
+          We could not load your PolicyEngine account: {me.error.message}
         </Text>
         <div className="tw:flex tw:gap-2">
-          <Button onClick={() => auth.retryAccount()}>Try again</Button>
+          <Button onClick={() => me.refetch()}>Try again</Button>
           <Button variant="outline" onClick={() => auth.signOut()}>
             Sign out
           </Button>
@@ -170,6 +176,8 @@ export default function AccountPage() {
       </PageShell>
     );
   }
+
+  const user = me.data;
 
   const handleExport = async () => {
     setExporting(true);
@@ -188,7 +196,6 @@ export default function AccountPage() {
     setDeleteError(null);
     try {
       await deleteMe(client, countryId);
-      forgetImportState(user.id);
       await auth.signOut();
     } catch (error) {
       setDeleteError(error instanceof Error ? error.message : 'The account was not deleted.');
@@ -212,51 +219,6 @@ export default function AccountPage() {
           </Stack>
         </CardContent>
       </Card>
-
-      {localImport.available && (localImport.pendingCount > 0 || localImport.summary) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Work saved on this device</CardTitle>
-            <CardDescription>
-              {localImport.pendingCount > 0
-                ? `This browser has ${localImport.pendingCount} item${
-                    localImport.pendingCount === 1 ? '' : 's'
-                  } saved on it while signed out that are not in your account. Saving copies them; nothing is removed from this device.`
-                : 'Everything this browser can save is in your account.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Stack gap="sm">
-              {localImport.summary &&
-                importSummaryLines(localImport.summary).map((line) => (
-                  <Text key={line} size="sm" style={{ margin: 0 }}>
-                    {line}
-                  </Text>
-                ))}
-              {localImport.state === 'error' && (
-                <Text size="sm" style={{ margin: 0, color: colors.error }}>
-                  {localImport.error}
-                </Text>
-              )}
-              {localImport.pendingCount > 0 && (
-                <div>
-                  <Button
-                    onClick={() => localImport.run()}
-                    disabled={localImport.state === 'running'}
-                  >
-                    {localImport.state === 'running' ? (
-                      <Spinner size="sm" />
-                    ) : (
-                      <IconUpload size={16} />
-                    )}
-                    Save to my account
-                  </Button>
-                </div>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
 
       <Card>
         <CardHeader>
@@ -286,8 +248,8 @@ export default function AccountPage() {
         <CardHeader>
           <CardTitle>Delete my account</CardTitle>
           <CardDescription>
-            Permanently deletes your account and everything saved to it. Work saved only on this
-            device stays on this device.
+            Permanently deletes your account and everything saved to it. Work saved on this browser
+            while signed out stays on this browser.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -306,8 +268,8 @@ export default function AccountPage() {
           <DialogHeader>
             <DialogTitle>Delete your account?</DialogTitle>
             <DialogDescription>
-              This permanently deletes your PolicyEngine account and every policy, household,
-              simulation, report and reform saved to it. It cannot be undone.
+              This permanently deletes your PolicyEngine account and every reform and report saved
+              to it. It cannot be undone.
             </DialogDescription>
           </DialogHeader>
           {deleteError && (

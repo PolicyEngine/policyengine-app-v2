@@ -26,7 +26,7 @@ export function useReportValidationSnapshot(
   apiReportId: string | undefined,
   live: LiveValidation
 ): ReportValidationState {
-  const { store, ready } = useFlagshipReportStore();
+  const { store } = useFlagshipReportStore();
   const [snapshot, setSnapshot] = useState<ReportValidationSnapshot | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);
   const pinned = useRef(false);
@@ -36,7 +36,7 @@ export function useReportValidationSnapshot(
     pinned.current = false;
     setSnapshot(null);
     setRecordId(null);
-    if (!apiReportId || !ready) {
+    if (!apiReportId) {
       return;
     }
     store
@@ -57,7 +57,7 @@ export function useReportValidationSnapshot(
     return () => {
       cancelled = true;
     };
-  }, [store, ready, userId, apiReportId]);
+  }, [store, userId, apiReportId]);
 
   const settled = isLiveValidationSettled(live);
   useEffect(() => {

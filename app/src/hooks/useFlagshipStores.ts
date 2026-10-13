@@ -1,25 +1,47 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import type { StoreMethods } from '@/api/deferredStore';
 import { getFlagshipReportStore, type FlagshipReportStore } from '@/api/flagshipReportStore';
 import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
-import { useSavedWorkStore } from '@/hooks/utils/useSavedWorkStore';
-import {
-  accountStoreContext,
-  useAssociationBackend,
-  useAssociationBackendResolver,
-  type AssociationBackend,
-} from '@/libs/auth/useAssociationBackend';
+import type { ApiStoreContext } from '@/api/v2Associations';
+import { MOCK_USER_ID } from '@/constants';
+import { useCountryContext } from '@/contexts/CountryContext';
+import { useAuthStatus } from '@/libs/auth/AuthContext';
+import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import type { RootState } from '@/store';
+import { isAssociationCountry } from '@/types/v2User';
 
 /**
- * The flagship (v3) stores for the current session: the account's when
- * signed in (US/UK), localStorage otherwise. A signed-in session whose
- * account could not be loaded gets the account stores, whose calls fail,
- * rather than localStorage. The stores wait for the session to be
- * restored, so nothing is written to the wrong one while it is.
+ * Where the v3 workspace keeps saved work: the account when signed in (US
+ * and UK), this browser otherwise. Nothing else decides it, and nothing
+ * falls back: an account request that fails is an ordinary error.
  */
+export interface V3SavedWork {
+  /** The account's routes when signed in; null keeps saved work in this browser. */
+  account: ApiStoreContext | null;
+  /**
+   * Scopes cached saved work to the session: the Auth0 subject when
+   * signed in, 'browser' otherwise. Signing in or out reloads the page; a
+   * session that ends without a reload moves every query to new keys.
+   */
+  scope: string;
+}
+
+export function useV3SavedWork(): V3SavedWork {
+  const { status, subject } = useAuthStatus();
+  const countryId = useCountryContext();
+  const client = useV2UserClient();
+  return useMemo(
+    () =>
+      status === 'signed_in' && subject && isAssociationCountry(countryId)
+        ? {
+            account: { client, countryId, userId: subject },
+            scope: `account:${subject}`,
+          }
+        : { account: null, scope: 'browser' },
+    [status, subject, countryId, client]
+  );
+}
 
 /** A v1 policy's raw parameter map (`policy_json`), per country. */
 const v1PolicyJsonKey = (countryId: string, policyId: string) =>
@@ -28,35 +50,17 @@ const v1PolicyJsonKey = (countryId: string, policyId: string) =>
 /** How long a fetched v1 policy stays cached without a reader. */
 const V1_POLICY_JSON_GC_TIME = 30 * 60 * 1000;
 
-const REFORM_STORE_METHODS: StoreMethods<ReformStore> = {
-  create: true,
-  findByUser: true,
-  findById: true,
-  update: true,
-  delete: true,
-};
-
-const FLAGSHIP_REPORT_STORE_METHODS: StoreMethods<FlagshipReportStore> = {
-  create: true,
-  findByUser: true,
-  findById: true,
-  findByApiReportId: true,
-  saveValidation: true,
-};
-
-function flagshipReportStoreFor(backend: AssociationBackend): FlagshipReportStore {
-  return getFlagshipReportStore(accountStoreContext(backend));
-}
-
 export function useReformStore(): ReformStore {
+  const { account } = useV3SavedWork();
   const parameters = useSelector((state: RootState) => state.metadata?.parameters);
   // Read through a ref so metadata arriving later does not rebuild the store.
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
   const queryClient = useQueryClient();
-  const reformStoreFor = useCallback(
-    (backend: AssociationBackend) =>
-      getReformStore(accountStoreContext(backend), {
+
+  return useMemo(
+    () =>
+      getReformStore(account, {
         getParameterMetadata: () => parametersRef.current,
         // v1 policies never change, so each is fetched once per session
         // rather than on every list of the account's reforms.
@@ -68,58 +72,27 @@ export function useReformStore(): ReformStore {
             gcTime: V1_POLICY_JSON_GC_TIME,
           }),
       }),
-    [queryClient]
+    [account, queryClient]
   );
-  return useSavedWorkStore(reformStoreFor, REFORM_STORE_METHODS).store;
-}
-
-/** Where a flagship run records its report. */
-export interface FlagshipRunDestination {
-  /** The account's report store and user; null keeps the run in this browser. */
-  account: { reportStore: FlagshipReportStore; userId: string } | null;
-  /** Set when signed in but the account could not be loaded: the run must not start. */
-  accountError: Error | null;
-}
-
-function flagshipRunDestination(backend: AssociationBackend): FlagshipRunDestination {
-  if (backend.mode === 'unavailable') {
-    return { account: null, accountError: backend.error };
-  }
-  if (backend.mode === 'api') {
-    return {
-      account: { reportStore: getFlagshipReportStore(backend), userId: backend.userId },
-      accountError: null,
-    };
-  }
-  return { account: null, accountError: null };
 }
 
 export interface FlagshipReportStoreSelection {
-  /** Waits for the session to be restored. */
   store: FlagshipReportStore;
   /** True when records go to the account (one `/v2/user-reports` row per run). */
   isAccount: boolean;
-  /** The user ID records are filed under. */
-  userId: string;
-  /** False while the session is being restored. */
-  ready: boolean;
-  /** Where a run records its report, once the session is restored. */
-  resolveRunDestination: () => Promise<FlagshipRunDestination>;
+  /** The session scope for cached records (see V3SavedWork). */
+  scope: string;
 }
 
 export function useFlagshipReportStore(): FlagshipReportStoreSelection {
-  const backend = useAssociationBackend();
-  const resolveBackend = useAssociationBackendResolver();
-  const { store, ready } = useSavedWorkStore(flagshipReportStoreFor, FLAGSHIP_REPORT_STORE_METHODS);
+  const { account, scope } = useV3SavedWork();
   return useMemo(
     () => ({
-      store,
-      isAccount: backend.mode !== 'localStorage',
-      userId: backend.userId,
-      ready,
-      resolveRunDestination: async () => flagshipRunDestination(await resolveBackend()),
+      store: getFlagshipReportStore(account),
+      isAccount: !!account,
+      scope,
     }),
-    [store, backend, ready, resolveBackend]
+    [account, scope]
   );
 }
 
@@ -129,11 +102,11 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
  * header. Signed-in (US/UK) sessions only; null otherwise.
  */
 export function useAccountReportRecord(apiReportId: string | undefined) {
-  const { store, isAccount, userId, ready } = useFlagshipReportStore();
+  const { store, isAccount, scope } = useFlagshipReportStore();
   const { data } = useQuery({
-    queryKey: ['flagship-report-record', userId, apiReportId ?? ''],
-    queryFn: () => store.findByApiReportId(userId, apiReportId!),
-    enabled: isAccount && ready && !!apiReportId,
+    queryKey: ['flagship-report-record', scope, apiReportId ?? ''],
+    queryFn: () => store.findByApiReportId(MOCK_USER_ID, apiReportId!),
+    enabled: isAccount && !!apiReportId,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
