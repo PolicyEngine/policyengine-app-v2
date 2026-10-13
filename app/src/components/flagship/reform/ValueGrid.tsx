@@ -82,6 +82,11 @@ export default function ValueGrid({
         style={{
           // One column stays input-sized rather than spanning the card.
           width: wide ? '100%' : 'auto',
+          // Year columns share the width evenly, not by what each holds: an
+          // input would otherwise take twice its share.
+          tableLayout: wide ? 'fixed' : 'auto',
+          // Even columns, but never narrower than a box: a narrow screen scrolls.
+          minWidth: wide ? (lone ? 96 : 160) + allYears.length * 104 : undefined,
           borderCollapse: 'collapse',
           fontSize: typography.fontSize.sm,
           fontFamily: typography.fontFamily.primary,
@@ -100,7 +105,9 @@ export default function ValueGrid({
                     : undefined
                 }
                 style={{
-                  padding: `0 ${spacing.xs} ${spacing.xs}`,
+                  // In from the cell's edge as far as the box's text is, so a
+                  // year heads its "$" and digits rather than the box's border.
+                  padding: `0 ${spacing.xs} ${spacing.xs} calc(${spacing.xs} + 12px)`,
                   textAlign: 'left',
                   fontSize: typography.fontSize.xs,
                   fontWeight: typography.fontWeight.medium,
@@ -209,8 +216,9 @@ export default function ValueGrid({
                         // Current-law cells read quieter, so the changes stand out.
                         className={changed ? undefined : 'tw:[&_input]:text-gray-500'}
                         style={{
-                          // A fixed width, or the input's 100% widens the table.
-                          width: years.length > 1 ? undefined : wide ? 120 : 200,
+                          // A lone box keeps its size; in a row of years (a fixed
+                          // layout) it fills its column.
+                          width: years.length > 1 || wide ? undefined : 200,
                           borderRadius: spacing.radius.container,
                           boxShadow: changed ? `0 0 0 2px ${colors.primary[200]}` : undefined,
                           background: changed ? colors.primary[50] : undefined,
