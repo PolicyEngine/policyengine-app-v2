@@ -116,7 +116,7 @@ describe('BudgetWindowCard', () => {
       ...COMPLETE,
       result: {
         ...COMPLETE.result!,
-        annualImpacts: [year('2026', 0, -5e7)],
+        annualImpacts: [{ ...year('2026', -60.6, -5e7), budgetaryImpact: -5e7 }],
         totals: year('Total', 0, -5e7),
       },
     });
@@ -128,6 +128,9 @@ describe('BudgetWindowCard', () => {
     const table = await screen.findByRole('table');
     expect(within(table).getByText('Federal tax revenue')).toBeInTheDocument();
     expect(within(table).getByText('State tax revenue')).toBeInTheDocument();
+    // A few dollars of rounding, and no spending change, read as nothing.
+    const first = within(table).getByRole('rowheader', { name: '2026' }).closest('tr')!;
+    expect(within(first).getAllByText('$0')).toHaveLength(2);
     expect(mockFetchBudgetWindow.mock.calls[0][3]).toMatchObject({ region: 'state/de' });
   });
 

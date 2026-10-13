@@ -21,6 +21,12 @@ import { formatCurrencyAbbr } from '@/utils/formatters';
 /** Window lengths offered: the common scoring windows. */
 const WINDOW_SIZES = [3, 5, 10];
 const DEFAULT_WINDOW = 10;
+/**
+ * Below this a figure reads as nothing: the federal figure is the total
+ * less the state's, and subtracting two large sums leaves a few dollars
+ * of rounding where a state bill changes no federal revenue.
+ */
+const NEGLIGIBLE = 1000;
 /** A typical 10-year window, for the bar until the API's progress arrives. */
 const EXPECTED_MS = 20 * 60 * 1000;
 
@@ -130,6 +136,9 @@ export default function BudgetWindowCard({
     if (!Number.isFinite(value)) {
       return '—';
     }
+    if (Math.abs(value) < NEGLIGIBLE) {
+      return countryId === 'uk' ? '£0' : '$0';
+    }
     const text = formatCurrencyAbbr(Math.abs(value), countryId as 'us' | 'uk', {
       maximumFractionDigits: 1,
     });
@@ -142,7 +151,7 @@ export default function BudgetWindowCard({
   const showState =
     countryId === 'us' &&
     (!!region?.startsWith('state/') ||
-      rows.some((row) => Math.abs(row.stateTaxRevenueImpact) > 0.5));
+      rows.some((row) => Math.abs(row.stateTaxRevenueImpact) >= NEGLIGIBLE));
   const columns: Array<{ label: string; value: (row: BudgetWindowYear) => number }> = [
     showState
       ? { label: 'Federal tax revenue', value: (row) => row.federalTaxRevenueImpact }
