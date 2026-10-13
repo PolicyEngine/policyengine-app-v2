@@ -106,20 +106,15 @@ function HeaderSelect({
 }
 
 /**
- * The reform's title bar: its name, then one toolbar — the run's year
- * and population on the left, the verbs (throw it away, save it, run the
- * report) on the right — so the reform below has the page.
+ * The reform's title bar: its name, then the year the editor and the run
+ * read the law in on the left, and what to do with the draft as a whole
+ * (throw it away, save it) on the right. Who the report runs on and the
+ * run itself come last, in the bar under the reform (DraftRunBar).
  */
 export default function DraftHeader({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
-  const runReport = useRunFlagshipReport();
   const taxYears = useSelector(getTaxYears);
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const currentLawAt = (path: string, at: number) => {
-    const values = parameters?.[path]?.values;
-    return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
-  };
   const year = draftYear(draft);
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
 
@@ -143,16 +138,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
     },
   });
 
-  // Who the report runs on: the whole country, a state, or a congressional district.
-  const region = draft.population?.region;
-  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
-
   const empty = draft.provisions.length === 0;
-  // The report models what the reform changes: a parameter added but
-  // left at current law stays in the draft, out of the run.
-  const adjusted = draft.provisions.filter((provision) =>
-    provisionAdjusts(provision, parameters?.[provision.path]?.values)
-  );
 
   return (
     <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
@@ -172,7 +158,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
         }}
       />
 
-      {/* What the run covers on the left; what to do with the reform on the right. */}
+      {/* The year first, as the editor reads current law in it; the draft's verbs on the right. */}
       <div
         style={{
           display: 'flex',
@@ -182,23 +168,16 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           gap: spacing.sm,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
-          <HeaderSelect
-            label="Year"
-            icon={<IconCalendarEvent size={16} />}
-            value={String(year)}
-            onValueChange={(next) => setDraftYear(Number(next))}
-            options={yearOptions.map((option) => ({
-              value: String(option),
-              label: String(option),
-            }))}
-          />
-          <PopulationPicker
-            value={region ?? ''}
-            onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
-            regions={regions}
-          />
-        </div>
+        <HeaderSelect
+          label="Year"
+          icon={<IconCalendarEvent size={16} />}
+          value={String(year)}
+          onValueChange={(next) => setDraftYear(Number(next))}
+          options={yearOptions.map((option) => ({
+            value: String(option),
+            label: String(option),
+          }))}
+        />
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
           <Button variant="ghost" onClick={() => clearDraftReform()}>
             Discard
@@ -210,29 +189,100 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
-          <Button
-            onClick={() =>
-              runReport.run(
-                draft.label || 'Draft reform',
-                SOURCE_NOTES[draft.source] ?? 'Draft reform',
-                // Described as they stand in the year the report simulates.
-                provisionsForYear(adjusted, year, currentLawAt),
-                undefined,
-                year,
-                { fromDraft: true, region }
-              )
-            }
-            disabled={adjusted.length === 0 || runReport.isRunning}
-            title={
-              !empty && adjusted.length === 0
-                ? 'Adjust at least one value from current law to run the report'
-                : undefined
-            }
-          >
-            <IconChartBar size={16} />
-            {runReport.isRunning ? 'Starting report…' : `Run ${year} report`}
-          </Button>
         </div>
+      </div>
+
+      {saveMutation.isError && (
+        <p
+          role="alert"
+          style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.error }}
+        >
+          Could not save the reform. Try again.
+        </p>
+      )}
+    </header>
+  );
+}
+
+/**
+ * The last step, under the reform: who the report runs on, and the run.
+ * It stays at the bottom of the window while the reform is longer than
+ * the screen, so the run is never a scroll away, and settles in place
+ * under the table once the table ends.
+ */
+export function DraftRunBar({ draft }: { draft: DraftReform }) {
+  const runReport = useRunFlagshipReport();
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const currentLawAt = (path: string, at: number) => {
+    const values = parameters?.[path]?.values;
+    return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
+  };
+  const year = draftYear(draft);
+
+  // Who the report runs on: the whole country, a state, or a congressional district.
+  const region = draft.population?.region;
+
+  const empty = draft.provisions.length === 0;
+  // The report models what the reform changes: a parameter added but
+  // left at current law stays in the draft, out of the run.
+  const adjusted = draft.provisions.filter((provision) =>
+    provisionAdjusts(provision, parameters?.[provision.path]?.values)
+  );
+
+  return (
+    <section
+      aria-label="Run the report"
+      style={{
+        position: 'sticky',
+        bottom: 0,
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: spacing.xs,
+        padding: `${spacing.md} 0`,
+        borderTop: `1px solid ${colors.border.light}`,
+        background: colors.background.primary,
+        boxShadow: '0 -6px 12px -10px rgba(16, 24, 40, 0.25)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: spacing.sm,
+        }}
+      >
+        <PopulationPicker
+          value={region ?? ''}
+          onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
+          regions={regions}
+        />
+        <Button
+          onClick={() =>
+            runReport.run(
+              draft.label || 'Draft reform',
+              SOURCE_NOTES[draft.source] ?? 'Draft reform',
+              // Described as they stand in the year the report simulates.
+              provisionsForYear(adjusted, year, currentLawAt),
+              undefined,
+              year,
+              { fromDraft: true, region }
+            )
+          }
+          disabled={adjusted.length === 0 || runReport.isRunning}
+          title={
+            !empty && adjusted.length === 0
+              ? 'Adjust at least one value from current law to run the report'
+              : undefined
+          }
+          style={{ marginLeft: 'auto' }}
+        >
+          <IconChartBar size={16} />
+          {runReport.isRunning ? 'Starting report…' : `Run ${year} report`}
+        </Button>
       </div>
 
       {/* Unchanged parameters still leave the run quietly; only "nothing changed" is said. */}
@@ -249,14 +299,14 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
         </p>
       )}
 
-      {(runReport.error || saveMutation.isError) && (
+      {runReport.error && (
         <p
           role="alert"
           style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.error }}
         >
-          {runReport.error ?? 'Could not save the reform. Try again.'}
+          {runReport.error}
         </p>
       )}
-    </header>
+    </section>
   );
 }

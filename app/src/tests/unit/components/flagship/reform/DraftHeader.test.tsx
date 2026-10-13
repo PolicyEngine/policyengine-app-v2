@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, waitFor } from '@test-utils';
+import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import DraftHeader from '@/components/flagship/reform/DraftHeader';
+import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import {
   addDraftProvision,
   clearDraftReform,
@@ -30,7 +30,12 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
 
 function HeaderHarness() {
   const draft = useDraftReform();
-  return draft ? <DraftHeader draft={draft} /> : null;
+  return draft ? (
+    <>
+      <DraftHeader draft={draft} />
+      <DraftRunBar draft={draft} />
+    </>
+  ) : null;
 }
 
 function renderHeader() {
@@ -60,11 +65,24 @@ describe('DraftHeader', () => {
     store.dispatch(clearMetadata());
   });
 
-  test('given a draft then its name and run read at the top', () => {
+  test('given a draft then its name and year lead, and the population and run sit in the bar under it', () => {
     renderHeader();
 
-    expect(screen.getByLabelText('Reform name')).toHaveAttribute('placeholder', 'Untitled reform');
-    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeInTheDocument();
+    const header = screen.getByRole('banner');
+    expect(within(header).getByLabelText('Reform name')).toHaveAttribute(
+      'placeholder',
+      'Untitled reform'
+    );
+    expect(within(header).getByRole('combobox', { name: /year/i })).toBeInTheDocument();
+    expect(within(header).getByRole('button', { name: 'Save' })).toBeInTheDocument();
+
+    const runBar = screen.getByRole('region', { name: 'Run the report' });
+    expect(
+      within(runBar).getByRole('button', { name: /population: nationwide/i })
+    ).toBeInTheDocument();
+    expect(within(runBar).getByRole('button', { name: /run 2026 report/i })).toBeInTheDocument();
+    // It stays in view at the bottom of the window while the reform is long.
+    expect(runBar).toHaveStyle({ position: 'sticky', bottom: '0px' });
   });
 
   test('given nothing changed yet then the run waits for a change', () => {
