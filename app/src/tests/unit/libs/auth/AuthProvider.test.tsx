@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
-import { AuthProvider } from '@/libs/auth/AuthProvider';
+import { AuthProvider, ME_RETRIES } from '@/libs/auth/AuthProvider';
 import type { CountryId } from '@/libs/countries';
 import {
   errorResponse,
@@ -49,8 +50,12 @@ function Probe() {
     <div>
       <span data-testid="status">{auth.status}</span>
       <span data-testid="user">{auth.user?.id ?? 'none'}</span>
+      <span data-testid="error">{auth.error?.message ?? 'none'}</span>
       <button type="button" onClick={() => auth.signIn('/us/reforms?filter=yours')}>
         Sign in
+      </button>
+      <button type="button" onClick={() => auth.retryAccount()}>
+        Retry
       </button>
     </div>
   );
@@ -181,8 +186,9 @@ describe('AuthProvider', () => {
     });
   });
 
-  test('given /v2/me fails then the session is signed in without a PolicyEngine user', async () => {
+  test('given /v2/me keeps failing then the session reports an account error, not a signed-in user', async () => {
     // Given
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     stubAuthEnv(true);
     auth0.state.isAuthenticated = true;
     auth0.state.user = { sub: 'google-oauth2|1234' };
@@ -190,12 +196,37 @@ describe('AuthProvider', () => {
 
     // When
     renderProvider('uk');
+    expect(screen.getByTestId('status')).toHaveTextContent('loading');
+    await vi.advanceTimersByTimeAsync(10_000);
 
-    // Then (after one retry)
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'), {
-      timeout: 3000,
-    });
+    // Then: every retry was spent before giving up
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('account_error'));
+    expect(fetchMock).toHaveBeenCalledTimes(1 + ME_RETRIES);
     expect(screen.getByTestId('user')).toHaveTextContent('none');
+    expect(screen.getByTestId('error')).toHaveTextContent('Database unavailable');
+    vi.useRealTimers();
+  });
+
+  test('given an account error then retrying loads the PolicyEngine user', async () => {
+    // Given
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    stubAuthEnv(true);
+    auth0.state.isAuthenticated = true;
+    auth0.state.user = { sub: 'google-oauth2|1234' };
+    fetchMock.mockImplementation(async () => errorResponse(503, 'Database unavailable'));
+    renderProvider('us');
+    await vi.advanceTimersByTimeAsync(10_000);
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('account_error'));
+    vi.useRealTimers();
+
+    // When
+    fetchMock.mockImplementation(async () => itemResponse(mockMeItem));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Retry' }));
+
+    // Then
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
+    expect(screen.getByTestId('user')).toHaveTextContent(mockMeItem.id);
+    expect(screen.getByTestId('error')).toHaveTextContent('none');
   });
 
   test('given a session in a country without account storage then /v2/me is not called', () => {

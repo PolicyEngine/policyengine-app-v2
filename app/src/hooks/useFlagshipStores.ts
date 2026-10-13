@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getFlagshipReportStore, type FlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore, type ReformStore } from '@/api/reformStore';
-import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
+import { accountStoreContext, useAssociationBackend } from '@/libs/auth/useAssociationBackend';
 import type { RootState } from '@/store';
 
 /**
  * The flagship (v3) stores for the current session: the account's when
- * signed in (US/UK), localStorage otherwise.
+ * signed in (US/UK), localStorage otherwise. A signed-in session whose
+ * account could not be loaded gets the account stores, whose calls fail,
+ * rather than localStorage.
  */
 
 export function useReformStore(): ReformStore {
@@ -20,7 +22,7 @@ export function useReformStore(): ReformStore {
 
   return useMemo(
     () =>
-      getReformStore(backend.mode === 'api' ? backend : null, {
+      getReformStore(accountStoreContext(backend), {
         getParameterMetadata: () => parametersRef.current,
       }),
     [backend]
@@ -35,16 +37,19 @@ export interface FlagshipReportStoreSelection {
   userId: string;
   /** False while the session is being restored. */
   ready: boolean;
+  /** Set when signed in but the account could not be loaded: nothing can be saved. */
+  accountError: Error | null;
 }
 
 export function useFlagshipReportStore(): FlagshipReportStoreSelection {
   const backend = useAssociationBackend();
   return useMemo(
     () => ({
-      store: getFlagshipReportStore(backend.mode === 'api' ? backend : null),
-      isAccount: backend.mode === 'api',
+      store: getFlagshipReportStore(accountStoreContext(backend)),
+      isAccount: backend.mode !== 'localStorage',
       userId: backend.userId,
       ready: backend.ready,
+      accountError: backend.mode === 'unavailable' ? backend.error : null,
     }),
     [backend]
   );

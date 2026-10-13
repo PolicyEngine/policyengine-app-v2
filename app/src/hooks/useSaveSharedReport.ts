@@ -72,7 +72,7 @@ export function useSaveSharedReport() {
     const userReportId = getShareDataUserReportId(shareData);
     const findExisting = async () =>
       (await reportStore.findByUserReportId(userReportId)) ??
-      (backend.mode === 'api'
+      (backend.mode !== 'localStorage'
         ? await reportStore.findById(userId, shareData.userReport.reportId)
         : null);
 

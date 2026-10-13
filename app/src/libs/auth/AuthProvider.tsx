@@ -1,6 +1,6 @@
 import { useCallback, useMemo, type ReactNode } from 'react';
 import { Auth0Provider, useAuth0, type AppState } from '@auth0/auth0-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { fetchMe } from '@/api/v2Me';
 import { createV2UserClient } from '@/api/v2UserClient';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -84,6 +84,50 @@ function stringClaim(value: unknown): string | null {
   return typeof value === 'string' && value ? value : null;
 }
 
+/** Attempts after the first before the PolicyEngine user counts as unavailable. */
+export const ME_RETRIES = 3;
+
+/** 1s, 2s, 4s between attempts (capped at 8s). */
+export function meRetryDelay(attempt: number): number {
+  return Math.min(1000 * 2 ** attempt, 8000);
+}
+
+const MISSING_SUBJECT_MESSAGE = 'The sign-in session did not identify a user.';
+
+/**
+ * Where the session stands. In the US and UK a signed-in session is only
+ * 'authenticated' once its PolicyEngine user has loaded; while that is
+ * in flight (retries included) it is 'loading', and once it has failed
+ * it is 'account_error'.
+ */
+export function sessionStatus({
+  isLoading,
+  isAuthenticated,
+  hasSubject,
+  meCountry,
+  me,
+}: {
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  hasSubject: boolean;
+  meCountry: string | null;
+  me: Pick<UseQueryResult<MeItem, Error>, 'data' | 'isError'>;
+}): AuthStatus {
+  if (isLoading) {
+    return 'loading';
+  }
+  if (!isAuthenticated) {
+    return 'anonymous';
+  }
+  if (!meCountry || me.data) {
+    return 'authenticated';
+  }
+  if (!hasSubject || me.isError) {
+    return 'account_error';
+  }
+  return 'loading';
+}
+
 function Auth0SessionBridge({
   config,
   countryId,
@@ -121,7 +165,10 @@ function Auth0SessionBridge({
 
   // The PolicyEngine user behind the session. Fetched with the current
   // country (us/uk) so a first sign-in provisions with it; elsewhere the
-  // session is still signed in but saved work stays local.
+  // session is still signed in but saved work stays local. Until it
+  // loads, saved work has nowhere to go, so a failure keeps retrying:
+  // with backoff at first, then whenever the window regains focus or
+  // the network comes back (and on retryAccount).
   const meCountry = isAssociationCountry(countryId) ? countryId : null;
   const meQuery = useQuery<MeItem, Error>({
     queryKey: authKeys.me(subject ?? ''),
@@ -129,23 +176,29 @@ function Auth0SessionBridge({
     enabled: isAuthenticated && !!subject && !!meCountry,
     staleTime: Infinity,
     gcTime: Infinity,
-    retry: 1,
-    refetchOnWindowFocus: false,
+    retry: ME_RETRIES,
+    retryDelay: meRetryDelay,
+    refetchOnWindowFocus: (query) => query.state.status === 'error',
+    refetchOnReconnect: (query) => query.state.status === 'error',
   });
 
-  let status: AuthStatus;
-  if (isLoading) {
-    status = 'loading';
-  } else if (!isAuthenticated) {
-    status = 'anonymous';
-  } else if (meCountry && !meQuery.data && meQuery.isPending && meQuery.fetchStatus !== 'idle') {
-    status = 'loading';
-  } else {
-    status = 'authenticated';
-  }
+  const status = sessionStatus({
+    isLoading,
+    isAuthenticated,
+    hasSubject: !!subject,
+    meCountry,
+    me: meQuery,
+  });
 
   const user = isAuthenticated ? (meQuery.data ?? null) : null;
-  const error = auth0Error ?? (isAuthenticated ? meQuery.error : null) ?? null;
+  const accountError =
+    status === 'account_error' ? (meQuery.error ?? new Error(MISSING_SUBJECT_MESSAGE)) : null;
+  const error = auth0Error ?? accountError;
+
+  const { refetch: refetchMe } = meQuery;
+  const retryAccount = useCallback(() => {
+    void refetchMe();
+  }, [refetchMe]);
 
   const signIn = useCallback(
     async (returnTo?: string) => {
@@ -177,9 +230,22 @@ function Auth0SessionBridge({
       error,
       signIn,
       signOut,
+      retryAccount,
       getAccessToken,
     }),
-    [status, user, isAuthenticated, name, email, picture, error, signIn, signOut, getAccessToken]
+    [
+      status,
+      user,
+      isAuthenticated,
+      name,
+      email,
+      picture,
+      error,
+      signIn,
+      signOut,
+      retryAccount,
+      getAccessToken,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

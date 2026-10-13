@@ -9,7 +9,16 @@ import type { MeItem } from '@/types/v2User';
  * does without sign-in.
  */
 
-export type AuthStatus = 'disabled' | 'loading' | 'anonymous' | 'authenticated';
+/**
+ * - 'loading': the session (or, in the US and UK, the PolicyEngine user
+ *   behind it) is still being restored.
+ * - 'authenticated': signed in; in the US and UK the PolicyEngine user
+ *   has loaded.
+ * - 'account_error': signed in, but the PolicyEngine user could not be
+ *   loaded (US and UK). Saved work is unavailable, never silently kept
+ *   on this device, until `retryAccount` succeeds or the user signs out.
+ */
+export type AuthStatus = 'disabled' | 'loading' | 'anonymous' | 'authenticated' | 'account_error';
 
 /** Display details from the identity provider (Auth0 ID token claims). */
 export interface AuthProfile {
@@ -28,6 +37,8 @@ export interface AuthContextValue {
   /** Redirects to the hosted sign-in page; returns to `returnTo` (default: here). */
   signIn: (returnTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Tries loading the PolicyEngine user again (after 'account_error'). */
+  retryAccount: () => void;
   /** An access token for the PolicyEngine API, or null when signed out. */
   getAccessToken: () => Promise<string | null>;
 }
@@ -39,6 +50,7 @@ export const DISABLED_AUTH: AuthContextValue = {
   error: null,
   signIn: async () => {},
   signOut: async () => {},
+  retryAccount: () => {},
   getAccessToken: async () => null,
 };
 

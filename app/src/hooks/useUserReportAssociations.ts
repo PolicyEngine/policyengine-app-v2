@@ -28,7 +28,7 @@ export const useReportAssociationStoreForMode = (): ReportAssociationStoreSelect
   const backend = useAssociationBackend();
   return useMemo(
     () =>
-      backend.mode === 'api'
+      backend.mode !== 'localStorage'
         ? {
             store: new ApiReportStore(backend, getLocalReportStore()),
             config: queryConfig.api,

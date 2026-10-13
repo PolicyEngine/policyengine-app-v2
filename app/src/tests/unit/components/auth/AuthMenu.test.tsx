@@ -5,6 +5,7 @@ import HeaderActionButtons from '@/components/homeHeader/HeaderActionButtons';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { mockMeItem } from '@/tests/fixtures/api/v2UserMocks';
 import {
+  accountErrorAuthValue,
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
@@ -62,6 +63,37 @@ describe('AuthMenu', () => {
     expect(screen.getByText(mockMeItem.email!)).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /my account/i })).toBeInTheDocument();
     await user.click(screen.getByRole('menuitem', { name: /sign out/i }));
+    expect(auth.signOut).toHaveBeenCalled();
+  });
+
+  test('given the account could not be loaded then the menu says so and offers Try again', async () => {
+    // Given
+    const user = userEvent.setup();
+    const auth = accountErrorAuthValue();
+    renderMenu(auth);
+
+    // When
+    await user.click(
+      screen.getByRole('button', { name: /account menu for ada lovelace \(account not loaded\)/i })
+    );
+
+    // Then
+    expect(screen.getByRole('alert')).toHaveTextContent(/could not load your account/i);
+    await user.click(screen.getByRole('menuitem', { name: /try again/i }));
+    expect(auth.retryAccount).toHaveBeenCalled();
+  });
+
+  test('given the account could not be loaded then Sign out is still offered', async () => {
+    // Given
+    const user = userEvent.setup();
+    const auth = accountErrorAuthValue();
+    renderMenu(auth);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /account menu for/i }));
+    await user.click(screen.getByRole('menuitem', { name: /sign out/i }));
+
+    // Then
     expect(auth.signOut).toHaveBeenCalled();
   });
 });

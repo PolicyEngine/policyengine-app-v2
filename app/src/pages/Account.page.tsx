@@ -157,11 +157,12 @@ export default function AccountPage() {
   if (!user) {
     return (
       <PageShell>
-        <Text style={{ margin: 0, color: colors.error }}>
+        <Text role="alert" style={{ margin: 0, color: colors.error }}>
           We could not load your PolicyEngine account
-          {auth.error ? `: ${auth.error.message}` : '.'}
+          {auth.error ? `: ${auth.error.message}` : '.'} Saved work is unavailable until it loads.
         </Text>
-        <div>
+        <div className="tw:flex tw:gap-2">
+          <Button onClick={() => auth.retryAccount()}>Try again</Button>
           <Button variant="outline" onClick={() => auth.signOut()}>
             Sign out
           </Button>

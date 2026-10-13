@@ -45,7 +45,7 @@ export const usePolicyAssociationStoreForMode = (): PolicyAssociationStoreSelect
   const backend = useAssociationBackend();
   return useMemo(
     () =>
-      backend.mode === 'api'
+      backend.mode !== 'localStorage'
         ? {
             store: new ApiPolicyStore(backend),
             config: queryConfig.api,

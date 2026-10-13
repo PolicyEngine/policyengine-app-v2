@@ -27,6 +27,7 @@ export function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthCo
     error: null,
     signIn: vi.fn().mockResolvedValue(undefined),
     signOut: vi.fn().mockResolvedValue(undefined),
+    retryAccount: vi.fn(),
     getAccessToken: vi.fn().mockResolvedValue(null),
     ...overrides,
   };
@@ -38,6 +39,17 @@ export function signedInAuthValue(overrides: Partial<AuthContextValue> = {}): Au
     status: 'authenticated',
     user: mockMeItem,
     profile: { name: 'Ada Lovelace', email: mockMeItem.email, picture: null },
+    getAccessToken: vi.fn().mockResolvedValue(TEST_ACCESS_TOKEN),
+    ...overrides,
+  });
+}
+
+/** Signed in, but the PolicyEngine user could not be loaded. */
+export function accountErrorAuthValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
+  return makeAuthValue({
+    status: 'account_error',
+    profile: { name: 'Ada Lovelace', email: mockMeItem.email, picture: null },
+    error: new Error('Saved work is temporarily unavailable.'),
     getAccessToken: vi.fn().mockResolvedValue(TEST_ACCESS_TOKEN),
     ...overrides,
   });

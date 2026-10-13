@@ -1,4 +1,4 @@
-import { IconLogout, IconUserCircle } from '@tabler/icons-react';
+import { IconAlertTriangle, IconLogout, IconRefresh, IconUserCircle } from '@tabler/icons-react';
 import {
   Button,
   DropdownMenu,
@@ -31,7 +31,9 @@ function initialOf(name: string): string {
 /**
  * Header control for sign-in: a "Sign in" button when signed out, the
  * user menu (My account, Sign out) when signed in, and nothing when
- * sign-in is disabled or the session is still being restored.
+ * sign-in is disabled or the session is still being restored. When the
+ * PolicyEngine account could not be loaded, the avatar carries a warning
+ * and the menu says so, with "Try again" and "Sign out".
  */
 export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const auth = useAuthStatus();
@@ -66,14 +68,19 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
 
   const name = accountDisplayName(auth);
   const email = auth.user?.email ?? auth.profile?.email;
+  const accountUnavailable = auth.status === 'account_error';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={`Account menu for ${name}`}
-          className="tw:cursor-pointer tw:rounded-full tw:border-none tw:p-0"
+          aria-label={
+            accountUnavailable
+              ? `Account menu for ${name} (account not loaded)`
+              : `Account menu for ${name}`
+          }
+          className="tw:relative tw:cursor-pointer tw:rounded-full tw:border-none tw:p-0"
           style={{ background: 'transparent', lineHeight: 0 }}
         >
           <span
@@ -91,6 +98,20 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
           >
             {initialOf(name)}
           </span>
+          {accountUnavailable && (
+            <span
+              aria-hidden
+              className="tw:absolute tw:rounded-full"
+              style={{
+                top: -2,
+                right: -2,
+                width: 10,
+                height: 10,
+                background: colors.error,
+                border: `2px solid ${inverse ? colors.primary[700] : colors.white}`,
+              }}
+            />
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ minWidth: 220 }}>
@@ -108,6 +129,31 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
             </div>
           )}
         </DropdownMenuLabel>
+        {accountUnavailable && (
+          <>
+            <DropdownMenuSeparator />
+            <div
+              role="alert"
+              className="tw:flex tw:gap-2"
+              style={{
+                padding: '6px 8px',
+                maxWidth: 260,
+                color: colors.error,
+                fontSize: typography.fontSize.xs,
+              }}
+            >
+              <IconAlertTriangle size={16} style={{ flexShrink: 0 }} aria-hidden />
+              <span>
+                We could not load your account, so saved work is unavailable. Nothing is saved until
+                it loads.
+              </span>
+            </div>
+            <DropdownMenuItem onSelect={() => auth.retryAccount()}>
+              <IconRefresh size={16} />
+              Try again
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => nav.push(`/${countryId}/account`)}>
           <IconUserCircle size={16} />

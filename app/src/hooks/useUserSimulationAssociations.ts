@@ -28,7 +28,7 @@ export const useSimulationAssociationStoreForMode = (): SimulationAssociationSto
   const backend = useAssociationBackend();
   return useMemo(
     () =>
-      backend.mode === 'api'
+      backend.mode !== 'localStorage'
         ? { store: new ApiSimulationStore(backend), config: queryConfig.api, ready: true }
         : {
             store: getLocalSimulationStore(),

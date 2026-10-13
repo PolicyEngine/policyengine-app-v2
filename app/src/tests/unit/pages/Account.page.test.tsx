@@ -10,6 +10,7 @@ import {
   TEST_ACCESS_TOKEN,
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
+  accountErrorAuthValue,
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
@@ -119,5 +120,22 @@ describe('AccountPage', () => {
       screen.getByText(/accounts store work for the us and uk calculators/i)
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete my account/i })).not.toBeInTheDocument();
+  });
+
+  test('given the account could not be loaded then the page offers Try again and Sign out', async () => {
+    // Given
+    const user = userEvent.setup();
+    const auth = accountErrorAuthValue();
+    renderPage(auth);
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      /could not load your PolicyEngine account: Saved work is temporarily unavailable/
+    );
+    expect(auth.retryAccount).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
   });
 });

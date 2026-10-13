@@ -46,6 +46,16 @@ export function useRunFlagshipReport() {
       setError('Model metadata is still loading — try again in a moment.');
       return;
     }
+    // Signed in, the run's only record is the account's; never run into
+    // this browser while the account is unknown or could not be loaded.
+    if (!reportStore.ready) {
+      setError('Still checking your sign-in — try again in a moment.');
+      return;
+    }
+    if (reportStore.accountError) {
+      setError(reportStore.accountError.message);
+      return;
+    }
     setIsRunning(true);
     setError(null);
     try {

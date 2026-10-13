@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
 import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
@@ -12,13 +12,18 @@ import { useReportAssociationStoreForMode } from '@/hooks/useUserReportAssociati
 import { useSimulationAssociationStoreForMode } from '@/hooks/useUserSimulationAssociations';
 import type { AuthContextValue, AuthStatus } from '@/libs/auth/AuthContext';
 import {
+  ACCOUNT_UNAVAILABLE_MESSAGE,
+  AccountUnavailableError,
   selectAssociationBackend,
+  UNAVAILABLE_ACCOUNT_USER_ID,
   useAssociationBackend,
   useCurrentUserId,
+  type AssociationBackendMode,
 } from '@/libs/auth/useAssociationBackend';
 import type { CountryId } from '@/libs/countries';
 import { mockMeItem, PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
 import {
+  accountErrorAuthValue,
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
@@ -33,23 +38,35 @@ function wrapperFor(auth: AuthContextValue, countryId: CountryId) {
 }
 
 describe('selectAssociationBackend', () => {
-  const statuses: AuthStatus[] = ['disabled', 'loading', 'anonymous', 'authenticated'];
+  const statuses: AuthStatus[] = [
+    'disabled',
+    'loading',
+    'anonymous',
+    'authenticated',
+    'account_error',
+  ];
   const countries: CountryId[] = ['us', 'uk', 'ca', 'ng', 'il'];
+  const expectedMode: Record<AuthStatus, AssociationBackendMode> = {
+    disabled: 'localStorage',
+    loading: 'localStorage',
+    anonymous: 'localStorage',
+    authenticated: 'api',
+    account_error: 'unavailable',
+  };
 
   test.each(statuses.flatMap((status) => countries.map((country) => [status, country] as const)))(
     'given status %s in %s then account storage is used only when signed in to US or UK',
     (status, countryId) => {
+      const user = status === 'authenticated' ? mockMeItem : null;
       const expected =
-        status === 'authenticated' && (countryId === 'us' || countryId === 'uk')
-          ? 'api'
-          : 'localStorage';
-      expect(selectAssociationBackend({ status, user: mockMeItem, countryId })).toBe(expected);
+        countryId === 'us' || countryId === 'uk' ? expectedMode[status] : 'localStorage';
+      expect(selectAssociationBackend({ status, user, countryId })).toBe(expected);
     }
   );
 
-  test('given a session whose PolicyEngine user has not loaded then localStorage is used', () => {
+  test('given a US session whose PolicyEngine user is missing then saved work is unavailable, not local', () => {
     expect(selectAssociationBackend({ status: 'authenticated', user: null, countryId: 'us' })).toBe(
-      'localStorage'
+      'unavailable'
     );
   });
 });
@@ -80,6 +97,32 @@ describe('useAssociationBackend', () => {
 
     expect(result.current.mode).toBe('localStorage');
     expect(result.current.ready).toBe(false);
+  });
+
+  test('given the account could not be loaded then saved work neither loads nor saves', async () => {
+    // Given
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const wrapper = wrapperFor(accountErrorAuthValue(), 'us');
+
+    // When
+    const backend = renderHook(() => useAssociationBackend(), { wrapper }).result.current;
+    const policyStore = renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result
+      .current.store;
+
+    // Then
+    expect(backend.mode).toBe('unavailable');
+    expect(backend.ready).toBe(true);
+    expect(backend.userId).toBe(UNAVAILABLE_ACCOUNT_USER_ID);
+    expect(policyStore).toBeInstanceOf(ApiPolicyStore);
+    await expect(policyStore.findByUser(backend.userId, 'us')).rejects.toBeInstanceOf(
+      AccountUnavailableError
+    );
+    await expect(
+      policyStore.create({ userId: backend.userId, policyId: '95762', countryId: 'us' })
+    ).rejects.toThrow(ACCOUNT_UNAVAILABLE_MESSAGE);
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 
   test('given no auth provider then sign-in is disabled and storage is local', () => {
