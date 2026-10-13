@@ -448,7 +448,7 @@ describe('import bookkeeping', () => {
     expect(isImportDeclined(PE_USER_ID)).toBe(false);
   });
 
-  test('given one account imported this browser then a second person signing in is not offered those items', async () => {
+  test('given one account imported this browser then a second account is still offered its signed-out items', async () => {
     // Given
     seedLocalData();
     const { fetchMock, context } = createTestApiContext();
@@ -462,27 +462,10 @@ describe('import bookkeeping', () => {
     // When
     const plan = planLocalImport(OTHER_PE_USER_ID);
 
-    // Then: nothing of the first account's is offered, and its links do not resolve
-    expect(plan.items).toEqual([]);
+    // Then: the same seven items, and the first account's links stay its own
+    expect(plan.items).toHaveLength(7);
+    expect(countImportableItems(PE_USER_ID)).toBe(0);
     expect(readImportedIdMap(OTHER_PE_USER_ID)).toEqual({});
     expect(resolveImportedId(OTHER_PE_USER_ID, LOCAL_IDS.REPORT_US)).toBeNull();
-  });
-
-  test('given the importing account was deleted then its items can be offered again', async () => {
-    // Given
-    seedLocalData();
-    const { fetchMock, context } = createTestApiContext();
-    fetchMock.mockImplementation(importResponder());
-    await runLocalImport({
-      client: context.client,
-      userId: PE_USER_ID,
-      materialize: async () => V1_IDS.MATERIALIZED_REFORM,
-    });
-
-    // When
-    forgetImportState(PE_USER_ID);
-
-    // Then
-    expect(countImportableItems(OTHER_PE_USER_ID)).toBe(7);
   });
 });

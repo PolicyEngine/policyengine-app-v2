@@ -64,9 +64,9 @@ export default function LocalDataImportPrompt() {
           <DialogDescription>
             {finished
               ? 'It now appears wherever you sign in.'
-              : `This browser has ${localImport.pendingCount} saved item${
+              : `This browser has ${localImport.pendingCount} item${
                   localImport.pendingCount === 1 ? '' : 's'
-                } — policies, households, simulations, reports and reforms. Saving copies them to your account so they are available on any device. Nothing is removed from this device.`}
+                } saved on it while signed out — policies, households, simulations, reports and reforms — that are not in your account. Anyone using this browser signed out can see them. Saving copies them to your account so they are available on any device. Nothing is removed from this device.`}
           </DialogDescription>
         </DialogHeader>
 

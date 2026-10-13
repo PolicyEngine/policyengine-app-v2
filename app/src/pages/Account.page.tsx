@@ -219,9 +219,9 @@ export default function AccountPage() {
             <CardTitle>Work saved on this device</CardTitle>
             <CardDescription>
               {localImport.pendingCount > 0
-                ? `This browser has ${localImport.pendingCount} saved item${
+                ? `This browser has ${localImport.pendingCount} item${
                     localImport.pendingCount === 1 ? '' : 's'
-                  } that are not in your account yet. Saving copies them; nothing is removed from this device.`
+                  } saved on it while signed out that are not in your account. Saving copies them; nothing is removed from this device.`
                 : 'Everything this browser can save is in your account.'}
             </CardDescription>
           </CardHeader>

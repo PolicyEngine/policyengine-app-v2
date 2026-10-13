@@ -29,14 +29,15 @@ import {
   IMPORTED_ID_MAP_KEY,
   readImportedIdMap,
   readImportSkipped,
-  readRefsImportedByAnyone,
   recordImportedIds,
   recordImportSkipped,
 } from './importedIds';
 
 /**
- * First-sign-in import: offers this browser's saved work (localStorage)
- * to the signed-in account via `POST /v2/me/imports`.
+ * First-sign-in import: offers the work saved on this browser while
+ * signed out (localStorage) to the signed-in account via
+ * `POST /v2/me/imports`, per account: each is offered what it has not
+ * imported itself.
  *
  * - Only US and UK items can be saved to an account; others are reported
  *   and stay on this device.
@@ -157,10 +158,11 @@ export function planLocalImport(
   userId: string,
   snapshot: LocalSnapshot = readLocalSnapshot()
 ): LocalImportPlan {
-  // Already handled for this account, or imported into another account
-  // that signed in on this browser (its items are that account's now).
+  // Each account is offered this browser's signed-out items that it has
+  // not imported or had skipped itself. Another account having imported
+  // them does not matter: anyone signed out on this browser can see them.
   const handled = new Set([
-    ...readRefsImportedByAnyone(),
+    ...Object.keys(readImportedIdMap(userId)),
     ...Object.keys(readImportSkipped(userId)),
   ]);
   const items: PlannedImportItem[] = [];

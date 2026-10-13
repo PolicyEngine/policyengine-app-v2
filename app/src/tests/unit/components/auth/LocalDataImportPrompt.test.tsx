@@ -49,7 +49,9 @@ describe('LocalDataImportPrompt', () => {
     expect(
       await screen.findByText('Save the work on this device to your account?')
     ).toBeInTheDocument();
-    expect(screen.getByText(/this browser has 2 saved items/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/this browser has 2 items saved on it while signed out/i)
+    ).toBeInTheDocument();
   });
 
   test('given a signed-out visitor then nothing is offered', () => {

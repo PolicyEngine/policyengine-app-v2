@@ -10,8 +10,9 @@ import { forgetAccountReportMeta } from '@/libs/flagship/runReport';
  * - The draft reform, which may hold an account reform loaded for editing.
  *
  * Import bookkeeping stays: it is filed per PolicyEngine user, maps only
- * this browser's own local IDs, and lets old links resolve when the same
- * person signs in again.
+ * this browser's own (signed-out) local IDs, and lets old links resolve
+ * when the same person signs in again. It never decides what another
+ * account is offered.
  */
 export function clearSignedInSessionData(): void {
   forgetAccountReportMeta();
