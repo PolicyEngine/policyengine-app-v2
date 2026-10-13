@@ -20,7 +20,7 @@ import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { FOREVER, MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -32,7 +32,10 @@ import {
   addDraftProvision,
   clearDraftReform,
   loadReformIntoDraft,
+  provisionsToRun,
+  reformToProvisions,
   setDraftLabel,
+  type ProvisionDetails,
 } from '@/libs/draftReform';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
 import { RootState } from '@/store';
@@ -71,14 +74,6 @@ const filterControl: React.CSSProperties = {
   fontFamily: typography.fontFamily.primary,
   color: colors.text.secondary,
 };
-
-interface ProvisionView {
-  path: string;
-  breadcrumb: string;
-  unit: string | null;
-  baselineValue: any;
-  value: any;
-}
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -328,17 +323,11 @@ export default function ReformsPage() {
     });
   };
 
-  const reformProvisions = (reform: Reform): ProvisionView[] =>
-    reform.parameters.map((parameter) => {
-      const metadata = parameters?.[parameter.name];
-      return {
-        path: parameter.name,
-        breadcrumb: resolveBreadcrumb(parameter.name),
-        unit: metadata?.unit ?? null,
-        baselineValue: getCurrentValue(metadata?.values),
-        value: parameter.values[0]?.value,
-      };
-    });
+  const provisionDetails: ProvisionDetails = (path) => ({
+    breadcrumb: resolveBreadcrumb(path),
+    unit: parameters?.[path]?.unit ?? null,
+    baselineValue: getCurrentValue(parameters?.[path]?.values),
+  });
 
   // Places with bills, for the place picker: the states by name, and how
   // many bills each scope holds. Federal bills carry no state.
@@ -724,10 +713,17 @@ export default function ReformsPage() {
           >
             <Button
               onClick={() =>
+                // Run as Build runs it (dated changes included), and
+                // linked to the reform.
                 runReport.run(
                   selectedReform.label || 'Untitled reform',
                   SOURCE_LABELS[selectedReform.provenance.source],
-                  reformProvisions(selectedReform)
+                  provisionsToRun(
+                    reformToProvisions(selectedReform, provisionDetails),
+                    Number(CURRENT_YEAR),
+                    parameters
+                  ),
+                  selectedReform.id
                 )
               }
               disabled={runReport.isRunning || selectedReform.parametersUnavailable}
@@ -751,11 +747,7 @@ export default function ReformsPage() {
               variant="outline"
               disabled={selectedReform.parametersUnavailable}
               onClick={() => {
-                loadReformIntoDraft(selectedReform, (path) => ({
-                  breadcrumb: resolveBreadcrumb(path),
-                  unit: parameters?.[path]?.unit ?? null,
-                  baselineValue: getCurrentValue(parameters?.[path]?.values),
-                }));
+                loadReformIntoDraft(selectedReform, provisionDetails);
                 nav.push(`/${countryId}/build`);
               }}
             >

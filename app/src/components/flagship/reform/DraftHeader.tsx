@@ -22,13 +22,13 @@ import {
   draftToReform,
   draftYear,
   provisionAdjusts,
-  provisionsForYear,
+  provisionsToRun,
+  setDraftEditingReform,
   setDraftLabel,
   setDraftYear,
 } from '@/libs/draftReform';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
-import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 /**
  * How the draft came about, for the report's own record. This is
@@ -116,31 +116,52 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
   const reformStore = useReformStore();
   const taxYears = useSelector(getTaxYears);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const currentLawAt = (path: string, at: number) => {
-    const values = parameters?.[path]?.values;
-    return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
-  };
   const year = draftYear(draft);
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
 
+  // Saving changes the reform the draft came from, or saves a new one.
+  const saveReform = async () => {
+    const payload = draftToReform(draft, MOCK_USER_ID);
+    if (draft.editingReformId) {
+      return reformStore.update(draft.editingReformId, {
+        label: payload.label,
+        parameters: payload.parameters,
+        provenance: payload.provenance,
+      });
+    }
+    return reformStore.create(payload);
+  };
+
   const saveMutation = useMutation({
-    mutationFn: async () => {
-      const payload = draftToReform(draft, MOCK_USER_ID);
-      if (draft.editingReformId) {
-        return reformStore.update(draft.editingReformId, {
-          label: payload.label,
-          parameters: payload.parameters,
-          provenance: payload.provenance,
-        });
-      }
-      return reformStore.create(payload);
-    },
+    mutationFn: saveReform,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reforms'] });
       clearDraftReform();
       nav.push(`/${draft.countryId}/reforms?filter=yours`);
     },
   });
+
+  // A report always comes from a saved reform: save first, then run the
+  // report linked to it. The draft becomes that reform, so trying again
+  // after a failed run changes it rather than saving another.
+  const saveAndRunMutation = useMutation({
+    mutationFn: saveReform,
+    onSuccess: (saved) => {
+      queryClient.invalidateQueries({ queryKey: ['reforms'] });
+      setDraftEditingReform(saved.id!);
+      void runReport.run(
+        draft.label || 'Draft reform',
+        SOURCE_NOTES[draft.source] ?? 'Draft reform',
+        // Described as they stand in the year the report simulates.
+        provisionsToRun(draft.provisions, year, parameters),
+        saved.id,
+        year,
+        true
+      );
+    },
+  });
+  const saveError = saveMutation.error ?? saveAndRunMutation.error;
+  const starting = saveAndRunMutation.isPending || runReport.isRunning;
 
   const empty = draft.provisions.length === 0;
   // The report models what the reform changes: a parameter added but
@@ -207,27 +228,17 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={empty || saveMutation.isPending}
+            disabled={empty || saveMutation.isPending || starting}
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
           <Button
-            onClick={() =>
-              runReport.run(
-                draft.label || 'Draft reform',
-                SOURCE_NOTES[draft.source] ?? 'Draft reform',
-                // Described as they stand in the year the report simulates.
-                provisionsForYear(adjusted, year, currentLawAt),
-                undefined,
-                year,
-                true
-              )
-            }
-            disabled={adjusted.length === 0 || runReport.isRunning}
+            onClick={() => saveAndRunMutation.mutate()}
+            disabled={adjusted.length === 0 || starting}
             title={!empty && adjusted.length === 0 ? 'Change a value to run the report' : undefined}
           >
             <IconChartBar size={16} />
-            {runReport.isRunning ? 'Starting report…' : `Run ${year} report`}
+            {starting ? 'Starting report…' : `Save and run ${year} report`}
           </Button>
         </div>
       </div>
@@ -246,14 +257,14 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
         </p>
       )}
 
-      {(runReport.error || saveMutation.isError) && (
+      {(runReport.error || saveError) && (
         <p
           role="alert"
           style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.error }}
         >
           {runReport.error ??
-            (saveMutation.error instanceof BrowserOnlyIdError
-              ? saveMutation.error.message
+            (saveError instanceof BrowserOnlyIdError
+              ? saveError.message
               : 'Could not save the reform. Try again.')}
         </p>
       )}

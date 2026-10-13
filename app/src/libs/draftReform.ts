@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { getCurrentValue } from '@/utils/parameterValues';
 
@@ -417,6 +418,29 @@ export function setDraftYear(year: number): void {
 }
 
 /**
+ * What a report runs for a set of provisions in `year`: only those that
+ * change the law, each as it stands in that year. Build and a saved
+ * reform's run both use it, so a reform reports the same either way.
+ */
+export function provisionsToRun(
+  provisions: DraftProvision[],
+  year: number,
+  parameters: ParameterMetadataCollection | null | undefined
+): DraftProvision[] {
+  const currentLawAt = (path: string, at: number) => {
+    const values = parameters?.[path]?.values;
+    return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
+  };
+  return provisionsForYear(
+    provisions.filter((provision) =>
+      provisionAdjusts(provision, parameters?.[provision.path]?.values)
+    ),
+    year,
+    currentLawAt
+  );
+}
+
+/**
  * The provisions as they stand in one year — current law then, and the
  * reform's value then — so a report's "current law → new value" lines
  * describe the year it simulates, not the year a value was typed.
@@ -466,31 +490,49 @@ export function setDraftPopulation(population: DraftPopulation): void {
   writeDraft({ ...draft, population });
 }
 
+/** Display details and current law for a parameter path. */
+export type ProvisionDetails = (path: string) => {
+  breadcrumb: string;
+  unit: string | null;
+  baselineValue: any;
+};
+
+/** A saved reform's parameters as provisions: one value from this year on, or its dated changes. */
+export function reformToProvisions(reform: Reform, resolve: ProvisionDetails): DraftProvision[] {
+  return reform.parameters.map((parameter) => {
+    const { breadcrumb, unit, baselineValue } = resolve(parameter.name);
+    const single =
+      parameter.values.length === 1 &&
+      parameter.values[0].startDate === `${CURRENT_YEAR}-01-01` &&
+      parameter.values[0].endDate === FOREVER;
+    return {
+      path: parameter.name,
+      breadcrumb,
+      unit,
+      baselineValue,
+      value: parameter.values[0]?.value ?? baselineValue,
+      // Anything but one value from this year on keeps its dates.
+      ...(!single && parameter.values.length > 0 && { intervals: parameter.values }),
+    };
+  });
+}
+
+/** Marks the draft as the saved reform `reformId`, so the next save changes it. */
+export function setDraftEditingReform(reformId: string): void {
+  const draft = getSnapshot();
+  if (!draft) {
+    return;
+  }
+  writeDraft({ ...draft, editingReformId: reformId });
+}
+
 /** Loads a saved reform into the composer for editing. */
-export function loadReformIntoDraft(
-  reform: Reform,
-  resolve: (path: string) => { breadcrumb: string; unit: string | null; baselineValue: any }
-): void {
+export function loadReformIntoDraft(reform: Reform, resolve: ProvisionDetails): void {
   writeDraft({
     countryId: reform.countryId,
     label: reform.label ?? '',
     population: { scope: 'national' },
-    provisions: reform.parameters.map((parameter) => {
-      const { breadcrumb, unit, baselineValue } = resolve(parameter.name);
-      const single =
-        parameter.values.length === 1 &&
-        parameter.values[0].startDate === `${CURRENT_YEAR}-01-01` &&
-        parameter.values[0].endDate === FOREVER;
-      return {
-        path: parameter.name,
-        breadcrumb,
-        unit,
-        baselineValue,
-        value: parameter.values[0]?.value ?? baselineValue,
-        // Anything but one value from this year on keeps its dates.
-        ...(!single && parameter.values.length > 0 && { intervals: parameter.values }),
-      };
-    }),
+    provisions: reformToProvisions(reform, resolve),
     source: reform.provenance.source,
     sourceRef: reform.provenance.ref,
     editingReformId: reform.id,

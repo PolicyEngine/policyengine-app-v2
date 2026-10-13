@@ -23,6 +23,12 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
   };
 });
 
+const mockRun = vi.fn();
+
+vi.mock('@/hooks/useRunFlagshipReport', () => ({
+  useRunFlagshipReport: () => ({ run: mockRun, isRunning: false, error: null }),
+}));
+
 const mockFetchTrackerBills = vi.fn();
 
 vi.mock('@/api/billFeed', async (importOriginal) => {
@@ -318,6 +324,50 @@ describe('ReformsPage', () => {
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
     expect(mockUpdate.mock.calls[0][1].parameters[0].values[0].value).toBe(4000);
+  });
+
+  test('given a saved reform runs its report then the report is linked to it', async () => {
+    // Given
+    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    // When
+    await user.click(screen.getByRole('button', { name: /view full impact report/i }));
+
+    // Then
+    expect(mockRun).toHaveBeenCalledTimes(1);
+    const [title, , provisions, reformId] = mockRun.mock.calls[0];
+    expect(title).toBe('CTC to $3,600 for children under 6');
+    expect(reformId).toBe('rf-1');
+    expect(provisions).toEqual([
+      expect.objectContaining({ path: 'gov.irs.credits.ctc.amount.base[0].amount', value: 3600 }),
+    ]);
+  });
+
+  test('given a saved reform with dated changes runs its report then the dates go with it', async () => {
+    // Given
+    const datedValues = [
+      { startDate: '2026-01-01', endDate: '2027-12-31', value: 3000 },
+      { startDate: '2028-01-01', endDate: '2100-12-31', value: 3600 },
+    ];
+    mockFindByUser.mockResolvedValue([
+      {
+        ...CHAT_REFORM,
+        parameters: [{ name: 'gov.irs.credits.ctc.amount.base[0].amount', values: datedValues }],
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    // When
+    await user.click(screen.getByRole('button', { name: /view full impact report/i }));
+
+    // Then: the whole schedule, not only its first value
+    const provisions = mockRun.mock.calls[0][2];
+    expect(provisions).toEqual([expect.objectContaining({ intervals: datedValues, value: 3000 })]);
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {

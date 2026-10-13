@@ -64,7 +64,7 @@ describe('DraftHeader', () => {
     renderHeader();
 
     expect(screen.getByLabelText('Reform name')).toHaveAttribute('placeholder', 'Untitled reform');
-    expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save and run 2026 report' })).toBeInTheDocument();
   });
 
   test('given nothing changed yet then the run waits for a change', () => {
@@ -83,12 +83,14 @@ describe('DraftHeader', () => {
       baselineValue: 600,
       value: 900,
     });
+    mockCreate.mockResolvedValue({ id: 'rf-1' });
     renderHeader();
 
     // The run leaves the unchanged one out without saying so.
     expect(screen.queryByText(/left out of the report/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
 
+    await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
     const provisions = mockRun.mock.calls[0][2];
     expect(provisions.map((provision: { path: string }) => provision.path)).toEqual([
       'gov.irs.credits.eitc.max',
@@ -183,6 +185,94 @@ describe('DraftHeader', () => {
     );
     expect(mockUpdate).toHaveBeenCalledWith('rf-browser1', expect.anything());
     expect(getDraftReform()?.editingReformId).toBe('rf-browser1');
+  });
+
+  test('given save and run then the reform is saved first and the report is linked to it', async () => {
+    // Given
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    mockCreate.mockResolvedValue({ id: 'rf-1' });
+    renderHeader();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save and run 2026 report' }));
+
+    // Then
+    await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockCreate.mock.invocationCallOrder[0]).toBeLessThan(
+      mockRun.mock.invocationCallOrder[0]
+    );
+    const [, , , reformId, year, fromDraft] = mockRun.mock.calls[0];
+    expect({ reformId, year, fromDraft }).toEqual({
+      reformId: 'rf-1',
+      year: 2026,
+      fromDraft: true,
+    });
+    // A second try changes this reform rather than saving another.
+    expect(getDraftReform()?.editingReformId).toBe('rf-1');
+  });
+
+  test('given the draft came from a saved reform then save and run changes that reform', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockUpdate.mockResolvedValue({ id: 'rf-saved' });
+    loadReformIntoDraft(
+      {
+        id: 'rf-saved',
+        userId: 'anonymous',
+        countryId: 'us',
+        label: 'CTC to $3,000',
+        parameters: [
+          {
+            name: 'gov.irs.credits.ctc.amount.base',
+            values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 }],
+          },
+        ],
+        baseline: 'current-law',
+        provenance: { source: 'manual' },
+      },
+      () => ({ breadcrumb: 'CTC', unit: 'currency-USD', baselineValue: 2000 })
+    );
+    renderHeader();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save and run 2026 report' }));
+
+    // Then
+    await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+    expect(mockUpdate).toHaveBeenCalledWith('rf-saved', expect.anything());
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockRun.mock.calls[0][3]).toBe('rf-saved');
+  });
+
+  test('given the save fails then no report runs and the error shows', async () => {
+    // Given
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    mockCreate.mockRejectedValue(new Error('Failed to create policy'));
+    renderHeader();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save and run 2026 report' }));
+
+    // Then
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not save the reform. Try again.'
+    );
+    expect(mockRun).not.toHaveBeenCalled();
   });
 
   test('given discard then the draft clears without saving', async () => {
