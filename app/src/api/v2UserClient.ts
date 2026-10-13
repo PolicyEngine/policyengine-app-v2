@@ -54,14 +54,19 @@ export interface CreateV2UserClientOptions {
   fetchImpl?: typeof fetch;
 }
 
+/**
+ * Messages for errors that arrive without one from the API. 409 and 422
+ * cover several causes on the server, so their messages name the likely
+ * ones rather than asserting one.
+ */
 const STATUS_MESSAGES: Record<number, string> = {
   400: 'The request was not valid.',
   401: 'Your session has ended. Sign in again to continue.',
   403: 'This account cannot use saved work.',
   404: 'Not found.',
-  409: 'This item is managed elsewhere and cannot be changed here.',
+  409: 'This conflicts with what is already saved: it may exist already, or be kept up to date from elsewhere.',
   413: 'Too much data in one request.',
-  422: 'Something this refers to no longer exists.',
+  422: 'This could not be saved: something in it is not valid, or something it refers to may no longer exist.',
   503: 'Saved work is temporarily unavailable.',
 };
 

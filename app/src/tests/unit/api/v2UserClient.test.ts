@@ -67,6 +67,25 @@ describe('v2UserClient', () => {
     expect(isV2ApiError(error, 422)).toBe(true);
   });
 
+  test.each([
+    [422, /not valid, or something it refers to may no longer exist/],
+    [409, /conflicts with what is already saved/],
+    [413, /too much data/i],
+  ])(
+    'given a %s without a message then the fallback does not claim a single cause',
+    async (status, expected) => {
+      // Given
+      const { fetchMock, context } = createTestApiContext();
+      fetchMock.mockResolvedValue(new Response('', { status }));
+
+      // When / Then
+      await expect(context.client.request('POST', 'user-policies')).rejects.toMatchObject({
+        status,
+        message: expect.stringMatching(expected),
+      });
+    }
+  );
+
   test('given an error without a body then the message describes the status', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
