@@ -65,7 +65,7 @@ describe('DraftHeader', () => {
     store.dispatch(clearMetadata());
   });
 
-  test('given a draft then its name and year lead, and the bar under it holds the population and the verbs', () => {
+  test('given a draft then its name leads, and the bar under it holds the year, the population and the verbs', () => {
     renderHeader();
 
     const header = screen.getByRole('banner');
@@ -73,10 +73,11 @@ describe('DraftHeader', () => {
       'placeholder',
       'Untitled reform'
     );
-    expect(within(header).getByRole('combobox', { name: /year/i })).toBeInTheDocument();
+    expect(within(header).queryByRole('combobox', { name: /year/i })).not.toBeInTheDocument();
     expect(within(header).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
 
     const bar = screen.getByRole('region', { name: 'Reform actions' });
+    expect(within(bar).getByRole('combobox', { name: /year/i })).toBeInTheDocument();
     expect(
       within(bar).getByRole('button', { name: /population: nationwide/i })
     ).toBeInTheDocument();
