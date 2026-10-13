@@ -513,6 +513,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         >
           <span style={sectionLabel}>Value</span>
           <SegmentedControl
+            animated
             value={mode}
             onValueChange={(value) => changeMode(value as EditMode)}
             options={EDIT_MODES.filter((option) => option.value !== 'indexed' || canIndex)}
@@ -533,74 +534,78 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
           </label>
         )}
 
-        {mode === 'dates' ? (
-          <CustomDatesEditor
-            members={members}
-            parameters={parameters}
-            defaultStart={`${year}-01-01`}
-            minDate={minDate}
-            maxDate={maxDate}
-            valueOn={valueOn}
-            baselineOn={baselineOn}
-            onAdd={(startDate, endDate, values) =>
-              Object.entries(values).forEach(([memberPath, value]) =>
-                addInterval(memberPath, { startDate, endDate, value })
-              )
-            }
-            focusedPath={focused}
-            onFocus={setFocusedPath}
-            brackets={group?.brackets}
-          />
-        ) : group?.brackets ? (
-          // A schedule shows as its brackets, one year at a time: a
-          // table a bracket per row is too wide to repeat across years.
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-            {mode === 'byYear' && (
-              <div>
-                <SegmentedControl
-                  value={String(scheduleYear)}
-                  onValueChange={(value) => setScheduleTab(Number(value))}
-                  options={years.map((at, index) => ({
-                    label: index === years.length - 1 ? `${at}+` : String(at),
-                    value: String(at),
-                  }))}
-                  size="xs"
-                  className="tw:[&>button]:bg-transparent"
-                />
-              </div>
-            )}
-            <BracketTable
-              brackets={group.brackets}
+        {/* A new mode fades in rather than snapping. */}
+        <div key={mode} className="tw:motion-safe:fade-in-soft">
+          {mode === 'dates' ? (
+            <CustomDatesEditor
               members={members}
-              period={String(scheduleYear)}
               parameters={parameters}
-              valueAt={(memberPath) => valueAt(memberPath, scheduleYear)}
-              baselineAt={(memberPath) => baselineAt(memberPath, scheduleYear)}
-              onChange={(memberPath, value) => onCellChange(memberPath, scheduleYear, value)}
+              defaultStart={`${year}-01-01`}
+              minDate={minDate}
+              maxDate={maxDate}
+              valueOn={valueOn}
+              baselineOn={baselineOn}
+              onAdd={(startDate, endDate, values) =>
+                Object.entries(values).forEach(([memberPath, value]) =>
+                  addInterval(memberPath, { startDate, endDate, value })
+                )
+              }
+              focusedPath={focused}
               onFocus={setFocusedPath}
-              footer={mode === 'indexed' ? growthRow : undefined}
+              brackets={group?.brackets}
             />
-          </div>
-        ) : (
-          <ValueGrid
-            members={members}
-            years={years}
-            openEnded
-            parameters={parameters}
-            valueAt={valueAt}
-            baselineAt={baselineAt}
-            onChange={onCellChange}
-            focusedPath={focused}
-            onFocus={setFocusedPath}
-            previewYears={previewYears}
-            footer={growthRow}
-            // One value: its start is the grid's first row, so no year heads the column.
-            lead={mode === 'one' ? { label: 'Applies from', content: appliesFrom } : undefined}
-            showYearHeadings={mode !== 'one'}
-            // A lone value reads on one line: when, current law, the new value.
-            inline={mode === 'one'}
-          />
-        )}
+          ) : group?.brackets ? (
+            // A schedule shows as its brackets, one year at a time: a
+            // table a bracket per row is too wide to repeat across years.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+              {mode === 'byYear' && (
+                <div>
+                  <SegmentedControl
+                    animated
+                    value={String(scheduleYear)}
+                    onValueChange={(value) => setScheduleTab(Number(value))}
+                    options={years.map((at, index) => ({
+                      label: index === years.length - 1 ? `${at}+` : String(at),
+                      value: String(at),
+                    }))}
+                    size="xs"
+                    className="tw:[&>button]:bg-transparent"
+                  />
+                </div>
+              )}
+              <BracketTable
+                brackets={group.brackets}
+                members={members}
+                period={String(scheduleYear)}
+                parameters={parameters}
+                valueAt={(memberPath) => valueAt(memberPath, scheduleYear)}
+                baselineAt={(memberPath) => baselineAt(memberPath, scheduleYear)}
+                onChange={(memberPath, value) => onCellChange(memberPath, scheduleYear, value)}
+                onFocus={setFocusedPath}
+                footer={mode === 'indexed' ? growthRow : undefined}
+              />
+            </div>
+          ) : (
+            <ValueGrid
+              members={members}
+              years={years}
+              openEnded
+              parameters={parameters}
+              valueAt={valueAt}
+              baselineAt={baselineAt}
+              onChange={onCellChange}
+              focusedPath={focused}
+              onFocus={setFocusedPath}
+              previewYears={previewYears}
+              footer={growthRow}
+              // One value: its start is the grid's first row, so no year heads the column.
+              lead={mode === 'one' ? { label: 'Applies from', content: appliesFrom } : undefined}
+              showYearHeadings={mode !== 'one'}
+              // A lone value reads on one line: when, current law, the new value.
+              inline={mode === 'one'}
+            />
+          )}
+        </div>
 
         {anyChanged && (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

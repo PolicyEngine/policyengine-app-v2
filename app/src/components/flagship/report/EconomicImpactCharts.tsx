@@ -151,6 +151,7 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
           focusedContent={decileChart(false)}
           controls={
             <SegmentedControl
+              animated
               value={decileMode}
               onValueChange={(value) => setDecileMode(value as DecileMode)}
               size="xs"
@@ -165,7 +166,10 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
               : getDecileRelativeCsvRows(output)
           }
         >
-          {decileChart(true)}
+          {/* A new mode fades in rather than snapping. */}
+          <div key={decileMode} className="tw:h-full tw:motion-safe:fade-in-soft">
+            {decileChart(true)}
+          </div>
         </ReportChartCard>
 
         <ReportChartCard
@@ -185,12 +189,14 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
           controls={
             <>
               <SegmentedControl
+                animated
                 value={povertyDepth}
                 onValueChange={handleDepthChange}
                 size="xs"
                 options={POVERTY_DEPTH_OPTIONS}
               />
               <SegmentedControl
+                animated
                 value={povertyBreakdown}
                 onValueChange={(value) => setPovertyBreakdown(value as PovertyBreakdown)}
                 size="xs"
@@ -202,7 +208,12 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
           csvFilename={povertyDownloadFilename.replace(/\.svg$/, '.csv')}
           csvData={povertyCsvData}
         >
-          {povertyChart(true)}
+          <div
+            key={`${povertyDepth}-${povertyBreakdown}`}
+            className="tw:h-full tw:motion-safe:fade-in-soft"
+          >
+            {povertyChart(true)}
+          </div>
         </ReportChartCard>
 
         <ReportChartCard

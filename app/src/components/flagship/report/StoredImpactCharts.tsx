@@ -13,6 +13,7 @@ import type { TrackedBill, WinnerShares } from '@/api/billFeed';
 import ReportChartCard from '@/components/flagship/report/ReportChartCard';
 import { SegmentedControl, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { formatCurrencyAbbr } from '@/utils/formatters';
 
 const WINNER_SEGMENTS = [
   { key: 'gainMore', label: 'Gain more than 5%', color: colors.primary[600] },
@@ -90,11 +91,62 @@ function povertyPercentChange(rates: PovertyRates | undefined): number | null {
   return null;
 }
 
+/** "−$24", not "$-24". */
+const dollars = (value: number) =>
+  `${value < 0 ? '−' : ''}$${Math.round(Math.abs(value)).toLocaleString()}`;
+
 const signedPercent = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(1)}%`;
 
+type StoredBudgetary = NonNullable<TrackedBill['impactData']>['budgetary'];
+
 /**
- * The legislative tracker's stored distributional and poverty results for
+ * The tracker's annual state revenue change, as the report's own headline
+ * words it: a number, not a chart, across the grid's full width.
+ */
+function StoredBudget({ budgetary }: { budgetary: StoredBudgetary }) {
+  const value = budgetary?.stateRevenueImpact;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null;
+  }
+  const amount = formatCurrencyAbbr(Math.abs(value), 'us', { maximumFractionDigits: 1 });
+  const label =
+    value < 0
+      ? 'Annual state revenue loss'
+      : value > 0
+        ? 'Annual state revenue gain'
+        : 'Annual state revenue change';
+  return (
+    <section
+      aria-label="Budgetary impact"
+      className="tw:p-md tw:border tw:border-border-light tw:rounded-container tw:bg-white"
+      style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: spacing.sm }}
+    >
+      <Text size="lg" fw={typography.fontWeight.medium} style={{ margin: 0 }}>
+        Budgetary impact
+      </Text>
+      <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: spacing.sm }}>
+        <span
+          style={{
+            fontSize: typography.fontSize['2xl'],
+            fontWeight: typography.fontWeight.semibold,
+            fontVariantNumeric: 'tabular-nums',
+            color: colors.text.primary,
+          }}
+        >
+          {value < 0 ? '−' : value > 0 ? '+' : ''}
+          {amount}
+        </span>
+        <span style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+          {label}
+        </span>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * The legislative tracker's stored budgetary, distributional and poverty results for
  * a bill, in the same chart cards as a report's economic impacts. Shown
  * while the full results calculate, or instead of them when they cannot.
  */
@@ -104,13 +156,22 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
   const average = decileRows(impact?.decile?.average);
   const relative = decileRows(impact?.decile?.relative, 100);
   const deciles = decileMode === 'average' ? average : relative;
+  // Relative changes can be tiny (a few hundredths of a percent): enough
+  // decimals that the bars don't all read "0.0%", and a true minus sign.
+  const largestRelative = Math.max(0, ...relative.map((row) => Math.abs(row.value)));
+  const relativeDigits = largestRelative >= 1 ? 1 : largestRelative >= 0.1 ? 2 : 3;
+  const percent = (value: number) =>
+    `${value < 0 ? '−' : ''}${Math.abs(value).toFixed(relativeDigits)}%`;
 
   const winners = impact?.winnersLosers;
+  // "All" on top and set apart by an empty row; then decile 10 down to 1,
+  // so the income ladder reads upward.
   const winnersRows = winners?.byDecile
     ? [
         winnerRow('All', winners),
+        { label: '' },
         ...Object.entries(winners.byDecile)
-          .sort((a, b) => Number(a[0]) - Number(b[0]))
+          .sort((a, b) => Number(b[0]) - Number(a[0]))
           .map(([decile, shares]) => winnerRow(decile, shares)),
       ]
     : [];
@@ -124,7 +185,11 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
     return change === null ? [] : [{ group, change }];
   });
 
-  if (average.length + relative.length + winnersRows.length + povertyRows.length === 0) {
+  const hasBudget = typeof impact?.budgetary?.stateRevenueImpact === 'number';
+  if (
+    !hasBudget &&
+    average.length + relative.length + winnersRows.length + povertyRows.length === 0
+  ) {
     return null;
   }
 
@@ -136,11 +201,15 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
         gap: spacing.lg,
       }}
     >
+      {/* The budget leads, as it does in the full results. */}
+      <StoredBudget budgetary={impact?.budgetary} />
+
       {(average.length > 0 || relative.length > 0) && (
         <ReportChartCard
           title="Income change by decile"
           controls={
             <SegmentedControl
+              animated
               size="xs"
               value={decileMode}
               onValueChange={(value) => setDecileMode(value as 'average' | 'relative')}
@@ -151,52 +220,54 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
             />
           }
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={deciles} margin={{ top: 20, right: 8, bottom: 4, left: 8 }}>
-              <XAxis
-                dataKey="decile"
-                tickLine={false}
-                axisLine={{ stroke: colors.border.light }}
-                tick={AXIS_TICK}
-              />
-              <YAxis
-                tickFormatter={(value: number) =>
-                  decileMode === 'average' ? `$${value.toLocaleString()}` : `${value.toFixed(1)}%`
-                }
-                tickLine={false}
-                axisLine={false}
-                tick={AXIS_TICK}
-                width={64}
-              />
-              <Tooltip
-                formatter={(value) => [
-                  decileMode === 'average'
-                    ? `$${Math.round(Number(value ?? 0)).toLocaleString()}`
-                    : `${Number(value ?? 0).toFixed(2)}%`,
-                  decileMode === 'average' ? 'Average change' : 'Relative change',
-                ]}
-                labelFormatter={(label) => `Decile ${label}`}
-              />
-              <Bar dataKey="value" radius={[3, 3, 0, 0]}>
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  formatter={(value) =>
-                    decileMode === 'average'
-                      ? `$${Math.round(Number(value ?? 0)).toLocaleString()}`
-                      : `${Number(value ?? 0).toFixed(1)}%`
-                  }
-                  style={{ fontSize: 11, fill: colors.text.secondary }}
+          <div key={decileMode} className="tw:h-full tw:motion-safe:fade-in-soft">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={deciles} margin={{ top: 20, right: 8, bottom: 4, left: 8 }}>
+                <XAxis
+                  dataKey="decile"
+                  tickLine={false}
+                  axisLine={{ stroke: colors.border.light }}
+                  tick={AXIS_TICK}
                 />
-                {deciles.map((row) => (
-                  <Cell
-                    key={row.decile}
-                    fill={row.value >= 0 ? colors.primary[500] : colors.gray[600]}
+                <YAxis
+                  tickFormatter={(value: number) =>
+                    decileMode === 'average' ? dollars(value) : percent(value)
+                  }
+                  tickLine={false}
+                  axisLine={false}
+                  tick={AXIS_TICK}
+                  width={64}
+                />
+                <Tooltip
+                  formatter={(value) => [
+                    decileMode === 'average'
+                      ? dollars(Number(value ?? 0))
+                      : percent(Number(value ?? 0)),
+                    decileMode === 'average' ? 'Average change' : 'Relative change',
+                  ]}
+                  labelFormatter={(label) => `Decile ${label}`}
+                />
+                <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                  <LabelList
+                    dataKey="value"
+                    position="top"
+                    formatter={(value) =>
+                      decileMode === 'average'
+                        ? dollars(Number(value ?? 0))
+                        : percent(Number(value ?? 0))
+                    }
+                    style={{ fontSize: 11, fill: colors.text.secondary }}
                   />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+                  {deciles.map((row) => (
+                    <Cell
+                      key={row.decile}
+                      fill={row.value >= 0 ? colors.primary[500] : colors.gray[600]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ReportChartCard>
       )}
 
@@ -215,6 +286,8 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
               <XAxis
                 type="number"
                 domain={[0, 100]}
+                // Whole steps: computed ticks read "100.00000000000001%".
+                ticks={[0, 25, 50, 75, 100]}
                 tickFormatter={(value: number) => `${value}%`}
                 tickLine={false}
                 axisLine={{ stroke: colors.border.light }}
@@ -224,13 +297,17 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
                 type="category"
                 dataKey="label"
                 width={36}
+                // Every row named: skipping alternate labels set them off their bars.
+                interval={0}
                 tickLine={false}
                 axisLine={false}
                 tick={AXIS_TICK}
               />
               <Tooltip
                 formatter={(value, name) => [`${Number(value ?? 0).toFixed(1)}%`, String(name)]}
-                labelFormatter={(label) => (label === 'All' ? 'All households' : `Decile ${label}`)}
+                labelFormatter={(label) =>
+                  label === 'All' ? 'All households' : label ? `Decile ${label}` : ''
+                }
               />
               {WINNER_SEGMENTS.map((segment) => (
                 <Bar
