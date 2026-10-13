@@ -33,6 +33,12 @@ vi.mock('@/api/billFeed', async (importOriginal) => {
   };
 });
 
+const mockRun = vi.fn();
+
+vi.mock('@/hooks/useRunFlagshipReport', () => ({
+  useRunFlagshipReport: () => ({ run: mockRun, isRunning: false, error: null }),
+}));
+
 const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', async () => {
@@ -58,6 +64,36 @@ const CHAT_REFORM: Reform = {
   baseline: 'current-law',
   provenance: { source: 'chat', ref: 'session-1' },
   updatedAt: '2026-08-01T00:00:00Z',
+};
+
+/** A value that starts after the report year, as Build saves "Applies from 2028". */
+const LATER_REFORM: Reform = {
+  ...CHAT_REFORM,
+  id: 'rf-2',
+  label: 'CTC to $1,000 from 2028',
+  parameters: [
+    {
+      name: 'gov.irs.credits.ctc.amount.base[0].amount',
+      values: [{ startDate: '2028-01-01', endDate: '2100-12-31', value: 1000 }],
+    },
+  ],
+};
+
+/** A schedule: a value for each year, as an indexed amount saves. */
+const SCHEDULE_REFORM: Reform = {
+  ...CHAT_REFORM,
+  id: 'rf-3',
+  label: 'CTC indexed',
+  parameters: [
+    {
+      name: 'gov.irs.credits.ctc.amount.base[0].amount',
+      values: [
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 2500 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 2550 },
+        { startDate: '2028-01-01', endDate: '2100-12-31', value: 2600 },
+      ],
+    },
+  ],
 };
 
 /**
@@ -321,6 +357,63 @@ describe('ReformsPage', () => {
 
     await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
     expect(mockUpdate.mock.calls[0][1].parameters[0].values[0].value).toBe(4000);
+  });
+
+  test('given a value that starts later then the detail says when, and save keeps the start', async () => {
+    mockFindByUser.mockResolvedValue([LATER_REFORM]);
+    mockUpdate.mockResolvedValue({ ...LATER_REFORM });
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $1,000 from 2028'));
+
+    expect(screen.getByText('from 2028')).toBeInTheDocument();
+    const input = screen.getByLabelText(/new value for gov\.irs/i);
+    await user.clear(input);
+    await user.type(input, '1200');
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual([
+      { startDate: '2028-01-01', endDate: '2100-12-31', value: 1200 },
+    ]);
+  });
+
+  test('given a value that starts later then its report runs in that year, from that date', async () => {
+    mockFindByUser.mockResolvedValue([LATER_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $1,000 from 2028'));
+
+    await user.click(screen.getByRole('button', { name: /view full impact report/i }));
+
+    expect(mockRun).toHaveBeenCalledTimes(1);
+    const [, , provisions, , year] = mockRun.mock.calls[0];
+    expect(year).toBe(2028);
+    expect(provisions[0]).toMatchObject({
+      value: 1000,
+      intervals: [{ startDate: '2028-01-01', endDate: '2100-12-31', value: 1000 }],
+    });
+  });
+
+  test('given a schedule then the detail reads it, and save leaves it whole', async () => {
+    mockFindByUser.mockResolvedValue([SCHEDULE_REFORM]);
+    mockUpdate.mockResolvedValue({ ...SCHEDULE_REFORM });
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC indexed'));
+
+    // Read-only here: a schedule changes in Build.
+    expect(screen.queryByLabelText(/new value for gov\.irs/i)).not.toBeInTheDocument();
+    expect(screen.getByText('3 periods from 2026')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Reform name'));
+    await user.type(screen.getByLabelText('Reform name'), 'CTC indexed to CPI');
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual(
+      SCHEDULE_REFORM.parameters[0].values
+    );
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {

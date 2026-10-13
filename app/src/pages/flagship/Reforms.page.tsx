@@ -36,8 +36,10 @@ import {
   setDraftLabel,
 } from '@/libs/draftReform';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
+import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import {
   formatCompactBreadcrumb,
@@ -80,7 +82,19 @@ interface ProvisionView {
   unit: string | null;
   baselineValue: any;
   value: any;
+  intervals?: ValueInterval[];
 }
+
+/**
+ * A saved value edits in place only as one period: a schedule (several
+ * periods, or values grown by an index) is changed in Build, so a save
+ * here never flattens it.
+ */
+const editableInPlace = (parameter: Reform['parameters'][number]) => parameter.values.length <= 1;
+
+/** The year a saved reform's report runs: its first change, or this year once that is past. */
+const reformRunYear = (reform: Reform) =>
+  billRunYear(reform.parameters.map((parameter) => ({ intervals: parameter.values })));
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -277,16 +291,22 @@ export default function ReformsPage() {
     mutationFn: (reform: Reform) =>
       getReformStore().update(reform.id!, {
         label: editedLabel || null,
-        parameters: reform.parameters.map((parameter) => ({
-          name: parameter.name,
-          values: [
-            {
-              startDate: parameter.values[0]?.startDate ?? `${new Date().getFullYear()}-01-01`,
-              endDate: parameter.values[0]?.endDate ?? FOREVER,
-              value: editedValues[parameter.name],
-            },
-          ],
-        })),
+        parameters: reform.parameters.map((parameter) =>
+          editableInPlace(parameter)
+            ? {
+                name: parameter.name,
+                values: [
+                  {
+                    // The value changes; the period it applies to stays.
+                    startDate:
+                      parameter.values[0]?.startDate ?? `${new Date().getFullYear()}-01-01`,
+                    endDate: parameter.values[0]?.endDate ?? FOREVER,
+                    value: editedValues[parameter.name],
+                  },
+                ],
+              }
+            : parameter
+        ),
       }),
     onSuccess: invalidate,
   });
@@ -326,17 +346,31 @@ export default function ReformsPage() {
     });
   };
 
-  const reformProvisions = (reform: Reform): ProvisionView[] =>
-    reform.parameters.map((parameter) => {
-      const metadata = parameters?.[parameter.name];
+  /** Current law for a parameter on 1 January of `year`. */
+  const currentLawAt = (path: string, year: number) => {
+    const values = parameters?.[path]?.values;
+    return values
+      ? (new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`) ??
+          getCurrentValue(values))
+      : undefined;
+  };
+
+  /** The reform as the report runs it: every dated value, described in the run year. */
+  const reformProvisions = (reform: Reform): ProvisionView[] => {
+    const year = reformRunYear(reform);
+    return reform.parameters.map((parameter) => {
+      const baselineValue = currentLawAt(parameter.name, year);
+      const inYear = new ValueIntervalCollection(parameter.values).getValueAtDate(`${year}-01-01`);
       return {
         path: parameter.name,
         breadcrumb: resolveBreadcrumb(parameter.name),
-        unit: metadata?.unit ?? null,
-        baselineValue: getCurrentValue(metadata?.values),
-        value: parameter.values[0]?.value,
+        unit: parameters?.[parameter.name]?.unit ?? null,
+        baselineValue,
+        value: inYear ?? baselineValue,
+        ...(parameter.values.length > 0 && { intervals: parameter.values }),
       };
     });
+  };
 
   // Places with bills, for the place picker: the states by name, and how
   // many bills each scope holds. Federal bills carry no state.
@@ -427,7 +461,9 @@ export default function ReformsPage() {
 
   const isDirty = (reform: Reform) =>
     editedLabel !== (reform.label ?? '') ||
-    reform.parameters.some((p) => editedValues[p.name] !== p.values[0]?.value);
+    reform.parameters.some(
+      (p) => editableInPlace(p) && editedValues[p.name] !== p.values[0]?.value
+    );
 
   const billStats = (bill: TrackedBill): React.ReactNode => {
     const stats: React.ReactNode[] = [];
@@ -638,8 +674,17 @@ export default function ReformsPage() {
           </Stack>
           <Stack style={{ gap: spacing.md }}>
             {selectedReform.parameters.map((parameter) => {
-              const baseline = getCurrentValue(parameters?.[parameter.name]?.values);
               const unit = parameters?.[parameter.name]?.unit ?? null;
+              const first = parameter.values[0];
+              // Current law where the change starts, not today.
+              const baseline = first
+                ? currentLawAt(parameter.name, Number(first.startDate.slice(0, 4)))
+                : getCurrentValue(parameters?.[parameter.name]?.values);
+              const editable = editableInPlace(parameter);
+              const schedule = summarizeIntervals(parameter.values, (value) =>
+                formatValue(value, unit)
+              );
+              const when = first ? (editable ? periodLabel(first) : schedule.when) : '';
               return (
                 <Stack
                   key={parameter.name}
@@ -668,13 +713,39 @@ export default function ReformsPage() {
                   >
                     {formatValue(baseline, unit)} →
                   </Text>
-                  <ValueInput
-                    value={editedValues[parameter.name]}
-                    onChange={(next) =>
-                      setEditedValues((current) => ({ ...current, [parameter.name]: next }))
-                    }
-                    ariaLabel={`New value for ${parameter.name}`}
-                  />
+                  {editable ? (
+                    <ValueInput
+                      value={editedValues[parameter.name]}
+                      onChange={(next) =>
+                        setEditedValues((current) => ({ ...current, [parameter.name]: next }))
+                      }
+                      ariaLabel={`New value for ${parameter.name}`}
+                    />
+                  ) : (
+                    <Text
+                      title="Change a schedule in Build"
+                      style={{
+                        fontSize: typography.fontSize.sm,
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.primary,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {schedule.value}
+                    </Text>
+                  )}
+                  {when && (
+                    <Text
+                      style={{
+                        minWidth: 72,
+                        fontSize: typography.fontSize.xs,
+                        color: colors.text.secondary,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {when}
+                    </Text>
+                  )}
                 </Stack>
               );
             })}
@@ -697,7 +768,9 @@ export default function ReformsPage() {
                 runReport.run(
                   selectedReform.label || 'Untitled reform',
                   SOURCE_LABELS[selectedReform.provenance.source],
-                  reformProvisions(selectedReform)
+                  reformProvisions(selectedReform),
+                  undefined,
+                  reformRunYear(selectedReform)
                 )
               }
               disabled={runReport.isRunning}
