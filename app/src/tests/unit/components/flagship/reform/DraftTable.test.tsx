@@ -182,6 +182,34 @@ describe('DraftTable', () => {
     expect(screen.getAllByText('from Jul 1, 2026')).toHaveLength(2);
   });
 
+  test('given a click anywhere on a row then it opens and closes, but not from its value box', async () => {
+    const user = userEvent.setup();
+    render(<TableHarness />);
+    const name = screen.getByRole('button', { name: 'Open Base amount' });
+    const row = name.parentElement!;
+
+    // Its current law, not a control: the row opens.
+    await user.click(within(row).getByText('$2,200'));
+    expect(screen.getByRole('button', { name: 'Close Base amount' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+
+    // Open, the new value reads the same: the first is current law.
+    await user.click(within(row).getAllByText('$2,200')[0]);
+    expect(screen.getByRole('button', { name: 'Open Base amount' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+
+    // The value box keeps its own job.
+    await user.click(row.querySelector('input')!);
+    expect(screen.getByRole('button', { name: 'Open Base amount' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
+
   test('given a row opens then it keeps its columns: current law, the new value and when', async () => {
     const user = userEvent.setup();
     render(<TableHarness />);
