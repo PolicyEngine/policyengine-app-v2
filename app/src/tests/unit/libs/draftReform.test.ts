@@ -89,7 +89,6 @@ describe('draftReform', () => {
   it('given a saved reform is loaded then provisions carry resolved metadata and the editing id', () => {
     const reform: Reform = {
       id: 'rf-1',
-      userId: 'anonymous',
       countryId: 'us',
       label: 'Saved CTC reform',
       parameters: [
@@ -120,9 +119,9 @@ describe('draftReform', () => {
     addDraftProvision('us', { ...CTC_PROVISION, value: 3600 });
     setDraftLabel('From HB 106');
 
-    const reform = draftToReform(getDraftReform()!, 'anonymous');
+    const reform = draftToReform(getDraftReform()!);
 
-    expect(reform.userId).toBe('anonymous');
+    expect(reform).not.toHaveProperty('userId');
     expect(reform.label).toBe('From HB 106');
     expect(reform.provenance).toEqual({ source: 'bill', ref: 'ut-hb-106' });
     expect(reform.parameters[0].name).toBe(CTC_PROVISION.path);

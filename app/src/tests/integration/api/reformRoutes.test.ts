@@ -1,17 +1,26 @@
 // @vitest-environment node
 //
 // Integration tests for the /api/reforms route handlers, executed against a
-// real in-memory Postgres (PGlite) with the checked-in Drizzle migration
+// real in-memory Postgres (PGlite) with the checked-in Drizzle migrations
 // applied — so schema, SQL, wire format, and handler logic are all exercised
 // exactly as deployed.
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ReformAdapter } from '@/adapters/ReformAdapter';
+import {
+  applyMigrations,
+  CLIENT_IP,
+  CLIENT_USER_AGENT,
+  editTokenHeader,
+  IDENTIFYING_HEADERS,
+  legacyMigrationTags,
+  OWNERSHIP_MIGRATION_TAG,
+  sha256Hex,
+  UNKNOWN_UUID,
+} from '@/tests/fixtures/integration/flagshipDbFixtures';
 import type { Reform } from '@/types/ingredients/Reform';
-import type { ReformMetadata } from '@/types/metadata/reformMetadata';
+import type { ReformCreatedMetadata, ReformMetadata } from '@/types/metadata/reformMetadata';
 // Route handlers + db module live in calculator-app; imported relatively
 // since they are outside the @/ alias root.
 import {
@@ -26,8 +35,6 @@ import {
 import { setDbForTesting } from '../../../../../calculator-app/src/db';
 import * as schema from '../../../../../calculator-app/src/db/schema';
 
-const MIGRATIONS_DIR = path.resolve(__dirname, '../../../../../calculator-app/src/db/migrations');
-
 let client: PGlite;
 
 beforeAll(async () => {
@@ -35,8 +42,7 @@ beforeAll(async () => {
   // flag-on behavior.
   process.env.NEXT_PUBLIC_FLAGSHIP_SHELL = 'true';
   client = new PGlite();
-  const migrationSql = readFileSync(path.join(MIGRATIONS_DIR, '0000_create-reforms.sql'), 'utf8');
-  await client.exec(migrationSql);
+  await applyMigrations(client);
   setDbForTesting(drizzle(client, { schema }) as any);
 });
 
@@ -50,7 +56,6 @@ beforeEach(async () => {
 });
 
 const VALID_PAYLOAD = {
-  user_id: 'user-1',
   country_id: 'us',
   label: 'CTC to $3,600 for children under 6',
   policy_id: null,
@@ -64,45 +69,111 @@ const VALID_PAYLOAD = {
   provenance: { source: 'chat', ref: 'session-1', confidence: 'exact' },
 };
 
-function postRequest(body: unknown): Request {
+function postRequest(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request('http://test/api/reforms', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: typeof body === 'string' ? body : JSON.stringify(body),
   });
 }
 
-function listRequest(query: string): Request {
-  return new Request(`http://test/api/reforms?${query}`);
+function listRequest(ids: string[]): Request {
+  return new Request(`http://test/api/reforms?ids=${ids.join(',')}`);
 }
 
 function itemContext(reformId: string) {
   return { params: Promise.resolve({ reformId }) };
 }
 
-function patchRequest(body: unknown): Request {
+function patchRequest(body: unknown, token?: string): Request {
   return new Request('http://test/api/reforms/x', {
     method: 'PATCH',
+    headers: token ? editTokenHeader(token) : {},
     body: JSON.stringify(body),
   });
 }
 
-async function createAndParse(payload: unknown = VALID_PAYLOAD): Promise<ReformMetadata> {
+function deleteRequest(token?: string): Request {
+  return new Request('http://test/api/reforms/x', {
+    method: 'DELETE',
+    headers: token ? editTokenHeader(token) : {},
+  });
+}
+
+async function createAndParse(payload: unknown = VALID_PAYLOAD): Promise<ReformCreatedMetadata> {
   const response = await createReform(postRequest(payload));
   expect(response.status).toBe(201);
   return response.json();
 }
 
+async function list(ids: string[]): Promise<ReformMetadata[]> {
+  const response = await listReforms(listRequest(ids));
+  expect(response.status).toBe(200);
+  return response.json();
+}
+
+/** A row as the pre-ownership schema wrote it: a client user id, no edit token. */
+async function insertLegacyRow(db: PGlite = client): Promise<string> {
+  const result = await db.query<{ id: string }>(
+    `INSERT INTO reforms (user_id, country_id, label, parameters, provenance)
+     VALUES ('anonymous', 'us', 'Saved before edit tokens', '[]', '{"source":"manual"}')
+     RETURNING id`
+  );
+  return result.rows[0].id;
+}
+
 describe('POST /api/reforms', () => {
-  it('given a valid payload then creates and returns the reform in wire format', async () => {
+  it('given a valid payload then creates and returns the reform in wire format with an edit token', async () => {
     const created = await createAndParse();
 
     expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(created.user_id).toBe('user-1');
+    expect(created.edit_token).toMatch(/^[0-9a-f]{64}$/);
+    expect(created).not.toHaveProperty('user_id');
+    expect(created).not.toHaveProperty('edit_token_hash');
     expect(created.country_id).toBe('us');
     expect(created.parameters).toEqual(VALID_PAYLOAD.parameters);
     expect(created.provenance).toEqual(VALID_PAYLOAD.provenance);
     expect(new Date(created.created_at!).getTime()).not.toBeNaN();
+  });
+
+  it('given a created reform then the row keeps only the token hash and no user id', async () => {
+    const created = await createAndParse();
+
+    const { rows } = await client.query<{ user_id: string | null; edit_token_hash: string }>(
+      'SELECT user_id, edit_token_hash FROM reforms WHERE id = $1',
+      [created.id]
+    );
+
+    expect(rows[0].user_id).toBeNull();
+    expect(rows[0].edit_token_hash).toBe(sha256Hex(created.edit_token));
+  });
+
+  it('given two reforms then each gets its own edit token', async () => {
+    const first = await createAndParse();
+    const second = await createAndParse();
+
+    expect(first.edit_token).not.toBe(second.edit_token);
+  });
+
+  it('given an older client that still sends user_id then it is not stored', async () => {
+    const created = await createAndParse({ ...VALID_PAYLOAD, user_id: 'anonymous' });
+
+    const { rows } = await client.query<{ user_id: string | null }>(
+      'SELECT user_id FROM reforms WHERE id = $1',
+      [created.id]
+    );
+    expect(rows[0].user_id).toBeNull();
+  });
+
+  it('given a request with an IP address and user agent then the row stores neither', async () => {
+    const response = await createReform(postRequest(VALID_PAYLOAD, IDENTIFYING_HEADERS));
+    expect(response.status).toBe(201);
+
+    const { rows } = await client.query<{ row: string }>(
+      'SELECT row_to_json(reforms)::text AS row FROM reforms'
+    );
+    expect(rows[0].row).not.toContain(CLIENT_IP);
+    expect(rows[0].row).not.toContain(CLIENT_USER_AGENT);
   });
 
   it('given the created response then it round-trips through ReformAdapter unchanged', async () => {
@@ -117,8 +188,6 @@ describe('POST /api/reforms', () => {
   });
 
   it.each([
-    ['missing user_id', { ...VALID_PAYLOAD, user_id: undefined }],
-    ['empty user_id', { ...VALID_PAYLOAD, user_id: '' }],
     ['invalid country', { ...VALID_PAYLOAD, country_id: 'fr' }],
     ['parameters not an array', { ...VALID_PAYLOAD, parameters: 'oops' }],
     ['parameter without name', { ...VALID_PAYLOAD, parameters: [{ values: [] }] }],
@@ -143,8 +212,7 @@ describe('POST /api/reforms', () => {
     expect(created.label).toBe(label);
 
     // Table still exists and holds the row
-    const list = await listReforms(listRequest('user_id=user-1'));
-    expect((await list.json()) as ReformMetadata[]).toHaveLength(1);
+    expect(await list([created.id])).toHaveLength(1);
   });
 
   it('given a unicode label with emoji then it round-trips intact', async () => {
@@ -178,60 +246,80 @@ describe('POST /api/reforms', () => {
 });
 
 describe('GET /api/reforms', () => {
-  it('given no user_id then returns 400', async () => {
-    const response = await listReforms(listRequest(''));
+  it('given no ids then returns 400 rather than listing every reform', async () => {
+    await createAndParse();
+
+    const response = await listReforms(new Request('http://test/api/reforms'));
+
     expect(response.status).toBe(400);
   });
 
-  it('given two users then each only sees their own reforms', async () => {
-    await createAndParse({ ...VALID_PAYLOAD, user_id: 'alice' });
-    await createAndParse({ ...VALID_PAYLOAD, user_id: 'bob' });
+  it('given a user_id query from an older client then returns 400', async () => {
+    await createAndParse();
 
-    const aliceList = (await (
-      await listReforms(listRequest('user_id=alice'))
-    ).json()) as ReformMetadata[];
+    const response = await listReforms(new Request('http://test/api/reforms?user_id=anonymous'));
 
-    expect(aliceList).toHaveLength(1);
-    expect(aliceList[0].user_id).toBe('alice');
+    expect(response.status).toBe(400);
   });
 
-  it('given a country filter then only that country is returned', async () => {
-    await createAndParse();
-    await createAndParse({ ...VALID_PAYLOAD, country_id: 'uk' });
+  it('given ids then only those reforms are returned, without tokens or user ids', async () => {
+    const mine = await createAndParse({ ...VALID_PAYLOAD, label: 'mine' });
+    await createAndParse({ ...VALID_PAYLOAD, label: 'someone else’s' });
 
-    const ukOnly = (await (
-      await listReforms(listRequest('user_id=user-1&country_id=uk'))
-    ).json()) as ReformMetadata[];
+    const reforms = await list([mine.id]);
 
-    expect(ukOnly).toHaveLength(1);
-    expect(ukOnly[0].country_id).toBe('uk');
+    expect(reforms.map((reform) => reform.label)).toEqual(['mine']);
+    expect(reforms[0]).not.toHaveProperty('edit_token');
+    expect(reforms[0]).not.toHaveProperty('user_id');
+  });
+
+  it('given unknown and malformed ids then they are skipped', async () => {
+    const mine = await createAndParse();
+
+    const reforms = await list([mine.id, UNKNOWN_UUID, 'not-a-uuid', "'; DROP TABLE reforms; --"]);
+
+    expect(reforms.map((reform) => reform.id)).toEqual([mine.id]);
+  });
+
+  it('given more than 100 ids then returns 400', async () => {
+    const ids = Array.from(
+      { length: 101 },
+      (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`
+    );
+
+    const response = await listReforms(listRequest(ids));
+
+    expect(response.status).toBe(400);
   });
 
   it('given several reforms then they are ordered most recently updated first', async () => {
     const first = await createAndParse({ ...VALID_PAYLOAD, label: 'first' });
-    await createAndParse({ ...VALID_PAYLOAD, label: 'second' });
-    await patchReform(patchRequest({ label: 'first-updated' }), itemContext(first.id));
+    const second = await createAndParse({ ...VALID_PAYLOAD, label: 'second' });
+    await patchReform(
+      patchRequest({ label: 'first-updated' }, first.edit_token),
+      itemContext(first.id)
+    );
 
-    const list = (await (
-      await listReforms(listRequest('user_id=user-1'))
-    ).json()) as ReformMetadata[];
+    const reforms = await list([first.id, second.id]);
 
-    expect(list.map((r) => r.label)).toEqual(['first-updated', 'second']);
+    expect(reforms.map((r) => r.label)).toEqual(['first-updated', 'second']);
   });
 });
 
 describe('GET/PATCH/DELETE /api/reforms/:id', () => {
-  it('given a created reform then GET returns it by id', async () => {
+  it('given a created reform then GET returns it by id with no token', async () => {
     const created = await createAndParse();
 
     const response = await getReform(new Request('http://test'), itemContext(created.id));
 
     expect(response.status).toBe(200);
-    expect(((await response.json()) as ReformMetadata).id).toBe(created.id);
+    const body = (await response.json()) as ReformMetadata;
+    expect(body.id).toBe(created.id);
+    expect(body).not.toHaveProperty('edit_token');
   });
 
   it.each([
-    ['a random UUID', '00000000-0000-4000-8000-000000000000'],
+    ['a random UUID', UNKNOWN_UUID],
     ['a non-UUID id', 'not-a-uuid'],
     ['a path-traversal id', '../reforms'],
   ])('given %s then GET returns 404', async (_name, reformId) => {
@@ -243,12 +331,15 @@ describe('GET/PATCH/DELETE /api/reforms/:id', () => {
     const created = await createAndParse();
 
     const response = await patchReform(
-      patchRequest({
-        label: 'Bill-derived version',
-        parameters: [],
-        baseline: 'current-policy',
-        provenance: { source: 'bill', ref: 'ut-hb-106', confidence: 'approximated' },
-      }),
+      patchRequest(
+        {
+          label: 'Bill-derived version',
+          parameters: [],
+          baseline: 'current-policy',
+          provenance: { source: 'bill', ref: 'ut-hb-106', confidence: 'approximated' },
+        },
+        created.edit_token
+      ),
       itemContext(created.id)
     );
 
@@ -267,7 +358,7 @@ describe('GET/PATCH/DELETE /api/reforms/:id', () => {
     const created = await createAndParse();
 
     const response = await patchReform(
-      patchRequest({ policy_id: 'pol-999' }),
+      patchRequest({ policy_id: 'pol-999' }, created.edit_token),
       itemContext(created.id)
     );
 
@@ -281,35 +372,127 @@ describe('GET/PATCH/DELETE /api/reforms/:id', () => {
     ['non-array parameters', { parameters: 'oops' }],
   ])('given %s then PATCH returns 400', async (_name, body) => {
     const created = await createAndParse();
-    const response = await patchReform(patchRequest(body), itemContext(created.id));
+    const response = await patchReform(
+      patchRequest(body, created.edit_token),
+      itemContext(created.id)
+    );
     expect(response.status).toBe(400);
   });
 
   it('given unknown fields only then PATCH returns 400 rather than silently succeeding', async () => {
     const created = await createAndParse();
     const response = await patchReform(
-      patchRequest({ user_id: 'mallory', country_id: 'uk' }),
+      patchRequest({ user_id: 'mallory', country_id: 'uk' }, created.edit_token),
       itemContext(created.id)
     );
     expect(response.status).toBe(400);
   });
 
+  it('given no edit token then PATCH returns 403 and the reform is unchanged', async () => {
+    const created = await createAndParse();
+
+    const response = await patchReform(
+      patchRequest({ label: 'Hijacked' }),
+      itemContext(created.id)
+    );
+
+    expect(response.status).toBe(403);
+    expect((await list([created.id]))[0].label).toBe(VALID_PAYLOAD.label);
+  });
+
+  it('given another reform’s edit token then PATCH returns 403', async () => {
+    const target = await createAndParse();
+    const other = await createAndParse();
+
+    const response = await patchReform(
+      patchRequest({ label: 'Hijacked' }, other.edit_token),
+      itemContext(target.id)
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it('given the stored hash sent as the token then PATCH returns 403', async () => {
+    const created = await createAndParse();
+
+    const response = await patchReform(
+      patchRequest({ label: 'Hijacked' }, sha256Hex(created.edit_token)),
+      itemContext(created.id)
+    );
+
+    expect(response.status).toBe(403);
+  });
+
   it('given a deleted reform then it 404s afterwards', async () => {
     const created = await createAndParse();
 
-    const deleteResponse = await deleteReform(new Request('http://test'), itemContext(created.id));
+    const deleteResponse = await deleteReform(
+      deleteRequest(created.edit_token),
+      itemContext(created.id)
+    );
     expect(deleteResponse.status).toBe(200);
 
     const getResponse = await getReform(new Request('http://test'), itemContext(created.id));
     expect(getResponse.status).toBe(404);
   });
 
+  it('given no edit token then DELETE returns 403 and the reform stays', async () => {
+    const created = await createAndParse();
+
+    const response = await deleteReform(deleteRequest(), itemContext(created.id));
+
+    expect(response.status).toBe(403);
+    expect(await list([created.id])).toHaveLength(1);
+  });
+
   it('given a nonexistent reform then DELETE returns 404', async () => {
-    const response = await deleteReform(
-      new Request('http://test'),
-      itemContext('00000000-0000-4000-8000-000000000000')
-    );
+    const response = await deleteReform(deleteRequest('a'.repeat(64)), itemContext(UNKNOWN_UUID));
     expect(response.status).toBe(404);
+  });
+});
+
+describe('legacy rows (written before edit tokens)', () => {
+  it('given a legacy row then GET reads it without exposing its user id', async () => {
+    const legacyId = await insertLegacyRow();
+
+    const response = await getReform(new Request('http://test'), itemContext(legacyId));
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as ReformMetadata;
+    expect(body.label).toBe('Saved before edit tokens');
+    expect(body).not.toHaveProperty('user_id');
+  });
+
+  it('given a legacy row then PATCH and DELETE return 403 whatever token is sent', async () => {
+    const legacyId = await insertLegacyRow();
+
+    const patch = await patchReform(
+      patchRequest({ label: 'Hijacked' }, 'a'.repeat(64)),
+      itemContext(legacyId)
+    );
+    const remove = await deleteReform(deleteRequest(), itemContext(legacyId));
+
+    expect(patch.status).toBe(403);
+    expect(remove.status).toBe(403);
+    expect(await list([legacyId])).toHaveLength(1);
+  });
+
+  it('given a row written under the old schema then it stays readable after the ownership migration', async () => {
+    const legacyDb = new PGlite();
+    try {
+      await applyMigrations(legacyDb, legacyMigrationTags());
+      const legacyId = await insertLegacyRow(legacyDb);
+      await applyMigrations(legacyDb, [OWNERSHIP_MIGRATION_TAG]);
+      setDbForTesting(drizzle(legacyDb, { schema }) as any);
+
+      const response = await getReform(new Request('http://test'), itemContext(legacyId));
+
+      expect(response.status).toBe(200);
+      expect(((await response.json()) as ReformMetadata).label).toBe('Saved before edit tokens');
+    } finally {
+      setDbForTesting(drizzle(client, { schema }) as any);
+      await legacyDb.close();
+    }
   });
 });
 
@@ -321,10 +504,10 @@ describe('degraded mode (no database configured)', () => {
 
     try {
       expect((await createReform(postRequest(VALID_PAYLOAD))).status).toBe(503);
-      expect((await listReforms(listRequest('user_id=user-1'))).status).toBe(503);
+      expect((await listReforms(listRequest([UNKNOWN_UUID]))).status).toBe(503);
       expect((await getReform(new Request('http://test'), itemContext('x'))).status).toBe(503);
       expect((await patchReform(patchRequest({ label: 'x' }), itemContext('x'))).status).toBe(503);
-      expect((await deleteReform(new Request('http://test'), itemContext('x'))).status).toBe(503);
+      expect((await deleteReform(deleteRequest(), itemContext('x'))).status).toBe(503);
     } finally {
       if (previousUrl !== undefined) {
         process.env.DATABASE_URL = previousUrl;
@@ -341,10 +524,10 @@ describe('flag-off deployments (production leak gate)', () => {
 
     try {
       expect((await createReform(postRequest(VALID_PAYLOAD))).status).toBe(404);
-      expect((await listReforms(listRequest('user_id=user-1'))).status).toBe(404);
+      expect((await listReforms(listRequest([UNKNOWN_UUID]))).status).toBe(404);
       expect((await getReform(new Request('http://test'), itemContext('x'))).status).toBe(404);
       expect((await patchReform(patchRequest({ label: 'x' }), itemContext('x'))).status).toBe(404);
-      expect((await deleteReform(new Request('http://test'), itemContext('x'))).status).toBe(404);
+      expect((await deleteReform(deleteRequest(), itemContext('x'))).status).toBe(404);
     } finally {
       process.env.NEXT_PUBLIC_FLAGSHIP_SHELL = previous;
     }

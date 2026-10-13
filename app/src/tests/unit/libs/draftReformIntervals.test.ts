@@ -110,7 +110,7 @@ describe('draft provisions over time', () => {
     ];
     setDraftProvisionIntervals('us', SINGLE, intervals);
 
-    const reform = draftToReform(getDraftReform()!, 'user-1');
+    const reform = draftToReform(getDraftReform()!);
 
     expect(reform.parameters).toEqual([{ name: SINGLE.path, values: intervals }]);
   });

@@ -4,8 +4,12 @@ import {
 } from "@/libs/flagship/apiGate";
 import { eq } from "drizzle-orm";
 import { getDb, isDbConfigured } from "../../../../db";
+import { isUuid, presentsEditToken } from "../../../../db/ownership";
 import { reports } from "../../../../db/schema";
 import { reportRowToMetadata } from "../../../../db/serialize";
+
+// Reads need only the unguessable id; pinning a validation also needs the
+// edit token the creating browser received. Legacy rows are read-only.
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -26,6 +30,9 @@ export async function GET(
   }
 
   const { reportId } = await params;
+  if (!isUuid(reportId)) {
+    return json({ error: "Report not found" }, 404);
+  }
   const [row] = await getDb()
     .select()
     .from(reports)
@@ -60,6 +67,24 @@ export async function PATCH(
     return json({ error: "Report store is not configured" }, 503);
   }
 
+  const { reportId } = await params;
+  if (!isUuid(reportId)) {
+    return json({ error: "Report not found" }, 404);
+  }
+  const [owner] = await getDb()
+    .select({ editTokenHash: reports.editTokenHash })
+    .from(reports)
+    .where(eq(reports.id, reportId));
+  if (!owner) {
+    return json({ error: "Report not found" }, 404);
+  }
+  if (!(await presentsEditToken(request, owner.editTokenHash))) {
+    return json(
+      { error: "This report can only be changed by its creator" },
+      403,
+    );
+  }
+
   let payload: any;
   try {
     payload = await request.json();
@@ -70,7 +95,6 @@ export async function PATCH(
     return json({ error: "validation snapshot is required" }, 400);
   }
 
-  const { reportId } = await params;
   const [row] = await getDb()
     .update(reports)
     .set({ validation: payload.validation })

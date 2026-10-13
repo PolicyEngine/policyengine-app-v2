@@ -6,17 +6,19 @@ import { eq } from "drizzle-orm";
 import { reformBaselines, reformSources } from "@/types/ingredients/Reform";
 import type { ReformUpdateMetadata } from "@/types/metadata/reformMetadata";
 import { getDb, isDbConfigured } from "../../../../db";
+import { isUuid, presentsEditToken } from "../../../../db/ownership";
 import { reforms } from "../../../../db/schema";
 import { reformRowToMetadata } from "../../../../db/serialize";
 
 // Handlers use Web-standard Request/Response (not next/server): these files
 // are also typechecked inside app/tsconfig.json's program, and importing
 // next/server would pull Next's React typings into the Vite app's graph.
+//
+// Reads need only the unguessable id. Changes also need the edit token the
+// creating browser received (see db/ownership.ts); legacy rows without one
+// are read-only.
 
 type RouteContext = { params: Promise<{ reformId: string }> };
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -33,6 +35,30 @@ function notFound(): Response {
   return json({ error: "Reform not found" }, 404);
 }
 
+/**
+ * 404 when the reform does not exist, 403 when the request lacks its
+ * edit token; null when the change may go ahead.
+ */
+async function denyUnlessEditable(
+  request: Request,
+  reformId: string,
+): Promise<Response | null> {
+  const [row] = await getDb()
+    .select({ editTokenHash: reforms.editTokenHash })
+    .from(reforms)
+    .where(eq(reforms.id, reformId));
+  if (!row) {
+    return notFound();
+  }
+  if (!(await presentsEditToken(request, row.editTokenHash))) {
+    return json(
+      { error: "This reform can only be changed by its creator" },
+      403,
+    );
+  }
+  return null;
+}
+
 export async function GET(
   _request: Request,
   context: RouteContext,
@@ -45,7 +71,7 @@ export async function GET(
   }
 
   const { reformId } = await context.params;
-  if (!UUID_PATTERN.test(reformId)) {
+  if (!isUuid(reformId)) {
     return notFound();
   }
 
@@ -72,8 +98,12 @@ export async function PATCH(
   }
 
   const { reformId } = await context.params;
-  if (!UUID_PATTERN.test(reformId)) {
+  if (!isUuid(reformId)) {
     return notFound();
+  }
+  const denied = await denyUnlessEditable(request, reformId);
+  if (denied) {
+    return denied;
   }
 
   let payload: ReformUpdateMetadata;
@@ -138,7 +168,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: RouteContext,
 ): Promise<Response> {
   if (!isFlagshipApiEnabled()) {
@@ -149,8 +179,12 @@ export async function DELETE(
   }
 
   const { reformId } = await context.params;
-  if (!UUID_PATTERN.test(reformId)) {
+  if (!isUuid(reformId)) {
     return notFound();
+  }
+  const denied = await denyUnlessEditable(request, reformId);
+  if (denied) {
+    return denied;
   }
 
   const [row] = await getDb()

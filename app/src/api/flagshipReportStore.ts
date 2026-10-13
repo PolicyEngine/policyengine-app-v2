@@ -1,5 +1,13 @@
 import { CountryId } from '@/libs/countries';
 import {
+  addOwnedItem,
+  editTokenHeaders,
+  findOwnedReportByApiReportId,
+  isUuid,
+  ItemNotOwnedError,
+  readOwnedItems,
+} from '@/libs/flagship/ownedItems';
+import {
   ReportValidationSnapshot,
   validationFromWire,
   validationToWire,
@@ -11,11 +19,12 @@ import { RunReportProvision } from '@/libs/flagship/runReport';
  * on the PolicyEngine API plus the provenance snapshot for the report
  * header. Central Supabase-backed store first, localStorage fallback
  * when it is unconfigured — same resilience pattern as the reform
- * store.
+ * store, and the same ownership model: no user identifier on the
+ * server, this browser's index of the records it created, and an edit
+ * token on every change.
  */
 export interface FlagshipReportRecord {
   id: string;
-  userId: string;
   countryId: CountryId;
   /** Report id on api.policyengine.org — the pointer to the outputs. */
   apiReportId: string;
@@ -34,10 +43,11 @@ export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt' | 
 
 export interface FlagshipReportStore {
   create: (report: NewFlagshipReport) => Promise<FlagshipReportRecord>;
-  findByUser: (userId: string, countryId?: string) => Promise<FlagshipReportRecord[]>;
+  /** The records this browser saved, newest first. */
+  findMine: (countryId?: string) => Promise<FlagshipReportRecord[]>;
   findById: (id: string) => Promise<FlagshipReportRecord | null>;
-  /** The record pointing at an API report, when this user has one. */
-  findByApiReportId: (userId: string, apiReportId: string) => Promise<FlagshipReportRecord | null>;
+  /** The record this browser saved for an API report, when it has one. */
+  findByApiReportId: (apiReportId: string) => Promise<FlagshipReportRecord | null>;
   /** Pins the validation snapshot to a record. */
   saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
 }
@@ -55,10 +65,16 @@ function throwIfUnavailable(response: Response): void {
   }
 }
 
+/** Ids per batch read, so the query string stays well under URL limits. */
+const IDS_PER_REQUEST = 50;
+
+function newestFirst(a: FlagshipReportRecord, b: FlagshipReportRecord): number {
+  return b.createdAt.localeCompare(a.createdAt);
+}
+
 function fromMetadata(data: any): FlagshipReportRecord {
   return {
     id: data.id,
-    userId: data.user_id,
     countryId: data.country_id,
     apiReportId: data.api_report_id,
     title: data.title,
@@ -85,7 +101,6 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user_id: report.userId,
         country_id: report.countryId,
         api_report_id: report.apiReportId,
         title: report.title,
@@ -98,27 +113,41 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
           value: p.value,
         })),
         year: report.year,
-        reform_id: report.reformId ?? null,
+        // A reform still in the localStorage fallback has no central row
+        // to point at.
+        reform_id: report.reformId && isUuid(report.reformId) ? report.reformId : null,
       }),
     });
     if (!response.ok) {
       throwIfUnavailable(response);
       throw new Error('Failed to save the report record');
     }
-    return fromMetadata(await response.json());
+    const { edit_token: editToken, ...data } = await response.json();
+    const record = fromMetadata(data);
+    addOwnedItem('reports', {
+      id: record.id,
+      countryId: record.countryId,
+      apiReportId: record.apiReportId,
+      editToken,
+    });
+    return record;
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
-    const params = new URLSearchParams({ user_id: userId });
-    if (countryId) {
-      params.set('country_id', countryId);
+  async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
+    const ids = readOwnedItems('reports', countryId).map((item) => item.id);
+    const records: FlagshipReportRecord[] = [];
+    for (let start = 0; start < ids.length; start += IDS_PER_REQUEST) {
+      const params = new URLSearchParams({
+        ids: ids.slice(start, start + IDS_PER_REQUEST).join(','),
+      });
+      const response = await fetch(`${this.BASE_URL}?${params}`);
+      if (!response.ok) {
+        throwIfUnavailable(response);
+        throw new Error('Failed to load reports');
+      }
+      records.push(...((await response.json()) as any[]).map(fromMetadata));
     }
-    const response = await fetch(`${this.BASE_URL}?${params}`);
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to load reports');
-    }
-    return ((await response.json()) as any[]).map(fromMetadata);
+    return records.sort(newestFirst);
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
@@ -133,18 +162,13 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     return fromMetadata(await response.json());
   }
 
-  async findByApiReportId(
-    userId: string,
-    apiReportId: string
-  ): Promise<FlagshipReportRecord | null> {
-    const params = new URLSearchParams({ user_id: userId, api_report_id: apiReportId });
-    const response = await fetch(`${this.BASE_URL}?${params}`);
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to load the report');
-    }
-    const records = ((await response.json()) as any[]).map(fromMetadata);
-    return records[0] ?? null;
+  /**
+   * Resolved through this browser's index: API report ids are sequential
+   * integers, so the server offers no lookup by them.
+   */
+  async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
+    const owned = findOwnedReportByApiReportId(apiReportId);
+    return owned ? this.findById(owned.id) : null;
   }
 
   async saveValidation(
@@ -153,11 +177,17 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
   ): Promise<FlagshipReportRecord> {
     const response = await fetch(`${this.BASE_URL}/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...editTokenHeaders('reports', id) },
       body: JSON.stringify({ validation: validationToWire(snapshot) }),
     });
+    // Item-level 404 means the record is gone, not that the store is.
+    if (response.status === 503) {
+      throw new ReportStoreUnavailableError();
+    }
+    if (response.status === 403) {
+      throw new ItemNotOwnedError();
+    }
     if (!response.ok) {
-      throwIfUnavailable(response);
       throw new Error('Failed to save the validation snapshot');
     }
     return fromMetadata(await response.json());
@@ -166,10 +196,16 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
 
 const LOCAL_KEY = 'pe-flagship-reports';
 
+/**
+ * The browser-only fallback. Everything in it was saved in this
+ * browser, so all of it is "mine" — including records saved before the
+ * central store dropped user ids, which still carry a userId field.
+ */
 export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   private read(): FlagshipReportRecord[] {
     try {
-      return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]');
+      const parsed = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]');
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
@@ -193,25 +229,18 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
     return record;
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
-    return this.read().filter(
-      (record) => record.userId === userId && (!countryId || record.countryId === countryId)
-    );
+  async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
+    return this.read()
+      .filter((record) => !countryId || record.countryId === countryId)
+      .sort(newestFirst);
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
     return this.read().find((record) => record.id === id) ?? null;
   }
 
-  async findByApiReportId(
-    userId: string,
-    apiReportId: string
-  ): Promise<FlagshipReportRecord | null> {
-    return (
-      this.read().find(
-        (record) => record.userId === userId && record.apiReportId === apiReportId
-      ) ?? null
-    );
+  async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
+    return this.read().find((record) => record.apiReportId === apiReportId) ?? null;
   }
 
   async saveValidation(
@@ -238,7 +267,10 @@ class ResilientFlagshipReportStore implements FlagshipReportStore {
     private readonly local: FlagshipReportStore = new LocalStorageFlagshipReportStore()
   ) {}
 
-  private async withFallback<T>(run: (store: FlagshipReportStore) => Promise<T>): Promise<T> {
+  private async withFallback<T>(
+    run: (store: FlagshipReportStore) => Promise<T>,
+    whenUnavailable: (store: FlagshipReportStore) => Promise<T> = run
+  ): Promise<T> {
     if (!centralUnavailable) {
       try {
         return await run(this.api);
@@ -249,26 +281,53 @@ class ResilientFlagshipReportStore implements FlagshipReportStore {
         centralUnavailable = true;
       }
     }
-    return run(this.local);
+    return whenUnavailable(this.local);
   }
 
   create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
     return this.withFallback((store) => store.create(report));
   }
 
-  findByUser(userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
-    return this.withFallback((store) => store.findByUser(userId, countryId));
+  // Records already in the localStorage fallback stay there with their
+  // ids: lists show them beside the central ones, and pins stay local.
+  async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
+    const local = await this.local.findMine(countryId);
+    const central = await this.withFallback(
+      (store) => store.findMine(countryId),
+      async () => []
+    );
+    return [...central, ...local].sort(newestFirst);
   }
 
-  findById(id: string): Promise<FlagshipReportRecord | null> {
-    return this.withFallback((store) => store.findById(id));
+  async findById(id: string): Promise<FlagshipReportRecord | null> {
+    const local = await this.local.findById(id);
+    if (local) {
+      return local;
+    }
+    return this.withFallback(
+      (store) => store.findById(id),
+      async () => null
+    );
   }
 
-  findByApiReportId(userId: string, apiReportId: string): Promise<FlagshipReportRecord | null> {
-    return this.withFallback((store) => store.findByApiReportId(userId, apiReportId));
+  async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
+    const local = await this.local.findByApiReportId(apiReportId);
+    if (local) {
+      return local;
+    }
+    return this.withFallback(
+      (store) => store.findByApiReportId(apiReportId),
+      async () => null
+    );
   }
 
-  saveValidation(id: string, snapshot: ReportValidationSnapshot): Promise<FlagshipReportRecord> {
+  async saveValidation(
+    id: string,
+    snapshot: ReportValidationSnapshot
+  ): Promise<FlagshipReportRecord> {
+    if (await this.local.findById(id)) {
+      return this.local.saveValidation(id, snapshot);
+    }
     return this.withFallback((store) => store.saveValidation(id, snapshot));
   }
 }

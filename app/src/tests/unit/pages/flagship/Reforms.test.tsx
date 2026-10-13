@@ -5,7 +5,7 @@ import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import ReformsPage from '@/pages/flagship/Reforms.page';
 import type { Reform } from '@/types/ingredients/Reform';
 
-const mockFindByUser = vi.fn();
+const mockFindMine = vi.fn();
 const mockDelete = vi.fn();
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
@@ -15,7 +15,7 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
   return {
     ...actual,
     getReformStore: () => ({
-      findByUser: mockFindByUser,
+      findMine: mockFindMine,
       delete: mockDelete,
       create: mockCreate,
       update: mockUpdate,
@@ -46,7 +46,6 @@ vi.mock('react-router-dom', async () => {
 
 const CHAT_REFORM: Reform = {
   id: 'rf-1',
-  userId: 'anonymous',
   countryId: 'us',
   label: 'CTC to $3,600 for children under 6',
   parameters: [
@@ -128,7 +127,7 @@ describe('ReformsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearDraftReform();
-    mockFindByUser.mockResolvedValue([]);
+    mockFindMine.mockResolvedValue([]);
     mockFetchTrackerBills.mockResolvedValue(FEED_BILLS);
   });
 
@@ -286,15 +285,24 @@ describe('ReformsPage', () => {
   });
 
   test('given a ?filter=yours deep link then the Yours tab is active', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
     renderReforms('/us/reforms?filter=yours');
 
     expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
   });
 
+  test('given the Yours tab then it lists this browser’s reforms for the country', async () => {
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    renderReforms('/us/reforms?filter=yours');
+
+    await screen.findByText('CTC to $3,600 for children under 6');
+
+    expect(mockFindMine).toHaveBeenCalledWith('us');
+  });
+
   test('given a reform card is clicked then its provisions edit in place', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
 
@@ -305,7 +313,7 @@ describe('ReformsPage', () => {
   });
 
   test('given an amended value then save updates the reform', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
     mockUpdate.mockResolvedValue({ ...CHAT_REFORM });
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
@@ -321,7 +329,7 @@ describe('ReformsPage', () => {
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
     mockDelete.mockResolvedValue(undefined);
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
@@ -333,7 +341,7 @@ describe('ReformsPage', () => {
   });
 
   test('given duplicate in the reform detail then a copy is created', async () => {
-    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
     mockCreate.mockResolvedValue({ id: 'rf-copy' });
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');

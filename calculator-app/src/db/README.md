@@ -1,8 +1,39 @@
 # Central reform database
 
-Postgres store for the flagship app's reform objects, served by the route
-handlers in `src/app/api/reforms/`. Schema is managed with Drizzle; checked-in
-migrations live in `migrations/`.
+Postgres store for the flagship app's reform objects and report records,
+served by the route handlers in `src/app/api/reforms/` and
+`src/app/api/reports/`. Schema is managed with Drizzle; checked-in migrations
+live in `migrations/`.
+
+## Ownership without sign-in
+
+There is no sign-in yet, so the server stores no user identifier:
+
+- Each row lives under a server-generated UUID. There is no list-by-user
+  route; `GET ?ids=a,b,c` reads up to 100 rows whose ids the caller already
+  knows. Reports cannot be looked up by `api_report_id`, because those ids are
+  sequential.
+- `POST` issues a random 256-bit edit token, returns it once as `edit_token`,
+  and stores only its SHA-256 hash (`edit_token_hash`). `PATCH` and `DELETE`
+  require the token in the `X-Edit-Token` header; a missing or wrong token gets
+  403. See `ownership.ts`.
+- The browser keeps the ids it created, with their tokens, in localStorage
+  (`app/src/libs/flagship/ownedItems.ts`). Lists read that index and fetch the
+  rows by id. Clearing site data loses the index: the rows stay readable by id,
+  but nobody can change them.
+- Rows written before migration `0003_anonymous-ownership` keep their legacy
+  `user_id` (never written now, never returned) and have no token hash, so
+  they are read-only. No browser index holds their ids, so they also drop out
+  of every list; they stay readable by id.
+
+### Privacy
+
+- Rows hold no user identifier, IP address, or user agent, and the handlers
+  read no request metadata other than `X-Edit-Token`. (The hosting platform's
+  own request logs are outside this schema.)
+- Households (income, ages, family details) are never stored here. Reforms hold
+  policy parameters; report records hold a pointer to the API report and the
+  policy provisions. Households stay in the browser.
 
 ## One-time provisioning (Neon via Vercel marketplace)
 

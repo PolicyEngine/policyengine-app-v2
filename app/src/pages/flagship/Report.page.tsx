@@ -9,7 +9,6 @@ import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Spinner, Stack, Text, Title } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
@@ -107,7 +106,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const calibration = useCalibrationMatches(provisionPaths, region);
   // The store keys records by the API report id as a string.
   const pin = useReportValidationSnapshot(
-    MOCK_USER_ID,
     report?.id !== undefined && report?.id !== null ? String(report.id) : undefined,
     { calibration, programs: trackRecordPrograms(trackRecord) }
   );

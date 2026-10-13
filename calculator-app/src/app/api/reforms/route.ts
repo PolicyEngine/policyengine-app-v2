@@ -2,11 +2,19 @@ import {
   flagshipApiDisabledResponse,
   isFlagshipApiEnabled,
 } from "@/libs/flagship/apiGate";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, inArray } from "drizzle-orm";
 import { reformBaselines, reformSources } from "@/types/ingredients/Reform";
-import type { ReformCreationMetadata } from "@/types/metadata/reformMetadata";
+import type {
+  ReformCreatedMetadata,
+  ReformCreationMetadata,
+} from "@/types/metadata/reformMetadata";
 import { countryIds } from "@/libs/countries";
 import { getDb, isDbConfigured } from "../../../db";
+import {
+  issueEditToken,
+  MAX_IDS_PER_REQUEST,
+  parseIdList,
+} from "../../../db/ownership";
 import { reforms } from "../../../db/schema";
 import { reformRowToMetadata } from "../../../db/serialize";
 
@@ -14,9 +22,10 @@ import { reformRowToMetadata } from "../../../db/serialize";
 // are also typechecked inside app/tsconfig.json's program, and importing
 // next/server would pull Next's React typings into the Vite app's graph.
 //
-// NOTE: user_id is client-supplied, matching the existing anonymous-UUID
-// trust model used by the user-*-association stores. Revisit when real
-// authentication lands (flagship phase 2 prerequisite).
+// Anonymous ownership (no sign-in yet): rows carry no user identifier, and
+// the handlers read no IP address, user agent, or other request metadata.
+// Each browser keeps the ids it created and lists them by id; the edit
+// token issued at creation guards changes (see db/ownership.ts).
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -32,9 +41,6 @@ function dbUnavailable(): Response {
 function validateCreationPayload(payload: any): string | null {
   if (!payload || typeof payload !== "object") {
     return "Invalid JSON body";
-  }
-  if (typeof payload.user_id !== "string" || !payload.user_id) {
-    return "user_id is required";
   }
   if (!countryIds.includes(payload.country_id)) {
     return `country_id must be one of: ${countryIds.join(", ")}`;
@@ -70,21 +76,24 @@ export async function GET(request: Request): Promise<Response> {
     return dbUnavailable();
   }
 
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("user_id");
-  if (!userId) {
-    return json({ error: "user_id is required" }, 400);
+  // A batch read by id; there is no listing by user or of everything.
+  const ids = parseIdList(new URL(request.url).searchParams);
+  if (!ids) {
+    return json(
+      {
+        error: `ids must list up to ${MAX_IDS_PER_REQUEST} comma-separated reform ids`,
+      },
+      400,
+    );
   }
-  const countryId = searchParams.get("country_id");
-
-  const conditions = countryId
-    ? and(eq(reforms.userId, userId), eq(reforms.countryId, countryId))
-    : eq(reforms.userId, userId);
+  if (ids.length === 0) {
+    return json([]);
+  }
 
   const rows = await getDb()
     .select()
     .from(reforms)
-    .where(conditions)
+    .where(inArray(reforms.id, ids))
     .orderBy(desc(reforms.updatedAt));
 
   return json(rows.map(reformRowToMetadata));
@@ -110,10 +119,11 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: validationError }, 400);
   }
 
+  const { token, hash } = await issueEditToken();
   const [row] = await getDb()
     .insert(reforms)
     .values({
-      userId: payload.user_id,
+      editTokenHash: hash,
       countryId: payload.country_id,
       label: payload.label ?? null,
       policyId: payload.policy_id ?? null,
@@ -123,5 +133,10 @@ export async function POST(request: Request): Promise<Response> {
     })
     .returning();
 
-  return json(reformRowToMetadata(row), 201);
+  // The only time the token leaves the server; the row keeps its hash.
+  const created: ReformCreatedMetadata = {
+    ...reformRowToMetadata(row),
+    edit_token: token,
+  };
+  return json(created, 201);
 }

@@ -41,7 +41,6 @@ export class ReformAdapter {
     reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>
   ): ReformCreationMetadata {
     return {
-      user_id: String(reform.userId),
       country_id: reform.countryId,
       label: reform.label ?? null,
       policy_id: reform.policyId ?? null,
@@ -59,7 +58,7 @@ export class ReformAdapter {
    * Convert partial Reform updates to API update payload
    */
   static toUpdatePayload(
-    updates: Partial<Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>>
+    updates: Partial<Omit<Reform, 'id' | 'countryId' | 'createdAt' | 'updatedAt'>>
   ): ReformUpdateMetadata {
     const payload: ReformUpdateMetadata = {};
     if (updates.label !== undefined) {
@@ -92,7 +91,6 @@ export class ReformAdapter {
   static fromApiResponse(apiData: ReformMetadata): Reform {
     return {
       id: String(apiData.id),
-      userId: String(apiData.user_id),
       countryId: apiData.country_id,
       label: apiData.label ?? undefined,
       policyId: apiData.policy_id != null ? String(apiData.policy_id) : undefined,

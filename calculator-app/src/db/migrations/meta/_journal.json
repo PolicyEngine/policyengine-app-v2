@@ -22,6 +22,13 @@
       "when": 1788771086146,
       "tag": "0002_add-report-validation",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791907730110,
+      "tag": "0003_anonymous-ownership",
+      "breakpoints": true
     }
   ]
 }
