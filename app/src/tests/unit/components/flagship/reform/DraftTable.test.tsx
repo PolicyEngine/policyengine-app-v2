@@ -132,11 +132,12 @@ describe('DraftTable', () => {
 
     // The row's own input gives way to the editor: one input, not two.
     expect(document.querySelectorAll(`[data-path="${CTC_PATH}"] input`)).toHaveLength(1);
-    expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
-      'Applies from',
-      'Current law',
-      'Your reform',
-    ]);
+    // One line: when, current law, the new value — no table, no year heading.
+    const details = screen.getByRole('region', { name: 'New value' });
+    expect(within(details).queryByRole('table')).not.toBeInTheDocument();
+    expect(within(details).getByText('Applies from')).toBeInTheDocument();
+    expect(within(details).getByText('Current law')).toBeInTheDocument();
+    expect(within(details).getByText('Your reform')).toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: '2026' })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'New value' })).toHaveAttribute('data-state', 'active');
   });

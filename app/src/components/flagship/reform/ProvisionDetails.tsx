@@ -596,6 +596,8 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             // One value: its start is the grid's first row, so no year heads the column.
             lead={mode === 'one' ? { label: 'Applies from', content: appliesFrom } : undefined}
             showYearHeadings={mode !== 'one'}
+            // A lone value reads on one line: when, current law, the new value.
+            inline={mode === 'one'}
           />
         )}
 

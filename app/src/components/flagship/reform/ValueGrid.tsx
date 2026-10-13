@@ -31,6 +31,12 @@ interface ValueGridProps {
   lead?: { label: string; content: React.ReactNode };
   /** Year headings over the columns; off where the lead row already says the year. */
   showYearHeadings?: boolean;
+  /**
+   * A lone parameter's one value on one line — the lead, current law and
+   * the box side by side — rather than a table of rows. Ignored for a
+   * breakdown or more than one year.
+   */
+  inline?: boolean;
 }
 
 const sameValue = (a: any, b: any) =>
@@ -70,9 +76,84 @@ export default function ValueGrid({
   footer,
   lead,
   showYearHeadings = true,
+  inline = false,
 }: ValueGridProps) {
   const lone = members.length === 1;
   const allYears = [...years, ...previewYears];
+
+  if (inline && lone && allYears.length === 1 && parameters[members[0].path]) {
+    const member = members[0];
+    const param = parameters[member.path];
+    const year = years[0];
+    const value = valueAt(member.path, year);
+    const baseline = baselineAt(member.path, year);
+    const changed = !sameValue(value, baseline);
+    const baselineText = formatValue(baseline, param.unit ?? null);
+    const pair = (label: string, content: React.ReactNode) => (
+      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+        <span
+          style={{
+            fontSize: typography.fontSize.xs,
+            color: colors.text.secondary,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {label}
+        </span>
+        {content}
+      </div>
+    );
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          columnGap: spacing.xl,
+          rowGap: spacing.sm,
+          fontFamily: typography.fontFamily.primary,
+          fontSize: typography.fontSize.sm,
+        }}
+      >
+        {lead && pair(lead.label, lead.content)}
+        {pair(
+          'Current law',
+          <span style={{ color: colors.text.secondary }}>
+            <ValueDisplay param={param} value={baseline} />
+          </span>
+        )}
+        {pair(
+          'Your reform',
+          <div
+            aria-label={`${member.label}, ${year}`}
+            data-path={member.path}
+            title={`Current law: ${baselineText}`}
+            onFocusCapture={() => onFocus(member.path)}
+            // Current law reads quieter, so a change stands out.
+            className={changed ? undefined : 'tw:[&_input]:text-gray-500'}
+            style={{
+              width: 200,
+              borderRadius: spacing.radius.container,
+              boxShadow: changed ? `0 0 0 2px ${colors.primary[200]}` : undefined,
+              background: changed ? colors.primary[50] : undefined,
+            }}
+          >
+            {isEditableValue(baseline) ? (
+              <ValueInput
+                param={param}
+                value={value}
+                onChange={(next) => onChange(member.path, year, next)}
+              />
+            ) : (
+              <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+                {baselineText}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
   const lastIndex = allYears.length - 1;
   // The last column runs on from its year; the hover says so, the heading stays a year.
   const header = (year: number, index: number) => headers?.[index] ?? String(year);
