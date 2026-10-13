@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ApiHouseholdStore } from '@/api/householdAssociation';
-import { ApiPolicyStore } from '@/api/policyAssociation';
+import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
+import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
 import {
   ApiReportStore,
   LocalStorageReportStore,
   type UserReportStore,
 } from '@/api/reportAssociation';
-import { ApiSimulationStore } from '@/api/simulationAssociation';
+import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
-import { recordImportedIds } from '@/libs/auth/importedIds';
+import { recordImportedIds, resolveImportedId } from '@/libs/auth/importedIds';
 import {
   ASSOCIATION_IDS,
   createTestApiContext,
@@ -188,6 +188,54 @@ describe('ApiPolicyStore', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  test('given a local sup- id never imported then renaming it saves it to the account', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const local = new LocalStoragePolicyStore();
+    const localPolicy = await local.create({
+      userId: MOCK_USER_ID,
+      policyId: String(LEGACY_IDS.POLICY),
+      countryId: 'us',
+      label: 'Local policy',
+    });
+    fetchMock.mockResolvedValue(
+      itemResponse(policyItem({ name: 'Renamed', client_ref: localPolicy.id! }), 201)
+    );
+    const store = new ApiPolicyStore(context, local);
+
+    // When
+    const renamed = await store.update(localPolicy.id!, { label: 'Renamed' });
+
+    // Then
+    expect(fetchCall(fetchMock).body).toEqual({
+      country_id: 'us',
+      legacy_policy_id: LEGACY_IDS.POLICY,
+      name: 'Renamed',
+      client_ref: localPolicy.id,
+    });
+    expect(renamed.id).toBe(ASSOCIATION_IDS.POLICY);
+    expect(resolveImportedId(PE_USER_ID, localPolicy.id!)).toBe(ASSOCIATION_IDS.POLICY);
+  });
+
+  test("given a local sup- id never imported then deleting it deletes this browser's copy", async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const local = new LocalStoragePolicyStore();
+    const localPolicy = await local.create({
+      userId: MOCK_USER_ID,
+      policyId: String(LEGACY_IDS.POLICY),
+      countryId: 'us',
+    });
+    const store = new ApiPolicyStore(context, local);
+
+    // When
+    await store.delete(localPolicy.id!);
+
+    // Then
+    expect(await local.findByUserPolicyId(localPolicy.id!)).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   test('given a delete then it sends DELETE and accepts 204', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
@@ -245,6 +293,57 @@ describe('ApiHouseholdStore', () => {
     // Then
     expect(fetchCall(fetchMock).body).toEqual({ legacy_household_id: 456 });
     expect(updated.householdId).toBe('456');
+  });
+});
+
+describe('local-only household and simulation ids', () => {
+  test('given a local suh- id never imported then renaming it saves it to the account', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const local = new LocalStorageHouseholdStore();
+    const localHousehold = await local.create({
+      type: 'household',
+      userId: MOCK_USER_ID,
+      householdId: String(LEGACY_IDS.HOUSEHOLD),
+      countryId: 'us',
+      label: 'Local household',
+    });
+    fetchMock.mockResolvedValue(itemResponse(householdItem({ name: 'Renamed' }), 201));
+    const store = new ApiHouseholdStore(context, local);
+
+    // When
+    await store.update(localHousehold.id!, { label: 'Renamed' });
+
+    // Then
+    expect(fetchCall(fetchMock).body).toMatchObject({
+      legacy_household_id: LEGACY_IDS.HOUSEHOLD,
+      client_ref: localHousehold.id,
+    });
+    expect(resolveImportedId(PE_USER_ID, localHousehold.id!)).toBe(ASSOCIATION_IDS.HOUSEHOLD);
+  });
+
+  test('given a local sus- id never imported then renaming it saves it to the account', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const local = new LocalStorageSimulationStore();
+    const localSimulation = await local.create({
+      userId: MOCK_USER_ID,
+      simulationId: String(LEGACY_IDS.SIMULATION),
+      countryId: 'us',
+      label: 'Local simulation',
+    });
+    fetchMock.mockResolvedValue(itemResponse(simulationItem({ name: 'Renamed' }), 201));
+    const store = new ApiSimulationStore(context, local);
+
+    // When
+    await store.update(localSimulation.id!, { label: 'Renamed' });
+
+    // Then
+    expect(fetchCall(fetchMock).body).toMatchObject({
+      legacy_simulation_id: LEGACY_IDS.SIMULATION,
+      client_ref: localSimulation.id,
+    });
+    expect(resolveImportedId(PE_USER_ID, localSimulation.id!)).toBe(ASSOCIATION_IDS.SIMULATION);
   });
 });
 
@@ -372,7 +471,7 @@ describe('ApiReportStore', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('given a local sur- id never imported then it is read and updated in localStorage', async () => {
+  test('given a local sur- id never imported then it is read from this browser', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();
     const local = new LocalStorageReportStore();
@@ -386,12 +485,45 @@ describe('ApiReportStore', () => {
 
     // When
     const found = await store.findByUserReportId(localReport.id);
-    const renamed = await store.update(localReport.id, { label: 'Renamed locally' });
 
     // Then
     expect(found?.label).toBe('Local report');
-    expect(renamed.label).toBe('Renamed locally');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given a local sur- id never imported then renaming it saves it to the account', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const local = new LocalStorageReportStore();
+    const localReport = await local.create({
+      userId: MOCK_USER_ID,
+      reportId: '42',
+      countryId: 'us',
+      label: 'Local report',
+    });
+    fetchMock.mockResolvedValue(
+      itemResponse(
+        reportItem({ legacy_report_id: 42, name: 'Renamed', client_ref: localReport.id }),
+        201
+      )
+    );
+    const store = new ApiReportStore(context, local);
+
+    // When
+    const renamed = await store.update(localReport.id, { label: 'Renamed' });
+
+    // Then
+    const call = fetchCall(fetchMock);
+    expect(call.method).toBe('POST');
+    expect(call.body).toEqual({
+      country_id: 'us',
+      legacy_report_id: 42,
+      name: 'Renamed',
+      client_ref: localReport.id,
+    });
+    expect(renamed.id).toBe(ASSOCIATION_IDS.REPORT);
+    expect(resolveImportedId(PE_USER_ID, localReport.id)).toBe(ASSOCIATION_IDS.REPORT);
+    expect((await local.findByUserReportId(localReport.id))?.label).toBe('Local report');
   });
 
   test('given a replaced base report then update repoints legacy_report_id', async () => {

@@ -17,21 +17,25 @@ export interface UserHouseholdStore {
 /**
  * Account storage: `/v2/user-households` on the PolicyEngine API. The
  * server stamps the signed-in user onto each row; `userId` arguments are
- * never sent.
+ * never sent. Local IDs follow the shared policy in v2Associations.
  */
 export class ApiHouseholdStore implements UserHouseholdStore {
   private readonly routes: AccountAssociationRoutes<UserHouseholdItem>;
 
-  constructor(context: ApiStoreContext) {
+  constructor(
+    context: ApiStoreContext,
+    private readonly local = new LocalStorageHouseholdStore()
+  ) {
     this.routes = new AccountAssociationRoutes(context, 'user-households', 'UserHousehold');
   }
 
+  private countryOf(household: Pick<UserHouseholdPopulation, 'countryId'>) {
+    return isAssociationCountry(household.countryId) ? household.countryId : this.routes.countryId;
+  }
+
   async create(association: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
-    const countryId = isAssociationCountry(association.countryId)
-      ? association.countryId
-      : this.routes.countryId;
     const item = await this.routes.create(
-      UserHouseholdAdapter.toCreationPayload(association, countryId)
+      UserHouseholdAdapter.toCreationPayload(association, this.countryOf(association))
     );
     return UserHouseholdAdapter.fromApiItem(item);
   }
@@ -60,15 +64,22 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     userHouseholdId: string,
     updates: Partial<UserHouseholdPopulation>
   ): Promise<UserHouseholdPopulation> {
-    const item = await this.routes.patch(
-      userHouseholdId,
-      UserHouseholdAdapter.toUpdatePayload(updates)
-    );
-    return UserHouseholdAdapter.fromApiItem(item);
+    const changes = UserHouseholdAdapter.toUpdatePayload(updates);
+    if (this.routes.isLocalOnly(userHouseholdId)) {
+      const local = this.local.findByUserHouseholdId(userHouseholdId);
+      const merged = { ...(await this.routes.requireLocal(userHouseholdId, local)), ...updates };
+      const body = UserHouseholdAdapter.toCreationPayload(merged, this.countryOf(merged));
+      return UserHouseholdAdapter.fromApiItem(
+        await this.routes.promote(userHouseholdId, body, changes)
+      );
+    }
+    return UserHouseholdAdapter.fromApiItem(await this.routes.patch(userHouseholdId, changes));
   }
 
   delete(userHouseholdId: string): Promise<void> {
-    return this.routes.delete(userHouseholdId);
+    return this.routes.isLocalOnly(userHouseholdId)
+      ? this.local.delete(userHouseholdId)
+      : this.routes.delete(userHouseholdId);
   }
 }
 
@@ -109,6 +120,11 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
   async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
     const households = this.getStoredHouseholds();
     return households.find((h) => h.userId === userId && h.householdId === householdId) || null;
+  }
+
+  /** The association by its own ID (`suh-…`). */
+  async findByUserHouseholdId(userHouseholdId: string): Promise<UserHouseholdPopulation | null> {
+    return this.getStoredHouseholds().find((h) => h.id === userHouseholdId) ?? null;
   }
 
   async update(

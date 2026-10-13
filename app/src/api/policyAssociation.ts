@@ -14,20 +14,27 @@ export interface UserPolicyStore {
 /**
  * Account storage: `/v2/user-policies` on the PolicyEngine API. The server
  * stamps the signed-in user onto each row; the `userId` arguments exist
- * for the localStorage interface and are never sent.
+ * for the localStorage interface and are never sent. Local IDs follow the
+ * shared policy in v2Associations.
  */
 export class ApiPolicyStore implements UserPolicyStore {
   private readonly routes: AccountAssociationRoutes<UserPolicyItem>;
 
-  constructor(context: ApiStoreContext) {
+  constructor(
+    context: ApiStoreContext,
+    private readonly local = new LocalStoragePolicyStore()
+  ) {
     this.routes = new AccountAssociationRoutes(context, 'user-policies', 'UserPolicy');
   }
 
+  private countryOf(policy: Pick<UserPolicy, 'countryId'>) {
+    return isAssociationCountry(policy.countryId) ? policy.countryId : this.routes.countryId;
+  }
+
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
-    const countryId = isAssociationCountry(policy.countryId)
-      ? policy.countryId
-      : this.routes.countryId;
-    const item = await this.routes.create(UserPolicyAdapter.toCreationPayload(policy, countryId));
+    const item = await this.routes.create(
+      UserPolicyAdapter.toCreationPayload(policy, this.countryOf(policy))
+    );
     return UserPolicyAdapter.fromApiItem(item);
   }
 
@@ -51,12 +58,20 @@ export class ApiPolicyStore implements UserPolicyStore {
   }
 
   async update(userPolicyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
-    const item = await this.routes.patch(userPolicyId, UserPolicyAdapter.toUpdatePayload(updates));
-    return UserPolicyAdapter.fromApiItem(item);
+    const changes = UserPolicyAdapter.toUpdatePayload(updates);
+    if (this.routes.isLocalOnly(userPolicyId)) {
+      const local = this.local.findByUserPolicyId(userPolicyId);
+      const merged = { ...(await this.routes.requireLocal(userPolicyId, local)), ...updates };
+      const body = UserPolicyAdapter.toCreationPayload(merged, this.countryOf(merged));
+      return UserPolicyAdapter.fromApiItem(await this.routes.promote(userPolicyId, body, changes));
+    }
+    return UserPolicyAdapter.fromApiItem(await this.routes.patch(userPolicyId, changes));
   }
 
   delete(userPolicyId: string): Promise<void> {
-    return this.routes.delete(userPolicyId);
+    return this.routes.isLocalOnly(userPolicyId)
+      ? this.local.delete(userPolicyId)
+      : this.routes.delete(userPolicyId);
   }
 }
 
@@ -94,6 +109,11 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
     const policies = this.getStoredPolicies();
     return policies.find((p) => p.userId === userId && p.policyId === policyId) || null;
+  }
+
+  /** The association by its own ID (`sup-…`). */
+  async findByUserPolicyId(userPolicyId: string): Promise<UserPolicy | null> {
+    return this.getStoredPolicies().find((p) => p.id === userPolicyId) ?? null;
   }
 
   private getStoredPolicies(): UserPolicy[] {

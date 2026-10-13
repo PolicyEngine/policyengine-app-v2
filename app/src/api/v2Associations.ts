@@ -1,6 +1,25 @@
 import { isV2ApiError, V2ApiError, type V2Query, type V2UserClient } from '@/api/v2UserClient';
-import { resolveImportedId } from '@/libs/auth/importedIds';
+import { recordImportedIds, resolveImportedId } from '@/libs/auth/importedIds';
 import type { AssociationCountryId, V2ItemResult, V2PageResult } from '@/types/v2User';
+
+/**
+ * Local IDs: how every account store treats the IDs it is handed.
+ *
+ * - A UUID, or a local ID this browser imported, names an account row.
+ * - Any other local ID (`sup-`, `suh-`, `sus-`, `sur-`, `lfr-`, `rf-`)
+ *   names an item only this browser has: saved while signed out and never
+ *   imported. Reading it reads this browser's copy. Changing it first
+ *   copies it into the account under its local ID as `client_ref` and
+ *   records the mapping, so links keep resolving and a later import finds
+ *   that row instead of adding a second one. Deleting it deletes this
+ *   browser's copy.
+ */
+
+/** What every account row carries. */
+export interface AccountRow {
+  id: string;
+  client_ref: string | null;
+}
 
 /**
  * What every account-backed store needs: an authenticated client, the
@@ -50,7 +69,7 @@ export function definedFields<T extends object>(body: T): Partial<T> {
  * store's country. Stores map items to app types; this class owns the
  * wire calls and the local-ID → UUID resolution.
  */
-export class AccountAssociationRoutes<TItem> {
+export class AccountAssociationRoutes<TItem extends AccountRow> {
   constructor(
     private readonly context: ApiStoreContext,
     private readonly path: string,
@@ -82,6 +101,47 @@ export class AccountAssociationRoutes<TItem> {
       query: { ...filters, country_id: this.context.countryId, limit: 1 },
     });
     return page.items[0] ?? null;
+  }
+
+  /** Whether the ID names an item only this browser has (see "Local IDs" above). */
+  isLocalOnly(id: string): boolean {
+    return accountAssociationId(this.context, id) === null;
+  }
+
+  /** This browser's copy of a local-only item; not found (404) when it has none. */
+  async requireLocal<T>(localId: string, lookup: Promise<T | null>): Promise<T> {
+    const copy = await lookup;
+    if (!copy) {
+      throw new V2ApiError(404, `${this.what} with id ${localId} not found`);
+    }
+    return copy;
+  }
+
+  /**
+   * Copies a local-only item into the account under its local ID and
+   * records the mapping. If the account already has that `client_ref` (an
+   * import or another tab got there first), `changes` go to that row.
+   */
+  async promote<TBody extends { country_id: AssociationCountryId }>(
+    localId: string,
+    body: TBody,
+    changes: object
+  ): Promise<TItem> {
+    let item: TItem;
+    try {
+      item = await this.create({ ...body, client_ref: localId });
+    } catch (error) {
+      if (!isV2ApiError(error, 409)) {
+        throw error;
+      }
+      const existing = (await this.list()).find((row) => row.client_ref === localId);
+      if (!existing) {
+        throw error;
+      }
+      item = Object.keys(changes).length > 0 ? await this.patch(existing.id, changes) : existing;
+    }
+    recordImportedIds(this.context.userId, { [localId]: item.id });
+    return item;
   }
 
   /** The row with this ID; null when it does not exist or belongs to someone else. */

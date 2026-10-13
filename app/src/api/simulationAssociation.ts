@@ -14,21 +14,27 @@ export interface UserSimulationStore {
 /**
  * Account storage: `/v2/user-simulations` on the PolicyEngine API. The
  * server stamps the signed-in user onto each row; `userId` arguments are
- * never sent.
+ * never sent. Local IDs follow the shared policy in v2Associations.
  */
 export class ApiSimulationStore implements UserSimulationStore {
   private readonly routes: AccountAssociationRoutes<UserSimulationItem>;
 
-  constructor(context: ApiStoreContext) {
+  constructor(
+    context: ApiStoreContext,
+    private readonly local = new LocalStorageSimulationStore()
+  ) {
     this.routes = new AccountAssociationRoutes(context, 'user-simulations', 'UserSimulation');
   }
 
-  async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
-    const countryId = isAssociationCountry(simulation.countryId)
+  private countryOf(simulation: Pick<UserSimulation, 'countryId'>) {
+    return isAssociationCountry(simulation.countryId)
       ? simulation.countryId
       : this.routes.countryId;
+  }
+
+  async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
     const item = await this.routes.create(
-      UserSimulationAdapter.toCreationPayload(simulation, countryId)
+      UserSimulationAdapter.toCreationPayload(simulation, this.countryOf(simulation))
     );
     return UserSimulationAdapter.fromApiItem(item);
   }
@@ -57,15 +63,22 @@ export class ApiSimulationStore implements UserSimulationStore {
     userSimulationId: string,
     updates: Partial<UserSimulation>
   ): Promise<UserSimulation> {
-    const item = await this.routes.patch(
-      userSimulationId,
-      UserSimulationAdapter.toUpdatePayload(updates)
-    );
-    return UserSimulationAdapter.fromApiItem(item);
+    const changes = UserSimulationAdapter.toUpdatePayload(updates);
+    if (this.routes.isLocalOnly(userSimulationId)) {
+      const local = this.local.findByUserSimulationId(userSimulationId);
+      const merged = { ...(await this.routes.requireLocal(userSimulationId, local)), ...updates };
+      const body = UserSimulationAdapter.toCreationPayload(merged, this.countryOf(merged));
+      return UserSimulationAdapter.fromApiItem(
+        await this.routes.promote(userSimulationId, body, changes)
+      );
+    }
+    return UserSimulationAdapter.fromApiItem(await this.routes.patch(userSimulationId, changes));
   }
 
   delete(userSimulationId: string): Promise<void> {
-    return this.routes.delete(userSimulationId);
+    return this.routes.isLocalOnly(userSimulationId)
+      ? this.local.delete(userSimulationId)
+      : this.routes.delete(userSimulationId);
   }
 }
 
@@ -105,6 +118,11 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
     const simulations = this.getStoredSimulations();
     return simulations.find((s) => s.userId === userId && s.simulationId === simulationId) || null;
+  }
+
+  /** The association by its own ID (`sus-…`). */
+  async findByUserSimulationId(userSimulationId: string): Promise<UserSimulation | null> {
+    return this.getStoredSimulations().find((s) => s.id === userSimulationId) ?? null;
   }
 
   private getStoredSimulations(): UserSimulation[] {

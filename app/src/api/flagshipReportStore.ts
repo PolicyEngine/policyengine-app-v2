@@ -101,21 +101,27 @@ export function recordFromItem(item: UserReportItem): FlagshipReportRecord {
   };
 }
 
-/** Flagship report records as the account's `/v2/user-reports` rows. */
+/**
+ * Flagship report records as the account's `/v2/user-reports` rows. Local
+ * `lfr-` IDs follow the shared policy in v2Associations.
+ */
 export class ApiFlagshipReportStore implements FlagshipReportStore {
   private readonly routes: AccountAssociationRoutes<UserReportItem>;
 
-  constructor(private readonly context: ApiStoreContext) {
+  constructor(
+    private readonly context: ApiStoreContext,
+    private readonly local: FlagshipReportStore = new LocalStorageFlagshipReportStore()
+  ) {
     this.routes = new AccountAssociationRoutes(context, 'user-reports', 'Report');
   }
 
-  async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
+  private creationBody(report: NewFlagshipReport): UserReportCreateBody {
     // The reform link must be one of this account's rows: a UUID, or a
     // local reform ID this browser imported.
     const userPolicyId = report.reformId
       ? resolveImportedId(this.context.userId, report.reformId)
       : null;
-    const body: UserReportCreateBody = {
+    return {
       country_id: this.context.countryId,
       legacy_report_id: Number(report.apiReportId),
       name: report.title || null,
@@ -124,7 +130,10 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
       ...(userPolicyId ? { user_policy_id: userPolicyId } : {}),
       last_run_at: new Date().toISOString(),
     };
-    return recordFromItem(await this.routes.create(body));
+  }
+
+  async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
+    return recordFromItem(await this.routes.create(this.creationBody(report)));
   }
 
   async findByUser(_userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
@@ -136,6 +145,9 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
+    if (this.routes.isLocalOnly(id)) {
+      return this.local.findById(id);
+    }
     const item = await this.routes.get(id);
     return item && isLegacyId(item.legacy_report_id) ? recordFromItem(item) : null;
   }
@@ -155,7 +167,13 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     id: string,
     snapshot: ReportValidationSnapshot
   ): Promise<FlagshipReportRecord> {
-    return recordFromItem(await this.routes.patch(id, { validation: validationToWire(snapshot) }));
+    const changes = { validation: validationToWire(snapshot) };
+    if (this.routes.isLocalOnly(id)) {
+      const record = await this.routes.requireLocal(id, this.local.findById(id));
+      const body = { ...this.creationBody(record), ...changes };
+      return recordFromItem(await this.routes.promote(id, body, changes));
+    }
+    return recordFromItem(await this.routes.patch(id, changes));
   }
 }
 

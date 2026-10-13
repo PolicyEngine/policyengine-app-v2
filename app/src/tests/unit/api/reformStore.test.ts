@@ -5,9 +5,12 @@ import {
   LocalStorageReformStore,
   parametersFromPolicyJson,
 } from '@/api/reformStore';
+import { resolveImportedId } from '@/libs/auth/importedIds';
+import { planLocalImport } from '@/libs/auth/localImport';
 import {
   ASSOCIATION_IDS,
   createTestApiContext,
+  errorResponse,
   fetchCall,
   itemResponse,
   noContentResponse,
@@ -215,8 +218,74 @@ describe('ApiReformStore', () => {
     expect(materializePolicy).toHaveBeenCalledWith('us', 'Renamed', mockReformInput.parameters);
     const call = fetchCall(fetchMock);
     expect(call.method).toBe('POST');
-    expect(call.body).toMatchObject({ name: 'Renamed', legacy_policy_id: MATERIALIZED_POLICY_ID });
+    expect(call.body).toMatchObject({
+      name: 'Renamed',
+      legacy_policy_id: MATERIALIZED_POLICY_ID,
+      client_ref: local.id,
+    });
     expect(saved.id).toBe(ASSOCIATION_IDS.REFORM);
+  });
+
+  it('given a local reform saved signed in, when the browser is imported later, then it is not added twice', async () => {
+    // Given
+    const local = await new LocalStorageReformStore().create(mockReformInput);
+    const { store, fetchMock } = apiReformStore();
+    fetchMock.mockResolvedValue(itemResponse({ ...reformRow, client_ref: local.id! }, 201));
+
+    // When
+    await store.update(local.id!, { label: 'Renamed' });
+
+    // Then: the rf- link resolves to the row, and the import no longer plans it
+    expect(resolveImportedId(PE_USER_ID, local.id!)).toBe(ASSOCIATION_IDS.REFORM);
+    expect(planLocalImport(PE_USER_ID).items.map((item) => item.clientRef)).not.toContain(local.id);
+  });
+
+  it('given the account already has the local reform, when saved, then that row is updated instead', async () => {
+    // Given: an import (or another tab) already added it under its rf- client_ref
+    const local = await new LocalStorageReformStore().create(mockReformInput);
+    const { store, fetchMock } = apiReformStore();
+    fetchMock
+      .mockResolvedValueOnce(errorResponse(409, 'client_ref already exists'))
+      .mockResolvedValueOnce(pageResponse([{ ...reformRow, client_ref: local.id! }]))
+      .mockResolvedValueOnce(itemResponse({ ...reformRow, name: 'Renamed' }));
+
+    // When
+    const saved = await store.update(local.id!, { label: 'Renamed' });
+
+    // Then
+    const patch = fetchCall(fetchMock, 2);
+    expect(patch.method).toBe('PATCH');
+    expect(patch.path).toBe(`/v2/user-policies/${ASSOCIATION_IDS.REFORM}`);
+    expect(patch.body).toMatchObject({ name: 'Renamed' });
+    expect(saved.label).toBe('Renamed');
+    expect(resolveImportedId(PE_USER_ID, local.id!)).toBe(ASSOCIATION_IDS.REFORM);
+  });
+
+  it("given a reform kept only in this browser, when read signed in, then this browser's copy is returned", async () => {
+    // Given
+    const local = await new LocalStorageReformStore().create(mockReformInput);
+    const { store, fetchMock } = apiReformStore();
+
+    // When
+    const found = await store.findById(local.id!);
+
+    // Then
+    expect(found?.label).toBe(mockReformInput.label);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("given a reform kept only in this browser, when deleted signed in, then this browser's copy goes", async () => {
+    // Given
+    const localStore = new LocalStorageReformStore();
+    const local = await localStore.create(mockReformInput);
+    const { store, fetchMock } = apiReformStore();
+
+    // When
+    await store.delete(local.id!);
+
+    // Then
+    expect(await localStore.findById(local.id!)).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('given a reform, when deleted, then its row is deleted', async () => {

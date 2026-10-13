@@ -7,7 +7,7 @@ import {
   provisionsFromWire,
   provisionsToWire,
 } from '@/api/flagshipReportStore';
-import { recordImportedIds } from '@/libs/auth/importedIds';
+import { recordImportedIds, resolveImportedId } from '@/libs/auth/importedIds';
 import { validationToWire } from '@/libs/flagship/reportValidation';
 import {
   ASSOCIATION_IDS,
@@ -218,6 +218,52 @@ describe('ApiFlagshipReportStore', () => {
     expect(call.path).toBe(`/v2/user-reports/${ASSOCIATION_IDS.REPORT}`);
     expect(call.body).toEqual({ validation: wire });
     expect(record.validation).toEqual(mockReportValidationSnapshot);
+  });
+});
+
+describe('ApiFlagshipReportStore with records kept only in this browser', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  test('given an lfr- record never imported then it is read from this browser', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const local = new LocalStorageFlagshipReportStore();
+    const localRecord = await local.create(newReport);
+    const store = new ApiFlagshipReportStore(context, local);
+
+    // When
+    const found = await store.findById(localRecord.id);
+
+    // Then
+    expect(found?.title).toBe(newReport.title);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given an lfr- record never imported then pinning validation saves it to the account', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const local = new LocalStorageFlagshipReportStore();
+    const localRecord = await local.create(newReport);
+    const wire = validationToWire(mockReportValidationSnapshot);
+    fetchMock.mockResolvedValue(
+      itemResponse(reportItem({ legacy_report_id: Number(API_REPORT_ID), validation: wire }), 201)
+    );
+    const store = new ApiFlagshipReportStore(context, local);
+
+    // When
+    await store.saveValidation(localRecord.id, mockReportValidationSnapshot);
+
+    // Then
+    const call = fetchCall(fetchMock);
+    expect(call.method).toBe('POST');
+    expect(call.body).toMatchObject({
+      legacy_report_id: Number(API_REPORT_ID),
+      validation: wire,
+      client_ref: localRecord.id,
+    });
+    expect(resolveImportedId(PE_USER_ID, localRecord.id)).toBe(ASSOCIATION_IDS.REPORT);
   });
 });
 

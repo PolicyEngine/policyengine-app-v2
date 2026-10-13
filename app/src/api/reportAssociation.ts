@@ -1,10 +1,5 @@
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
-import {
-  accountAssociationId,
-  AccountAssociationRoutes,
-  isLegacyId,
-  type ApiStoreContext,
-} from '@/api/v2Associations';
+import { AccountAssociationRoutes, isLegacyId, type ApiStoreContext } from '@/api/v2Associations';
 import { isAssociationCountry, type UserReportItem } from '@/types/v2User';
 import { UserReport } from '../types/ingredients/UserReport';
 
@@ -28,25 +23,28 @@ export interface UserReportStore {
  * sent.
  *
  * Report links are URL-addressable, so local IDs (`sur-…`) keep working
- * after sign-in: imported ones resolve to their account UUID, and ones
- * never imported are read from (and updated in) this browser's
- * localStorage as before.
+ * after sign-in, following the shared policy in v2Associations: imported
+ * ones resolve to their account UUID; ones never imported are read from
+ * this browser, and saved to the account when changed.
  */
 export class ApiReportStore implements UserReportStore {
   private readonly routes: AccountAssociationRoutes<UserReportItem>;
 
   constructor(
-    private readonly context: ApiStoreContext,
+    context: ApiStoreContext,
     private readonly local: UserReportStore = new LocalStorageReportStore()
   ) {
     this.routes = new AccountAssociationRoutes(context, 'user-reports', 'UserReport');
   }
 
+  private countryOf(report: Pick<UserReport, 'countryId'>) {
+    return isAssociationCountry(report.countryId) ? report.countryId : this.routes.countryId;
+  }
+
   async create(report: Omit<UserReport, 'id' | 'createdAt'>): Promise<UserReport> {
-    const countryId = isAssociationCountry(report.countryId)
-      ? report.countryId
-      : this.routes.countryId;
-    const item = await this.routes.create(UserReportAdapter.toCreationPayload(report, countryId));
+    const item = await this.routes.create(
+      UserReportAdapter.toCreationPayload(report, this.countryOf(report))
+    );
     return UserReportAdapter.fromApiItem(item);
   }
 
@@ -70,7 +68,7 @@ export class ApiReportStore implements UserReportStore {
   }
 
   async findByUserReportId(userReportId: string): Promise<UserReport | null> {
-    if (!accountAssociationId(this.context, userReportId)) {
+    if (this.routes.isLocalOnly(userReportId)) {
       return this.local.findByUserReportId(userReportId);
     }
     const item = await this.routes.get(userReportId);
@@ -80,18 +78,20 @@ export class ApiReportStore implements UserReportStore {
   }
 
   async update(userReportId: string, updates: Partial<UserReport>): Promise<UserReport> {
-    if (!accountAssociationId(this.context, userReportId)) {
-      return this.local.update(userReportId, updates);
+    const changes = UserReportAdapter.toUpdatePayload(updates);
+    if (this.routes.isLocalOnly(userReportId)) {
+      const local = this.local.findByUserReportId(userReportId);
+      const merged = { ...(await this.routes.requireLocal(userReportId, local)), ...updates };
+      const body = UserReportAdapter.toCreationPayload(merged, this.countryOf(merged));
+      return UserReportAdapter.fromApiItem(await this.routes.promote(userReportId, body, changes));
     }
-    const item = await this.routes.patch(userReportId, UserReportAdapter.toUpdatePayload(updates));
-    return UserReportAdapter.fromApiItem(item);
+    return UserReportAdapter.fromApiItem(await this.routes.patch(userReportId, changes));
   }
 
   delete(userReportId: string): Promise<void> {
-    if (!accountAssociationId(this.context, userReportId)) {
-      return this.local.delete(userReportId);
-    }
-    return this.routes.delete(userReportId);
+    return this.routes.isLocalOnly(userReportId)
+      ? this.local.delete(userReportId)
+      : this.routes.delete(userReportId);
   }
 }
 
