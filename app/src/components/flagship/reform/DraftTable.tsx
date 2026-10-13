@@ -195,6 +195,27 @@ export default function DraftTable({
   const toggle = (key: string, open?: boolean) =>
     setOpenKey((current) => ((open ?? current !== key) ? key : null));
 
+  /**
+   * A click anywhere on a row opens or closes it — its name, its current
+   * law, the space between — except on a control, which keeps its own job:
+   * the value box, the switch, the summary, the row's own buttons.
+   */
+  const onRowClick = (key: string) => (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(
+        'button, input, select, textarea, a, label, [role="switch"], [role="combobox"]'
+      )
+    ) {
+      return;
+    }
+    // A drag to select text is not a click on the row.
+    if (window.getSelection()?.toString()) {
+      return;
+    }
+    toggle(key);
+  };
+
   // Focus the pending pick's value, selected so typing replaces it — or
   // the switch a yes/no parameter shows instead. False while its control
   // has not rendered yet (an opening row's grid).
@@ -271,7 +292,7 @@ export default function DraftTable({
         </span>
         <span style={headerCell}>New value</span>
         <span className={WIDE_ONLY} style={headerCell}>
-          When
+          Effective
         </span>
         <span />
       </div>
@@ -314,8 +335,11 @@ export default function DraftTable({
 
         return (
           <Fragment key={row.key}>
+            {/* A mouse shortcut: the name and the arrow are the row's keyboard controls. */}
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
-              className={ROW_GRID}
+              className={`${ROW_GRID} tw:cursor-pointer ${open ? '' : 'tw:hover:bg-gray-50'}`}
+              onClick={onRowClick(row.key)}
               style={{
                 padding: `${spacing.sm} ${spacing.lg}`,
                 borderTop: index > 0 ? `1px solid ${colors.border.light}` : undefined,
