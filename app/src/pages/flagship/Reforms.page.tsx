@@ -46,6 +46,7 @@ import {
 } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
+/** How a reform came about: the report's record keeps it; the page doesn't show it. */
 const SOURCE_LABELS: Record<ReformSource, string> = {
   manual: 'Hand-built',
   chat: 'From a question',
@@ -619,7 +620,6 @@ export default function ReformsPage() {
         <Stack style={{ gap: spacing.lg }}>
           {backLink}
           <Stack style={{ gap: spacing.xs }}>
-            <Eyebrow>{SOURCE_LABELS[selectedReform.provenance.source]}</Eyebrow>
             <input
               value={editedLabel}
               onChange={(event) => setEditedLabel(event.target.value)}
@@ -921,7 +921,7 @@ export default function ReformsPage() {
                 key={reform.id}
                 eyebrow={`${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`}
                 title={reform.label || 'Untitled reform'}
-                body={SOURCE_LABELS[reform.provenance.source]}
+                body=""
                 onClick={() => openReform(reform)}
               />
             ))}

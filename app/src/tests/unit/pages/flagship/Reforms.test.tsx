@@ -291,6 +291,8 @@ describe('ReformsPage', () => {
 
     expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+    // How the reform came about isn't shown on its card.
+    expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
 
   test('given a reform card is clicked then its provisions edit in place', async () => {
@@ -302,6 +304,7 @@ describe('ReformsPage', () => {
 
     expect(screen.getByLabelText(/new value for gov\.irs/i)).toHaveValue(3600);
     expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
+    expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
 
   test('given an amended value then save updates the reform', async () => {
