@@ -11,11 +11,12 @@ import {
   TEST_PROFILE,
 } from '@/tests/fixtures/libs/auth/authMocks';
 
-function renderMenu(auth: AuthContextValue) {
+function renderMenu(auth: AuthContextValue, countryId = 'us') {
   return render(
     <AuthTestProvider value={auth}>
       <AuthMenu />
-    </AuthTestProvider>
+    </AuthTestProvider>,
+    countryId
   );
 }
 
@@ -44,6 +45,14 @@ describe('AuthMenu', () => {
   test('given sign-in is disabled then nothing is shown', () => {
     // When
     renderMenu(makeAuthValue({ status: 'disabled' }));
+
+    // Then
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  test('given a country without accounts then nothing is shown, signed in or out', () => {
+    // When
+    renderMenu(makeAuthValue(), 'ca');
 
     // Then
     expect(screen.queryByRole('button')).not.toBeInTheDocument();

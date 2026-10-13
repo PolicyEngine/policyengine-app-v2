@@ -52,12 +52,14 @@ Format code:
 make format
 ```
 
-## Sign-in and saved work (calculator)
+## Sign-in and saved work (v3 workspace)
 
-The calculator can sign users in with social sign-on (Auth0) and save their
-policies, households, simulations, reports and reforms to their PolicyEngine
-account through the PolicyEngine API (`/v2/me` and `/v2/user-*`). It is off
-unless all of these are set at build time (see `calculator-app/.env.example`):
+The v3 workspace (the flagship shell: Ask, Build, Reforms, reports and the
+account page) can sign users in with social sign-on (Auth0) and save their
+reforms and reports to their PolicyEngine account through the PolicyEngine
+API (`/v2/me` and `/v2/user-*`). It is off unless all of these are set at
+build time (see `calculator-app/.env.example`), alongside
+`NEXT_PUBLIC_FLAGSHIP_SHELL=true`:
 
 | Variable | Purpose |
 | --- | --- |
@@ -67,15 +69,14 @@ unless all of these are set at build time (see `calculator-app/.env.example`):
 | `NEXT_PUBLIC_AUTH0_AUDIENCE` | PolicyEngine API resource server identifier |
 | `NEXT_PUBLIC_API_URL` | PolicyEngine API origin (default `https://api.policyengine.org`); set to the staging API on staging |
 
-The legacy Vite build reads the same settings as `VITE_AUTH_ENABLED`,
-`VITE_AUTH0_*` and `VITE_API_URL`, but does not mount the sign-in provider.
-
-- Signed out, and in every country without account storage (Canada,
-  Nigeria, Israel), saved work stays in the browser's localStorage, as before.
-- Signed in on the US or UK calculator, saved work goes to the account. The
-  first sign-in offers to copy this browser's saved work to the account;
-  nothing is deleted from the device.
-- Saved geographies always stay in localStorage.
+- Signed in on the US or UK workspace, reforms and reports go to the
+  account. Signed out, they stay in this browser, in v3's own keys.
+- The first sign-in, which creates the account, copies the v3 reforms and
+  reports saved on this browser while signed out into it; nothing is
+  removed from the browser. Existing accounts are not offered an import.
+- The legacy calculator (policies, households, simulations and reports
+  built outside the workspace) has no sign-in and keeps its saved work in
+  localStorage, as before. v3 never reads or writes that storage.
 
 ## Project structure
 

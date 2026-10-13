@@ -131,20 +131,6 @@ export interface UserReportCreateBody {
   client_ref?: string | null;
 }
 
-export type UserReportPatchBody = Partial<
-  Pick<
-    UserReportCreateBody,
-    | 'legacy_report_id'
-    | 'name'
-    | 'description'
-    | 'user_policy_id'
-    | 'source_note'
-    | 'provisions'
-    | 'validation'
-    | 'last_run_at'
-  >
->;
-
 /* /v2/me/export */
 
 /** Everything saved to the account, in every country; downloaded as is. */

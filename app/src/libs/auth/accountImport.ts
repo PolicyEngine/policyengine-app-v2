@@ -33,9 +33,9 @@ import {
 const REFORMS_KEY = 'reforms';
 
 /** Server limits on one import request. */
-export const IMPORT_MAX_ITEMS = 500;
+const IMPORT_MAX_ITEMS = 500;
 /** Kept under the 1 MiB body cap to leave room for the envelope. */
-export const IMPORT_MAX_BYTES = 950_000;
+const IMPORT_MAX_BYTES = 950_000;
 
 function readArray<T>(key: string): T[] {
   try {
@@ -64,7 +64,7 @@ type PlannedItem =
   | { kind: 'reports'; clientRef: string; body: ImportReportItem };
 
 /** This browser's v3 reforms and reports, per account country. */
-export function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
+function planBrowserWorkImport(): Record<AssociationCountryId, PlannedItem[]> {
   const reforms = readArray<Reform>(REFORMS_KEY);
   const records = readArray<FlagshipReportRecord>(FLAGSHIP_REPORTS_KEY);
   const meta = readObject<FlagshipReportMeta>(REPORT_META_KEY);
@@ -130,7 +130,7 @@ function byteLength(value: unknown): number {
 }
 
 /** Request bodies of at most `maxItems` items and about `maxBytes`, reforms first. */
-export function chunkImportItems(
+function chunkImportItems(
   items: PlannedItem[],
   { maxItems = IMPORT_MAX_ITEMS, maxBytes = IMPORT_MAX_BYTES } = {}
 ): ImportRequestBody[] {
@@ -222,7 +222,7 @@ export async function importBrowserWork({
 }
 
 /** Whether this browser holds any v3 work the import would copy. */
-export function hasBrowserWorkToImport(): boolean {
+function hasBrowserWorkToImport(): boolean {
   const plan = planBrowserWorkImport();
   return ASSOCIATION_COUNTRY_IDS.some((countryId) => plan[countryId].length > 0);
 }

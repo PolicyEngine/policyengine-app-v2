@@ -97,7 +97,7 @@ const SESSION_ENDED_ERRORS = new Set([
   'invalid_grant',
 ]);
 
-export function isSessionEndedError(error: unknown): boolean {
+function isSessionEndedError(error: unknown): boolean {
   if (!error || typeof error !== 'object' || !('error' in error)) {
     return false;
   }
@@ -105,7 +105,7 @@ export function isSessionEndedError(error: unknown): boolean {
 }
 
 /** Shown in place of the workspace while Auth0 restores the session. */
-export function SessionRestoring() {
+function SessionRestoring() {
   return (
     <Stack
       role="status"

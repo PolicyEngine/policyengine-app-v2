@@ -12,6 +12,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useAuthStatus, type AuthContextValue } from '@/libs/auth/AuthContext';
+import { isAssociationCountry } from '@/types/v2User';
 
 interface AuthMenuProps {
   /** 'inverse' for the teal calculator header; 'default' for light bars. */
@@ -30,7 +31,8 @@ function initialOf(name: string): string {
 /**
  * The v3 header's sign-in control: "Sign in" when signed out (with a note
  * when the last session ended on its own), the user menu (My account,
- * Sign out) when signed in, and nothing when sign-in is disabled.
+ * Sign out) when signed in, and nothing when sign-in is disabled or
+ * outside the US and UK.
  */
 export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const auth = useAuthStatus();
@@ -38,7 +40,8 @@ export default function AuthMenu({ variant = 'default' }: AuthMenuProps) {
   const nav = useAppNavigate();
   const inverse = variant === 'inverse';
 
-  if (auth.status === 'disabled') {
+  // Accounts hold US and UK work only; elsewhere v3 stays in this browser.
+  if (auth.status === 'disabled' || !isAssociationCountry(countryId)) {
     return null;
   }
 
