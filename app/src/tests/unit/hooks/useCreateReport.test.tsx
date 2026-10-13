@@ -124,10 +124,17 @@ describe('useCreateReport', () => {
           payload: mockReportCreationPayload,
           userId: 'anonymous',
           label: TEST_LABEL,
-          // Signed out, the association is saved in localStorage
-          reportStore: expect.any(LocalStorageReportStore),
+          reportStore: expect.objectContaining({ create: expect.any(Function) }),
         });
       });
+      // Signed out, the association is saved in localStorage
+      const { reportStore } = vi.mocked(createReportAndAssociateWithUser).mock.calls[0][0];
+      const saved = await reportStore!.create({
+        userId: 'anonymous',
+        reportId: '615',
+        countryId: TEST_COUNTRY_ID,
+      });
+      expect(await new LocalStorageReportStore().findByUserReportId(saved.id)).not.toBeNull();
     });
 
     test('given no label when creating report then creates with undefined label', async () => {
@@ -146,7 +153,7 @@ describe('useCreateReport', () => {
           payload: mockReportCreationPayload,
           userId: 'anonymous',
           label: undefined,
-          reportStore: expect.any(LocalStorageReportStore),
+          reportStore: expect.objectContaining({ create: expect.any(Function) }),
         });
       });
     });

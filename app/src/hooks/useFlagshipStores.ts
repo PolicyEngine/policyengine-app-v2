@@ -3,18 +3,33 @@ import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getFlagshipReportStore, type FlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore, type ReformStore } from '@/api/reformStore';
-import { accountStoreContext, useAssociationBackend } from '@/libs/auth/useAssociationBackend';
+import { deferredFlagshipReportStore, deferredReformStore } from '@/api/settledStores';
+import {
+  accountStoreContext,
+  useAssociationBackend,
+  useAssociationBackendResolver,
+  type AssociationBackend,
+} from '@/libs/auth/useAssociationBackend';
 import type { RootState } from '@/store';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
 /**
  * The flagship (v3) stores for the current session: the account's when
  * signed in (US/UK), localStorage otherwise. A signed-in session whose
  * account could not be loaded gets the account stores, whose calls fail,
- * rather than localStorage.
+ * rather than localStorage. The stores wait for the session to be
+ * restored, so nothing is written to the wrong one while it is.
  */
 
+function accountReformStore(
+  backend: AssociationBackend,
+  getParameterMetadata: () => ParameterMetadataCollection | null | undefined
+): ReformStore {
+  return getReformStore(accountStoreContext(backend), { getParameterMetadata });
+}
+
 export function useReformStore(): ReformStore {
-  const backend = useAssociationBackend();
+  const resolveBackend = useAssociationBackendResolver();
   const parameters = useSelector((state: RootState) => state.metadata?.parameters);
   // Read through a ref so metadata arriving later does not rebuild the store.
   const parametersRef = useRef(parameters);
@@ -22,14 +37,36 @@ export function useReformStore(): ReformStore {
 
   return useMemo(
     () =>
-      getReformStore(accountStoreContext(backend), {
-        getParameterMetadata: () => parametersRef.current,
-      }),
-    [backend]
+      deferredReformStore(async () =>
+        accountReformStore(await resolveBackend(), () => parametersRef.current)
+      ),
+    [resolveBackend]
   );
 }
 
+/** Where a flagship run records its report. */
+export interface FlagshipRunDestination {
+  /** The account's report store and user; null keeps the run in this browser. */
+  account: { reportStore: FlagshipReportStore; userId: string } | null;
+  /** Set when signed in but the account could not be loaded: the run must not start. */
+  accountError: Error | null;
+}
+
+function flagshipRunDestination(backend: AssociationBackend): FlagshipRunDestination {
+  if (backend.mode === 'unavailable') {
+    return { account: null, accountError: backend.error };
+  }
+  if (backend.mode === 'api') {
+    return {
+      account: { reportStore: getFlagshipReportStore(backend), userId: backend.userId },
+      accountError: null,
+    };
+  }
+  return { account: null, accountError: null };
+}
+
 export interface FlagshipReportStoreSelection {
+  /** Waits for the session to be restored. */
   store: FlagshipReportStore;
   /** True when records go to the account (one `/v2/user-reports` row per run). */
   isAccount: boolean;
@@ -37,21 +74,24 @@ export interface FlagshipReportStoreSelection {
   userId: string;
   /** False while the session is being restored. */
   ready: boolean;
-  /** Set when signed in but the account could not be loaded: nothing can be saved. */
-  accountError: Error | null;
+  /** Where a run records its report, once the session is restored. */
+  resolveRunDestination: () => Promise<FlagshipRunDestination>;
 }
 
 export function useFlagshipReportStore(): FlagshipReportStoreSelection {
   const backend = useAssociationBackend();
+  const resolveBackend = useAssociationBackendResolver();
   return useMemo(
     () => ({
-      store: getFlagshipReportStore(accountStoreContext(backend)),
+      store: deferredFlagshipReportStore(async () =>
+        getFlagshipReportStore(accountStoreContext(await resolveBackend()))
+      ),
       isAccount: backend.mode !== 'localStorage',
       userId: backend.userId,
       ready: backend.ready,
-      accountError: backend.mode === 'unavailable' ? backend.error : null,
+      resolveRunDestination: async () => flagshipRunDestination(await resolveBackend()),
     }),
-    [backend]
+    [backend, resolveBackend]
   );
 }
 

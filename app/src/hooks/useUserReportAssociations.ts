@@ -1,8 +1,14 @@
 import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deferredReportStore } from '@/api/settledStores';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
-import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
+import {
+  accountStoreContext,
+  useAssociationBackend,
+  useAssociationBackendResolver,
+  type AssociationBackend,
+} from '@/libs/auth/useAssociationBackend';
 import {
   ApiReportStore,
   LocalStorageReportStore,
@@ -17,26 +23,33 @@ import { UserReport } from '../types/ingredients/UserReport';
 let localReportStore: LocalStorageReportStore | null = null;
 const getLocalReportStore = () => (localReportStore ??= new LocalStorageReportStore());
 
+function reportStoreFor(backend: AssociationBackend): UserReportStore {
+  const account = accountStoreContext(backend);
+  return account ? new ApiReportStore(account, getLocalReportStore()) : getLocalReportStore();
+}
+
 type ReportAssociationStoreSelection = {
+  /** Waits for the session to be restored, so writes never go to the wrong store. */
   store: UserReportStore;
   config: typeof queryConfig.api | typeof queryConfig.localStorage;
   /** False while the session is being restored; queries wait. */
   ready: boolean;
+  /** The store for the session once it is restored; `store` forwards to it. */
+  resolveStore: () => Promise<UserReportStore>;
 };
 
 export const useReportAssociationStoreForMode = (): ReportAssociationStoreSelection => {
   const backend = useAssociationBackend();
-  return useMemo(
-    () =>
-      backend.mode !== 'localStorage'
-        ? {
-            store: new ApiReportStore(backend, getLocalReportStore()),
-            config: queryConfig.api,
-            ready: true,
-          }
-        : { store: getLocalReportStore(), config: queryConfig.localStorage, ready: backend.ready },
-    [backend]
-  );
+  const resolveBackend = useAssociationBackendResolver();
+  return useMemo(() => {
+    const resolveStore = async () => reportStoreFor(await resolveBackend());
+    return {
+      store: deferredReportStore(resolveStore),
+      config: backend.mode === 'localStorage' ? queryConfig.localStorage : queryConfig.api,
+      ready: backend.ready,
+      resolveStore,
+    };
+  }, [backend, resolveBackend]);
 };
 
 export const useUserReportStore = () => {

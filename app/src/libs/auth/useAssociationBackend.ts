@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient, type V2UserClient } from '@/api/v2UserClient';
 import { MOCK_USER_ID } from '@/constants';
@@ -104,43 +104,94 @@ export function accountStoreContext(backend: AssociationBackend): ApiStoreContex
   return backend.mode === 'localStorage' ? null : backend;
 }
 
-/** A PolicyEngine API client bound to the current session's access token. */
+/**
+ * A PolicyEngine API client bound to the session's access token. It asks
+ * for the token at request time, so a request that waited for the
+ * session to be restored carries the signed-in user's token.
+ */
 export function useV2UserClient(): V2UserClient {
   const { getAccessToken } = useAuthStatus();
-  return useMemo(() => createV2UserClient({ getAccessToken }), [getAccessToken]);
+  const latestGetAccessToken = useRef(getAccessToken);
+  latestGetAccessToken.current = getAccessToken;
+  return useMemo(
+    () => createV2UserClient({ getAccessToken: () => latestGetAccessToken.current() }),
+    []
+  );
 }
 
-export function useAssociationBackend(countryIdOverride?: string | null): AssociationBackend {
+/** The backend for a session state in a country (see selectAssociationBackend). */
+export function associationBackendFor({
+  status,
+  user,
+  countryId,
+  client,
+}: {
+  status: AuthStatus;
+  user: Pick<MeItem, 'id'> | null;
+  countryId: string | null;
+  client: V2UserClient;
+}): AssociationBackend {
+  const mode = selectAssociationBackend({ status, user, countryId });
+  if (mode === 'api' && user && isAssociationCountry(countryId)) {
+    return { mode, ready: true, userId: user.id, countryId, client };
+  }
+  if (mode === 'unavailable' && isAssociationCountry(countryId)) {
+    const error = new AccountUnavailableError();
+    return {
+      mode,
+      ready: true,
+      userId: UNAVAILABLE_ACCOUNT_USER_ID,
+      countryId,
+      client: createUnavailableClient(error),
+      error,
+    };
+  }
+  return {
+    mode: 'localStorage',
+    ready: status !== 'loading',
+    userId: MOCK_USER_ID,
+    countryId,
+    client: null,
+  };
+}
+
+function useBackendCountry(countryIdOverride?: string | null): string | null {
   const contextCountry = useCountryContext();
-  const countryId = countryIdOverride ?? contextCountry ?? null;
+  return countryIdOverride ?? contextCountry ?? null;
+}
+
+/** The backend for the session as it stands (not ready while it is being restored). */
+export function useAssociationBackend(countryIdOverride?: string | null): AssociationBackend {
+  const countryId = useBackendCountry(countryIdOverride);
   const { status, user } = useAuthStatus();
   const client = useV2UserClient();
-  const mode = selectAssociationBackend({ status, user, countryId });
   const userId = user?.id ?? null;
 
-  return useMemo<AssociationBackend>(() => {
-    if (mode === 'api' && userId && isAssociationCountry(countryId)) {
-      return { mode, ready: true, userId, countryId, client };
-    }
-    if (mode === 'unavailable' && isAssociationCountry(countryId)) {
-      const error = new AccountUnavailableError();
-      return {
-        mode,
-        ready: true,
-        userId: UNAVAILABLE_ACCOUNT_USER_ID,
-        countryId,
-        client: createUnavailableClient(error),
-        error,
-      };
-    }
-    return {
-      mode: 'localStorage',
-      ready: status !== 'loading',
-      userId: MOCK_USER_ID,
-      countryId,
-      client: null,
-    };
-  }, [mode, status, userId, countryId, client]);
+  return useMemo(
+    () =>
+      associationBackendFor({ status, user: userId ? { id: userId } : null, countryId, client }),
+    [status, userId, countryId, client]
+  );
+}
+
+/**
+ * The backend saved-work writes should use: it waits until the session
+ * is restored, then answers for how it settled. A signed-in user's write
+ * issued while the session is restoring therefore goes to the account,
+ * never to this browser; a signed-out visitor's waits only for the
+ * restore and then goes to localStorage.
+ */
+export function useAssociationBackendResolver(
+  countryIdOverride?: string | null
+): () => Promise<AssociationBackend> {
+  const countryId = useBackendCountry(countryIdOverride);
+  const { settledSession } = useAuthStatus();
+  const client = useV2UserClient();
+
+  return useCallback(async () => {
+    const { status, user } = await settledSession();
+    return associationBackendFor({ status, user, countryId, client });
+  }, [settledSession, countryId, client]);
 }
 
 /** The user ID that saved work is filed under right now. */

@@ -107,14 +107,15 @@ describe('useAssociationBackend', () => {
 
     // When
     const backend = renderHook(() => useAssociationBackend(), { wrapper }).result.current;
-    const policyStore = renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result
-      .current.store;
+    const selection = renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result
+      .current;
+    const policyStore = selection.store;
 
     // Then
     expect(backend.mode).toBe('unavailable');
     expect(backend.ready).toBe(true);
     expect(backend.userId).toBe(UNAVAILABLE_ACCOUNT_USER_ID);
-    expect(policyStore).toBeInstanceOf(ApiPolicyStore);
+    expect(await selection.resolveStore()).toBeInstanceOf(ApiPolicyStore);
     await expect(policyStore.findByUser(backend.userId, 'us')).rejects.toBeInstanceOf(
       AccountUnavailableError
     );
@@ -135,41 +136,49 @@ describe('useAssociationBackend', () => {
 });
 
 describe('association store selection', () => {
-  test('given a signed-in UK session then every association hook uses the account stores', () => {
-    const wrapper = wrapperFor(signedInAuthValue(), 'uk');
+  async function resolvedStores(auth: AuthContextValue, countryId: CountryId) {
+    const wrapper = wrapperFor(auth, countryId);
+    return Promise.all([
+      renderHook(() => usePolicyAssociationStoreForMode(), {
+        wrapper,
+      }).result.current.resolveStore(),
+      renderHook(() => useHouseholdAssociationStoreForMode(), {
+        wrapper,
+      }).result.current.resolveStore(),
+      renderHook(() => useSimulationAssociationStoreForMode(), {
+        wrapper,
+      }).result.current.resolveStore(),
+      renderHook(() => useReportAssociationStoreForMode(), {
+        wrapper,
+      }).result.current.resolveStore(),
+    ]);
+  }
 
-    expect(
-      renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(ApiPolicyStore);
-    expect(
-      renderHook(() => useHouseholdAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(ApiHouseholdStore);
-    expect(
-      renderHook(() => useSimulationAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(ApiSimulationStore);
-    expect(
-      renderHook(() => useReportAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(ApiReportStore);
+  test('given a signed-in UK session then every association hook uses the account stores', async () => {
+    const [policies, households, simulations, reports] = await resolvedStores(
+      signedInAuthValue(),
+      'uk'
+    );
+
+    expect(policies).toBeInstanceOf(ApiPolicyStore);
+    expect(households).toBeInstanceOf(ApiHouseholdStore);
+    expect(simulations).toBeInstanceOf(ApiSimulationStore);
+    expect(reports).toBeInstanceOf(ApiReportStore);
   });
 
   test.each([
     ['signed out in the US', makeAuthValue({ status: 'anonymous' }), 'us'],
     ['sign-in disabled', makeAuthValue({ status: 'disabled' }), 'uk'],
     ['signed in in Nigeria', signedInAuthValue(), 'ng'],
-  ] as const)('given %s then every association hook uses localStorage', (_, auth, countryId) => {
-    const wrapper = wrapperFor(auth, countryId);
+  ] as const)(
+    'given %s then every association hook uses localStorage',
+    async (_, auth, countryId) => {
+      const [policies, households, simulations, reports] = await resolvedStores(auth, countryId);
 
-    expect(
-      renderHook(() => usePolicyAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(LocalStoragePolicyStore);
-    expect(
-      renderHook(() => useHouseholdAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(LocalStorageHouseholdStore);
-    expect(
-      renderHook(() => useSimulationAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(LocalStorageSimulationStore);
-    expect(
-      renderHook(() => useReportAssociationStoreForMode(), { wrapper }).result.current.store
-    ).toBeInstanceOf(LocalStorageReportStore);
-  });
+      expect(policies).toBeInstanceOf(LocalStoragePolicyStore);
+      expect(households).toBeInstanceOf(LocalStorageHouseholdStore);
+      expect(simulations).toBeInstanceOf(LocalStorageSimulationStore);
+      expect(reports).toBeInstanceOf(LocalStorageReportStore);
+    }
+  );
 });

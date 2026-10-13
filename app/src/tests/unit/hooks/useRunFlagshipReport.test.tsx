@@ -1,20 +1,21 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ApiFlagshipReportStore } from '@/api/flagshipReportStore';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
-import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import {
-  ACCOUNT_UNAVAILABLE_MESSAGE,
-  AccountUnavailableError,
-} from '@/libs/auth/useAssociationBackend';
+import type { AuthContextValue } from '@/libs/auth/AuthContext';
+import { ACCOUNT_UNAVAILABLE_MESSAGE } from '@/libs/auth/useAssociationBackend';
 import { runFlagshipReport, type RunReportProvision } from '@/libs/flagship/runReport';
 import { store } from '@/store';
-
-vi.mock('@/hooks/useFlagshipStores', () => ({
-  useFlagshipReportStore: vi.fn(),
-}));
+import { PE_USER_ID } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  accountErrorAuthValue,
+  AuthTestProvider,
+  makeAuthValue,
+  signedInAuthValue,
+} from '@/tests/fixtures/libs/auth/authMocks';
 
 vi.mock('@/libs/flagship/runReport', () => ({
   runFlagshipReport: vi.fn(),
@@ -35,40 +36,38 @@ const PROVISIONS: RunReportProvision[] = [
   },
 ];
 
-function wrapper({ children }: { children: React.ReactNode }) {
-  return (
+function renderRun(initialAuth: AuthContextValue) {
+  let auth = initialAuth;
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
     <ReduxProvider store={store}>
       <CountryProvider value="us">
-        <NavigationProvider value={{ push: vi.fn(), replace: vi.fn(), back: vi.fn() }}>
-          {children}
-        </NavigationProvider>
+        <AuthTestProvider value={auth}>
+          <NavigationProvider value={{ push: vi.fn(), replace: vi.fn(), back: vi.fn() }}>
+            {children}
+          </NavigationProvider>
+        </AuthTestProvider>
       </CountryProvider>
     </ReduxProvider>
   );
-}
-
-function selection(overrides: Partial<ReturnType<typeof useFlagshipReportStore>> = {}) {
+  const rendered = renderHook(() => useRunFlagshipReport(), { wrapper });
   return {
-    store: {} as ReturnType<typeof useFlagshipReportStore>['store'],
-    isAccount: true,
-    userId: 'account-unavailable',
-    ready: true,
-    accountError: null,
-    ...overrides,
+    ...rendered,
+    settle: (next: AuthContextValue) => {
+      auth = next;
+      rendered.rerender();
+    },
   };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(runFlagshipReport).mockResolvedValue('56');
 });
 
 describe('useRunFlagshipReport', () => {
   test('given the account could not be loaded then the run is refused before anything is created', async () => {
     // Given
-    vi.mocked(useFlagshipReportStore).mockReturnValue(
-      selection({ accountError: new AccountUnavailableError() })
-    );
-    const { result } = renderHook(() => useRunFlagshipReport(), { wrapper });
+    const { result } = renderRun(accountErrorAuthValue());
 
     // When
     await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
@@ -76,20 +75,44 @@ describe('useRunFlagshipReport', () => {
     // Then
     expect(runFlagshipReport).not.toHaveBeenCalled();
     expect(result.current.error).toBe(ACCOUNT_UNAVAILABLE_MESSAGE);
+    expect(result.current.isRunning).toBe(false);
   });
 
-  test('given the session is still being restored then the run waits instead of saving locally', async () => {
+  test('given a run started while signing in then it is recorded in the account once signed in', async () => {
     // Given
-    vi.mocked(useFlagshipReportStore).mockReturnValue(
-      selection({ isAccount: false, ready: false })
-    );
-    const { result } = renderHook(() => useRunFlagshipReport(), { wrapper });
+    const { result, settle } = renderRun(makeAuthValue({ status: 'loading' }));
+    let running: Promise<void> | undefined;
+    act(() => {
+      running = result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS);
+    });
+    expect(runFlagshipReport).not.toHaveBeenCalled();
 
     // When
-    await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
+    act(() => settle(signedInAuthValue()));
+    await act(() => running!);
 
     // Then
-    expect(runFlagshipReport).not.toHaveBeenCalled();
-    expect(result.current.error).toMatch(/still checking your sign-in/i);
+    expect(runFlagshipReport).toHaveBeenCalledTimes(1);
+    const { account } = vi.mocked(runFlagshipReport).mock.calls[0][0];
+    expect(account?.userId).toBe(PE_USER_ID);
+    expect(account?.reportStore).toBeInstanceOf(ApiFlagshipReportStore);
+  });
+
+  test('given a run started while the session restores then a signed-out visitor runs locally without an error', async () => {
+    // Given
+    const { result, settle } = renderRun(makeAuthValue({ status: 'loading' }));
+    let running: Promise<void> | undefined;
+    act(() => {
+      running = result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS);
+    });
+
+    // When
+    act(() => settle(makeAuthValue({ status: 'anonymous' })));
+    await act(() => running!);
+
+    // Then
+    await waitFor(() => expect(runFlagshipReport).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(runFlagshipReport).mock.calls[0][0].account).toBeNull();
+    expect(result.current.error).toBeNull();
   });
 });

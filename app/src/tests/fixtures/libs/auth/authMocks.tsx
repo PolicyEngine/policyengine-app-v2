@@ -1,5 +1,11 @@
+import { useMemo } from 'react';
 import { vi } from 'vitest';
-import { AuthContext, type AuthContextValue } from '@/libs/auth/AuthContext';
+import {
+  AuthContext,
+  useSettledSession,
+  type AuthContextValue,
+  type SettledSession,
+} from '@/libs/auth/AuthContext';
 import { mockMeItem, TEST_ACCESS_TOKEN } from '@/tests/fixtures/api/v2UserMocks';
 
 export const TEST_AUTH0_CONFIG = {
@@ -19,8 +25,13 @@ export function stubAuthEnv(
   vi.stubEnv('VITE_AUTH0_AUDIENCE', config.audience ?? '');
 }
 
+/**
+ * A fixed auth state. Its `settledSession` answers at once unless the
+ * state is 'loading', which never settles on its own; AuthTestProvider
+ * replaces it with one that settles when the provided value changes.
+ */
 export function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
-  return {
+  const value: AuthContextValue = {
     status: 'anonymous',
     user: null,
     profile: null,
@@ -28,9 +39,16 @@ export function makeAuthValue(overrides: Partial<AuthContextValue> = {}): AuthCo
     signIn: vi.fn().mockResolvedValue(undefined),
     signOut: vi.fn().mockResolvedValue(undefined),
     retryAccount: vi.fn(),
+    settledSession: () => {
+      const { status, user } = value;
+      return status === 'loading'
+        ? new Promise<SettledSession>(() => {})
+        : Promise.resolve({ status, user });
+    },
     getAccessToken: vi.fn().mockResolvedValue(null),
     ...overrides,
   };
+  return value;
 }
 
 /** A signed-in session whose PolicyEngine user has loaded. */
@@ -55,6 +73,7 @@ export function accountErrorAuthValue(overrides: Partial<AuthContextValue> = {})
   });
 }
 
+/** Provides `value`, with a `settledSession` that settles as the real provider's does. */
 export function AuthTestProvider({
   value,
   children,
@@ -62,5 +81,7 @@ export function AuthTestProvider({
   value: AuthContextValue;
   children: React.ReactNode;
 }) {
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const settledSession = useSettledSession(value.status, value.user);
+  const provided = useMemo(() => ({ ...value, settledSession }), [value, settledSession]);
+  return <AuthContext.Provider value={provided}>{children}</AuthContext.Provider>;
 }

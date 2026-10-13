@@ -1,8 +1,14 @@
 import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deferredSimulationStore } from '@/api/settledStores';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useSessionGatedQuery } from '@/hooks/utils/useSessionGatedQuery';
-import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
+import {
+  accountStoreContext,
+  useAssociationBackend,
+  useAssociationBackendResolver,
+  type AssociationBackend,
+} from '@/libs/auth/useAssociationBackend';
 import {
   ApiSimulationStore,
   LocalStorageSimulationStore,
@@ -17,26 +23,33 @@ import { UserSimulation } from '../types/ingredients/UserSimulation';
 let localSimulationStore: LocalStorageSimulationStore | null = null;
 const getLocalSimulationStore = () => (localSimulationStore ??= new LocalStorageSimulationStore());
 
+function simulationStoreFor(backend: AssociationBackend): UserSimulationStore {
+  const account = accountStoreContext(backend);
+  return account ? new ApiSimulationStore(account) : getLocalSimulationStore();
+}
+
 type SimulationAssociationStoreSelection = {
+  /** Waits for the session to be restored, so writes never go to the wrong store. */
   store: UserSimulationStore;
   config: typeof queryConfig.api | typeof queryConfig.localStorage;
   /** False while the session is being restored; queries wait. */
   ready: boolean;
+  /** The store for the session once it is restored; `store` forwards to it. */
+  resolveStore: () => Promise<UserSimulationStore>;
 };
 
 export const useSimulationAssociationStoreForMode = (): SimulationAssociationStoreSelection => {
   const backend = useAssociationBackend();
-  return useMemo(
-    () =>
-      backend.mode !== 'localStorage'
-        ? { store: new ApiSimulationStore(backend), config: queryConfig.api, ready: true }
-        : {
-            store: getLocalSimulationStore(),
-            config: queryConfig.localStorage,
-            ready: backend.ready,
-          },
-    [backend]
-  );
+  const resolveBackend = useAssociationBackendResolver();
+  return useMemo(() => {
+    const resolveStore = async () => simulationStoreFor(await resolveBackend());
+    return {
+      store: deferredSimulationStore(resolveStore),
+      config: backend.mode === 'localStorage' ? queryConfig.localStorage : queryConfig.api,
+      ready: backend.ready,
+      resolveStore,
+    };
+  }, [backend, resolveBackend]);
 };
 
 export const useUserSimulationStore = () => {

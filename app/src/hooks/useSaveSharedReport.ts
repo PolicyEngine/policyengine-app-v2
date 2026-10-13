@@ -10,7 +10,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
-import { useAssociationBackend } from '@/libs/auth/useAssociationBackend';
+import { useAssociationBackendResolver } from '@/libs/auth/useAssociationBackend';
 import { CountryId } from '@/libs/countries';
 import { Household } from '@/models/Household';
 import { RootState } from '@/store';
@@ -46,7 +46,7 @@ export function useSaveSharedReport() {
   const createHouseholdAssociation = useCreateHouseholdAssociation();
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
-  const backend = useAssociationBackend();
+  const resolveBackend = useAssociationBackendResolver();
 
   // Get currentLawId to skip creating associations for current law policies
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
@@ -68,6 +68,9 @@ export function useSaveSharedReport() {
     _policies: Policy[] = [],
     _households: SharedSaveHouseholdDetails[] = []
   ): Promise<UserReport> => {
+    // Saved where the session settles: the account when signed in (even if
+    // the save was clicked while signing in), this browser when signed out.
+    const backend = await resolveBackend();
     const { userId } = backend;
     const userReportId = getShareDataUserReportId(shareData);
     const findExisting = async () =>

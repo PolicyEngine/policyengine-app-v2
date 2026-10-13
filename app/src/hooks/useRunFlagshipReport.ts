@@ -46,18 +46,17 @@ export function useRunFlagshipReport() {
       setError('Model metadata is still loading — try again in a moment.');
       return;
     }
-    // Signed in, the run's only record is the account's; never run into
-    // this browser while the account is unknown or could not be loaded.
-    if (!reportStore.ready) {
-      setError('Still checking your sign-in — try again in a moment.');
-      return;
-    }
-    if (reportStore.accountError) {
-      setError(reportStore.accountError.message);
-      return;
-    }
     setIsRunning(true);
     setError(null);
+    // Where the run's record goes is known once the session is restored:
+    // the account when signed in (never this browser while signing in),
+    // this browser when signed out.
+    const destination = await reportStore.resolveRunDestination();
+    if (destination.accountError) {
+      setError(destination.accountError.message);
+      setIsRunning(false);
+      return;
+    }
     try {
       const userReportId = await runFlagshipReport({
         countryId,
@@ -67,9 +66,7 @@ export function useRunFlagshipReport() {
         currentLawId: Number(currentLawId),
         reformId,
         year,
-        account: reportStore.isAccount
-          ? { reportStore: reportStore.store, userId: reportStore.userId }
-          : null,
+        account: destination.account,
       });
       if (fromDraft) {
         markDraftRun(userReportId);

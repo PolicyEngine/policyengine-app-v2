@@ -15,7 +15,13 @@ import {
   safeReturnTo,
   type Auth0Config,
 } from './authConfig';
-import { AuthContext, authKeys, type AuthContextValue, type AuthStatus } from './AuthContext';
+import {
+  AuthContext,
+  authKeys,
+  useSettledSession,
+  type AuthContextValue,
+  type AuthStatus,
+} from './AuthContext';
 import { clearSignedInSessionData } from './sessionData';
 
 /**
@@ -196,6 +202,8 @@ function Auth0SessionBridge({
     status === 'account_error' ? (meQuery.error ?? new Error(MISSING_SUBJECT_MESSAGE)) : null;
   const error = auth0Error ?? accountError;
 
+  const settledSession = useSettledSession(status, user);
+
   const { refetch: refetchMe } = meQuery;
   const retryAccount = useCallback(() => {
     void refetchMe();
@@ -233,6 +241,7 @@ function Auth0SessionBridge({
       signIn,
       signOut,
       retryAccount,
+      settledSession,
       getAccessToken,
     }),
     [
@@ -246,6 +255,7 @@ function Auth0SessionBridge({
       signIn,
       signOut,
       retryAccount,
+      settledSession,
       getAccessToken,
     ]
   );
