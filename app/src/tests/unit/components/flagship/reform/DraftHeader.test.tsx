@@ -65,7 +65,7 @@ describe('DraftHeader', () => {
     store.dispatch(clearMetadata());
   });
 
-  test('given a draft then its name and year lead, and the population and run sit in the bar under it', () => {
+  test('given a draft then its name and year lead, and the bar under it holds the population and the verbs', () => {
     renderHeader();
 
     const header = screen.getByRole('banner');
@@ -74,15 +74,22 @@ describe('DraftHeader', () => {
       'Untitled reform'
     );
     expect(within(header).getByRole('combobox', { name: /year/i })).toBeInTheDocument();
-    expect(within(header).getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(within(header).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
 
-    const runBar = screen.getByRole('region', { name: 'Run the report' });
+    const bar = screen.getByRole('region', { name: 'Reform actions' });
     expect(
-      within(runBar).getByRole('button', { name: /population: nationwide/i })
+      within(bar).getByRole('button', { name: /population: nationwide/i })
     ).toBeInTheDocument();
-    expect(within(runBar).getByRole('button', { name: /run 2026 report/i })).toBeInTheDocument();
+    // Discard and Save sit left of the run.
+    const verbs = within(bar)
+      .getAllByRole('button')
+      .map((button) => button.textContent?.trim())
+      .filter(
+        (text) => text === 'Discard' || text === 'Save' || /^Run 2026 report$/.test(text ?? '')
+      );
+    expect(verbs).toEqual(['Discard', 'Save', 'Run 2026 report']);
     // It stays in view at the bottom of the window while the reform is long.
-    expect(runBar).toHaveStyle({ position: 'sticky', bottom: '0px' });
+    expect(bar).toHaveStyle({ position: 'sticky', bottom: '0px' });
   });
 
   test('given nothing changed yet then the run waits for a change', () => {
