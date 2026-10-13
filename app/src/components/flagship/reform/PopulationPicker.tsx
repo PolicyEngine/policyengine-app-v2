@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IconCheck, IconChevronDown, IconUsers } from '@tabler/icons-react';
+import { STATE_NAMES } from '@/api/billFeed';
 import { scopeFilter } from '@/components/flagship/ScopePicker';
 import {
   Badge,
@@ -36,16 +37,25 @@ const DISTRICT_PREFIX = 'congressional_district/';
 /** "California's 1st congressional district" reads "California's 1st" beside its code. */
 const shortDistrictLabel = (label: string) => label.replace(/\s+congressional district$/i, '');
 
-/** What the trigger shows for a region: "Nationwide", "California", "California's 1st". */
+/**
+ * What the trigger shows for a region: "Nationwide", "California",
+ * "California's 1st". Before metadata lists the regions — while it loads —
+ * a state still reads by name and a district by its code, never as
+ * "state/ar".
+ */
 export function populationLabel(value: string, regions: PopulationRegion[]): string {
   if (!value) {
     return 'Nationwide';
   }
   const region = regions.find((candidate) => candidate.name === value);
-  if (!region) {
-    return value;
+  if (region) {
+    return value.startsWith(DISTRICT_PREFIX) ? shortDistrictLabel(region.label) : region.label;
   }
-  return value.startsWith(DISTRICT_PREFIX) ? shortDistrictLabel(region.label) : region.label;
+  if (value.startsWith(STATE_PREFIX)) {
+    const code = value.slice(STATE_PREFIX.length).toUpperCase();
+    return STATE_NAMES[code] ?? code;
+  }
+  return value.startsWith(DISTRICT_PREFIX) ? value.slice(DISTRICT_PREFIX.length) : value;
 }
 
 /**

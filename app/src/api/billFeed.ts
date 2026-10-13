@@ -191,8 +191,8 @@ async function trackerSelect(
   return response.json();
 }
 
-/** Full state names for the tracker's two-letter state codes. */
-const STATE_NAMES: Record<string, string> = {
+/** Full state names for two-letter state codes. */
+export const STATE_NAMES: Record<string, string> = {
   AL: 'Alabama',
   AK: 'Alaska',
   AZ: 'Arizona',
@@ -200,6 +200,7 @@ const STATE_NAMES: Record<string, string> = {
   CA: 'California',
   CO: 'Colorado',
   CT: 'Connecticut',
+  DC: 'District of Columbia',
   DE: 'Delaware',
   FL: 'Florida',
   GA: 'Georgia',

@@ -94,7 +94,6 @@ describe('DraftTable', () => {
       'Single',
       'Joint',
       'Head of household',
-      'Indexing',
     ]);
     expect(provision(JOINT_PATH)?.intervals).toEqual([
       { startDate: '2026-01-01', endDate: FOREVER, value: 35000 },
@@ -134,7 +133,6 @@ describe('DraftTable', () => {
     expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
       'Current law',
       'Your reform',
-      'Indexing',
     ]);
     expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute('data-state', 'active');
   });
@@ -188,7 +186,7 @@ describe('DraftTable', () => {
       .getAllByRole('region')
       .map((region) => region.getAttribute('aria-label'));
     expect(regions).toEqual(['New value', 'About this parameter']);
-    const history = screen.getByRole('button', { name: /show past values/i });
+    const history = screen.getByRole('button', { name: /show historic values/i });
     await user.click(history);
     expect(history).toHaveAttribute('aria-expanded', 'true');
   });
@@ -198,8 +196,8 @@ describe('DraftTable', () => {
     render(<TableHarness />);
     await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
 
-    await user.click(screen.getByRole('button', { name: /show past values/i }));
-    const members = within(screen.getByRole('group', { name: 'Past values of' }));
+    await user.click(screen.getByRole('button', { name: /show historic values/i }));
+    const members = within(screen.getByRole('group', { name: 'Historic values of' }));
     expect(members.getAllByRole('button').map((chip) => chip.textContent)).toEqual([
       'Single',
       'Joint',
@@ -283,30 +281,26 @@ describe('DraftTable', () => {
       Element.prototype.hasPointerCapture ??= vi.fn(() => false);
     });
 
-    /** Opens the indexing pop-up from the grid's Indexing row. */
-    const openIndexing = async (user: ReturnType<typeof userEvent.setup>) =>
-      user.click(screen.getByRole('button', { name: /^(add|edit) indexing$/i }));
-
-    /** Picks an option in one of the pop-up's menus. */
+    /** Picks an option in one of the indexing pop-up's menus. */
     const pick = async (user: ReturnType<typeof userEvent.setup>, menu: string, option: string) => {
       await user.click(screen.getByRole('combobox', { name: menu }));
       await user.click(await screen.findByRole('option', { name: option }));
     };
 
-    /** Chooses an index in the pop-up and applies it. */
-    const applyIndex = async (user: ReturnType<typeof userEvent.setup>, option: string) => {
-      await openIndexing(user);
-      await pick(user, 'Indexing', option);
-      await user.click(screen.getByRole('button', { name: 'Apply' }));
-    };
-
-    test('then an unindexed amount holds by default, and can grow with an index', async () => {
+    test('then an unindexed amount opens as one value, and the Indexed mode grows it', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-      expect(screen.getByRole('button', { name: 'Add indexing' })).toBeInTheDocument();
-      await applyIndex(user, 'CPI-U');
+      expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute(
+        'data-state',
+        'active'
+      );
+      // One value is one box: no later years, no indexing row.
+      expect(screen.queryByLabelText('Child tax credit base amount, 2027')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Edit indexing' })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
       expect(provision(CTC_PATH)?.intervals).toEqual([
@@ -320,57 +314,12 @@ describe('DraftTable', () => {
       );
     });
 
-    test("then an amount current law indexes is indexed at current law's rate by default", async () => {
-      const user = userEvent.setup();
-      addDraftProvision('us', {
-        path: EXEMPTION_PATH,
-        breadcrumb: 'IRS → Income → Exemption → Amount',
-        unit: 'currency-USD',
-        baselineValue: 5000,
-        value: 5000,
-      });
-      render(<TableHarness />);
-      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
-
-      expect(screen.getByText(/grows at current law's rate from 2026/)).toBeInTheDocument();
-      fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
-
-      // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
-      // to $100, the step current law's projected values all land on.
-      expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
-        { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 6100 },
-      ]);
-      await openIndexing(user);
-      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
-        "Current law's rate"
-      );
-      expect(screen.getByRole('combobox', { name: 'Rounding' })).toHaveTextContent('down to');
-      expect(screen.getByRole('combobox', { name: 'Rounding step' })).toHaveTextContent('$100');
-    });
-
-    test('then a value set before indexing existed shows none, as it runs', async () => {
-      const user = userEvent.setup();
-      addDraftProvision('us', {
-        path: EXEMPTION_PATH,
-        breadcrumb: 'IRS → Income → Exemption → Amount',
-        unit: 'currency-USD',
-        baselineValue: 5000,
-        value: 6000,
-      });
-      render(<TableHarness />);
-      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
-
-      expect(screen.getByRole('button', { name: 'Add indexing' })).toBeInTheDocument();
-      expect(screen.getByText(/Every later year keeps the 2026 value/)).toBeInTheDocument();
-    });
-
-    test('then applying an index to an amount still at current law grows its later years', async () => {
+    test('then choosing Indexed grows an amount still at current law', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-      await applyIndex(user, 'CPI-U');
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
 
       // Indexing a flat amount is itself the change: 2,200 × 1.03.
       expect(provision(CTC_PATH)?.intervals).toEqual([
@@ -382,24 +331,86 @@ describe('DraftTable', () => {
       );
     });
 
-    test('then cancelling the pop-up changes nothing', async () => {
+    test('then back to one value, an amount never edited returns to current law', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
 
-      await openIndexing(user);
-      await pick(user, 'Indexing', 'CPI-U');
-      await user.click(screen.getByRole('button', { name: 'Cancel' }));
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
+      await user.click(screen.getByRole('tab', { name: 'One value' }));
 
       expect(provision(CTC_PATH)?.intervals).toBeUndefined();
-      expect(screen.getByRole('button', { name: 'Add indexing' })).toBeInTheDocument();
+      expect(provision(CTC_PATH)?.growth).toBeUndefined();
     });
 
-    test('then the years after preview what the growth makes of it', async () => {
+    test('then back to one value, an edited amount holds from its year', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await applyIndex(user, 'CPI-U');
+
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
+      fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
+      await user.click(screen.getByRole('tab', { name: 'One value' }));
+
+      const intervals = provision(CTC_PATH)?.intervals ?? [];
+      expect(intervals.at(-1)).toMatchObject({ endDate: FOREVER, value: 3000 });
+      expect(intervals.every((interval) => interval.value === 3000)).toBe(true);
+    });
+
+    test("then an amount current law indexes opens indexed at current law's rate", async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 5000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+
+      expect(screen.getByRole('tab', { name: 'Indexed' })).toHaveAttribute('data-state', 'active');
+      expect(screen.getByText(/grows at current law's rate from 2026/)).toBeInTheDocument();
+      fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
+
+      // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
+      // to $100, the step current law's projected values all land on.
+      expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
+        { startDate: '2027-01-01', endDate: FOREVER, value: 6100 },
+      ]);
+      await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
+      expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
+        "Current law's rate"
+      );
+      // "None" is the One value mode, not an indexing choice.
+      await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
+      expect(screen.queryByRole('option', { name: 'None' })).not.toBeInTheDocument();
+    });
+
+    test('then a value set before indexing existed opens as one value', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', {
+        path: EXEMPTION_PATH,
+        breadcrumb: 'IRS → Income → Exemption → Amount',
+        unit: 'currency-USD',
+        baselineValue: 5000,
+        value: 6000,
+      });
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Amount' }));
+
+      expect(screen.getByRole('tab', { name: 'One value' })).toHaveAttribute(
+        'data-state',
+        'active'
+      );
+    });
+
+    test('then the years after preview what the indexing makes of it', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
 
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
@@ -412,7 +423,7 @@ describe('DraftTable', () => {
       ).toBeInTheDocument();
     });
 
-    test('then a later start holds the value until it, measured from the base year', async () => {
+    test('then the pop-up shows the start and base years', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', {
         path: EXEMPTION_PATH,
@@ -423,24 +434,23 @@ describe('DraftTable', () => {
       });
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Amount' }));
-      await applyIndex(user, "Current law's rate");
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // The model runs to 2027 here, so 2027 is the only later start.
-      await openIndexing(user);
+      await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
       expect(screen.getByRole('combobox', { name: 'Indexing starts' })).toHaveTextContent('2027');
       expect(screen.getByRole('combobox', { name: 'Base year' })).toHaveTextContent('2026');
       expect(provision(EXEMPTION_PATH)).toMatchObject({ growthStart: 2027, growthBase: 2026 });
     });
 
-    test('then the rounding can change, and the values follow', async () => {
+    test('then the rounding can change, and the values follow on Apply', async () => {
       const user = userEvent.setup();
       render(<TableHarness />);
       await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
-      await applyIndex(user, 'CPI-U');
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
-      await openIndexing(user);
+      await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
       await pick(user, 'Rounding step', '$50');
       await pick(user, 'Rounding', 'down to');
       await user.click(screen.getByRole('button', { name: 'Apply' }));
@@ -455,7 +465,21 @@ describe('DraftTable', () => {
       ).toBeInTheDocument();
     });
 
-    test('then a rate has no growth to offer', async () => {
+    test('then cancelling the pop-up changes nothing', async () => {
+      const user = userEvent.setup();
+      render(<TableHarness />);
+      await user.click(screen.getByRole('button', { name: 'Open Base amount' }));
+      await user.click(screen.getByRole('tab', { name: 'Indexed' }));
+
+      await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
+      await pick(user, 'Rounding step', '$50');
+      await pick(user, 'Rounding', 'down to');
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+      expect(provision(CTC_PATH)?.intervals?.[1]).toMatchObject({ value: 2266 });
+    });
+
+    test('then a rate has no Indexed mode', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', {
         path: PHASE_IN_RATE_PATH,
@@ -469,9 +493,7 @@ describe('DraftTable', () => {
         screen.getByRole('button', { name: 'Open EITC phase-in rate by number of children' })
       );
 
-      expect(
-        screen.queryByRole('button', { name: /^(add|edit) indexing$/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: 'Indexed' })).not.toBeInTheDocument();
     });
   });
 

@@ -13,6 +13,7 @@ import {
   provisionIntervals,
   provisionValueInYear,
   provisionVariesOverTime,
+  sameParameterValue,
   setDraftProvisionIntervals,
 } from '@/libs/draftReform';
 import { periodLabel } from '@/libs/flagship/draftLabels';
@@ -51,11 +52,16 @@ interface ProvisionDetailsProps {
   focusPath?: string;
 }
 
-type EditMode = 'one' | 'byYear' | 'dates';
+type EditMode = 'one' | 'indexed' | 'byYear' | 'dates';
 
-/** The ways to set a value, in the order people reach for them. */
-const EDIT_MODES = [
+/**
+ * The ways to set a value, in the order people reach for them. One value
+ * holds from its year on; indexed, it grows with an index — offered for
+ * money amounts only.
+ */
+const EDIT_MODES: Array<{ label: string; value: EditMode }> = [
   { label: 'One value', value: 'one' },
+  { label: 'Indexed', value: 'indexed' },
   { label: 'By year', value: 'byYear' },
   { label: 'Custom dates', value: 'dates' },
 ];
@@ -98,21 +104,6 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     draft.provisions.find((provision) => provision.path === memberPath);
 
   const [focusedPath, setFocusedPath] = useState(focusPath ?? path);
-  // Open on the way the reform already sets it: dates the grid can't
-  // show, a schedule, or else one value.
-  const [mode, setMode] = useState<EditMode>(() => {
-    const provisions = members.map((member) => provisionFor(member.path));
-    // A value that grows reads as one value and how it moves.
-    if (provisions.some((provision) => provision?.growth && provision.growth !== 'fixed')) {
-      return 'one';
-    }
-    if (!provisions.every(fitsGrid)) {
-      return 'dates';
-    }
-    return provisions.some((provision) => provisionVariesOverTime(provision ?? {}))
-      ? 'byYear'
-      : 'one';
-  });
   const [historyOpen, setHistoryOpen] = useState(false);
   // How the value is indexed: the draft's choice, else the first money
   // member's default (current law's rate, where current law indexes it).
@@ -127,6 +118,22 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       }) ??
       money[0];
     return set ? growthOf(provisionFor(set.path), parameters?.[set.path]) : 'fixed';
+  });
+  // Open on the way the reform already sets it: a value that grows,
+  // dates the grid can't show, a schedule — else one value, or indexed
+  // where that is the amount's default (current law indexes it).
+  const [mode, setMode] = useState<EditMode>(() => {
+    const provisions = members.map((member) => provisionFor(member.path));
+    if (provisions.some((provision) => provision?.growth && provision.growth !== 'fixed')) {
+      return 'indexed';
+    }
+    if (!provisions.every(fitsGrid)) {
+      return 'dates';
+    }
+    if (provisions.some((provision) => provisionVariesOverTime(provision ?? {}))) {
+      return 'byYear';
+    }
+    return growthChoice !== 'fixed' ? 'indexed' : 'one';
   });
   // When it grows: the first set member's timing, else from the year after.
   const [timingChoice, setTimingChoice] = useState<GrowthTiming>(() => {
@@ -213,6 +220,8 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     return choice;
   };
   const timing = growthTiming(year, timingChoice);
+  // One value holds; only the Indexed mode grows it.
+  const activeGrowth: Growth = mode === 'indexed' ? growthChoice : 'fixed';
   const setOneValue = (
     memberPath: string,
     value: any,
@@ -257,8 +266,41 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   };
   // The money member whose series and amount the growth row speaks of.
   const moneyMember = members.find((member) => canGrow(parameters[member.path]));
+  // "None" is the One value mode; Indexed offers the ways to grow.
+  const indexMenu = growthMenu.filter((option) => option.value !== 'fixed');
+  const canIndex = indexMenu.length > 0 && !!moneyMember;
+  /** Indexed by default as current law indexes the amount, else with the first index offered. */
+  const defaultIndexing = (): Growth =>
+    indexMenu.find((option) => option.value === 'current_law')?.value ?? indexMenu[0]?.value;
+  const changeMode = (next: EditMode) => {
+    if (next === 'indexed' && mode !== 'indexed') {
+      // Choosing Indexed indexes the amounts at once, so their later years show it.
+      changeGrowth(
+        growthChoice !== 'fixed' ? growthChoice : defaultIndexing(),
+        timing,
+        roundingChoice
+      );
+    }
+    if (next === 'one' && mode === 'indexed') {
+      // Back to one value: an edited amount holds from its year; one never
+      // edited returns to current law rather than freezing there.
+      members.forEach((member) => {
+        const provision = provisionFor(member.path);
+        if (!provision || !canGrow(parameters[member.path])) {
+          return;
+        }
+        const value = valueAt(member.path, year);
+        if (sameParameterValue(value, baselineAt(member.path, year))) {
+          setDraftProvisionIntervals(draft.countryId, provision, []);
+        } else {
+          setOneValue(member.path, value, 'fixed', timing, roundingChoice);
+        }
+      });
+    }
+    setMode(next);
+  };
   const growthRow =
-    mode === 'one' && growthMenu.length > 0 && moneyMember
+    mode === 'indexed' && canIndex && moneyMember
       ? {
           label: 'Indexing',
           content: (
@@ -266,7 +308,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               year={year}
               lastYear={lastYear}
               value={growthChoice}
-              options={growthMenu}
+              options={indexMenu}
               timing={timing}
               seriesYearsFor={(choice) =>
                 seriesYears(choice, parameters[moneyMember.path], parameters)
@@ -288,7 +330,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : undefined;
   // What a growth makes of the value: the next years, and the last the model runs to.
   const previewYears =
-    mode === 'one' && growthRow
+    mode === 'indexed' && growthRow
       ? [
           ...Array.from({ length: PREVIEW_YEARS }, (_, i) => year + 1 + i).filter(
             (at) => at <= lastYear
@@ -298,8 +340,8 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : [];
 
   const onCellChange = (memberPath: string, at: number, value: any) => {
-    if (mode === 'one') {
-      setOneValue(memberPath, value, growthChoice, timing, roundingChoice);
+    if (mode === 'one' || mode === 'indexed') {
+      setOneValue(memberPath, value, activeGrowth, timing, roundingChoice);
       return;
     }
     const lastColumn = at === years[years.length - 1];
@@ -395,8 +437,8 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
           <span style={sectionLabel}>New value</span>
           <SegmentedControl
             value={mode}
-            onValueChange={(value) => setMode(value as EditMode)}
-            options={EDIT_MODES}
+            onValueChange={(value) => changeMode(value as EditMode)}
+            options={EDIT_MODES.filter((option) => option.value !== 'indexed' || canIndex)}
             size="xs"
             // Unstyled buttons default to white here, so the idle options
             // read as chosen too.
@@ -449,7 +491,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               baselineAt={(memberPath) => baselineAt(memberPath, scheduleYear)}
               onChange={(memberPath, value) => onCellChange(memberPath, scheduleYear, value)}
               onFocus={setFocusedPath}
-              footer={mode === 'one' ? growthRow : undefined}
+              footer={mode === 'indexed' ? growthRow : undefined}
             />
           </div>
         ) : (
@@ -457,7 +499,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             members={members}
             years={years}
             // One value with nothing after it says where it starts.
-            headers={mode === 'one' && previewYears.length === 0 ? [`From ${year}`] : undefined}
+            headers={mode !== 'byYear' && previewYears.length === 0 ? [`From ${year}`] : undefined}
             openEnded
             parameters={parameters}
             valueAt={valueAt}
@@ -531,7 +573,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               style={{ marginLeft: `-${spacing.sm}` }}
             >
               <IconChartLine />
-              {historyOpen ? 'Hide' : 'Show'} past values
+              {historyOpen ? 'Hide' : 'Show'} historic values
               <IconChevronDown
                 style={{
                   transform: historyOpen ? 'rotate(180deg)' : undefined,
@@ -544,7 +586,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             // Every member's history is a click away, not only the one in focus.
             <div
               role="group"
-              aria-label="Past values of"
+              aria-label="Historic values of"
               style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}
             >
               {members.map((member) => {
