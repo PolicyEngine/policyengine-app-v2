@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import type { StoreMethods } from '@/api/deferredStore';
 import { getFlagshipReportStore, type FlagshipReportStore } from '@/api/flagshipReportStore';
-import { getReformStore, type ReformStore } from '@/api/reformStore';
+import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
 import { useSavedWorkStore } from '@/hooks/utils/useSavedWorkStore';
 import {
   accountStoreContext,
@@ -11,6 +11,7 @@ import {
   useAssociationBackendResolver,
   type AssociationBackend,
 } from '@/libs/auth/useAssociationBackend';
+import { policyKeys } from '@/libs/queryKeys';
 import type { RootState } from '@/store';
 
 /**
@@ -20,6 +21,9 @@ import type { RootState } from '@/store';
  * rather than localStorage. The stores wait for the session to be
  * restored, so nothing is written to the wrong one while it is.
  */
+
+/** How long a fetched v1 policy stays cached without a reader. */
+const V1_POLICY_JSON_GC_TIME = 30 * 60 * 1000;
 
 const REFORM_STORE_METHODS: StoreMethods<ReformStore> = {
   create: true,
@@ -46,12 +50,22 @@ export function useReformStore(): ReformStore {
   // Read through a ref so metadata arriving later does not rebuild the store.
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
+  const queryClient = useQueryClient();
   const reformStoreFor = useCallback(
     (backend: AssociationBackend) =>
       getReformStore(accountStoreContext(backend), {
         getParameterMetadata: () => parametersRef.current,
+        // v1 policies never change, so each is fetched once per session
+        // rather than on every list of the account's reforms.
+        fetchPolicyJson: (countryId, policyId) =>
+          queryClient.fetchQuery({
+            queryKey: policyKeys.json(countryId, policyId),
+            queryFn: () => fetchV1PolicyJson(countryId, policyId),
+            staleTime: Infinity,
+            gcTime: V1_POLICY_JSON_GC_TIME,
+          }),
       }),
-    []
+    [queryClient]
   );
   return useSavedWorkStore(reformStoreFor, REFORM_STORE_METHODS).store;
 }

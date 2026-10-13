@@ -22,9 +22,13 @@ interface ReportAdjustPanelProps {
   provisions: RunReportProvision[];
 }
 
-/** True when the reform's parameter set is exactly the given provisions. */
+/**
+ * True when the reform's parameter set is exactly the given provisions. A
+ * reform whose changes could not be loaded matches nothing: its empty
+ * parameter list is not its real changes.
+ */
 function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
-  if (reform.parameters.length !== provisions.length) {
+  if (reform.parametersUnavailable || reform.parameters.length !== provisions.length) {
     return false;
   }
   return provisions.every((provision) =>

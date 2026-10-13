@@ -385,6 +385,24 @@ export default function ReformsPage() {
     setEditedValues(Object.fromEntries(reform.parameters.map((p) => [p.name, p.values[0]?.value])));
   };
 
+  // A reform opened before its changes loaded starts its edits from them
+  // once "Try again" brings them in.
+  useEffect(() => {
+    if (!selectedReform || selectedReform.parametersUnavailable) {
+      return;
+    }
+    setEditedValues((current) =>
+      Object.keys(current).length > 0
+        ? current
+        : Object.fromEntries(
+            selectedReform.parameters.map((parameter) => [
+              parameter.name,
+              parameter.values[0]?.value,
+            ])
+          )
+    );
+  }, [selectedReform]);
+
   const openBillAsDraft = (bill: TrackedBill) => {
     clearDraftReform();
     billProvisions(bill).forEach((provision) =>
@@ -610,6 +628,17 @@ export default function ReformsPage() {
               }}
             />
           </Stack>
+          {selectedReform.parametersUnavailable && (
+            <Stack role="alert" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
+              <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
+                This reform's changes could not be loaded, so it cannot be run, edited or duplicated
+                right now. Nothing about it has changed.
+              </Text>
+              <Button variant="outline" onClick={invalidate}>
+                Try again
+              </Button>
+            </Stack>
+          )}
           <Stack style={{ gap: spacing.md }}>
             {selectedReform.parameters.map((parameter) => {
               const baseline = getCurrentValue(parameters?.[parameter.name]?.values);
@@ -674,14 +703,18 @@ export default function ReformsPage() {
                   reformProvisions(selectedReform)
                 )
               }
-              disabled={runReport.isRunning}
+              disabled={runReport.isRunning || selectedReform.parametersUnavailable}
             >
               <IconChartBar size={16} />
               {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
             </Button>
             <Button
               variant="outline"
-              disabled={!isDirty(selectedReform) || saveMutation.isPending}
+              disabled={
+                !isDirty(selectedReform) ||
+                saveMutation.isPending ||
+                selectedReform.parametersUnavailable
+              }
               onClick={() => saveMutation.mutate(selectedReform)}
             >
               <IconDeviceFloppy size={16} />
@@ -689,6 +722,7 @@ export default function ReformsPage() {
             </Button>
             <Button
               variant="outline"
+              disabled={selectedReform.parametersUnavailable}
               onClick={() => {
                 loadReformIntoDraft(selectedReform, (path) => ({
                   breadcrumb: resolveBreadcrumb(path),
@@ -703,7 +737,7 @@ export default function ReformsPage() {
             </Button>
             <Button
               variant="outline"
-              disabled={duplicateMutation.isPending}
+              disabled={duplicateMutation.isPending || selectedReform.parametersUnavailable}
               onClick={() => duplicateMutation.mutate(selectedReform)}
             >
               <IconCopy size={16} />
@@ -917,7 +951,11 @@ export default function ReformsPage() {
             visibleReforms.map((reform) => (
               <Card
                 key={reform.id}
-                eyebrow={`${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`}
+                eyebrow={
+                  reform.parametersUnavailable
+                    ? 'Changes could not be loaded'
+                    : `${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`
+                }
                 title={reform.label || 'Untitled reform'}
                 body={SOURCE_LABELS[reform.provenance.source]}
                 onClick={() => openReform(reform)}

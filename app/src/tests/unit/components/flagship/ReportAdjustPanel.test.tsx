@@ -128,6 +128,25 @@ describe('ReportAdjustPanel', () => {
     expect(reformId).toBe('rf-existing');
   });
 
+  test('given a saved reform whose changes could not load then it is skipped, not matched or fatal', async () => {
+    mockFindByUser.mockResolvedValue([
+      { id: 'rf-unloaded', label: 'Unloaded', parameters: [], parametersUnavailable: true },
+    ]);
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const user = userEvent.setup();
+    await renderPanel();
+
+    // Removing every provision but one leaves a set an empty reform must not match
+    const input = screen.getByLabelText(/adjusted value for gov\.irs/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+  });
+
   test('given a provision is removed then recompute runs without it', async () => {
     mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
     const user = userEvent.setup();

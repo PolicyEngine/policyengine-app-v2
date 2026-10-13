@@ -44,6 +44,12 @@ export interface Reform {
   /** Canonical policy id in api.policyengine.org once materialized */
   policyId?: string | null;
   parameters: Parameter[];
+  /**
+   * Set when the reform's changes could not be loaded (a saved reform
+   * whose v1 policy did not load). `parameters` is then empty and must
+   * not be shown, run, matched or saved as the reform's changes.
+   */
+  parametersUnavailable?: boolean;
   baseline: ReformBaseline;
   provenance: ReformProvenance;
   createdAt?: string;

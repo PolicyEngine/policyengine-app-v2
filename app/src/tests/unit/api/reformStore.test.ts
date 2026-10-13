@@ -288,6 +288,38 @@ describe('ApiReformStore', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('given one reform whose v1 policy fails to load, when listed, then the others still list', async () => {
+    // Given
+    const { store, fetchMock, fetchPolicyJson } = apiReformStore();
+    const unloadable = policyItem({
+      ...reformRow,
+      id: '66666666-6666-4666-8666-666666666666',
+      legacy_policy_id: REPLACEMENT_POLICY_ID,
+      name: 'Unloadable',
+    });
+    fetchMock.mockResolvedValue(pageResponse([reformRow, unloadable]));
+    fetchPolicyJson.mockImplementation(async (_countryId: string, policyId: string) => {
+      if (policyId === String(REPLACEMENT_POLICY_ID)) {
+        throw new Error('Failed to fetch policy 95800');
+      }
+      return POLICY_JSON;
+    });
+
+    // When
+    const reforms = await store.findByUser(PE_USER_ID, 'us');
+
+    // Then
+    expect(reforms).toHaveLength(2);
+    expect(reforms[0].parameters).toHaveLength(1);
+    expect(reforms[0].parametersUnavailable).toBeUndefined();
+    expect(reforms[1]).toMatchObject({
+      label: 'Unloadable',
+      policyId: String(REPLACEMENT_POLICY_ID),
+      parameters: [],
+      parametersUnavailable: true,
+    });
+  });
+
   it('given a reform, when deleted, then its row is deleted', async () => {
     // Given
     const { store, fetchMock } = apiReformStore();

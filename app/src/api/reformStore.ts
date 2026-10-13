@@ -198,7 +198,8 @@ export function materializeReformPolicy(
   );
 }
 
-async function fetchV1PolicyJson(
+/** A v1 policy's parameter map. v1 policies never change once created. */
+export async function fetchV1PolicyJson(
   countryId: string,
   policyId: string
 ): Promise<PolicyMetadataParams> {
@@ -255,7 +256,14 @@ export class ApiReformStore implements ReformStore {
       return [];
     }
     const items = (await this.routes.list()).filter(isAccountReform);
-    return Promise.all(items.map((item) => this.toReform(item)));
+    // Each reform's changes come from its own v1 policy. One that fails to
+    // load is listed without them (flagged), rather than failing the list.
+    const loaded = await Promise.allSettled(items.map((item) => this.toReform(item)));
+    return loaded.map((outcome, index) =>
+      outcome.status === 'fulfilled'
+        ? outcome.value
+        : { ...this.reformFromItem(items[index], []), parametersUnavailable: true }
+    );
   }
 
   async findById(reformId: string): Promise<Reform | null> {
@@ -320,19 +328,22 @@ export class ApiReformStore implements ReformStore {
   }
 
   private async toReform(item: UserPolicyItem, knownParameters?: Parameter[]): Promise<Reform> {
-    const policyId = String(item.legacy_policy_id);
     const parameters =
       knownParameters ??
       parametersFromPolicyJson(
-        await this.fetchPolicyJson(item.country_id, policyId),
+        await this.fetchPolicyJson(item.country_id, String(item.legacy_policy_id)),
         this.getParameterMetadata()
       );
+    return this.reformFromItem(item, parameters);
+  }
+
+  private reformFromItem(item: UserPolicyItem, parameters: Parameter[]): Reform {
     return {
       id: item.id,
       userId: item.user_id,
       countryId: item.country_id,
       label: item.name ?? undefined,
-      policyId,
+      policyId: String(item.legacy_policy_id),
       parameters,
       baseline: (item.baseline ?? 'current-law') as ReformBaseline,
       provenance: provenanceFromWire(item.provenance),

@@ -314,6 +314,48 @@ describe('ReformsPage', () => {
     );
   });
 
+  test('given a reform whose changes could not load then its card and detail say so', async () => {
+    mockFindByUser.mockResolvedValue([
+      CHAT_REFORM,
+      {
+        ...CHAT_REFORM,
+        id: 'rf-2',
+        label: 'Unloadable reform',
+        parameters: [],
+        parametersUnavailable: true,
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    // The other reform still lists normally
+    expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
+    expect(screen.getByText('Changes could not be loaded')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Unloadable reform'));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/changes could not be loaded/i);
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /add parameters in build/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /duplicate/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled();
+  });
+
+  test('given a reform whose changes could not load then "Try again" reloads the list', async () => {
+    mockFindByUser.mockResolvedValue([
+      { ...CHAT_REFORM, parameters: [], parametersUnavailable: true },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    mockFindByUser.mockResolvedValue([CHAT_REFORM]);
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(await screen.findByLabelText(/new value for gov\.irs/i)).toHaveValue(3600);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   test('given the back link in a detail then the grid returns', async () => {
     const user = userEvent.setup();
     renderReforms();
