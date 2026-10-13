@@ -8,6 +8,7 @@ import {
 } from '@/components/flagship/CalibrationMatches';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
+import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
@@ -305,6 +306,16 @@ export default function ReportView({
                 'economy',
                 <Stack style={{ gap: spacing.md }}>
                   {output ? <EconomicImpactCharts output={output} /> : economyPending}
+                  {/* The budget over several years, on the reader's request. */}
+                  {reformPolicyId && baselinePolicyId && (
+                    <BudgetWindowCard
+                      countryId={countryId}
+                      reformPolicyId={reformPolicyId}
+                      baselinePolicyId={baselinePolicyId}
+                      region={region}
+                      year={year}
+                    />
+                  )}
                 </Stack>
               )}
               {tabPanel(
