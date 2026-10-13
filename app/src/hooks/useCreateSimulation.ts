@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { createSimulation } from '@/api/simulation';
+import { useAccountSaveFailure } from '@/hooks/useAccountSaveFailure';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
-import { reportSaveFailure } from '@/libs/saveFailureNotice';
 import { SimulationCreationPayload } from '@/types/payloads';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
@@ -10,6 +10,7 @@ export function useCreateSimulation(simulationLabel?: string) {
   const country = useCurrentCountry();
   const userId = useCurrentUserId();
   const createAssociation = useCreateSimulationAssociation();
+  const reportAccountSaveFailure = useAccountSaveFailure();
 
   const mutation = useMutation({
     mutationFn: (data: SimulationCreationPayload) => createSimulation(country, data),
@@ -26,9 +27,9 @@ export function useCreateSimulation(simulationLabel?: string) {
         });
       } catch (error) {
         console.error('Simulation created but association failed:', error);
-        // The builder carries on with the created simulation; tell the user it
-        // is not in their saved work (account unavailable, too large, down).
-        reportSaveFailure('simulation', error);
+        // The builder carries on with the created simulation; tell a signed-in
+        // user it is not in their account (unavailable, too large, down).
+        await reportAccountSaveFailure('simulation', error);
       }
     },
   });

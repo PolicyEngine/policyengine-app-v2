@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
+import { useAccountSaveFailure } from '@/hooks/useAccountSaveFailure';
 import { useCurrentUserId } from '@/libs/auth/useAssociationBackend';
 import { countryIds } from '@/libs/countries';
-import { reportSaveFailure } from '@/libs/saveFailureNotice';
 import type { HouseholdCreationPayload } from '@/types/payloads';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 
@@ -14,6 +14,7 @@ interface CreateHouseholdVariables {
 export function useCreateHousehold(householdLabel?: string) {
   const userId = useCurrentUserId();
   const createAssociation = useCreateHouseholdAssociation();
+  const reportAccountSaveFailure = useAccountSaveFailure();
 
   const mutation = useMutation({
     mutationFn: ({ payload }: CreateHouseholdVariables) => createHousehold(payload),
@@ -31,9 +32,9 @@ export function useCreateHousehold(householdLabel?: string) {
         });
       } catch (error) {
         console.error('Household created but association failed:', error);
-        // The builder carries on with the created household; tell the user it
-        // is not in their saved work (account unavailable, too large, down).
-        reportSaveFailure('household', error);
+        // The builder carries on with the created household; tell a signed-in
+        // user it is not in their account (unavailable, too large, down).
+        await reportAccountSaveFailure('household', error);
       }
     },
   });

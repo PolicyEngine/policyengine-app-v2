@@ -3,7 +3,7 @@ import { FloatingAlert } from './FloatingAlert';
 
 /**
  * Tells the user when something they created could not be added to their
- * saved work (see reportSaveFailure). Mounted once per app shell, so it
+ * account (see useAccountSaveFailure). Mounted once per app shell, so it
  * stays up after the dialog that started the save has closed.
  */
 export default function SaveFailureNotice() {

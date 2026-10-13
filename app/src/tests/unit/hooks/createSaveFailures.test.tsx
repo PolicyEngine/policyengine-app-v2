@@ -81,7 +81,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('creating while saved work cannot be saved', () => {
+describe('creating while the account cannot save', () => {
   test('given the account is unavailable then a new policy is still returned and the user is told', async () => {
     // Given
     const { result } = renderWithSession(
@@ -95,7 +95,7 @@ describe('creating while saved work cannot be saved', () => {
     // Then
     expect(created).toEqual(POLICY_RESPONSE);
     expect(screen.getByRole('alert')).toHaveTextContent(
-      `Your policy was created, but it could not be added to your saved work. ${ACCOUNT_UNAVAILABLE_MESSAGE}`
+      `Your policy was created, but it could not be added to your account. ${ACCOUNT_UNAVAILABLE_MESSAGE}`
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -111,7 +111,7 @@ describe('creating while saved work cannot be saved', () => {
     // Then
     expect(created).toEqual(HOUSEHOLD_RESPONSE);
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Your household was created, but it could not be added to your saved work. Request body is too large.'
+      'Your household was created, but it could not be added to your account. Request body is too large.'
     );
   });
 
@@ -129,8 +129,30 @@ describe('creating while saved work cannot be saved', () => {
     // Then
     expect(created).toEqual(SIMULATION_RESPONSE);
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Your simulation was created, but it could not be added to your saved work. Saved work is temporarily unavailable.'
+      'Your simulation was created, but it could not be added to your account. Saved work is temporarily unavailable.'
     );
+  });
+
+  test('given a signed-out save to this browser fails then it stays console-only, as before', async () => {
+    // Given
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    const { result } = renderWithSession(
+      () => useCreatePolicy('CTC expansion'),
+      makeAuthValue({ status: 'anonymous' })
+    );
+
+    // When
+    const created = await act(() => result.current.createPolicy(POLICY_PAYLOAD));
+
+    // Then
+    expect(created).toEqual(POLICY_RESPONSE);
+    expect(console.error).toHaveBeenCalledWith(
+      'Policy created but association failed:',
+      expect.any(Error)
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   test('given a successful save then nothing is shown', async () => {
