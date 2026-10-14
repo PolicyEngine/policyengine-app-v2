@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import type { BudgetWindowParams, BudgetWindowYear } from '@/api/budgetWindow';
 import RunProgress from '@/components/flagship/report/RunProgress';
+import { ErrorState } from '@/components/flagship/states';
 import {
   Button,
   Select,
@@ -263,14 +264,12 @@ export default function BudgetWindowCard({
       )}
 
       {failed && (
-        <Stack style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
-          <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.error }}>
-            {data?.error || budget.error?.message || 'The budget window could not be calculated.'}
-          </Text>
-          <Button size="sm" variant="outline" onClick={() => void budget.refetch()}>
-            Try again
-          </Button>
-        </Stack>
+        <ErrorState
+          compact
+          title="The budget window could not be calculated"
+          description={data?.error || budget.error?.message}
+          onRetry={() => budget.refetch()}
+        />
       )}
 
       {result && (
