@@ -8,6 +8,7 @@ import {
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 /**
  * A report opened from a shared link: no provenance stashed in this
@@ -53,3 +54,10 @@ export const SCHEDULE_REPORT_2028: Report = {
   label: 'Phased exemption',
   year: REPORT_YEAR_2028,
 };
+
+/** A report whose simulations ran on one household, as the classic calculator saves them. */
+export const HOUSEHOLD_SIMULATIONS: Simulation[] = EXISTING_SIMULATIONS.map((simulation) => ({
+  ...simulation,
+  populationId: '55123',
+  populationType: 'household',
+}));

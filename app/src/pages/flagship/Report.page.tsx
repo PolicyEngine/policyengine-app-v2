@@ -7,6 +7,7 @@ import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
 import ReportLoadError from '@/components/flagship/report/ReportLoadError';
+import ReportNotSocietyWide from '@/components/flagship/report/ReportNotSocietyWide';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
@@ -104,6 +105,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     !failedPolicyIds.includes(reformPolicyId) &&
     metadata.status !== 'error';
 
+  // A household report is the classic calculator's: this page shows
+  // society-wide results only. Run here, it would score one household
+  // and write that over the report's stored outputs.
+  const householdReport = simulations.some(
+    (simulation) => simulation.populationType === 'household'
+  );
+
   // The run handed its draft over to this report; Build starts fresh.
   useEffect(() => {
     clearDraftAfterRun(userReportId);
@@ -112,7 +120,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const calcConfigs = useMemo(() => {
     // Wait for the reform simulation too: starting on the baseline alone
     // scores current law against itself and persists zeros as the result.
-    if (!report?.id || !allSimulationsLoaded(report, simulations)) {
+    if (!report?.id || householdReport || !allSimulationsLoaded(report, simulations)) {
       return null;
     }
     const simulation1 = simulations[0];
@@ -139,7 +147,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         },
       } as CalcStartConfig,
     ];
-  }, [report, simulations]);
+  }, [report, simulations, householdReport]);
 
   useStartCalculationOnLoad({
     enabled: !!report && !!calcConfigs,
@@ -195,6 +203,17 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           {title}
         </Title>
         <ReportDetailsError error={unreadableMeta.error} onOpenWithout={unreadableMeta.setAside} />
+      </Stack>
+    );
+  }
+
+  if (householdReport) {
+    return layout(
+      <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+        <Title order={1} style={{ margin: 0 }}>
+          {title}
+        </Title>
+        <ReportNotSocietyWide />
       </Stack>
     );
   }
