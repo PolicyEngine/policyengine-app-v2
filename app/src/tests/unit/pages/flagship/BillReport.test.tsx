@@ -143,7 +143,8 @@ describe('BillReportPage', () => {
     ).toBeInTheDocument();
   });
 
-  test('given the overview then summary, date, bill text link, and verdict show', async () => {
+  test('given the overview then summary, date and bill text show; the verdict is in Validation', async () => {
+    const user = userEvent.setup();
     renderReport();
 
     expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
@@ -154,7 +155,14 @@ describe('BillReportPage', () => {
       'href',
       TRACKED_BILL.sourceUrl
     );
-    expect(screen.getAllByText(/Within fiscal-note range/).length).toBeGreaterThanOrEqual(1);
+    expect(
+      within(screen.getByRole('tabpanel')).queryByText(/fiscal-note range/)
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+    expect(
+      within(screen.getByRole('tabpanel')).getAllByText(/Within fiscal-note range/).length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   test('given the full run is calculating then economic impacts show its progress', async () => {

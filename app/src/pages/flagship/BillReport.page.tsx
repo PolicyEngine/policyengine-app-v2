@@ -10,11 +10,7 @@ import DistrictImpactCard, {
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
-import {
-  BillValidationSection,
-  useModelTrackRecord,
-  ValidationChip,
-} from '@/components/flagship/ValidationPanel';
+import { BillValidationSection, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text } from '@/components/ui';
 import { getDurationForCountry } from '@/constants/calculationDurations';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
@@ -47,12 +43,11 @@ function Caption({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The bill's summary, analysis date, bill text, and validation verdict. */
+/** The bill's summary, analysis date, and bill text. Its validation verdict lives in Validation. */
 function BillOverviewLead({ bill }: { bill: TrackedBill }) {
   const billTextUrl = bill.sourceUrl ?? bill.legiscanUrl;
   return (
     <Stack style={{ gap: spacing.sm }}>
-      {bill.validation && <ValidationChip validation={bill.validation} />}
       {bill.summary && (
         <Text
           style={{

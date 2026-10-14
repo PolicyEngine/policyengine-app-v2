@@ -8,6 +8,7 @@ import {
 } from '@/components/flagship/CalibrationMatches';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
+import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
@@ -80,6 +81,8 @@ export interface ReportViewProps {
    * cover reads the population and the year under the title: "California · 2026".
    */
   populationLabel?: string;
+  /** A budget window asked for with the run (in Build): its section opens running. */
+  budgetWindow?: { startYear: number; windowSize: number };
   provisions: RunReportProvision[];
   /**
    * The overview's list of changes, before and after, when the source
@@ -134,6 +137,7 @@ export default function ReportView({
   heading = title,
   sourceNote,
   populationLabel,
+  budgetWindow,
   provisions,
   changes,
   priorLawBaseline = false,
@@ -313,6 +317,17 @@ export default function ReportView({
                 'economy',
                 <Stack style={{ gap: spacing.md }}>
                   {output ? <EconomicImpactCharts output={output} /> : economyPending}
+                  {/* The budget over several years, on the reader's request. */}
+                  {reformPolicyId && baselinePolicyId && (
+                    <BudgetWindowCard
+                      countryId={countryId}
+                      reformPolicyId={reformPolicyId}
+                      baselinePolicyId={baselinePolicyId}
+                      region={region}
+                      year={year}
+                      initialWindow={budgetWindow}
+                    />
+                  )}
                 </Stack>
               )}
               {tabPanel(

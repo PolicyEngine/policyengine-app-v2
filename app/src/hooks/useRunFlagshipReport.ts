@@ -37,11 +37,14 @@ export function useRunFlagshipReport() {
     {
       fromDraft = false,
       region,
+      windowYears,
     }: {
       /** A run from the draft hands the draft over: its report clears it. */
       fromDraft?: boolean;
       /** A state or congressional district ("state/ca"); the whole country when unset. */
       region?: string;
+      /** Years of budget to score alongside the report, e.g. 10. */
+      windowYears?: number;
     } = {}
   ) => {
     if (isRunning) {
@@ -63,6 +66,7 @@ export function useRunFlagshipReport() {
         reformId,
         year,
         region,
+        windowYears,
       });
       if (fromDraft) {
         markDraftRun(userReportId);

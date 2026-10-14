@@ -73,11 +73,11 @@ describe('DraftHeader', () => {
     expect(within(header).getByRole('button', { name: 'Rename the reform' })).toHaveTextContent(
       'Name your reform'
     );
-    expect(within(header).queryByRole('combobox', { name: /year/i })).not.toBeInTheDocument();
+    expect(within(header).queryByRole('combobox', { name: 'Year' })).not.toBeInTheDocument();
     expect(within(header).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
 
     const bar = screen.getByRole('region', { name: 'Reform actions' });
-    expect(within(bar).getByRole('combobox', { name: /year/i })).toBeInTheDocument();
+    expect(within(bar).getByRole('combobox', { name: 'Year' })).toBeInTheDocument();
     expect(
       within(bar).getByRole('button', { name: /population: nationwide/i })
     ).toBeInTheDocument();
@@ -136,6 +136,31 @@ describe('DraftHeader', () => {
 
     expect(getDraftReform()?.year).toBe(2027);
     expect(screen.getByRole('button', { name: /run 2027 report/i })).toBeInTheDocument();
+  });
+
+  test('given a budget window is chosen then the draft and its run take it', async () => {
+    Element.prototype.scrollIntoView ??= vi.fn();
+    Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+    seedDeductionMetadata();
+    const user = userEvent.setup();
+    // A change to run.
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    renderHeader();
+
+    const years = screen.getByRole('combobox', { name: 'Budget years' });
+    expect(years).toHaveTextContent('2026 only');
+    await user.click(years);
+    await user.click(await screen.findByRole('option', { name: '2026–2035' }));
+
+    expect(getDraftReform()?.windowYears).toBe(10);
+    await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+    expect(mockRun.mock.calls[0][5]).toMatchObject({ fromDraft: true, windowYears: 10 });
   });
 
   test('given the population picker then a household shows, but waits', async () => {
