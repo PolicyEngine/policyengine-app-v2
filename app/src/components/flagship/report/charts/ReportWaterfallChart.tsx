@@ -160,12 +160,14 @@ export default function ReportWaterfallChart({
           fill="none"
           stroke="none"
           isAnimationActive={false}
+          // A spacer below zero comes with a negative height, which SVG
+          // rejects; draw the same box from its top instead.
           shape={(props: any) => (
             <rect
               x={props.x}
-              y={props.y}
+              y={props.height < 0 ? props.y + props.height : props.y}
               width={props.width}
-              height={props.height}
+              height={Math.abs(props.height ?? 0)}
               fill="none"
               stroke="none"
             />
