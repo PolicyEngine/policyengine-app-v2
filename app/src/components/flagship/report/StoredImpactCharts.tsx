@@ -100,12 +100,16 @@ const signedPercent = (value: number) =>
 
 type StoredBudgetary = NonNullable<TrackedBill['impactData']>['budgetary'];
 
+/** The stored revenue change; as the tracker reads it, net cost stands in where none is stored. */
+const storedRevenue = (budgetary: StoredBudgetary) =>
+  budgetary?.stateRevenueImpact ?? budgetary?.netCost;
+
 /**
  * The tracker's annual state revenue change, as the report's own headline
  * words it: a number, not a chart, across the grid's full width.
  */
 function StoredBudget({ budgetary }: { budgetary: StoredBudgetary }) {
-  const value = budgetary?.stateRevenueImpact;
+  const value = storedRevenue(budgetary);
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return null;
   }
@@ -185,7 +189,7 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
     return change === null ? [] : [{ group, change }];
   });
 
-  const hasBudget = typeof impact?.budgetary?.stateRevenueImpact === 'number';
+  const hasBudget = typeof storedRevenue(impact?.budgetary) === 'number';
   if (
     !hasBudget &&
     average.length + relative.length + winnersRows.length + povertyRows.length === 0

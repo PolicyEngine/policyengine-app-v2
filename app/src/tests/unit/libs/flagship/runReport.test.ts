@@ -52,6 +52,8 @@ describe('runFlagshipReport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // Account runs keep their details in memory for the page session.
+    forgetAccountReportMeta();
     mockCreatePolicy.mockResolvedValue({ result: { policy_id: '77' } });
     mockCreateSimulation
       .mockResolvedValueOnce({ result: { simulation_id: '101' } })
@@ -236,6 +238,188 @@ describe('runFlagshipReport', () => {
     expect(meta?.provisions).toEqual([PROVISION]);
   });
 
+  describe('given a saved reform to compare with', () => {
+    const SAVED_BASELINE = {
+      reformId: 'rf-plan-b',
+      label: 'Plan B',
+      parameters: [
+        {
+          name: 'gov.irs.credits.ctc.amount.base[0].amount',
+          values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 }],
+        },
+      ],
+    };
+
+    /** Plan B's change, as its unlabelled baseline policy carries it. */
+    const PLAN_B_DATA = {
+      'gov.irs.credits.ctc.amount.base[0].amount': { '2026-01-01.2100-12-31': 3000 },
+    };
+
+    beforeEach(() => {
+      // The reform and the baseline each become their own policy, told
+      // apart by what they change: neither carries a name.
+      mockCreatePolicy.mockImplementation(
+        async (_country: string, payload: { data: Record<string, unknown> }) => ({
+          result: {
+            policy_id: JSON.stringify(payload.data) === JSON.stringify(PLAN_B_DATA) ? '88' : '77',
+          },
+        })
+      );
+      mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+      mockFetchBudgetWindow.mockResolvedValue({ status: 'computing', result: null });
+    });
+
+    test('then its parameters become the baseline policy', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        baseline: SAVED_BASELINE,
+      });
+
+      expect(mockCreatePolicy).toHaveBeenCalledWith('us', { data: PLAN_B_DATA });
+      // Names live on the user's records, never on the base policies.
+      for (const [, payload] of mockCreatePolicy.mock.calls) {
+        expect(payload).not.toHaveProperty('label');
+      }
+    });
+
+    test('then the baseline simulation, the calculation and the window all use it', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        year: 2026,
+        windowYears: 10,
+        baseline: SAVED_BASELINE,
+      });
+
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+        population_id: 'us',
+        population_type: 'geography',
+        policy_id: 88,
+      });
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+        population_id: 'us',
+        population_type: 'geography',
+        policy_id: 77,
+      });
+      // The economy asks for the reform over the chosen baseline: /economy/77/over/88.
+      expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '88', {
+        region: 'us',
+        time_period: '2026',
+      });
+      expect(mockFetchBudgetWindow).toHaveBeenCalledWith('us', '77', '88', {
+        region: 'us',
+        startYear: 2026,
+        windowSize: 10,
+      });
+    });
+
+    test('then the account record links the compared reform, without its name', async () => {
+      const accountStore = {
+        create: vi.fn().mockResolvedValue({ id: 'row-1' }),
+      } as unknown as FlagshipReportStore;
+
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        baseline: SAVED_BASELINE,
+        accountReportStore: accountStore,
+      });
+
+      expect(accountStore.create).toHaveBeenCalledWith(
+        expect.objectContaining({ baselineReformId: 'rf-plan-b' })
+      );
+      expect(JSON.stringify(vi.mocked(accountStore.create).mock.calls[0][0])).not.toContain(
+        'Plan B'
+      );
+    });
+
+    test('then the report meta records it by id and name', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        baseline: SAVED_BASELINE,
+      });
+
+      expect(readReportMeta('55')?.baseline).toEqual({
+        reformId: 'rf-plan-b',
+        policyId: '88',
+        label: 'Plan B',
+      });
+    });
+
+    test('given its policy already then the run reuses it without making one', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        baseline: { reformId: 'rf-plan-b', label: 'Plan B', policyId: 88 },
+      });
+
+      expect(mockCreatePolicy).toHaveBeenCalledTimes(1);
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+        1,
+        'us',
+        expect.objectContaining({ policy_id: 88 })
+      );
+      expect(readReportMeta('55')?.baseline).toEqual({
+        reformId: 'rf-plan-b',
+        policyId: '88',
+        label: 'Plan B',
+      });
+    });
+  });
+
+  test('given no baseline then the report compares with current law and records none', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+    });
+
+    expect(mockCreatePolicy).toHaveBeenCalledTimes(1);
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+      1,
+      'us',
+      expect.objectContaining({ policy_id: 2 })
+    );
+    expect(readReportMeta('55')).not.toHaveProperty('baseline');
+  });
+
+  test('given a baseline with nothing in it then the report compares with current law', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      baseline: { reformId: 'rf-empty', label: 'Empty', parameters: [] },
+    });
+
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+      1,
+      'us',
+      expect.objectContaining({ policy_id: 2 })
+    );
+    expect(readReportMeta('55')).not.toHaveProperty('baseline');
+  });
+
   test('given no provisions then it refuses to run', async () => {
     await expect(
       runFlagshipReport({
@@ -310,6 +494,7 @@ describe('runFlagshipReport', () => {
       year: '2027',
       reformId: REFORM_ROW_ID,
       budgetWindowYears: null,
+      baselineReformId: null,
     });
     expect(localStorage.getItem('pe-flagship-reports')).toBeNull();
     for (const legacyKey of LEGACY_KEYS) {
@@ -395,6 +580,16 @@ describe('reportMetaFromRecord', () => {
     createdAt: '2026-10-14T00:00:00Z',
     budgetWindowYears: 10,
   };
+
+  test('given the compared reform, named by the caller, then the details carry it', () => {
+    const baseline = { reformId: 'rf-plan-b', policyId: '88', label: 'Plan B' };
+
+    expect(
+      reportMetaFromRecord({ ...accountRecord, baselineReformId: 'rf-plan-b' }, '2027', baseline)
+        ?.baseline
+    ).toEqual(baseline);
+    expect(reportMetaFromRecord(accountRecord, '2027')).not.toHaveProperty('baseline');
+  });
 
   test('given a record with a budget window then the window starts in the report year', () => {
     expect(reportMetaFromRecord(accountRecord, '2027')).toEqual({

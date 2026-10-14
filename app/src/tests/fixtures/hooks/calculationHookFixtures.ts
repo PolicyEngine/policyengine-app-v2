@@ -13,6 +13,14 @@ export const HOOK_TEST_CONSTANTS = {
 } as const;
 
 /**
+ * Region estimates a pending society-wide status can carry (v3 runs opt in)
+ */
+export const TEST_ESTIMATED_DURATIONS_MS = {
+  US_STATE: 190_000,
+  US_DISTRICT: 200_000,
+} as const;
+
+/**
  * Create a real QueryClient for hook tests
  * This is needed because hooks require a real QueryClient instance
  */

@@ -63,6 +63,7 @@ export function reportItem(overrides: Partial<UserReportItem> = {}): UserReportI
     report_id: null,
     legacy_report_id: LEGACY_IDS.REPORT,
     user_policy_id: null,
+    baseline_user_policy_id: null,
     source_note: null,
     provisions: null,
     validation: null,

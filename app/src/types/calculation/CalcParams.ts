@@ -41,6 +41,14 @@ export interface CalcParams {
   region?: string;
 
   /**
+   * Estimate a society-wide run's duration from its region (optional, v3)
+   * When true, the strategy uses getDurationForRegion and returns
+   * estimatedDurationMs on pending statuses. Off by default: the country
+   * estimate applies and no estimatedDurationMs is set.
+   */
+  estimateByRegion?: boolean;
+
+  /**
    * Year for the calculation (e.g., '2025')
    * Used to specify which year's policy rules to apply
    */

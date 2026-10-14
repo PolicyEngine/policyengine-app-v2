@@ -10,7 +10,10 @@ import { createSimulation } from '@/api/simulation';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
+import type { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { parseReportMeta, stampReportMeta, type ReportParseResult } from './reportSchema';
 
 /**
  * The run bridge: turns a set of provisions (from a draft reform or a
@@ -28,6 +31,25 @@ export interface RunReportProvision {
   value: any;
   /** Dated changes, when the provision varies over time (see DraftProvision). */
   intervals?: ValueInterval[];
+  /** How a value set from one year on grows, from when, and how it rounds (see DraftProvision). */
+  growth?: string;
+  growthStart?: number;
+  growthBase?: number;
+  growthRoundTo?: number;
+  growthRound?: 'nearest' | 'down' | 'up';
+}
+
+/**
+ * What a report compared the reform with, when not current law: a saved
+ * reform, run as the baseline policy.
+ */
+export interface FlagshipReportBaseline {
+  /** The saved reform, when the run came from one. */
+  reformId: string | null;
+  /** The baseline policy on the API. */
+  policyId: string;
+  /** Its name: the report reads "Compared with <label>". */
+  label: string;
 }
 
 /** Provenance shown in the flagship report header, stashed per report. */
@@ -39,6 +61,8 @@ export interface FlagshipReportMeta {
   createdAt: string;
   /** The budget window asked for with the run, which the report opens running. */
   budgetWindow?: { startYear: number; windowSize: number };
+  /** What the reform is compared with; current law when absent, as in older reports. */
+  baseline?: FlagshipReportBaseline;
 }
 
 export const REPORT_META_KEY = 'pe-flagship-report-meta';
@@ -60,7 +84,8 @@ export function forgetAccountReportMeta(): void {
   accountReportMeta.clear();
 }
 
-function readAllMeta(): Record<string, FlagshipReportMeta> {
+/** Every report's provenance as stored, of any schema version (see reportSchema). */
+function readAllMeta(): Record<string, unknown> {
   try {
     return JSON.parse(localStorage.getItem(REPORT_META_KEY) ?? '{}');
   } catch {
@@ -68,7 +93,8 @@ function readAllMeta(): Record<string, FlagshipReportMeta> {
   }
 }
 
-export function saveReportMeta(userReportId: string, meta: FlagshipReportMeta): void {
+export function saveReportMeta(userReportId: string, unstamped: FlagshipReportMeta): void {
+  const meta = stampReportMeta(unstamped);
   try {
     localStorage.setItem(
       REPORT_META_KEY,
@@ -79,19 +105,61 @@ export function saveReportMeta(userReportId: string, meta: FlagshipReportMeta): 
   }
 }
 
+/** The stash, when it holds this report's provenance; a stash that is not a map holds none. */
+function stashWith(userReportId: string): Record<string, unknown> | null {
+  const all: unknown = readAllMeta();
+  if (!all || typeof all !== 'object' || Array.isArray(all) || !Object.hasOwn(all, userReportId)) {
+    return null;
+  }
+  return all as Record<string, unknown>;
+}
+
+/**
+ * The report's stored provenance, parsed: null when none is stored,
+ * otherwise the current shape or why it can't be read.
+ */
+export function readReportMetaResult(
+  userReportId: string
+): ReportParseResult<FlagshipReportMeta> | null {
+  const all = stashWith(userReportId);
+  return all ? parseReportMeta(all[userReportId]) : null;
+}
+
+/** The report's provenance in the current shape; null when none is stored or it can't be read. */
 export function readReportMeta(userReportId: string): FlagshipReportMeta | null {
-  return accountReportMeta.get(userReportId) ?? readAllMeta()[userReportId] ?? null;
+  const accountMeta = accountReportMeta.get(userReportId);
+  if (accountMeta) {
+    return accountMeta;
+  }
+  const result = readReportMetaResult(userReportId);
+  return result?.ok ? result.value : null;
+}
+
+/** Drops the report's stored provenance; the other reports' stays as stored. */
+export function removeReportMeta(userReportId: string): void {
+  const all = stashWith(userReportId);
+  if (!all) {
+    return;
+  }
+  const { [userReportId]: _removed, ...rest } = all;
+  try {
+    localStorage.setItem(REPORT_META_KEY, JSON.stringify(rest));
+  } catch {
+    // It stays stored; the report still opens without it.
+  }
 }
 
 /**
  * A report record's provenance, as the run's own details would give it:
  * how a report opened on another device, or after a reload, still shows
- * its title, source, changes and budget window. A record without
- * provisions has nothing to show, so it gives none.
+ * its title, source, changes, budget window and comparison. A record
+ * without provisions has nothing to show, so it gives none. The record
+ * keeps only the link to its baseline reform, so the caller names it.
  */
 export function reportMetaFromRecord(
   record: FlagshipReportRecord | null | undefined,
-  reportYear: string | undefined
+  reportYear: string | undefined,
+  baseline?: FlagshipReportBaseline
 ): FlagshipReportMeta | null {
   if (!record || record.provisions.length === 0) {
     return null;
@@ -105,7 +173,25 @@ export function reportMetaFromRecord(
     ...(record.budgetWindowYears && record.budgetWindowYears > 1 && startYear
       ? { budgetWindow: { startYear, windowSize: record.budgetWindowYears } }
       : {}),
+    ...(baseline && { baseline }),
   };
+}
+
+/**
+ * A saved reform to compare the reform with, in place of current law.
+ * From Build it brings its parameters, made into the baseline policy
+ * (the API reuses an identical one); a re-run of a report brings the
+ * baseline policy that report already has.
+ */
+export interface RunReportBaseline {
+  /** The saved reform, when known. */
+  reformId?: string | null;
+  /** Its name, for the report's labels. */
+  label: string;
+  /** Its parameters, as the reform store keeps them. */
+  parameters?: Parameter[];
+  /** The baseline policy itself, when a report already has one. */
+  policyId?: number;
 }
 
 export interface RunFlagshipReportArgs {
@@ -127,11 +213,13 @@ export interface RunFlagshipReportArgs {
   region?: string;
   /** Years of budget to score from `year` alongside the report; none when unset or 1. */
   windowYears?: number;
+  /** What the reform is compared with; current law when unset. */
+  baseline?: RunReportBaseline;
   /**
    * With accounts (US/UK): the report store for this session's user, the
    * account or this browser's unauthenticated user. The run then writes
    * exactly one `/v2/user-reports` row — with the title, source note,
-   * provisions and reform link — instead of the browser record.
+   * provisions and reform links — instead of the browser record.
    */
   accountReportStore?: FlagshipReportStore | null;
 }
@@ -180,19 +268,27 @@ export async function runFlagshipReport({
   year = Number(CURRENT_YEAR),
   region,
   windowYears,
+  baseline: requestedBaseline,
   accountReportStore,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
   }
 
-  const reformPolicyId = await createReformPolicy(countryId, provisions);
+  // Compared with current law, unless a saved reform is chosen instead.
+  // Neither policy carries a name: names live on the user's records.
+  const comparison = customBaseline(requestedBaseline, currentLawId);
+  const [reformPolicyId, baselineId] = await Promise.all([
+    createReformPolicy(countryId, provisions),
+    comparison?.policyId ??
+      (comparison ? createReformPolicy(countryId, baselineProvisions(comparison)) : currentLawId),
+  ]);
 
   const [baseline, reform] = await Promise.all([
     createSimulation(countryId, {
       population_id: region ?? countryId,
       population_type: 'geography',
-      policy_id: currentLawId,
+      policy_id: baselineId,
     }),
     createSimulation(countryId, {
       population_id: region ?? countryId,
@@ -220,6 +316,13 @@ export async function runFlagshipReport({
     provisions,
     createdAt: new Date().toISOString(),
     ...(budgetWindow && { budgetWindow }),
+    ...(comparison && {
+      baseline: {
+        reformId: comparison.reformId ?? null,
+        policyId: String(baselineId),
+        label: comparison.label,
+      },
+    }),
   };
   const record = {
     countryId,
@@ -231,6 +334,8 @@ export async function runFlagshipReport({
     reformId: reformId ?? null,
     // Kept on the record so the report shows its window on any device.
     budgetWindowYears: budgetWindow?.windowSize ?? null,
+    // The comparison's name is its saved reform's, read from the link.
+    baselineReformId: comparison?.reformId ?? null,
   };
 
   if (accountReportStore) {
@@ -254,7 +359,7 @@ export async function runFlagshipReport({
   // A failure here never fails the run: the report page asks again.
   void Promise.resolve()
     .then(() =>
-      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(currentLawId), {
+      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(baselineId), {
         region: region ?? countryId,
         time_period: String(year),
       })
@@ -265,7 +370,7 @@ export async function runFlagshipReport({
   // report, rather than when the report page opens. The first request
   // submits the batch; the report's section checks on the same one.
   if (budgetWindow) {
-    void fetchBudgetWindow(countryId, String(reformPolicyId), String(currentLawId), {
+    void fetchBudgetWindow(countryId, String(reformPolicyId), String(baselineId), {
       region: region ?? countryId,
       ...budgetWindow,
     }).catch(() => {

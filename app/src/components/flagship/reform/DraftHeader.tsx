@@ -28,6 +28,7 @@ import {
   draftYear,
   provisionAdjusts,
   provisionsToRun,
+  setDraftBaseline,
   setDraftEditingReform,
   setDraftLabel,
   setDraftPopulation,
@@ -38,6 +39,7 @@ import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
+import BaselinePicker, { savedReformName, useDraftBaseline } from './BaselinePicker';
 import PopulationPicker from './PopulationPicker';
 
 /** The reform the draft edits is not in this session's store. */
@@ -139,13 +141,17 @@ function YearsPicker({
             <Select value={String(year)} onValueChange={(next) => onYearChange(Number(next))}>
               <SelectTrigger
                 aria-label={yearLabel}
-                className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
+                className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500 tw:max-sm:min-h-10"
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="start">
                 {yearOptions.map((option) => (
-                  <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
+                  <SelectItem
+                    key={option}
+                    value={String(option)}
+                    className="tw:cursor-pointer tw:max-sm:min-h-10"
+                  >
                     {option}
                   </SelectItem>
                 ))}
@@ -162,6 +168,9 @@ function YearsPicker({
                 value: String(years),
                 label: years === 1 ? '1 year' : `${years} years`,
               }))}
+              // A fingertip tall on a phone. The popover portals out of the
+              // shell, so the shell's own phone sizes do not reach it.
+              className="tw:max-sm:h-12"
             />
           </div>
         </div>
@@ -218,7 +227,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           onClick={() => setEditing(true)}
           aria-label="Rename the reform"
           title="Rename the reform"
-          className="tw:group tw:cursor-pointer tw:rounded-md tw:border tw:border-transparent tw:hover:border-border-light"
+          className="tw:group tw:cursor-pointer tw:rounded-md tw:border tw:border-transparent tw:hover:border-border-light tw:max-sm:min-h-10"
           style={{
             ...titleText,
             display: 'inline-flex',
@@ -248,12 +257,11 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
 }
 
 /**
- * The last step, under the reform: the run's year and who it runs on on
- * the left; throwing the draft away, saving it and running it on the
- * right. It
- * stays at the bottom of the window while the reform is longer than the
- * screen, so the run is never a scroll away, and settles in place under
- * the table once the table ends.
+ * The last step, under the reform: the run's year, who it runs on and
+ * what it is compared with on the left; throwing the draft away, saving
+ * it and running it on the right. It stays at the bottom of the window
+ * while the reform is longer than the screen, so the run is never a
+ * scroll away, and settles in place under the table once the table ends.
  */
 export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
@@ -271,6 +279,9 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
 
   // Who the report runs on: the whole country, a state, or a congressional district.
   const region = draft.population?.region;
+
+  // What the report compares the reform with: current law, or a saved reform.
+  const baseline = useDraftBaseline(draft);
 
   // Saving changes the reform the draft came from, or saves a new one.
   // When that reform is no longer in this store (deleted, or another
@@ -336,7 +347,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         provisionsToRun(draft.provisions, year, parameters),
         saved.id,
         year,
-        { fromDraft: true, region, windowYears: draft.windowYears }
+        { fromDraft: true, region, windowYears: draft.windowYears, baseline: baseline.forRun }
       );
     },
   });
@@ -391,6 +402,11 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
             regions={regions}
           />
+          <BaselinePicker
+            value={baseline.reform?.id}
+            onChange={setDraftBaseline}
+            reforms={baseline.options}
+          />
         </div>
         <div
           style={{
@@ -413,7 +429,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           </Button>
           <Button
             onClick={() => saveAndRunMutation.mutate()}
-            disabled={adjusted.length === 0 || starting || saveMutation.isPending}
+            disabled={
+              adjusted.length === 0 ||
+              starting ||
+              saveMutation.isPending ||
+              baseline.pending ||
+              baseline.matchesDraft
+            }
             title={
               !empty && adjusted.length === 0
                 ? 'Adjust at least one value from current law to run the report'
@@ -437,6 +459,19 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           }}
         >
           No values differ from current law yet. Adjust at least one value to run the report.
+        </p>
+      )}
+      {adjusted.length > 0 && baseline.matchesDraft && baseline.reform && (
+        <p
+          style={{
+            margin: 0,
+            textAlign: 'right',
+            fontSize: typography.fontSize.xs,
+            color: colors.text.tertiary,
+          }}
+        >
+          This reform matches {savedReformName(baseline.reform)}. Change a value or compare with
+          something else.
         </p>
       )}
 

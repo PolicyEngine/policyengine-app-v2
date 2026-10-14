@@ -110,6 +110,34 @@ const DATED_PROVISION_WIRE = {
 };
 
 describe('provisions wire mapping', () => {
+  test('given a growing provision then its growth settings round-trip in snake_case', () => {
+    const growing = {
+      ...DATED_PROVISION,
+      growth: 'gov.bls.cpi.cpi_u',
+      growthStart: 2027,
+      growthBase: 2026,
+      growthRoundTo: 50,
+      growthRound: 'down' as const,
+    };
+
+    const [wire] = provisionsToWire([growing]);
+
+    expect(wire).toMatchObject({
+      growth: 'gov.bls.cpi.cpi_u',
+      growth_start: 2027,
+      growth_base: 2026,
+      growth_round_to: 50,
+      growth_round: 'down',
+    });
+    expect(provisionsFromWire([wire])).toEqual([growing]);
+  });
+
+  test('given a fixed provision then the wire carries no growth keys', () => {
+    const [wire] = provisionsToWire([DATED_PROVISION]);
+
+    expect(Object.keys(wire).filter((key) => key.startsWith('growth'))).toEqual([]);
+  });
+
   test('given dated provisions then they map to snake_case with start_date and end_date', () => {
     expect(provisionsToWire([DATED_PROVISION])).toEqual([DATED_PROVISION_WIRE]);
   });
@@ -200,7 +228,22 @@ describe('ApiFlagshipReportStore', () => {
     // Then
     expect(fetchCall(fetchMock, 0).body).not.toHaveProperty('budget_window_years');
     expect(fetchCall(fetchMock, 1).body).not.toHaveProperty('budget_window_years');
-    expect(record.budgetWindowYears).toBeNull();
+    expect(record).not.toHaveProperty('budgetWindowYears');
+  });
+
+  test('given a comparison with a saved reform then the row links it, unless browser-only', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(async () => itemResponse(reportItem(), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.create({ ...newReport, baselineReformId: ASSOCIATION_IDS.POLICY });
+    await store.create({ ...newReport, baselineReformId: 'rf-browser1' });
+
+    // Then
+    expect(fetchCall(fetchMock, 0).body.baseline_user_policy_id).toBe(ASSOCIATION_IDS.POLICY);
+    expect(fetchCall(fetchMock, 1).body).not.toHaveProperty('baseline_user_policy_id');
   });
 
   test('given a reform saved in this browser then the account row is not linked to it', async () => {

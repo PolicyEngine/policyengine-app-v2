@@ -89,12 +89,20 @@ export interface ReportProvisionWire {
   baseline_value: unknown;
   value: unknown;
   intervals: ReportIntervalWire[] | null;
+  /** How a value set from one year on grows after it; each key only when set. */
+  growth?: string;
+  growth_start?: number;
+  growth_base?: number;
+  growth_round_to?: number;
+  growth_round?: 'nearest' | 'down' | 'up';
 }
 
 export interface UserReportItem extends AssociationItemBase {
   report_id: string | null;
   legacy_report_id: number | null;
   user_policy_id: string | null;
+  /** The saved reform the report was compared with, when not current law. */
+  baseline_user_policy_id: string | null;
   source_note: string | null;
   provisions: ReportProvisionWire[] | null;
   /** ReportValidationWire on the wire; validated by validationFromWire. */
@@ -128,6 +136,7 @@ export interface UserReportCreateBody {
   name?: string | null;
   description?: string | null;
   user_policy_id?: string | null;
+  baseline_user_policy_id?: string | null;
   source_note?: string | null;
   provisions?: ReportProvisionWire[] | null;
   validation?: unknown | null;

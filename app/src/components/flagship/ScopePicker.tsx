@@ -30,6 +30,8 @@ interface ScopePickerProps {
   counts?: Record<string, number>;
   /** The trigger's accessible name before its value, e.g. "State scope" */
   label?: string;
+  /** The options above the states; all jurisdictions and federal only unless set */
+  scopes?: ScopeOption[];
 }
 
 const JURISDICTIONS: ScopeOption[] = [
@@ -68,10 +70,11 @@ export default function ScopePicker({
   triggerStyle,
   counts,
   label = 'State scope',
+  scopes = JURISDICTIONS,
 }: ScopePickerProps) {
   const [open, setOpen] = useState(false);
   const current =
-    JURISDICTIONS.find((option) => option.code === value) ??
+    scopes.find((option) => option.code === value) ??
     states.find((option) => option.code === value);
   const currentLabel = current?.label ?? value.toUpperCase();
 
@@ -147,12 +150,18 @@ export default function ScopePicker({
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" style={{ width: 260, padding: 0 }}>
+      <PopoverContent
+        align="start"
+        // On a phone each choice is a fingertip tall.
+        className="tw:max-sm:[&_[data-slot=command-item]]:min-h-10"
+        style={{ width: 260, padding: 0 }}
+      >
         <Command filter={scopeFilter} label="Find a state">
-          <CommandInput placeholder="Find a state…" />
+          {/* 16px on a phone, so the browser does not zoom in to type. */}
+          <CommandInput className="tw:max-sm:text-base" placeholder="Find a state…" />
           <CommandList>
             <CommandEmpty>No matching state</CommandEmpty>
-            <CommandGroup>{JURISDICTIONS.map((option) => renderItem(option, false))}</CommandGroup>
+            <CommandGroup>{scopes.map((option) => renderItem(option, false))}</CommandGroup>
             {states.length > 0 && (
               <>
                 <CommandSeparator />

@@ -5,19 +5,25 @@ import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/society
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
+import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
+import ReportLoadError from '@/components/flagship/report/ReportLoadError';
 import ReportView from '@/components/flagship/report/ReportView';
-import RunProgress from '@/components/flagship/report/RunProgress';
+import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
+import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
-import { Spinner, Stack, Text, Title } from '@/components/ui';
+import { Stack, Title } from '@/components/ui';
 import { getDurationForCountry } from '@/constants/calculationDurations';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
-import { useAccountReportRecord, useReportRecord } from '@/hooks/useFlagshipStores';
+import { useAccountReportRecord, useReportRecord, useSavedReform } from '@/hooks/useFlagshipStores';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
+import { reportBaselineLabel, reportRunBaseline } from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -39,7 +45,15 @@ interface FlagshipReportPageProps {
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
   const params = useParams<{ userReportId: string }>();
   const userReportId = propId ?? params.userReportId ?? '';
-  const { report, simulations, policies, isLoading } = useFlagshipReport(userReportId);
+  const {
+    report,
+    simulations,
+    policies,
+    isLoading,
+    error: loadError,
+    notFound,
+    retry,
+  } = useFlagshipReport(userReportId);
   // Only API report ids open; an old browser-only "sur-" link is not found.
   const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
@@ -53,14 +67,30 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // Provenance: the run's details, else the account's record, else rebuilt
   // from the reform policy so a shared link validates like the original.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
+  const baselinePolicyId = simulations?.[0]?.policyId;
+  // The account's record links the saved reform it was compared with;
+  // that reform's own name is the comparison's.
+  const baselineReform = useSavedReform(accountRecord?.baselineReformId);
+  const recordBaseline =
+    accountRecord?.baselineReformId && baselineReform && baselinePolicyId
+      ? {
+          reformId: accountRecord.baselineReformId,
+          policyId: String(baselinePolicyId),
+          label: baselineReform.label || 'Untitled reform',
+        }
+      : undefined;
   // Without metadata the rebuilt provisions would show raw paths and no
   // baseline, so they count as still loading until it arrives.
   const meta =
     readReportMeta(userReportId) ??
-    reportMetaFromRecord(accountRecord, report?.year) ??
+    reportMetaFromRecord(accountRecord, report?.year, recordBaseline) ??
     (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
+  // Stored provenance that can't be read: readReportMeta answers none for it.
+  const unreadableMeta = useUnreadableReportMeta(userReportId);
+  // The reform's provisions are rebuilt from metadata; without it they cannot show.
+  const metadata = useFlagshipMetadataStatus();
 
   // The run handed its draft over to this report; Build starts fresh.
   useEffect(() => {
@@ -87,6 +117,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         countryId: report.countryId,
         year: report.year,
         simulations: { simulation1, simulation2: simulations[1] || null },
+        // The bar follows a typical run for this region, not the country.
+        estimateByRegion: true,
         populations: {
           household1: null,
           household2: null,
@@ -106,11 +138,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const output = calcStatus.isComplete ? (calcStatus.result as SocietyWideOutput) : null;
 
   const reformPolicyId = simulations?.[1]?.policyId;
-  const baselinePolicyId = simulations?.[0]?.policyId;
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
-  const customBaselineLabel = baselinePolicy?.parameters?.length
-    ? baselinePolicy.label || 'Custom baseline policy'
-    : null;
+  const customBaselineLabel = reportBaselineLabel(meta, baselinePolicy);
+  // Adjusted, the report keeps what it was compared with.
+  const runBaseline = reportRunBaseline(meta, baselinePolicyId, customBaselineLabel);
   const region = simulations?.[0]?.populationId;
   // A report on part of the country names it: "California".
   const regionLabel =
@@ -135,6 +166,18 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     <div style={{ width: '100%', minWidth: 0 }}>{main}</div>
   );
 
+  // Unreadable stored provenance says so, until the report is opened without it.
+  if (unreadableMeta.error) {
+    return layout(
+      <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+        <Title order={1} style={{ margin: 0 }}>
+          {title}
+        </Title>
+        <ReportDetailsError error={unreadableMeta.error} onOpenWithout={unreadableMeta.setAside} />
+      </Stack>
+    );
+  }
+
   if (!output || isLoading || (!meta && !!reformPolicy)) {
     if (unresolvable) {
       return layout(
@@ -153,6 +196,17 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             {title}
           </Title>
           <ReportUnresolvable />
+        </Stack>
+      );
+    }
+    // A report that failed to load would otherwise wait here for good.
+    if (loadError) {
+      return layout(
+        <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+          <Title order={1} style={{ margin: 0 }}>
+            {title}
+          </Title>
+          <ReportLoadError notFound={notFound} onRetry={retry} />
         </Stack>
       );
     }
@@ -175,6 +229,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                       region: region && region !== report.countryId ? region : undefined,
                       // Saving the edit changes the reform it was run from.
                       reformId: reportRecord?.reformId,
+                      baselineReformId: meta.baseline?.reformId,
                     })
                 : undefined
             }
@@ -182,10 +237,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         </Stack>
       );
     }
+    // The run card and its placeholder are each a status of their own.
     return layout(
       <Stack
-        role="status"
-        aria-live="polite"
         style={{
           maxWidth: 1080,
           margin: '0 auto',
@@ -210,10 +264,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             expectedMs={getDurationForCountry(report?.countryId ?? 'us')}
           />
         ) : (
-          <>
-            <Spinner size="sm" />
-            <Text style={{ margin: 0, color: colors.text.secondary }}>Loading report…</Text>
-          </>
+          <RunLoading label="Loading report" />
         )}
       </Stack>
     );
@@ -221,9 +272,12 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const singleProvision = meta?.provisions.length === 1 ? meta.provisions[0] : null;
   const isSingleCtc = singleProvision?.path.startsWith('gov.irs.credits.ctc.amount.base');
+  // Against a saved reform, current law says nothing of the direction.
   const coverTitle =
     isSingleCtc && singleProvision
-      ? `${Number(singleProvision.value) > Number(singleProvision.baselineValue) ? 'Increasing' : Number(singleProvision.value) < Number(singleProvision.baselineValue) ? 'Reducing' : 'Setting'} the Child Tax Credit`
+      ? customBaselineLabel
+        ? 'Changing the Child Tax Credit'
+        : `${Number(singleProvision.value) > Number(singleProvision.baselineValue) ? 'Increasing' : Number(singleProvision.value) < Number(singleProvision.baselineValue) ? 'Reducing' : 'Setting'} the Child Tax Credit`
       : title;
 
   return (
@@ -235,7 +289,21 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       // A window asked for in Build opens running.
       budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
+      overviewLead={
+        !meta && metadata.status === 'error' ? (
+          <div
+            style={{
+              padding: spacing.lg,
+              border: `1px dashed ${colors.border.light}`,
+              borderRadius: spacing.radius.feature,
+            }}
+          >
+            <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+          </div>
+        ) : undefined
+      }
       customBaselineLabel={customBaselineLabel}
+      baseline={runBaseline}
       year={report?.year ?? ''}
       region={region}
       reformPolicyId={reformPolicyId}

@@ -263,6 +263,8 @@ export class CalcOrchestrator {
       region,
       year: config.year,
       calcId: config.calcId,
+      // Opt-in (v3): without it the params stay exactly as before.
+      ...(config.estimateByRegion && { estimateByRegion: true }),
     };
   }
 }

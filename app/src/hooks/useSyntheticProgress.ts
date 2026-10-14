@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   HOUSEHOLD_DURATION_MS,
   US_SOCIETY_WIDE_DURATION_MS,
@@ -10,6 +10,8 @@ import {
 interface ServerProgress {
   queuePosition?: number;
   estimatedTimeRemaining?: number;
+  /** Typical society-wide duration for this run; replaces the default when set */
+  estimatedDurationMs?: number;
 }
 
 /**
@@ -116,6 +118,12 @@ export function useSyntheticProgress(
     progress: 0,
     message: '',
   });
+  // Read through a ref: the estimate arrives with the first server status,
+  // and a dependency on it would restart the timer from zero.
+  const estimatedDurationRef = useRef(serverProgress?.estimatedDurationMs);
+  useEffect(() => {
+    estimatedDurationRef.current = serverProgress?.estimatedDurationMs;
+  }, [serverProgress?.estimatedDurationMs]);
 
   useEffect(() => {
     if (!isActive) {
@@ -124,13 +132,13 @@ export function useSyntheticProgress(
     }
 
     const startTime = Date.now();
-    const estimatedDuration =
-      calcType === 'household'
-        ? SYNTHETIC_PROGRESS_CONFIG.HOUSEHOLD_DURATION_MS
-        : SYNTHETIC_PROGRESS_CONFIG.SOCIETY_WIDE_DURATION_MS;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
+      const estimatedDuration =
+        calcType === 'household'
+          ? SYNTHETIC_PROGRESS_CONFIG.HOUSEHOLD_DURATION_MS
+          : (estimatedDurationRef.current ?? SYNTHETIC_PROGRESS_CONFIG.SOCIETY_WIDE_DURATION_MS);
 
       // Pure time-based synthetic progress (for both household and society-wide)
       // This provides consistent linear progress that users expect

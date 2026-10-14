@@ -11,7 +11,7 @@ import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { loadProvisionsIntoDraft, provisionAdjusts, sameParameterValue } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
-import { RunReportProvision } from '@/libs/flagship/runReport';
+import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -33,6 +33,8 @@ interface ReportAdjustPanelProps {
   region?: string;
   /** The report's year, so a recompute simulates the same year. */
   year?: string;
+  /** What the report is compared with, so a recompute is too; current law when unset. */
+  baseline?: RunReportBaseline;
 }
 
 /**
@@ -67,6 +69,7 @@ export default function ReportAdjustPanel({
   loading = false,
   region,
   year,
+  baseline,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const nav = useAppNavigate();
@@ -135,6 +138,7 @@ export default function ReportAdjustPanel({
       label: label === 'Draft reform' ? '' : label,
       year: year ? Number(year) : undefined,
       region: population,
+      baselineReformId: baseline?.reformId,
     });
     nav.push(`/${countryId}/build`);
   };
@@ -184,7 +188,7 @@ export default function ReportAdjustPanel({
         adjusted,
         reformId,
         year ? Number(year) : undefined,
-        { region: population }
+        { region: population, baseline }
       );
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
@@ -265,6 +269,8 @@ export default function ReportAdjustPanel({
                     type="button"
                     onClick={() => setRemoved((current) => new Set([...current, provision.path]))}
                     aria-label={`Remove ${name}`}
+                    // A fingertip wide on a phone, without moving the name.
+                    className="tw:max-sm:-my-3 tw:max-sm:-mr-3 tw:max-sm:inline-flex tw:max-sm:size-10 tw:max-sm:items-center tw:max-sm:justify-center"
                     style={{
                       border: 'none',
                       background: 'none',
@@ -331,6 +337,7 @@ export default function ReportAdjustPanel({
             <button
               type="button"
               onClick={() => setRemoved(new Set())}
+              className="tw:max-sm:min-h-10"
               style={{
                 border: 'none',
                 background: 'none',

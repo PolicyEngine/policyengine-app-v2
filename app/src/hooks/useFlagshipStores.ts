@@ -131,3 +131,20 @@ export function useAccountReportRecord(apiReportId: string | undefined) {
   const record = useReportRecord(apiReportId);
   return isAccount ? record : null;
 }
+
+/**
+ * One of this session's saved reforms, for naming it (a report's
+ * comparison, say); null while it loads, when unset, or once deleted.
+ */
+export function useSavedReform(reformId: string | null | undefined) {
+  const store = useReformStore();
+  const { scope } = useV3SavedWork();
+  const { data } = useQuery({
+    queryKey: ['saved-reform', scope, reformId ?? ''],
+    queryFn: () => store.findById(reformId!),
+    enabled: !!reformId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+  return data ?? null;
+}

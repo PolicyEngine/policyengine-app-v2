@@ -89,6 +89,7 @@ export function useBillEconomy(
           region,
           year,
           calcId: metadata.calcId,
+          estimateByRegion: true,
         },
         metadata
       ),

@@ -100,6 +100,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   // Generate synthetic progress
   const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {
     queuePosition: status?.queuePosition,
+    estimatedDurationMs: status?.estimatedDurationMs,
   });
 
   const currentStatus = status?.status || 'initializing';

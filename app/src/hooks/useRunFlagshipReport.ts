@@ -4,7 +4,11 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
-import { runFlagshipReport, RunReportProvision } from '@/libs/flagship/runReport';
+import {
+  runFlagshipReport,
+  RunReportBaseline,
+  RunReportProvision,
+} from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 
 /**
@@ -40,6 +44,7 @@ export function useRunFlagshipReport() {
       fromDraft = false,
       region,
       windowYears,
+      baseline,
     }: {
       /** A run from the draft hands the draft over: its report clears it. */
       fromDraft?: boolean;
@@ -47,6 +52,8 @@ export function useRunFlagshipReport() {
       region?: string;
       /** Years of budget to score alongside the report, e.g. 10. */
       windowYears?: number;
+      /** A saved reform to compare with; current law when unset. */
+      baseline?: RunReportBaseline;
     } = {}
   ) => {
     if (isRunning) {
@@ -69,6 +76,7 @@ export function useRunFlagshipReport() {
         year,
         region,
         windowYears,
+        baseline,
         // With accounts, the run's record goes through the API (the account,
         // or this browser's unauthenticated user); otherwise this browser's.
         accountReportStore: reportStore.isAccount ? reportStore.store : null,
