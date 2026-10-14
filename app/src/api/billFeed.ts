@@ -568,6 +568,31 @@ function normalizeBillNumber(value: string): string {
 const processedBillKey = (state: string, billNumber: string) =>
   `${state.toUpperCase()}:${normalizeBillNumber(billNumber)}`;
 
+/** A status row's LegiScan bill id as a number, lowest when it has none. */
+const billAge = (bill: any): number => {
+  const id = Number(bill.bill_id ?? NaN);
+  return Number.isFinite(id) ? id : -Infinity;
+};
+
+const statusRowText = (bill: any) =>
+  JSON.stringify([bill.bill_id, bill.state, bill.bill_number, bill.status, bill.legiscan_url]);
+
+/**
+ * Sorts status rows so the later bill comes last. LegiScan numbers bills
+ * in the order it first sees them, so the higher bill id is the later
+ * bill; rows with the same id, or none, fall back to their contents.
+ * Two rows under one bill number (NY "S 4487" and "S04487") then resolve
+ * to the same row whatever order the tracker sent them in.
+ */
+function byLaterBill(a: any, b: any): number {
+  const [ageA, ageB] = [billAge(a), billAge(b)];
+  if (ageA !== ageB) {
+    return ageA < ageB ? -1 : 1;
+  }
+  const [textA, textB] = [statusRowText(a), statusRowText(b)];
+  return textA < textB ? -1 : textA > textB ? 1 : 0;
+}
+
 /**
  * The tracker's status row (processed_bills) for a research entry. The
  * entry's LegiScan link (legiscan_bill_id) names the row when it is set.
@@ -626,13 +651,15 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const impactsById = new Map((impacts ?? []).map((impact) => [impact.id, impact]));
   const baselineById = new Map((baselines ?? []).map((row) => [row.id, row.baseline_params]));
   const validationById = new Map((validations ?? []).map((row) => [row.id, row]));
+  // The later bill last, so it is the row each map keeps for a shared key.
+  const processedRows = [...(processed ?? [])].sort(byLaterBill);
   const processedByBillId = new Map(
-    (processed ?? []).flatMap((bill) =>
+    processedRows.flatMap((bill) =>
       bill.bill_id === null || bill.bill_id === undefined ? [] : [[String(bill.bill_id), bill]]
     )
   );
   const processedByKey = new Map(
-    (processed ?? []).map((bill) => [
+    processedRows.map((bill) => [
       processedBillKey(String(bill.state), String(bill.bill_number)),
       bill,
     ])
