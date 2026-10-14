@@ -21,7 +21,7 @@ import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { FOREVER, MOCK_USER_ID } from '@/constants';
+import { FOREVER } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -281,8 +281,8 @@ export default function ReformsPage() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ['reforms', MOCK_USER_ID, countryId],
-    queryFn: () => getReformStore().findByUser(MOCK_USER_ID, countryId),
+    queryKey: ['reforms', countryId],
+    queryFn: () => getReformStore().findMine(countryId),
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
@@ -322,7 +322,6 @@ export default function ReformsPage() {
   const duplicateMutation = useMutation({
     mutationFn: (reform: Reform) =>
       getReformStore().create({
-        userId: reform.userId,
         countryId: reform.countryId,
         label: `${reform.label || 'Untitled reform'} (copy)`,
         parameters: reform.parameters,
@@ -769,7 +768,8 @@ export default function ReformsPage() {
                   selectedReform.label || 'Untitled reform',
                   SOURCE_LABELS[selectedReform.provenance.source],
                   reformProvisions(selectedReform),
-                  undefined,
+                  // Links the report record to the saved reform it came from.
+                  selectedReform.id,
                   reformRunYear(selectedReform)
                 )
               }

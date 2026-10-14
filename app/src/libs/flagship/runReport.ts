@@ -190,13 +190,12 @@ export async function runFlagshipReport({
     });
   }
 
-  // Record the report centrally (pointer + provenance; never outputs).
-  // Best-effort: the run already succeeded, and the store falls back to
-  // localStorage when the database is unconfigured.
+  // Record the report centrally (pointer + provenance; never outputs,
+  // never a user id). Best-effort: the run already succeeded, and the
+  // store falls back to localStorage when the database is unconfigured.
   try {
     const { getFlagshipReportStore } = await import('@/api/flagshipReportStore');
     await getFlagshipReportStore().create({
-      userId: MOCK_USER_ID,
       countryId,
       apiReportId: String(metadata.baseReportId),
       title: title || null,

@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
@@ -265,7 +264,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const store = getReformStore();
-      const payload = draftToReform(draft, MOCK_USER_ID);
+      const payload = draftToReform(draft);
       if (draft.editingReformId) {
         return store.update(draft.editingReformId, {
           label: payload.label,

@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import { Button, Input, Stack, Text } from '@/components/ui';
-import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -52,9 +52,9 @@ function reformMatches(reform: Reform, provisions: { path: string; value: any }[
 /**
  * The report's companion panel: every provision stays editable (or
  * removable) beside the results. Recompute first reconciles with the
- * saved reforms — an exact match is reused, anything new is saved as
- * its own reform — then runs the pipeline and lands on the new
- * report, linked to that reform. Collapses to a slim edge tab.
+ * reforms this browser saved — an exact match is reused, anything new
+ * is saved as its own reform — then runs the pipeline and lands on the
+ * new report, linked to that reform. Collapses to a slim edge tab.
  */
 export default function ReportAdjustPanel({
   title,
@@ -134,10 +134,10 @@ export default function ReportAdjustPanel({
     try {
       const adjusted = adjustedProvisions();
 
-      // Reconcile with saved reforms: reuse an exact match, otherwise
-      // save the adjusted set as its own reform.
+      // Reconcile with this browser's saved reforms: reuse an exact
+      // match, otherwise save the adjusted set as its own reform.
       const store = getReformStore();
-      const existing = await store.findByUser(MOCK_USER_ID, countryId);
+      const existing = await store.findMine(countryId);
       const match = existing.find((reform) => reformMatches(reform, adjusted));
 
       const label = renamed ? name.trim() : `${title} (adjusted)`;
@@ -148,7 +148,6 @@ export default function ReportAdjustPanel({
         runTitle = renamed ? label : match.label || label;
       } else {
         const created = await store.create({
-          userId: MOCK_USER_ID,
           countryId,
           label,
           parameters: adjusted.map((provision) => ({

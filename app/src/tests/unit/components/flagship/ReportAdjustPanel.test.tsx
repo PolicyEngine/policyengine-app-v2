@@ -11,7 +11,7 @@ import {
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockRun = vi.fn();
-const mockFindByUser = vi.fn();
+const mockFindMine = vi.fn();
 const mockCreate = vi.fn();
 
 vi.mock('@/hooks/useRunFlagshipReport', () => ({
@@ -22,7 +22,7 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/reformStore')>();
   return {
     ...actual,
-    getReformStore: () => ({ findByUser: mockFindByUser, create: mockCreate }),
+    getReformStore: () => ({ findMine: mockFindMine, create: mockCreate }),
   };
 });
 
@@ -79,7 +79,7 @@ async function renderPanel({ region, year }: { region?: string; year?: string } 
 describe('ReportAdjustPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFindByUser.mockResolvedValue([]);
+    mockFindMine.mockResolvedValue([]);
   });
 
   test('given the panel then provisions are editable and recompute waits for a change', async () => {
@@ -248,6 +248,7 @@ describe('ReportAdjustPanel', () => {
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({ label: 'CTC expansion (adjusted)' })
     );
+    expect(mockCreate.mock.calls[0][0]).not.toHaveProperty('userId');
     const [runTitle, , runProvisions, reformId] = mockRun.mock.calls[0];
     expect(runTitle).toBe('CTC expansion (adjusted)');
     expect(reformId).toBe('rf-new');
@@ -257,8 +258,20 @@ describe('ReportAdjustPanel', () => {
     ]);
   });
 
+  test('given recompute then only this browser’s saved reforms are searched for a match', async () => {
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const user = userEvent.setup();
+    await renderPanel();
+
+    await user.click(screen.getByRole('button', { name: /remove maximum allotment/i }));
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockFindMine).toHaveBeenCalledWith('us');
+  });
+
   test('given the adjusted set matches a saved reform then it is reused, not duplicated', async () => {
-    mockFindByUser.mockResolvedValue([
+    mockFindMine.mockResolvedValue([
       {
         id: 'rf-existing',
         label: 'My CTC reform',

@@ -14,15 +14,23 @@ import type {
 /**
  * Central store for the flagship app's reform objects.
  *
- * A reform is user-owned, mutable content; the canonical immutable Policy
- * lives in the main PolicyEngine API and is linked via policy_id once the
- * reform has been materialized for simulation.
+ * A reform is mutable content; the canonical immutable Policy lives in
+ * the main PolicyEngine API and is linked via policy_id once the reform
+ * has been materialized for simulation.
+ *
+ * Rows carry no user identifier (and no IP address or user agent). The
+ * unguessable id is the only way to reach a row; the browser that
+ * created it keeps the id in its own index, with the edit token whose
+ * hash is stored here.
  */
 export const reforms = pgTable(
   "reforms",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").notNull(),
+    /** Legacy: client-supplied on rows written before edit tokens. Never written now. */
+    userId: text("user_id"),
+    /** SHA-256 of the edit token issued at creation. Null on legacy rows, which are read-only. */
+    editTokenHash: text("edit_token_hash"),
     countryId: text("country_id").notNull(),
     label: text("label"),
     policyId: text("policy_id"),
@@ -38,9 +46,8 @@ export const reforms = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [
-    index("reforms_user_country_idx").on(table.userId, table.countryId),
-  ],
+  // Serves the new-row budget (db/limits.ts), which counts recent rows.
+  (table) => [index("reforms_created_at_idx").on(table.createdAt)],
 );
 
 export type ReformRow = typeof reforms.$inferSelect;
@@ -50,13 +57,17 @@ export type NewReformRow = typeof reforms.$inferInsert;
  * A generated impact report: a pointer to the computed output on the
  * PolicyEngine API plus the provenance snapshot shown in the report
  * header. Outputs themselves are never duplicated here — the API caches
- * and persists them.
+ * and persists them. Same ownership model as reforms: no user
+ * identifier, an unguessable id, and the hash of an edit token.
  */
 export const reports = pgTable(
   "reports",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").notNull(),
+    /** Legacy: client-supplied on rows written before edit tokens. Never written now. */
+    userId: text("user_id"),
+    /** SHA-256 of the edit token issued at creation. Null on legacy rows, which are read-only. */
+    editTokenHash: text("edit_token_hash"),
     countryId: text("country_id").notNull(),
     /** Report id on api.policyengine.org — the pointer to the outputs. */
     apiReportId: text("api_report_id").notNull(),
@@ -81,9 +92,7 @@ export const reports = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [
-    index("reports_user_country_idx").on(table.userId, table.countryId),
-  ],
+  (table) => [index("reports_created_at_idx").on(table.createdAt)],
 );
 
 export interface ReportProvisionMetadata {

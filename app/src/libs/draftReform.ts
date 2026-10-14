@@ -534,12 +534,8 @@ export function provisionFromSearchEntry(
 }
 
 /** Converts the draft to the Reform shape for the store. */
-export function draftToReform(
-  draft: DraftReform,
-  userId: string
-): Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> {
+export function draftToReform(draft: DraftReform): Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> {
   return {
-    userId,
     countryId: draft.countryId,
     label: draft.label || null,
     parameters: draft.provisions.map((provision) => ({
