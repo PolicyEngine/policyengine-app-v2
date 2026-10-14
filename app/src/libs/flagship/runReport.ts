@@ -6,6 +6,7 @@ import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { parseReportMeta, stampReportMeta, type ReportParseResult } from './reportSchema';
 
 /**
  * The run bridge: turns a set of provisions (from a draft reform or a
@@ -38,7 +39,8 @@ export interface FlagshipReportMeta {
 
 const META_KEY = 'pe-flagship-report-meta';
 
-function readAllMeta(): Record<string, FlagshipReportMeta> {
+/** Every report's provenance as stored, of any schema version (see reportSchema). */
+function readAllMeta(): Record<string, unknown> {
   try {
     return JSON.parse(localStorage.getItem(META_KEY) ?? '{}');
   } catch {
@@ -46,7 +48,8 @@ function readAllMeta(): Record<string, FlagshipReportMeta> {
   }
 }
 
-export function saveReportMeta(userReportId: string, meta: FlagshipReportMeta): void {
+export function saveReportMeta(userReportId: string, unstamped: FlagshipReportMeta): void {
+  const meta = stampReportMeta(unstamped);
   try {
     localStorage.setItem(META_KEY, JSON.stringify({ ...readAllMeta(), [userReportId]: meta }));
   } catch {
@@ -54,8 +57,25 @@ export function saveReportMeta(userReportId: string, meta: FlagshipReportMeta): 
   }
 }
 
+/**
+ * The report's stored provenance, parsed: null when none is stored,
+ * otherwise the current shape or why it can't be read.
+ */
+export function readReportMetaResult(
+  userReportId: string
+): ReportParseResult<FlagshipReportMeta> | null {
+  const all: unknown = readAllMeta();
+  // A stash that is not a map holds no report's provenance.
+  if (!all || typeof all !== 'object' || Array.isArray(all) || !Object.hasOwn(all, userReportId)) {
+    return null;
+  }
+  return parseReportMeta((all as Record<string, unknown>)[userReportId]);
+}
+
+/** The report's provenance in the current shape; null when none is stored or it can't be read. */
 export function readReportMeta(userReportId: string): FlagshipReportMeta | null {
-  return readAllMeta()[userReportId] ?? null;
+  const result = readReportMetaResult(userReportId);
+  return result?.ok ? result.value : null;
 }
 
 export interface RunFlagshipReportArgs {

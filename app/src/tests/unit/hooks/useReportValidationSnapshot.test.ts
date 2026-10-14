@@ -74,7 +74,8 @@ describe('useReportValidationSnapshot', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(result.current.snapshot).toBeNull();
     const stored = await new LocalStorageFlagshipReportStore().findById(record.id);
-    expect(stored?.validation).toBeUndefined();
+    // No pin reads as null, the report schema's default.
+    expect(stored?.validation).toBeNull();
   });
 
   test('given no store record for the report then nothing is pinned', async () => {
