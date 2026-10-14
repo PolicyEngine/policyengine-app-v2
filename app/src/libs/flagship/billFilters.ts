@@ -1,5 +1,6 @@
 import { STATE_NAMES, type TrackedBill } from '@/api/billFeed';
 import { billStage, type BillStage } from './billStage';
+import { trackerPlace } from './billTracker';
 
 /** Federal bills carry no state; every bill with a state is a state bill. */
 export type BillLevel = 'federal' | 'state';
@@ -19,9 +20,9 @@ type FilterableBill = Pick<TrackedBill, 'state' | 'status'>;
 export const billLevel = (bill: Pick<TrackedBill, 'state'>): BillLevel =>
   bill.state ? 'state' : 'federal';
 
-/** Where a bill is from, as its card names it: the state, or "Federal". */
-export const billPlace = (bill: Pick<TrackedBill, 'state' | 'jurisdiction'>): string =>
-  bill.state ? (STATE_NAMES[bill.state] ?? bill.jurisdiction) : 'Federal';
+/** Where a bill is from, as its card and the tracker name it: the state, or "Federal". */
+export const billPlace = (bill: Pick<TrackedBill, 'state'>): string =>
+  trackerPlace(bill.state, STATE_NAMES);
 
 function inPlace(bill: FilterableBill, filters: BillFilters): boolean {
   if (filters.level === 'all') {

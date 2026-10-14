@@ -416,8 +416,8 @@ export default function ReformsPage() {
     tokens.every((token) => haystack.toLowerCase().includes(token));
 
   const searchedBills = bills.filter((bill) =>
-    // The card's place ("Federal") reads too, not only the tracker's "US".
-    matches(`${bill.title} ${billPlace(bill)} ${bill.jurisdiction} ${bill.summary}`)
+    // The place reads once, as the card names it: "Federal", "Utah".
+    matches(`${bill.title} ${billPlace(bill)} ${bill.summary}`)
   );
   const visibleBills = filterBills(searchedBills, billFilters).sort((a, b) =>
     (b.date ?? '').localeCompare(a.date ?? '')
