@@ -18,6 +18,9 @@ export const SIMULATION_UNAVAILABLE_ERROR = new Error(
   `Failed to fetch simulation ${REFORM_SIMULATION_ID}: 503 Service Unavailable`
 );
 
+/** As fetchPolicyById throws when the API is down. */
+export const POLICY_UNAVAILABLE_ERROR = new Error('Failed to fetch policy 98557');
+
 export const EXISTING_REPORT_METADATA: ReportMetadata = {
   id: Number(EXISTING_REPORT_ID),
   country_id: 'us',

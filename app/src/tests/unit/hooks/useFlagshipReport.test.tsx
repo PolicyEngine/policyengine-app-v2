@@ -5,13 +5,16 @@ import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useFlagshipReport } from '@/hooks/useFlagshipReport';
+import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
+import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import {
   BASELINE_SIMULATION_ID,
   EXISTING_REPORT_ID,
   EXISTING_REPORT_METADATA,
   MISSING_REPORT_ID,
   nationwideSimulationMetadata,
+  POLICY_UNAVAILABLE_ERROR,
   REFORM_SIMULATION_ID,
   REPORT_NOT_FOUND_ERROR,
   SIMULATION_UNAVAILABLE_ERROR,
@@ -19,6 +22,7 @@ import {
 
 const mockFetchReportById = vi.fn();
 const mockFetchSimulationById = vi.fn();
+const mockFetchPolicyById = vi.fn();
 
 vi.mock('@/api/report', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/report')>()),
@@ -28,6 +32,11 @@ vi.mock('@/api/report', async (importOriginal) => ({
 vi.mock('@/api/simulation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/simulation')>()),
   fetchSimulationById: (...args: unknown[]) => mockFetchSimulationById(...args),
+}));
+
+vi.mock('@/api/policy', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/policy')>()),
+  fetchPolicyById: (...args: unknown[]) => mockFetchPolicyById(...args),
 }));
 
 // Old association links are not under test here.
@@ -53,6 +62,7 @@ function renderReportHook(id: string) {
 describe('useFlagshipReport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    store.dispatch(clearMetadata());
     mockFetchReportById.mockResolvedValue(EXISTING_REPORT_METADATA);
     mockFetchSimulationById.mockImplementation(async (_country: string, id: string) =>
       nationwideSimulationMetadata(id, id === BASELINE_SIMULATION_ID ? '2' : '98557')
@@ -97,6 +107,21 @@ describe('useFlagshipReport', () => {
     await waitFor(() => expect(result.current.error).toBe(SIMULATION_UNAVAILABLE_ERROR));
     expect(result.current.notFound).toBe(false);
     expect(result.current.isLoading).toBe(false);
+  });
+
+  test('given a policy fails to load then the run is not held up by it', async () => {
+    // Given: policies load once the model's metadata is in.
+    seedDeductionMetadata();
+    mockFetchPolicyById.mockRejectedValue(POLICY_UNAVAILABLE_ERROR);
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then
+    await waitFor(() => expect(mockFetchPolicyById).toHaveBeenCalled());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.simulations).toHaveLength(2);
+    expect(result.current.error).toBeNull();
   });
 
   test('given a failed simulation then retry asks for it again and the error clears', async () => {

@@ -28,7 +28,11 @@ export interface FlagshipReportData {
   simulations: Simulation[];
   policies: Policy[];
   isLoading: boolean;
-  /** Why the report, a simulation or a policy failed to load; null while none has. */
+  /**
+   * Why the report or one of its simulations failed to load; null while
+   * neither has. A policy that fails only costs the provision detail, so
+   * it does not count: the run goes on without it.
+   */
   error: Error | null;
   /** The report id resolves to no report (a bad or deleted link). */
   notFound: boolean;
@@ -100,11 +104,7 @@ export function useFlagshipReport(id: string): FlagshipReportData {
       retry: async () => undefined,
     };
   }
-  const error =
-    (reportError as Error | null) ??
-    (simulationResults.error as Error | null) ??
-    (policyResults.error as Error | null) ??
-    null;
+  const error = (reportError as Error | null) ?? (simulationResults.error as Error | null) ?? null;
   return {
     report,
     simulations,
