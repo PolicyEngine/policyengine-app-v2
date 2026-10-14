@@ -52,6 +52,28 @@ export const SCORECARD_URL = 'https://www.policyengine.org/scorecard';
 export const SCORECARD_COMPARISON_URL = `${SCORECARD_URL}?view=scorecard`;
 export const SCORECARD_METHOD_URL = `${SCORECARD_URL}?view=about`;
 
+/**
+ * Where an entry sits on the scorecard: its comparison table
+ * ("scorecard", the comparison.json rows) or its registry of published
+ * claims ("validation", the populations feed, baseline claims included).
+ */
+export type ScorecardView = 'scorecard' | 'validation';
+
+/**
+ * The closest link the scorecard has to one entry: the view that lists
+ * it, in the entry's country. The scorecard's URL carries only `view` and
+ * `country` (US is its default and stays out); it has no address for a
+ * single entry, so the reader finds the row in that view.
+ */
+export function scorecardEntryUrl(view: ScorecardView, country?: string | null): string {
+  const params = new URLSearchParams({ view });
+  const code = country?.toLowerCase();
+  if (code && code !== 'us') {
+    params.set('country', code);
+  }
+  return `${SCORECARD_URL}?${params}`;
+}
+
 export const PROGRAM_LABELS: Record<string, string> = {
   snap: 'SNAP',
   wic: 'WIC',

@@ -5,7 +5,7 @@ import {
   BillExternalEstimates,
   trackRecordClaims,
 } from '@/components/flagship/ValidationPanel';
-import type { ScorecardMatches } from '@/libs/flagship/modelValidation';
+import { SCORECARD_COMPARISON_URL, type ScorecardMatches } from '@/libs/flagship/modelValidation';
 import {
   NATIONWIDE,
   REFUNDABLE_CTC_MAX_PATH,
@@ -22,6 +22,8 @@ import {
 import { utahBaselineClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 
+/** The scorecard's registry of published claims, where baseline claims are listed. */
+const SCORECARD_CLAIMS_URL = 'https://www.policyengine.org/scorecard?view=validation';
 const NO_COMPARISON = 'No scorecard comparison measures the programs this reform changes.';
 const EMPTY_TRACK_RECORD: ScorecardMatches = {
   modelVersion: '1.808.0',
@@ -180,7 +182,7 @@ describe('BaselineComparisons', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
-  test('given report 4332 then only the CDCC rows show', () => {
+  test('given report 4332 then only the CDCC rows show, each linked to the scorecard', () => {
     render(
       <BaselineComparisons
         trackRecord={EMPTY_TRACK_RECORD}
@@ -196,6 +198,9 @@ describe('BaselineComparisons', () => {
     ).toBeInTheDocument();
     expect(within(table).getByRole('button', { name: SOI_CDCC_CLAIM.name })).toBeInTheDocument();
     expect(within(table).queryByText(/Maryland|South Carolina|saver/i)).not.toBeInTheDocument();
+    for (const link of within(table).getAllByRole('link', { name: 'View in scorecard' })) {
+      expect(link).toHaveAttribute('href', SCORECARD_CLAIMS_URL);
+    }
     expect(within(table).queryByText(/not recorded/i)).not.toBeInTheDocument();
   });
 
@@ -221,6 +226,26 @@ describe('BaselineComparisons', () => {
       'href',
       'https://apps.urban.org/features/state-safety-net/'
     );
+  });
+
+  test('given both kinds of row then each links to the scorecard view that lists it', () => {
+    render(
+      <BaselineComparisons
+        trackRecord={SNAP_AND_CTC_TRACK_RECORD}
+        scorecardRows={[{ ...utahBaselineClaim, matchBasis: 'program' }]}
+        reform={usReform([SNAP_DEDUCTION_PATH, UT_CTC_AMOUNT_PATH], UTAH)}
+      />
+    );
+
+    const scorecardLink = (title: string) =>
+      within(screen.getByRole('row', { name: new RegExp(`^${title}`) })).getByRole('link', {
+        name: 'View in scorecard',
+      });
+    expect(scorecardLink('SNAP — Eligible people')).toHaveAttribute(
+      'href',
+      SCORECARD_COMPARISON_URL
+    );
+    expect(scorecardLink('Utah Child Tax Credit')).toHaveAttribute('href', SCORECARD_CLAIMS_URL);
   });
 });
 

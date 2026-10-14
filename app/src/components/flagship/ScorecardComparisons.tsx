@@ -3,6 +3,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import { Stack, Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
+import { scorecardEntryUrl } from '@/libs/flagship/modelValidation';
 import {
   loadParameterDependencies,
   variablesReachedByPaths,
@@ -47,6 +48,7 @@ const sourceNames: Record<string, string> = {
   tpc: 'Tax Policy Center',
   cpsp: 'Center on Poverty and Social Policy',
   pwbm: 'Penn Wharton Budget Model',
+  treasury: 'US Treasury',
 };
 const metricNames: Record<string, string> = {
   revenue_change: 'Change in tax revenue',
@@ -319,6 +321,8 @@ export interface ClaimPresentation {
   modelPeriod?: string;
   externalValue?: string;
   peValue?: string;
+  /** Where the claim sits on the scorecard, when not its registry of published claims. */
+  scorecardUrl?: string;
 }
 
 /** A scorecard claim, and how to present it. */
@@ -332,6 +336,11 @@ function claimTitle(row: RelatedScorecardClaim, presentation?: ClaimPresentation
     presentation?.title ??
     (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name))
   );
+}
+
+/** The claim's own place on the scorecard, as close as the scorecard's links reach. */
+function claimScorecardUrl(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
+  return presentation?.scorecardUrl ?? scorecardEntryUrl('validation', row.country);
 }
 
 /** The source, and the geography when the claim records one: "Joint Committee on Taxation · US". */
@@ -480,6 +489,7 @@ export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry
 /** One claim as a table row: what is compared, both values, and the gap. */
 function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
   const sourceUrl = safeUrl(row.url);
+  const smallLink = { ...linkStyle, fontSize: typography.fontSize.xs };
   // Only a period that is recorded; "not recorded" under every value says nothing.
   const publishedNote = presentation?.externalPeriod ?? claimPeriod(row);
   const peNote = presentation?.modelPeriod ?? modelPeriod(row);
@@ -505,16 +515,24 @@ function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
           </DialogContent>
         </Dialog>
         <CellNote>{claimWhere(row, presentation)}</CellNote>
-        {sourceUrl && (
+        <CellNote>
+          {sourceUrl && (
+            <>
+              <a href={sourceUrl} target="_blank" rel="noreferrer" style={smallLink}>
+                Read source
+              </a>
+              {' · '}
+            </>
+          )}
           <a
-            href={sourceUrl}
+            href={claimScorecardUrl(row, presentation)}
             target="_blank"
             rel="noreferrer"
-            style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
+            style={smallLink}
           >
-            Read source
+            View in scorecard
           </a>
-        )}
+        </CellNote>
       </th>
       <td style={numberCellStyle}>
         {presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept)}

@@ -6,7 +6,11 @@ import {
   splitScorecardRows,
   useScorecardComparisons,
 } from '@/components/flagship/ScorecardComparisons';
-import { SOI_CDCC_CLAIM } from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
+import { SCORECARD_COMPARISON_URL } from '@/libs/flagship/modelValidation';
+import {
+  SOI_CDCC_CLAIM,
+  UK_PARAMETER_CLAIM,
+} from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
 import {
   CTC_PATH,
   jctCtcClaim,
@@ -87,6 +91,36 @@ describe('scorecard evidence presentation', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText(/Utah credits claimed before limiting/)).toBeInTheDocument();
     expect(screen.getByText(/Modeled Utah credit actually usable/)).toBeInTheDocument();
+  });
+
+  test('given a claim then its row links to the scorecard view that lists it', () => {
+    render(
+      <ScorecardClaimTable
+        label="Baseline comparisons"
+        entries={[
+          { row: { ...SOI_CDCC_CLAIM } },
+          { row: { ...UK_PARAMETER_CLAIM } },
+          {
+            row: { ...SOI_CDCC_CLAIM, claim_id: 'comparison-row', name: 'Comparison row' },
+            presentation: { title: 'Comparison row', scorecardUrl: SCORECARD_COMPARISON_URL },
+          },
+        ]}
+      />
+    );
+
+    const scorecardLink = (title: string) =>
+      within(screen.getByRole('row', { name: new RegExp(`^${title}`) })).getByRole('link', {
+        name: 'View in scorecard',
+      });
+    expect(scorecardLink(SOI_CDCC_CLAIM.name)).toHaveAttribute(
+      'href',
+      'https://www.policyengine.org/scorecard?view=validation'
+    );
+    expect(scorecardLink(UK_PARAMETER_CLAIM.name)).toHaveAttribute(
+      'href',
+      'https://www.policyengine.org/scorecard?view=validation&country=uk'
+    );
+    expect(scorecardLink('Comparison row')).toHaveAttribute('href', SCORECARD_COMPARISON_URL);
   });
 
   test('given a claim without a recorded model period then none shows under its value', () => {

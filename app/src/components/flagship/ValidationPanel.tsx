@@ -10,6 +10,7 @@ import {
   ModelValidationRow,
   PROGRAM_LABELS,
   SCORECARD_COMPARISON_URL,
+  scorecardEntryUrl,
   ScorecardMatches,
   scorecardMatchesForPaths,
 } from '@/libs/flagship/modelValidation';
@@ -302,6 +303,8 @@ export function trackRecordClaims(trackRecord: ScorecardMatches): ScorecardClaim
         modelPeriod: row.pePeriod ?? undefined,
         externalValue: metricValue(row, row.externalValue),
         peValue: metricValue(row, row.peValue),
+        // Comparison rows live in the scorecard's comparison table.
+        scorecardUrl: scorecardEntryUrl('scorecard', 'US'),
       },
     };
   });

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   claimsFromBillValidation,
   fetchModelValidation,
+  scorecardEntryUrl,
   scorecardMatchesForPaths,
   summarizeScorecardPrograms,
 } from '@/libs/flagship/modelValidation';
@@ -202,5 +203,22 @@ describe('claimsFromBillValidation', () => {
 
   test('given no comparable estimates then no claims return', () => {
     expect(claimsFromBillValidation('x', { peEstimate: -5 })).toEqual([]);
+  });
+});
+
+describe('scorecardEntryUrl', () => {
+  test('given a US entry then the link opens its view with the default country left out', () => {
+    expect(scorecardEntryUrl('validation', 'US')).toBe(
+      'https://www.policyengine.org/scorecard?view=validation'
+    );
+    expect(scorecardEntryUrl('scorecard')).toBe(
+      'https://www.policyengine.org/scorecard?view=scorecard'
+    );
+  });
+
+  test('given another country then the link selects it', () => {
+    expect(scorecardEntryUrl('validation', 'UK')).toBe(
+      'https://www.policyengine.org/scorecard?view=validation&country=uk'
+    );
   });
 });
