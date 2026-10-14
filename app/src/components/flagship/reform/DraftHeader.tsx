@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import {
-  IconCalendarEvent,
-  IconCalendarStats,
-  IconChartBar,
-  IconPencil,
-} from '@tabler/icons-react';
+import { IconCalendarEvent, IconChartBar, IconChevronDown, IconPencil } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import {
-  Badge,
   Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -52,66 +50,110 @@ const SOURCE_NOTES: Record<string, string> = {
 /** Budget spans offered: the year alone, or the common scoring windows. */
 const WINDOW_YEARS = [1, 3, 5, 10];
 
-interface HeaderOption {
-  value: string;
-  label: string;
-  /** Shown, but not yet choosable. */
-  soon?: boolean;
+/** "2026", or "2026–2035" for a window of years. */
+export function yearsLabel(year: number, windowYears: number): string {
+  return windowYears > 1 ? `${year}–${year + windowYears - 1}` : String(year);
 }
 
+const fieldLabel: React.CSSProperties = {
+  fontSize: typography.fontSize.xs,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.secondary,
+};
+
 /**
- * A setting of the run as a dropdown that reads at a glance: its icon,
- * what it sets, and the choice — "Year 2026" — at the height of the
- * buttons beside it, with a menu that opens below.
+ * The run's years in one control: the year the report scores in full,
+ * and how many years of budget it adds from there. It reads "Year 2026",
+ * or "Years 2026–2035" with a window; a click opens both choices, and a
+ * window keeps its length when the year moves.
  */
-function HeaderSelect({
-  label,
-  icon,
-  value,
-  onValueChange,
-  options,
+function YearsPicker({
+  year,
+  windowYears,
+  yearOptions,
+  onYearChange,
+  onWindowChange,
 }: {
-  label: string;
-  icon: React.ReactNode;
-  value: string;
-  onValueChange: (value: string) => void;
-  options: HeaderOption[];
+  year: number;
+  windowYears: number;
+  yearOptions: number[];
+  onYearChange: (year: number) => void;
+  onWindowChange: (windowYears: number) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const label = windowYears > 1 ? 'Years' : 'Year';
+  const span = yearsLabel(year, windowYears);
+  const yearLabel = windowYears > 1 ? 'Start year' : 'Report year';
+
   return (
-    <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger
-        aria-label={label}
-        className="tw:w-auto tw:cursor-pointer tw:bg-white tw:transition-colors tw:hover:border-primary-500"
-        style={{ gap: spacing.sm, fontFamily: typography.fontFamily.primary }}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${label}: ${span}`}
+          className="tw:inline-flex tw:h-9 tw:cursor-pointer tw:items-center tw:rounded-md tw:border tw:border-input tw:bg-white tw:px-3 tw:text-sm tw:whitespace-nowrap tw:shadow-xs tw:transition-colors tw:hover:border-primary-500"
+          style={{ gap: spacing.sm, fontFamily: typography.fontFamily.primary }}
+        >
+          <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
+            <IconCalendarEvent size={16} />
+          </span>
+          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+            {label}
+          </span>
+          <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
+            {span}
+          </span>
+          <IconChevronDown
+            size={14}
+            aria-hidden
+            style={{
+              color: colors.text.tertiary,
+              transform: open ? 'rotate(180deg)' : undefined,
+              transition: 'transform 160ms ease',
+            }}
+          />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        aria-label="Report years"
+        style={{ width: 320, padding: spacing.lg, fontFamily: typography.fontFamily.primary }}
       >
-        <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
-          {icon}
-        </span>
-        <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-          {label}
-        </span>
-        <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
-          <SelectValue />
-        </span>
-      </SelectTrigger>
-      <SelectContent position="popper" align="start" style={{ minWidth: 180 }}>
-        {options.map((option) => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-            disabled={option.soon}
-            className="tw:cursor-pointer"
-          >
-            {option.label}
-            {option.soon && (
-              <Badge variant="secondary" style={{ marginLeft: spacing.sm }}>
-                Soon
-              </Badge>
-            )}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+            {/* The report's year, or with a window the year it starts. */}
+            <span style={fieldLabel}>{yearLabel}</span>
+            <Select value={String(year)} onValueChange={(next) => onYearChange(Number(next))}>
+              <SelectTrigger
+                aria-label={yearLabel}
+                className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" align="start">
+                {yearOptions.map((option) => (
+                  <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+            <span style={fieldLabel}>Budget</span>
+            <SegmentedControl
+              animated
+              value={String(windowYears)}
+              onValueChange={(next) => onWindowChange(Number(next))}
+              options={WINDOW_YEARS.map((years) => ({
+                value: String(years),
+                label: years === 1 ? '1 year' : `${years} years`,
+              }))}
+            />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -216,10 +258,6 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // The budget's span from the report's year: the year alone, or a window
   // scored a year at a time alongside the report.
   const windowYears = draft.windowYears ?? 1;
-  const windowOptions = WINDOW_YEARS.map((years) => ({
-    value: String(years),
-    label: years === 1 ? `${year} only` : `${year}–${year + years - 1}`,
-  }));
 
   // Who the report runs on: the whole country, a state, or a congressional district.
   const region = draft.population?.region;
@@ -280,22 +318,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
-          <HeaderSelect
-            label="Year"
-            icon={<IconCalendarEvent size={16} />}
-            value={String(year)}
-            onValueChange={(next) => setDraftYear(Number(next))}
-            options={yearOptions.map((option) => ({
-              value: String(option),
-              label: String(option),
-            }))}
-          />
-          <HeaderSelect
-            label="Budget years"
-            icon={<IconCalendarStats size={16} />}
-            value={String(windowYears)}
-            onValueChange={(next) => setDraftWindowYears(Number(next))}
-            options={windowOptions}
+          <YearsPicker
+            year={year}
+            windowYears={windowYears}
+            yearOptions={yearOptions}
+            onYearChange={setDraftYear}
+            onWindowChange={setDraftWindowYears}
           />
           <PopulationPicker
             value={region ?? ''}

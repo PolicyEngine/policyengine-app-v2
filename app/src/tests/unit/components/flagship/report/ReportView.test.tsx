@@ -8,6 +8,11 @@ vi.mock('@/utils/isSocietyWideReportNoOp', () => ({
   isSocietyWideReportNoOp: () => true,
 }));
 
+vi.mock('@/api/budgetWindow', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/budgetWindow')>()),
+  fetchBudgetWindow: async () => ({ status: 'computing', result: null, progress: 10 }),
+}));
+
 function renderCover(populationLabel?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -47,6 +52,42 @@ describe('ReportView overview', () => {
     expect(panel.querySelector('[aria-label="No change in this year"]')).toHaveTextContent(
       'This reform changes nothing in 2026'
     );
+  });
+});
+
+describe('ReportView budget window', () => {
+  const renderWith = (budgetWindow?: { startYear: number; windowSize: number }) => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Bigger CTC"
+          sourceNote="Hand-built"
+          provisions={[]}
+          year="2026"
+          reformPolicyId="9"
+          baselinePolicyId="2"
+          budgetWindow={budgetWindow}
+          output={null}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+  };
+
+  test('given a window asked for in Build then the overview carries it', async () => {
+    renderWith({ startYear: 2026, windowSize: 10 });
+
+    expect(await screen.findByRole('region', { name: 'Budget window' })).toHaveTextContent(
+      'Budget, 2026–2035'
+    );
+  });
+
+  test('given no window asked for then the overview has none', () => {
+    renderWith();
+
+    expect(screen.queryByRole('region', { name: 'Budget window' })).not.toBeInTheDocument();
   });
 });
 

@@ -2,6 +2,7 @@ import { fetchBudgetWindow } from '@/api/budgetWindow';
 import { createPolicy } from '@/api/policy';
 import { createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
+import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -162,6 +163,20 @@ export async function runFlagshipReport({
     createdAt: new Date().toISOString(),
     ...(budgetWindow && { budgetWindow }),
   });
+
+  // Start the report's own calculation now, not when its page opens: the
+  // first request queues the job, so a tab closed right after "Run" still
+  // gets its result, waiting for the link. The page asks with the same
+  // reform, baseline, region and year, so it checks on this job.
+  // A failure here never fails the run: the report page asks again.
+  void Promise.resolve()
+    .then(() =>
+      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(currentLawId), {
+        region: region ?? countryId,
+        time_period: String(year),
+      })
+    )
+    .catch(() => undefined);
 
   // The window was asked for with the run: start it now, alongside the
   // report, rather than when the report page opens. The first request
