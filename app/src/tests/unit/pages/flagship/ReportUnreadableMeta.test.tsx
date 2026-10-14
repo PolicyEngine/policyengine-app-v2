@@ -12,7 +12,7 @@ import {
 // schema, from real localStorage (Report.test.tsx stubs the read).
 
 const REPORT_ID = 'r1';
-const UNREADABLE_HEADING = "This report's saved details can't be read";
+const UNREADABLE_HEADING = "Could not read this report's saved details";
 const WAITING_TEXT = 'Calculating the nationwide results';
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
