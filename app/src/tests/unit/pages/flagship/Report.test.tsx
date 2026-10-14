@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
+import { scorecardClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalcStatus = vi.fn();
@@ -137,5 +138,39 @@ describe('FlagshipReportPage', () => {
         .getAllByRole('heading', { level: 3 })
         .map((heading) => heading.textContent)
     ).toEqual(['External estimates', 'Data calibration', 'Baseline comparisons']);
+  });
+
+  const COMPLETE = {
+    status: 'complete',
+    isComplete: true,
+    isError: false,
+    result: createMockSocietyWideOutput(),
+  };
+
+  test('given a finished custom report with a related published score then validation shows it', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          built: '2026-08-29',
+          rows: [{ ...scorecardClaim(), matchBasis: 'parameter' }],
+          unmappedCount: 0,
+        })
+      )
+    );
+    mockCalcStatus.mockReturnValue(COMPLETE);
+
+    renderPage();
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByRole('table', { name: 'Related reforms' })
+    ).toBeInTheDocument();
+    expect(within(panel).getByRole('button', { name: 'CTC extension' })).toBeInTheDocument();
+    expect(
+      within(panel).queryByText('No external estimate is available for this reform.')
+    ).not.toBeInTheDocument();
   });
 });
