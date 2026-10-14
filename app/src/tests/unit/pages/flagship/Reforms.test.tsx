@@ -650,16 +650,145 @@ describe('ReformsPage', () => {
     ).toBeInTheDocument();
   });
 
-  test('given delete in the reform detail then the store delete is called', async () => {
+  test('given delete in the reform detail then it asks first and deletes nothing yet', async () => {
+    // Given
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     mockDelete.mockResolvedValue(undefined);
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
+    // When
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
+    // Then
+    const dialog = screen.getByRole('alertdialog', {
+      name: 'Delete “CTC to $3,600 for children under 6”?',
+    });
+    expect(dialog).toBeInTheDocument();
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  test('given the delete is confirmed then the store delete is called', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockDelete.mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    // When
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete reform' })
+    );
+
+    // Then
     expect(mockDelete).toHaveBeenCalledWith('rf-1');
+  });
+
+  test('given the delete is cancelled then the reform stays', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    // When
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' })
+    );
+
+    // Then
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue('CTC to $3,600 for children under 6')).toBeInTheDocument();
+  });
+
+  test('given a reform with reports then the delete prompt says they stay reachable by link', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockFindReports.mockResolvedValue([
+      {
+        id: 'r-a',
+        countryId: 'us',
+        apiReportId: '901',
+        title: 'CTC',
+        sourceNote: null,
+        provisions: [],
+        year: '2026',
+        createdAt: '2026-10-13T15:00:00Z',
+        reformId: 'rf-1',
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await screen.findByText('2026 report');
+
+    // When
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    // Then
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      'Its 1 report leaves this list; it still opens from its link.'
+    );
+  });
+
+  test('given the delete fails then the detail says so', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockDelete.mockRejectedValue(new Error('503'));
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    // When
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete reform' })
+    );
+
+    // Then
+    expect(await screen.findByText(/could not delete/i)).toBeInTheDocument();
+  });
+
+  test('given a failed delete then another reform opens with no error', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM, LATER_REFORM]);
+    mockDelete.mockRejectedValue(new Error('503'));
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete reform' })
+    );
+    await screen.findByText(/could not delete/i);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /all reforms/i }));
+    await user.click(await screen.findByText('CTC to $1,000 from 2028'));
+
+    // Then
+    expect(screen.getByDisplayValue('CTC to $1,000 from 2028')).toBeInTheDocument();
+    expect(screen.queryByText(/could not delete/i)).not.toBeInTheDocument();
+  });
+
+  test('given the duplicate fails then the detail says so', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockCreate.mockRejectedValue(new Error('503'));
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    // When
+    await user.click(screen.getByRole('button', { name: /duplicate/i }));
+
+    // Then
+    expect(await screen.findByText(/could not duplicate/i)).toBeInTheDocument();
   });
 
   test('given duplicate in the reform detail then a copy is created', async () => {
