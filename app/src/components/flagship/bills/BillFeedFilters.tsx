@@ -74,7 +74,11 @@ export default function BillFeedFilters({
           onChange={(state) => onChange({ ...value, state })}
           states={states}
           scopes={ALL_STATES}
-          counts={stateBillCounts(searched, value)}
+          counts={stateBillCounts(
+            searched,
+            value,
+            states.map((state) => state.code)
+          )}
           triggerStyle={controlStyle}
         />
       )}

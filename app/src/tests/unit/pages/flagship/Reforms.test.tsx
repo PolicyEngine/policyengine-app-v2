@@ -6,6 +6,7 @@ import ReformsPage from '@/pages/flagship/Reforms.page';
 import {
   FEDERAL_ENACTED,
   FEDERAL_PROPOSED,
+  FEDERAL_UNTRACKED,
   FILTER_BILLS,
   GEORGIA_VETOED,
   UTAH_ENACTED,
@@ -300,6 +301,25 @@ describe('ReformsPage', () => {
     expect(within(card(UTAH_PROPOSED.title)).getByText('Utah')).toBeInTheDocument();
     expect(within(card(UTAH_PROPOSED.title)).getByText('Proposed')).toBeInTheDocument();
     expect(within(card(GEORGIA_VETOED.title)).getByText('Failed')).toBeInTheDocument();
+    // No tracked status, no stage: the card does not guess one.
+    expect(
+      within(card(FEDERAL_UNTRACKED.title)).queryByText(/^(Enacted|Proposed|Failed)$/)
+    ).not.toBeInTheDocument();
+  });
+
+  test('given a search for federal then the bills whose cards say Federal match', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue(FILTER_BILLS);
+    renderReforms();
+
+    await screen.findByText(UTAH_ENACTED.title);
+    // The tracker files these bills under "US"; the cards say Federal.
+    await user.type(screen.getByRole('textbox', { name: /search reforms/i }), 'federal');
+
+    expect(await screen.findByText(FEDERAL_ENACTED.title)).toBeInTheDocument();
+    expect(screen.getByText(FEDERAL_PROPOSED.title)).toBeInTheDocument();
+    expect(screen.queryByText(UTAH_ENACTED.title)).not.toBeInTheDocument();
+    expect(screen.queryByText('No bills match.')).not.toBeInTheDocument();
   });
 
   test('given filters that match no bill then a message offers to clear them', async () => {

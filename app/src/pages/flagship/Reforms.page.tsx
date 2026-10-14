@@ -65,12 +65,15 @@ type Tab = 'bills' | 'yours';
 /** Bills render in pages of this size; scrolling near the end reveals the next page. */
 const BILLS_PAGE_SIZE = 12;
 
-/** The list's filter controls — state and search — at one height and border. */
+/**
+ * The list's filter controls — state and search — at one height and
+ * border: the segmented controls' height (h-9), so a filter row lines up.
+ */
 const filterControl: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: spacing.xs,
-  height: 34,
+  height: 36,
   padding: `0 ${spacing.md}`,
   border: `1px solid ${colors.border.light}`,
   borderRadius: spacing.radius.container,
@@ -403,7 +406,8 @@ export default function ReformsPage() {
     tokens.every((token) => haystack.toLowerCase().includes(token));
 
   const searchedBills = bills.filter((bill) =>
-    matches(`${bill.title} ${bill.jurisdiction} ${bill.summary}`)
+    // The card's place ("Federal") reads too, not only the tracker's "US".
+    matches(`${bill.title} ${billPlace(bill)} ${bill.jurisdiction} ${bill.summary}`)
   );
   const visibleBills = filterBills(searchedBills, billFilters).sort((a, b) =>
     (b.date ?? '').localeCompare(a.date ?? '')

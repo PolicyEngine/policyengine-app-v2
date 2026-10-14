@@ -9,6 +9,7 @@ import {
 import {
   FEDERAL_ENACTED,
   FEDERAL_PROPOSED,
+  FEDERAL_UNTRACKED,
   FILTER_BILLS,
   GEORGIA_VETOED,
   UTAH_ENACTED,
@@ -46,6 +47,7 @@ describe('filterBills', () => {
     expect(ids(filterBills(FILTER_BILLS, { ...NO_BILL_FILTERS, level: 'federal' }))).toEqual([
       FEDERAL_ENACTED.id,
       FEDERAL_PROPOSED.id,
+      FEDERAL_UNTRACKED.id,
     ]);
   });
 
@@ -66,7 +68,7 @@ describe('filterBills', () => {
   test('given a state outside the state level then it is not read', () => {
     expect(
       ids(filterBills(FILTER_BILLS, { ...NO_BILL_FILTERS, level: 'federal', state: 'ut' }))
-    ).toEqual([FEDERAL_ENACTED.id, FEDERAL_PROPOSED.id]);
+    ).toEqual([FEDERAL_ENACTED.id, FEDERAL_PROPOSED.id, FEDERAL_UNTRACKED.id]);
   });
 
   test('given the enacted stage then only enacted bills stay', () => {
@@ -76,11 +78,19 @@ describe('filterBills', () => {
     ]);
   });
 
-  test('given the proposed stage then bills with no status set stay with the proposals', () => {
+  test('given the proposed stage then only proposals stay', () => {
     expect(ids(filterBills(FILTER_BILLS, { ...NO_BILL_FILTERS, stage: 'proposed' }))).toEqual([
       FEDERAL_PROPOSED.id,
       UTAH_PROPOSED.id,
     ]);
+  });
+
+  test('given a bill with no tracked status then it stays under all stages only', () => {
+    const atStage = (stage: 'enacted' | 'proposed' | 'failed') =>
+      ids(filterBills([FEDERAL_UNTRACKED], { ...NO_BILL_FILTERS, stage }));
+
+    expect(ids(filterBills([FEDERAL_UNTRACKED], NO_BILL_FILTERS))).toEqual([FEDERAL_UNTRACKED.id]);
+    expect([atStage('enacted'), atStage('proposed'), atStage('failed')]).toEqual([[], [], []]);
   });
 
   test('given a level and a stage then both apply', () => {
@@ -100,5 +110,11 @@ describe('stateBillCounts', () => {
       all: 1,
       ut: 1,
     });
+  });
+
+  test('given listed states then a state with no bill at the stage counts 0', () => {
+    expect(
+      stateBillCounts(FILTER_BILLS, { ...NO_BILL_FILTERS, stage: 'enacted' }, ['UT', 'ga'])
+    ).toEqual({ all: 1, ut: 1, ga: 0 });
   });
 });

@@ -78,9 +78,9 @@ describe('BillFeedFilters', () => {
 
     await user.click(screen.getByRole('button', { name: 'State: All states' }));
 
-    // Counts follow the stage: one enacted bill, in Utah.
+    // Counts follow the stage: one enacted bill, in Utah, and none in Georgia.
     expect(screen.getByRole('option', { name: /all states\s*1/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /georgia/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /georgia\s*0/i })).toBeInTheDocument();
     await user.click(screen.getByRole('option', { name: /utah\s*1/i }));
     expect(onChange).toHaveBeenCalledWith({ level: 'state', state: 'ut', stage: 'enacted' });
   });

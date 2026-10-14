@@ -21,9 +21,10 @@ describe('billStage', () => {
   });
 
   test.each(UNSET_STATUSES)(
-    'given no status the tracker set (%s) then it reads as proposed',
+    'given no status the tracker set (%s) then it has no stage',
     (status) => {
-      expect(billStage(status)).toBe('proposed');
+      // It may be law or not: without the tracker's mark the feed says neither.
+      expect(billStage(status)).toBeNull();
     }
   );
 

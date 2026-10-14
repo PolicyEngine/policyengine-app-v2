@@ -25,9 +25,19 @@ export const PROPOSED_STATUSES = [
   'Sent to President',
   'Awaiting signature',
   'Proposed',
+  // Words that sit near a stage word but name no stage.
+  'Referred to Committee on Law',
+  'Line item veto',
 ];
 
-export const FAILED_STATUSES = ['Vetoed', 'Pocket veto', 'Dead/Withdrawn', 'Failed', 'Died'];
+export const FAILED_STATUSES = [
+  'Vetoed',
+  'Pocket veto',
+  'Dead/Withdrawn',
+  'Failed',
+  'Died',
+  'Veto override failed',
+];
 
 /** What the feed says when the tracker follows no status for a bill. */
 export const UNSET_STATUSES = ['Analyzed', '', undefined, null];
@@ -70,7 +80,7 @@ export const UTAH_PROPOSED = bill({
   jurisdiction: 'Utah',
   state: 'UT',
   title: 'HB 290: Utah child tax credit',
-  status: 'Analyzed',
+  status: 'Passed One Chamber',
 });
 
 export const GEORGIA_VETOED = bill({
@@ -81,10 +91,22 @@ export const GEORGIA_VETOED = bill({
   status: 'Vetoed',
 });
 
-/** Two federal bills and three state bills across two states and every stage. */
+/** A bill the tracker follows no status for: it has no stage. */
+export const FEDERAL_UNTRACKED = bill({
+  id: 'us-s1',
+  jurisdiction: 'US',
+  title: 'S 1: Working Families Tax Cut',
+  status: 'Analyzed',
+});
+
+/**
+ * Three federal bills and three state bills across two states, every
+ * stage, and one bill with no stage.
+ */
 export const FILTER_BILLS: TrackedBill[] = [
   FEDERAL_ENACTED,
   FEDERAL_PROPOSED,
+  FEDERAL_UNTRACKED,
   UTAH_ENACTED,
   UTAH_PROPOSED,
   GEORGIA_VETOED,

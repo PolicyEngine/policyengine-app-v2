@@ -37,6 +37,7 @@ function inPlace(bill: FilterableBill, filters: BillFilters): boolean {
   );
 }
 
+/** A bill with no tracked stage passes only when every stage does. */
 const atStage = (bill: FilterableBill, filters: BillFilters): boolean =>
   filters.stage === 'all' || billStage(bill.status) === filters.stage;
 
@@ -48,10 +49,18 @@ export function filterBills<T extends FilterableBill>(bills: T[], filters: BillF
 /**
  * How many state bills each state holds at the chosen stage, keyed by
  * lowercase code, with every state's total under 'all' — the counts the
- * state picker shows beside each state.
+ * state picker shows beside each state. Each of `stateCodes` counts from
+ * 0, so a listed state with no bill at the stage reads 0, not blank.
  */
-export function stateBillCounts(bills: FilterableBill[], filters: BillFilters) {
+export function stateBillCounts(
+  bills: FilterableBill[],
+  filters: BillFilters,
+  stateCodes: string[] = []
+) {
   const counts: Record<string, number> = { all: 0 };
+  for (const code of stateCodes) {
+    counts[code.toLowerCase()] = 0;
+  }
   for (const bill of bills) {
     const code = bill.state?.toLowerCase();
     if (code && atStage(bill, filters)) {
