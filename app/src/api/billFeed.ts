@@ -1,5 +1,12 @@
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import {
+  processedBillKey,
+  researchBillKeys,
+  trackerBillTitle,
+  trackerBillUrl,
+  trackerPlace,
+} from '@/libs/flagship/billTracker';
 import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
@@ -104,6 +111,10 @@ export interface TrackedBill {
   /** Two-letter state code for state bills; absent for federal ones. */
   state?: string;
   title: string;
+  /**
+   * The bill's stage in the tracker's words ("In Committee"), or
+   * "Analyzed" when the tracker follows no stage for it.
+   */
   status: string;
   summary: string;
   provisions: TrackedBillProvision[];
@@ -114,6 +125,8 @@ export interface TrackedBill {
   legiscanUrl?: string;
   /** The bill's source page (congress.gov / state legislature), when known. */
   sourceUrl?: string;
+  /** The bill's page in the bill tracker. */
+  trackerUrl?: string;
   /** Analysis date (ISO), for newest-first ordering. */
   date?: string;
   /** Model and data versions behind the stored analysis. */
@@ -396,7 +409,8 @@ export function changesFromTrackerProvisions(raw: unknown): BillChange[] {
 
 /** Headline numbers from a reform_impacts row, when present and numeric. */
 function extractImpacts(impact: any): TrackedBill['impacts'] {
-  const revenue = impact?.budgetary_impact?.stateRevenueImpact;
+  // As the tracker reads it: net cost stands in where no revenue change is stored.
+  const revenue = impact?.budgetary_impact?.stateRevenueImpact ?? impact?.budgetary_impact?.netCost;
   const poverty = impact?.poverty_impact?.percentChange;
   const result: NonNullable<TrackedBill['impacts']> = {};
   if (typeof revenue === 'number' && Number.isFinite(revenue) && revenue !== 0) {
@@ -538,35 +552,37 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const impactsById = new Map((impacts ?? []).map((impact) => [impact.id, impact]));
   const baselineById = new Map((baselines ?? []).map((row) => [row.id, row.baseline_params]));
   const validationById = new Map((validations ?? []).map((row) => [row.id, row]));
+  // Joined as the tracker joins them, so a bill shows the tracker's stage.
   const processedByKey = new Map(
-    (processed ?? []).map((bill) => [
-      `${String(bill.state).toLowerCase()}-${String(bill.bill_number).toLowerCase().replace(/\s+/g, '')}`,
-      bill,
-    ])
+    (processed ?? []).map((bill) => [processedBillKey(bill.state, bill.bill_number), bill])
   );
 
   return research
     .filter((record) => isScorableReform(record, impactsById.get(record.id)))
     .map((record): TrackedBill => {
       const impact = impactsById.get(record.id);
-      const status = processedByKey.get(record.id)?.status;
+      const rows = researchBillKeys(record)
+        .map((key) => processedByKey.get(key))
+        .filter(Boolean);
+      const tracked = rows.find((row) => row.status) ?? rows[0];
       return {
         id: record.id,
         countryId: 'us',
-        jurisdiction: STATE_NAMES[record.state] ?? record.state ?? 'Federal',
+        jurisdiction: trackerPlace(record.state, STATE_NAMES),
         // The tracker files federal bills under "US", which is not a state.
         state:
           /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
             ? record.state.toUpperCase()
             : undefined,
-        title: record.title ?? record.id,
-        status: status || 'Analyzed',
+        title: trackerBillTitle(record),
+        status: tracked?.status || 'Analyzed',
         summary: record.description ?? '',
         provisions: provisionsFromReformParams(impact?.reform_params, baselineById.get(record.id)),
         changes: changesFromTrackerProvisions(impact?.provisions),
         keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
-        legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
+        legiscanUrl: tracked?.legiscan_url ?? undefined,
         sourceUrl: record.url ?? undefined,
+        trackerUrl: trackerBillUrl(record),
         date: record.date ?? undefined,
         provenance: impact
           ? {
