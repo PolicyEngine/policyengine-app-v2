@@ -173,6 +173,36 @@ describe('ApiFlagshipReportStore', () => {
     });
   });
 
+  test('given a budget window then the row carries its years and reads them back', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(itemResponse(reportItem({ budget_window_years: 10 }), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    const record = await store.create({ ...newReport, budgetWindowYears: 10 });
+
+    // Then
+    expect(fetchCall(fetchMock).body.budget_window_years).toBe(10);
+    expect(record.budgetWindowYears).toBe(10);
+  });
+
+  test('given a one-year run then the row has no budget window', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(async () => itemResponse(reportItem(), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.create({ ...newReport, budgetWindowYears: 1 });
+    const record = await store.create({ ...newReport, budgetWindowYears: null });
+
+    // Then
+    expect(fetchCall(fetchMock, 0).body).not.toHaveProperty('budget_window_years');
+    expect(fetchCall(fetchMock, 1).body).not.toHaveProperty('budget_window_years');
+    expect(record.budgetWindowYears).toBeNull();
+  });
+
   test('given a reform saved in this browser then the account row is not linked to it', async () => {
     // Given
     const { fetchMock, context } = createTestApiContext();

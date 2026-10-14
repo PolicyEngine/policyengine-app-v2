@@ -1,6 +1,7 @@
 import { fetchBudgetWindow } from '@/api/budgetWindow';
 import {
   LocalStorageFlagshipReportStore,
+  type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
 import { createPolicy } from '@/api/policy';
@@ -80,6 +81,31 @@ export function saveReportMeta(userReportId: string, meta: FlagshipReportMeta): 
 
 export function readReportMeta(userReportId: string): FlagshipReportMeta | null {
   return accountReportMeta.get(userReportId) ?? readAllMeta()[userReportId] ?? null;
+}
+
+/**
+ * A report record's provenance, as the run's own details would give it:
+ * how a report opened on another device, or after a reload, still shows
+ * its title, source, changes and budget window. A record without
+ * provisions has nothing to show, so it gives none.
+ */
+export function reportMetaFromRecord(
+  record: FlagshipReportRecord | null | undefined,
+  reportYear: string | undefined
+): FlagshipReportMeta | null {
+  if (!record || record.provisions.length === 0) {
+    return null;
+  }
+  const startYear = Number(reportYear);
+  return {
+    title: record.title ?? '',
+    sourceNote: record.sourceNote ?? '',
+    provisions: record.provisions,
+    createdAt: record.createdAt,
+    ...(record.budgetWindowYears && record.budgetWindowYears > 1 && startYear
+      ? { budgetWindow: { startYear, windowSize: record.budgetWindowYears } }
+      : {}),
+  };
 }
 
 export interface RunFlagshipReportArgs {
@@ -203,6 +229,8 @@ export async function runFlagshipReport({
     provisions,
     year: String(year),
     reformId: reformId ?? null,
+    // Kept on the record so the report shows its window on any device.
+    budgetWindowYears: budgetWindow?.windowSize ?? null,
   };
 
   if (accountReportStore) {

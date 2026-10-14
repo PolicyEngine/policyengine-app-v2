@@ -36,6 +36,8 @@ export interface FlagshipReportRecord {
   reformId?: string | null;
   /** What validation matched this report against, pinned at match time. */
   validation?: ReportValidationSnapshot | null;
+  /** Years in the budget window run with the report, from its year; none for one year. */
+  budgetWindowYears?: number | null;
 }
 
 export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt' | 'validation'>;
@@ -107,6 +109,7 @@ export function recordFromItem(item: UserReportItem): FlagshipReportRecord {
     createdAt: item.created_at,
     reformId: item.user_policy_id,
     validation: validationFromWire(item.validation),
+    budgetWindowYears: item.budget_window_years ?? null,
   };
 }
 
@@ -133,6 +136,9 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
       source_note: clampStoreText(report.sourceNote, MAX_STORE_NOTE_LENGTH) || null,
       provisions: provisionsToWire(report.provisions),
       ...(userPolicyId ? { user_policy_id: userPolicyId } : {}),
+      ...(report.budgetWindowYears && report.budgetWindowYears > 1
+        ? { budget_window_years: report.budgetWindowYears }
+        : {}),
       last_run_at: new Date().toISOString(),
     };
   }

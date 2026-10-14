@@ -66,6 +66,7 @@ export function reportItem(overrides: Partial<UserReportItem> = {}): UserReportI
     source_note: null,
     provisions: null,
     validation: null,
+    budget_window_years: null,
     last_run_at: null,
     ...overrides,
   };

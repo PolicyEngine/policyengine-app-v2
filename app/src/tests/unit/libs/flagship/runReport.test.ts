@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { FlagshipReportStore } from '@/api/flagshipReportStore';
+import type { FlagshipReportRecord, FlagshipReportStore } from '@/api/flagshipReportStore';
 import {
   forgetAccountReportMeta,
   readReportMeta,
   REPORT_META_KEY,
+  reportMetaFromRecord,
   runFlagshipReport,
 } from '@/libs/flagship/runReport';
 
@@ -308,12 +309,36 @@ describe('runFlagshipReport', () => {
       provisions: [PROVISION],
       year: '2027',
       reformId: REFORM_ROW_ID,
+      budgetWindowYears: null,
     });
     expect(localStorage.getItem('pe-flagship-reports')).toBeNull();
     for (const legacyKey of LEGACY_KEYS) {
       expect(localStorage.getItem(legacyKey)).toBeNull();
     }
     expect(readReportMeta('55')?.title).toBe('CTC expansion');
+  });
+
+  test('given a run with a budget window then the account record keeps the window', async () => {
+    // Given
+    const accountStore = {
+      create: vi.fn().mockResolvedValue({ id: 'row-1' }),
+    } as unknown as FlagshipReportStore;
+
+    // When
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      windowYears: 10,
+      accountReportStore: accountStore,
+    });
+
+    // Then: a reload on any device reads it back from the record
+    expect(accountStore.create).toHaveBeenCalledWith(
+      expect.objectContaining({ budgetWindowYears: 10 })
+    );
   });
 
   test('given a signed-in run then its provenance stays out of localStorage and goes on sign-out', async () => {
@@ -356,5 +381,40 @@ describe('runFlagshipReport', () => {
         accountReportStore: accountStore,
       })
     ).rejects.toThrow('Saved work is temporarily unavailable.');
+  });
+});
+
+describe('reportMetaFromRecord', () => {
+  const accountRecord: FlagshipReportRecord = {
+    id: 'row-1',
+    countryId: 'us',
+    apiReportId: '55',
+    title: 'CTC expansion',
+    sourceNote: 'Hand-built draft',
+    provisions: [PROVISION],
+    createdAt: '2026-10-14T00:00:00Z',
+    budgetWindowYears: 10,
+  };
+
+  test('given a record with a budget window then the window starts in the report year', () => {
+    expect(reportMetaFromRecord(accountRecord, '2027')).toEqual({
+      title: 'CTC expansion',
+      sourceNote: 'Hand-built draft',
+      provisions: [PROVISION],
+      createdAt: '2026-10-14T00:00:00Z',
+      budgetWindow: { startYear: 2027, windowSize: 10 },
+    });
+  });
+
+  test('given no window, or no report year yet, then the details carry no window', () => {
+    expect(
+      reportMetaFromRecord({ ...accountRecord, budgetWindowYears: null }, '2027')
+    ).not.toHaveProperty('budgetWindow');
+    expect(reportMetaFromRecord(accountRecord, undefined)).not.toHaveProperty('budgetWindow');
+  });
+
+  test('given no record, or one without provisions, then there are no details', () => {
+    expect(reportMetaFromRecord(null, '2027')).toBeNull();
+    expect(reportMetaFromRecord({ ...accountRecord, provisions: [] }, '2027')).toBeNull();
   });
 });

@@ -99,6 +99,8 @@ export interface UserReportItem extends AssociationItemBase {
   provisions: ReportProvisionWire[] | null;
   /** ReportValidationWire on the wire; validated by validationFromWire. */
   validation: unknown | null;
+  /** Years in the budget window run with the report, from its year (2–75). */
+  budget_window_years: number | null;
   last_run_at: string | null;
 }
 
@@ -129,6 +131,7 @@ export interface UserReportCreateBody {
   source_note?: string | null;
   provisions?: ReportProvisionWire[] | null;
   validation?: unknown | null;
+  budget_window_years?: number | null;
   last_run_at?: string | null;
 }
 

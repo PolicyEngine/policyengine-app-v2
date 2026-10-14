@@ -19,7 +19,7 @@ import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
-import { readReportMeta } from '@/libs/flagship/runReport';
+import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
@@ -57,14 +57,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // baseline, so they count as still loading until it arrives.
   const meta =
     readReportMeta(userReportId) ??
-    (accountRecord && accountRecord.provisions.length > 0
-      ? {
-          title: accountRecord.title ?? '',
-          sourceNote: accountRecord.sourceNote ?? '',
-          provisions: accountRecord.provisions,
-          createdAt: accountRecord.createdAt,
-        }
-      : null) ??
+    reportMetaFromRecord(accountRecord, report?.year) ??
     (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
