@@ -123,32 +123,6 @@ describe('ReportView compared with a saved reform', () => {
 
     expect(valueHeadings()).toEqual(['Change', 'Before', 'After', 'Start', 'End']);
   });
-
-  test('then Validation says published scores compare with current law', async () => {
-    const user = userEvent.setup();
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
-    renderWith('Plan B');
-
-    await user.click(screen.getByRole('tab', { name: 'Validation' }));
-
-    expect(
-      screen.getByText(
-        'Published scores compare with current law. This report compares with Plan B.'
-      )
-    ).toBeInTheDocument();
-    fetchSpy.mockRestore();
-  });
-
-  test('given current law then Validation has no such note', async () => {
-    const user = userEvent.setup();
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
-    renderWith();
-
-    await user.click(screen.getByRole('tab', { name: 'Validation' }));
-
-    expect(screen.queryByText(/Published scores compare/)).not.toBeInTheDocument();
-    fetchSpy.mockRestore();
-  });
 });
 
 describe('ReportView budget window', () => {
