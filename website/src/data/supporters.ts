@@ -91,7 +91,7 @@ export const supporters: Supporter[] = [
     id: "pci",
     name: "Pritzker Children's Initiative",
     websiteUrl: "https://www.pritzkerchildrensinitiative.org/",
-    logoUrl: "/assets/supporters/pci.webp",
+    logoUrl: "/assets/supporters/pci-logo.webp",
     description:
       "a program of the J.B. and M.K. Pritzker Family Foundation focused on ensuring every child arrives at kindergarten ready to succeed, with particular emphasis on the prenatal to age three period.",
   },
