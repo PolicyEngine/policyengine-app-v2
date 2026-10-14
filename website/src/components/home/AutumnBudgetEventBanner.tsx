@@ -21,8 +21,9 @@ export default function AutumnBudgetEventBanner({
         alignItems: "center",
         justifyContent: "center",
         gap: "8px 20px",
-        background: colors.warning,
-        color: colors.gray[900],
+        background: colors.primary[50],
+        borderBottom: `1px solid ${colors.primary[100]}`,
+        color: colors.primary[900],
         textAlign: "center",
         padding: "16px",
         fontFamily: typography.fontFamily.primary,
@@ -38,7 +39,7 @@ export default function AutumnBudgetEventBanner({
       </span>
       <span
         style={{
-          background: colors.gray[900],
+          background: colors.primary[600],
           color: colors.white,
           borderRadius: 999,
           padding: "8px 18px",

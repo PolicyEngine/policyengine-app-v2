@@ -31,7 +31,6 @@ import ggf from "../../../app/src/images/logos/orgs/good-growth-foundation.png";
 import houseOfLords from "../../../app/src/images/logos/orgs/house-of-lords.svg";
 import nef from "../../../app/src/images/logos/orgs/new-economics-foundation.png";
 import no10 from "../../../app/src/images/logos/orgs/no10-data-science.svg";
-import nuffield from "../../../app/src/images/logos/orgs/nuffield-foundation.svg";
 import tpa from "../../../app/src/images/logos/orgs/tax-policy-associates.svg";
 import wpi from "../../../app/src/images/logos/orgs/wpi-economics.svg";
 import umich from "../../../app/src/images/logos/orgs/umich.png";
@@ -114,14 +113,6 @@ export const organizations: Record<string, Organization> = {
     countries: ["uk"],
 
     priority: 7,
-  },
-  nuffield: {
-    name: "Nuffield Foundation",
-    logo: nuffield,
-    link: "https://www.nuffieldfoundation.org/project/enhancing-localising-and-democratising-tax-benefit-policy-analysis",
-    countries: ["uk"],
-
-    priority: 8,
   },
   ukeu: {
     name: "UK in a Changing Europe",
