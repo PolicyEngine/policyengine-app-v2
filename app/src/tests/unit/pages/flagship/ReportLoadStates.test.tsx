@@ -89,12 +89,12 @@ describe('FlagshipReportPage load states', () => {
     mockFetchMetadata.mockReturnValue(new Promise(() => {}));
   });
 
-  test('given the report is loading then the run card placeholder holds its place', () => {
+  test('given the report is loading then a spinner holds the wait', () => {
     mockUseFlagshipReport.mockReturnValue(reportData({ isLoading: true }));
 
     renderPage(EXISTING_REPORT_ID);
 
-    // One status, the placeholder's own: no live region around it.
+    // One status, the spinner's own: no live region around it.
     expect(screen.getAllByRole('status')).toEqual([
       screen.getByRole('status', { name: 'Loading report' }),
     ]);

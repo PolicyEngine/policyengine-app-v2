@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SkeletonLine, SkeletonRegion } from '@/components/flagship/states';
-import { Progress, Stack, Text } from '@/components/ui';
+import { Progress, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { formatElapsed } from '@/libs/flagship/reportStages';
 
@@ -15,7 +14,7 @@ function useElapsed(): number {
   return now - started;
 }
 
-/** The run's card, shared with its placeholder so one replaces the other in place. */
+/** The run's card. */
 const CARD_STYLE: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -29,18 +28,28 @@ const CARD_STYLE: React.CSSProperties = {
 };
 
 /**
- * The run's card before there is a run to show — the report and its
- * status still loading — at the size the run's bar takes once it starts.
+ * The wait before a run has a bar: the report and its status still
+ * loading. A spinner, not a card, so nothing stands empty on the page
+ * until the run's own card arrives.
  */
-export function RunProgressSkeleton({ label }: { label: string }) {
+export function RunLoading({ label }: { label: string }) {
   return (
-    <SkeletonRegion label={label} style={CARD_STYLE}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md, height: 20 }}>
-        <SkeletonLine width="45%" />
-        <SkeletonLine width={64} height={12} style={{ marginLeft: 'auto' }} />
-      </div>
-      <SkeletonLine height={8} style={{ borderRadius: 999 }} />
-    </SkeletonRegion>
+    <div
+      role="status"
+      aria-label={label}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: spacing.sm,
+        padding: `${spacing['3xl']} 0`,
+      }}
+    >
+      <Spinner size="md" aria-hidden />
+      <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+        {label}…
+      </Text>
+    </div>
   );
 }
 

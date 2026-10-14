@@ -7,7 +7,7 @@ import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportLoadError from '@/components/flagship/report/ReportLoadError';
 import ReportView from '@/components/flagship/report/ReportView';
-import RunProgress, { RunProgressSkeleton } from '@/components/flagship/report/RunProgress';
+import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
@@ -223,7 +223,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             expectedMs={getDurationForCountry(report?.countryId ?? 'us')}
           />
         ) : (
-          <RunProgressSkeleton label="Loading report" />
+          <RunLoading label="Loading report" />
         )}
       </Stack>
     );
