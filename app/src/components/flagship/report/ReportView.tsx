@@ -41,7 +41,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
-import type { RunReportProvision } from '@/libs/flagship/runReport';
+import type { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
 import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
@@ -101,7 +101,10 @@ export interface ReportViewProps {
    * provisions show placeholders meanwhile, not raw parameter paths.
    */
   provisionsLoading?: boolean;
+  /** What the results are compared with, by name; current law when unset. */
   customBaselineLabel?: string | null;
+  /** What the adjust panel's runs compare with; current law when unset. */
+  baseline?: RunReportBaseline;
   year: string;
   region?: string;
   reformPolicyId?: string;
@@ -144,6 +147,7 @@ export default function ReportView({
   priorLawBaseline = false,
   provisionsLoading = false,
   customBaselineLabel,
+  baseline,
   year,
   region,
   reformPolicyId,
@@ -307,7 +311,11 @@ export default function ReportView({
                 <Stack style={{ gap: spacing.xl }}>
                   {/* Said first, before a page of results that all read "no change". */}
                   {output && isSocietyWideReportNoOp(output) && (
-                    <NoChangeNotice year={year} provisions={provisions} />
+                    <NoChangeNotice
+                      year={year}
+                      provisions={provisions}
+                      baselineLabel={customBaselineLabel}
+                    />
                   )}
                   {overviewLead}
                   <ReportChanges
@@ -464,6 +472,7 @@ export default function ReportView({
           loading={provisionsLoading}
           region={region}
           year={year}
+          baseline={baseline}
         />
       </div>
     </div>

@@ -17,6 +17,7 @@ import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
+import { reportBaselineLabel, reportRunBaseline } from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -100,9 +101,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const reformPolicyId = simulations?.[1]?.policyId;
   const baselinePolicyId = simulations?.[0]?.policyId;
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
-  const customBaselineLabel = baselinePolicy?.parameters?.length
-    ? baselinePolicy.label || 'Custom baseline policy'
-    : null;
+  const customBaselineLabel = reportBaselineLabel(meta, baselinePolicy);
+  // Adjusted, the report keeps what it was compared with.
+  const runBaseline = reportRunBaseline(meta, baselinePolicyId, customBaselineLabel);
   const region = simulations?.[0]?.populationId;
   // A report on part of the country names it: "California".
   const regionLabel =
@@ -165,6 +166,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                       year: Number(report.year) || undefined,
                       // Back in Build on the population it ran on.
                       region: region && region !== report.countryId ? region : undefined,
+                      baselineReformId: meta.baseline?.reformId,
                     })
                 : undefined
             }
@@ -226,6 +228,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
       customBaselineLabel={customBaselineLabel}
+      baseline={runBaseline}
       year={report?.year ?? ''}
       region={region}
       reformPolicyId={reformPolicyId}

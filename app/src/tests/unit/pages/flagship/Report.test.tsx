@@ -1,9 +1,28 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import type { FlagshipReportMeta } from '@/libs/flagship/runReport';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalcStatus = vi.fn();
+
+const META: FlagshipReportMeta = {
+  title: 'Test Reform',
+  sourceNote: 'Hand-built',
+  createdAt: '2026-10-13T00:00:00Z',
+  provisions: [
+    {
+      path: 'gov.irs.credits.ctc.refundable.individual_max',
+      breadcrumb: 'IRS → Credits → CTC → Refundable maximum',
+      unit: 'currency-USD',
+      baselineValue: 1700,
+      value: 499,
+    },
+  ],
+};
+let mockMeta: FlagshipReportMeta = META;
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
@@ -46,20 +65,12 @@ vi.mock('@/utils/reportSimulations', () => ({
 
 vi.mock('@/libs/flagship/runReport', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/runReport')>()),
-  readReportMeta: () => ({
-    title: 'Test Reform',
-    sourceNote: 'Hand-built',
-    createdAt: '2026-10-13T00:00:00Z',
-    provisions: [
-      {
-        path: 'gov.irs.credits.ctc.refundable.individual_max',
-        breadcrumb: 'IRS → Credits → CTC → Refundable maximum',
-        unit: 'currency-USD',
-        baselineValue: 1700,
-        value: 499,
-      },
-    ],
-  }),
+  readReportMeta: () => mockMeta,
+}));
+
+vi.mock('@/api/budgetWindow', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/budgetWindow')>()),
+  fetchBudgetWindow: async () => ({ status: 'computing', result: null, progress: 10 }),
 }));
 
 function renderPage() {
@@ -74,6 +85,7 @@ function renderPage() {
 describe('FlagshipReportPage', () => {
   beforeEach(() => {
     mockCalcStatus.mockReset();
+    mockMeta = META;
   });
 
   test('given the run is still calculating then the page is the wait, without the adjust panel', () => {
@@ -104,5 +116,57 @@ describe('FlagshipReportPage', () => {
     renderPage();
 
     expect(screen.queryByText('Adjust parameters')).not.toBeInTheDocument();
+  });
+  describe('given what the report is compared with', () => {
+    const PLAN_B_META: FlagshipReportMeta = {
+      ...META,
+      baseline: { reformId: 'rf-plan-b', policyId: '2', label: 'Plan B' },
+    };
+
+    test('given a saved reform then the results say they are compared with it', () => {
+      mockMeta = PLAN_B_META;
+      mockCalcStatus.mockReturnValue({
+        status: 'complete',
+        isComplete: true,
+        isError: false,
+        result: createMockSocietyWideOutput(),
+      });
+
+      renderPage();
+
+      expect(screen.getByText('Compared with: Plan B')).toBeInTheDocument();
+    });
+
+    test('given a report from before baselines then it reads as current law', () => {
+      mockCalcStatus.mockReturnValue({
+        status: 'complete',
+        isComplete: true,
+        isError: false,
+        result: createMockSocietyWideOutput(),
+      });
+
+      renderPage();
+
+      expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
+    });
+
+    test('given a failed run then Build gets the reform back with the same comparison', async () => {
+      clearDraftReform();
+      mockMeta = PLAN_B_META;
+      mockCalcStatus.mockReturnValue({
+        status: 'error',
+        isComplete: false,
+        isError: true,
+        error: { message: 'Simulation failed' },
+        result: null,
+      });
+      const user = userEvent.setup();
+
+      renderPage();
+      await user.click(screen.getByRole('button', { name: 'Edit the reform' }));
+
+      expect(getDraftReform()?.baselineReformId).toBe('rf-plan-b');
+      clearDraftReform();
+    });
   });
 });

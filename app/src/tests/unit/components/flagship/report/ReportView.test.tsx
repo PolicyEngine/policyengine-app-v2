@@ -53,6 +53,29 @@ describe('ReportView overview', () => {
       'This reform changes nothing in 2026'
     );
   });
+
+  test('given a report compared with a saved reform then the cover and the notice name it', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Bigger CTC"
+          sourceNote="Hand-built"
+          provisions={[]}
+          customBaselineLabel="Plan B"
+          year="2026"
+          output={createMockSocietyWideOutput()}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByText('Compared with: Plan B')).toBeInTheDocument();
+    const notice = screen.getByRole('region', { name: 'No change in this year' });
+    expect(notice).toHaveTextContent('Every result matches Plan B.');
+    expect(notice).not.toHaveTextContent('matches current law');
+  });
 });
 
 describe('ReportView budget window', () => {
@@ -105,5 +128,11 @@ describe('ReportView cover', () => {
 
     expect(screen.queryByText(/· 2026/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Hand-built/)).not.toBeInTheDocument();
+  });
+
+  test('given current law then the cover names no comparison', () => {
+    renderCover('Delaware');
+
+    expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
   });
 });

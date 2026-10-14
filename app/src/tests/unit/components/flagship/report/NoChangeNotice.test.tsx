@@ -58,4 +58,27 @@ describe('NoChangeNotice', () => {
     expect(notice).toHaveTextContent('A changed value is at current law in 2026.');
     expect(notice).toHaveTextContent('A program you changed is not in effect in 2026');
   });
+
+  test('given a report compared with a saved reform then it names that, not current law', () => {
+    render(
+      <NoChangeNotice
+        year="2026"
+        provisions={[provision({ value: 2000 })]}
+        baselineLabel="Plan B"
+      />
+    );
+
+    const notice = screen.getByRole('region', { name: 'No change in this year' });
+    expect(notice).toHaveTextContent('Every result matches Plan B.');
+    expect(notice).not.toHaveTextContent('matches current law');
+    expect(notice).toHaveTextContent('The reform sets the same values as Plan B in 2026.');
+  });
+
+  test('given no baseline then it reads current law, as before', () => {
+    render(<NoChangeNotice year="2026" provisions={[provision({ value: 2000 })]} />);
+
+    const notice = screen.getByRole('region', { name: 'No change in this year' });
+    expect(notice).toHaveTextContent('Every result matches current law. The likely reason:');
+    expect(notice).not.toHaveTextContent('same values as');
+  });
 });
