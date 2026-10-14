@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react';
-import { IconHome, IconPlus } from '@tabler/icons-react';
 import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
@@ -12,6 +11,7 @@ import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import BudgetWindowSummary from '@/components/flagship/report/BudgetWindowSummary';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
+import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
@@ -26,18 +26,8 @@ import {
   ModelTrackRecordSection,
   type ModelTrackRecord,
 } from '@/components/flagship/ValidationPanel';
-import {
-  Button,
-  Stack,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Text,
-  Title,
-} from '@/components/ui';
+import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
-import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
@@ -165,7 +155,6 @@ export default function ReportView({
   trackRecord,
   validationLead,
 }: ReportViewProps) {
-  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const [activeTab, setActiveTab] = useState('policy');
   const [visitedTabs, setVisitedTabs] = useState(() => new Set(['policy']));
@@ -393,38 +382,27 @@ export default function ReportView({
                 'household',
                 <Stack style={{ gap: spacing.md }}>
                   <SectionHeading id="household" title="Household" />
-                  <Stack
-                    style={{
-                      gap: spacing.md,
-                      padding: spacing.lg,
-                      border: `1px dashed ${colors.border.light}`,
-                      borderRadius: 12,
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <Stack style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-                      <IconHome size={18} color={colors.text.secondary} />
+                  {/* A household runs on the report's own policies, once they exist. */}
+                  {reformPolicyId && baselinePolicyId ? (
+                    <HouseholdImpactSection
+                      // New policies, year or region start a new form, with nothing run.
+                      key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
+                      countryId={countryId}
+                      year={year}
+                      region={region}
+                      baselinePolicyId={baselinePolicyId}
+                      reformPolicyId={reformPolicyId}
+                    />
+                  ) : (
+                    <>
                       <Text
-                        style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}
+                        style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                       >
-                        No household attached to this report yet.
+                        A household runs once the full results start.
                       </Text>
-                    </Stack>
-                    <Text
-                      style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
-                    >
-                      See how this reform changes taxes and benefits for a specific family — build a
-                      household and it will appear here alongside the nationwide results.
-                    </Text>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => nav.push(`/${countryId}/households`)}
-                    >
-                      <IconPlus size={14} />
-                      Add a household
-                    </Button>
-                  </Stack>
+                      {pending}
+                    </>
+                  )}
                 </Stack>
               )}
               {tabPanel(
