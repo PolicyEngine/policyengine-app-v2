@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { PHONE_QUERY } from '@/libs/flagship/viewport';
 
 /**
  * The flagship shell's right plane.
@@ -30,6 +31,13 @@ const FADE_MS = 160;
  * The spine keeps its place in the column as the way back.
  */
 const OVERLAY_BELOW = '(max-width: 1023px)';
+/**
+ * The folded bar's height on a phone: a fingertip, and a line of text.
+ * There a spine would take a ninth of the screen, so the shell puts the
+ * plane under the content (see FlagshipShell): folded, the panel is a
+ * bar across the bottom; open, it fills the screen, as a drawer.
+ */
+const BAR_HEIGHT = 48;
 
 /** Effects that must run before paint, without warning during SSR. */
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -115,6 +123,7 @@ export default function SidePanel({
   const focusAfterToggle = useRef(false);
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const overlay = useMediaQuery(OVERLAY_BELOW);
+  const phone = useMediaQuery(PHONE_QUERY);
 
   useIsomorphicLayoutEffect(() => {
     setSlot(document.getElementById(SIDE_PANEL_SLOT_ID));
@@ -146,6 +155,24 @@ export default function SidePanel({
     writeStoredOpen(storageKey, next);
   };
 
+  // A drawer over the whole screen closes with Escape, as a dialog does —
+  // unless the Escape already closed a picker open inside it.
+  useEffect(() => {
+    if (!phone || !open) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) {
+        return;
+      }
+      focusAfterToggle.current = true;
+      setOpenState(false);
+      writeStoredOpen(storageKey, false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [phone, open, storageKey]);
+
   // The plane mirrors the left sidebar: the same flat surface and quiet
   // edge, with teal reserved for text — no colored bands.
   const titleColor = accent ? colors.primary[700] : colors.text.primary;
@@ -170,37 +197,67 @@ export default function SidePanel({
     background: colors.gray[50],
   };
 
+  /** Where the open panel sits: the column, over the content, or (a phone) the whole screen. */
+  const openPlacement: React.CSSProperties = phone
+    ? {
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        zIndex: 30,
+        width: '100%',
+        background: colors.gray[50],
+      }
+    : overlay
+      ? {
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          height: '100vh',
+          zIndex: 30,
+          boxShadow: `-${spacing.sm} 0 ${spacing.xl} ${colors.shadow.medium}`,
+          ...surface,
+          // Floating on narrow shells, a wide panel never outgrows the window.
+          width: `min(${width}px, 100vw)`,
+        }
+      : { position: 'absolute', top: 0, left: 0, height: '100%', width };
+
   const content = (
     <div
-      style={{
-        // Narrow shells keep only the spine's width; the open panel
-        // floats over the content instead of squeezing it.
-        width: open && !overlay ? width : SPINE_WIDTH,
-        transition: reduceMotion ? undefined : `width ${WIDTH_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-        height: '100%',
-        position: 'relative',
-        flexShrink: 0,
-        overflow: 'hidden',
-        fontFamily: typography.fontFamily.primary,
-        ...surface,
-      }}
+      style={
+        phone
+          ? {
+              // A phone's plane is under the content: a bar across the screen.
+              width: '100%',
+              height: BAR_HEIGHT,
+              position: 'relative',
+              flexShrink: 0,
+              overflow: 'hidden',
+              fontFamily: typography.fontFamily.primary,
+              borderTop: `1px solid ${colors.border.light}`,
+              background: colors.gray[50],
+            }
+          : {
+              // Narrow shells keep only the spine's width; the open panel
+              // floats over the content instead of squeezing it.
+              width: open && !overlay ? width : SPINE_WIDTH,
+              transition: reduceMotion
+                ? undefined
+                : `width ${WIDTH_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+              height: '100%',
+              position: 'relative',
+              flexShrink: 0,
+              overflow: 'hidden',
+              fontFamily: typography.fontFamily.primary,
+              ...surface,
+            }
+      }
     >
       <div
         aria-label={title}
         style={{
-          ...(overlay
-            ? {
-                position: 'fixed',
-                top: 0,
-                right: 0,
-                height: '100vh',
-                zIndex: 30,
-                boxShadow: `-${spacing.sm} 0 ${spacing.xl} ${colors.shadow.medium}`,
-                ...surface,
-              }
-            : { position: 'absolute', top: 0, left: 0, height: '100%' }),
-          // Floating on narrow shells, a wide panel never outgrows the window.
-          width: overlay ? `min(${width}px, 100vw)` : width,
+          ...openPlacement,
           minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
@@ -293,26 +350,34 @@ export default function SidePanel({
           position: 'absolute',
           top: 0,
           left: 0,
-          width: SPINE_WIDTH,
+          width: phone ? '100%' : SPINE_WIDTH,
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: phone ? 'row' : 'column',
           alignItems: 'center',
           gap: spacing.sm,
-          padding: `${spacing.md} 0`,
+          padding: phone ? `0 ${spacing.lg}` : `${spacing.md} 0`,
           ...face(!open),
         }}
       >
         <IconChevronDown
           size={14}
           color={titleColor}
-          style={{ transform: 'rotate(90deg)', transition: 'transform 160ms ease' }}
+          style={{
+            flexShrink: 0,
+            // The spine opens to the left; a phone's bar opens upward.
+            transform: phone ? 'rotate(180deg)' : 'rotate(90deg)',
+            transition: 'transform 160ms ease',
+          }}
         />
         <Text
           style={{
             // Vertical label: the spine is a spine, not a squeezed button.
-            writingMode: 'vertical-rl',
-            fontSize: typography.fontSize.xs,
+            writingMode: phone ? undefined : 'vertical-rl',
+            minWidth: 0,
+            overflow: phone ? 'hidden' : undefined,
+            textOverflow: phone ? 'ellipsis' : undefined,
+            fontSize: phone ? typography.fontSize.sm : typography.fontSize.xs,
             fontWeight: typography.fontWeight.semibold,
             color: titleColor,
             whiteSpace: 'nowrap',

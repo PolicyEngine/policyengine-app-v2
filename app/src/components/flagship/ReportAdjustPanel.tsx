@@ -255,6 +255,8 @@ export default function ReportAdjustPanel({
                     type="button"
                     onClick={() => setRemoved((current) => new Set([...current, provision.path]))}
                     aria-label={`Remove ${name}`}
+                    // A fingertip wide on a phone, without moving the name.
+                    className="tw:max-sm:-my-3 tw:max-sm:-mr-3 tw:max-sm:inline-flex tw:max-sm:size-10 tw:max-sm:items-center tw:max-sm:justify-center"
                     style={{
                       border: 'none',
                       background: 'none',
@@ -321,6 +323,7 @@ export default function ReportAdjustPanel({
             <button
               type="button"
               onClick={() => setRemoved(new Set())}
+              className="tw:max-sm:min-h-10"
               style={{
                 border: 'none',
                 background: 'none',
