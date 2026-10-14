@@ -74,6 +74,28 @@ describe('NoChangeNotice', () => {
     expect(notice).toHaveTextContent('The reform sets the same values as Plan B in 2026.');
   });
 
+  test('given a saved reform then the reasons are only those that compare with it', () => {
+    render(
+      <NoChangeNotice
+        year="2026"
+        provisions={[
+          // Dated after the year, and at current law: reasons against current law only.
+          provision({ intervals: [{ startDate: '2028-01-01', endDate: FOREVER, value: 2000 }] }),
+          provision({ path: 'gov.irs.credits.eitc.max', value: 600, baselineValue: 600 }),
+        ]}
+        baselineLabel="Plan B"
+      />
+    );
+
+    const notice = screen.getByRole('region', { name: 'No change in this year' });
+    expect(notice).toHaveTextContent('Likely reasons:');
+    expect(notice).toHaveTextContent('The reform sets the same values as Plan B in 2026.');
+    expect(notice).toHaveTextContent('A program you changed is not in effect in 2026');
+    expect(notice).not.toHaveTextContent('changes from 2028');
+    expect(notice).not.toHaveTextContent('at current law');
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+
   test('given no baseline then it reads current law, as before', () => {
     render(<NoChangeNotice year="2026" provisions={[provision({ value: 2000 })]} />);
 

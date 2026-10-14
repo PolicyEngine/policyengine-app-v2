@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { reportBaselineLabel, reportRunBaseline } from '@/libs/flagship/reportBaseline';
+import {
+  baselineProvisions,
+  customBaseline,
+  reportBaselineLabel,
+  reportRunBaseline,
+} from '@/libs/flagship/reportBaseline';
 
 const PLAN_B_META = {
   baseline: { reformId: 'rf-plan-b', policyId: '88', label: 'Plan B' },
@@ -54,5 +59,42 @@ describe('reportRunBaseline', () => {
   test('given current law then a re-run compares with current law', () => {
     expect(reportRunBaseline({}, '2', null)).toBeUndefined();
     expect(reportRunBaseline(PLAN_B_META, undefined, 'Plan B')).toBeUndefined();
+  });
+});
+
+describe('customBaseline', () => {
+  const PLAN_B = { reformId: 'rf-plan-b', label: 'Plan B', parameters: PLAN_B_POLICY.parameters };
+
+  test('given no baseline then the run compares with current law', () => {
+    expect(customBaseline(undefined, 2)).toBeUndefined();
+  });
+
+  test('given a saved reform with parameters then the run compares with it', () => {
+    expect(customBaseline(PLAN_B, 2)).toBe(PLAN_B);
+  });
+
+  test('given a saved reform that sets nothing then the run compares with current law', () => {
+    expect(customBaseline({ ...PLAN_B, parameters: [] }, 2)).toBeUndefined();
+  });
+
+  test('given a baseline policy then current law itself is no custom baseline', () => {
+    expect(customBaseline({ label: 'Plan B', policyId: 88 }, 2)).toEqual({
+      label: 'Plan B',
+      policyId: 88,
+    });
+    expect(customBaseline({ label: 'Current law', policyId: 2 }, 2)).toBeUndefined();
+  });
+});
+
+describe('baselineProvisions', () => {
+  test('given a saved reform then each parameter is a provision with its dated values', () => {
+    expect(baselineProvisions({ parameters: PLAN_B_POLICY.parameters })).toEqual([
+      {
+        path: 'gov.irs.credits.ctc.amount.base[0].amount',
+        value: 3000,
+        intervals: PLAN_B_POLICY.parameters[0].values,
+      },
+    ]);
+    expect(baselineProvisions({})).toEqual([]);
   });
 });

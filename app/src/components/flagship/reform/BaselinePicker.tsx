@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IconCheck, IconChevronDown, IconScale } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import {
   Command,
@@ -15,9 +16,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { draftToReform, type DraftReform } from '@/libs/draftReform';
+import { provisionAdjusts, provisionIntervals, type DraftReform } from '@/libs/draftReform';
 import { sameReformParameters } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
+import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
 
 export const CURRENT_LAW_LABEL = 'Current law';
@@ -29,16 +31,18 @@ export function savedReformName(reform: Pick<Reform, 'label'>): string {
 
 /**
  * The draft's comparison: the saved reforms it can be compared with (the
- * list Your reforms shows, less the one the draft edits), the chosen one
- * once they load, and what the run takes of it.
+ * list Your reforms shows, less the one the draft edits and any that set
+ * nothing), the chosen one once they load, and what the run takes of it.
  */
 export function useDraftBaseline(draft: DraftReform) {
+  const currentLaw = useSelector((state: RootState) => state.metadata.parameters);
   const { data: saved, isPending } = useQuery({
     queryKey: ['reforms', draft.countryId],
     queryFn: () => getReformStore().findMine(draft.countryId),
   });
+  // A reform that sets nothing runs as current law, so it is not offered.
   const options = (saved ?? []).filter(
-    (reform) => !!reform.id && reform.id !== draft.editingReformId
+    (reform) => !!reform.id && reform.id !== draft.editingReformId && reform.parameters.length > 0
   );
   // A comparison no longer saved reads, and runs, as current law.
   const reform = draft.baselineReformId
@@ -49,15 +53,26 @@ export function useDraftBaseline(draft: DraftReform) {
     label: savedReformName(reform),
     parameters: reform.parameters,
   };
+  // What each side changes in the run: only the values that differ from
+  // current law, as the run sends the draft's.
+  const draftChanges = draft.provisions
+    .filter((provision) => provisionAdjusts(provision, currentLaw?.[provision.path]?.values))
+    .map((provision) => ({ name: provision.path, values: provisionIntervals(provision) }));
+  const baselineChanges = (reform?.parameters ?? []).filter((parameter) =>
+    provisionAdjusts(
+      { value: parameter.values[0]?.value, baselineValue: undefined, intervals: parameter.values },
+      currentLaw?.[parameter.name]?.values
+    )
+  );
   return {
     options,
     reform,
     forRun,
     /** The chosen comparison is not known until the saved reforms load. */
     pending: !!draft.baselineReformId && isPending,
-    /** The draft sets just what its comparison sets: the report would show no change. */
+    /** The draft changes just what its comparison changes: the report would show no change. */
     matchesDraft:
-      !!reform && sameReformParameters(reform.parameters, draftToReform(draft).parameters),
+      !!reform && draftChanges.length > 0 && sameReformParameters(baselineChanges, draftChanges),
   };
 }
 

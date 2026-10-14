@@ -262,7 +262,7 @@ export default function ReportView({
               <Stack style={{ gap: spacing.sm }}>
                 {customBaselineLabel && (
                   <Text style={{ margin: 0, color: colors.primary[100] }}>
-                    Compared with: {customBaselineLabel}
+                    Compared with {customBaselineLabel}
                   </Text>
                 )}
                 {populationLabel && (
@@ -323,6 +323,7 @@ export default function ReportView({
                     changes={changes}
                     priorLawBaseline={priorLawBaseline}
                     loading={provisionsLoading}
+                    beforeLabel={customBaselineLabel ? 'Current law' : undefined}
                   />
                   <ReportContents
                     metrics={metrics}
@@ -432,6 +433,19 @@ export default function ReportView({
                   <SectionHeading id="validation" title="Validation" />
                   {validationLead}
                   <CalibrationMatchSection matches={calibration} pin={calibrationPin} />
+                  {/* Published scores compare with current law, not the saved reform. */}
+                  {customBaselineLabel && (
+                    <Text
+                      style={{
+                        margin: 0,
+                        fontSize: typography.fontSize.sm,
+                        color: colors.text.secondary,
+                      }}
+                    >
+                      Published scores compare with current law. This report compares with{' '}
+                      {customBaselineLabel}.
+                    </Text>
+                  )}
                   <ScorecardComparisons
                     reportContext={
                       provisions.length > 0 ? (

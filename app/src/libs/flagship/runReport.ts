@@ -5,6 +5,7 @@ import { createSimulation } from '@/api/simulation';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
@@ -147,39 +148,6 @@ export async function createReformPolicy(
   return Number(policyResponse.result.policy_id);
 }
 
-/** A baseline that names a policy other than current law, or none. */
-function customBaseline(
-  baseline: RunReportBaseline | undefined,
-  currentLawId: number
-): RunReportBaseline | undefined {
-  if (!baseline) {
-    return undefined;
-  }
-  if (baseline.policyId !== undefined) {
-    return baseline.policyId === currentLawId ? undefined : baseline;
-  }
-  return baseline.parameters && baseline.parameters.length > 0 ? baseline : undefined;
-}
-
-/** The baseline's policy id: the one given, or its parameters made into one. */
-async function baselinePolicyId(
-  countryId: CountryId,
-  baseline: RunReportBaseline
-): Promise<number> {
-  if (baseline.policyId !== undefined) {
-    return baseline.policyId;
-  }
-  return createReformPolicy(
-    countryId,
-    baseline.label,
-    (baseline.parameters ?? []).map((parameter) => ({
-      path: parameter.name,
-      value: parameter.values[0]?.value,
-      intervals: parameter.values,
-    }))
-  );
-}
-
 export async function runFlagshipReport({
   countryId,
   title,
@@ -200,7 +168,10 @@ export async function runFlagshipReport({
   const comparison = customBaseline(requestedBaseline, currentLawId);
   const [reformPolicyId, baselineId] = await Promise.all([
     createReformPolicy(countryId, title, provisions),
-    comparison ? baselinePolicyId(countryId, comparison) : Promise.resolve(currentLawId),
+    comparison?.policyId ??
+      (comparison
+        ? createReformPolicy(countryId, comparison.label, baselineProvisions(comparison))
+        : currentLawId),
   ]);
 
   const [baseline, reform] = await Promise.all([

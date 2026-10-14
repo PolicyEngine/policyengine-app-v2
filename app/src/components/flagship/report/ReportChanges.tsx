@@ -112,6 +112,7 @@ export default function ReportChanges({
   changes,
   priorLawBaseline = false,
   loading = false,
+  beforeLabel = 'Before',
 }: {
   provisions: RunReportProvision[];
   changes?: BillChange[];
@@ -119,6 +120,8 @@ export default function ReportChanges({
   loading?: boolean;
   /** The results compare with the law before the reform, which today's values include. */
   priorLawBaseline?: boolean;
+  /** The first value column's heading: "Current law" when the results compare with something else. */
+  beforeLabel?: string;
 }) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const variables = useSelector((state: RootState) => state.metadata.variables);
@@ -242,7 +245,7 @@ export default function ReportChanges({
                   Change
                 </th>
                 <th scope="col" className={WIDE_ONLY} style={headerCell}>
-                  Before
+                  {beforeLabel}
                 </th>
                 <th scope="col" className={WIDE_ONLY} style={headerCell}>
                   After

@@ -213,9 +213,12 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const singleProvision = meta?.provisions.length === 1 ? meta.provisions[0] : null;
   const isSingleCtc = singleProvision?.path.startsWith('gov.irs.credits.ctc.amount.base');
+  // Against a saved reform, current law says nothing of the direction.
   const coverTitle =
     isSingleCtc && singleProvision
-      ? `${Number(singleProvision.value) > Number(singleProvision.baselineValue) ? 'Increasing' : Number(singleProvision.value) < Number(singleProvision.baselineValue) ? 'Reducing' : 'Setting'} the Child Tax Credit`
+      ? customBaselineLabel
+        ? 'Changing the Child Tax Credit'
+        : `${Number(singleProvision.value) > Number(singleProvision.baselineValue) ? 'Increasing' : Number(singleProvision.value) < Number(singleProvision.baselineValue) ? 'Reducing' : 'Setting'} the Child Tax Credit`
       : title;
 
   return (

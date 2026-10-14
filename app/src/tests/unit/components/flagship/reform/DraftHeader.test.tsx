@@ -339,14 +339,72 @@ describe('DraftHeader', () => {
       expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
     });
 
-    test('then a comparison no longer saved reads as current law', async () => {
+    test('then a draft that differs from its comparison only in unchanged values waits for a change', async () => {
+      // Each side also sets a value at current law, which the run leaves out.
+      seedDeductionMetadata();
+      const atCurrentLaw = {
+        name: 'gov.irs.credits.eitc.phase_in_rate[1].amount',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.34 }],
+      };
+      mockFindMine.mockResolvedValue([
+        { ...PLAN_B, parameters: [...PLAN_B.parameters, atCurrentLaw] },
+      ]);
+      updateDraftProvisionValue('gov.irs.credits.ctc.amount.base', 3000);
+      addDraftProvision('us', { ...CHANGED, value: CHANGED.baselineValue });
+      setDraftBaseline('rf-plan-b');
+      renderHeader();
+
+      expect(
+        await screen.findByText(/this reform matches plan b\. change a value/i)
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    });
+
+    test('then a saved reform that sets nothing is not offered', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([
+        PLAN_B,
+        { ...PLAN_B, id: 'rf-empty', label: 'Empty', parameters: [] },
+      ]);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: 'Compared with: Current law' }));
+
+      expect(await screen.findByRole('option', { name: 'Plan B' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Empty' })).not.toBeInTheDocument();
+    });
+
+    test('then a chosen comparison holds the run until the saved reforms load', async () => {
+      mockFindMine.mockReturnValue(new Promise(() => {}));
+      addDraftProvision('us', CHANGED);
+      setDraftBaseline('rf-plan-b');
+      renderHeader();
+
+      expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    });
+
+    test('then current law runs while the saved reforms load', async () => {
+      mockFindMine.mockReturnValue(new Promise(() => {}));
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeEnabled();
+    });
+
+    test('then a comparison no longer saved reads, and runs, as current law', async () => {
+      const user = userEvent.setup();
       mockFindMine.mockResolvedValue([]);
+      addDraftProvision('us', CHANGED);
       setDraftBaseline('rf-deleted');
       renderHeader();
 
       expect(
         await screen.findByRole('button', { name: 'Compared with: Current law' })
       ).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][5].baseline).toBeUndefined();
     });
   });
 

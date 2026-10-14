@@ -29,9 +29,10 @@ function datedReason(provision: RunReportProvision, year: number): string | null
 /**
  * A report whose reform changes nothing in its year: every result is
  * its baseline's — current law's, or the saved reform's it is compared
- * with. It says so first thing in the overview — not after a
- * page of zeros — with the reasons the provisions themselves give, then
- * the ones they can't (a program not in effect that year).
+ * with. It says so first thing in the overview — not after a page of
+ * zeros — with the reasons the provisions themselves give, then the
+ * ones they can't (a program not in effect that year). Against a saved
+ * reform, the reasons are only those that compare with it.
  */
 export default function NoChangeNotice({
   year,
@@ -45,13 +46,17 @@ export default function NoChangeNotice({
   baselineLabel?: string | null;
 }) {
   const yearNumber = Number(year);
-  const reasons = Number.isFinite(yearNumber)
-    ? provisions
-        .map((provision) => datedReason(provision, yearNumber))
-        .filter((reason): reason is string => !!reason)
-    : [];
+  // The provisions' dates and current-law values explain a match with
+  // current law, not with a saved reform.
+  const reasons =
+    !baselineLabel && Number.isFinite(yearNumber)
+      ? provisions
+          .map((provision) => datedReason(provision, yearNumber))
+          .filter((reason): reason is string => !!reason)
+      : [];
   // A provision at current law in the year, with no dates to explain it.
   const atCurrentLaw =
+    !baselineLabel &&
     reasons.length === 0 &&
     provisions.some((provision) => sameParameterValue(provision.value, provision.baselineValue));
   const yearText = year || 'the simulated year';
@@ -59,7 +64,7 @@ export default function NoChangeNotice({
     reasons.length +
     (atCurrentLaw ? 1 : 0) +
     (reasons.length === 0 ? 1 : 0) +
-    (baselineLabel && reasons.length === 0 ? 1 : 0);
+    (baselineLabel ? 1 : 0);
 
   return (
     <section
@@ -107,7 +112,7 @@ export default function NoChangeNotice({
           {reasons.map((reason) => (
             <li key={reason}>{reason}</li>
           ))}
-          {baselineLabel && reasons.length === 0 && (
+          {baselineLabel && (
             <li>
               The reform sets the same values as {baselineLabel} in {yearText}.
             </li>

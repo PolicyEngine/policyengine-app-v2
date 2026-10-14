@@ -134,7 +134,7 @@ describe('FlagshipReportPage', () => {
 
       renderPage();
 
-      expect(screen.getByText('Compared with: Plan B')).toBeInTheDocument();
+      expect(screen.getByText('Compared with Plan B')).toBeInTheDocument();
     });
 
     test('given a report from before baselines then it reads as current law', () => {
@@ -148,6 +148,46 @@ describe('FlagshipReportPage', () => {
       renderPage();
 
       expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
+    });
+
+    describe('given a single Child Tax Credit change', () => {
+      const CTC_PROVISION = {
+        path: 'gov.irs.credits.ctc.amount.base[0].amount',
+        breadcrumb: 'IRS → Credits → Child tax credit → Base amount',
+        unit: 'currency-USD',
+        baselineValue: 2200,
+        value: 2500,
+      };
+      const complete = () =>
+        mockCalcStatus.mockReturnValue({
+          status: 'complete',
+          isComplete: true,
+          isError: false,
+          result: createMockSocietyWideOutput(),
+        });
+
+      test('given current law then the cover says which way it moves', () => {
+        mockMeta = { ...META, provisions: [CTC_PROVISION] };
+        complete();
+
+        renderPage();
+
+        expect(
+          screen.getByRole('heading', { level: 1, name: 'Increasing the Child Tax Credit' })
+        ).toBeInTheDocument();
+      });
+
+      test('given a saved reform then the cover does not read the move against current law', () => {
+        mockMeta = { ...PLAN_B_META, provisions: [CTC_PROVISION] };
+        complete();
+
+        renderPage();
+
+        expect(
+          screen.getByRole('heading', { level: 1, name: 'Changing the Child Tax Credit' })
+        ).toBeInTheDocument();
+        expect(screen.queryByText(/Increasing the Child Tax Credit/)).not.toBeInTheDocument();
+      });
     });
 
     test('given a failed run then Build gets the reform back with the same comparison', async () => {

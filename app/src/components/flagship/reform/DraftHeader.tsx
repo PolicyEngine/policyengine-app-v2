@@ -238,11 +238,10 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
 
 /**
  * The last step, under the reform: the run's year, who it runs on and
- * what it is compared with on the left; throwing the draft away, saving it and running it on the
- * right. It
- * stays at the bottom of the window while the reform is longer than the
- * screen, so the run is never a scroll away, and settles in place under
- * the table once the table ends.
+ * what it is compared with on the left; throwing the draft away, saving
+ * it and running it on the right. It stays at the bottom of the window
+ * while the reform is longer than the screen, so the run is never a
+ * scroll away, and settles in place under the table once the table ends.
  */
 export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();

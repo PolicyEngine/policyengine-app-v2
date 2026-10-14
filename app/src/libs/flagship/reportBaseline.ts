@@ -1,4 +1,8 @@
-import type { FlagshipReportMeta, RunReportBaseline } from '@/libs/flagship/runReport';
+import type {
+  FlagshipReportMeta,
+  RunReportBaseline,
+  RunReportProvision,
+} from '@/libs/flagship/runReport';
 import type { Policy } from '@/types/ingredients/Policy';
 
 /**
@@ -37,4 +41,29 @@ export function reportRunBaseline(
     label: baselineLabel,
     policyId: Number(baselinePolicyId),
   };
+}
+
+/** A baseline that names a policy other than current law, or none. */
+export function customBaseline(
+  baseline: RunReportBaseline | undefined,
+  currentLawId: number
+): RunReportBaseline | undefined {
+  if (!baseline) {
+    return undefined;
+  }
+  if (baseline.policyId !== undefined) {
+    return baseline.policyId === currentLawId ? undefined : baseline;
+  }
+  return baseline.parameters && baseline.parameters.length > 0 ? baseline : undefined;
+}
+
+/** A saved reform's parameters as the provisions its baseline policy is made from. */
+export function baselineProvisions(
+  baseline: Pick<RunReportBaseline, 'parameters'>
+): Array<Pick<RunReportProvision, 'path' | 'value' | 'intervals'>> {
+  return (baseline.parameters ?? []).map((parameter) => ({
+    path: parameter.name,
+    value: parameter.values[0]?.value,
+    intervals: parameter.values,
+  }));
 }
