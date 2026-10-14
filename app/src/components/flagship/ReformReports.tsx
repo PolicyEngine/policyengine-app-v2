@@ -7,6 +7,7 @@ import { Badge, Button, Stack, Text } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
+import { readReportMeta } from '@/libs/flagship/runReport';
 
 /**
  * Where a report stands, as the API's record says. A report whose page
@@ -31,9 +32,29 @@ function ReportStatus({ countryId, apiReportId }: { countryId: CountryId; apiRep
 }
 
 /**
+ * What a report compared the reform with, when not current law: the same
+ * reform against a saved reform is another report, and reads as one.
+ */
+function ReportBaseline({ apiReportId }: { apiReportId: string }) {
+  const baseline = readReportMeta(apiReportId)?.baseline;
+  if (!baseline) {
+    return null;
+  }
+  return (
+    <span
+      className="tw:truncate"
+      style={{ minWidth: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+    >
+      Compared with {baseline.label}
+    </span>
+  );
+}
+
+/**
  * The reports run from one saved reform, newest first: the year each
- * scored, when it ran, how it ended when the API knows, and a way back
- * to it — the reform is where its reports are found again.
+ * scored, what it compared the reform with when not current law, when
+ * it ran, how it ended when the API knows, and a way back to it — the
+ * reform is where its reports are found again.
  */
 export default function ReformReports({
   countryId,
@@ -87,6 +108,7 @@ export default function ReformReports({
               >
                 {report.year} report
               </span>
+              <ReportBaseline apiReportId={report.apiReportId} />
               <span
                 style={{
                   fontSize: typography.fontSize.xs,

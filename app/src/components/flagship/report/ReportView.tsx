@@ -41,7 +41,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
-import type { RunReportProvision } from '@/libs/flagship/runReport';
+import type { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
 import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
@@ -101,7 +101,10 @@ export interface ReportViewProps {
    * provisions show placeholders meanwhile, not raw parameter paths.
    */
   provisionsLoading?: boolean;
+  /** What the results are compared with, by name; current law when unset. */
   customBaselineLabel?: string | null;
+  /** What the adjust panel's runs compare with; current law when unset. */
+  baseline?: RunReportBaseline;
   year: string;
   region?: string;
   reformPolicyId?: string;
@@ -144,6 +147,7 @@ export default function ReportView({
   priorLawBaseline = false,
   provisionsLoading = false,
   customBaselineLabel,
+  baseline,
   year,
   region,
   reformPolicyId,
@@ -258,7 +262,7 @@ export default function ReportView({
               <Stack style={{ gap: spacing.sm }}>
                 {customBaselineLabel && (
                   <Text style={{ margin: 0, color: colors.primary[100] }}>
-                    Compared with: {customBaselineLabel}
+                    Compared with {customBaselineLabel}
                   </Text>
                 )}
                 {populationLabel && (
@@ -307,7 +311,11 @@ export default function ReportView({
                 <Stack style={{ gap: spacing.xl }}>
                   {/* Said first, before a page of results that all read "no change". */}
                   {output && isSocietyWideReportNoOp(output) && (
-                    <NoChangeNotice year={year} provisions={provisions} />
+                    <NoChangeNotice
+                      year={year}
+                      provisions={provisions}
+                      baselineLabel={customBaselineLabel}
+                    />
                   )}
                   {overviewLead}
                   <ReportChanges
@@ -315,6 +323,7 @@ export default function ReportView({
                     changes={changes}
                     priorLawBaseline={priorLawBaseline}
                     loading={provisionsLoading}
+                    beforeLabel={customBaselineLabel ? 'Current law' : undefined}
                   />
                   <ReportContents
                     metrics={metrics}
@@ -424,6 +433,19 @@ export default function ReportView({
                   <SectionHeading id="validation" title="Validation" />
                   {validationLead}
                   <CalibrationMatchSection matches={calibration} pin={calibrationPin} />
+                  {/* Published scores compare with current law, not the saved reform. */}
+                  {customBaselineLabel && (
+                    <Text
+                      style={{
+                        margin: 0,
+                        fontSize: typography.fontSize.sm,
+                        color: colors.text.secondary,
+                      }}
+                    >
+                      Published scores compare with current law. This report compares with{' '}
+                      {customBaselineLabel}.
+                    </Text>
+                  )}
                   <ScorecardComparisons
                     reportContext={
                       provisions.length > 0 ? (
@@ -464,6 +486,7 @@ export default function ReportView({
           loading={provisionsLoading}
           region={region}
           year={year}
+          baseline={baseline}
         />
       </div>
     </div>
