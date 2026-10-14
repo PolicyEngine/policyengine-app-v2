@@ -67,7 +67,15 @@ function isOwnedItem(value: unknown): value is OwnedItem {
   );
 }
 
-function readAll(kind: OwnedItemKind): OwnedItem[] {
+/**
+ * Items whose write to localStorage failed (storage full or blocked) right
+ * after the server created them: kept for this session, so a reform just
+ * saved still lists and still edits until the tab closes, rather than
+ * vanishing with its edit token.
+ */
+const sessionItems: Record<OwnedItemKind, OwnedItem[]> = { reforms: [], reports: [] };
+
+function readStored(kind: OwnedItemKind): OwnedItem[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS[kind]) ?? '[]');
     return Array.isArray(parsed) ? parsed.filter(isOwnedItem) : [];
@@ -76,12 +84,19 @@ function readAll(kind: OwnedItemKind): OwnedItem[] {
   }
 }
 
-function writeAll(kind: OwnedItemKind, items: OwnedItem[]): void {
+function readAll(kind: OwnedItemKind): OwnedItem[] {
+  const stored = readStored(kind);
+  const held = sessionItems[kind].filter((item) => !stored.some((s) => s.id === item.id));
+  return [...held, ...stored];
+}
+
+/** Whether the index reached localStorage. */
+function writeStored(kind: OwnedItemKind, items: OwnedItem[]): boolean {
   try {
     localStorage.setItem(STORAGE_KEYS[kind], JSON.stringify(items));
+    return true;
   } catch {
-    // The item stays on the server, readable by id, but drops off this
-    // browser's lists.
+    return false;
   }
 }
 
@@ -99,16 +114,33 @@ export function findOwnedReportByApiReportId(apiReportId: string): OwnedItem | n
   return readAll('reports').find((item) => item.apiReportId === apiReportId) ?? null;
 }
 
-export function addOwnedItem(kind: OwnedItemKind, item: Omit<OwnedItem, 'addedAt'>): void {
-  const others = readAll(kind).filter((existing) => existing.id !== item.id);
-  writeAll(kind, [{ ...item, addedAt: new Date().toISOString() }, ...others]);
+/**
+ * Adds an item to this browser's index. Returns false when localStorage
+ * refused it: the item is then held for this session only.
+ */
+export function addOwnedItem(kind: OwnedItemKind, item: Omit<OwnedItem, 'addedAt'>): boolean {
+  const entry = { ...item, addedAt: new Date().toISOString() };
+  const others = readStored(kind).filter((existing) => existing.id !== item.id);
+  if (writeStored(kind, [entry, ...others])) {
+    sessionItems[kind] = sessionItems[kind].filter((held) => held.id !== item.id);
+    return true;
+  }
+  sessionItems[kind] = [entry, ...sessionItems[kind].filter((held) => held.id !== item.id)];
+  return false;
 }
 
 export function removeOwnedItem(kind: OwnedItemKind, id: string): void {
-  writeAll(
+  sessionItems[kind] = sessionItems[kind].filter((item) => item.id !== id);
+  writeStored(
     kind,
-    readAll(kind).filter((item) => item.id !== id)
+    readStored(kind).filter((item) => item.id !== id)
   );
+}
+
+/** Test hook: forget the items held for the session. */
+export function resetSessionOwnedItemsForTesting(): void {
+  sessionItems.reforms = [];
+  sessionItems.reports = [];
 }
 
 /** Headers for a change to an owned item; throws when this browser has no token for it. */

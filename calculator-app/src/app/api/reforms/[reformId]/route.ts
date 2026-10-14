@@ -7,6 +7,7 @@ import { reformBaselines, reformSources } from "@/types/ingredients/Reform";
 import type { ReformUpdateMetadata } from "@/types/metadata/reformMetadata";
 import { getDb, isDbConfigured } from "../../../../db";
 import { invalidText, readJsonBody } from "../../../../db/limits";
+import { guardSchema } from "../../../../db/errors";
 import { isUuid, presentsEditToken } from "../../../../db/ownership";
 import { reforms } from "../../../../db/schema";
 import { reformRowToMetadata } from "../../../../db/serialize";
@@ -60,7 +61,7 @@ async function denyUnlessEditable(
   return null;
 }
 
-export async function GET(
+async function handleGET(
   _request: Request,
   context: RouteContext,
 ): Promise<Response> {
@@ -87,7 +88,7 @@ export async function GET(
   return json(reformRowToMetadata(row));
 }
 
-export async function PATCH(
+async function handlePATCH(
   request: Request,
   context: RouteContext,
 ): Promise<Response> {
@@ -171,7 +172,7 @@ export async function PATCH(
   return json(reformRowToMetadata(row));
 }
 
-export async function DELETE(
+async function handleDELETE(
   request: Request,
   context: RouteContext,
 ): Promise<Response> {
@@ -200,4 +201,23 @@ export async function DELETE(
   }
 
   return json({ deleted: true });
+}
+
+// A database missing the latest migration answers 503, not 500 (see db/errors).
+export async function GET(
+  ...args: Parameters<typeof handleGET>
+): Promise<Response> {
+  return guardSchema(() => handleGET(...args));
+}
+
+export async function PATCH(
+  ...args: Parameters<typeof handlePATCH>
+): Promise<Response> {
+  return guardSchema(() => handlePATCH(...args));
+}
+
+export async function DELETE(
+  ...args: Parameters<typeof handleDELETE>
+): Promise<Response> {
+  return guardSchema(() => handleDELETE(...args));
 }

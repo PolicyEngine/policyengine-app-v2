@@ -8,6 +8,7 @@ import {
   ItemNotOwnedError,
   readOwnedItems,
   removeOwnedItem,
+  resetSessionOwnedItemsForTesting,
 } from '@/libs/flagship/ownedItems';
 import {
   API_REPORT_ID,
@@ -27,6 +28,7 @@ import {
 
 describe('ownedItems', () => {
   beforeEach(() => {
+    resetSessionOwnedItemsForTesting();
     localStorage.clear();
   });
 
@@ -131,7 +133,7 @@ describe('ownedItems', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('SecurityError');
     });
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
 
@@ -155,5 +157,51 @@ describe('ownedItems', () => {
 
   test('given an item this browser did not create then asking for its token throws', () => {
     expect(() => editTokenHeaders('reforms', CENTRAL_REFORM_ID)).toThrow(ItemNotOwnedError);
+  });
+});
+
+describe('ownedItems when localStorage refuses the write', () => {
+  beforeEach(() => {
+    resetSessionOwnedItemsForTesting();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('then the item is held for the session: it still lists and still edits', () => {
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError');
+    });
+
+    const stored = addOwnedItem('reforms', {
+      id: CENTRAL_REFORM_ID,
+      countryId: 'us',
+      editToken: EDIT_TOKEN,
+    });
+
+    expect(stored).toBe(false);
+    expect(readOwnedItems('reforms', 'us').map((item) => item.id)).toEqual([CENTRAL_REFORM_ID]);
+    expect(editTokenHeaders('reforms', CENTRAL_REFORM_ID)).toEqual({
+      [EDIT_TOKEN_HEADER]: EDIT_TOKEN,
+    });
+
+    removeOwnedItem('reforms', CENTRAL_REFORM_ID);
+    expect(readOwnedItems('reforms')).toEqual([]);
+  });
+
+  test('then a later write that succeeds moves the item into localStorage', () => {
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementationOnce(() => {
+      throw new DOMException('QuotaExceededError');
+    });
+    addOwnedItem('reforms', { id: CENTRAL_REFORM_ID, countryId: 'us', editToken: EDIT_TOKEN });
+    setItem.mockRestore();
+
+    expect(
+      addOwnedItem('reforms', { id: CENTRAL_REFORM_ID, countryId: 'us', editToken: EDIT_TOKEN })
+    ).toBe(true);
+    expect(JSON.parse(localStorage.getItem(OWNED_REFORMS_KEY) ?? '[]')).toHaveLength(1);
+    expect(readOwnedItems('reforms')).toHaveLength(1);
   });
 });

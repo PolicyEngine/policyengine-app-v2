@@ -1,3 +1,4 @@
+import { clampStoreText } from '@/libs/flagship/storeText';
 import { Reform } from '@/types/ingredients/Reform';
 import {
   ReformCreationMetadata,
@@ -42,7 +43,7 @@ export class ReformAdapter {
   ): ReformCreationMetadata {
     return {
       country_id: reform.countryId,
-      label: reform.label ?? null,
+      label: clampStoreText(reform.label ?? null),
       policy_id: reform.policyId ?? null,
       parameters: reform.parameters.map(ReformAdapter.parameterToMetadata),
       baseline: reform.baseline,
@@ -62,7 +63,7 @@ export class ReformAdapter {
   ): ReformUpdateMetadata {
     const payload: ReformUpdateMetadata = {};
     if (updates.label !== undefined) {
-      payload.label = updates.label;
+      payload.label = clampStoreText(updates.label);
     }
     if (updates.policyId !== undefined) {
       payload.policy_id = updates.policyId;

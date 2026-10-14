@@ -12,10 +12,11 @@ import { countryIds } from "@/libs/countries";
 import { getDb, isDbConfigured } from "../../../db";
 import {
   invalidText,
-  newRowBudgetExhausted,
+  insertWithinBudget,
   newRowBudgetResponse,
   readJsonBody,
 } from "../../../db/limits";
+import { guardSchema } from "../../../db/errors";
 import {
   issueEditToken,
   MAX_IDS_PER_REQUEST,
@@ -78,7 +79,7 @@ function validateCreationPayload(payload: any): string | null {
   return null;
 }
 
-export async function GET(request: Request): Promise<Response> {
+async function handleGET(request: Request): Promise<Response> {
   if (!isFlagshipApiEnabled()) {
     return flagshipApiDisabledResponse();
   }
@@ -109,7 +110,7 @@ export async function GET(request: Request): Promise<Response> {
   return json(rows.map(reformRowToMetadata));
 }
 
-export async function POST(request: Request): Promise<Response> {
+async function handlePOST(request: Request): Promise<Response> {
   if (!isFlagshipApiEnabled()) {
     return flagshipApiDisabledResponse();
   }
@@ -127,23 +128,26 @@ export async function POST(request: Request): Promise<Response> {
   if (validationError) {
     return json({ error: validationError }, 400);
   }
-  if (await newRowBudgetExhausted(reforms)) {
-    return newRowBudgetResponse();
-  }
 
   const { token, hash } = await issueEditToken();
-  const [row] = await getDb()
-    .insert(reforms)
-    .values({
-      editTokenHash: hash,
-      countryId: payload.country_id,
-      label: payload.label ?? null,
-      policyId: payload.policy_id ?? null,
-      parameters: payload.parameters,
-      baseline: payload.baseline,
-      provenance: payload.provenance,
-    })
-    .returning();
+  const row = await insertWithinBudget(reforms, async (tx) => {
+    const [inserted] = await tx
+      .insert(reforms)
+      .values({
+        editTokenHash: hash,
+        countryId: payload.country_id,
+        label: payload.label ?? null,
+        policyId: payload.policy_id ?? null,
+        parameters: payload.parameters,
+        baseline: payload.baseline,
+        provenance: payload.provenance,
+      })
+      .returning();
+    return inserted;
+  });
+  if (!row) {
+    return newRowBudgetResponse();
+  }
 
   // The only time the token leaves the server; the row keeps its hash.
   const created: ReformCreatedMetadata = {
@@ -151,4 +155,17 @@ export async function POST(request: Request): Promise<Response> {
     edit_token: token,
   };
   return json(created, 201);
+}
+
+// A database missing the latest migration answers 503, not 500 (see db/errors).
+export async function GET(
+  ...args: Parameters<typeof handleGET>
+): Promise<Response> {
+  return guardSchema(() => handleGET(...args));
+}
+
+export async function POST(
+  ...args: Parameters<typeof handlePOST>
+): Promise<Response> {
+  return guardSchema(() => handlePOST(...args));
 }
