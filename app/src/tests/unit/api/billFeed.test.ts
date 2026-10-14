@@ -582,6 +582,46 @@ describe('fetchTrackerBills', () => {
     expect(bills![3].legiscanUrl).toBe('https://legiscan.com/KS/bill/HB2620/2026');
   });
 
+  test('given an id with words after the bill number then the stage joins by the bill number', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal(
+      'fetch',
+      mockTrackerFetch({
+        research: [
+          // The title names the bill, as the tracker reads it.
+          { id: 'hi-sb3125-hd1', type: 'bill', state: 'HI', title: 'Hawaii SB3125 HD1: tax relief' },
+          {
+            id: 'nj-a1185-marriage-penalty-elimination',
+            type: 'bill',
+            state: 'NJ',
+            title: 'New Jersey A1185: Marriage penalty elimination',
+          },
+          // No bill number in the title: the id's first token names it.
+          { id: 'ut-sb60-bill', type: 'bill', state: 'UT', title: 'Income tax rate reduction' },
+          // A number in the title that names no bill of the state.
+          { id: 'ok-tax-2026', type: 'bill', state: 'OK', title: 'Oklahoma FY 2026 tax plan' },
+        ],
+        processed_bills: [
+          { bill_id: 1, state: 'HI', bill_number: 'SB3125', status: 'Passed Both Chambers' },
+          { bill_id: 2, state: 'NJ', bill_number: 'A1185', status: 'In Committee' },
+          { bill_id: 3, state: 'UT', bill_number: 'SB0060', status: 'Signed into Law' },
+          // The same number in another state is not this bill.
+          { bill_id: 4, state: 'UT', bill_number: 'A1185', status: 'Vetoed' },
+        ],
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills!.map((bill) => [bill.id, bill.status])).toEqual([
+      ['hi-sb3125-hd1', 'Passed Both Chambers'],
+      ['nj-a1185-marriage-penalty-elimination', 'In Committee'],
+      ['ut-sb60-bill', 'Signed into Law'],
+      ['ok-tax-2026', UNTRACKED_BILL_STATUS],
+    ]);
+  });
+
   test('given the tracker stores baseline params then the bills carry them', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
