@@ -126,7 +126,7 @@ export const projects: SupportedProjectData[] = [
     supporterId: "manifund",
   },
   {
-    title: "Land value tax in every constituency",
+    title: "Land value tax in every UK constituency",
     amount: 12000,
     currency: "GBP",
     awardDate: "2026-10",
