@@ -132,6 +132,20 @@ describe('BillReportPage', () => {
     expect(screen.getByText('Stored estimates from the legislative tracker')).toBeInTheDocument();
   });
 
+  test('given a federal bill then its stored budget reads as the overview does, not as state revenue', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderReport();
+
+    // When
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    // Then
+    const budget = screen.getByRole('region', { name: 'Budgetary impact' });
+    expect(budget).toHaveTextContent('$225.5bnAnnual revenue loss');
+    expect(budget).not.toHaveTextContent(/state revenue|−/);
+  });
+
   test('given the page and its tabs open then no full run starts until asked', async () => {
     const user = userEvent.setup();
     seedDeductionMetadata();

@@ -10,27 +10,45 @@ function relativeChange(percentChange: number): string {
   return `${magnitude < 0.1 ? '<0.1' : magnitude.toFixed(1)}% ${percentChange < 0 ? 'decrease' : 'increase'}`;
 }
 
+type StoredBill = Pick<TrackedBill, 'state' | 'impacts' | 'impactData'>;
+
+/**
+ * A tracked bill's stored annual revenue change, worded as a loss or a
+ * gain with the amount unsigned: "$225.5bn", "Annual revenue loss". A
+ * state bill's figure is that state's revenue; a federal bill's is not.
+ * Null when the tracker stored none.
+ */
+export function storedRevenueMetric(
+  bill: StoredBill,
+  countryId: Parameters<typeof formatCurrencyAbbr>[1]
+): ReportMetric | null {
+  const revenue = bill.impactData?.budgetary?.stateRevenueImpact ?? bill.impacts?.revenue;
+  if (typeof revenue !== 'number' || !Number.isFinite(revenue)) {
+    return null;
+  }
+  return {
+    value: formatCurrencyAbbr(Math.abs(revenue), countryId, { maximumFractionDigits: 1 }),
+    label: `Annual ${bill.state ? 'state ' : ''}revenue ${
+      revenue < 0 ? 'loss' : revenue > 0 ? 'gain' : 'change'
+    }`,
+  };
+}
+
 /**
  * A tracked bill's stored headline numbers, shaped like a completed
  * report's overview metrics so the page reads the same before the full
  * results arrive. Metrics the tracker did not store are left out.
  */
 export function storedBillMetrics(
-  bill: Pick<TrackedBill, 'state' | 'impacts' | 'impactData'>,
+  bill: StoredBill,
   countryId: Parameters<typeof formatCurrencyAbbr>[1]
 ): ReportMetric[] {
   const impact = bill.impactData;
   const metrics: ReportMetric[] = [];
 
-  const revenue = impact?.budgetary?.stateRevenueImpact ?? bill.impacts?.revenue;
-  if (typeof revenue === 'number' && Number.isFinite(revenue)) {
-    metrics.push({
-      value: formatCurrencyAbbr(Math.abs(revenue), countryId, { maximumFractionDigits: 1 }),
-      // A state bill's stored figure is that state's revenue.
-      label: `Annual ${bill.state ? 'state ' : ''}revenue ${
-        revenue < 0 ? 'loss' : revenue > 0 ? 'gain' : 'change'
-      }`,
-    });
+  const revenue = storedRevenueMetric(bill, countryId);
+  if (revenue) {
+    metrics.push(revenue);
   }
 
   const winners = impact?.winnersLosers;
