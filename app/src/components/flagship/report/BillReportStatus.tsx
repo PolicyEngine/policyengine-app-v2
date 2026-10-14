@@ -1,3 +1,4 @@
+import { IconExternalLink } from '@tabler/icons-react';
 import ReportSkeleton from '@/components/flagship/report/ReportSkeleton';
 import { EmptyState, ErrorState } from '@/components/flagship/states';
 import { Button } from '@/components/ui';
@@ -14,11 +15,14 @@ export default function BillReportStatus({
   isError,
   isConfigured,
   onRetry,
+  trackerUrl,
 }: {
   isLoading: boolean;
   isError: boolean;
   isConfigured: boolean;
   onRetry: () => unknown;
+  /** The bill's page in the tracker, for a bill the feed does not carry. */
+  trackerUrl?: string;
 }) {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
@@ -45,9 +49,20 @@ export default function BillReportStatus({
         <EmptyState
           title="This bill is not in the feed."
           action={
-            <Button size="sm" onClick={toBills}>
-              All bills
-            </Button>
+            <>
+              <Button size="sm" onClick={toBills}>
+                All bills
+              </Button>
+              {/* The tracker may still have it. */}
+              {trackerUrl && (
+                <Button size="sm" variant="outline" asChild>
+                  <a href={trackerUrl} target="_blank" rel="noreferrer">
+                    Bill tracker
+                    <IconExternalLink size={14} aria-hidden />
+                  </a>
+                </Button>
+              )}
+            </>
           }
         />
       ) : (

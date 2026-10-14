@@ -196,7 +196,7 @@ describe('BillReportPage', () => {
     mockFetchTrackerBills.mockResolvedValue([]);
     renderReport(UNLISTED_BILL.id);
 
-    expect(await screen.findByText('This bill is not in the current feed.')).toBeInTheDocument();
+    expect(await screen.findByText('This bill is not in the feed.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /bill tracker/i })).toHaveAttribute(
       'href',
       UNLISTED_BILL.trackerUrl

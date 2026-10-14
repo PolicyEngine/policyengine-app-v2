@@ -1,6 +1,7 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import BillReportStatus from '@/components/flagship/report/BillReportStatus';
+import { UNLISTED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 
 const mockPush = vi.fn();
 
@@ -45,6 +46,16 @@ describe('BillReportStatus', () => {
 
     expect(screen.getByText('This bill is not in the feed.')).toBeInTheDocument();
     expect(mockPush).toHaveBeenCalledWith('/us/reforms');
+    expect(screen.queryByRole('link', { name: /bill tracker/i })).not.toBeInTheDocument();
+  });
+
+  test('given a bill the feed does not carry and its tracker page then it links there', () => {
+    render(<BillReportStatus {...FEED} onRetry={vi.fn()} trackerUrl={UNLISTED_BILL.trackerUrl} />);
+
+    expect(screen.getByRole('link', { name: /bill tracker/i })).toHaveAttribute(
+      'href',
+      UNLISTED_BILL.trackerUrl
+    );
   });
 
   test('given no feed configured then it says so and offers Build', async () => {

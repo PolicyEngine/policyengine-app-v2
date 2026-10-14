@@ -25,7 +25,7 @@ import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
-import { findTrackedBill } from '@/libs/flagship/billTracker';
+import { findTrackedBill, trackerUrlForBillId } from '@/libs/flagship/billTracker';
 import { RootState } from '@/store';
 
 interface BillReportPageProps {
@@ -283,6 +283,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
         isError={feed.isError}
         isConfigured={feed.isConfigured}
         onRetry={feed.retry}
+        trackerUrl={billId ? trackerUrlForBillId(billId) : undefined}
       />
     );
   }
