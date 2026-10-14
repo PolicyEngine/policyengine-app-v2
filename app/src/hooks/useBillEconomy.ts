@@ -57,7 +57,7 @@ export function useBillEconomy(
 
   const policy = useQuery({
     queryKey: ['flagship-bill-policy', countryId, bill?.id, provisions],
-    queryFn: () => createReformPolicy(countryId, bill!.title, provisions),
+    queryFn: () => createReformPolicy(countryId, provisions),
     enabled: enabled && !!bill && provisions.length > 0,
     staleTime: Infinity,
   });

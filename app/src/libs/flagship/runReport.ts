@@ -118,15 +118,16 @@ export function provisionPeriods(
 /**
  * Creates (or, since the API dedupes identical policies, finds) the reform
  * policy for a set of provisions — each with its dated changes, or its
- * single value from the current year onward.
+ * single value from the current year onward. The policy carries only the
+ * changes, never a label: names and titles belong to the user's records,
+ * so identical changes always share one policy.
  */
 export async function createReformPolicy(
   countryId: CountryId,
-  title: string,
   provisions: Array<Pick<RunReportProvision, 'path' | 'value' | 'intervals'>>
 ): Promise<number> {
   const data = Object.fromEntries(provisions.map((p) => [p.path, provisionPeriods(p)]));
-  const policyResponse = await createPolicy(countryId, { data, label: title || undefined });
+  const policyResponse = await createPolicy(countryId, { data });
   return Number(policyResponse.result.policy_id);
 }
 
@@ -144,7 +145,7 @@ export async function runFlagshipReport({
     throw new Error('Cannot run a report with no provisions');
   }
 
-  const reformPolicyId = await createReformPolicy(countryId, title, provisions);
+  const reformPolicyId = await createReformPolicy(countryId, provisions);
 
   const [baseline, reform] = await Promise.all([
     createSimulation(countryId, {

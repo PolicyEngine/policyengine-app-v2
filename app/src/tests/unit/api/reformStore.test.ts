@@ -69,11 +69,7 @@ describe('ApiReformStore', () => {
     const created = await store.create(mockReformInput);
 
     // Then
-    expect(materializePolicy).toHaveBeenCalledWith(
-      'us',
-      mockReformInput.label,
-      mockReformInput.parameters
-    );
+    expect(materializePolicy).toHaveBeenCalledWith('us', mockReformInput.parameters);
     const call = fetchCall(fetchMock);
     expect(call.path).toBe('/v2/user-policies');
     expect(call.body).toEqual({
@@ -272,11 +268,7 @@ describe('ApiReformStore', () => {
     await store.create({ ...mockReformInput, countryId: 'uk' });
 
     // Then
-    expect(materializePolicy).toHaveBeenCalledWith(
-      'uk',
-      mockReformInput.label,
-      mockReformInput.parameters
-    );
+    expect(materializePolicy).toHaveBeenCalledWith('uk', mockReformInput.parameters);
     const call = fetchCall(fetchMock);
     expect(call.query).toEqual({ country_id: 'uk' });
     expect(call.body.country_id).toBe('uk');
@@ -354,11 +346,7 @@ describe('LocalStorageReformStore', () => {
   it('given a reform, when created, then its v1 policy is created and its ID kept in this browser', async () => {
     const created = await store.create(mockReformInput);
 
-    expect(materializePolicy).toHaveBeenCalledWith(
-      'us',
-      mockReformInput.label,
-      mockReformInput.parameters
-    );
+    expect(materializePolicy).toHaveBeenCalledWith('us', mockReformInput.parameters);
     expect(created.policyId).toBe(String(MATERIALIZED_POLICY_ID));
     expect((await store.findById(created.id!))?.policyId).toBe(String(MATERIALIZED_POLICY_ID));
   });
@@ -410,7 +398,7 @@ describe('LocalStorageReformStore', () => {
 
     const updated = await store.update(created.id!, { parameters });
 
-    expect(materializePolicy).toHaveBeenLastCalledWith('us', mockReformInput.label, parameters);
+    expect(materializePolicy).toHaveBeenLastCalledWith('us', parameters);
     expect(updated.policyId).toBe(String(REPLACEMENT_POLICY_ID));
     expect((await store.findById(created.id!))?.parameters).toEqual(parameters);
   });

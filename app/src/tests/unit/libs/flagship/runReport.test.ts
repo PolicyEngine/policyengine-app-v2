@@ -92,8 +92,8 @@ describe('runFlagshipReport', () => {
     });
 
     expect(userReportId).toBe('55');
+    // The base policy carries only the changes; the title stays on the record.
     expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
-      label: 'CTC expansion',
       data: {
         'gov.irs.credits.ctc.amount.base[0].amount': { '2026-01-01.2100-12-31': 2500 },
       },

@@ -65,7 +65,7 @@ export class LocalStorageReformStore implements ReformStore {
   async create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
     const policyId = isLegacyId(reform.policyId)
       ? String(reform.policyId)
-      : String(await this.materializePolicy(reform.countryId, reform.label, reform.parameters));
+      : String(await this.materializePolicy(reform.countryId, reform.parameters));
 
     // Generate a unique ID for local storage
     // Format: "rf-[short-timestamp][random]"
@@ -105,13 +105,7 @@ export class LocalStorageReformStore implements ReformStore {
     // Changed parameters are a new v1 policy; a rename keeps the policy.
     const policyId =
       updates.parameters !== undefined
-        ? String(
-            await this.materializePolicy(
-              existing.countryId,
-              updates.label !== undefined ? updates.label : existing.label,
-              updates.parameters
-            )
-          )
+        ? String(await this.materializePolicy(existing.countryId, updates.parameters))
         : (updates.policyId ?? existing.policyId);
 
     // Read again after the request, so a change made meanwhile is kept.
@@ -211,10 +205,9 @@ function provenanceFromWire(wire: ProvenanceWire | null): ReformProvenance {
   };
 }
 
-/** Materializes parameters as a v1 policy; returns its ID. */
+/** Materializes parameters as an unlabelled v1 policy; returns its ID. */
 export type MaterializeReformPolicy = (
   countryId: string,
-  label: string | null | undefined,
   parameters: Parameter[]
 ) => Promise<number>;
 
@@ -226,15 +219,16 @@ export interface ApiReformStoreOptions {
   fetchPolicyJson?: (countryId: string, policyId: string) => Promise<PolicyMetadataParams>;
 }
 
-/** The v1 policy for a set of parameters, via the run bridge's policy creation. */
+/**
+ * The v1 policy for a set of parameters, via the run bridge's policy
+ * creation. The reform's name stays on its user record, never the policy.
+ */
 export function materializeReformPolicy(
   countryId: string,
-  label: string | null | undefined,
   parameters: Parameter[]
 ): Promise<number> {
   return createReformPolicy(
     countryId as Reform['countryId'],
-    label ?? '',
     parameters.map((parameter) => ({
       path: parameter.name,
       value: parameter.values[0]?.value,
@@ -280,7 +274,7 @@ export class ApiReformStore implements ReformStore {
     const countryId = this.routes.writeCountry(reform.countryId);
     const legacyPolicyId = isLegacyId(reform.policyId)
       ? Number(reform.policyId)
-      : await this.materializePolicy(countryId, reform.label, reform.parameters);
+      : await this.materializePolicy(countryId, reform.parameters);
     return {
       country_id: countryId,
       legacy_policy_id: legacyPolicyId,
@@ -333,7 +327,6 @@ export class ApiReformStore implements ReformStore {
     if (updates.parameters !== undefined) {
       body.legacy_policy_id = await this.materializePolicy(
         this.context.countryId,
-        updates.label,
         updates.parameters
       );
     } else if (updates.policyId !== undefined && isLegacyId(updates.policyId)) {
