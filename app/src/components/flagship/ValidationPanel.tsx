@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BillValidation } from '@/api/billFeed';
 import { describeDepth, RING_LABELS } from '@/components/flagship/CalibrationMatches';
-import { Spinner, Stack, Text } from '@/components/ui';
+import { Stack } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
   claimsFromBillValidation,
@@ -9,18 +9,31 @@ import {
   ModelValidationRow,
   PROGRAM_LABELS,
   SCORECARD_COMPARISON_URL,
-  SCORECARD_URL,
   ScorecardMatches,
   scorecardMatchesForPaths,
 } from '@/libs/flagship/modelValidation';
-import { ScorecardClaimCard } from './ScorecardComparisons';
+import type { RelatedScorecardClaim } from '@/libs/flagship/scorecardComparisons';
+import { ScorecardClaimTable, type ScorecardClaimEntry } from './ScorecardComparisons';
+import {
+  CellNote,
+  EvidenceTable,
+  gapText,
+  labelCellStyle,
+  linkStyle,
+  numberCellStyle,
+  rowStyle,
+  ValidationCard,
+  ValidationLoading,
+  ValidationNote,
+} from './ValidationDisplay';
 
 /**
- * The two validation surfaces for a bill report:
- * - BillValidationSection: the tracker pipeline's external checks for
- *   this bill (official fiscal note, third-party analyses, verdict).
- * - ModelTrackRecordSection: the PolicyEngine scorecard's comparisons
- *   against external analyses for the programs the bill touches.
+ * The scorecard side of a report's validation:
+ * - BillExternalEstimates: the tracker pipeline's external checks for a
+ *   bill (official fiscal note, third-party analyses, verdict).
+ * - BaselineComparisons: the PolicyEngine scorecard's comparisons of the
+ *   model's baseline with published measures, for the programs the
+ *   reform touches.
  */
 
 function compactMoney(value: number): string {
@@ -57,53 +70,7 @@ function metricValue(row: ModelValidationRow, value: number): string {
   return Math.round(value).toLocaleString();
 }
 
-const cellStyle: React.CSSProperties = {
-  fontSize: typography.fontSize.sm,
-  fontFamily: typography.fontFamily.primary,
-  color: colors.text.primary,
-  padding: `${spacing.xs} ${spacing.md} ${spacing.xs} 0`,
-  textAlign: 'left',
-  verticalAlign: 'top',
-};
-
-const headCellStyle: React.CSSProperties = {
-  ...cellStyle,
-  fontSize: typography.fontSize.xs,
-  color: colors.text.secondary,
-  fontWeight: typography.fontWeight.medium,
-};
-
-function SectionCard({ children }: { children: React.ReactNode }) {
-  return (
-    <Stack
-      style={{
-        gap: spacing.sm,
-        padding: spacing.lg,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: 12,
-        background: colors.background.primary,
-      }}
-    >
-      {children}
-    </Stack>
-  );
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <Text
-      style={{
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.medium,
-        color: colors.text.primary,
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-/** Teal/gray verdict pill, also reused in the report header. */
+/** Teal/gray verdict pill, shown with the bill's external estimates only. */
 export function ValidationChip({ validation }: { validation: BillValidation }) {
   if (validation.withinRange === undefined) {
     return null;
@@ -146,7 +113,18 @@ export function ValidationChip({ validation }: { validation: BillValidation }) {
   );
 }
 
-export function BillValidationSection({
+const VERIFICATION_COPY: Record<NonNullable<BillValidation['verification']>['overall'], string> = {
+  confirmed: 'Sources and figures independently re-verified',
+  partially_confirmed: 'Sources and figures partially re-verified',
+  refuted: 'Re-verification disputed these figures — treat with caution',
+  unverifiable: 'Sources could not be independently re-verified',
+};
+
+/**
+ * A bill's external estimates beside PolicyEngine's, in one table, with
+ * the range verdict and what the pipeline noted about the comparison.
+ */
+export function BillExternalEstimates({
   billId,
   validation,
 }: {
@@ -156,96 +134,78 @@ export function BillValidationSection({
   // External numbers render from scorecard-shaped claims, so tracker
   // rows today and scorecard shard rows tomorrow are interchangeable.
   const claims = claimsFromBillValidation(billId, validation);
+  const peEstimate = validation.peEstimate;
   const range =
     typeof validation.targetRangeLow === 'number' && typeof validation.targetRangeHigh === 'number'
       ? [validation.targetRangeLow, validation.targetRangeHigh].sort((a, b) => a - b)
       : null;
   return (
-    <SectionCard>
-      <SectionTitle>External checks for this bill</SectionTitle>
-      <table style={{ borderCollapse: 'collapse' }}>
-        <tbody>
-          {typeof validation.peEstimate === 'number' && (
-            <tr>
-              <td style={headCellStyle}>PolicyEngine estimate</td>
-              <td style={cellStyle}>{compactMoney(validation.peEstimate)}</td>
-              <td style={cellStyle} />
-            </tr>
-          )}
-          {range && (
-            <tr>
-              <td style={headCellStyle}>Accepted range</td>
-              <td style={cellStyle}>
-                {compactMoney(range[0])} to {compactMoney(range[1])}
-              </td>
-              <td style={cellStyle} />
-            </tr>
-          )}
-          {claims.map((claim) => (
-            <tr key={claim.source}>
-              <td style={headCellStyle}>{claim.source}</td>
-              <td style={cellStyle}>
-                {compactMoney(claim.externalValue)}
-                {claim.sourceUrl && (
-                  <>
-                    {' '}
-                    <a
-                      href={claim.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        color: colors.primary[700],
-                        textDecoration: 'underline',
-                        textUnderlineOffset: '3px',
-                      }}
-                    >
-                      source
-                    </a>
-                  </>
-                )}
-              </td>
-              <td style={{ ...cellStyle, color: colors.text.secondary }}>
-                {typeof claim.ratio === 'number' ? `${claim.ratio.toFixed(2)}× PE` : ''}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <Stack style={{ gap: spacing.md }}>
+      <EvidenceTable label="Estimates for this bill" columns={['Source', 'Estimate', 'Gap']}>
+        {typeof peEstimate === 'number' && (
+          <tr style={rowStyle}>
+            <th scope="row" style={labelCellStyle}>
+              <span style={{ fontWeight: typography.fontWeight.medium }}>PolicyEngine</span>
+            </th>
+            <td style={{ ...numberCellStyle, fontWeight: typography.fontWeight.medium }}>
+              {compactMoney(peEstimate)}
+            </td>
+            <td style={numberCellStyle}>—</td>
+          </tr>
+        )}
+        {claims.map((claim) => (
+          <tr key={claim.source} style={rowStyle}>
+            <th scope="row" style={labelCellStyle}>
+              <span>{claim.source}</span>
+              {claim.sourceUrl && (
+                <CellNote>
+                  <a
+                    href={claim.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
+                  >
+                    Read source
+                  </a>
+                </CellNote>
+              )}
+            </th>
+            <td style={numberCellStyle}>{compactMoney(claim.externalValue)}</td>
+            <td style={numberCellStyle}>{gapText(peEstimate, claim.externalValue)}</td>
+          </tr>
+        ))}
+        {range && (
+          <tr style={rowStyle}>
+            <th scope="row" style={labelCellStyle}>
+              Accepted range
+            </th>
+            <td style={numberCellStyle}>
+              {compactMoney(range[0])} to {compactMoney(range[1])}
+            </td>
+            <td style={numberCellStyle} />
+          </tr>
+        )}
+      </EvidenceTable>
       <ValidationChip validation={validation} />
       {validation.drift && (
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+        <ValidationNote>
           This check predates the current analysis: {validation.drift.reasons.join('; ')}. The
-          comparison below describes the earlier estimate until validation is re-run.
-        </Text>
+          comparison describes the earlier estimate until validation is re-run.
+        </ValidationNote>
       )}
       {validation.verification && (
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          {
-            {
-              confirmed: 'Sources and figures independently re-verified',
-              partially_confirmed: 'Sources and figures partially re-verified',
-              refuted: 'Re-verification disputed these figures — treat with caution',
-              unverifiable: 'Sources could not be independently re-verified',
-            }[validation.verification.overall]
-          }
+        <ValidationNote>
+          {VERIFICATION_COPY[validation.verification.overall]}
           {validation.verification.verifiedAt
             ? ` (${validation.verification.verifiedAt.slice(0, 10)})`
             : ''}
           .
-        </Text>
+        </ValidationNote>
       )}
       {validation.discrepancyExplanation && (
-        <Text
-          style={{
-            fontSize: typography.fontSize.xs,
-            color: colors.text.secondary,
-            lineHeight: 1.6,
-          }}
-        >
-          {validation.discrepancyExplanation}
-        </Text>
+        <ValidationNote>{validation.discrepancyExplanation}</ValidationNote>
       )}
-    </SectionCard>
+    </Stack>
   );
 }
 
@@ -258,11 +218,6 @@ export type ModelTrackRecord = ScorecardMatches | null | undefined;
 /** The program ids of a resolved track record, for the pin and the run's stages. */
 export function trackRecordPrograms(trackRecord: ModelTrackRecord): string[] | null | undefined {
   return trackRecord ? trackRecord.programs.map((match) => match.program) : trackRecord;
-}
-
-/** Whether ModelTrackRecordSection renders anything for this track record. */
-export function hasTrackRecordContent(trackRecord: ModelTrackRecord): boolean {
-  return !trackRecord || trackRecord.programs.length > 0 || trackRecord.reachedCount > 0;
 }
 
 /**
@@ -297,140 +252,100 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
   return trackRecord;
 }
 
-export function ModelTrackRecordSection({
+/** The track record's comparison rows, in the scorecard claim shape the tables render. */
+export function trackRecordClaims(trackRecord: ScorecardMatches): ScorecardClaimEntry[] {
+  return trackRecord.rows.map((row) => {
+    const program = trackRecord.programs.find((match) => match.program === row.program)!;
+    const claimId = `${row.source}-${row.program}-${row.metric}-${row.period ?? ''}`;
+    const claim: RelatedScorecardClaim = {
+      claim_id: claimId,
+      country: 'US',
+      geography: 'US',
+      name: metricLabel(row),
+      source: row.source,
+      url: row.sourceUrl ?? undefined,
+      metric: row.metric,
+      unit_concept: row.unitConcept ?? '',
+      period: row.period ?? '',
+      reform_framework: 'baseline',
+      reform_key: 'baseline',
+      external_value: row.externalValue,
+      calibration_relationship: row.heldOut ? 'held_out' : 'consumed_as_target',
+      matchBasis: 'variable',
+      diagnosis: row.diagnosis ? { title: row.diagnosis } : null,
+      latest: {
+        value: row.peValue,
+        status: row.status,
+        construction: row.construction ?? undefined,
+        engine_version: row.engineVersion ?? undefined,
+        data_bundle: row.dataBundle ?? undefined,
+        annotations: [
+          `${RING_LABELS[program.ring]} · ${describeDepth(program.depth)}`,
+          `Matched at policyengine-us ${trackRecord.modelVersion}.`,
+          ...(row.notes ?? []).filter((note) => !note.startsWith('The 2026 column')),
+          ...(row.calibrationBasis ? [row.calibrationBasis] : []),
+        ],
+        ratio: row.ratio,
+      },
+    };
+    return {
+      row: claim,
+      presentation: {
+        title: `${PROGRAM_LABELS[row.program] ?? row.program} — ${metricLabel(row)}`,
+        sourceName: row.sourceName ?? row.source,
+        externalPeriod: row.period ?? 'Period not recorded',
+        modelPeriod: row.pePeriod ?? 'Period not recorded',
+        externalValue: metricValue(row, row.externalValue),
+        peValue: metricValue(row, row.peValue),
+      },
+    };
+  });
+}
+
+/**
+ * How the model's baseline compares with published measures of the
+ * programs the reform touches: the scorecard's track record for those
+ * programs, then its other baseline claims linked to the reform.
+ */
+export function BaselineComparisons({
   trackRecord,
-  embedded = false,
+  scorecardRows,
 }: {
   trackRecord: ModelTrackRecord;
-  embedded?: boolean;
+  /** The published scorecard's baseline claims for the reform; undefined while loading. */
+  scorecardRows: RelatedScorecardClaim[] | null | undefined;
 }) {
-  if (trackRecord === null) {
-    return (
-      <SectionCard>
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          External comparisons are temporarily unavailable — see the{' '}
-          <a
-            href={SCORECARD_URL}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              color: colors.primary[700],
-              textDecoration: 'underline',
-              textUnderlineOffset: '3px',
-            }}
-          >
-            PolicyEngine scorecard
-          </a>{' '}
-          directly.
-        </Text>
-      </SectionCard>
-    );
-  }
-  if (trackRecord === undefined) {
-    return (
-      <SectionCard>
-        <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Spinner size="sm" />
-          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-            Loading external comparisons…
-          </Text>
-        </Stack>
-      </SectionCard>
-    );
-  }
-  if (!hasTrackRecordContent(trackRecord)) {
-    return null;
-  }
-  const { programs, rows } = trackRecord;
-  if (programs.length === 0) {
+  const entries = [
+    ...(trackRecord ? trackRecordClaims(trackRecord) : []),
+    ...(scorecardRows ?? []).map((row) => ({ row })),
+  ];
+  let content;
+  if (entries.length > 0) {
+    content = <ScorecardClaimTable label="Baseline comparisons" entries={entries} />;
+  } else if (trackRecord === undefined || scorecardRows === undefined) {
+    content = <ValidationLoading>Loading baseline comparisons…</ValidationLoading>;
+  } else if (trackRecord === null) {
+    content = <ValidationNote>Baseline comparisons are temporarily unavailable.</ValidationNote>;
+  } else if (trackRecord.reachedCount > 0) {
     // Silence would read as "fine". State credits are the usual case: the
     // scorecard measures federal programs and poverty, not state credits.
-    return (
-      <SectionCard>
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          None of the {trackRecord.reachedCount} variables this reform moves is measured by the{' '}
-          <a
-            href={SCORECARD_COMPARISON_URL}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              color: colors.primary[700],
-              textDecoration: 'underline',
-              textUnderlineOffset: '3px',
-            }}
-          >
-            PolicyEngine scorecard
-          </a>
-          , so there is no external comparison for the programs behind this estimate.
-        </Text>
-      </SectionCard>
+    content = (
+      <ValidationNote>
+        None of the {trackRecord.reachedCount} variables this reform moves is measured by the
+        scorecard.
+      </ValidationNote>
     );
+  } else {
+    content = <ValidationNote>No baseline comparison covers this reform.</ValidationNote>;
   }
-
-  const cards = (
-    <Stack
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr)',
-        gap: spacing.md,
-        alignItems: 'start',
-      }}
+  return (
+    <ValidationCard
+      id="baseline-comparisons"
+      title="Baseline comparisons"
+      href={SCORECARD_COMPARISON_URL}
+      linkLabel="View scorecard"
     >
-      {rows.map((row) => {
-        const program = programs.find((match) => match.program === row.program)!;
-        return (
-          <ScorecardClaimCard
-            key={`${row.source}-${row.program}-${row.metric}`}
-            presentation={{
-              title: `${PROGRAM_LABELS[row.program] ?? row.program} — ${metricLabel(row)}`,
-              sourceName: row.sourceName ?? row.source,
-              externalPeriod: row.period ?? 'Period not recorded',
-              modelPeriod: row.pePeriod ?? 'Period not recorded',
-              externalValue: metricValue(row, row.externalValue),
-              peValue: metricValue(row, row.peValue),
-            }}
-            row={{
-              claim_id: `${row.source}-${row.program}-${row.metric}`,
-              country: 'US',
-              geography: 'US',
-              name: metricLabel(row),
-              source: row.source,
-              url: row.sourceUrl ?? undefined,
-              metric: row.metric,
-              unit_concept: row.unitConcept ?? '',
-              period: row.period ?? '',
-              reform_framework: 'baseline',
-              reform_key: 'baseline',
-              external_value: row.externalValue,
-              calibration_relationship: row.heldOut ? 'held_out' : 'consumed_as_target',
-              matchBasis: 'variable',
-              diagnosis: row.diagnosis ? { title: row.diagnosis } : null,
-              latest: {
-                value: row.peValue,
-                status: row.status,
-                construction: row.construction ?? undefined,
-                engine_version: row.engineVersion ?? undefined,
-                data_bundle: row.dataBundle ?? undefined,
-                annotations: [
-                  `${RING_LABELS[program.ring]} · ${describeDepth(program.depth)}`,
-                  `Matched at policyengine-us ${trackRecord.modelVersion}.`,
-                  ...(row.notes ?? []).filter((note) => !note.startsWith('The 2026 column')),
-                  ...(row.calibrationBasis ? [row.calibrationBasis] : []),
-                ],
-                ratio: row.ratio,
-              },
-            }}
-          />
-        );
-      })}
-    </Stack>
-  );
-  return embedded ? (
-    cards
-  ) : (
-    <SectionCard>
-      <SectionTitle>Baseline comparisons</SectionTitle>
-      {cards}
-    </SectionCard>
+      {content}
+    </ValidationCard>
   );
 }

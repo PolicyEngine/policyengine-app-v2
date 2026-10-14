@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { render, screen, userEvent, within } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalcStatus = vi.fn();
 
@@ -76,6 +77,10 @@ describe('FlagshipReportPage', () => {
     mockCalcStatus.mockReset();
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   test('given the run is still calculating then the page is the wait, without the adjust panel', () => {
     mockCalcStatus.mockReturnValue({
       status: 'pending',
@@ -104,5 +109,33 @@ describe('FlagshipReportPage', () => {
     renderPage();
 
     expect(screen.queryByText('Adjust parameters')).not.toBeInTheDocument();
+  });
+
+  test('given a finished custom report then validation shows both checks and says no external estimate exists', async () => {
+    const user = userEvent.setup();
+    // The scorecard links no published score to this reform.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+    );
+    mockCalcStatus.mockReturnValue({
+      status: 'complete',
+      isComplete: true,
+      isError: false,
+      result: createMockSocietyWideOutput(),
+    });
+
+    renderPage();
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByText('No external estimate is available for this reform.')
+    ).toBeInTheDocument();
+    expect(
+      within(panel)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent)
+    ).toEqual(['External estimates', 'Data calibration', 'Baseline comparisons']);
   });
 });
