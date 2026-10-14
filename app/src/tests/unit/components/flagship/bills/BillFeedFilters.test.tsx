@@ -1,4 +1,4 @@
-import { render, screen, userEvent, within } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import { NO_BILL_FILTERS, type BillFilters } from '@/libs/flagship/billFilters';
@@ -22,37 +22,41 @@ function renderFilters(value: BillFilters = NO_BILL_FILTERS, bills = FILTER_BILL
   return onChange;
 }
 
+// Radix Select asks for pointer capture, which jsdom does not have.
+Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+Element.prototype.releasePointerCapture ??= vi.fn();
+
+/** The options a filter's dropdown lists, once opened. */
+async function optionsOf(user: ReturnType<typeof userEvent.setup>, filter: 'Level' | 'Stage') {
+  await user.click(screen.getByRole('combobox', { name: filter }));
+  return (await screen.findAllByRole('option')).map((option) => option.textContent);
+}
+
 describe('BillFeedFilters', () => {
-  test('given the feed then level and stage each offer their options', () => {
+  test('given the feed then level and stage are dropdowns with their options', async () => {
+    const user = userEvent.setup();
     renderFilters();
 
-    const level = screen.getByRole('group', { name: 'Level' });
-    expect(
-      within(level)
-        .getAllByRole('tab')
-        .map((tab) => tab.textContent)
-    ).toEqual(['All', 'Federal', 'State']);
-    const stage = screen.getByRole('group', { name: 'Stage' });
-    expect(
-      within(stage)
-        .getAllByRole('tab')
-        .map((tab) => tab.textContent)
-    ).toEqual(['All', 'Enacted', 'Proposed', 'Failed']);
+    expect(screen.getByRole('combobox', { name: 'Level' })).toHaveTextContent('All levels');
+    expect(screen.getByRole('combobox', { name: 'Stage' })).toHaveTextContent('All stages');
+    expect(await optionsOf(user, 'Level')).toEqual(['All levels', 'Federal', 'State']);
+    await user.keyboard('{Escape}');
+    expect(await optionsOf(user, 'Stage')).toEqual(['All stages', 'Enacted', 'Proposed', 'Failed']);
   });
 
-  test('given no bill failed then the stage has no failed option', () => {
+  test('given no bill failed then the stage has no failed option', async () => {
+    const user = userEvent.setup();
     renderFilters(NO_BILL_FILTERS, [FEDERAL_PROPOSED, UTAH_ENACTED]);
 
-    expect(
-      within(screen.getByRole('group', { name: 'Stage' })).queryByRole('tab', { name: 'Failed' })
-    ).not.toBeInTheDocument();
+    expect(await optionsOf(user, 'Stage')).not.toContain('Failed');
   });
 
   test('given a level is chosen then the filters change to it from all its states', async () => {
     const user = userEvent.setup();
     const onChange = renderFilters({ ...NO_BILL_FILTERS, level: 'state', state: 'ut' });
 
-    await user.click(screen.getByRole('tab', { name: 'Federal' }));
+    await user.click(screen.getByRole('combobox', { name: 'Level' }));
+    await user.click(await screen.findByRole('option', { name: 'Federal' }));
 
     expect(onChange).toHaveBeenCalledWith({ level: 'federal', state: 'all', stage: 'all' });
   });
@@ -61,7 +65,8 @@ describe('BillFeedFilters', () => {
     const user = userEvent.setup();
     const onChange = renderFilters({ ...NO_BILL_FILTERS, level: 'state', state: 'ut' });
 
-    await user.click(screen.getByRole('tab', { name: 'Enacted' }));
+    await user.click(screen.getByRole('combobox', { name: 'Stage' }));
+    await user.click(await screen.findByRole('option', { name: 'Enacted' }));
 
     expect(onChange).toHaveBeenCalledWith({ level: 'state', state: 'ut', stage: 'enacted' });
   });
