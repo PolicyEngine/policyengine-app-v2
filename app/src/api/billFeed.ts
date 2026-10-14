@@ -592,9 +592,7 @@ function laterStatusRow(current: any, candidate: any): any {
  * letters-then-number ("SB3125", "H. 3492", "A 1185"), not a fiscal year.
  */
 function titleBillNumber(title: unknown): string | undefined {
-  return typeof title === 'string'
-    ? title.match(/\b(?!FY)([A-Z]{1,3}\.?\s*\d+)/i)?.[1]
-    : undefined;
+  return typeof title === 'string' ? title.match(/\b(?!FY)([A-Z]{1,3}\.?\s*\d+)/i)?.[1] : undefined;
 }
 
 /**

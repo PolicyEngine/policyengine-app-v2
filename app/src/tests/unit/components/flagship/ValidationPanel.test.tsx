@@ -134,10 +134,11 @@ describe('BillExternalEstimates', () => {
     const row = within(table).getByRole('row', {
       name: new RegExp(`^${RANGE_ONLY_FISCAL_NOTE.fiscalNoteSource}`),
     });
-    expect(within(row).getAllByRole('cell').map((cell) => cell.textContent)).toEqual([
-      'No estimate',
-      '—',
-    ]);
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['No estimate', '—']);
     expect(within(row).getByRole('link', { name: 'Read source' })).toHaveAttribute(
       'href',
       RANGE_ONLY_FISCAL_NOTE.fiscalNoteUrl

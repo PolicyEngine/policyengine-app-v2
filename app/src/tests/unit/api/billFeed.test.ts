@@ -310,7 +310,12 @@ describe('tracker reads', () => {
       bill_number: `HB${index}`,
       status: 'Introduced',
     }));
-    statuses[1417] = { bill_id: 1417, state: 'WV', bill_number: 'SB392', status: 'Signed into Law' };
+    statuses[1417] = {
+      bill_id: 1417,
+      state: 'WV',
+      bill_number: 'SB392',
+      status: 'Signed into Law',
+    };
     const fetchMock = vi.fn(async (url: string) => {
       const params = new URL(url).searchParams;
       const table = new URL(url).pathname.split('/').pop();
@@ -329,7 +334,9 @@ describe('tracker reads', () => {
           : all.slice(offset - 418, offset);
       return {
         ok: true,
-        headers: new Headers({ 'content-range': `${offset}-${offset + page.length - 1}/${all.length}` }),
+        headers: new Headers({
+          'content-range': `${offset}-${offset + page.length - 1}/${all.length}`,
+        }),
         json: async () => page,
       };
     });
@@ -590,7 +597,12 @@ describe('fetchTrackerBills', () => {
       mockTrackerFetch({
         research: [
           // The title names the bill, as the tracker reads it.
-          { id: 'hi-sb3125-hd1', type: 'bill', state: 'HI', title: 'Hawaii SB3125 HD1: tax relief' },
+          {
+            id: 'hi-sb3125-hd1',
+            type: 'bill',
+            state: 'HI',
+            title: 'Hawaii SB3125 HD1: tax relief',
+          },
           {
             id: 'nj-a1185-marriage-penalty-elimination',
             type: 'bill',
