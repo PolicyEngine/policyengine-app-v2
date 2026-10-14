@@ -103,9 +103,28 @@ export const supporters: Supporter[] = [
     description:
       "an educational charity in London offering courses in practical philosophy and economics.",
   },
+  {
+    id: "manifund",
+    name: "Manifund",
+    websiteUrl: "https://manifund.org/",
+    logoUrl: "/assets/supporters/manifund.webp",
+    description:
+      "a platform for funding impactful projects, sponsored by Manifold for Charity, a US 501(c)(3) nonprofit.",
+  },
 ];
 
 export const projects: SupportedProjectData[] = [
+  {
+    title: "Token tax modelling for the UK",
+    projectUrl:
+      "https://manifund.org/projects/token-taxes-as-a-mechanism-for-reducing-ai-driven-power-concentration",
+    amount: 4650,
+    currency: "USD",
+    awardDate: "2026-10",
+    description:
+      "Modelling the revenue and distributional effects of a UK tax on AI inference, for Lucas Irwin's project \"Token taxes as a mechanism for reducing AI-driven power concentration\" and its policy memo with IPPR. The project is funded through Manifund by grantmaking.ai.",
+    supporterId: "manifund",
+  },
   {
     title: "Land value tax in every constituency",
     amount: 12000,
