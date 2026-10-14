@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconChevronDown } from '@tabler/icons-react';
+import { IconChevronDown, IconX } from '@tabler/icons-react';
 import { createPortal } from 'react-dom';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
@@ -19,6 +19,8 @@ import { PHONE_QUERY } from '@/libs/flagship/viewport';
  * the panel renders in place.
  */
 export const SIDE_PANEL_SLOT_ID = 'flagship-side-panel-slot';
+/** The shell's root (see FlagshipShell): what a phone's open drawer covers. */
+const SHELL_ROOT_SELECTOR = '[data-flagship-shell]';
 
 const PANEL_WIDTH = 340;
 const SPINE_WIDTH = 40;
@@ -37,7 +39,7 @@ const OVERLAY_BELOW = '(max-width: 1023px)';
  * plane under the content (see FlagshipShell): folded, the panel is a
  * bar across the bottom; open, it fills the screen, as a drawer.
  */
-const BAR_HEIGHT = 48;
+const BAR_HEIGHT = spacing['4xl'];
 
 /** Effects that must run before paint, without warning during SSR. */
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -173,6 +175,28 @@ export default function SidePanel({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [phone, open, storageKey]);
 
+  // The drawer covers the shell: while it is open, the page and the top
+  // bar under it are out of reach of the keyboard and screen readers.
+  useEffect(() => {
+    const shell = slot?.closest(SHELL_ROOT_SELECTOR);
+    if (!phone || !open || !slot || !shell) {
+      return;
+    }
+    const covered: Element[] = [];
+    let node: Element = slot;
+    while (node !== shell && node.parentElement) {
+      const parent: Element = node.parentElement;
+      for (const sibling of Array.from(parent.children)) {
+        if (sibling !== node && !sibling.hasAttribute('inert')) {
+          sibling.setAttribute('inert', '');
+          covered.push(sibling);
+        }
+      }
+      node = parent;
+    }
+    return () => covered.forEach((element) => element.removeAttribute('inert'));
+  }, [phone, open, slot]);
+
   // The plane mirrors the left sidebar: the same flat surface and quiet
   // edge, with teal reserved for text — no colored bands.
   const titleColor = accent ? colors.primary[700] : colors.text.primary;
@@ -256,6 +280,9 @@ export default function SidePanel({
     >
       <div
         aria-label={title}
+        // A phone's open panel is a drawer over the whole screen.
+        role={phone && open ? 'dialog' : undefined}
+        aria-modal={phone && open ? true : undefined}
         style={{
           ...openPlacement,
           minHeight: 0,
@@ -318,16 +345,22 @@ export default function SidePanel({
               </Text>
             </span>
           </span>
-          {meta && (
-            <Text
-              style={{
-                fontSize: typography.fontSize.xs,
-                color: colors.text.secondary,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {meta}
-            </Text>
+          {(meta || phone) && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+              {meta && (
+                <Text
+                  style={{
+                    fontSize: typography.fontSize.xs,
+                    color: colors.text.secondary,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {meta}
+                </Text>
+              )}
+              {/* A drawer shows how to close it. */}
+              {phone && <IconX size={18} aria-hidden color={colors.text.secondary} />}
+            </span>
           )}
         </button>
         {/* The body scrolls, not the page: the plane keeps its own height. */}

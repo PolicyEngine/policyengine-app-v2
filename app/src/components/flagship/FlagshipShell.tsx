@@ -1,3 +1,5 @@
+import { useAppPathname } from '@/contexts/LocationContext';
+import { isFlagshipPagePath } from '@/libs/flagship/shellRoutes';
 import FlagshipTopBar from './FlagshipTopBar';
 import { SIDE_PANEL_SLOT_ID } from './SidePanel';
 
@@ -19,6 +21,28 @@ const PHONE_TOUCH_TARGETS = [
 ].join(' ');
 
 /**
+ * The layout of a v3 page: the touch targets and a closer page edge on a
+ * phone, where the right plane moves under the content.
+ */
+const FLAGSHIP_LAYOUT = {
+  root: `tw:h-dvh tw:overflow-hidden tw:flex tw:flex-col ${PHONE_TOUCH_TARGETS}`,
+  row: 'tw:flex tw:flex-1 tw:min-h-0 tw:max-sm:flex-col',
+  main: 'tw:flex-1 tw:min-w-0 tw:min-h-0 tw:overflow-y-auto tw:overflow-x-hidden tw:p-lg tw:sm:p-2xl tw:bg-gray-50',
+  slot: 'tw:shrink-0 tw:flex tw:h-full tw:max-sm:h-auto tw:bg-gray-50',
+};
+
+/**
+ * The legacy v2 pages the shell also hosts while the flag is on keep the
+ * layout they have always had, on every screen.
+ */
+const LEGACY_LAYOUT = {
+  root: 'tw:h-screen tw:overflow-hidden tw:flex tw:flex-col',
+  row: 'tw:flex tw:flex-1 tw:min-h-0',
+  main: 'tw:flex-1 tw:min-w-0 tw:overflow-y-auto tw:overflow-x-hidden tw:p-[24px] tw:bg-gray-50',
+  slot: 'tw:shrink-0 tw:flex tw:h-full tw:bg-gray-50',
+};
+
+/**
  * The flagship shell: a slim top bar (brand, sections, website links)
  * over the content area and the right plane for side panels. The bar
  * stays one slim row on every viewport, so content always has the full
@@ -26,23 +50,21 @@ const PHONE_TOUCH_TARGETS = [
  * panel keeps a slim bar across the bottom (see SidePanel).
  */
 export default function FlagshipShell({ children }: FlagshipShellProps) {
+  const layout = isFlagshipPagePath(useAppPathname()) ? FLAGSHIP_LAYOUT : LEGACY_LAYOUT;
+
+  // data-flagship-shell: where a phone's drawer finds the page it covers (see SidePanel).
   return (
-    <div className={`tw:h-dvh tw:overflow-hidden tw:flex tw:flex-col ${PHONE_TOUCH_TARGETS}`}>
+    <div data-flagship-shell className={layout.root}>
       <FlagshipTopBar />
 
-      <div className="tw:flex tw:flex-1 tw:min-h-0 tw:max-sm:flex-col">
-        <main className="tw:flex-1 tw:min-w-0 tw:min-h-0 tw:overflow-y-auto tw:overflow-x-hidden tw:p-[16px] tw:sm:p-[24px] tw:bg-gray-50">
-          {children}
-        </main>
+      <div className={layout.row}>
+        <main className={layout.main}>{children}</main>
         {/* The right plane: SidePanel portals its content here, so the
             panel is a real column of the shell — outside the scrolling
             content, full height by construction — rather than a
             floating box inside it. Empty (zero width) on pages
             without a companion. */}
-        <div
-          id={SIDE_PANEL_SLOT_ID}
-          className="tw:shrink-0 tw:flex tw:h-full tw:max-sm:h-auto tw:bg-gray-50"
-        />
+        <div id={SIDE_PANEL_SLOT_ID} className={layout.slot} />
       </div>
     </div>
   );

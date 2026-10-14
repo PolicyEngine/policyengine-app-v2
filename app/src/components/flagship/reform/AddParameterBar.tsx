@@ -232,6 +232,8 @@ export default function AddParameterBar({
 
       {browseOpen && (
         <div
+          // On a phone the close button is a fingertip tall: the tree starts under it.
+          className="tw:p-lg tw:max-sm:pt-4xl"
           style={{
             ...(inTable
               ? { position: 'relative' as const }
@@ -239,7 +241,6 @@ export default function AddParameterBar({
             marginTop: spacing.sm,
             maxHeight: '70vh',
             overflowY: 'auto',
-            padding: spacing.lg,
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.feature,
             background: colors.gray[50],

@@ -132,7 +132,11 @@ function YearsPicker({
               </SelectTrigger>
               <SelectContent position="popper" align="start">
                 {yearOptions.map((option) => (
-                  <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
+                  <SelectItem
+                    key={option}
+                    value={String(option)}
+                    className="tw:cursor-pointer tw:max-sm:min-h-10"
+                  >
                     {option}
                   </SelectItem>
                 ))}
@@ -149,7 +153,8 @@ function YearsPicker({
                 value: String(years),
                 label: years === 1 ? '1 year' : `${years} years`,
               }))}
-              // A fingertip tall on a phone.
+              // A fingertip tall on a phone. The popover portals out of the
+              // shell, so the shell's own phone sizes do not reach it.
               className="tw:max-sm:h-12"
             />
           </div>

@@ -7,13 +7,26 @@ export const SCREEN_WIDTHS = {
   DESKTOP: 1280,
 } as const;
 
-/** Whether a screen this wide matches a query's (min-width / max-width: Npx) parts. */
+/** CSS pixels in one unit of a width query; em and rem use the 16px default font size. */
+const PX_PER_UNIT: Record<string, number> = { px: 1, em: 16, rem: 16 };
+
+/**
+ * Whether a screen this wide matches a query's (min-width / max-width: N
+ * px | em | rem) parts. A width query in any other form throws, so a test
+ * never gets the desktop layout without a warning.
+ */
 function matchesWidth(query: string, width: number): boolean {
-  const parts = [...query.matchAll(/\((min|max)-width:\s*(\d+)px\)/g)];
-  return (
-    parts.length > 0 &&
-    parts.every(([, bound, px]) => (bound === 'min' ? width >= Number(px) : width <= Number(px)))
-  );
+  const parts = [...query.matchAll(/\((min|max)-width:\s*(\d+(?:\.\d+)?)(px|em|rem)\)/g)];
+  if (parts.length === 0) {
+    if (query.includes('width')) {
+      throw new Error(`mockScreenWidth cannot read the width query "${query}"`);
+    }
+    return false;
+  }
+  return parts.every(([, bound, size, unit]) => {
+    const px = Number(size) * PX_PER_UNIT[unit];
+    return bound === 'min' ? width >= px : width <= px;
+  });
 }
 
 /**
