@@ -73,11 +73,11 @@ describe('DraftHeader', () => {
     expect(within(header).getByRole('button', { name: 'Rename the reform' })).toHaveTextContent(
       'Name your reform'
     );
-    expect(within(header).queryByRole('combobox', { name: 'Year' })).not.toBeInTheDocument();
+    expect(within(header).queryByRole('button', { name: /^Years?:/ })).not.toBeInTheDocument();
     expect(within(header).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
 
     const bar = screen.getByRole('region', { name: 'Reform actions' });
-    expect(within(bar).getByRole('combobox', { name: 'Year' })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: 'Year: 2026' })).toBeInTheDocument();
     expect(
       within(bar).getByRole('button', { name: /population: nationwide/i })
     ).toBeInTheDocument();
@@ -131,7 +131,8 @@ describe('DraftHeader', () => {
     const user = userEvent.setup();
     renderHeader();
 
-    await user.click(screen.getByRole('combobox', { name: 'Year' }));
+    await user.click(screen.getByRole('button', { name: 'Year: 2026' }));
+    await user.click(await screen.findByRole('combobox', { name: 'Report year' }));
     await user.click(await screen.findByRole('option', { name: '2027' }));
 
     expect(getDraftReform()?.year).toBe(2027);
@@ -153,10 +154,11 @@ describe('DraftHeader', () => {
     });
     renderHeader();
 
-    const years = screen.getByRole('combobox', { name: 'Budget years' });
-    expect(years).toHaveTextContent('2026 only');
-    await user.click(years);
-    await user.click(await screen.findByRole('option', { name: '2026–2035' }));
+    // One control: the year, and the years of budget from it.
+    await user.click(screen.getByRole('button', { name: 'Year: 2026' }));
+    await user.click(await screen.findByRole('tab', { name: '10 years' }));
+    expect(screen.getByText(/adds the budget for each year from 2026 to 2035/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Years: 2026–2035' })).toBeInTheDocument();
 
     expect(getDraftReform()?.windowYears).toBe(10);
     await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
