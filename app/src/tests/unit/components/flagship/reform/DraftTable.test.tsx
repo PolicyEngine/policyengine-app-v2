@@ -389,9 +389,11 @@ describe('DraftTable', () => {
       await user.click(screen.getByRole('tab', { name: 'Indexed' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
+      // CPI-U runs to 2028, a year past the model's: the value grows to then.
       expect(provision(CTC_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 3000 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 3090 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 3090 },
+        { startDate: '2028-01-01', endDate: FOREVER, value: 3180 },
       ]);
       await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
       expect(screen.getByText('from 2026 · CPI-U')).toHaveAttribute(
@@ -410,7 +412,8 @@ describe('DraftTable', () => {
       // Indexing a flat amount is itself the change: 2,200 × 1.03.
       expect(provision(CTC_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 2200 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 2266 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 2266 },
+        { startDate: '2028-01-01', endDate: FOREVER, value: 2332 },
       ]);
       expect(screen.getByLabelText('Child tax credit base amount, 2027')).toHaveTextContent(
         '$2,266'
@@ -466,10 +469,13 @@ describe('DraftTable', () => {
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
-      // to $100, the step current law's projected values all land on.
+      // to $100, the step current law's projected values all land on — and
+      // goes on growing to 2029, as far as current law projects it.
       expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 6100 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 6100 },
+        { startDate: '2028-01-01', endDate: '2028-12-31', value: 6200 },
+        { startDate: '2029-01-01', endDate: FOREVER, value: 6300 },
       ]);
       await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
       expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
