@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SkeletonLine, SkeletonRegion } from '@/components/flagship/states';
 import { Progress, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { formatElapsed } from '@/libs/flagship/reportStages';
@@ -12,6 +13,35 @@ function useElapsed(): number {
     return () => window.clearInterval(timer);
   }, []);
   return now - started;
+}
+
+/** The run's card, shared with its placeholder so one replaces the other in place. */
+const CARD_STYLE: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  maxWidth: 640,
+  gap: spacing.sm,
+  padding: spacing.lg,
+  border: `1px solid ${colors.border.light}`,
+  borderRadius: 12,
+  background: colors.background.primary,
+};
+
+/**
+ * The run's card before there is a run to show — the report and its
+ * status still loading — at the size the run's bar takes once it starts.
+ */
+export function RunProgressSkeleton({ label }: { label: string }) {
+  return (
+    <SkeletonRegion label={label} style={CARD_STYLE}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md, height: 20 }}>
+        <SkeletonLine width="45%" />
+        <SkeletonLine width={64} height={12} style={{ marginLeft: 'auto' }} />
+      </div>
+      <SkeletonLine height={8} style={{ borderRadius: 999 }} />
+    </SkeletonRegion>
+  );
 }
 
 /**
@@ -45,19 +75,7 @@ export default function RunProgress({
   const percent = Math.max(0, Math.min(Math.round(value), 99));
 
   return (
-    <Stack
-      role="status"
-      aria-live="polite"
-      style={{
-        width: '100%',
-        maxWidth: 640,
-        gap: spacing.sm,
-        padding: spacing.lg,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: 12,
-        background: colors.background.primary,
-      }}
-    >
+    <Stack role="status" aria-live="polite" style={CARD_STYLE}>
       <Stack style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.md }}>
         <Text
           style={{

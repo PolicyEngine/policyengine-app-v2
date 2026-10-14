@@ -6,6 +6,7 @@ import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useUserReportById } from '@/hooks/useUserReports';
+import { isNotFoundError, retryUnlessNotFound } from '@/libs/flagship/loadError';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -27,6 +28,12 @@ export interface FlagshipReportData {
   simulations: Simulation[];
   policies: Policy[];
   isLoading: boolean;
+  /** Why the report, a simulation or a policy failed to load; null while none has. */
+  error: Error | null;
+  /** The report id resolves to no report (a bad or deleted link). */
+  notFound: boolean;
+  /** Asks again for whatever failed; settles when the answers are in. */
+  retry: () => Promise<unknown>;
 }
 
 /**
@@ -43,11 +50,18 @@ export function useFlagshipReport(id: string): FlagshipReportData {
 
   const legacy = useUserReportById(id, { enabled: !direct && !!id });
 
-  const { data: report, isLoading: reportLoading } = useQuery({
+  const {
+    data: report,
+    isLoading: reportLoading,
+    error: reportError,
+    refetch: refetchReport,
+  } = useQuery({
     queryKey: reportKeys.byId(id),
     queryFn: async () => ReportAdapter.fromMetadata(await fetchReportById(country, id)),
     enabled: direct,
     staleTime: 5 * 60 * 1000,
+    // A missing report stays missing: say so at once rather than retrying.
+    retry: retryUnlessNotFound,
   });
 
   const simulationIds = direct ? (report?.simulationIds ?? []) : [];
@@ -80,12 +94,30 @@ export function useFlagshipReport(id: string): FlagshipReportData {
       simulations: legacy.simulations,
       policies: legacy.policies ?? [],
       isLoading: legacy.isLoading,
+      // A legacy link that resolves to nothing reads as unresolvable.
+      error: null,
+      notFound: false,
+      retry: async () => undefined,
     };
   }
+  const error =
+    (reportError as Error | null) ??
+    (simulationResults.error as Error | null) ??
+    (policyResults.error as Error | null) ??
+    null;
   return {
     report,
     simulations,
     policies,
     isLoading: reportLoading || simulationResults.isLoading || policyResults.isLoading,
+    error,
+    notFound: !!reportError && isNotFoundError(reportError),
+    retry: () =>
+      Promise.all([
+        reportError ? refetchReport() : null,
+        ...[...simulationResults.queries, ...policyResults.queries]
+          .filter((query) => query.error)
+          .map((query) => query.refetch()),
+      ]),
   };
 }

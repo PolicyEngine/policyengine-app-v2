@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { IconAlertTriangle, IconCheck, IconCopy } from '@tabler/icons-react';
+import { IconCheck, IconCopy } from '@tabler/icons-react';
+import { ErrorState } from '@/components/flagship/states';
 import { Button } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -37,61 +38,11 @@ export default function ReportCalculationError({
   };
 
   return (
-    <section
-      role="alert"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing.md,
-        maxWidth: 640,
-        padding: spacing.xl,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.feature,
-        background: colors.background.primary,
-        fontFamily: typography.fontFamily.primary,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing.md }}>
-        <span
-          aria-hidden
-          style={{
-            display: 'inline-flex',
-            flexShrink: 0,
-            padding: spacing.sm,
-            borderRadius: 999,
-            // The warning yellow, tinted.
-            background: `${colors.warning}33`,
-            color: colors.text.warning,
-          }}
-        >
-          <IconAlertTriangle size={20} />
-        </span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: typography.fontSize.lg,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.text.primary,
-            }}
-          >
-            {summary.title}
-          </h2>
-          <p
-            style={{
-              margin: 0,
-              fontSize: typography.fontSize.sm,
-              lineHeight: typography.lineHeight.relaxed,
-              color: colors.text.secondary,
-            }}
-          >
-            {summary.body}
-          </p>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm }}>
-        {summary.retryable && <Button onClick={() => window.location.reload()}>Try again</Button>}
+    <ErrorState
+      title={summary.title}
+      description={summary.body}
+      onRetry={summary.retryable ? () => window.location.reload() : undefined}
+      actions={
         <Button
           variant={summary.retryable ? 'outline' : 'default'}
           onClick={() => {
@@ -101,8 +52,8 @@ export default function ReportCalculationError({
         >
           {onEdit ? 'Edit the reform' : 'Back to Build'}
         </Button>
-      </div>
-
+      }
+    >
       {summary.reference && (
         <div
           style={{
@@ -165,6 +116,6 @@ export default function ReportCalculationError({
           {summary.detail}
         </pre>
       </details>
-    </section>
+    </ErrorState>
   );
 }
