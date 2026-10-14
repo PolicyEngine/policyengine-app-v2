@@ -189,6 +189,13 @@ function totalRows(response: Response): number | undefined {
 async function trackerSelect(
   table: string,
   select: string,
+  /**
+   * A unique column that puts the rows in one fixed order ("bill_id").
+   * With no order, the database can give each page its rows in another
+   * order, so the pages repeat some rows and drop others, and different
+   * ones on each load.
+   */
+  order: string,
   /** A PostgREST row filter, e.g. "id=eq.ks-hb2620". */
   filter?: string
 ): Promise<any[] | null> {
@@ -199,7 +206,7 @@ async function trackerSelect(
   // Read page by page: one request stops at the cap and drops the rest.
   const rows: any[] = [];
   for (;;) {
-    const query = `select=${select}${filter ? `&${filter}` : ''}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
+    const query = `select=${select}${filter ? `&${filter}` : ''}&order=${order}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
     const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
       headers: {
         apikey: config.anonKey,
@@ -500,6 +507,7 @@ export async function fetchTrackerBillDistricts(
   const rows = await trackerSelect(
     'reform_impacts',
     'district_impacts',
+    'id',
     `id=eq.${encodeURIComponent(billId)}`
   );
   const raw = rows?.[0]?.district_impacts;
@@ -595,19 +603,21 @@ function processedBillFor(
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const [research, impacts, processed, validations, baselines] = await Promise.all([
     // Titled as the tracker shows them: an entry with no title reads as its bill number.
-    trackerSelect('research', '*').then((rows) => rows?.map(withTrackerTitle) ?? null),
+    trackerSelect('research', '*', 'id').then((rows) => rows?.map(withTrackerTitle) ?? null),
     trackerSelect(
       'reform_impacts',
-      'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
+      'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at',
+      'id'
     ),
-    trackerSelect('processed_bills', 'bill_id,state,bill_number,status,legiscan_url'),
+    trackerSelect('processed_bills', 'bill_id,state,bill_number,status,legiscan_url', 'bill_id'),
     trackerSelect(
       'validation_metadata',
-      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against'
+      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against',
+      'id'
     ),
     // The law each bill was compared with. Read on its own, so a tracker
     // without the column yet still serves the rest of the feed.
-    trackerSelect('reform_impacts', 'id,baseline_params').catch(() => null),
+    trackerSelect('reform_impacts', 'id,baseline_params', 'id').catch(() => null),
   ]);
   if (!research) {
     return null;

@@ -9,6 +9,12 @@ import {
 } from '@/api/billFeed';
 import { CURRENT_YEAR } from '@/constants';
 import {
+  LATE_STATUS,
+  LATE_STATUS_ROWS,
+  MANY_BILL_ROWS,
+  MANY_BILLS,
+  MANY_BILLS_STATUS,
+  mockPagedTrackerFetch,
   mockTrackerFetch,
   NET_COST_DRIFT_ROWS,
   NET_COST_ONLY_ROWS,
@@ -299,6 +305,41 @@ describe('tracker reads', () => {
       '0',
       '1000',
     ]);
+  });
+
+  test('given a status row past the first page then every load finds its stage and link', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    // Pages read with no fixed order repeat rows and skip the rest.
+    vi.stubGlobal('fetch', mockPagedTrackerFetch(LATE_STATUS_ROWS));
+
+    const [bill] = (await fetchTrackerBills())!;
+
+    expect([bill.status, bill.legiscanUrl]).toEqual([LATE_STATUS.status, LATE_STATUS.legiscanUrl]);
+  });
+
+  test('given every table past one page then each bill reads once, with its run, check and stage', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal('fetch', mockPagedTrackerFetch(MANY_BILL_ROWS));
+
+    const bills = (await fetchTrackerBills())!;
+
+    const billsWith = (has: (bill: (typeof bills)[number]) => boolean) =>
+      new Set(bills.filter(has).map((bill) => bill.id)).size;
+    expect({
+      listed: bills.length,
+      unique: billsWith(() => true),
+      withRun: billsWith((bill) => bill.impacts?.revenue !== undefined),
+      withCheck: billsWith((bill) => bill.validation?.withinRange === true),
+      withStage: billsWith((bill) => bill.status === MANY_BILLS_STATUS),
+    }).toEqual({
+      listed: MANY_BILLS,
+      unique: MANY_BILLS,
+      withRun: MANY_BILLS,
+      withCheck: MANY_BILLS,
+      withStage: MANY_BILLS,
+    });
   });
 });
 
