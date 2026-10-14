@@ -45,7 +45,8 @@
     "date": "2026-07-28",
     "url": "https://neweconomics.org/2026/07/the-good-work-effect",
     "image": "nef-good-work-effect.jpg",
-    "tags": ["uk", "policy"]
+    "tags": ["uk", "policy"],
+    "featured": true
   },
   {
     "title": "Londoners face £1,000 property tax rise as Andy Burnham to become PM",
@@ -77,7 +78,8 @@
     "date": "2026-06-25",
     "url": "https://assets.publishing.service.gov.uk/media/6a3cfb3c33bc5beefd3c49d2/E03598728_OBR_ARA_25-26_Accessible.pdf",
     "image": "obr-annual-report-2025-26.jpg",
-    "tags": ["uk", "policy"]
+    "tags": ["uk", "policy"],
+    "featured": true
   },
   {
     "title": "Andy Burnham's property tax raids set to leave hundreds of thousands of Britons £1,000 worse off",
