@@ -20,6 +20,7 @@ import {
   gapText,
   labelCellStyle,
   linkStyle,
+  NotComparable,
   numberCellStyle,
   rowStyle,
   ValidationCard,
@@ -310,17 +311,29 @@ export function trackRecordClaims(trackRecord: ScorecardMatches): ScorecardClaim
 export function BaselineComparisons({
   trackRecord,
   scorecardRows,
+  baselineLabel,
 }: {
   trackRecord: ModelTrackRecord;
   /** The published scorecard's baseline claims for the reform; undefined while loading. */
   scorecardRows: RelatedScorecardClaim[] | null | undefined;
+  /**
+   * What the report compares with, when not current law. The scorecard
+   * measures current law, so its comparisons do not apply.
+   */
+  baselineLabel?: string | null;
 }) {
   const entries = [
     ...(trackRecord ? trackRecordClaims(trackRecord) : []),
     ...(scorecardRows ?? []).map((row) => ({ row })),
   ];
   let content;
-  if (entries.length > 0) {
+  if (baselineLabel) {
+    content = (
+      <NotComparable>
+        The scorecard measures current law. This report compares with {baselineLabel}.
+      </NotComparable>
+    );
+  } else if (entries.length > 0) {
     content = <ScorecardClaimTable label="Baseline comparisons" entries={entries} />;
   } else if (trackRecord === undefined || scorecardRows === undefined) {
     content = <ValidationLoading>Loading baseline comparisons…</ValidationLoading>;

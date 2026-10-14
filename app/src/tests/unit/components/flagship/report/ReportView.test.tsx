@@ -180,4 +180,23 @@ describe('ReportView validation', () => {
       within(panel).queryByText('No external estimate is available for this reform.')
     ).not.toBeInTheDocument();
   });
+
+  test('given a custom baseline then validation marks the scorecard not comparable', async () => {
+    const panel = await renderValidationTab({ customBaselineLabel: 'Smaller CTC' });
+
+    expect(within(panel).getAllByText('Not comparable')).toHaveLength(2);
+    expect(within(panel).getByRole('table', { name: 'Calibration targets' })).toBeInTheDocument();
+    // External scores assume current law: the scorecard is not asked.
+    const urls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
+    expect(urls).not.toContain('/api/scorecard-comparisons');
+  });
+
+  test('given current law then validation asks the scorecard and marks nothing', async () => {
+    const panel = await renderValidationTab();
+
+    await within(panel).findByText('No external estimate is available for this reform.');
+    const urls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
+    expect(urls).toContain('/api/scorecard-comparisons');
+    expect(within(panel).queryByText('Not comparable')).not.toBeInTheDocument();
+  });
 });

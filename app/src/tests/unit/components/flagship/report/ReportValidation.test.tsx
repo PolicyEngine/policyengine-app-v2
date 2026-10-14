@@ -11,17 +11,20 @@ import {
 } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 
-const mockUseScorecardComparisons = vi.fn<() => ScorecardComparisonsState>();
+const mockUseScorecardComparisons =
+  vi.fn<(countryId: string, paths: string[]) => ScorecardComparisonsState>();
 
 vi.mock('@/components/flagship/ScorecardComparisons', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/components/flagship/ScorecardComparisons')>()),
-  useScorecardComparisons: () => mockUseScorecardComparisons(),
+  useScorecardComparisons: (countryId: string, paths: string[]) =>
+    mockUseScorecardComparisons(countryId, paths),
 }));
 
 const NO_SCORECARD_ROWS = { built: '2026-08-29', rows: [], unmappedCount: 4 };
 const RELATED_REFORM = { ...scorecardClaim(), matchBasis: 'parameter' as const };
 const UTAH_BASELINE = { ...utahBaselineClaim, matchBasis: 'program' as const };
 const EMPTY_TRACK_RECORD = { modelVersion: '1.808.0', reachedCount: 12, programs: [], rows: [] };
+const SAVED_REFORM_BASELINE = 'Smaller CTC';
 
 function renderValidation(props: Partial<Parameters<typeof ReportValidation>[0]> = {}) {
   return render(
@@ -151,5 +154,44 @@ describe('ReportValidation', () => {
     expect(
       within(card('External estimates')).getByText(/4 claims in this country have no usable/)
     ).not.toBeVisible();
+  });
+
+  test('given a custom baseline then both scorecard cards are marked not comparable', () => {
+    mockUseScorecardComparisons.mockReturnValue({
+      ...NO_SCORECARD_ROWS,
+      rows: [RELATED_REFORM, UTAH_BASELINE],
+    });
+    renderValidation({ baselineLabel: SAVED_REFORM_BASELINE });
+
+    for (const name of ['External estimates', 'Baseline comparisons']) {
+      expect(within(card(name)).getByText('Not comparable')).toBeInTheDocument();
+      expect(within(card(name)).queryByRole('table')).not.toBeInTheDocument();
+    }
+    expect(
+      within(card('External estimates')).getByText(
+        'External estimates assume current law. This report compares with Smaller CTC.'
+      )
+    ).toBeInTheDocument();
+    expect(
+      within(card('Baseline comparisons')).getByText(
+        'The scorecard measures current law. This report compares with Smaller CTC.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  test('given a custom baseline then the scorecard is not asked and calibration still shows', () => {
+    renderValidation({ baselineLabel: SAVED_REFORM_BASELINE });
+
+    expect(mockUseScorecardComparisons).toHaveBeenCalledWith('us', []);
+    expect(
+      within(card('Data calibration')).getByRole('table', { name: 'Calibration targets' })
+    ).toBeInTheDocument();
+  });
+
+  test('given current law then the scorecard is asked for the reform paths and nothing is marked', () => {
+    renderValidation();
+
+    expect(mockUseScorecardComparisons).toHaveBeenCalledWith('us', [CTC_PATH]);
+    expect(screen.queryByText('Not comparable')).not.toBeInTheDocument();
   });
 });

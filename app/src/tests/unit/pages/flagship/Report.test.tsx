@@ -6,6 +6,8 @@ import { scorecardClaim } from '@/tests/fixtures/libs/flagship/scorecardComparis
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalcStatus = vi.fn();
+// The report's policies; a baseline policy with parameters is a custom baseline.
+const mockPolicies = vi.hoisted(() => ({ current: [] as unknown[] }));
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
@@ -15,7 +17,7 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
       { id: 's1', populationId: 'us', policyId: '2' },
       { id: 's2', populationId: 'us', policyId: '9' },
     ],
-    policies: [],
+    policies: mockPolicies.current,
     isLoading: false,
   }),
 }));
@@ -76,6 +78,7 @@ function renderPage() {
 describe('FlagshipReportPage', () => {
   beforeEach(() => {
     mockCalcStatus.mockReset();
+    mockPolicies.current = [];
   });
 
   afterEach(() => {
@@ -172,5 +175,32 @@ describe('FlagshipReportPage', () => {
     expect(
       within(panel).queryByText('No external estimate is available for this reform.')
     ).not.toBeInTheDocument();
+  });
+
+  test('given a finished report against a saved reform then the scorecard is not comparable', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+    );
+    mockPolicies.current = [
+      {
+        id: '2',
+        label: 'Smaller CTC',
+        parameters: [{ name: 'gov.irs.credits.ctc.refundable.individual_max', values: [] }],
+      },
+    ];
+    mockCalcStatus.mockReturnValue(COMPLETE);
+
+    renderPage();
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      within(panel).getByText(
+        'External estimates assume current law. This report compares with Smaller CTC.'
+      )
+    ).toBeInTheDocument();
+    expect(within(panel).getAllByText('Not comparable')).toHaveLength(2);
   });
 });

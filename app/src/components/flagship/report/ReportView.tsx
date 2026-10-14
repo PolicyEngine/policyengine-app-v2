@@ -427,6 +427,7 @@ export default function ReportView({
                     trackRecord={trackRecord}
                     externalEstimates={externalEstimates}
                     externalEstimatesNote={externalEstimatesNote}
+                    baselineLabel={customBaselineLabel}
                   />
                 </Stack>
               )}

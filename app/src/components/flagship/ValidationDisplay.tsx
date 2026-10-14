@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { IconExternalLink } from '@tabler/icons-react';
-import { Spinner, Stack, Text } from '@/components/ui';
+import { Badge, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 /**
@@ -143,6 +143,18 @@ export function ValidationNote({ children }: { children: ReactNode }) {
     >
       {children}
     </Text>
+  );
+}
+
+/** A check that does not apply to this report, marked as such, with the reason. */
+export function NotComparable({ children }: { children: ReactNode }) {
+  return (
+    <Stack style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
+      <Badge variant="outline" style={{ color: colors.text.secondary }}>
+        Not comparable
+      </Badge>
+      <ValidationNote>{children}</ValidationNote>
+    </Stack>
   );
 }
 
