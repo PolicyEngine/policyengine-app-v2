@@ -5,6 +5,7 @@ import {
   fitValueLabels,
   fixedPlotHeight,
   formatUnitAmount,
+  getCategoryAxis,
   getDomainTicks,
   getLabelledDomain,
   getValueBarLayout,
@@ -13,6 +14,9 @@ import {
   OUTSIDE_LABEL_SPACE,
   pickCurrencyUnit,
   tickDecimals,
+  VALUE_LABEL_MIN_FONT_SIZE,
+  wrapLabel,
+  X_AXIS_HEIGHT,
   type CurrencyUnit,
 } from '@/components/flagship/report/charts/barLayout';
 
@@ -319,5 +323,60 @@ describe('text fitting', () => {
 
   test('given a fixed-height chart then the plot is what margins and the x-axis leave', () => {
     expect(fixedPlotHeight(280, { top: 12, bottom: 20 })).toBe(218);
+  });
+});
+
+describe('category axis', () => {
+  const FONT = { fontFamily: 'Inter', fontSize: 12, fill: '#6B7280' };
+
+  test('given words that fit a slot together then wrapLabel keeps them on one line', () => {
+    expect(wrapLabel('Top 1% share', 100, 12, measure)).toEqual(['Top 1% share']);
+  });
+
+  test('given a narrow slot then wrapLabel breaks between words', () => {
+    expect(wrapLabel('State and local income tax revenues', 80, 12, measure)).toEqual([
+      'State and',
+      'local',
+      'income tax',
+      'revenues',
+    ]);
+  });
+
+  test('given a wide plot then the axis keeps the chart font and Recharts’ height', () => {
+    const axis = getCategoryAxis(['Male', 'Female', 'All'], 600, FONT, measure);
+
+    expect(axis.tick).toEqual({ ...FONT, width: 196 });
+    expect(axis.height).toBe(X_AXIS_HEIGHT);
+  });
+
+  test('given a word wider than its slot then the font shrinks until it fits', () => {
+    // Five slots of 48px: "Hispanic" is 57.6px at 12px and 48px at 10px.
+    const axis = getCategoryAxis(
+      ['Black', 'Other', 'White', 'Hispanic', 'All'],
+      260,
+      FONT,
+      measure
+    );
+
+    expect(axis.tick.fontSize).toBe(10);
+  });
+
+  test('given a word too wide for the smallest font then the font stops at that size', () => {
+    const axis = getCategoryAxis(['Supercalifragilistic', 'All'], 60, FONT, measure);
+
+    expect(axis.tick.fontSize).toBe(VALUE_LABEL_MIN_FONT_SIZE);
+  });
+
+  test('given labels that wrap then the axis grows to hold the most lines', () => {
+    const axis = getCategoryAxis(
+      ['Federal tax revenues', 'State and local income tax revenues', 'Net impact'],
+      252,
+      FONT,
+      measure
+    );
+
+    // Slots of 80px: the state label wraps to four lines of 12px.
+    expect(axis.tick.width).toBe(80);
+    expect(axis.height).toBe(8 + 4 * 12 + 2);
   });
 });
