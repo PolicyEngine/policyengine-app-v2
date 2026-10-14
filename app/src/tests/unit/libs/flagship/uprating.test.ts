@@ -82,9 +82,9 @@ describe('grownIntervals', () => {
 describe('growthOf', () => {
   const indexed = param('currency-USD', { ...INDEXED_VALUES, '2029-01-01': 17400 });
 
-  test("given a new value on an amount current law indexes then current law's rate", () => {
-    expect(growthOf(undefined, indexed)).toBe('current_law');
-    expect(growthOf({ value: 17400, baselineValue: 17400 }, indexed)).toBe('current_law');
+  test('given a new value on an amount current law indexes then none, until Indexed is chosen', () => {
+    expect(growthOf(undefined, indexed)).toBe('fixed');
+    expect(growthOf({ value: 17400, baselineValue: 17400 }, indexed)).toBe('fixed');
   });
 
   test('given an amount current law holds then none', () => {

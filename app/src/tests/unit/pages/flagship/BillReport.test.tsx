@@ -139,21 +139,30 @@ describe('BillReportPage', () => {
       { enabled: true }
     );
     expect(
-      within(screen.getByRole('tabpanel')).getByText('Calculating the full results…')
+      within(screen.getByRole('tabpanel')).getByText('Calculating the full results')
     ).toBeInTheDocument();
   });
 
-  test('given the overview then summary, sponsor, date, bill text link, and verdict show', async () => {
+  test('given the overview then summary, date and bill text show; the verdict is in Validation', async () => {
+    const user = userEvent.setup();
     renderReport();
 
     expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
-    expect(screen.getByText(/Sponsored by Rep\. Mackenzie/)).toBeInTheDocument();
+    // The tracker's author field is a post's author as often as a sponsor; it isn't shown.
+    expect(screen.queryByText(/Sponsored by/)).not.toBeInTheDocument();
     expect(screen.getByText(/Analyzed July 6, 2026/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /bill text/i })).toHaveAttribute(
       'href',
       TRACKED_BILL.sourceUrl
     );
-    expect(screen.getAllByText(/Within fiscal-note range/).length).toBeGreaterThanOrEqual(1);
+    expect(
+      within(screen.getByRole('tabpanel')).queryByText(/fiscal-note range/)
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+    expect(
+      within(screen.getByRole('tabpanel')).getAllByText(/Within fiscal-note range/).length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   test('given the full run is calculating then economic impacts show its progress', async () => {
@@ -164,8 +173,12 @@ describe('BillReportPage', () => {
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
     await user.click(screen.getByRole('button', { name: 'Load full results' }));
 
-    expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
-    expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
+    expect(screen.getByText('Calculating the full results')).toBeInTheDocument();
+    // A bar, with the queue position under it.
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('In queue (position 2)')).toBeInTheDocument();
+    expect(screen.getByText('Later visits load from the cache.')).toBeInTheDocument();
+    expect(screen.queryByText(/Estimated from typical run times/)).not.toBeInTheDocument();
     expect(screen.queryByText('Economic impact charts')).not.toBeInTheDocument();
     // The tracker's stored detail fills the wait.
     expect(screen.getByText('Income change by decile')).toBeInTheDocument();
@@ -466,7 +479,7 @@ describe('BillReportPage', () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
     expect(screen.getByText(/provisions are mapped to model parameters yet/)).toBeInTheDocument();
-    expect(screen.queryByText('Calculating the full results…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Calculating the full results')).not.toBeInTheDocument();
   });
 
   test('given an unknown bill then says it is not in the feed', async () => {

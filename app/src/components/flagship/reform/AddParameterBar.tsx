@@ -24,9 +24,21 @@ const SEARCH_PLACEHOLDERS: Record<string, string> = {
   uk: 'Add a parameter — search by name, e.g. personal allowance',
 };
 
+/** Once the reform has a parameter, the bar says a reform takes more than one. */
+const ANOTHER_PLACEHOLDERS: Record<string, string> = {
+  us: 'Add another parameter — search by name, e.g. earned income tax credit',
+  uk: 'Add another parameter — search by name, e.g. child benefit',
+};
+
 interface AddParameterBarProps {
   onPick: (entry: ParameterSearchEntry) => void;
   autoFocus?: boolean;
+  /**
+   * The bar as the reform table's last row: it asks for another
+   * parameter, and its results and the policy tree open in the page's
+   * flow under it — scrolled into view — rather than over the page.
+   */
+  inTable?: boolean;
 }
 
 /**
@@ -62,7 +74,11 @@ export function ParametersLoading() {
   );
 }
 
-export default function AddParameterBar({ onPick, autoFocus = false }: AddParameterBarProps) {
+export default function AddParameterBar({
+  onPick,
+  autoFocus = false,
+  inTable = false,
+}: AddParameterBarProps) {
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
   const clusters = useSelector(selectConceptClusters);
@@ -115,6 +131,28 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
     setBrowseOpen(false);
   };
 
+  // At the foot of the reform, what opens under the bar — results, the
+  // policy tree — would start below the screen. When the bar grows, bring
+  // it up so what opened has the room. Results arrive a moment after the
+  // typing (the search runs in the background), so the growth, not the
+  // keystroke, is the cue.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!inTable || !container || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    let height = container.offsetHeight;
+    const observer = new ResizeObserver(() => {
+      const next = container.offsetHeight;
+      if (next > height + 40) {
+        container.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+      }
+      height = next;
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [inTable, entries.length]);
+
   if (entries.length === 0) {
     return <ParametersLoading />;
   }
@@ -133,7 +171,9 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
           setActive(false);
         }
       }}
-      style={{ position: 'relative', zIndex: 10 }}
+      // Over the page, its dropdowns float above what follows; in the
+      // table, they are the page and pass under the run bar like it.
+      style={{ position: 'relative', zIndex: inTable ? undefined : 10 }}
     >
       <ParameterSearchBox
         entries={entries}
@@ -144,7 +184,8 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
         labelFor={(path) => parameters?.[path]?.label ?? null}
         backgroundSearch
         autoFocus={autoFocus}
-        placeholder={SEARCH_PLACEHOLDERS[countryId]}
+        placeholder={(inTable ? ANOTHER_PLACEHOLDERS : SEARCH_PLACEHOLDERS)[countryId]}
+        resultsInFlow={inTable}
         hideResults={!active || browseOpen}
         inDraft={(path) => draftPaths.has(path)}
         onOpenFolder={(path) => {
@@ -179,10 +220,9 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
       {browseOpen && (
         <div
           style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
+            ...(inTable
+              ? { position: 'relative' as const }
+              : { position: 'absolute' as const, top: '100%', left: 0, right: 0 }),
             marginTop: spacing.sm,
             maxHeight: '70vh',
             overflowY: 'auto',

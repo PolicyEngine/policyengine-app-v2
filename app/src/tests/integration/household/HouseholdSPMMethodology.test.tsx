@@ -31,7 +31,7 @@ vi.mock('@/pages/report-output/earnings-variation/BaselineAndReformChart', () =>
 }));
 vi.mock('@/api/reformStore', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/reformStore')>()),
-  getReformStore: () => ({ findByUser: async () => [] }),
+  getReformStore: () => ({ findMine: async () => [] }),
 }));
 
 const mockFetch = vi.fn();

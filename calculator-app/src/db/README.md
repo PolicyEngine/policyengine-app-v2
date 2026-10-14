@@ -1,8 +1,84 @@
 # Central reform database
 
-Postgres store for the flagship app's reform objects, served by the route
-handlers in `src/app/api/reforms/`. Schema is managed with Drizzle; checked-in
-migrations live in `migrations/`.
+Postgres store for the flagship app's reform objects and report records,
+served by the route handlers in `src/app/api/reforms/` and
+`src/app/api/reports/`. Schema is managed with Drizzle; checked-in migrations
+live in `migrations/`.
+
+## Ownership without sign-in
+
+There is no sign-in yet, so the server stores no user identifier:
+
+- Each row lives under a server-generated UUID. There is no list-by-user
+  route; `GET ?ids=a,b,c` reads up to 100 rows whose ids the caller already
+  knows. Reports cannot be looked up by `api_report_id`, because those ids are
+  sequential.
+- `POST` issues a random 256-bit edit token, returns it once as `edit_token`,
+  and stores only its SHA-256 hash (`edit_token_hash`). `PATCH` and `DELETE`
+  require the token in the `X-Edit-Token` header; a missing or wrong token gets 403. See `ownership.ts`.
+- The browser keeps the ids it created, with their tokens, in localStorage
+  (`app/src/libs/flagship/ownedItems.ts`). Lists read that index and fetch the
+  rows by id. Clearing site data loses the index: the rows stay readable by id,
+  but nobody can change them.
+- Rows written before migration `0003_anonymous-ownership` keep their legacy
+  `user_id` (never written now, never returned) and have no token hash, so
+  they are read-only. No browser index holds their ids, so they also drop out
+  of every list; they stay readable by id.
+
+### Abuse limits
+
+In code (`limits.ts`), with no client identifier:
+
+- Request bodies over 256 KB get 413 (POST and PATCH).
+- `label`, `title` and `source_note` must be strings of at most 500
+  characters, or 400. The client shortens them to 500 before it sends them
+  (`app/src/libs/flagship/storeText.ts`), so a long bill title still saves.
+- Each table takes at most 120 new rows per minute across all visitors; a
+  create over that gets 429 with `Retry-After: 60`. The count and the insert
+  run in one transaction under a per-table advisory lock
+  (`pg_advisory_xact_lock`), so concurrent creates cannot all read a count
+  under the limit and all insert. The client then saves that one item to its
+  localStorage fallback and keeps using the central store. Edits are not
+  counted.
+- Known trade-off: the limit is shared, so one client can use it up for
+  everyone (their creates then stay in their own browser's fallback). The
+  per-client limit below is what prevents that; enforce it, not only log it,
+  before the flagship flag goes on in production.
+
+Per-client rate limiting belongs at Vercel's edge, where the firewall keys on
+the IP address and our handlers never see it. It is project configuration,
+not code, so create it on the Vercel project that receives visitors' requests
+for these routes. Roll it out in log mode first:
+
+```bash
+vercel firewall rules add "Flagship store writes" \
+  --condition '{"type":"path","op":"pre","value":"/api/reforms"}' \
+  --condition '{"type":"method","op":"inc","value":["POST","PATCH","DELETE"]}' \
+  --or \
+  --condition '{"type":"path","op":"pre","value":"/api/reports"}' \
+  --condition '{"type":"method","op":"inc","value":["POST","PATCH","DELETE"]}' \
+  --action rate_limit \
+  --rate-limit-window 60 \
+  --rate-limit-requests 30 \
+  --rate-limit-keys ip \
+  --rate-limit-action log \
+  --yes
+vercel firewall diff        # review, then publish from the dashboard or CLI
+```
+
+After a few days of traffic, check in the Firewall traffic view that the rule
+sees distinct client addresses (not one proxy address), then switch
+`--rate-limit-action` to `rate_limit` (429). Counters are per region.
+(`vercel firewall` needs a recent Vercel CLI; the dashboard works too.)
+
+### Privacy
+
+- Rows hold no user identifier, IP address, or user agent, and the handlers
+  read no request metadata other than `X-Edit-Token`. (The hosting platform's
+  own request logs are outside this schema.)
+- Households (income, ages, family details) are never stored here. Reforms hold
+  policy parameters; report records hold a pointer to the API report and the
+  policy provisions. Households stay in the browser.
 
 ## One-time provisioning (Neon via Vercel marketplace)
 
@@ -14,6 +90,13 @@ vercel env pull .env.local --yes # bring DATABASE_URL down for local dev
 ```
 
 ## Applying migrations
+
+Nothing applies migrations automatically: not CI, not the deploy. Run them by
+hand on every database a flag-on deployment uses, **before** the code that
+needs them deploys. The code reads every column in `schema.ts`; against a
+database without the latest migration, the routes answer 503 (see
+`errors.ts`), so the client falls back to localStorage rather than failing,
+but nothing reaches the central store until the migration runs.
 
 `drizzle-kit` does not auto-load `.env.local`, so source it first:
 

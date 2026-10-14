@@ -1,17 +1,20 @@
-import { IconCalendarEvent, IconChartBar, IconUsers } from '@tabler/icons-react';
+import { useState } from 'react';
+import { IconCalendarEvent, IconChartBar, IconChevronDown, IconPencil } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { getReformStore } from '@/api/reformStore';
 import {
-  Badge,
   Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
@@ -23,11 +26,15 @@ import {
   provisionAdjusts,
   provisionsForYear,
   setDraftLabel,
+  setDraftPopulation,
+  setDraftWindowYears,
   setDraftYear,
 } from '@/libs/draftReform';
+import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import PopulationPicker from './PopulationPicker';
 
 /**
  * How the draft came about, for the report's own record. This is
@@ -40,91 +47,272 @@ const SOURCE_NOTES: Record<string, string> = {
   tool: 'Drafted from a tool',
 };
 
-interface HeaderOption {
-  value: string;
-  label: string;
-  /** Shown, but not yet choosable. */
-  soon?: boolean;
+/** Budget spans offered: the year alone, or the common scoring windows. */
+const WINDOW_YEARS = [1, 3, 5, 10];
+
+/** "2026", or "2026–2035" for a window of years. */
+export function yearsLabel(year: number, windowYears: number): string {
+  return windowYears > 1 ? `${year}–${year + windowYears - 1}` : String(year);
 }
 
+const fieldLabel: React.CSSProperties = {
+  fontSize: typography.fontSize.xs,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.secondary,
+};
+
 /**
- * A setting of the run as a dropdown that reads at a glance: its icon,
- * what it sets, and the choice — "Year 2026" — at the height of the
- * buttons beside it, with a menu that opens below.
+ * The run's years in one control: the year the report scores in full,
+ * and how many years of budget it adds from there. It reads "Year 2026",
+ * or "Years 2026–2035" with a window; a click opens both choices, and a
+ * window keeps its length when the year moves.
  */
-function HeaderSelect({
-  label,
-  icon,
-  value,
-  onValueChange,
-  options,
+function YearsPicker({
+  year,
+  windowYears,
+  yearOptions,
+  onYearChange,
+  onWindowChange,
 }: {
-  label: string;
-  icon: React.ReactNode;
-  value: string;
-  onValueChange: (value: string) => void;
-  options: HeaderOption[];
+  year: number;
+  windowYears: number;
+  yearOptions: number[];
+  onYearChange: (year: number) => void;
+  onWindowChange: (windowYears: number) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const label = windowYears > 1 ? 'Years' : 'Year';
+  const span = yearsLabel(year, windowYears);
+  const yearLabel = windowYears > 1 ? 'Start year' : 'Report year';
+
   return (
-    <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger
-        aria-label={label}
-        className="tw:w-auto tw:cursor-pointer tw:bg-white tw:transition-colors tw:hover:border-primary-500"
-        style={{ gap: spacing.sm, fontFamily: typography.fontFamily.primary }}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${label}: ${span}`}
+          className="tw:inline-flex tw:h-9 tw:cursor-pointer tw:items-center tw:rounded-md tw:border tw:border-input tw:bg-white tw:px-3 tw:text-sm tw:whitespace-nowrap tw:shadow-xs tw:transition-colors tw:hover:border-primary-500"
+          style={{ gap: spacing.sm, fontFamily: typography.fontFamily.primary }}
+        >
+          <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
+            <IconCalendarEvent size={16} />
+          </span>
+          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+            {label}
+          </span>
+          <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
+            {span}
+          </span>
+          <IconChevronDown
+            size={14}
+            aria-hidden
+            style={{
+              color: colors.text.tertiary,
+              transform: open ? 'rotate(180deg)' : undefined,
+              transition: 'transform 160ms ease',
+            }}
+          />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        aria-label="Report years"
+        style={{ width: 320, padding: spacing.lg, fontFamily: typography.fontFamily.primary }}
       >
-        <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
-          {icon}
-        </span>
-        <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-          {label}
-        </span>
-        <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
-          <SelectValue />
-        </span>
-      </SelectTrigger>
-      <SelectContent position="popper" align="start" style={{ minWidth: 180 }}>
-        {options.map((option) => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-            disabled={option.soon}
-            className="tw:cursor-pointer"
-          >
-            {option.label}
-            {option.soon && (
-              <Badge variant="secondary" style={{ marginLeft: spacing.sm }}>
-                Soon
-              </Badge>
-            )}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+            {/* The report's year, or with a window the year it starts. */}
+            <span style={fieldLabel}>{yearLabel}</span>
+            <Select value={String(year)} onValueChange={(next) => onYearChange(Number(next))}>
+              <SelectTrigger
+                aria-label={yearLabel}
+                className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" align="start">
+                {yearOptions.map((option) => (
+                  <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+            <span style={fieldLabel}>Budget</span>
+            <SegmentedControl
+              animated
+              value={String(windowYears)}
+              onValueChange={(next) => onWindowChange(Number(next))}
+              options={WINDOW_YEARS.map((years) => ({
+                value: String(years),
+                label: years === 1 ? '1 year' : `${years} years`,
+              }))}
+            />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
 /**
- * The reform's title bar: its name, then one toolbar — the run's year
- * and population on the left, the verbs (throw it away, save it, run the
- * report) on the right — so the reform below has the page.
+ * The reform's title: its name. The run's settings and what to do with
+ * the draft — the year, who the report runs on, discard, save, run —
+ * come last, in the bar under the reform (DraftRunBar).
  */
 export default function DraftHeader({ draft }: { draft: DraftReform }) {
+  const [editing, setEditing] = useState(false);
+  const named = draft.label.trim().length > 0;
+  const titleText: React.CSSProperties = {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.primary,
+    lineHeight: typography.lineHeight.tight,
+  };
+
+  return (
+    <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+      {/* The name reads as a title with a pencil after it; a click opens it
+          to typing, and Enter, Escape or a click away closes it again. */}
+      {editing ? (
+        <input
+          // Opened by the reader's click: the cursor goes straight to the name.
+          autoFocus
+          value={draft.label}
+          onChange={(event) => setDraftLabel(event.target.value)}
+          onFocus={(event) => event.target.select()}
+          onBlur={() => setEditing(false)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === 'Escape') {
+              event.currentTarget.blur();
+            }
+          }}
+          placeholder="Name your reform"
+          aria-label="Reform name"
+          className="tw:w-full tw:rounded-md tw:border tw:border-primary-500 tw:bg-white tw:focus:outline-none"
+          style={{
+            ...titleText,
+            marginLeft: `-${spacing.sm}`,
+            padding: `2px ${spacing.sm}`,
+            color: colors.text.primary,
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          aria-label="Rename the reform"
+          title="Rename the reform"
+          className="tw:group tw:cursor-pointer tw:rounded-md tw:border tw:border-transparent tw:hover:border-border-light"
+          style={{
+            ...titleText,
+            display: 'inline-flex',
+            alignItems: 'center',
+            alignSelf: 'flex-start',
+            gap: spacing.sm,
+            maxWidth: '100%',
+            marginLeft: `-${spacing.sm}`,
+            padding: `2px ${spacing.sm}`,
+            background: 'transparent',
+            textAlign: 'left',
+            color: named ? colors.text.primary : colors.text.tertiary,
+          }}
+        >
+          <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            {named ? draft.label : 'Name your reform'}
+          </span>
+          <IconPencil
+            size={18}
+            aria-hidden
+            className="tw:shrink-0 tw:text-gray-500 tw:group-hover:text-primary-700"
+          />
+        </button>
+      )}
+    </header>
+  );
+}
+
+/**
+ * The last step, under the reform: the run's year and who it runs on on
+ * the left; throwing the draft away, saving it and running it on the
+ * right. It
+ * stays at the bottom of the window while the reform is longer than the
+ * screen, so the run is never a scroll away, and settles in place under
+ * the table once the table ends.
+ */
+export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
   const runReport = useRunFlagshipReport();
-  const taxYears = useSelector(getTaxYears);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const taxYears = useSelector(getTaxYears);
   const currentLawAt = (path: string, at: number) => {
     const values = parameters?.[path]?.values;
     return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
   };
   const year = draftYear(draft);
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
+  // The budget's span from the report's year: the year alone, or a window
+  // scored a year at a time alongside the report.
+  const windowYears = draft.windowYears ?? 1;
+
+  // Who the report runs on: the whole country, a state, or a congressional district.
+  const region = draft.population?.region;
+
+  // A run keeps its reform: it saves the draft to Your reforms (or
+  // updates the saved reform it edits, or reuses a saved one that sets
+  // the same values), so the report links to it and both can be found
+  // again after the tab closes. Best-effort: the run goes ahead unsaved
+  // if the store fails.
+  const [savingForRun, setSavingForRun] = useState(false);
+  const saveForRun = async (): Promise<string | undefined> => {
+    try {
+      const store = getReformStore();
+      const payload = draftToReform(draft);
+      if (draft.editingReformId) {
+        await store.update(draft.editingReformId, {
+          label: payload.label,
+          parameters: payload.parameters,
+          provenance: payload.provenance,
+        });
+        return draft.editingReformId;
+      }
+      const match = findMatchingReform(await store.findMine(draft.countryId), payload.parameters);
+      if (match?.id) {
+        if (payload.label && payload.label !== match.label) {
+          await store.update(match.id, { label: payload.label });
+        }
+        return match.id;
+      }
+      return (await store.create(payload)).id;
+    } catch {
+      return undefined;
+    } finally {
+      queryClient.invalidateQueries({ queryKey: ['reforms'] });
+    }
+  };
+  const runAndKeep = async () => {
+    setSavingForRun(true);
+    const reformId = await saveForRun();
+    setSavingForRun(false);
+    await runReport.run(
+      draft.label || 'Draft reform',
+      SOURCE_NOTES[draft.source] ?? 'Draft reform',
+      // Described as they stand in the year the report simulates.
+      provisionsForYear(adjusted, year, currentLawAt),
+      reformId,
+      year,
+      { fromDraft: true, region, windowYears: draft.windowYears }
+    );
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const store = getReformStore();
-      const payload = draftToReform(draft, MOCK_USER_ID);
+      const payload = draftToReform(draft);
       if (draft.editingReformId) {
         return store.update(draft.editingReformId, {
           label: payload.label,
@@ -149,24 +337,24 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
   );
 
   return (
-    <header style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-      <input
-        value={draft.label}
-        onChange={(event) => setDraftLabel(event.target.value)}
-        placeholder="Untitled reform"
-        aria-label="Reform name"
-        className="tw:w-full tw:rounded-md tw:border tw:border-transparent tw:bg-transparent tw:hover:border-border-light tw:focus:border-primary-500 tw:focus:bg-white tw:focus:outline-none"
-        style={{
-          marginLeft: `-${spacing.sm}`,
-          padding: `2px ${spacing.sm}`,
-          fontSize: typography.fontSize['2xl'],
-          fontWeight: typography.fontWeight.semibold,
-          fontFamily: typography.fontFamily.primary,
-          color: colors.text.primary,
-        }}
-      />
-
-      {/* What the run covers on the left; what to do with the reform on the right. */}
+    <section
+      aria-label="Reform actions"
+      style={{
+        position: 'sticky',
+        bottom: 0,
+        // Over the reform scrolling under it, but under the add bar (10),
+        // whose search results and policy tree open down over the page.
+        zIndex: 5,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: spacing.xs,
+        padding: `${spacing.md} 0`,
+        // The page's own grey, so the bar reads as part of the page: only a
+        // hairline above it parts the reform scrolling underneath.
+        borderTop: `1px solid ${colors.border.light}`,
+        background: colors.gray[50],
+      }}
+    >
       <div
         style={{
           display: 'flex',
@@ -177,29 +365,28 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
-          <HeaderSelect
-            label="Year"
-            icon={<IconCalendarEvent size={16} />}
-            value={String(year)}
-            onValueChange={(next) => setDraftYear(Number(next))}
-            options={yearOptions.map((option) => ({
-              value: String(option),
-              label: String(option),
-            }))}
+          <YearsPicker
+            year={year}
+            windowYears={windowYears}
+            yearOptions={yearOptions}
+            onYearChange={setDraftYear}
+            onWindowChange={setDraftWindowYears}
           />
-          <HeaderSelect
-            label="Population"
-            icon={<IconUsers size={16} />}
-            value="national"
-            // Household analysis arrives with the run bridge.
-            onValueChange={() => {}}
-            options={[
-              { value: 'national', label: 'Nationwide' },
-              { value: 'household', label: 'A household', soon: true },
-            ]}
+          <PopulationPicker
+            value={region ?? ''}
+            onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
+            regions={regions}
           />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: spacing.sm,
+            marginLeft: 'auto',
+          }}
+        >
           <Button variant="ghost" onClick={() => clearDraftReform()}>
             Discard
           </Button>
@@ -211,22 +398,16 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
           <Button
-            onClick={() =>
-              runReport.run(
-                draft.label || 'Draft reform',
-                SOURCE_NOTES[draft.source] ?? 'Draft reform',
-                // Described as they stand in the year the report simulates.
-                provisionsForYear(adjusted, year, currentLawAt),
-                undefined,
-                year,
-                true
-              )
+            onClick={() => void runAndKeep()}
+            disabled={adjusted.length === 0 || runReport.isRunning || savingForRun}
+            title={
+              !empty && adjusted.length === 0
+                ? 'Adjust at least one value from current law to run the report'
+                : undefined
             }
-            disabled={adjusted.length === 0 || runReport.isRunning}
-            title={!empty && adjusted.length === 0 ? 'Change a value to run the report' : undefined}
           >
             <IconChartBar size={16} />
-            {runReport.isRunning ? 'Starting report…' : `Run ${year} report`}
+            {runReport.isRunning || savingForRun ? 'Starting report…' : `Run ${year} report`}
           </Button>
         </div>
       </div>
@@ -241,7 +422,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
             color: colors.text.tertiary,
           }}
         >
-          Nothing is changed yet. Change a value to run the report.
+          No values differ from current law yet. Adjust at least one value to run the report.
         </p>
       )}
 
@@ -253,6 +434,6 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           {runReport.error ?? 'Could not save the reform. Try again.'}
         </p>
       )}
-    </header>
+    </section>
   );
 }

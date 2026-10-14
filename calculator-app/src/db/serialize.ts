@@ -2,11 +2,13 @@ import type { ReformMetadata } from "@/types/metadata/reformMetadata";
 import type { ReportRow } from "./schema";
 import type { ReformRow } from "./schema";
 
+// The wire format leaves out the legacy user_id and the edit token hash:
+// neither ever leaves the server.
+
 /** Convert a database row to the snake_case wire format the client stores expect. */
 export function reformRowToMetadata(row: ReformRow): ReformMetadata {
   return {
     id: row.id,
-    user_id: row.userId,
     country_id: row.countryId as ReformMetadata["country_id"],
     label: row.label,
     policy_id: row.policyId,
@@ -22,7 +24,6 @@ export function reformRowToMetadata(row: ReformRow): ReformMetadata {
 export function reportRowToMetadata(row: ReportRow) {
   return {
     id: row.id,
-    user_id: row.userId,
     country_id: row.countryId,
     api_report_id: row.apiReportId,
     title: row.title,

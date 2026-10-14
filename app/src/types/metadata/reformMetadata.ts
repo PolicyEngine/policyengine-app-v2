@@ -26,7 +26,6 @@ export interface ReformProvenanceMetadata {
  */
 export interface ReformMetadata {
   id: string;
-  user_id: string;
   country_id: (typeof countryIds)[number];
   label?: string | null;
   policy_id?: string | null;
@@ -44,8 +43,16 @@ export interface ReformMetadata {
 export type ReformCreationMetadata = Omit<ReformMetadata, 'id' | 'created_at' | 'updated_at'>;
 
 /**
+ * The creation response: the reform plus its edit token, which the
+ * server returns this one time and keeps only as a hash.
+ */
+export interface ReformCreatedMetadata extends ReformMetadata {
+  edit_token: string;
+}
+
+/**
  * API update payload format for reforms; all content fields optional
  */
 export type ReformUpdateMetadata = Partial<
-  Omit<ReformMetadata, 'id' | 'user_id' | 'country_id' | 'created_at' | 'updated_at'>
+  Omit<ReformMetadata, 'id' | 'country_id' | 'created_at' | 'updated_at'>
 >;

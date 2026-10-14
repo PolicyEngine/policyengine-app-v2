@@ -6,17 +6,21 @@ import { eq } from "drizzle-orm";
 import { reformBaselines, reformSources } from "@/types/ingredients/Reform";
 import type { ReformUpdateMetadata } from "@/types/metadata/reformMetadata";
 import { getDb, isDbConfigured } from "../../../../db";
+import { invalidText, readJsonBody } from "../../../../db/limits";
+import { guardSchema } from "../../../../db/errors";
+import { isUuid, presentsEditToken } from "../../../../db/ownership";
 import { reforms } from "../../../../db/schema";
 import { reformRowToMetadata } from "../../../../db/serialize";
 
 // Handlers use Web-standard Request/Response (not next/server): these files
 // are also typechecked inside app/tsconfig.json's program, and importing
 // next/server would pull Next's React typings into the Vite app's graph.
+//
+// Reads need only the unguessable id. Changes also need the edit token the
+// creating browser received (see db/ownership.ts); legacy rows without one
+// are read-only.
 
 type RouteContext = { params: Promise<{ reformId: string }> };
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -33,7 +37,31 @@ function notFound(): Response {
   return json({ error: "Reform not found" }, 404);
 }
 
-export async function GET(
+/**
+ * 404 when the reform does not exist, 403 when the request lacks its
+ * edit token; null when the change may go ahead.
+ */
+async function denyUnlessEditable(
+  request: Request,
+  reformId: string,
+): Promise<Response | null> {
+  const [row] = await getDb()
+    .select({ editTokenHash: reforms.editTokenHash })
+    .from(reforms)
+    .where(eq(reforms.id, reformId));
+  if (!row) {
+    return notFound();
+  }
+  if (!(await presentsEditToken(request, row.editTokenHash))) {
+    return json(
+      { error: "This reform can only be changed by its creator" },
+      403,
+    );
+  }
+  return null;
+}
+
+async function handleGET(
   _request: Request,
   context: RouteContext,
 ): Promise<Response> {
@@ -45,7 +73,7 @@ export async function GET(
   }
 
   const { reformId } = await context.params;
-  if (!UUID_PATTERN.test(reformId)) {
+  if (!isUuid(reformId)) {
     return notFound();
   }
 
@@ -60,7 +88,7 @@ export async function GET(
   return json(reformRowToMetadata(row));
 }
 
-export async function PATCH(
+async function handlePATCH(
   request: Request,
   context: RouteContext,
 ): Promise<Response> {
@@ -72,19 +100,26 @@ export async function PATCH(
   }
 
   const { reformId } = await context.params;
-  if (!UUID_PATTERN.test(reformId)) {
+  if (!isUuid(reformId)) {
     return notFound();
   }
-
-  let payload: ReformUpdateMetadata;
-  try {
-    payload = await request.json();
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
+  const denied = await denyUnlessEditable(request, reformId);
+  if (denied) {
+    return denied;
   }
+
+  const parsed = await readJsonBody(request);
+  if ("error" in parsed) {
+    return json({ error: parsed.error }, parsed.status);
+  }
+  const payload = (parsed.body ?? {}) as ReformUpdateMetadata;
 
   const updates: Partial<typeof reforms.$inferInsert> = {};
   if (payload.label !== undefined) {
+    const labelError = invalidText("label", payload.label);
+    if (labelError) {
+      return json({ error: labelError }, 400);
+    }
     updates.label = payload.label;
   }
   if (payload.policy_id !== undefined) {
@@ -137,8 +172,8 @@ export async function PATCH(
   return json(reformRowToMetadata(row));
 }
 
-export async function DELETE(
-  _request: Request,
+async function handleDELETE(
+  request: Request,
   context: RouteContext,
 ): Promise<Response> {
   if (!isFlagshipApiEnabled()) {
@@ -149,8 +184,12 @@ export async function DELETE(
   }
 
   const { reformId } = await context.params;
-  if (!UUID_PATTERN.test(reformId)) {
+  if (!isUuid(reformId)) {
     return notFound();
+  }
+  const denied = await denyUnlessEditable(request, reformId);
+  if (denied) {
+    return denied;
   }
 
   const [row] = await getDb()
@@ -162,4 +201,23 @@ export async function DELETE(
   }
 
   return json({ deleted: true });
+}
+
+// A database missing the latest migration answers 503, not 500 (see db/errors).
+export async function GET(
+  ...args: Parameters<typeof handleGET>
+): Promise<Response> {
+  return guardSchema(() => handleGET(...args));
+}
+
+export async function PATCH(
+  ...args: Parameters<typeof handlePATCH>
+): Promise<Response> {
+  return guardSchema(() => handlePATCH(...args));
+}
+
+export async function DELETE(
+  ...args: Parameters<typeof handleDELETE>
+): Promise<Response> {
+  return guardSchema(() => handleDELETE(...args));
 }

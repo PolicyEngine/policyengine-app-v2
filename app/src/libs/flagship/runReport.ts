@@ -1,6 +1,8 @@
+import { fetchBudgetWindow } from '@/api/budgetWindow';
 import { createPolicy } from '@/api/policy';
 import { createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
+import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -30,6 +32,8 @@ export interface FlagshipReportMeta {
   sourceNote: string;
   provisions: RunReportProvision[];
   createdAt: string;
+  /** The budget window asked for with the run, which the report opens running. */
+  budgetWindow?: { startYear: number; windowSize: number };
 }
 
 const META_KEY = 'pe-flagship-report-meta';
@@ -65,6 +69,14 @@ export interface RunFlagshipReportArgs {
   reformId?: string | null;
   /** The year to simulate; the current year when unset. */
   year?: number;
+  /**
+   * The population: a state or congressional district as the API names
+   * it ("state/ca", "congressional_district/CA-01"); the whole country
+   * when unset.
+   */
+  region?: string;
+  /** Years of budget to score from `year` alongside the report; none when unset or 1. */
+  windowYears?: number;
 }
 
 /**
@@ -108,6 +120,8 @@ export async function runFlagshipReport({
   currentLawId,
   reformId,
   year = Number(CURRENT_YEAR),
+  region,
+  windowYears,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -117,12 +131,12 @@ export async function runFlagshipReport({
 
   const [baseline, reform] = await Promise.all([
     createSimulation(countryId, {
-      population_id: countryId,
+      population_id: region ?? countryId,
       population_type: 'geography',
       policy_id: currentLawId,
     }),
     createSimulation(countryId, {
-      population_id: countryId,
+      population_id: region ?? countryId,
       population_type: 'geography',
       policy_id: reformPolicyId,
     }),
@@ -140,20 +154,48 @@ export async function runFlagshipReport({
   });
 
   const reportId = String(metadata.baseReportId);
+  const budgetWindow =
+    windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
   saveReportMeta(reportId, {
     title,
     sourceNote,
     provisions,
     createdAt: new Date().toISOString(),
+    ...(budgetWindow && { budgetWindow }),
   });
 
-  // Record the report centrally (pointer + provenance; never outputs).
-  // Best-effort: the run already succeeded, and the store falls back to
-  // localStorage when the database is unconfigured.
+  // Start the report's own calculation now, not when its page opens: the
+  // first request queues the job, so a tab closed right after "Run" still
+  // gets its result, waiting for the link. The page asks with the same
+  // reform, baseline, region and year, so it checks on this job.
+  // A failure here never fails the run: the report page asks again.
+  void Promise.resolve()
+    .then(() =>
+      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(currentLawId), {
+        region: region ?? countryId,
+        time_period: String(year),
+      })
+    )
+    .catch(() => undefined);
+
+  // The window was asked for with the run: start it now, alongside the
+  // report, rather than when the report page opens. The first request
+  // submits the batch; the report's section checks on the same one.
+  if (budgetWindow) {
+    void fetchBudgetWindow(countryId, String(reformPolicyId), String(currentLawId), {
+      region: region ?? countryId,
+      ...budgetWindow,
+    }).catch(() => {
+      // The report's section asks again, and shows any error there.
+    });
+  }
+
+  // Record the report centrally (pointer + provenance; never outputs,
+  // never a user id). Best-effort: the run already succeeded, and the
+  // store falls back to localStorage when the database is unconfigured.
   try {
     const { getFlagshipReportStore } = await import('@/api/flagshipReportStore');
     await getFlagshipReportStore().create({
-      userId: MOCK_USER_ID,
       countryId,
       apiReportId: String(metadata.baseReportId),
       title: title || null,
