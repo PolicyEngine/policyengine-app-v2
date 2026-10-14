@@ -61,6 +61,7 @@ function LogoItem({ org }: { org: Organization }) {
           maxHeight: "70px",
           width: "auto",
           height: "auto",
+          filter: org.darkenLogo ? "brightness(0)" : undefined,
         }}
       />
     </a>

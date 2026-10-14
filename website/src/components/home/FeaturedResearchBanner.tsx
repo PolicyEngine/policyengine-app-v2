@@ -12,24 +12,24 @@ const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 
 const cards = [
   {
-    href: "/uk/spring-statement-2026",
-    title: "Spring Statement 2026 analysis",
-    desc: "New OBR forecast and its effects on UK living standards",
+    href: "/uk/energy-autumn-budget",
+    title: "Energy bills and the Autumn Budget 2026",
+    desc: "Household energy costs at forecast prices and seven Budget support options",
   },
   {
-    href: "/uk/research/uk-two-child-limit-reintroduction",
-    title: "Two-child limit reintroduction",
-    desc: "Budgetary, distributional, poverty, and inequality impacts across the UK",
+    href: "/uk/childcare-100k-threshold",
+    title: "Scrapping the childcare cliff edge",
+    desc: "Cost of removing the £100,000 income limit on childcare support",
   },
   {
-    href: "/uk/uk-salary-sacrifice-tool",
-    title: "Salary sacrifice cap analysis tool",
-    desc: "Revenue and distributional impacts of capping pension salary sacrifice",
+    href: "/uk/targeted-energy-discount",
+    title: "Targeted energy bill discount",
+    desc: "Cost, reach and distributional effects of a targeted energy discount",
   },
   {
-    href: "/uk/uk-student-loan-calculator",
-    title: "Student loan deductions calculator",
-    desc: "Repayments, marginal tax rates, and lifetime costs for UK graduates",
+    href: "/uk/middle-east-war-living-standards",
+    title: "Middle East war and UK living standards",
+    desc: "How energy, fuel and food price rises affect UK households",
   },
 ];
 
@@ -102,7 +102,7 @@ export default function FeaturedResearchBanner({
             letterSpacing: "-0.01em",
           }}
         >
-          Explore our latest research and tools
+          Our latest research ahead of the Autumn Budget
         </p>
 
         <div
