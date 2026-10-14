@@ -525,7 +525,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         </div>
 
         {/* One value's start leads its grid; above a schedule or a grown series, it stands apart. */}
-        {(mode === 'indexed' || (mode === 'one' && group?.brackets)) && (
+        {group?.brackets && (mode === 'one' || mode === 'indexed') && (
           <label style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
             <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
               Applies from
@@ -599,7 +599,11 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               previewYears={previewYears}
               footer={growthRow}
               // One value: its start is the grid's first row, so no year heads the column.
-              lead={mode === 'one' ? { label: 'Applies from', content: appliesFrom } : undefined}
+              lead={
+                mode === 'one' || mode === 'indexed'
+                  ? { label: 'Applies from', content: appliesFrom }
+                  : undefined
+              }
               showYearHeadings={mode !== 'one'}
               // A lone value reads on one line: when, current law, the new value.
               inline={mode === 'one'}

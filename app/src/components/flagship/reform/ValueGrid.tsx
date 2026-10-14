@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { colors, spacing, typography } from '@/designTokens';
 import { isEditableValue, sameParameterValue } from '@/libs/draftReform';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -169,6 +170,32 @@ export default function ValueGrid({
     );
   }
   const lastIndex = allYears.length - 1;
+  // A jump in the years (2030, then 2035) gets a narrow "…" column, so
+  // the years left out read as left out, not as the next year.
+  const gapBefore = (year: number) => {
+    const index = allYears.indexOf(year);
+    return index > 0 && year - allYears[index - 1] > 1;
+  };
+  const gapCount = allYears.filter(gapBefore).length;
+  const gapCell = (key: string, header = false) => {
+    const style: React.CSSProperties = {
+      padding: cellPadding,
+      textAlign: 'center',
+      verticalAlign: header ? 'bottom' : 'middle',
+      fontSize: typography.fontSize.xs,
+      color: colors.text.tertiary,
+    };
+    return header ? (
+      <th key={key} aria-hidden style={style}>
+        …
+      </th>
+    ) : (
+      <td key={key} aria-hidden style={style}>
+        …
+      </td>
+    );
+  };
+  const spanned = allYears.length + gapCount;
   // The last column runs on from its year; the hover says so, the heading stays a year.
   const header = (year: number, index: number) => headers?.[index] ?? String(year);
   const wide = allYears.length > 1;
@@ -187,41 +214,24 @@ export default function ValueGrid({
           // input would otherwise take twice its share.
           tableLayout: wide ? 'fixed' : 'auto',
           // Even columns, but never narrower than a box: a narrow screen scrolls.
-          minWidth: wide ? (lone ? 96 : 160) + allYears.length * 104 : undefined,
+          minWidth: wide ? (lone ? 96 : 160) + allYears.length * 104 + gapCount * 28 : undefined,
           borderCollapse: 'collapse',
           fontSize: typography.fontSize.sm,
           fontFamily: typography.fontFamily.primary,
         }}
       >
-        <thead style={showYearHeadings ? undefined : { display: 'none' }}>
-          <tr>
-            <th style={{ width: lone ? 96 : wide ? '22%' : undefined }} />
-            {allYears.map((year, index) => (
-              <th
-                key={year}
-                scope="col"
-                title={
-                  (openEnded || previewYears.length > 0) && index === lastIndex
-                    ? `${year} and later`
-                    : undefined
-                }
-                style={{
-                  // In from the cell's edge as far as the box's text is, so a
-                  // year heads its "$" and digits rather than the box's border.
-                  padding: `0 ${spacing.xs} ${spacing.xs} calc(${spacing.xs} + 12px)`,
-                  textAlign: 'left',
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.secondary,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {header(year, index)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
+        {/* Widths set here, not by the first row: the lead row spans the years. */}
+        <colgroup>
+          <col style={{ width: lone ? 96 : wide ? '22%' : undefined }} />
+          {allYears.map((year) => (
+            <Fragment key={year}>
+              {gapBefore(year) && <col style={{ width: 28 }} />}
+              <col />
+            </Fragment>
+          ))}
+        </colgroup>
+        <thead>
+          {/* The start leads, above the years it starts. */}
           {lead && (
             <tr>
               <th
@@ -231,19 +241,51 @@ export default function ValueGrid({
                   verticalAlign: 'middle',
                   padding: `${spacing.xs} ${spacing.md} ${spacing.sm} 0`,
                   fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.normal,
                   color: colors.text.secondary,
                 }}
               >
                 {lead.label}
               </th>
               <td
-                colSpan={allYears.length}
+                colSpan={spanned}
                 style={{ padding: `${spacing.xs} ${spacing.xs} ${spacing.sm}` }}
               >
                 {lead.content}
               </td>
             </tr>
           )}
+          {showYearHeadings && (
+            <tr>
+              <th />
+              {allYears.map((year, index) => [
+                gapBefore(year) ? gapCell(`gap-${year}`, true) : null,
+                <th
+                  key={year}
+                  scope="col"
+                  title={
+                    (openEnded || previewYears.length > 0) && index === lastIndex
+                      ? `${year} and later`
+                      : undefined
+                  }
+                  style={{
+                    // In from the cell's edge as far as the box's text is, so a
+                    // year heads its "$" and digits rather than the box's border.
+                    padding: `0 ${spacing.xs} ${spacing.xs} calc(${spacing.xs} + 12px)`,
+                    textAlign: 'left',
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.secondary,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {header(year, index)}
+                </th>,
+              ])}
+            </tr>
+          )}
+        </thead>
+        <tbody>
           {lone && parameters[members[0].path] && (
             <tr>
               <th
@@ -257,7 +299,8 @@ export default function ValueGrid({
               >
                 Current law
               </th>
-              {allYears.map((year) => (
+              {allYears.map((year) => [
+                gapBefore(year) ? gapCell(`gap-${year}`) : null,
                 <td
                   key={year}
                   style={{
@@ -270,8 +313,8 @@ export default function ValueGrid({
                     param={parameters[members[0].path]}
                     value={baselineAt(members[0].path, year)}
                   />
-                </td>
-              ))}
+                </td>,
+              ])}
             </tr>
           )}
           {members.map((member) => {
@@ -387,7 +430,8 @@ export default function ValueGrid({
                 {previewYears.map((year) => {
                   const value = valueAt(member.path, year);
                   const changed = !sameValue(value, baselineAt(member.path, year));
-                  return (
+                  return [
+                    gapBefore(year) ? gapCell(`gap-${year}`) : null,
                     <td
                       key={year}
                       aria-label={`${member.label}, ${year}`}
@@ -400,8 +444,8 @@ export default function ValueGrid({
                     >
                       {/* As tall as the box beside it, and its digits where the box's sit. */}
                       <ValueDisplay param={param} value={value} boxed />
-                    </td>
-                  );
+                    </td>,
+                  ];
                 })}
               </tr>
             );
@@ -419,7 +463,7 @@ export default function ValueGrid({
               >
                 {footer.label}
               </th>
-              <td colSpan={allYears.length} style={{ padding: `${spacing.xs} ${spacing.xs}` }}>
+              <td colSpan={spanned} style={{ padding: `${spacing.xs} ${spacing.xs}` }}>
                 {footer.content}
               </td>
             </tr>

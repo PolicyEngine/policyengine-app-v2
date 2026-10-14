@@ -14,7 +14,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Text,
 } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
@@ -84,6 +83,7 @@ function YearsPicker({
   const [open, setOpen] = useState(false);
   const label = windowYears > 1 ? 'Years' : 'Year';
   const span = yearsLabel(year, windowYears);
+  const yearLabel = windowYears > 1 ? 'Start year' : 'Report year';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -121,10 +121,11 @@ function YearsPicker({
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
-            <span style={fieldLabel}>Report year</span>
+            {/* The report's year, or with a window the year it starts. */}
+            <span style={fieldLabel}>{yearLabel}</span>
             <Select value={String(year)} onValueChange={(next) => onYearChange(Number(next))}>
               <SelectTrigger
-                aria-label="Report year"
+                aria-label={yearLabel}
                 className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
               >
                 <SelectValue />
@@ -150,19 +151,6 @@ function YearsPicker({
               }))}
             />
           </div>
-          {windowYears > 1 && (
-            <Text
-              style={{
-                margin: 0,
-                fontSize: typography.fontSize.xs,
-                lineHeight: typography.lineHeight.relaxed,
-                color: colors.text.secondary,
-              }}
-            >
-              The report scores {year} in full, and adds the budget for each year from {year} to{' '}
-              {year + windowYears - 1}.
-            </Text>
-          )}
         </div>
       </PopoverContent>
     </Popover>

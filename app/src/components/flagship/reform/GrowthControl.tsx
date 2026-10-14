@@ -148,13 +148,22 @@ export default function GrowthControl(props: GrowthControlProps) {
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
-      <span style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+    // The formula on the left, its edit on the right of the same row.
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md }}>
+      <span
+        style={{
+          flex: '1 1 260px',
+          minWidth: 0,
+          fontSize: typography.fontSize.sm,
+          lineHeight: typography.lineHeight.relaxed,
+          color: colors.text.secondary,
+        }}
+      >
         {hint({ value, timing, rounding }, props)}
       </span>
       <Popover open={open} onOpenChange={openWith}>
         <PopoverTrigger asChild>
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" style={{ flexShrink: 0, marginLeft: 'auto' }}>
             {indexed ? 'Edit indexing' : 'Add indexing'}
           </Button>
         </PopoverTrigger>

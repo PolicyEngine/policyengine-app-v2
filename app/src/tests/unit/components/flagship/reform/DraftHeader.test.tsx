@@ -157,7 +157,8 @@ describe('DraftHeader', () => {
     // One control: the year, and the years of budget from it.
     await user.click(screen.getByRole('button', { name: 'Year: 2026' }));
     await user.click(await screen.findByRole('tab', { name: '10 years' }));
-    expect(screen.getByText(/adds the budget for each year from 2026 to 2035/)).toBeInTheDocument();
+    // With a window, the year is where it starts.
+    expect(screen.getByRole('combobox', { name: 'Start year' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Years: 2026–2035' })).toBeInTheDocument();
 
     expect(getDraftReform()?.windowYears).toBe(10);
