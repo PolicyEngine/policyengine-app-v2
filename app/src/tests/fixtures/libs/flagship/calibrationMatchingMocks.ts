@@ -16,6 +16,9 @@ const soiRow = (
   variable,
   policyengineVariables,
   measure: 'total',
+  // The dashboard's measure id is the id's last segment: "…actc_amount@2024" → "actc_amount".
+  sourceMeasureId: name.split('.').pop()!.split('@')[0],
+  breakdown: 'All · All',
   level: geography === 'US' ? 'national' : 'state',
   geography,
   period: 2024,
@@ -49,12 +52,15 @@ export const mockCalibrationRows: CalibrationTargetRow[] = [
 ];
 
 /** A national EITC target, which an EITC reform changes directly. */
-export const mockEitcCalibrationRow: CalibrationTargetRow = soiRow(
-  'irs_soi.ty2023.table_2_5.eitc_by_agi_children.no_qualifying_children.18k_to_19k.eitc_returns@2024',
-  'eitc',
-  ['eitc'],
-  0.08
-);
+export const mockEitcCalibrationRow: CalibrationTargetRow = {
+  ...soiRow(
+    'irs_soi.ty2023.table_2_5.eitc_by_agi_children.no_qualifying_children.18k_to_19k.eitc_returns@2024',
+    'eitc',
+    ['eitc'],
+    0.08
+  ),
+  breakdown: '18k to 19k · no qualifying children · All',
+};
 
 /** A group named for a raw model variable, as the CTC targets reach a CDCC reform. */
 export const mockCtcLimitingMatch = {

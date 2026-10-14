@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   calibrationMatchesForPaths,
+  calibrationTargetLabel,
+  calibrationVariableLabel,
   dashboardTargetsUrl,
   fetchCalibrationTargets,
   geographyForRegion,
@@ -245,5 +247,60 @@ describe('relevantCalibrationMatches', () => {
     expect(match.targets).toEqual([mockEitcCalibrationRow]);
     expect(match.worst).toBe(mockEitcCalibrationRow);
     expect(match.meanAbsRelativeError).toBeCloseTo(0.08);
+  });
+});
+
+describe('calibrationTargetLabel', () => {
+  test('given a measure id and a whole-table slice then the quantity names the target', () => {
+    expect(calibrationTargetLabel(mockCalibrationRows[0])).toBe('Amount');
+    expect(calibrationTargetLabel(mockCalibrationRows[1])).toBe('Returns');
+  });
+
+  test('given a slice of the table then the slice follows the quantity', () => {
+    expect(calibrationTargetLabel(mockEitcCalibrationRow)).toBe(
+      'Returns · 18k to 19k · no qualifying children'
+    );
+  });
+
+  test('given a measure id without a quantity word then it reads as words', () => {
+    expect(
+      calibrationTargetLabel({
+        ...mockCalibrationRows[0],
+        sourceMeasureId: 'average_monthly_households',
+        breakdown: '',
+      })
+    ).toBe('Average monthly households');
+  });
+
+  test('given no measure id then the measure names the target', () => {
+    expect(
+      calibrationTargetLabel({
+        ...mockCalibrationRows[0],
+        sourceMeasureId: null,
+        breakdown: null,
+        measure: 'count',
+      })
+    ).toBe('Count');
+  });
+});
+
+describe('calibrationVariableLabel', () => {
+  test('given our own copy then it wins over the model label', () => {
+    expect(calibrationVariableLabel('refundable_ctc', 'refundable CTC')).toBe(
+      'Refundable Child Tax Credit'
+    );
+  });
+
+  test('given the model label then it names the variable', () => {
+    expect(
+      calibrationVariableLabel('ctc_limiting_tax_liability', 'CTC-limiting tax liability')
+    ).toBe('CTC-limiting tax liability');
+    expect(calibrationVariableLabel('snap', 'SNAP allotment')).toBe('SNAP allotment');
+  });
+
+  test('given no label then the name reads as words with its acronyms', () => {
+    expect(calibrationVariableLabel('ctc_limiting_tax_liability')).toBe(
+      'CTC limiting tax liability'
+    );
   });
 });

@@ -32,6 +32,8 @@ interface TargetRow {
   variable: string;
   policyengineVariables: string[];
   measure: string | null;
+  sourceMeasureId: string | null;
+  breakdown: string | null;
   level: "national" | "state";
   geography: string;
   period: number | string | null;
@@ -61,6 +63,10 @@ function normalize(raw: any): TargetRow | null {
       ? raw.policyengine_variables.filter((v: unknown) => typeof v === "string")
       : [],
     measure: typeof raw.measure === "string" ? raw.measure : null,
+    // What the target counts and which slice of its table, for a readable name.
+    sourceMeasureId:
+      typeof raw.source_measure_id === "string" ? raw.source_measure_id : null,
+    breakdown: typeof raw.breakdown === "string" ? raw.breakdown : null,
     level,
     geography:
       level === "national" ? "US" : String(raw.state ?? raw.geography ?? ""),

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
@@ -6,11 +7,14 @@ import {
   CalibrationMatches,
   calibrationMatchesForPaths,
   CalibrationRing,
+  calibrationTargetLabel,
   CalibrationTargetRow,
+  calibrationVariableLabel,
   dashboardTargetsUrl,
   geographyForRegion,
 } from '@/libs/flagship/calibrationMatching';
 import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation';
+import type { RootState } from '@/store';
 import {
   CellNote,
   detailStyle,
@@ -54,17 +58,6 @@ export function describeDepth(depth: number): string {
 export const ATTENTION_ERROR = 0.25;
 
 const CALIBRATION_COLUMNS = ['Target', 'Period', 'Official', 'PolicyEngine', 'Gap'];
-
-function humanize(variable: string): string {
-  const labels: Record<string, string> = {
-    refundable_ctc: 'Refundable Child Tax Credit',
-    ctc: 'Child Tax Credit',
-    income_tax: 'Income tax',
-    assigned_aca_ptc: 'Assigned ACA premium tax credit',
-  };
-  const label = labels[variable] ?? variable.replaceAll('_', ' ');
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
 
 function compactNumber(value: number | null): string {
   return value === null
@@ -134,18 +127,21 @@ function PinNote({ pin }: { pin: CalibrationPin }) {
   );
 }
 
-/** A target's name, opening its exact values. */
-function TargetDetails({ target }: { target: CalibrationTargetRow }) {
+/** A target's name, opening its exact values; the dashboard id rides along as a tooltip. */
+function TargetDetails({ target, group }: { target: CalibrationTargetRow; group: string }) {
+  const label = calibrationTargetLabel(target);
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button" style={rowButtonStyle}>
-          {target.name}
+        <button type="button" style={rowButtonStyle} title={target.name}>
+          {label}
         </button>
       </DialogTrigger>
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>Calibration target</DialogTitle>
-        <Text style={{ ...detailStyle, overflowWrap: 'anywhere' }}>{target.name}</Text>
+        <Text style={detailStyle}>
+          {group} · {label}
+        </Text>
         <dl
           style={{
             display: 'grid',
@@ -157,6 +153,7 @@ function TargetDetails({ target }: { target: CalibrationTargetRow }) {
           }}
         >
           {[
+            ['Target id', target.name],
             ['Source', target.sourceLabel ?? target.source],
             ['Geography', target.geography],
             ['Period', target.period ?? '—'],
@@ -164,10 +161,10 @@ function TargetDetails({ target }: { target: CalibrationTargetRow }) {
             ['Official', exactNumber(target.target)],
             ['PolicyEngine', exactNumber(target.estimate)],
             ['Gap', gapOf(target)],
-          ].map(([label, value]) => (
-            <div key={label} style={{ display: 'contents' }}>
-              <dt>{label}</dt>
-              <dd style={{ margin: 0 }}>{value}</dd>
+          ].map(([field, value]) => (
+            <div key={field} style={{ display: 'contents' }}>
+              <dt>{field}</dt>
+              <dd style={{ margin: 0, overflowWrap: 'anywhere' }}>{value}</dd>
             </div>
           ))}
         </dl>
@@ -196,6 +193,7 @@ export function CalibrationMatchSection({
   matches: CalibrationMatches | null | undefined;
   pin?: CalibrationPin;
 }) {
+  const variables = useSelector((state: RootState) => state.metadata.variables);
   const level = matches ? (matches.geography === 'US' ? 'national' : 'state') : null;
   const card = (content: React.ReactNode) => (
     <ValidationCard
@@ -229,6 +227,10 @@ export function CalibrationMatchSection({
           const sources = [
             ...new Set(match.targets.map((target) => target.sourceLabel ?? target.source)),
           ].join(', ');
+          const group = calibrationVariableLabel(
+            match.variable,
+            variables?.[match.variable]?.label
+          );
           return (
             <tbody key={match.variable}>
               <tr style={rowStyle}>
@@ -237,9 +239,7 @@ export function CalibrationMatchSection({
                   colSpan={CALIBRATION_COLUMNS.length}
                   style={{ ...labelCellStyle, paddingBottom: 0 }}
                 >
-                  <span style={{ fontWeight: typography.fontWeight.semibold }}>
-                    {humanize(match.variable)}
-                  </span>
+                  <span style={{ fontWeight: typography.fontWeight.semibold }}>{group}</span>
                   <CellNote>
                     <span>
                       {sources} · {matches.geography}
@@ -259,7 +259,7 @@ export function CalibrationMatchSection({
               {match.targets.map((target) => (
                 <tr key={target.name}>
                   <th scope="row" style={labelCellStyle}>
-                    <TargetDetails target={target} />
+                    <TargetDetails target={target} group={group} />
                   </th>
                   <td style={numberCellStyle}>{target.period ?? '—'}</td>
                   <td style={numberCellStyle}>{compactNumber(target.target)}</td>
