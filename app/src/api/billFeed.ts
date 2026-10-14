@@ -114,8 +114,6 @@ export interface TrackedBill {
   legiscanUrl?: string;
   /** The bill's source page (congress.gov / state legislature), when known. */
   sourceUrl?: string;
-  /** Bill sponsor, e.g. "Rep. Mackenzie, Ryan [R-PA-7]". */
-  author?: string;
   /** Analysis date (ISO), for newest-first ordering. */
   date?: string;
   /** Model and data versions behind the stored analysis. */
@@ -191,8 +189,8 @@ async function trackerSelect(
   return response.json();
 }
 
-/** Full state names for the tracker's two-letter state codes. */
-const STATE_NAMES: Record<string, string> = {
+/** Full state names for two-letter state codes. */
+export const STATE_NAMES: Record<string, string> = {
   AL: 'Alabama',
   AK: 'Alaska',
   AZ: 'Arizona',
@@ -200,6 +198,7 @@ const STATE_NAMES: Record<string, string> = {
   CA: 'California',
   CO: 'Colorado',
   CT: 'Connecticut',
+  DC: 'District of Columbia',
   DE: 'Delaware',
   FL: 'Florida',
   GA: 'Georgia',
@@ -568,7 +567,6 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
         keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
         legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
         sourceUrl: record.url ?? undefined,
-        author: record.author ?? undefined,
         date: record.date ?? undefined,
         provenance: impact
           ? {

@@ -15,17 +15,14 @@ import {
   fetchCall,
   itemResponse,
   pageResponse,
-  PE_USER_ID,
   reportItem,
 } from '@/tests/fixtures/api/v2UserMocks';
 import { mockReportValidationSnapshot } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
 
-const USER_ID = 'user-123';
 const API_REPORT_ID = '4512';
 const OTHER_API_REPORT_ID = '9999';
 
 const newReport: NewFlagshipReport = {
-  userId: USER_ID,
   countryId: 'us',
   apiReportId: API_REPORT_ID,
   title: 'CTC to $2,500',
@@ -48,13 +45,24 @@ describe('LocalStorageFlagshipReportStore', () => {
     localStorage.clear();
   });
 
-  test('given a created report then it is found by its API report id for that user', async () => {
+  test('given a created report then it is found by its API report id', async () => {
     const store = new LocalStorageFlagshipReportStore();
     const created = await store.create(newReport);
 
-    await expect(store.findByApiReportId(USER_ID, API_REPORT_ID)).resolves.toEqual(created);
-    await expect(store.findByApiReportId(USER_ID, OTHER_API_REPORT_ID)).resolves.toBeNull();
-    await expect(store.findByApiReportId('someone-else', API_REPORT_ID)).resolves.toBeNull();
+    await expect(store.findByApiReportId(API_REPORT_ID)).resolves.toEqual(created);
+    await expect(store.findByApiReportId(OTHER_API_REPORT_ID)).resolves.toBeNull();
+  });
+
+  test('given reports in two countries then findMine lists one country, newest first', async () => {
+    const store = new LocalStorageFlagshipReportStore();
+    const older = await store.create(newReport);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const newer = await store.create({ ...newReport, apiReportId: OTHER_API_REPORT_ID });
+    await store.create({ ...newReport, countryId: 'uk' });
+
+    const usRecords = await store.findMine('us');
+
+    expect(usRecords.map((record) => record.id)).toEqual([newer.id, older.id]);
   });
 
   test('given a saved validation then it persists on the record', async () => {
@@ -157,7 +165,6 @@ describe('ApiFlagshipReportStore', () => {
     expect(call.body).not.toHaveProperty('year');
     expect(record).toMatchObject({
       id: ASSOCIATION_IDS.REPORT,
-      userId: PE_USER_ID,
       apiReportId: API_REPORT_ID,
       title: 'CTC to $2,500',
       sourceNote: 'Hand-built draft',
@@ -205,7 +212,7 @@ describe('ApiFlagshipReportStore', () => {
     const store = new ApiFlagshipReportStore(context);
 
     // When
-    const record = await store.findByApiReportId(PE_USER_ID, API_REPORT_ID);
+    const record = await store.findByApiReportId(API_REPORT_ID);
 
     // Then
     expect(fetchCall(fetchMock).query).toEqual({

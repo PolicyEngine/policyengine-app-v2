@@ -6,6 +6,7 @@ import {
   parametersFromPolicyJson,
   ReformNotFoundError,
 } from '@/api/reformStore';
+import { MAX_STORE_NAME_LENGTH } from '@/libs/flagship/storeText';
 import {
   ASSOCIATION_IDS,
   createTestApiContext,
@@ -13,13 +14,11 @@ import {
   itemResponse,
   noContentResponse,
   pageResponse,
-  PE_USER_ID,
   policyItem,
 } from '@/tests/fixtures/api/v2UserMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockReformInput: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> = {
-  userId: 'user-123',
   countryId: 'us',
   label: 'CTC to $3,600 for children under 6',
   parameters: [
@@ -81,10 +80,21 @@ describe('ApiReformStore', () => {
     });
     expect(created).toMatchObject({
       id: ASSOCIATION_IDS.REFORM,
-      userId: PE_USER_ID,
       policyId: String(MATERIALIZED_POLICY_ID),
       parameters: mockReformInput.parameters,
     });
+  });
+
+  it('given a long name, when created, then it is shortened to the account limit', async () => {
+    // Given: a bill title longer than the Public API's 255-character name
+    const { store, fetchMock } = apiReformStore();
+    fetchMock.mockResolvedValue(itemResponse(reformRow, 201));
+
+    // When
+    await store.create({ ...mockReformInput, label: 'A'.repeat(300) });
+
+    // Then
+    expect(fetchCall(fetchMock).body.name).toHaveLength(MAX_STORE_NAME_LENGTH);
   });
 
   it('given a reform already materialized, when created, then no new policy is made', async () => {
@@ -112,7 +122,7 @@ describe('ApiReformStore', () => {
     );
 
     // When
-    const reforms = await store.findByUser(PE_USER_ID, 'us');
+    const reforms = await store.findMine('us');
 
     // Then
     expect(fetchPolicyJson).toHaveBeenCalledWith('us', String(MATERIALIZED_POLICY_ID));
@@ -245,7 +255,7 @@ describe('ApiReformStore', () => {
     });
 
     // When
-    const reforms = await store.findByUser(PE_USER_ID, 'us');
+    const reforms = await store.findMine('us');
 
     // Then
     expect(reforms).toHaveLength(2);
@@ -336,8 +346,8 @@ describe('LocalStorageReformStore', () => {
     expect(created.id).toBeDefined();
     expect(created.createdAt).toBeDefined();
 
-    const byUser = await store.findByUser('user-123', 'us');
-    expect(byUser).toHaveLength(1);
+    const mine = await store.findMine('us');
+    expect(mine).toHaveLength(1);
 
     const byId = await store.findById(created.id!);
     expect(byId?.label).toBe('CTC to $3,600 for children under 6');
@@ -362,14 +372,14 @@ describe('LocalStorageReformStore', () => {
     materializePolicy.mockRejectedValue(new Error('Failed to create policy'));
 
     await expect(store.create(mockReformInput)).rejects.toThrow('Failed to create policy');
-    expect(await store.findByUser('user-123')).toEqual([]);
+    expect(await store.findMine()).toEqual([]);
   });
 
   it('given reforms from two countries, when filtering by country, then only matches are returned', async () => {
     await store.create(mockReformInput);
     await store.create({ ...mockReformInput, countryId: 'uk' });
 
-    const usOnly = await store.findByUser('user-123', 'us');
+    const usOnly = await store.findMine('us');
     expect(usOnly).toHaveLength(1);
     expect(usOnly[0].countryId).toBe('us');
   });
@@ -381,7 +391,6 @@ describe('LocalStorageReformStore', () => {
     const updated = await store.update(created.id!, { label: 'Renamed' });
 
     expect(updated.label).toBe('Renamed');
-    expect(updated.userId).toBe('user-123');
     expect(updated.policyId).toBe(String(MATERIALIZED_POLICY_ID));
     expect(materializePolicy).not.toHaveBeenCalled();
   });

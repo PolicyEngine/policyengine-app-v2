@@ -25,6 +25,25 @@ export interface ReportMetric {
 }
 
 /**
+ * Whether a report leads with state revenue: a state reform (every
+ * provision a state parameter) run on part of the country. A federal
+ * reform run on one state leads with its full budget effect there; its
+ * state revenue change is mostly nil.
+ */
+export function leadsWithStateRevenue(
+  region: string | undefined,
+  provisions: Array<{ path: string }>
+): boolean {
+  const subnational =
+    !!region && (region.startsWith('state/') || region.startsWith('congressional_district/'));
+  return (
+    subnational &&
+    provisions.length > 0 &&
+    provisions.every((provision) => /^gov\.(contrib\.)?states\./.test(provision.path))
+  );
+}
+
+/**
  * The overview's headline numbers from a completed society-wide run. A
  * run on one state's data leads with that state's revenue, the figure
  * state fiscal notes and the tracker report, rather than the combined

@@ -18,11 +18,11 @@ export interface ReportValidationState {
 /**
  * Pins the live validation to the report's store record the first time
  * both checks settle, and reports drift between that pin and what the
- * checks see now. Best-effort: a report without a store record (the
- * central store was unavailable at run time) simply never pins.
+ * checks see now. Best-effort: a report without a record in this
+ * browser (another browser ran it, or storage was unavailable at run
+ * time) simply never pins.
  */
 export function useReportValidationSnapshot(
-  userId: string,
   apiReportId: string | undefined,
   live: LiveValidation
 ): ReportValidationState {
@@ -40,7 +40,7 @@ export function useReportValidationSnapshot(
       return;
     }
     store
-      .findByApiReportId(userId, apiReportId)
+      .findByApiReportId(apiReportId)
       .then((record) => {
         if (cancelled || !record) {
           return;
@@ -57,7 +57,7 @@ export function useReportValidationSnapshot(
     return () => {
       cancelled = true;
     };
-  }, [store, userId, apiReportId]);
+  }, [store, apiReportId]);
 
   const settled = isLiveValidationSettled(live);
   useEffect(() => {

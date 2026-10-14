@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconCalendar, IconExternalLink, IconUser } from '@tabler/icons-react';
+import { IconCalendar, IconExternalLink } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
@@ -8,13 +8,11 @@ import DistrictImpactCard, {
   type CongressionalMode,
 } from '@/components/flagship/report/DistrictImpactCard';
 import ReportView from '@/components/flagship/report/ReportView';
+import RunProgress from '@/components/flagship/report/RunProgress';
 import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
-import {
-  BillValidationSection,
-  useModelTrackRecord,
-  ValidationChip,
-} from '@/components/flagship/ValidationPanel';
-import { Button, Spinner, Stack, Text } from '@/components/ui';
+import { BillValidationSection, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
+import { Button, Stack, Text } from '@/components/ui';
+import { getDurationForCountry } from '@/constants/calculationDurations';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
@@ -45,12 +43,11 @@ function Caption({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The bill's summary, sponsor, analysis date, bill text, and validation verdict. */
+/** The bill's summary, analysis date, and bill text. Its validation verdict lives in Validation. */
 function BillOverviewLead({ bill }: { bill: TrackedBill }) {
   const billTextUrl = bill.sourceUrl ?? bill.legiscanUrl;
   return (
     <Stack style={{ gap: spacing.sm }}>
-      {bill.validation && <ValidationChip validation={bill.validation} />}
       {bill.summary && (
         <Text
           style={{
@@ -62,16 +59,10 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
           {bill.summary}
         </Text>
       )}
-      {(bill.author || bill.date || billTextUrl) && (
+      {(bill.date || billTextUrl) && (
         <Stack
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}
         >
-          {bill.author && (
-            <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <IconUser size={13} color={colors.text.secondary} />
-              <Caption>Sponsored by {bill.author}</Caption>
-            </Stack>
-          )}
           {bill.date && (
             <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
               <IconCalendar size={13} color={colors.text.secondary} />
@@ -146,6 +137,7 @@ function FullResultsStatus({
   economy: BillEconomy;
   onStart: () => void;
 }) {
+  const countryId = useCurrentCountry();
   const unavailable = UNAVAILABLE_COPY[runState];
   if (unavailable) {
     return (
@@ -188,19 +180,21 @@ function FullResultsStatus({
       </Stack>
     );
   }
-  // Strategy messages end in an ellipsis; the caption adds its own stop.
-  const progress = economy.message?.replace(/[.…]+$/, '');
+  // A queue position is worth a line; the strategy's other messages say only "running".
+  const queued =
+    typeof economy.queuePosition === 'number' && economy.queuePosition > 0
+      ? `In queue, position ${economy.queuePosition}`
+      : economy.message?.startsWith('In queue')
+        ? economy.message.replace(/[.…]+$/, '')
+        : undefined;
   return (
-    <Stack role="status" aria-live="polite" style={{ ...STATUS_BOX, alignItems: 'center' }}>
-      <Spinner size="sm" />
-      <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-        Calculating the full results…
-      </Text>
-      <Caption>
-        {progress ? `${progress}. ` : ''}A bill&apos;s first full run can take several minutes;
-        later visits load from the cache.
-      </Caption>
-    </Stack>
+    <RunProgress
+      title="Calculating the full results"
+      progress={economy.progress}
+      detail={queued}
+      expectedMs={getDurationForCountry(countryId)}
+      note="Later visits load from the cache."
+    />
   );
 }
 

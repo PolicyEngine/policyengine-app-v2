@@ -3,13 +3,14 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportView from '@/components/flagship/report/ReportView';
-import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
+import RunProgress from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Spinner, Stack, Text, Title } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
+import { getDurationForCountry } from '@/constants/calculationDurations';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
@@ -42,15 +43,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // Only API report ids open; an old browser-only "sur-" link is not found.
   const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const apiReportId =
     report?.id !== undefined && report?.id !== null ? String(report.id) : undefined;
-  // Signed in, the account's record carries the provenance to every device.
+  // With accounts, this user's record carries the provenance to every device.
   const accountRecord = useAccountReportRecord(apiReportId);
   // This session's record names the saved reform the report was run from.
   const reportRecord = useReportRecord(apiReportId);
-  // Provenance: the local stash from the run, else the account's record,
-  // else rebuilt from the reform policy so a shared link validates like
-  // the original.
+  // Provenance: the run's details, else the account's record, else rebuilt
+  // from the reform policy so a shared link validates like the original.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
   // Without metadata the rebuilt provisions would show raw paths and no
   // baseline, so they count as still loading until it arrives.
@@ -118,35 +119,27 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     ? baselinePolicy.label || 'Custom baseline policy'
     : null;
   const region = simulations?.[0]?.populationId;
+  // A report on part of the country names it: "California".
+  const regionLabel =
+    region && report && region !== report.countryId
+      ? populationLabel(region, economyRegions)
+      : undefined;
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
   // The store keys records by the API report id as a string.
-  const pin = useReportValidationSnapshot(MOCK_USER_ID, apiReportId, {
+  const pin = useReportValidationSnapshot(apiReportId, {
     calibration,
     programs: trackRecordPrograms(trackRecord),
   });
 
   const title = meta?.title || report?.label || 'Impact report';
 
+  // Until the results are in, the page is the wait (or what went wrong):
+  // adjusting a reform that has no results yet has nothing to adjust
+  // against, so the side panel comes with the finished report.
   const layout = (main: React.ReactNode) => (
-    <div style={{ width: '100%', minWidth: 0 }}>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: spacing['2xl'],
-          alignItems: 'flex-start',
-        }}
-      >
-        <div style={{ flex: '1 1 640px', minWidth: 0 }}>{main}</div>
-        <ReportAdjustPanel
-          title={title}
-          sourceNote={meta?.sourceNote || ''}
-          provisions={meta?.provisions ?? []}
-        />
-      </div>
-    </div>
+    <div style={{ width: '100%', minWidth: 0 }}>{main}</div>
   );
 
   if (!output || isLoading || (!meta && !!reformPolicy)) {
@@ -185,6 +178,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                     loadProvisionsIntoDraft(report.countryId, meta.provisions, {
                       label: meta.title === 'Draft reform' ? '' : meta.title,
                       year: Number(report.year) || undefined,
+                      // Back in Build on the population it ran on.
+                      region: region && region !== report.countryId ? region : undefined,
                       // Saving the edit changes the reform it was run from.
                       reformId: reportRecord?.reformId,
                     })
@@ -206,10 +201,27 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           alignItems: 'center',
         }}
       >
-        <Spinner size="sm" />
-        <Text style={{ margin: 0, color: colors.text.secondary }}>
-          {calcStatus.status === 'pending' ? 'Calculating report results…' : 'Loading report…'}
-        </Text>
+        {calcStatus.status === 'pending' ? (
+          <RunProgress
+            title={
+              regionLabel
+                ? `Calculating the results for ${regionLabel}`
+                : 'Calculating the nationwide results'
+            }
+            progress={calcStatus.progress}
+            detail={
+              typeof calcStatus.queuePosition === 'number' && calcStatus.queuePosition > 0
+                ? `In queue, position ${calcStatus.queuePosition}`
+                : undefined
+            }
+            expectedMs={getDurationForCountry(report?.countryId ?? 'us')}
+          />
+        ) : (
+          <>
+            <Spinner size="sm" />
+            <Text style={{ margin: 0, color: colors.text.secondary }}>Loading report…</Text>
+          </>
+        )}
       </Stack>
     );
   }
@@ -226,6 +238,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       title={title}
       heading={coverTitle}
       sourceNote={meta?.sourceNote || ''}
+      populationLabel={regionLabel ?? 'Nationwide'}
+      // A window asked for in Build opens running.
+      budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
       customBaselineLabel={customBaselineLabel}
       year={report?.year ?? ''}

@@ -20,7 +20,6 @@ import {
   ASSOCIATION_IDS,
   okResponse,
   pageResponse,
-  PE_USER_ID,
   policyItem,
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
@@ -104,7 +103,7 @@ describe('v3 store choice', () => {
     // When
     const reforms = renderHook(() => useReformStore(), { wrapper }).result.current;
     const reports = renderHook(() => useFlagshipReportStore(), { wrapper }).result.current;
-    await reforms.findByUser('anonymous', 'us');
+    await reforms.findMine('us');
 
     // Then
     expect(reforms).toBeInstanceOf(ApiReformStore);
@@ -151,8 +150,8 @@ describe('useReformStore', () => {
     const reformStore = renderHook(() => useReformStore(), { wrapper }).result.current;
 
     // When
-    const first = await reformStore.findByUser(PE_USER_ID, 'us');
-    const second = await reformStore.findByUser(PE_USER_ID, 'us');
+    const first = await reformStore.findMine('us');
+    const second = await reformStore.findMine('us');
 
     // Then
     expect(first[0].parameters).toHaveLength(1);
@@ -166,7 +165,6 @@ describe('useReportRecord', () => {
     // Given
     localStorage.clear();
     await new LocalStorageFlagshipReportStore().create({
-      userId: 'anonymous',
       countryId: 'us',
       apiReportId: '615',
       title: 'CTC expansion',

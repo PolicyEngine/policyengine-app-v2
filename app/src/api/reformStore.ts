@@ -8,6 +8,7 @@ import {
   type ApiStoreContext,
 } from '@/api/v2Associations';
 import { createReformPolicy } from '@/libs/flagship/runReport';
+import { clampStoreText } from '@/libs/flagship/storeText';
 import { Reform, ReformBaseline, ReformProvenance } from '@/types/ingredients/Reform';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { PolicyMetadataParams } from '@/types/metadata/policyMetadata';
@@ -30,20 +31,26 @@ import type {
  * is a row in the account's `/v2/user-policies` carrying the policy ID,
  * the name, the baseline, and the provenance.
  */
+export type NewReform = Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>;
+export type ReformUpdates = Partial<Omit<Reform, 'id' | 'countryId' | 'createdAt' | 'updatedAt'>>;
+
 export interface ReformStore {
-  create: (reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Reform>;
-  findByUser: (userId: string, countryId?: string) => Promise<Reform[]>;
+  create: (reform: NewReform) => Promise<Reform>;
+  /** This session's reforms, most recently updated first. */
+  findMine: (countryId?: string) => Promise<Reform[]>;
   findById: (reformId: string) => Promise<Reform | null>;
-  update: (
-    reformId: string,
-    updates: Partial<Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>>
-  ) => Promise<Reform>;
+  update: (reformId: string, updates: ReformUpdates) => Promise<Reform>;
   delete: (reformId: string) => Promise<void>;
 }
 
-export type ReformUpdates = Partial<
-  Omit<Reform, 'id' | 'userId' | 'countryId' | 'createdAt' | 'updatedAt'>
->;
+/** Most recently updated first. */
+function byRecentUpdate(reforms: Reform[]): Reform[] {
+  return [...reforms].sort((first, second) =>
+    (second.updatedAt ?? second.createdAt ?? '').localeCompare(
+      first.updatedAt ?? first.createdAt ?? ''
+    )
+  );
+}
 
 /** The reform is not in this store: deleted, or saved in the other sign-in state. */
 export class ReformNotFoundError extends Error {
@@ -62,7 +69,7 @@ export class LocalStorageReformStore implements ReformStore {
     this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
   }
 
-  async create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
+  async create(reform: NewReform): Promise<Reform> {
     const policyId = isLegacyId(reform.policyId)
       ? String(reform.policyId)
       : String(await this.materializePolicy(reform.countryId, reform.parameters));
@@ -87,9 +94,9 @@ export class LocalStorageReformStore implements ReformStore {
     return newReform;
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<Reform[]> {
-    return this.getStoredReforms().filter(
-      (r) => r.userId === userId && (!countryId || r.countryId === countryId)
+  async findMine(countryId?: string): Promise<Reform[]> {
+    return byRecentUpdate(
+      this.getStoredReforms().filter((reform) => !countryId || reform.countryId === countryId)
     );
   }
 
@@ -268,9 +275,7 @@ export class ApiReformStore implements ReformStore {
   }
 
   /** The row for a reform; its parameters become a v1 policy first when they are not one yet. */
-  private async creationBody(
-    reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>
-  ): Promise<UserPolicyCreateBody> {
+  private async creationBody(reform: NewReform): Promise<UserPolicyCreateBody> {
     const countryId = this.routes.writeCountry(reform.countryId);
     const legacyPolicyId = isLegacyId(reform.policyId)
       ? Number(reform.policyId)
@@ -278,18 +283,18 @@ export class ApiReformStore implements ReformStore {
     return {
       country_id: countryId,
       legacy_policy_id: legacyPolicyId,
-      ...(reform.label ? { name: reform.label } : {}),
+      ...(reform.label ? { name: clampStoreText(reform.label) } : {}),
       baseline: reform.baseline,
       provenance: provenanceToWire(reform.provenance),
     };
   }
 
-  async create(reform: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>): Promise<Reform> {
+  async create(reform: NewReform): Promise<Reform> {
     const item = await this.routes.create(await this.creationBody(reform));
     return this.toReform(item, reform.parameters);
   }
 
-  async findByUser(_userId: string, countryId?: string): Promise<Reform[]> {
+  async findMine(countryId?: string): Promise<Reform[]> {
     if (countryId && countryId !== this.context.countryId) {
       return [];
     }
@@ -297,10 +302,12 @@ export class ApiReformStore implements ReformStore {
     // Each reform's changes come from its own v1 policy. One that fails to
     // load is listed without them (flagged), rather than failing the list.
     const loaded = await Promise.allSettled(items.map((item) => this.toReform(item)));
-    return loaded.map((outcome, index) =>
-      outcome.status === 'fulfilled'
-        ? outcome.value
-        : { ...this.reformFromItem(items[index], []), parametersUnavailable: true }
+    return byRecentUpdate(
+      loaded.map((outcome, index) =>
+        outcome.status === 'fulfilled'
+          ? outcome.value
+          : { ...this.reformFromItem(items[index], []), parametersUnavailable: true }
+      )
     );
   }
 
@@ -316,7 +323,7 @@ export class ApiReformStore implements ReformStore {
     }
     const body: UserPolicyPatchBody = {};
     if (updates.label !== undefined) {
-      body.name = updates.label || null;
+      body.name = clampStoreText(updates.label) || null;
     }
     if (updates.baseline !== undefined) {
       body.baseline = updates.baseline;
@@ -353,7 +360,6 @@ export class ApiReformStore implements ReformStore {
   private reformFromItem(item: UserPolicyItem, parameters: Parameter[]): Reform {
     return {
       id: item.id,
-      userId: item.user_id,
       countryId: item.country_id,
       label: item.name ?? undefined,
       policyId: String(item.legacy_policy_id),

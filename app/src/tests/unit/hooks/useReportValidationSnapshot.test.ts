@@ -14,7 +14,6 @@ vi.mock('@/api/flagshipReportStore', async (importOriginal) => {
   };
 });
 
-const USER_ID = 'user-123';
 const API_REPORT_ID = '4512';
 
 const settledLive: LiveValidation = {
@@ -24,7 +23,6 @@ const settledLive: LiveValidation = {
 
 async function createRecord() {
   return new LocalStorageFlagshipReportStore().create({
-    userId: USER_ID,
     countryId: 'us',
     apiReportId: API_REPORT_ID,
     title: 'CTC to $2,500',
@@ -43,8 +41,7 @@ describe('useReportValidationSnapshot', () => {
     const record = await createRecord();
 
     const { result, rerender } = renderHook(
-      ({ live }: { live: LiveValidation }) =>
-        useReportValidationSnapshot(USER_ID, API_REPORT_ID, live),
+      ({ live }: { live: LiveValidation }) => useReportValidationSnapshot(API_REPORT_ID, live),
       { initialProps: { live: settledLive } }
     );
 
@@ -71,7 +68,7 @@ describe('useReportValidationSnapshot', () => {
     const record = await createRecord();
 
     const { result } = renderHook(() =>
-      useReportValidationSnapshot(USER_ID, API_REPORT_ID, { calibration: undefined, programs: [] })
+      useReportValidationSnapshot(API_REPORT_ID, { calibration: undefined, programs: [] })
     );
 
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -81,9 +78,7 @@ describe('useReportValidationSnapshot', () => {
   });
 
   test('given no store record for the report then nothing is pinned', async () => {
-    const { result } = renderHook(() =>
-      useReportValidationSnapshot(USER_ID, API_REPORT_ID, settledLive)
-    );
+    const { result } = renderHook(() => useReportValidationSnapshot(API_REPORT_ID, settledLive));
 
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(result.current.snapshot).toBeNull();

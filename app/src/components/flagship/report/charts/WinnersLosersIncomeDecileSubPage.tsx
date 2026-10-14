@@ -147,7 +147,8 @@ export default function WinnersLosersIncomeDecileSubPage({
         data={allData}
         stackOffset="expand"
         barSize={BAR_SIZE}
-        margin={{ top: 8, right: 10, bottom: 0, left: 40 }}
+        // The same left edge as the deciles below, so "All" lines up with them.
+        margin={{ top: 8, right: 10, bottom: 0, left: compact ? 10 : 40 }}
       >
         <XAxis type="number" hide />
         <YAxis
@@ -182,7 +183,8 @@ export default function WinnersLosersIncomeDecileSubPage({
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
         layout="vertical"
-        data={decileData}
+        // Decile 10 on top, 1 at the bottom: the income ladder reads upward.
+        data={[...decileData].reverse()}
         stackOffset="expand"
         barSize={BAR_SIZE}
         barCategoryGap={1}

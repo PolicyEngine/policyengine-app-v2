@@ -11,6 +11,7 @@ import {
   validationToWire,
 } from '@/libs/flagship/reportValidation';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
+import { clampStoreText, MAX_STORE_NOTE_LENGTH } from '@/libs/flagship/storeText';
 import type { ReportProvisionWire, UserReportCreateBody, UserReportItem } from '@/types/v2User';
 
 /**
@@ -22,7 +23,6 @@ import type { ReportProvisionWire, UserReportCreateBody, UserReportItem } from '
  */
 export interface FlagshipReportRecord {
   id: string;
-  userId: string;
   countryId: CountryId;
   /** Report id on api.policyengine.org — the pointer to the outputs. */
   apiReportId: string;
@@ -40,12 +40,18 @@ export interface FlagshipReportRecord {
 
 export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt' | 'validation'>;
 
+/** Newest first. */
+function newestFirst(records: FlagshipReportRecord[]): FlagshipReportRecord[] {
+  return [...records].sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+}
+
 export interface FlagshipReportStore {
   create: (report: NewFlagshipReport) => Promise<FlagshipReportRecord>;
-  findByUser: (userId: string, countryId?: string) => Promise<FlagshipReportRecord[]>;
+  /** This session's records, newest first. */
+  findMine: (countryId?: string) => Promise<FlagshipReportRecord[]>;
   findById: (id: string) => Promise<FlagshipReportRecord | null>;
-  /** The record pointing at an API report, when this user has one. */
-  findByApiReportId: (userId: string, apiReportId: string) => Promise<FlagshipReportRecord | null>;
+  /** The record pointing at an API report, when this session has one. */
+  findByApiReportId: (apiReportId: string) => Promise<FlagshipReportRecord | null>;
   /** Pins the validation snapshot to a record. */
   saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
 }
@@ -93,7 +99,6 @@ export function provisionsFromWire(
 export function recordFromItem(item: UserReportItem): FlagshipReportRecord {
   return {
     id: item.id,
-    userId: item.user_id,
     countryId: item.country_id,
     apiReportId: String(item.legacy_report_id),
     title: item.name,
@@ -124,8 +129,8 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     return {
       country_id: this.routes.writeCountry(report.countryId),
       legacy_report_id: Number(report.apiReportId),
-      name: report.title || null,
-      source_note: report.sourceNote || null,
+      name: clampStoreText(report.title) || null,
+      source_note: clampStoreText(report.sourceNote, MAX_STORE_NOTE_LENGTH) || null,
       provisions: provisionsToWire(report.provisions),
       ...(userPolicyId ? { user_policy_id: userPolicyId } : {}),
       last_run_at: new Date().toISOString(),
@@ -136,12 +141,14 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     return recordFromItem(await this.routes.create(this.creationBody(report)));
   }
 
-  async findByUser(_userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
+  async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
     if (countryId && countryId !== this.context.countryId) {
       return [];
     }
     const items = await this.routes.list();
-    return items.filter((item) => isLegacyId(item.legacy_report_id)).map(recordFromItem);
+    return newestFirst(
+      items.filter((item) => isLegacyId(item.legacy_report_id)).map(recordFromItem)
+    );
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
@@ -149,10 +156,7 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
     return item && isLegacyId(item.legacy_report_id) ? recordFromItem(item) : null;
   }
 
-  async findByApiReportId(
-    _userId: string,
-    apiReportId: string
-  ): Promise<FlagshipReportRecord | null> {
+  async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
     if (!isLegacyId(apiReportId)) {
       return null;
     }
@@ -197,9 +201,9 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
     return record;
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<FlagshipReportRecord[]> {
-    return this.read().filter(
-      (record) => record.userId === userId && (!countryId || record.countryId === countryId)
+  async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
+    return newestFirst(
+      this.read().filter((record) => !countryId || record.countryId === countryId)
     );
   }
 
@@ -207,15 +211,8 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
     return this.read().find((record) => record.id === id) ?? null;
   }
 
-  async findByApiReportId(
-    userId: string,
-    apiReportId: string
-  ): Promise<FlagshipReportRecord | null> {
-    return (
-      this.read().find(
-        (record) => record.userId === userId && record.apiReportId === apiReportId
-      ) ?? null
-    );
+  async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
+    return this.read().find((record) => record.apiReportId === apiReportId) ?? null;
   }
 
   async saveValidation(

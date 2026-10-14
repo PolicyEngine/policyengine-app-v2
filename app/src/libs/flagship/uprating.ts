@@ -91,9 +91,10 @@ export function defaultGrowth(param: ParameterMetadata | undefined): Growth {
 }
 
 /**
- * A provision's indexing: the one chosen; else, for a value already set
- * without one (before indexing existed, or from a bill), none — the fixed
- * value it holds; else, for a value not yet set, its parameter's default.
+ * A provision's indexing: the one chosen, else none. Indexing is a choice
+ * (the Indexed mode), not a default — a new value holds as set, even for
+ * an amount current law indexes. `defaultGrowth` is then what choosing
+ * Indexed starts from.
  */
 export function growthOf(
   provision: Pick<DraftProvision, 'growth' | 'value' | 'baselineValue' | 'intervals'> | undefined,
@@ -102,10 +103,7 @@ export function growthOf(
   if (!canGrow(param)) {
     return 'fixed';
   }
-  if (provision?.growth) {
-    return provision.growth;
-  }
-  return provision && provisionChanged(provision) ? 'fixed' : defaultGrowth(param);
+  return provision?.growth ?? 'fixed';
 }
 
 export function availableIndexes(

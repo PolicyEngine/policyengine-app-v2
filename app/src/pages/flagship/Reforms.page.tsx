@@ -15,17 +15,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import ReformReports from '@/components/flagship/ReformReports';
 import ScopePicker from '@/components/flagship/ScopePicker';
 import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
-import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
+import { FOREVER } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
+import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import {
@@ -38,8 +40,10 @@ import {
   type ProvisionDetails,
 } from '@/libs/draftReform';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
+import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import {
   formatCompactBreadcrumb,
@@ -48,6 +52,7 @@ import {
 } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
+/** How a reform came about: the report's record keeps it; the page doesn't show it. */
 const SOURCE_LABELS: Record<ReformSource, string> = {
   manual: 'Hand-built',
   chat: 'From a question',
@@ -74,6 +79,17 @@ const filterControl: React.CSSProperties = {
   fontFamily: typography.fontFamily.primary,
   color: colors.text.secondary,
 };
+
+/**
+ * A saved value edits in place only as one period: a schedule (several
+ * periods, or values grown by an index) is changed in Build, so a save
+ * here never flattens it.
+ */
+const editableInPlace = (parameter: Reform['parameters'][number]) => parameter.values.length <= 1;
+
+/** The year a saved reform's report runs: its first change, or this year once that is past. */
+const reformRunYear = (reform: Reform) =>
+  billRunYear(reform.parameters.map((parameter) => ({ intervals: parameter.values })));
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -249,6 +265,7 @@ export default function ReformsPage() {
 
   const runReport = useRunFlagshipReport();
   const reformStore = useReformStore();
+  const { store: reportStore } = useFlagshipReportStore();
   const { scope } = useV3SavedWork();
   const {
     bills,
@@ -263,25 +280,50 @@ export default function ReformsPage() {
     isError,
   } = useQuery({
     queryKey: ['reforms', scope, countryId],
-    queryFn: () => reformStore.findByUser(MOCK_USER_ID, countryId),
+    queryFn: () => reformStore.findMine(countryId),
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
+
+  // This session's reports, by the saved reform each came from: a reform
+  // is where its reports are found again.
+  const { data: reports } = useQuery({
+    queryKey: ['flagship-reports', scope, countryId],
+    queryFn: () => reportStore.findMine(countryId),
+  });
+  const reportsFor = (reformId: string | undefined) =>
+    reformId ? (reports ?? []).filter((report) => report.reformId === reformId) : [];
+  const reportsLine = (reformId: string | undefined) => {
+    const runs = reportsFor(reformId);
+    if (runs.length === 0) {
+      return 'No reports yet';
+    }
+    const latest = runs.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
+    return `${runs.length} report${runs.length === 1 ? '' : 's'} · latest ${new Date(
+      latest.createdAt
+    ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  };
 
   const saveMutation = useMutation({
     mutationFn: (reform: Reform) =>
       reformStore.update(reform.id!, {
         label: editedLabel || null,
-        parameters: reform.parameters.map((parameter) => ({
-          name: parameter.name,
-          values: [
-            {
-              startDate: parameter.values[0]?.startDate ?? `${new Date().getFullYear()}-01-01`,
-              endDate: parameter.values[0]?.endDate ?? FOREVER,
-              value: editedValues[parameter.name],
-            },
-          ],
-        })),
+        parameters: reform.parameters.map((parameter) =>
+          editableInPlace(parameter)
+            ? {
+                name: parameter.name,
+                values: [
+                  {
+                    // The value changes; the period it applies to stays.
+                    startDate:
+                      parameter.values[0]?.startDate ?? `${new Date().getFullYear()}-01-01`,
+                    endDate: parameter.values[0]?.endDate ?? FOREVER,
+                    value: editedValues[parameter.name],
+                  },
+                ],
+              }
+            : parameter
+        ),
       }),
     onSuccess: invalidate,
   });
@@ -297,7 +339,6 @@ export default function ReformsPage() {
   const duplicateMutation = useMutation({
     mutationFn: (reform: Reform) =>
       reformStore.create({
-        userId: reform.userId,
         countryId: reform.countryId,
         label: `${reform.label || 'Untitled reform'} (copy)`,
         // The copy shares the original's v1 policy; nothing new to create.
@@ -328,6 +369,15 @@ export default function ReformsPage() {
     unit: parameters?.[path]?.unit ?? null,
     baselineValue: getCurrentValue(parameters?.[path]?.values),
   });
+
+  /** Current law for a parameter on 1 January of `year`. */
+  const currentLawAt = (path: string, year: number) => {
+    const values = parameters?.[path]?.values;
+    return values
+      ? (new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`) ??
+          getCurrentValue(values))
+      : undefined;
+  };
 
   // Places with bills, for the place picker: the states by name, and how
   // many bills each scope holds. Federal bills carry no state.
@@ -436,7 +486,9 @@ export default function ReformsPage() {
 
   const isDirty = (reform: Reform) =>
     editedLabel !== (reform.label ?? '') ||
-    reform.parameters.some((p) => editedValues[p.name] !== p.values[0]?.value);
+    reform.parameters.some(
+      (p) => editableInPlace(p) && editedValues[p.name] !== p.values[0]?.value
+    );
 
   const billStats = (bill: TrackedBill): React.ReactNode => {
     const stats: React.ReactNode[] = [];
@@ -574,7 +626,9 @@ export default function ReformsPage() {
                     '',
                     provisions,
                     null,
-                    billRunYear(selectedBill.provisions)
+                    billRunYear(selectedBill.provisions),
+                    // A state bill runs on its state, as its own report does.
+                    { region: billRegion(selectedBill, countryId) }
                   )
                 }
                 disabled={runReport.isRunning || provisions.length === 0}
@@ -624,9 +678,11 @@ export default function ReformsPage() {
   if (selectedReform) {
     // What the report would run, as Build runs it (dated changes
     // included); a reform that changes nothing has no report to run.
+    // Run in the reform's own year: its first change, or this year once that is past.
+    const runYear = reformRunYear(selectedReform);
     const runProvisions = provisionsToRun(
       reformToProvisions(selectedReform, provisionDetails),
-      Number(CURRENT_YEAR),
+      runYear,
       parameters
     );
     const changesNothing = !selectedReform.parametersUnavailable && runProvisions.length === 0;
@@ -635,7 +691,6 @@ export default function ReformsPage() {
         <Stack style={{ gap: spacing.lg }}>
           {backLink}
           <Stack style={{ gap: spacing.xs }}>
-            <Eyebrow>{SOURCE_LABELS[selectedReform.provenance.source]}</Eyebrow>
             <input
               value={editedLabel}
               onChange={(event) => setEditedLabel(event.target.value)}
@@ -665,8 +720,17 @@ export default function ReformsPage() {
           )}
           <Stack style={{ gap: spacing.md }}>
             {selectedReform.parameters.map((parameter) => {
-              const baseline = getCurrentValue(parameters?.[parameter.name]?.values);
               const unit = parameters?.[parameter.name]?.unit ?? null;
+              const first = parameter.values[0];
+              // Current law where the change starts, not today.
+              const baseline = first
+                ? currentLawAt(parameter.name, Number(first.startDate.slice(0, 4)))
+                : getCurrentValue(parameters?.[parameter.name]?.values);
+              const editable = editableInPlace(parameter);
+              const schedule = summarizeIntervals(parameter.values, (value) =>
+                formatValue(value, unit)
+              );
+              const when = first ? (editable ? periodLabel(first) : schedule.when) : '';
               return (
                 <Stack
                   key={parameter.name}
@@ -695,13 +759,39 @@ export default function ReformsPage() {
                   >
                     {formatValue(baseline, unit)} →
                   </Text>
-                  <ValueInput
-                    value={editedValues[parameter.name]}
-                    onChange={(next) =>
-                      setEditedValues((current) => ({ ...current, [parameter.name]: next }))
-                    }
-                    ariaLabel={`New value for ${parameter.name}`}
-                  />
+                  {editable ? (
+                    <ValueInput
+                      value={editedValues[parameter.name]}
+                      onChange={(next) =>
+                        setEditedValues((current) => ({ ...current, [parameter.name]: next }))
+                      }
+                      ariaLabel={`New value for ${parameter.name}`}
+                    />
+                  ) : (
+                    <Text
+                      title="Change a schedule in Build"
+                      style={{
+                        fontSize: typography.fontSize.sm,
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.primary,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {schedule.value}
+                    </Text>
+                  )}
+                  {when && (
+                    <Text
+                      style={{
+                        minWidth: 72,
+                        fontSize: typography.fontSize.xs,
+                        color: colors.text.secondary,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {when}
+                    </Text>
+                  )}
                 </Stack>
               );
             })}
@@ -726,13 +816,19 @@ export default function ReformsPage() {
                   selectedReform.label || 'Untitled reform',
                   SOURCE_LABELS[selectedReform.provenance.source],
                   runProvisions,
-                  selectedReform.id
+                  // Links the report record to the saved reform it came from.
+                  selectedReform.id,
+                  runYear
                 )
               }
               disabled={
                 runReport.isRunning || selectedReform.parametersUnavailable || changesNothing
               }
-              title={changesNothing ? 'Change a value to run the report' : undefined}
+              title={
+                changesNothing
+                  ? 'Adjust at least one value from current law to run the report'
+                  : undefined
+              }
             >
               <IconChartBar size={16} />
               {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
@@ -786,9 +882,11 @@ export default function ReformsPage() {
             <Text
               style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
             >
-              Nothing in this reform differs from current law. Change a value to run the report.
+              Nothing in this reform differs from current law. Adjust at least one value to run the
+              report.
             </Text>
           )}
+          <ReformReports countryId={countryId} reports={reportsFor(selectedReform.id)} />
         </Stack>
       </WorkspaceLayout>
     );
@@ -965,7 +1063,7 @@ export default function ReformsPage() {
                     : `${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`
                 }
                 title={reform.label || 'Untitled reform'}
-                body={SOURCE_LABELS[reform.provenance.source]}
+                body={reportsLine(reform.id)}
                 onClick={() => openReform(reform)}
               />
             ))}

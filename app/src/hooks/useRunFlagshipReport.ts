@@ -36,8 +36,18 @@ export function useRunFlagshipReport() {
     provisions: RunReportProvision[],
     reformId?: string | null,
     year?: number,
-    /** A run from the draft hands the draft over: its report clears it. */
-    fromDraft = false
+    {
+      fromDraft = false,
+      region,
+      windowYears,
+    }: {
+      /** A run from the draft hands the draft over: its report clears it. */
+      fromDraft?: boolean;
+      /** A state or congressional district ("state/ca"); the whole country when unset. */
+      region?: string;
+      /** Years of budget to score alongside the report, e.g. 10. */
+      windowYears?: number;
+    } = {}
   ) => {
     if (isRunning) {
       return;
@@ -57,7 +67,10 @@ export function useRunFlagshipReport() {
         currentLawId: Number(currentLawId),
         reformId,
         year,
-        // Signed in, the run's record is the account's; otherwise this browser's.
+        region,
+        windowYears,
+        // With accounts, the run's record goes through the API (the account,
+        // or this browser's unauthenticated user); otherwise this browser's.
         accountReportStore: reportStore.isAccount ? reportStore.store : null,
       });
       if (fromDraft) {

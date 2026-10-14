@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import { getFlagshipReportStore, type FlagshipReportStore } from '@/api/flagshipReportStore';
 import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
 import type { ApiStoreContext } from '@/api/v2Associations';
-import { MOCK_USER_ID } from '@/constants';
 import { useCountryContext } from '@/contexts/CountryContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
@@ -114,7 +113,7 @@ export function useReportRecord(apiReportId: string | undefined) {
   const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
     queryKey: ['flagship-report-record', scope, apiReportId ?? ''],
-    queryFn: () => store.findByApiReportId(MOCK_USER_ID, apiReportId!),
+    queryFn: () => store.findByApiReportId(apiReportId!),
     enabled: !!apiReportId,
     staleTime: 5 * 60 * 1000,
     retry: 1,

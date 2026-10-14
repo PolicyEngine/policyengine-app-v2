@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportStore } from '@/api/flagshipReportStore';
-import { MOCK_USER_ID } from '@/constants';
 import {
   forgetAccountReportMeta,
   readReportMeta,
@@ -11,6 +10,8 @@ import {
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
 const mockCreateReport = vi.fn();
+const mockFetchBudgetWindow = vi.fn();
+const mockFetchSocietyWide = vi.fn();
 
 vi.mock('@/api/policy', () => ({
   createPolicy: (...args: any[]) => mockCreatePolicy(...args),
@@ -20,6 +21,12 @@ vi.mock('@/api/simulation', () => ({
 }));
 vi.mock('@/api/report', () => ({
   createReport: (...args: any[]) => mockCreateReport(...args),
+}));
+vi.mock('@/api/budgetWindow', () => ({
+  fetchBudgetWindow: (...args: any[]) => mockFetchBudgetWindow(...args),
+}));
+vi.mock('@/api/societyWideCalculation', () => ({
+  fetchSocietyWideCalculation: (...args: any[]) => mockFetchSocietyWide(...args),
 }));
 
 /** The localStorage keys the legacy calculator keeps its saved work under. */
@@ -115,6 +122,104 @@ describe('runFlagshipReport', () => {
     });
   });
 
+  test('given a state or district then both simulations run on it', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      region: 'congressional_district/CA-01',
+    });
+
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+      population_id: 'congressional_district/CA-01',
+      population_type: 'geography',
+      policy_id: 2,
+    });
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+      population_id: 'congressional_district/CA-01',
+      population_type: 'geography',
+      policy_id: 77,
+    });
+  });
+
+  test('given a run then its calculation starts at once, as the report page asks for it', async () => {
+    mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      year: 2027,
+      region: 'state/de',
+    });
+
+    expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '2', {
+      region: 'state/de',
+      time_period: '2027',
+    });
+  });
+
+  test('given a nationwide run then the calculation asks for the country', async () => {
+    mockFetchSocietyWide.mockRejectedValue(new Error('offline'));
+
+    // A failed first request doesn't fail the run: the report page asks again.
+    await expect(
+      runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        year: 2026,
+      })
+    ).resolves.toBe('55');
+    expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '2', {
+      region: 'us',
+      time_period: '2026',
+    });
+  });
+
+  test('given a budget window with the run then it starts at once and the report knows it', async () => {
+    mockFetchBudgetWindow.mockResolvedValue({ status: 'computing', result: null });
+
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      year: 2026,
+      region: 'state/de',
+      windowYears: 10,
+    });
+
+    // Submitted with the report, on its reform, baseline and population.
+    expect(mockFetchBudgetWindow).toHaveBeenCalledWith('us', '77', '2', {
+      region: 'state/de',
+      startYear: 2026,
+      windowSize: 10,
+    });
+    expect(readReportMeta('55')?.budgetWindow).toEqual({ startYear: 2026, windowSize: 10 });
+  });
+
+  test('given one year then no window starts', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      windowYears: 1,
+    });
+
+    expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
+    expect(readReportMeta('55')?.budgetWindow).toBeUndefined();
+  });
+
   test('given a run then provenance is stashed under the API report id', async () => {
     await runFlagshipReport({
       countryId: 'us',
@@ -158,7 +263,6 @@ describe('runFlagshipReport', () => {
     const records = JSON.parse(localStorage.getItem('pe-flagship-reports') ?? '[]');
     expect(records).toEqual([
       expect.objectContaining({
-        userId: 'anonymous',
         apiReportId: '55',
         title: 'CTC expansion',
         reformId: 'rf-local1',
@@ -197,7 +301,6 @@ describe('runFlagshipReport', () => {
     });
     expect(accountStore.create).toHaveBeenCalledTimes(1);
     expect(accountStore.create).toHaveBeenCalledWith({
-      userId: MOCK_USER_ID,
       countryId: 'us',
       apiReportId: '55',
       title: 'CTC expansion',

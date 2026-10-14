@@ -69,14 +69,13 @@ describe('v3 and the legacy calculator storage', () => {
       currentLawId: 2,
     });
     await new LocalStorageReformStore().create({
-      userId: MOCK_USER_ID,
       countryId: 'us',
       label: 'CTC expansion',
       parameters: [],
       baseline: 'current-law',
       provenance: { source: 'manual' },
     });
-    await new LocalStorageFlagshipReportStore().findByUser(MOCK_USER_ID, 'us');
+    await new LocalStorageFlagshipReportStore().findMine('us');
 
     // Then
     expect(touchedKeys.has('pe-flagship-reports')).toBe(true);

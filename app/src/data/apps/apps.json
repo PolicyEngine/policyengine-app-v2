@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "energy-autumn-budget",
+    "title": "Energy bills and the Autumn Budget 2026",
+    "description": "Estimate what UK households will pay for energy at forecast prices in 2026-27 and 2027-28, and what Autumn Budget support options would cost and who they would reach, modelled with PolicyEngine UK.",
+    "source": "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "energy-autumn-budget.jpg",
+    "date": "2026-10-14 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "childcare-100k-threshold",
     "title": "Scrapping the childcare cliff edge",
     "description": "Estimate the cost of removing the £100,000 income limit on the 30 funded hours and Tax-Free Childcare, who gains, and how a family's income changes at the cliff, modelled with PolicyEngine UK.",

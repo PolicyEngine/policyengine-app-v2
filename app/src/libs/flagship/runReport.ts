@@ -1,3 +1,4 @@
+import { fetchBudgetWindow } from '@/api/budgetWindow';
 import {
   LocalStorageFlagshipReportStore,
   type FlagshipReportStore,
@@ -5,7 +6,8 @@ import {
 import { createPolicy } from '@/api/policy';
 import { createReport } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
-import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
+import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
@@ -34,6 +36,8 @@ export interface FlagshipReportMeta {
   sourceNote: string;
   provisions: RunReportProvision[];
   createdAt: string;
+  /** The budget window asked for with the run, which the report opens running. */
+  budgetWindow?: { startYear: number; windowSize: number };
 }
 
 export const REPORT_META_KEY = 'pe-flagship-report-meta';
@@ -90,7 +94,16 @@ export interface RunFlagshipReportArgs {
   /** The year to simulate; the current year when unset. */
   year?: number;
   /**
-   * Signed in (US/UK): the account's report store. The run then writes
+   * The population: a state or congressional district as the API names
+   * it ("state/ca", "congressional_district/CA-01"); the whole country
+   * when unset.
+   */
+  region?: string;
+  /** Years of budget to score from `year` alongside the report; none when unset or 1. */
+  windowYears?: number;
+  /**
+   * With accounts (US/UK): the report store for this session's user, the
+   * account or this browser's unauthenticated user. The run then writes
    * exactly one `/v2/user-reports` row — with the title, source note,
    * provisions and reform link — instead of the browser record.
    */
@@ -139,6 +152,8 @@ export async function runFlagshipReport({
   currentLawId,
   reformId,
   year = Number(CURRENT_YEAR),
+  region,
+  windowYears,
   accountReportStore,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
@@ -149,12 +164,12 @@ export async function runFlagshipReport({
 
   const [baseline, reform] = await Promise.all([
     createSimulation(countryId, {
-      population_id: countryId,
+      population_id: region ?? countryId,
       population_type: 'geography',
       policy_id: currentLawId,
     }),
     createSimulation(countryId, {
-      population_id: countryId,
+      population_id: region ?? countryId,
       population_type: 'geography',
       policy_id: reformPolicyId,
     }),
@@ -167,13 +182,20 @@ export async function runFlagshipReport({
   };
 
   // The v1 report comes first; its ID is the report's link. Then exactly
-  // one record of it: the account's row when signed in, otherwise this
+  // one record of it: through the API with accounts, otherwise this
   // browser's flagship record (v3 never writes the legacy report keys).
   const reportMetadata = await createReport(countryId, payload);
   const reportId = String(reportMetadata.id);
-  const meta = { title, sourceNote, provisions, createdAt: new Date().toISOString() };
+  const budgetWindow =
+    windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
+  const meta: FlagshipReportMeta = {
+    title,
+    sourceNote,
+    provisions,
+    createdAt: new Date().toISOString(),
+    ...(budgetWindow && { budgetWindow }),
+  };
   const record = {
-    userId: MOCK_USER_ID,
     countryId,
     apiReportId: reportId,
     title: title || null,
@@ -187,15 +209,41 @@ export async function runFlagshipReport({
     // A failure fails the run, so a report that opens is one that was saved.
     rememberAccountReportMeta(reportId, meta);
     await accountReportStore.create(record);
-    return reportId;
+  } else {
+    saveReportMeta(reportId, meta);
+    // Best-effort: the run already succeeded, and the link opens without it.
+    try {
+      await new LocalStorageFlagshipReportStore().create(record);
+    } catch {
+      // The report still opens by its v1 report ID.
+    }
   }
 
-  saveReportMeta(reportId, meta);
-  // Best-effort: the run already succeeded, and the link opens without it.
-  try {
-    await new LocalStorageFlagshipReportStore().create(record);
-  } catch {
-    // The report still opens by its v1 report ID.
+  // Start the report's own calculation now, not when its page opens: the
+  // first request queues the job, so a tab closed right after "Run" still
+  // gets its result, waiting for the link. The page asks with the same
+  // reform, baseline, region and year, so it checks on this job.
+  // A failure here never fails the run: the report page asks again.
+  void Promise.resolve()
+    .then(() =>
+      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(currentLawId), {
+        region: region ?? countryId,
+        time_period: String(year),
+      })
+    )
+    .catch(() => undefined);
+
+  // The window was asked for with the run: start it now, alongside the
+  // report, rather than when the report page opens. The first request
+  // submits the batch; the report's section checks on the same one.
+  if (budgetWindow) {
+    void fetchBudgetWindow(countryId, String(reformPolicyId), String(currentLawId), {
+      region: region ?? countryId,
+      ...budgetWindow,
+    }).catch(() => {
+      // The report's section asks again, and shows any error there.
+    });
   }
+
   return reportId;
 }
