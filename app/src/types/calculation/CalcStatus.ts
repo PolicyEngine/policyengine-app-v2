@@ -89,7 +89,8 @@ export interface CalcStatus {
 
   /**
    * Typical duration of this calculation in milliseconds, for time-based
-   * progress. Set for pending society-wide calculations from their region.
+   * progress. Set only for pending society-wide calculations whose caller
+   * opted into the region estimate (CalcParams.estimateByRegion, v3).
    */
   estimatedDurationMs?: number;
 

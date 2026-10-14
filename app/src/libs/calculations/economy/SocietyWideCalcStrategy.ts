@@ -4,9 +4,17 @@ import {
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
-import { getDurationForRegion } from '@/constants/calculationDurations';
+import { getDurationForCountry, getDurationForRegion } from '@/constants/calculationDurations';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
+
+/** How a caller wants the run's duration estimated. */
+export interface DurationEstimateOptions {
+  /** Estimate from the region (v3). Off by default: the country estimate applies. */
+  estimateByRegion?: boolean;
+  /** The region as sent to the API, e.g. 'state/ca'; read only with estimateByRegion. */
+  region?: string;
+}
 
 /**
  * Strategy for executing society-wide calculations
@@ -40,12 +48,10 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       );
 
       // Transform to unified status with provided metadata
-      return this.transformResponseWithMetadata(
-        response,
-        metadata,
-        params.countryId,
-        params.region
-      );
+      return this.transformResponseWithMetadata(response, metadata, params.countryId, {
+        estimateByRegion: params.estimateByRegion,
+        region: apiRegion,
+      });
     } catch (error) {
       console.error('[SocietyWideCalcStrategy.execute] Calculation failed:', error);
       const errorMessage =
@@ -80,12 +86,15 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
 
   /**
    * Transform society-wide API response with provided metadata
+   * @param estimate - Opt-in (v3): with estimateByRegion, progress follows the
+   *   region estimate and pending statuses carry estimatedDurationMs. Without
+   *   it, the country estimate applies and no estimatedDurationMs is set.
    */
   transformResponseWithMetadata(
     apiResponse: unknown,
     metadata: CalcMetadata,
     countryId?: string,
-    region?: string
+    estimate: DurationEstimateOptions = {}
   ): CalcStatus {
     const response = apiResponse as SocietyWideCalculationResponse;
 
@@ -93,13 +102,13 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
     if (response.status === 'computing') {
       // Calculate synthetic progress based on elapsed time (mimicking household calculations)
       const elapsed = Date.now() - metadata.startedAt;
-      const estimatedDuration = this.getEstimatedDuration(countryId, region);
+      const estimatedDuration = this.getEstimatedDuration(countryId, estimate);
       const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95%
 
       return {
         status: 'pending',
         progress,
-        estimatedDurationMs: estimatedDuration,
+        ...(estimate.estimateByRegion && { estimatedDurationMs: estimatedDuration }),
         queuePosition: response.queue_position,
         message: this.getComputingMessage(response.queue_position),
         metadata,
@@ -151,10 +160,13 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
   }
 
   /**
-   * Get estimated duration for society-wide calculations based on country and region
+   * Get estimated duration for society-wide calculations based on country,
+   * or on country and region when the caller opts in
    * Uses shared constants from calculationDurations
    */
-  private getEstimatedDuration(countryId?: string, region?: string): number {
-    return getDurationForRegion(countryId || 'us', region);
+  private getEstimatedDuration(countryId?: string, estimate: DurationEstimateOptions = {}): number {
+    return estimate.estimateByRegion
+      ? getDurationForRegion(countryId || 'us', estimate.region)
+      : getDurationForCountry(countryId || 'us');
   }
 }

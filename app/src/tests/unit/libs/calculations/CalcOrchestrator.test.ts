@@ -278,6 +278,35 @@ describe('CalcOrchestrator', () => {
     });
   });
 
+  describe('duration estimate', () => {
+    const startAndReadParams = async (config: ReturnType<typeof mockSocietyWideCalcConfig>) => {
+      const mockQueryFn = vi.fn().mockResolvedValue(mockPendingSocietyWideStatus());
+      (calculationQueries.forReport as any).mockImplementation((calcId: string) =>
+        mockSocietyWideQueryOptions(calcId, mockQueryFn)
+      );
+      await orchestrator.startCalculation(config);
+      return (calculationQueries.forReport as any).mock.calls[0][2];
+    };
+
+    it('given the default then the params leave the region estimate out', async () => {
+      // When
+      const params = await startAndReadParams(mockSocietyWideCalcConfig());
+
+      // Then - the params stay exactly as before region estimates
+      expect(params).not.toHaveProperty('estimateByRegion');
+    });
+
+    it('given estimateByRegion then the params pass it to the strategy', async () => {
+      // When
+      const params = await startAndReadParams(
+        mockSocietyWideCalcConfig({ estimateByRegion: true })
+      );
+
+      // Then
+      expect(params.estimateByRegion).toBe(true);
+    });
+  });
+
   describe('cleanup', () => {
     it('given no active polling then cleanup does nothing', () => {
       // When

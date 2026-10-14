@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
 
 const mockCalcStatus = vi.fn();
+const mockStartCalculationOnLoad = vi.fn();
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
@@ -23,7 +24,7 @@ vi.mock('@/hooks/useCalculationStatus', () => ({
 }));
 
 vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
-  useStartCalculationOnLoad: () => undefined,
+  useStartCalculationOnLoad: (args: unknown) => mockStartCalculationOnLoad(args),
 }));
 
 vi.mock('@/hooks/useReportValidationSnapshot', () => ({
@@ -74,6 +75,25 @@ function renderPage() {
 describe('FlagshipReportPage', () => {
   beforeEach(() => {
     mockCalcStatus.mockReset();
+    mockStartCalculationOnLoad.mockReset();
+  });
+
+  test('given the report runs then it asks for the region estimate', () => {
+    mockCalcStatus.mockReturnValue({
+      status: 'pending',
+      isComplete: false,
+      isError: false,
+      progress: 0,
+      result: null,
+    });
+
+    renderPage();
+
+    expect(mockStartCalculationOnLoad).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configs: [expect.objectContaining({ calcId: 'r1', estimateByRegion: true })],
+      })
+    );
   });
 
   test('given the run is still calculating then the page is the wait, without the adjust panel', () => {

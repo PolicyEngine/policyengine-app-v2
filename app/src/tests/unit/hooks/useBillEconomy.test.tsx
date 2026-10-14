@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { billRegion, useBillEconomy } from '@/hooks/useBillEconomy';
+import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const { mockCreatePolicy, mockFetchSocietyWide } = vi.hoisted(() => ({
@@ -104,6 +105,20 @@ describe('useBillEconomy', () => {
     await waitFor(() => expect(result.current.message).toMatch(/3/));
     expect(result.current.status).toBe('pending');
     expect(result.current.output).toBeNull();
+  });
+
+  test('given a state bill then the run asks for the region estimate', async () => {
+    mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+    const execute = vi.spyOn(SocietyWideCalcStrategy.prototype, 'execute');
+
+    renderHook(() => useBillEconomy(BILL), { wrapper });
+
+    await waitFor(() => expect(execute).toHaveBeenCalled());
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({ region: 'state/ut', estimateByRegion: true }),
+      expect.anything()
+    );
+    execute.mockRestore();
   });
 
   test('given the run fails then the error is reported', async () => {

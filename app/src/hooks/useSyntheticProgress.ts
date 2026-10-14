@@ -121,7 +121,9 @@ export function useSyntheticProgress(
   // Read through a ref: the estimate arrives with the first server status,
   // and a dependency on it would restart the timer from zero.
   const estimatedDurationRef = useRef(serverProgress?.estimatedDurationMs);
-  estimatedDurationRef.current = serverProgress?.estimatedDurationMs;
+  useEffect(() => {
+    estimatedDurationRef.current = serverProgress?.estimatedDurationMs;
+  }, [serverProgress?.estimatedDurationMs]);
 
   useEffect(() => {
     if (!isActive) {
