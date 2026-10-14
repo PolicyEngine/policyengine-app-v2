@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, renderWithCountry, screen, userEvent, waitFor } from '@test-utils';
+import { render, renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import ReformsPage from '@/pages/flagship/Reforms.page';
@@ -27,6 +27,21 @@ const mockRun = vi.fn();
 
 vi.mock('@/hooks/useRunFlagshipReport', () => ({
   useRunFlagshipReport: () => ({ run: mockRun, isRunning: false, error: null }),
+}));
+
+const mockFindReports = vi.fn();
+
+vi.mock('@/api/flagshipReportStore', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/flagshipReportStore')>()),
+  getFlagshipReportStore: () => ({ findMine: mockFindReports }),
+}));
+
+vi.mock('@/api/report', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/report')>()),
+  fetchReportById: async (_countryId: string, reportId: string) => ({
+    id: reportId,
+    status: reportId === '901' ? 'complete' : 'pending',
+  }),
 }));
 
 const mockFetchTrackerBills = vi.fn();
@@ -164,6 +179,7 @@ describe('ReformsPage', () => {
     vi.clearAllMocks();
     clearDraftReform();
     mockFindMine.mockResolvedValue([]);
+    mockFindReports.mockResolvedValue([]);
     mockFetchTrackerBills.mockResolvedValue(FEED_BILLS);
   });
 
@@ -437,6 +453,72 @@ describe('ReformsPage', () => {
     expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual(
       SCHEDULE_REFORM.parameters[0].values
     );
+  });
+
+  test('given reports run from a reform then its card counts them and its detail lists them', async () => {
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockFindReports.mockResolvedValue([
+      {
+        id: 'r-a',
+        countryId: 'us',
+        apiReportId: '901',
+        title: 'CTC',
+        sourceNote: null,
+        provisions: [],
+        year: '2026',
+        createdAt: '2026-10-13T15:00:00Z',
+        reformId: 'rf-1',
+      },
+      {
+        id: 'r-b',
+        countryId: 'us',
+        apiReportId: '902',
+        title: 'CTC',
+        sourceNote: null,
+        provisions: [],
+        year: '2027',
+        createdAt: '2026-10-14T09:00:00Z',
+        reformId: 'rf-1',
+      },
+      {
+        id: 'r-other',
+        countryId: 'us',
+        apiReportId: '903',
+        title: 'Other',
+        sourceNote: null,
+        provisions: [],
+        year: '2026',
+        createdAt: '2026-10-14T10:00:00Z',
+        reformId: 'rf-other',
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    expect(await screen.findByText('2 reports · latest Oct 14')).toBeInTheDocument();
+    await user.click(screen.getByText('CTC to $3,600 for children under 6'));
+
+    const list = screen.getByRole('region', { name: 'Reports' });
+    // Newest first; the finished one says so.
+    const rows = within(list)
+      .getAllByText(/^\d{4} report$/)
+      .map((row) => row.textContent);
+    expect(rows).toEqual(['2027 report', '2026 report']);
+    expect(await within(list).findByText('Done')).toBeInTheDocument();
+    await user.click(within(list).getAllByRole('button', { name: /open/i })[0]);
+    expect(mockNavigate).toHaveBeenCalledWith('/us/report/902');
+  });
+
+  test('given a reform with no reports then its card and detail say so', async () => {
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    expect(await screen.findByText('No reports yet')).toBeInTheDocument();
+    await user.click(screen.getByText('CTC to $3,600 for children under 6'));
+    expect(
+      within(screen.getByRole('region', { name: 'Reports' })).getByText(/No reports yet\. Run one/)
+    ).toBeInTheDocument();
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {

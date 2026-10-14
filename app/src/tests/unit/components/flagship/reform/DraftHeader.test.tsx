@@ -17,6 +17,8 @@ import {
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const mockCreate = vi.fn();
+const mockUpdate = vi.fn();
+const mockFindMine = vi.fn();
 const mockRun = vi.fn();
 
 vi.mock('@/hooks/useRunFlagshipReport', () => ({
@@ -25,7 +27,10 @@ vi.mock('@/hooks/useRunFlagshipReport', () => ({
 
 vi.mock('@/api/reformStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/reformStore')>();
-  return { ...actual, getReformStore: () => ({ create: mockCreate, update: vi.fn() }) };
+  return {
+    ...actual,
+    getReformStore: () => ({ create: mockCreate, update: mockUpdate, findMine: mockFindMine }),
+  };
 });
 
 function HeaderHarness() {
@@ -50,6 +55,9 @@ function renderHeader() {
 describe('DraftHeader', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFindMine.mockResolvedValue([]);
+    mockCreate.mockResolvedValue({ id: 'rf-new' });
+    mockUpdate.mockResolvedValue({});
     clearDraftReform();
     startDraftReform('us', 'chat', 'ask-keyword-v0');
     addDraftProvision('us', {
@@ -164,6 +172,62 @@ describe('DraftHeader', () => {
     expect(getDraftReform()?.windowYears).toBe(10);
     await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
     expect(mockRun.mock.calls[0][5]).toMatchObject({ fromDraft: true, windowYears: 10 });
+  });
+
+  describe('given a run', () => {
+    const CHANGED = {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    };
+
+    test('then the draft is saved to Your reforms and the report links to it', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+    });
+
+    test('then a saved reform with the same values is reused, not copied', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      const draft = getDraftReform()!;
+      const parameters = draft.provisions.map((provision) => ({
+        name: provision.path,
+        values: provision.intervals ?? [
+          { startDate: '2026-01-01', endDate: '2100-12-31', value: provision.value },
+        ],
+      }));
+      mockFindMine.mockResolvedValue([
+        { id: 'rf-saved', countryId: 'us', label: 'Mine', parameters, provenance: {} },
+      ]);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockCreate).not.toHaveBeenCalled();
+      expect(mockRun.mock.calls[0][3]).toBe('rf-saved');
+    });
+
+    test('then a failed save still runs the report, unlinked', async () => {
+      const user = userEvent.setup();
+      mockCreate.mockRejectedValue(new Error('store down'));
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][3]).toBeUndefined();
+    });
   });
 
   test('given the population picker then a household shows, but waits', async () => {
