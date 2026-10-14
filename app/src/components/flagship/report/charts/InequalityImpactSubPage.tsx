@@ -20,6 +20,11 @@ import {
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
+import {
+  rateChangeMessage,
+  relativeBar,
+  relativeChange,
+} from '@/components/flagship/report/charts/relativeChange';
 import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
 import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
@@ -30,7 +35,6 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import { getInequalityCsvRows } from '@/pages/report-output/inequality-impact/inequalityChartUtils';
 import type { RootState } from '@/store';
-import { relativeChangeMessage } from '@/utils/chartMessages';
 import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
@@ -65,14 +69,19 @@ export default function InequalityImpactSubPage({
   const top1Impact = output.inequality.top_1_pct_share;
 
   const labels = ['Gini index', 'Top 10% share', 'Top 1% share'];
-  const metricChanges = [
-    giniImpact.reform / giniImpact.baseline - 1,
-    top10Impact.reform / top10Impact.baseline - 1,
-    top1Impact.reform / top1Impact.baseline - 1,
-  ];
+  // Each measure's change; none for a measure that is zero before.
+  const metricChanges = [giniImpact, top10Impact, top1Impact].map(({ baseline, reform }) =>
+    relativeChange(reform, baseline)
+  );
 
   // Calculate precision for display
-  const yvaluePrecision = Math.max(1, precision(metricChanges, 100));
+  const yvaluePrecision = Math.max(
+    1,
+    precision(
+      metricChanges.filter((change): change is number => change !== null),
+      100
+    )
+  );
 
   const formatPer = (n: number) =>
     formatPercent(n, countryId, {
@@ -103,22 +112,16 @@ export default function InequalityImpactSubPage({
       formatter = formatPer;
     }
 
-    const change = reform / baseline - 1;
-    return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
-      baseline,
-      reform,
-      formatter,
-    });
+    return rateChangeMessage(obj, baseline, reform, countryId, formatter);
   };
 
   // Generate chart title
   const getChartTitle = () => {
-    const signTerm =
-      metricChanges[0] > 0 && metricChanges[1] > 0 && metricChanges[2] > 0
-        ? 'increase'
-        : metricChanges[0] < 0 && metricChanges[1] < 0 && metricChanges[2] < 0
-          ? 'decrease'
-          : 'have an ambiguous effect on';
+    const signTerm = metricChanges.every((change) => change !== null && change > 0)
+      ? 'increase'
+      : metricChanges.every((change) => change !== null && change < 0)
+        ? 'decrease'
+        : 'have an ambiguous effect on';
     const region = regionName(metadata);
     const regionPhrase = region ? ` in ${region}` : '';
     return `This reform would ${signTerm} income inequality${regionPhrase}`;
@@ -127,8 +130,7 @@ export default function InequalityImpactSubPage({
   // Recharts data
   const chartData = labels.map((label, i) => ({
     name: label,
-    value: metricChanges[i],
-    label: (metricChanges[i] > 0 ? '+' : '') + formatPer(metricChanges[i]),
+    ...relativeBar(metricChanges[i], formatPer),
     hoverText: hoverMessage(label),
   }));
 

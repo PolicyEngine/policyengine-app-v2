@@ -20,6 +20,12 @@ import {
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
+import {
+  rateChangeMessage,
+  rateChangeTitle,
+  relativeBar,
+  relativeChange,
+} from '@/components/flagship/report/charts/relativeChange';
 import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
 import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
@@ -30,9 +36,8 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import { getPovertyByRaceCsvRows } from '@/pages/report-output/poverty-impact/povertyChartUtils';
 import type { RootState } from '@/store';
-import { relativeChangeMessage } from '@/utils/chartMessages';
 import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
-import { formatNumber, formatPercent } from '@/utils/formatters';
+import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 /** Margins around the plot; value labels stay inside it, so the top needs little. */
@@ -64,11 +69,11 @@ export default function PovertyImpactByRaceSubPage({
 
   // Get all race keys dynamically
   const raceKeys = Object.keys(raceImpact).filter((key) => key !== 'all');
-  const raceChanges = raceKeys.map((key) => {
-    const data = raceImpact[key];
-    return data.reform / data.baseline - 1;
-  });
-  const totalPovertyChange = allImpact.all.reform / allImpact.all.baseline - 1;
+  // Each group's change; none for a group with no one in poverty before.
+  const raceChanges = raceKeys.map((key) =>
+    relativeChange(raceImpact[key].reform, raceImpact[key].baseline)
+  );
+  const totalPovertyChange = relativeChange(allImpact.all.reform, allImpact.all.baseline);
 
   const povertyChanges = [...raceChanges, totalPovertyChange];
   const povertyLabels = [
@@ -92,43 +97,26 @@ export default function PovertyImpactByRaceSubPage({
     const key = labelToKey[x];
     const baseline = x === 'All' ? allImpact.all.baseline : raceImpact[key].baseline;
     const reform = x === 'All' ? allImpact.all.reform : raceImpact[key].reform;
-    const change = reform / baseline - 1;
-    return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
-      baseline,
-      reform,
-      formatter: formatPer,
-    });
+    return rateChangeMessage(obj, baseline, reform, countryId, formatPer);
   };
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = allImpact.all.baseline;
-    const reform = allImpact.all.reform;
-    const relativeChange = reform / baseline - 1;
-    const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
-    const objectTerm = 'the poverty rate';
-    const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
-      maximumFractionDigits: 1,
-    });
-    const absTerm = formatNumber(absoluteChange, countryId, {
-      maximumFractionDigits: 2,
-    });
-    const term2 = `${relTerm} (${absTerm}pp)`;
-    const signTerm = relativeChange > 0 ? 'increase' : 'decrease';
     const region = regionName(metadata);
-    const regionPhrase = region ? ` in ${region}` : '';
-
-    if (absTerm === '0') {
-      return `This reform would have no effect on ${objectTerm}${regionPhrase}`;
-    }
-    return `This reform would ${signTerm} ${objectTerm}${regionPhrase} by ${term2}`;
+    const { baseline, reform } = allImpact.all;
+    return rateChangeTitle(
+      'the poverty rate',
+      baseline,
+      reform,
+      countryId,
+      region ? ` in ${region}` : ''
+    );
   };
 
   // Recharts data
   const chartData = povertyLabels.map((label, i) => ({
     name: label,
-    value: povertyChanges[i],
-    label: (povertyChanges[i] > 0 ? '+' : '') + formatPer(povertyChanges[i]),
+    ...relativeBar(povertyChanges[i], formatPer),
     hoverText: hoverMessage(label),
   }));
 

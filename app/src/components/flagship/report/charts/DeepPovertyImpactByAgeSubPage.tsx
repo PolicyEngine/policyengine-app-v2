@@ -21,6 +21,12 @@ import {
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
+import {
+  rateChangeMessage,
+  rateChangeTitle,
+  relativeBar,
+  relativeChange,
+} from '@/components/flagship/report/charts/relativeChange';
 import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
 import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
@@ -31,9 +37,8 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import { getPovertyByAgeCsvRows } from '@/pages/report-output/poverty-impact/povertyChartUtils';
 import type { RootState } from '@/store';
-import { relativeChangeMessage } from '@/utils/chartMessages';
 import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
-import { formatNumber, formatPercent } from '@/utils/formatters';
+import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 /** Margins around the plot; value labels stay inside it, so the top needs little. */
@@ -61,19 +66,6 @@ export default function DeepPovertyImpactByAgeSubPage({
   // Extract data
   const deepPovertyImpact = output.poverty.deep_poverty;
 
-  // Calculate changes for each age group
-  const childPovertyChange = deepPovertyImpact.child.reform / deepPovertyImpact.child.baseline - 1;
-  const adultPovertyChange = deepPovertyImpact.adult.reform / deepPovertyImpact.adult.baseline - 1;
-  const seniorPovertyChange =
-    deepPovertyImpact.senior.reform / deepPovertyImpact.senior.baseline - 1;
-  const totalPovertyChange = deepPovertyImpact.all.reform / deepPovertyImpact.all.baseline - 1;
-
-  const povertyChanges = [
-    childPovertyChange,
-    adultPovertyChange,
-    seniorPovertyChange,
-    totalPovertyChange,
-  ];
   const povertyLabels = ['Children', 'Working-age adults', 'Seniors', 'All'];
   const labelToKey: Record<string, keyof typeof deepPovertyImpact> = {
     Children: 'child',
@@ -81,6 +73,11 @@ export default function DeepPovertyImpactByAgeSubPage({
     Seniors: 'senior',
     All: 'all',
   };
+  // Each age group's change; none for a group with no one in deep poverty before.
+  const povertyChanges = povertyLabels.map((label) => {
+    const { baseline, reform } = deepPovertyImpact[labelToKey[label]];
+    return relativeChange(reform, baseline);
+  });
 
   const formatPer = (n: number) =>
     formatPercent(n, countryId, {
@@ -91,45 +88,27 @@ export default function DeepPovertyImpactByAgeSubPage({
   // Generate hover message
   const hoverMessage = (x: string) => {
     const obj = `the percentage of ${x === 'All' ? 'people' : x.toLowerCase()} in deep poverty`;
-    const baseline = deepPovertyImpact[labelToKey[x]].baseline;
-    const reform = deepPovertyImpact[labelToKey[x]].reform;
-    const change = reform / baseline - 1;
-    return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
-      baseline,
-      reform,
-      formatter: formatPer,
-    });
+    const { baseline, reform } = deepPovertyImpact[labelToKey[x]];
+    return rateChangeMessage(obj, baseline, reform, countryId, formatPer);
   };
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = deepPovertyImpact.all.baseline;
-    const reform = deepPovertyImpact.all.reform;
-    const relativeChange = reform / baseline - 1;
-    const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
-    const objectTerm = 'the deep poverty rate';
-    const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
-      maximumFractionDigits: 1,
-    });
-    const absTerm = formatNumber(absoluteChange, countryId, {
-      maximumFractionDigits: 2,
-    });
-    const term2 = `${relTerm} (${absTerm}pp)`;
-    const signTerm = relativeChange > 0 ? 'increase' : 'decrease';
     const region = regionName(metadata);
-    const regionPhrase = region ? ` in ${region}` : '';
-
-    if (absTerm === '0') {
-      return `This reform would have no effect on ${objectTerm}${regionPhrase}`;
-    }
-    return `This reform would ${signTerm} ${objectTerm}${regionPhrase} by ${term2}`;
+    const { baseline, reform } = deepPovertyImpact.all;
+    return rateChangeTitle(
+      'the deep poverty rate',
+      baseline,
+      reform,
+      countryId,
+      region ? ` in ${region}` : ''
+    );
   };
 
   // Recharts data
   const chartData = povertyLabels.map((label, i) => ({
     name: label,
-    value: povertyChanges[i],
-    label: (povertyChanges[i] > 0 ? '+' : '') + formatPer(povertyChanges[i]),
+    ...relativeBar(povertyChanges[i], formatPer),
     hoverText: hoverMessage(label),
   }));
 
