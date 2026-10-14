@@ -1,4 +1,5 @@
 import { IconArrowRight } from '@tabler/icons-react';
+import { ErrorState } from '@/components/flagship/states';
 import { Button, Progress, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBudgetWindow } from '@/hooks/useBudgetWindow';
@@ -97,11 +98,11 @@ export default function BudgetWindowSummary({
             </span>
           </div>
         ) : failed ? (
-          <Text
-            style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
-          >
-            The budget window could not be calculated.
-          </Text>
+          <ErrorState
+            compact
+            title="The budget window could not be calculated"
+            onRetry={() => budget.refetch()}
+          />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
             <Text
@@ -123,10 +124,13 @@ export default function BudgetWindowSummary({
           </div>
         )}
       </div>
-      <Button size="sm" variant="ghost" onClick={onOpen}>
-        {totalText ? 'See each year' : 'See its progress'}
-        <IconArrowRight size={14} />
-      </Button>
+      {/* A failed window has nothing to see yet; its retry is on the left. */}
+      {!failed && (
+        <Button size="sm" variant="ghost" onClick={onOpen}>
+          {totalText ? 'See each year' : 'See its progress'}
+          <IconArrowRight size={14} />
+        </Button>
+      )}
     </section>
   );
 }

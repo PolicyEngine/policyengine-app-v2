@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   bracketFieldLabel,
+  groupKeyFromPath,
   humanizeSegment,
   parameterGroup,
 } from '@/libs/flagship/parameterGroups';
@@ -92,6 +93,28 @@ describe('parameterGroup', () => {
 
   test('given an ordinary parameter then it stands alone', () => {
     expect(parameterGroup('gov.irs.credits.ctc.amount', PARAMETERS, DRAFTABLE)).toBeNull();
+  });
+});
+
+describe('groupKeyFromPath', () => {
+  test('given a grouped member then its key is the group key the index gives', () => {
+    for (const path of [
+      'gov.irs.deductions.standard.amount.SINGLE',
+      'gov.irs.credits.eitc.max[1].amount',
+      'gov.usda.snap.allotment.10',
+    ]) {
+      expect(groupKeyFromPath(path)).toBe(parameterGroup(path, PARAMETERS, DRAFTABLE)?.key);
+    }
+  });
+
+  test('given members of one setting then they share a key', () => {
+    expect(groupKeyFromPath('gov.irs.credits.eitc.max[0].threshold')).toBe(
+      groupKeyFromPath('gov.irs.credits.eitc.max[1].amount')
+    );
+  });
+
+  test('given an ordinary parameter then its key is its own path', () => {
+    expect(groupKeyFromPath('gov.irs.credits.ctc.amount')).toBe('gov.irs.credits.ctc.amount');
   });
 });
 

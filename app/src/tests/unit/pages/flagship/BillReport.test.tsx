@@ -6,6 +6,7 @@ import BillReportPage from '@/pages/flagship/BillReport.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -52,6 +53,12 @@ vi.mock('@/libs/flagship/billMetrics', async (importOriginal) => {
 });
 
 const mockUseBillEconomy = vi.fn();
+const mockFetchMetadata = vi.fn();
+
+vi.mock('@/api/metadata', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/metadata')>()),
+  fetchMetadata: (...args: unknown[]) => mockFetchMetadata(...args),
+}));
 
 vi.mock('@/hooks/useBillEconomy', () => ({
   useBillEconomy: (...args: unknown[]) => mockUseBillEconomy(...args),
@@ -219,7 +226,7 @@ describe('BillReportPage', () => {
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
     await user.click(screen.getByRole('button', { name: 'Load full results' }));
-    expect(screen.getByText('The full results could not be calculated.')).toBeInTheDocument();
+    expect(screen.getByText('The full results could not be calculated')).toBeInTheDocument();
     expect(screen.getByText('Worker lost')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
@@ -515,6 +522,49 @@ describe('BillReportPage', () => {
   test('given an unknown bill then says it is not in the feed', async () => {
     renderReport('missing-bill');
 
-    expect(await screen.findByText('This bill is not in the current feed.')).toBeInTheDocument();
+    expect(await screen.findByText('This bill is not in the feed.')).toBeInTheDocument();
+  });
+
+  test('given the feed is loading then the report placeholder holds its place', () => {
+    mockFetchTrackerBills.mockReturnValue(new Promise(() => {}));
+
+    renderReport();
+
+    expect(screen.getByRole('status', { name: 'Loading the bill' })).toBeInTheDocument();
+  });
+
+  test('given the feed failed then try again asks for it again', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockRejectedValue(new Error('tracker down'));
+    renderReport();
+    // The feed retries once before failing, so give it past the retry delay.
+    await screen.findByText('Could not load the bill feed', {}, { timeout: 5000 });
+    mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(
+      await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title })
+    ).toBeInTheDocument();
+  });
+
+  test('given the model metadata failed then the full results say so and ask for it again', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchMetadata.mockReturnValue(new Promise(() => {}));
+    seedMetadataError();
+    renderReport();
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the parameters');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(mockFetchMetadata).toHaveBeenCalledWith('us');
+    expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument();
   });
 });

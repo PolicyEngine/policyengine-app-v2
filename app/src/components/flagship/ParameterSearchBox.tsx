@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconArrowLeft,
   IconCheck,
@@ -7,7 +7,8 @@ import {
   IconInfoCircle,
   IconSearch,
 } from '@tabler/icons-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { EmptyState } from '@/components/flagship/states';
+import { Button, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useParameterSearch } from '@/hooks/useParameterSearch';
 import {
@@ -312,6 +313,7 @@ export default function ParameterSearchBox({
   autoFocus = false,
 }: ParameterSearchBoxProps) {
   const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState(0);
   const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
   /**
@@ -541,6 +543,7 @@ export default function ParameterSearchBox({
       >
         <IconSearch size={20} color={colors.primary[500]} style={{ flexShrink: 0 }} />
         <input
+          ref={inputRef}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -662,30 +665,30 @@ export default function ParameterSearchBox({
       </div>
 
       {noMatches && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: spacing.sm,
-            marginTop: spacing.md,
-            padding: `${spacing['2xl']} ${spacing.lg}`,
-            border: `1px dashed ${colors.border.medium}`,
-            borderRadius: spacing.radius.feature,
-            textAlign: 'center',
-            fontSize: typography.fontSize.sm,
-            fontFamily: typography.fontFamily.primary,
-            color: colors.text.secondary,
-          }}
-        >
-          <span>
-            No parameters match{' '}
-            <strong style={{ color: colors.text.primary }}>“{query.trim()}”</strong>
-            {scopePhrase}.
-          </span>
-          <span style={{ fontSize: typography.fontSize.xs }}>
-            Nothing matches anywhere else either — check the spelling, or try fewer words.
-          </span>
+        <div style={{ marginTop: spacing.md }}>
+          <EmptyState
+            compact
+            title={
+              <>
+                No parameters match{' '}
+                <strong style={{ color: colors.text.primary }}>“{query.trim()}”</strong>
+                {scopePhrase}.
+              </>
+            }
+            action={
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setQuery('');
+                  setHighlighted(0);
+                  inputRef.current?.focus();
+                }}
+              >
+                Clear search
+              </Button>
+            }
+          />
         </div>
       )}
 

@@ -20,10 +20,16 @@ import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports from '@/components/flagship/ReformReports';
+import {
+  CARD_GRID_STYLE,
+  CardGridSkeleton,
+  EmptyState,
+  ErrorState,
+} from '@/components/flagship/states';
 import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
-import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
+import { Button, Stack, Text, Title } from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
@@ -285,6 +291,7 @@ export default function ReformsPage() {
     isConfigured: billsConfigured,
     isLoading: billsLoading,
     isError: billsError,
+    retry: retryBills,
   } = useTrackedBills(countryId);
 
   const {
@@ -840,6 +847,11 @@ export default function ReformsPage() {
   }
 
   // ---- The browsing surface ----
+  const buildAction = (
+    <Button size="sm" onClick={() => nav.push(`/${countryId}/build`)}>
+      Build a reform
+    </Button>
+  );
   return (
     <WorkspaceLayout wide>
       <Stack style={{ gap: spacing.lg }}>
@@ -926,67 +938,66 @@ export default function ReformsPage() {
           />
         )}
 
-        {tab === 'yours' && isPending && <Spinner />}
+        {tab === 'yours' && isPending && <CardGridSkeleton label="Loading your reforms" />}
         {tab === 'yours' && isError && (
-          <Text style={{ color: colors.error, fontSize: typography.fontSize.sm }}>
-            Could not load your reforms. Try reloading the page.
-          </Text>
+          <ErrorState title="Could not load your reforms" onRetry={invalidate} />
         )}
 
-        {tab === 'bills' && billsLoading && <Spinner />}
+        {tab === 'bills' && billsLoading && <CardGridSkeleton label="Loading bills" withStats />}
         {tab === 'bills' && billsError && (
-          <Text style={{ color: colors.error, fontSize: typography.fontSize.sm }}>
-            Could not load the bill feed. Try reloading the page.
-          </Text>
+          <ErrorState title="Could not load the bill feed" onRetry={retryBills} />
         )}
         {tab === 'bills' && !billsLoading && !billsError && !billsConfigured && (
-          <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-            The bill feed is not configured for this deployment.
-          </Text>
+          <EmptyState
+            icon={<IconScale size={22} />}
+            title="The bill feed is not configured here."
+            action={buildAction}
+          />
         )}
         {tab === 'bills' && !billsLoading && !billsError && billsConfigured && (
           <>
             {bills.length === 0 && (
-              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                No analyzed bills yet for this country.
-              </Text>
+              <EmptyState
+                icon={<IconScale size={22} />}
+                title="No analyzed bills yet."
+                action={buildAction}
+              />
             )}
             {bills.length > 0 && visibleBills.length === 0 && (
-              <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                  No bills match.
-                </Text>
-                <Button variant="outline" size="sm" onClick={clearBillFilters}>
-                  Clear filters
-                </Button>
-              </Stack>
+              <EmptyState
+                title="No bills match."
+                action={
+                  <Button size="sm" variant="outline" onClick={clearBillFilters}>
+                    Clear filters
+                  </Button>
+                }
+              />
             )}
           </>
         )}
-        {tab === 'yours' && !isPending && visibleReforms.length === 0 && (
-          <Stack
-            style={{
-              padding: spacing['2xl'],
-              border: `1px dashed ${colors.border.light}`,
-              borderRadius: 12,
-              alignItems: 'center',
-              gap: spacing.sm,
-            }}
-          >
-            <IconScale size={22} color={colors.text.secondary} />
-            <Text style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}>
-              No saved reforms yet — build one, or ask a policy question.
-            </Text>
-          </Stack>
-        )}
+        {/* Saved reforms a search hides are a different empty from none at all. */}
+        {tab === 'yours' &&
+          !isPending &&
+          !isError &&
+          visibleReforms.length === 0 &&
+          ((reforms ?? []).length === 0 ? (
+            <EmptyState
+              icon={<IconScale size={22} />}
+              title="No saved reforms yet."
+              action={buildAction}
+            />
+          ) : (
+            <EmptyState
+              title="No reforms match."
+              action={
+                <Button size="sm" variant="outline" onClick={() => setQuery('')}>
+                  Clear search
+                </Button>
+              }
+            />
+          ))}
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: spacing.md,
-          }}
-        >
+        <div style={CARD_GRID_STYLE}>
           {tab === 'bills' &&
             pagedBills.map((bill) => (
               <Card

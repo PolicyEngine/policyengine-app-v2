@@ -32,9 +32,9 @@ interface DraftRow {
 
 // Narrow tables drop the current-law and when columns; the row's
 // details still have both.
-const ROW_GRID =
+export const ROW_GRID =
   'tw:grid tw:items-center tw:gap-3 tw:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_136px_64px]';
-const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
+export const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
 
 /** One line, cut with an ellipsis: list values run to dozens of names. */
 const truncate: React.CSSProperties = {

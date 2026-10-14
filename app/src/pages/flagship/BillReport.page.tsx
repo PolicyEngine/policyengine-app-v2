@@ -4,12 +4,14 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import BillReportStatus from '@/components/flagship/report/BillReportStatus';
 import DistrictImpactCard, {
   type CongressionalMode,
 } from '@/components/flagship/report/DistrictImpactCard';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
+import { ErrorState } from '@/components/flagship/states';
 import { BillExternalEstimates, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text } from '@/components/ui';
 import { getDurationForCountry } from '@/constants/calculationDurations';
@@ -17,6 +19,7 @@ import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistr
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
@@ -111,10 +114,6 @@ const UNAVAILABLE_COPY: Partial<Record<RunState, { title: string; detail: string
     title: 'The full results cannot be calculated.',
     detail: 'None of this bill’s provisions are mapped to model parameters yet.',
   },
-  'no-metadata': {
-    title: 'The full results cannot be calculated.',
-    detail: 'The model’s parameters could not be loaded. Reload the page to try again.',
-  },
 };
 
 /** The tracker stores no relative income change by district, so that view is left out. */
@@ -138,6 +137,14 @@ function FullResultsStatus({
   onStart: () => void;
 }) {
   const countryId = useCurrentCountry();
+  const metadata = useFlagshipMetadataStatus();
+  if (runState === 'no-metadata') {
+    return (
+      <Stack style={STATUS_BOX}>
+        <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+      </Stack>
+    );
+  }
   const unavailable = UNAVAILABLE_COPY[runState];
   if (unavailable) {
     return (
@@ -169,14 +176,13 @@ function FullResultsStatus({
   }
   if (runState === 'error') {
     return (
-      <Stack style={{ ...STATUS_BOX, alignItems: 'flex-start' }}>
-        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-          The full results could not be calculated.
-        </Text>
-        {economy.message && <Caption>{economy.message}</Caption>}
-        <Button size="sm" variant="outline" onClick={economy.retry}>
-          Try again
-        </Button>
+      <Stack style={STATUS_BOX}>
+        <ErrorState
+          compact
+          title="The full results could not be calculated"
+          description={economy.message}
+          onRetry={economy.retry}
+        />
       </Stack>
     );
   }
@@ -220,7 +226,8 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const metadataLoaded = useSelector((state: RootState) => state.metadata.version !== null);
   const metadataError = useSelector((state: RootState) => state.metadata.error);
-  const { bills, isLoading } = useTrackedBills(countryId);
+  const feed = useTrackedBills(countryId);
+  const { bills } = feed;
   // The bill whose full run the reader started; another bill starts unrun.
   const [runRequestedFor, setRunRequestedFor] = useState<string | null>(null);
   const runRequested = runRequestedFor === billId;
@@ -264,11 +271,12 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   if (!bill) {
     return (
-      <Stack style={{ maxWidth: 760, margin: '0 auto', gap: spacing.lg }}>
-        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          {isLoading ? 'Loading the analysis…' : 'This bill is not in the current feed.'}
-        </Text>
-      </Stack>
+      <BillReportStatus
+        isLoading={feed.isLoading}
+        isError={feed.isError}
+        isConfigured={feed.isConfigured}
+        onRetry={feed.retry}
+      />
     );
   }
 
