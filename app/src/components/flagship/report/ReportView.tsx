@@ -9,6 +9,7 @@ import {
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
+import BudgetWindowSummary from '@/components/flagship/report/BudgetWindowSummary';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
 import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCharts';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
@@ -168,6 +169,17 @@ export default function ReportView({
     setVisitedTabs((visited) => (visited.has(section) ? visited : new Set([...visited, section])));
     setActiveTab(section);
   }
+  /** The Economic impacts tab, at its Budget window section. */
+  function openBudgetWindow() {
+    selectTab('economy');
+    // The tab draws its content on first visit: scroll once it is there.
+    window.setTimeout(() => {
+      document
+        .getElementById('budget-window-heading')
+        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }, 60);
+  }
+
   function openReportSection(section: string) {
     selectTab(section);
     requestAnimationFrame(() => {
@@ -310,6 +322,17 @@ export default function ReportView({
                     districtAvailable={districtScope || countryId === 'uk'}
                     onOpen={openReportSection}
                   />
+                  {/* A window asked for in Build: its progress, then its total, here too. */}
+                  {budgetWindow && reformPolicyId && baselinePolicyId && (
+                    <BudgetWindowSummary
+                      countryId={countryId}
+                      reformPolicyId={reformPolicyId}
+                      baselinePolicyId={baselinePolicyId}
+                      region={region}
+                      window={budgetWindow}
+                      onOpen={openBudgetWindow}
+                    />
+                  )}
                   {overviewFooter}
                 </Stack>
               )}

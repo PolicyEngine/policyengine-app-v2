@@ -424,7 +424,8 @@ describe('DraftTable', () => {
         'active'
       );
       await user.click(screen.getByRole('tab', { name: 'Indexed' }));
-      expect(screen.getByText(/grows at current law's rate from 2026/)).toBeInTheDocument();
+      // Indexing is a button beside the start, not a row of the grid.
+      expect(screen.queryByRole('rowheader', { name: 'Indexing' })).not.toBeInTheDocument();
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
@@ -437,6 +438,8 @@ describe('DraftTable', () => {
       expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
         "Current law's rate"
       );
+      // The formula reads in the pop-up.
+      expect(screen.getByText(/grows at current law's rate from 2026/)).toBeInTheDocument();
       // "None" is the One value mode, not an indexing choice.
       await user.click(screen.getByRole('combobox', { name: 'Indexing' }));
       expect(screen.queryByRole('option', { name: 'None' })).not.toBeInTheDocument();
@@ -515,6 +518,8 @@ describe('DraftTable', () => {
       expect(screen.getByLabelText('Child tax credit base amount, 2027')).toHaveTextContent(
         '$3,090'
       );
+      // The formula reads in the pop-up, beside the start's button.
+      await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
       expect(
         screen.getByText('From 2027: $3,000 × CPI-U that year ÷ CPI-U in 2026.')
       ).toBeInTheDocument();
@@ -556,6 +561,7 @@ describe('DraftTable', () => {
       // 3,000 × 1.03 = 3,090, down to a multiple of $50.
       expect(provision(CTC_PATH)?.intervals?.[1]).toMatchObject({ value: 3050 });
       expect(provision(CTC_PATH)).toMatchObject({ growthRoundTo: 50, growthRound: 'down' });
+      await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
       expect(
         screen.getByText(
           'From 2027: $3,000 × CPI-U that year ÷ CPI-U in 2026, rounded down to a multiple of $50.'
