@@ -5,6 +5,7 @@ const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
 const mockCreateReportAndAssociate = vi.fn();
 const mockFetchBudgetWindow = vi.fn();
+const mockFetchSocietyWide = vi.fn();
 
 vi.mock('@/api/policy', () => ({
   createPolicy: (...args: any[]) => mockCreatePolicy(...args),
@@ -17,6 +18,9 @@ vi.mock('@/api/report', () => ({
 }));
 vi.mock('@/api/budgetWindow', () => ({
   fetchBudgetWindow: (...args: any[]) => mockFetchBudgetWindow(...args),
+}));
+vi.mock('@/api/societyWideCalculation', () => ({
+  fetchSocietyWideCalculation: (...args: any[]) => mockFetchSocietyWide(...args),
 }));
 
 const PROVISION = {
@@ -124,6 +128,45 @@ describe('runFlagshipReport', () => {
       population_id: 'congressional_district/CA-01',
       population_type: 'geography',
       policy_id: 77,
+    });
+  });
+
+  test('given a run then its calculation starts at once, as the report page asks for it', async () => {
+    mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      year: 2027,
+      region: 'state/de',
+    });
+
+    expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '2', {
+      region: 'state/de',
+      time_period: '2027',
+    });
+  });
+
+  test('given a nationwide run then the calculation asks for the country', async () => {
+    mockFetchSocietyWide.mockRejectedValue(new Error('offline'));
+
+    // A failed first request doesn't fail the run: the report page asks again.
+    await expect(
+      runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        year: 2026,
+      })
+    ).resolves.toBe('55');
+    expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '2', {
+      region: 'us',
+      time_period: '2026',
     });
   });
 
