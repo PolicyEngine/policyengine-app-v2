@@ -25,12 +25,15 @@ describe('FlagshipTopBar', () => {
     clearDraftReform();
   });
 
-  test('given the bar renders then both sections are in the primary navigation', () => {
+  test('given the bar renders then both sections and the more menu are in the primary navigation', () => {
     renderTopBar();
 
     const primary = screen.getByRole('navigation', { name: 'Primary' });
     expect(primary).toContainElement(screen.getByRole('button', { name: 'Build' }));
     expect(primary).toContainElement(screen.getByRole('button', { name: 'Reforms' }));
+    expect(primary).toContainElement(
+      screen.getByRole('button', { name: /more policyengine links/i })
+    );
   });
 
   test('given the Ask page is paused then it has no nav item', () => {

@@ -24,8 +24,8 @@ const NAV_ITEMS = [
 export const FLAGSHIP_TOP_BAR_HEIGHT = 56;
 
 /**
- * The flagship shell's navigation: brand, the two sections, and the
- * website links, in one slim bar across the top. Two destinations do
+ * The flagship shell's navigation: brand, then the two sections and the
+ * website links as one group, in one slim bar across the top. Two destinations do
  * not earn a sidebar's width, and they fit a phone's bar as they are,
  * so there is no drawer to open on any viewport.
  */
@@ -113,70 +113,72 @@ export default function FlagshipTopBar() {
             </button>
           );
         })}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="More PolicyEngine links"
+              className="tw:cursor-pointer tw:hover:bg-gray-100 tw:text-gray-700"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.xs,
+                height: 34,
+                padding: `0 ${spacing.md}`,
+                border: 'none',
+                borderRadius: spacing.radius.container,
+                fontSize: typography.fontSize.sm,
+                fontFamily: typography.fontFamily.primary,
+                fontWeight: typography.fontWeight.medium,
+              }}
+            >
+              <IconDotsVertical size={16} style={{ flexShrink: 0 }} />
+              <span className="tw:hidden tw:sm:inline">More</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {moreLinks.map((link) => (
+              <DropdownMenuItem key={link.href} asChild>
+                <a href={link.href} style={{ cursor: 'pointer' }}>
+                  {link.label}
+                </a>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </nav>
 
-      {draftCount > 0 && (
-        <button
-          type="button"
-          onClick={() => nav.push(`/${countryId}/build`)}
-          className="tw:cursor-pointer tw:hover:bg-primary-100"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            height: 30,
-            marginLeft: 'auto',
-            padding: `0 ${spacing.md}`,
-            border: 'none',
-            borderRadius: 999,
-            background: colors.primary[50],
-            color: colors.primary[700],
-            fontSize: typography.fontSize.sm,
-            fontWeight: typography.fontWeight.medium,
-            fontFamily: typography.fontFamily.primary,
-          }}
-        >
-          <IconFilePencil size={15} aria-hidden />
-          Draft · {draftCount} parameter{draftCount === 1 ? '' : 's'}
-        </button>
-      )}
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      {/* The draft chip and the sign-in / user menu sit together on the right. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: spacing.lg, marginLeft: 'auto' }}>
+        {draftCount > 0 && (
           <button
             type="button"
-            aria-label="More PolicyEngine links"
-            className="tw:cursor-pointer tw:text-gray-700 tw:hover:bg-gray-100"
+            onClick={() => nav.push(`/${countryId}/build`)}
+            className="tw:cursor-pointer tw:hover:bg-primary-100"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: spacing.xs,
-              height: 34,
-              marginLeft: draftCount > 0 ? undefined : 'auto',
-              padding: `0 ${spacing.sm}`,
+              height: 30,
+              padding: `0 ${spacing.md}`,
               border: 'none',
-              borderRadius: spacing.radius.container,
+              borderRadius: 999,
+              background: colors.primary[50],
+              color: colors.primary[700],
               fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.medium,
               fontFamily: typography.fontFamily.primary,
             }}
           >
-            <IconDotsVertical size={16} />
-            <span className="tw:hidden tw:sm:inline">More</span>
+            <IconFilePencil size={15} aria-hidden />
+            Draft · {draftCount} parameter{draftCount === 1 ? '' : 's'}
           </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {moreLinks.map((link) => (
-            <DropdownMenuItem key={link.href} asChild>
-              <a href={link.href} style={{ cursor: 'pointer' }}>
-                {link.label}
-              </a>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
 
-      {/* Sign in / user menu; renders nothing unless sign-in is enabled. */}
-      <AuthMenu />
+        {/* Sign in / user menu; renders nothing unless sign-in is enabled. */}
+        <AuthMenu />
+      </div>
     </header>
   );
 }
