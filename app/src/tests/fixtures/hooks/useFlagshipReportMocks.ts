@@ -1,3 +1,5 @@
+import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
 import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 
@@ -12,6 +14,10 @@ export const REFORM_SIMULATION_ID = '502';
 /** As fetchReportById throws on a 404. */
 export const REPORT_NOT_FOUND_ERROR = new Error(
   `Failed to fetch report ${MISSING_REPORT_ID}: 404 Not Found`
+);
+/** As fetchReportById throws when the API is down. */
+export const REPORT_UNAVAILABLE_ERROR = new Error(
+  `Failed to fetch report ${EXISTING_REPORT_ID}: 503 Service Unavailable`
 );
 /** As fetchSimulationById throws when the API is down. */
 export const SIMULATION_UNAVAILABLE_ERROR = new Error(
@@ -42,3 +48,32 @@ export const nationwideSimulationMetadata = (id: string, policyId: string): Simu
   status: 'pending',
   output: null,
 });
+
+/** The report the hook hands on once it is in. */
+export const EXISTING_REPORT: Report = {
+  id: EXISTING_REPORT_ID,
+  label: 'Bigger CTC',
+  countryId: 'us',
+  year: '2026',
+  apiVersion: 'v1',
+  simulationIds: [BASELINE_SIMULATION_ID, REFORM_SIMULATION_ID],
+  status: 'pending',
+};
+
+const nationwideSimulation = (id: string, policyId: string): Simulation => ({
+  id,
+  countryId: 'us',
+  apiVersion: 'v1',
+  policyId,
+  populationId: 'us',
+  populationType: 'geography',
+  label: null,
+  isCreated: true,
+  status: 'pending',
+});
+
+/** Its baseline and reform simulations, once they are in. */
+export const EXISTING_SIMULATIONS: Simulation[] = [
+  nationwideSimulation(BASELINE_SIMULATION_ID, '2'),
+  nationwideSimulation(REFORM_SIMULATION_ID, '98557'),
+];

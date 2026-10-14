@@ -528,13 +528,13 @@ describe('BillReportPage', () => {
     seedMetadataError();
     renderReport();
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the model’s parameters');
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the parameters');
 
     // When
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     // Then
     expect(mockFetchMetadata).toHaveBeenCalledWith('us');
-    expect(screen.queryByText('Could not load the model’s parameters')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument();
   });
 });

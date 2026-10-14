@@ -3,15 +3,23 @@ import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportData } from '@/hooks/useFlagshipReport';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
+import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
 import {
+  EXISTING_REPORT,
   EXISTING_REPORT_ID,
+  EXISTING_SIMULATIONS,
   MISSING_REPORT_ID,
   REPORT_NOT_FOUND_ERROR,
   SIMULATION_UNAVAILABLE_ERROR,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockUseFlagshipReport = vi.fn();
 const mockRetry = vi.fn();
+const mockCalcStatus = vi.fn();
+const mockFetchMetadata = vi.fn();
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
@@ -19,13 +27,16 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
 }));
 
 vi.mock('@/hooks/useCalculationStatus', () => ({
-  useCalculationStatus: () => ({
-    status: 'idle',
-    isComplete: false,
-    isError: false,
-    result: null,
-  }),
+  useCalculationStatus: () => mockCalcStatus(),
 }));
+
+vi.mock('@/api/metadata', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/metadata')>()),
+  fetchMetadata: (...args: unknown[]) => mockFetchMetadata(...args),
+}));
+
+const IDLE_STATUS = { status: 'idle', isComplete: false, isError: false, result: null };
+const PENDING_STATUS = { ...IDLE_STATUS, status: 'pending', progress: 20 };
 
 vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
   useStartCalculationOnLoad: () => undefined,
@@ -71,6 +82,11 @@ function renderPage(userReportId: string) {
 describe('FlagshipReportPage load states', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Cleared before each test, not after: the last page is still mounted then.
+    store.dispatch(clearMetadata());
+    mockCalcStatus.mockReturnValue(IDLE_STATUS);
+    // A retried metadata fetch stays in flight.
+    mockFetchMetadata.mockReturnValue(new Promise(() => {}));
   });
 
   test('given the report is loading then the run card placeholder holds its place', () => {
@@ -78,7 +94,47 @@ describe('FlagshipReportPage load states', () => {
 
     renderPage(EXISTING_REPORT_ID);
 
-    expect(screen.getByRole('status', { name: 'Loading report' })).toBeInTheDocument();
+    // One status, the placeholder's own: no live region around it.
+    expect(screen.getAllByRole('status')).toEqual([
+      screen.getByRole('status', { name: 'Loading report' }),
+    ]);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('given the run is calculating then the run card is the one status', () => {
+    mockCalcStatus.mockReturnValue(PENDING_STATUS);
+    mockUseFlagshipReport.mockReturnValue(
+      reportData({ report: EXISTING_REPORT, simulations: EXISTING_SIMULATIONS })
+    );
+
+    renderPage(EXISTING_REPORT_ID);
+
+    const [status, ...others] = screen.getAllByRole('status');
+    expect(status).toHaveTextContent('Calculating the nationwide results');
+    expect(others).toHaveLength(0);
+  });
+
+  test('given the results are in and the parameters failed then the overview says so and asks again', async () => {
+    // Given
+    const user = userEvent.setup();
+    seedMetadataError();
+    mockCalcStatus.mockReturnValue({
+      status: 'complete',
+      isComplete: true,
+      isError: false,
+      result: createMockSocietyWideOutput(),
+    });
+    mockUseFlagshipReport.mockReturnValue(
+      reportData({ report: EXISTING_REPORT, simulations: EXISTING_SIMULATIONS })
+    );
+    renderPage(EXISTING_REPORT_ID);
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the parameters');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(mockFetchMetadata).toHaveBeenCalledWith('us');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

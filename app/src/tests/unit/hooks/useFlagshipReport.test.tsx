@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useFlagshipReport } from '@/hooks/useFlagshipReport';
+import { reportKeys } from '@/libs/queryKeys';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
@@ -17,6 +18,7 @@ import {
   POLICY_UNAVAILABLE_ERROR,
   REFORM_SIMULATION_ID,
   REPORT_NOT_FOUND_ERROR,
+  REPORT_UNAVAILABLE_ERROR,
   SIMULATION_UNAVAILABLE_ERROR,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
 
@@ -56,7 +58,7 @@ function renderReportHook(id: string) {
       </QueryClientProvider>
     </Provider>
   );
-  return renderHook(() => useFlagshipReport(id), { wrapper });
+  return { queryClient, ...renderHook(() => useFlagshipReport(id), { wrapper }) };
 }
 
 describe('useFlagshipReport', () => {
@@ -89,6 +91,47 @@ describe('useFlagshipReport', () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBe(REPORT_NOT_FOUND_ERROR);
     expect(mockFetchReportById).toHaveBeenCalledTimes(1);
+  });
+
+  test('given the report is in then a refetch that fails is not a failed load', async () => {
+    // Given
+    const { result, rerender, queryClient } = renderReportHook(EXISTING_REPORT_ID);
+    await waitFor(() => expect(result.current.simulations).toHaveLength(2));
+    mockFetchReportById.mockRejectedValue(REPORT_UNAVAILABLE_ERROR);
+
+    // When — e.g. the reader comes back to the tab while the run goes on
+    await act(async () => {
+      await queryClient.refetchQueries({ queryKey: reportKeys.byId(EXISTING_REPORT_ID) });
+    });
+    // A render after the refetch reads the query as it now stands.
+    rerender();
+
+    // Then
+    expect(queryClient.getQueryState(reportKeys.byId(EXISTING_REPORT_ID))?.error).toBe(
+      REPORT_UNAVAILABLE_ERROR
+    );
+    expect(result.current.error).toBeNull();
+    expect(result.current.report).toBeDefined();
+  });
+
+  test('given the report is in then a refetch that finds nothing does not make it not found', async () => {
+    // Given
+    const { result, rerender, queryClient } = renderReportHook(EXISTING_REPORT_ID);
+    await waitFor(() => expect(result.current.simulations).toHaveLength(2));
+    mockFetchReportById.mockRejectedValue(REPORT_NOT_FOUND_ERROR);
+
+    // When
+    await act(async () => {
+      await queryClient.refetchQueries({ queryKey: reportKeys.byId(EXISTING_REPORT_ID) });
+    });
+    rerender();
+
+    // Then
+    expect(queryClient.getQueryState(reportKeys.byId(EXISTING_REPORT_ID))?.error).toBe(
+      REPORT_NOT_FOUND_ERROR
+    );
+    expect(result.current.notFound).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 
   test('given a simulation fails to load then the error says so, and the report is found', async () => {

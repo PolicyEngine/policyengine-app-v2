@@ -31,7 +31,8 @@ export interface FlagshipReportData {
   /**
    * Why the report or one of its simulations failed to load; null while
    * neither has. A policy that fails only costs the provision detail, so
-   * it does not count: the run goes on without it.
+   * it does not count: the run goes on without it. Nor does a refetch
+   * that fails after the data is in.
    */
   error: Error | null;
   /** The report id resolves to no report (a bad or deleted link). */
@@ -104,14 +105,21 @@ export function useFlagshipReport(id: string): FlagshipReportData {
       retry: async () => undefined,
     };
   }
-  const error = (reportError as Error | null) ?? (simulationResults.error as Error | null) ?? null;
+  // A failed background refetch keeps the data it had (TanStack keeps
+  // `data` and sets `error`): that is not a failed load, and the run the
+  // report shows goes on. Only a query with nothing to show counts.
+  const unloadedReportError = report ? null : (reportError as Error | null);
+  const error =
+    unloadedReportError ??
+    simulationResults.queries.find((query) => query.error && !query.data)?.error ??
+    null;
   return {
     report,
     simulations,
     policies,
     isLoading: reportLoading || simulationResults.isLoading || policyResults.isLoading,
     error,
-    notFound: !!reportError && isNotFoundError(reportError),
+    notFound: !!unloadedReportError && isNotFoundError(unloadedReportError),
     retry: () =>
       Promise.all([
         reportError ? refetchReport() : null,

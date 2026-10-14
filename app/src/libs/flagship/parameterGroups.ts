@@ -65,6 +65,25 @@ function labelFor(path: string, parameters: ParameterMetadataCollection): string
 }
 
 /**
+ * The key `path`'s group has, read from the path alone: a bracket
+ * field's schedule, a breakdown member's split setting, else the path
+ * itself. Draft paths that share a key share one table row, so a count
+ * of keys sizes the table before the parameters are here to group it.
+ */
+export function groupKeyFromPath(path: string): string {
+  const lastDot = path.lastIndexOf('.');
+  if (lastDot <= 0) {
+    return path;
+  }
+  const parent = path.slice(0, lastDot);
+  const bracket = parent.match(BRACKET_PARENT);
+  if (bracket) {
+    return bracket[1];
+  }
+  return BREAKDOWN_SEGMENT.test(path.slice(lastDot + 1)) ? parent : path;
+}
+
+/**
  * The group `path` belongs to, from the draftable parameters around it,
  * or null when it stands alone (fewer than two members).
  */

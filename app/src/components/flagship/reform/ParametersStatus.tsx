@@ -2,6 +2,7 @@ import { IconSearch } from '@tabler/icons-react';
 import { ErrorState, SkeletonLine, SkeletonRegion } from '@/components/flagship/states';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
+import { groupKeyFromPath } from '@/libs/flagship/parameterGroups';
 import { ROW_GRID, WIDE_ONLY } from './DraftTable';
 
 /** The search bar and its filter row, as placeholders at their own size. */
@@ -108,11 +109,12 @@ function DraftTableSkeleton({ rows }: { rows: number }) {
  * Build waits on the model's parameters: the add bar has nothing to
  * search and the table cannot group breakdowns until they arrive. While
  * they load, placeholders hold the bar's place (and the table's, for a
- * draft of `rows` parameters); if they fail, the error says so and asks
- * for them again.
+ * draft of `paths`, a row per group as the table draws them); if they
+ * fail, the error says so and asks for them again.
  */
-export default function ParametersStatus({ rows = 0 }: { rows?: number }) {
+export default function ParametersStatus({ paths = [] }: { paths?: string[] }) {
   const metadata = useFlagshipMetadataStatus();
+  const rows = new Set(paths.map(groupKeyFromPath)).size;
 
   if (metadata.status === 'error') {
     return (

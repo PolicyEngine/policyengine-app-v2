@@ -141,12 +141,7 @@ function FullResultsStatus({
   if (runState === 'no-metadata') {
     return (
       <Stack style={STATUS_BOX}>
-        <ErrorState
-          compact
-          title="Could not load the model’s parameters"
-          description="The full results need them."
-          onRetry={metadata.retry}
-        />
+        <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
       </Stack>
     );
   }

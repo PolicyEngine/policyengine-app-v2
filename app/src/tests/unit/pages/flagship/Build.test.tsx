@@ -1,11 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@test-utils';
+import { act, render, screen, userEvent } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
 import BuildPage from '@/pages/flagship/Build.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
-import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import {
+  JOINT_PATH,
+  seedDeductionMetadata,
+  SINGLE_PATH,
+} from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
 
 const mockFetchMetadata = vi.fn();
@@ -88,6 +92,26 @@ describe('BuildPage', () => {
     // The placeholder is the table's shape, so the table takes its place without a jump.
     expect(loading[0]).toHaveTextContent('New value');
     expect(screen.queryByRole('button', { name: /open base amount/i })).not.toBeInTheDocument();
+  });
+
+  test('given breakdown members before metadata loads then the placeholder has the table rows', () => {
+    // Given — two filing statuses of one deduction share a row in the table
+    startDraftReform('us', 'manual');
+    addDraftProvision('us', CTC);
+    for (const path of [SINGLE_PATH, JOINT_PATH]) {
+      addDraftProvision('us', { ...CTC, path, breadcrumb: 'IRS → Deductions → Standard' });
+    }
+    renderPage();
+    const placeholder = screen.getByRole('status', { name: 'Loading parameters' });
+    // The header, a row per table row, and the add bar at the foot.
+    const placeholderRows = placeholder.firstElementChild!.children.length - 2;
+
+    // When
+    act(() => seedDeductionMetadata());
+
+    // Then
+    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(placeholderRows);
+    expect(placeholderRows).toBe(2);
   });
 
   test('given metadata failed then the page says so instead of loading for good', () => {

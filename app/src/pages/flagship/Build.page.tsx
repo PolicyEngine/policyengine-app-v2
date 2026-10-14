@@ -61,7 +61,7 @@ export default function BuildPage() {
           <>
             <DraftHeader draft={current} />
             {loading ? (
-              <ParametersStatus rows={current.provisions.length} />
+              <ParametersStatus paths={current.provisions.map((provision) => provision.path)} />
             ) : (
               // The next parameter is added at the foot of the reform, where
               // the last one ends: a reform takes as many as it needs.

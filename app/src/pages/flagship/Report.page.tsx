@@ -9,11 +9,13 @@ import ReportLoadError from '@/components/flagship/report/ReportLoadError';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress, { RunProgressSkeleton } from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
+import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Title } from '@/components/ui';
 import { getDurationForCountry } from '@/constants/calculationDurations';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
@@ -62,6 +64,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
+  // The reform's provisions are rebuilt from metadata; without it they cannot show.
+  const metadata = useFlagshipMetadataStatus();
 
   // The run handed its draft over to this report; Build starts fresh.
   useEffect(() => {
@@ -192,10 +196,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         </Stack>
       );
     }
+    // The run card and its placeholder are each a status of their own.
     return layout(
       <Stack
-        role="status"
-        aria-live="polite"
         style={{
           maxWidth: 1080,
           margin: '0 auto',
@@ -242,6 +245,19 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       // A window asked for in Build opens running.
       budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
+      overviewLead={
+        !meta && metadata.status === 'error' ? (
+          <div
+            style={{
+              padding: spacing.lg,
+              border: `1px dashed ${colors.border.light}`,
+              borderRadius: spacing.radius.feature,
+            }}
+          >
+            <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+          </div>
+        ) : undefined
+      }
       customBaselineLabel={customBaselineLabel}
       year={report?.year ?? ''}
       region={region}
