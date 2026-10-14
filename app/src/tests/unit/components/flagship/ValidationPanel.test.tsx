@@ -196,6 +196,7 @@ describe('BaselineComparisons', () => {
     ).toBeInTheDocument();
     expect(within(table).getByRole('button', { name: SOI_CDCC_CLAIM.name })).toBeInTheDocument();
     expect(within(table).queryByText(/Maryland|South Carolina|saver/i)).not.toBeInTheDocument();
+    expect(within(table).queryByText(/not recorded/i)).not.toBeInTheDocument();
   });
 
   test('given track record and scorecard rows then they share one table', () => {
@@ -232,5 +233,12 @@ describe('trackRecordClaims', () => {
     expect(snap.row.program).toBe('snap');
     expect(snap.presentation?.title).toBe('SNAP — Eligible people');
     expect(snap.presentation?.externalValue).toBe('69.1M');
+  });
+
+  test('given a row without a model period then none is invented', () => {
+    const [snap] = trackRecordClaims(SNAP_AND_CTC_TRACK_RECORD);
+
+    expect(snap.presentation?.modelPeriod).toBeUndefined();
+    expect(snap.presentation?.externalPeriod).toBe('2023 average month');
   });
 });

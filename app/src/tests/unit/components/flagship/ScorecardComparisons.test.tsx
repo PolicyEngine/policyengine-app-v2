@@ -6,6 +6,7 @@ import {
   splitScorecardRows,
   useScorecardComparisons,
 } from '@/components/flagship/ScorecardComparisons';
+import { SOI_CDCC_CLAIM } from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
 import {
   CTC_PATH,
   jctCtcClaim,
@@ -86,6 +87,29 @@ describe('scorecard evidence presentation', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText(/Utah credits claimed before limiting/)).toBeInTheDocument();
     expect(screen.getByText(/Modeled Utah credit actually usable/)).toBeInTheDocument();
+  });
+
+  test('given a claim without a recorded model period then none shows under its value', () => {
+    render(
+      <ScorecardClaimTable label="Baseline comparisons" entries={[{ row: SOI_CDCC_CLAIM }]} />
+    );
+
+    const cells = within(screen.getByRole('row', { name: new RegExp(`^${SOI_CDCC_CLAIM.name}`) }))
+      .getAllByRole('cell')
+      .map((cell) => cell.textContent);
+    expect(cells).toEqual(['$3.5BTY2023', '$4.3B', '25.4%']);
+    expect(screen.queryByText(/not recorded/i)).not.toBeInTheDocument();
+  });
+
+  test('given a receipt that records the calendar year then the period shows under the value', () => {
+    render(
+      <ScorecardClaimTable
+        label="Related reforms"
+        entries={[{ row: { ...scorecardClaim(), matchBasis: 'parameter' } }]}
+      />
+    );
+
+    expect(screen.getByText('Calendar year 2026')).toBeInTheDocument();
   });
 
   test('given an undocumented reform then explicitly identifies missing before-and-after rules', () => {

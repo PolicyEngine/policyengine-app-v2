@@ -297,8 +297,9 @@ export function trackRecordClaims(trackRecord: ScorecardMatches): ScorecardClaim
       presentation: {
         title: `${PROGRAM_LABELS[row.program] ?? row.program} — ${metricLabel(row)}`,
         sourceName: row.sourceName ?? row.source,
-        externalPeriod: row.period ?? 'Period not recorded',
-        modelPeriod: row.pePeriod ?? 'Period not recorded',
+        // A period shows only when the scorecard records it.
+        externalPeriod: row.period ?? undefined,
+        modelPeriod: row.pePeriod ?? undefined,
         externalValue: metricValue(row, row.externalValue),
         peValue: metricValue(row, row.peValue),
       },

@@ -124,7 +124,8 @@ export function claimPeriod(row: ScorecardClaim): string {
     row.period_start != null && row.period_end != null
       ? `${row.period_start}–${row.period_end}`
       : String(row.period);
-  return `${period} · ${(row.time_basis ?? 'time basis not recorded').replaceAll('_', ' ')}`;
+  // An unrecorded time basis says nothing; the period alone stands.
+  return row.time_basis ? `${period} · ${row.time_basis.replaceAll('_', ' ')}` : period;
 }
 
 export function claimValue(value: number | null | undefined, unit: string): string {

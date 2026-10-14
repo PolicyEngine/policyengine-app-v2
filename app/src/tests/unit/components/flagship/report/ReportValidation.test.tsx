@@ -138,6 +138,7 @@ describe('ReportValidation', () => {
         .getAllByRole('button')
         .map((button) => button.textContent)
     ).toEqual([TREASURY_CDCC_CLAIM.name, SOI_CDCC_CLAIM.name]);
+    expect(within(table).queryByText('Period not recorded separately')).not.toBeInTheDocument();
     expect(
       within(card('External estimates')).getByText(
         'No external estimate is available for this reform.'
