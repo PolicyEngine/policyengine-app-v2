@@ -514,16 +514,19 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
           }}
         >
           <span style={sectionLabel}>Value</span>
-          <SegmentedControl
-            animated
-            value={mode}
-            onValueChange={(value) => changeMode(value as EditMode)}
-            options={EDIT_MODES.filter((option) => option.value !== 'indexed' || canIndex)}
-            size="xs"
-            // Unstyled buttons default to white here, so the idle options
-            // read as chosen too.
-            className="tw:[&>button]:bg-transparent"
-          />
+          {/* Wider than a phone's card: there, the ways scroll sideways. */}
+          <div className="tw:max-w-full tw:overflow-x-auto">
+            <SegmentedControl
+              animated
+              value={mode}
+              onValueChange={(value) => changeMode(value as EditMode)}
+              options={EDIT_MODES.filter((option) => option.value !== 'indexed' || canIndex)}
+              size="xs"
+              // Unstyled buttons default to white here, so the idle options
+              // read as chosen too.
+              className="tw:[&>button]:bg-transparent"
+            />
+          </div>
         </div>
 
         {/* One value's start leads its grid; above a schedule or a grown series, it stands apart. */}
@@ -562,7 +565,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             // table a bracket per row is too wide to repeat across years.
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
               {mode === 'byYear' && (
-                <div>
+                <div className="tw:max-w-full tw:overflow-x-auto">
                   <SegmentedControl
                     animated
                     value={String(scheduleYear)}
@@ -684,7 +687,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
                     type="button"
                     aria-pressed={chosen}
                     onClick={() => setFocusedPath(member.path)}
-                    className="tw:cursor-pointer tw:transition-colors tw:hover:border-primary-500"
+                    className="tw:cursor-pointer tw:transition-colors tw:hover:border-primary-500 tw:max-sm:min-h-10"
                     style={{
                       padding: `2px ${spacing.sm}`,
                       border: `1px solid ${chosen ? colors.primary[500] : colors.border.light}`,

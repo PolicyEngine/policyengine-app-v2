@@ -8,10 +8,13 @@ import {
   readOwnedItems,
 } from '@/libs/flagship/ownedItems';
 import {
-  ReportValidationSnapshot,
-  validationFromWire,
-  validationToWire,
-} from '@/libs/flagship/reportValidation';
+  parseReportRecord,
+  parseReportRow,
+  readableReports,
+  stampReportRecord,
+  unwrapReport,
+} from '@/libs/flagship/reportSchema';
+import { ReportValidationSnapshot, validationToWire } from '@/libs/flagship/reportValidation';
 import { RunReportProvision } from '@/libs/flagship/runReport';
 import { clampStoreText } from '@/libs/flagship/storeText';
 
@@ -81,25 +84,9 @@ function newestFirst(a: FlagshipReportRecord, b: FlagshipReportRecord): number {
   return b.createdAt.localeCompare(a.createdAt);
 }
 
-function fromMetadata(data: any): FlagshipReportRecord {
-  return {
-    id: data.id,
-    countryId: data.country_id,
-    apiReportId: data.api_report_id,
-    title: data.title,
-    sourceNote: data.source_note,
-    provisions: (data.provisions ?? []).map((p: any) => ({
-      path: p.path,
-      breadcrumb: p.breadcrumb,
-      unit: p.unit ?? null,
-      baselineValue: p.baseline_value,
-      value: p.value,
-    })),
-    year: data.year,
-    createdAt: data.created_at,
-    reformId: data.reform_id ?? null,
-    validation: validationFromWire(data.validation),
-  };
+/** A central row as a record (see reportSchema); throws ReportSchemaError when unreadable. */
+function fromMetadata(data: unknown): FlagshipReportRecord {
+  return unwrapReport(parseReportRow(data));
 }
 
 export class ApiFlagshipReportStore implements FlagshipReportStore {
@@ -158,7 +145,9 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
         throwIfUnavailable(response);
         throw new Error('Failed to load reports');
       }
-      records.push(...((await response.json()) as any[]).map(fromMetadata));
+      // A row that can't be read is left out of the list, not fatal to it.
+      const rows: unknown = await response.json();
+      records.push(...readableReports((Array.isArray(rows) ? rows : []).map(parseReportRow)));
     }
     return records.sort(newestFirst);
   }
@@ -215,7 +204,11 @@ const LOCAL_KEY = 'pe-flagship-reports';
  * central store dropped user ids, which still carry a userId field.
  */
 export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
-  private read(): FlagshipReportRecord[] {
+  /**
+   * The entries as stored, of any schema version. Writes keep the ones
+   * this version can't read, so a record a newer version saved survives.
+   */
+  private readStored(): unknown[] {
     try {
       const parsed = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]');
       return Array.isArray(parsed) ? parsed : [];
@@ -224,21 +217,43 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
     }
   }
 
-  private write(records: FlagshipReportRecord[]): void {
+  private write(entries: unknown[]): void {
     try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(records));
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(entries));
     } catch {
       // Reports simply won't persist locally.
     }
   }
 
+  /** The readable records, in the current shape; an unreadable entry is left out. */
+  private read(): FlagshipReportRecord[] {
+    return readableReports(this.readStored().map(parseReportRecord));
+  }
+
+  /** The first entry with this field value, parsed; throws ReportSchemaError when unreadable. */
+  private findStored(
+    field: 'id' | 'apiReportId',
+    value: string
+  ): { entries: unknown[]; index: number; record: FlagshipReportRecord } | null {
+    const entries = this.readStored();
+    const index = entries.findIndex(
+      (entry) => !!entry && typeof entry === 'object' && (entry as any)[field] === value
+    );
+    if (index === -1) {
+      return null;
+    }
+    return { entries, index, record: unwrapReport(parseReportRecord(entries[index])) };
+  }
+
   async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
-    const record: FlagshipReportRecord = {
-      ...report,
-      id: `lfr-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
-      createdAt: new Date().toISOString(),
-    };
-    this.write([record, ...this.read()]);
+    const record = unwrapReport(
+      parseReportRecord({
+        ...report,
+        id: `lfr-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+        createdAt: new Date().toISOString(),
+      })
+    );
+    this.write([stampReportRecord(record), ...this.readStored()]);
     return record;
   }
 
@@ -249,25 +264,24 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
-    return this.read().find((record) => record.id === id) ?? null;
+    return this.findStored('id', id)?.record ?? null;
   }
 
   async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
-    return this.read().find((record) => record.apiReportId === apiReportId) ?? null;
+    return this.findStored('apiReportId', apiReportId)?.record ?? null;
   }
 
   async saveValidation(
     id: string,
     snapshot: ReportValidationSnapshot
   ): Promise<FlagshipReportRecord> {
-    const records = this.read();
-    const index = records.findIndex((record) => record.id === id);
-    if (index === -1) {
+    const found = this.findStored('id', id);
+    if (!found) {
       throw new Error('Report not found');
     }
-    const updated = { ...records[index], validation: snapshot };
-    records[index] = updated;
-    this.write(records);
+    const updated = { ...found.record, validation: snapshot };
+    found.entries[found.index] = stampReportRecord(updated);
+    this.write(found.entries);
     return updated;
   }
 }

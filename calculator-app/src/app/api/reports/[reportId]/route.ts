@@ -3,6 +3,7 @@ import {
   isFlagshipApiEnabled,
 } from "@/libs/flagship/apiGate";
 import { eq } from "drizzle-orm";
+import { reportValidationWireError } from "@/libs/flagship/reportSchema";
 import { getDb, isDbConfigured } from "../../../../db";
 import { readJsonBody } from "../../../../db/limits";
 import { guardSchema } from "../../../../db/errors";
@@ -94,6 +95,11 @@ async function handlePATCH(
   const payload: any = parsed.body;
   if (!isValidationPayload(payload?.validation)) {
     return json({ error: "validation snapshot is required" }, 400);
+  }
+  // The snapshot as the client's report schema reads it back.
+  const validationError = reportValidationWireError(payload.validation);
+  if (validationError) {
+    return json({ error: validationError }, 400);
   }
 
   const [row] = await getDb()

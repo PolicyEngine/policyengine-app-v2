@@ -3,24 +3,29 @@ import { IconCalendar, IconExternalLink } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
+import BillTrackerLink from '@/components/flagship/BillTrackerLink';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import BillReportStatus from '@/components/flagship/report/BillReportStatus';
 import DistrictImpactCard, {
   type CongressionalMode,
 } from '@/components/flagship/report/DistrictImpactCard';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
-import { BillValidationSection, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
+import { ErrorState } from '@/components/flagship/states';
+import { BillExternalEstimates, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text } from '@/components/ui';
 import { getDurationForCountry } from '@/constants/calculationDurations';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
+import { findTrackedBill, trackerUrlForBillId } from '@/libs/flagship/billTracker';
 import { RootState } from '@/store';
 
 interface BillReportPageProps {
@@ -43,7 +48,10 @@ function Caption({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The bill's summary, analysis date, and bill text. Its validation verdict lives in Validation. */
+/**
+ * The bill's summary, analysis date, bill text, and tracker page. Its
+ * validation verdict lives in Validation.
+ */
 function BillOverviewLead({ bill }: { bill: TrackedBill }) {
   const billTextUrl = bill.sourceUrl ?? bill.legiscanUrl;
   return (
@@ -59,7 +67,7 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
           {bill.summary}
         </Text>
       )}
-      {(bill.date || billTextUrl) && (
+      {(bill.date || billTextUrl || bill.trackerUrl) && (
         <Stack
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}
         >
@@ -87,6 +95,7 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
               <IconExternalLink size={11} />
             </a>
           )}
+          {bill.trackerUrl && <BillTrackerLink href={bill.trackerUrl} />}
         </Stack>
       )}
     </Stack>
@@ -111,10 +120,6 @@ const UNAVAILABLE_COPY: Partial<Record<RunState, { title: string; detail: string
     title: 'The full results cannot be calculated.',
     detail: 'None of this bill’s provisions are mapped to model parameters yet.',
   },
-  'no-metadata': {
-    title: 'The full results cannot be calculated.',
-    detail: 'The model’s parameters could not be loaded. Reload the page to try again.',
-  },
 };
 
 /** The tracker stores no relative income change by district, so that view is left out. */
@@ -138,6 +143,14 @@ function FullResultsStatus({
   onStart: () => void;
 }) {
   const countryId = useCurrentCountry();
+  const metadata = useFlagshipMetadataStatus();
+  if (runState === 'no-metadata') {
+    return (
+      <Stack style={STATUS_BOX}>
+        <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+      </Stack>
+    );
+  }
   const unavailable = UNAVAILABLE_COPY[runState];
   if (unavailable) {
     return (
@@ -169,14 +182,13 @@ function FullResultsStatus({
   }
   if (runState === 'error') {
     return (
-      <Stack style={{ ...STATUS_BOX, alignItems: 'flex-start' }}>
-        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.primary }}>
-          The full results could not be calculated.
-        </Text>
-        {economy.message && <Caption>{economy.message}</Caption>}
-        <Button size="sm" variant="outline" onClick={economy.retry}>
-          Try again
-        </Button>
+      <Stack style={STATUS_BOX}>
+        <ErrorState
+          compact
+          title="The full results could not be calculated"
+          description={economy.message}
+          onRetry={economy.retry}
+        />
       </Stack>
     );
   }
@@ -220,12 +232,14 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const metadataLoaded = useSelector((state: RootState) => state.metadata.version !== null);
   const metadataError = useSelector((state: RootState) => state.metadata.error);
-  const { bills, isLoading } = useTrackedBills(countryId);
+  const feed = useTrackedBills(countryId);
+  const { bills } = feed;
   // The bill whose full run the reader started; another bill starts unrun.
   const [runRequestedFor, setRunRequestedFor] = useState<string | null>(null);
   const runRequested = runRequestedFor === billId;
 
-  const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
+  // The tracker links here by its bill id; an encoded or upper-case id finds the same bill.
+  const bill: TrackedBill | undefined = findTrackedBill(bills, billId);
   const { data: storedDistricts } = useStoredBillDistricts(bill?.id);
 
   // A bill from a later year runs, and reads against the law, in its first year.
@@ -264,11 +278,13 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   if (!bill) {
     return (
-      <Stack style={{ maxWidth: 760, margin: '0 auto', gap: spacing.lg }}>
-        <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          {isLoading ? 'Loading the analysis…' : 'This bill is not in the current feed.'}
-        </Text>
-      </Stack>
+      <BillReportStatus
+        isLoading={feed.isLoading}
+        isError={feed.isError}
+        isConfigured={feed.isConfigured}
+        onRetry={feed.retry}
+        trackerUrl={billId ? trackerUrlForBillId(billId) : undefined}
+      />
     );
   }
 
@@ -328,15 +344,11 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       overviewLead={<BillOverviewLead bill={bill} />}
       calibration={calibration}
       trackRecord={trackRecord}
-      validationLead={
-        (bill.validation || provenanceNote) && (
-          <Stack style={{ gap: spacing.sm }}>
-            {bill.validation && (
-              <BillValidationSection billId={bill.id} validation={bill.validation} />
-            )}
-            {provenanceNote && <Caption>Tracker estimate: {provenanceNote}</Caption>}
-          </Stack>
-        )
+      externalEstimates={
+        bill.validation && <BillExternalEstimates billId={bill.id} validation={bill.validation} />
+      }
+      externalEstimatesNote={
+        provenanceNote && <Caption>Tracker estimate: {provenanceNote}</Caption>
       }
     />
   );

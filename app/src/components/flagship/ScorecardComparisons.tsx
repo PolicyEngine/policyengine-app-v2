@@ -1,9 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { IconExternalLink } from '@tabler/icons-react';
 import { Stack, Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
-import { SCORECARD_URL } from '@/libs/flagship/modelValidation';
 import {
   loadParameterDependencies,
   variablesReachedByPaths,
@@ -16,12 +15,20 @@ import {
 } from '@/libs/flagship/scorecardComparisons';
 import {
   cardStyle,
+  CellNote,
   detailStyle,
   EvidenceHeader,
+  EvidenceTable,
   EvidenceValues,
+  gapText,
+  labelCellStyle,
   linkStyle,
-  panelStyle,
+  numberCellStyle,
+  rowButtonStyle,
+  rowStyle,
   summaryStyle,
+  ValidationNote,
+  ValidationSubheading,
 } from './ValidationDisplay';
 
 const matchLabels = {
@@ -301,132 +308,47 @@ const baselineDescriptions: Record<string, string[][]> = {
   ],
 };
 
-export function ScorecardClaimCard({
-  row,
-  presentation,
-  showDetails = false,
-}: {
-  showDetails?: boolean;
+/** How a claim reads in its row and dialog, when the caller words it better than the claim. */
+export interface ClaimPresentation {
+  title: string;
+  sourceName?: string;
+  externalPeriod?: string;
+  modelPeriod?: string;
+  externalValue?: string;
+  peValue?: string;
+}
+
+/** A scorecard claim, and how to present it. */
+export interface ScorecardClaimEntry {
   row: RelatedScorecardClaim;
-  presentation?: {
-    title: string;
-    sourceName?: string;
-    externalPeriod?: string;
-    modelPeriod?: string;
-    externalValue?: string;
-    peValue?: string;
-  };
-}) {
-  const latest = row.latest;
-  const status = latest?.status_effective ?? latest?.status ?? 'not_computed';
+  presentation?: ClaimPresentation;
+}
+
+function claimTitle(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
+  return (
+    presentation?.title ??
+    (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name))
+  );
+}
+
+/** The source, and the geography when the claim records one: "Joint Committee on Taxation · US". */
+function claimWhere(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
   const sourceName =
     presentation?.sourceName ?? sourceNames[row.source] ?? human(row.source).toUpperCase();
+  return [sourceName, row.geography && human(row.geography)].filter(Boolean).join(' · ');
+}
+
+/** Everything the scorecard records about one claim, for its detail dialog. */
+export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry) {
+  const latest = row.latest;
+  const status = latest?.status_effective ?? latest?.status ?? 'not_computed';
   const sourceUrl = safeUrl(row.url);
-  if (!showDetails) {
-    const title =
-      presentation?.title ??
-      (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name));
-    const published =
-      presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept);
-    const modeled = presentation?.peValue ?? claimValue(latest?.value, row.unit_concept);
-    const gap =
-      typeof latest?.value === 'number' &&
-      typeof row.external_value === 'number' &&
-      row.external_value !== 0
-        ? `${(((latest.value - row.external_value) / Math.abs(row.external_value)) * 100).toFixed(1)}%`
-        : '—';
-    return (
-      <div style={{ ...cardStyle, overflowX: 'auto' }}>
-        <table
-          style={{ width: '100%', borderCollapse: 'collapse', fontSize: typography.fontSize.sm }}
-        >
-          <thead>
-            <tr>
-              {['Comparison', 'Published estimate', 'PolicyEngine estimate', 'Gap'].map((label) => (
-                <th
-                  key={label}
-                  style={{
-                    padding: spacing.sm,
-                    textAlign: label === 'Comparison' ? 'left' : 'right',
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  {label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr style={{ borderTop: `1px solid ${colors.border.light}` }}>
-              <td style={{ padding: spacing.sm, width: '40%' }}>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button
-                      type="button"
-                      style={{
-                        ...linkStyle,
-                        background: 'none',
-                        border: 0,
-                        padding: 0,
-                        font: 'inherit',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {title}
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent
-                    aria-describedby={undefined}
-                    style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
-                  >
-                    <DialogTitle>
-                      {row.reform_framework === 'baseline'
-                        ? 'Baseline comparison'
-                        : 'Related reform comparison'}
-                    </DialogTitle>
-                    <ScorecardClaimCard row={row} presentation={presentation} showDetails />
-                  </DialogContent>
-                </Dialog>
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  {sourceName} · {human(row.geography)}
-                </Text>
-                {sourceUrl && (
-                  <a href={sourceUrl} target="_blank" rel="noreferrer" style={linkStyle}>
-                    Read source
-                  </a>
-                )}
-              </td>
-              <td style={{ padding: spacing.sm, textAlign: 'right' }}>
-                {published}
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  {presentation?.externalPeriod ?? claimPeriod(row)}
-                </Text>
-              </td>
-              <td style={{ padding: spacing.sm, textAlign: 'right' }}>
-                {modeled}
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  {presentation?.modelPeriod ?? modelPeriod(row)}
-                </Text>
-              </td>
-              <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                {gap}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  }
 
   return (
     <Stack style={cardStyle}>
       <EvidenceHeader
-        title={
-          presentation?.title ??
-          (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name))
-        }
-        subtitle={`${sourceName} · ${human(row.geography)}`}
+        title={claimTitle(row, presentation)}
+        subtitle={claimWhere(row, presentation)}
         href={sourceUrl}
       />
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
@@ -552,172 +474,187 @@ export function ScorecardClaimCard({
   );
 }
 
-export function ScorecardComparisonResults({
-  result,
-  baselineContent,
-  reportContext,
-  feedStatus,
-}: {
-  result: ScorecardComparisonsResult;
-  baselineContent?: ReactNode;
-  reportContext?: ReactNode;
-  feedStatus?: string;
-}) {
-  const baseline = result.rows.filter((row) => row.reform_framework === 'baseline');
-  const reforms = result.rows.filter((row) => row.reform_framework !== 'baseline');
+/** One claim as a table row: what is compared, both values, and the gap. */
+function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
+  const sourceUrl = safeUrl(row.url);
   return (
-    <Stack style={{ gap: spacing.lg }}>
-      {[
-        {
-          title: 'Baseline comparisons',
-          description: 'How the model compares with published measures of existing programs.',
-          rows: baseline,
-        },
-        {
-          title: 'Related reform comparisons',
-          description:
-            'How PolicyEngine scored other published policy changes. These are not a validation of this report’s exact reform or cost.',
-          rows: reforms,
-        },
-      ].map(({ title, description, rows }) => (
-        <Stack key={title} style={panelStyle}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: spacing.md,
-            }}
+    <tr style={rowStyle}>
+      <th scope="row" style={labelCellStyle}>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button type="button" style={rowButtonStyle}>
+              {claimTitle(row, presentation)}
+            </button>
+          </DialogTrigger>
+          <DialogContent
+            aria-describedby={undefined}
+            style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
           >
-            <Text
-              style={{
-                fontWeight: typography.fontWeight.semibold,
-                fontSize: typography.fontSize.lg,
-                margin: 0,
-              }}
-            >
-              {title}
-            </Text>
-            <a href={SCORECARD_URL} target="_blank" rel="noreferrer" style={linkStyle}>
-              View scorecard <IconExternalLink size={16} aria-hidden="true" />
-            </a>
-          </div>
-          {title !== 'Baseline comparisons' && (
-            <Text style={{ ...detailStyle, margin: 0 }}>{description}</Text>
-          )}
-          {title === 'Related reform comparisons' && reportContext}
-          {title === 'Baseline comparisons' && baselineContent}
-          {feedStatus && <Text style={detailStyle}>{feedStatus}</Text>}
-          {rows.length ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1fr)',
-                gap: spacing.md,
-                alignItems: 'start',
-              }}
-            >
-              {rows.map((row) => (
-                <ScorecardClaimCard key={row.claim_id} row={row} />
-              ))}
-            </div>
-          ) : feedStatus || (title === 'Baseline comparisons' && baselineContent) ? null : (
-            <Text style={detailStyle}>
-              No linked {title === 'Related reform comparisons' ? 'reform' : 'baseline'} comparisons
-              were found in the published scorecard feed.
-            </Text>
-          )}
-        </Stack>
+            <DialogTitle>
+              {row.reform_framework === 'baseline'
+                ? 'Baseline comparison'
+                : 'Related reform comparison'}
+            </DialogTitle>
+            <ScorecardClaimDetails row={row} presentation={presentation} />
+          </DialogContent>
+        </Dialog>
+        <CellNote>{claimWhere(row, presentation)}</CellNote>
+        {sourceUrl && (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
+          >
+            Read source
+          </a>
+        )}
+      </th>
+      <td style={numberCellStyle}>
+        {presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept)}
+        <CellNote>{presentation?.externalPeriod ?? claimPeriod(row)}</CellNote>
+      </td>
+      <td style={numberCellStyle}>
+        {presentation?.peValue ?? claimValue(row.latest?.value, row.unit_concept)}
+        <CellNote>{presentation?.modelPeriod ?? modelPeriod(row)}</CellNote>
+      </td>
+      <td style={numberCellStyle}>{gapText(row.latest?.value, row.external_value)}</td>
+    </tr>
+  );
+}
+
+/** Scorecard claims in one table, so their numbers line up. Each title opens its details. */
+export function ScorecardClaimTable({
+  label,
+  entries,
+}: {
+  label: string;
+  entries: ScorecardClaimEntry[];
+}) {
+  return (
+    <EvidenceTable label={label} columns={['Comparison', 'Published', 'PolicyEngine', 'Gap']}>
+      {entries.map((entry) => (
+        <ScorecardClaimRow
+          key={entry.row.claim_id}
+          row={entry.row}
+          presentation={entry.presentation}
+        />
       ))}
-      <details style={detailStyle}>
-        <summary style={summaryStyle}>Coverage and last update</summary>
-        <Text style={detailStyle}>
-          Coverage is limited to published claims with a recorded variable, program, parameter path
-          or shared source line item.{' '}
-          {result.unmappedCount > 0
-            ? `${result.unmappedCount} claims in this country have no usable mapping and were not matched. `
-            : ''}
-          Absence of a match does not establish that no external estimate exists.
-          {result.built ? ` Scorecard export: ${result.built}.` : ''}
-        </Text>
-      </details>
+    </EvidenceTable>
+  );
+}
+
+/** Published scorecard estimates of other policies that change the same rules. */
+export function RelatedReformEstimates({ rows }: { rows: RelatedScorecardClaim[] }) {
+  return (
+    <Stack style={{ gap: spacing.sm }}>
+      <ValidationSubheading>Related reforms</ValidationSubheading>
+      <ValidationNote>
+        Published scores of policies that change the same rules. They do not score this exact
+        reform.
+      </ValidationNote>
+      <ScorecardClaimTable label="Related reforms" entries={rows.map((row) => ({ row }))} />
     </Stack>
   );
 }
 
-export default function ScorecardComparisons({
-  countryId,
-  paths,
-  baselineContent,
-  reportContext,
-}: {
-  countryId: string;
-  paths: string[];
-  baselineContent?: ReactNode;
-  reportContext?: ReactNode;
-}) {
+/** What the scorecard match covers, collapsed. */
+export function ScorecardCoverage({ result }: { result: ScorecardComparisonsResult }) {
+  return (
+    <details style={detailStyle}>
+      <summary style={summaryStyle}>Coverage</summary>
+      <Text style={detailStyle}>
+        Matches cover scorecard claims with a recorded variable, program, parameter path or source
+        line item.
+        {result.unmappedCount > 0
+          ? ` ${result.unmappedCount} claims in this country have no usable mapping.`
+          : ''}
+        {result.built ? ` Scorecard export: ${result.built}.` : ''}
+      </Text>
+    </details>
+  );
+}
+
+/**
+ * The published scorecard claims linked to a reform: `undefined` while
+ * loading, `null` when the feed is unavailable.
+ */
+export type ScorecardComparisonsState = ScorecardComparisonsResult | null | undefined;
+
+const NO_COMPARISONS: ScorecardComparisonsResult = { built: null, rows: [], unmappedCount: 0 };
+
+/** The claims that score a policy change, apart from those that measure today's programs. */
+export function splitScorecardRows(result: ScorecardComparisonsState): {
+  reforms: RelatedScorecardClaim[];
+  baseline: RelatedScorecardClaim[];
+} {
+  const rows = result?.rows ?? [];
+  return {
+    reforms: rows.filter((row) => row.reform_framework !== 'baseline'),
+    baseline: rows.filter((row) => row.reform_framework === 'baseline'),
+  };
+}
+
+async function fetchScorecardComparisons(
+  countryId: string,
+  paths: string[],
+  signal: AbortSignal
+): Promise<ScorecardComparisonsResult> {
+  let variables: string[] = [];
+  // The committed dependency map is US-only. Never use it for another country.
+  if (countryId === 'us') {
+    try {
+      variables = variablesReachedByPaths(paths, await loadParameterDependencies()).map(
+        (entry) => entry.variable
+      );
+    } catch {
+      /* Recorded parameter paths still allow conservative matching. */
+    }
+  }
+  const response = await fetch('/api/scorecard-comparisons', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal,
+    body: JSON.stringify({ country: countryId, paths, variables }),
+  });
+  if (!response.ok) {
+    throw new Error('Scorecard unavailable');
+  }
+  return (await response.json()) as ScorecardComparisonsResult;
+}
+
+/** Fetches the published scorecard claims linked to a reform's parameter paths. */
+export function useScorecardComparisons(
+  countryId: string,
+  paths: string[]
+): ScorecardComparisonsState {
   const requestKey = JSON.stringify({ countryId, paths });
   const [state, setState] = useState<{ key: string; result: ScorecardComparisonsResult | null }>();
   useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
     const request = JSON.parse(requestKey) as { countryId: string; paths: string[] };
     if (!request.paths.length) {
-      return () => controller.abort();
+      return;
     }
-    (async () => {
-      let variables: string[] = [];
-      // The committed dependency map is US-only. Never use it for another country.
-      if (request.countryId === 'us') {
-        try {
-          variables = variablesReachedByPaths(request.paths, await loadParameterDependencies()).map(
-            (entry) => entry.variable
-          );
-        } catch {
-          /* Recorded parameter paths still allow conservative matching. */
+    let cancelled = false;
+    const controller = new AbortController();
+    fetchScorecardComparisons(request.countryId, request.paths, controller.signal)
+      .then((result) => {
+        if (!cancelled) {
+          setState({ key: requestKey, result });
         }
-      }
-      const response = await fetch('/api/scorecard-comparisons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({ country: request.countryId, paths: request.paths, variables }),
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setState({ key: requestKey, result: null });
+        }
       });
-      if (!response.ok) {
-        throw new Error('Scorecard unavailable');
-      }
-      const result = (await response.json()) as ScorecardComparisonsResult;
-      if (!cancelled) {
-        setState({ key: requestKey, result });
-      }
-    })().catch(() => {
-      if (!cancelled) {
-        setState({ key: requestKey, result: null });
-      }
-    });
     return () => {
       cancelled = true;
       controller.abort();
     };
   }, [requestKey]);
   if (!paths.length) {
-    return <Text>No parameter changes are available to match to scorecard comparisons.</Text>;
+    return NO_COMPARISONS;
   }
-  const pending = state?.key !== requestKey;
-  return (
-    <ScorecardComparisonResults
-      baselineContent={baselineContent}
-      reportContext={reportContext}
-      result={
-        !pending && state?.result ? state.result : { built: null, rows: [], unmappedCount: 0 }
-      }
-      feedStatus={
-        pending
-          ? 'Loading published scorecard comparisons…'
-          : state?.result === null
-            ? 'The published comparison feed is temporarily unavailable. Existing baseline evidence remains available below.'
-            : undefined
-      }
-    />
-  );
+  return state?.key === requestKey ? state.result : undefined;
 }

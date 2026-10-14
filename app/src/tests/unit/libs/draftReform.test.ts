@@ -4,9 +4,11 @@ import {
   clearDraftReform,
   draftToReform,
   getDraftReform,
+  loadProvisionsIntoDraft,
   loadReformIntoDraft,
   provisionFromSearchEntry,
   removeDraftProvision,
+  setDraftBaseline,
   setDraftLabel,
   startDraftReform,
   updateDraftProvisionValue,
@@ -127,6 +129,35 @@ describe('draftReform', () => {
     expect(reform.parameters[0].name).toBe(CTC_PROVISION.path);
     expect(reform.parameters[0].values[0].value).toBe(3600);
     expect(reform.parameters[0].values[0].endDate).toBe('2100-12-31');
+  });
+
+  it('given a saved reform to compare with then the draft keeps it, and current law clears it', () => {
+    addDraftProvision('us', CTC_PROVISION);
+
+    // A new draft compares with current law.
+    expect(getDraftReform()).not.toHaveProperty('baselineReformId');
+    setDraftBaseline('rf-plan-b');
+    expect(getDraftReform()?.baselineReformId).toBe('rf-plan-b');
+    setDraftBaseline(undefined);
+    expect(getDraftReform()?.baselineReformId).toBeUndefined();
+  });
+
+  it('given a baseline then the draft saves as the same reform, compared with nothing', () => {
+    addDraftProvision('us', { ...CTC_PROVISION, value: 3600 });
+    setDraftBaseline('rf-plan-b');
+
+    // The comparison is the run's, not the reform's.
+    expect(draftToReform(getDraftReform()!).baseline).toBe('current-law');
+  });
+
+  it('given a report back in the draft then it keeps the comparison it ran with', () => {
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }], {
+      baselineReformId: 'rf-plan-b',
+    });
+    expect(getDraftReform()?.baselineReformId).toBe('rf-plan-b');
+
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }], { baselineReformId: null });
+    expect(getDraftReform()).not.toHaveProperty('baselineReformId');
   });
 
   it('given a search entry and metadata values then provisionFromSearchEntry uses the current value as baseline', () => {

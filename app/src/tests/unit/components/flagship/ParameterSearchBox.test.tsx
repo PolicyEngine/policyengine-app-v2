@@ -390,6 +390,22 @@ describe('ParameterSearchBox', () => {
     expect(screen.getByText(/no parameters match/i)).toHaveTextContent('zzzz quantum flux');
   });
 
+  test('given a query with no match then clear search empties the box and returns to it', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const search = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(search, 'zzzz quantum flux');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    // Then
+    expect(search).toHaveValue('');
+    expect(search).toHaveFocus();
+    expect(screen.queryByText(/no parameters match/i)).not.toBeInTheDocument();
+  });
+
   test('given a scope with no match then other jurisdictions wait until asked for', async () => {
     // Given
     const user = userEvent.setup();

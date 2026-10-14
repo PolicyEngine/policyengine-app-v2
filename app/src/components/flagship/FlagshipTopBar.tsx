@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
-import { IconAdjustments, IconDotsVertical, IconFilePencil, IconGavel } from '@tabler/icons-react';
+import {
+  IconAdjustments,
+  IconDotsVertical,
+  IconFilePencil,
+  IconGavel,
+  IconMenu2,
+} from '@tabler/icons-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
@@ -25,8 +32,8 @@ const FLAGSHIP_TOP_BAR_HEIGHT = 56;
 /**
  * The flagship shell's navigation: brand, the two sections, and the
  * website links, in one slim bar across the top. Two destinations do
- * not earn a sidebar's width, and they fit a phone's bar as they are,
- * so there is no drawer to open on any viewport.
+ * not earn a sidebar's width. On a phone the sections and the links
+ * fold into one menu, so the bar keeps room for the brand and the draft.
  */
 export default function FlagshipTopBar() {
   const nav = useAppNavigate();
@@ -45,6 +52,12 @@ export default function FlagshipTopBar() {
   useEffect(() => {
     setPendingSlug(null);
   }, [location.pathname]);
+  const isActive = (slug: string) =>
+    pendingSlug ? pendingSlug === slug : location.pathname.includes(`/${slug}`);
+  const goTo = (slug: string) => {
+    setPendingSlug(slug);
+    nav.push(`/${countryId}/${slug}`);
+  };
 
   // Away from Build, an unfinished draft stays one click away.
   const draft = useDraftReform();
@@ -52,6 +65,7 @@ export default function FlagshipTopBar() {
     draft && draft.countryId === countryId && !location.pathname.includes('/build')
       ? draft.provisions.length
       : 0;
+  const parameterWord = draftCount === 1 ? 'parameter' : 'parameters';
 
   const moreLinks = [
     { label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
@@ -64,29 +78,24 @@ export default function FlagshipTopBar() {
 
   return (
     <header
-      className="tw:flex tw:shrink-0 tw:items-center tw:border-b tw:border-border-light tw:bg-white"
+      // A phone's bar sits closer to its edges and between its items.
+      className="tw:flex tw:shrink-0 tw:items-center tw:border-b tw:border-border-light tw:bg-white tw:gap-sm tw:px-md tw:sm:gap-lg tw:sm:px-lg"
       style={{
         height: FLAGSHIP_TOP_BAR_HEIGHT,
-        gap: spacing.lg,
-        padding: `0 ${spacing.lg}`,
         fontFamily: typography.fontFamily.primary,
       }}
     >
-      <FlagshipBrand style={{ padding: 0, flexShrink: 0 }} />
+      <FlagshipBrand className="tw:max-sm:h-10" style={{ padding: 0, flexShrink: 0 }} />
 
-      <nav aria-label="Primary" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      {/* On a phone the sections are in the menu at the end of the bar. */}
+      <nav aria-label="Primary" className="tw:hidden tw:items-center tw:gap-1 tw:sm:flex">
         {NAV_ITEMS.map(({ slug, label, icon: Icon }) => {
-          const active = pendingSlug
-            ? pendingSlug === slug
-            : location.pathname.includes(`/${slug}`);
+          const active = isActive(slug);
           return (
             <button
               key={slug}
               type="button"
-              onClick={() => {
-                setPendingSlug(slug);
-                nav.push(`/${countryId}/${slug}`);
-              }}
+              onClick={() => goTo(slug)}
               aria-current={active ? 'page' : undefined}
               className={
                 active ? undefined : 'tw:cursor-pointer tw:hover:bg-gray-100 tw:text-gray-700'
@@ -118,12 +127,13 @@ export default function FlagshipTopBar() {
         <button
           type="button"
           onClick={() => nav.push(`/${countryId}/build`)}
-          className="tw:cursor-pointer tw:hover:bg-primary-100"
+          aria-label={`Draft · ${draftCount} ${parameterWord}`}
+          // A finger's height on a phone, where the count stands alone.
+          className="tw:h-[30px] tw:cursor-pointer tw:whitespace-nowrap tw:hover:bg-primary-100 tw:max-sm:h-10"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: spacing.xs,
-            height: 30,
             marginLeft: 'auto',
             padding: `0 ${spacing.md}`,
             border: 'none',
@@ -136,18 +146,65 @@ export default function FlagshipTopBar() {
           }}
         >
           <IconFilePencil size={15} aria-hidden />
-          Draft · {draftCount} parameter{draftCount === 1 ? '' : 's'}
+          Draft · {draftCount}
+          <span className="tw:max-sm:hidden"> {parameterWord}</span>
         </button>
       )}
+
+      {/* A phone's one menu: the sections, then the website links. */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label="Menu"
+            className="tw:flex tw:size-10 tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:text-gray-700 tw:hover:bg-gray-100 tw:sm:hidden"
+            style={{
+              marginLeft: draftCount > 0 ? undefined : 'auto',
+              border: 'none',
+              borderRadius: spacing.radius.container,
+            }}
+          >
+            <IconMenu2 size={20} />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="tw:min-w-[200px]">
+          {NAV_ITEMS.map(({ slug, label, icon: Icon }) => {
+            const active = isActive(slug);
+            return (
+              <DropdownMenuItem
+                key={slug}
+                onSelect={() => goTo(slug)}
+                aria-current={active ? 'page' : undefined}
+                className="tw:min-h-10 tw:cursor-pointer"
+                style={
+                  active
+                    ? { color: colors.primary[700], fontWeight: typography.fontWeight.semibold }
+                    : undefined
+                }
+              >
+                <Icon size={16} aria-hidden />
+                {label}
+              </DropdownMenuItem>
+            );
+          })}
+          <DropdownMenuSeparator />
+          {moreLinks.map((link) => (
+            <DropdownMenuItem key={link.href} asChild className="tw:min-h-10">
+              <a href={link.href} style={{ cursor: 'pointer' }}>
+                {link.label}
+              </a>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
             aria-label="More PolicyEngine links"
-            className="tw:cursor-pointer tw:text-gray-700 tw:hover:bg-gray-100"
+            className="tw:hidden tw:cursor-pointer tw:text-gray-700 tw:hover:bg-gray-100 tw:sm:flex"
             style={{
-              display: 'flex',
               alignItems: 'center',
               gap: spacing.xs,
               height: 34,

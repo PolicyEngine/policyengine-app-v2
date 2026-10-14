@@ -1,7 +1,13 @@
-import { fireEvent, render, screen, userEvent } from '@test-utils';
-import { describe, expect, test } from 'vitest';
-import { ScorecardComparisonResults } from '@/components/flagship/ScorecardComparisons';
+import { fireEvent, render, renderHook, screen, userEvent, waitFor, within } from '@test-utils';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
+  RelatedReformEstimates,
+  ScorecardClaimTable,
+  splitScorecardRows,
+  useScorecardComparisons,
+} from '@/components/flagship/ScorecardComparisons';
+import {
+  CTC_PATH,
   jctCtcClaim,
   scorecardClaim,
   stackedJctCtcClaim,
@@ -9,29 +15,10 @@ import {
 } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 
 describe('scorecard evidence presentation', () => {
-  test('given no baseline rows and no baseline content then says none were found', () => {
-    render(
-      <ScorecardComparisonResults
-        result={{ built: null, unmappedCount: 0, rows: [] }}
-        baselineContent={false}
-      />
-    );
-    expect(
-      screen.getByText(/No linked baseline comparisons were found in the published scorecard feed/)
-    ).toBeInTheDocument();
-  });
-  test('given a related reform then shows source-policy counterparts, periods, baseline caveats and no search button', () => {
-    render(
-      <ScorecardComparisonResults
-        result={{
-          built: null,
-          unmappedCount: 3,
-          rows: [{ ...scorecardClaim(), matchBasis: 'parameter' }],
-        }}
-      />
-    );
-    expect(screen.getByText(/not a validation of this report/)).toBeInTheDocument();
-    expect(screen.getByText('PolicyEngine estimate')).toBeInTheDocument();
+  test('given a related reform then shows source-policy counterparts, periods and baseline caveats', () => {
+    render(<RelatedReformEstimates rows={[{ ...scorecardClaim(), matchBasis: 'parameter' }]} />);
+    expect(screen.getByText(/do not score this exact reform/)).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'PolicyEngine' })).toBeInTheDocument();
     expect(screen.getByText(/2026 · fiscal year/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText('Different stacking baseline')).toBeInTheDocument();
@@ -39,14 +26,34 @@ describe('scorecard evidence presentation', () => {
       screen.queryByRole('button', { name: /Find external estimates/ })
     ).not.toBeInTheDocument();
   });
+
+  test('given several claims then one table holds them so their numbers line up', () => {
+    render(
+      <ScorecardClaimTable
+        label="Related reforms"
+        entries={[
+          { row: { ...scorecardClaim(), matchBasis: 'parameter' } },
+          { row: { ...stackedJctCtcClaim, claim_id: 'ctc-2027', matchBasis: 'related-policy' } },
+        ]}
+      />
+    );
+    const table = screen.getByRole('table', { name: 'Related reforms' });
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent)
+    ).toEqual(['Comparison', 'Published', 'PolicyEngine', 'Gap']);
+    // A header row and one row per claim.
+    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    expect(within(table).getAllByText('-86.9%')).toHaveLength(2);
+  });
+
   test('given an expiry-reversal run then explains its policy and different starting baseline', () => {
     render(
-      <ScorecardComparisonResults
-        result={{
-          built: null,
-          unmappedCount: 0,
-          rows: [{ ...jctCtcClaim, matchBasis: 'parameter' }],
-        }}
+      <ScorecardClaimTable
+        label="Related reforms"
+        entries={[{ row: { ...jctCtcClaim, matchBasis: 'parameter' } }]}
       />
     );
     fireEvent.click(screen.getByRole('button'));
@@ -54,28 +61,24 @@ describe('scorecard evidence presentation', () => {
     expect(screen.getByRole('cell', { name: '$1,000', hidden: true })).toBeInTheDocument();
     expect(screen.getByText(/broad CTC expansion from an expiry baseline/)).toBeInTheDocument();
   });
+
   test('given a stacked run then describes that run without applying the expiry-reversal explanation', () => {
     render(
-      <ScorecardComparisonResults
-        result={{
-          built: null,
-          unmappedCount: 0,
-          rows: [{ ...stackedJctCtcClaim, matchBasis: 'related-policy' }],
-        }}
+      <ScorecardClaimTable
+        label="Related reforms"
+        entries={[{ row: { ...stackedJctCtcClaim, matchBasis: 'related-policy' } }]}
       />
     );
     fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText(/This run adds the CTC changes after/)).toBeInTheDocument();
     expect(screen.queryByText(/This run keeps other enacted tax changes/)).not.toBeInTheDocument();
   });
+
   test('given a Utah baseline comparison then distinguishes claimed and usable credit', () => {
     render(
-      <ScorecardComparisonResults
-        result={{
-          built: null,
-          unmappedCount: 0,
-          rows: [{ ...utahBaselineClaim, matchBasis: 'program' }],
-        }}
+      <ScorecardClaimTable
+        label="Baseline comparisons"
+        entries={[{ row: { ...utahBaselineClaim, matchBasis: 'program' } }]}
       />
     );
     expect(screen.getByRole('table')).toBeInTheDocument();
@@ -84,40 +87,79 @@ describe('scorecard evidence presentation', () => {
     expect(screen.getByText(/Utah credits claimed before limiting/)).toBeInTheDocument();
     expect(screen.getByText(/Modeled Utah credit actually usable/)).toBeInTheDocument();
   });
+
   test('given an undocumented reform then explicitly identifies missing before-and-after rules', () => {
     render(
-      <ScorecardComparisonResults
-        result={{
-          built: null,
-          unmappedCount: 0,
-          rows: [{ ...scorecardClaim(), matchBasis: 'parameter' }],
-        }}
+      <ScorecardClaimTable
+        label="Related reforms"
+        entries={[{ row: { ...scorecardClaim(), matchBasis: 'parameter' } }]}
       />
     );
     fireEvent.click(screen.getByRole('button'));
     expect(screen.getByText(/does not supply a complete before-and-after/)).toBeInTheDocument();
   });
-  test('given a reform card then policy details are collapsed until opened', async () => {
+
+  test('given a reform row then policy details are collapsed until opened', async () => {
     render(
-      <ScorecardComparisonResults
-        result={{
-          built: null,
-          unmappedCount: 0,
-          rows: [{ ...jctCtcClaim, matchBasis: 'parameter' }],
-        }}
+      <ScorecardClaimTable
+        label="Related reforms"
+        entries={[{ row: { ...jctCtcClaim, matchBasis: 'parameter' } }]}
       />
     );
     expect(screen.getByRole('table')).toBeVisible();
     await userEvent.click(screen.getByRole('button'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     await userEvent.click(screen.getByText('Compared policy and baseline'));
-    expect(screen.getByRole('table')).toBeVisible();
+    expect(screen.getByRole('table', { name: 'Related reforms', hidden: true })).toBeVisible();
   });
-  test('given an empty feed then absence of matching evidence is explicit', () => {
-    render(<ScorecardComparisonResults result={{ built: null, unmappedCount: 0, rows: [] }} />);
-    expect(screen.getByText(/No linked reform comparisons/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/does not establish that no external estimate exists/)
-    ).toBeInTheDocument();
+});
+
+describe('splitScorecardRows', () => {
+  test('given mixed claims then reform scores and baseline measures come apart', () => {
+    const reform = { ...scorecardClaim(), matchBasis: 'parameter' as const };
+    const baseline = { ...utahBaselineClaim, matchBasis: 'program' as const };
+
+    expect(splitScorecardRows({ built: null, unmappedCount: 0, rows: [reform, baseline] })).toEqual(
+      { reforms: [reform], baseline: [baseline] }
+    );
+  });
+
+  test('given the feed is loading or unavailable then both lists are empty', () => {
+    expect(splitScorecardRows(undefined)).toEqual({ reforms: [], baseline: [] });
+    expect(splitScorecardRows(null)).toEqual({ reforms: [], baseline: [] });
+  });
+});
+
+describe('useScorecardComparisons', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('given no parameter paths then it resolves empty without a request', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { result } = renderHook(() => useScorecardComparisons('uk', []));
+
+    expect(result.current).toEqual({ built: null, rows: [], unmappedCount: 0 });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given paths then it is loading until the feed answers', async () => {
+    const feed = { built: '2026-08-29', rows: [scorecardClaim()], unmappedCount: 2 };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(feed)));
+
+    const { result } = renderHook(() => useScorecardComparisons('uk', [CTC_PATH]));
+
+    expect(result.current).toBeUndefined();
+    await waitFor(() => expect(result.current).toEqual(feed));
+  });
+
+  test('given the feed fails then it resolves to null', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 502 })));
+
+    const { result } = renderHook(() => useScorecardComparisons('uk', [CTC_PATH]));
+
+    await waitFor(() => expect(result.current).toBeNull());
   });
 });
