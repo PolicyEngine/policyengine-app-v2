@@ -36,7 +36,7 @@ export const staff: TeamMember[] = [
   },
   {
     name: "María Juaristi",
-    bio: "is a policy modeling intern at PolicyEngine. She is also pursuing an undergraduate degree in political science and data science at Minerva University. Previously, she was a research intern at the University of Chicago.",
+    bio: "is a research associate at PolicyEngine. She is also pursuing an undergraduate degree in political science and data science at Minerva University. Previously, she was a research intern at the University of Chicago.",
     image: "/assets/team/maria-juaristi.webp",
   },
   {

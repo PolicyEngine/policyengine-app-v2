@@ -46,6 +46,7 @@ export const supporters: Supporter[] = [
     id: "corvus",
     name: "Corvus Oaks Foundation",
     websiteUrl: "https://corvusoaks.org/",
+    logoUrl: "/assets/supporters/corvus-oaks.svg",
     description:
       "a new private foundation currently exploring several issues for future engagement and collaboration.",
   },
@@ -91,13 +92,60 @@ export const supporters: Supporter[] = [
     id: "pci",
     name: "Pritzker Children's Initiative",
     websiteUrl: "https://www.pritzkerchildrensinitiative.org/",
-    logoUrl: "/assets/supporters/pci.webp",
+    logoUrl: "/assets/supporters/pci-logo.webp",
     description:
       "a program of the J.B. and M.K. Pritzker Family Foundation focused on ensuring every child arrives at kindergarten ready to succeed, with particular emphasis on the prenatal to age three period.",
+  },
+  {
+    id: "ses",
+    name: "School of Philosophy and Economic Science",
+    websiteUrl: "https://www.schoolofphilosophy.org/",
+    logoUrl: "/assets/supporters/ses.svg",
+    description:
+      "an educational charity in London offering courses in practical philosophy and economics.",
+  },
+  {
+    id: "manifund",
+    name: "Manifund",
+    websiteUrl: "https://manifund.org/",
+    logoUrl: "/assets/supporters/manifund.webp",
+    description:
+      "a platform for funding impactful projects, sponsored by Manifold for Charity.",
   },
 ];
 
 export const projects: SupportedProjectData[] = [
+  {
+    title: "Token tax modelling for the UK",
+    projectUrl:
+      "https://manifund.org/projects/token-taxes-as-a-mechanism-for-reducing-ai-driven-power-concentration",
+    amount: 4650,
+    currency: "USD",
+    awardDate: "2026-10",
+    description:
+      "Modelling the revenue and distributional effects of a UK tax on AI inference, for the project \"Token taxes as a mechanism for reducing AI-driven power concentration\". The project is funded through Manifund by grantmaking.ai.",
+    supporterId: "manifund",
+  },
+  {
+    title: "Land value tax in every UK constituency",
+    amount: 12000,
+    currency: "GBP",
+    awardDate: "2026-10",
+    description:
+      "Estimating residential land values for each local authority in England, then modelling who gains and who loses in each constituency if a land value tax replaced council tax, or council tax and stamp duty together, with options such as deferral for asset-rich, income-poor households. Funded by the Economics Grant Fund (Harrington Legacy).",
+    supporterId: "ses",
+  },
+  {
+    title: "Advancing evidence-based policy with AI & tax-benefit microsimulation",
+    projectUrl:
+      "https://www.nuffieldfoundation.org/project/advancing-evidence-based-policy-with-ai-tax-benefit-microsimulation",
+    amount: 300000,
+    currency: "GBP",
+    awardDate: "2026-07",
+    description:
+      "Continuing support for PolicyEngine UK: local council tax variation, constituency-level Budget analysis, and reaching underserved audiences such as local journalists.",
+    supporterId: "nuffield",
+  },
   {
     title:
       "Enhancing, localising and democratising tax-benefit policy analysis",
