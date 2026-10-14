@@ -183,6 +183,20 @@ function renderReforms(path?: string) {
   return path ? renderWithCountry(ui, 'us', path) : render(ui);
 }
 
+// Radix Select asks for pointer capture, which jsdom does not have.
+Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+Element.prototype.releasePointerCapture ??= vi.fn();
+
+/** Picks one option from a bill filter's dropdown. */
+async function chooseFilter(
+  user: ReturnType<typeof userEvent.setup>,
+  filter: 'Level' | 'Stage',
+  option: string
+) {
+  await user.click(screen.getByRole('combobox', { name: filter }));
+  await user.click(await screen.findByRole('option', { name: option }));
+}
+
 describe('ReformsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -280,7 +294,7 @@ describe('ReformsPage', () => {
     renderReforms();
 
     await screen.findByText(/HB 106/);
-    await user.click(screen.getByRole('tab', { name: 'Federal' }));
+    await chooseFilter(user, 'Level', 'Federal');
 
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
     expect(screen.getByText('Child tax credit expansion proposal')).toBeInTheDocument();
@@ -293,7 +307,7 @@ describe('ReformsPage', () => {
     renderReforms();
 
     await screen.findByText(UTAH_ENACTED.title);
-    await user.click(screen.getByRole('tab', { name: 'State' }));
+    await chooseFilter(user, 'Level', 'State');
     expect(screen.queryByText(FEDERAL_PROPOSED.title)).not.toBeInTheDocument();
     expect(screen.getByText(GEORGIA_VETOED.title)).toBeInTheDocument();
 
@@ -310,7 +324,7 @@ describe('ReformsPage', () => {
     renderReforms();
 
     await screen.findByText(/HB 106/);
-    await user.click(screen.getByRole('tab', { name: 'Enacted' }));
+    await chooseFilter(user, 'Stage', 'Enacted');
 
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();
     expect(screen.queryByText('Child tax credit expansion proposal')).not.toBeInTheDocument();
@@ -357,8 +371,8 @@ describe('ReformsPage', () => {
 
     await screen.findByText(/HB 106/);
     // Both federal bills are proposals.
-    await user.click(screen.getByRole('tab', { name: 'Federal' }));
-    await user.click(screen.getByRole('tab', { name: 'Enacted' }));
+    await chooseFilter(user, 'Level', 'Federal');
+    await chooseFilter(user, 'Stage', 'Enacted');
     expect(screen.getByText('No bills match.')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Clear filters' }));
