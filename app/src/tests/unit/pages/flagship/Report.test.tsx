@@ -10,6 +10,9 @@ import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutput
 const mockCalcStatus = vi.fn();
 // The report's policies; a baseline policy with parameters is a custom baseline.
 const mockPolicies = vi.hoisted(() => ({ current: [] as unknown[] }));
+// The policies that failed to load, by id.
+const mockFailedPolicyIds = vi.hoisted(() => ({ current: [] as string[] }));
+const mockRetry = vi.fn();
 
 const META: FlagshipReportMeta = {
   title: 'Test Reform',
@@ -38,6 +41,8 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
     ],
     policies: mockPolicies.current,
     isLoading: false,
+    failedPolicyIds: mockFailedPolicyIds.current,
+    retry: mockRetry,
   }),
 }));
 
@@ -91,6 +96,8 @@ describe('FlagshipReportPage', () => {
     mockCalcStatus.mockReset();
     mockMeta = META;
     mockPolicies.current = [];
+    mockFailedPolicyIds.current = [];
+    mockRetry.mockReset();
     mockStartCalculationOnLoad.mockReset();
   });
 
@@ -216,6 +223,32 @@ describe('FlagshipReportPage', () => {
         ).toBeInTheDocument();
         expect(screen.queryByText(/Increasing the Child Tax Credit/)).not.toBeInTheDocument();
       });
+    });
+
+    test('given the baseline policy failed to load then the report does not read as current law', async () => {
+      const user = userEvent.setup();
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+      );
+      mockFailedPolicyIds.current = ['2'];
+      mockCalcStatus.mockReturnValue({
+        status: 'complete',
+        isComplete: true,
+        isError: false,
+        result: createMockSocietyWideOutput(),
+      });
+
+      renderPage();
+
+      expect(
+        screen.getByText('Compared with a baseline policy that could not be loaded')
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Try again' }));
+      expect(mockRetry).toHaveBeenCalledTimes(1);
+
+      await user.click(screen.getByRole('tab', { name: 'Validation' }));
+      expect(within(screen.getByRole('tabpanel')).getAllByText('Not comparable')).toHaveLength(2);
     });
 
     test('given a failed run then Build gets the reform back with the same comparison', async () => {

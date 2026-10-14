@@ -3,6 +3,7 @@ import {
   baselineProvisions,
   customBaseline,
   reportBaselineLabel,
+  reportBaselineUnknown,
   reportRunBaseline,
 } from '@/libs/flagship/reportBaseline';
 
@@ -36,6 +37,37 @@ describe('reportBaselineLabel', () => {
     expect(reportBaselineLabel(null, { ...PLAN_B_POLICY, label: null })).toBe(
       'Custom baseline policy'
     );
+  });
+});
+
+describe('reportBaselineUnknown', () => {
+  const CURRENT_LAW_ID = 2;
+
+  test('given a shared link whose baseline policy failed then the baseline is unknown', () => {
+    expect(
+      reportBaselineUnknown(null, '88', { currentLawId: CURRENT_LAW_ID, failedPolicyIds: ['88'] })
+    ).toBe(true);
+  });
+
+  test('given the baseline policy loaded then the baseline is known', () => {
+    expect(
+      reportBaselineUnknown(null, '88', { currentLawId: CURRENT_LAW_ID, failedPolicyIds: ['99'] })
+    ).toBe(false);
+  });
+
+  test('given current law failed to load then it is still current law', () => {
+    expect(
+      reportBaselineUnknown(null, '2', { currentLawId: CURRENT_LAW_ID, failedPolicyIds: ['2'] })
+    ).toBe(false);
+  });
+
+  test('given the run recorded its baseline then a failed policy leaves it known', () => {
+    expect(
+      reportBaselineUnknown(PLAN_B_META, '88', {
+        currentLawId: CURRENT_LAW_ID,
+        failedPolicyIds: ['88'],
+      })
+    ).toBe(false);
   });
 });
 

@@ -23,6 +23,28 @@ export function reportBaselineLabel(
     : null;
 }
 
+/** What a report compares with when its baseline policy could not be loaded. */
+export const UNKNOWN_BASELINE_LABEL = 'a baseline policy that could not be loaded';
+
+/**
+ * Whether what the report compares with is unknown: no record of the
+ * run's baseline (a shared link), and a baseline policy, not current
+ * law, that failed to load. Read as current law, the report would claim
+ * a comparison that it cannot show.
+ */
+export function reportBaselineUnknown(
+  meta: Pick<FlagshipReportMeta, 'baseline'> | null | undefined,
+  baselinePolicyId: string | undefined,
+  { currentLawId, failedPolicyIds }: { currentLawId: number; failedPolicyIds: string[] }
+): boolean {
+  return (
+    !meta?.baseline &&
+    !!baselinePolicyId &&
+    baselinePolicyId !== String(currentLawId) &&
+    failedPolicyIds.includes(baselinePolicyId)
+  );
+}
+
 /**
  * What a new run from this report compares with: the same baseline
  * policy when it is not current law, so an adjusted report keeps its

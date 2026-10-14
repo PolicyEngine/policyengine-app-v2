@@ -165,6 +165,8 @@ describe('useFlagshipReport', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.simulations).toHaveLength(2);
     expect(result.current.error).toBeNull();
+    // Each failed policy is named, so a missing baseline reads as unknown.
+    await waitFor(() => expect(result.current.failedPolicyIds).toEqual(['2', '98557']));
   });
 
   test('given a failed simulation then retry asks for it again and the error clears', async () => {

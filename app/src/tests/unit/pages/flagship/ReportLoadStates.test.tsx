@@ -65,6 +65,7 @@ function reportData(overrides: Partial<FlagshipReportData> = {}): FlagshipReport
     isLoading: false,
     error: null,
     notFound: false,
+    failedPolicyIds: [],
     retry: mockRetry,
     ...overrides,
   };

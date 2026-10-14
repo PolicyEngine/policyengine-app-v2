@@ -84,6 +84,11 @@ export interface ReportViewProps {
   provisionsLoading?: boolean;
   /** What the results are compared with, by name; current law when unset. */
   customBaselineLabel?: string | null;
+  /**
+   * The baseline policy could not be loaded: the adjust panel cannot
+   * recompute against it.
+   */
+  baselineUnknown?: boolean;
   /** What the adjust panel's runs compare with; current law when unset. */
   baseline?: RunReportBaseline;
   year: string;
@@ -133,6 +138,7 @@ export default function ReportView({
   priorLawBaseline = false,
   provisionsLoading = false,
   customBaselineLabel,
+  baselineUnknown = false,
   baseline,
   year,
   region,
@@ -429,6 +435,7 @@ export default function ReportView({
           region={region}
           year={year}
           baseline={baseline}
+          baselineUnknown={baselineUnknown}
         />
       </div>
     </div>

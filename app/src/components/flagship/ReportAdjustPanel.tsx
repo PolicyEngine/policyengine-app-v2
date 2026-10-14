@@ -35,6 +35,11 @@ interface ReportAdjustPanelProps {
   year?: string;
   /** What the report is compared with, so a recompute is too; current law when unset. */
   baseline?: RunReportBaseline;
+  /**
+   * The report's baseline policy could not be loaded. A recompute would
+   * compare with current law instead, so it is off.
+   */
+  baselineUnknown?: boolean;
 }
 
 /** True when the reform's parameter set is exactly the given provisions. */
@@ -66,6 +71,7 @@ export default function ReportAdjustPanel({
   region,
   year,
   baseline,
+  baselineUnknown = false,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const nav = useAppNavigate();
@@ -351,7 +357,15 @@ export default function ReportAdjustPanel({
             {reconcileError || runReport.error}
           </Text>
         )}
-        <Button onClick={recompute} disabled={!isDirty || busy || active.length === 0}>
+        {baselineUnknown && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            The baseline policy could not be loaded, so a recompute cannot compare with it.
+          </Text>
+        )}
+        <Button
+          onClick={recompute}
+          disabled={baselineUnknown || !isDirty || busy || active.length === 0}
+        >
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>
