@@ -9,18 +9,37 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { loadProvisionsIntoDraft, sameParameterValue } from '@/libs/draftReform';
+import {
+  loadProvisionsIntoDraft,
+  provisionIntervals,
+  sameParameterValue,
+} from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionSkeleton from './ProvisionSkeleton';
 import PopulationPicker from './reform/PopulationPicker';
 import NumberInput from './reform/ValueInput';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
+
+/** True when the reform's parameter set is exactly the given provisions. */
+function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
+  if (reform.parameters.length !== provisions.length) {
+    return false;
+  }
+  return provisions.every((provision) =>
+    reform.parameters.some(
+      (parameter) =>
+        parameter.name === provision.path &&
+        String(parameter.values[0]?.value) === String(provision.value)
+    )
+  );
+}
 
 interface ReportAdjustPanelProps {
   /** Title of the report being adjusted; the recomputed one appends "(adjusted)". */
@@ -40,20 +59,6 @@ interface ReportAdjustPanelProps {
    * compare with current law instead, so it is off.
    */
   baselineUnknown?: boolean;
-}
-
-/** True when the reform's parameter set is exactly the given provisions. */
-function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
-  if (reform.parameters.length !== provisions.length) {
-    return false;
-  }
-  return provisions.every((provision) =>
-    reform.parameters.some(
-      (parameter) =>
-        parameter.name === provision.path &&
-        String(parameter.values[0]?.value) === String(provision.value)
-    )
-  );
 }
 
 /**
@@ -129,17 +134,38 @@ function AdjustPanel({
     return null;
   }
 
+  // The year a recompute simulates; the current year when the report has none.
+  const runYear = year ? Number(year) : undefined;
+
   /**
-   * The provisions as the panel has them. A value edited here replaces the
-   * provision's own dates — one value, from the report's year on — or the
-   * run would keep the dates and ignore the edit.
+   * The provisions as the panel has them. A value edited here holds from
+   * 1 January of the report's year on, over whatever dated values come
+   * before it (as Build's inline edit sets it): left on the provision's
+   * old dates, or on the current year's, the run would miss the edit.
    */
-  const adjustedProvisions = () =>
+  const adjustedProvisions = (): RunReportProvision[] =>
     active.map((provision) => {
       const value = values[provision.path];
-      return sameParameterValue(value, provision.value)
-        ? { ...provision }
-        : { ...provision, value, intervals: undefined };
+      if (sameParameterValue(value, provision.value)) {
+        return { ...provision };
+      }
+      const schedule = new ValueIntervalCollection(provisionIntervals(provision));
+      schedule.addInterval({
+        startDate: `${runYear ?? CURRENT_YEAR}-01-01`,
+        endDate: FOREVER,
+        value,
+      });
+      return {
+        ...provision,
+        value,
+        intervals: schedule.getIntervals(),
+        // A value held from one year on no longer grows as the old one did.
+        growth: undefined,
+        growthStart: undefined,
+        growthBase: undefined,
+        growthRoundTo: undefined,
+        growthRound: undefined,
+      };
     });
 
   // Back to Build with the reform as the panel has it, to add to it there.
@@ -147,7 +173,7 @@ function AdjustPanel({
     const label = name.trim() || title;
     loadProvisionsIntoDraft(countryId, adjustedProvisions(), {
       label: label === 'Draft reform' ? '' : label,
-      year: year ? Number(year) : undefined,
+      year: runYear,
       region: population,
       baselineReformId: baseline?.reformId,
     });
@@ -159,6 +185,12 @@ function AdjustPanel({
     setIsReconciling(true);
     try {
       const adjusted = adjustedProvisions();
+      // The reform as it runs: every provision with the dated values the
+      // run sends (see provisionPeriods), so what is saved is what ran.
+      const parameters = adjusted.map((provision) => ({
+        name: provision.path,
+        values: provisionIntervals(provision),
+      }));
 
       // Reconcile with this browser's saved reforms: reuse an exact
       // match, otherwise save the adjusted set as its own reform.
@@ -176,16 +208,7 @@ function AdjustPanel({
         const created = await store.create({
           countryId,
           label,
-          parameters: adjusted.map((provision) => ({
-            name: provision.path,
-            values: [
-              {
-                startDate: `${CURRENT_YEAR}-01-01`,
-                endDate: FOREVER,
-                value: provision.value,
-              },
-            ],
-          })),
+          parameters,
           baseline: 'current-law',
           provenance: { source: 'manual', ref: 'report-adjust' },
         });
@@ -194,14 +217,10 @@ function AdjustPanel({
         runTitle = created.label || label;
       }
 
-      await runReport.run(
-        runTitle,
-        sourceNote,
-        adjusted,
-        reformId,
-        year ? Number(year) : undefined,
-        { region: population, baseline }
-      );
+      await runReport.run(runTitle, sourceNote, adjusted, reformId, runYear, {
+        region: population,
+        baseline,
+      });
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
     } finally {

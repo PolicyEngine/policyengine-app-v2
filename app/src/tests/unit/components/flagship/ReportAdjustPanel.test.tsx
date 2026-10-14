@@ -3,13 +3,23 @@ import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
-import type { RunReportBaseline } from '@/libs/flagship/runReport';
+import {
+  provisionPeriods,
+  type RunReportBaseline,
+  type RunReportProvision,
+} from '@/libs/flagship/runReport';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   seedDeductionMetadata,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import {
+  FLAT_CTC_PROVISION,
+  PAST_REPORT_YEAR,
+  PHASED_CTC_PROVISION,
+  PHASED_REPORT_YEAR,
+} from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
 
 const mockRun = vi.fn();
 const mockFindMine = vi.fn();
@@ -243,9 +253,9 @@ describe('ReportAdjustPanel', () => {
     await user.click(screen.getByRole('button', { name: /recompute/i }));
 
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
-    expect(mockRun.mock.calls[0][2]).toEqual([
-      expect.objectContaining({ value: 3600, intervals: undefined }),
-    ]);
+    expect(provisionPeriods(mockRun.mock.calls[0][2][0])).toEqual({
+      '2026-01-01.2100-12-31': 3600,
+    });
   });
 
   test('given the reform is renamed then recompute saves and titles it with the name', async () => {
@@ -415,5 +425,74 @@ describe('ReportAdjustPanel', () => {
 
     await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
     expect(screen.getByRole('button', { name: /recompute/i })).toBeInTheDocument();
+  });
+
+  describe('given the report year and the provision’s dates', () => {
+    function renderOne(provision: RunReportProvision, year: string) {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      return render(
+        <QueryClientProvider client={queryClient}>
+          <ReportAdjustPanel
+            title="CTC expansion"
+            sourceNote=""
+            provisions={[provision]}
+            year={year}
+          />
+        </QueryClientProvider>
+      );
+    }
+
+    async function editAndRecompute(value: string) {
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      const input = screen.getByLabelText(/new value for maximum credit per child/i);
+      await user.clear(input);
+      await user.type(input, value);
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    }
+
+    test('given a past-year report then an edited value runs from that year', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      renderOne(FLAT_CTC_PROVISION, PAST_REPORT_YEAR);
+
+      // When
+      await editAndRecompute('3000');
+
+      // Then
+      const [, , provisions, , year] = mockRun.mock.calls[0];
+      expect(year).toBe(Number(PAST_REPORT_YEAR));
+      expect(provisionPeriods(provisions[0])).toEqual({ '2024-01-01.2100-12-31': 3000 });
+    });
+
+    test('given a past-year report then the saved reform sets the value from that year', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      renderOne(FLAT_CTC_PROVISION, PAST_REPORT_YEAR);
+
+      // When
+      await editAndRecompute('3000');
+
+      // Then
+      expect(mockCreate.mock.calls[0][0].parameters[0].values).toEqual([
+        { startDate: '2024-01-01', endDate: '2100-12-31', value: 3000 },
+      ]);
+    });
+
+    test('given a phased provision then an edit holds from the report year, after its earlier dates', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+
+      // When
+      await editAndRecompute('3600');
+
+      // Then
+      expect(provisionPeriods(mockRun.mock.calls[0][2][0])).toEqual({
+        '2026-01-01.2026-12-31': 2500,
+        '2027-01-01.2100-12-31': 3600,
+      });
+    });
   });
 });
