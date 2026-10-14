@@ -16,21 +16,37 @@ export default function AutumnBudgetEventBanner({
       target="_blank"
       rel="noopener noreferrer"
       style={{
-        display: "block",
-        background: colors.primary[700],
-        color: "white",
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px 20px",
+        background: colors.warning,
+        color: colors.gray[900],
         textAlign: "center",
-        padding: "10px 16px",
+        padding: "16px",
         fontFamily: typography.fontFamily.primary,
-        fontSize: 14,
+        fontSize: 17,
         fontWeight: 500,
+        lineHeight: 1.4,
         textDecoration: "none",
-        letterSpacing: "0.02em",
       }}
     >
-      Autumn Budget 2026: join our same-day first look online, Wednesday 28
-      October, 4:30pm.{" "}
-      <span style={{ textDecoration: "underline", fontWeight: 600 }}>
+      <span>
+        <strong style={{ fontWeight: 700 }}>Autumn Budget 2026:</strong> join
+        our same-day first look online, Wednesday 28 October, 4:30pm
+      </span>
+      <span
+        style={{
+          background: colors.gray[900],
+          color: colors.white,
+          borderRadius: 999,
+          padding: "8px 18px",
+          fontSize: 15,
+          fontWeight: 600,
+          whiteSpace: "nowrap",
+        }}
+      >
         Register free &rarr;
       </span>
     </a>

@@ -13,23 +13,23 @@ const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 const cards = [
   {
     href: "/uk/energy-autumn-budget",
-    title: "Energy bills and the Autumn Budget 2026",
-    desc: "Household energy costs at forecast prices and seven Budget support options",
+    title: "Energy bills and the Autumn Budget",
+    desc: "What households will pay over the next two winters, and seven ways the Chancellor could help",
   },
   {
     href: "/uk/childcare-100k-threshold",
     title: "Scrapping the childcare cliff edge",
-    desc: "Cost of removing the £100,000 income limit on childcare support",
+    desc: "What it would cost to remove the £100,000 limit on free hours and Tax-Free Childcare",
   },
   {
     href: "/uk/targeted-energy-discount",
-    title: "Targeted energy bill discount",
-    desc: "Cost, reach and distributional effects of a targeted energy discount",
+    title: "A targeted energy bill discount",
+    desc: "Who would gain, and at what cost, from the Resolution Foundation's proposal",
   },
   {
     href: "/uk/middle-east-war-living-standards",
-    title: "Middle East war and UK living standards",
-    desc: "How energy, fuel and food price rises affect UK households",
+    title: "The Middle East war and living standards",
+    desc: "How rising energy, fuel and food prices affect UK household budgets",
   },
 ];
 
@@ -108,7 +108,7 @@ export default function FeaturedResearchBanner({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: spacing.md,
           }}
         >
