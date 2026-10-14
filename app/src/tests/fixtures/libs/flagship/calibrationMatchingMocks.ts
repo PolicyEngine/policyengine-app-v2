@@ -48,6 +48,26 @@ export const mockCalibrationRows: CalibrationTargetRow[] = [
   ),
 ];
 
+/** A national EITC target, which an EITC reform changes directly. */
+export const mockEitcCalibrationRow: CalibrationTargetRow = soiRow(
+  'irs_soi.ty2023.table_2_5.eitc_by_agi_children.no_qualifying_children.18k_to_19k.eitc_returns@2024',
+  'eitc',
+  ['eitc'],
+  0.08
+);
+
+/** A group named for a raw model variable, as the CTC targets reach a CDCC reform. */
+export const mockCtcLimitingMatch = {
+  variable: 'ctc_limiting_tax_liability',
+  depth: 5,
+  via: 'non_refundable_credits',
+  ring: 'downstream' as const,
+  targets: [mockCalibrationRows[2]],
+  targetCount: 1,
+  meanAbsRelativeError: 0.3,
+  worst: mockCalibrationRows[2],
+};
+
 export const mockCalibrationMatches: CalibrationMatches = {
   releaseId: POPULACE_RELEASE_ID,
   geography: 'US',

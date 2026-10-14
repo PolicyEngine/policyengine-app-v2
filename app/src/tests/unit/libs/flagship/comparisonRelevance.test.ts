@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { relevantComparisons } from '@/libs/flagship/comparisonRelevance';
 import {
+  ACA_CONTRIBUTION_PATH,
   ACTC_CLAIM,
+  BRACKET_RATE_PATH,
   CDCC_DIRECT_READERS,
   CDCC_ELIGIBILITY_MAX_PATH,
   COLORADO_CTC_CLAIM,
@@ -17,6 +19,8 @@ import {
   MARYLAND_FEDERAL_EITC_CLAIM,
   MD_EITC_CLAIM,
   MD_EITC_MATCH_PATH,
+  MEDICAID_CATEGORIES_PATH,
+  MORTGAGE_CAP_PATH,
   NATIONWIDE,
   NONREFUNDABLE_CTC_CLAIM,
   NYC_EITC_PATH,
@@ -25,6 +29,7 @@ import {
   SAVERS_CREDIT_CLAIM,
   SC_CDCC_CLAIM,
   SC_EITC_CLAIM,
+  SNAP_DEDUCTION_PATH,
   SOI_CDCC_CLAIM,
   SOUTH_CAROLINA,
   STANDARD_DEDUCTION_PATH,
@@ -148,5 +153,25 @@ describe('relevantComparisons', () => {
         region: 'uk',
       })
     ).toEqual([UK_PARAMETER_CLAIM]);
+  });
+
+  test('given model variable names then entity and status words do not hide the program', () => {
+    const target = (program: string) => ({ program, geography: 'US' });
+    const kept = (program: string, path: string, readers: string[] = []) =>
+      relevantComparisons([target(program)], usReform([path], NATIONWIDE, { [path]: readers }))
+        .length > 0;
+
+    expect(kept('medicaid_enrolled', MEDICAID_CATEGORIES_PATH)).toBe(true);
+    expect(
+      kept('deductible_mortgage_interest_tax_unit', MORTGAGE_CAP_PATH, [
+        'deductible_mortgage_interest',
+      ])
+    ).toBe(true);
+    expect(
+      kept('assigned_aca_ptc', ACA_CONTRIBUTION_PATH, ['aca_required_contribution_percentage'])
+    ).toBe(true);
+    // Income tax is a program of its own, not every rule with "income" in its path.
+    expect(kept('income_tax', BRACKET_RATE_PATH, ['income_tax_main_rates'])).toBe(true);
+    expect(kept('income_tax', SNAP_DEDUCTION_PATH, ['snap_standard_deduction'])).toBe(false);
   });
 });

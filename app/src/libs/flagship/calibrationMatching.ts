@@ -14,10 +14,12 @@
  * mechanism is usually the interacted quantity that bounds the data-side
  * bias of the estimate, so ordering is by depth, nearest first.
  */
+import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   DEFAULT_MAX_DEPTH,
   loadParameterDependencies,
   ReachedVariable,
+  readersOfPath,
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
@@ -167,6 +169,41 @@ export function summarizeMatches(
 }
 
 /**
+ * The matches whose targets measure a program the reform changes, in the
+ * report's jurisdiction (the rule baseline comparisons use). A target's
+ * program is the model variables it was computed from; targets of a
+ * program the change only echoes into drop, and so does a match left
+ * with none.
+ */
+export function relevantCalibrationMatches(
+  matches: CalibrationVariableMatch[],
+  reform: ReformScope
+): CalibrationVariableMatch[] {
+  return matches.flatMap((match) => {
+    const targets = relevantComparisons(
+      match.targets.map((target) => ({
+        program: target.policyengineVariables.join('+'),
+        geography: target.geography,
+        target,
+      })),
+      reform
+    ).map((entry) => entry.target);
+    if (targets.length === 0) {
+      return [];
+    }
+    return [
+      {
+        ...match,
+        targets,
+        targetCount: targets.length,
+        meanAbsRelativeError: weightedMeanAbsError(targets),
+        worst: targets[0],
+      },
+    ];
+  });
+}
+
+/**
  * Fetches the targets that measure any of `variables` in `geography`.
  * Returns null when the route is unavailable (Vite build, dashboard
  * unreachable) so callers can render an honest note.
@@ -200,7 +237,8 @@ export async function fetchCalibrationTargets(
 /**
  * The calibration matches for a reform: the variables its paths reach
  * (to `maxDepth`) that are calibration targets in `geography`, with
- * their fit. Null when either the map or the dashboard is unavailable.
+ * their fit, kept to the programs the reform changes. Null when either
+ * the map or the dashboard is unavailable.
  */
 export async function calibrationMatchesForPaths(
   paths: string[],
@@ -221,11 +259,17 @@ export async function calibrationMatchesForPaths(
   if (fetched === null) {
     return null;
   }
+  const reform: ReformScope = {
+    countryId: 'us',
+    paths,
+    readers: Object.fromEntries(paths.map((path) => [path, readersOfPath(path, map)])),
+    region: geography === 'US' ? 'us' : `state/${geography.toLowerCase()}`,
+  };
   return {
     releaseId: fetched.releaseId,
     geography,
     modelVersion: map.model.version,
     reachedCount: reached.length,
-    matches: summarizeMatches(reached, fetched.rows),
+    matches: relevantCalibrationMatches(summarizeMatches(reached, fetched.rows), reform),
   };
 }

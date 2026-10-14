@@ -4,16 +4,26 @@ import {
   dashboardTargetsUrl,
   fetchCalibrationTargets,
   geographyForRegion,
+  relevantCalibrationMatches,
   ringForDepth,
   summarizeMatches,
   weightedMeanAbsError,
 } from '@/libs/flagship/calibrationMatching';
 import {
+  mockCalibrationMatches,
   mockCalibrationRows,
+  mockCtcLimitingMatch,
+  mockEitcCalibrationRow,
   POPULACE_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
+  NATIONWIDE,
+  REPORT_4332_REFORM,
+  usReform,
+} from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
+import {
   CTC_BASE_AMOUNT_PATH,
+  EITC_MAX_PATH,
   mockParameterDependencyMap,
   STANDARD_DEDUCTION_PATH,
 } from '@/tests/fixtures/libs/flagship/parameterDependenciesMocks';
@@ -178,5 +188,62 @@ describe('calibrationMatchesForPaths', () => {
 
     expect(result!.matches).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given an EITC path echoing into the CTC then only the EITC targets remain', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        okResponse({
+          releaseId: POPULACE_RELEASE_ID,
+          rows: [...mockCalibrationRows, mockEitcCalibrationRow],
+        })
+      )
+    );
+
+    const result = await calibrationMatchesForPaths([EITC_MAX_PATH], 'US');
+
+    expect(result!.reachedCount).toBeGreaterThan(1);
+    expect(result!.matches.map((match) => match.variable)).toEqual(['eitc']);
+  });
+});
+
+describe('relevantCalibrationMatches', () => {
+  test('given report 4332 then its CTC targets drop and no match is left', () => {
+    expect(
+      relevantCalibrationMatches(
+        [...mockCalibrationMatches.matches, mockCtcLimitingMatch],
+        REPORT_4332_REFORM
+      )
+    ).toEqual([]);
+  });
+
+  test('given a CTC reform then its CTC targets stay with their fit', () => {
+    const [refundable] = relevantCalibrationMatches(
+      mockCalibrationMatches.matches,
+      usReform([CTC_BASE_AMOUNT_PATH], NATIONWIDE)
+    );
+
+    expect(refundable.variable).toBe('refundable_ctc');
+    expect(refundable.targetCount).toBe(2);
+    expect(refundable.worst).toBe(mockCalibrationRows[1]);
+  });
+
+  test('given a group with targets of another program then only the changed program stays', () => {
+    const [match] = relevantCalibrationMatches(
+      [
+        {
+          ...mockCalibrationMatches.matches[0],
+          targets: [mockCalibrationRows[2], mockEitcCalibrationRow],
+          targetCount: 2,
+          worst: mockCalibrationRows[2],
+        },
+      ],
+      usReform([EITC_MAX_PATH], NATIONWIDE)
+    );
+
+    expect(match.targets).toEqual([mockEitcCalibrationRow]);
+    expect(match.worst).toBe(mockEitcCalibrationRow);
+    expect(match.meanAbsRelativeError).toBeCloseTo(0.08);
   });
 });

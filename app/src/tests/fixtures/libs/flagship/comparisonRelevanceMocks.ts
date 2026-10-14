@@ -36,6 +36,10 @@ export const STANDARD_DEDUCTION_PATH = 'gov.irs.deductions.standard.amount.SINGL
 export const SNAP_DEDUCTION_PATH = 'gov.usda.snap.income.deductions.standard';
 export const REFUNDABLE_CTC_MAX_PATH = 'gov.irs.credits.ctc.refundable.individual_max';
 export const UT_CTC_AMOUNT_PATH = 'gov.states.ut.tax.income.credits.ctc.amount';
+export const MEDICAID_CATEGORIES_PATH = 'gov.hhs.medicaid.eligibility.categories.covered';
+export const MORTGAGE_CAP_PATH = 'gov.irs.deductions.itemized.interest.mortgage.cap';
+export const ACA_CONTRIBUTION_PATH = 'gov.aca.required_contribution_percentage.final';
+export const BRACKET_RATE_PATH = 'gov.irs.income.bracket.rates.1';
 
 export const NATIONWIDE = 'us';
 export const MARYLAND = 'state/md';

@@ -10,6 +10,10 @@
  * CDCC). Programs further down the dependency graph, such as a state
  * EITC that a federal credit reaches through the tax it reduces, are the
  * tax-benefit system echoing the change, not programs the reform changes.
+ * Names are compared without the words that only qualify a program
+ * (refundable, enrolled, the tax_unit entity), so refundable_ctc is the
+ * CTC and medicaid_enrolled is Medicaid. Baseline comparisons and
+ * calibration targets use the same rule.
  *
  * Jurisdiction, US only: a nationwide report keeps the national
  * comparisons of the federal programs the reform changes, and a state's
@@ -50,7 +54,11 @@ const US_STATES = new Set(
   ).split(' ')
 );
 
-/** Words that qualify a program, not name it: refundable_ctc and non_refundable_ctc are the CTC. */
+/**
+ * Words that qualify or state a program, not name it, left out of every
+ * name before comparing: refundable_ctc and non_refundable_ctc are the
+ * CTC, medicaid_enrolled and is_medicaid_eligible are Medicaid.
+ */
 const QUALIFIERS = new Set([
   'refundable',
   'nonrefundable',
@@ -58,21 +66,41 @@ const QUALIFIERS = new Set([
   'refund',
   'credit',
   'credits',
-  'tax',
   'deduction',
+  'enrolled',
+  'eligible',
+  'is',
+  'has',
 ]);
 
-/** Scorecard program ids that are not model names, and the model names they stand for. */
+/** The entity a model variable belongs to, which names no program: deductible_mortgage_interest_tax_unit. */
+const ENTITY = /(?:^|_)(?:tax_unit|spm_unit)(?=_|$)/g;
+
+/**
+ * Program ids whose name is not the one their parameters and readers
+ * use, and the names they stand for: scorecard abbreviations, and model
+ * variables named for a quantity rather than the program.
+ */
 const PROGRAM_ALIASES: Record<string, string[]> = {
+  assigned_aca_ptc: ['aca'],
   co_fac: ['co_family_affordability_credit'],
+  education_tax_credits: ['education'],
   housing: ['hud'],
   ma_cftc: ['ma_child_and_family_credit'],
   ny_escc: ['ny_ctc'],
   or_kids_credit: ['or_ctc'],
+  spm_unit_energy_subsidy: ['liheap'],
   va_eitc_cli: ['va_eitc', 'va_low_income_credit'],
   wa_wftc: ['wa_working_families_tax_credit'],
   wi_eic: ['wi_earned_income_credit'],
 };
+
+/** A name's words, without its entity and qualifiers; all of them when nothing else is left. */
+function nameTokens(name: string): string[] {
+  const tokens = name.replace(ENTITY, '').split('_').filter(Boolean);
+  const named = tokens.filter((token) => !QUALIFIERS.has(token));
+  return named.length > 0 ? named : tokens;
+}
 
 /** A program the reform changes: its name, whose program it is, and where the change applies. */
 interface ProgramSignal {
@@ -106,7 +134,7 @@ function reformSignals(reform: ReformScope, us: boolean): ProgramSignal[] {
     const scope = pathScope(segments);
     // The last segment names a setting (max, rate, min_children_for_ss_taxes_minus_eitc).
     const own: ProgramSignal = {
-      tokens: segments.slice(0, -1).flatMap((segment) => segment.split('_')),
+      tokens: segments.slice(0, -1).flatMap(nameTokens),
       owner: scope,
       applies: scope,
     };
@@ -116,8 +144,8 @@ function reformSignals(reform: ReformScope, us: boolean): ProgramSignal[] {
       // An unprefixed variable reading a state's parameter is a federal
       // program the state runs, such as a SNAP option.
       return state
-        ? { tokens: rest, owner: state, applies: scope }
-        : { tokens: variable.split('_'), owner: scope === null ? null : NATIONAL, applies: scope };
+        ? { tokens: nameTokens(rest.join('_')), owner: state, applies: scope }
+        : { tokens: nameTokens(variable), owner: scope === null ? null : NATIONAL, applies: scope };
     });
     return [own, ...readers];
   });
@@ -136,11 +164,9 @@ function comparisonPrograms(
       // "md_eitc" measured in Maryland is Maryland's program; "eitc" there is the federal one.
       const statesOwn =
         geography !== NATIONAL && tokens.length > 1 && stateCode(tokens[0]) === geography;
-      const named = statesOwn ? tokens.slice(1) : tokens;
-      const family = named.filter((token) => !QUALIFIERS.has(token));
       return {
         owner: statesOwn ? geography : NATIONAL,
-        family: family.length > 0 ? family : named,
+        family: nameTokens((statesOwn ? tokens.slice(1) : tokens).join('_')),
       };
     });
 }

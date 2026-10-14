@@ -29,25 +29,21 @@ describe('CalibrationMatchSection', () => {
     ).toBeInTheDocument();
   });
 
-  test('given reached variables but none calibrated then the gap is stated, not hidden', () => {
-    render(
-      <CalibrationMatchSection
-        matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount: 33, matches: [] }}
-      />
-    );
+  test('given no target of a changed program then one plain line says so', () => {
+    for (const reachedCount of [0, 33]) {
+      const { unmount } = render(
+        <CalibrationMatchSection
+          matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount, matches: [] }}
+        />
+      );
 
-    expect(screen.getByText(/none of the 33 variables .* in CA/i)).toBeInTheDocument();
-  });
-
-  test('given no provisions at all then a plain line says no target covers the reform', () => {
-    render(
-      <CalibrationMatchSection
-        matches={{ ...mockCalibrationMatches, reachedCount: 0, matches: [] }}
-      />
-    );
-
-    expect(screen.getByRole('heading', { name: 'Data calibration' })).toBeInTheDocument();
-    expect(screen.getByText('No calibration target covers this reform.')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Data calibration' })).toBeInTheDocument();
+      expect(
+        screen.getByText('No calibration target measures the programs this reform changes.')
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      unmount();
+    }
   });
 
   test('shows each target with its period, values, gap and source link', () => {

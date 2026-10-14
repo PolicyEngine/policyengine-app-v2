@@ -214,14 +214,10 @@ export function CalibrationMatchSection({
     return card(<ValidationLoading label="Checking calibration targets" />);
   }
   if (matches.matches.length === 0) {
-    const where = matches.geography === 'US' ? 'nationally' : `in ${matches.geography}`;
-    // Silence would read as "fine". State credits are the usual case: the
-    // dashboard's state income tax targets carry no model-variable mapping.
+    // Silence would read as "fine"; loose matches would read as evidence.
     return card(
       <ValidationNote>
-        {matches.reachedCount > 0
-          ? `None of the ${matches.reachedCount} variables this reform moves is a calibration target ${where}.`
-          : 'No calibration target covers this reform.'}
+        No calibration target measures the programs this reform changes.
       </ValidationNote>
     );
   }
