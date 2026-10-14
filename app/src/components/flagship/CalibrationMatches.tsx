@@ -211,7 +211,7 @@ export function CalibrationMatchSection({
     return card(<ValidationNote>Calibration checks are temporarily unavailable.</ValidationNote>);
   }
   if (matches === undefined) {
-    return card(<ValidationLoading>Checking calibration targets…</ValidationLoading>);
+    return card(<ValidationLoading label="Checking calibration targets" />);
   }
   if (matches.matches.length === 0) {
     const where = matches.geography === 'US' ? 'nationally' : `in ${matches.geography}`;

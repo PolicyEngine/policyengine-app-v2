@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { IconExternalLink } from '@tabler/icons-react';
-import { Badge, Spinner, Stack, Text } from '@/components/ui';
+import { SkeletonLine, SkeletonRegion } from '@/components/flagship/states';
+import { Badge, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 /**
@@ -158,13 +159,20 @@ export function NotComparable({ children }: { children: ReactNode }) {
   );
 }
 
-/** A card's check is still loading; the line, not the spinner, is what gets announced. */
-export function ValidationLoading({ children }: { children: ReactNode }) {
+/**
+ * A card's check is still loading: placeholder lines where its rows will
+ * be, as the rest of app v3 waits, named for what is coming.
+ */
+export function ValidationLoading({ label }: { label: string }) {
   return (
-    <Stack role="status" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-      <Spinner size="sm" role="presentation" aria-hidden="true" />
-      <ValidationNote>{children}</ValidationNote>
-    </Stack>
+    <SkeletonRegion
+      label={label}
+      style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}
+    >
+      <SkeletonLine width="70%" />
+      <SkeletonLine width="90%" />
+      <SkeletonLine width="55%" />
+    </SkeletonRegion>
   );
 }
 

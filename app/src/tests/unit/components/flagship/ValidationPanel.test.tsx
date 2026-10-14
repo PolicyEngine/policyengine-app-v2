@@ -110,7 +110,9 @@ describe('BaselineComparisons', () => {
   test('given matches are loading then the loading state renders', () => {
     render(<BaselineComparisons trackRecord={undefined} scorecardRows={undefined} />);
 
-    expect(screen.getByText(/loading baseline comparisons/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('status', { name: 'Loading baseline comparisons' })
+    ).toBeInTheDocument();
   });
 
   test('given the reform reaches nothing then a plain line says no comparison covers it', () => {
