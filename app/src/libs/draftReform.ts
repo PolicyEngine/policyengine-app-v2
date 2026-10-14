@@ -271,18 +271,30 @@ export function clearDraftAfterRun(userReportId: string): void {
   }
 }
 
-/** A report's reform back in the draft, to edit and run again. */
+/**
+ * A report's reform back in the draft, to edit and run again — or a
+ * bill's, with the bill as its source.
+ */
 export function loadProvisionsIntoDraft(
   countryId: CountryId,
   provisions: DraftProvision[],
-  options: { label?: string; year?: number; region?: string; baselineReformId?: string | null } = {}
+  options: {
+    label?: string;
+    year?: number;
+    region?: string;
+    baselineReformId?: string | null;
+    /** Where the reform came from; hand-built when unset. */
+    source?: ReformSource;
+    sourceRef?: string;
+  } = {}
 ): void {
   writeDraft({
     countryId,
     label: options.label ?? '',
     provisions: provisions.map((provision) => ({ ...provision })),
     population: { scope: 'national', ...(options.region ? { region: options.region } : {}) },
-    source: 'manual',
+    source: options.source ?? 'manual',
+    ...(options.sourceRef ? { sourceRef: options.sourceRef } : {}),
     startedAt: Date.now(),
     ...(options.year ? { year: options.year } : {}),
     ...(options.baselineReformId ? { baselineReformId: options.baselineReformId } : {}),

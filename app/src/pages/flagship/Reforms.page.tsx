@@ -39,12 +39,7 @@ import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import {
-  addDraftProvision,
-  clearDraftReform,
-  loadReformIntoDraft,
-  setDraftLabel,
-} from '@/libs/draftReform';
+import { loadProvisionsIntoDraft, loadReformIntoDraft } from '@/libs/draftReform';
 import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
 import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
@@ -470,11 +465,14 @@ export default function ReformsPage() {
   };
 
   const openBillAsDraft = (bill: TrackedBill) => {
-    clearDraftReform();
-    billProvisions(bill).forEach((provision) =>
-      addDraftProvision(countryId, provision, 'bill', bill.id)
-    );
-    setDraftLabel(bill.title);
+    // The draft runs as the bill's report does: in its first year, on its state.
+    loadProvisionsIntoDraft(countryId, billProvisions(bill), {
+      label: bill.title,
+      year: billRunYear(bill.provisions),
+      region: bill.state ? billRegion(bill, countryId) : undefined,
+      source: 'bill',
+      sourceRef: bill.id,
+    });
     // The draft is Build's page now, not a panel beside this one.
     nav.push(`/${countryId}/build`);
   };

@@ -160,6 +160,22 @@ describe('draftReform', () => {
     expect(getDraftReform()).not.toHaveProperty('baselineReformId');
   });
 
+  it('given provisions loaded with no source then the draft is hand-built', () => {
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }]);
+
+    expect(getDraftReform()?.source).toBe('manual');
+    expect(getDraftReform()).not.toHaveProperty('sourceRef');
+  });
+
+  it('given provisions loaded from a bill then the draft keeps the bill as its source', () => {
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }], {
+      source: 'bill',
+      sourceRef: 'us-hr1425',
+    });
+
+    expect(getDraftReform()).toMatchObject({ source: 'bill', sourceRef: 'us-hr1425' });
+  });
+
   it('given a search entry and metadata values then provisionFromSearchEntry uses the current value as baseline', () => {
     const provision = provisionFromSearchEntry(
       { path: 'gov.x', breadcrumb: 'X', unit: 'currency-USD' },
