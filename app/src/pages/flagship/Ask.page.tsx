@@ -580,7 +580,7 @@ export default function AskPage() {
             <div style={{ flex: '1 1 220px', minWidth: 200 }}>
               <SectionTile
                 icon={IconGavel}
-                title="In Congress"
+                title="Bills"
                 detail="Real bills scored with the model"
                 onClick={() => nav.push(`/${countryId}/reforms?filter=bills`)}
               />

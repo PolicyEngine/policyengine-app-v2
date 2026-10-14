@@ -3,6 +3,15 @@ import { render, renderWithCountry, screen, userEvent, waitFor, within } from '@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import ReformsPage from '@/pages/flagship/Reforms.page';
+import {
+  FEDERAL_ENACTED,
+  FEDERAL_PROPOSED,
+  FEDERAL_UNTRACKED,
+  FILTER_BILLS,
+  GEORGIA_VETOED,
+  UTAH_ENACTED,
+  UTAH_PROPOSED,
+} from '@/tests/fixtures/libs/flagship/billFilterMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockFindMine = vi.fn();
@@ -183,7 +192,7 @@ describe('ReformsPage', () => {
     mockFetchTrackerBills.mockResolvedValue(FEED_BILLS);
   });
 
-  test('given the default view then bill cards render with jurisdiction eyebrows', async () => {
+  test('given the default view then bill cards render with place eyebrows', async () => {
     renderReforms();
 
     expect(await screen.findByText(/HB 106/)).toBeInTheDocument();
@@ -237,34 +246,111 @@ describe('ReformsPage', () => {
     expect(draft?.provisions.length).toBeGreaterThan(0);
   });
 
-  test('given the place filter then only that jurisdiction remains', async () => {
+  test('given the federal level then state bills leave', async () => {
     const user = userEvent.setup();
     renderReforms();
 
     await screen.findByText(/HB 106/);
-    await user.click(screen.getByRole('button', { name: 'Place: All jurisdictions' }));
-    await user.click(await screen.findByRole('option', { name: /utah/i }));
+    await user.click(screen.getByRole('tab', { name: 'Federal' }));
 
-    expect(screen.getByRole('button', { name: 'Place: Utah' })).toBeInTheDocument();
+    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+    expect(screen.getByText('Child tax credit expansion proposal')).toBeInTheDocument();
+    expect(screen.getByText('SNAP benefit adjustment proposal')).toBeInTheDocument();
+  });
+
+  test('given the state level then one state narrows the list', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue(FILTER_BILLS);
+    renderReforms();
+
+    await screen.findByText(UTAH_ENACTED.title);
+    await user.click(screen.getByRole('tab', { name: 'State' }));
+    expect(screen.queryByText(FEDERAL_PROPOSED.title)).not.toBeInTheDocument();
+    expect(screen.getByText(GEORGIA_VETOED.title)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'State: All states' }));
+    await user.click(await screen.findByRole('option', { name: /utah\s*2/i }));
+
+    expect(screen.getByRole('button', { name: 'State: Utah' })).toBeInTheDocument();
+    expect(screen.getByText(UTAH_PROPOSED.title)).toBeInTheDocument();
+    expect(screen.queryByText(GEORGIA_VETOED.title)).not.toBeInTheDocument();
+  });
+
+  test('given the enacted stage then only enacted bills remain', async () => {
+    const user = userEvent.setup();
+    renderReforms();
+
+    await screen.findByText(/HB 106/);
+    await user.click(screen.getByRole('tab', { name: 'Enacted' }));
+
     expect(screen.getByText(/HB 106/)).toBeInTheDocument();
     expect(screen.queryByText('Child tax credit expansion proposal')).not.toBeInTheDocument();
   });
 
-  test('given federal only then state bills leave, and each place says how many it holds', async () => {
+  test('given each bill card then it carries its place and stage', async () => {
+    mockFetchTrackerBills.mockResolvedValue(FILTER_BILLS);
+    renderReforms();
+
+    const card = (title: string) =>
+      screen.getByText(title).closest('[role="button"]') as HTMLElement;
+    await screen.findByText(UTAH_ENACTED.title);
+
+    // The tracker files federal bills under "US"; the card says Federal.
+    expect(within(card(FEDERAL_ENACTED.title)).getByText('Federal')).toBeInTheDocument();
+    expect(within(card(FEDERAL_ENACTED.title)).getByText('Enacted')).toBeInTheDocument();
+    expect(within(card(UTAH_PROPOSED.title)).getByText('Utah')).toBeInTheDocument();
+    expect(within(card(UTAH_PROPOSED.title)).getByText('Proposed')).toBeInTheDocument();
+    expect(within(card(GEORGIA_VETOED.title)).getByText('Failed')).toBeInTheDocument();
+    // No tracked status, no stage: the card does not guess one.
+    expect(
+      within(card(FEDERAL_UNTRACKED.title)).queryByText(/^(Enacted|Proposed|Failed)$/)
+    ).not.toBeInTheDocument();
+  });
+
+  test('given a search for federal then the bills whose cards say Federal match', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue(FILTER_BILLS);
+    renderReforms();
+
+    await screen.findByText(UTAH_ENACTED.title);
+    // The tracker files these bills under "US"; the cards say Federal.
+    await user.type(screen.getByRole('textbox', { name: /search reforms/i }), 'federal');
+
+    expect(await screen.findByText(FEDERAL_ENACTED.title)).toBeInTheDocument();
+    expect(screen.getByText(FEDERAL_PROPOSED.title)).toBeInTheDocument();
+    expect(screen.queryByText(UTAH_ENACTED.title)).not.toBeInTheDocument();
+    expect(screen.queryByText('No bills match.')).not.toBeInTheDocument();
+  });
+
+  test('given filters that match no bill then a message offers to clear them', async () => {
     const user = userEvent.setup();
     renderReforms();
 
     await screen.findByText(/HB 106/);
-    await user.click(screen.getByRole('button', { name: 'Place: All jurisdictions' }));
-    // Three bills: two federal, one in Utah.
-    expect(
-      await screen.findByRole('option', { name: /all jurisdictions\s*3/i })
-    ).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /utah\s*1/i })).toBeInTheDocument();
-    await user.click(screen.getByRole('option', { name: /federal only\s*2/i }));
+    // Both federal bills are proposals.
+    await user.click(screen.getByRole('tab', { name: 'Federal' }));
+    await user.click(screen.getByRole('tab', { name: 'Enacted' }));
+    expect(screen.getByText('No bills match.')).toBeInTheDocument();
 
-    expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    expect(screen.queryByText('No bills match.')).not.toBeInTheDocument();
+    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
     expect(screen.getByText('Child tax credit expansion proposal')).toBeInTheDocument();
+  });
+
+  test('given a search that matches no bill then clear filters empties the search', async () => {
+    const user = userEvent.setup();
+    renderReforms();
+
+    await screen.findByText(/HB 106/);
+    await user.type(screen.getByRole('textbox', { name: /search reforms/i }), 'medicaid');
+    expect(await screen.findByText('No bills match.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    expect(screen.getByRole('textbox', { name: /search reforms/i })).toHaveValue('');
+    expect(screen.getByText(/HB 106/)).toBeInTheDocument();
   });
 
   test('given a search then bill cards filter', async () => {

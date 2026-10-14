@@ -25,6 +25,7 @@ import {
   draftYear,
   provisionAdjusts,
   provisionsForYear,
+  setDraftBaseline,
   setDraftLabel,
   setDraftPopulation,
   setDraftWindowYears,
@@ -34,6 +35,7 @@ import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import BaselinePicker, { savedReformName, useDraftBaseline } from './BaselinePicker';
 import PopulationPicker from './PopulationPicker';
 
 /**
@@ -235,12 +237,11 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
 }
 
 /**
- * The last step, under the reform: the run's year and who it runs on on
- * the left; throwing the draft away, saving it and running it on the
- * right. It
- * stays at the bottom of the window while the reform is longer than the
- * screen, so the run is never a scroll away, and settles in place under
- * the table once the table ends.
+ * The last step, under the reform: the run's year, who it runs on and
+ * what it is compared with on the left; throwing the draft away, saving
+ * it and running it on the right. It stays at the bottom of the window
+ * while the reform is longer than the screen, so the run is never a
+ * scroll away, and settles in place under the table once the table ends.
  */
 export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
@@ -261,6 +262,9 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
 
   // Who the report runs on: the whole country, a state, or a congressional district.
   const region = draft.population?.region;
+
+  // What the report compares the reform with: current law, or a saved reform.
+  const baseline = useDraftBaseline(draft);
 
   // A run keeps its reform: it saves the draft to Your reforms (or
   // updates the saved reform it edits, or reuses a saved one that sets
@@ -305,7 +309,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
       provisionsForYear(adjusted, year, currentLawAt),
       reformId,
       year,
-      { fromDraft: true, region, windowYears: draft.windowYears }
+      {
+        fromDraft: true,
+        region,
+        windowYears: draft.windowYears,
+        baseline: baseline.forRun,
+      }
     );
   };
 
@@ -377,6 +386,11 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
             regions={regions}
           />
+          <BaselinePicker
+            value={baseline.reform?.id}
+            onChange={setDraftBaseline}
+            reforms={baseline.options}
+          />
         </div>
         <div
           style={{
@@ -399,7 +413,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           </Button>
           <Button
             onClick={() => void runAndKeep()}
-            disabled={adjusted.length === 0 || runReport.isRunning || savingForRun}
+            disabled={
+              adjusted.length === 0 ||
+              runReport.isRunning ||
+              savingForRun ||
+              baseline.pending ||
+              baseline.matchesDraft
+            }
             title={
               !empty && adjusted.length === 0
                 ? 'Adjust at least one value from current law to run the report'
@@ -423,6 +443,19 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           }}
         >
           No values differ from current law yet. Adjust at least one value to run the report.
+        </p>
+      )}
+      {adjusted.length > 0 && baseline.matchesDraft && baseline.reform && (
+        <p
+          style={{
+            margin: 0,
+            textAlign: 'right',
+            fontSize: typography.fontSize.xs,
+            color: colors.text.tertiary,
+          }}
+        >
+          This reform matches {savedReformName(baseline.reform)}. Change a value or compare with
+          something else.
         </p>
       )}
 

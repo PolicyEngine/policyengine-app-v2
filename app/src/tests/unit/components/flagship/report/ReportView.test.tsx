@@ -57,6 +57,98 @@ describe('ReportView overview', () => {
       'This reform changes nothing in 2026'
     );
   });
+
+  test('given a report compared with a saved reform then the cover and the notice name it', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Bigger CTC"
+          sourceNote="Hand-built"
+          provisions={[]}
+          customBaselineLabel="Plan B"
+          year="2026"
+          output={createMockSocietyWideOutput()}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByText('Compared with Plan B')).toBeInTheDocument();
+    const notice = screen.getByRole('region', { name: 'No change in this year' });
+    expect(notice).toHaveTextContent('Every result matches Plan B.');
+    expect(notice).not.toHaveTextContent('matches current law');
+  });
+});
+
+describe('ReportView compared with a saved reform', () => {
+  const PROVISION = {
+    path: 'gov.irs.credits.ctc.amount.base',
+    breadcrumb: 'IRS → Credits → Child tax credit → Base amount',
+    unit: 'currency-USD',
+    baselineValue: 2000,
+    value: 2500,
+  };
+  const renderWith = (customBaselineLabel?: string) => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Bigger CTC"
+          sourceNote="Hand-built"
+          provisions={[PROVISION]}
+          customBaselineLabel={customBaselineLabel}
+          year="2026"
+          output={null}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+  };
+  const valueHeadings = () =>
+    within(screen.getByRole('region', { name: 'Policy changes' }))
+      .getAllByRole('columnheader')
+      .map((header) => header.textContent);
+
+  test('then the changes table says its first values are current law', () => {
+    renderWith('Plan B');
+
+    expect(valueHeadings()).toEqual(['Change', 'Current law', 'After', 'Start', 'End']);
+  });
+
+  test('given current law then the changes table reads before and after, as before', () => {
+    renderWith();
+
+    expect(valueHeadings()).toEqual(['Change', 'Before', 'After', 'Start', 'End']);
+  });
+
+  test('then Validation says published scores compare with current law', async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    renderWith('Plan B');
+
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    expect(
+      screen.getByText(
+        'Published scores compare with current law. This report compares with Plan B.'
+      )
+    ).toBeInTheDocument();
+    fetchSpy.mockRestore();
+  });
+
+  test('given current law then Validation has no such note', async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    renderWith();
+
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    expect(screen.queryByText(/Published scores compare/)).not.toBeInTheDocument();
+    fetchSpy.mockRestore();
+  });
 });
 
 describe('ReportView budget window', () => {
@@ -109,6 +201,12 @@ describe('ReportView cover', () => {
 
     expect(screen.queryByText(/· 2026/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Hand-built/)).not.toBeInTheDocument();
+  });
+
+  test('given current law then the cover names no comparison', () => {
+    renderCover('Delaware');
+
+    expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
   });
 });
 

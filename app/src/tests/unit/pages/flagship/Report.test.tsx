@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import type { FlagshipReportMeta } from '@/libs/flagship/runReport';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
 import { scorecardClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -8,6 +10,22 @@ import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutput
 const mockCalcStatus = vi.fn();
 // The report's policies; a baseline policy with parameters is a custom baseline.
 const mockPolicies = vi.hoisted(() => ({ current: [] as unknown[] }));
+
+const META: FlagshipReportMeta = {
+  title: 'Test Reform',
+  sourceNote: 'Hand-built',
+  createdAt: '2026-10-13T00:00:00Z',
+  provisions: [
+    {
+      path: 'gov.irs.credits.ctc.refundable.individual_max',
+      breadcrumb: 'IRS → Credits → CTC → Refundable maximum',
+      unit: 'currency-USD',
+      baselineValue: 1700,
+      value: 499,
+    },
+  ],
+};
+let mockMeta: FlagshipReportMeta = META;
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
@@ -50,20 +68,12 @@ vi.mock('@/utils/reportSimulations', () => ({
 
 vi.mock('@/libs/flagship/runReport', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/runReport')>()),
-  readReportMeta: () => ({
-    title: 'Test Reform',
-    sourceNote: 'Hand-built',
-    createdAt: '2026-10-13T00:00:00Z',
-    provisions: [
-      {
-        path: 'gov.irs.credits.ctc.refundable.individual_max',
-        breadcrumb: 'IRS → Credits → CTC → Refundable maximum',
-        unit: 'currency-USD',
-        baselineValue: 1700,
-        value: 499,
-      },
-    ],
-  }),
+  readReportMeta: () => mockMeta,
+}));
+
+vi.mock('@/api/budgetWindow', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/budgetWindow')>()),
+  fetchBudgetWindow: async () => ({ status: 'computing', result: null, progress: 10 }),
 }));
 
 function renderPage() {
@@ -78,6 +88,7 @@ function renderPage() {
 describe('FlagshipReportPage', () => {
   beforeEach(() => {
     mockCalcStatus.mockReset();
+    mockMeta = META;
     mockPolicies.current = [];
   });
 
@@ -113,6 +124,98 @@ describe('FlagshipReportPage', () => {
     renderPage();
 
     expect(screen.queryByText('Adjust parameters')).not.toBeInTheDocument();
+  });
+  describe('given what the report is compared with', () => {
+    const PLAN_B_META: FlagshipReportMeta = {
+      ...META,
+      baseline: { reformId: 'rf-plan-b', policyId: '2', label: 'Plan B' },
+    };
+
+    test('given a saved reform then the results say they are compared with it', () => {
+      mockMeta = PLAN_B_META;
+      mockCalcStatus.mockReturnValue({
+        status: 'complete',
+        isComplete: true,
+        isError: false,
+        result: createMockSocietyWideOutput(),
+      });
+
+      renderPage();
+
+      expect(screen.getByText('Compared with Plan B')).toBeInTheDocument();
+    });
+
+    test('given a report from before baselines then it reads as current law', () => {
+      mockCalcStatus.mockReturnValue({
+        status: 'complete',
+        isComplete: true,
+        isError: false,
+        result: createMockSocietyWideOutput(),
+      });
+
+      renderPage();
+
+      expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
+    });
+
+    describe('given a single Child Tax Credit change', () => {
+      const CTC_PROVISION = {
+        path: 'gov.irs.credits.ctc.amount.base[0].amount',
+        breadcrumb: 'IRS → Credits → Child tax credit → Base amount',
+        unit: 'currency-USD',
+        baselineValue: 2200,
+        value: 2500,
+      };
+      const complete = () =>
+        mockCalcStatus.mockReturnValue({
+          status: 'complete',
+          isComplete: true,
+          isError: false,
+          result: createMockSocietyWideOutput(),
+        });
+
+      test('given current law then the cover says which way it moves', () => {
+        mockMeta = { ...META, provisions: [CTC_PROVISION] };
+        complete();
+
+        renderPage();
+
+        expect(
+          screen.getByRole('heading', { level: 1, name: 'Increasing the Child Tax Credit' })
+        ).toBeInTheDocument();
+      });
+
+      test('given a saved reform then the cover does not read the move against current law', () => {
+        mockMeta = { ...PLAN_B_META, provisions: [CTC_PROVISION] };
+        complete();
+
+        renderPage();
+
+        expect(
+          screen.getByRole('heading', { level: 1, name: 'Changing the Child Tax Credit' })
+        ).toBeInTheDocument();
+        expect(screen.queryByText(/Increasing the Child Tax Credit/)).not.toBeInTheDocument();
+      });
+    });
+
+    test('given a failed run then Build gets the reform back with the same comparison', async () => {
+      clearDraftReform();
+      mockMeta = PLAN_B_META;
+      mockCalcStatus.mockReturnValue({
+        status: 'error',
+        isComplete: false,
+        isError: true,
+        error: { message: 'Simulation failed' },
+        result: null,
+      });
+      const user = userEvent.setup();
+
+      renderPage();
+      await user.click(screen.getByRole('button', { name: 'Edit the reform' }));
+
+      expect(getDraftReform()?.baselineReformId).toBe('rf-plan-b');
+      clearDraftReform();
+    });
   });
 
   test('given a finished custom report then validation shows both checks and says no external estimate exists', async () => {

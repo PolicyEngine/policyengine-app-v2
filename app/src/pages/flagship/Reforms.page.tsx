@@ -16,9 +16,10 @@ import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
 import { getFlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore } from '@/api/reformStore';
+import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
+import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports from '@/components/flagship/ReformReports';
-import ScopePicker from '@/components/flagship/ScopePicker';
 import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
@@ -37,6 +38,7 @@ import {
   loadReformIntoDraft,
   setDraftLabel,
 } from '@/libs/draftReform';
+import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
 import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { RootState } from '@/store';
@@ -63,12 +65,15 @@ type Tab = 'bills' | 'yours';
 /** Bills render in pages of this size; scrolling near the end reveals the next page. */
 const BILLS_PAGE_SIZE = 12;
 
-/** The list's filter controls — place and search — at one height and border. */
+/**
+ * The list's filter controls — state and search — at one height and
+ * border: the segmented controls' height (h-9), so a filter row lines up.
+ */
 const filterControl: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: spacing.xs,
-  height: 34,
+  height: 36,
   padding: `0 ${spacing.md}`,
   border: `1px solid ${colors.border.light}`,
   borderRadius: spacing.radius.container,
@@ -126,6 +131,7 @@ function clamp(lines: number): React.CSSProperties {
 
 function Card({
   eyebrow,
+  badge,
   title,
   body,
   stats,
@@ -133,6 +139,8 @@ function Card({
   onClick,
 }: {
   eyebrow: string;
+  /** Beside the eyebrow, e.g. a bill's stage. */
+  badge?: React.ReactNode;
   title: string;
   body: string;
   stats?: React.ReactNode;
@@ -178,6 +186,7 @@ function Card({
     >
       <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <Eyebrow>{eyebrow}</Eyebrow>
+        {badge}
         <div style={{ flex: 1 }} />
         {linkUrl && (
           <a
@@ -247,8 +256,8 @@ function Stat({ value, label }: { value: string; label: string }) {
 
 /**
  * Reforms — everything reform-shaped in one calm surface. Two views:
- * In Congress (bills analyzed with the PolicyEngine model, live from
- * the tracker) and Yours (saved reforms, amendable). Cards open a
+ * Bills (federal and state bills analyzed with the PolicyEngine model,
+ * live from the tracker) and Yours (saved reforms, amendable). Cards open a
  * focused detail; every detail ends in the same two verbs — view the
  * full impact report, or open as a draft.
  */
@@ -264,7 +273,7 @@ export default function ReformsPage() {
     urlParams.get('filter') === 'yours' ? 'yours' : 'bills'
   );
   const [query, setQuery] = useState('');
-  const [placeFilter, setPlaceFilter] = useState('all');
+  const [billFilters, setBillFilters] = useState<BillFilters>(NO_BILL_FILTERS);
   // Deep links (?bill=<id>) open straight into that bill's detail.
   const [selectedId, setSelectedId] = useState<string | null>(() => urlParams.get('bill'));
   const [editedLabel, setEditedLabel] = useState('');
@@ -392,47 +401,28 @@ export default function ReformsPage() {
     });
   };
 
-  // Places with bills, for the place picker: the states by name, and how
-  // many bills each scope holds. Federal bills carry no state.
-  const { placeStates, placeCounts } = useMemo(() => {
-    const states = new Map<string, string>();
-    const counts: Record<string, number> = { all: bills.length, federal: 0 };
-    for (const bill of bills) {
-      const code = bill.state?.toLowerCase();
-      if (code) {
-        states.set(code, bill.jurisdiction);
-        counts[code] = (counts[code] ?? 0) + 1;
-      } else {
-        counts.federal += 1;
-      }
-    }
-    return {
-      placeStates: [...states]
-        .map(([code, label]) => ({ code, label }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-      placeCounts: counts,
-    };
-  }, [bills]);
-  const inPlace = (bill: TrackedBill) =>
-    placeFilter === 'all' ||
-    (placeFilter === 'federal' ? !bill.state : bill.state?.toLowerCase() === placeFilter);
-
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const matches = (haystack: string) =>
     tokens.every((token) => haystack.toLowerCase().includes(token));
 
-  const visibleBills = bills
-    .filter(
-      (bill) => inPlace(bill) && matches(`${bill.title} ${bill.jurisdiction} ${bill.summary}`)
-    )
-    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+  const searchedBills = bills.filter((bill) =>
+    // The card's place ("Federal") reads too, not only the tracker's "US".
+    matches(`${bill.title} ${billPlace(bill)} ${bill.jurisdiction} ${bill.summary}`)
+  );
+  const visibleBills = filterBills(searchedBills, billFilters).sort((a, b) =>
+    (b.date ?? '').localeCompare(a.date ?? '')
+  );
+  const clearBillFilters = () => {
+    setBillFilters(NO_BILL_FILTERS);
+    setQuery('');
+  };
 
   // The live feed can carry hundreds of bills — render a page at a time
   // and reveal the next as the reader approaches the end of the grid.
   const [billsShown, setBillsShown] = useState(BILLS_PAGE_SIZE);
   useEffect(() => {
     setBillsShown(BILLS_PAGE_SIZE);
-  }, [tab, query, placeFilter, countryId]);
+  }, [tab, query, billFilters, countryId]);
   const pagedBills = visibleBills.slice(0, billsShown);
   const hasMoreBills = visibleBills.length > billsShown;
 
@@ -873,7 +863,7 @@ export default function ReformsPage() {
         <Stack style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
           {(
             [
-              { id: 'bills', label: 'In Congress' },
+              { id: 'bills', label: 'Bills' },
               { id: 'yours', label: 'Yours' },
             ] as const
           ).map((option) => {
@@ -906,16 +896,6 @@ export default function ReformsPage() {
             );
           })}
           <div style={{ flex: 1 }} />
-          {tab === 'bills' && placeStates.length + (placeCounts.federal > 0 ? 1 : 0) > 1 && (
-            <ScopePicker
-              label="Place"
-              value={placeFilter}
-              onChange={setPlaceFilter}
-              states={placeStates}
-              counts={placeCounts}
-              triggerStyle={filterControl}
-            />
-          )}
           <div style={{ ...filterControl, width: 220 }}>
             <IconSearch size={14} color={colors.text.secondary} />
             <input
@@ -935,6 +915,16 @@ export default function ReformsPage() {
             />
           </div>
         </Stack>
+
+        {tab === 'bills' && billsConfigured && bills.length > 0 && (
+          <BillFeedFilters
+            bills={bills}
+            searched={searchedBills}
+            value={billFilters}
+            onChange={setBillFilters}
+            controlStyle={filterControl}
+          />
+        )}
 
         {tab === 'yours' && isPending && <Spinner />}
         {tab === 'yours' && isError && (
@@ -962,9 +952,14 @@ export default function ReformsPage() {
               </Text>
             )}
             {bills.length > 0 && visibleBills.length === 0 && (
-              <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-                No bills match — adjust the search or place filter.
-              </Text>
+              <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+                  No bills match.
+                </Text>
+                <Button variant="outline" size="sm" onClick={clearBillFilters}>
+                  Clear filters
+                </Button>
+              </Stack>
             )}
           </>
         )}
@@ -996,7 +991,8 @@ export default function ReformsPage() {
             pagedBills.map((bill) => (
               <Card
                 key={bill.id}
-                eyebrow={bill.jurisdiction}
+                eyebrow={billPlace(bill)}
+                badge={<BillStageBadge status={bill.status} />}
                 title={bill.title}
                 body={bill.summary}
                 linkUrl={bill.legiscanUrl}
