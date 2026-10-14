@@ -222,6 +222,158 @@ describe('runFlagshipReport', () => {
     expect(meta?.provisions).toEqual([PROVISION]);
   });
 
+  describe('given a saved reform to compare with', () => {
+    const SAVED_BASELINE = {
+      reformId: 'rf-plan-b',
+      label: 'Plan B',
+      parameters: [
+        {
+          name: 'gov.irs.credits.ctc.amount.base[0].amount',
+          values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 }],
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      // The reform and the baseline each become their own policy.
+      mockCreatePolicy.mockImplementation(
+        async (_country: string, payload: { label?: string }) => ({
+          result: { policy_id: payload.label === 'Plan B' ? '88' : '77' },
+        })
+      );
+      mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+      mockFetchBudgetWindow.mockResolvedValue({ status: 'computing', result: null });
+    });
+
+    test('then its parameters become the baseline policy', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        baseline: SAVED_BASELINE,
+      });
+
+      expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
+        label: 'Plan B',
+        data: {
+          'gov.irs.credits.ctc.amount.base[0].amount': { '2026-01-01.2100-12-31': 3000 },
+        },
+      });
+    });
+
+    test('then the baseline simulation, the calculation and the window all use it', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        year: 2026,
+        windowYears: 10,
+        baseline: SAVED_BASELINE,
+      });
+
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+        population_id: 'us',
+        population_type: 'geography',
+        policy_id: 88,
+      });
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+        population_id: 'us',
+        population_type: 'geography',
+        policy_id: 77,
+      });
+      // The economy asks for the reform over the chosen baseline: /economy/77/over/88.
+      expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '88', {
+        region: 'us',
+        time_period: '2026',
+      });
+      expect(mockFetchBudgetWindow).toHaveBeenCalledWith('us', '77', '88', {
+        region: 'us',
+        startYear: 2026,
+        windowSize: 10,
+      });
+    });
+
+    test('then the report meta records it by id and name', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        baseline: SAVED_BASELINE,
+      });
+
+      expect(readReportMeta('55')?.baseline).toEqual({
+        reformId: 'rf-plan-b',
+        policyId: '88',
+        label: 'Plan B',
+      });
+    });
+
+    test('given its policy already then the run reuses it without making one', async () => {
+      await runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        baseline: { reformId: 'rf-plan-b', label: 'Plan B', policyId: 88 },
+      });
+
+      expect(mockCreatePolicy).toHaveBeenCalledTimes(1);
+      expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+        1,
+        'us',
+        expect.objectContaining({ policy_id: 88 })
+      );
+      expect(readReportMeta('55')?.baseline).toEqual({
+        reformId: 'rf-plan-b',
+        policyId: '88',
+        label: 'Plan B',
+      });
+    });
+  });
+
+  test('given no baseline then the report compares with current law and records none', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+    });
+
+    expect(mockCreatePolicy).toHaveBeenCalledTimes(1);
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+      1,
+      'us',
+      expect.objectContaining({ policy_id: 2 })
+    );
+    expect(readReportMeta('55')).not.toHaveProperty('baseline');
+  });
+
+  test('given a baseline with nothing in it then the report compares with current law', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      baseline: { reformId: 'rf-empty', label: 'Empty', parameters: [] },
+    });
+
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(
+      1,
+      'us',
+      expect.objectContaining({ policy_id: 2 })
+    );
+    expect(readReportMeta('55')).not.toHaveProperty('baseline');
+  });
+
   test('given no provisions then it refuses to run', async () => {
     await expect(
       runFlagshipReport({

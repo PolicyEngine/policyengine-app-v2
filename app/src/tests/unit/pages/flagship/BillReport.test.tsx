@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, within } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BillEconomy } from '@/hooks/useBillEconomy';
 import BillReportPage from '@/pages/flagship/BillReport.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
@@ -102,6 +102,10 @@ describe('BillReportPage', () => {
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
     // Tests that seed metadata must not leave it loaded for the next one.
     store.dispatch(clearMetadata());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   test('given a bill then it uses the saved report sections', async () => {
@@ -240,7 +244,10 @@ describe('BillReportPage', () => {
 
     await user.click(await screen.findByRole('tab', { name: 'Validation' }));
 
-    expect(screen.getByText('External checks for this bill')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'External estimates' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Estimates for this bill' })).toBeInTheDocument();
     expect(screen.getByText('-$225.5B')).toBeInTheDocument();
     expect(screen.getByText('CRFB')).toBeInTheDocument();
     expect(screen.getByText(/later effective date/)).toBeInTheDocument();
@@ -248,6 +255,29 @@ describe('BillReportPage', () => {
       screen.getByText(
         'Tracker estimate: policyengine-us 1.729.3 · populace-us 1.17.0 · computed July 9, 2026'
       )
+    ).toBeInTheDocument();
+  });
+
+  test('given a bill without external checks then validation says no estimate is available', async () => {
+    const user = userEvent.setup();
+    // Each request gets its own body: the scorecard feeds answer with no rows.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+    );
+    mockFetchTrackerBills.mockResolvedValue([{ ...TRACKED_BILL, validation: undefined }]);
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByText('No external estimate is available for this reform.')
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText(/fiscal-note range/)).not.toBeInTheDocument();
+    // The tracker's provenance still says where the stored estimate came from.
+    expect(
+      within(panel).getByText(/^Tracker estimate: policyengine-us 1\.729\.3/)
     ).toBeInTheDocument();
   });
 

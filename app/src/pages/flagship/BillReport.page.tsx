@@ -12,7 +12,7 @@ import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts';
 import { ErrorState } from '@/components/flagship/states';
-import { BillValidationSection, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
+import { BillExternalEstimates, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text } from '@/components/ui';
 import { getDurationForCountry } from '@/constants/calculationDurations';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
@@ -336,15 +336,11 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       overviewLead={<BillOverviewLead bill={bill} />}
       calibration={calibration}
       trackRecord={trackRecord}
-      validationLead={
-        (bill.validation || provenanceNote) && (
-          <Stack style={{ gap: spacing.sm }}>
-            {bill.validation && (
-              <BillValidationSection billId={bill.id} validation={bill.validation} />
-            )}
-            {provenanceNote && <Caption>Tracker estimate: {provenanceNote}</Caption>}
-          </Stack>
-        )
+      externalEstimates={
+        bill.validation && <BillExternalEstimates billId={bill.id} validation={bill.validation} />
+      }
+      externalEstimatesNote={
+        provenanceNote && <Caption>Tracker estimate: {provenanceNote}</Caption>
       }
     />
   );
