@@ -250,6 +250,58 @@ describe('fetchTrackerBillDistricts', () => {
   });
 });
 
+describe('tracker reads', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  test('given more rows than one request returns then the feed reads every page', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    // The bill-status table: 1,418 rows, served 1,000 at a time.
+    const statuses = Array.from({ length: 1418 }, (_, index) => ({
+      bill_id: index,
+      state: 'UT',
+      bill_number: `HB${index}`,
+      status: 'Introduced',
+    }));
+    statuses[1417] = { bill_id: 1417, state: 'UT', bill_number: 'HB210', status: 'Signed' };
+    const fetchMock = vi.fn(async (url: string) => {
+      const params = new URL(url).searchParams;
+      const table = new URL(url).pathname.split('/').pop();
+      const offset = Number(params.get('offset') ?? 0);
+      const all: any[] =
+        table === 'processed_bills'
+          ? statuses
+          : table === 'research'
+            ? [{ id: 'ut-hb210', state: 'UT', type: 'bill', status: 'published', title: 'HB 210' }]
+            : [];
+      const page = all.slice(offset, offset + 1000);
+      return {
+        ok: true,
+        headers: new Headers({
+          'content-range': `${offset}-${offset + page.length - 1}/${all.length}`,
+        }),
+        json: async () => page,
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const bills = await fetchTrackerBills();
+
+    // The bill's status row is past the first 1,000.
+    expect(bills?.[0].status).toBe('Signed');
+    const statusReads = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/processed_bills?')
+    );
+    expect(statusReads.map(([url]) => new URL(String(url)).searchParams.get('offset'))).toEqual([
+      '0',
+      '1000',
+    ]);
+  });
+});
+
 describe('fetchTrackerBills', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

@@ -13,8 +13,16 @@ import {
 } from 'recharts';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
-import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import { ChartWatermark, ImpactTooltip } from '@/components/charts';
 import ChartExplanation from '@/components/flagship/report/ChartExplanation';
+import {
+  fitAxisTitle,
+  fixedPlotHeight,
+  getValueBarLayout,
+  tickDecimals,
+} from '@/components/flagship/report/charts/barLayout';
+import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
+import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -24,14 +32,12 @@ import { useViewportSize } from '@/hooks/useViewportSize';
 import { getPovertyByAgeCsvRows } from '@/pages/report-output/poverty-impact/povertyChartUtils';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import {
-  getClampedChartHeight,
-  getNiceTicks,
-  getYAxisLayout,
-  RECHARTS_FONT_STYLE,
-} from '@/utils/chartUtils';
+import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+
+/** Margins around the plot; value labels stay inside it, so the top needs little. */
+const CHART_MARGIN = { top: 12, right: 20, bottom: 20 };
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -123,16 +129,30 @@ export default function DeepPovertyImpactByAgeSubPage({
   const chartData = povertyLabels.map((label, i) => ({
     name: label,
     value: povertyChanges[i],
-    label: (povertyChanges[i] >= 0 ? '+' : '') + formatPer(povertyChanges[i]),
+    label: (povertyChanges[i] > 0 ? '+' : '') + formatPer(povertyChanges[i]),
     hoverText: hoverMessage(label),
   }));
 
-  const values = chartData.map((d) => d.value);
-  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
-  const yTicks = getNiceTicks(yDomain);
+  const { plotWidth, plotHeight, probe } = usePlotSize(
+    fillHeight ? undefined : fixedPlotHeight(chartHeight, CHART_MARGIN)
+  );
+  const layout = getValueBarLayout(
+    chartData.map((d) => d.value),
+    chartData.map((d) => d.label),
+    { width: plotWidth, height: plotHeight }
+  );
+  const { domain: yDomain, ticks: yTicks } = layout;
 
-  const yTickFormatter = (v: number) => `${(v * 100).toFixed(1)}%`;
-  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+  // Enough decimals that a 0.25% step does not read as 0.3%.
+  const tickDigits = Math.max(1, tickDecimals(yTicks.map((v) => v * 100)));
+  const yTickFormatter = (v: number) => `${(v * 100).toFixed(tickDigits)}%`;
+  const axisTitle = fitAxisTitle(
+    compact
+      ? ['Deep poverty change (%)', 'Change (%)']
+      : ['Relative change in deep poverty rate', 'Deep poverty change (%)', 'Change (%)'],
+    plotHeight
+  );
+  const yAxis = getYAxisLayout(yTicks, !!axisTitle, yTickFormatter);
 
   // Description text
   const povertyMeasure =
@@ -143,8 +163,9 @@ export default function DeepPovertyImpactByAgeSubPage({
   const description = `PolicyEngine reports the impact to ${povertyMeasure}. The deep poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below half their poverty threshold.`;
 
   const barChart = (
-    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+    <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
+      {probe}
+      <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis
         dataKey="name"
         tick={RECHARTS_FONT_STYLE}
@@ -153,23 +174,25 @@ export default function DeepPovertyImpactByAgeSubPage({
       />
       <YAxis
         ticks={yTicks}
-        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        domain={yDomain}
         tickFormatter={yTickFormatter}
         tick={RECHARTS_FONT_STYLE}
         tickLine={false}
         width={yAxis.yAxisWidth}
       >
-        <Label
-          value={compact ? 'Deep poverty change (%)' : 'Relative change in deep poverty rate'}
-          angle={-90}
-          position="center"
-          dx={yAxis.labelDx}
-          style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
-        />
+        {axisTitle && (
+          <Label
+            value={axisTitle}
+            angle={-90}
+            position="center"
+            dx={yAxis.labelDx}
+            style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+          />
+        )}
       </YAxis>
       <ReferenceLine y={0} stroke={colors.gray[600]} strokeWidth={1} />
       <Tooltip content={<ImpactTooltip />} />
-      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+      <Bar dataKey="value" label={<ReportBarLabel data={chartData} layout={layout} />}>
         {chartData.map((entry, index) => (
           <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
         ))}

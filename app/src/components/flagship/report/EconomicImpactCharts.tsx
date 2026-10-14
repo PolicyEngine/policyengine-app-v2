@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import BudgetaryImpactSubPage from '@/components/flagship/report/charts/BudgetaryImpactSubPage';
 import DeepPovertyImpactByAgeSubPage from '@/components/flagship/report/charts/DeepPovertyImpactByAgeSubPage';
 import DeepPovertyImpactByGenderSubPage from '@/components/flagship/report/charts/DeepPovertyImpactByGenderSubPage';
 import DistributionalImpactIncomeAverageSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeAverageSubPage';
@@ -13,7 +14,6 @@ import ReportChartCard from '@/components/flagship/report/ReportChartCard';
 import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import BudgetaryImpactSubPage from '@/pages/report-output/budgetary-impact/BudgetaryImpactSubPage';
 import { getBudgetCsvRows } from '@/pages/report-output/budgetary-impact/budgetChartUtils';
 import {
   getDecileAverageCsvRows,
