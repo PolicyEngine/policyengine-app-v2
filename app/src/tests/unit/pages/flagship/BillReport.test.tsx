@@ -379,6 +379,45 @@ describe('BillReportPage', () => {
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
   });
 
+  test('given the stored parameters disagree with the write-up then no run is offered and the tracker estimate stays', async () => {
+    const user = userEvent.setup();
+    // UT SB60 as the tracker stores it: a write-up of 4.5% → 4.45%, but
+    // reform params of 0.045, the law before the bill.
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        id: 'ut-sb60-bill',
+        state: 'UT',
+        title: 'Utah SB60: Income tax rate reduction (enacted)',
+        provisions: [
+          {
+            path: 'gov.states.ut.tax.income.rate',
+            value: 0.045,
+            intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.045 }],
+            baselineIntervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.0445 }],
+          },
+        ],
+        changes: [{ label: 'Income tax rate', before: '4.5%', after: '4.45%' }],
+      },
+    ]);
+    renderReport('ut-sb60-bill');
+
+    expect(
+      await screen.findByText(
+        'Stored estimates from the legislative tracker · full results unavailable'
+      )
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      within(panel).getByText('The full results are not available for this bill.')
+    ).toBeInTheDocument();
+    expect(within(panel).queryByRole('button', { name: 'Load full results' })).toBeNull();
+    // The tracker's own estimate still shows.
+    expect(within(panel).getByRole('region', { name: 'Budgetary impact' })).toBeInTheDocument();
+    expect(mockUseBillEconomy).not.toHaveBeenCalledWith(expect.anything(), { enabled: true });
+  });
+
   test('given the tracker wrote up the changes then the overview lists them as scored', async () => {
     mockFetchTrackerBills.mockResolvedValue([
       {

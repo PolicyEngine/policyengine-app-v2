@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
+import {
+  billAlreadyCurrentLaw,
+  billReportProvisions,
+  billScoresOtherThanWriteUp,
+} from '@/libs/flagship/billProvisions';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
 const RATE = 'gov.states.ga.tax.income.main.flat_rate';
@@ -125,5 +129,90 @@ describe('billAlreadyCurrentLaw', () => {
         2026
       )
     ).toBe(true);
+  });
+});
+
+describe('billScoresOtherThanWriteUp', () => {
+  const UT_RATE = 'gov.states.ut.tax.income.rate';
+  const change = (before: string, after: string, parameter?: string) => ({
+    label: 'Income tax rate',
+    before,
+    after,
+    ...(parameter ? { parameter } : {}),
+  });
+
+  test('given the scored value is the write-up’s law before the bill then they disagree', () => {
+    // UT SB60 as stored: reform_params 0.045, a write-up of 4.5% → 4.45%.
+    const provisions = [dated(UT_RATE, ['2026-01-01', '2100-12-31', 0.045])];
+
+    expect(billScoresOtherThanWriteUp(provisions, [change('4.5%', '4.45%')])).toBe(true);
+  });
+
+  test('given the scored value is the write-up’s new value then they agree', () => {
+    const provisions = [dated(UT_RATE, ['2026-01-01', '2100-12-31', 0.0445])];
+
+    expect(billScoresOtherThanWriteUp(provisions, [change('4.5%', '4.45%')])).toBe(false);
+  });
+
+  test('given a write-up rounded to its last digit then it still agrees', () => {
+    const provisions = [dated(RATE, ['2026-01-01', '2100-12-31', 0.04449])];
+
+    expect(billScoresOtherThanWriteUp(provisions, [change('5.19%', '4.45%')])).toBe(false);
+    expect(billScoresOtherThanWriteUp(provisions, [change('5.19%', '4.4%')])).toBe(false);
+  });
+
+  test('given amounts in dollars or bare numbers then they read as written', () => {
+    const provisions = [{ path: DEDUCTION, value: 2000 }];
+
+    expect(billScoresOtherThanWriteUp(provisions, [change('$1,500', '$2,000')])).toBe(false);
+    expect(billScoresOtherThanWriteUp(provisions, [change('$1,500', '$2,500')])).toBe(true);
+    expect(
+      billScoresOtherThanWriteUp([{ path: UT_RATE, value: 0.0445 }], [change('4.5', '4.45')])
+    ).toBe(false);
+  });
+
+  test('given a phased bill then any value it sets can be the one written up', () => {
+    const provisions = [
+      dated(RATE, ['2026-01-01', '2026-12-31', 0.0499], ['2027-01-01', '2100-12-31', 0.0479]),
+    ];
+
+    expect(billScoresOtherThanWriteUp(provisions, [change('5.19%', '4.79%')])).toBe(false);
+  });
+
+  test('given a change that names its parameter then only that parameter is checked', () => {
+    const provisions = [
+      { path: 'gov.states.ga.tax.income.main.single.brackets[5].rate', value: 0.05 },
+      { path: 'gov.states.ga.tax.income.main.joint.brackets[5].rate', value: 0.0575 },
+      { path: DEDUCTION, value: 2000 },
+    ];
+    const parameter = 'gov.states.ga.tax.income.main.{filing_status}.brackets[5].rate';
+
+    expect(billScoresOtherThanWriteUp(provisions, [change('5.49%', '5%', parameter)])).toBe(true);
+    expect(
+      billScoresOtherThanWriteUp(provisions.slice(0, 1).concat(provisions.slice(2)), [
+        change('5.49%', '5%', parameter),
+      ])
+    ).toBe(false);
+  });
+
+  test('given a write-up that cannot be paired or read as a number then nothing is flagged', () => {
+    const two = [
+      { path: UT_RATE, value: 0.045 },
+      { path: DEDUCTION, value: 2000 },
+    ];
+
+    // Two provisions, no parameter named: which one the change describes is unknown.
+    expect(billScoresOtherThanWriteUp(two, [change('4.5%', '4.45%')])).toBe(false);
+    // Words, not one number.
+    expect(
+      billScoresOtherThanWriteUp(
+        [{ path: UT_RATE, value: 0.045 }],
+        [change('Under 7', 'Under 7 (2026) to Under 16 (2035)')]
+      )
+    ).toBe(false);
+    expect(billScoresOtherThanWriteUp([{ path: UT_RATE, value: 0.045 }], undefined)).toBe(false);
+    expect(billScoresOtherThanWriteUp([{ path: UT_RATE, value: true }], [change('No', '5%')])).toBe(
+      false
+    );
   });
 });

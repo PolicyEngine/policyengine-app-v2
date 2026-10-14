@@ -1,4 +1,4 @@
-import { intervalValueAt, type TrackedBillProvision } from '@/api/billFeed';
+import { intervalValueAt, type BillChange, type TrackedBillProvision } from '@/api/billFeed';
 import { isAlreadyCurrentLaw, lawValuesFrom } from '@/libs/flagship/billMetrics';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -88,4 +88,76 @@ export function billAlreadyCurrentLaw(
       );
     })
   );
+}
+
+/**
+ * A write-up value that is one plain number — "4.45%", "$2,000", "-0.5" —
+ * with how far its rounding lets the true value lie: half its last digit.
+ * Anything else (words, ranges, several values) reads as nothing.
+ */
+function writeUpNumber(text: string): { value: number; tolerance: number } | undefined {
+  const match = text
+    .trim()
+    .match(/^([-\u2212+]?)\s*\$?\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?\s*%?$/);
+  if (!match) {
+    return undefined;
+  }
+  const [, sign, whole, decimals = ''] = match;
+  const magnitude = Number(`${whole.replace(/,/g, '')}.${decimals || '0'}`);
+  return {
+    value: sign === '-' || sign === '\u2212' ? -magnitude : magnitude,
+    tolerance: 0.5 * 10 ** -decimals.length,
+  };
+}
+
+/** Whether a change's parameter, which can hold "{filing_status}", names this path. */
+function changeNamesPath(parameter: string, path: string): boolean {
+  const pattern = parameter
+    .split(/\{[^}]+\}/)
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('[^.]+');
+  return new RegExp(`^${pattern}$`).test(path);
+}
+
+/**
+ * Whether the values a bill's run would score disagree with the tracker's
+ * write-up of its changes — the "after" it shows in the Policy changes
+ * table. A change is checked against the provisions it names, or against
+ * a bill's only provision when the write-up has one change; one that
+ * cannot be paired, or whose value is not one number, is not checked. A
+ * written value agrees with any value the bill sets, as written or as a
+ * percent of it ("4.45%" is 0.0445), within the write-up's rounding.
+ *
+ * When they disagree the stored parameters do not describe the bill as
+ * written up (a tracker row with its reform and baseline swapped scores
+ * the law before the bill), and a run would score some other change.
+ */
+export function billScoresOtherThanWriteUp(
+  provisions: Array<Pick<TrackedBillProvision, 'path' | 'value' | 'intervals'>>,
+  changes: BillChange[] | undefined
+): boolean {
+  if (!changes || changes.length === 0) {
+    return false;
+  }
+  return changes.some((change) => {
+    const written = writeUpNumber(change.after);
+    if (!written) {
+      return false;
+    }
+    const described = change.parameter
+      ? provisions.filter((provision) => changeNamesPath(change.parameter!, provision.path))
+      : provisions.length === 1 && changes.length === 1
+        ? provisions
+        : [];
+    const near = (scored: number) =>
+      Math.abs(scored - written.value) <=
+      written.tolerance + 1e-9 * Math.max(1, Math.abs(written.value));
+    return described.some((provision) => {
+      const scored = [
+        provision.value,
+        ...(provision.intervals ?? []).map((interval) => interval.value),
+      ].filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+      return scored.length > 0 && !scored.some((value) => near(value) || near(value * 100));
+    });
+  });
 }
