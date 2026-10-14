@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getDateRange,
   getFieldLabel,
   getFieldOptions,
   isDropdownField,
@@ -7,11 +8,14 @@ import {
 } from '@/libs/metadataUtils';
 import type { RootState } from '@/store';
 import {
+  EXPECTED_DATE_RANGES,
   EXPECTED_LABELS,
   mockMetadataPayload,
   mockMinimalPayload,
   mockStateWithMetadata,
+  mockStateWithTimePeriods,
   TEST_FIELD_NAMES,
+  TEST_TIME_PERIOD_YEARS,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
 
 describe('metadataUtils', () => {
@@ -263,6 +267,30 @@ describe('metadataUtils', () => {
 
       // Then
       expect(result.parameterTree).toBeNull();
+    });
+  });
+
+  describe('getDateRange', () => {
+    it('given years through 2036 in metadata then the range runs from the first to the last year', () => {
+      // Given
+      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.THROUGH_2036) as RootState;
+
+      // When
+      const result = getDateRange(state);
+
+      // Then
+      expect(result).toEqual(EXPECTED_DATE_RANGES.THROUGH_2036);
+    });
+
+    it('given no time periods yet then falls back to 2022 through 2036', () => {
+      // Given
+      const state = mockStateWithTimePeriods(TEST_TIME_PERIOD_YEARS.NONE) as RootState;
+
+      // When
+      const result = getDateRange(state);
+
+      // Then
+      expect(result).toEqual(EXPECTED_DATE_RANGES.FALLBACK);
     });
   });
 });
