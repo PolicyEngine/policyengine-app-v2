@@ -1,4 +1,6 @@
 import type { RunReportProvision } from '@/libs/flagship/runReport';
+import type { Reform } from '@/types/ingredients/Reform';
+import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 export const CTC_BASE_PATH = 'gov.irs.credits.ctc.amount.base[0].amount';
 
@@ -28,3 +30,22 @@ export const PHASED_CTC_PROVISION: RunReportProvision = {
   value: 3000,
   intervals: PHASED_CTC_INTERVALS,
 };
+
+const savedReform = (id: string, label: string, values: ValueInterval[]): Reform => ({
+  id,
+  countryId: 'us',
+  label,
+  parameters: [{ name: CTC_BASE_PATH, values }],
+  baseline: 'current-law',
+  provenance: { source: 'manual' },
+  createdAt: '2026-10-01T00:00:00Z',
+  updatedAt: '2026-10-01T00:00:00Z',
+});
+
+/** A saved reform that sets the 2027 value from 2026 on: the same value, other dates. */
+export const FLAT_3000_REFORM = savedReform('rf-flat', 'Flat 3000', [
+  { startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 },
+]);
+
+/** A saved reform with the phased schedule itself. */
+export const PHASED_CTC_REFORM = savedReform('rf-phased', 'Phased CTC', PHASED_CTC_INTERVALS);

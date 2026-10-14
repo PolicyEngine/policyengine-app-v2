@@ -15,9 +15,12 @@ import {
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import {
+  FLAT_3000_REFORM,
   FLAT_CTC_PROVISION,
   PAST_REPORT_YEAR,
+  PHASED_CTC_INTERVALS,
   PHASED_CTC_PROVISION,
+  PHASED_CTC_REFORM,
   PHASED_REPORT_YEAR,
 } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
 
@@ -493,6 +496,71 @@ describe('ReportAdjustPanel', () => {
         '2026-01-01.2026-12-31': 2500,
         '2027-01-01.2100-12-31': 3600,
       });
+    });
+
+    test('given only the population changes then a saved reform with other dates is not reused', async () => {
+      // Given
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockFindMine.mockResolvedValue([FLAT_3000_REFORM]);
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+      await user.click(await screen.findByRole('option', { name: /California/ }));
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      const [runTitle, , , reformId] = mockRun.mock.calls[0];
+      expect(reformId).toBe('rf-new');
+      expect(runTitle).toBe('CTC expansion (adjusted)');
+      store.dispatch(clearMetadata());
+    });
+
+    test('given no saved match then the saved reform has the dates that ran', async () => {
+      // Given
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+      await user.click(await screen.findByRole('option', { name: /California/ }));
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockCreate.mock.calls[0][0].parameters[0].values).toEqual(PHASED_CTC_INTERVALS);
+      expect(provisionPeriods(mockRun.mock.calls[0][2][0])).toEqual({
+        '2026-01-01.2026-12-31': 2500,
+        '2027-01-01.2100-12-31': 3000,
+      });
+      store.dispatch(clearMetadata());
+    });
+
+    test('given the same dated reform is saved then it is reused', async () => {
+      // Given
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockFindMine.mockResolvedValue([FLAT_3000_REFORM, PHASED_CTC_REFORM]);
+      const user = userEvent.setup();
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+      await user.click(await screen.findByRole('option', { name: /California/ }));
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockCreate).not.toHaveBeenCalled();
+      expect(mockRun.mock.calls[0][3]).toBe(PHASED_CTC_REFORM.id);
+      store.dispatch(clearMetadata());
     });
   });
 });

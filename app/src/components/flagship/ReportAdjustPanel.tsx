@@ -15,9 +15,9 @@ import {
   sameParameterValue,
 } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
+import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
-import { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
@@ -26,20 +26,6 @@ import PopulationPicker from './reform/PopulationPicker';
 import NumberInput from './reform/ValueInput';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
-
-/** True when the reform's parameter set is exactly the given provisions. */
-function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
-  if (reform.parameters.length !== provisions.length) {
-    return false;
-  }
-  return provisions.every((provision) =>
-    reform.parameters.some(
-      (parameter) =>
-        parameter.name === provision.path &&
-        String(parameter.values[0]?.value) === String(provision.value)
-    )
-  );
-}
 
 interface ReportAdjustPanelProps {
   /** Title of the report being adjusted; the recomputed one appends "(adjusted)". */
@@ -192,11 +178,10 @@ function AdjustPanel({
         values: provisionIntervals(provision),
       }));
 
-      // Reconcile with this browser's saved reforms: reuse an exact
-      // match, otherwise save the adjusted set as its own reform.
+      // Reconcile with this browser's saved reforms: reuse one that sets
+      // the same values over the same dates, otherwise save this one.
       const store = getReformStore();
-      const existing = await store.findMine(countryId);
-      const match = existing.find((reform) => reformMatches(reform, adjusted));
+      const match = findMatchingReform(await store.findMine(countryId), parameters);
 
       const label = renamed ? name.trim() : `${title} (adjusted)`;
       let reformId: string;

@@ -156,6 +156,8 @@ describe('FlagshipReportPage from a shared link', () => {
     const [, , provisions, , year] = mockRun.mock.calls[0];
     expect(year).toBe(Number(REPORT_YEAR_2028));
     expect(provisionPeriods(provisions[0])).toEqual(EXEMPTION_SCHEDULE_PERIODS);
+    // Saved to Your reforms as it ran.
+    expect(mockCreate.mock.calls[0][0].parameters[0].values).toEqual(EXEMPTION_SCHEDULE);
   });
 
   test('given a failed run then Edit the reform puts the dated reform back in the draft', async () => {
