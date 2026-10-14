@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
 import { getFlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore } from '@/api/reformStore';
+import { BillTrackerHomeButton } from '@/components/flagship/BillTrackerLinks';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports from '@/components/flagship/ReformReports';
 import ScopePicker from '@/components/flagship/ScopePicker';
@@ -864,10 +865,13 @@ export default function ReformsPage() {
           <Title order={1} style={{ margin: 0 }}>
             Reforms
           </Title>
-          <Button onClick={() => nav.push(`/${countryId}/build`)}>
-            New reform
-            <IconPlus size={16} />
-          </Button>
+          <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            {countryId === 'us' && <BillTrackerHomeButton />}
+            <Button onClick={() => nav.push(`/${countryId}/build`)}>
+              New reform
+              <IconPlus size={16} />
+            </Button>
+          </Stack>
         </Stack>
 
         <Stack style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
