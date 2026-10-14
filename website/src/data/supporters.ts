@@ -99,6 +99,17 @@ export const supporters: Supporter[] = [
 
 export const projects: SupportedProjectData[] = [
   {
+    title: "Advancing evidence-based policy with AI & tax-benefit microsimulation",
+    projectUrl:
+      "https://www.nuffieldfoundation.org/project/advancing-evidence-based-policy-with-ai-tax-benefit-microsimulation",
+    amount: 300000,
+    currency: "GBP",
+    awardDate: "2026-07",
+    description:
+      "Continuing support for PolicyEngine UK: local council tax variation, constituency-level Budget analysis, and reaching underserved audiences such as local journalists.",
+    supporterId: "nuffield",
+  },
+  {
     title:
       "Enhancing, localising and democratising tax-benefit policy analysis",
     projectUrl:
