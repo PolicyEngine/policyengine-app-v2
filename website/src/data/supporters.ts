@@ -46,6 +46,7 @@ export const supporters: Supporter[] = [
     id: "corvus",
     name: "Corvus Oaks Foundation",
     websiteUrl: "https://corvusoaks.org/",
+    logoUrl: "/assets/supporters/corvus-oaks.svg",
     description:
       "a new private foundation currently exploring several issues for future engagement and collaboration.",
   },

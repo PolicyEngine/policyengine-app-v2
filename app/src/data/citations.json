@@ -138,8 +138,7 @@
     "date": "2026-07-03",
     "url": "https://www.smf.co.uk/commentary_podcasts/ai-looks-set-to-squeeze-junior-hiring-the-fix-already-exists-in-law/",
     "image": "smf-ai-junior-hiring-ni.jpg",
-    "tags": ["uk", "tax"],
-    "featured": true
+    "tags": ["uk", "tax"]
   },
   {
     "title": "How replacing council tax with a flat land value tax would affect households in the UK",
@@ -248,8 +247,7 @@
     "date": "2026-02-17",
     "url": "https://arxiv.org/pdf/2602.15607",
     "image": "arxiv-carbon-budget.webp",
-    "tags": ["uk", "policy"],
-    "featured": true
+    "tags": ["uk", "policy"]
   },
   {
     "title": "Informing policy using micro-simulations",
