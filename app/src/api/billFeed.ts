@@ -173,6 +173,19 @@ function trackerConfig(): { url: string; anonKey: string } | null {
   return url && anonKey ? { url, anonKey } : null;
 }
 
+/**
+ * The most rows the tracker's API returns for one request: Supabase caps
+ * a read at 1,000 rows, and the bill-status table alone holds more.
+ */
+const TRACKER_PAGE_SIZE = 1000;
+
+/** The table's row count from a Content-Range header ("0-999/1418"), when given. */
+function totalRows(response: Response): number | undefined {
+  const range = response.headers?.get?.('content-range');
+  const total = range?.split('/')[1];
+  return total && total !== '*' ? Number(total) : undefined;
+}
+
 async function trackerSelect(
   table: string,
   select: string,
@@ -183,17 +196,31 @@ async function trackerSelect(
   if (!config) {
     return null;
   }
-  const query = `select=${select}${filter ? `&${filter}` : ''}`;
-  const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
-    headers: {
-      apikey: config.anonKey,
-      Authorization: `Bearer ${config.anonKey}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`Tracker feed ${table} failed: ${response.status}`);
+  // Read page by page: one request stops at the cap and drops the rest.
+  const rows: any[] = [];
+  for (;;) {
+    const query = `select=${select}${filter ? `&${filter}` : ''}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
+    const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`,
+        Prefer: 'count=exact',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Tracker feed ${table} failed: ${response.status}`);
+    }
+    const page = await response.json();
+    if (!Array.isArray(page)) {
+      return page;
+    }
+    rows.push(...page);
+    const total = totalRows(response);
+    const more = total !== undefined ? rows.length < total : page.length === TRACKER_PAGE_SIZE;
+    if (!more || page.length === 0) {
+      return rows;
+    }
   }
-  return response.json();
 }
 
 /** Full state names for two-letter state codes. */
