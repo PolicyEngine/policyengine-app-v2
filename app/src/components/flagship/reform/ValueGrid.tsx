@@ -54,6 +54,9 @@ const labelCell: React.CSSProperties = {
 
 const cellPadding = `${spacing.xs} ${spacing.xs}`;
 
+/** A lone year's box: its own size, narrower on a phone so a breakdown fits its card. */
+const LONE_BOX = 'tw:w-[200px] tw:max-sm:w-[150px]';
+
 /**
  * Years across, values down, edited in place. Every cell starts at what
  * is in effect, so the grid reads as the schedule itself, and changed
@@ -332,8 +335,11 @@ export default function ValueGrid({
               >
                 <th
                   scope="row"
+                  // A member's name wraps on a phone, so its box keeps the room.
+                  className="tw:whitespace-nowrap tw:max-sm:whitespace-normal"
                   style={{
                     ...labelCell,
+                    whiteSpace: undefined,
                     // Level with the text inside the 36px inputs.
                     padding: `${spacing.md} ${spacing.md} ${spacing.xs} 0`,
                     fontSize: lone ? typography.fontSize.xs : typography.fontSize.sm,
@@ -380,11 +386,13 @@ export default function ValueGrid({
                         data-path={member.path}
                         onFocusCapture={() => onFocus(member.path)}
                         // Current-law cells read quieter, so the changes stand out.
-                        className={changed ? undefined : 'tw:[&_input]:text-gray-500'}
+                        // A lone box keeps its size; in a row of years (a fixed
+                        // layout) it fills its column.
+                        className={[
+                          changed ? '' : 'tw:[&_input]:text-gray-500',
+                          years.length > 1 || wide ? '' : LONE_BOX,
+                        ].join(' ')}
                         style={{
-                          // A lone box keeps its size; in a row of years (a fixed
-                          // layout) it fills its column.
-                          width: years.length > 1 || wide ? undefined : 200,
                           borderRadius: spacing.radius.container,
                           boxShadow: changed ? `0 0 0 2px ${colors.primary[200]}` : undefined,
                           background: changed ? colors.primary[50] : undefined,

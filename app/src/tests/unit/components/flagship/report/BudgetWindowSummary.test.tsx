@@ -77,13 +77,30 @@ describe('BudgetWindowSummary', () => {
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
-  test('given the window failed then the overview says so', async () => {
+  test('given the window failed then the overview says so, without a progress link', async () => {
     mockFetchBudgetWindow.mockResolvedValue({ status: 'error', result: null, error: 'Failed' });
 
     renderSummary();
 
-    expect(
-      await screen.findByText('The budget window could not be calculated.')
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The budget window could not be calculated'
+    );
+    expect(screen.queryByRole('button', { name: /see its progress/i })).not.toBeInTheDocument();
+  });
+
+  test('given the window failed then try again asks for it again', async () => {
+    // Given
+    mockFetchBudgetWindow
+      .mockResolvedValueOnce({ status: 'error', result: null, error: 'Failed' })
+      .mockResolvedValue({ status: 'computing', result: null, progress: 40 });
+    const user = userEvent.setup();
+    renderSummary();
+
+    // When
+    await user.click(await screen.findByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(await screen.findByText('Calculating · 40%')).toBeInTheDocument();
+    expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(2);
   });
 });

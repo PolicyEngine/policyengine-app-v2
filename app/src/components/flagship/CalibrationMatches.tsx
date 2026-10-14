@@ -1,30 +1,39 @@
 import { useEffect, useState } from 'react';
-import { Spinner, Stack, Text } from '@/components/ui';
+import { Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
 import {
   CalibrationMatches,
   calibrationMatchesForPaths,
   CalibrationRing,
+  CalibrationTargetRow,
   dashboardTargetsUrl,
   geographyForRegion,
 } from '@/libs/flagship/calibrationMatching';
 import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation';
 import {
-  cardStyle,
+  CellNote,
   detailStyle,
-  EvidenceHeader,
+  EvidenceTable,
+  labelCellStyle,
   linkStyle,
-  panelStyle,
+  numberCellStyle,
+  percentText,
+  rowButtonStyle,
+  rowStyle,
   summaryStyle,
+  ValidationCard,
+  ValidationLoading,
+  ValidationNote,
 } from './ValidationDisplay';
 
 /**
  * The data-side validation surface for a report: which of the variables
  * this reform moves are calibration targets of the microdata, and how
- * well the current populace release fits them. Nearest variables first;
- * the interacted quantity within the mechanism is the one that bounds
- * the data-side bias of the estimate.
+ * well the current populace release fits them — the model's baseline
+ * totals against the official ones. Nearest variables first; the
+ * interacted quantity within the mechanism is the one that bounds the
+ * data-side bias of the estimate.
  */
 
 export const RING_LABELS: Record<CalibrationRing, string> = {
@@ -44,10 +53,7 @@ export function describeDepth(depth: number): string {
 /** Above this the fit is worth calling out; the diagnostics skill's escalation bar. */
 export const ATTENTION_ERROR = 0.25;
 
-function percent(fraction: number): string {
-  const value = fraction * 100;
-  return `${Math.abs(value) >= 100 ? Math.round(value) : value.toFixed(1)}%`;
-}
+const CALIBRATION_COLUMNS = ['Target', 'Period', 'Official', 'PolicyEngine', 'Gap'];
 
 function humanize(variable: string): string {
   const labels: Record<string, string> = {
@@ -60,32 +66,18 @@ function humanize(variable: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-function SectionCard({ children }: { children: React.ReactNode }) {
-  return <Stack style={panelStyle}>{children}</Stack>;
+function compactNumber(value: number | null): string {
+  return value === null
+    ? '—'
+    : value.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 1 });
 }
 
-function DashboardLink({
-  children,
-  source,
-  level,
-  title,
-}: {
-  children: React.ReactNode;
-  source?: string | null;
-  level?: 'national' | 'state' | null;
-  title?: string;
-}) {
-  return (
-    <a
-      href={dashboardTargetsUrl({ source, level })}
-      target="_blank"
-      rel="noreferrer"
-      title={title}
-      style={linkStyle}
-    >
-      {children}
-    </a>
-  );
+function exactNumber(value: number | null): string {
+  return value?.toLocaleString('en-US', { maximumFractionDigits: 2 }) ?? '—';
+}
+
+function gapOf(target: CalibrationTargetRow): string {
+  return target.relativeError === null ? '—' : percentText(target.relativeError);
 }
 
 /**
@@ -137,8 +129,63 @@ function PinNote({ pin }: { pin: CalibrationPin }) {
     <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
       {pin.drift.length === 0
         ? `Pinned ${when}; the release and model it was matched against are still current.`
-        : `Pinned ${when}; since then ${pin.drift.join(' and ')}. The cards show the live comparison; the pinned one is historical.`}
+        : `Pinned ${when}; since then ${pin.drift.join(' and ')}. The table shows the live comparison; the pinned one is historical.`}
     </Text>
+  );
+}
+
+/** A target's name, opening its exact values. */
+function TargetDetails({ target }: { target: CalibrationTargetRow }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button type="button" style={rowButtonStyle}>
+          {target.name}
+        </button>
+      </DialogTrigger>
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>Calibration target</DialogTitle>
+        <Text style={{ ...detailStyle, overflowWrap: 'anywhere' }}>{target.name}</Text>
+        <dl
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr',
+            gap: spacing.sm,
+            margin: 0,
+            fontSize: typography.fontSize.sm,
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {[
+            ['Source', target.sourceLabel ?? target.source],
+            ['Geography', target.geography],
+            ['Period', target.period ?? '—'],
+            ['Measure', target.measure ?? '—'],
+            ['Official', exactNumber(target.target)],
+            ['PolicyEngine', exactNumber(target.estimate)],
+            ['Gap', gapOf(target)],
+          ].map(([label, value]) => (
+            <div key={label} style={{ display: 'contents' }}>
+              <dt>{label}</dt>
+              <dd style={{ margin: 0 }}>{value}</dd>
+            </div>
+          ))}
+        </dl>
+        {target.sourceUrl && (
+          <a href={target.sourceUrl} target="_blank" rel="noreferrer" style={linkStyle}>
+            Read source
+          </a>
+        )}
+        <a
+          href={dashboardTargetsUrl({ source: target.source, level: target.level })}
+          target="_blank"
+          rel="noreferrer"
+          style={linkStyle}
+        >
+          View target group in dashboard
+        </a>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -149,219 +196,93 @@ export function CalibrationMatchSection({
   matches: CalibrationMatches | null | undefined;
   pin?: CalibrationPin;
 }) {
+  const level = matches ? (matches.geography === 'US' ? 'national' : 'state') : null;
+  const card = (content: React.ReactNode) => (
+    <ValidationCard
+      id="data-calibration"
+      title="Data calibration"
+      href={dashboardTargetsUrl({ level })}
+      linkLabel="View dashboard"
+    >
+      {content}
+    </ValidationCard>
+  );
   if (matches === null) {
-    return (
-      <SectionCard>
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          Calibration checks are temporarily unavailable — see the{' '}
-          <DashboardLink>calibration dashboard</DashboardLink> directly.
-        </Text>
-      </SectionCard>
-    );
+    return card(<ValidationNote>Calibration checks are temporarily unavailable.</ValidationNote>);
   }
   if (matches === undefined) {
-    return (
-      <SectionCard>
-        <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Spinner size="sm" />
-          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-            Checking the calibration of the variables this reform moves…
-          </Text>
-        </Stack>
-      </SectionCard>
-    );
+    return card(<ValidationLoading>Checking calibration targets…</ValidationLoading>);
   }
-  const where = matches.geography === 'US' ? 'nationally' : `in ${matches.geography}`;
-  const level = matches.geography === 'US' ? 'national' : 'state';
   if (matches.matches.length === 0) {
-    if (matches.reachedCount === 0) {
-      return null;
-    }
+    const where = matches.geography === 'US' ? 'nationally' : `in ${matches.geography}`;
     // Silence would read as "fine". State credits are the usual case: the
     // dashboard's state income tax targets carry no model-variable mapping.
-    return (
-      <SectionCard>
-        <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-          None of the {matches.reachedCount} variables this reform moves is a calibration target{' '}
-          {where}, so the data behind this estimate is unvalidated on that side. See the{' '}
-          <DashboardLink level={level}>calibration dashboard</DashboardLink> for what is covered.
-        </Text>
-      </SectionCard>
+    return card(
+      <ValidationNote>
+        {matches.reachedCount > 0
+          ? `None of the ${matches.reachedCount} variables this reform moves is a calibration target ${where}.`
+          : 'No calibration target covers this reform.'}
+      </ValidationNote>
     );
   }
 
-  return (
-    <SectionCard>
-      <EvidenceHeader
-        title="Data calibration"
-        href={dashboardTargetsUrl({ level })}
-        linkLabel="View dashboard"
-      />
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          gap: spacing.md,
-          alignItems: 'start',
-        }}
-      >
-        {matches.matches.map((match) => (
-          <Stack key={match.variable} style={cardStyle}>
-            <EvidenceHeader
-              title={humanize(match.variable)}
-              subtitle={`${match.worst.sourceLabel ?? match.worst.source} · ${matches.geography}`}
-              href={dashboardTargetsUrl({ source: match.worst.source, level })}
-              linkLabel="View targets"
-            />
-            <div style={{ overflowX: 'auto' }}>
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: typography.fontSize.sm,
-                }}
-              >
-                <thead>
-                  <tr>
-                    {['Target', 'Period', 'Target value', 'Model value', 'Gap'].map((label) => (
-                      <th
-                        key={label}
-                        style={{
-                          textAlign: label === 'Target' ? 'left' : 'right',
-                          padding: spacing.sm,
-                          fontWeight: typography.fontWeight.medium,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {match.targets.map((target) => (
-                    <tr key={target.name} style={{ borderTop: `1px solid ${colors.border.light}` }}>
-                      <td style={{ padding: spacing.sm, maxWidth: 360, overflowWrap: 'anywhere' }}>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <button
-                              type="button"
-                              style={{
-                                ...linkStyle,
-                                background: 'none',
-                                border: 0,
-                                padding: 0,
-                                textAlign: 'left',
-                                font: 'inherit',
-                                overflowWrap: 'anywhere',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              {target.name}
-                            </button>
-                          </DialogTrigger>
-                          <DialogContent aria-describedby={undefined}>
-                            <DialogTitle>Calibration target</DialogTitle>
-                            <Text style={{ ...detailStyle, overflowWrap: 'anywhere' }}>
-                              {target.name}
-                            </Text>
-                            <dl
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'auto 1fr',
-                                gap: spacing.sm,
-                                margin: 0,
-                                fontSize: typography.fontSize.sm,
-                              }}
-                            >
-                              {[
-                                ['Source', target.sourceLabel ?? target.source],
-                                ['Geography', target.geography],
-                                ['Period', target.period ?? '—'],
-                                ['Measure', target.measure ?? '—'],
-                                [
-                                  'Target value',
-                                  target.target?.toLocaleString('en-US', {
-                                    maximumFractionDigits: 2,
-                                  }) ?? '—',
-                                ],
-                                [
-                                  'Model value',
-                                  target.estimate?.toLocaleString('en-US', {
-                                    maximumFractionDigits: 2,
-                                  }) ?? '—',
-                                ],
-                                [
-                                  'Gap',
-                                  target.relativeError === null
-                                    ? '—'
-                                    : percent(target.relativeError),
-                                ],
-                              ].map(([label, value]) => (
-                                <div key={label} style={{ display: 'contents' }}>
-                                  <dt>{label}</dt>
-                                  <dd style={{ margin: 0 }}>{value}</dd>
-                                </div>
-                              ))}
-                            </dl>
-                            {target.sourceUrl && (
-                              <a
-                                href={target.sourceUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={linkStyle}
-                              >
-                                Read source
-                              </a>
-                            )}
-                            <DashboardLink source={target.source} level={target.level}>
-                              View target group in dashboard
-                            </DashboardLink>
-                          </DialogContent>
-                        </Dialog>
-                        <Text style={{ ...detailStyle, margin: 0 }}>
-                          {target.sourceLabel ?? target.source} · {target.geography}
-                          {target.measure ? ` · ${target.measure}` : ''}
-                        </Text>
-                      </td>
-                      <td style={{ padding: spacing.sm, textAlign: 'right' }}>
-                        {target.period ?? '—'}
-                      </td>
-                      <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {target.target === null
-                          ? '—'
-                          : target.target.toLocaleString('en-US', {
-                              notation: 'compact',
-                              maximumFractionDigits: 1,
-                            })}
-                      </td>
-                      <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {target.estimate === null
-                          ? '—'
-                          : target.estimate.toLocaleString('en-US', {
-                              notation: 'compact',
-                              maximumFractionDigits: 1,
-                            })}
-                      </td>
-                      <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {target.relativeError === null ? '—' : percent(target.relativeError)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Stack>
-        ))}
-      </div>
+  return card(
+    <>
+      <EvidenceTable label="Calibration targets" columns={CALIBRATION_COLUMNS} grouped>
+        {matches.matches.map((match) => {
+          const sources = [
+            ...new Set(match.targets.map((target) => target.sourceLabel ?? target.source)),
+          ].join(', ');
+          return (
+            <tbody key={match.variable}>
+              <tr style={rowStyle}>
+                <th
+                  scope="rowgroup"
+                  colSpan={CALIBRATION_COLUMNS.length}
+                  style={{ ...labelCellStyle, paddingBottom: 0 }}
+                >
+                  <span style={{ fontWeight: typography.fontWeight.semibold }}>
+                    {humanize(match.variable)}
+                  </span>
+                  <CellNote>
+                    <span>
+                      {sources} · {matches.geography}
+                    </span>{' '}
+                    ·{' '}
+                    <a
+                      href={dashboardTargetsUrl({ source: match.worst.source, level })}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
+                    >
+                      View targets
+                    </a>
+                  </CellNote>
+                </th>
+              </tr>
+              {match.targets.map((target) => (
+                <tr key={target.name}>
+                  <th scope="row" style={labelCellStyle}>
+                    <TargetDetails target={target} />
+                  </th>
+                  <td style={numberCellStyle}>{target.period ?? '—'}</td>
+                  <td style={numberCellStyle}>{compactNumber(target.target)}</td>
+                  <td style={numberCellStyle}>{compactNumber(target.estimate)}</td>
+                  <td style={numberCellStyle}>{gapOf(target)}</td>
+                </tr>
+              ))}
+            </tbody>
+          );
+        })}
+      </EvidenceTable>
       <details style={detailStyle}>
         <summary style={summaryStyle}>Data release</summary>
         <Text style={detailStyle}>
-          {matches.releaseId ? `Data release ${matches.releaseId}` : 'Release not recorded'}
-          {matches.modelVersion ? ` · Matched at policyengine-us ${matches.modelVersion}` : ''}.
+          {matches.releaseId ?? 'Not recorded'}
+          {matches.modelVersion ? ` · policyengine-us ${matches.modelVersion}` : ''}
         </Text>
       </details>
       {pin && <PinNote pin={pin} />}
-    </SectionCard>
+    </>
   );
 }

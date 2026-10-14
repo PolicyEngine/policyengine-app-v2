@@ -501,22 +501,64 @@ export async function fetchTrackerBillDistricts(
 }
 
 /**
- * Whether a tracker research entry is a reform the Reforms tab can show:
- * a bill, or a blog post that carries a reform to score. Dashboards and
- * tools (the OBBBA Household Explorer, MyFriendBen) are apps, and a blog
- * post without reform params is prose only.
+ * Whether a tracker research entry is a bill, as the tracker's own bill
+ * lists read it (type "bill", status not "in_review"). The research
+ * table also files dashboards and tools (the OBBBA Household Explorer,
+ * MyFriendBen), which are apps, and blog posts, which are write-ups: a
+ * post that carries a reform to score (UT SB 60) is about a bill, not
+ * the bill, so it stays out too. An analysis still in review is not
+ * published yet. The type and status read without case or spacing; an
+ * entry with no type is a bill.
  */
-function isScorableReform(record: any, impact: any): boolean {
-  if (!record.type || record.type === 'bill') {
-    return true;
+function isBillRecord(record: any): boolean {
+  const word = (value: unknown) => (typeof value === 'string' ? value.trim().toLowerCase() : '');
+  const type = word(record?.type);
+  return (type === '' || type === 'bill') && word(record?.status) !== 'in_review';
+}
+
+/** A bill's status when the tracker follows none for it. */
+export const UNTRACKED_BILL_STATUS = 'Analyzed';
+
+/**
+ * A bill number as the tracker compares them: no spaces, dashes or dots,
+ * upper case, and no zeros before the number ("SB 0060" is "SB60").
+ */
+function normalizeBillNumber(value: string): string {
+  return value
+    .replace(/[\s.-]+/g, '')
+    .toUpperCase()
+    .replace(/^([A-Z]+)0+(\d)/, '$1$2');
+}
+
+const processedBillKey = (state: string, billNumber: string) =>
+  `${state.toUpperCase()}:${normalizeBillNumber(billNumber)}`;
+
+/**
+ * The tracker's status row (processed_bills) for a research entry. The
+ * entry's LegiScan link (legiscan_bill_id) names the row when it is set.
+ * Otherwise the entry's id names the bill: "ut-sb0060", "ny-s-4487", or
+ * "ga-hb463-2026", where a trailing year names the session, not the bill.
+ */
+function processedBillFor(
+  record: any,
+  byBillId: Map<string, any>,
+  byKey: Map<string, any>
+): any | undefined {
+  if (record.legiscan_bill_id !== null && record.legiscan_bill_id !== undefined) {
+    const linked = byBillId.get(String(record.legiscan_bill_id));
+    if (linked) {
+      return linked;
+    }
   }
-  const params = impact?.reform_params;
-  return (
-    record.type === 'blog' &&
-    !!params &&
-    typeof params === 'object' &&
-    Object.keys(params).length > 0
-  );
+  const [state, ...parts] = String(record.id ?? '').split('-');
+  if (!state || parts.length === 0) {
+    return undefined;
+  }
+  const exact = byKey.get(processedBillKey(state, parts.join('')));
+  if (exact || parts.length < 2 || !/^\d{4}$/.test(parts[parts.length - 1])) {
+    return exact;
+  }
+  return byKey.get(processedBillKey(state, parts.slice(0, -1).join('')));
 }
 
 /**
@@ -531,7 +573,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       'reform_impacts',
       'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
     ),
-    trackerSelect('processed_bills', 'state,bill_number,status,legiscan_url'),
+    trackerSelect('processed_bills', 'bill_id,state,bill_number,status,legiscan_url'),
     trackerSelect(
       'validation_metadata',
       'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against'
@@ -547,18 +589,23 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const impactsById = new Map((impacts ?? []).map((impact) => [impact.id, impact]));
   const baselineById = new Map((baselines ?? []).map((row) => [row.id, row.baseline_params]));
   const validationById = new Map((validations ?? []).map((row) => [row.id, row]));
+  const processedByBillId = new Map(
+    (processed ?? []).flatMap((bill) =>
+      bill.bill_id === null || bill.bill_id === undefined ? [] : [[String(bill.bill_id), bill]]
+    )
+  );
   const processedByKey = new Map(
     (processed ?? []).map((bill) => [
-      `${String(bill.state).toLowerCase()}-${String(bill.bill_number).toLowerCase().replace(/\s+/g, '')}`,
+      processedBillKey(String(bill.state), String(bill.bill_number)),
       bill,
     ])
   );
 
   return research
-    .filter((record) => isScorableReform(record, impactsById.get(record.id)))
+    .filter((record) => isBillRecord(record))
     .map((record): TrackedBill => {
       const impact = impactsById.get(record.id);
-      const status = processedByKey.get(record.id)?.status;
+      const processedBill = processedBillFor(record, processedByBillId, processedByKey);
       return {
         id: record.id,
         countryId: 'us',
@@ -569,12 +616,12 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
             ? record.state.toUpperCase()
             : undefined,
         title: record.title ?? record.id,
-        status: status || 'Analyzed',
+        status: processedBill?.status || UNTRACKED_BILL_STATUS,
         summary: record.description ?? '',
         provisions: provisionsFromReformParams(impact?.reform_params, baselineById.get(record.id)),
         changes: changesFromTrackerProvisions(impact?.provisions),
         keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
-        legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
+        legiscanUrl: processedBill?.legiscan_url ?? undefined,
         sourceUrl: record.url ?? undefined,
         trackerUrl: trackerBillUrl(record),
         date: record.date ?? undefined,

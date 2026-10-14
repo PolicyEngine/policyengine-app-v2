@@ -31,10 +31,17 @@ interface DraftRow {
 }
 
 // Narrow tables drop the current-law and when columns; the row's
-// details still have both.
-const ROW_GRID =
-  'tw:grid tw:items-center tw:gap-3 tw:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_136px_64px]';
-const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
+// details still have both. A phone's table puts the new value on a line
+// of its own under the name, so the name keeps the row's width.
+export const ROW_GRID =
+  'tw:grid tw:items-center tw:gap-3 tw:@max-[480px]:gap-y-2 tw:grid-cols-[minmax(0,1fr)_auto] tw:@min-[480px]:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_136px_64px]';
+export const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
+/** The value cell, under the name across the row on a phone's table. */
+const VALUE_CELL = 'tw:min-w-0 tw:@max-[480px]:col-span-2 tw:@max-[480px]:row-start-2';
+/** The row's own buttons, beside the name on a phone's table, a fingertip each. */
+const ACTIONS_CELL = 'tw:@max-[480px]:col-start-2 tw:@max-[480px]:row-start-1';
+const ROW_BUTTON =
+  'tw:@max-[480px]:size-10 tw:@max-[480px]:items-center tw:@max-[480px]:justify-center';
 
 /** One line, cut with an ellipsis: list values run to dozens of names. */
 const truncate: React.CSSProperties = {
@@ -290,7 +297,9 @@ export default function DraftTable({
         <span className={WIDE_ONLY} style={headerCell}>
           Current law
         </span>
-        <span style={headerCell}>New value</span>
+        <span className="tw:@max-[480px]:hidden" style={headerCell}>
+          New value
+        </span>
         <span className={WIDE_ONLY} style={headerCell}>
           Effective
         </span>
@@ -391,7 +400,7 @@ export default function DraftTable({
                     {baselineText}
                   </span>
 
-                  <div style={{ minWidth: 0 }}>
+                  <div className={VALUE_CELL}>
                     {open ? (
                       <SummaryButton
                         onClick={() => toggle(row.key, true)}
@@ -468,7 +477,7 @@ export default function DraftTable({
                 <>
                   {/* A breakdown has a value for each member: its details list them. */}
                   <span className={WIDE_ONLY} />
-                  <div style={{ minWidth: 0 }}>
+                  <div className={VALUE_CELL}>
                     <SummaryButton
                       onClick={() => toggle(row.key, true)}
                       title={groupSummary || undefined}
@@ -484,12 +493,15 @@ export default function DraftTable({
                 {when ? <Chip title={whenTitle}>{when}</Chip> : null}
               </span>
 
-              <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <span
+                className={ACTIONS_CELL}
+                style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}
+              >
                 <button
                   type="button"
                   onClick={() => toggle(row.key)}
                   aria-label={open ? `Hide ${name} details` : `Show ${name} details`}
-                  className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100"
+                  className={`tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100 ${ROW_BUTTON}`}
                   style={{
                     display: 'inline-flex',
                     padding: spacing.xs,
@@ -510,7 +522,7 @@ export default function DraftTable({
                   type="button"
                   onClick={() => row.provisions.forEach((p) => removeDraftProvision(p.path))}
                   aria-label={`Remove ${name}`}
-                  className="tw:cursor-pointer tw:text-gray-400 tw:hover:bg-gray-100 tw:hover:text-gray-700"
+                  className={`tw:cursor-pointer tw:text-gray-400 tw:hover:bg-gray-100 tw:hover:text-gray-700 ${ROW_BUTTON}`}
                   style={{
                     display: 'inline-flex',
                     padding: spacing.xs,

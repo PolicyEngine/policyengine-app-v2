@@ -28,30 +28,43 @@ function datedReason(provision: RunReportProvision, year: number): string | null
 
 /**
  * A report whose reform changes nothing in its year: every result is
- * current law's. It says so first thing in the overview — not after a
- * page of zeros — with the reasons the provisions themselves give, then
- * the ones they can't (a program not in effect that year).
+ * its baseline's — current law's, or the saved reform's it is compared
+ * with. It says so first thing in the overview — not after a page of
+ * zeros — with the reasons the provisions themselves give, then the
+ * ones they can't (a program not in effect that year). Against a saved
+ * reform, the reasons are only those that compare with it.
  */
 export default function NoChangeNotice({
   year,
   provisions,
+  baselineLabel,
 }: {
   /** The report's year, e.g. "2026" */
   year: string;
   provisions: RunReportProvision[];
+  /** What the report is compared with, by name; current law when unset. */
+  baselineLabel?: string | null;
 }) {
   const yearNumber = Number(year);
-  const reasons = Number.isFinite(yearNumber)
-    ? provisions
-        .map((provision) => datedReason(provision, yearNumber))
-        .filter((reason): reason is string => !!reason)
-    : [];
+  // The provisions' dates and current-law values explain a match with
+  // current law, not with a saved reform.
+  const reasons =
+    !baselineLabel && Number.isFinite(yearNumber)
+      ? provisions
+          .map((provision) => datedReason(provision, yearNumber))
+          .filter((reason): reason is string => !!reason)
+      : [];
   // A provision at current law in the year, with no dates to explain it.
   const atCurrentLaw =
+    !baselineLabel &&
     reasons.length === 0 &&
     provisions.some((provision) => sameParameterValue(provision.value, provision.baselineValue));
   const yearText = year || 'the simulated year';
-  const count = reasons.length + (atCurrentLaw ? 1 : 0) + (reasons.length === 0 ? 1 : 0);
+  const count =
+    reasons.length +
+    (atCurrentLaw ? 1 : 0) +
+    (reasons.length === 0 ? 1 : 0) +
+    (baselineLabel ? 1 : 0);
 
   return (
     <section
@@ -82,7 +95,8 @@ export default function NoChangeNotice({
           This reform changes nothing in {yearText}
         </Text>
         <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          Every result matches current law. {count > 1 ? 'Likely reasons:' : 'The likely reason:'}
+          Every result matches {baselineLabel || 'current law'}.{' '}
+          {count > 1 ? 'Likely reasons:' : 'The likely reason:'}
         </Text>
         <ul
           style={{
@@ -98,6 +112,11 @@ export default function NoChangeNotice({
           {reasons.map((reason) => (
             <li key={reason}>{reason}</li>
           ))}
+          {baselineLabel && (
+            <li>
+              The reform sets the same values as {baselineLabel} in {yearText}.
+            </li>
+          )}
           {atCurrentLaw && <li>A changed value is at current law in {yearText}.</li>}
           {reasons.length === 0 && (
             <li>

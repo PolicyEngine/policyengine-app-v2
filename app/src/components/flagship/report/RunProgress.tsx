@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Progress, Stack, Text } from '@/components/ui';
+import { Progress, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { formatElapsed } from '@/libs/flagship/reportStages';
 
@@ -12,6 +12,45 @@ function useElapsed(): number {
     return () => window.clearInterval(timer);
   }, []);
   return now - started;
+}
+
+/** The run's card. */
+const CARD_STYLE: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  maxWidth: 640,
+  gap: spacing.sm,
+  padding: spacing.lg,
+  border: `1px solid ${colors.border.light}`,
+  borderRadius: 12,
+  background: colors.background.primary,
+};
+
+/**
+ * The wait before a run has a bar: the report and its status still
+ * loading. A spinner, not a card, so nothing stands empty on the page
+ * until the run's own card arrives.
+ */
+export function RunLoading({ label }: { label: string }) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: spacing.sm,
+        padding: `${spacing['3xl']} 0`,
+      }}
+    >
+      <Spinner size="md" aria-hidden />
+      <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+        {label}…
+      </Text>
+    </div>
+  );
 }
 
 /**
@@ -45,19 +84,7 @@ export default function RunProgress({
   const percent = Math.max(0, Math.min(Math.round(value), 99));
 
   return (
-    <Stack
-      role="status"
-      aria-live="polite"
-      style={{
-        width: '100%',
-        maxWidth: 640,
-        gap: spacing.sm,
-        padding: spacing.lg,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: 12,
-        background: colors.background.primary,
-      }}
-    >
+    <Stack role="status" aria-live="polite" style={CARD_STYLE}>
       <Stack style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.md }}>
         <Text
           style={{

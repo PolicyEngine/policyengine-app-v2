@@ -3,6 +3,7 @@ import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
@@ -58,7 +59,11 @@ const PROVISIONS = [
   },
 ];
 
-async function renderPanel({ region, year }: { region?: string; year?: string } = {}) {
+async function renderPanel({
+  region,
+  year,
+  baseline,
+}: { region?: string; year?: string; baseline?: RunReportBaseline } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
     <QueryClientProvider client={queryClient}>
@@ -68,6 +73,7 @@ async function renderPanel({ region, year }: { region?: string; year?: string } 
         provisions={PROVISIONS}
         region={region}
         year={year}
+        baseline={baseline}
       />
     </QueryClientProvider>
   );
@@ -153,6 +159,35 @@ describe('ReportAdjustPanel', () => {
       [PROVISIONS[1].path, 350],
     ]);
     clearDraftReform();
+  });
+
+  describe('given a report compared with a saved reform', () => {
+    const PLAN_B: RunReportBaseline = { reformId: 'rf-plan-b', label: 'Plan B', policyId: 88 };
+
+    test('then recompute compares with it too', async () => {
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      await renderPanel({ baseline: PLAN_B });
+
+      const input = screen.getByLabelText(/new value for maximum credit per child/i);
+      await user.clear(input);
+      await user.type(input, '3600');
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockRun.mock.calls[0][5]).toEqual({ region: undefined, baseline: PLAN_B });
+    });
+
+    test('then Edit in Build keeps the comparison in the draft', async () => {
+      clearDraftReform();
+      const user = userEvent.setup();
+      await renderPanel({ baseline: PLAN_B });
+
+      await user.click(screen.getByRole('button', { name: /edit in build/i }));
+
+      expect(getDraftReform()?.baselineReformId).toBe('rf-plan-b');
+      clearDraftReform();
+    });
   });
 
   test('given a dated provision is edited then recompute runs the new value, not its dates', async () => {
