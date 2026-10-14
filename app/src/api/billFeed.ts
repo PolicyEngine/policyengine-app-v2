@@ -493,22 +493,16 @@ export async function fetchTrackerBillDistricts(
 }
 
 /**
- * Whether a tracker research entry is a reform the Reforms tab can show:
- * a bill, or a blog post that carries a reform to score. Dashboards and
- * tools (the OBBBA Household Explorer, MyFriendBen) are apps, and a blog
- * post without reform params is prose only.
+ * Whether a tracker research entry is a bill, as the tracker's own bill
+ * lists read it. The research table also files dashboards and tools (the
+ * OBBBA Household Explorer, MyFriendBen), which are apps, and blog posts,
+ * which are write-ups: a post that carries a reform to score (UT SB 60)
+ * is about a bill, not the bill, so it stays out too. The type reads
+ * without case or spacing; an entry with none is a bill.
  */
-function isScorableReform(record: any, impact: any): boolean {
-  if (!record.type || record.type === 'bill') {
-    return true;
-  }
-  const params = impact?.reform_params;
-  return (
-    record.type === 'blog' &&
-    !!params &&
-    typeof params === 'object' &&
-    Object.keys(params).length > 0
-  );
+function isBillRecord(record: any): boolean {
+  const type = typeof record?.type === 'string' ? record.type.trim().toLowerCase() : '';
+  return type === '' || type === 'bill';
 }
 
 /**
@@ -546,7 +540,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   );
 
   return research
-    .filter((record) => isScorableReform(record, impactsById.get(record.id)))
+    .filter((record) => isBillRecord(record))
     .map((record): TrackedBill => {
       const impact = impactsById.get(record.id);
       const status = processedByKey.get(record.id)?.status;
