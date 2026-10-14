@@ -4,6 +4,7 @@ import {
 } from "@/libs/flagship/apiGate";
 import { desc, inArray } from "drizzle-orm";
 import { countryIds } from "@/libs/countries";
+import { reportProvisionsWireError } from "@/libs/flagship/reportSchema";
 import { getDb, isDbConfigured } from "../../../db";
 import {
   invalidText,
@@ -58,6 +59,11 @@ function validateCreationPayload(payload: any): string | null {
   }
   if (!Array.isArray(payload.provisions)) {
     return "provisions must be an array";
+  }
+  // Each provision as the client's report schema reads it back.
+  const provisionsError = reportProvisionsWireError(payload.provisions);
+  if (provisionsError) {
+    return provisionsError;
   }
   if (typeof payload.year !== "string" || !payload.year) {
     return "year is required";

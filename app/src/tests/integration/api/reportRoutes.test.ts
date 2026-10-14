@@ -136,12 +136,39 @@ describe('POST /api/reports', () => {
     ['invalid country', { ...VALID_PAYLOAD, country_id: 'fr' }],
     ['missing api_report_id', { ...VALID_PAYLOAD, api_report_id: undefined }],
     ['provisions not an array', { ...VALID_PAYLOAD, provisions: 'oops' }],
+    ['a provision that is not an object', { ...VALID_PAYLOAD, provisions: ['oops'] }],
+    ['a provision without a path', { ...VALID_PAYLOAD, provisions: [{ breadcrumb: 'CTC' }] }],
+    [
+      'a provision with a numeric unit',
+      { ...VALID_PAYLOAD, provisions: [{ ...VALID_PAYLOAD.provisions[0], unit: 7 }] },
+    ],
     ['missing year', { ...VALID_PAYLOAD, year: undefined }],
     ['a local fallback reform_id', { ...VALID_PAYLOAD, reform_id: 'rf-mfz1abcd' }],
     ['a non-string reform_id', { ...VALID_PAYLOAD, reform_id: 42 }],
   ])('given %s then returns 400', async (_name, payload) => {
     const response = await createReport(postRequest(payload));
     expect(response.status).toBe(400);
+  });
+
+  it('given a provision without a path then the error names the field', async () => {
+    const response = await createReport(
+      postRequest({ ...VALID_PAYLOAD, provisions: [{ breadcrumb: 'CTC' }] })
+    );
+
+    expect(await response.json()).toEqual({
+      error: 'provisions[0].path must be a non-empty string',
+    });
+  });
+
+  it('given provisions without units or baselines then the record is stored', async () => {
+    const { path, breadcrumb, value } = VALID_PAYLOAD.provisions[0];
+
+    const created = await createAndParse({
+      ...VALID_PAYLOAD,
+      provisions: [{ path, breadcrumb, value }],
+    });
+
+    expect(created.provisions).toEqual([{ path, breadcrumb, value }]);
   });
 
   it('given a central reform_id then it is stored on the record', async () => {
@@ -271,6 +298,23 @@ describe('GET/PATCH /api/reports/:id', () => {
     const response = await patchReport(patchRequest(VALIDATION_BODY), itemContext(created.id));
 
     expect(response.status).toBe(403);
+    const reread = await getReport(new Request('http://test'), itemContext(created.id));
+    expect((await reread.json()).validation).toBeNull();
+  });
+
+  it('given a pin the report schema can not read then PATCH returns 400 and nothing is pinned', async () => {
+    const created = await createAndParse();
+    const damaged = { ...VALIDATION_BODY.validation, scorecard: { programs: 'ctc_refund' } };
+
+    const response = await patchReport(
+      patchRequest({ validation: damaged }, created.edit_token),
+      itemContext(created.id)
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: 'validation.scorecard.programs must be an array',
+    });
     const reread = await getReport(new Request('http://test'), itemContext(created.id));
     expect((await reread.json()).validation).toBeNull();
   });
