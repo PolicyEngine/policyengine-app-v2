@@ -95,9 +95,26 @@ export const supporters: Supporter[] = [
     description:
       "a program of the J.B. and M.K. Pritzker Family Foundation focused on ensuring every child arrives at kindergarten ready to succeed, with particular emphasis on the prenatal to age three period.",
   },
+  {
+    id: "ses",
+    name: "School of Philosophy and Economic Science",
+    websiteUrl: "https://www.schoolofphilosophy.org/",
+    logoUrl: "/assets/supporters/ses.svg",
+    description:
+      "an educational charity in London offering courses in practical philosophy and economics.",
+  },
 ];
 
 export const projects: SupportedProjectData[] = [
+  {
+    title: "Land value tax in every constituency",
+    amount: 12000,
+    currency: "GBP",
+    awardDate: "2026-09",
+    description:
+      "Estimating residential land values for each local authority in England, then modelling who gains and who loses in each constituency if a land value tax replaced council tax, or council tax and stamp duty together, with options such as deferral for asset-rich, income-poor households. Funded by the Economics Grant Fund (Harrington Legacy).",
+    supporterId: "ses",
+  },
   {
     title: "Advancing evidence-based policy with AI & tax-benefit microsimulation",
     projectUrl:
