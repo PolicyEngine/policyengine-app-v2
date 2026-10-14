@@ -12,24 +12,24 @@ const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 
 const cards = [
   {
-    href: "/uk/spring-statement-2026",
-    title: "Spring Statement 2026 analysis",
-    desc: "New OBR forecast and its effects on UK living standards",
+    href: "/uk/energy-autumn-budget",
+    title: "Energy bills and the Autumn Budget",
+    desc: "What households will pay over the next two winters, and seven ways the Chancellor could help",
   },
   {
-    href: "/uk/research/uk-two-child-limit-reintroduction",
-    title: "Two-child limit reintroduction",
-    desc: "Budgetary, distributional, poverty, and inequality impacts across the UK",
+    href: "/uk/childcare-100k-threshold",
+    title: "Scrapping the childcare cliff edge",
+    desc: "What it would cost to remove the £100,000 limit on free hours and Tax-Free Childcare",
   },
   {
-    href: "/uk/uk-salary-sacrifice-tool",
-    title: "Salary sacrifice cap analysis tool",
-    desc: "Revenue and distributional impacts of capping pension salary sacrifice",
+    href: "/uk/targeted-energy-discount",
+    title: "A targeted energy bill discount",
+    desc: "Who would gain, and at what cost, from the Resolution Foundation's proposal",
   },
   {
-    href: "/uk/uk-student-loan-calculator",
-    title: "Student loan deductions calculator",
-    desc: "Repayments, marginal tax rates, and lifetime costs for UK graduates",
+    href: "/uk/middle-east-war-living-standards",
+    title: "The Middle East war and living standards",
+    desc: "How rising energy, fuel and food prices affect UK household budgets",
   },
 ];
 
@@ -102,13 +102,13 @@ export default function FeaturedResearchBanner({
             letterSpacing: "-0.01em",
           }}
         >
-          Explore our latest research and tools
+          Our latest research ahead of the Autumn Budget
         </p>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: spacing.md,
           }}
         >

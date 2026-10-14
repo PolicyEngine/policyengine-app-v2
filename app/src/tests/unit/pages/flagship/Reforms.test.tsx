@@ -65,6 +65,36 @@ const CHAT_REFORM: Reform = {
   updatedAt: '2026-08-01T00:00:00Z',
 };
 
+/** A value that starts after the report year, as Build saves "Applies from 2028". */
+const LATER_REFORM: Reform = {
+  ...CHAT_REFORM,
+  id: 'rf-2',
+  label: 'CTC to $1,000 from 2028',
+  parameters: [
+    {
+      name: 'gov.irs.credits.ctc.amount.base[0].amount',
+      values: [{ startDate: '2028-01-01', endDate: '2100-12-31', value: 1000 }],
+    },
+  ],
+};
+
+/** A schedule: a value for each year, as an indexed amount saves. */
+const SCHEDULE_REFORM: Reform = {
+  ...CHAT_REFORM,
+  id: 'rf-3',
+  label: 'CTC indexed',
+  parameters: [
+    {
+      name: 'gov.irs.credits.ctc.amount.base[0].amount',
+      values: [
+        { startDate: '2026-01-01', endDate: '2026-12-31', value: 2500 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 2550 },
+        { startDate: '2028-01-01', endDate: '2100-12-31', value: 2600 },
+      ],
+    },
+  ],
+};
+
 /**
  * Three bills standing in for the tracker feed. The feed is the only
  * source of bills in the app, so the fixture lives with the tests that
@@ -296,6 +326,8 @@ describe('ReformsPage', () => {
 
     expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
+    // How the reform came about isn't shown on its card.
+    expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
 
   test('given the Yours tab then it lists this browser’s reforms for the country', async () => {
@@ -316,6 +348,7 @@ describe('ReformsPage', () => {
 
     expect(screen.getByLabelText(/new value for gov\.irs/i)).toHaveValue(3600);
     expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
+    expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
 
   test('given an amended value then save updates the reform', async () => {
@@ -346,6 +379,64 @@ describe('ReformsPage', () => {
     const [runTitle, , , reformId] = mockRun.mock.calls[0];
     expect(runTitle).toBe('CTC to $3,600 for children under 6');
     expect(reformId).toBe('rf-1');
+  });
+
+  test('given a value that starts later then the detail says when, and save keeps the start', async () => {
+    mockFindMine.mockResolvedValue([LATER_REFORM]);
+    mockUpdate.mockResolvedValue({ ...LATER_REFORM });
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $1,000 from 2028'));
+
+    expect(screen.getByText('from 2028')).toBeInTheDocument();
+    const input = screen.getByLabelText(/new value for gov\.irs/i);
+    await user.clear(input);
+    await user.type(input, '1200');
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual([
+      { startDate: '2028-01-01', endDate: '2100-12-31', value: 1200 },
+    ]);
+  });
+
+  test('given a value that starts later then its report runs in that year, from that date', async () => {
+    mockFindMine.mockResolvedValue([LATER_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $1,000 from 2028'));
+
+    await user.click(screen.getByRole('button', { name: /view full impact report/i }));
+
+    expect(mockRun).toHaveBeenCalledTimes(1);
+    const [, , provisions, reformId, year] = mockRun.mock.calls[0];
+    expect(reformId).toBe('rf-2');
+    expect(year).toBe(2028);
+    expect(provisions[0]).toMatchObject({
+      value: 1000,
+      intervals: [{ startDate: '2028-01-01', endDate: '2100-12-31', value: 1000 }],
+    });
+  });
+
+  test('given a schedule then the detail reads it, and save leaves it whole', async () => {
+    mockFindMine.mockResolvedValue([SCHEDULE_REFORM]);
+    mockUpdate.mockResolvedValue({ ...SCHEDULE_REFORM });
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC indexed'));
+
+    // Read-only here: a schedule changes in Build.
+    expect(screen.queryByLabelText(/new value for gov\.irs/i)).not.toBeInTheDocument();
+    expect(screen.getByText('3 periods from 2026')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Reform name'));
+    await user.type(screen.getByLabelText('Reform name'), 'CTC indexed to CPI');
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
+    expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual(
+      SCHEDULE_REFORM.parameters[0].values
+    );
   });
 
   test('given delete in the reform detail then the store delete is called', async () => {

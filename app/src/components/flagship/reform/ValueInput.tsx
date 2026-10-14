@@ -5,6 +5,7 @@ import { colors } from '@/designTokens';
 import { cn } from '@/lib/utils';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { formatValue } from '@/utils/parameterValues';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
 interface ValueInputProps {
@@ -45,6 +46,50 @@ export default function ValueInput({ param, value, onChange, ariaLabel }: ValueI
     return <ValueInputBox param={param} value={value} onChange={onChange} />;
   }
   return <NumberInput param={param} value={value} onChange={onChange} ariaLabel={ariaLabel} />;
+}
+
+/**
+ * A value laid out as the number box lays it out — its "$" at the same
+ * place, its digits where the box's digits sit, its "%" after them — so
+ * a column of read-only values lines up with the box above or beside it.
+ * `boxed` matches the box's height too, for a cell in the box's row.
+ */
+export function ValueDisplay({
+  param,
+  value,
+  boxed = false,
+  style,
+}: {
+  param: ParameterMetadata;
+  value: unknown;
+  boxed?: boolean;
+  style?: React.CSSProperties;
+}) {
+  const percentage = param.unit === '/1';
+  const prefix = CURRENCY_PREFIXES[String(param.unit)] ?? '';
+  const numeric = typeof value === 'number';
+  const digits = numeric
+    ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString('en-US', {
+        maximumFractionDigits: 6,
+      })
+    : formatValue(value, param.unit ?? null);
+  return (
+    <div
+      className="tw:relative tw:flex tw:items-center tw:text-sm"
+      style={{ height: boxed ? 36 : undefined, whiteSpace: 'nowrap', ...style }}
+    >
+      {numeric && prefix && (
+        <span className="tw:pointer-events-none tw:absolute tw:left-3 tw:text-gray-500">
+          {prefix}
+        </span>
+      )}
+      {/* The box's digits sit inside its 1px border. */}
+      <span className={numeric && prefix ? 'tw:pl-7' : 'tw:pl-3'} style={{ marginLeft: 1 }}>
+        {digits}
+      </span>
+      {numeric && percentage && <span className="tw:ml-1 tw:text-gray-500">%</span>}
+    </div>
+  );
 }
 
 function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {

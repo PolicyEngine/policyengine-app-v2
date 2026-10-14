@@ -4,6 +4,7 @@ import { readReportMeta, runFlagshipReport } from '@/libs/flagship/runReport';
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
 const mockCreateReportAndAssociate = vi.fn();
+const mockFetchBudgetWindow = vi.fn();
 
 vi.mock('@/api/policy', () => ({
   createPolicy: (...args: any[]) => mockCreatePolicy(...args),
@@ -13,6 +14,9 @@ vi.mock('@/api/simulation', () => ({
 }));
 vi.mock('@/api/report', () => ({
   createReportAndAssociateWithUser: (...args: any[]) => mockCreateReportAndAssociate(...args),
+}));
+vi.mock('@/api/budgetWindow', () => ({
+  fetchBudgetWindow: (...args: any[]) => mockFetchBudgetWindow(...args),
 }));
 
 const PROVISION = {
@@ -99,6 +103,65 @@ describe('runFlagshipReport', () => {
         payload: { simulation_1_id: 101, simulation_2_id: 102, year: '2026' },
       })
     );
+  });
+
+  test('given a state or district then both simulations run on it', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      region: 'congressional_district/CA-01',
+    });
+
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(1, 'us', {
+      population_id: 'congressional_district/CA-01',
+      population_type: 'geography',
+      policy_id: 2,
+    });
+    expect(mockCreateSimulation).toHaveBeenNthCalledWith(2, 'us', {
+      population_id: 'congressional_district/CA-01',
+      population_type: 'geography',
+      policy_id: 77,
+    });
+  });
+
+  test('given a budget window with the run then it starts at once and the report knows it', async () => {
+    mockFetchBudgetWindow.mockResolvedValue({ status: 'computing', result: null });
+
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      year: 2026,
+      region: 'state/de',
+      windowYears: 10,
+    });
+
+    // Submitted with the report, on its reform, baseline and population.
+    expect(mockFetchBudgetWindow).toHaveBeenCalledWith('us', '77', '2', {
+      region: 'state/de',
+      startYear: 2026,
+      windowSize: 10,
+    });
+    expect(readReportMeta('55')?.budgetWindow).toEqual({ startYear: 2026, windowSize: 10 });
+  });
+
+  test('given one year then no window starts', async () => {
+    await runFlagshipReport({
+      countryId: 'us',
+      title: 'CTC expansion',
+      sourceNote: '',
+      provisions: [PROVISION],
+      currentLawId: 2,
+      windowYears: 1,
+    });
+
+    expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
+    expect(readReportMeta('55')?.budgetWindow).toBeUndefined();
   });
 
   test('given a run then provenance is stashed under the API report id', async () => {

@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { IconArrowBackUp, IconChartLine, IconChevronDown } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Button, SegmentedControl } from '@/components/ui';
+import {
+  Button,
+  SegmentedControl,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import {
@@ -13,6 +21,7 @@ import {
   provisionIntervals,
   provisionValueInYear,
   provisionVariesOverTime,
+  sameParameterValue,
   setDraftProvisionIntervals,
 } from '@/libs/draftReform';
 import { periodLabel } from '@/libs/flagship/draftLabels';
@@ -30,7 +39,7 @@ import {
   seriesYears,
   setValueFromYear,
 } from '@/libs/flagship/uprating';
-import { getDateRange } from '@/libs/metadataUtils';
+import { getDateRange, getTaxYears } from '@/libs/metadataUtils';
 import { selectParameterEntriesByPath } from '@/libs/parameterSearch';
 import { ChangesCard } from '@/pages/reportBuilder/modals/policyCreation/ChangesCard';
 import { RootState } from '@/store';
@@ -51,13 +60,18 @@ interface ProvisionDetailsProps {
   focusPath?: string;
 }
 
-type EditMode = 'one' | 'byYear' | 'dates';
+type EditMode = 'one' | 'indexed' | 'byYear' | 'dates';
 
-/** The ways to set a value, in the order people reach for them. */
-const EDIT_MODES = [
-  { label: 'One value', value: 'one' },
+/**
+ * The ways to set a value, in the order people reach for them. One value
+ * holds from its year on; indexed, it grows with an index — offered for
+ * money amounts only.
+ */
+const EDIT_MODES: Array<{ label: string; value: EditMode }> = [
+  { label: 'New value', value: 'one' },
   { label: 'By year', value: 'byYear' },
   { label: 'Custom dates', value: 'dates' },
+  { label: 'Indexed', value: 'indexed' },
 ];
 
 /** Columns in the by-year grid; the last runs on from its year. */
@@ -86,6 +100,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const entriesByPath = useSelector(selectParameterEntriesByPath);
   const { minDate, maxDate } = useSelector(getDateRange);
+  const taxYears = useSelector(getTaxYears);
   const year = draftYear(draft);
 
   const members = group?.members ?? [
@@ -98,21 +113,6 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     draft.provisions.find((provision) => provision.path === memberPath);
 
   const [focusedPath, setFocusedPath] = useState(focusPath ?? path);
-  // Open on the way the reform already sets it: dates the grid can't
-  // show, a schedule, or else one value.
-  const [mode, setMode] = useState<EditMode>(() => {
-    const provisions = members.map((member) => provisionFor(member.path));
-    // A value that grows reads as one value and how it moves.
-    if (provisions.some((provision) => provision?.growth && provision.growth !== 'fixed')) {
-      return 'one';
-    }
-    if (!provisions.every(fitsGrid)) {
-      return 'dates';
-    }
-    return provisions.some((provision) => provisionVariesOverTime(provision ?? {}))
-      ? 'byYear'
-      : 'one';
-  });
   const [historyOpen, setHistoryOpen] = useState(false);
   // How the value is indexed: the draft's choice, else the first money
   // member's default (current law's rate, where current law indexes it).
@@ -128,10 +128,35 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       money[0];
     return set ? growthOf(provisionFor(set.path), parameters?.[set.path]) : 'fixed';
   });
+  // Open on the way the reform already sets it: a value that grows,
+  // dates the grid can't show, a schedule — else one value, or indexed
+  // where that is the amount's default (current law indexes it).
+  const [mode, setMode] = useState<EditMode>(() => {
+    const provisions = members.map((member) => provisionFor(member.path));
+    if (provisions.some((provision) => provision?.growth && provision.growth !== 'fixed')) {
+      return 'indexed';
+    }
+    if (!provisions.every(fitsGrid)) {
+      return 'dates';
+    }
+    if (provisions.some((provision) => provisionVariesOverTime(provision ?? {}))) {
+      return 'byYear';
+    }
+    return 'one';
+  });
+  // Where the draft already starts its values, earliest first.
+  const startYears = members
+    .map((member) => provisionFor(member.path)?.intervals?.[0]?.startDate)
+    .filter((start): start is string => !!start)
+    .map((start) => Number(start.slice(0, 4)))
+    .sort((a, b) => a - b);
+  // The year a new or indexed value starts: where the draft already
+  // starts it, else the report year. The years before keep current law.
+  const [fromYear, setFromYear] = useState(() => startYears[0] ?? year);
   // When it grows: the first set member's timing, else from the year after.
   const [timingChoice, setTimingChoice] = useState<GrowthTiming>(() => {
     const set = members.map((member) => provisionFor(member.path)).find((p) => p?.growthStart);
-    return growthTiming(year, { start: set?.growthStart, base: set?.growthBase });
+    return growthTiming(fromYear, { start: set?.growthStart, base: set?.growthBase });
   });
   // How grown values round: the first set member's, else the first money
   // member's default (the step its projections land on, if indexed).
@@ -201,8 +226,13 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   };
 
   const years =
-    mode === 'byYear' ? Array.from({ length: YEAR_COLUMNS }, (_, i) => year + i) : [year];
-  const scheduleYear = mode === 'byYear' && years.includes(scheduleTab) ? scheduleTab : year;
+    mode === 'byYear' ? Array.from({ length: YEAR_COLUMNS }, (_, i) => year + i) : [fromYear];
+  const scheduleYear =
+    mode === 'byYear' && years.includes(scheduleTab)
+      ? scheduleTab
+      : mode === 'byYear'
+        ? year
+        : fromYear;
   const lastYear = Number(maxDate.slice(0, 4));
   // A member grows only if it is money, and as current law only if current law does.
   const memberGrowth = (memberPath: string, choice: Growth): Growth => {
@@ -212,22 +242,30 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     }
     return choice;
   };
-  const timing = growthTiming(year, timingChoice);
+  const timing = growthTiming(fromYear, timingChoice);
+  // One value holds; only the Indexed mode grows it.
+  const activeGrowth: Growth = mode === 'indexed' ? growthChoice : 'fixed';
   const setOneValue = (
     memberPath: string,
     value: any,
     choice: Growth,
     when: GrowthTiming,
-    rounding: GrowthRounding
+    rounding: GrowthRounding,
+    from: number = fromYear,
+    /** Drop the provision's dates first, so the years before `from` keep current law. */
+    fresh = false
   ) => {
-    const provision = provisionFor(memberPath) ?? baseProvision(memberPath);
-    if (!provision) {
+    const current = provisionFor(memberPath) ?? baseProvision(memberPath);
+    if (!current) {
       return;
     }
+    const provision = fresh
+      ? { ...current, value: current.baselineValue, intervals: undefined }
+      : current;
     setValueFromYear({
       countryId: draft.countryId,
       provision,
-      year,
+      year: from,
       value,
       growth: memberGrowth(memberPath, choice),
       timing: when,
@@ -246,33 +284,121 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     setGrowthChoice(choice);
     setTimingChoice(when);
     setRoundingChoice(rounding);
-    // Values already set move the new way from their year on.
+    // Every amount in the draft moves the new way from its year on — also
+    // one still at current law: indexing a flat amount is itself the change,
+    // and the later years then show what it grows to.
     members.forEach((member) => {
-      const provision = provisionFor(member.path);
-      if (provision && provisionChanged(provision) && canGrow(parameters[member.path])) {
-        setOneValue(member.path, valueAt(member.path, year), choice, when, rounding);
+      if (provisionFor(member.path) && canGrow(parameters[member.path])) {
+        setOneValue(member.path, valueAt(member.path, fromYear), choice, when, rounding);
       }
     });
   };
   // The money member whose series and amount the growth row speaks of.
   const moneyMember = members.find((member) => canGrow(parameters[member.path]));
+  // "None" is the One value mode; Indexed offers the ways to grow.
+  const indexMenu = growthMenu.filter((option) => option.value !== 'fixed');
+  const canIndex = indexMenu.length > 0 && !!moneyMember;
+  /** Indexed by default as current law indexes the amount, else with the first index offered. */
+  const defaultIndexing = (): Growth =>
+    indexMenu.find((option) => option.value === 'current_law')?.value ?? indexMenu[0]?.value;
+  const changeMode = (next: EditMode) => {
+    if (next === 'indexed' && mode !== 'indexed') {
+      // Choosing Indexed indexes the amounts at once, so their later years show it.
+      changeGrowth(
+        growthChoice !== 'fixed' ? growthChoice : defaultIndexing(),
+        timing,
+        roundingChoice
+      );
+    }
+    if (next === 'one' && mode === 'indexed') {
+      // Back to one value: an edited amount holds from its year; one never
+      // edited returns to current law rather than freezing there.
+      members.forEach((member) => {
+        const provision = provisionFor(member.path);
+        if (!provision || !canGrow(parameters[member.path])) {
+          return;
+        }
+        const value = valueAt(member.path, fromYear);
+        if (sameParameterValue(value, baselineAt(member.path, fromYear))) {
+          setDraftProvisionIntervals(draft.countryId, provision, []);
+        } else {
+          setOneValue(member.path, value, 'fixed', timing, roundingChoice);
+        }
+      });
+    }
+    setMode(next);
+  };
+  // A new value can start in any year the model scores, before the report
+  // year or after it; the years before it keep current law. An earlier
+  // start matters to a budget window that opens before the report year.
+  const firstYear = Math.min(
+    year,
+    startYears[0] ?? year,
+    ...taxYears.map((taxYear) => Number(taxYear.value)).filter(Number.isFinite)
+  );
+  const fromOptions = Array.from(
+    { length: Math.max(Math.min(lastYear, year + 10) - firstYear + 1, 1) },
+    (_, i) => firstYear + i
+  );
+  const changeFromYear = (next: number) => {
+    const when = growthTiming(next, {});
+    members.forEach((member) => {
+      const provision = provisionFor(member.path);
+      if (provision && provisionChanged(provision)) {
+        setOneValue(
+          member.path,
+          valueAt(member.path, fromYear),
+          activeGrowth,
+          when,
+          roundingChoice,
+          next,
+          true
+        );
+      }
+    });
+    setFromYear(next);
+    // Indexing, if any, starts the year after the value does.
+    setTimingChoice(when);
+  };
+  const appliesFrom = (
+    <Select value={String(fromYear)} onValueChange={(next) => changeFromYear(Number(next))}>
+      <SelectTrigger
+        aria-label="Applies from"
+        // As tall as the value boxes beside and below it.
+        size="default"
+        className="tw:w-auto tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
+        style={{ fontFamily: typography.fontFamily.primary }}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent position="popper" align="start">
+        {fromOptions.map((option) => (
+          <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
+            {option}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
   const growthRow =
-    mode === 'one' && growthMenu.length > 0 && moneyMember
+    mode === 'indexed' && canIndex && moneyMember
       ? {
           label: 'Indexing',
           content: (
             <GrowthControl
-              year={year}
+              year={fromYear}
               lastYear={lastYear}
               value={growthChoice}
-              options={growthMenu}
+              options={indexMenu}
               timing={timing}
-              seriesYears={seriesYears(growthChoice, parameters[moneyMember.path], parameters)}
+              seriesYearsFor={(choice) =>
+                seriesYears(choice, parameters[moneyMember.path], parameters)
+              }
               amountText={
                 group
                   ? 'each amount'
                   : formatValue(
-                      valueAt(moneyMember.path, year),
+                      valueAt(moneyMember.path, fromYear),
                       parameters[moneyMember.path]?.unit ?? null
                     )
               }
@@ -285,18 +411,18 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : undefined;
   // What a growth makes of the value: the next years, and the last the model runs to.
   const previewYears =
-    mode === 'one' && growthRow
+    mode === 'indexed' && growthRow
       ? [
-          ...Array.from({ length: PREVIEW_YEARS }, (_, i) => year + 1 + i).filter(
+          ...Array.from({ length: PREVIEW_YEARS }, (_, i) => fromYear + 1 + i).filter(
             (at) => at <= lastYear
           ),
-          ...(lastYear > year + PREVIEW_YEARS ? [lastYear] : []),
+          ...(lastYear > fromYear + PREVIEW_YEARS ? [lastYear] : []),
         ]
       : [];
 
   const onCellChange = (memberPath: string, at: number, value: any) => {
-    if (mode === 'one') {
-      setOneValue(memberPath, value, growthChoice, timing, roundingChoice);
+    if (mode === 'one' || mode === 'indexed') {
+      setOneValue(memberPath, value, activeGrowth, timing, roundingChoice);
       return;
     }
     const lastColumn = at === years[years.length - 1];
@@ -316,10 +442,6 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       : [];
   const memberLabel = members.find((member) => member.path === focused)?.label ?? '';
   const chartLabel = group ? `${group.label} · ${memberLabel.toLowerCase()}` : members[0].label;
-  // A breakdown says what it is once, for all its members, which
-  // seldom carry a description of their own.
-  const description =
-    (group ? parameters[group.key]?.description : null) || focusedParam?.description;
   const anyChanged = members.some((member) => {
     const provision = provisionFor(member.path);
     return provision ? provisionChanged(provision) : false;
@@ -389,11 +511,12 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             gap: spacing.sm,
           }}
         >
-          <span style={sectionLabel}>New value</span>
+          <span style={sectionLabel}>Value</span>
           <SegmentedControl
+            animated
             value={mode}
-            onValueChange={(value) => setMode(value as EditMode)}
-            options={EDIT_MODES}
+            onValueChange={(value) => changeMode(value as EditMode)}
+            options={EDIT_MODES.filter((option) => option.value !== 'indexed' || canIndex)}
             size="xs"
             // Unstyled buttons default to white here, so the idle options
             // read as chosen too.
@@ -401,71 +524,88 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
           />
         </div>
 
-        {mode === 'dates' ? (
-          <CustomDatesEditor
-            members={members}
-            parameters={parameters}
-            defaultStart={`${year}-01-01`}
-            minDate={minDate}
-            maxDate={maxDate}
-            valueOn={valueOn}
-            baselineOn={baselineOn}
-            onAdd={(startDate, endDate, values) =>
-              Object.entries(values).forEach(([memberPath, value]) =>
-                addInterval(memberPath, { startDate, endDate, value })
-              )
-            }
-            focusedPath={focused}
-            onFocus={setFocusedPath}
-            brackets={group?.brackets}
-          />
-        ) : group?.brackets ? (
-          // A schedule shows as its brackets, one year at a time: a
-          // table a bracket per row is too wide to repeat across years.
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-            {mode === 'byYear' && (
-              <div>
-                <SegmentedControl
-                  value={String(scheduleYear)}
-                  onValueChange={(value) => setScheduleTab(Number(value))}
-                  options={years.map((at, index) => ({
-                    label: index === years.length - 1 ? `${at}+` : String(at),
-                    value: String(at),
-                  }))}
-                  size="xs"
-                  className="tw:[&>button]:bg-transparent"
-                />
-              </div>
-            )}
-            <BracketTable
-              brackets={group.brackets}
-              members={members}
-              period={String(scheduleYear)}
-              parameters={parameters}
-              valueAt={(memberPath) => valueAt(memberPath, scheduleYear)}
-              baselineAt={(memberPath) => baselineAt(memberPath, scheduleYear)}
-              onChange={(memberPath, value) => onCellChange(memberPath, scheduleYear, value)}
-              onFocus={setFocusedPath}
-              footer={mode === 'one' ? growthRow : undefined}
-            />
-          </div>
-        ) : (
-          <ValueGrid
-            members={members}
-            years={years}
-            // One value with nothing after it says where it starts.
-            headers={mode === 'one' && previewYears.length === 0 ? [`From ${year}`] : undefined}
-            openEnded
-            parameters={parameters}
-            valueAt={valueAt}
-            baselineAt={baselineAt}
-            onChange={onCellChange}
-            focusedPath={focused}
-            onFocus={setFocusedPath}
-            previewYears={previewYears}
-            footer={growthRow}
-          />
+        {/* One value's start leads its grid; above a schedule or a grown series, it stands apart. */}
+        {(mode === 'indexed' || (mode === 'one' && group?.brackets)) && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+            <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+              Applies from
+            </span>
+            {appliesFrom}
+          </label>
         )}
+
+        {/* A new mode fades in rather than snapping. */}
+        <div key={mode} className="tw:motion-safe:fade-in-soft">
+          {mode === 'dates' ? (
+            <CustomDatesEditor
+              members={members}
+              parameters={parameters}
+              defaultStart={`${year}-01-01`}
+              minDate={minDate}
+              maxDate={maxDate}
+              valueOn={valueOn}
+              baselineOn={baselineOn}
+              onAdd={(startDate, endDate, values) =>
+                Object.entries(values).forEach(([memberPath, value]) =>
+                  addInterval(memberPath, { startDate, endDate, value })
+                )
+              }
+              focusedPath={focused}
+              onFocus={setFocusedPath}
+              brackets={group?.brackets}
+            />
+          ) : group?.brackets ? (
+            // A schedule shows as its brackets, one year at a time: a
+            // table a bracket per row is too wide to repeat across years.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+              {mode === 'byYear' && (
+                <div>
+                  <SegmentedControl
+                    animated
+                    value={String(scheduleYear)}
+                    onValueChange={(value) => setScheduleTab(Number(value))}
+                    options={years.map((at, index) => ({
+                      label: index === years.length - 1 ? `${at}+` : String(at),
+                      value: String(at),
+                    }))}
+                    size="xs"
+                    className="tw:[&>button]:bg-transparent"
+                  />
+                </div>
+              )}
+              <BracketTable
+                brackets={group.brackets}
+                members={members}
+                period={String(scheduleYear)}
+                parameters={parameters}
+                valueAt={(memberPath) => valueAt(memberPath, scheduleYear)}
+                baselineAt={(memberPath) => baselineAt(memberPath, scheduleYear)}
+                onChange={(memberPath, value) => onCellChange(memberPath, scheduleYear, value)}
+                onFocus={setFocusedPath}
+                footer={mode === 'indexed' ? growthRow : undefined}
+              />
+            </div>
+          ) : (
+            <ValueGrid
+              members={members}
+              years={years}
+              openEnded
+              parameters={parameters}
+              valueAt={valueAt}
+              baselineAt={baselineAt}
+              onChange={onCellChange}
+              focusedPath={focused}
+              onFocus={setFocusedPath}
+              previewYears={previewYears}
+              footer={growthRow}
+              // One value: its start is the grid's first row, so no year heads the column.
+              lead={mode === 'one' ? { label: 'Applies from', content: appliesFrom } : undefined}
+              showYearHeadings={mode !== 'one'}
+              // A lone value reads on one line: when, current law, the new value.
+              inline={mode === 'one'}
+            />
+          )}
+        </div>
 
         {anyChanged && (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -500,25 +640,12 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         />
       )}
 
-      {/* 2. What it is and how it has moved */}
+      {/* 2. How it has moved */}
       {focusedParam && (
         <section
-          aria-label="About this parameter"
+          aria-label="Historic values"
           style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}
         >
-          <span style={sectionLabel}>About this parameter</span>
-          {description && (
-            <p
-              style={{
-                margin: 0,
-                fontSize: typography.fontSize.sm,
-                lineHeight: typography.lineHeight.relaxed,
-                color: colors.text.secondary,
-              }}
-            >
-              {description}
-            </p>
-          )}
           <div>
             <Button
               variant="ghost"
@@ -528,7 +655,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               style={{ marginLeft: `-${spacing.sm}` }}
             >
               <IconChartLine />
-              {historyOpen ? 'Hide' : 'Show'} past values
+              {historyOpen ? 'Hide' : 'Show'} historic values
               <IconChevronDown
                 style={{
                   transform: historyOpen ? 'rotate(180deg)' : undefined,
@@ -541,7 +668,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
             // Every member's history is a click away, not only the one in focus.
             <div
               role="group"
-              aria-label="Past values of"
+              aria-label="Historic values of"
               style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}
             >
               {members.map((member) => {

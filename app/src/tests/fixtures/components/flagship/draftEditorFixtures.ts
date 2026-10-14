@@ -100,7 +100,21 @@ export const PHASE_IN_RATE_PATH = 'gov.irs.credits.eitc.phase_in_rate[1].amount'
 export const EXEMPTION_PATH = 'gov.irs.income.exemption.amount';
 
 /** Loads the fixture parameters into the app store, as a metadata fetch would. */
-export function seedDeductionMetadata() {
+/** A few US regions, as metadata's economy_options.region lists them. */
+export const US_REGIONS = [
+  { name: 'us', label: 'the US', type: 'national' },
+  { name: 'state/ca', label: 'California', type: 'state' },
+  { name: 'state/ny', label: 'New York', type: 'state' },
+  {
+    name: 'congressional_district/CA-01',
+    label: "California's 1st congressional district",
+    type: 'congressional_district',
+  },
+];
+
+export function seedDeductionMetadata({
+  regions = [],
+}: { regions?: Array<{ name: string; label: string; type: string }> } = {}) {
   const meta = { arg: 'us', requestId: 'draft-editor-test', requestStatus: 'pending' };
   store.dispatch({ type: fetchMetadataThunk.pending.type, meta });
   store.dispatch({
@@ -115,8 +129,9 @@ export function seedDeductionMetadata() {
           entities: {},
           variableModules: {},
           economy_options: {
-            region: [],
+            region: regions,
             time_period: [
+              { name: 2025, label: '2025' },
               { name: 2026, label: '2026' },
               { name: 2027, label: '2027' },
             ],

@@ -50,6 +50,12 @@ export interface DraftProvision {
  */
 export interface DraftPopulation {
   scope: 'national' | 'household';
+  /**
+   * Part of the country, as the API names it: a state ("state/ca") or a
+   * congressional district ("congressional_district/CA-01"). Absent for
+   * the whole country.
+   */
+  region?: string;
 }
 
 export interface DraftReform {
@@ -68,6 +74,11 @@ export interface DraftReform {
   startedAt?: number;
   /** The year the report simulates; the current year when unset. */
   year?: number;
+  /**
+   * Years of budget the run scores from that year, e.g. 10 for 2026–2035;
+   * one year (the report alone) when unset.
+   */
+  windowYears?: number;
 }
 
 /** The year a draft's report simulates. */
@@ -262,13 +273,13 @@ export function clearDraftAfterRun(userReportId: string): void {
 export function loadProvisionsIntoDraft(
   countryId: CountryId,
   provisions: DraftProvision[],
-  options: { label?: string; year?: number } = {}
+  options: { label?: string; year?: number; region?: string } = {}
 ): void {
   writeDraft({
     countryId,
     label: options.label ?? '',
     provisions: provisions.map((provision) => ({ ...provision })),
-    population: { scope: 'national' },
+    population: { scope: 'national', ...(options.region ? { region: options.region } : {}) },
     source: 'manual',
     startedAt: Date.now(),
     ...(options.year ? { year: options.year } : {}),
@@ -399,6 +410,15 @@ export function setDraftProvisionValueFrom(
   );
   collection.addInterval({ startDate: `${year}-01-01`, endDate: FOREVER, value });
   setDraftProvisionIntervals(countryId, provision, collection.getIntervals());
+}
+
+/** How many years of budget the run scores, from the draft's year. */
+export function setDraftWindowYears(windowYears: number): void {
+  const draft = getSnapshot();
+  if (!draft) {
+    return;
+  }
+  writeDraft({ ...draft, windowYears: windowYears > 1 ? windowYears : undefined });
 }
 
 export function setDraftYear(year: number): void {
