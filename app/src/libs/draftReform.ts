@@ -443,6 +443,10 @@ export function setDraftYear(year: number): void {
  * The provisions as they stand in one year — current law then, and the
  * reform's value then — so a report's "current law → new value" lines
  * describe the year it simulates, not the year a value was typed.
+ *
+ * Only the description moves with the year: a changed single value keeps
+ * its own dates (from the current year on), so the policy sent still sets
+ * the user's value even when the year described comes before it starts.
  */
 export function provisionsForYear(
   provisions: DraftProvision[],
@@ -454,6 +458,7 @@ export function provisionsForYear(
     const changed = provisionChanged(p);
     return {
       ...p,
+      ...(changed && !p.intervals?.length && { intervals: provisionIntervals(p) }),
       baselineValue: baseline,
       value: changed ? (provisionValueInYear(p, year) ?? baseline) : baseline,
     };
