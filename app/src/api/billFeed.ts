@@ -1,5 +1,6 @@
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { trackerBillUrl, trackerPlace, withTrackerTitle } from '@/libs/flagship/billTracker';
 import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
@@ -104,6 +105,10 @@ export interface TrackedBill {
   /** Two-letter state code for state bills; absent for federal ones. */
   state?: string;
   title: string;
+  /**
+   * The bill's stage in the tracker's words ("In Committee"), or
+   * "Analyzed" when the tracker follows no stage for it.
+   */
   status: string;
   summary: string;
   provisions: TrackedBillProvision[];
@@ -114,6 +119,8 @@ export interface TrackedBill {
   legiscanUrl?: string;
   /** The bill's source page (congress.gov / state legislature), when known. */
   sourceUrl?: string;
+  /** The bill's page in the bill tracker. */
+  trackerUrl?: string;
   /** Analysis date (ISO), for newest-first ordering. */
   date?: string;
   /** Model and data versions behind the stored analysis. */
@@ -396,7 +403,8 @@ export function changesFromTrackerProvisions(raw: unknown): BillChange[] {
 
 /** Headline numbers from a reform_impacts row, when present and numeric. */
 function extractImpacts(impact: any): TrackedBill['impacts'] {
-  const revenue = impact?.budgetary_impact?.stateRevenueImpact;
+  // As the tracker reads it: net cost stands in where no revenue change is stored.
+  const revenue = impact?.budgetary_impact?.stateRevenueImpact ?? impact?.budgetary_impact?.netCost;
   const poverty = impact?.poverty_impact?.percentChange;
   const result: NonNullable<TrackedBill['impacts']> = {};
   if (typeof revenue === 'number' && Number.isFinite(revenue) && revenue !== 0) {
@@ -559,7 +567,8 @@ function processedBillFor(
  */
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const [research, impacts, processed, validations, baselines] = await Promise.all([
-    trackerSelect('research', '*'),
+    // Titled as the tracker shows them: an entry with no title reads as its bill number.
+    trackerSelect('research', '*').then((rows) => rows?.map(withTrackerTitle) ?? null),
     trackerSelect(
       'reform_impacts',
       'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
@@ -600,7 +609,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       return {
         id: record.id,
         countryId: 'us',
-        jurisdiction: STATE_NAMES[record.state] ?? record.state ?? 'Federal',
+        jurisdiction: trackerPlace(record.state, STATE_NAMES),
         // The tracker files federal bills under "US", which is not a state.
         state:
           /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
@@ -614,6 +623,7 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
         keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
         legiscanUrl: processedBill?.legiscan_url ?? undefined,
         sourceUrl: record.url ?? undefined,
+        trackerUrl: trackerBillUrl(record),
         date: record.date ?? undefined,
         provenance: impact
           ? {
@@ -643,7 +653,9 @@ function detectValidationDrift(row: any, impact: any): BillValidation['drift'] {
   }
   const reasons: string[] = [];
   const snapEstimate = snapshot.pe_estimate;
-  const currentEstimate = impact.budgetary_impact?.stateRevenueImpact;
+  // The estimate the feed headlines (see extractImpacts).
+  const currentEstimate =
+    impact.budgetary_impact?.stateRevenueImpact ?? impact.budgetary_impact?.netCost;
   if (
     typeof snapEstimate === 'number' &&
     typeof currentEstimate === 'number' &&

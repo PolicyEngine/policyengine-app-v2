@@ -8,6 +8,13 @@ import {
   UNTRACKED_BILL_STATUS,
 } from '@/api/billFeed';
 import { CURRENT_YEAR } from '@/constants';
+import {
+  mockTrackerFetch,
+  NET_COST_DRIFT_ROWS,
+  NET_COST_ONLY_ROWS,
+  TRACKER_NAMING_ROWS,
+} from '@/tests/fixtures/api/billFeedMocks';
+import { TRACKER_HOME } from '@/tests/fixtures/libs/flagship/billTrackerMocks';
 
 describe('provisionsFromReformParams', () => {
   test('given dated value maps then each path keeps its dates and its value', () => {
@@ -588,5 +595,43 @@ describe('fetchTrackerBills', () => {
 
     expect(bills![0].validation?.withinRange).toBe(true);
     expect(bills![0].validation?.drift).toBeUndefined();
+  });
+
+  test('given tracker rows then each bill carries the tracker place, name and page', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal('fetch', mockTrackerFetch(TRACKER_NAMING_ROWS));
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills!.map((bill) => [bill.jurisdiction, bill.title, bill.trackerUrl])).toEqual([
+      ['Federal', 'HR 1425', `${TRACKER_HOME}/us/us-hr1425`],
+      ['Federal', 'HR 7024', `${TRACKER_HOME}/us/us-hr7024`],
+      ['District of Columbia', 'DC B26', `${TRACKER_HOME}/dc/dc-b26`],
+      ['Utah', 'HB-106', `${TRACKER_HOME}/ut/ut-hb-106`],
+    ]);
+  });
+
+  test('given only a net cost then it reads as the revenue change, as in the tracker', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal('fetch', mockTrackerFetch(NET_COST_ONLY_ROWS));
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills![0].impacts?.revenue).toBe(-74_200_000);
+  });
+
+  test('given only a net cost that moved since validation then drift is flagged', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal('fetch', mockTrackerFetch(NET_COST_DRIFT_ROWS));
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills![0].validation?.drift).toEqual({
+      stale: true,
+      reasons: ['the model estimate has changed since validation'],
+    });
   });
 });

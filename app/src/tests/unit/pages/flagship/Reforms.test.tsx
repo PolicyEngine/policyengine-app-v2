@@ -202,6 +202,35 @@ describe('ReformsPage', () => {
     expect(screen.queryByRole('button', { name: /open as draft reform/i })).not.toBeInTheDocument();
   });
 
+  test('given US reforms then the header links to the bill tracker home', async () => {
+    renderReforms();
+
+    const link = await screen.findByRole('link', { name: /bill tracker/i });
+    expect(link).toHaveAttribute('href', 'https://policyengine.org/us/bill-tracker');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  test('given UK reforms then the header has no bill tracker link', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithCountry(
+      <QueryClientProvider client={queryClient}>
+        <ReformsPage />
+      </QueryClientProvider>,
+      'uk',
+      '/uk/reforms'
+    );
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Reforms' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /bill tracker/i })).not.toBeInTheDocument();
+  });
+
+  test('given a narrow screen then the header actions can wrap under the title', async () => {
+    renderReforms();
+
+    const title = await screen.findByRole('heading', { level: 1, name: 'Reforms' });
+    expect(title.parentElement).toHaveStyle({ flexWrap: 'wrap' });
+  });
+
   test('given a bill opens then no place-and-status line sits over its title', async () => {
     const user = userEvent.setup();
     renderReforms();

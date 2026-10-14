@@ -27,6 +27,7 @@ import {
   ErrorState,
 } from '@/components/flagship/states';
 import StatTile from '@/components/flagship/StatTile';
+import TrackerHomeButton from '@/components/flagship/TrackerHomeButton';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Stack, Text, Title } from '@/components/ui';
@@ -415,8 +416,8 @@ export default function ReformsPage() {
     tokens.every((token) => haystack.toLowerCase().includes(token));
 
   const searchedBills = bills.filter((bill) =>
-    // The card's place ("Federal") reads too, not only the tracker's "US".
-    matches(`${bill.title} ${billPlace(bill)} ${bill.jurisdiction} ${bill.summary}`)
+    // The place reads once, as the card names it: "Federal", "Utah".
+    matches(`${bill.title} ${billPlace(bill)} ${bill.summary}`)
   );
   const visibleBills = filterBills(searchedBills, billFilters).sort((a, b) =>
     (b.date ?? '').localeCompare(a.date ?? '')
@@ -864,15 +865,20 @@ export default function ReformsPage() {
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: spacing.md,
+            // On a narrow screen the actions move under the title.
+            flexWrap: 'wrap',
           }}
         >
           <Title order={1} style={{ margin: 0 }}>
             Reforms
           </Title>
-          <Button onClick={() => nav.push(`/${countryId}/build`)}>
-            New reform
-            <IconPlus size={16} />
-          </Button>
+          <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            {countryId === 'us' && <TrackerHomeButton />}
+            <Button onClick={() => nav.push(`/${countryId}/build`)}>
+              New reform
+              <IconPlus size={16} />
+            </Button>
+          </Stack>
         </Stack>
 
         <Stack

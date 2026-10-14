@@ -8,7 +8,7 @@ import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
-import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
+import { TRACKED_BILL, UNLISTED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalibrationMatchesForPaths = vi.fn();
@@ -174,6 +174,33 @@ describe('BillReportPage', () => {
     expect(
       within(screen.getByRole('tabpanel')).getAllByText(/Within fiscal-note range/).length
     ).toBeGreaterThanOrEqual(1);
+  });
+
+  test('given a tracked bill then the overview links to its tracker page', async () => {
+    renderReport();
+
+    const link = await screen.findByRole('link', { name: /bill tracker/i });
+    expect(link).toHaveAttribute('href', TRACKED_BILL.trackerUrl);
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  test('given the tracker id in upper case then the same report opens', async () => {
+    renderReport('US-HR1425');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title })
+    ).toBeInTheDocument();
+  });
+
+  test('given a bill not in the feed then it links to that bill in the tracker', async () => {
+    mockFetchTrackerBills.mockResolvedValue([]);
+    renderReport(UNLISTED_BILL.id);
+
+    expect(await screen.findByText('This bill is not in the feed.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /bill tracker/i })).toHaveAttribute(
+      'href',
+      UNLISTED_BILL.trackerUrl
+    );
   });
 
   test('given the full run is calculating then economic impacts show its progress', async () => {
