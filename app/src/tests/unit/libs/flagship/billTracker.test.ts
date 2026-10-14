@@ -2,12 +2,11 @@ import { describe, expect, test } from 'vitest';
 import {
   BILL_TRACKER_URL,
   findTrackedBill,
-  processedBillKey,
-  researchBillKeys,
   trackerBillTitle,
   trackerBillUrl,
   trackerPlace,
   trackerUrlForBillId,
+  withTrackerTitle,
 } from '@/libs/flagship/billTracker';
 import {
   FEED_IDS,
@@ -65,8 +64,9 @@ describe('trackerPlace', () => {
     }
   });
 
-  test('given an unknown code then it stays as stored', () => {
+  test('given an unknown code then it reads as the code, upper-case', () => {
     expect(trackerPlace('PR', STATE_NAMES_SAMPLE)).toBe('PR');
+    expect(trackerPlace(' pr ', STATE_NAMES_SAMPLE)).toBe('PR');
   });
 });
 
@@ -84,24 +84,12 @@ describe('trackerBillTitle', () => {
   });
 });
 
-describe('processed bill keys', () => {
-  test('given spacing, dashes and leading zeros then a bill and its row share a key', () => {
-    expect(processedBillKey('UT', 'HB 0210')).toBe('UT:HB210');
-    expect(researchBillKeys({ id: 'ut-hb210' })).toEqual(['UT:HB210']);
-    expect(researchBillKeys({ id: 'ut-hb-210' })).toEqual(['UT:HB210']);
-    expect(researchBillKeys({ id: 'us-hr1425' })).toEqual([processedBillKey('us', 'HR 1425')]);
-  });
+describe('withTrackerTitle', () => {
+  test('given a row then only its title changes, to the tracker name', () => {
+    const row = { ...TRACKER_ROWS.UNTYPED_STATE_ROW, title: null };
 
-  test('given a bill number in the title then that key comes first', () => {
-    expect(researchBillKeys({ id: 'ga-hb463-2026', title: 'GA HB 463: income tax cut' })).toEqual([
-      'GA:HB463',
-      'GA:HB4632026',
-    ]);
-    expect(researchBillKeys({ id: 'sc-h3492', title: 'SC H.3492' })).toEqual(['SC:H3492']);
-  });
-
-  test('given an id with no bill number then it has no key', () => {
-    expect(researchBillKeys({ id: 'budget2026', title: 'FY2026 budget' })).toEqual([]);
+    expect(withTrackerTitle(row)).toEqual({ ...row, title: 'SB60' });
+    expect(withTrackerTitle(TRACKER_ROWS.STATE_BILL)).toEqual(TRACKER_ROWS.STATE_BILL);
   });
 });
 

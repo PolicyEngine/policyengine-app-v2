@@ -1,12 +1,6 @@
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
-import {
-  processedBillKey,
-  researchBillKeys,
-  trackerBillTitle,
-  trackerBillUrl,
-  trackerPlace,
-} from '@/libs/flagship/billTracker';
+import { trackerBillUrl, trackerPlace, withTrackerTitle } from '@/libs/flagship/billTracker';
 import type { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
@@ -531,7 +525,8 @@ function isScorableReform(record: any, impact: any): boolean {
  */
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const [research, impacts, processed, validations, baselines] = await Promise.all([
-    trackerSelect('research', '*'),
+    // Titled as the tracker shows them: an entry with no title reads as its bill number.
+    trackerSelect('research', '*').then((rows) => rows?.map(withTrackerTitle) ?? null),
     trackerSelect(
       'reform_impacts',
       'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
@@ -552,19 +547,18 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const impactsById = new Map((impacts ?? []).map((impact) => [impact.id, impact]));
   const baselineById = new Map((baselines ?? []).map((row) => [row.id, row.baseline_params]));
   const validationById = new Map((validations ?? []).map((row) => [row.id, row]));
-  // Joined as the tracker joins them, so a bill shows the tracker's stage.
   const processedByKey = new Map(
-    (processed ?? []).map((bill) => [processedBillKey(bill.state, bill.bill_number), bill])
+    (processed ?? []).map((bill) => [
+      `${String(bill.state).toLowerCase()}-${String(bill.bill_number).toLowerCase().replace(/\s+/g, '')}`,
+      bill,
+    ])
   );
 
   return research
     .filter((record) => isScorableReform(record, impactsById.get(record.id)))
     .map((record): TrackedBill => {
       const impact = impactsById.get(record.id);
-      const rows = researchBillKeys(record)
-        .map((key) => processedByKey.get(key))
-        .filter(Boolean);
-      const tracked = rows.find((row) => row.status) ?? rows[0];
+      const status = processedByKey.get(record.id)?.status;
       return {
         id: record.id,
         countryId: 'us',
@@ -574,13 +568,13 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
           /^[a-z]{2}$/i.test(record.state ?? '') && record.state.toUpperCase() !== 'US'
             ? record.state.toUpperCase()
             : undefined,
-        title: trackerBillTitle(record),
-        status: tracked?.status || 'Analyzed',
+        title: record.title ?? record.id,
+        status: status || 'Analyzed',
         summary: record.description ?? '',
         provisions: provisionsFromReformParams(impact?.reform_params, baselineById.get(record.id)),
         changes: changesFromTrackerProvisions(impact?.provisions),
         keyFindings: Array.isArray(record.key_findings) ? record.key_findings : undefined,
-        legiscanUrl: tracked?.legiscan_url ?? undefined,
+        legiscanUrl: processedByKey.get(record.id)?.legiscan_url ?? undefined,
         sourceUrl: record.url ?? undefined,
         trackerUrl: trackerBillUrl(record),
         date: record.date ?? undefined,
@@ -612,7 +606,9 @@ function detectValidationDrift(row: any, impact: any): BillValidation['drift'] {
   }
   const reasons: string[] = [];
   const snapEstimate = snapshot.pe_estimate;
-  const currentEstimate = impact.budgetary_impact?.stateRevenueImpact;
+  // The estimate the feed headlines (see extractImpacts).
+  const currentEstimate =
+    impact.budgetary_impact?.stateRevenueImpact ?? impact.budgetary_impact?.netCost;
   if (
     typeof snapEstimate === 'number' &&
     typeof currentEstimate === 'number' &&

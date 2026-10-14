@@ -7,6 +7,13 @@ import {
   provisionsFromReformParams,
 } from '@/api/billFeed';
 import { CURRENT_YEAR } from '@/constants';
+import {
+  mockTrackerFetch,
+  NET_COST_DRIFT_ROWS,
+  NET_COST_ONLY_ROWS,
+  TRACKER_NAMING_ROWS,
+} from '@/tests/fixtures/api/billFeedMocks';
+import { TRACKER_HOME } from '@/tests/fixtures/libs/flagship/billTrackerMocks';
 
 describe('provisionsFromReformParams', () => {
   test('given dated value maps then each path keeps its dates and its value', () => {
@@ -514,68 +521,41 @@ describe('fetchTrackerBills', () => {
     expect(bills![0].validation?.drift).toBeUndefined();
   });
 
-  test('given tracker rows then each bill carries the tracker place, name, stage and page', async () => {
+  test('given tracker rows then each bill carries the tracker place, name and page', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    const responses: Record<string, any[]> = {
-      research: [
-        { id: 'us-hr1425', state: 'US', type: 'bill', title: 'HR 1425' },
-        { id: 'dc-b26', state: 'dc', type: 'bill', title: 'DC B26' },
-        // The tracker writes the bill number "HB 0210"; the id runs it together.
-        { id: 'ut-hb210', state: 'UT', type: 'bill', title: 'UT HB 210' },
-        // A dashed id with no title, and a processed row with no stage yet.
-        { id: 'ut-hb-106', state: 'UT', type: 'bill' },
-        // The id carries the session year; the title carries the bill number.
-        { id: 'ga-hb463-2026', state: 'GA', type: 'bill', title: 'GA HB 463: income tax cut' },
-      ],
-      processed_bills: [
-        { state: 'US', bill_number: 'HR 1425', status: 'In Committee' },
-        { state: 'UT', bill_number: 'HB 0210', status: 'Signed into Law' },
-        { state: 'UT', bill_number: 'HB 106', status: null },
-        { state: 'GA', bill_number: 'HB 463', status: 'Passed One Chamber' },
-      ],
-    };
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (url: string) => {
-        const table = String(url).match(/rest\/v1\/(\w+)\?/)?.[1] ?? '';
-        return { ok: true, json: async () => responses[table] ?? [] };
-      })
-    );
+    vi.stubGlobal('fetch', mockTrackerFetch(TRACKER_NAMING_ROWS));
 
     const bills = await fetchTrackerBills();
 
-    const tracker = 'https://policyengine.org/us/bill-tracker';
-    expect(
-      bills!.map((bill) => [bill.jurisdiction, bill.title, bill.status, bill.trackerUrl])
-    ).toEqual([
-      ['Federal', 'HR 1425', 'In Committee', `${tracker}/us/us-hr1425`],
-      ['District of Columbia', 'DC B26', 'Analyzed', `${tracker}/dc/dc-b26`],
-      ['Utah', 'UT HB 210', 'Signed into Law', `${tracker}/ut/ut-hb210`],
-      ['Utah', 'HB-106', 'Analyzed', `${tracker}/ut/ut-hb-106`],
-      ['Georgia', 'GA HB 463: income tax cut', 'Passed One Chamber', `${tracker}/ga/ga-hb463-2026`],
+    expect(bills!.map((bill) => [bill.jurisdiction, bill.title, bill.trackerUrl])).toEqual([
+      ['Federal', 'HR 1425', `${TRACKER_HOME}/us/us-hr1425`],
+      ['Federal', 'HR 7024', `${TRACKER_HOME}/us/us-hr7024`],
+      ['District of Columbia', 'DC B26', `${TRACKER_HOME}/dc/dc-b26`],
+      ['Utah', 'HB-106', `${TRACKER_HOME}/ut/ut-hb-106`],
     ]);
   });
 
   test('given only a net cost then it reads as the revenue change, as in the tracker', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    const responses: Record<string, any[]> = {
-      research: [{ id: 'us-hr1425', state: 'US', type: 'bill', title: 'HR 1425' }],
-      reform_impacts: [
-        { id: 'us-hr1425', computed: true, budgetary_impact: { netCost: -74_200_000 } },
-      ],
-    };
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (url: string) => {
-        const table = String(url).match(/rest\/v1\/(\w+)\?/)?.[1] ?? '';
-        return { ok: true, json: async () => responses[table] ?? [] };
-      })
-    );
+    vi.stubGlobal('fetch', mockTrackerFetch(NET_COST_ONLY_ROWS));
 
     const bills = await fetchTrackerBills();
 
     expect(bills![0].impacts?.revenue).toBe(-74_200_000);
+  });
+
+  test('given only a net cost that moved since validation then drift is flagged', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal('fetch', mockTrackerFetch(NET_COST_DRIFT_ROWS));
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills![0].validation?.drift).toEqual({
+      stale: true,
+      reasons: ['the model estimate has changed since validation'],
+    });
   });
 });

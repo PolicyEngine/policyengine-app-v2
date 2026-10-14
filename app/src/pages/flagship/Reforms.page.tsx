@@ -16,11 +16,11 @@ import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
 import { getFlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore } from '@/api/reformStore';
-import { BillTrackerHomeButton } from '@/components/flagship/BillTrackerLinks';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports from '@/components/flagship/ReformReports';
 import ScopePicker from '@/components/flagship/ScopePicker';
 import StatTile from '@/components/flagship/StatTile';
+import TrackerHomeButton from '@/components/flagship/TrackerHomeButton';
 import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
@@ -860,13 +860,15 @@ export default function ReformsPage() {
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: spacing.md,
+            // On a narrow screen the actions move under the title.
+            flexWrap: 'wrap',
           }}
         >
           <Title order={1} style={{ margin: 0 }}>
             Reforms
           </Title>
           <Stack style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-            {countryId === 'us' && <BillTrackerHomeButton />}
+            {countryId === 'us' && <TrackerHomeButton />}
             <Button onClick={() => nav.push(`/${countryId}/build`)}>
               New reform
               <IconPlus size={16} />

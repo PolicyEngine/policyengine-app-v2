@@ -6,10 +6,9 @@ import { WEBSITE_URL } from '@/constants';
  *
  * The rules mirror the tracker's own code (PolicyEngine/state-legislative-tracker):
  * its page routes (src/App.jsx, src/components/RedesignHome.jsx), its place
- * names (src/components/Breadcrumb.jsx), its bill number fallback
- * (src/context/DataContext.jsx), and its join of research rows to
- * processed_bills (src/components/StatePanel.jsx, RedesignHome.jsx).
- * A bill's stage stays the tracker's own word; reading it is billStage's job.
+ * names (src/components/Breadcrumb.jsx), and its bill number fallback
+ * (src/context/DataContext.jsx). A bill's stage is not read here: the feed
+ * joins it from processed_bills, and billStage reads it.
  */
 
 /** Where policyengine.org serves the tracker (its BASE_PATH). */
@@ -74,7 +73,7 @@ export function trackerPlace(state: unknown, stateNames: Record<string, string>)
   if (!code || FEDERAL_CODES.has(code)) {
     return 'Federal';
   }
-  return stateNames[code] ?? String(state);
+  return stateNames[code] ?? code;
 }
 
 /**
@@ -90,38 +89,9 @@ export function trackerBillTitle(row: Pick<TrackerResearchRow, 'id' | 'title'>):
   return (parts.length >= 2 ? parts.slice(1).join('-') : row.id).toUpperCase();
 }
 
-/** A bill number across spacing and leading-zero variants: "HB 0210" is "HB210". */
-function billNumberKey(billNumber: string): string {
-  return billNumber
-    .replace(/[\s.]+/g, '')
-    .toUpperCase()
-    .replace(/^([A-Z]+)0+(\d)/, '$1$2');
-}
-
-/** The key the tracker joins a processed_bills row by: "UT:HB210". */
-export function processedBillKey(state: unknown, billNumber: unknown): string {
-  return `${String(state ?? '').toUpperCase()}:${billNumberKey(String(billNumber ?? ''))}`;
-}
-
-/** A bill number in a title ("UT HB 210: …" has "HB 210"), as the tracker reads it. */
-const TITLE_BILL_NUMBER = /\b(?!FY)([A-Z]{1,3}\.?\s*\d+(?:\s*S\d+)?)/i;
-
-/**
- * The keys a research row's processed_bills row may sit under, in the
- * order the tracker tries them: the bill number in its title, then the
- * one its id carries ("ut-hb-210" and "ut-hb210" are both "UT:HB210").
- */
-export function researchBillKeys(row: Pick<TrackerResearchRow, 'id' | 'title'>): string[] {
-  const parts = row.id.split('-');
-  if (parts.length < 2) {
-    return [];
-  }
-  const fromTitle = row.title?.match(TITLE_BILL_NUMBER)?.[1];
-  const keys = [
-    ...(fromTitle ? [processedBillKey(parts[0], fromTitle)] : []),
-    processedBillKey(parts[0], parts.slice(1).join('')),
-  ];
-  return [...new Set(keys)];
+/** A research row titled as the tracker shows it (see trackerBillTitle). */
+export function withTrackerTitle<T extends Pick<TrackerResearchRow, 'id' | 'title'>>(row: T): T {
+  return { ...row, title: trackerBillTitle(row) };
 }
 
 /**

@@ -3,7 +3,7 @@ import { IconCalendar, IconExternalLink } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
-import { BillTrackerLink } from '@/components/flagship/BillTrackerLinks';
+import BillTrackerLink from '@/components/flagship/BillTrackerLink';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import DistrictImpactCard, {
   type CongressionalMode,

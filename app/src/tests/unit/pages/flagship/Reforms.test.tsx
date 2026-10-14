@@ -215,6 +215,13 @@ describe('ReformsPage', () => {
     expect(screen.queryByRole('link', { name: /bill tracker/i })).not.toBeInTheDocument();
   });
 
+  test('given a narrow screen then the header actions can wrap under the title', async () => {
+    renderReforms();
+
+    const title = await screen.findByRole('heading', { level: 1, name: 'Reforms' });
+    expect(title.parentElement).toHaveStyle({ flexWrap: 'wrap' });
+  });
+
   test('given a bill opens then no place-and-status line sits over its title', async () => {
     const user = userEvent.setup();
     renderReforms();

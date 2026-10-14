@@ -7,7 +7,7 @@ import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
-import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
+import { TRACKED_BILL, UNLISTED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalibrationMatchesForPaths = vi.fn();
@@ -183,12 +183,12 @@ describe('BillReportPage', () => {
 
   test('given a bill not in the feed then it links to that bill in the tracker', async () => {
     mockFetchTrackerBills.mockResolvedValue([]);
-    renderReport('ks-hb2620');
+    renderReport(UNLISTED_BILL.id);
 
     expect(await screen.findByText('This bill is not in the current feed.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /bill tracker/i })).toHaveAttribute(
       'href',
-      'https://policyengine.org/us/bill-tracker/ks/ks-hb2620'
+      UNLISTED_BILL.trackerUrl
     );
   });
 
