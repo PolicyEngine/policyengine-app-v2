@@ -5,6 +5,7 @@ import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/society
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
+import ReportRecordError from '@/components/flagship/report/ReportRecordError';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
@@ -16,6 +17,7 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta } from '@/libs/flagship/runReport';
@@ -53,6 +55,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
+  // Stored provenance that can't be read: readReportMeta answers none for it.
+  const unreadableMeta = useUnreadableReportMeta(userReportId);
 
   // The run handed its draft over to this report; Build starts fresh.
   useEffect(() => {
@@ -126,6 +130,18 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const layout = (main: React.ReactNode) => (
     <div style={{ width: '100%', minWidth: 0 }}>{main}</div>
   );
+
+  // Unreadable stored provenance says so, until the report is opened without it.
+  if (unreadableMeta.error) {
+    return layout(
+      <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+        <Title order={1} style={{ margin: 0 }}>
+          {title}
+        </Title>
+        <ReportRecordError error={unreadableMeta.error} onOpenWithout={unreadableMeta.setAside} />
+      </Stack>
+    );
+  }
 
   if (!output || isLoading || (!meta && !!reformPolicy)) {
     if (unresolvable) {
