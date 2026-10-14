@@ -415,6 +415,7 @@ export default function ReportView({
                   <ReportValidation
                     countryId={countryId}
                     paths={provisions.map((p) => p.path)}
+                    region={region}
                     calibration={calibration}
                     calibrationPin={calibrationPin}
                     trackRecord={trackRecord}

@@ -1,9 +1,18 @@
-import { render, screen, within } from '@test-utils';
+import { act, render, screen, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
 import type { ScorecardComparisonsState } from '@/components/flagship/ScorecardComparisons';
 import { BillExternalEstimates } from '@/components/flagship/ValidationPanel';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
+import {
+  CDCC_ELIGIBILITY_MAX_PATH,
+  cdccDependencyMap,
+  NATIONWIDE,
+  REPORT_4332_CLAIMS,
+  SOI_CDCC_CLAIM,
+  STANDARD_DEDUCTION_PATH,
+  TREASURY_CDCC_CLAIM,
+} from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
 import {
   CTC_PATH,
   scorecardClaim,
@@ -13,6 +22,12 @@ import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 
 const mockUseScorecardComparisons =
   vi.fn<(countryId: string, paths: string[]) => ScorecardComparisonsState>();
+
+// The traced map's slice for report 4332, so the relevance check runs on known readers.
+vi.mock('@/libs/flagship/parameterDependencies', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/libs/flagship/parameterDependencies')>()),
+  loadParameterDependencies: () => Promise.resolve(cdccDependencyMap),
+}));
 
 vi.mock('@/components/flagship/ScorecardComparisons', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/components/flagship/ScorecardComparisons')>()),
@@ -26,8 +41,9 @@ const UTAH_BASELINE = { ...utahBaselineClaim, matchBasis: 'program' as const };
 const EMPTY_TRACK_RECORD = { modelVersion: '1.808.0', reachedCount: 12, programs: [], rows: [] };
 const SAVED_REFORM_BASELINE = 'Smaller CTC';
 
-function renderValidation(props: Partial<Parameters<typeof ReportValidation>[0]> = {}) {
-  return render(
+/** Renders the section and lets the dependency map resolve, as the page would. */
+async function renderValidation(props: Partial<Parameters<typeof ReportValidation>[0]> = {}) {
+  render(
     <ReportValidation
       countryId="us"
       paths={[CTC_PATH]}
@@ -36,6 +52,7 @@ function renderValidation(props: Partial<Parameters<typeof ReportValidation>[0]>
       {...props}
     />
   );
+  await act(async () => {});
 }
 
 const card = (name: string) =>
@@ -47,16 +64,16 @@ describe('ReportValidation', () => {
     mockUseScorecardComparisons.mockReturnValue(NO_SCORECARD_ROWS);
   });
 
-  test('given a custom report then the external estimates, calibration and baseline cards render in order', () => {
-    renderValidation();
+  test('given a custom report then the external estimates, calibration and baseline cards render in order', async () => {
+    await renderValidation();
 
     expect(
       screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)
     ).toEqual(['External estimates', 'Data calibration', 'Baseline comparisons']);
   });
 
-  test('given a custom report without external estimates then one plain line says so', () => {
-    renderValidation();
+  test('given a custom report without external estimates then one plain line says so', async () => {
+    await renderValidation();
 
     expect(
       within(card('External estimates')).getByText(
@@ -70,12 +87,12 @@ describe('ReportValidation', () => {
     ).toBeInTheDocument();
   });
 
-  test('given a custom report with scorer estimates then they show instead of the plain line', () => {
+  test('given a custom report with scorer estimates then they show instead of the plain line', async () => {
     mockUseScorecardComparisons.mockReturnValue({
       ...NO_SCORECARD_ROWS,
       rows: [RELATED_REFORM],
     });
-    renderValidation();
+    await renderValidation();
 
     const estimates = card('External estimates');
     expect(within(estimates).getByRole('table', { name: 'Related reforms' })).toBeInTheDocument();
@@ -86,8 +103,8 @@ describe('ReportValidation', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('given a bill report then its fiscal note leads the external estimates', () => {
-    renderValidation({
+  test('given a bill report then its fiscal note leads the external estimates', async () => {
+    await renderValidation({
       externalEstimates: (
         <BillExternalEstimates billId={TRACKED_BILL.id} validation={TRACKED_BILL.validation!} />
       ),
@@ -107,16 +124,20 @@ describe('ReportValidation', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('given scorecard baseline claims then they join the baseline comparisons, not the estimates', () => {
+  test('given report 4332 then the baseline card lists only the CDCC comparisons', async () => {
     mockUseScorecardComparisons.mockReturnValue({
       ...NO_SCORECARD_ROWS,
-      rows: [UTAH_BASELINE],
+      rows: REPORT_4332_CLAIMS,
     });
-    renderValidation();
+    await renderValidation({ paths: [CDCC_ELIGIBILITY_MAX_PATH], region: NATIONWIDE });
 
+    const baseline = card('Baseline comparisons');
+    const table = await within(baseline).findByRole('table', { name: 'Baseline comparisons' });
     expect(
-      within(card('Baseline comparisons')).getByRole('button', { name: 'Utah Child Tax Credit' })
-    ).toBeInTheDocument();
+      within(table)
+        .getAllByRole('button')
+        .map((button) => button.textContent)
+    ).toEqual([TREASURY_CDCC_CLAIM.name, SOI_CDCC_CLAIM.name]);
     expect(
       within(card('External estimates')).getByText(
         'No external estimate is available for this reform.'
@@ -124,18 +145,33 @@ describe('ReportValidation', () => {
     ).toBeInTheDocument();
   });
 
-  test('given the scorecard is still loading then the estimates card says it is loading', () => {
+  test('given baseline claims of other programs then one plain line says none applies', async () => {
+    mockUseScorecardComparisons.mockReturnValue({
+      ...NO_SCORECARD_ROWS,
+      rows: REPORT_4332_CLAIMS,
+    });
+    await renderValidation({ paths: [STANDARD_DEDUCTION_PATH], region: NATIONWIDE });
+
+    expect(
+      await within(card('Baseline comparisons')).findByText(
+        'No scorecard comparison measures the programs this reform changes.'
+      )
+    ).toBeInTheDocument();
+    expect(within(card('Baseline comparisons')).queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  test('given the scorecard is still loading then the estimates card says it is loading', async () => {
     mockUseScorecardComparisons.mockReturnValue(undefined);
-    renderValidation();
+    await renderValidation();
 
     expect(
       within(card('External estimates')).getByRole('status', { name: 'Loading external estimates' })
     ).toBeInTheDocument();
   });
 
-  test('given the scorecard is unavailable then the estimates card says so, not that none exists', () => {
+  test('given the scorecard is unavailable then the estimates card says so, not that none exists', async () => {
     mockUseScorecardComparisons.mockReturnValue(null);
-    renderValidation();
+    await renderValidation();
 
     expect(
       within(card('External estimates')).getByText(
@@ -147,8 +183,8 @@ describe('ReportValidation', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('given the coverage of the scorecard match then it is collapsed under the estimates', () => {
-    renderValidation();
+  test('given the coverage of the scorecard match then it is collapsed under the estimates', async () => {
+    await renderValidation();
 
     expect(within(card('External estimates')).getByText('Coverage')).toBeInTheDocument();
     expect(
@@ -156,12 +192,12 @@ describe('ReportValidation', () => {
     ).not.toBeVisible();
   });
 
-  test('given a custom baseline then both scorecard cards are marked not comparable', () => {
+  test('given a custom baseline then both scorecard cards are marked not comparable', async () => {
     mockUseScorecardComparisons.mockReturnValue({
       ...NO_SCORECARD_ROWS,
       rows: [RELATED_REFORM, UTAH_BASELINE],
     });
-    renderValidation({ baselineLabel: SAVED_REFORM_BASELINE });
+    await renderValidation({ baselineLabel: SAVED_REFORM_BASELINE });
 
     for (const name of ['External estimates', 'Baseline comparisons']) {
       expect(within(card(name)).getByText('Not comparable')).toBeInTheDocument();
@@ -179,8 +215,8 @@ describe('ReportValidation', () => {
     ).toBeInTheDocument();
   });
 
-  test('given a custom baseline then the scorecard is not asked and calibration still shows', () => {
-    renderValidation({ baselineLabel: SAVED_REFORM_BASELINE });
+  test('given a custom baseline then the scorecard is not asked and calibration still shows', async () => {
+    await renderValidation({ baselineLabel: SAVED_REFORM_BASELINE });
 
     expect(mockUseScorecardComparisons).toHaveBeenCalledWith('us', []);
     expect(
@@ -188,8 +224,8 @@ describe('ReportValidation', () => {
     ).toBeInTheDocument();
   });
 
-  test('given current law then the scorecard is asked for the reform paths and nothing is marked', () => {
-    renderValidation();
+  test('given current law then the scorecard is asked for the reform paths and nothing is marked', async () => {
+    await renderValidation();
 
     expect(mockUseScorecardComparisons).toHaveBeenCalledWith('us', [CTC_PATH]);
     expect(screen.queryByText('Not comparable')).not.toBeInTheDocument();

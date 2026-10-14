@@ -6,8 +6,29 @@ import {
   trackRecordClaims,
 } from '@/components/flagship/ValidationPanel';
 import type { ScorecardMatches } from '@/libs/flagship/modelValidation';
+import {
+  NATIONWIDE,
+  REFUNDABLE_CTC_MAX_PATH,
+  REPORT_4332_CLAIMS,
+  REPORT_4332_REFORM,
+  SNAP_DEDUCTION_PATH,
+  SOI_CDCC_CLAIM,
+  STANDARD_DEDUCTION_PATH,
+  TREASURY_CDCC_CLAIM,
+  usReform,
+  UT_CTC_AMOUNT_PATH,
+  UTAH,
+} from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
 import { utahBaselineClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
+
+const NO_COMPARISON = 'No scorecard comparison measures the programs this reform changes.';
+const EMPTY_TRACK_RECORD: ScorecardMatches = {
+  modelVersion: '1.808.0',
+  reachedCount: 0,
+  programs: [],
+  rows: [],
+};
 
 const SNAP_AND_CTC_TRACK_RECORD: ScorecardMatches = {
   modelVersion: '1.808.0',
@@ -101,42 +122,80 @@ describe('BillExternalEstimates', () => {
 
 describe('BaselineComparisons', () => {
   test('given the scorecard is unreachable then an honest note renders, not a blank card', () => {
-    render(<BaselineComparisons trackRecord={null} scorecardRows={null} />);
+    render(
+      <BaselineComparisons trackRecord={null} scorecardRows={null} reform={REPORT_4332_REFORM} />
+    );
 
     expect(screen.getByText(/temporarily unavailable/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view scorecard/i })).toBeInTheDocument();
   });
 
   test('given matches are loading then the loading state renders', () => {
-    render(<BaselineComparisons trackRecord={undefined} scorecardRows={undefined} />);
+    render(
+      <BaselineComparisons trackRecord={undefined} scorecardRows={undefined} reform={undefined} />
+    );
 
     expect(
       screen.getByRole('status', { name: 'Loading baseline comparisons' })
     ).toBeInTheDocument();
   });
 
-  test('given the reform reaches nothing then a plain line says no comparison covers it', () => {
+  test('given the reform is still being traced then rows wait instead of showing unchecked', () => {
     render(
       <BaselineComparisons
-        trackRecord={{ modelVersion: '1.808.0', reachedCount: 0, programs: [], rows: [] }}
-        scorecardRows={[]}
-      />
-    );
-
-    expect(screen.getByText('No baseline comparison covers this reform.')).toBeInTheDocument();
-  });
-
-  test('given reached variables the scorecard does not measure then the note says so', () => {
-    render(
-      <BaselineComparisons
-        trackRecord={{ modelVersion: '1.808.0', reachedCount: 30, programs: [], rows: [] }}
-        scorecardRows={[]}
+        trackRecord={EMPTY_TRACK_RECORD}
+        scorecardRows={REPORT_4332_CLAIMS}
+        reform={undefined}
       />
     );
 
     expect(
-      screen.getByText(/none of the 30 variables this reform moves is measured/i)
+      screen.getByRole('status', { name: 'Loading baseline comparisons' })
     ).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  test('given the reform reaches nothing then a plain line says no comparison covers it', () => {
+    render(
+      <BaselineComparisons
+        trackRecord={EMPTY_TRACK_RECORD}
+        scorecardRows={[]}
+        reform={REPORT_4332_REFORM}
+      />
+    );
+
+    expect(screen.getByText(NO_COMPARISON)).toBeInTheDocument();
+  });
+
+  test('given only loose matches then one plain line says so instead of listing them', () => {
+    render(
+      <BaselineComparisons
+        trackRecord={SNAP_AND_CTC_TRACK_RECORD}
+        scorecardRows={REPORT_4332_CLAIMS}
+        reform={usReform([STANDARD_DEDUCTION_PATH], NATIONWIDE)}
+      />
+    );
+
+    expect(screen.getByText(NO_COMPARISON)).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  test('given report 4332 then only the CDCC rows show', () => {
+    render(
+      <BaselineComparisons
+        trackRecord={EMPTY_TRACK_RECORD}
+        scorecardRows={REPORT_4332_CLAIMS}
+        reform={REPORT_4332_REFORM}
+      />
+    );
+
+    const table = screen.getByRole('table', { name: 'Baseline comparisons' });
+    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    expect(
+      within(table).getByRole('button', { name: TREASURY_CDCC_CLAIM.name })
+    ).toBeInTheDocument();
+    expect(within(table).getByRole('button', { name: SOI_CDCC_CLAIM.name })).toBeInTheDocument();
+    expect(within(table).queryByText(/Maryland|South Carolina|saver/i)).not.toBeInTheDocument();
   });
 
   test('given track record and scorecard rows then they share one table', () => {
@@ -144,6 +203,7 @@ describe('BaselineComparisons', () => {
       <BaselineComparisons
         trackRecord={SNAP_AND_CTC_TRACK_RECORD}
         scorecardRows={[{ ...utahBaselineClaim, matchBasis: 'program' }]}
+        reform={usReform([SNAP_DEDUCTION_PATH, REFUNDABLE_CTC_MAX_PATH, UT_CTC_AMOUNT_PATH], UTAH)}
       />
     );
 
@@ -169,6 +229,7 @@ describe('trackRecordClaims', () => {
 
     expect(snap.row.reform_framework).toBe('baseline');
     expect(snap.row.calibration_relationship).toBe('held_out');
+    expect(snap.row.program).toBe('snap');
     expect(snap.presentation?.title).toBe('SNAP — Eligible people');
     expect(snap.presentation?.externalValue).toBe('69.1M');
   });
