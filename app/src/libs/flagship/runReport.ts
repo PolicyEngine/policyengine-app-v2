@@ -24,6 +24,12 @@ export interface RunReportProvision {
   value: any;
   /** Dated changes, when the provision varies over time (see DraftProvision). */
   intervals?: ValueInterval[];
+  /** How a value set from one year on grows, from when, and how it rounds (see DraftProvision). */
+  growth?: string;
+  growthStart?: number;
+  growthBase?: number;
+  growthRoundTo?: number;
+  growthRound?: 'nearest' | 'down' | 'up';
 }
 
 /** Provenance shown in the flagship report header, stashed per report. */
@@ -57,6 +63,15 @@ export function saveReportMeta(userReportId: string, unstamped: FlagshipReportMe
   }
 }
 
+/** The stash, when it holds this report's provenance; a stash that is not a map holds none. */
+function stashWith(userReportId: string): Record<string, unknown> | null {
+  const all: unknown = readAllMeta();
+  if (!all || typeof all !== 'object' || Array.isArray(all) || !Object.hasOwn(all, userReportId)) {
+    return null;
+  }
+  return all as Record<string, unknown>;
+}
+
 /**
  * The report's stored provenance, parsed: null when none is stored,
  * otherwise the current shape or why it can't be read.
@@ -64,18 +79,28 @@ export function saveReportMeta(userReportId: string, unstamped: FlagshipReportMe
 export function readReportMetaResult(
   userReportId: string
 ): ReportParseResult<FlagshipReportMeta> | null {
-  const all: unknown = readAllMeta();
-  // A stash that is not a map holds no report's provenance.
-  if (!all || typeof all !== 'object' || Array.isArray(all) || !Object.hasOwn(all, userReportId)) {
-    return null;
-  }
-  return parseReportMeta((all as Record<string, unknown>)[userReportId]);
+  const all = stashWith(userReportId);
+  return all ? parseReportMeta(all[userReportId]) : null;
 }
 
 /** The report's provenance in the current shape; null when none is stored or it can't be read. */
 export function readReportMeta(userReportId: string): FlagshipReportMeta | null {
   const result = readReportMetaResult(userReportId);
   return result?.ok ? result.value : null;
+}
+
+/** Drops the report's stored provenance; the other reports' stays as stored. */
+export function removeReportMeta(userReportId: string): void {
+  const all = stashWith(userReportId);
+  if (!all) {
+    return;
+  }
+  const { [userReportId]: _removed, ...rest } = all;
+  try {
+    localStorage.setItem(META_KEY, JSON.stringify(rest));
+  } catch {
+    // It stays stored; the report still opens without it.
+  }
 }
 
 export interface RunFlagshipReportArgs {

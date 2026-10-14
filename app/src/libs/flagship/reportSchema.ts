@@ -19,7 +19,8 @@
  * Versions:
  *  1 — unversioned: everything written before this module.
  *      Meta: title, sourceNote, provisions, createdAt; later provisions
- *      gained `intervals`, and the meta `budgetWindow` and `baseline`.
+ *      gained `intervals` and the `growth` settings, and the meta
+ *      `budgetWindow` and `baseline`.
  *      Record: id, userId, countryId, apiReportId, title, sourceNote,
  *      provisions, year, createdAt; later `reformId` and `validation`,
  *      and then `userId` was dropped.
@@ -225,6 +226,11 @@ const intervalRule = shape<ValueInterval>({
   value: anyValue,
 });
 
+const growthRound: Rule<NonNullable<RunReportProvision['growthRound']>> = (value, field) =>
+  value === 'nearest' || value === 'down' || value === 'up'
+    ? value
+    : fail(field, 'nearest, down or up');
+
 const provisionFields = shape<RunReportProvision>({
   path: requiredText,
   breadcrumb: text(''),
@@ -232,6 +238,13 @@ const provisionFields = shape<RunReportProvision>({
   baselineValue: anyValue,
   value: anyValue,
   intervals: optional(arrayOf(intervalRule)),
+  // How a value set from one year on grows after it: Build reads these
+  // back when the report is edited there.
+  growth: optional(text('')),
+  growthStart: optional(finiteNumber),
+  growthBase: optional(finiteNumber),
+  growthRoundTo: optional(finiteNumber),
+  growthRound: optional(growthRound),
 });
 
 /** A provision; one stored without a breadcrumb is labelled by its path. */

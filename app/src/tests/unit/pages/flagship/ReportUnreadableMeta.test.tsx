@@ -99,6 +99,31 @@ describe('FlagshipReportPage with stored provenance it cannot read', () => {
     expect(screen.getByText(WAITING_TEXT)).toBeInTheDocument();
   });
 
+  test('given damaged provenance opened without it then the next visit does not ask', async () => {
+    const user = userEvent.setup();
+    seedMeta({ ...metaFromRunBridge, provisions: 'oops' });
+    const { unmount } = renderPage();
+    await user.click(screen.getByRole('button', { name: 'Open without saved details' }));
+    unmount();
+
+    renderPage();
+
+    expect(screen.queryByRole('heading', { name: UNREADABLE_HEADING })).not.toBeInTheDocument();
+    expect(screen.getByText(WAITING_TEXT)).toBeInTheDocument();
+  });
+
+  test('given provenance a newer version saved opened without it then the next visit asks again', async () => {
+    const user = userEvent.setup();
+    seedMeta({ ...metaFromRunBridge, schemaVersion: NEWER_SCHEMA_VERSION });
+    const { unmount } = renderPage();
+    await user.click(screen.getByRole('button', { name: 'Open without saved details' }));
+    unmount();
+
+    renderPage();
+
+    expect(screen.getByRole('heading', { name: UNREADABLE_HEADING })).toBeInTheDocument();
+  });
+
   test('given provenance a newer version saved then reloading is offered', () => {
     seedMeta({ ...metaFromRunBridge, schemaVersion: NEWER_SCHEMA_VERSION });
 

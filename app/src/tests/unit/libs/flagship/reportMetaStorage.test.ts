@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { readReportMeta, readReportMetaResult, saveReportMeta } from '@/libs/flagship/runReport';
+import { getDraftReform, loadProvisionsIntoDraft } from '@/libs/draftReform';
+import {
+  readReportMeta,
+  readReportMetaResult,
+  removeReportMeta,
+  saveReportMeta,
+} from '@/libs/flagship/runReport';
 import {
   CURRENT_SCHEMA_VERSION,
   currentMeta,
   CUSTOM_BASELINE,
+  GROWING_PROVISION,
   metaFromRunBridge,
   metaWithBudgetWindow,
   NEWER_SCHEMA_VERSION,
@@ -81,6 +88,38 @@ describe('report provenance in localStorage', () => {
 
     expect(readReportMetaResult('0')).toBeNull();
     expect(readReportMeta('0')).toBeNull();
+  });
+
+  test('given a saved provision that grows then Build gets it back with its growth', () => {
+    saveReportMeta(REPORT_ID, currentMeta);
+
+    loadProvisionsIntoDraft('us', readReportMeta(REPORT_ID)!.provisions);
+
+    expect(getDraftReform()?.provisions).toEqual(currentMeta.provisions);
+    expect(getDraftReform()?.provisions[1]).toMatchObject({
+      growth: GROWING_PROVISION.growth,
+      growthStart: GROWING_PROVISION.growthStart,
+      growthBase: GROWING_PROVISION.growthBase,
+      growthRoundTo: GROWING_PROVISION.growthRoundTo,
+      growthRound: GROWING_PROVISION.growthRound,
+    });
+  });
+
+  test('given provenance removed then only that report loses it', () => {
+    const damaged = { ...metaFromRunBridge, provisions: 'oops' };
+    seedMeta({ [REPORT_ID]: damaged, [OTHER_REPORT_ID]: metaFromRunBridge });
+
+    removeReportMeta(REPORT_ID);
+
+    expect(storedMeta()).toEqual({ [OTHER_REPORT_ID]: metaFromRunBridge });
+  });
+
+  test('given no provenance for the report then removing it leaves the stash alone', () => {
+    seedMeta({ [OTHER_REPORT_ID]: metaFromRunBridge });
+
+    removeReportMeta(REPORT_ID);
+
+    expect(storedMeta()).toEqual({ [OTHER_REPORT_ID]: metaFromRunBridge });
   });
 
   test('given meta compared with a saved reform then the baseline reads back', () => {

@@ -41,6 +41,24 @@ export const DATED_CTC_PROVISION: RunReportProvision = {
   ],
 };
 
+/** A value set from 2026 that grows with CPI-U after it, as Build's one-value editor saves it. */
+export const GROWING_PROVISION: RunReportProvision = {
+  path: 'gov.irs.deductions.standard.amount.SINGLE',
+  breadcrumb: 'IRS → Deductions → Standard deduction → Single',
+  unit: 'currency-USD',
+  baselineValue: 16100,
+  value: 18000,
+  intervals: [
+    { startDate: '2026-01-01', endDate: '2026-12-31', value: 18000 },
+    { startDate: '2027-01-01', endDate: '2027-12-31', value: 18450 },
+  ],
+  growth: 'gov.bls.cpi.cpi_u',
+  growthStart: 2027,
+  growthBase: 2026,
+  growthRoundTo: 50,
+  growthRound: 'down',
+};
+
 /* Provenance meta, stored under REPORT_META_KEY by report id. */
 
 /** 3673cf94 "Build the run bridge": the first shape. */
@@ -54,9 +72,28 @@ export const metaFromRunBridge = {
 /** ebb805b5 "Build: make the reform the page": provisions with dated changes. */
 export const metaWithIntervals = { ...metaFromRunBridge, provisions: [DATED_CTC_PROVISION] };
 
+/** 42c22f3a "Build: let a value grow with inflation, …": a provision's growth. */
+const {
+  growthStart: _growthStart,
+  growthBase: _growthBase,
+  growthRoundTo: _growthRoundTo,
+  growthRound: _growthRound,
+  ...provisionWithGrowth
+} = GROWING_PROVISION;
+export const metaWithGrowth = {
+  ...metaWithIntervals,
+  provisions: [DATED_CTC_PROVISION, provisionWithGrowth],
+};
+
+/** e02a17ef "Build: … set when and how they grow and round": its timing and rounding. */
+export const metaWithGrowthTiming = {
+  ...metaWithIntervals,
+  provisions: [DATED_CTC_PROVISION, GROWING_PROVISION],
+};
+
 /** aaf850a6 "Build: choose the budget window before the run". */
 export const metaWithBudgetWindow = {
-  ...metaWithIntervals,
+  ...metaWithGrowthTiming,
   budgetWindow: { startYear: 2026, windowSize: 10 },
 };
 
@@ -91,7 +128,7 @@ export const sparseMetaExpected: FlagshipReportMeta = {
 export const currentMeta: FlagshipReportMeta = {
   title: 'CTC to $2,500',
   sourceNote: 'Hand-built draft',
-  provisions: [DATED_CTC_PROVISION],
+  provisions: [DATED_CTC_PROVISION, GROWING_PROVISION],
   createdAt: CREATED_AT,
   budgetWindow: { startYear: 2026, windowSize: 10 },
 };
@@ -99,6 +136,8 @@ export const currentMeta: FlagshipReportMeta = {
 export const historicMeta: Array<[string, unknown, ReportMetaFields]> = [
   ['the run bridge', metaFromRunBridge, metaFromRunBridge],
   ['provisions with dated changes', metaWithIntervals, metaWithIntervals],
+  ['a provision that grows', metaWithGrowth, metaWithGrowth],
+  ['when and how it grows and rounds', metaWithGrowthTiming, metaWithGrowthTiming],
   ['a budget window', metaWithBudgetWindow, metaWithBudgetWindow],
   ['a custom baseline', metaWithBaseline, metaWithBaseline],
   [
@@ -241,6 +280,24 @@ export const malformedMeta: Array<[string, unknown, string, string | undefined]>
     },
     'invalid-field',
     'provisions[0].intervals[0].startDate',
+  ],
+  [
+    'a numeric growth',
+    { provisions: [{ ...GROWING_PROVISION, growth: 0.03 }] },
+    'invalid-field',
+    'provisions[0].growth',
+  ],
+  [
+    'a growth start as text',
+    { provisions: [{ ...GROWING_PROVISION, growthStart: '2027' }] },
+    'invalid-field',
+    'provisions[0].growthStart',
+  ],
+  [
+    'an unknown rounding',
+    { provisions: [{ ...GROWING_PROVISION, growthRound: 'sideways' }] },
+    'invalid-field',
+    'provisions[0].growthRound',
   ],
   ['a numeric title', { ...metaFromRunBridge, title: 42 }, 'invalid-field', 'title'],
   [

@@ -10,7 +10,7 @@ import type { ReportSchemaError } from '@/libs/flagship/reportSchema';
  * be read: saved by a newer version of the app, or damaged. The results
  * can still open without them, rebuilt from the report's policy.
  */
-export default function ReportRecordError({
+export default function ReportDetailsError({
   error,
   onOpenWithout,
 }: {

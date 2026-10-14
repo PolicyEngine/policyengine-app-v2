@@ -5,7 +5,7 @@ import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/society
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
-import ReportRecordError from '@/components/flagship/report/ReportRecordError';
+import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
@@ -138,7 +138,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         <Title order={1} style={{ margin: 0 }}>
           {title}
         </Title>
-        <ReportRecordError error={unreadableMeta.error} onOpenWithout={unreadableMeta.setAside} />
+        <ReportDetailsError error={unreadableMeta.error} onOpenWithout={unreadableMeta.setAside} />
       </Stack>
     );
   }

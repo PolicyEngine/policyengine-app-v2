@@ -19,6 +19,7 @@ import {
   CURRENT_SCHEMA_VERSION,
   currentMeta,
   currentRecord,
+  GROWING_PROVISION,
   historicMeta,
   historicRecords,
   historicRows,
@@ -67,6 +68,14 @@ describe('parseReportMeta', () => {
     expect(parseReportMeta(stored)).toEqual({ ok: true, value: currentMeta });
   });
 
+  test('given a provision that grows then its growth, timing and rounding read back', () => {
+    const result = parseReportMeta(
+      throughStorage({ ...currentMeta, provisions: [GROWING_PROVISION] })
+    );
+
+    expect(result.ok && result.value.provisions).toEqual([GROWING_PROVISION]);
+  });
+
   test('given meta with fields no version wrote then they are dropped', () => {
     const result = parseReportMeta({ ...currentMeta, stray: 'value' });
 
@@ -113,6 +122,17 @@ describe('parseReportRecord', () => {
     const stored = throughStorage(stampReportRecord(currentRecord));
 
     expect(parseReportRecord(stored)).toEqual({ ok: true, value: currentRecord });
+  });
+
+  test('given a record whose provision grows then its growth reads back', () => {
+    const stored = throughStorage(
+      stampReportRecord({ ...currentRecord, provisions: [GROWING_PROVISION] })
+    );
+
+    expect(parseReportRecord(stored)).toEqual({
+      ok: true,
+      value: { ...currentRecord, provisions: [GROWING_PROVISION] },
+    });
   });
 
   test('given a damaged validation pin then the record reads without it', () => {
