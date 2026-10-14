@@ -80,13 +80,16 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   // Provenance: the local stash from the run, else rebuilt from the reform
-  // policy so a shared link validates like the original.
+  // policy so a shared link validates like the original — read in the
+  // report's year, with every dated value the run had.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
   // Without metadata the rebuilt provisions would show raw paths and no
   // baseline, so they count as still loading until it arrives.
   const meta =
     readReportMeta(userReportId) ??
-    (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
+    (parameters
+      ? provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year || undefined)
+      : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
