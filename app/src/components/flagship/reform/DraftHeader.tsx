@@ -30,6 +30,7 @@ import {
   setDraftWindowYears,
   setDraftYear,
 } from '@/libs/draftReform';
+import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -261,6 +262,53 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // Who the report runs on: the whole country, a state, or a congressional district.
   const region = draft.population?.region;
 
+  // A run keeps its reform: it saves the draft to Your reforms (or
+  // updates the saved reform it edits, or reuses a saved one that sets
+  // the same values), so the report links to it and both can be found
+  // again after the tab closes. Best-effort: the run goes ahead unsaved
+  // if the store fails.
+  const [savingForRun, setSavingForRun] = useState(false);
+  const saveForRun = async (): Promise<string | undefined> => {
+    try {
+      const store = getReformStore();
+      const payload = draftToReform(draft);
+      if (draft.editingReformId) {
+        await store.update(draft.editingReformId, {
+          label: payload.label,
+          parameters: payload.parameters,
+          provenance: payload.provenance,
+        });
+        return draft.editingReformId;
+      }
+      const match = findMatchingReform(await store.findMine(draft.countryId), payload.parameters);
+      if (match?.id) {
+        if (payload.label && payload.label !== match.label) {
+          await store.update(match.id, { label: payload.label });
+        }
+        return match.id;
+      }
+      return (await store.create(payload)).id;
+    } catch {
+      return undefined;
+    } finally {
+      queryClient.invalidateQueries({ queryKey: ['reforms'] });
+    }
+  };
+  const runAndKeep = async () => {
+    setSavingForRun(true);
+    const reformId = await saveForRun();
+    setSavingForRun(false);
+    await runReport.run(
+      draft.label || 'Draft reform',
+      SOURCE_NOTES[draft.source] ?? 'Draft reform',
+      // Described as they stand in the year the report simulates.
+      provisionsForYear(adjusted, year, currentLawAt),
+      reformId,
+      year,
+      { fromDraft: true, region, windowYears: draft.windowYears }
+    );
+  };
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const store = getReformStore();
@@ -350,18 +398,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
           <Button
-            onClick={() =>
-              runReport.run(
-                draft.label || 'Draft reform',
-                SOURCE_NOTES[draft.source] ?? 'Draft reform',
-                // Described as they stand in the year the report simulates.
-                provisionsForYear(adjusted, year, currentLawAt),
-                undefined,
-                year,
-                { fromDraft: true, region, windowYears: draft.windowYears }
-              )
-            }
-            disabled={adjusted.length === 0 || runReport.isRunning}
+            onClick={() => void runAndKeep()}
+            disabled={adjusted.length === 0 || runReport.isRunning || savingForRun}
             title={
               !empty && adjusted.length === 0
                 ? 'Adjust at least one value from current law to run the report'
@@ -369,7 +407,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             }
           >
             <IconChartBar size={16} />
-            {runReport.isRunning ? 'Starting report…' : `Run ${year} report`}
+            {runReport.isRunning || savingForRun ? 'Starting report…' : `Run ${year} report`}
           </Button>
         </div>
       </div>

@@ -14,8 +14,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
+import { getFlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore } from '@/api/reformStore';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import ReformReports from '@/components/flagship/ReformReports';
 import ScopePicker from '@/components/flagship/ScopePicker';
 import StatTile from '@/components/flagship/StatTile';
 import ValueInput from '@/components/flagship/ValueInput';
@@ -286,6 +288,25 @@ export default function ReformsPage() {
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
+
+  // The reports this browser ran, by the saved reform each came from: a
+  // reform is where its reports are found again.
+  const { data: reports } = useQuery({
+    queryKey: ['flagship-reports', countryId],
+    queryFn: () => getFlagshipReportStore().findMine(countryId),
+  });
+  const reportsFor = (reformId: string | undefined) =>
+    reformId ? (reports ?? []).filter((report) => report.reformId === reformId) : [];
+  const reportsLine = (reformId: string | undefined) => {
+    const runs = reportsFor(reformId);
+    if (runs.length === 0) {
+      return 'No reports yet';
+    }
+    const latest = runs.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
+    return `${runs.length} report${runs.length === 1 ? '' : 's'} · latest ${new Date(
+      latest.createdAt
+    ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  };
 
   const saveMutation = useMutation({
     mutationFn: (reform: Reform) =>
@@ -822,6 +843,7 @@ export default function ReformsPage() {
               </Text>
             )}
           </Stack>
+          <ReformReports countryId={countryId} reports={reportsFor(selectedReform.id)} />
         </Stack>
       </WorkspaceLayout>
     );
@@ -994,7 +1016,7 @@ export default function ReformsPage() {
                 key={reform.id}
                 eyebrow={`${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`}
                 title={reform.label || 'Untitled reform'}
-                body=""
+                body={reportsLine(reform.id)}
                 onClick={() => openReform(reform)}
               />
             ))}
