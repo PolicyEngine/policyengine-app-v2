@@ -309,8 +309,9 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
               />
               <Tooltip
                 formatter={(value, name) => [`${Number(value ?? 0).toFixed(1)}%`, String(name)]}
+                // The shares count people, so the All row is everyone.
                 labelFormatter={(label) =>
-                  label === 'All' ? 'All households' : label ? `Decile ${label}` : ''
+                  label === 'All' ? 'All people' : label ? `Decile ${label}` : ''
                 }
               />
               {WINNER_SEGMENTS.map((segment) => (

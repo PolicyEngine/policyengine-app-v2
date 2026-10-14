@@ -49,11 +49,12 @@ const TOOLTIP_WRAPPER_STYLE = {
   maxWidth: 'min(280px, calc(100vw - 32px))',
 };
 
-function WinnersLosersTooltip({ active, payload, label }: any) {
+/** A row's outcome shares on hover. The shares count people, so "All" is everyone. */
+export function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
     return null;
   }
-  const decileLabel = label === 'All' ? 'All households' : `Decile ${label}`;
+  const decileLabel = label === 'All' ? 'All people' : `Decile ${label}`;
   return (
     <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{decileLabel}</p>
