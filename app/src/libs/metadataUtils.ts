@@ -35,7 +35,7 @@ export const getDateRange = createSelector(
     if (!timePeriods || timePeriods.length === 0) {
       return {
         minDate: '2022-01-01',
-        maxDate: '2035-12-31',
+        maxDate: '2036-12-31',
       };
     }
 
