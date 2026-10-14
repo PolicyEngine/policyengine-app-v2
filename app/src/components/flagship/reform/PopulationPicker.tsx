@@ -154,9 +154,16 @@ export default function PopulationPicker({ value, onChange, regions }: Populatio
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" style={{ width: 300, padding: 0 }}>
+      <PopoverContent
+        align="start"
+        // On a phone each choice is a fingertip tall.
+        className="tw:max-sm:[&_[data-slot=command-item]]:min-h-10"
+        style={{ width: 300, padding: 0 }}
+      >
         <Command filter={scopeFilter} label="Find a state or district">
           <CommandInput
+            // 16px on a phone, so the browser does not zoom in to type.
+            className="tw:max-sm:text-base"
             placeholder="Find a state or district…"
             value={search}
             onValueChange={setSearch}

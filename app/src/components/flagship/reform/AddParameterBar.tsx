@@ -6,7 +6,9 @@ import PolicyBrowser from '@/components/flagship/policyBrowser/PolicyBrowser';
 import { Spinner } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useDraftReform } from '@/libs/draftReform';
+import { PHONE_QUERY } from '@/libs/flagship/viewport';
 import { getStateLabels } from '@/libs/metadataUtils';
 import {
   ParameterSearchEntry,
@@ -29,6 +31,10 @@ const ANOTHER_PLACEHOLDERS: Record<string, string> = {
   us: 'Add another parameter — search by name, e.g. earned income tax credit',
   uk: 'Add another parameter — search by name, e.g. child benefit',
 };
+
+/** A phone's bar has no room for the example, so it only asks. */
+const PHONE_PLACEHOLDER = 'Add a parameter';
+const PHONE_ANOTHER_PLACEHOLDER = 'Add another parameter';
 
 interface AddParameterBarProps {
   onPick: (entry: ParameterSearchEntry) => void;
@@ -93,6 +99,13 @@ export default function AddParameterBar({
   const draftPaths = new Set(
     draft?.countryId === countryId ? draft.provisions.map((p) => p.path) : []
   );
+
+  const phone = useMediaQuery(PHONE_QUERY);
+  const placeholder = phone
+    ? inTable
+      ? PHONE_ANOTHER_PLACEHOLDER
+      : PHONE_PLACEHOLDER
+    : (inTable ? ANOTHER_PLACEHOLDERS : SEARCH_PLACEHOLDERS)[countryId];
 
   const containerRef = useRef<HTMLDivElement>(null);
   // Results show while the bar is in use; a click elsewhere puts them away.
@@ -184,7 +197,7 @@ export default function AddParameterBar({
         labelFor={(path) => parameters?.[path]?.label ?? null}
         backgroundSearch
         autoFocus={autoFocus}
-        placeholder={(inTable ? ANOTHER_PLACEHOLDERS : SEARCH_PLACEHOLDERS)[countryId]}
+        placeholder={placeholder}
         resultsInFlow={inTable}
         hideResults={!active || browseOpen}
         inDraft={(path) => draftPaths.has(path)}
@@ -198,12 +211,12 @@ export default function AddParameterBar({
             type="button"
             onClick={() => setBrowseOpen((open) => !open)}
             aria-expanded={browseOpen}
-            className="tw:cursor-pointer tw:border tw:border-border-light tw:bg-white tw:hover:border-border-medium"
+            // A fingertip tall on a phone.
+            className="tw:h-[30px] tw:cursor-pointer tw:border tw:border-border-light tw:bg-white tw:hover:border-border-medium tw:max-sm:h-10"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: spacing.xs,
-              height: 30,
               padding: `0 ${spacing.sm}`,
               borderRadius: spacing.radius.container,
               fontSize: typography.fontSize.xs,
@@ -237,7 +250,7 @@ export default function AddParameterBar({
             type="button"
             onClick={() => setBrowseOpen(false)}
             aria-label="Close the policy tree"
-            className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100"
+            className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100 tw:max-sm:size-10 tw:max-sm:items-center tw:max-sm:justify-center"
             style={{
               position: 'absolute',
               top: spacing.sm,
