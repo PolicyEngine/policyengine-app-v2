@@ -376,6 +376,8 @@ export default function ReportView({
                   {/* A household runs on the report's own policies, once they exist. */}
                   {reformPolicyId && baselinePolicyId ? (
                     <HouseholdImpactSection
+                      // New policies, year or region start a new form, with nothing run.
+                      key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
                       countryId={countryId}
                       year={year}
                       region={region}
@@ -383,7 +385,14 @@ export default function ReportView({
                       reformPolicyId={reformPolicyId}
                     />
                   ) : (
-                    pending
+                    <>
+                      <Text
+                        style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                      >
+                        A household runs once the full results start.
+                      </Text>
+                      {pending}
+                    </>
                   )}
                 </Stack>
               )}

@@ -5,6 +5,7 @@ import {
   defaultHouseholdInput,
   describeHouseholdInput,
   isValidHouseholdInput,
+  plainHouseholdError,
   readHouseholdTotal,
   runFlagshipHousehold,
   stateFromRegion,
@@ -14,6 +15,9 @@ import {
   BASELINE_RESULT,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
+  householdResult,
+  LOW_EARNER_BASELINE_RESULT,
+  LOW_EARNER_REFORM_RESULT,
   MARRIED_TWO_CHILDREN,
   REFORM_POLICY_ID,
   REFORM_RESULT,
@@ -151,6 +155,42 @@ describe('compareHouseholds', () => {
     ]);
   });
 
+  test('given a bigger gross Child Tax Credit the household cannot claim then no credit is listed', () => {
+    const impact = compareHouseholds(
+      LOW_EARNER_BASELINE_RESULT,
+      LOW_EARNER_REFORM_RESULT,
+      HOUSEHOLD_YEAR
+    );
+
+    expect(impact.netIncome.change).toBe(0);
+    expect(impact.programs).toEqual([]);
+  });
+
+  test('given a Child Tax Credit then the line is the credit received, not the gross amount', () => {
+    const impact = compareHouseholds(
+      LOW_EARNER_BASELINE_RESULT,
+      householdResult({
+        netIncome: 22375,
+        incomeTax: 0,
+        stateIncomeTax: 0,
+        ctcValue: 1500,
+        grossCtc: 6000,
+      }),
+      HOUSEHOLD_YEAR
+    );
+
+    expect(impact.programs).toEqual([
+      {
+        id: 'ctc_value',
+        label: 'Child Tax Credit',
+        baseline: 1125,
+        reform: 1500,
+        change: 375,
+        effect: 375,
+      },
+    ]);
+  });
+
   test('given net income moving beyond the listed parts then the rest is "Other"', () => {
     const impact = compareHouseholds(BASELINE_RESULT, REFORM_RESULT_WITH_REMAINDER, HOUSEHOLD_YEAR);
 
@@ -181,6 +221,17 @@ describe('compareHouseholds', () => {
     expect(impact.netIncome.change).toBe(0);
     expect(impact.components).toEqual([]);
     expect(impact.programs).toEqual([]);
+  });
+
+  test('given a result without net income then the comparison fails, not reads as no change', () => {
+    const missing = householdResult({ netIncome: 0, incomeTax: 3000, stateIncomeTax: 2500 });
+    delete (missing.households as Record<string, Record<string, unknown>>)['your household']
+      .household_net_income;
+
+    expect(() => compareHouseholds(BASELINE_RESULT, missing, HOUSEHOLD_YEAR)).toThrow(
+      `The result has no net income for ${HOUSEHOLD_YEAR}.`
+    );
+    expect(() => compareHouseholds(missing, BASELINE_RESULT, HOUSEHOLD_YEAR)).toThrow();
   });
 });
 
@@ -236,6 +287,38 @@ describe('runFlagshipHousehold', () => {
         reformPolicyId: REFORM_POLICY_ID,
       })
     ).rejects.toThrow('Household calculation failed');
+  });
+
+  test('given a timeout or a network failure then the run fails in plain words', async () => {
+    const args = {
+      year: HOUSEHOLD_YEAR,
+      input: MARRIED_TWO_CHILDREN,
+      baselinePolicyId: BASELINE_POLICY_ID,
+      reformPolicyId: REFORM_POLICY_ID,
+    };
+    mockFetchHouseholdCalculation.mockRejectedValue(
+      new Error('Household calculation timed out after 50 seconds (client-side timeout)')
+    );
+    await expect(runFlagshipHousehold(args)).rejects.toThrow('The calculation took too long.');
+
+    mockCreateHousehold.mockRejectedValue(new TypeError('Failed to fetch'));
+    await expect(runFlagshipHousehold(args)).rejects.toThrow(
+      'Could not reach PolicyEngine. Check your connection.'
+    );
+  });
+});
+
+describe('plainHouseholdError', () => {
+  test('given an API error then its own message is kept', () => {
+    const error = new Error('Invalid state_name');
+
+    expect(plainHouseholdError(error)).toBe(error);
+  });
+
+  test('given a network failure then the original error is its cause', () => {
+    const error = new TypeError('Load failed');
+
+    expect(plainHouseholdError(error).cause).toBe(error);
   });
 });
 

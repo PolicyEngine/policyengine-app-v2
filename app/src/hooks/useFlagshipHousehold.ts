@@ -29,8 +29,11 @@ export function useFlagshipHousehold({
     queryKey: flagshipHouseholdQueryKey(year, baselinePolicyId, reformPolicyId, input),
     queryFn: () => runFlagshipHousehold({ year, input: input!, baselinePolicyId, reformPolicyId }),
     enabled: !!input,
-    // A calculated household does not change; a failure waits for "Try again".
+    // A calculated household does not change. A failure has no data, so it
+    // reads as stale: only "Try again" runs it again, not a refocus or reconnect.
     staleTime: Infinity,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }

@@ -23,7 +23,10 @@ interface ResultValues {
   payrollTax?: number;
   selfEmploymentTax?: number;
   benefits?: number;
-  ctc?: number;
+  /** The Child Tax Credit received (`ctc_value`). */
+  ctcValue?: number;
+  /** The gross Child Tax Credit entitlement (`ctc`); the received credit when unset. */
+  grossCtc?: number;
   eitc?: number;
   snap?: number;
 }
@@ -41,7 +44,8 @@ export function householdResult({
   payrollTax = 6500,
   selfEmploymentTax = 0,
   benefits = 0,
-  ctc = 0,
+  ctcValue = 0,
+  grossCtc = ctcValue,
   eitc = 0,
   snap = 0,
 }: ResultValues): HouseholdCalculationData {
@@ -65,7 +69,8 @@ export function householdResult({
         state_income_tax: at(stateIncomeTax),
         local_income_tax: at(0),
         employee_payroll_tax: at(payrollTax),
-        ctc: at(ctc),
+        ctc: at(grossCtc),
+        ctc_value: at(ctcValue),
         eitc: at(eitc),
       },
     },
@@ -79,7 +84,7 @@ export const BASELINE_RESULT = householdResult({
   netIncome: 72000,
   incomeTax: 3000,
   stateIncomeTax: 2500,
-  ctc: 4400,
+  ctcValue: 4400,
   benefits: 1200,
   snap: 1200,
 });
@@ -89,7 +94,7 @@ export const REFORM_RESULT = householdResult({
   netIncome: 73000,
   incomeTax: 2000,
   stateIncomeTax: 2500,
-  ctc: 5400,
+  ctcValue: 5400,
   benefits: 1200,
   snap: 1200,
 });
@@ -99,7 +104,7 @@ export const REFORM_RESULT_WITH_REMAINDER = householdResult({
   netIncome: 73040,
   incomeTax: 2000,
   stateIncomeTax: 2500,
-  ctc: 5400,
+  ctcValue: 5400,
   benefits: 1200,
   snap: 1200,
 });
@@ -109,7 +114,28 @@ export const REFORM_RESULT_LOSS = householdResult({
   netIncome: 71100,
   incomeTax: 3000,
   stateIncomeTax: 3100,
-  ctc: 4400,
+  ctcValue: 4400,
   benefits: 900,
   snap: 900,
+});
+
+/**
+ * A low-earning single parent of two: the gross Child Tax Credit is
+ * $4,400, but only $1,125 of it is refundable on $10,000 of earnings.
+ */
+export const LOW_EARNER_BASELINE_RESULT = householdResult({
+  netIncome: 22000,
+  incomeTax: 0,
+  stateIncomeTax: 0,
+  ctcValue: 1125,
+  grossCtc: 4400,
+});
+
+/** A bigger credit that the household cannot claim: only the gross amount moves. */
+export const LOW_EARNER_REFORM_RESULT = householdResult({
+  netIncome: 22000,
+  incomeTax: 0,
+  stateIncomeTax: 0,
+  ctcValue: 1125,
+  grossCtc: 6000,
 });

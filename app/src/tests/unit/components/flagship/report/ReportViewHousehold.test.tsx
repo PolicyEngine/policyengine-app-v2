@@ -11,6 +11,9 @@ import {
   REFORM_RESULT,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
 
+/** A second bill's reform, run earlier in the session. */
+const OTHER_REFORM_POLICY_ID = '11111';
+
 const mockCreateHousehold = vi.fn();
 const mockFetchHouseholdCalculation = vi.fn();
 
@@ -25,9 +28,10 @@ vi.mock('@/api/budgetWindow', async (importOriginal) => ({
   fetchBudgetWindow: async () => ({ status: 'computing', result: null, progress: 10 }),
 }));
 
-function renderReport(policies: { baselinePolicyId?: string; reformPolicyId?: string }) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+type Policies = { baselinePolicyId?: string; reformPolicyId?: string };
+
+function reportView(queryClient: QueryClient, policies: Policies) {
+  return (
     <QueryClientProvider client={queryClient}>
       <ReportView
         title="Bigger CTC"
@@ -43,6 +47,15 @@ function renderReport(policies: { baselinePolicyId?: string; reformPolicyId?: st
       />
     </QueryClientProvider>
   );
+}
+
+function renderReport(policies: Policies) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(reportView(queryClient, policies));
+  return {
+    ...view,
+    rerenderWith: (next: Policies) => view.rerender(reportView(queryClient, next)),
+  };
 }
 
 describe('ReportView household', () => {
@@ -82,7 +95,27 @@ describe('ReportView household', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Household' }));
 
+    expect(screen.getByText('A household runs once the full results start.')).toBeInTheDocument();
     expect(screen.getByText('Waiting for the full results')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+  });
+
+  test('given new policies after a run then the household waits for Calculate again', async () => {
+    const user = userEvent.setup();
+    const policies = {
+      baselinePolicyId: CUSTOM_BASELINE_POLICY_ID,
+      reformPolicyId: REFORM_POLICY_ID,
+    };
+    const { rerenderWith } = renderReport(policies);
+
+    await user.click(screen.getByRole('tab', { name: 'Household' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    expect(await screen.findByRole('region', { name: 'Household impact' })).toBeInTheDocument();
+
+    rerenderWith({ ...policies, reformPolicyId: OTHER_REFORM_POLICY_ID });
+
+    expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Calculate' })).toBeEnabled();
+    expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2);
   });
 });

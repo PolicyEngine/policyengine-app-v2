@@ -1,12 +1,19 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, waitFor, within } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  focusManager,
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import { act, render, screen, userEvent, waitFor, within } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
+  LOW_EARNER_BASELINE_RESULT,
+  LOW_EARNER_REFORM_RESULT,
   REFORM_POLICY_ID,
   REFORM_RESULT,
   REFORM_RESULT_LOSS,
@@ -58,6 +65,11 @@ describe('HouseholdImpactSection', () => {
     // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
     Element.prototype.scrollIntoView ??= vi.fn();
     Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+  });
+
+  afterEach(() => {
+    focusManager.setFocused(undefined);
+    onlineManager.setOnline(true);
   });
 
   test('given the section then a default household waits and nothing runs', () => {
@@ -154,6 +166,22 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
+  test('given a bigger credit the household cannot claim then no credit change is shown', async () => {
+    const user = userEvent.setup();
+    mockFetchHouseholdCalculation.mockImplementation(
+      async (_country: string, _household: string, policyId: string) =>
+        policyId === BASELINE_POLICY_ID ? LOW_EARNER_BASELINE_RESULT : LOW_EARNER_REFORM_RESULT
+    );
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    expect(
+      await screen.findByText("No change in this household's taxes or benefits.")
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Credits and benefits' })).not.toBeInTheDocument();
+  });
+
   test('given a married couple with children then their earnings and ages are sent', async () => {
     const user = userEvent.setup();
     renderSection();
@@ -171,6 +199,21 @@ describe('HouseholdImpactSection', () => {
     expect(people['your partner'].employment_income).toEqual({ [HOUSEHOLD_YEAR]: 20000 });
     expect(people['your first dependent'].age).toEqual({ [HOUSEHOLD_YEAR]: 3 });
     expect(people['your second dependent'].age).toEqual({ [HOUSEHOLD_YEAR]: 10 });
+  });
+
+  test('given earnings that are not a round thousand then the household still runs', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    const earnings = screen.getByRole('spinbutton', { name: 'Annual earnings' });
+    await user.clear(earnings);
+    await user.type(earnings, '52500.50');
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
+    expect(mockCreateHousehold.mock.calls[0][0].data.people.you.employment_income).toEqual({
+      [HOUSEHOLD_YEAR]: 52500.5,
+    });
   });
 
   test('given a child aged 18 then the household cannot run', async () => {
@@ -200,6 +243,47 @@ describe('HouseholdImpactSection', () => {
 
     expect(await screen.findByRole('region', { name: 'Household impact' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('given a failed run then refocusing the page or reconnecting does not run it again', async () => {
+    const user = userEvent.setup();
+    mockFetchHouseholdCalculation.mockRejectedValueOnce(new Error('Household calculation failed'));
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await screen.findByRole('alert');
+
+    // The query client refetches on focus and reconnect a tick later.
+    await act(async () => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+      onlineManager.setOnline(false);
+      onlineManager.setOnline(true);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(mockCreateHousehold).toHaveBeenCalledTimes(1);
+  });
+
+  test.each([
+    [
+      'a timeout',
+      new Error('Household calculation timed out after 50 seconds (client-side timeout)'),
+      'The calculation took too long.',
+    ],
+    ['a network failure', new TypeError('Failed to fetch'), 'Could not reach PolicyEngine.'],
+  ])('given %s then the alert reads in plain words', async (_kind, error, message) => {
+    const user = userEvent.setup();
+    mockFetchHouseholdCalculation.mockRejectedValueOnce(error);
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(message);
+    expect(alert).not.toHaveTextContent(error.message);
   });
 
   test('given a report outside the US then no household form shows', () => {

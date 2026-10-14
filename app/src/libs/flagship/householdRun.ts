@@ -207,9 +207,14 @@ const COMPONENTS: LineDefinition[] = [
   },
 ];
 
-/** Credits and benefits within those parts, listed when a reform changes them. */
+/**
+ * Credits and benefits within those parts, listed when a reform changes
+ * them. Each is what the household receives: the Child Tax Credit is
+ * `ctc_value`, the credit after the tax-liability and refundability
+ * limits, not the gross `ctc` entitlement.
+ */
 const PROGRAMS: LineDefinition[] = [
-  ['ctc', 'Child Tax Credit', 'tax_units'],
+  ['ctc_value', 'Child Tax Credit', 'tax_units'],
   ['eitc', 'Earned Income Tax Credit', 'tax_units'],
   ['cdcc', 'Child and Dependent Care Credit', 'tax_units'],
   ['state_ctc', 'State child tax credit', 'tax_units'],
@@ -284,14 +289,21 @@ function lineChange(
 const changed = (line: HouseholdLineChange | null): line is HouseholdLineChange =>
   !!line && Math.abs(line.change) >= NEGLIGIBLE;
 
-/** What the reform changes for the household: net income, and the parts that move it. */
+/**
+ * What the reform changes for the household: net income, and the parts
+ * that move it. A result without net income is a failed calculation, not
+ * a household the reform leaves alone.
+ */
 export function compareHouseholds(
   baseline: HouseholdCalculationData,
   reform: HouseholdCalculationData,
   year: string
 ): FlagshipHouseholdImpact {
-  const before = readHouseholdTotal(baseline, 'households', 'household_net_income', year) ?? 0;
-  const after = readHouseholdTotal(reform, 'households', 'household_net_income', year) ?? 0;
+  const before = readHouseholdTotal(baseline, 'households', 'household_net_income', year);
+  const after = readHouseholdTotal(reform, 'households', 'household_net_income', year);
+  if (before === null || after === null) {
+    throw new Error(`The result has no net income for ${year}.`);
+  }
   const netChange = after - before;
   const components = COMPONENTS.map((definition) =>
     lineChange(definition, baseline, reform, year)
@@ -328,6 +340,44 @@ export interface FlagshipHouseholdRun extends FlagshipHouseholdImpact {
 }
 
 /**
+ * The household API's timeout and network failures in plain words; any
+ * other failure keeps the API's own message. The shared helpers' timeout
+ * message names a time that is not their real limit, and a browser's
+ * network failure reads only "Failed to fetch" or "Load failed".
+ */
+export function plainHouseholdError(error: unknown): Error {
+  if (error instanceof TypeError) {
+    return new Error('Could not reach PolicyEngine. Check your connection.', { cause: error });
+  }
+  if (error instanceof Error && /timed out/i.test(error.message)) {
+    return new Error('The calculation took too long.', { cause: error });
+  }
+  return error instanceof Error ? error : new Error(String(error));
+}
+
+/** Creates the household and calculates it under each policy, at once. */
+async function calculateHousehold(
+  input: FlagshipHouseholdInput,
+  year: string,
+  baselinePolicyId: string,
+  reformPolicyId: string
+) {
+  try {
+    const created = await createHousehold(buildHouseholdPayload(input, year));
+    const householdId = String(created.result.household_id);
+    const [baseline, reform] = await Promise.all([
+      fetchHouseholdCalculation('us', householdId, baselinePolicyId),
+      baselinePolicyId === reformPolicyId
+        ? null
+        : fetchHouseholdCalculation('us', householdId, reformPolicyId),
+    ]);
+    return { householdId, baseline, reform: reform ?? baseline };
+  } catch (error) {
+    throw plainHouseholdError(error);
+  }
+}
+
+/**
  * Creates the household (the API dedupes identical ones) and calculates
  * it under the baseline and the reform at once.
  */
@@ -337,15 +387,13 @@ export async function runFlagshipHousehold({
   baselinePolicyId,
   reformPolicyId,
 }: RunFlagshipHouseholdArgs): Promise<FlagshipHouseholdRun> {
-  const created = await createHousehold(buildHouseholdPayload(input, year));
-  const householdId = String(created.result.household_id);
-  const [baseline, reform] = await Promise.all([
-    fetchHouseholdCalculation('us', householdId, baselinePolicyId),
-    baselinePolicyId === reformPolicyId
-      ? null
-      : fetchHouseholdCalculation('us', householdId, reformPolicyId),
-  ]);
-  return { householdId, ...compareHouseholds(baseline, reform ?? baseline, year) };
+  const { householdId, baseline, reform } = await calculateHousehold(
+    input,
+    year,
+    baselinePolicyId,
+    reformPolicyId
+  );
+  return { householdId, ...compareHouseholds(baseline, reform, year) };
 }
 
 /** "Single · 2 children · $50,000 · California": the household a result is for. */

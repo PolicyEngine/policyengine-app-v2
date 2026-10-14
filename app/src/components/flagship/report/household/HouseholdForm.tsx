@@ -76,9 +76,10 @@ function MoneyInput({
       <Input
         id={id}
         type="number"
-        inputMode="numeric"
+        inputMode="decimal"
         min={0}
-        step={1000}
+        // Any amount: a step would block the form on, say, $52,500.
+        step="any"
         value={shownNumber(value)}
         aria-invalid={!(Number.isFinite(value) && value >= 0)}
         onChange={(event) => onChange(parseNumber(event.target.value))}
@@ -121,6 +122,8 @@ export default function HouseholdForm({
   return (
     <form
       aria-label="Describe a household"
+      // The household's own check decides; the browser's would differ from it.
+      noValidate
       onSubmit={(event) => {
         event.preventDefault();
         if (valid && !submitDisabled) {
