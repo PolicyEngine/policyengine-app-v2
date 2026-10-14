@@ -86,3 +86,9 @@ The application automatically deploys to GitHub Pages when changes are pushed to
 - React Query
 - React Router
 - Plotly.js for visualisations
+
+## License
+
+Code in this repository is released under the [MIT License](LICENSE). Original text and figures are released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) with attribution to PolicyEngine. Third-party data and materials keep their own terms, including third-party logos, screenshots and photos in `app/public/assets/` and the congressional district boundaries in `app/public/data/geojson/`.
+
+`app/scripts/build-parameter-dependency-map.py` imports `policyengine-core` and `policyengine-us`, which are licensed under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html). The MIT License applies to that script on its own. Running it combines it with those packages, and that combination is subject to AGPL-3.0 as a whole. The web applications in this repository do not include either package.
