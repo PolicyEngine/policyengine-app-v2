@@ -28,7 +28,7 @@
     "outlet": "The Independent",
     "date": "2026-08-18",
     "url": "https://www.independent.co.uk/news/uk/home-news/reform-benefits-policy-pip-anger-b3034324.html",
-    "image": "independent-reform-pip.jpg",
+    "image": "independent-reform-pip-headline.jpg",
     "tags": ["uk", "policy"]
   },
   {
@@ -44,7 +44,7 @@
     "outlet": "New Economics Foundation",
     "date": "2026-07-28",
     "url": "https://neweconomics.org/2026/07/the-good-work-effect",
-    "image": "nef-good-work-effect.jpg",
+    "image": "nef-good-work-effect-cover.jpg",
     "tags": ["uk", "policy"],
     "featured": true
   },
@@ -77,7 +77,7 @@
     "outlet": "Office for Budget Responsibility",
     "date": "2026-06-25",
     "url": "https://assets.publishing.service.gov.uk/media/6a3cfb3c33bc5beefd3c49d2/E03598728_OBR_ARA_25-26_Accessible.pdf",
-    "image": "obr-annual-report-2025-26.jpg",
+    "image": "obr-annual-report-2025-26-cover.jpg",
     "tags": ["uk", "policy"],
     "featured": true
   },
