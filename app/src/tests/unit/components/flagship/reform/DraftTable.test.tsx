@@ -6,6 +6,7 @@ import {
   addDraftProvision,
   clearDraftReform,
   getDraftReform,
+  setDraftYear,
   startDraftReform,
   useDraftReform,
 } from '@/libs/draftReform';
@@ -29,6 +30,14 @@ const CTC = {
   unit: 'currency-USD',
   baselineValue: 2200,
   value: 2200,
+};
+/** Current law grows it: $5,000 in 2026, $5,100 in 2027. */
+const EXEMPTION = {
+  path: EXEMPTION_PATH,
+  breadcrumb: 'IRS → Income → Exemption → Amount',
+  unit: 'currency-USD',
+  baselineValue: 5000,
+  value: 5000,
 };
 const SINGLE = {
   path: SINGLE_PATH,
@@ -73,6 +82,34 @@ describe('DraftTable', () => {
       { startDate: '2026-01-01', endDate: FOREVER, value: 3000 },
     ]);
     expect(screen.getByText('from 2026')).toBeInTheDocument();
+  });
+
+  test('given a later report year then the row reads and edits from current law in that year', () => {
+    // Added while 2026 current law ($5,000) applied, then the report moves to 2027.
+    addDraftProvision('us', EXEMPTION);
+    setDraftYear(2027);
+    render(<TableHarness />);
+
+    expect(rowValue(EXEMPTION_PATH).value).toBe('5100');
+    expect(screen.getByTitle('$5,100')).toHaveTextContent('$5,100');
+    expect(screen.queryByTitle('$5,000')).not.toBeInTheDocument();
+
+    // Raising it by $200 raises it against 2027 current law.
+    fireEvent.change(rowValue(EXEMPTION_PATH), { target: { value: '5300' } });
+    expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
+      { startDate: '2027-01-01', endDate: FOREVER, value: 5300 },
+    ]);
+  });
+
+  test('given a single value from 2026 and a later report year then the row reads it as its summary', () => {
+    // As Ask or a saved reform adds it: one value, no dates, from the current year on.
+    addDraftProvision('us', { ...EXEMPTION, value: 6000 });
+    setDraftYear(2027);
+    render(<TableHarness />);
+
+    // The box would edit from 2027 and split the change in two; the summary opens the editor.
+    expect(rowValue(EXEMPTION_PATH)).toBeNull();
+    expect(screen.getByRole('button', { name: '$6,000' })).toBeInTheDocument();
   });
 
   test('given a breakdown member then the row stands for the whole breakdown', () => {
