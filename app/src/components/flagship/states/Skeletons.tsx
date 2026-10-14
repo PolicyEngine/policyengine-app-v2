@@ -40,7 +40,7 @@ export function SkeletonLine({
 /** The card grid's own columns, so the placeholders fill the same tracks. */
 export const CARD_GRID_STYLE: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
   gap: spacing.md,
 };
 

@@ -128,13 +128,17 @@ function YearsPicker({
             <Select value={String(year)} onValueChange={(next) => onYearChange(Number(next))}>
               <SelectTrigger
                 aria-label={yearLabel}
-                className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
+                className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500 tw:max-sm:min-h-10"
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="start">
                 {yearOptions.map((option) => (
-                  <SelectItem key={option} value={String(option)} className="tw:cursor-pointer">
+                  <SelectItem
+                    key={option}
+                    value={String(option)}
+                    className="tw:cursor-pointer tw:max-sm:min-h-10"
+                  >
                     {option}
                   </SelectItem>
                 ))}
@@ -151,6 +155,9 @@ function YearsPicker({
                 value: String(years),
                 label: years === 1 ? '1 year' : `${years} years`,
               }))}
+              // A fingertip tall on a phone. The popover portals out of the
+              // shell, so the shell's own phone sizes do not reach it.
+              className="tw:max-sm:h-12"
             />
           </div>
         </div>
@@ -207,7 +214,7 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
           onClick={() => setEditing(true)}
           aria-label="Rename the reform"
           title="Rename the reform"
-          className="tw:group tw:cursor-pointer tw:rounded-md tw:border tw:border-transparent tw:hover:border-border-light"
+          className="tw:group tw:cursor-pointer tw:rounded-md tw:border tw:border-transparent tw:hover:border-border-light tw:max-sm:min-h-10"
           style={{
             ...titleText,
             display: 'inline-flex',

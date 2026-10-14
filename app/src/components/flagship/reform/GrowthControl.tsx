@@ -188,7 +188,12 @@ export default function GrowthControl(props: GrowthControlProps) {
         <PopoverContent
           align="start"
           aria-label="Indexing"
-          style={{ width: 360, padding: spacing.lg, fontFamily: typography.fontFamily.primary }}
+          style={{
+            // Never wider than a phone's screen, less its edges.
+            width: `min(360px, calc(100vw - ${spacing['3xl']}))`,
+            padding: spacing.lg,
+            fontFamily: typography.fontFamily.primary,
+          }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
             <span

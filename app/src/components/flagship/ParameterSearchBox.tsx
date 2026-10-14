@@ -553,6 +553,8 @@ export default function ParameterSearchBox({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-label="Search parameters"
+          // A fingertip tall on a phone, in the bar's own height.
+          className="tw:max-sm:-my-1.5 tw:max-sm:min-h-10"
           autoFocus={autoFocus}
           role="combobox"
           aria-expanded={Boolean(browsing) || flatEntries.length > 0}
@@ -592,8 +594,10 @@ export default function ParameterSearchBox({
             triggerStyle={controlShell}
           />
         )}
-        <div style={controlShell}>
+        {/* A fingertip tall on a phone, the whole height a tap on the label. */}
+        <div className="tw:max-sm:min-h-10" style={controlShell}>
           <label
+            className="tw:max-sm:self-stretch"
             style={{
               display: 'flex',
               alignItems: 'center',

@@ -93,4 +93,37 @@ describe('FlagshipTopBar', () => {
     // The mocked location is /us/build, where the draft already is.
     expect(screen.queryByRole('button', { name: /draft ·/i })).not.toBeInTheDocument();
   });
+
+  test("given a phone's menu is opened then it offers both sections and the website links", async () => {
+    // Given — the menu button a phone shows in place of the sections
+    const user = userEvent.setup();
+    renderTopBar();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+
+    // Then
+    expect(await screen.findByRole('menuitem', { name: 'Build' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(screen.getByRole('menuitem', { name: 'Reforms' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Research' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/us/research')
+    );
+  });
+
+  test("given a section is chosen from a phone's menu then it navigates there", async () => {
+    // Given
+    const user = userEvent.setup();
+    renderTopBar();
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+
+    // When
+    await user.click(await screen.findByRole('menuitem', { name: 'Reforms' }));
+
+    // Then
+    expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
+  });
 });
