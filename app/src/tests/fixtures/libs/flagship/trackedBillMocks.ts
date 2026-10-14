@@ -18,6 +18,7 @@ export const TRACKED_BILL: TrackedBill = {
   provisions: [{ path: 'gov.irs.credits.ctc.amount.base[0].amount', value: 5000 }],
   keyFindings: ['External check (cost): within CRFB band.'],
   sourceUrl: 'https://www.congress.gov/bill/119th-congress/house-bill/1425',
+  trackerUrl: 'https://policyengine.org/us/bill-tracker/us/us-hr1425',
   date: '2026-07-06',
   provenance: {
     modelVersion: '1.729.3',

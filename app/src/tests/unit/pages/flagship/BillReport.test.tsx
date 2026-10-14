@@ -165,6 +165,33 @@ describe('BillReportPage', () => {
     ).toBeGreaterThanOrEqual(1);
   });
 
+  test('given a tracked bill then the overview links to its tracker page', async () => {
+    renderReport();
+
+    const link = await screen.findByRole('link', { name: /bill tracker/i });
+    expect(link).toHaveAttribute('href', TRACKED_BILL.trackerUrl);
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  test('given the tracker id in upper case then the same report opens', async () => {
+    renderReport('US-HR1425');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title })
+    ).toBeInTheDocument();
+  });
+
+  test('given a bill not in the feed then it links to that bill in the tracker', async () => {
+    mockFetchTrackerBills.mockResolvedValue([]);
+    renderReport('ks-hb2620');
+
+    expect(await screen.findByText('This bill is not in the current feed.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /bill tracker/i })).toHaveAttribute(
+      'href',
+      'https://policyengine.org/us/bill-tracker/ks/ks-hb2620'
+    );
+  });
+
   test('given the full run is calculating then economic impacts show its progress', async () => {
     const user = userEvent.setup();
     mockUseBillEconomy.mockReturnValue(economy({ message: 'In queue (position 2)...' }));

@@ -3,6 +3,7 @@ import { IconCalendar, IconExternalLink } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { billRunYear, type TrackedBill } from '@/api/billFeed';
+import { BillTrackerLink } from '@/components/flagship/BillTrackerLinks';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import DistrictImpactCard, {
   type CongressionalMode,
@@ -21,6 +22,7 @@ import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
+import { findTrackedBill, trackerUrlForBillId } from '@/libs/flagship/billTracker';
 import { RootState } from '@/store';
 
 interface BillReportPageProps {
@@ -43,7 +45,10 @@ function Caption({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** The bill's summary, analysis date, and bill text. Its validation verdict lives in Validation. */
+/**
+ * The bill's summary, analysis date, bill text, and tracker page. Its
+ * validation verdict lives in Validation.
+ */
 function BillOverviewLead({ bill }: { bill: TrackedBill }) {
   const billTextUrl = bill.sourceUrl ?? bill.legiscanUrl;
   return (
@@ -59,7 +64,7 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
           {bill.summary}
         </Text>
       )}
-      {(bill.date || billTextUrl) && (
+      {(bill.date || billTextUrl || bill.trackerUrl) && (
         <Stack
           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}
         >
@@ -87,6 +92,7 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
               <IconExternalLink size={11} />
             </a>
           )}
+          {bill.trackerUrl && <BillTrackerLink href={bill.trackerUrl} />}
         </Stack>
       )}
     </Stack>
@@ -225,7 +231,8 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const [runRequestedFor, setRunRequestedFor] = useState<string | null>(null);
   const runRequested = runRequestedFor === billId;
 
-  const bill: TrackedBill | undefined = bills.find((candidate) => candidate.id === billId);
+  // The tracker links here by its bill id; an encoded or upper-case id finds the same bill.
+  const bill: TrackedBill | undefined = findTrackedBill(bills, billId);
   const { data: storedDistricts } = useStoredBillDistricts(bill?.id);
 
   // A bill from a later year runs, and reads against the law, in its first year.
@@ -268,6 +275,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
         <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
           {isLoading ? 'Loading the analysis…' : 'This bill is not in the current feed.'}
         </Text>
+        {!isLoading && billId && <BillTrackerLink href={trackerUrlForBillId(billId)} />}
       </Stack>
     );
   }
