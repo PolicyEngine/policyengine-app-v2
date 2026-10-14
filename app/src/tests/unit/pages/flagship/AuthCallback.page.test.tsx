@@ -82,7 +82,9 @@ describe('AuthCallbackPage', () => {
     expect(request.url.searchParams.get('country_id')).toBe('us');
     expect(request.headers[UNAUTHENTICATED_USER_HEADER]).toBe(browserUserId);
     expect(request.headers.Authorization).toMatch(/^Bearer /);
-    expect(await screen.findByRole('alert')).toHaveTextContent(UPGRADE_SUCCESS_MESSAGE);
+    expect(await screen.findByRole('status', { name: 'Added to your account' })).toHaveTextContent(
+      UPGRADE_SUCCESS_MESSAGE
+    );
     // The browser starts over, so whoever is next here signed out starts empty.
     expect(getBrowserUserId()).not.toBe(browserUserId);
   });
@@ -97,7 +99,7 @@ describe('AuthCallbackPage', () => {
     // Then
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: 'Added to your account' })).not.toBeInTheDocument();
   });
 
   test('given the upgrade fails then the browser keeps its user, and Try again upgrades it', async () => {
@@ -107,7 +109,9 @@ describe('AuthCallbackPage', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const user = userEvent.setup();
     renderCallback(signedInAuthValue());
-    expect(await screen.findByRole('alert')).toHaveTextContent(UPGRADE_FAILURE_MESSAGE);
+    expect(
+      await screen.findByRole('alert', { name: 'Not added to your account yet' })
+    ).toHaveTextContent(UPGRADE_FAILURE_MESSAGE);
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
     expect(getBrowserUserId()).toBe(browserUserId);
 
@@ -129,5 +133,21 @@ describe('AuthCallbackPage', () => {
     expect(screen.getByText('Sign-in did not complete')).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
     expect(navigation.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('AccountUpgradeNotice', () => {
+  test('given the notice then it can be dismissed', async () => {
+    // Given
+    answerUpgrade('converted');
+    const user = userEvent.setup();
+    renderCallback(signedInAuthValue());
+    await screen.findByRole('status', { name: 'Added to your account' });
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+    // Then
+    expect(screen.queryByRole('status', { name: 'Added to your account' })).not.toBeInTheDocument();
   });
 });

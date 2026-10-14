@@ -21,7 +21,7 @@ const NAV_ITEMS = [
 ];
 
 /** Height of the bar. */
-const FLAGSHIP_TOP_BAR_HEIGHT = 56;
+export const FLAGSHIP_TOP_BAR_HEIGHT = 56;
 
 /**
  * The flagship shell's navigation: brand, the two sections, and the
