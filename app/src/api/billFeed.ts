@@ -186,8 +186,22 @@ function totalRows(response: Response): number | undefined {
   return total && total !== '*' ? Number(total) : undefined;
 }
 
+/**
+ * Each tracker table's row order, by its key. Pages are read by offset,
+ * and without an order the database may sort each request its own way:
+ * a second page can then repeat rows of the first and skip others.
+ */
+const TRACKER_ROW_ORDER = {
+  research: 'id.asc',
+  reform_impacts: 'id.asc',
+  validation_metadata: 'id.asc',
+  processed_bills: 'bill_id.asc,state.asc,bill_number.asc',
+} as const;
+
+type TrackerTable = keyof typeof TRACKER_ROW_ORDER;
+
 async function trackerSelect(
-  table: string,
+  table: TrackerTable,
   select: string,
   /** A PostgREST row filter, e.g. "id=eq.ks-hb2620". */
   filter?: string
@@ -199,7 +213,7 @@ async function trackerSelect(
   // Read page by page: one request stops at the cap and drops the rest.
   const rows: any[] = [];
   for (;;) {
-    const query = `select=${select}${filter ? `&${filter}` : ''}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
+    const query = `select=${select}${filter ? `&${filter}` : ''}&order=${TRACKER_ROW_ORDER[table]}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
     const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
       headers: {
         apikey: config.anonKey,
@@ -561,6 +575,19 @@ const processedBillKey = (state: string, billNumber: string) =>
   `${state.toUpperCase()}:${normalizeBillNumber(billNumber)}`;
 
 /**
+ * Of two status rows for one bill number, the one whose last action is
+ * later; on the same date (or none), the later row in the table's order.
+ */
+function laterStatusRow(current: any, candidate: any): any {
+  if (!current) {
+    return candidate;
+  }
+  const actionDate = (row: any) =>
+    typeof row?.last_action_date === 'string' ? row.last_action_date : '';
+  return actionDate(candidate) >= actionDate(current) ? candidate : current;
+}
+
+/**
  * The tracker's status row (processed_bills) for a research entry. The
  * entry's LegiScan link (legiscan_bill_id) names the row when it is set.
  * Otherwise the entry's id names the bill: "ut-sb0060", "ny-s-4487", or
@@ -600,7 +627,10 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       'reform_impacts',
       'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
     ),
-    trackerSelect('processed_bills', 'bill_id,state,bill_number,status,legiscan_url'),
+    trackerSelect(
+      'processed_bills',
+      'bill_id,state,bill_number,status,legiscan_url,last_action_date'
+    ),
     trackerSelect(
       'validation_metadata',
       'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against'
@@ -621,12 +651,13 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       bill.bill_id === null || bill.bill_id === undefined ? [] : [[String(bill.bill_id), bill]]
     )
   );
-  const processedByKey = new Map(
-    (processed ?? []).map((bill) => [
-      processedBillKey(String(bill.state), String(bill.bill_number)),
-      bill,
-    ])
-  );
+  // Rows that write one bill number apart ("HB 4170", "HB4170") share a key:
+  // the one with the latest action holds it.
+  const processedByKey = new Map<string, any>();
+  for (const bill of processed ?? []) {
+    const key = processedBillKey(String(bill.state), String(bill.bill_number));
+    processedByKey.set(key, laterStatusRow(processedByKey.get(key), bill));
+  }
 
   return research
     .filter((record) => isBillRecord(record))

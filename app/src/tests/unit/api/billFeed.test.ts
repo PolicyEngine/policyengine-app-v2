@@ -300,6 +300,80 @@ describe('tracker reads', () => {
       '1000',
     ]);
   });
+
+  test('given pages read without an order repeat rows then every row still reads once', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    const statuses = Array.from({ length: 1418 }, (_, index) => ({
+      bill_id: index,
+      state: 'UT',
+      bill_number: `HB${index}`,
+      status: 'Introduced',
+    }));
+    statuses[1417] = { bill_id: 1417, state: 'WV', bill_number: 'SB392', status: 'Signed into Law' };
+    const fetchMock = vi.fn(async (url: string) => {
+      const params = new URL(url).searchParams;
+      const table = new URL(url).pathname.split('/').pop();
+      const offset = Number(params.get('offset') ?? 0);
+      const all: any[] =
+        table === 'processed_bills'
+          ? statuses
+          : table === 'research'
+            ? [{ id: 'wv-sb392', state: 'WV', type: 'bill', status: 'published', title: 'SB 392' }]
+            : [];
+      // Without an order the database picks any row order per request, as
+      // seen live: page 2 repeats rows 582-999 of page 1 and skips the rest.
+      const page =
+        params.get('order') || offset === 0
+          ? all.slice(offset, offset + 1000)
+          : all.slice(offset - 418, offset);
+      return {
+        ok: true,
+        headers: new Headers({ 'content-range': `${offset}-${offset + page.length - 1}/${all.length}` }),
+        json: async () => page,
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills?.[0].status).toBe('Signed into Law');
+    // Every paged read names a stable order.
+    for (const [url] of fetchMock.mock.calls) {
+      expect(new URL(String(url)).searchParams.get('order')).toBeTruthy();
+    }
+  });
+
+  test('given two status rows for one bill number then the latest action wins', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal(
+      'fetch',
+      mockTrackerFetch({
+        research: [{ id: 'mi-hb4170', state: 'MI', type: 'bill', title: 'MI HB 4170' }],
+        processed_bills: [
+          {
+            bill_id: 9,
+            state: 'MI',
+            bill_number: 'HB 4170',
+            status: 'Passed',
+            last_action_date: '2026-06-10',
+          },
+          {
+            bill_id: 3,
+            state: 'MI',
+            bill_number: 'HB4170',
+            status: 'Passed One Chamber',
+            last_action_date: '2026-03-02',
+          },
+        ],
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills?.[0].status).toBe('Passed');
+  });
 });
 
 describe('fetchTrackerBills', () => {
