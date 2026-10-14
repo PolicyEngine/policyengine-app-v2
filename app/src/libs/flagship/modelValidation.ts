@@ -14,10 +14,12 @@
  */
 
 import { CalibrationRing, ringForDepth } from '@/libs/flagship/calibrationMatching';
+import { relevantComparisons } from '@/libs/flagship/comparisonRelevance';
 import {
   DEFAULT_MAX_DEPTH,
   loadParameterDependencies,
   ReachedVariable,
+  readersOfPath,
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
@@ -190,8 +192,10 @@ export async function fetchModelValidation(
 
 /**
  * The scorecard matches for a reform: the programs whose comparison rows
- * were computed from variables its paths reach (to `maxDepth`), with the
- * rows. Null when either the map or the scorecard is unavailable.
+ * were computed from variables its paths reach (to `maxDepth`), kept to
+ * the programs the reform changes, with the rows. The rows are all
+ * national, so the report's region does not narrow them. Null when either
+ * the map or the scorecard is unavailable.
  */
 export async function scorecardMatchesForPaths(
   paths: string[],
@@ -208,10 +212,19 @@ export async function scorecardMatchesForPaths(
   if (fetched === null) {
     return null;
   }
+  const changed = relevantComparisons(
+    fetched.map((row) => ({ program: row.program, geography: 'US', row })),
+    {
+      countryId: 'us',
+      paths,
+      readers: Object.fromEntries(paths.map((path) => [path, readersOfPath(path, map)])),
+      region: 'us',
+    }
+  ).map((entry) => entry.row);
   return {
     modelVersion: map.model.version,
     reachedCount: reached.length,
-    ...summarizeScorecardPrograms(reached, fetched),
+    ...summarizeScorecardPrograms(reached, changed),
   };
 }
 

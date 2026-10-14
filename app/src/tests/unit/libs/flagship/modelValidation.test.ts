@@ -132,7 +132,7 @@ describe('scorecardMatchesForPaths', () => {
     expect(matches?.rows).toHaveLength(2);
   });
 
-  test('given an EITC path echoing into the refundable CTC then both show, EITC nearest', async () => {
+  test('given an EITC path echoing into the refundable CTC then only the EITC is its program', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => okResponse({ rows: mockEitcScorecardRows }))
@@ -140,10 +140,11 @@ describe('scorecardMatchesForPaths', () => {
 
     const matches = await scorecardMatchesForPaths([EITC_MAX_PATH]);
 
+    // The CTC is reached through the tax the EITC reduces; the reform does not change it.
     expect(matches?.programs.map((match) => [match.program, match.ring])).toEqual([
       ['eitc', 'primary'],
-      ['ctc_refund', 'mechanism'],
     ]);
+    expect(matches?.rows.every((row) => row.program === 'eitc')).toBe(true);
   });
 
   test('given a state credit then no federal program is borrowed', async () => {
