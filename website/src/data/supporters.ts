@@ -129,7 +129,7 @@ export const projects: SupportedProjectData[] = [
     title: "Land value tax in every constituency",
     amount: 12000,
     currency: "GBP",
-    awardDate: "2026-09",
+    awardDate: "2026-10",
     description:
       "Estimating residential land values for each local authority in England, then modelling who gains and who loses in each constituency if a land value tax replaced council tax, or council tax and stamp duty together, with options such as deferral for asset-rich, income-poor households. Funded by the Economics Grant Fund (Harrington Legacy).",
     supporterId: "ses",
