@@ -380,38 +380,40 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
       </SelectContent>
     </Select>
   );
-  const growthRow =
-    mode === 'indexed' && canIndex && moneyMember
-      ? {
-          label: 'Indexing',
-          content: (
-            <GrowthControl
-              year={fromYear}
-              lastYear={lastYear}
-              value={growthChoice}
-              options={indexMenu}
-              timing={timing}
-              seriesYearsFor={(choice) =>
-                seriesYears(choice, parameters[moneyMember.path], parameters)
-              }
-              amountText={
-                group
-                  ? 'each amount'
-                  : formatValue(
-                      valueAt(moneyMember.path, fromYear),
-                      parameters[moneyMember.path]?.unit ?? null
-                    )
-              }
-              rounding={roundingChoice}
-              currency={String(parameters[moneyMember.path]?.unit).includes('GBP') ? '£' : '$'}
-              onChange={changeGrowth}
-            />
-          ),
+  // Indexing is edited from a button beside the value's start; its
+  // formula shows in the pop-up, not as a row of the grid.
+  const growthButton =
+    mode === 'indexed' && canIndex && moneyMember ? (
+      <GrowthControl
+        buttonOnly
+        year={fromYear}
+        lastYear={lastYear}
+        value={growthChoice}
+        options={indexMenu}
+        timing={timing}
+        seriesYearsFor={(choice) => seriesYears(choice, parameters[moneyMember.path], parameters)}
+        amountText={
+          group
+            ? 'each amount'
+            : formatValue(
+                valueAt(moneyMember.path, fromYear),
+                parameters[moneyMember.path]?.unit ?? null
+              )
         }
-      : undefined;
+        rounding={roundingChoice}
+        currency={String(parameters[moneyMember.path]?.unit).includes('GBP') ? '£' : '$'}
+        onChange={changeGrowth}
+      />
+    ) : null;
+  const startControls = (
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
+      {appliesFrom}
+      {growthButton}
+    </div>
+  );
   // What a growth makes of the value: the next years, and the last the model runs to.
   const previewYears =
-    mode === 'indexed' && growthRow
+    mode === 'indexed' && growthButton
       ? [
           ...Array.from({ length: PREVIEW_YEARS }, (_, i) => fromYear + 1 + i).filter(
             (at) => at <= lastYear
@@ -531,6 +533,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               Applies from
             </span>
             {appliesFrom}
+            {growthButton}
           </label>
         )}
 
@@ -582,7 +585,6 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
                 baselineAt={(memberPath) => baselineAt(memberPath, scheduleYear)}
                 onChange={(memberPath, value) => onCellChange(memberPath, scheduleYear, value)}
                 onFocus={setFocusedPath}
-                footer={mode === 'indexed' ? growthRow : undefined}
               />
             </div>
           ) : (
@@ -597,11 +599,10 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               focusedPath={focused}
               onFocus={setFocusedPath}
               previewYears={previewYears}
-              footer={growthRow}
               // One value: its start is the grid's first row, so no year heads the column.
               lead={
                 mode === 'one' || mode === 'indexed'
-                  ? { label: 'Applies from', content: appliesFrom }
+                  ? { label: 'Applies from', content: startControls }
                   : undefined
               }
               showYearHeadings={mode !== 'one'}

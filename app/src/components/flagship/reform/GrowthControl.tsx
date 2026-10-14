@@ -28,6 +28,8 @@ interface GrowthControlProps {
   /** "$" or "£", for the rounding steps */
   currency: string;
   onChange: (value: Growth, timing: GrowthTiming, rounding: GrowthRounding) => void;
+  /** The button alone, beside the value's start: the formula shows in the pop-up. */
+  buttonOnly?: boolean;
 }
 
 /** Steps laws round indexed amounts to. */
@@ -120,8 +122,18 @@ const fieldLabel: React.CSSProperties = {
  * later years in the grid show the indexed values.
  */
 export default function GrowthControl(props: GrowthControlProps) {
-  const { year, lastYear, value, options, timing, seriesYearsFor, rounding, currency, onChange } =
-    props;
+  const {
+    year,
+    lastYear,
+    value,
+    options,
+    timing,
+    seriesYearsFor,
+    rounding,
+    currency,
+    onChange,
+    buttonOnly = false,
+  } = props;
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<Choice>({ value, timing, rounding });
 
@@ -150,20 +162,26 @@ export default function GrowthControl(props: GrowthControlProps) {
   return (
     // The formula on the left, its edit on the right of the same row.
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md }}>
-      <span
-        style={{
-          flex: '1 1 260px',
-          minWidth: 0,
-          fontSize: typography.fontSize.sm,
-          lineHeight: typography.lineHeight.relaxed,
-          color: colors.text.secondary,
-        }}
-      >
-        {hint({ value, timing, rounding }, props)}
-      </span>
+      {!buttonOnly && (
+        <span
+          style={{
+            flex: '1 1 260px',
+            minWidth: 0,
+            fontSize: typography.fontSize.sm,
+            lineHeight: typography.lineHeight.relaxed,
+            color: colors.text.secondary,
+          }}
+        >
+          {hint({ value, timing, rounding }, props)}
+        </span>
+      )}
       <Popover open={open} onOpenChange={openWith}>
         <PopoverTrigger asChild>
-          <Button size="sm" variant="outline" style={{ flexShrink: 0, marginLeft: 'auto' }}>
+          <Button
+            size={buttonOnly ? 'default' : 'sm'}
+            variant="outline"
+            style={{ flexShrink: 0, marginLeft: buttonOnly ? undefined : 'auto' }}
+          >
             {indexed ? 'Edit indexing' : 'Add indexing'}
           </Button>
         </PopoverTrigger>
