@@ -248,11 +248,17 @@ export interface ValidationClaim {
   notes?: string;
 }
 
+/** A fiscal note's label: who wrote it, as the tracker stored it, or the generic name. */
+export function fiscalNoteLabel(validation: { fiscalNoteSource?: string }): string {
+  return validation.fiscalNoteSource?.trim() || 'Official fiscal note';
+}
+
 /** Tracker validation_metadata → scorecard-shaped claims. */
 export function claimsFromBillValidation(
   billId: string,
   validation: {
     fiscalNoteEstimate?: number;
+    fiscalNoteSource?: string;
     fiscalNoteUrl?: string;
     peEstimate?: number;
     discrepancyExplanation?: string;
@@ -276,7 +282,9 @@ export function claimsFromBillValidation(
   return [
     ...(typeof validation.fiscalNoteEstimate === 'number'
       ? [
-          claim('Official fiscal note', validation.fiscalNoteEstimate, {
+          // Named by its source: a proxy note (another bill's score) must not
+          // read as this bill's own.
+          claim(fiscalNoteLabel(validation), validation.fiscalNoteEstimate, {
             sourceUrl: validation.fiscalNoteUrl,
             notes: validation.discrepancyExplanation,
           }),

@@ -6,6 +6,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   claimsFromBillValidation,
+  fiscalNoteLabel,
   METRIC_LABELS,
   ModelValidationRow,
   PROGRAM_LABELS,
@@ -124,9 +125,27 @@ const VERIFICATION_COPY: Record<NonNullable<BillValidation['verification']>['ove
   unverifiable: 'Sources could not be independently re-verified',
 };
 
+/** A link to an estimate's source, under its name. */
+function ReadSource({ href }: { href: string }) {
+  return (
+    <CellNote>
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
+      >
+        Read source
+      </a>
+    </CellNote>
+  );
+}
+
 /**
  * A bill's external estimates beside PolicyEngine's, in one table, with
  * the range verdict and what the pipeline noted about the comparison.
+ * A fiscal note stored without a single estimate still names and links
+ * its source: under the accepted range it sets, or in a row of its own.
  */
 export function BillExternalEstimates({
   billId,
@@ -143,6 +162,10 @@ export function BillExternalEstimates({
     typeof validation.targetRangeLow === 'number' && typeof validation.targetRangeHigh === 'number'
       ? [validation.targetRangeLow, validation.targetRangeHigh].sort((a, b) => a - b)
       : null;
+  const noteSource = validation.fiscalNoteSource?.trim();
+  const noteWithoutEstimate =
+    typeof validation.fiscalNoteEstimate !== 'number' &&
+    (validation.fiscalNoteUrl !== undefined || Boolean(noteSource));
   return (
     <Stack style={{ gap: spacing.md }}>
       <EvidenceTable label="Estimates for this bill" columns={['Source', 'Estimate', 'Gap']}>
@@ -157,31 +180,34 @@ export function BillExternalEstimates({
             <td style={numberCellStyle}>—</td>
           </tr>
         )}
-        {claims.map((claim) => (
-          <tr key={claim.source} style={rowStyle}>
+        {claims.map((claim, index) => (
+          <tr key={`${index}-${claim.source}`} style={rowStyle}>
             <th scope="row" style={labelCellStyle}>
               <span>{claim.source}</span>
-              {claim.sourceUrl && (
-                <CellNote>
-                  <a
-                    href={claim.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
-                  >
-                    Read source
-                  </a>
-                </CellNote>
-              )}
+              {claim.sourceUrl && <ReadSource href={claim.sourceUrl} />}
             </th>
             <td style={numberCellStyle}>{compactMoney(claim.externalValue)}</td>
             <td style={numberCellStyle}>{gapText(peEstimate, claim.externalValue)}</td>
           </tr>
         ))}
+        {noteWithoutEstimate && !range && (
+          <tr style={rowStyle}>
+            <th scope="row" style={labelCellStyle}>
+              <span>{fiscalNoteLabel(validation)}</span>
+              {validation.fiscalNoteUrl && <ReadSource href={validation.fiscalNoteUrl} />}
+            </th>
+            <td style={numberCellStyle}>No estimate</td>
+            <td style={numberCellStyle}>—</td>
+          </tr>
+        )}
         {range && (
           <tr style={rowStyle}>
             <th scope="row" style={labelCellStyle}>
-              Accepted range
+              <span>Accepted range</span>
+              {noteWithoutEstimate && noteSource && <CellNote>{noteSource}</CellNote>}
+              {noteWithoutEstimate && validation.fiscalNoteUrl && (
+                <ReadSource href={validation.fiscalNoteUrl} />
+              )}
             </th>
             <td style={numberCellStyle}>
               {compactMoney(range[0])} to {compactMoney(range[1])}
