@@ -122,7 +122,7 @@ export const projects: SupportedProjectData[] = [
     currency: "USD",
     awardDate: "2026-10",
     description:
-      "Modelling the revenue and distributional effects of a UK tax on AI inference, for Lucas Irwin's project \"Token taxes as a mechanism for reducing AI-driven power concentration\" and its policy memo with IPPR. The project is funded through Manifund by grantmaking.ai.",
+      "Modelling the revenue and distributional effects of a UK tax on AI inference, for the project \"Token taxes as a mechanism for reducing AI-driven power concentration\" and its policy memo with IPPR. The project is funded through Manifund by grantmaking.ai.",
     supporterId: "manifund",
   },
   {
