@@ -202,13 +202,13 @@ describe('DraftHeader', () => {
     test('then a saved reform with the same values is reused, not copied', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', CHANGED);
-      const draft = getDraftReform()!;
-      const parameters = draft.provisions.map((provision) => ({
-        name: provision.path,
-        values: provision.intervals ?? [
-          { startDate: '2026-01-01', endDate: '2100-12-31', value: provision.value },
-        ],
-      }));
+      // A saved reform holds what differs from current law: the changed value alone.
+      const parameters = [
+        {
+          name: CHANGED.path,
+          values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: CHANGED.value }],
+        },
+      ];
       mockFindMine.mockResolvedValue([
         { id: 'rf-saved', countryId: 'us', label: 'Mine', parameters, provenance: {} },
       ]);
@@ -219,6 +219,20 @@ describe('DraftHeader', () => {
       await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
       expect(mockCreate).not.toHaveBeenCalled();
       expect(mockRun.mock.calls[0][3]).toBe('rf-saved');
+    });
+
+    test('then the saved reform holds only what the report models', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+      // The child tax credit row was added but left at current law.
+      expect(
+        mockCreate.mock.calls[0][0].parameters.map((parameter: { name: string }) => parameter.name)
+      ).toEqual([CHANGED.path]);
     });
 
     test('then a failed save still runs the report, unlinked', async () => {
@@ -497,6 +511,28 @@ describe('DraftHeader', () => {
       ref: 'ask-keyword-v0',
     });
     await waitFor(() => expect(getDraftReform()).toBeNull());
+  });
+
+  test('given save then a parameter left at current law is not saved as a freeze', async () => {
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+    expect(mockCreate.mock.calls[0][0].parameters).toEqual([
+      {
+        name: 'gov.irs.credits.eitc.max',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 900 }],
+      },
+    ]);
   });
 
   test('given discard then the draft clears without saving', async () => {

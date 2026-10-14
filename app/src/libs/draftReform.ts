@@ -550,15 +550,26 @@ export function provisionFromSearchEntry(
   };
 }
 
-/** Converts the draft to the Reform shape for the store. */
-export function draftToReform(draft: DraftReform): Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> {
+/**
+ * Converts the draft to the Reform shape for the store. Only what differs
+ * from current law is kept, as a run models it: a parameter added but
+ * left at current law, or reset to it, saves as nothing rather than as a
+ * freeze at today's value.
+ */
+export function draftToReform(
+  draft: DraftReform,
+  /** Current law's values for a parameter; without them, any set value is kept. */
+  currentLaw?: (path: string) => Record<string, unknown> | undefined
+): Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> {
   return {
     countryId: draft.countryId,
     label: draft.label || null,
-    parameters: draft.provisions.map((provision) => ({
-      name: provision.path,
-      values: provisionIntervals(provision),
-    })),
+    parameters: draft.provisions
+      .filter((provision) => provisionAdjusts(provision, currentLaw?.(provision.path)))
+      .map((provision) => ({
+        name: provision.path,
+        values: provisionIntervals(provision),
+      })),
     baseline: 'current-law',
     provenance: { source: draft.source, ref: draft.sourceRef },
   };

@@ -23,6 +23,14 @@ const CTC_PROVISION = {
   value: 2000,
 };
 
+const EITC_PROVISION = {
+  path: 'gov.irs.credits.eitc.max[0].amount',
+  breadcrumb: 'IRS → Credits → EITC → Maximum → Bracket 1 → Amount',
+  unit: 'currency-USD',
+  baselineValue: 600,
+  value: 600,
+};
+
 describe('draftReform', () => {
   beforeEach(() => {
     clearDraftReform();
@@ -129,6 +137,34 @@ describe('draftReform', () => {
     expect(reform.parameters[0].name).toBe(CTC_PROVISION.path);
     expect(reform.parameters[0].values[0].value).toBe(3600);
     expect(reform.parameters[0].values[0].endDate).toBe('2100-12-31');
+  });
+
+  it('given a parameter added but left at current law then saving leaves it out', () => {
+    addDraftProvision('us', CTC_PROVISION);
+    addDraftProvision('us', { ...EITC_PROVISION, value: 900 });
+
+    const reform = draftToReform(getDraftReform()!);
+
+    expect(reform.parameters.map((parameter) => parameter.name)).toEqual([EITC_PROVISION.path]);
+  });
+
+  it('given current law then a value reset to it saves as nothing, and a freeze still saves', () => {
+    // Current law moves on in 2027: holding 2,000 from 2026 freezes it.
+    const currentLaw = { '2026-01-01': 2000, '2027-01-01': 2100 };
+    addDraftProvision('us', {
+      ...CTC_PROVISION,
+      intervals: [{ startDate: '2026-01-01', endDate: '2026-12-31', value: 2000 }],
+    });
+    addDraftProvision('us', {
+      ...EITC_PROVISION,
+      intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 600 }],
+    });
+
+    const reform = draftToReform(getDraftReform()!, (path) =>
+      path === CTC_PROVISION.path ? currentLaw : { '2026-01-01': 600, '2027-01-01': 650 }
+    );
+
+    expect(reform.parameters.map((parameter) => parameter.name)).toEqual([EITC_PROVISION.path]);
   });
 
   it('given a saved reform to compare with then the draft keeps it, and current law clears it', () => {

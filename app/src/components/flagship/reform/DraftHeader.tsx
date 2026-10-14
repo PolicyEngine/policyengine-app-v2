@@ -261,6 +261,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
     const values = parameters?.[path]?.values;
     return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
   };
+  // Saving keeps what the run models: the values that differ from current law.
+  const currentLawValues = (path: string) => parameters?.[path]?.values;
   const year = draftYear(draft);
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
   // The budget's span from the report's year: the year alone, or a window
@@ -282,7 +284,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const saveForRun = async (): Promise<string | undefined> => {
     try {
       const store = getReformStore();
-      const payload = draftToReform(draft);
+      const payload = draftToReform(draft, currentLawValues);
       if (draft.editingReformId) {
         await store.update(draft.editingReformId, {
           label: payload.label,
@@ -328,7 +330,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const store = getReformStore();
-      const payload = draftToReform(draft);
+      const payload = draftToReform(draft, currentLawValues);
       if (draft.editingReformId) {
         return store.update(draft.editingReformId, {
           label: payload.label,
