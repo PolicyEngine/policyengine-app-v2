@@ -186,6 +186,8 @@ function Card({
             rel="noreferrer"
             aria-label="Bill text"
             onClick={(event) => event.stopPropagation()}
+            // A fingertip wide on a phone, without moving the card's lines.
+            className="tw:max-sm:-my-3 tw:max-sm:-mr-3 tw:max-sm:size-10 tw:max-sm:items-center tw:max-sm:justify-center"
             style={{ display: 'inline-flex', color: colors.text.secondary }}
           >
             <IconExternalLink size={13} />
@@ -515,6 +517,7 @@ export default function ReformsPage() {
     <button
       type="button"
       onClick={() => setSelectedId(null)}
+      className="tw:max-sm:min-h-10"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -870,7 +873,9 @@ export default function ReformsPage() {
           </Button>
         </Stack>
 
-        <Stack style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
+        <Stack
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, alignItems: 'center' }}
+        >
           {(
             [
               { id: 'bills', label: 'In Congress' },
@@ -887,11 +892,13 @@ export default function ReformsPage() {
                   setSelectedId(null);
                 }}
                 aria-pressed={active}
+                className="tw:max-sm:min-h-10"
                 style={{
                   border: 'none',
                   background: 'none',
                   padding: `0 0 ${spacing.xs}`,
                   cursor: 'pointer',
+                  whiteSpace: 'nowrap',
                   fontSize: typography.fontSize.base,
                   fontFamily: typography.fontFamily.primary,
                   fontWeight: active
@@ -905,7 +912,8 @@ export default function ReformsPage() {
               </button>
             );
           })}
-          <div style={{ flex: 1 }} />
+          {/* On a phone the filters take a line of their own, under the tabs. */}
+          <div className="tw:flex-1 tw:max-sm:basis-full" />
           {tab === 'bills' && placeStates.length + (placeCounts.federal > 0 ? 1 : 0) > 1 && (
             <ScopePicker
               label="Place"
@@ -916,13 +924,19 @@ export default function ReformsPage() {
               triggerStyle={filterControl}
             />
           )}
-          <div style={{ ...filterControl, width: 220 }}>
+          <div
+            // On a phone the search fills what the place filter leaves.
+            className="tw:max-sm:min-h-10 tw:max-sm:min-w-0 tw:max-sm:grow tw:max-sm:basis-[160px]"
+            style={{ ...filterControl, width: 220 }}
+          >
             <IconSearch size={14} color={colors.text.secondary} />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search"
               aria-label="Search reforms"
+              // 16px on a phone, so the browser does not zoom in to type.
+              className="tw:max-sm:-my-px tw:max-sm:h-10 tw:max-sm:text-base!"
               style={{
                 flex: 1,
                 minWidth: 0,
@@ -988,7 +1002,7 @@ export default function ReformsPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
             gap: spacing.md,
           }}
         >

@@ -39,6 +39,8 @@ export default function ValueInput({ value, onChange, ariaLabel }: ValueInputPro
       value={value ?? ''}
       aria-label={ariaLabel}
       onChange={(event) => onChange(event.target.value === '' ? '' : Number(event.target.value))}
+      // On a phone: a fingertip tall, and 16px so the browser does not zoom in to type.
+      className="tw:max-sm:min-h-10 tw:max-sm:text-base!"
       style={{
         width: 110,
         padding: `${spacing.xs} ${spacing.sm}`,
