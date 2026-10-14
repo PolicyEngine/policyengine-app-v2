@@ -97,6 +97,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         countryId: report.countryId,
         year: report.year,
         simulations: { simulation1, simulation2: simulations[1] || null },
+        // The bar follows a typical run for this region, not the country.
+        estimateByRegion: true,
         populations: {
           household1: null,
           household2: null,

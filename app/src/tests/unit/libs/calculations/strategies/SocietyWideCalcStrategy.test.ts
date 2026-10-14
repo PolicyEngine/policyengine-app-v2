@@ -1,4 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  UK_REGION_SOCIETY_WIDE_DURATION_MS,
+  US_DISTRICT_SOCIETY_WIDE_DURATION_MS,
+  US_SOCIETY_WIDE_DURATION_MS,
+  US_STATE_SOCIETY_WIDE_DURATION_MS,
+} from '@/constants/calculationDurations';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import {
   mockSocietyWideCompleteResponse,
@@ -7,6 +13,19 @@ import {
   STRATEGY_TEST_CONSTANTS,
 } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 import { mockSocietyWideCalcParams } from '@/tests/fixtures/types/calculationFixtures';
+import type { CalcParams } from '@/types/calculation';
+
+// The country estimates that legacy (v2) progress bars use
+const THREE_MINUTES_MS = 3 * 60 * 1000;
+const SIX_MINUTES_MS = 6 * 60 * 1000;
+
+/** Metadata for a society-wide report run that started `elapsedMs` ago. */
+const startedAgo = (elapsedMs: number) => ({
+  calcId: 'test-report',
+  calcType: 'societyWide' as const,
+  targetType: 'report' as const,
+  startedAt: Date.now() - elapsedMs,
+});
 
 // Mock the societyWide API
 vi.mock('@/api/societyWideCalculation', () => ({
@@ -220,6 +239,85 @@ describe('SocietyWideCalcStrategy', () => {
           region: 'ca', // No prefix for US
         })
       );
+    });
+  });
+
+  describe('duration estimate', () => {
+    it.each<[CalcParams['countryId'], string, number]>([
+      ['uk', 'uk', THREE_MINUTES_MS],
+      ['uk', 'country/england', THREE_MINUTES_MS],
+      ['us', 'us', SIX_MINUTES_MS],
+      ['us', 'state/ca', SIX_MINUTES_MS],
+      ['us', 'congressional_district/CA-46', SIX_MINUTES_MS],
+    ])(
+      'given the default and a %s run on %s then progress follows the %i ms country estimate',
+      async (countryId, region, countryEstimateMs) => {
+        // Given - half of the country estimate has passed
+        const params = mockSocietyWideCalcParams({ countryId, region, populationId: region });
+        mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+
+        // When
+        const result = await strategy.execute(params, startedAgo(countryEstimateMs / 2));
+
+        // Then - unchanged from before region estimates, with no estimate attached
+        expect(result.status).toBe('pending');
+        expect(result.progress).toBeCloseTo(50, 0);
+        expect(result).not.toHaveProperty('estimatedDurationMs');
+      }
+    );
+
+    it.each<[CalcParams['countryId'], string, number]>([
+      ['uk', 'uk', UK_REGION_SOCIETY_WIDE_DURATION_MS],
+      ['uk', 'constituency/Sheffield Central', UK_REGION_SOCIETY_WIDE_DURATION_MS],
+      ['us', 'us', US_SOCIETY_WIDE_DURATION_MS],
+      ['us', 'state/ca', US_STATE_SOCIETY_WIDE_DURATION_MS],
+      ['us', 'congressional_district/CA-46', US_DISTRICT_SOCIETY_WIDE_DURATION_MS],
+    ])(
+      'given estimateByRegion and a %s run on %s then progress follows the %i ms region estimate',
+      async (countryId, region, regionEstimateMs) => {
+        // Given - half of the region estimate has passed
+        const params = mockSocietyWideCalcParams({
+          countryId,
+          region,
+          populationId: region,
+          estimateByRegion: true,
+        });
+        mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+
+        // When
+        const result = await strategy.execute(params, startedAgo(regionEstimateMs / 2));
+
+        // Then
+        expect(result.status).toBe('pending');
+        expect(result.progress).toBeCloseTo(50, 0);
+        expect(result.estimatedDurationMs).toBe(regionEstimateMs);
+      }
+    );
+
+    it('given estimateByRegion and no region then estimates a nationwide run', async () => {
+      // Given
+      const params = mockSocietyWideCalcParams({ region: undefined, estimateByRegion: true });
+      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+
+      // When
+      const result = await strategy.execute(params, startedAgo(0));
+
+      // Then
+      expect(result.estimatedDurationMs).toBe(US_SOCIETY_WIDE_DURATION_MS);
+    });
+
+    it('given a region without estimateByRegion then the transform ignores the region', () => {
+      // When
+      const result = strategy.transformResponseWithMetadata(
+        mockSocietyWideComputingResponse(),
+        startedAgo(SIX_MINUTES_MS / 2),
+        'us',
+        { region: 'state/ca' }
+      );
+
+      // Then
+      expect(result.progress).toBeCloseTo(50, 0);
+      expect(result).not.toHaveProperty('estimatedDurationMs');
     });
   });
 
