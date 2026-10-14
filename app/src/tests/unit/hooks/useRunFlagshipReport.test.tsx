@@ -67,9 +67,21 @@ describe('useRunFlagshipReport', () => {
     expect(accountReportStore).toBeInstanceOf(ApiFlagshipReportStore);
   });
 
-  test('given a signed-out session then the run records in this browser', async () => {
+  test("given a signed-out session then the run records as this browser's user in the API", async () => {
     // Given
     const { result } = renderRun(makeAuthValue());
+
+    // When
+    await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
+
+    // Then
+    const { accountReportStore } = vi.mocked(runFlagshipReport).mock.calls[0][0];
+    expect(accountReportStore).toBeInstanceOf(ApiFlagshipReportStore);
+  });
+
+  test('given sign-in off then the run records in this browser', async () => {
+    // Given
+    const { result } = renderRun(makeAuthValue({ status: 'disabled' }));
 
     // When
     await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));

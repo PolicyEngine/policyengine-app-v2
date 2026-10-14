@@ -5,6 +5,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiFlagshipReportStore, LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
 import { ApiReformStore, LocalStorageReformStore } from '@/api/reformStore';
+import { UNAUTHENTICATED_USER_HEADER } from '@/api/v2UserClient';
 import { CountryProvider } from '@/contexts/CountryContext';
 import {
   useFlagshipReportStore,
@@ -13,6 +14,7 @@ import {
   useV3SavedWork,
 } from '@/hooks/useFlagshipStores';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
+import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { store } from '@/store';
 import {
   ASSOCIATION_IDS,
@@ -93,9 +95,30 @@ describe('v3 store choice', () => {
     expect(savedWork.scope).toBe(`account:${TEST_AUTH0_SUBJECT}`);
   });
 
+  test("given signed out then saved work goes to the API as this browser's user", async () => {
+    // Given
+    localStorage.clear();
+    const browserUserId = getBrowserUserId();
+    const wrapper = wrapperFor(makeAuthValue());
+
+    // When
+    const reforms = renderHook(() => useReformStore(), { wrapper }).result.current;
+    const reports = renderHook(() => useFlagshipReportStore(), { wrapper }).result.current;
+    await reforms.findByUser('anonymous', 'us');
+
+    // Then
+    expect(reforms).toBeInstanceOf(ApiReformStore);
+    expect(reports.store).toBeInstanceOf(ApiFlagshipReportStore);
+    expect(reports.isAccount).toBe(true);
+    expect(reports.scope).toBe(`browser-user:${browserUserId}`);
+    const headers = fetchMock.mock.calls[0][1].headers as Record<string, string>;
+    expect(headers[UNAUTHENTICATED_USER_HEADER]).toBe(browserUserId);
+    expect(headers.Authorization).toBeUndefined();
+  });
+
   test.each([
-    ['signed out', makeAuthValue(), 'us'],
-    ['sign-in disabled', makeAuthValue({ status: 'disabled' }), 'uk'],
+    ['sign-in off', makeAuthValue({ status: 'disabled' }), 'uk'],
+    ['signed out outside the US and UK', makeAuthValue(), 'ca'],
     ['signed in outside the US and UK', signedInAuthValue(), 'ca'],
   ] as const)('given %s then reforms and reports stay in this browser', (_, auth, countryId) => {
     // Given
@@ -139,7 +162,7 @@ describe('useReformStore', () => {
 });
 
 describe('useReportRecord', () => {
-  test('given a signed-out run on this browser then its record names the reform it was run from', async () => {
+  test('given a run kept in this browser then its record names the reform it was run from', async () => {
     // Given
     localStorage.clear();
     await new LocalStorageFlagshipReportStore().create({
@@ -153,9 +176,9 @@ describe('useReportRecord', () => {
       reformId: 'rf-ran',
     });
 
-    // When
+    // When: sign-in off, so records are this browser's
     const { result } = renderHook(() => useReportRecord('615'), {
-      wrapper: wrapperFor(makeAuthValue()),
+      wrapper: wrapperFor(makeAuthValue({ status: 'disabled' })),
     });
 
     // Then

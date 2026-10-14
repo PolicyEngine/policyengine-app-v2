@@ -69,17 +69,22 @@ build time (see `calculator-app/.env.example`), alongside
 | `NEXT_PUBLIC_AUTH0_AUDIENCE` | PolicyEngine API resource server identifier |
 | `NEXT_PUBLIC_API_URL` | PolicyEngine API origin (default `https://api.policyengine.org`); set to the staging API on staging |
 
-- Signed in on the US or UK workspace, reforms and reports go to the
-  account. Signed out, they stay in this browser, in v3's own keys.
-- Either way, saving a reform first creates its policy in the PolicyEngine
-  API, and running a report creates its simulations and report there. A
-  browser reform keeps its policy ID next to a copy of its changes; an
-  account reform keeps only the policy ID and reads the changes from the
-  policy.
-- Every sign-in moves the v3 reforms and reports saved on this browser
-  while signed out into the account. Each item the account confirms is
-  removed from the browser; anything else stays and is sent again at the
-  next sign-in. Work outside the US and UK always stays in the browser.
+- On the US and UK workspace, saved reforms and reports always go to the
+  PolicyEngine API. Signed in, they belong to the account. Signed out, they
+  belong to this browser's unauthenticated user: a random UUID made on the
+  first visit, kept in localStorage (`pe-browser-user-id`) with no expiry,
+  and sent as the `PolicyEngine-Unauthenticated-User` header. It is the
+  credential for that work, so it never goes in a URL or a log.
+- A saved reform is a pointer to its PolicyEngine API policy (with its
+  name, baseline and origin); its changes are read back from the policy.
+  Running a report creates its policy, simulations and report in the API.
+- Signing in upgrades the browser's unauthenticated user
+  (`POST /v2/me/upgrade`): on a first sign-in it becomes the account, so
+  everything saved stays; for an existing account its work moves into that
+  account. The browser then starts over with a new UUID. A failed upgrade
+  keeps the UUID, so the next sign-in tries again.
+- With sign-in off, and outside the US and UK, saved work stays in this
+  browser, in v3's own keys.
 - The legacy calculator (policies, households, simulations and reports
   built outside the workspace) has no sign-in and keeps its saved work in
   localStorage, as before. v3 never reads or writes that storage.

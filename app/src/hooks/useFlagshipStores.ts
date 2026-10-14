@@ -7,22 +7,27 @@ import type { ApiStoreContext } from '@/api/v2Associations';
 import { MOCK_USER_ID } from '@/constants';
 import { useCountryContext } from '@/contexts/CountryContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
+import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
 
 /**
- * Where the v3 workspace keeps saved work: the account when signed in (US
- * and UK), this browser otherwise. Nothing else decides it, and nothing
- * falls back: an account request that fails is an ordinary error.
+ * Where the v3 workspace keeps saved work. Wherever accounts exist (sign-in
+ * configured, US and UK) it is the PolicyEngine API: as the signed-in
+ * account, or signed out as this browser's unauthenticated user. Without
+ * sign-in (and outside the US and UK) it stays in this browser. Nothing
+ * else decides it, and nothing falls back: a request that fails is an
+ * ordinary error.
  */
 export interface V3SavedWork {
-  /** The account's routes when signed in; null keeps saved work in this browser. */
+  /** The API routes for this session's user; null keeps saved work in this browser. */
   account: ApiStoreContext | null;
   /**
-   * Scopes cached saved work to the session: the Auth0 subject when
-   * signed in, 'browser' otherwise. Signing in or out reloads the page; a
-   * session that ends without a reload moves every query to new keys.
+   * Scopes cached saved work to whose it is: the Auth0 subject when signed
+   * in, this browser's unauthenticated user when signed out, 'browser'
+   * otherwise. A session that ends without a reload moves every query to
+   * new keys.
    */
   scope: string;
 }
@@ -31,16 +36,19 @@ export function useV3SavedWork(): V3SavedWork {
   const { status, subject } = useAuthStatus();
   const countryId = useCountryContext();
   const client = useV2UserClient();
-  return useMemo(
-    () =>
-      status === 'signed_in' && subject && isAssociationCountry(countryId)
-        ? {
-            account: { client, countryId },
-            scope: `account:${subject}`,
-          }
-        : { account: null, scope: 'browser' },
-    [status, subject, countryId, client]
-  );
+  const browserUserId = status === 'signed_out' ? getBrowserUserId() : null;
+  return useMemo(() => {
+    if (!isAssociationCountry(countryId)) {
+      return { account: null, scope: 'browser' };
+    }
+    if (status === 'signed_in' && subject) {
+      return { account: { client, countryId }, scope: `account:${subject}` };
+    }
+    if (browserUserId) {
+      return { account: { client, countryId }, scope: `browser-user:${browserUserId}` };
+    }
+    return { account: null, scope: 'browser' };
+  }, [status, subject, browserUserId, countryId, client]);
 }
 
 /** A v1 policy's raw parameter map (`policy_json`), per country. */

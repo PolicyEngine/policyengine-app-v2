@@ -1,24 +1,24 @@
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { LocalStorageReformStore } from '@/api/reformStore';
-import AccountImportNotice from '@/components/auth/AccountImportNotice';
-import { MOCK_USER_ID } from '@/constants';
+import { UNAUTHENTICATED_USER_HEADER } from '@/api/v2UserClient';
+import AccountUpgradeNotice from '@/components/auth/AccountUpgradeNotice';
 import { NavigationProvider } from '@/contexts/NavigationContext';
-import { dismissAccountImportNotice } from '@/libs/auth/accountImport';
+import {
+  dismissAccountUpgradeNotice,
+  UPGRADE_FAILURE_MESSAGE,
+  UPGRADE_SUCCESS_MESSAGE,
+} from '@/libs/auth/accountUpgrade';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { takeSignInReturnTo } from '@/libs/auth/AuthProvider';
+import { getBrowserUserId } from '@/libs/auth/browserUser';
 import AuthCallbackPage from '@/pages/flagship/AuthCallback.page';
-import {
-  errorResponse,
-  itemResponse,
-  mockMeItem,
-  okResponse,
-} from '@/tests/fixtures/api/v2UserMocks';
+import { errorResponse, mockMeItem, okResponse } from '@/tests/fixtures/api/v2UserMocks';
 import {
   AuthTestProvider,
   makeAuthValue,
   signedInAuthValue,
 } from '@/tests/fixtures/libs/auth/authMocks';
+import type { UpgradeOutcome } from '@/types/v2User';
 
 vi.mock('@/libs/auth/AuthProvider', () => ({
   takeSignInReturnTo: vi.fn(),
@@ -32,57 +32,35 @@ function renderCallback(auth: AuthContextValue) {
     <NavigationProvider value={navigation}>
       <AuthTestProvider value={auth}>
         <AuthCallbackPage />
-        <AccountImportNotice />
+        <AccountUpgradeNotice />
       </AuthTestProvider>
     </NavigationProvider>
   );
 }
 
-function requestPaths(): string[] {
-  return fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
-}
-
-/** Answers /v2/me with the account, and imports with every reform added or with a failure. */
-function answerImports(imports: 'accept' | 'fail') {
-  fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
-    const path = new URL(url).pathname;
-    if (path === '/v2/me') {
-      return itemResponse(mockMeItem);
-    }
-    if (path !== '/v2/me/imports') {
+/** Answers the upgrade with `outcome`, or with a failure. */
+function answerUpgrade(answer: UpgradeOutcome | 'fail') {
+  fetchMock.mockImplementation(async (url: string) => {
+    if (new URL(url).pathname !== '/v2/me/upgrade') {
       return new Response('', { status: 404 });
     }
-    if (imports === 'fail') {
-      return errorResponse(503, 'Saved work is temporarily unavailable.');
-    }
-    const body = JSON.parse(String(init.body));
-    return okResponse({
-      id_map: Object.fromEntries(
-        (body.policies ?? []).map((item: { client_ref: string }) => [item.client_ref, 'uuid-1'])
-      ),
-      skipped: [],
-    });
+    return answer === 'fail'
+      ? errorResponse(503, 'Saved work is temporarily unavailable.')
+      : okResponse({ item: mockMeItem, outcome: answer });
   });
 }
 
-const browserReformCount = () => JSON.parse(localStorage.getItem('reforms') ?? '[]').length;
+function upgradeRequest(index = 0) {
+  const [url, init] = fetchMock.mock.calls[index] as [string, RequestInit];
+  return { url: new URL(url), headers: init.headers as Record<string, string> };
+}
 
-beforeEach(async () => {
+beforeEach(() => {
   localStorage.clear();
   vi.clearAllMocks();
   vi.stubGlobal('fetch', fetchMock);
   vi.mocked(takeSignInReturnTo).mockReturnValue('/us/reforms');
-  dismissAccountImportNotice();
-  // A reform saved on this browser while signed out, with its v1 policy.
-  await new LocalStorageReformStore().create({
-    userId: MOCK_USER_ID,
-    countryId: 'us',
-    label: 'CTC expansion',
-    policyId: '95762',
-    parameters: [],
-    baseline: 'current-law',
-    provenance: { source: 'manual' },
-  });
+  dismissAccountUpgradeNotice();
 });
 
 afterEach(() => {
@@ -90,55 +68,57 @@ afterEach(() => {
 });
 
 describe('AuthCallbackPage', () => {
-  test('given work saved on this browser then it moves to the account, then it returns', async () => {
+  test("given this browser's user had saved work then it is upgraded into the account, then it returns", async () => {
     // Given
-    answerImports('accept');
+    const browserUserId = getBrowserUserId();
+    answerUpgrade('converted');
 
     // When
     renderCallback(signedInAuthValue());
 
     // Then
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
-    // The account is set up in the sign-in country first.
-    expect(requestPaths()).toEqual(['/v2/me', '/v2/me/imports']);
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Moved 1 reform and 0 reports from this browser to your account.'
-    );
-    expect(browserReformCount()).toBe(0);
+    const request = upgradeRequest();
+    expect(request.url.searchParams.get('country_id')).toBe('us');
+    expect(request.headers[UNAUTHENTICATED_USER_HEADER]).toBe(browserUserId);
+    expect(request.headers.Authorization).toMatch(/^Bearer /);
+    expect(await screen.findByRole('alert')).toHaveTextContent(UPGRADE_SUCCESS_MESSAGE);
+    // The browser starts over, so whoever is next here signed out starts empty.
+    expect(getBrowserUserId()).not.toBe(browserUserId);
   });
 
-  test('given nothing saved on this browser then nothing is called', async () => {
+  test('given nothing to upgrade then it returns without a notice', async () => {
     // Given
-    localStorage.clear();
-    answerImports('accept');
+    answerUpgrade('none');
 
     // When
     renderCallback(signedInAuthValue());
 
     // Then
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  test('given the import fails then the work stays, and Try again moves it', async () => {
+  test('given the upgrade fails then the browser keeps its user, and Try again upgrades it', async () => {
     // Given
-    answerImports('fail');
+    const browserUserId = getBrowserUserId();
+    answerUpgrade('fail');
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const user = userEvent.setup();
     renderCallback(signedInAuthValue());
-    expect(await screen.findByRole('alert')).toHaveTextContent(/still on this browser/);
+    expect(await screen.findByRole('alert')).toHaveTextContent(UPGRADE_FAILURE_MESSAGE);
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/us/reforms'));
-    expect(browserReformCount()).toBe(1);
+    expect(getBrowserUserId()).toBe(browserUserId);
 
     // When
-    answerImports('accept');
+    answerUpgrade('merged');
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     // Then
-    expect(await screen.findByText(/^Moved 1 reform/)).toBeInTheDocument();
-    expect(requestPaths().filter((path) => path === '/v2/me/imports')).toHaveLength(2);
-    expect(browserReformCount()).toBe(0);
+    expect(await screen.findByText(UPGRADE_SUCCESS_MESSAGE)).toBeInTheDocument();
+    expect(upgradeRequest(1).headers[UNAUTHENTICATED_USER_HEADER]).toBe(browserUserId);
+    expect(getBrowserUserId()).not.toBe(browserUserId);
   });
 
   test('given sign-in did not complete then the error shows and nothing is called', () => {

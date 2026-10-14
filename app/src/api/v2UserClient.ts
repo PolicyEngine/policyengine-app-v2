@@ -2,12 +2,18 @@ import { BASE_URL } from '@/constants';
 import type { V2Envelope, V2PageResult } from '@/types/v2User';
 
 /**
- * Fetch wrapper for the PolicyEngine API's signed-in routes
- * (`${BASE_URL}/v2/me*` and `/v2/user-*`). Every request carries the
- * session's access token as `Authorization: Bearer …`; the server derives
- * the user from it, so callers never send a user ID. Responses are the
- * API's `{status, message, result}` envelope, unwrapped to `result`.
+ * Fetch wrapper for the PolicyEngine API's saved-work routes
+ * (`${BASE_URL}/v2/me*` and `/v2/user-*`). Every request carries who it
+ * is made as: a signed-in session's access token (`Authorization: Bearer …`),
+ * or, signed out, this browser's unauthenticated user
+ * (`PolicyEngine-Unauthenticated-User: <uuid>`). The server derives the
+ * owner from that, so callers never send a user ID in a body or query.
+ * Responses are the API's `{status, message, result}` envelope, unwrapped
+ * to `result`.
  */
+
+/** Names this browser's unauthenticated user on a signed-out request. */
+export const UNAUTHENTICATED_USER_HEADER = 'PolicyEngine-Unauthenticated-User';
 
 /** Largest page the list routes serve. */
 export const V2_MAX_PAGE_SIZE = 500;
@@ -29,12 +35,19 @@ export function isV2ApiError(error: unknown, status?: number): error is V2ApiErr
 
 export type AccessTokenGetter = () => Promise<string | null>;
 
+/** Who requests are made as: a signed-in session, or this browser's unauthenticated user. */
+export type V2Credentials =
+  | { kind: 'session'; getAccessToken: AccessTokenGetter }
+  | { kind: 'unauthenticated'; userId: string };
+
 type QueryValue = string | number | boolean | null | undefined;
 export type V2Query = Record<string, QueryValue>;
 
 export interface V2RequestOptions {
   query?: V2Query;
   body?: unknown;
+  /** Extra request headers (the upgrade sends the browser's user beside the session). */
+  headers?: Record<string, string>;
 }
 
 export interface V2UserClient {
@@ -49,7 +62,7 @@ export interface V2UserClient {
 }
 
 export interface CreateV2UserClientOptions {
-  getAccessToken: AccessTokenGetter;
+  credentials: V2Credentials;
   baseUrl?: string;
   fetchImpl?: typeof fetch;
 }
@@ -96,29 +109,37 @@ async function readEnvelope(response: Response): Promise<V2Envelope<unknown> | n
   }
 }
 
+/** The header naming who a request is made as. */
+async function credentialHeaders(credentials: V2Credentials): Promise<Record<string, string>> {
+  if (credentials.kind === 'unauthenticated') {
+    return { [UNAUTHENTICATED_USER_HEADER]: credentials.userId };
+  }
+  let token: string | null;
+  try {
+    token = await credentials.getAccessToken();
+  } catch {
+    throw new V2ApiError(0, SIGN_IN_UNREACHABLE_MESSAGE);
+  }
+  if (!token) {
+    throw new V2ApiError(401, STATUS_MESSAGES[401]);
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
 export function createV2UserClient({
-  getAccessToken,
+  credentials,
   baseUrl,
   fetchImpl,
 }: CreateV2UserClientOptions): V2UserClient {
   async function request<R>(
     method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
     path: string,
-    { query, body }: V2RequestOptions = {}
+    { query, body, headers: extraHeaders }: V2RequestOptions = {}
   ): Promise<R> {
-    let token: string | null;
-    try {
-      token = await getAccessToken();
-    } catch {
-      throw new V2ApiError(0, SIGN_IN_UNREACHABLE_MESSAGE);
-    }
-    if (!token) {
-      throw new V2ApiError(401, STATUS_MESSAGES[401]);
-    }
-
     const headers: Record<string, string> = {
       Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
+      ...extraHeaders,
+      ...(await credentialHeaders(credentials)),
     };
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';

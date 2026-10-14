@@ -1,20 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button, Spinner, Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { hasBrowserWorkToImport, runSignInImport } from '@/libs/auth/accountImport';
+import { runAccountUpgrade } from '@/libs/auth/accountUpgrade';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { isAssociationCountry } from '@/types/v2User';
 
 /**
  * Where Auth0 sends the browser after sign-in. The AuthProvider finishes
- * the code exchange (showing its loading state meanwhile); this page moves
- * the v3 work saved on this browser while signed out into the account
- * (see runSignInImport), then returns to where sign-in started. The
- * account's first request creates the PolicyEngine user. It shows the
- * error when sign-in did not complete.
+ * the code exchange (showing its loading state meanwhile); this page
+ * upgrades this browser's unauthenticated user into the account (see
+ * runAccountUpgrade), which also creates the account on a first sign-in,
+ * then returns to where sign-in started. It shows the error when sign-in
+ * did not complete.
  */
 export default function AuthCallbackPage() {
   const countryId = useCurrentCountry();
@@ -22,7 +23,6 @@ export default function AuthCallbackPage() {
   const { status, error } = useAuthStatus();
   const client = useV2UserClient();
   const started = useRef(false);
-  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     if (started.current || (status === 'signed_out' && error)) {
@@ -36,9 +36,8 @@ export default function AuthCallbackPage() {
     }
     const returnTo = takeSignInReturnTo() ?? home;
     void (async () => {
-      if (hasBrowserWorkToImport()) {
-        setImporting(true);
-        await runSignInImport({ client, signInCountryId: countryId });
+      if (isAssociationCountry(countryId)) {
+        await runAccountUpgrade({ client, countryId });
       }
       nav.replace(returnTo);
     })();
@@ -71,9 +70,7 @@ export default function AuthCallbackPage() {
       style={{ padding: spacing['3xl'], gap: spacing.md, alignItems: 'center' }}
     >
       <Spinner size="sm" />
-      <Text style={{ margin: 0, color: colors.text.secondary }}>
-        {importing ? 'Moving the work saved on this browser to your account…' : 'Signing you in…'}
-      </Text>
+      <Text style={{ margin: 0, color: colors.text.secondary }}>Signing you in…</Text>
     </Stack>
   );
 }

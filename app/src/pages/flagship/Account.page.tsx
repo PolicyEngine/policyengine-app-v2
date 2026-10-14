@@ -125,8 +125,8 @@ export default function AccountPage() {
           <CardHeader>
             <CardTitle>Sign in to keep your work</CardTitle>
             <CardDescription>
-              Signed in, the reforms and reports you save are kept in your account and available on
-              any device.
+              The reforms and reports you save now are kept for this browser. Sign in to keep them
+              in your account and use them on any device.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -216,7 +216,10 @@ function SignedInAccount({ countryId }: { countryId: AssociationCountryId }) {
         <CardContent>
           <Stack gap="sm">
             <DetailRow label="Email" value={user.email ?? auth.profile?.email ?? null} />
-            <DetailRow label="Primary country" value={getCountryLabel(user.primary_country)} />
+            <DetailRow
+              label="Primary country"
+              value={user.primary_country ? getCountryLabel(user.primary_country) : null}
+            />
             <DetailRow label="Member since" value={formatDate(user.created_at)} />
             <DetailRow label="PolicyEngine user ID" value={user.id} />
           </Stack>

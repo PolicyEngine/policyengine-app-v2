@@ -5,6 +5,8 @@ import type { MeItem, UserPolicyItem, UserReportItem } from '@/types/v2User';
 
 export const TEST_API_BASE = 'https://api.test.policyengine.org';
 export const TEST_ACCESS_TOKEN = 'test-access-token';
+/** This browser's unauthenticated user in tests. */
+export const BROWSER_USER_ID = '6f1c2a9e-3b4d-4e5f-8a7b-9c0d1e2f3a4b';
 export const PE_USER_ID = '7c1e5a8e-2b1f-4c55-9a3e-1f2d3c4b5a69';
 
 export const ASSOCIATION_IDS = {
@@ -25,6 +27,7 @@ export const TIMESTAMPS = {
 
 export const mockMeItem: MeItem = {
   id: PE_USER_ID,
+  user_type: 'standard',
   primary_country: 'us',
   first_name: 'Ada',
   last_name: 'Lovelace',
@@ -37,7 +40,6 @@ const base = {
   user_id: PE_USER_ID,
   name: null,
   description: null,
-  client_ref: null,
   created_at: TIMESTAMPS.CREATED,
   updated_at: TIMESTAMPS.UPDATED,
 };
@@ -103,7 +105,7 @@ export function createTestApiContext(countryId: 'us' | 'uk' = 'us'): {
 } {
   const fetchMock = vi.fn();
   const client = createV2UserClient({
-    getAccessToken: async () => TEST_ACCESS_TOKEN,
+    credentials: { kind: 'session', getAccessToken: async () => TEST_ACCESS_TOKEN },
     baseUrl: TEST_API_BASE,
     fetchImpl: fetchMock as unknown as typeof fetch,
   });

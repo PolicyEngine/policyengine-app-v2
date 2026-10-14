@@ -1,16 +1,16 @@
-import type { V2UserClient } from '@/api/v2UserClient';
+import { UNAUTHENTICATED_USER_HEADER, type V2UserClient } from '@/api/v2UserClient';
 import type {
   AssociationCountryId,
-  ImportRequestBody,
-  ImportResult,
   MeExportResult,
   MeItem,
+  MeUpgradeResult,
   V2ItemResult,
 } from '@/types/v2User';
 
 /**
- * "Who am I": the PolicyEngine user behind the session. The first call
- * provisions the user, with `primary_country` set from `countryId`.
+ * "Who am I": the PolicyEngine user behind the session. Signed in, the
+ * first call provisions the account, with `primary_country` set from
+ * `countryId`.
  */
 export async function fetchMe(
   client: V2UserClient,
@@ -38,14 +38,19 @@ export async function deleteMe(
   await client.request<void>('DELETE', 'me', { query: { country_id: countryId } });
 }
 
-/** Bulk import of this browser's saved items; idempotent per `client_ref`. */
-export function importToAccount(
+/**
+ * Upgrades this browser's unauthenticated user at sign-in: on a first
+ * sign-in it becomes the account (same user, so every saved reform and
+ * report stays); for an existing account its work moves into that
+ * account. Sent with the session's token and the browser's user.
+ */
+export async function upgradeAccount(
   client: V2UserClient,
   countryId: AssociationCountryId,
-  body: ImportRequestBody
-): Promise<ImportResult> {
-  return client.request<ImportResult>('POST', 'me/imports', {
+  browserUserId: string
+): Promise<MeUpgradeResult> {
+  return client.request<MeUpgradeResult>('POST', 'me/upgrade', {
     query: { country_id: countryId },
-    body,
+    headers: { [UNAUTHENTICATED_USER_HEADER]: browserUserId },
   });
 }

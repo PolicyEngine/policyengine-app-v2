@@ -213,7 +213,7 @@ describe('ApiReformStore', () => {
     ],
     ['deleted', (store: ApiReformStore, id: string) => store.delete(id)],
   ])(
-    'given a reform saved on this browser while signed out, when %s signed in, then it is refused',
+    'given a reform saved only in this browser, when %s through the API, then it is refused',
     async (_, operate) => {
       // Given
       const local = await new LocalStorageReformStore({
@@ -223,7 +223,7 @@ describe('ApiReformStore', () => {
 
       // When / Then: refused before any v1 policy is made for it
       await expect(operate(store, local.id!)).rejects.toThrow(
-        'This was saved on this browser while signed out. Sign out to open it.'
+        'This was saved only in this browser, so it cannot be opened here.'
       );
       expect(fetchMock).not.toHaveBeenCalled();
       expect(materializePolicy).not.toHaveBeenCalled();

@@ -1,13 +1,20 @@
 import { describe, expect, test, vi } from 'vitest';
 import { fetchMe } from '@/api/v2Me';
-import { createV2UserClient, isV2ApiError, V2ApiError } from '@/api/v2UserClient';
 import {
+  createV2UserClient,
+  isV2ApiError,
+  UNAUTHENTICATED_USER_HEADER,
+  V2ApiError,
+} from '@/api/v2UserClient';
+import {
+  BROWSER_USER_ID,
   createTestApiContext,
   errorResponse,
   fetchCall,
   itemResponse,
   mockMeItem,
   noContentResponse,
+  okResponse,
   pageResponse,
   policyItem,
   TEST_ACCESS_TOKEN,
@@ -114,7 +121,7 @@ describe('v2UserClient', () => {
     // Given
     const fetchMock = vi.fn();
     const client = createV2UserClient({
-      getAccessToken: async () => null,
+      credentials: { kind: 'session', getAccessToken: async () => null },
       baseUrl: TEST_API_BASE,
       fetchImpl: fetchMock as unknown as typeof fetch,
     });
@@ -128,8 +135,11 @@ describe('v2UserClient', () => {
     // Given
     const fetchMock = vi.fn();
     const client = createV2UserClient({
-      getAccessToken: async () => {
-        throw new Error('timeout');
+      credentials: {
+        kind: 'session',
+        getAccessToken: async () => {
+          throw new Error('timeout');
+        },
       },
       baseUrl: TEST_API_BASE,
       fetchImpl: fetchMock as unknown as typeof fetch,
@@ -141,6 +151,40 @@ describe('v2UserClient', () => {
       message: 'Could not reach the sign-in service. Check your connection and try again.',
     });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given an unauthenticated browser user then requests name it, with no bearer token', async () => {
+    // Given
+    const fetchMock = vi.fn().mockResolvedValue(pageResponse([]));
+    const client = createV2UserClient({
+      credentials: { kind: 'unauthenticated', userId: BROWSER_USER_ID },
+      baseUrl: TEST_API_BASE,
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    // When
+    await client.request('GET', 'user-policies', { query: { country_id: 'us' } });
+
+    // Then
+    const { headers } = fetchCall(fetchMock, 0);
+    expect(headers[UNAUTHENTICATED_USER_HEADER]).toBe(BROWSER_USER_ID);
+    expect(headers.Authorization).toBeUndefined();
+  });
+
+  test('given extra headers then they go with the session token', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(okResponse({}));
+
+    // When
+    await context.client.request('POST', 'me/upgrade', {
+      headers: { [UNAUTHENTICATED_USER_HEADER]: BROWSER_USER_ID },
+    });
+
+    // Then
+    const { headers } = fetchCall(fetchMock, 0);
+    expect(headers.Authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
+    expect(headers[UNAUTHENTICATED_USER_HEADER]).toBe(BROWSER_USER_ID);
   });
 
   test('given a network failure then it throws status 0', async () => {

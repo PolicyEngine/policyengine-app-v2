@@ -24,12 +24,13 @@ export function isAccountId(id: unknown): id is string {
 }
 
 /**
- * What an account store answers when handed the ID of something saved in
- * this browser while signed out: signed in, only account items open.
+ * What an API store answers when handed the ID of something saved only in
+ * this browser (sign-in off, or before saved work moved to the API): only
+ * items saved through the API open.
  */
 export class BrowserOnlyIdError extends Error {
   constructor() {
-    super('This was saved on this browser while signed out. Sign out to open it.');
+    super('This was saved only in this browser, so it cannot be opened here.');
     this.name = 'BrowserOnlyIdError';
   }
 }

@@ -1,7 +1,8 @@
 /**
- * Wire types for the PolicyEngine API's signed-in routes (`/v2/me*` and
+ * Wire types for the PolicyEngine API's saved-work routes (`/v2/me*` and
  * `/v2/user-*`). Field names are snake_case, as on the wire. The server
- * derives the user from the bearer token, so request bodies never carry a
+ * derives the user from the session's bearer token, or signed out from
+ * this browser's unauthenticated user, so request bodies never carry a
  * `user_id`; responses do.
  */
 
@@ -34,10 +35,15 @@ export interface V2PageResult<T> {
   has_more: boolean;
 }
 
+/** An unauthenticated user is this browser's; a standard user signs in with Auth0. */
+export type UserType = 'unauthenticated' | 'standard';
+
 export interface MeItem {
   /** The PolicyEngine user ID that owns every association. */
   id: string;
-  primary_country: AssociationCountryId;
+  user_type: UserType;
+  /** Null for an unauthenticated user. */
+  primary_country: AssociationCountryId | null;
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -58,7 +64,6 @@ interface AssociationItemBase {
   user_id: string;
   name: string | null;
   description: string | null;
-  client_ref: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -106,7 +111,6 @@ export interface UserPolicyCreateBody {
   description?: string | null;
   baseline?: BaselineWire | null;
   provenance?: ProvenanceWire | null;
-  client_ref?: string | null;
 }
 
 export type UserPolicyPatchBody = Partial<
@@ -126,55 +130,30 @@ export interface UserReportCreateBody {
   provisions?: ReportProvisionWire[] | null;
   validation?: unknown | null;
   last_run_at?: string | null;
-  client_ref?: string | null;
 }
 
 /* /v2/me/export */
 
 /** Everything saved to the account, in every country; downloaded as is. */
 export interface MeExportResult {
-  user: MeItem;
+  /** Null for a signed-out browser that has saved nothing yet. */
+  user: MeItem | null;
   policies: UserPolicyItem[];
   reports: UserReportItem[];
   [otherRecords: string]: unknown;
 }
 
-/* /v2/me/imports */
+/* /v2/me/upgrade */
 
-export interface ImportPolicyItem {
-  client_ref: string;
-  legacy_policy_id: number;
-  name: string | null;
-  description: string | null;
-  baseline: BaselineWire | null;
-  provenance: ProvenanceWire | null;
-}
+/**
+ * What signing in did with this browser's unauthenticated user: made it
+ * the new account ("converted"), moved its work into an existing account
+ * ("merged"), or found nothing to upgrade ("none").
+ */
+export type UpgradeOutcome = 'converted' | 'merged' | 'none';
 
-export interface ImportReportItem {
-  client_ref: string;
-  legacy_report_id: number;
-  name: string | null;
-  description: string | null;
-  user_policy_client_ref: string | null;
-  source_note: string | null;
-  provisions: ReportProvisionWire[] | null;
-  validation: unknown | null;
-  last_run_at: string | null;
-}
-
-/** v3 imports its reforms (as policies) and its reports only. */
-export interface ImportRequestBody {
-  policies?: ImportPolicyItem[];
-  reports?: ImportReportItem[];
-}
-
-export interface ImportSkippedItem {
-  /** Null when the server could not parse the item at all. */
-  client_ref: string | null;
-  reason: string;
-}
-
-export interface ImportResult {
-  id_map: Record<string, string>;
-  skipped: ImportSkippedItem[];
+export interface MeUpgradeResult {
+  /** The signed-in account. */
+  item: MeItem;
+  outcome: UpgradeOutcome;
 }
