@@ -109,7 +109,7 @@ export const supporters: Supporter[] = [
     websiteUrl: "https://manifund.org/",
     logoUrl: "/assets/supporters/manifund.webp",
     description:
-      "a platform for funding impactful projects, sponsored by Manifold for Charity, a US 501(c)(3) nonprofit.",
+      "a platform for funding impactful projects, sponsored by Manifold for Charity.",
   },
 ];
 
