@@ -554,6 +554,21 @@ describe('abuse limits', () => {
     expect(response.status).toBe(201);
   });
 
+  it('given creates at the same time then the budget still holds: the count and insert are locked together', async () => {
+    await insertRowsCreatedAgo(client, 'reforms', NEW_ROWS_PER_MINUTE - 5, 0);
+
+    // Counted apart from the insert, all twenty would read a count under the limit.
+    const responses = await Promise.all(
+      Array.from({ length: 20 }, () => createReform(postRequest(VALID_PAYLOAD)))
+    );
+
+    const statuses = responses.map((response) => response.status);
+    expect(statuses.filter((status) => status === 201)).toHaveLength(5);
+    expect(statuses.filter((status) => status === 429)).toHaveLength(15);
+    const { rows } = await client.query<{ n: number }>('SELECT count(*)::int AS n FROM reforms');
+    expect(rows[0].n).toBe(NEW_ROWS_PER_MINUTE);
+  });
+
   it('given the budget is used up then edits to existing reforms still work', async () => {
     const created = await createAndParse();
     await insertRowsCreatedAgo(client, 'reforms', NEW_ROWS_PER_MINUTE, 0);
@@ -564,6 +579,25 @@ describe('abuse limits', () => {
     );
 
     expect(response.status).toBe(200);
+  });
+});
+
+describe('a database without the latest migration', () => {
+  it('then the store answers 503, so the client falls back to localStorage, not 500', async () => {
+    // A database migrated only up to before the ownership migration.
+    const staleDb = new PGlite();
+    try {
+      await applyMigrations(staleDb, legacyMigrationTags());
+      setDbForTesting(drizzle(staleDb, { schema }) as any);
+
+      const created = await createReform(postRequest(VALID_PAYLOAD));
+      expect(created.status).toBe(503);
+      const listed = await listReforms(listRequest([UNKNOWN_UUID]));
+      expect(listed.status).toBe(503);
+    } finally {
+      setDbForTesting(drizzle(client, { schema }) as any);
+      await staleDb.close();
+    }
   });
 });
 

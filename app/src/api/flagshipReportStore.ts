@@ -13,6 +13,7 @@ import {
   validationToWire,
 } from '@/libs/flagship/reportValidation';
 import { RunReportProvision } from '@/libs/flagship/runReport';
+import { clampStoreText } from '@/libs/flagship/storeText';
 
 /**
  * Store for flagship report records: a pointer to the computed output
@@ -111,8 +112,9 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
       body: JSON.stringify({
         country_id: report.countryId,
         api_report_id: report.apiReportId,
-        title: report.title,
-        source_note: report.sourceNote,
+        // Shortened to the store's text limit, so a long bill title saves.
+        title: clampStoreText(report.title),
+        source_note: clampStoreText(report.sourceNote),
         provisions: report.provisions.map((p) => ({
           path: p.path,
           breadcrumb: p.breadcrumb,

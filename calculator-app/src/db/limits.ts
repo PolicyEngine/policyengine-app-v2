@@ -1,5 +1,5 @@
 import { count, gt, sql } from "drizzle-orm";
-import { getDb } from "./index";
+import { getDb, type ReformDb } from "./index";
 import { reforms, reports } from "./schema";
 
 /**
@@ -67,16 +67,38 @@ export function invalidText(name: string, value: unknown): string | null {
   return null;
 }
 
-/** Whether the table already took NEW_ROWS_PER_MINUTE rows in the last minute. */
-export async function newRowBudgetExhausted(
+/** A transaction-scoped advisory lock per table, so creates on it count in turn. */
+const BUDGET_LOCK_KEYS = new Map<typeof reforms | typeof reports, number>([
+  [reforms, 724_101],
+  [reports, 724_102],
+]);
+
+/**
+ * Inserts a row if the table took fewer than NEW_ROWS_PER_MINUTE in the
+ * last minute; null when the budget is used up. The count and the insert
+ * share one transaction under the table's advisory lock: counted apart,
+ * concurrent creates would all read a count under the limit and all
+ * insert. The lock is transaction-scoped, which Supabase's transaction
+ * pooler supports, and is released at commit.
+ */
+export async function insertWithinBudget<T>(
   table: typeof reforms | typeof reports,
-): Promise<boolean> {
-  // The database clock, so app-server clock skew cannot widen the window.
-  const [row] = await getDb()
-    .select({ value: count() })
-    .from(table)
-    .where(gt(table.createdAt, sql`now() - interval '1 minute'`));
-  return (row?.value ?? 0) >= NEW_ROWS_PER_MINUTE;
+  insert: (tx: ReformDb) => Promise<T>,
+): Promise<T | null> {
+  return getDb().transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(${BUDGET_LOCK_KEYS.get(table)!})`,
+    );
+    // The database clock, so app-server clock skew cannot widen the window.
+    const [row] = await tx
+      .select({ value: count() })
+      .from(table)
+      .where(gt(table.createdAt, sql`now() - interval '1 minute'`));
+    if ((row?.value ?? 0) >= NEW_ROWS_PER_MINUTE) {
+      return null;
+    }
+    return insert(tx as unknown as ReformDb);
+  });
 }
 
 /** 429 for a create while the new-row budget is used up. */

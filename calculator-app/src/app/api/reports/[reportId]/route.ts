@@ -5,6 +5,7 @@ import {
 import { eq } from "drizzle-orm";
 import { getDb, isDbConfigured } from "../../../../db";
 import { readJsonBody } from "../../../../db/limits";
+import { guardSchema } from "../../../../db/errors";
 import { isUuid, presentsEditToken } from "../../../../db/ownership";
 import { reports } from "../../../../db/schema";
 import { reportRowToMetadata } from "../../../../db/serialize";
@@ -19,7 +20,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-export async function GET(
+async function handleGET(
   _request: Request,
   { params }: { params: Promise<{ reportId: string }> },
 ): Promise<Response> {
@@ -57,7 +58,7 @@ function isValidationPayload(value: any): boolean {
 }
 
 /** Pins what validation matched the report against. Idempotent. */
-export async function PATCH(
+async function handlePATCH(
   request: Request,
   { params }: { params: Promise<{ reportId: string }> },
 ): Promise<Response> {
@@ -105,4 +106,17 @@ export async function PATCH(
     return json({ error: "Report not found" }, 404);
   }
   return json(reportRowToMetadata(row));
+}
+
+// A database missing the latest migration answers 503, not 500 (see db/errors).
+export async function GET(
+  ...args: Parameters<typeof handleGET>
+): Promise<Response> {
+  return guardSchema(() => handleGET(...args));
+}
+
+export async function PATCH(
+  ...args: Parameters<typeof handlePATCH>
+): Promise<Response> {
+  return guardSchema(() => handlePATCH(...args));
 }

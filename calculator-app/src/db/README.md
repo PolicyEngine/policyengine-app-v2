@@ -31,11 +31,19 @@ In code (`limits.ts`), with no client identifier:
 
 - Request bodies over 256 KB get 413 (POST and PATCH).
 - `label`, `title` and `source_note` must be strings of at most 500
-  characters, or 400.
+  characters, or 400. The client shortens them to 500 before it sends them
+  (`app/src/libs/flagship/storeText.ts`), so a long bill title still saves.
 - Each table takes at most 120 new rows per minute across all visitors; a
-  create over that gets 429 with `Retry-After: 60`. The client then saves that
-  one item to its localStorage fallback and keeps using the central store.
-  Edits are not counted.
+  create over that gets 429 with `Retry-After: 60`. The count and the insert
+  run in one transaction under a per-table advisory lock
+  (`pg_advisory_xact_lock`), so concurrent creates cannot all read a count
+  under the limit and all insert. The client then saves that one item to its
+  localStorage fallback and keeps using the central store. Edits are not
+  counted.
+- Known trade-off: the limit is shared, so one client can use it up for
+  everyone (their creates then stay in their own browser's fallback). The
+  per-client limit below is what prevents that; enforce it, not only log it,
+  before the flagship flag goes on in production.
 
 Per-client rate limiting belongs at Vercel's edge, where the firewall keys on
 the IP address and our handlers never see it. It is project configuration,
@@ -82,6 +90,13 @@ vercel env pull .env.local --yes # bring DATABASE_URL down for local dev
 ```
 
 ## Applying migrations
+
+Nothing applies migrations automatically: not CI, not the deploy. Run them by
+hand on every database a flag-on deployment uses, **before** the code that
+needs them deploys. The code reads every column in `schema.ts`; against a
+database without the latest migration, the routes answer 503 (see
+`errors.ts`), so the client falls back to localStorage rather than failing,
+but nothing reaches the central store until the migration runs.
 
 `drizzle-kit` does not auto-load `.env.local`, so source it first:
 
