@@ -6,7 +6,10 @@ import {
   addDraftProvision,
   clearDraftReform,
   getDraftReform,
+  loadReformIntoDraft,
+  setDraftBaseline,
   startDraftReform,
+  updateDraftProvisionValue,
   useDraftReform,
 } from '@/libs/draftReform';
 import { clearMetadata } from '@/reducers/metadataReducer';
@@ -15,6 +18,7 @@ import {
   seedDeductionMetadata,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import type { Reform } from '@/types/ingredients/Reform';
 
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
@@ -227,6 +231,122 @@ describe('DraftHeader', () => {
 
       await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
       expect(mockRun.mock.calls[0][3]).toBeUndefined();
+    });
+  });
+
+  describe('given what the report is compared with', () => {
+    const CHANGED = {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    };
+    const PLAN_B = {
+      id: 'rf-plan-b',
+      countryId: 'us',
+      label: 'Plan B',
+      parameters: [
+        {
+          name: 'gov.irs.credits.ctc.amount.base',
+          values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 }],
+        },
+      ],
+      baseline: 'current-law',
+      provenance: { source: 'manual' },
+    };
+
+    test('then it reads current law until a saved reform is chosen', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([PLAN_B]);
+      renderHeader();
+
+      const bar = screen.getByRole('region', { name: 'Reform actions' });
+      await user.click(within(bar).getByRole('button', { name: 'Compared with: Current law' }));
+
+      // Current law first, then the reforms Your reforms lists.
+      const options = (await screen.findAllByRole('option')).map((option) =>
+        option.textContent?.trim()
+      );
+      expect(options).toEqual(['Current law', 'Plan B']);
+    });
+
+    test('then a chosen saved reform is the draft’s and the run’s', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([PLAN_B]);
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: 'Compared with: Current law' }));
+      await user.click(await screen.findByRole('option', { name: 'Plan B' }));
+
+      expect(getDraftReform()?.baselineReformId).toBe('rf-plan-b');
+      expect(screen.getByRole('button', { name: 'Compared with: Plan B' })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][5].baseline).toEqual({
+        reformId: 'rf-plan-b',
+        label: 'Plan B',
+        parameters: PLAN_B.parameters,
+      });
+      // The reform itself is still saved as its own, not as Plan B.
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+    });
+
+    test('then choosing current law again runs with no baseline', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([PLAN_B]);
+      addDraftProvision('us', CHANGED);
+      setDraftBaseline('rf-plan-b');
+      renderHeader();
+
+      await user.click(await screen.findByRole('button', { name: 'Compared with: Plan B' }));
+      await user.click(await screen.findByRole('option', { name: 'Current law' }));
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(getDraftReform()?.baselineReformId).toBeUndefined();
+      expect(mockRun.mock.calls[0][5].baseline).toBeUndefined();
+    });
+
+    test('then the saved reform the draft edits is not offered against itself', async () => {
+      const user = userEvent.setup();
+      mockFindMine.mockResolvedValue([PLAN_B, { ...PLAN_B, id: 'rf-mine', label: 'Mine' }]);
+      loadReformIntoDraft({ ...PLAN_B, id: 'rf-mine', label: 'Mine' } as Reform, (path) => ({
+        breadcrumb: path,
+        unit: 'currency-USD',
+        baselineValue: 2000,
+      }));
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: 'Compared with: Current law' }));
+
+      expect(await screen.findByRole('option', { name: 'Plan B' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Mine' })).not.toBeInTheDocument();
+    });
+
+    test('then a draft that sets just what its comparison sets waits for a change', async () => {
+      mockFindMine.mockResolvedValue([PLAN_B]);
+      updateDraftProvisionValue('gov.irs.credits.ctc.amount.base', 3000);
+      setDraftBaseline('rf-plan-b');
+      renderHeader();
+
+      expect(
+        await screen.findByText(/this reform matches plan b\. change a value/i)
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /run 2026 report/i })).toBeDisabled();
+    });
+
+    test('then a comparison no longer saved reads as current law', async () => {
+      mockFindMine.mockResolvedValue([]);
+      setDraftBaseline('rf-deleted');
+      renderHeader();
+
+      expect(
+        await screen.findByRole('button', { name: 'Compared with: Current law' })
+      ).toBeInTheDocument();
     });
   });
 

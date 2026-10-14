@@ -79,6 +79,8 @@ export interface DraftReform {
    * one year (the report alone) when unset.
    */
   windowYears?: number;
+  /** The saved reform the run compares with; current law when unset. */
+  baselineReformId?: string;
 }
 
 /** The year a draft's report simulates. */
@@ -273,7 +275,7 @@ export function clearDraftAfterRun(userReportId: string): void {
 export function loadProvisionsIntoDraft(
   countryId: CountryId,
   provisions: DraftProvision[],
-  options: { label?: string; year?: number; region?: string } = {}
+  options: { label?: string; year?: number; region?: string; baselineReformId?: string | null } = {}
 ): void {
   writeDraft({
     countryId,
@@ -283,6 +285,7 @@ export function loadProvisionsIntoDraft(
     source: 'manual',
     startedAt: Date.now(),
     ...(options.year ? { year: options.year } : {}),
+    ...(options.baselineReformId ? { baselineReformId: options.baselineReformId } : {}),
   });
 }
 
@@ -476,6 +479,15 @@ export function setDraftLabel(label: string): void {
     return;
   }
   writeDraft({ ...draft, label });
+}
+
+/** What the run compares the reform with: a saved reform, or current law when unset. */
+export function setDraftBaseline(reformId: string | undefined): void {
+  const draft = getSnapshot();
+  if (!draft) {
+    return;
+  }
+  writeDraft({ ...draft, baselineReformId: reformId || undefined });
 }
 
 export function setDraftPopulation(population: DraftPopulation): void {
