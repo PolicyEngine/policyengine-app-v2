@@ -17,8 +17,10 @@ export function useTrackedBills(countryId: CountryId): {
   isConfigured: boolean;
   isLoading: boolean;
   isError: boolean;
+  /** Asks the feed again after a failure; settles when the answer is in. */
+  retry: () => Promise<unknown>;
 } {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['tracker-bills'],
     queryFn: fetchTrackerBills,
     staleTime: 5 * 60 * 1000,
@@ -41,5 +43,6 @@ export function useTrackedBills(countryId: CountryId): {
     isConfigured: data !== null,
     isLoading,
     isError,
+    retry: refetch,
   };
 }
