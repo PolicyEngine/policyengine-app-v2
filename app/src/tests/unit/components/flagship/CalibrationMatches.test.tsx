@@ -1,7 +1,10 @@
-import { fireEvent, render, screen } from '@test-utils';
+import { fireEvent, render, screen, within } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import { CalibrationMatchSection } from '@/components/flagship/CalibrationMatches';
-import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
+import {
+  mockCalibrationMatches,
+  POPULACE_RELEASE_ID,
+} from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
   mockReportValidationSnapshot,
   NEWER_RELEASE_ID,
@@ -12,16 +15,16 @@ describe('CalibrationMatchSection', () => {
     render(<CalibrationMatchSection matches={null} />);
 
     expect(screen.getByText(/temporarily unavailable/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /calibration dashboard/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /view dashboard/i })).toHaveAttribute(
       'href',
       expect.stringContaining('calibration-diagnostics')
     );
   });
 
-  test('given matches are loading then the spinner state renders', () => {
+  test('given matches are loading then the loading state renders', () => {
     render(<CalibrationMatchSection matches={undefined} />);
 
-    expect(screen.getByText(/checking the calibration/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Checking calibration targets…');
   });
 
   test('given reached variables but none calibrated then the gap is stated, not hidden', () => {
@@ -34,19 +37,29 @@ describe('CalibrationMatchSection', () => {
     expect(screen.getByText(/none of the 33 variables .* in CA/i)).toBeInTheDocument();
   });
 
-  test('given no provisions at all then nothing renders', () => {
-    const { container } = render(
+  test('given no provisions at all then a plain line says no target covers the reform', () => {
+    render(
       <CalibrationMatchSection
         matches={{ ...mockCalibrationMatches, reachedCount: 0, matches: [] }}
       />
     );
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByRole('heading', { name: 'Data calibration' })).toBeInTheDocument();
+    expect(screen.getByText('No calibration target covers this reform.')).toBeInTheDocument();
   });
 
   test('shows each target with its period, values, gap and source link', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
+    // One table, so every variable's numbers line up in the same columns.
+    const table = screen.getByRole('table', { name: 'Calibration targets' });
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent)
+    ).toEqual(['Target', 'Period', 'Official', 'PolicyEngine', 'Gap']);
     expect(screen.getByText('Refundable Child Tax Credit')).toBeInTheDocument();
+    expect(screen.getAllByText('IRS Statistics of Income · US')).toHaveLength(2);
     expect(screen.getByText('940K')).toBeInTheDocument();
     expect(screen.getAllByText('1M')[0]).toBeInTheDocument();
     expect(screen.getByText('-6.0%')).toBeInTheDocument();
@@ -103,5 +116,12 @@ describe('CalibrationMatchSection', () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByText(/the pinned one is historical/i)).toBeInTheDocument();
+  });
+
+  test('given matches then the data release id is collapsed under one label', () => {
+    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
+
+    expect(screen.getByText('Data release')).toBeInTheDocument();
+    expect(screen.getByText(`${POPULACE_RELEASE_ID} · policyengine-us 1.808.0`)).not.toBeVisible();
   });
 });

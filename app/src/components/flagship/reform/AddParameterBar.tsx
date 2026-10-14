@@ -3,7 +3,7 @@ import { IconListTree, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import PolicyBrowser from '@/components/flagship/policyBrowser/PolicyBrowser';
-import { Spinner } from '@/components/ui';
+import ParametersStatus from '@/components/flagship/reform/ParametersStatus';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -53,33 +53,6 @@ interface AddParameterBarProps {
  * out of the way the moment a parameter is picked — the reform below
  * stays the page.
  */
-/**
- * The parameter index takes a moment on the US tree. The page shows
- * this once, in the add bar's own footprint, so nothing jumps when the
- * bar and the reform below it arrive.
- */
-export function ParametersLoading() {
-  return (
-    <div
-      aria-live="polite"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.sm,
-        padding: `${spacing.lg} ${spacing.xl}`,
-        border: `1px dashed ${colors.border.medium}`,
-        borderRadius: spacing.radius.feature,
-        fontSize: typography.fontSize.sm,
-        color: colors.text.secondary,
-      }}
-    >
-      <Spinner size="sm" />
-      Loading parameters…
-    </div>
-  );
-}
-
 export default function AddParameterBar({
   onPick,
   autoFocus = false,
@@ -166,8 +139,9 @@ export default function AddParameterBar({
     return () => observer.disconnect();
   }, [inTable, entries.length]);
 
+  // Until the index is in, the bar's place holds its loading (or failed) state.
   if (entries.length === 0) {
-    return <ParametersLoading />;
+    return <ParametersStatus />;
   }
 
   return (

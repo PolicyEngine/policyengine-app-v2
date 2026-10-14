@@ -1,7 +1,8 @@
 import { useSelector } from 'react-redux';
-import AddParameterBar, { ParametersLoading } from '@/components/flagship/reform/AddParameterBar';
+import AddParameterBar from '@/components/flagship/reform/AddParameterBar';
 import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import DraftTable from '@/components/flagship/reform/DraftTable';
+import ParametersStatus from '@/components/flagship/reform/ParametersStatus';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Title } from '@/components/ui';
 import { spacing } from '@/designTokens';
@@ -60,7 +61,7 @@ export default function BuildPage() {
           <>
             <DraftHeader draft={current} />
             {loading ? (
-              <ParametersLoading />
+              <ParametersStatus paths={current.provisions.map((provision) => provision.path)} />
             ) : (
               // The next parameter is added at the foot of the reform, where
               // the last one ends: a reform takes as many as it needs.

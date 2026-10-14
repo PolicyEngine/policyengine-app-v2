@@ -11,7 +11,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { loadProvisionsIntoDraft, sameParameterValue } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
-import { RunReportProvision } from '@/libs/flagship/runReport';
+import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -33,6 +33,8 @@ interface ReportAdjustPanelProps {
   region?: string;
   /** The report's year, so a recompute simulates the same year. */
   year?: string;
+  /** What the report is compared with, so a recompute is too; current law when unset. */
+  baseline?: RunReportBaseline;
 }
 
 /** True when the reform's parameter set is exactly the given provisions. */
@@ -63,6 +65,7 @@ export default function ReportAdjustPanel({
   loading = false,
   region,
   year,
+  baseline,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const nav = useAppNavigate();
@@ -124,6 +127,7 @@ export default function ReportAdjustPanel({
       label: label === 'Draft reform' ? '' : label,
       year: year ? Number(year) : undefined,
       region: population,
+      baselineReformId: baseline?.reformId,
     });
     nav.push(`/${countryId}/build`);
   };
@@ -174,7 +178,7 @@ export default function ReportAdjustPanel({
         adjusted,
         reformId,
         year ? Number(year) : undefined,
-        { region: population }
+        { region: population, baseline }
       );
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
