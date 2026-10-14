@@ -62,8 +62,24 @@ function reformMatches(reform: Reform, provisions: { path: string; value: any }[
  * reforms this browser saved — an exact match is reused, anything new
  * is saved as its own reform — then runs the pipeline and lands on the
  * new report, linked to that reform. Collapses to a slim edge tab.
+ *
+ * It starts over from the reform whenever the reform changes: a shared
+ * link's provisions can arrive after the results, and the values and
+ * name it edits must be theirs, not those of the empty reform before.
  */
-export default function ReportAdjustPanel({
+export default function ReportAdjustPanel(props: ReportAdjustPanelProps) {
+  const reform = JSON.stringify([
+    props.title,
+    props.provisions.map((provision) => [
+      provision.path,
+      provision.value,
+      provision.intervals ?? null,
+    ]),
+  ]);
+  return <AdjustPanel key={reform} {...props} />;
+}
+
+function AdjustPanel({
   title,
   sourceNote,
   provisions,

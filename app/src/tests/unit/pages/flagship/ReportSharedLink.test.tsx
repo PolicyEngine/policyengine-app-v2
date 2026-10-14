@@ -173,4 +173,48 @@ describe('FlagshipReportPage from a shared link', () => {
     expect(draft?.provisions[0].intervals).toEqual(EXEMPTION_SCHEDULE);
     clearDraftReform();
   });
+
+  test('given the reform policy is still loading then the page waits for it', () => {
+    // Given: the results are in; the policy waits on the parameter metadata.
+    mockUseFlagshipReport.mockReturnValue(sharedReport({ policies: [] }));
+
+    // When
+    renderPage();
+
+    // Then
+    expect(screen.getByRole('status', { name: 'Loading report' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /open adjust parameters/i })
+    ).not.toBeInTheDocument();
+  });
+
+  test('given the reform policy arrives then the panel shows it, with nothing to recompute', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockUseFlagshipReport.mockReturnValue(sharedReport({ policies: [] }));
+    const { rerenderPage } = renderPage();
+
+    // When
+    mockUseFlagshipReport.mockReturnValue(sharedReport());
+    rerenderPage();
+    await openPanel(user);
+
+    // Then
+    expect(screen.getByLabelText(/new value for/i)).toHaveValue(8000);
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+  });
+
+  test('given the reform policy failed to load then the report shows without it', () => {
+    // Given
+    mockUseFlagshipReport.mockReturnValue(
+      sharedReport({ policies: [], failedPolicyIds: [EXEMPTION_SCHEDULE_POLICY.id!] })
+    );
+
+    // When
+    renderPage();
+
+    // Then
+    expect(screen.queryByRole('status', { name: 'Loading report' })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Validation' })).toBeInTheDocument();
+  });
 });

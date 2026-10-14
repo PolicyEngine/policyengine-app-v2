@@ -82,20 +82,27 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // Provenance: the local stash from the run, else rebuilt from the reform
   // policy so a shared link validates like the original — read in the
   // report's year, with every dated value the run had.
-  const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
-  // Without metadata the rebuilt provisions would show raw paths and no
-  // baseline, so they count as still loading until it arrives.
+  const reformPolicyId = simulations?.[1]?.policyId;
+  const reformPolicy = policies.find((policy) => policy.id === reformPolicyId);
   const meta =
     readReportMeta(userReportId) ??
-    (parameters
-      ? provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year || undefined)
-      : null);
+    provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year || undefined);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
   const unreadableMeta = useUnreadableReportMeta(userReportId);
   // The reform's provisions are rebuilt from metadata; without it they cannot show.
   const metadata = useFlagshipMetadataStatus();
+  // Rebuilt, the provisions are on their way until the reform policy loads
+  // (it waits for the parameter metadata, so names and current law come
+  // with it): the report waits for them rather than show an empty reform
+  // to adjust. A policy or metadata that failed lets it show without them.
+  const awaitingProvisions =
+    !meta &&
+    isApiReportId(userReportId) &&
+    !!reformPolicyId &&
+    !failedPolicyIds.includes(reformPolicyId) &&
+    metadata.status !== 'error';
 
   // The run handed its draft over to this report; Build starts fresh.
   useEffect(() => {
@@ -142,7 +149,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const output = calcStatus.isComplete ? (calcStatus.result as SocietyWideOutput) : null;
 
-  const reformPolicyId = simulations?.[1]?.policyId;
   const baselinePolicyId = simulations?.[0]?.policyId;
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
   // A baseline policy that failed to load is unknown, not current law.
@@ -193,7 +199,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     );
   }
 
-  if (!output || isLoading || (!meta && !!reformPolicy)) {
+  if (!output || isLoading || awaitingProvisions) {
     if (unresolvable) {
       return layout(
         <Stack

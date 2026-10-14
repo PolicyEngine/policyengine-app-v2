@@ -144,6 +144,26 @@ describe('ReportAdjustPanel', () => {
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
   });
 
+  test('given the provisions arrive after the panel then it shows them, with nothing to recompute', async () => {
+    // Given: a shared link renders the results before the reform policy loads.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const panel = (title: string, provisions: typeof PROVISIONS) => (
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel title={title} sourceNote="" provisions={provisions} />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(panel('Impact report', []));
+
+    // When
+    rerender(panel('CTC expansion', [PROVISIONS[0]]));
+    await userEvent.setup().click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+    // Then
+    expect(screen.getByLabelText(/new value for maximum credit per child/i)).toHaveValue(2500);
+    expect(screen.getByRole('textbox', { name: 'Reform name' })).toHaveValue('CTC expansion');
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+  });
+
   test('given Edit in Build then the reform as adjusted opens there as the draft', async () => {
     clearDraftReform();
     const user = userEvent.setup();
