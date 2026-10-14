@@ -322,7 +322,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       economyPending={
         <Stack style={{ gap: spacing.lg }}>
           <FullResultsStatus runState={runState} economy={economy} onStart={startRun} />
-          <StoredImpactCharts impact={bill.impactData} />
+          <StoredImpactCharts impact={bill.impactData} state={bill.state} />
         </Stack>
       }
       districtsPending={

@@ -154,6 +154,19 @@ describe('BillReportPage', () => {
     ).toBeInTheDocument();
   });
 
+  test('given a federal bill then economic impacts word its stored budget as the overview does', async () => {
+    const user = userEvent.setup();
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    const budget = within(screen.getByRole('tabpanel')).getByRole('region', {
+      name: 'Budgetary impact',
+    });
+    expect(budget).toHaveTextContent('Annual revenue loss');
+    expect(budget).not.toHaveTextContent(/state revenue/i);
+  });
+
   test('given the overview then summary, date and bill text show; the verdict is in Validation', async () => {
     const user = userEvent.setup();
     renderReport();

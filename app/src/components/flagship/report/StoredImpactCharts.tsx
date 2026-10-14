@@ -105,21 +105,19 @@ const storedRevenue = (budgetary: StoredBudgetary) =>
   budgetary?.stateRevenueImpact ?? budgetary?.netCost;
 
 /**
- * The tracker's annual state revenue change, as the report's own headline
- * words it: a number, not a chart, across the grid's full width.
+ * The tracker's annual revenue change, as the report's own headline words
+ * it: a number, not a chart, across the grid's full width. A state bill's
+ * figure is that state's revenue; a federal bill's is not.
  */
-function StoredBudget({ budgetary }: { budgetary: StoredBudgetary }) {
+function StoredBudget({ budgetary, state }: { budgetary: StoredBudgetary; state?: string }) {
   const value = storedRevenue(budgetary);
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return null;
   }
   const amount = formatCurrencyAbbr(Math.abs(value), 'us', { maximumFractionDigits: 1 });
-  const label =
-    value < 0
-      ? 'Annual state revenue loss'
-      : value > 0
-        ? 'Annual state revenue gain'
-        : 'Annual state revenue change';
+  const label = `Annual ${state ? 'state ' : ''}revenue ${
+    value < 0 ? 'loss' : value > 0 ? 'gain' : 'change'
+  }`;
   return (
     <section
       aria-label="Budgetary impact"
@@ -154,7 +152,14 @@ function StoredBudget({ budgetary }: { budgetary: StoredBudgetary }) {
  * a bill, in the same chart cards as a report's economic impacts. Shown
  * while the full results calculate, or instead of them when they cannot.
  */
-export default function StoredImpactCharts({ impact }: { impact: TrackedBill['impactData'] }) {
+export default function StoredImpactCharts({
+  impact,
+  state,
+}: {
+  impact: TrackedBill['impactData'];
+  /** The bill's state; absent for a federal bill. */
+  state?: TrackedBill['state'];
+}) {
   const [decileMode, setDecileMode] = useState<'average' | 'relative'>('average');
 
   const average = decileRows(impact?.decile?.average);
@@ -206,7 +211,7 @@ export default function StoredImpactCharts({ impact }: { impact: TrackedBill['im
       }}
     >
       {/* The budget leads, as it does in the full results. */}
-      <StoredBudget budgetary={impact?.budgetary} />
+      <StoredBudget budgetary={impact?.budgetary} state={state} />
 
       {(average.length > 0 || relative.length > 0) && (
         <ReportChartCard
