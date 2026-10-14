@@ -1,12 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { render, screen, userEvent, within } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import type { FlagshipReportMeta } from '@/libs/flagship/runReport';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
+import { scorecardClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalcStatus = vi.fn();
+// The report's policies; a baseline policy with parameters is a custom baseline.
+const mockPolicies = vi.hoisted(() => ({ current: [] as unknown[] }));
 
 const META: FlagshipReportMeta = {
   title: 'Test Reform',
@@ -32,7 +35,7 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
       { id: 's1', populationId: 'us', policyId: '2' },
       { id: 's2', populationId: 'us', policyId: '9' },
     ],
-    policies: [],
+    policies: mockPolicies.current,
     isLoading: false,
   }),
 }));
@@ -86,6 +89,11 @@ describe('FlagshipReportPage', () => {
   beforeEach(() => {
     mockCalcStatus.mockReset();
     mockMeta = META;
+    mockPolicies.current = [];
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   test('given the run is still calculating then the page is the wait, without the adjust panel', () => {
@@ -208,5 +216,94 @@ describe('FlagshipReportPage', () => {
       expect(getDraftReform()?.baselineReformId).toBe('rf-plan-b');
       clearDraftReform();
     });
+  });
+
+  test('given a finished custom report then validation shows both checks and says no external estimate exists', async () => {
+    const user = userEvent.setup();
+    // The scorecard links no published score to this reform.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+    );
+    mockCalcStatus.mockReturnValue({
+      status: 'complete',
+      isComplete: true,
+      isError: false,
+      result: createMockSocietyWideOutput(),
+    });
+
+    renderPage();
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByText('No external estimate is available for this reform.')
+    ).toBeInTheDocument();
+    expect(
+      within(panel)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent)
+    ).toEqual(['External estimates', 'Data calibration', 'Baseline comparisons']);
+  });
+
+  const COMPLETE = {
+    status: 'complete',
+    isComplete: true,
+    isError: false,
+    result: createMockSocietyWideOutput(),
+  };
+
+  test('given a finished custom report with a related published score then validation shows it', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          built: '2026-08-29',
+          rows: [{ ...scorecardClaim(), matchBasis: 'parameter' }],
+          unmappedCount: 0,
+        })
+      )
+    );
+    mockCalcStatus.mockReturnValue(COMPLETE);
+
+    renderPage();
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByRole('table', { name: 'Related reforms' })
+    ).toBeInTheDocument();
+    expect(within(panel).getByRole('button', { name: 'CTC extension' })).toBeInTheDocument();
+    expect(
+      within(panel).queryByText('No external estimate is available for this reform.')
+    ).not.toBeInTheDocument();
+  });
+
+  test('given a finished report against a saved reform then the scorecard is not comparable', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+    );
+    mockPolicies.current = [
+      {
+        id: '2',
+        label: 'Smaller CTC',
+        parameters: [{ name: 'gov.irs.credits.ctc.refundable.individual_max', values: [] }],
+      },
+    ];
+    mockCalcStatus.mockReturnValue(COMPLETE);
+
+    renderPage();
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      within(panel).getByText(
+        'External estimates assume current law. This report compares with Smaller CTC.'
+      )
+    ).toBeInTheDocument();
+    expect(within(panel).getAllByText('Not comparable')).toHaveLength(2);
   });
 });

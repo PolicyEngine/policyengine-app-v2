@@ -1,12 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import {
-  CalibrationMatchSection,
-  type CalibrationPin,
-} from '@/components/flagship/CalibrationMatches';
-import ProvisionList from '@/components/flagship/ProvisionList';
-import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
+import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
 import BudgetWindowSummary from '@/components/flagship/report/BudgetWindowSummary';
 import DistrictImpactCard from '@/components/flagship/report/DistrictImpactCard';
@@ -14,18 +9,14 @@ import EconomicImpactCharts from '@/components/flagship/report/EconomicImpactCha
 import HouseholdImpactSection from '@/components/flagship/report/household/HouseholdImpactSection';
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
+import ReportValidation from '@/components/flagship/report/ReportValidation';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
   leadsWithStateRevenue,
   reportMetrics,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
-import ScorecardComparisons from '@/components/flagship/ScorecardComparisons';
-import {
-  hasTrackRecordContent,
-  ModelTrackRecordSection,
-  type ModelTrackRecord,
-} from '@/components/flagship/ValidationPanel';
+import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -117,8 +108,13 @@ export interface ReportViewProps {
   calibration: CalibrationMatches | null | undefined;
   calibrationPin?: CalibrationPin;
   trackRecord: ModelTrackRecord;
-  /** Validation content above the data checks, e.g. a bill's external estimates. */
-  validationLead?: ReactNode;
+  /**
+   * The report's own external estimates, e.g. a bill's fiscal note.
+   * Without them, validation says no external estimate is available.
+   */
+  externalEstimates?: ReactNode;
+  /** A line under the external estimates, e.g. where the bill's estimate came from. */
+  externalEstimatesNote?: ReactNode;
 }
 
 /**
@@ -153,7 +149,8 @@ export default function ReportView({
   calibration,
   calibrationPin,
   trackRecord,
-  validationLead,
+  externalEstimates,
+  externalEstimatesNote,
 }: ReportViewProps) {
   const countryId = useCurrentCountry();
   const [activeTab, setActiveTab] = useState('policy');
@@ -409,48 +406,15 @@ export default function ReportView({
                 'validation',
                 <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
                   <SectionHeading id="validation" title="Validation" />
-                  {validationLead}
-                  <CalibrationMatchSection matches={calibration} pin={calibrationPin} />
-                  {/* Published scores compare with current law, not the saved reform. */}
-                  {customBaselineLabel && (
-                    <Text
-                      style={{
-                        margin: 0,
-                        fontSize: typography.fontSize.sm,
-                        color: colors.text.secondary,
-                      }}
-                    >
-                      Published scores compare with current law. This report compares with{' '}
-                      {customBaselineLabel}.
-                    </Text>
-                  )}
-                  <ScorecardComparisons
-                    reportContext={
-                      provisions.length > 0 ? (
-                        <Stack style={{ gap: spacing.sm }}>
-                          <Text style={{ fontWeight: typography.fontWeight.semibold }}>
-                            Your reform · {year}
-                          </Text>
-                          {provisionsLoading ? (
-                            <ProvisionSkeleton count={provisions.length} />
-                          ) : (
-                            <ProvisionList
-                              provisions={provisions}
-                              sameValueNote={priorLawBaseline ? '' : undefined}
-                            />
-                          )}
-                        </Stack>
-                      ) : (
-                        <Text>Before-and-after details for your reform are unavailable.</Text>
-                      )
-                    }
-                    baselineContent={
-                      hasTrackRecordContent(trackRecord) && (
-                        <ModelTrackRecordSection trackRecord={trackRecord} embedded />
-                      )
-                    }
+                  <ReportValidation
                     countryId={countryId}
                     paths={provisions.map((p) => p.path)}
+                    calibration={calibration}
+                    calibrationPin={calibrationPin}
+                    trackRecord={trackRecord}
+                    externalEstimates={externalEstimates}
+                    externalEstimatesNote={externalEstimatesNote}
+                    baselineLabel={customBaselineLabel}
                   />
                 </Stack>
               )}
