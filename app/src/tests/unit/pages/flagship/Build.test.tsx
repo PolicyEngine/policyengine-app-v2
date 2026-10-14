@@ -1,11 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@test-utils';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { render, screen, userEvent } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
 import BuildPage from '@/pages/flagship/Build.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
+
+const mockFetchMetadata = vi.fn();
+
+vi.mock('@/api/metadata', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/metadata')>()),
+  fetchMetadata: (...args: unknown[]) => mockFetchMetadata(...args),
+}));
 
 const CTC = {
   path: 'gov.irs.credits.ctc.amount.base',
@@ -27,6 +35,9 @@ function renderPage() {
 describe('BuildPage', () => {
   beforeEach(() => {
     clearDraftReform();
+    mockFetchMetadata.mockReset();
+    // A retried fetch stays in flight: the page shows its loading state.
+    mockFetchMetadata.mockReturnValue(new Promise(() => {}));
   });
 
   afterEach(() => {
@@ -39,7 +50,7 @@ describe('BuildPage', () => {
 
     // Then
     expect(screen.getByRole('heading', { name: 'Build a reform' })).toBeInTheDocument();
-    expect(screen.getAllByText('Loading parameters…')).toHaveLength(1);
+    expect(screen.getAllByRole('status', { name: 'Loading parameters' })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: 'Rename the reform' })).not.toBeInTheDocument();
   });
 
@@ -72,7 +83,51 @@ describe('BuildPage', () => {
 
     // Then
     expect(screen.getByRole('button', { name: 'Rename the reform' })).toBeInTheDocument();
-    expect(screen.getAllByText('Loading parameters…')).toHaveLength(1);
+    const loading = screen.getAllByRole('status', { name: 'Loading parameters' });
+    expect(loading).toHaveLength(1);
+    // The placeholder is the table's shape, so the table takes its place without a jump.
+    expect(loading[0]).toHaveTextContent('New value');
     expect(screen.queryByRole('button', { name: /open base amount/i })).not.toBeInTheDocument();
+  });
+
+  test('given metadata failed then the page says so instead of loading for good', () => {
+    // Given
+    seedMetadataError();
+
+    // When
+    renderPage();
+
+    // Then
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the parameters');
+    expect(screen.queryByRole('status', { name: 'Loading parameters' })).not.toBeInTheDocument();
+  });
+
+  test('given metadata failed then try again asks for it again', async () => {
+    // Given
+    const user = userEvent.setup();
+    seedMetadataError();
+    renderPage();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(mockFetchMetadata).toHaveBeenCalledWith('us');
+    expect(await screen.findByRole('status', { name: 'Loading parameters' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  test('given a draft and metadata failed then the error stands in for the table', () => {
+    // Given
+    startDraftReform('us', 'manual');
+    addDraftProvision('us', CTC);
+    seedMetadataError();
+
+    // When
+    renderPage();
+
+    // Then
+    expect(screen.getByRole('button', { name: 'Rename the reform' })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the parameters');
   });
 });
