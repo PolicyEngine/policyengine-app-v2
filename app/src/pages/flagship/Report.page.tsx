@@ -19,6 +19,7 @@ import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
+import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
@@ -148,6 +149,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       } as CalcStartConfig,
     ];
   }, [report, simulations, householdReport]);
+
+  // A report whose record is complete opens from the results stored on
+  // it: run again, each open would ask for the economy once more and
+  // write the same results back over the public record. Seeded before
+  // the start below looks, so no run starts for it.
+  useHydrateCalculationCache({
+    report,
+    outputType: calcConfigs && report?.status === 'complete' ? 'societyWide' : undefined,
+  });
 
   useStartCalculationOnLoad({
     enabled: !!report && !!calcConfigs,
