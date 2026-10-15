@@ -218,11 +218,7 @@ function HouseholdCard({
           Remove
         </Button>
       </div>
-      {/* The inputs on the left, their result beside them on a wide screen. */}
-      <div
-        className="tw:grid tw:gap-6 tw:lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]"
-        style={{ padding: spacing.lg }}
-      >
+      <Stack style={{ gap: spacing.lg, padding: spacing.lg }}>
         <div style={{ minWidth: 0 }}>
           <HouseholdBuilderForm
             household={household}
@@ -240,6 +236,9 @@ function HouseholdCard({
               setHousehold(household.withBuilderChildCount(year, count))
             }
             disabled={running}
+            // National poverty thresholds, the model's default, without the choice.
+            hideSpmGeography
+            layout="columns"
           />
           <div
             style={{
@@ -293,27 +292,8 @@ function HouseholdCard({
           {result && requested && (
             <HouseholdImpactResult impact={result} summary={`${requested.summary} · ${year}`} />
           )}
-
-          {!requested && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: 160,
-                padding: spacing.lg,
-                border: `1px dashed ${colors.border.light}`,
-                borderRadius: spacing.radius.container,
-                fontSize: typography.fontSize.sm,
-                color: colors.text.tertiary,
-                textAlign: 'center',
-              }}
-            >
-              Describe the household, then Calculate to see how the reform changes its net income.
-            </div>
-          )}
         </Stack>
-      </div>
+      </Stack>
     </section>
   );
 }

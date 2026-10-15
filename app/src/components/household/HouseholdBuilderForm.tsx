@@ -55,6 +55,10 @@ export interface HouseholdBuilderFormProps {
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
   isReadOnly?: boolean;
+  /** Leave out the SPM geography choice; the household keeps its own. */
+  hideSpmGeography?: boolean;
+  /** "columns" sets the sections side by side on a wide screen; stacked by default. */
+  layout?: 'stacked' | 'columns';
 }
 
 interface BuilderWarning {
@@ -73,6 +77,8 @@ export default function HouseholdBuilderForm({
   onChange,
   onMaritalStatusChange,
   onNumChildrenChange,
+  hideSpmGeography = false,
+  layout = 'stacked',
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -308,16 +314,24 @@ export default function HouseholdBuilderForm({
     onChange(newHousehold);
   };
 
+  const columns = layout === 'columns';
+
   return (
-    <Stack gap="lg">
-      <SPMGeographyChoice
-        household={household}
-        year={year}
-        metadata={metadata}
-        onChange={onChange}
-        disabled={disabled}
-        isReadOnly={isReadOnly}
-      />
+    // In columns, each section (family, individuals, household) is a column of the grid.
+    <Stack
+      gap="lg"
+      className={columns ? 'tw:lg:grid tw:lg:grid-cols-3 tw:lg:items-start tw:lg:gap-6' : undefined}
+    >
+      {!hideSpmGeography && (
+        <SPMGeographyChoice
+          household={household}
+          year={year}
+          metadata={metadata}
+          onChange={onChange}
+          disabled={disabled}
+          isReadOnly={isReadOnly}
+        />
+      )}
       {/* Floating notification when variable added to different entity */}
       {warningMessage && (
         <div
@@ -398,10 +412,14 @@ export default function HouseholdBuilderForm({
         </div>
       </Stack>
 
-      <hr className="tw:border-border-light" />
+      {!columns && <hr className="tw:border-border-light" />}
 
       {/* Main Accordion Sections - all open by default */}
-      <Accordion type="multiple" defaultValue={['individuals', 'household-vars']}>
+      <Accordion
+        type="multiple"
+        defaultValue={['individuals', 'household-vars']}
+        className={columns ? 'tw:lg:contents' : undefined}
+      >
         {/* Individuals / Members Section */}
         <AccordionItem value="individuals">
           <AccordionTrigger>
