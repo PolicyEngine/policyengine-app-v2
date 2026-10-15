@@ -255,7 +255,6 @@ describe('districtDetailFigures', () => {
         winner_percentage: 0.12,
         loser_percentage: 0.53,
         no_change_percentage: 0.35,
-        population: 760512.4,
       })
     ).toEqual([
       { label: 'Average household income change', value: '-$613' },
@@ -263,7 +262,6 @@ describe('districtDetailFigures', () => {
       { label: 'People gaining income', value: '12.0%' },
       { label: 'People losing income', value: '53.0%' },
       { label: 'People with no change', value: '35.0%' },
-      { label: 'Population', value: '760,512' },
     ]);
   });
 

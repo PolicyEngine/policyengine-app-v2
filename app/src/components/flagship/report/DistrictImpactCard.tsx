@@ -14,7 +14,7 @@ import {
 } from '@/pages/report-output/SocietyWideOverview';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
-import { formatCurrency, formatNumber, formatPercent } from '@/utils/formatters';
+import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 export type CongressionalMode = 'absolute' | 'relative' | 'winner-pct' | 'loser-pct';
@@ -321,7 +321,6 @@ export interface DistrictImpactRow {
   winner_percentage?: number;
   loser_percentage?: number;
   no_change_percentage?: number;
-  population?: number;
 }
 
 /** A share as a percentage, with two significant figures; one that rounds to zero reads zero. */
@@ -358,12 +357,6 @@ export function districtDetailFigures(row: DistrictImpactRow): { label: string; 
     if (typeof value === 'number') {
       figures.push({ label, value: formatShare(value) });
     }
-  }
-  if (typeof row.population === 'number') {
-    figures.push({
-      label: 'Population',
-      value: formatNumber(row.population, 'us', { maximumFractionDigits: 0 }),
-    });
   }
   return figures;
 }
