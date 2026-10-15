@@ -13,6 +13,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import type { CountryId } from '@/libs/countries';
+import { tooltipText } from '@/libs/flagship/tooltipText';
 import {
   BudgetWaterfallTooltip,
   formatBillions,
@@ -107,7 +108,10 @@ export default function BudgetaryImpactSubPage({
   const data = computeWaterfallData(
     items.map((item) => ({ ...item, value: item.value / unit.divisor })),
     (value) => formatBarAmount(toAmount(value), countryId)
-  ).map((datum) => ({ ...datum, hoverText: hoverMessage(datum.name, toAmount(datum.value)) }));
+  ).map((datum) => ({
+    ...datum,
+    hoverText: tooltipText(hoverMessage(datum.name, toAmount(datum.value))),
+  }));
 
   const symbol = currencySymbol(countryId);
   const unitName = `${symbol}${unit.suffix}`;
