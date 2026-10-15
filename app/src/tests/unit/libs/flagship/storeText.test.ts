@@ -26,4 +26,22 @@ describe('clampStoreText', () => {
 
     expect(clampStoreText(note, MAX_STORE_NOTE_LENGTH)).toHaveLength(MAX_STORE_NOTE_LENGTH);
   });
+
+  test('given an emoji at the cut then it is kept whole, never split into half a character', () => {
+    // 253 letters put the emoji (two UTF-16 units) across the old cut point.
+    const title = `${'A'.repeat(MAX_STORE_NAME_LENGTH - 2)}🎉${'B'.repeat(20)}`;
+
+    const clamped = clampStoreText(title);
+
+    expect(Array.from(clamped)).toHaveLength(MAX_STORE_NAME_LENGTH);
+    expect(clamped.endsWith('🎉…')).toBe(true);
+    expect(clamped.isWellFormed()).toBe(true);
+  });
+
+  test('given a name with emoji within the limit in characters then it is not cut', () => {
+    // 250 emoji are 500 UTF-16 units but 250 characters, as the API counts.
+    const title = '🎉'.repeat(MAX_STORE_NAME_LENGTH - 5);
+
+    expect(clampStoreText(title)).toBe(title);
+  });
 });
