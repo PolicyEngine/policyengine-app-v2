@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
-import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import { clearDraftReform, draftYear, getDraftReform } from '@/libs/draftReform';
 import ReformsPage from '@/pages/flagship/Reforms.page';
 import {
   FEDERAL_ENACTED,
@@ -334,9 +334,10 @@ describe('ReformsPage', () => {
     await user.click(await screen.findByRole('button', { name: /open as draft reform/i }));
 
     const draft = getDraftReform();
-    expect(draft?.year).toBe(Number(CURRENT_YEAR));
+    expect(draftYear(draft)).toBe(Number(CURRENT_YEAR));
+    // No state region, and still the bill's draft.
     expect(draft?.population).toEqual({ scope: 'national' });
-    expect(draft?.sourceRef).toBe('us-ctc-expansion');
+    expect(draft).toMatchObject({ source: 'bill', sourceRef: 'us-ctc-expansion' });
   });
 
   test('given the federal level then state bills leave', async () => {
