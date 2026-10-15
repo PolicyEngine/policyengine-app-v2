@@ -1,7 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, userEvent } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
+import {
+  addDraftProvision,
+  clearDraftReform,
+  setDraftLabel,
+  startDraftReform,
+} from '@/libs/draftReform';
 import BuildPage from '@/pages/flagship/Build.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
@@ -27,6 +32,14 @@ const CTC = {
   value: 2000,
 };
 
+const PERSONAL_ALLOWANCE = {
+  path: 'gov.hmrc.income_tax.allowances.personal_allowance.amount',
+  breadcrumb: 'HMRC → Income tax → Personal allowance',
+  unit: 'currency-GBP',
+  baselineValue: 12570,
+  value: 12570,
+};
+
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -38,6 +51,8 @@ function renderPage() {
 
 describe('BuildPage', () => {
   beforeEach(() => {
+    // Every country's draft, the ones set aside too.
+    localStorage.clear();
     clearDraftReform();
     mockFetchMetadata.mockReset();
     // A retried fetch stays in flight: the page shows its loading state.
@@ -75,6 +90,19 @@ describe('BuildPage', () => {
     const search = screen.getByRole('combobox', { name: 'Search parameters' });
     expect(search).toHaveAttribute('placeholder', expect.stringMatching(/^Add another parameter/));
     expect(row.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  test("given a draft set aside for another country's then this country's page brings it back", () => {
+    // Given — a US draft, then a UK one started on the UK page
+    addDraftProvision('us', CTC);
+    setDraftLabel('US plan');
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
+
+    // When
+    renderPage();
+
+    // Then
+    expect(screen.getByRole('button', { name: 'Rename the reform' })).toHaveTextContent('US plan');
   });
 
   test('given a draft before metadata loads then one loader stands for the bar and the table', () => {

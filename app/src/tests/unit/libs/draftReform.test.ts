@@ -8,6 +8,7 @@ import {
   loadReformIntoDraft,
   provisionFromSearchEntry,
   removeDraftProvision,
+  resumeDraftFor,
   setDraftBaseline,
   setDraftLabel,
   setDraftPopulation,
@@ -34,8 +35,27 @@ const EITC_PROVISION = {
   value: 600,
 };
 
+/** A UK parameter, for drafts in two countries at once. */
+const PERSONAL_ALLOWANCE = {
+  path: 'gov.hmrc.income_tax.allowances.personal_allowance.amount',
+  breadcrumb: 'HMRC → Income tax → Personal allowance',
+  unit: 'currency-GBP',
+  baselineValue: 12570,
+  value: 12570,
+};
+
+const MARRIAGE_ALLOWANCE = {
+  path: 'gov.hmrc.income_tax.allowances.marriage_allowance.max',
+  breadcrumb: 'HMRC → Income tax → Marriage allowance → Maximum',
+  unit: 'currency-GBP',
+  baselineValue: 1260,
+  value: 1260,
+};
+
 describe('draftReform', () => {
   beforeEach(() => {
+    // Every country's draft, the ones set aside too.
+    localStorage.clear();
     clearDraftReform();
   });
 
@@ -56,19 +76,49 @@ describe('draftReform', () => {
     expect(getDraftReform()?.provisions[0].value).toBe(2000);
   });
 
-  it('given a draft for another country then adding replaces it with a fresh draft', () => {
+  it('given a draft for another country then adding starts a fresh draft for this one', () => {
     addDraftProvision('us', CTC_PROVISION);
-    addDraftProvision('uk', {
-      path: 'gov.hmrc.income_tax.allowances.personal_allowance.amount',
-      breadcrumb: 'HMRC → Income tax → Personal allowance',
-      unit: 'currency-GBP',
-      baselineValue: 12570,
-      value: 12570,
-    });
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
 
     const draft = getDraftReform();
     expect(draft?.countryId).toBe('uk');
     expect(draft?.provisions).toHaveLength(1);
+  });
+
+  it('given a draft for another country then the first draft is kept for its own country', () => {
+    addDraftProvision('us', CTC_PROVISION);
+    setDraftLabel('US plan');
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
+
+    resumeDraftFor('us');
+
+    expect(getDraftReform()).toMatchObject({
+      countryId: 'us',
+      label: 'US plan',
+      provisions: [CTC_PROVISION],
+    });
+  });
+
+  it('given a country with a draft set aside then adding there goes on with that draft', () => {
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
+    addDraftProvision('us', CTC_PROVISION);
+
+    addDraftProvision('uk', MARRIAGE_ALLOWANCE);
+
+    expect(getDraftReform()?.provisions.map((provision) => provision.path)).toEqual([
+      PERSONAL_ALLOWANCE.path,
+      MARRIAGE_ALLOWANCE.path,
+    ]);
+  });
+
+  it('given a draft is discarded then it does not come back, and the other country keeps its own', () => {
+    addDraftProvision('us', CTC_PROVISION);
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
+
+    clearDraftReform();
+
+    expect(resumeDraftFor('uk')).toBeNull();
+    expect(resumeDraftFor('us')?.provisions).toEqual([CTC_PROVISION]);
   });
 
   it('given a value update then only that provision changes', () => {

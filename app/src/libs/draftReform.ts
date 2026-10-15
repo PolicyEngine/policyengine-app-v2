@@ -184,9 +184,15 @@ export function provisionValueInYear(
 const STORAGE_KEY = 'pe-draft-reform';
 const CHANGE_EVENT = 'pe-draft-reform-change';
 
-function readDraft(): DraftReform | null {
+/**
+ * Where another country's draft waits while this one is built: one per
+ * country, so starting a UK draft never throws away the US one.
+ */
+const setAsideKey = (countryId: string) => `${STORAGE_KEY}:${countryId}`;
+
+function readDraft(key: string = STORAGE_KEY): DraftReform | null {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(key);
     if (!stored) {
       return null;
     }
@@ -204,6 +210,17 @@ function readDraft(): DraftReform | null {
 function writeDraft(draft: DraftReform | null): void {
   try {
     if (draft) {
+      // Another country's draft is set aside, not lost; this country's
+      // own set-aside draft is the one written now, or one it replaces.
+      const active = readDraft();
+      if (
+        active &&
+        active.countryId !== draft.countryId &&
+        (active.provisions.length > 0 || hasDraftSettings(active) || active.editingReformId)
+      ) {
+        localStorage.setItem(setAsideKey(active.countryId), JSON.stringify(active));
+      }
+      localStorage.removeItem(setAsideKey(draft.countryId));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
     } else {
       localStorage.removeItem(STORAGE_KEY);
@@ -307,6 +324,24 @@ export function startDraftReform(
   return draft;
 }
 
+/**
+ * Brings this country's draft back when another country's is in hand —
+ * the one set aside when the other was started — setting the other
+ * aside in turn. The country's draft, or null when it has none.
+ */
+export function resumeDraftFor(countryId: CountryId): DraftReform | null {
+  const active = getSnapshot();
+  if (active?.countryId === countryId) {
+    return active;
+  }
+  const setAside = readDraft(setAsideKey(countryId));
+  if (!setAside) {
+    return null;
+  }
+  writeDraft(setAside);
+  return setAside;
+}
+
 /** Adds a provision (no-op if the parameter is already in the draft). */
 export function addDraftProvision(
   countryId: CountryId,
@@ -314,11 +349,7 @@ export function addDraftProvision(
   source: ReformSource = 'manual',
   sourceRef?: string
 ): void {
-  const existing = getSnapshot();
-  const draft =
-    existing && existing.countryId === countryId
-      ? existing
-      : startDraftReform(countryId, source, sourceRef);
+  const draft = resumeDraftFor(countryId) ?? startDraftReform(countryId, source, sourceRef);
 
   if (draft.provisions.some((p) => p.path === provision.path)) {
     return;
