@@ -11,8 +11,10 @@ import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/utils/valueCoercion';
 import { parseReportMeta, stampReportMeta, type ReportParseResult } from './reportSchema';
 
 /**
@@ -223,6 +225,8 @@ export interface RunFlagshipReportArgs {
    * provisions and reform links — instead of the browser record.
    */
   accountReportStore?: FlagshipReportStore | null;
+  /** The model's parameters, to check and type each value as v2 does. */
+  parameters?: ParameterMetadataCollection;
 }
 
 /**
@@ -244,6 +248,30 @@ export function provisionPeriods(
 }
 
 /**
+ * A provision's values as v2 sends them (convertParametersToPolicyJson):
+ * numbers from numeric text, booleans as booleans, infinity as the API
+ * spells it, and a value of the wrong kind refused. A parameter the
+ * metadata lacks (a bill's contributed switch) is sent as it is.
+ */
+function coercePeriods(
+  path: string,
+  periods: Record<string, any>,
+  parameters: ParameterMetadataCollection | undefined
+): Record<string, any> {
+  const metadata = parameters?.[path];
+  if (!metadata || metadata.type !== 'parameter') {
+    return periods;
+  }
+  const spec = resolvePolicyParameterValueSpec(path, parameters!);
+  return Object.fromEntries(
+    Object.entries(periods).map(([period, value]) => [
+      period,
+      coercePolicyParameterValue(value, spec, path),
+    ])
+  );
+}
+
+/**
  * Creates (or, since the API dedupes identical policies, finds) the reform
  * policy for a set of provisions — each with its dated changes, or its
  * single value from the current year onward. The policy carries only the
@@ -252,9 +280,13 @@ export function provisionPeriods(
  */
 export async function createReformPolicy(
   countryId: CountryId,
-  provisions: Array<Pick<RunReportProvision, 'path' | 'value' | 'intervals'>>
+  provisions: Array<Pick<RunReportProvision, 'path' | 'value' | 'intervals'>>,
+  /** The model's parameters: each value is checked and typed against them, as v2's policies are. */
+  parameters?: ParameterMetadataCollection
 ): Promise<number> {
-  const data = Object.fromEntries(provisions.map((p) => [p.path, provisionPeriods(p)]));
+  const data = Object.fromEntries(
+    provisions.map((p) => [p.path, coercePeriods(p.path, provisionPeriods(p), parameters)])
+  );
   const policyResponse = await createPolicy(countryId, { data });
   return Number(policyResponse.result.policy_id);
 }
@@ -275,6 +307,7 @@ export async function runFlagshipReport({
   windowYears,
   baseline: requestedBaseline,
   accountReportStore,
+  parameters,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -284,9 +317,11 @@ export async function runFlagshipReport({
   // Neither policy carries a name: names live on the user's records.
   const comparison = customBaseline(requestedBaseline, currentLawId);
   const [reformPolicyId, baselineId] = await Promise.all([
-    createReformPolicy(countryId, provisions),
+    createReformPolicy(countryId, provisions, parameters),
     comparison?.policyId ??
-      (comparison ? createReformPolicy(countryId, baselineProvisions(comparison)) : currentLawId),
+      (comparison
+        ? createReformPolicy(countryId, baselineProvisions(comparison), parameters)
+        : currentLawId),
   ]);
 
   const [baseline, reform] = await Promise.all([
