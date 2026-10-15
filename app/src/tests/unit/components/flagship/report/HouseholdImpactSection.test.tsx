@@ -71,9 +71,13 @@ vi.mock('@/utils/HouseholdValidation', () => ({
   HouseholdValidation: { isReadyForSimulation: () => ({ isValid: true, errors: [] }) },
 }));
 
-function renderSection({ region, countryId = 'us' }: { region?: string; countryId?: string } = {}) {
+function renderSection({
+  region,
+  countryId = 'us',
+  added = true,
+}: { region?: string; countryId?: string; added?: boolean } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <HouseholdImpactSection
         countryId={countryId}
@@ -84,6 +88,11 @@ function renderSection({ region, countryId = 'us' }: { region?: string; countryI
       />
     </QueryClientProvider>
   );
+  // Most tests start from a household already added.
+  if (added && countryId === 'us') {
+    act(() => screen.getByRole('button', { name: 'Add a household' }).click());
+  }
+  return view;
 }
 
 /** Each policy's calculated household, from the reform's result. */
@@ -109,25 +118,29 @@ describe('HouseholdImpactSection', () => {
     onlineManager.setOnline(true);
   });
 
-  test('given the section then a default household waits and nothing runs', async () => {
-    renderSection();
+  test('given the section then only a button to add a household shows', () => {
+    renderSection({ added: false });
+
+    expect(screen.getByRole('button', { name: 'Add a household' })).toBeInTheDocument();
+    expect(screen.queryByRole('generic', { name: 'Household builder' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    expect(mockCreateHousehold).not.toHaveBeenCalled();
+  });
+
+  test('given Add a household then the builder opens with nothing filled in', async () => {
+    renderSection({ region: 'state/ny' });
 
     expect(screen.getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
       'single · 0'
     );
-    expect(screen.getByTestId('state')).toHaveTextContent('CA');
+    // No state, even on a state's report, and no earnings: the reader sets them.
+    expect(screen.getByTestId('state')).toHaveTextContent('');
     expect(await screen.findByRole('button', { name: 'Calculate' })).toBeEnabled();
     expect(mockCreateHousehold).not.toHaveBeenCalled();
     expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
   });
 
-  test("given a state's report then the household starts in that state", () => {
-    renderSection({ region: 'state/ny' });
-
-    expect(screen.getByTestId('state')).toHaveTextContent('NY');
-  });
-
-  test('given the default household then it earns $50,000, on national poverty thresholds', async () => {
+  test('given the new household then it earns nothing, on national poverty thresholds', async () => {
     const user = userEvent.setup();
     renderSection();
 
@@ -135,7 +148,7 @@ describe('HouseholdImpactSection', () => {
 
     await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
     const sent = mockCreateHousehold.mock.calls[0][0];
-    expect(sent.data.people.you.employment_income).toEqual({ [HOUSEHOLD_YEAR]: 50000 });
+    expect(sent.data.people.you.employment_income).toEqual({ [HOUSEHOLD_YEAR]: 0 });
     expect(JSON.stringify(sent)).toContain('national');
   });
 
@@ -166,7 +179,7 @@ describe('HouseholdImpactSection', () => {
     const headline = within(result).getByRole('group', { name: 'Change in annual net income' });
     expect(headline).toHaveTextContent('+$1,000');
     expect(headline).toHaveTextContent('$72,000 → $73,000 (+1.4%)');
-    expect(result).toHaveTextContent('Single · no children · California · 2026');
+    expect(result).toHaveTextContent('Single · no children · 2026');
   });
 
   test('given a result then its taxes, benefits and credits that change are listed', async () => {

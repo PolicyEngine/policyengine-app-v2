@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { IconPlus } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { STATE_NAMES } from '@/api/billFeed';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
@@ -8,7 +9,6 @@ import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
-import { stateFromRegion } from '@/libs/flagship/householdRun';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
@@ -18,36 +18,12 @@ import { HouseholdValidation } from '@/utils/HouseholdValidation';
 /** Both policies run at once; one household typically takes under a minute. */
 const EXPECTED_MS = 45 * 1000;
 
-/** Where the household starts: the report's state, else California, the model's default. */
-const DEFAULT_STATE = 'CA';
-const DEFAULT_EARNINGS = 50000;
-
 /**
- * The household to start from: the builder's own, in the report's state,
- * earning $50,000 a year, measured against national poverty thresholds —
- * so "Calculate" works at once, and anything can be changed or added.
+ * A new household: the household builder's own start, one adult and
+ * nothing else set, measured against national poverty thresholds.
  */
-function starterHousehold(year: string, region?: string): Household {
-  let household = Household.starter('us', year).withSPM({ geography_kind: 'national' });
-  const householdKey = Object.keys(household.householdData.households ?? {})[0];
-  if (householdKey) {
-    household = household.setGroupVariableAtYear(
-      'households',
-      householdKey,
-      'state_name',
-      year,
-      stateFromRegion(region) ?? DEFAULT_STATE
-    );
-  }
-  const { primaryPersonKey } = household.deriveBuilderComposition(year);
-  return primaryPersonKey
-    ? household.setPersonVariableAtYear(
-        primaryPersonKey,
-        'employment_income',
-        year,
-        DEFAULT_EARNINGS
-      )
-    : household;
+function newHousehold(year: string): Household {
+  return Household.starter('us', year).withSPM({ geography_kind: 'national' });
 }
 
 /** "Married · 2 children · New York": who a result is for. */
@@ -68,21 +44,21 @@ interface HouseholdImpactSectionProps {
   countryId: string;
   /** The report's year: the household runs in it. */
   year: string;
-  /** The report's population; a state's report starts the household there. */
+  /** The report's population. */
   region?: string;
   baselinePolicyId: string;
   reformPolicyId: string;
 }
 
 /**
- * The report's household section: describe one household, then see how
- * the report's reform changes its net income against the report's
- * baseline, in the report's year. Nothing runs until "Calculate".
+ * The report's household section: add a household, describe it, then
+ * see how the report's reform changes its net income against the
+ * report's baseline, in the report's year. Nothing is filled in for the
+ * reader, and nothing runs until "Calculate".
  */
 export default function HouseholdImpactSection({
   countryId,
   year,
-  region,
   baselinePolicyId,
   reformPolicyId,
 }: HouseholdImpactSectionProps) {
@@ -90,7 +66,7 @@ export default function HouseholdImpactSection({
   // per person and per household, as in the household builder.
   const metadata = useSelector((state: RootState) => state.metadata);
   const basicInputFields = useSelector(getBasicInputFields);
-  const [household, setHousehold] = useState(() => starterHousehold(year, region));
+  const [household, setHousehold] = useState<Household | null>(null);
   const [requested, setRequested] = useState<{
     payload: V1HouseholdCreateEnvelope;
     summary: string;
@@ -101,7 +77,7 @@ export default function HouseholdImpactSection({
     reformPolicyId,
     payload: requested?.payload ?? null,
   });
-  const composition = useMemo(() => household.deriveBuilderComposition(year), [household, year]);
+  const composition = useMemo(() => household?.deriveBuilderComposition(year), [household, year]);
   const basicNonPersonFields = useMemo(
     () =>
       Object.entries(basicInputFields)
@@ -111,7 +87,7 @@ export default function HouseholdImpactSection({
   );
   // Whether the household can run, as the household builder checks it.
   const validation = useMemo(
-    () => HouseholdValidation.isReadyForSimulation(household, 'us', year, metadata),
+    () => household && HouseholdValidation.isReadyForSimulation(household, 'us', year, metadata),
     [household, year, metadata]
   );
 
@@ -120,6 +96,32 @@ export default function HouseholdImpactSection({
       <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
         Household impacts are available for US reports.
       </Text>
+    );
+  }
+
+  if (!household || !composition || !validation) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: spacing.md,
+          padding: spacing.lg,
+          border: `1px solid ${colors.border.light}`,
+          borderRadius: spacing.radius.container,
+          background: colors.secondary[50],
+        }}
+      >
+        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+          See how this reform changes the net income of one household that you describe.
+        </Text>
+        <Button size="sm" onClick={() => setHousehold(newHousehold(year))}>
+          <IconPlus size={16} aria-hidden />
+          Add a household
+        </Button>
+      </div>
     );
   }
 
@@ -150,12 +152,12 @@ export default function HouseholdImpactSection({
           numChildren={composition.numChildren}
           basicPersonFields={basicInputFields.person || []}
           basicNonPersonFields={basicNonPersonFields}
-          onChange={setHousehold}
+          onChange={(next) => setHousehold(next)}
           onMaritalStatusChange={(status) =>
-            setHousehold((current) => current.withBuilderMaritalStatus(year, status))
+            setHousehold(household.withBuilderMaritalStatus(year, status))
           }
           onNumChildrenChange={(count) =>
-            setHousehold((current) => current.withBuilderChildCount(year, count))
+            setHousehold(household.withBuilderChildCount(year, count))
           }
           disabled={running}
         />
