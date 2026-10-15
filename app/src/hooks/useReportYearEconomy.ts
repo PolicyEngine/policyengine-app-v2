@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import type { CalcStatus, RunStage } from '@/types/calculation';
@@ -94,4 +94,88 @@ export function useReportYearEconomy({
     queuePosition: economy.data?.queuePosition,
     retry: () => void economy.refetch(),
   };
+}
+
+/**
+ * Every requested year of a budget window, each scored as
+ * `useReportYearEconomy` scores one. Years not requested do not run.
+ */
+export function useReportYearEconomies({
+  countryId,
+  reformPolicyId,
+  baselinePolicyId,
+  region,
+  years,
+}: {
+  countryId: string;
+  reformPolicyId?: string;
+  baselinePolicyId?: string;
+  region?: string;
+  /** The years to score. */
+  years: string[];
+}): Record<string, ReportYearEconomy> {
+  const population = region || countryId;
+  const ready = !!reformPolicyId && !!baselinePolicyId;
+  const results = useQueries({
+    queries: years.map((year) => ({
+      queryKey: [
+        'flagship-report-year',
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        population,
+        year,
+      ],
+      queryFn: () =>
+        strategy.execute(
+          {
+            countryId: countryId as 'us',
+            calcType: 'societyWide' as const,
+            policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
+            populationId: population,
+            region: population,
+            year,
+            calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
+            estimateByRegion: true,
+          },
+          {
+            calcId: `report-year-${reformPolicyId}-${baselinePolicyId}-${population}-${year}`,
+            calcType: 'societyWide' as const,
+            targetType: 'report' as const,
+            startedAt: Date.now(),
+          }
+        ),
+      enabled: ready,
+      refetchInterval: (query: { state: { data?: CalcStatus } }) =>
+        query.state.data?.status === 'pending' ? 2000 : false,
+      staleTime: Infinity,
+    })),
+  });
+  return Object.fromEntries(
+    years.map((year, index) => {
+      const economy = results[index];
+      const status: ReportYearEconomy['status'] = !ready
+        ? 'idle'
+        : economy.isError || economy.data?.status === 'error'
+          ? 'error'
+          : economy.data?.status === 'complete'
+            ? 'complete'
+            : 'pending';
+      return [
+        year,
+        {
+          output:
+            economy.data?.status === 'complete'
+              ? (economy.data.result as SocietyWideReportOutput)
+              : null,
+          status,
+          message: status === 'error' ? economy.data?.error?.message : economy.data?.message,
+          progress: economy.data?.progress,
+          runStage: economy.data?.runStage,
+          queuePosition: economy.data?.queuePosition,
+          retry: () => void economy.refetch(),
+        },
+      ];
+    })
+  );
 }

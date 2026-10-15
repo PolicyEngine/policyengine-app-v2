@@ -4,12 +4,16 @@ import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
+import AllYearsView from '@/components/flagship/report/AllYearsView';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
 import ReportLoadError from '@/components/flagship/report/ReportLoadError';
 import ReportNotSocietyWide from '@/components/flagship/report/ReportNotSocietyWide';
 import ReportView from '@/components/flagship/report/ReportView';
-import ReportYearSwitcher from '@/components/flagship/report/ReportYearSwitcher';
+import ReportYearSwitcher, {
+  ALL_YEARS,
+  type YearStatus,
+} from '@/components/flagship/report/ReportYearSwitcher';
 import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { ErrorState } from '@/components/flagship/states';
@@ -22,7 +26,7 @@ import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
-import { useReportYearEconomy } from '@/hooks/useReportYearEconomy';
+import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
@@ -191,15 +195,23 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     region && report && region !== report.countryId
       ? populationLabel(region, economyRegions)
       : undefined;
-  // The window year whose full results show; null is the report's own year.
-  const [shownYear, setShownYear] = useState<string | null>(null);
-  const yearEconomy = useReportYearEconomy({
+  // A budget window's years. The run scored the first in full; another
+  // year runs once it is opened, or with the rest from the All years view.
+  const windowYears =
+    meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
+      ? Array.from({ length: meta.budgetWindow.windowSize }, (_, index) =>
+          String(meta.budgetWindow!.startYear + index)
+        )
+      : [];
+  const reportYear = report?.year ?? '';
+  const [view, setView] = useState<string | null>(null);
+  const [requestedYears, setRequestedYears] = useState<string[]>([]);
+  const yearEconomies = useReportYearEconomies({
     countryId: report?.countryId ?? 'us',
     reformPolicyId: reformPolicyId ? String(reformPolicyId) : undefined,
     baselinePolicyId: baselinePolicyId ? String(baselinePolicyId) : undefined,
     region,
-    year: shownYear ?? '',
-    enabled: !!shownYear && shownYear !== report?.year,
+    years: requestedYears.filter((year) => year !== reportYear),
   });
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths);
@@ -343,21 +355,41 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         : `${Number(singleProvision.value) > Number(singleProvision.baselineValue) ? 'Increasing' : Number(singleProvision.value) < Number(singleProvision.baselineValue) ? 'Reducing' : 'Setting'} the Child Tax Credit`
       : title;
 
-  // A budget window's years: the run scored the first in full; another
-  // opens its own full results, scored when it is picked.
-  const windowYears =
-    meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
-      ? Array.from({ length: meta.budgetWindow.windowSize }, (_, index) =>
-          String(meta.budgetWindow!.startYear + index)
-        )
-      : [];
-  const reportYear = report?.year ?? '';
-  const year = windowYears.includes(shownYear ?? '') ? shownYear! : reportYear;
+  const shownView = view ?? (windowYears.length > 1 ? ALL_YEARS : reportYear);
+  const allYears = shownView === ALL_YEARS;
+  const year = allYears || !windowYears.includes(shownView) ? reportYear : shownView;
   const otherYear = year !== reportYear;
-  const shownOutput = otherYear ? yearEconomy.output : output;
+  const yearEconomy = yearEconomies[year];
+  const statusByYear: Record<string, YearStatus> = Object.fromEntries(
+    windowYears.map((windowYear) => {
+      if (windowYear === reportYear) {
+        return [windowYear, output ? 'done' : 'computing'];
+      }
+      const economy = yearEconomies[windowYear];
+      return [
+        windowYear,
+        !economy
+          ? 'not-run'
+          : economy.status === 'complete'
+            ? 'done'
+            : economy.status === 'error'
+              ? 'error'
+              : 'computing',
+      ];
+    })
+  );
+  const requestYears = (years: string[]) =>
+    setRequestedYears((current) => [...new Set([...current, ...years])]);
+  const selectView = (next: string) => {
+    setView(next);
+    if (next !== ALL_YEARS && next !== reportYear) {
+      requestYears([next]);
+    }
+  };
+  const shownOutput = otherYear ? (yearEconomy?.output ?? null) : output;
   const yearPending =
-    otherYear && yearEconomy.status !== 'complete' ? (
-      yearEconomy.status === 'error' ? (
+    otherYear && yearEconomy?.status !== 'complete' ? (
+      yearEconomy?.status === 'error' ? (
         <ErrorState
           compact
           title={`Could not calculate ${year}`}
@@ -367,8 +399,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       ) : (
         <RunProgress
           title={`Calculating ${year}`}
-          progress={yearEconomy.progress}
-          runStage={yearEconomy.runStage}
+          progress={yearEconomy?.progress}
+          runStage={yearEconomy?.runStage}
           expectedMs={getDurationForRegion(report?.countryId ?? 'us', region)}
         />
       )
@@ -411,9 +443,34 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       baselinePolicyId={baselinePolicyId}
       output={shownOutput}
       pending={yearPending}
+      coverYear={allYears ? `${windowYears[0]}–${windowYears[windowYears.length - 1]}` : year}
       yearSwitcher={
         windowYears.length > 1 ? (
-          <ReportYearSwitcher years={windowYears} value={year} onChange={setShownYear} />
+          <ReportYearSwitcher
+            years={windowYears}
+            value={shownView}
+            onChange={selectView}
+            statusByYear={statusByYear}
+          />
+        ) : undefined
+      }
+      sectionsOverride={
+        allYears ? (
+          <AllYearsView
+            countryId={report?.countryId ?? 'us'}
+            reformPolicyId={reformPolicyId ? String(reformPolicyId) : undefined}
+            baselinePolicyId={baselinePolicyId ? String(baselinePolicyId) : undefined}
+            region={region}
+            years={windowYears}
+            outputs={Object.fromEntries(
+              windowYears.map((windowYear) => [
+                windowYear,
+                windowYear === reportYear ? output : (yearEconomies[windowYear]?.output ?? null),
+              ])
+            )}
+            statusByYear={statusByYear}
+            onCalculateAll={() => requestYears(windowYears)}
+          />
         ) : undefined
       }
       calibration={calibration}

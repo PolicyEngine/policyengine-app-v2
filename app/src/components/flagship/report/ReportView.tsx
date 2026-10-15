@@ -110,6 +110,10 @@ export interface ReportViewProps {
   overviewLead?: ReactNode;
   /** Above the section tabs: which year the results show, for a budget window. */
   yearSwitcher?: ReactNode;
+  /** In place of the section tabs, e.g. a budget window's all-years view. */
+  sectionsOverride?: ReactNode;
+  /** The cover's year, when it differs from `year` (a window's span). */
+  coverYear?: string;
   /** Content below the overview's section cards, e.g. data provenance. */
   overviewFooter?: ReactNode;
   calibration: CalibrationMatches | null | undefined;
@@ -154,6 +158,8 @@ export default function ReportView({
   districtsPending = pending,
   overviewLead,
   yearSwitcher,
+  sectionsOverride,
+  coverYear,
   overviewFooter,
   calibration,
   calibrationPin,
@@ -268,7 +274,7 @@ export default function ReportView({
                       fontSize: typography.fontSize.sm,
                     }}
                   >
-                    {[populationLabel, year].filter(Boolean).join(' · ')}
+                    {[populationLabel, coverYear ?? year].filter(Boolean).join(' · ')}
                   </Text>
                 )}
               </Stack>
@@ -276,161 +282,163 @@ export default function ReportView({
 
             {yearSwitcher}
 
-            <Tabs value={activeTab} onValueChange={selectTab} style={{ gap: spacing.xl }}>
-              <TabsList
-                aria-label="Report sections"
-                variant="line"
-                style={{
-                  flexWrap: 'wrap',
-                  height: 'auto',
-                  width: '100%',
-                  justifyContent: 'flex-start',
-                  borderBottom: `1px solid ${colors.border.light}`,
-                  paddingBottom: spacing.sm,
-                }}
-              >
-                {SECTIONS.map((section) => (
-                  <TabsTrigger
-                    key={section.id}
-                    value={section.id}
-                    style={{
-                      flex: '0 0 auto',
-                      padding: `${spacing.sm} ${spacing.md}`,
-                      fontSize: typography.fontSize.sm,
-                    }}
-                  >
-                    {section.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {tabPanel(
-                'policy',
-                <Stack style={{ gap: spacing.xl }}>
-                  {/* Said first, before a page of results that all read "no change". */}
-                  {output && isSocietyWideReportNoOp(output) && (
-                    <NoChangeNotice
-                      year={year}
+            {sectionsOverride ?? (
+              <Tabs value={activeTab} onValueChange={selectTab} style={{ gap: spacing.xl }}>
+                <TabsList
+                  aria-label="Report sections"
+                  variant="line"
+                  style={{
+                    flexWrap: 'wrap',
+                    height: 'auto',
+                    width: '100%',
+                    justifyContent: 'flex-start',
+                    borderBottom: `1px solid ${colors.border.light}`,
+                    paddingBottom: spacing.sm,
+                  }}
+                >
+                  {SECTIONS.map((section) => (
+                    <TabsTrigger
+                      key={section.id}
+                      value={section.id}
+                      style={{
+                        flex: '0 0 auto',
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        fontSize: typography.fontSize.sm,
+                      }}
+                    >
+                      {section.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {tabPanel(
+                  'policy',
+                  <Stack style={{ gap: spacing.xl }}>
+                    {/* Said first, before a page of results that all read "no change". */}
+                    {output && isSocietyWideReportNoOp(output) && (
+                      <NoChangeNotice
+                        year={year}
+                        provisions={provisions}
+                        baselineLabel={customBaselineLabel}
+                      />
+                    )}
+                    {overviewLead}
+                    <ReportChanges
                       provisions={provisions}
-                      baselineLabel={customBaselineLabel}
+                      changes={changes}
+                      priorLawBaseline={priorLawBaseline}
+                      loading={provisionsLoading}
+                      beforeLabel={customBaselineLabel ? 'Current law' : undefined}
                     />
-                  )}
-                  {overviewLead}
-                  <ReportChanges
-                    provisions={provisions}
-                    changes={changes}
-                    priorLawBaseline={priorLawBaseline}
-                    loading={provisionsLoading}
-                    beforeLabel={customBaselineLabel ? 'Current law' : undefined}
-                  />
-                  <ReportContents
-                    metrics={metrics}
-                    metricsNote={output ? undefined : storedMetricsNote}
-                    districtAvailable={districtScope || countryId === 'uk'}
-                    onOpen={openReportSection}
-                  />
-                  {/* A window asked for in Build: its progress, then its total, here too. */}
-                  {budgetWindow && reformPolicyId && baselinePolicyId && (
-                    <BudgetWindowSummary
-                      countryId={countryId}
-                      reformPolicyId={reformPolicyId}
-                      baselinePolicyId={baselinePolicyId}
-                      region={region}
-                      window={budgetWindow}
-                      onOpen={openBudgetWindow}
+                    <ReportContents
+                      metrics={metrics}
+                      metricsNote={output ? undefined : storedMetricsNote}
+                      districtAvailable={districtScope || countryId === 'uk'}
+                      onOpen={openReportSection}
                     />
-                  )}
-                  {overviewFooter}
-                </Stack>
-              )}
-              {tabPanel(
-                'economy',
-                <Stack style={{ gap: spacing.md }}>
-                  {output ? <EconomicImpactCharts output={output} /> : economyPending}
-                  {/* The budget over several years, on the reader's request. */}
-                  {reformPolicyId && baselinePolicyId && (
-                    <BudgetWindowCard
-                      countryId={countryId}
-                      reformPolicyId={reformPolicyId}
-                      baselinePolicyId={baselinePolicyId}
-                      region={region}
-                      year={year}
-                      initialWindow={budgetWindow}
-                    />
-                  )}
-                </Stack>
-              )}
-              {tabPanel(
-                'districts',
-                <Stack style={{ gap: spacing.md }}>
-                  <SectionHeading id="districts" title="Districts" />
-                  {!output && districtsPending}
-                  {output && showUSDistricts && (
-                    <CongressionalDistrictDataProvider
-                      reformPolicyId={reformPolicyId ?? ''}
-                      baselinePolicyId={baselinePolicyId ?? ''}
-                      year={year}
-                      region={region}
-                    >
-                      <DistrictImpactCard output={output} />
-                    </CongressionalDistrictDataProvider>
-                  )}
-                  {output && !showUSDistricts && countryId === 'uk' && (
-                    <ConstituencySubPage output={output} />
-                  )}
-                  {output && !showUSDistricts && countryId !== 'uk' && (
-                    <Text
-                      style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
-                    >
-                      District-level impacts are not available for this report's scope.
-                    </Text>
-                  )}
-                </Stack>
-              )}
-              {tabPanel(
-                'household',
-                <Stack style={{ gap: spacing.md }}>
-                  <SectionHeading id="household" title="Household" />
-                  {/* A household runs on the report's own policies, once they exist. */}
-                  {reformPolicyId && baselinePolicyId ? (
-                    <HouseholdImpactSection
-                      // New policies, year or region start a new form, with nothing run.
-                      key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
-                      countryId={countryId}
-                      year={year}
-                      region={region}
-                      baselinePolicyId={baselinePolicyId}
-                      reformPolicyId={reformPolicyId}
-                    />
-                  ) : (
-                    <>
+                    {/* A window asked for in Build: its progress, then its total, here too. */}
+                    {budgetWindow && !yearSwitcher && reformPolicyId && baselinePolicyId && (
+                      <BudgetWindowSummary
+                        countryId={countryId}
+                        reformPolicyId={reformPolicyId}
+                        baselinePolicyId={baselinePolicyId}
+                        region={region}
+                        window={budgetWindow}
+                        onOpen={openBudgetWindow}
+                      />
+                    )}
+                    {overviewFooter}
+                  </Stack>
+                )}
+                {tabPanel(
+                  'economy',
+                  <Stack style={{ gap: spacing.md }}>
+                    {output ? <EconomicImpactCharts output={output} /> : economyPending}
+                    {/* The budget over several years, on the reader's request. */}
+                    {reformPolicyId && baselinePolicyId && (
+                      <BudgetWindowCard
+                        countryId={countryId}
+                        reformPolicyId={reformPolicyId}
+                        baselinePolicyId={baselinePolicyId}
+                        region={region}
+                        year={year}
+                        initialWindow={budgetWindow}
+                      />
+                    )}
+                  </Stack>
+                )}
+                {tabPanel(
+                  'districts',
+                  <Stack style={{ gap: spacing.md }}>
+                    <SectionHeading id="districts" title="Districts" />
+                    {!output && districtsPending}
+                    {output && showUSDistricts && (
+                      <CongressionalDistrictDataProvider
+                        reformPolicyId={reformPolicyId ?? ''}
+                        baselinePolicyId={baselinePolicyId ?? ''}
+                        year={year}
+                        region={region}
+                      >
+                        <DistrictImpactCard output={output} />
+                      </CongressionalDistrictDataProvider>
+                    )}
+                    {output && !showUSDistricts && countryId === 'uk' && (
+                      <ConstituencySubPage output={output} />
+                    )}
+                    {output && !showUSDistricts && countryId !== 'uk' && (
                       <Text
                         style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
                       >
-                        A household runs once the full results start.
+                        District-level impacts are not available for this report's scope.
                       </Text>
-                      {pending}
-                    </>
-                  )}
-                </Stack>
-              )}
-              {tabPanel(
-                'validation',
-                <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
-                  <SectionHeading id="validation" title="Validation" />
-                  <ReportValidation
-                    countryId={countryId}
-                    paths={provisions.map((p) => p.path)}
-                    region={region}
-                    calibration={calibration}
-                    calibrationPin={calibrationPin}
-                    trackRecord={trackRecord}
-                    externalEstimates={externalEstimates}
-                    externalEstimatesNote={externalEstimatesNote}
-                    baselineLabel={customBaselineLabel}
-                  />
-                </Stack>
-              )}
-            </Tabs>
+                    )}
+                  </Stack>
+                )}
+                {tabPanel(
+                  'household',
+                  <Stack style={{ gap: spacing.md }}>
+                    <SectionHeading id="household" title="Household" />
+                    {/* A household runs on the report's own policies, once they exist. */}
+                    {reformPolicyId && baselinePolicyId ? (
+                      <HouseholdImpactSection
+                        // New policies, year or region start a new form, with nothing run.
+                        key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
+                        countryId={countryId}
+                        year={year}
+                        region={region}
+                        baselinePolicyId={baselinePolicyId}
+                        reformPolicyId={reformPolicyId}
+                      />
+                    ) : (
+                      <>
+                        <Text
+                          style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                        >
+                          A household runs once the full results start.
+                        </Text>
+                        {pending}
+                      </>
+                    )}
+                  </Stack>
+                )}
+                {tabPanel(
+                  'validation',
+                  <Stack style={{ gap: spacing.md, paddingBottom: spacing['2xl'] }}>
+                    <SectionHeading id="validation" title="Validation" />
+                    <ReportValidation
+                      countryId={countryId}
+                      paths={provisions.map((p) => p.path)}
+                      region={region}
+                      calibration={calibration}
+                      calibrationPin={calibrationPin}
+                      trackRecord={trackRecord}
+                      externalEstimates={externalEstimates}
+                      externalEstimatesNote={externalEstimatesNote}
+                      baselineLabel={customBaselineLabel}
+                    />
+                  </Stack>
+                )}
+              </Tabs>
+            )}
           </Stack>
         </div>
         <ReportAdjustPanel
