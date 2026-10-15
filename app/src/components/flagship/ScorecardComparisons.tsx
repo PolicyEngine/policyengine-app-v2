@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { IconExternalLink } from '@tabler/icons-react';
+import { IconExternalLink, IconInfoCircle } from '@tabler/icons-react';
 import { Stack, Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
@@ -81,35 +81,99 @@ function modelPeriod(row: RelatedScorecardClaim): string | null {
   return years.length === 1 ? `Calendar year ${years[0]}` : null;
 }
 
-function comparisonReason(
+/**
+ * Why a comparison's two numbers can differ for reasons other than the
+ * model: a different baseline, a different period, a different measure.
+ * Each is one sentence; none when the comparison is like for like.
+ */
+export function differenceNotes(
   row: RelatedScorecardClaim,
   externalPeriod?: string,
   pePeriod?: string
-): string {
-  const notes = [row.latest?.construction, ...(row.latest?.annotations ?? [])].join(' ');
-  if (row.diagnosis?.title) {
-    return 'The source and model measure different concepts; see the explanation below.';
-  }
-  if (/eligib/.test(row.metric) && /claims.calibrated|claims.shaped/i.test(notes)) {
-    return 'PolicyEngine uses a claims-based proxy; the external source estimates eligibility.';
-  }
-  const baselineDiffers =
-    /LAST-IN-STACK|different (?:stacking )?baseline|baseline (?:definitions?|assumptions?) (?:differ|mismatch)/i.test(
-      notes
+): string[] {
+  const receipt = [row.latest?.construction, ...(row.latest?.annotations ?? [])].join(' ');
+  const status = row.latest?.status_effective ?? row.latest?.status;
+  const notes: string[] = [];
+  // A run stacked where JCT stacks the provision has JCT's baseline.
+  const stackedLikeSource = row.latest?.baseline?.startsWith('obbba_stack_below') ?? false;
+  if (isJctCtc(row) && !stackedLikeSource) {
+    notes.push(
+      'Different baselines: JCT scores this provision after the scheduled TCJA expiry and the bill’s provisions 1–3; PolicyEngine scores it against full current law, so interactions with personal exemptions, AMT and SALT differ.'
     );
-  const calendar = pePeriod ?? modelPeriod(row);
-  const fiscal = /fiscal|FY/i.test(externalPeriod ?? claimPeriod(row));
-  const calendarYear = calendar?.startsWith('Calendar year') ? calendar : null;
-  if (baselineDiffers && fiscal && calendarYear) {
-    return 'Different starting policies and timing: the source uses a fiscal year; PolicyEngine uses a calendar year.';
+  } else if (
+    (!isJctCtc(row) &&
+      /LAST-IN-STACK|different (?:stacking )?baseline|baseline (?:definitions?|assumptions?) (?:differ|mismatch)/i.test(
+        receipt
+      )) ||
+    (row.claim_baseline &&
+      row.latest?.baseline &&
+      row.claim_baseline !== row.latest.baseline &&
+      row.reform_framework !== 'baseline')
+  ) {
+    notes.push(
+      'Different baselines: the source and PolicyEngine score the change against different starting policies.'
+    );
   }
-  if (fiscal && calendarYear) {
-    return `Different timing: the source uses a fiscal year; PolicyEngine uses ${calendarYear.toLowerCase()}.`;
+  const published = externalPeriod ?? claimPeriod(row) ?? '';
+  const modelled = pePeriod ?? modelPeriod(row) ?? '';
+  const years = (text: string) => [...new Set(text.match(/\b20\d{2}\b/g) ?? [])];
+  const fiscal = /fiscal|\bFY\b/i.test(published);
+  const calendar = /calendar|annual/i.test(modelled);
+  const [publishedYear] = years(published);
+  const [modelledYear] = years(modelled);
+  const otherYear = !!publishedYear && !!modelledYear && publishedYear !== modelledYear;
+  if (otherYear || (fiscal && calendar)) {
+    const side = (kind: string, year?: string) => [kind, year].filter(Boolean).join(' ');
+    notes.push(
+      `Different periods: the source covers ${side(fiscal ? 'fiscal year' : 'year', publishedYear)}; PolicyEngine covers ${side(calendar ? 'calendar year' : 'year', modelledYear)}.`
+    );
   }
-  if (baselineDiffers) {
-    return 'The source and PolicyEngine start from different baseline policies.';
+  if (/average month/i.test(published) && calendar && row.unit_concept !== 'usd') {
+    notes.push(
+      'Different measures: the source counts an average month; PolicyEngine counts everyone over the year, which runs higher.'
+    );
   }
-  return 'The scorecard flags this comparison as approximate but does not specify the reason in a structured field. Check the source and calculation notes before interpreting the gap.';
+  if (row.diagnosis?.title) {
+    notes.push(`Different measures: ${row.diagnosis.title}`);
+  } else if (/eligib/.test(row.metric) && /claims.calibrated|claims.shaped/i.test(receipt)) {
+    notes.push(
+      'Different measures: PolicyEngine uses a claims-based proxy; the source estimates eligibility.'
+    );
+  }
+  if (notes.length === 0 && status === 'constructed') {
+    notes.push(
+      'The scorecard marks this comparison as approximate; read the source and calculation notes before reading the gap.'
+    );
+  }
+  return notes;
+}
+
+/** The notes under a comparison: why its numbers can differ, before the gap is read. */
+function DifferenceNotes({ notes }: { notes: string[] }) {
+  if (notes.length === 0) {
+    return null;
+  }
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: spacing.sm,
+        padding: `${spacing.sm} ${spacing.md}`,
+        borderRadius: 8,
+        background: colors.gray[50],
+        fontSize: typography.fontSize.xs,
+        lineHeight: 1.5,
+        color: colors.text.secondary,
+      }}
+    >
+      <IconInfoCircle size={14} aria-hidden style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {notes.map((note) => (
+          <span key={note}>{note}</span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function isJctCtc(row: RelatedScorecardClaim) {
@@ -403,14 +467,9 @@ export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry
           note: presentation?.modelPeriod ?? modelPeriod(row) ?? undefined,
         }}
       />
-      {status === 'constructed' &&
-        !isJctCtc(row) &&
-        !baselineDescriptions[`${row.source}:${row.source_column}`] && (
-          <Text style={{ ...detailStyle, margin: 0 }}>
-            {comparisonReason(row, presentation?.externalPeriod, presentation?.modelPeriod)}
-          </Text>
-        )}
-      {row.diagnosis?.title && <Text style={detailStyle}>{row.diagnosis.title}</Text>}
+      <DifferenceNotes
+        notes={differenceNotes(row, presentation?.externalPeriod, presentation?.modelPeriod)}
+      />
       <details style={detailStyle}>
         <summary style={summaryStyle}>
           {row.reform_framework === 'baseline'
@@ -493,57 +552,68 @@ function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
   // Only a period that is recorded; "not recorded" under every value says nothing.
   const publishedNote = presentation?.externalPeriod ?? claimPeriod(row);
   const peNote = presentation?.modelPeriod ?? modelPeriod(row);
+  const notes = differenceNotes(row, presentation?.externalPeriod, presentation?.modelPeriod);
   return (
-    <tr style={rowStyle}>
-      <th scope="row" style={labelCellStyle}>
-        <Dialog>
-          <DialogTrigger asChild>
-            <button type="button" style={rowButtonStyle}>
-              {claimTitle(row, presentation)}
-            </button>
-          </DialogTrigger>
-          <DialogContent
-            aria-describedby={undefined}
-            style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
-          >
-            <DialogTitle>
-              {row.reform_framework === 'baseline'
-                ? 'Baseline comparison'
-                : 'Related reform comparison'}
-            </DialogTitle>
-            <ScorecardClaimDetails row={row} presentation={presentation} />
-          </DialogContent>
-        </Dialog>
-        <CellNote>{claimWhere(row, presentation)}</CellNote>
-        <CellNote>
-          {sourceUrl && (
-            <>
-              <a href={sourceUrl} target="_blank" rel="noreferrer" style={smallLink}>
-                Read source
-              </a>
-              {' · '}
-            </>
-          )}
-          <a
-            href={claimScorecardUrl(row, presentation)}
-            target="_blank"
-            rel="noreferrer"
-            style={smallLink}
-          >
-            View in scorecard
-          </a>
-        </CellNote>
-      </th>
-      <td style={numberCellStyle}>
-        {presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept)}
-        {publishedNote && <CellNote>{publishedNote}</CellNote>}
-      </td>
-      <td style={numberCellStyle}>
-        {presentation?.peValue ?? claimValue(row.latest?.value, row.unit_concept)}
-        {peNote && <CellNote>{peNote}</CellNote>}
-      </td>
-      <td style={numberCellStyle}>{gapText(row.latest?.value, row.external_value)}</td>
-    </tr>
+    <>
+      <tr style={rowStyle}>
+        <th scope="row" style={labelCellStyle}>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button type="button" style={rowButtonStyle}>
+                {claimTitle(row, presentation)}
+              </button>
+            </DialogTrigger>
+            <DialogContent
+              aria-describedby={undefined}
+              style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
+            >
+              <DialogTitle>
+                {row.reform_framework === 'baseline'
+                  ? 'Baseline comparison'
+                  : 'Related reform comparison'}
+              </DialogTitle>
+              <ScorecardClaimDetails row={row} presentation={presentation} />
+            </DialogContent>
+          </Dialog>
+          <CellNote>{claimWhere(row, presentation)}</CellNote>
+          <CellNote>
+            {sourceUrl && (
+              <>
+                <a href={sourceUrl} target="_blank" rel="noreferrer" style={smallLink}>
+                  Read source
+                </a>
+                {' · '}
+              </>
+            )}
+            <a
+              href={claimScorecardUrl(row, presentation)}
+              target="_blank"
+              rel="noreferrer"
+              style={smallLink}
+            >
+              View in scorecard
+            </a>
+          </CellNote>
+        </th>
+        <td style={numberCellStyle}>
+          {presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept)}
+          {publishedNote && <CellNote>{publishedNote}</CellNote>}
+        </td>
+        <td style={numberCellStyle}>
+          {presentation?.peValue ?? claimValue(row.latest?.value, row.unit_concept)}
+          {peNote && <CellNote>{peNote}</CellNote>}
+        </td>
+        <td style={numberCellStyle}>{gapText(row.latest?.value, row.external_value)}</td>
+      </tr>
+      {notes.length > 0 && (
+        // Under the row it explains, across all four columns.
+        <tr>
+          <td colSpan={4} style={{ padding: `0 0 ${spacing.md}` }}>
+            <DifferenceNotes notes={notes} />
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 

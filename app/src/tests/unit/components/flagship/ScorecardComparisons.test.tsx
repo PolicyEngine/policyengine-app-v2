@@ -1,6 +1,7 @@
 import { fireEvent, render, renderHook, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
+  differenceNotes,
   RelatedReformEstimates,
   ScorecardClaimTable,
   splitScorecardRows,
@@ -49,8 +50,8 @@ describe('scorecard evidence presentation', () => {
         .getAllByRole('columnheader')
         .map((cell) => cell.textContent)
     ).toEqual(['Comparison', 'Published', 'PolicyEngine', 'Gap']);
-    // A header row and one row per claim.
-    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    // One row per claim; a claim's notes sit on a line of their own under it.
+    expect(within(table).getAllByRole('rowheader')).toHaveLength(2);
     expect(within(table).getAllByText('-86.9%')).toHaveLength(2);
   });
 
@@ -219,5 +220,63 @@ describe('useScorecardComparisons', () => {
     const { result } = renderHook(() => useScorecardComparisons('uk', [CTC_PATH]));
 
     await waitFor(() => expect(result.current).toBeNull());
+  });
+});
+
+describe('differenceNotes', () => {
+  const related = <T extends object>(claim: T) => ({
+    ...claim,
+    matchBasis: 'related-policy' as const,
+  });
+
+  test('given JCT’s CTC row scored against full current law then baseline and timing notes explain the gap', () => {
+    expect(differenceNotes(related(jctCtcClaim))).toEqual([
+      expect.stringMatching(
+        /^Different baselines: JCT scores this provision after the scheduled TCJA expiry/
+      ),
+      'Different periods: the source covers fiscal year 2026; PolicyEngine covers calendar year 2026.',
+    ]);
+  });
+
+  test('given the run stacked where JCT stacks it then no baseline note shows', () => {
+    expect(
+      differenceNotes(related(stackedJctCtcClaim)).some((note) =>
+        note.startsWith('Different baselines')
+      )
+    ).toBe(false);
+  });
+
+  test('given a stacking baseline in the receipt then the generic baseline note shows', () => {
+    expect(differenceNotes(related(scorecardClaim()))).toContain(
+      'Different baselines: the source and PolicyEngine score the change against different starting policies.'
+    );
+  });
+
+  test('given a like-for-like comparison then there are no notes', () => {
+    expect(
+      differenceNotes(
+        related(
+          scorecardClaim({
+            time_basis: 'calendar_year',
+            latest: { value: 1, status: 'comparable', annotations: [], construction: '' },
+          })
+        )
+      )
+    ).toEqual([]);
+  });
+
+  test('given another year and an average month then both differences are named', () => {
+    expect(
+      differenceNotes(
+        related(
+          scorecardClaim({ unit_concept: 'persons', latest: { value: 1, status: 'comparable' } })
+        ),
+        '2023 average month',
+        '2024 annual'
+      )
+    ).toEqual([
+      'Different periods: the source covers year 2023; PolicyEngine covers calendar year 2024.',
+      'Different measures: the source counts an average month; PolicyEngine counts everyone over the year, which runs higher.',
+    ]);
   });
 });
