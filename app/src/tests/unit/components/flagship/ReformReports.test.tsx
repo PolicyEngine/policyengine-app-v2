@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, within } from '@test-utils';
+import { act, render, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { fetchSimulationById } from '@/api/simulation';
 import ReformReports from '@/components/flagship/ReformReports';
 import { saveReportMeta } from '@/libs/flagship/runReport';
 import { clearMetadata } from '@/reducers/metadataReducer';
@@ -227,6 +228,22 @@ describe('ReformReports comparisons without a link', () => {
 
     // Then
     expect(await screen.findByText('2026 report')).toBeInTheDocument();
+    expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
+  });
+
+  test('given metadata still loading then a current-law report shows no comparison', async () => {
+    // Given: current law reads 0 until the model's metadata loads
+    store.dispatch(clearMetadata());
+    renderReports([record({ id: 'rec-64', apiReportId: '64', baselineReformId: null })]);
+
+    // When: its baseline simulation has been read
+    await waitFor(() => expect(fetchSimulationById).toHaveBeenCalledWith('us', 'sim-64'));
+    await act(async () => {
+      await vi.mocked(fetchSimulationById).mock.results.at(-1)?.value;
+    });
+
+    // Then
+    expect(screen.getByText('2026 report')).toBeInTheDocument();
     expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
   });
 });
