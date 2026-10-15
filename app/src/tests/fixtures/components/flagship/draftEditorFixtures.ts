@@ -87,6 +87,16 @@ export const DEDUCTION_PARAMETERS = {
       '2029-01-01': 5300,
     },
   },
+  // A threshold current law leaves unlimited, as metadata sends it: the text "Infinity".
+  'gov.irs.credits.cdcc.phase_out.second_start': {
+    parameter: 'gov.irs.credits.cdcc.phase_out.second_start',
+    label: 'CDCC second phase-out start',
+    type: 'parameter',
+    unit: 'currency-USD',
+    economy: true,
+    household: true,
+    values: { '2022-01-01': 'Infinity' },
+  },
   ...deduction('SINGLE', 'SINGLE', 16100),
   ...deduction('JOINT', 'JOINT', 32200),
   ...deduction('HEAD_OF_HOUSEHOLD', 'HEAD OF HOUSEHOLD', 24150),
@@ -98,6 +108,7 @@ export const CTC_PATH = 'gov.irs.credits.ctc.amount.base';
 export const LIST_PATH = 'gov.irs.credits.ctc.refundable.social_security.add';
 export const PHASE_IN_RATE_PATH = 'gov.irs.credits.eitc.phase_in_rate[1].amount';
 export const EXEMPTION_PATH = 'gov.irs.income.exemption.amount';
+export const NO_LIMIT_PATH = 'gov.irs.credits.cdcc.phase_out.second_start';
 
 /** Loads the fixture parameters into the app store, as a metadata fetch would. */
 /** A few US regions, as metadata's economy_options.region lists them. */

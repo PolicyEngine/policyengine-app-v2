@@ -4,6 +4,7 @@ import {
   clearDraftReform,
   draftToReform,
   getDraftReform,
+  isEditableValue,
   loadProvisionsIntoDraft,
   loadReformIntoDraft,
   provisionFromSearchEntry,
@@ -276,5 +277,14 @@ describe('draftReform', () => {
 
     expect(provision.baselineValue).toBe(1500);
     expect(provision.value).toBe(1500);
+  });
+
+  it('given no limit then a number box can set it, while lists and text stay read only', () => {
+    // Metadata sends no limit as the text "Infinity".
+    expect(isEditableValue('Infinity')).toBe(true);
+    expect(isEditableValue('-Infinity')).toBe(true);
+    expect(isEditableValue(2200)).toBe(true);
+    expect(isEditableValue(['employee_medicare_tax'])).toBe(false);
+    expect(isEditableValue('CITIZEN')).toBe(false);
   });
 });

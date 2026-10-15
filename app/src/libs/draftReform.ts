@@ -159,9 +159,25 @@ export function provisionAdjusts(
   );
 }
 
-/** Numbers and yes/no switches: the values a number box or switch sets. */
+/**
+ * No limit: a threshold or cap current law leaves unbounded, which
+ * metadata sends as the text "Infinity".
+ */
+export function isUnlimitedValue(value: unknown): boolean {
+  return (
+    value === 'Infinity' ||
+    value === '-Infinity' ||
+    value === Number.POSITIVE_INFINITY ||
+    value === Number.NEGATIVE_INFINITY
+  );
+}
+
+/**
+ * Numbers and yes/no switches: the values a number box or switch sets.
+ * No limit counts as a number: its box sets a limit in its place.
+ */
 export function isEditableValue(value: unknown): boolean {
-  return typeof value === 'number' || typeof value === 'boolean';
+  return typeof value === 'number' || typeof value === 'boolean' || isUnlimitedValue(value);
 }
 
 /** True when the provision's intervals amount to more than one value from one date. */

@@ -19,6 +19,7 @@ import {
   EXEMPTION_PATH,
   JOINT_PATH,
   LIST_PATH,
+  NO_LIMIT_PATH,
   PHASE_IN_RATE_PATH,
   seedDeductionMetadata,
   SINGLE_PATH,
@@ -699,6 +700,46 @@ describe('DraftTable', () => {
 
     expect(screen.getByText(/can.t be changed here/i)).toBeInTheDocument();
     expect(document.querySelector(`[data-path="${LIST_PATH}"]`)).toBeNull();
+  });
+
+  test('given a parameter current law leaves without a limit then its row sets one in place', () => {
+    addDraftProvision('us', {
+      path: NO_LIMIT_PATH,
+      breadcrumb: 'IRS → Credits → CDCC → Phase-out → Second start',
+      unit: 'currency-USD',
+      baselineValue: 'Infinity',
+      value: 'Infinity',
+    });
+    render(<TableHarness />);
+
+    expect(screen.queryByText(/can.t be changed here/i)).not.toBeInTheDocument();
+    expect(rowValue(NO_LIMIT_PATH)).toHaveAttribute('placeholder', 'No limit');
+    fireEvent.change(rowValue(NO_LIMIT_PATH), { target: { value: '150000' } });
+
+    expect(provision(NO_LIMIT_PATH)?.intervals).toEqual([
+      { startDate: '2026-01-01', endDate: FOREVER, value: 150000 },
+    ]);
+  });
+
+  test('given a parameter without a limit is opened then its details set a limit too', async () => {
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: NO_LIMIT_PATH,
+      breadcrumb: 'IRS → Credits → CDCC → Phase-out → Second start',
+      unit: 'currency-USD',
+      baselineValue: 'Infinity',
+      value: 'Infinity',
+    });
+    render(<TableHarness />);
+
+    await user.click(screen.getByRole('button', { name: /^Open .*second/i }));
+    const box = document.querySelector(`[data-path="${NO_LIMIT_PATH}"] input`) as HTMLInputElement;
+    expect(box).toHaveAttribute('placeholder', 'No limit');
+    fireEvent.change(box, { target: { value: '200000' } });
+
+    expect(provision(NO_LIMIT_PATH)?.intervals).toEqual([
+      { startDate: '2026-01-01', endDate: FOREVER, value: 200000 },
+    ]);
   });
 
   test('given list-valued parameters then search and browse never offer them', () => {

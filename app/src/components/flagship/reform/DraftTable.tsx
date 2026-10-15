@@ -7,6 +7,7 @@ import {
   DraftReform,
   draftYear,
   isEditableValue,
+  isUnlimitedValue,
   provisionChanged,
   provisionIntervals,
   provisionValueInYear,
@@ -23,7 +24,7 @@ import { RootState } from '@/store';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionDetails from './ProvisionDetails';
-import ValueInput from './ValueInput';
+import ValueInput, { NO_LIMIT } from './ValueInput';
 
 interface DraftRow {
   /** The breakdown's path, or the lone parameter's own */
@@ -189,6 +190,9 @@ export default function DraftTable({
   const valueInYear = (provision: DraftProvision) =>
     (provisionChanged(provision) ? provisionValueInYear(provision, year) : null) ??
     currentLawInYear(provision);
+  // A value with no limit reads as such, not as the text "Infinity".
+  const formatRowValue = (value: unknown, unit: string | null) =>
+    isUnlimitedValue(value) ? NO_LIMIT : formatValue(value, unit);
 
   // Groups depend only on which parameters are in the draft — not on
   // their values — so typing a value never re-scans the index.
@@ -357,7 +361,7 @@ export default function DraftTable({
         const when = whens.length === 1 ? whens[0] : whens.length > 1 ? 'mixed dates' : '';
         const whenTitle =
           whens.length === 1 ? (changed.find((c) => c.when === when)?.whenFull ?? when) : when;
-        const baselineText = lone ? formatValue(currentLawInYear(lone), lone.unit) : '';
+        const baselineText = lone ? formatRowValue(currentLawInYear(lone), lone.unit) : '';
 
         return (
           <Fragment key={row.key}>
@@ -424,7 +428,7 @@ export default function DraftTable({
                         title={changed[0]?.value}
                         accent={changed.length > 0}
                       >
-                        {changed[0]?.value || formatValue(valueInYear(lone), lone.unit)}
+                        {changed[0]?.value || formatRowValue(valueInYear(lone), lone.unit)}
                       </SummaryButton>
                     ) : !isEditableValue(lone.baselineValue) ? (
                       // Only numbers and switches can be offered; this one came
@@ -485,7 +489,7 @@ export default function DraftTable({
                         title={changed[0]?.value}
                         accent={changed.length > 0}
                       >
-                        {changed[0]?.value || formatValue(valueInYear(lone), lone.unit)}
+                        {changed[0]?.value || formatRowValue(valueInYear(lone), lone.unit)}
                       </SummaryButton>
                     )}
                   </div>
