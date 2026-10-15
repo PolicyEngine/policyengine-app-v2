@@ -33,6 +33,10 @@ const GEOJSON_PATHS: Record<MapVisualizationType, string> = {
   hex: '/data/geojson/congressional_districts_hex.geojson',
 };
 
+/** The map's name for screen readers; the lists next to it give the districts' values. */
+const MAP_LABEL =
+  'Congressional district map, colored by the change. The lists of districts give the values.';
+
 /** Default fill for districts without data */
 const NO_DATA_FILL = colors.gray[300];
 
@@ -543,6 +547,9 @@ export function DistrictChoroplethMap({
           width={SVG_WIDTH}
           height={fullConfig.height}
           style={{ width: '100%', height: '100%' }}
+          // One named image, not 437 unnamed shapes: the ranked lists carry the values.
+          role="img"
+          aria-label={MAP_LABEL}
         >
           <ZoomableGroup
             center={view.center}
@@ -580,6 +587,9 @@ export function DistrictChoroplethMap({
                       <Geography
                         key={geo.rsmKey ?? districtId ?? geo.id}
                         geography={geo}
+                        // react-simple-maps makes every shape a tab stop; a district
+                        // shows its values on hover only, so it takes no focus.
+                        tabIndex={-1}
                         fill={fillColor}
                         stroke={BORDER_COLOR}
                         strokeWidth={BORDER_WIDTH}

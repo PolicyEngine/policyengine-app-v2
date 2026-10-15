@@ -9,7 +9,6 @@ import {
   IconPlus,
   IconScale,
   IconSearch,
-  IconTrash,
 } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -18,6 +17,7 @@ import { getFlagshipReportStore } from '@/api/flagshipReportStore';
 import { getReformStore } from '@/api/reformStore';
 import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
+import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
 import ReformReports from '@/components/flagship/ReformReports';
 import {
@@ -470,6 +470,10 @@ export default function ReformsPage() {
     : null;
 
   const openReform = (reform: Reform) => {
+    // A failed save, delete or copy belongs to the reform it was tried on.
+    saveMutation.reset();
+    deleteMutation.reset();
+    duplicateMutation.reset();
     setSelectedId(reform.id!);
     setEditedLabel(reform.label ?? '');
     setEditedValues(Object.fromEntries(reform.parameters.map((p) => [p.name, p.values[0]?.value])));
@@ -793,6 +797,16 @@ export default function ReformsPage() {
               Could not save the changes. Try again.
             </Text>
           )}
+          {deleteMutation.isError && (
+            <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
+              Could not delete the reform. Try again.
+            </Text>
+          )}
+          {duplicateMutation.isError && (
+            <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
+              Could not duplicate the reform. Try again.
+            </Text>
+          )}
           <Stack
             style={{
               flexDirection: 'row',
@@ -847,14 +861,12 @@ export default function ReformsPage() {
               <IconCopy size={16} />
               Duplicate
             </Button>
-            <Button
-              variant="outline"
+            <DeleteReformDialog
+              name={selectedReform.label || 'Untitled reform'}
+              reportCount={reportsFor(selectedReform.id).length}
               disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(selectedReform.id!)}
-            >
-              <IconTrash size={16} />
-              Delete
-            </Button>
+              onConfirm={() => deleteMutation.mutate(selectedReform.id!)}
+            />
             {runReport.error && (
               <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
                 {runReport.error}

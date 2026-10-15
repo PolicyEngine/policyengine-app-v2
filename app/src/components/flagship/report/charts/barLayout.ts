@@ -447,3 +447,76 @@ export function fitAxisTitle(
 ): string | undefined {
   return candidates.find((title) => measure(title, VALUE_LABEL_FONT_SIZE) <= plotHeight);
 }
+
+// ---------------------------------------------------------------------------
+// Category axis
+// ---------------------------------------------------------------------------
+
+/** Clear space kept between two category labels side by side, px. */
+const CATEGORY_LABEL_SIDE_GAP = 4;
+/** From the x-axis line to a category label's first line: Recharts' tick size and margin, px. */
+const CATEGORY_LABEL_OFFSET = 8;
+/** Room under a category label's last line for its descenders, px. */
+const CATEGORY_LABEL_DESCENT = 2;
+
+/** The lines a label wraps to, by word, in `width` px. A word wider than that keeps its own line. */
+export function wrapLabel(
+  label: string,
+  width: number,
+  fontSize: number,
+  measure: MeasureText = measureTextWidth
+): string[] {
+  const lines: string[] = [];
+  for (const word of label.split(/\s+/).filter(Boolean)) {
+    const last = lines[lines.length - 1];
+    if (last !== undefined && measure(`${last} ${word}`, fontSize) <= width) {
+      lines[lines.length - 1] = `${last} ${word}`;
+    } else {
+      lines.push(word);
+    }
+  }
+  return lines;
+}
+
+export interface CategoryAxis<Style> {
+  /** The XAxis `tick`: the chart's font, at a size every word fits its slot, and the slot width a label wraps to. */
+  tick: Style & { fontSize: number; width: number };
+  /** The XAxis `height` that holds the label with the most lines, px. */
+  height: number;
+}
+
+/**
+ * A bar chart's category axis that labels every bar. Use with
+ * `interval={0}`, so Recharts drops no label that would crowd: each label
+ * wraps by word to its own slot, the font shrinks until the longest word
+ * fits a slot, and the axis grows to hold the label with the most lines.
+ */
+export function getCategoryAxis<Style extends { fontSize: number }>(
+  labels: string[],
+  plotWidth: number,
+  style: Style,
+  measure: MeasureText = measureTextWidth
+): CategoryAxis<Style> {
+  const slot = Math.max(plotWidth / Math.max(labels.length, 1) - CATEGORY_LABEL_SIDE_GAP, 1);
+  const words = labels.flatMap((label) => label.split(/\s+/).filter(Boolean));
+  const fontSize = words.reduce(
+    (size, word) =>
+      Math.min(
+        size,
+        fitFontSize(word, slot, { max: style.fontSize, min: VALUE_LABEL_MIN_FONT_SIZE, measure }) ??
+          VALUE_LABEL_MIN_FONT_SIZE
+      ),
+    style.fontSize
+  );
+  const lines = Math.max(
+    1,
+    ...labels.map((label) => wrapLabel(label, slot, fontSize, measure).length)
+  );
+  return {
+    tick: { ...style, fontSize, width: slot },
+    height: Math.max(
+      X_AXIS_HEIGHT,
+      Math.ceil(CATEGORY_LABEL_OFFSET + lines * fontSize + CATEGORY_LABEL_DESCENT)
+    ),
+  };
+}

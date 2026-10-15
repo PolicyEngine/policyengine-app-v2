@@ -159,6 +159,9 @@ export const REPORT_4332_OUTPUT = {
   },
 } as unknown as SocietyWideReportOutput;
 
+/** A report chart's size in a card on a 375px phone, px. */
+export const PHONE_CHART_SIZE = { width: 300, height: 260 };
+
 /** Report 4332's budget bars, as the chart labels them. */
 export const REPORT_4332_BUDGET_LABELS = ['−$296.5m', '−$34.5m', '−$331.0m'];
 
