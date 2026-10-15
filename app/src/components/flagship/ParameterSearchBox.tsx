@@ -1064,7 +1064,7 @@ export default function ParameterSearchBox({
             groups.map((group, groupIndex) => {
               const isFolder = group.entries.length > 1 && group.folder;
               return (
-                <div key={group.folder || group.entries[0].path}>
+                <div key={group.schedule ?? (group.folder || group.entries[0].path)}>
                   {isFolder &&
                     (() => {
                       const folderPath = groupFolderPath(group.entries);
