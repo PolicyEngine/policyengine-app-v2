@@ -162,6 +162,25 @@ describe('DraftTable', () => {
     expect(screen.getByText('2027 only')).toBeInTheDocument();
   });
 
+  test("given the by-year grid then more years can be added, up to the model's last", async () => {
+    seedDeductionMetadata({ lastYear: 2035 });
+    const user = userEvent.setup();
+    render(<TableHarness />);
+    await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
+    await user.click(screen.getByRole('tab', { name: 'By year' }));
+
+    // Five years to start; the next ones come with a click.
+    expect(screen.queryByLabelText('Single, 2031')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Add \d+ years$/ }));
+    fireEvent.change(cell('Single, 2031'), { target: { value: '18000' } });
+
+    expect(provision(SINGLE_PATH)?.intervals).toContainEqual(
+      expect.objectContaining({ startDate: '2031-01-01', value: 18000 })
+    );
+    // 2026 to 2035 is the whole model: nothing further to add.
+    expect(screen.queryByRole('button', { name: /^Add \d+ years$/ })).not.toBeInTheDocument();
+  });
+
   test('given a lone parameter is opened then its value shows once, under current law', async () => {
     const user = userEvent.setup();
     render(<TableHarness />);

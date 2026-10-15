@@ -138,7 +138,12 @@ export const UK_REGIONS = [
 
 export function seedDeductionMetadata({
   regions = [],
-}: { regions?: Array<{ name: string; label: string; type: string }> } = {}) {
+  lastYear = 2027,
+}: {
+  regions?: Array<{ name: string; label: string; type: string }>;
+  /** The model's last year (economy_options.time_period runs 2025 to it). */
+  lastYear?: number;
+} = {}) {
   const meta = { arg: 'us', requestId: 'draft-editor-test', requestStatus: 'pending' };
   store.dispatch({ type: fetchMetadataThunk.pending.type, meta });
   store.dispatch({
@@ -154,11 +159,10 @@ export function seedDeductionMetadata({
           variableModules: {},
           economy_options: {
             region: regions,
-            time_period: [
-              { name: 2025, label: '2025' },
-              { name: 2026, label: '2026' },
-              { name: 2027, label: '2027' },
-            ],
+            time_period: Array.from({ length: lastYear - 2024 }, (_, index) => ({
+              name: 2025 + index,
+              label: String(2025 + index),
+            })),
             datasets: [],
           },
           current_law_id: 2,
