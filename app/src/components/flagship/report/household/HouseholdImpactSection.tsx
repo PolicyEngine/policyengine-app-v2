@@ -180,45 +180,50 @@ function HouseholdCard({
     JSON.stringify(requested.payload) === JSON.stringify(household.toV1CreationPayload());
 
   return (
-    <section aria-label={label}>
-      <Stack style={{ gap: spacing.lg }}>
-        <div
+    <section
+      aria-label={label}
+      style={{
+        border: `1px solid ${colors.border.light}`,
+        borderRadius: spacing.radius.container,
+        background: colors.background.primary,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.md,
+          padding: `${spacing.sm} ${spacing.sm} ${spacing.sm} ${spacing.lg}`,
+          borderBottom: `1px solid ${colors.border.light}`,
+        }}
+      >
+        <Text
           style={{
-            padding: spacing.lg,
-            border: `1px solid ${colors.border.light}`,
-            borderRadius: spacing.radius.container,
-            background: colors.secondary[50],
+            margin: 0,
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: spacing.md,
-              marginBottom: spacing.md,
-            }}
-          >
-            <Text
-              style={{
-                margin: 0,
-                fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.semibold,
-                color: colors.text.primary,
-              }}
-            >
-              {label}
-            </Text>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={onRemove}
-              aria-label={`Remove ${label.toLowerCase()}`}
-            >
-              <IconTrash size={14} aria-hidden />
-              Remove
-            </Button>
-          </div>
+          {label}
+        </Text>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onRemove}
+          aria-label={`Remove ${label.toLowerCase()}`}
+        >
+          <IconTrash size={14} aria-hidden />
+          Remove
+        </Button>
+      </div>
+      {/* The inputs on the left, their result beside them on a wide screen. */}
+      <div
+        className="tw:grid tw:gap-6 tw:lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]"
+        style={{ padding: spacing.lg }}
+      >
+        <div style={{ minWidth: 0 }}>
           <HouseholdBuilderForm
             household={household}
             metadata={metadata}
@@ -268,26 +273,47 @@ function HouseholdCard({
           </div>
         </div>
 
-        {running && <RunProgress title="Calculating this household" expectedMs={EXPECTED_MS} />}
+        <Stack style={{ gap: spacing.md, minWidth: 0 }}>
+          {running && <RunProgress title="Calculating this household" expectedMs={EXPECTED_MS} />}
 
-        {failed && (
-          <ErrorState
-            compact
-            title="This household could not be calculated"
-            description={
-              // An API message can carry a long unbroken path.
-              run.error?.message && (
-                <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
-              )
-            }
-            onRetry={run.refetch}
-          />
-        )}
+          {failed && (
+            <ErrorState
+              compact
+              title="This household could not be calculated"
+              description={
+                // An API message can carry a long unbroken path.
+                run.error?.message && (
+                  <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
+                )
+              }
+              onRetry={run.refetch}
+            />
+          )}
 
-        {result && requested && (
-          <HouseholdImpactResult impact={result} summary={`${requested.summary} · ${year}`} />
-        )}
-      </Stack>
+          {result && requested && (
+            <HouseholdImpactResult impact={result} summary={`${requested.summary} · ${year}`} />
+          )}
+
+          {!requested && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 160,
+                padding: spacing.lg,
+                border: `1px dashed ${colors.border.light}`,
+                borderRadius: spacing.radius.container,
+                fontSize: typography.fontSize.sm,
+                color: colors.text.tertiary,
+                textAlign: 'center',
+              }}
+            >
+              Describe the household, then Calculate to see how the reform changes its net income.
+            </div>
+          )}
+        </Stack>
+      </div>
     </section>
   );
 }
