@@ -437,6 +437,7 @@ export default function ReportView({
           year={year}
           baseline={baseline}
           baselineUnknown={baselineUnknown}
+          budgetWindow={budgetWindow}
         />
       </div>
     </div>

@@ -316,6 +316,8 @@ export function loadProvisionsIntoDraft(
     year?: number;
     region?: string;
     baselineReformId?: string | null;
+    /** Years of budget to score with the run, e.g. 3. */
+    windowYears?: number;
     /** Where the reform came from; hand-built when unset. */
     source?: ReformSource;
     sourceRef?: string;
@@ -331,6 +333,7 @@ export function loadProvisionsIntoDraft(
     startedAt: Date.now(),
     ...(options.year ? { year: options.year } : {}),
     ...(options.baselineReformId ? { baselineReformId: options.baselineReformId } : {}),
+    ...(options.windowYears && options.windowYears > 1 ? { windowYears: options.windowYears } : {}),
   });
 }
 
