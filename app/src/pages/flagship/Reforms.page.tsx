@@ -913,8 +913,10 @@ export default function ReformsPage() {
               </button>
             );
           })}
-          {/* On a phone the filters take a line of their own, under the tabs. */}
-          <div className="tw:flex-1 tw:max-sm:basis-full" />
+        </Stack>
+
+        {/* Search first, then the bill filters beside it. */}
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
           <div
             // On a phone the search fills the line.
             className="tw:max-sm:min-h-10 tw:max-sm:min-w-0 tw:max-sm:grow tw:max-sm:basis-[160px]"
@@ -939,17 +941,16 @@ export default function ReformsPage() {
               }}
             />
           </div>
-        </Stack>
-
-        {tab === 'bills' && billsConfigured && bills.length > 0 && (
-          <BillFeedFilters
-            bills={bills}
-            searched={searchedBills}
-            value={billFilters}
-            onChange={setBillFilters}
-            controlStyle={filterControl}
-          />
-        )}
+          {tab === 'bills' && billsConfigured && bills.length > 0 && (
+            <BillFeedFilters
+              bills={bills}
+              searched={searchedBills}
+              value={billFilters}
+              onChange={setBillFilters}
+              controlStyle={filterControl}
+            />
+          )}
+        </div>
 
         {tab === 'yours' && isPending && <CardGridSkeleton label="Loading your reforms" />}
         {tab === 'yours' && isError && (
