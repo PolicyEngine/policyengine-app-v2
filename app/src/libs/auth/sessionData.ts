@@ -1,4 +1,9 @@
-import { clearAllDraftReforms } from '@/libs/draftReform';
+import {
+  clearAllDraftReforms,
+  dropHeldDraftReforms,
+  holdAllDraftReforms,
+  restoreHeldDraftReforms,
+} from '@/libs/draftReform';
 import { forgetAccountReportMeta } from '@/libs/flagship/runReport';
 
 /**
@@ -48,10 +53,11 @@ function writeDraftOwner(owner: string | null): void {
   }
 }
 
-/** Signing out: everything the session left goes. */
+/** Signing out: everything the session left goes, held drafts too. */
 export function clearSignedInSessionData(): void {
   forgetAccountReportMeta();
   clearAllDraftReforms();
+  dropHeldDraftReforms();
   writeDraftOwner(null);
 }
 
@@ -69,17 +75,22 @@ export function endSignedInSession(): void {
  * Settles whose draft this browser holds once the session is known:
  * after it is restored on load, and whenever someone signs in.
  *
- * - Signed in: a draft left by another account is dropped; the draft, if
- *   any, is now this account's (a signed-out draft comes along with it).
- * - Signed out on load: a draft left by a signed-in session that was
- *   never signed out (it expired between visits) is dropped.
+ * - Signed in: a draft left by another account is dropped; drafts held for
+ *   this account come back; the draft, if any, is now this account's (a
+ *   signed-out draft comes along with it).
+ * - Signed out on load: drafts left by a signed-in session are held out of
+ *   sight for that account, not deleted. Its session may have expired
+ *   between visits, or only failed to restore (a timeout, a lost
+ *   connection), in which case the next load signs it back in.
  */
 export function settleDraftOwner(subject: string | null): void {
   const owner = readDraftOwner();
   if (!subject) {
     if (owner) {
-      clearAllDraftReforms();
+      holdAllDraftReforms(owner);
       writeDraftOwner(null);
+    } else {
+      dropHeldDraftReforms({ expiredOnly: true });
     }
     return;
   }
@@ -87,5 +98,6 @@ export function settleDraftOwner(subject: string | null): void {
   if (owner && owner !== fingerprint) {
     clearAllDraftReforms();
   }
+  restoreHeldDraftReforms(fingerprint);
   writeDraftOwner(fingerprint);
 }
