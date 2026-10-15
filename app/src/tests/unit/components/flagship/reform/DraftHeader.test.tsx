@@ -175,7 +175,7 @@ describe('DraftHeader', () => {
     expect(screen.getByRole('button', { name: 'Years: 2026–2035' })).toBeInTheDocument();
 
     expect(getDraftReform()?.windowYears).toBe(10);
-    await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+    await user.click(screen.getByRole('button', { name: /run 2026–2035 report/i }));
     expect(mockRun.mock.calls[0][5]).toMatchObject({ fromDraft: true, windowYears: 10 });
   });
 
