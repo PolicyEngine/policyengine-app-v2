@@ -22,6 +22,9 @@ Two core quirks are handled here rather than upstream:
   * core caches the yearly ParameterNodeAtInstant before its own tracing
     recast runs, so the cached node is untraced; we flag the parameter root
     for tracing and clear the at-instant caches before any calculation.
+  * core traces a node's own call (parameters.gov.x.y(period)) only when
+    that node is flagged, and only the root is; we flag every node, or a
+    formula that reads its parameters that way leaves them out of the map.
   * TracingParameterNodeAtInstant only records scalar/array leaves, so
     scale/bracket objects (p.base.calc(age), p.max[children]) are invisible;
     we record every non-node child access.
@@ -89,6 +92,12 @@ def enable_parameter_tracing(simulation) -> None:
             cache.clear()
         children = getattr(node, "children", None)
         if isinstance(children, dict):
+            # A formula can call a node below the root with its period
+            # (parameters.gov.usda.snap.emergency_allotment(period)); core
+            # traces that call only when the node itself is flagged.
+            node.trace = True
+            node.tracer = simulation.tracer
+            node.branch_name = simulation.branch_name
             for child in children.values():
                 clear(child)
 
