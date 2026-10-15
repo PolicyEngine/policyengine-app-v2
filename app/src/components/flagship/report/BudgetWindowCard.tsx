@@ -1,28 +1,11 @@
-import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
-import type { BudgetWindowParams, BudgetWindowYear } from '@/api/budgetWindow';
+import type { BudgetWindowYear } from '@/api/budgetWindow';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import { ErrorState } from '@/components/flagship/states';
-import {
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Stack,
-  Text,
-  Title,
-} from '@/components/ui';
+import { Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { budgetWindowQueryKey, useBudgetWindow } from '@/hooks/useBudgetWindow';
-import { getTaxYears } from '@/libs/metadataUtils';
+import { useBudgetWindow } from '@/hooks/useBudgetWindow';
 import { formatCurrencyAbbr } from '@/utils/formatters';
 
-/** Window lengths offered: the common scoring windows. */
-const WINDOW_SIZES = [3, 5, 10];
-const DEFAULT_WINDOW = 10;
 /**
  * Below this a figure reads as nothing: the federal figure is the total
  * less the state's, and subtracting two large sums leaves a few dollars
@@ -38,10 +21,8 @@ interface BudgetWindowCardProps {
   baselinePolicyId?: string;
   /** The report's population, e.g. "state/de"; the whole country when absent. */
   region?: string;
-  /** The report's year, the window's default start. */
-  year: string;
-  /** A window asked for with the run (in Build): the section opens on it, running. */
-  initialWindow?: { startYear: number; windowSize: number };
+  /** The years the report scores, chosen in Build or in the Adjust parameters panel. */
+  window: { startYear: number; windowSize: number };
 }
 
 const headerCell: React.CSSProperties = {
@@ -60,100 +41,31 @@ const bodyCell: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-function MiniSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: Array<{ value: string; label: string }>;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        aria-label={label}
-        size="sm"
-        className="tw:w-auto tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
-        style={{ fontFamily: typography.fontFamily.primary }}
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent position="popper" align="start">
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value} className="tw:cursor-pointer">
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
 /** "Scoring 2026, 2027 (0 of 10 complete)..." reads without its trailing dots. */
 const progressDetail = (message?: string | null) =>
   message ? message.replace(/[.…]+$/, '') : undefined;
 
 /**
  * The reform's budget over several years: the same reform and baseline
- * scored for each year of a window, with the window's total. A window
- * runs a simulation for every year, so it starts only from its button —
- * changing the start or the length waits for the next click, and the
- * table keeps the window it was calculated for.
+ * scored for each year of the report's window, with the window's total.
+ * The window is the report's own — chosen with the run, or in the
+ * Adjust parameters panel — so this section only shows it.
  */
 export default function BudgetWindowCard({
   countryId,
   reformPolicyId,
   baselinePolicyId,
   region,
-  year,
-  initialWindow,
+  window,
 }: BudgetWindowCardProps) {
-  const taxYears = useSelector(getTaxYears);
-  const reportYear = Number(year);
-  const startOptions = Array.from(
-    new Set([reportYear, ...taxYears.map((taxYear) => Number(taxYear.value))])
-  )
-    .filter((option) => Number.isFinite(option))
-    .sort((a, b) => a - b);
-  const [startYear, setStartYear] = useState(initialWindow?.startYear ?? reportYear);
-  const [windowSize, setWindowSize] = useState(initialWindow?.windowSize ?? DEFAULT_WINDOW);
-  // Back on the tab, a window already asked for picks up where it was:
-  // its result, or its run, still being checked on.
-  const queryClient = useQueryClient();
-  const [requested, setRequested] = useState<BudgetWindowParams | null>(() => {
-    // Asked for in Build: the reader already chose to run it.
-    if (initialWindow) {
-      return { region: region ?? countryId, ...initialWindow };
-    }
-    const initial = {
-      region: region ?? countryId,
-      startYear: reportYear,
-      windowSize: DEFAULT_WINDOW,
-    };
-    return queryClient.getQueryData(
-      budgetWindowQueryKey(countryId, reformPolicyId, baselinePolicyId, initial)
-    )
-      ? initial
-      : null;
+  const requested = { region: region ?? countryId, ...window };
+  const budget = useBudgetWindow(countryId, reformPolicyId, baselinePolicyId, requested, {
+    enabled: true,
   });
-
-  const budget = useBudgetWindow(
-    countryId,
-    reformPolicyId,
-    baselinePolicyId,
-    requested ?? { region: region ?? countryId, startYear, windowSize },
-    { enabled: !!requested }
-  );
   const data = budget.data;
-  const computing =
-    !!requested && (budget.isFetching || data?.status === 'computing') && !data?.result;
-  const failed = !!requested && !computing && (budget.isError || data?.status === 'error');
+  const computing = (budget.isFetching || data?.status === 'computing') && !data?.result;
+  const failed = !computing && (budget.isError || data?.status === 'error');
   const result = data?.status === 'ok' ? data.result : null;
-  const pendingChoice =
-    !requested || requested.startYear !== startYear || requested.windowSize !== windowSize;
 
   const money = (value: number) => {
     if (!Number.isFinite(value)) {
@@ -191,7 +103,6 @@ export default function BudgetWindowCard({
     { label: 'Budgetary impact', value: (row) => row.budgetaryImpact },
   ];
 
-  const start = () => setRequested({ region: region ?? countryId, startYear, windowSize });
   const lastYear = (params: { startYear: number; windowSize: number }) =>
     params.startYear + params.windowSize - 1;
 
@@ -213,48 +124,12 @@ export default function BudgetWindowCard({
           Budget window
         </Title>
         <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          The budgetary impact in each year of a window, and the window&apos;s total.
+          The budgetary impact in each year from {window.startYear} to {lastYear(window)}, and the
+          total.
         </Text>
       </Stack>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
-        <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>From</span>
-        <MiniSelect
-          label="Window starts"
-          value={String(startYear)}
-          options={startOptions.map((option) => ({ value: String(option), label: String(option) }))}
-          onChange={(next) => setStartYear(Number(next))}
-        />
-        <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>for</span>
-        <MiniSelect
-          label="Window length"
-          value={String(windowSize)}
-          options={WINDOW_SIZES.map((size) => ({ value: String(size), label: `${size} years` }))}
-          onChange={(next) => setWindowSize(Number(next))}
-        />
-        <span
-          style={{
-            fontSize: typography.fontSize.xs,
-            color: colors.text.secondary,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {startYear}–{lastYear({ startYear, windowSize })}
-        </span>
-        <Button
-          size="sm"
-          onClick={start}
-          // The window on screen is the one chosen: nothing to run again.
-          disabled={
-            !reformPolicyId || !baselinePolicyId || (!pendingChoice && (computing || !!result))
-          }
-          style={{ marginLeft: 'auto' }}
-        >
-          {result && !pendingChoice ? 'Calculated' : `Calculate ${windowSize}-year budget`}
-        </Button>
-      </div>
-
-      {computing && requested && (
+      {computing && (
         <RunProgress
           title={`Calculating the ${requested.startYear}–${lastYear(requested)} budget`}
           progress={typeof data?.progress === 'number' ? data.progress : undefined}
