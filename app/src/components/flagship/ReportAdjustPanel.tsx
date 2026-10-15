@@ -409,6 +409,9 @@ function AdjustPanel({
                         )}
                       </div>
                     ))}
+                    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+                      Baseline: {formatValue(provision.baselineValue, provision.unit)}
+                    </Text>
                   </div>
                 ) : (
                   /* The value to edit; what it was, quietly beside it, as Build shows it. */
