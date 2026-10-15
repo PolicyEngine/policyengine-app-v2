@@ -7,6 +7,7 @@ import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
 import ReportLoadError from '@/components/flagship/report/ReportLoadError';
+import ReportNotSocietyWide from '@/components/flagship/report/ReportNotSocietyWide';
 import ReportView from '@/components/flagship/report/ReportView';
 import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
@@ -18,6 +19,7 @@ import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
+import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
@@ -80,22 +82,36 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   // Provenance: the local stash from the run, else rebuilt from the reform
-  // policy so a shared link validates like the original.
-  const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
-  // Without metadata the rebuilt provisions would show raw paths and no
-  // baseline, so they count as still loading until it arrives.
+  // policy so a shared link validates like the original — read in the
+  // report's year, with every dated value the run had.
+  const reformPolicyId = simulations?.[1]?.policyId;
+  const reformPolicy = policies.find((policy) => policy.id === reformPolicyId);
   const meta =
     readReportMeta(userReportId) ??
-    (parameters
-      ? // Described in the year the report simulates, as the run's own stash is.
-        provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year)
-      : null);
+    provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year || undefined);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
   const unreadableMeta = useUnreadableReportMeta(userReportId);
   // The reform's provisions are rebuilt from metadata; without it they cannot show.
   const metadata = useFlagshipMetadataStatus();
+  // Rebuilt, the provisions are on their way until the reform policy loads
+  // (it waits for the parameter metadata, so names and current law come
+  // with it): the report waits for them rather than show an empty reform
+  // to adjust. A policy or metadata that failed lets it show without them.
+  const awaitingProvisions =
+    !meta &&
+    isApiReportId(userReportId) &&
+    !!reformPolicyId &&
+    !failedPolicyIds.includes(reformPolicyId) &&
+    metadata.status !== 'error';
+
+  // A household report is the classic calculator's: this page shows
+  // society-wide results only. Run here, it would score one household
+  // and write that over the report's stored outputs.
+  const householdReport = simulations.some(
+    (simulation) => simulation.populationType === 'household'
+  );
 
   // The run handed its draft over to this report; Build starts fresh.
   useEffect(() => {
@@ -105,7 +121,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const calcConfigs = useMemo(() => {
     // Wait for the reform simulation too: starting on the baseline alone
     // scores current law against itself and persists zeros as the result.
-    if (!report?.id || !allSimulationsLoaded(report, simulations)) {
+    if (!report?.id || householdReport || !allSimulationsLoaded(report, simulations)) {
       return null;
     }
     const simulation1 = simulations[0];
@@ -124,6 +140,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         simulations: { simulation1, simulation2: simulations[1] || null },
         // The bar follows a typical run for this region, not the country.
         estimateByRegion: true,
+        // A failed run says so on its record, so Your reforms can say Failed.
+        recordReportErrors: true,
         populations: {
           household1: null,
           household2: null,
@@ -132,7 +150,16 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         },
       } as CalcStartConfig,
     ];
-  }, [report, simulations]);
+  }, [report, simulations, householdReport]);
+
+  // A report whose record is complete opens from the results stored on
+  // it: run again, each open would ask for the economy once more and
+  // write the same results back over the public record. Seeded before
+  // the start below looks, so no run starts for it.
+  useHydrateCalculationCache({
+    report,
+    outputType: calcConfigs && report?.status === 'complete' ? 'societyWide' : undefined,
+  });
 
   useStartCalculationOnLoad({
     enabled: !!report && !!calcConfigs,
@@ -142,7 +169,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const output = calcStatus.isComplete ? (calcStatus.result as SocietyWideOutput) : null;
 
-  const reformPolicyId = simulations?.[1]?.policyId;
   const baselinePolicyId = simulations?.[0]?.policyId;
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
   // A baseline policy that failed to load is unknown, not current law.
@@ -193,7 +219,18 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     );
   }
 
-  if (!output || isLoading || (!meta && !!reformPolicy)) {
+  if (householdReport) {
+    return layout(
+      <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+        <Title order={1} style={{ margin: 0 }}>
+          {title}
+        </Title>
+        <ReportNotSocietyWide />
+      </Stack>
+    );
+  }
+
+  if (!output || isLoading || awaitingProvisions) {
     if (unresolvable) {
       return layout(
         <Stack

@@ -307,3 +307,15 @@ export async function runFlagshipReport({
 
   return reportId;
 }
+
+/**
+ * Query keys for the reports this browser ran, as Your reforms lists
+ * them by reform, and for where each one stands on the API.
+ */
+export const flagshipReportQueryKeys = {
+  all: ['flagship-reports'] as const,
+  mine: (countryId: string) => ['flagship-reports', countryId] as const,
+  statuses: ['flagship-report-status'] as const,
+  status: (countryId: string, apiReportId: string) =>
+    ['flagship-report-status', countryId, apiReportId] as const,
+};
