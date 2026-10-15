@@ -465,13 +465,29 @@ export function provisionsForYear(
   });
 }
 
+/** Whether the draft holds choices beyond its parameters: a name, years, a population or a comparison. */
+function hasDraftSettings(draft: DraftReform): boolean {
+  return Boolean(
+    draft.label?.trim() ||
+    draft.year ||
+    draft.windowYears ||
+    draft.population?.region ||
+    draft.baselineReformId
+  );
+}
+
+/**
+ * Removes a provision. Removing the last one clears a draft that is only
+ * its parameters; one with settings of its own — or a saved reform being
+ * edited — stays, empty, so the parameter can be swapped for another.
+ */
 export function removeDraftProvision(path: string): void {
   const draft = getSnapshot();
   if (!draft) {
     return;
   }
   const provisions = draft.provisions.filter((p) => p.path !== path);
-  if (provisions.length === 0 && !draft.editingReformId) {
+  if (provisions.length === 0 && !draft.editingReformId && !hasDraftSettings(draft)) {
     writeDraft(null);
     return;
   }

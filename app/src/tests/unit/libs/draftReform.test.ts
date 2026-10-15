@@ -10,6 +10,9 @@ import {
   removeDraftProvision,
   setDraftBaseline,
   setDraftLabel,
+  setDraftPopulation,
+  setDraftWindowYears,
+  setDraftYear,
   startDraftReform,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
@@ -81,6 +84,25 @@ describe('draftReform', () => {
     removeDraftProvision(CTC_PROVISION.path);
 
     expect(getDraftReform()).toBeNull();
+  });
+
+  it('given the last provision is removed from a named draft then the draft keeps its settings', () => {
+    // The user swaps the one parameter for another: the name and years stay.
+    addDraftProvision('us', CTC_PROVISION);
+    setDraftLabel('QA build flow test');
+    setDraftYear(2027);
+    setDraftWindowYears(10);
+    setDraftPopulation({ scope: 'national', region: 'state/ca' });
+
+    removeDraftProvision(CTC_PROVISION.path);
+
+    expect(getDraftReform()).toMatchObject({
+      label: 'QA build flow test',
+      year: 2027,
+      windowYears: 10,
+      population: { scope: 'national', region: 'state/ca' },
+      provisions: [],
+    });
   });
 
   it('given a label is set then it persists on the draft', () => {
