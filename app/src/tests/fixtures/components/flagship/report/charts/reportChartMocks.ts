@@ -219,3 +219,40 @@ export function withPovertyByAgeChanges(
     },
   } as SocietyWideReportOutput;
 }
+
+type Rate = { baseline: number; reform: number };
+
+/** A report's output with its deep poverty rates by age swapped for the given ones. */
+export function withDeepPovertyByAge(
+  output: SocietyWideReportOutput,
+  rates: { child: Rate; adult: Rate; senior: Rate; all: Rate }
+): SocietyWideReportOutput {
+  return {
+    ...output,
+    poverty: { ...output.poverty, deep_poverty: rates },
+  } as SocietyWideReportOutput;
+}
+
+/**
+ * Deep poverty by age in a small region, as report 4302 (NY-04, 2026)
+ * returned it for seniors: none in deep poverty, before or after.
+ */
+export const NO_SENIORS_IN_DEEP_POVERTY = {
+  child: { baseline: 0.04, reform: 0.038 },
+  adult: { baseline: 0.03, reform: 0.029 },
+  senior: { baseline: 0, reform: 0 },
+  all: { baseline: 0.025, reform: 0.024 },
+};
+
+/** A report's output with one race's poverty rate swapped for the given one. */
+export function withRacePoverty(
+  output: SocietyWideReportOutput,
+  race: string,
+  rate: Rate
+): SocietyWideReportOutput {
+  const byRace = (output as any).poverty_by_race;
+  return {
+    ...output,
+    poverty_by_race: { ...byRace, poverty: { ...byRace.poverty, [race]: rate } },
+  } as SocietyWideReportOutput;
+}

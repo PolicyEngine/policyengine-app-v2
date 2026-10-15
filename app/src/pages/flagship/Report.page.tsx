@@ -86,7 +86,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // baseline, so they count as still loading until it arrives.
   const meta =
     readReportMeta(userReportId) ??
-    (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
+    (parameters
+      ? // Described in the year the report simulates, as the run's own stash is.
+        provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year)
+      : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.

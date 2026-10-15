@@ -7,9 +7,12 @@ import InequalityImpactSubPage from '@/components/flagship/report/charts/Inequal
 import PovertyImpactByAgeSubPage from '@/components/flagship/report/charts/PovertyImpactByAgeSubPage';
 import PovertyImpactByRaceSubPage from '@/components/flagship/report/charts/PovertyImpactByRaceSubPage';
 import {
+  NO_SENIORS_IN_DEEP_POVERTY,
   REPORT_4332_OUTPUT,
+  withDeepPovertyByAge,
   withInequalityChanges,
   withPovertyByAgeChanges,
+  withRacePoverty,
 } from '@/tests/fixtures/components/flagship/report/charts/reportChartMocks';
 
 const size = vi.hoisted(() => ({ width: 700, height: 260 }));
@@ -154,6 +157,46 @@ describe('report bar charts', () => {
     ).map((tick) => tick.textContent);
     expect(ticks).toContain('-0.25%');
     expectLabelsInsidePlot(container);
+  });
+
+  test('given a group with no baseline rate then it reads n/a and every other bar keeps its label', async () => {
+    // Given: no seniors in deep poverty, before or after, as in report 4302.
+    const output = withDeepPovertyByAge(REPORT_4332_OUTPUT, NO_SENIORS_IN_DEEP_POVERTY);
+
+    // When
+    const { container } = render(
+      <DeepPovertyImpactByAgeSubPage output={output} compact fillHeight />
+    );
+
+    // Then: one label a bar, in order, with All's own value on All.
+    await screen.findByText('-3.3%', undefined, LABELS_SHOWN);
+    const labels = valueLabels(container);
+    expect(labels.map((label) => label.text)).toEqual(['-5.0%', '-3.3%', 'n/a', '-4.0%']);
+    expect(labels.map((label) => label.x)).toEqual(
+      [...labels.map((label) => label.x)].sort((a, b) => a - b)
+    );
+    const ticks = Array.from(
+      container.querySelectorAll('.recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value')
+    );
+    const allTick = ticks.find((tick) => tick.textContent === 'All');
+    expect(Number(allTick?.getAttribute('x'))).toBeCloseTo(labels[3].x, 0);
+  });
+
+  test('given a race with no baseline poverty that the reform raises then its bar reads n/a', async () => {
+    // Given: no one of another race in poverty before the reform, some after.
+    size.width = 340;
+    size.height = 170;
+    const output = withRacePoverty(REPORT_4332_OUTPUT, 'other', { baseline: 0, reform: 0.01 });
+
+    // When
+    const { container } = render(<PovertyImpactByRaceSubPage output={output} compact fillHeight />);
+
+    // Then
+    await screen.findByText('-0.8%', undefined, LABELS_SHOWN);
+    const texts = valueLabels(container).map((label) => label.text);
+    expect(texts).toHaveLength(5);
+    expect(texts[1]).toBe('n/a');
+    expect(texts.join(' ')).not.toMatch(/NaN|∞/);
   });
 
   test('given a short chart then the value axis title shortens to fit the plot', () => {

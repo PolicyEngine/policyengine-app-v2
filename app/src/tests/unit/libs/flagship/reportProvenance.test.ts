@@ -1,10 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { isApiReportId } from '@/hooks/useFlagshipReport';
-import {
-  provenanceFromPolicy,
-  provisionsFromPolicy,
-  valueForYear,
-} from '@/libs/flagship/reportProvenance';
+import { provenanceFromPolicy, provisionsFromPolicy } from '@/libs/flagship/reportProvenance';
 import type { Policy } from '@/types/ingredients/Policy';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
 
@@ -44,14 +40,30 @@ describe('isApiReportId', () => {
   });
 });
 
-describe('valueForYear', () => {
+describe('the reform value in the report year', () => {
   test('given dated intervals then the one covering the year wins', () => {
-    expect(valueForYear(reformPolicy.parameters![0], '2026')).toBe(2500);
-    expect(valueForYear(reformPolicy.parameters![0], '2025')).toBe(2200);
+    expect(provisionsFromPolicy(reformPolicy, metadataParameters, '2026')[0].value).toBe(2500);
+    expect(provisionsFromPolicy(reformPolicy, metadataParameters, '2025')[0].value).toBe(2200);
   });
 
-  test('given no covering interval then the first stands in', () => {
-    expect(valueForYear(reformPolicy.parameters![0], '2010')).toBe(2200);
+  test('given no covering interval then the value is current law, not the first interval', () => {
+    // Given: current law is $2,000 in 2025, before the reform's first value.
+    const [provision] = provisionsFromPolicy(
+      {
+        ...reformPolicy,
+        parameters: [
+          {
+            name: CTC_BASE_PATH,
+            values: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 2500 }],
+          },
+        ],
+      },
+      metadataParameters,
+      '2025'
+    );
+
+    // Then
+    expect(provision).toMatchObject({ baselineValue: 2000, value: 2000 });
   });
 });
 
@@ -74,6 +86,77 @@ describe('provisionsFromPolicy', () => {
     expect(provision.breadcrumb).toBe(CTC_BASE_PATH);
     expect(provision.unit).toBeNull();
     expect(provision.baselineValue).toBeUndefined();
+  });
+});
+
+describe('provisionsFromPolicy for the report year', () => {
+  const MD_CTC_PATH = 'gov.states.md.tax.income.credits.ctc.amount';
+  // A reform that starts in 2027 and rises over time, like policy 98731.
+  const datedReform: Policy = {
+    id: '98731',
+    countryId: 'us',
+    label: 'MD CTC Increase',
+    parameters: [
+      {
+        name: MD_CTC_PATH,
+        values: [
+          { startDate: '2030-01-01', endDate: '2100-12-31', value: 643 },
+          { startDate: '2027-01-01', endDate: '2027-12-31', value: 600 },
+          { startDate: '2028-01-01', endDate: '2029-12-31', value: 614 },
+        ],
+      },
+    ],
+  };
+  const mdMetadata = {
+    [MD_CTC_PATH]: {
+      parameter: MD_CTC_PATH,
+      label: 'Amount',
+      unit: 'currency-USD',
+      values: { '2023-01-01': 500, '2030-01-01': 550 },
+    },
+  };
+
+  test('given a 2031 report then current law and the reform read as they stand in 2031', () => {
+    // When
+    const [provision] = provisionsFromPolicy(datedReform, mdMetadata, '2031');
+
+    // Then
+    expect({ before: provision.baselineValue, after: provision.value }).toEqual({
+      before: 550,
+      after: 643,
+    });
+  });
+
+  test('given a year before the reform starts then the value is current law then', () => {
+    // When
+    const [provision] = provisionsFromPolicy(datedReform, mdMetadata, '2026');
+
+    // Then
+    expect({ before: provision.baselineValue, after: provision.value }).toEqual({
+      before: 500,
+      after: 500,
+    });
+  });
+
+  test('given dated values then the provision carries them in date order', () => {
+    // When
+    const [provision] = provisionsFromPolicy(datedReform, mdMetadata, '2027');
+
+    // Then
+    expect(provision.intervals?.map((interval) => interval.startDate)).toEqual([
+      '2027-01-01',
+      '2028-01-01',
+      '2030-01-01',
+    ]);
+    expect(provision.value).toBe(600);
+  });
+
+  test('given a report year then the provenance describes that year', () => {
+    // When
+    const meta = provenanceFromPolicy(datedReform, mdMetadata, 'MD CTC', '2028');
+
+    // Then
+    expect(meta?.provisions[0]).toMatchObject({ baselineValue: 500, value: 614 });
   });
 });
 
