@@ -17,6 +17,15 @@ vi.mock('@/api/report', () => ({
     finished_at: '2026-10-14T15:12:00Z',
     // Report 60 ran on the model the app has loaded ("test", from the seed).
     output: id === '60' ? JSON.stringify({ model_version: 'test' }) : null,
+    simulation_1_id: `sim-${id}`,
+  })),
+}));
+
+vi.mock('@/api/simulation', () => ({
+  // Report 63's baseline ran a reform (policy 88); every other report's ran
+  // current law (2, from the seed).
+  fetchSimulationById: vi.fn(async (_country: string, simulationId: string) => ({
+    policy_id: simulationId === 'sim-63' ? '88' : '2',
   })),
 }));
 
@@ -194,5 +203,30 @@ describe('ReformReports', () => {
     expect(await screen.findByText('Up to date')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /re-run/i })).not.toBeInTheDocument();
     store.dispatch(clearMetadata());
+  });
+});
+
+describe('ReformReports comparisons without a link', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    store.dispatch(clearMetadata());
+    seedDeductionMetadata();
+  });
+
+  test('given a report whose compared reform is gone then it still reads as compared', async () => {
+    // Given: no run details and no link, but its baseline ran another reform
+    renderReports([record({ id: 'rec-63', apiReportId: '63', baselineReformId: null })]);
+
+    // Then
+    expect(await screen.findByText('Compared with a saved reform')).toBeInTheDocument();
+  });
+
+  test('given a report whose baseline ran current law then no comparison shows', async () => {
+    // Given
+    renderReports([record({ id: 'rec-64', apiReportId: '64', baselineReformId: null })]);
+
+    // Then
+    expect(await screen.findByText('2026 report')).toBeInTheDocument();
+    expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
   });
 });

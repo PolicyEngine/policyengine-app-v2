@@ -98,6 +98,49 @@ describe('rerunSettings', () => {
     expect((await rerunSettings('us', REPORT)).region).toBeUndefined();
   });
 
+  describe('given an account report that no longer links the reform it was compared with', () => {
+    // The compared reform was deleted (its link went null), or the report
+    // recomputed someone else's: the row names no saved reform.
+    const UNLINKED_REPORT: FlagshipReportRecord = { ...ACCOUNT_REPORT, baselineReformId: null };
+
+    beforeEach(() => {
+      fetchReportById.mockResolvedValue({ simulation_1_id: '9', year: '2028' });
+    });
+
+    test('then it keeps the comparison its baseline policy shows', async () => {
+      // Given: the report's baseline ran policy 88, not current law (2)
+      fetchSimulationById.mockResolvedValue({
+        population_type: 'geography',
+        population_id: 'us',
+        policy_id: '88',
+      });
+
+      // When
+      const settings = await rerunSettings('us', UNLINKED_REPORT, { currentLawPolicyId: 2 });
+
+      // Then
+      expect(settings.baseline).toEqual({
+        reformId: null,
+        label: 'a saved reform',
+        policyId: 88,
+      });
+    });
+
+    test('then a report against current law still runs against current law', async () => {
+      // Given
+      fetchSimulationById.mockResolvedValue({
+        population_type: 'geography',
+        population_id: 'us',
+        policy_id: '2',
+      });
+
+      // When / Then
+      expect(
+        (await rerunSettings('us', UNLINKED_REPORT, { currentLawPolicyId: 2 })).baseline
+      ).toBeUndefined();
+    });
+  });
+
   describe('given an account report', () => {
     beforeEach(() => {
       fetchReportById.mockResolvedValue({ simulation_1_id: '9', year: '2028' });

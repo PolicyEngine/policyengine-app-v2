@@ -1,4 +1,5 @@
 import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { ranAgainstReform } from '@/libs/flagship/reportComparison';
 import { readReportMeta } from '@/libs/flagship/runReport';
 import type { Reform } from '@/types/ingredients/Reform';
 
@@ -14,14 +15,24 @@ function valueKey(
   )}`;
 }
 
+/** A report with the policy its baseline simulation ran, when the API's record was read. */
+export type ReportWithBaseline = FlagshipReportRecord & { baselinePolicyId?: string };
+
 /**
  * Whether a report was compared with something other than current law:
  * the run's details say so in the session that ran it (kept under the
- * report's link), and the record links the saved reform it was compared
- * with.
+ * report's link), the record links the saved reform it was compared with,
+ * or its baseline simulation ran a policy other than current law.
  */
-function comparedWithSavedReform(report: FlagshipReportRecord): boolean {
-  return !!readReportMeta(reportLink(report))?.baseline || !!report.baselineReformId;
+function comparedWithSavedReform(
+  report: ReportWithBaseline,
+  currentLawPolicyId: number | undefined
+): boolean {
+  return (
+    !!readReportMeta(reportLink(report))?.baseline ||
+    !!report.baselineReformId ||
+    ranAgainstReform(report.baselinePolicyId, currentLawPolicyId) === true
+  );
 }
 
 /**
@@ -34,15 +45,16 @@ function comparedWithSavedReform(report: FlagshipReportRecord): boolean {
  */
 export function latestMatchingReport(
   reform: Reform,
-  reports: FlagshipReportRecord[],
-  year: number
+  reports: ReportWithBaseline[],
+  year: number,
+  currentLawPolicyId?: number
 ): FlagshipReportRecord | null {
   const reformKey = reform.parameters
     .map((parameter) => valueKey(parameter.name, parameter.values))
     .sort()
     .join('|');
   const matching = reports.filter((report) => {
-    if (report.year !== String(year) || comparedWithSavedReform(report)) {
+    if (report.year !== String(year) || comparedWithSavedReform(report, currentLawPolicyId)) {
       return false;
     }
     const reportKey = report.provisions

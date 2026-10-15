@@ -4,10 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { fetchReportById } from '@/api/report';
+import { fetchSimulationById } from '@/api/simulation';
 import { Badge, Button, Stack, Text } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
+import { ranAgainstReform, UNNAMED_COMPARISON } from '@/libs/flagship/reportComparison';
 import { flagshipReportQueryKeys, readReportMeta } from '@/libs/flagship/runReport';
 import type { RootState } from '@/store';
 
@@ -70,21 +72,50 @@ export function LatestReportBadge({
 }
 
 /**
+ * The policy a report's baseline simulation ran, read only when asked
+ * (`simulationId` set): whether the report was compared with a reform its
+ * record no longer names.
+ */
+function useBaselinePolicyId(countryId: CountryId, simulationId: string | undefined) {
+  return useQuery({
+    queryKey: flagshipReportQueryKeys.baselineSimulation(countryId, simulationId ?? ''),
+    queryFn: () => fetchSimulationById(countryId, simulationId!),
+    enabled: !!simulationId,
+    staleTime: Infinity,
+    retry: false,
+  }).data?.policy_id;
+}
+
+/**
  * What a report compared the reform with, when not current law: the same
  * reform against a saved reform is another report, and reads as one. The
  * run's details name it in the session that ran it; otherwise an account
- * record links the saved reform, named from this session's reforms.
+ * record links the saved reform, named from this session's reforms. A
+ * record that no longer links one (the reform was deleted, or the report
+ * recomputed someone else's) shows its comparison by its baseline policy.
  */
 function ReportBaseline({
+  countryId,
   report,
+  baselineSimulationId,
   reformName,
 }: {
+  countryId: CountryId;
   report: FlagshipReportRecord;
+  baselineSimulationId: string | undefined;
   reformName?: (reformId: string) => string | null | undefined;
 }) {
-  const label =
+  const namedLabel =
     readReportMeta(reportLink(report))?.baseline?.label ??
-    (report.baselineReformId ? reformName?.(report.baselineReformId) || 'a saved reform' : null);
+    (report.baselineReformId ? reformName?.(report.baselineReformId) || UNNAMED_COMPARISON : null);
+  const currentLawPolicyId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const baselinePolicyId = useBaselinePolicyId(
+    countryId,
+    namedLabel ? undefined : baselineSimulationId
+  );
+  const label =
+    namedLabel ??
+    (ranAgainstReform(baselinePolicyId, currentLawPolicyId) ? UNNAMED_COMPARISON : null);
   if (!label) {
     return null;
   }
@@ -162,7 +193,12 @@ function ReportRow({
             ? `Results from ${dayjs(finished).format('MMM D, YYYY')}`
             : `Run ${dayjs(report.createdAt).format('MMM D, YYYY')}`}
         </span>
-        <ReportBaseline report={report} reformName={reformName} />
+        <ReportBaseline
+          countryId={countryId}
+          report={report}
+          baselineSimulationId={api?.simulation_1_id}
+          reformName={reformName}
+        />
       </div>
       <span>
         <ReportStatus status={api?.status} />

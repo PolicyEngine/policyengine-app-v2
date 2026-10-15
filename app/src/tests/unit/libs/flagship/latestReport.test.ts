@@ -84,4 +84,21 @@ describe('latestMatchingReport', () => {
     // Then
     expect(latestMatchingReport(REFORM, [accountReport], 2026)?.id).toBe(ACCOUNT_REPORT_ID);
   });
+
+  test('given a report whose baseline ran another reform then it does not open, linked or not', () => {
+    // Given: no run details and no link, but its baseline was not current law
+    const unlinked = {
+      ...report({ id: ACCOUNT_REPORT_ID, baselineReformId: null }),
+      baselinePolicyId: '88',
+    };
+
+    // When / Then
+    expect(latestMatchingReport(REFORM, [unlinked], 2026, 2)).toBeNull();
+  });
+
+  test('given a report whose baseline ran current law then it opens', () => {
+    const againstCurrentLaw = { ...report({ id: ACCOUNT_REPORT_ID }), baselinePolicyId: '2' };
+
+    expect(latestMatchingReport(REFORM, [againstCurrentLaw], 2026, 2)?.id).toBe(ACCOUNT_REPORT_ID);
+  });
 });

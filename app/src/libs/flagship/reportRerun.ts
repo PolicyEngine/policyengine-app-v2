@@ -2,6 +2,7 @@ import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import type { CountryId } from '@/libs/countries';
+import { ranAgainstReform, UNNAMED_COMPARISON } from '@/libs/flagship/reportComparison';
 import { readReportMeta, type RunReportBaseline } from '@/libs/flagship/runReport';
 import type { Reform } from '@/types/ingredients/Reform';
 
@@ -18,6 +19,8 @@ export interface RerunSettings {
 export interface RerunSettingsOptions {
   /** This session's saved reform by its ID, to name the reform a report was compared with. */
   savedReform?: (reformId: string) => Reform | undefined;
+  /** The current-law policy, to tell a report compared with a reform from one against current law. */
+  currentLawPolicyId?: number;
 }
 
 /**
@@ -35,7 +38,7 @@ export interface RerunSettingsOptions {
 export async function rerunSettings(
   countryId: CountryId,
   report: FlagshipReportRecord,
-  { savedReform }: RerunSettingsOptions = {}
+  { savedReform, currentLawPolicyId }: RerunSettingsOptions = {}
 ): Promise<RerunSettings> {
   const meta = readReportMeta(reportLink(report));
   let year = report.year;
@@ -63,23 +66,28 @@ export async function rerunSettings(
           label: meta.baseline.label,
           policyId: Number(meta.baseline.policyId),
         }
-      : savedBaseline(report, baselinePolicyId, savedReform),
+      : savedBaseline(report, baselinePolicyId, savedReform, currentLawPolicyId),
   };
 }
 
 /**
  * The saved reform a report's record says it was compared with, as the
  * baseline to run again: the policy the report ran as its baseline, or,
- * when that can't be read, the saved reform's own policy. None for a
- * report compared with current law.
+ * when that can't be read, the saved reform's own policy. A record that no
+ * longer names one (the reform was deleted, or the report recomputed
+ * someone else's) keeps the comparison its baseline policy shows. None for
+ * a report compared with current law.
  */
 function savedBaseline(
   report: FlagshipReportRecord,
   baselinePolicyId: number | undefined,
-  savedReform: RerunSettingsOptions['savedReform']
+  savedReform: RerunSettingsOptions['savedReform'],
+  currentLawPolicyId: number | undefined
 ): RunReportBaseline | undefined {
   if (!report.baselineReformId) {
-    return undefined;
+    return baselinePolicyId && ranAgainstReform(baselinePolicyId, currentLawPolicyId)
+      ? { reformId: null, label: UNNAMED_COMPARISON, policyId: baselinePolicyId }
+      : undefined;
   }
   const reform = savedReform?.(report.baselineReformId);
   const policyId = baselinePolicyId ?? (Number(reform?.policyId) || undefined);

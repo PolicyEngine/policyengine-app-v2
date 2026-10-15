@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
 import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { fetchReportById } from '@/api/report';
+import { fetchSimulationById } from '@/api/simulation';
 import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
@@ -297,6 +298,8 @@ export default function ReformsPage() {
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const currentLawPolicyId =
+    Number(useSelector((state: RootState) => state.metadata.currentLawId)) || undefined;
   const appLocation = useAppLocation();
   const urlParams = useMemo(() => new URLSearchParams(appLocation.search), [appLocation.search]);
 
@@ -403,6 +406,27 @@ export default function ReformsPage() {
         staleTime: 60_000,
       });
       return apiReport.year ?? undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  // The policy a report's baseline simulation ran: current law, or the
+  // reform it was compared with, even when its record no longer names it.
+  const reportBaselinePolicyId = async (
+    report: FlagshipReportRecord
+  ): Promise<string | undefined> => {
+    try {
+      const apiReport = await queryClient.fetchQuery({
+        queryKey: flagshipReportQueryKeys.status(countryId, report.apiReportId),
+        queryFn: () => fetchReportById(countryId, report.apiReportId),
+        staleTime: 60_000,
+      });
+      const simulation = await queryClient.fetchQuery({
+        queryKey: flagshipReportQueryKeys.baselineSimulation(countryId, apiReport.simulation_1_id),
+        queryFn: () => fetchSimulationById(countryId, apiReport.simulation_1_id),
+        staleTime: Infinity,
+      });
+      return simulation.policy_id ? String(simulation.policy_id) : undefined;
     } catch {
       return undefined;
     }
@@ -875,9 +899,15 @@ export default function ReformsPage() {
                   reportsFor(selectedReform.id).map(async (report) => ({
                     ...report,
                     year: await reportYear(report),
+                    baselinePolicyId: await reportBaselinePolicyId(report),
                   }))
                 );
-                const latest = latestMatchingReport(selectedReform, reformReports, runYear);
+                const latest = latestMatchingReport(
+                  selectedReform,
+                  reformReports,
+                  runYear,
+                  currentLawPolicyId
+                );
                 if (latest) {
                   nav.push(`/${countryId}/report/${reportLink(latest)}`);
                   return;
@@ -942,9 +972,10 @@ export default function ReformsPage() {
               // The same report on today's model: its reform as it ran, its
               // year, population, budget window and comparison, linked to the
               // same saved reform.
-              const settings = await rerunSettings(countryId, report, { savedReform }).catch(
-                () => null
-              );
+              const settings = await rerunSettings(countryId, report, {
+                savedReform,
+                currentLawPolicyId,
+              }).catch(() => null);
               if (!settings) {
                 setRerunError('Could not re-run the report. Try again.');
                 return;

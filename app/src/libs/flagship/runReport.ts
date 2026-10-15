@@ -399,4 +399,7 @@ export const flagshipReportQueryKeys = {
   statuses: ['flagship-report-status'] as const,
   status: (countryId: string, apiReportId: string) =>
     ['flagship-report-status', countryId, apiReportId] as const,
+  /** A report's baseline simulation, as the API's metadata (not the adapted Simulation). */
+  baselineSimulation: (countryId: string, simulationId: string) =>
+    ['flagship-report-baseline-simulation', countryId, simulationId] as const,
 };
