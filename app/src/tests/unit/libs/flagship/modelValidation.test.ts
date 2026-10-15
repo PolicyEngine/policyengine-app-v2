@@ -202,6 +202,16 @@ describe('claimsFromBillValidation', () => {
     expect(claims[1].source).toBe('GBPI');
   });
 
+  test('given the fiscal note names its source then the claim carries that source', () => {
+    const claims = claimsFromBillValidation('ct-sb78', {
+      fiscalNoteEstimate: -57_500_000,
+      fiscalNoteSource: '  OFA fiscal note for sSB-1 Sec. 6 ',
+      peEstimate: -60_000_000,
+    });
+
+    expect(claims[0].source).toBe('OFA fiscal note for sSB-1 Sec. 6');
+  });
+
   test('given no comparable estimates then no claims return', () => {
     expect(claimsFromBillValidation('x', { peEstimate: -5 })).toEqual([]);
   });

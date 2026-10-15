@@ -621,10 +621,21 @@ function compareStatusRows(a: any, b: any): number {
 }
 
 /**
+ * The bill number a title names, as the tracker reads it: the first
+ * letters-then-number ("SB3125", "H. 3492", "A 1185"), not a fiscal year.
+ */
+function titleBillNumber(title: unknown): string | undefined {
+  return typeof title === 'string' ? title.match(/\b(?!FY)([A-Z]{1,3}\.?\s*\d+)/i)?.[1] : undefined;
+}
+
+/**
  * The tracker's status row (processed_bills) for a research entry. The
  * entry's LegiScan link (legiscan_bill_id) names the row when it is set.
  * Otherwise the entry's id names the bill: "ut-sb0060", "ny-s-4487", or
  * "ga-hb463-2026", where a trailing year names the session, not the bill.
+ * An id with words after the number ("hi-sb3125-hd1", "ut-sb60-bill")
+ * finds its row as the tracker does: by the bill number in the title,
+ * then by the id's first part.
  */
 function processedBillFor(
   record: any,
@@ -641,11 +652,24 @@ function processedBillFor(
   if (!state || parts.length === 0) {
     return undefined;
   }
-  const exact = byKey.get(processedBillKey(state, parts.join('')));
-  if (exact || parts.length < 2 || !/^\d{4}$/.test(parts[parts.length - 1])) {
-    return exact;
+  const candidates = [parts.join('')];
+  if (parts.length >= 2 && /^\d{4}$/.test(parts[parts.length - 1])) {
+    candidates.push(parts.slice(0, -1).join(''));
   }
-  return byKey.get(processedBillKey(state, parts.slice(0, -1).join('')));
+  const titled = titleBillNumber(record.title);
+  if (titled) {
+    candidates.push(titled);
+  }
+  if (parts.length >= 2 && /^[a-z]+\d+$/i.test(parts[0])) {
+    candidates.push(parts[0]);
+  }
+  for (const billNumber of candidates) {
+    const row = byKey.get(processedBillKey(state, billNumber));
+    if (row) {
+      return row;
+    }
+  }
+  return undefined;
 }
 
 /**

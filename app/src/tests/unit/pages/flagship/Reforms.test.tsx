@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import { CURRENT_YEAR } from '@/constants';
+import { clearDraftReform, draftYear, getDraftReform } from '@/libs/draftReform';
 import ReformsPage from '@/pages/flagship/Reforms.page';
 import {
   FEDERAL_ENACTED,
@@ -173,6 +174,48 @@ const FEED_BILLS = [
   },
 ];
 
+/** A state bill that first takes effect next year (live: RI S2364, from 2027). */
+const LATER_STATE_BILL = {
+  id: 'ri-s2364',
+  countryId: 'us' as const,
+  jurisdiction: 'Rhode Island',
+  state: 'RI',
+  title: 'Rhode Island S2364: income tax rate cut',
+  status: 'In Committee',
+  summary: 'Cuts the lowest income tax rate from 2027.',
+  provisions: [
+    {
+      path: 'gov.states.ri.tax.income.rates[0].rate',
+      value: 0.0375,
+      intervals: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 0.0375 }],
+      fallbackBreadcrumb: 'Rhode Island → Income tax → Lowest rate',
+    },
+  ],
+};
+
+/**
+ * UT SB60 as the tracker stores it: a write-up of 4.5% → 4.45%, but
+ * reform params of 0.045, the law before the bill.
+ */
+const SWAPPED_STATE_BILL = {
+  id: 'ut-sb60-bill',
+  countryId: 'us' as const,
+  jurisdiction: 'Utah',
+  state: 'UT',
+  title: 'Utah SB60: Income tax rate reduction',
+  status: 'Signed into Law',
+  summary: 'Cuts the income tax rate from 4.5% to 4.45%.',
+  provisions: [
+    {
+      path: 'gov.states.ut.tax.income.rate',
+      value: 0.045,
+      intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.045 }],
+      fallbackBreadcrumb: 'Utah → Income tax → Rate',
+    },
+  ],
+  changes: [{ label: 'Income tax rate', before: '4.5%', after: '4.45%' }],
+};
+
 function renderReforms(path?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const ui = (
@@ -287,6 +330,53 @@ describe('ReformsPage', () => {
     expect(draft?.source).toBe('bill');
     expect(draft?.label).toBe('Child tax credit expansion proposal');
     expect(draft?.provisions.length).toBeGreaterThan(0);
+  });
+
+  test('given a state bill from a later year opens as a draft then the draft runs as its report does', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([...FEED_BILLS, LATER_STATE_BILL]);
+    renderReforms(`/us/reforms?bill=${LATER_STATE_BILL.id}`);
+
+    await user.click(await screen.findByRole('button', { name: /open as draft reform/i }));
+
+    // The bill's first year and its state, not this year and the whole country.
+    expect(getDraftReform()).toMatchObject({
+      label: LATER_STATE_BILL.title,
+      year: 2027,
+      population: { scope: 'national', region: 'state/ri' },
+      source: 'bill',
+      sourceRef: LATER_STATE_BILL.id,
+      provisions: [{ path: 'gov.states.ri.tax.income.rates[0].rate', value: 0.0375 }],
+    });
+  });
+
+  test('given a federal bill opens as a draft then the draft runs on the whole country', async () => {
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?bill=us-ctc-expansion');
+
+    await user.click(await screen.findByRole('button', { name: /open as draft reform/i }));
+
+    const draft = getDraftReform();
+    expect(draftYear(draft)).toBe(Number(CURRENT_YEAR));
+    // No state region, and still the bill's draft.
+    expect(draft?.population).toEqual({ scope: 'national' });
+    expect(draft).toMatchObject({ source: 'bill', sourceRef: 'us-ctc-expansion' });
+  });
+
+  test('given stored parameters that contradict the write-up then no report or draft starts', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([...FEED_BILLS, SWAPPED_STATE_BILL]);
+    renderReforms(`/us/reforms?bill=${SWAPPED_STATE_BILL.id}`);
+
+    const draftButton = await screen.findByRole('button', { name: /open as draft reform/i });
+    expect(draftButton).toBeDisabled();
+    expect(screen.getByRole('button', { name: /run impact report/i })).toBeDisabled();
+    expect(screen.getByText(/do not match its write-up of the changes/)).toBeInTheDocument();
+
+    await user.click(draftButton);
+
+    expect(getDraftReform()).toBeNull();
+    expect(mockRun).not.toHaveBeenCalled();
   });
 
   test('given the federal level then state bills leave', async () => {

@@ -6,6 +6,7 @@ import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { sameParameterValue } from '@/libs/draftReform';
+import { changeNamesPath } from '@/libs/flagship/billProvisions';
 import { describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -83,15 +84,6 @@ function provisionDates(provision: Pick<RunReportProvision, 'intervals'>): Chang
   };
 }
 
-/** Whether a tracker parameter, which can hold "{filing_status}", names this path. */
-function namesPath(parameter: string, path: string): boolean {
-  const pattern = parameter
-    .split(/\{[^}]+\}/)
-    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('[^.]+');
-  return new RegExp(`^${pattern}$`).test(path);
-}
-
 const dateText = (date: string) => dayjs(date).format('MMM D, YYYY');
 const endText = (date: string) => (date === FOREVER ? 'No end date' : dateText(date));
 
@@ -138,7 +130,7 @@ export default function ReportChanges({
       : undefined;
   const changeDates = (change: BillChange): ChangeDates | undefined => {
     const named = change.parameter
-      ? provisions.filter((provision) => namesPath(change.parameter!, provision.path))
+      ? provisions.filter((provision) => changeNamesPath(change.parameter!, provision.path))
       : [];
     if (named.length > 0) {
       const dates = named.map(provisionDates);

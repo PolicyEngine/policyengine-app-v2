@@ -1,5 +1,6 @@
 import { render, screen, within } from '@test-utils';
 import { describe, expect, test } from 'vitest';
+import type { BillValidation } from '@/api/billFeed';
 import {
   BaselineComparisons,
   BillExternalEstimates,
@@ -73,6 +74,17 @@ const SNAP_AND_CTC_TRACK_RECORD: ScorecardMatches = {
   ],
 };
 
+/** A fiscal note stored as a range with its source and link, but no point estimate. */
+const RANGE_ONLY_FISCAL_NOTE: BillValidation = {
+  peEstimate: -800_583_615,
+  fiscalNoteSource: 'GA Dept. of Audits & Accounts / OPB',
+  fiscalNoteUrl: 'https://opb.georgia.gov/fiscal-notes/hb1001',
+  targetRangeLow: -840_000_000,
+  targetRangeHigh: -680_000_000,
+  withinRange: true,
+  differencePct: 5.3,
+};
+
 describe('BillExternalEstimates', () => {
   test('given a bill with a fiscal note then every estimate shares one aligned table', () => {
     render(
@@ -90,6 +102,81 @@ describe('BillExternalEstimates', () => {
     expect(cells('Accepted range')).toEqual(['-$250.0B to -$210.0B', '']);
     expect(screen.getByText('Within fiscal-note range · Δ 2%')).toBeInTheDocument();
     expect(screen.getByText(/later effective date/)).toBeInTheDocument();
+  });
+
+  test('given a fiscal note with a range and no point estimate then the range names and links it', () => {
+    // As ga-hb1001 stores it: the note's range, its source and its link, no single number.
+    render(<BillExternalEstimates billId="ga-hb1001" validation={RANGE_ONLY_FISCAL_NOTE} />);
+
+    const table = screen.getByRole('table', { name: 'Estimates for this bill' });
+    const range = within(table).getByRole('row', { name: /^Accepted range/ });
+    expect(within(range).getByText(RANGE_ONLY_FISCAL_NOTE.fiscalNoteSource!)).toBeInTheDocument();
+    expect(within(range).getByRole('link', { name: 'Read source' })).toHaveAttribute(
+      'href',
+      RANGE_ONLY_FISCAL_NOTE.fiscalNoteUrl
+    );
+    expect(screen.getByText('Within fiscal-note range · Δ 5.3%')).toBeInTheDocument();
+  });
+
+  test('given a fiscal note with a link and no estimate or range then a row still links it', () => {
+    render(
+      <BillExternalEstimates
+        billId="ga-hb1001"
+        validation={{
+          ...RANGE_ONLY_FISCAL_NOTE,
+          targetRangeLow: undefined,
+          targetRangeHigh: undefined,
+        }}
+      />
+    );
+
+    const table = screen.getByRole('table', { name: 'Estimates for this bill' });
+    const row = within(table).getByRole('row', {
+      name: new RegExp(`^${RANGE_ONLY_FISCAL_NOTE.fiscalNoteSource}`),
+    });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['No estimate', '—']);
+    expect(within(row).getByRole('link', { name: 'Read source' })).toHaveAttribute(
+      'href',
+      RANGE_ONLY_FISCAL_NOTE.fiscalNoteUrl
+    );
+  });
+
+  test('given an empty fiscal-note link and no estimate then no fiscal-note row shows', () => {
+    render(
+      <BillExternalEstimates
+        billId="ga-hb1001"
+        validation={{ peEstimate: -800_583_615, fiscalNoteUrl: '  ' }}
+      />
+    );
+
+    const table = screen.getByRole('table', { name: 'Estimates for this bill' });
+    expect(within(table).queryByText('Official fiscal note')).not.toBeInTheDocument();
+    expect(within(table).queryByText('No estimate')).not.toBeInTheDocument();
+  });
+
+  test('given a fiscal note with a named source then its row is called by that source', () => {
+    // A proxy note (ct-sb78: OFA's score of another bill) must not read as the bill's own.
+    render(
+      <BillExternalEstimates
+        billId="ct-sb78"
+        validation={{
+          peEstimate: -60_000_000,
+          fiscalNoteEstimate: -57_500_000,
+          fiscalNoteSource: 'OFA fiscal note for sSB-1 Sec. 6',
+          withinRange: true,
+        }}
+      />
+    );
+
+    const table = screen.getByRole('table', { name: 'Estimates for this bill' });
+    expect(
+      within(table).getByRole('row', { name: /^OFA fiscal note for sSB-1 Sec\. 6/ })
+    ).toHaveTextContent('-$57.5M');
+    expect(within(table).queryByText('Official fiscal note')).not.toBeInTheDocument();
   });
 
   test('given a bill outside the range then the chip says so', () => {

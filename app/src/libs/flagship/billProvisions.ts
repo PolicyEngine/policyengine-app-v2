@@ -1,4 +1,4 @@
-import { intervalValueAt, type TrackedBillProvision } from '@/api/billFeed';
+import { intervalValueAt, type BillChange, type TrackedBillProvision } from '@/api/billFeed';
 import { isAlreadyCurrentLaw, lawValuesFrom } from '@/libs/flagship/billMetrics';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -88,4 +88,97 @@ export function billAlreadyCurrentLaw(
       );
     })
   );
+}
+
+/** A write-up value read as one number, with the rounding its digits allow. */
+interface WriteUpNumber {
+  value: number;
+  /** How far the true value can lie from the written one: half its last digit. */
+  tolerance: number;
+  /** Whether the text has its own sign ("+1%", "−0.25%"). */
+  signed: boolean;
+}
+
+/**
+ * A write-up value that is one plain number — "4.45%", "$2,000", "-0.5".
+ * Anything else (words, ranges, several values) reads as nothing.
+ */
+function writeUpNumber(text: string): WriteUpNumber | undefined {
+  const match = text.trim().match(/^([-−+]?)\s*\$?\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?\s*%?$/);
+  if (!match) {
+    return undefined;
+  }
+  const [, sign, whole, decimals = ''] = match;
+  const magnitude = Number(`${whole.replace(/,/g, '')}.${decimals || '0'}`);
+  return {
+    value: sign === '-' || sign === '−' ? -magnitude : magnitude,
+    tolerance: 0.5 * 10 ** -decimals.length,
+    signed: sign !== '',
+  };
+}
+
+/**
+ * Whether a tracker change's parameter, which can hold a placeholder
+ * ("main.{filing_status}.brackets[5].rate"), names this path.
+ */
+export function changeNamesPath(parameter: string, path: string): boolean {
+  const pattern = parameter
+    .split(/\{[^}]+\}/)
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('[^.]+');
+  return new RegExp(`^${pattern}$`).test(path);
+}
+
+/** A stored value as a write-up can give it: as stored, or as a percent either way. */
+const writtenForms = (value: number) => [value, value * 100, value / 100];
+
+/**
+ * Whether a bill's run would score the law before the bill instead of the
+ * bill: the stored parameters hold the write-up's "before" value and none
+ * of its "after" value (a tracker row with its reform and baseline
+ * swapped, as UT SB60's is).
+ *
+ * A change is checked against the provisions it names, all of them
+ * together (one filing status can hold the written value), or against a
+ * bill's only provision when the write-up has one change. A change that
+ * cannot be paired, that is not two plain numbers, or whose "after" is a
+ * step ("+1%" from "4%") is not checked. A written value agrees with a
+ * stored one as written or as a percent ("4.45%" is 0.0445), within the
+ * write-up's rounding. A value in other units ("$1,000" a year for 83.33
+ * a month) agrees with neither, so it flags nothing.
+ */
+export function billScoresOtherThanWriteUp(
+  provisions: Array<Pick<TrackedBillProvision, 'path' | 'value' | 'intervals'>>,
+  changes: BillChange[] | undefined
+): boolean {
+  if (!changes || changes.length === 0) {
+    return false;
+  }
+  return changes.some((change) => {
+    const before = writeUpNumber(change.before);
+    const after = writeUpNumber(change.after);
+    if (!before || !after || (after.signed && !before.signed)) {
+      return false;
+    }
+    const described = change.parameter
+      ? provisions.filter((provision) => changeNamesPath(change.parameter!, provision.path))
+      : provisions.length === 1 && changes.length === 1
+        ? provisions
+        : [];
+    const scored = described
+      .flatMap((provision) => [
+        provision.value,
+        ...(provision.intervals ?? []).map((interval) => interval.value),
+      ])
+      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+    const holds = (written: WriteUpNumber) =>
+      scored.some((value) =>
+        writtenForms(value).some(
+          (form) =>
+            Math.abs(form - written.value) <=
+            written.tolerance + 1e-9 * Math.max(1, Math.abs(written.value))
+        )
+      );
+    return holds(before) && !holds(after);
+  });
 }
