@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { IconAlertTriangle } from '@tabler/icons-react';
 import HouseholdForm from '@/components/flagship/report/household/HouseholdForm';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import RunProgress from '@/components/flagship/report/RunProgress';
-import { Button, Stack, Text } from '@/components/ui';
+import { ErrorState } from '@/components/flagship/states';
+import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHousehold } from '@/hooks/useFlagshipHousehold';
 import {
@@ -81,46 +81,17 @@ export default function HouseholdImpactSection({
       {running && <RunProgress title="Calculating this household" expectedMs={EXPECTED_MS} />}
 
       {failed && (
-        <section
-          role="alert"
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: spacing.md,
-            padding: spacing.lg,
-            border: `1px solid ${colors.border.light}`,
-            borderRadius: spacing.radius.container,
-            background: colors.background.primary,
-          }}
-        >
-          <IconAlertTriangle size={20} aria-hidden style={{ flexShrink: 0, color: colors.error }} />
-          <Stack style={{ gap: spacing.sm, alignItems: 'flex-start', minWidth: 0 }}>
-            <Text
-              style={{
-                margin: 0,
-                fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.medium,
-              }}
-            >
-              This household could not be calculated.
-            </Text>
-            {run.error?.message && (
-              <Text
-                style={{
-                  margin: 0,
-                  fontSize: typography.fontSize.xs,
-                  color: colors.text.secondary,
-                  overflowWrap: 'anywhere',
-                }}
-              >
-                {run.error.message}
-              </Text>
-            )}
-            <Button size="sm" variant="outline" onClick={() => void run.refetch()}>
-              Try again
-            </Button>
-          </Stack>
-        </section>
+        <ErrorState
+          compact
+          title="This household could not be calculated"
+          description={
+            // An API message can carry a long unbroken path.
+            run.error?.message && (
+              <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
+            )
+          }
+          onRetry={run.refetch}
+        />
       )}
 
       {result && requested && (

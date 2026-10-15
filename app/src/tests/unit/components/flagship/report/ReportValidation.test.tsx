@@ -128,9 +128,9 @@ describe('ReportValidation', () => {
     mockUseScorecardComparisons.mockReturnValue(undefined);
     renderValidation();
 
-    expect(within(card('External estimates')).getByRole('status')).toHaveTextContent(
-      'Loading external estimates…'
-    );
+    expect(
+      within(card('External estimates')).getByRole('status', { name: 'Loading external estimates' })
+    ).toBeInTheDocument();
   });
 
   test('given the scorecard is unavailable then the estimates card says so, not that none exists', () => {

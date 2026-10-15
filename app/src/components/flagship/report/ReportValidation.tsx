@@ -69,7 +69,7 @@ function ExternalEstimates({
   if (!estimates && reforms.length === 0) {
     fallback =
       scorecard === undefined ? (
-        <ValidationLoading>Loading external estimates…</ValidationLoading>
+        <ValidationLoading label="Loading external estimates" />
       ) : scorecard === null ? (
         <ValidationNote>External estimates are temporarily unavailable.</ValidationNote>
       ) : (

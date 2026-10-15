@@ -336,7 +336,7 @@ export function BaselineComparisons({
   } else if (entries.length > 0) {
     content = <ScorecardClaimTable label="Baseline comparisons" entries={entries} />;
   } else if (trackRecord === undefined || scorecardRows === undefined) {
-    content = <ValidationLoading>Loading baseline comparisons…</ValidationLoading>;
+    content = <ValidationLoading label="Loading baseline comparisons" />;
   } else if (trackRecord === null) {
     content = <ValidationNote>Baseline comparisons are temporarily unavailable.</ValidationNote>;
   } else if (trackRecord.reachedCount > 0) {

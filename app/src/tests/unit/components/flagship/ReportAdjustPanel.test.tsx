@@ -63,7 +63,13 @@ async function renderPanel({
   region,
   year,
   baseline,
-}: { region?: string; year?: string; baseline?: RunReportBaseline } = {}) {
+  baselineUnknown,
+}: {
+  region?: string;
+  year?: string;
+  baseline?: RunReportBaseline;
+  baselineUnknown?: boolean;
+} = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
     <QueryClientProvider client={queryClient}>
@@ -74,6 +80,7 @@ async function renderPanel({
         region={region}
         year={year}
         baseline={baseline}
+        baselineUnknown={baselineUnknown}
       />
     </QueryClientProvider>
   );
@@ -363,6 +370,20 @@ describe('ReportAdjustPanel', () => {
 
     await user.click(screen.getByRole('button', { name: /restore 2 removed provisions/i }));
     expect(screen.getByLabelText(/new value for maximum credit per child/i)).toBeInTheDocument();
+  });
+
+  test('given the baseline policy could not be loaded then recompute is off and says why', async () => {
+    const user = userEvent.setup();
+    await renderPanel({ baselineUnknown: true });
+
+    await user.click(screen.getByRole('button', { name: /remove maximum allotment/i }));
+
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+    expect(
+      screen.getByText(
+        'The baseline policy could not be loaded, so a recompute cannot compare with it.'
+      )
+    ).toBeInTheDocument();
   });
 
   test('given collapse then the panel shrinks to the adjust tab and reopens', async () => {

@@ -236,7 +236,7 @@ describe('HouseholdImpactSection', () => {
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('This household could not be calculated.');
+    expect(alert).toHaveTextContent('This household could not be calculated');
     expect(alert).toHaveTextContent('Household calculation failed');
 
     await user.click(within(alert).getByRole('button', { name: 'Try again' }));

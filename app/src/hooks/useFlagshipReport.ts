@@ -37,6 +37,11 @@ export interface FlagshipReportData {
   error: Error | null;
   /** The report id resolves to no report (a bad or deleted link). */
   notFound: boolean;
+  /**
+   * The policies that failed to load, with nothing to show. A missing
+   * baseline policy leaves what the report compares with unknown.
+   */
+  failedPolicyIds: string[];
   /** Asks again for whatever failed; settles when the answers are in. */
   retry: () => Promise<unknown>;
 }
@@ -92,6 +97,10 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     structuralSharing: false,
   });
   const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
+  const failedPolicyIds = policyIds.filter((_, index) => {
+    const query = policyResults.queries[index];
+    return !!query?.error && !query.data;
+  });
 
   if (!direct) {
     return {
@@ -102,6 +111,7 @@ export function useFlagshipReport(id: string): FlagshipReportData {
       // A legacy link that resolves to nothing reads as unresolvable.
       error: null,
       notFound: false,
+      failedPolicyIds: [],
       retry: async () => undefined,
     };
   }
@@ -120,6 +130,7 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     isLoading: reportLoading || simulationResults.isLoading || policyResults.isLoading,
     error,
     notFound: !!unloadedReportError && isNotFoundError(unloadedReportError),
+    failedPolicyIds,
     retry: () =>
       Promise.all([
         reportError ? refetchReport() : null,

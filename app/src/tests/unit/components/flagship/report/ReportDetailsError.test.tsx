@@ -15,7 +15,7 @@ describe('ReportDetailsError', () => {
     render(<ReportDetailsError error={DAMAGED} onOpenWithout={vi.fn()} />);
 
     expect(
-      screen.getByRole('heading', { name: "This report's saved details can't be read" })
+      screen.getByRole('heading', { name: "Could not read this report's saved details" })
     ).toBeInTheDocument();
     expect(screen.getByText('They are damaged in this browser.')).toBeInTheDocument();
     expect(screen.getByText('provisions must be an array')).toBeInTheDocument();

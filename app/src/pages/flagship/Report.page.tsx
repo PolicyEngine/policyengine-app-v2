@@ -22,12 +22,32 @@ import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
-import { reportBaselineLabel, reportRunBaseline } from '@/libs/flagship/reportBaseline';
+import {
+  reportBaselineLabel,
+  reportBaselineUnknown,
+  reportRunBaseline,
+  UNKNOWN_BASELINE_LABEL,
+} from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
+
+/** A failed load at the top of the overview, in a dashed box. */
+function LeadError({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        padding: spacing.lg,
+        border: `1px dashed ${colors.border.light}`,
+        borderRadius: spacing.radius.feature,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 interface FlagshipReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
@@ -51,12 +71,14 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     isLoading,
     error: loadError,
     notFound,
+    failedPolicyIds,
     retry,
   } = useFlagshipReport(userReportId);
   // A local association id from another browser resolves to nothing.
   const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   // Provenance: the local stash from the run, else rebuilt from the reform
   // policy so a shared link validates like the original.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
@@ -120,9 +142,18 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const reformPolicyId = simulations?.[1]?.policyId;
   const baselinePolicyId = simulations?.[0]?.policyId;
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
-  const customBaselineLabel = reportBaselineLabel(meta, baselinePolicy);
-  // Adjusted, the report keeps what it was compared with.
-  const runBaseline = reportRunBaseline(meta, baselinePolicyId, customBaselineLabel);
+  // A baseline policy that failed to load is unknown, not current law.
+  const baselineUnknown = reportBaselineUnknown(meta, baselinePolicyId, {
+    currentLawId,
+    failedPolicyIds,
+  });
+  const customBaselineLabel = baselineUnknown
+    ? UNKNOWN_BASELINE_LABEL
+    : reportBaselineLabel(meta, baselinePolicy);
+  // Adjusted, the report keeps what it was compared with; an unknown one gives it nothing to keep.
+  const runBaseline = baselineUnknown
+    ? undefined
+    : reportRunBaseline(meta, baselinePolicyId, customBaselineLabel);
   const region = simulations?.[0]?.populationId;
   // A report on part of the country names it: "California".
   const regionLabel =
@@ -269,19 +300,26 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
       overviewLead={
-        !meta && metadata.status === 'error' ? (
-          <div
-            style={{
-              padding: spacing.lg,
-              border: `1px dashed ${colors.border.light}`,
-              borderRadius: spacing.radius.feature,
-            }}
-          >
-            <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
-          </div>
-        ) : undefined
+        <>
+          {!meta && metadata.status === 'error' && (
+            <LeadError>
+              <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+            </LeadError>
+          )}
+          {baselineUnknown && (
+            <LeadError>
+              <ErrorState
+                compact
+                title="Could not load the baseline policy"
+                description="The results compare with it, but its name and values are missing."
+                onRetry={retry}
+              />
+            </LeadError>
+          )}
+        </>
       }
       customBaselineLabel={customBaselineLabel}
+      baselineUnknown={baselineUnknown}
       baseline={runBaseline}
       year={report?.year ?? ''}
       region={region}

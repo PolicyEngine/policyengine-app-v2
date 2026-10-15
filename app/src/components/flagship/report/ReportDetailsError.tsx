@@ -1,4 +1,4 @@
-import { IconAlertTriangle } from '@tabler/icons-react';
+import { ErrorState } from '@/components/flagship/states';
 import { Button } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -23,68 +23,27 @@ export default function ReportDetailsError({
   const newer = error.code === 'newer-version';
 
   return (
-    <section
-      role="alert"
-      className="tw:flex tw:flex-col"
-      style={{
-        gap: spacing.md,
-        maxWidth: 640,
-        padding: spacing.xl,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.feature,
-        background: colors.background.primary,
-        fontFamily: typography.fontFamily.primary,
-      }}
+    <ErrorState
+      title="Could not read this report's saved details"
+      description={
+        newer
+          ? 'A newer version of PolicyEngine saved them. Reload to update.'
+          : 'They are damaged in this browser.'
+      }
+      // Only a newer version's details read after a reload.
+      onRetry={newer ? () => window.location.reload() : undefined}
+      retryLabel="Reload"
+      actions={
+        <>
+          <Button variant={newer ? 'outline' : 'default'} onClick={onOpenWithout}>
+            Open without saved details
+          </Button>
+          <Button variant="outline" onClick={() => nav.push(`/${countryId}/build`)}>
+            Back to Build
+          </Button>
+        </>
+      }
     >
-      <div className="tw:flex tw:items-start" style={{ gap: spacing.md }}>
-        <span
-          aria-hidden
-          className="tw:inline-flex tw:shrink-0 tw:rounded-full"
-          style={{
-            padding: spacing.sm,
-            // The warning yellow, tinted.
-            background: `${colors.warning}33`,
-            color: colors.text.warning,
-          }}
-        >
-          <IconAlertTriangle size={20} />
-        </span>
-        <div className="tw:flex tw:flex-col" style={{ gap: spacing.xs }}>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: typography.fontSize.lg,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.text.primary,
-            }}
-          >
-            This report's saved details can't be read
-          </h2>
-          <p
-            style={{
-              margin: 0,
-              fontSize: typography.fontSize.sm,
-              lineHeight: typography.lineHeight.relaxed,
-              color: colors.text.secondary,
-            }}
-          >
-            {newer
-              ? 'A newer version of PolicyEngine saved them. Reload to update.'
-              : 'They are damaged in this browser.'}
-          </p>
-        </div>
-      </div>
-
-      <div className="tw:flex tw:flex-wrap" style={{ gap: spacing.sm }}>
-        {newer && <Button onClick={() => window.location.reload()}>Reload</Button>}
-        <Button variant={newer ? 'outline' : 'default'} onClick={onOpenWithout}>
-          Open without saved details
-        </Button>
-        <Button variant="outline" onClick={() => nav.push(`/${countryId}/build`)}>
-          Back to Build
-        </Button>
-      </div>
-
       <details>
         <summary
           className="tw:cursor-pointer"
@@ -108,6 +67,6 @@ export default function ReportDetailsError({
           {error.message}
         </pre>
       </details>
-    </section>
+    </ErrorState>
   );
 }

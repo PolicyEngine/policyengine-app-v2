@@ -24,7 +24,9 @@ describe('CalibrationMatchSection', () => {
   test('given matches are loading then the loading state renders', () => {
     render(<CalibrationMatchSection matches={undefined} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Checking calibration targets…');
+    expect(
+      screen.getByRole('status', { name: 'Checking calibration targets' })
+    ).toBeInTheDocument();
   });
 
   test('given reached variables but none calibrated then the gap is stated, not hidden', () => {
