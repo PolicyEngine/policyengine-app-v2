@@ -46,6 +46,10 @@ const BORDER_COLOR = colors.white;
 /** Stroke width for district borders */
 const BORDER_WIDTH = 0.5;
 
+/** Outline for the selected district */
+const SELECTED_BORDER_COLOR = colors.gray[900];
+const SELECTED_BORDER_WIDTH = 2;
+
 /** Color bar dimensions */
 const COLOR_BAR_WIDTH = 16;
 const COLOR_BAR_HEIGHT_FRACTION = 0.6;
@@ -301,6 +305,13 @@ const SVG_WIDTH = 800;
 
 const DEFAULT_US_CENTER: [number, number] = [-96, 38.5];
 
+export interface DistrictChoroplethMapProps extends USDistrictChoroplethMapProps {
+  /** The district to outline, e.g. the one whose details show. */
+  selectedDistrict?: string | null;
+  /** Called with a district's ID when it is clicked; districts with no data are not clickable. */
+  onDistrictClick?: (districtId: string) => void;
+}
+
 export function DistrictChoroplethMap({
   data,
   config = {},
@@ -309,7 +320,9 @@ export function DistrictChoroplethMap({
   visualizationType = 'geographic',
   exportRef,
   errorStates,
-}: USDistrictChoroplethMapProps) {
+  selectedDistrict,
+  onDistrictClick,
+}: DistrictChoroplethMapProps) {
   const uniqueId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const isHexMap = visualizationType === 'hex';
@@ -567,48 +580,67 @@ export function DistrictChoroplethMap({
             {geoSource && (
               <Geographies geography={geoSource as unknown as Record<string, unknown>}>
                 {({ geographies }) =>
-                  geographies.map((geo) => {
-                    const districtId = geo.properties?.DISTRICT_ID as string | undefined;
-                    const stateAbbr = districtId?.split('-')[0]?.toUpperCase();
-                    const isErrorState = stateAbbr ? errorStateSet.has(stateAbbr) : false;
-                    const dataPoint = districtId ? dataMap.get(districtId) : undefined;
+                  // The selected district draws last, so no neighbor covers its outline.
+                  [...geographies]
+                    .sort(
+                      (a, b) =>
+                        Number(a.properties?.DISTRICT_ID === selectedDistrict) -
+                        Number(b.properties?.DISTRICT_ID === selectedDistrict)
+                    )
+                    .map((geo) => {
+                      const districtId = geo.properties?.DISTRICT_ID as string | undefined;
+                      const stateAbbr = districtId?.split('-')[0]?.toUpperCase();
+                      const isErrorState = stateAbbr ? errorStateSet.has(stateAbbr) : false;
+                      const dataPoint = districtId ? dataMap.get(districtId) : undefined;
+                      const isSelected = !!districtId && districtId === selectedDistrict;
+                      const isClickable = !!onDistrictClick && !!dataPoint && !isErrorState;
 
-                    const fillColor = isErrorState
-                      ? 'rgba(220, 53, 69, 0.5)'
-                      : dataPoint
-                        ? getDistrictColor(
-                            dataPoint.value,
-                            colorRange,
-                            fullConfig.colorScale.colors
-                          )
-                        : NO_DATA_FILL;
+                      const fillColor = isErrorState
+                        ? 'rgba(220, 53, 69, 0.5)'
+                        : dataPoint
+                          ? getDistrictColor(
+                              dataPoint.value,
+                              colorRange,
+                              fullConfig.colorScale.colors
+                            )
+                          : NO_DATA_FILL;
 
-                    return (
-                      <Geography
-                        key={geo.rsmKey ?? districtId ?? geo.id}
-                        geography={geo}
-                        // react-simple-maps makes every shape a tab stop; a district
-                        // shows its values on hover only, so it takes no focus.
-                        tabIndex={-1}
-                        fill={fillColor}
-                        stroke={BORDER_COLOR}
-                        strokeWidth={BORDER_WIDTH}
-                        style={{
-                          default: { outline: 'none' },
-                          hover: { outline: 'none', opacity: 0.85 },
-                          pressed: { outline: 'none' },
-                        }}
-                        onMouseEnter={(event) => {
-                          if (districtId) {
-                            handleMouseEnter(event, districtId);
+                      return (
+                        <Geography
+                          key={geo.rsmKey ?? districtId ?? geo.id}
+                          geography={geo}
+                          // react-simple-maps makes every shape a tab stop; the lists beside
+                          // the map open a district's details from the keyboard instead.
+                          tabIndex={-1}
+                          fill={fillColor}
+                          stroke={isSelected ? SELECTED_BORDER_COLOR : BORDER_COLOR}
+                          strokeWidth={isSelected ? SELECTED_BORDER_WIDTH : BORDER_WIDTH}
+                          style={{
+                            default: { outline: 'none' },
+                            hover: {
+                              outline: 'none',
+                              opacity: 0.85,
+                              cursor: isClickable ? 'pointer' : undefined,
+                            },
+                            pressed: { outline: 'none' },
+                          }}
+                          onClick={
+                            isClickable && districtId
+                              ? () => onDistrictClick(districtId)
+                              : undefined
                           }
-                        }}
-                        onMouseMove={handleMouseMove}
-                        onMouseLeave={handleMouseLeave}
-                        data-testid={districtId ? `district-${districtId}` : undefined}
-                      />
-                    );
-                  })
+                          data-selected={isSelected || undefined}
+                          onMouseEnter={(event) => {
+                            if (districtId) {
+                              handleMouseEnter(event, districtId);
+                            }
+                          }}
+                          onMouseMove={handleMouseMove}
+                          onMouseLeave={handleMouseLeave}
+                          data-testid={districtId ? `district-${districtId}` : undefined}
+                        />
+                      );
+                    })
                 }
               </Geographies>
             )}

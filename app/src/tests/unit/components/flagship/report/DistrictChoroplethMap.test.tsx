@@ -67,4 +67,41 @@ describe('DistrictChoroplethMap', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
     await waitFor(() => expect(group.getAttribute('transform')).toBe(initialTransform));
   });
+
+  test('given a click handler then clicking a district passes its ID', async () => {
+    // Given
+    const onDistrictClick = vi.fn();
+    render(
+      <DistrictChoroplethMap
+        data={MOCK_DISTRICT_CHOROPLETH_DATA.slice(0, 3)}
+        onDistrictClick={onDistrictClick}
+      />
+    );
+
+    // When
+    fireEvent.click(await screen.findByTestId('district-CA-12'));
+    // Texas has no data, so it takes no click.
+    fireEvent.click(screen.getByTestId('district-TX-23'));
+
+    // Then
+    expect(onDistrictClick).toHaveBeenCalledTimes(1);
+    expect(onDistrictClick).toHaveBeenCalledWith('CA-12');
+  });
+
+  test('given a selected district then it alone is outlined and drawn last', async () => {
+    // Given
+    const { container } = render(
+      <DistrictChoroplethMap data={MOCK_DISTRICT_CHOROPLETH_DATA} selectedDistrict="AL-01" />
+    );
+
+    // When
+    const selected = await screen.findByTestId('district-AL-01');
+
+    // Then
+    expect(selected).toHaveAttribute('data-selected', 'true');
+    expect(selected).toHaveAttribute('stroke-width', '2');
+    expect(container.querySelectorAll('[data-selected]')).toHaveLength(1);
+    const paths = container.querySelectorAll('path.rsm-geography');
+    expect(paths[paths.length - 1]).toBe(selected);
+  });
 });
