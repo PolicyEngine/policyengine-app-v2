@@ -4,11 +4,16 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
 import ReformReports from '@/components/flagship/ReformReports';
 import { saveReportMeta } from '@/libs/flagship/runReport';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
+import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 vi.mock('@/api/report', () => ({
-  fetchReportById: vi.fn(async () => ({
+  fetchReportById: vi.fn(async (_country: string, id: string) => ({
     status: 'complete',
     finished_at: '2026-10-14T15:12:00Z',
+    // Report 60 ran on the model the app has loaded ("test", from the seed).
+    output: id === '60' ? JSON.stringify({ model_version: 'test' }) : null,
   })),
 }));
 
@@ -95,5 +100,14 @@ describe('ReformReports', () => {
 
     // Then
     expect(onRerun).toHaveBeenCalledWith(report);
+  });
+
+  test('given a report on the current model then it is up to date, with no re-run', async () => {
+    seedDeductionMetadata();
+    renderReports([record({ apiReportId: '60' })], vi.fn());
+
+    expect(await screen.findByText('Up to date')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /re-run/i })).not.toBeInTheDocument();
+    store.dispatch(clearMetadata());
   });
 });

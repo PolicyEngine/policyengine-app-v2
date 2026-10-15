@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { IconArrowRight, IconRefresh } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { fetchReportById } from '@/api/report';
 import { Badge, Button, Stack, Text } from '@/components/ui';
@@ -8,6 +9,18 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
 import { flagshipReportQueryKeys, readReportMeta } from '@/libs/flagship/runReport';
+import type { RootState } from '@/store';
+
+/** The model version a report's stored results were computed on, when they say. */
+function modelVersionOf(output: unknown): string | null {
+  try {
+    const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+    const version = (parsed as { model_version?: unknown } | null)?.model_version;
+    return typeof version === 'string' ? version : null;
+  } catch {
+    return null;
+  }
+}
 
 /** The API's record of a report: how it ended, and when. */
 function useApiReport(countryId: CountryId, apiReportId: string) {
@@ -76,6 +89,11 @@ function ReportRow({
 }) {
   const api = useApiReport(countryId, report.apiReportId);
   const done = api?.status === 'complete';
+  const currentModel = useSelector((state: RootState) => state.metadata.version);
+  // The same reform on the same model gives the same results: a re-run
+  // is offered only once the model has moved on from the one that ran it.
+  const ranModel = done ? modelVersionOf(api?.output) : null;
+  const upToDate = !!ranModel && !!currentModel && ranModel === currentModel;
   const finished = done && api?.finished_at ? api.finished_at : null;
   return (
     <div
@@ -113,7 +131,15 @@ function ReportRow({
       </span>
       <ReportStatus status={api?.status} />
       <div style={{ display: 'flex', gap: spacing.xs, marginLeft: 'auto' }}>
-        {onRerun && (
+        {onRerun && upToDate && (
+          <span
+            title={`Ran on model ${ranModel}, the current one`}
+            style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+          >
+            Up to date
+          </span>
+        )}
+        {onRerun && !upToDate && (
           <Button size="sm" variant="ghost" onClick={onRerun} disabled={rerunning}>
             <IconRefresh size={14} />
             Re-run
