@@ -657,4 +657,93 @@ describe('ParameterSearchBox', () => {
     expect(screen.getByRole('button', { name: /open base/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /open actc/i })).toBeInTheDocument();
   });
+
+  test('given the combobox then it says that typing filters a list', () => {
+    // Given / When
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // Then
+    expect(screen.getByRole('combobox', { name: /search parameters/i })).toHaveAttribute(
+      'aria-autocomplete',
+      'list'
+    );
+  });
+
+  test('given arrow keys in the results then the input points screen readers at the highlighted option', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'credits');
+
+    // When
+    await user.keyboard('{ArrowDown}');
+
+    // Then — focus stays in the input; the active option is the highlighted one
+    const [highlighted] = screen.getAllByRole('option', { selected: true });
+    expect(input).toHaveFocus();
+    expect(highlighted.id).not.toBe('');
+    expect(input).toHaveAttribute('aria-activedescendant', highlighted.id);
+    expect(screen.getAllByRole('option')[1]).toBe(highlighted);
+  });
+
+  test('given every option then each has its own id', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'credits');
+
+    // Then
+    const ids = screen.getAllByRole('option').map((option) => option.id);
+    expect(ids.every(Boolean)).toBe(true);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test('given a folder header is hovered then the input points at no option', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+    const header = await screen.findByRole('button', { name: 'Browse IRS → Credits → EITC' });
+
+    // When
+    await user.hover(header);
+
+    // Then
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+  });
+
+  test('given no results then the input points at no option', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+
+    // When
+    await user.type(input, 'zzzz quantum flux');
+
+    // Then
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+  });
+
+  test('given a folder open in place then the arrow keys move the active option through it', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+    await user.click(input);
+
+    // When
+    await user.keyboard('{ArrowDown}');
+
+    // Then
+    const [highlighted] = screen.getAllByRole('option', { selected: true });
+    expect(highlighted).toHaveTextContent('Phase-in rate');
+    expect(input).toHaveAttribute('aria-activedescendant', highlighted.id);
+  });
 });
