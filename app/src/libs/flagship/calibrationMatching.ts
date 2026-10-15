@@ -14,10 +14,12 @@
  * mechanism is usually the interacted quantity that bounds the data-side
  * bias of the estimate, so ordering is by depth, nearest first.
  */
+import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   DEFAULT_MAX_DEPTH,
   loadParameterDependencies,
   ReachedVariable,
+  readersOfPath,
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
@@ -29,6 +31,10 @@ export interface CalibrationTargetRow {
   variable: string;
   policyengineVariables: string[];
   measure: string | null;
+  /** The dashboard's id for the measured quantity, e.g. "ctc_amount". */
+  sourceMeasureId?: string | null;
+  /** The target's slice of the source table, e.g. "18k to 19k · no qualifying children · All". */
+  breakdown?: string | null;
   level: 'national' | 'state';
   /** "US" for national targets, else the state code. */
   geography: string;
@@ -167,6 +173,114 @@ export function summarizeMatches(
 }
 
 /**
+ * The matches whose targets measure a program the reform changes, in the
+ * report's jurisdiction (the rule baseline comparisons use). A target's
+ * program is the model variables it was computed from; targets of a
+ * program the change only echoes into drop, and so does a match left
+ * with none.
+ */
+export function relevantCalibrationMatches(
+  matches: CalibrationVariableMatch[],
+  reform: ReformScope
+): CalibrationVariableMatch[] {
+  return matches.flatMap((match) => {
+    const targets = relevantComparisons(
+      match.targets.map((target) => ({
+        program: target.policyengineVariables.join('+'),
+        geography: target.geography,
+        target,
+      })),
+      reform
+    ).map((entry) => entry.target);
+    if (targets.length === 0) {
+      return [];
+    }
+    return [
+      {
+        ...match,
+        targets,
+        targetCount: targets.length,
+        meanAbsRelativeError: weightedMeanAbsError(targets),
+        worst: targets[0],
+      },
+    ];
+  });
+}
+
+/** Words that read as acronyms in a model variable's name. */
+const ACRONYMS: Record<string, string> = {
+  aca: 'ACA',
+  agi: 'AGI',
+  cdcc: 'CDCC',
+  chip: 'CHIP',
+  ctc: 'CTC',
+  eitc: 'EITC',
+  ira: 'IRA',
+  liheap: 'LIHEAP',
+  ptc: 'PTC',
+  salt: 'SALT',
+  snap: 'SNAP',
+  spm: 'SPM',
+  ssi: 'SSI',
+  tanf: 'TANF',
+  wic: 'WIC',
+};
+
+/** Copy for the variables whose model label reads badly on its own. */
+const VARIABLE_LABELS: Record<string, string> = {
+  refundable_ctc: 'Refundable Child Tax Credit',
+  ctc: 'Child Tax Credit',
+  income_tax: 'Income tax',
+  assigned_aca_ptc: 'Assigned ACA premium tax credit',
+};
+
+/**
+ * A model variable as a reader names it: our copy, else the model's own
+ * label, else its name in words ("ctc_limiting_tax_liability" reads
+ * "CTC limiting tax liability").
+ */
+export function calibrationVariableLabel(variable: string, modelLabel?: string | null): string {
+  const label =
+    VARIABLE_LABELS[variable] ??
+    (modelLabel?.trim() ||
+      variable
+        .split('_')
+        .filter(Boolean)
+        .map((word) => ACRONYMS[word] ?? word)
+        .join(' '));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** The quantity words a dashboard measure id ends with: ctc_amount, actc_claims, eitc_returns. */
+const MEASURE_WORDS = new Set(['amount', 'claims', 'returns', 'total', 'count']);
+/** Breakdown parts that name no slice. */
+const WHOLE_SLICES = new Set(['', 'all', 'total']);
+
+/**
+ * A target as a reader names it, under its variable's heading: the
+ * quantity it measures, then the slice of the table it covers, e.g.
+ * "Amount", "Claims", "Returns · 18k to 19k · no qualifying children".
+ * The dashboard id stays in the target's details.
+ */
+export function calibrationTargetLabel(target: CalibrationTargetRow): string {
+  const id = target.sourceMeasureId ?? '';
+  const last = id.split('_').pop() ?? '';
+  const quantity = MEASURE_WORDS.has(last)
+    ? last
+    : id
+      ? id.replaceAll('_', ' ')
+      : target.measure === 'count'
+        ? 'count'
+        : 'total';
+  const slices = (target.breakdown ?? '')
+    .split('·')
+    .map((part) => part.trim())
+    .filter((part) => !WHOLE_SLICES.has(part.toLowerCase()));
+  const label = [quantity, ...slices].join(' · ');
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/**
  * Fetches the targets that measure any of `variables` in `geography`.
  * Returns null when the route is unavailable (Vite build, dashboard
  * unreachable) so callers can render an honest note.
@@ -200,7 +314,8 @@ export async function fetchCalibrationTargets(
 /**
  * The calibration matches for a reform: the variables its paths reach
  * (to `maxDepth`) that are calibration targets in `geography`, with
- * their fit. Null when either the map or the dashboard is unavailable.
+ * their fit, kept to the programs the reform changes. Null when either
+ * the map or the dashboard is unavailable.
  */
 export async function calibrationMatchesForPaths(
   paths: string[],
@@ -221,11 +336,17 @@ export async function calibrationMatchesForPaths(
   if (fetched === null) {
     return null;
   }
+  const reform: ReformScope = {
+    countryId: 'us',
+    paths,
+    readers: Object.fromEntries(paths.map((path) => [path, readersOfPath(path, map)])),
+    region: geography === 'US' ? 'us' : `state/${geography.toLowerCase()}`,
+  };
   return {
     releaseId: fetched.releaseId,
     geography,
     modelVersion: map.model.version,
     reachedCount: reached.length,
-    matches: summarizeMatches(reached, fetched.rows),
+    matches: relevantCalibrationMatches(summarizeMatches(reached, fetched.rows), reform),
   };
 }

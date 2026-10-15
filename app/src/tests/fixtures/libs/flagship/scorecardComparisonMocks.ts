@@ -52,4 +52,6 @@ export const utahBaselineClaim = scorecardClaim({
   reform_framework: 'baseline',
   name: 'Utah Child Tax Credit',
   metric: 'benefit_cost',
+  program: 'ut_ctc',
+  geography: 'UT',
 });

@@ -3,6 +3,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import { Stack, Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
+import { scorecardEntryUrl } from '@/libs/flagship/modelValidation';
 import {
   loadParameterDependencies,
   variablesReachedByPaths,
@@ -47,6 +48,7 @@ const sourceNames: Record<string, string> = {
   tpc: 'Tax Policy Center',
   cpsp: 'Center on Poverty and Social Policy',
   pwbm: 'Penn Wharton Budget Model',
+  treasury: 'US Treasury',
 };
 const metricNames: Record<string, string> = {
   revenue_change: 'Change in tax revenue',
@@ -72,10 +74,11 @@ function displayTitle(title: string): string {
     .trim();
   return cleaned ? cleaned[0].toUpperCase() + cleaned.slice(1) : title;
 }
-function modelPeriod(row: RelatedScorecardClaim): string {
+/** The model's period when the receipt records one; null says nothing, so nothing shows. */
+function modelPeriod(row: RelatedScorecardClaim): string | null {
   const receipt = [row.latest?.construction, ...(row.latest?.annotations ?? [])].join(' ');
   const years = [...new Set([...receipt.matchAll(/\bCY\s*(20\d{2})/gi)].map((match) => match[1]))];
-  return years.length === 1 ? `Calendar year ${years[0]}` : 'Period not recorded separately';
+  return years.length === 1 ? `Calendar year ${years[0]}` : null;
 }
 
 function comparisonReason(
@@ -96,11 +99,12 @@ function comparisonReason(
     );
   const calendar = pePeriod ?? modelPeriod(row);
   const fiscal = /fiscal|FY/i.test(externalPeriod ?? claimPeriod(row));
-  if (baselineDiffers && fiscal && calendar.startsWith('Calendar year')) {
+  const calendarYear = calendar?.startsWith('Calendar year') ? calendar : null;
+  if (baselineDiffers && fiscal && calendarYear) {
     return 'Different starting policies and timing: the source uses a fiscal year; PolicyEngine uses a calendar year.';
   }
-  if (fiscal && calendar.startsWith('Calendar year')) {
-    return `Different timing: the source uses a fiscal year; PolicyEngine uses ${calendar.toLowerCase()}.`;
+  if (fiscal && calendarYear) {
+    return `Different timing: the source uses a fiscal year; PolicyEngine uses ${calendarYear.toLowerCase()}.`;
   }
   if (baselineDiffers) {
     return 'The source and PolicyEngine start from different baseline policies.';
@@ -164,6 +168,7 @@ function ComparisonContext({ row }: { row: RelatedScorecardClaim }) {
             ],
           ]);
   if (isJctCtc(row)) {
+    const period = modelPeriod(row);
     const reversed = row.latest?.construction?.includes('scored as expiry reversal');
     const stacked =
       row.latest?.baseline === 'obbba_stack_below__jcx_producer__obbba_child_tax_credit';
@@ -238,7 +243,7 @@ function ComparisonContext({ row }: { row: RelatedScorecardClaim }) {
           {reversed
             ? 'This run keeps other enacted tax changes in place while reversing the CTC expiry. JCT starts with only the bill’s tax-rate, standard-deduction and personal-exemption changes applied. Those different tax rules affect how much CTC families can receive.'
             : stacked
-              ? `This run adds the CTC changes after the bill’s tax-rate, standard-deduction and personal-exemption changes. Model period: ${modelPeriod(row)}; check the source year below.`
+              ? `This run adds the CTC changes after the bill’s tax-rate, standard-deduction and personal-exemption changes.${period ? ` Model period: ${period}; check the source year below.` : ''}`
               : 'The stored calculation does not provide enough detail to confirm the starting tax rules.'}
         </Text>
       </Stack>
@@ -316,6 +321,8 @@ export interface ClaimPresentation {
   modelPeriod?: string;
   externalValue?: string;
   peValue?: string;
+  /** Where the claim sits on the scorecard, when not its registry of published claims. */
+  scorecardUrl?: string;
 }
 
 /** A scorecard claim, and how to present it. */
@@ -329,6 +336,11 @@ function claimTitle(row: RelatedScorecardClaim, presentation?: ClaimPresentation
     presentation?.title ??
     (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name))
   );
+}
+
+/** The claim's own place on the scorecard, as close as the scorecard's links reach. */
+function claimScorecardUrl(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
+  return presentation?.scorecardUrl ?? scorecardEntryUrl('validation', row.country);
 }
 
 /** The source, and the geography when the claim records one: "Joint Committee on Taxation · US". */
@@ -380,7 +392,7 @@ export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry
         left={{
           label: 'Published estimate',
           value: presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept),
-          note: presentation?.externalPeriod ?? claimPeriod(row),
+          note: presentation?.externalPeriod ?? (claimPeriod(row) || undefined),
         }}
         right={{
           label:
@@ -388,7 +400,7 @@ export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry
               ? 'PolicyEngine estimate'
               : 'PolicyEngine scorecard estimate',
           value: presentation?.peValue ?? claimValue(latest?.value, row.unit_concept),
-          note: presentation?.modelPeriod ?? modelPeriod(row),
+          note: presentation?.modelPeriod ?? modelPeriod(row) ?? undefined,
         }}
       />
       {status === 'constructed' &&
@@ -477,6 +489,10 @@ export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry
 /** One claim as a table row: what is compared, both values, and the gap. */
 function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
   const sourceUrl = safeUrl(row.url);
+  const smallLink = { ...linkStyle, fontSize: typography.fontSize.xs };
+  // Only a period that is recorded; "not recorded" under every value says nothing.
+  const publishedNote = presentation?.externalPeriod ?? claimPeriod(row);
+  const peNote = presentation?.modelPeriod ?? modelPeriod(row);
   return (
     <tr style={rowStyle}>
       <th scope="row" style={labelCellStyle}>
@@ -499,24 +515,32 @@ function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
           </DialogContent>
         </Dialog>
         <CellNote>{claimWhere(row, presentation)}</CellNote>
-        {sourceUrl && (
+        <CellNote>
+          {sourceUrl && (
+            <>
+              <a href={sourceUrl} target="_blank" rel="noreferrer" style={smallLink}>
+                Read source
+              </a>
+              {' · '}
+            </>
+          )}
           <a
-            href={sourceUrl}
+            href={claimScorecardUrl(row, presentation)}
             target="_blank"
             rel="noreferrer"
-            style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
+            style={smallLink}
           >
-            Read source
+            View in scorecard
           </a>
-        )}
+        </CellNote>
       </th>
       <td style={numberCellStyle}>
         {presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept)}
-        <CellNote>{presentation?.externalPeriod ?? claimPeriod(row)}</CellNote>
+        {publishedNote && <CellNote>{publishedNote}</CellNote>}
       </td>
       <td style={numberCellStyle}>
         {presentation?.peValue ?? claimValue(row.latest?.value, row.unit_concept)}
-        <CellNote>{presentation?.modelPeriod ?? modelPeriod(row)}</CellNote>
+        {peNote && <CellNote>{peNote}</CellNote>}
       </td>
       <td style={numberCellStyle}>{gapText(row.latest?.value, row.external_value)}</td>
     </tr>

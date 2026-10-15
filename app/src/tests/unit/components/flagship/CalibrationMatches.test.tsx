@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { CalibrationMatchSection } from '@/components/flagship/CalibrationMatches';
 import {
   mockCalibrationMatches,
+  mockCtcLimitingMatch,
   POPULACE_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
@@ -29,25 +30,21 @@ describe('CalibrationMatchSection', () => {
     ).toBeInTheDocument();
   });
 
-  test('given reached variables but none calibrated then the gap is stated, not hidden', () => {
-    render(
-      <CalibrationMatchSection
-        matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount: 33, matches: [] }}
-      />
-    );
+  test('given no target of a changed program then one plain line says so', () => {
+    for (const reachedCount of [0, 33]) {
+      const { unmount } = render(
+        <CalibrationMatchSection
+          matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount, matches: [] }}
+        />
+      );
 
-    expect(screen.getByText(/none of the 33 variables .* in CA/i)).toBeInTheDocument();
-  });
-
-  test('given no provisions at all then a plain line says no target covers the reform', () => {
-    render(
-      <CalibrationMatchSection
-        matches={{ ...mockCalibrationMatches, reachedCount: 0, matches: [] }}
-      />
-    );
-
-    expect(screen.getByRole('heading', { name: 'Data calibration' })).toBeInTheDocument();
-    expect(screen.getByText('No calibration target covers this reform.')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Data calibration' })).toBeInTheDocument();
+      expect(
+        screen.getByText('No calibration target measures the programs this reform changes.')
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      unmount();
+    }
   });
 
   test('shows each target with its period, values, gap and source link', () => {
@@ -66,9 +63,11 @@ describe('CalibrationMatchSection', () => {
     expect(screen.getAllByText('1M')[0]).toBeInTheDocument();
     expect(screen.getByText('-6.0%')).toBeInTheDocument();
     expect(screen.getAllByText('2024')).toHaveLength(3);
-    expect(
-      screen.getByRole('button', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Returns' })).toHaveAttribute(
+      'title',
+      'irs_soi.ty2023.table_1_4.all.actc_returns@2024'
+    );
+    expect(screen.queryByText(/irs_soi\.ty2023/)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/formula steps|How to interpret|Worth a look/i)
     ).not.toBeInTheDocument();
@@ -78,14 +77,29 @@ describe('CalibrationMatchSection', () => {
     );
   });
 
-  test('clicking a target opens its exact values', () => {
+  test('clicking a target opens its exact values and its dashboard id', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
-    fireEvent.click(
-      screen.getByRole('button', { name: 'irs_soi.ty2023.table_1_4.all.actc_returns@2024' })
+    fireEvent.click(screen.getByRole('button', { name: 'Returns' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Refundable Child Tax Credit · Returns')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('irs_soi.ty2023.table_1_4.all.actc_returns@2024')
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('940,000')).toBeInTheDocument();
+    expect(within(dialog).getByText('1,000,000')).toBeInTheDocument();
+  });
+
+  test('given a group named for a raw model variable then it reads as words', () => {
+    render(
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, matches: [mockCtcLimitingMatch] }}
+      />
     );
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('940,000')).toBeInTheDocument();
-    expect(screen.getByText('1,000,000')).toBeInTheDocument();
+
+    expect(screen.getByText('CTC limiting tax liability')).toBeInTheDocument();
+    expect(screen.queryByText(/ctc_limiting|Ctc limiting/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Amount' })).toBeInTheDocument();
   });
 
   test('given a pin that is still current then the card says when it was pinned', () => {

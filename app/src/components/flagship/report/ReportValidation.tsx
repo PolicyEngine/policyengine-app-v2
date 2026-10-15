@@ -16,7 +16,11 @@ import {
   ValidationLoading,
   ValidationNote,
 } from '@/components/flagship/ValidationDisplay';
-import { BaselineComparisons, type ModelTrackRecord } from '@/components/flagship/ValidationPanel';
+import {
+  BaselineComparisons,
+  useReformReaders,
+  type ModelTrackRecord,
+} from '@/components/flagship/ValidationPanel';
 import { Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
@@ -25,6 +29,8 @@ export interface ReportValidationProps {
   countryId: string;
   /** The reform's parameter paths, to match against the scorecard. */
   paths: string[];
+  /** The report's region ("us", "state/md"): baseline comparisons keep to its jurisdiction. */
+  region?: string | null;
   calibration: CalibrationMatches | null | undefined;
   calibrationPin?: CalibrationPin;
   trackRecord: ModelTrackRecord;
@@ -100,6 +106,7 @@ const NO_PATHS: string[] = [];
 export default function ReportValidation({
   countryId,
   paths,
+  region,
   calibration,
   calibrationPin,
   trackRecord,
@@ -108,8 +115,10 @@ export default function ReportValidation({
   baselineLabel,
 }: ReportValidationProps) {
   // Against another baseline the scorecard is not shown, so it is not asked.
-  const scorecard = useScorecardComparisons(countryId, baselineLabel ? NO_PATHS : paths);
+  const scorecardPaths = baselineLabel ? NO_PATHS : paths;
+  const scorecard = useScorecardComparisons(countryId, scorecardPaths);
   const { baseline } = splitScorecardRows(scorecard);
+  const readers = useReformReaders(countryId, scorecardPaths);
   return (
     <Stack style={{ gap: spacing.xl }}>
       <ExternalEstimates
@@ -123,6 +132,7 @@ export default function ReportValidation({
         trackRecord={trackRecord}
         scorecardRows={scorecard === undefined ? undefined : scorecard === null ? null : baseline}
         baselineLabel={baselineLabel}
+        reform={readers && { countryId, paths, readers, region }}
       />
     </Stack>
   );

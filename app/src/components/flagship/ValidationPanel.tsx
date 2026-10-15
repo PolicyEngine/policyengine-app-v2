@@ -3,15 +3,18 @@ import { BillValidation } from '@/api/billFeed';
 import { describeDepth, RING_LABELS } from '@/components/flagship/CalibrationMatches';
 import { Stack } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   claimsFromBillValidation,
   METRIC_LABELS,
   ModelValidationRow,
   PROGRAM_LABELS,
   SCORECARD_COMPARISON_URL,
+  scorecardEntryUrl,
   ScorecardMatches,
   scorecardMatchesForPaths,
 } from '@/libs/flagship/modelValidation';
+import { loadParameterDependencies, readersOfPath } from '@/libs/flagship/parameterDependencies';
 import type { RelatedScorecardClaim } from '@/libs/flagship/scorecardComparisons';
 import { ScorecardClaimTable, type ScorecardClaimEntry } from './ScorecardComparisons';
 import {
@@ -34,7 +37,7 @@ import {
  *   bill (official fiscal note, third-party analyses, verdict).
  * - BaselineComparisons: the PolicyEngine scorecard's comparisons of the
  *   model's baseline with published measures, for the programs the
- *   reform touches.
+ *   reform changes in the report's jurisdiction.
  */
 
 function compactMoney(value: number): string {
@@ -262,6 +265,7 @@ export function trackRecordClaims(trackRecord: ScorecardMatches): ScorecardClaim
       claim_id: claimId,
       country: 'US',
       geography: 'US',
+      program: row.program,
       name: metricLabel(row),
       source: row.source,
       url: row.sourceUrl ?? undefined,
@@ -294,24 +298,70 @@ export function trackRecordClaims(trackRecord: ScorecardMatches): ScorecardClaim
       presentation: {
         title: `${PROGRAM_LABELS[row.program] ?? row.program} — ${metricLabel(row)}`,
         sourceName: row.sourceName ?? row.source,
-        externalPeriod: row.period ?? 'Period not recorded',
-        modelPeriod: row.pePeriod ?? 'Period not recorded',
+        // A period shows only when the scorecard records it.
+        externalPeriod: row.period ?? undefined,
+        modelPeriod: row.pePeriod ?? undefined,
         externalValue: metricValue(row, row.externalValue),
         peValue: metricValue(row, row.peValue),
+        // Comparison rows live in the scorecard's comparison table.
+        scorecardUrl: scorecardEntryUrl('scorecard', 'US'),
       },
     };
   });
 }
 
+const NO_READERS: Record<string, string[]> = {};
+
+/**
+ * The variables that read each reform path directly, from the traced
+ * dependency map: `undefined` while it loads. The map is US-only, so
+ * another country, or a map that fails to load, matches on the paths alone.
+ */
+export function useReformReaders(
+  countryId: string,
+  paths: string[]
+): Record<string, string[]> | undefined {
+  const requestKey = JSON.stringify({ countryId, paths });
+  const needsMap = countryId === 'us' && paths.length > 0;
+  const [state, setState] = useState<{ key: string; readers: Record<string, string[]> }>();
+  useEffect(() => {
+    if (!needsMap) {
+      return;
+    }
+    const request = JSON.parse(requestKey) as { paths: string[] };
+    let cancelled = false;
+    loadParameterDependencies()
+      .then((map) =>
+        Object.fromEntries(request.paths.map((path) => [path, readersOfPath(path, map)]))
+      )
+      .catch(() => NO_READERS)
+      .then((readers) => {
+        if (!cancelled) {
+          setState({ key: requestKey, readers });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [requestKey, needsMap]);
+  if (!needsMap) {
+    return NO_READERS;
+  }
+  return state?.key === requestKey ? state.readers : undefined;
+}
+
 /**
  * How the model's baseline compares with published measures of the
- * programs the reform touches: the scorecard's track record for those
- * programs, then its other baseline claims linked to the reform.
+ * programs the reform changes: the scorecard's track record for those
+ * programs, then its other baseline claims linked to the reform. Only
+ * comparisons of a program the reform changes, in the report's
+ * jurisdiction, show; a loose link through the dependency graph does not.
  */
 export function BaselineComparisons({
   trackRecord,
   scorecardRows,
   baselineLabel,
+  reform,
 }: {
   trackRecord: ModelTrackRecord;
   /** The published scorecard's baseline claims for the reform; undefined while loading. */
@@ -321,11 +371,22 @@ export function BaselineComparisons({
    * measures current law, so its comparisons do not apply.
    */
   baselineLabel?: string | null;
+  /** The reform and the report's region, which pick the comparisons; undefined while loading. */
+  reform: ReformScope | undefined;
 }) {
-  const entries = [
+  const candidates = [
     ...(trackRecord ? trackRecordClaims(trackRecord) : []),
     ...(scorecardRows ?? []).map((row) => ({ row })),
   ];
+  const relevant = new Set(
+    reform
+      ? relevantComparisons(
+          candidates.map((entry) => entry.row),
+          reform
+        )
+      : []
+  );
+  const entries = candidates.filter((entry) => relevant.has(entry.row));
   let content;
   if (baselineLabel) {
     content = (
@@ -335,21 +396,17 @@ export function BaselineComparisons({
     );
   } else if (entries.length > 0) {
     content = <ScorecardClaimTable label="Baseline comparisons" entries={entries} />;
-  } else if (trackRecord === undefined || scorecardRows === undefined) {
+  } else if (trackRecord === undefined || scorecardRows === undefined || reform === undefined) {
     content = <ValidationLoading label="Loading baseline comparisons" />;
-  } else if (trackRecord === null) {
+  } else if (trackRecord === null || scorecardRows === null) {
     content = <ValidationNote>Baseline comparisons are temporarily unavailable.</ValidationNote>;
-  } else if (trackRecord.reachedCount > 0) {
-    // Silence would read as "fine". State credits are the usual case: the
-    // scorecard measures federal programs and poverty, not state credits.
+  } else {
+    // Silence would read as "fine"; loose matches would read as evidence.
     content = (
       <ValidationNote>
-        None of the {trackRecord.reachedCount} variables this reform moves is measured by the
-        scorecard.
+        No scorecard comparison measures the programs this reform changes.
       </ValidationNote>
     );
-  } else {
-    content = <ValidationNote>No baseline comparison covers this reform.</ValidationNote>;
   }
   return (
     <ValidationCard
