@@ -463,12 +463,15 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             alignItems: 'center',
             justifyContent: 'flex-end',
             flexWrap: 'wrap',
-            gap: spacing.sm,
+            columnGap: spacing.lg,
+            rowGap: spacing.sm,
             width: 'fit-content',
+            maxWidth: '100%',
             marginLeft: 'auto',
-            padding: `${spacing.xs} ${spacing.md}`,
+            marginTop: spacing.sm,
+            padding: `${spacing.sm} ${spacing.sm} ${spacing.sm} ${spacing.lg}`,
             border: `1px solid ${colors.border.light}`,
-            borderRadius: 8,
+            borderRadius: 10,
             background: colors.gray[50],
             fontSize: typography.fontSize.sm,
             color: colors.text.secondary,
@@ -502,23 +505,11 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             />
           ) : (
             <>
-              <IconPencil size={14} aria-hidden style={{ color: colors.text.tertiary }} />
               <span>No name yet. The report will be called “{UNTITLED_REFORM}”.</span>
-              <button
-                type="button"
-                onClick={() => setNaming(true)}
-                className="tw:cursor-pointer tw:underline tw:underline-offset-2 tw:max-sm:min-h-10"
-                style={{
-                  border: 'none',
-                  background: 'none',
-                  padding: 0,
-                  font: 'inherit',
-                  fontWeight: typography.fontWeight.semibold,
-                  color: colors.primary[700],
-                }}
-              >
+              <Button size="sm" variant="outline" onClick={() => setNaming(true)}>
+                <IconPencil size={14} aria-hidden />
                 Name it
-              </button>
+              </Button>
             </>
           )}
         </div>
