@@ -18,7 +18,7 @@ import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
-import ReformReports from '@/components/flagship/ReformReports';
+import ReformReports, { LatestReportBadge } from '@/components/flagship/ReformReports';
 import {
   CARD_GRID_STYLE,
   CardGridSkeleton,
@@ -339,15 +339,19 @@ export default function ReformsPage() {
   });
   const reportsFor = (reformId: string | undefined) =>
     reformId ? (reports ?? []).filter((report) => report.reformId === reformId) : [];
-  const reportsLine = (reformId: string | undefined) => {
+  const latestReport = (reformId: string | undefined) => {
     const runs = reportsFor(reformId);
-    if (runs.length === 0) {
-      return 'No reports yet';
-    }
-    const latest = runs.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
-    return `${runs.length} report${runs.length === 1 ? '' : 's'} · latest ${new Date(
-      latest.createdAt
-    ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    return runs.length === 0 ? null : runs.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
+  };
+  const reportsLine = (reformId: string | undefined) => {
+    const latest = latestReport(reformId);
+    return latest
+      ? `Last run ${new Date(latest.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })}`
+      : 'No reports yet';
   };
 
   const deleteMutation = useMutation({
@@ -1084,6 +1088,12 @@ export default function ReformsPage() {
               <Card
                 key={reform.id}
                 eyebrow={`${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`}
+                badge={(() => {
+                  const latest = latestReport(reform.id);
+                  return latest?.apiReportId ? (
+                    <LatestReportBadge countryId={countryId} apiReportId={latest.apiReportId} />
+                  ) : undefined;
+                })()}
                 title={reform.label || 'Untitled reform'}
                 body={reportsLine(reform.id)}
                 onClick={() => openReform(reform)}
