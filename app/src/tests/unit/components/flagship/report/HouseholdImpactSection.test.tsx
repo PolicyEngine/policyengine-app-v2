@@ -76,7 +76,7 @@ describe('HouseholdImpactSection', () => {
     renderSection();
 
     expect(screen.getByRole('combobox', { name: 'State' })).toHaveTextContent('California');
-    expect(screen.getByRole('spinbutton', { name: 'Earnings, You' })).toHaveValue(50000);
+    expect(screen.getByRole('spinbutton', { name: 'Annual earnings' })).toHaveValue(50000);
     expect(screen.getByRole('button', { name: 'Calculate' })).toBeEnabled();
     expect(mockCreateHousehold).not.toHaveBeenCalled();
     expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
@@ -187,8 +187,8 @@ describe('HouseholdImpactSection', () => {
     renderSection();
 
     await user.click(screen.getByRole('tab', { name: 'Married' }));
-    await user.clear(screen.getByRole('spinbutton', { name: 'Earnings, Partner' }));
-    await user.type(screen.getByRole('spinbutton', { name: 'Earnings, Partner' }), '20000');
+    await user.clear(screen.getByRole('spinbutton', { name: "Partner's annual earnings" }));
+    await user.type(screen.getByRole('spinbutton', { name: "Partner's annual earnings" }), '20000');
     await pick(user, 'Children', '2');
     await user.clear(screen.getByRole('spinbutton', { name: 'Child 1 age' }));
     await user.type(screen.getByRole('spinbutton', { name: 'Child 1 age' }), '3');
@@ -205,7 +205,7 @@ describe('HouseholdImpactSection', () => {
     const user = userEvent.setup();
     renderSection();
 
-    const earnings = screen.getByRole('spinbutton', { name: 'Earnings, You' });
+    const earnings = screen.getByRole('spinbutton', { name: 'Annual earnings' });
     await user.clear(earnings);
     await user.type(earnings, '52500.50');
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
@@ -225,7 +225,7 @@ describe('HouseholdImpactSection', () => {
     await user.type(screen.getByRole('spinbutton', { name: 'Child 1 age' }), '18');
 
     expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
-    expect(screen.getByText(/aged 0 to 17/)).toBeInTheDocument();
+    expect(screen.getByText(/ages from 0 to 17/)).toBeInTheDocument();
   });
 
   test('given a failed run then it says so, and trying again shows the result', async () => {

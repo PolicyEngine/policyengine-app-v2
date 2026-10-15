@@ -25,34 +25,7 @@ export interface FlagshipHouseholdInput {
   earnings: number;
   /** The partner's annual employment income; read only when married. */
   partnerEarnings: number;
-  /** The head's age; the model's default adult when absent. */
-  headAge?: number;
-  /** The partner's age; read only when married. */
-  partnerAge?: number;
-  /** Other annual income by source (see OTHER_INCOME), for the head and the partner. */
-  otherIncome?: {
-    head?: Partial<Record<OtherIncomeKey, number>>;
-    partner?: Partial<Record<OtherIncomeKey, number>>;
-  };
-  /** The household's annual rent. */
-  rent?: number;
-  /** What the household pays a year for child care, before any subsidy. */
-  childcare?: number;
 }
-
-/** Income beyond earnings an adult can have, by its model variable. */
-export const OTHER_INCOME = [
-  { key: 'self_employment_income', label: 'Self-employment income' },
-  { key: 'social_security_retirement', label: 'Social Security' },
-  { key: 'taxable_pension_income', label: 'Pension income' },
-  { key: 'unemployment_compensation', label: 'Unemployment benefits' },
-] as const;
-export type OtherIncomeKey = (typeof OTHER_INCOME)[number]['key'];
-
-export const MIN_ADULT_AGE = 18;
-export const MAX_ADULT_AGE = 120;
-/** The builder's own default adult, so a household left as is calculates as before. */
-export const DEFAULT_ADULT_AGE = 30;
 
 export const MAX_CHILDREN = 6;
 export const MAX_CHILD_AGE = 17;
@@ -74,8 +47,6 @@ export function defaultHouseholdInput(region?: string): FlagshipHouseholdInput {
     childAges: [],
     earnings: DEFAULT_EARNINGS,
     partnerEarnings: 0,
-    headAge: DEFAULT_ADULT_AGE,
-    partnerAge: DEFAULT_ADULT_AGE,
   };
 }
 
@@ -88,9 +59,6 @@ export function stateFromRegion(region?: string): string | undefined {
 
 const isAmount = (value: number) => Number.isFinite(value) && value >= 0;
 const isChildAge = (age: number) => Number.isInteger(age) && age >= 0 && age <= MAX_CHILD_AGE;
-const isAdultAge = (age: number | undefined) =>
-  age === undefined || (Number.isInteger(age) && age >= MIN_ADULT_AGE && age <= MAX_ADULT_AGE);
-const isOptionalAmount = (value: number | undefined) => value === undefined || isAmount(value);
 
 /** Whether the household can run: a known state, amounts of zero or more, children's ages. */
 export function isValidHouseholdInput(input: FlagshipHouseholdInput): boolean {
@@ -99,13 +67,7 @@ export function isValidHouseholdInput(input: FlagshipHouseholdInput): boolean {
     isAmount(input.earnings) &&
     (!input.married || isAmount(input.partnerEarnings)) &&
     input.childAges.length <= MAX_CHILDREN &&
-    input.childAges.every(isChildAge) &&
-    isAdultAge(input.headAge) &&
-    (!input.married || isAdultAge(input.partnerAge)) &&
-    Object.values(input.otherIncome?.head ?? {}).every(isOptionalAmount) &&
-    (!input.married || Object.values(input.otherIncome?.partner ?? {}).every(isOptionalAmount)) &&
-    isOptionalAmount(input.rent) &&
-    isOptionalAmount(input.childcare)
+    input.childAges.every(isChildAge)
   );
 }
 
@@ -138,27 +100,6 @@ export function buildHouseholdPayload(
       input.partnerEarnings
     );
   }
-  // Ages and the income beyond earnings, each where it is set.
-  const setPerson = (
-    key: string | null | undefined,
-    variable: string,
-    value: number | undefined
-  ) => {
-    if (key && value !== undefined && Number.isFinite(value)) {
-      household = household.setPersonVariableAtYear(key, variable, year, value);
-    }
-  };
-  setPerson(primaryPersonKey, 'age', input.headAge);
-  if (input.married) {
-    setPerson(partnerKey, 'age', input.partnerAge);
-  }
-  for (const { key } of OTHER_INCOME) {
-    setPerson(primaryPersonKey, key, input.otherIncome?.head?.[key]);
-    if (input.married) {
-      setPerson(partnerKey, key, input.otherIncome?.partner?.[key]);
-    }
-  }
-  setPerson(primaryPersonKey, 'rent', input.rent);
   childKeys.forEach((childKey, index) => {
     household = household.setPersonVariableAtYear(
       childKey,
@@ -175,16 +116,6 @@ export function buildHouseholdPayload(
       'state_name',
       year,
       input.state
-    );
-  }
-  const spmUnitKey = Object.keys(household.householdData.spmUnits ?? {})[0];
-  if (spmUnitKey && input.childcare !== undefined && Number.isFinite(input.childcare)) {
-    household = household.setGroupVariableAtYear(
-      'spm_units',
-      spmUnitKey,
-      'spm_unit_pre_subsidy_childcare_expenses',
-      year,
-      input.childcare
     );
   }
   return household.toV1CreationPayload();
