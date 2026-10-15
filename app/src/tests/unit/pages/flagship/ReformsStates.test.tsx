@@ -73,7 +73,7 @@ function renderReforms() {
 }
 
 async function openYours(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: 'Yours' }));
+  await user.click(screen.getByRole('button', { name: 'Your library' }));
 }
 
 describe('ReformsPage states', () => {

@@ -553,16 +553,16 @@ describe('ReformsPage', () => {
     expect(screen.getByText('Showing 24 of 30 bills')).toBeInTheDocument();
   });
 
-  test('given the Yours tab with no reforms then the invitation shows', async () => {
+  test('given the Your library tab with no reforms then the invitation shows', async () => {
     const user = userEvent.setup();
     renderReforms();
 
-    await user.click(screen.getByRole('button', { name: 'Yours' }));
+    await user.click(screen.getByRole('button', { name: 'Your library' }));
 
     expect(await screen.findByText(/no saved reforms yet/i)).toBeInTheDocument();
   });
 
-  test('given a ?filter=yours deep link then the Yours tab is active', async () => {
+  test('given a ?filter=yours deep link then the Your library tab is active', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     renderReforms('/us/reforms?filter=yours');
 
@@ -572,7 +572,7 @@ describe('ReformsPage', () => {
     expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
 
-  test('given the Yours tab then it lists this browser’s reforms for the country', async () => {
+  test('given the Your library tab then it lists this browser’s reforms for the country', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     renderReforms('/us/reforms?filter=yours');
 

@@ -290,7 +290,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 /**
  * Reforms — everything reform-shaped in one calm surface. Two views:
  * Bills (federal and state bills analyzed with the PolicyEngine model,
- * live from the tracker) and Yours (saved reforms, amendable). Cards open a
+ * live from the tracker) and Your library (saved reforms). Cards open a
  * focused detail; every detail ends in the same two verbs — view the
  * full impact report, or open as a draft.
  */
@@ -880,7 +880,7 @@ export default function ReformsPage() {
           {(
             [
               { id: 'bills', label: 'Bills' },
-              { id: 'yours', label: 'Yours' },
+              { id: 'yours', label: 'Your library' },
             ] as const
           ).map((option) => {
             const active = tab === option.id;
