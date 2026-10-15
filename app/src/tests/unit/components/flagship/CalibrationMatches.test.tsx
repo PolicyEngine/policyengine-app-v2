@@ -31,20 +31,30 @@ describe('CalibrationMatchSection', () => {
   });
 
   test('given no target of a changed program then one plain line says so', () => {
-    for (const reachedCount of [0, 33]) {
-      const { unmount } = render(
-        <CalibrationMatchSection
-          matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount, matches: [] }}
-        />
-      );
+    render(
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount: 33, matches: [] }}
+      />
+    );
 
-      expect(screen.getByRole('heading', { name: 'Data calibration' })).toBeInTheDocument();
-      expect(
-        screen.getByText('No calibration target measures the programs this reform changes.')
-      ).toBeInTheDocument();
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
-      unmount();
-    }
+    expect(screen.getByRole('heading', { name: 'Data calibration' })).toBeInTheDocument();
+    expect(
+      screen.getByText('No calibration target measures the programs this reform changes.')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  test('given the map traces nothing the reform changes then it says so, not "no target"', () => {
+    render(
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, geography: 'US', reachedCount: 0, matches: [] }}
+      />
+    );
+
+    expect(
+      screen.getByText(/does not trace the parameters this reform changes/)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/No calibration target measures/)).not.toBeInTheDocument();
   });
 
   test('given nothing measures the change but related targets do then they show as related', () => {

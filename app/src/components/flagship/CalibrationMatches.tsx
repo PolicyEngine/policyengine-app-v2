@@ -213,6 +213,15 @@ export function CalibrationMatchSection({
   }
   const geographyName = matches.geography === 'US' ? 'the US' : matches.geography;
   const related = matches.matches.length === 0 ? (matches.related ?? []) : [];
+  if (matches.reachedCount === 0) {
+    // Not "nothing measures it": the model map has no record of what it moves.
+    return card(
+      <ValidationNote>
+        The model&apos;s dependency map does not trace the parameters this reform changes, so no
+        calibration target can be matched to it.
+      </ValidationNote>
+    );
+  }
   if (matches.matches.length === 0 && related.length === 0) {
     // Silence would read as "fine"; loose matches would read as evidence.
     return card(
