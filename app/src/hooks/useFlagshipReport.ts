@@ -14,10 +14,11 @@ import { policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
- * A flagship report URL carries the API report id, which anyone can
- * resolve. Links minted before that carried a legacy browser association
- * id ("sur-…"); v3 does not read the legacy calculator's storage, so they
- * no longer open.
+ * Whether an ID is a v1 report's number. With accounts, a flagship report
+ * URL carries the saved report's ID instead (see reportLink); without
+ * them, it carries the v1 report's number. Links from the legacy
+ * calculator carried its browser association ID ("sur-…"); v3 does not
+ * read that storage, so they no longer open.
  */
 export function isApiReportId(id: string): boolean {
   return /^\d+$/.test(id);
@@ -44,8 +45,8 @@ export interface FlagshipReportData {
 /**
  * Resolves a flagship report by its API report id: the report, its
  * simulations, and their policies come straight from the PolicyEngine
- * API, so a shared link opens with full provenance on any device. Any
- * other id resolves to nothing.
+ * API, so the report opens on any device. Any other id resolves to
+ * nothing.
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();

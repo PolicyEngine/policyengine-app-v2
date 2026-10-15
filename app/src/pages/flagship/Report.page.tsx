@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
@@ -18,7 +19,11 @@ import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
-import { useAccountReportRecord, useReportRecord, useSavedReform } from '@/hooks/useFlagshipStores';
+import {
+  useFlagshipReportStore,
+  useReportRecord,
+  useSharedReport,
+} from '@/hooks/useFlagshipStores';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
@@ -45,45 +50,58 @@ interface FlagshipReportPageProps {
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
   const params = useParams<{ userReportId: string }>();
   const userReportId = propId ?? params.userReportId ?? '';
+  // A report's link is its saved report's ID, which anyone can open with its
+  // owner's details. Without accounts (sign-in off, or outside the US and
+  // UK) nothing is shared, so the link is the v1 report's number; where
+  // accounts exist, such a link is an old one and no longer opens, nor does
+  // an old browser-only "sur-" link.
+  const { isAccount } = useFlagshipReportStore();
+  const sharedLink = isAccountId(userReportId);
+  const browserLink = !isAccount && isApiReportId(userReportId);
+  const unresolvable = !!userReportId && !sharedLink && !browserLink;
+  const sharedQuery = useSharedReport(sharedLink ? userReportId : undefined);
+  const shared = sharedQuery.data ?? null;
   const {
     report,
     simulations,
     policies,
     isLoading,
-    error: loadError,
-    notFound,
-    retry,
-  } = useFlagshipReport(userReportId);
-  // Only API report ids open; an old browser-only "sur-" link is not found.
-  const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
+    error: reportLoadError,
+    notFound: reportNotFound,
+    retry: retryReport,
+  } = useFlagshipReport(
+    (sharedLink ? shared?.record.apiReportId : browserLink ? userReportId : undefined) ?? ''
+  );
+  // No saved report has the link's ID (deleted, or a bad link).
+  const sharedNotFound = sharedLink && sharedQuery.isSuccess && !shared;
+  const sharedLoadError = sharedLink ? sharedQuery.error : null;
+  const loadError = sharedLoadError ?? reportLoadError;
+  const notFound = sharedNotFound || reportNotFound;
+  const retry = sharedLoadError ? sharedQuery.refetch : retryReport;
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
-  const apiReportId =
-    report?.id !== undefined && report?.id !== null ? String(report.id) : undefined;
-  // With accounts, this user's record carries the provenance to every device.
-  const accountRecord = useAccountReportRecord(apiReportId);
-  // This session's record names the saved reform the report was run from.
-  const reportRecord = useReportRecord(apiReportId);
-  // Provenance: the run's details, else the account's record, else rebuilt
-  // from the reform policy so a shared link validates like the original.
+  // This session's own record, when it ran the report: it names the saved
+  // reform the report was run from, and holds the validation pin.
+  const reportRecord = useReportRecord(unresolvable ? undefined : userReportId);
+  // Provenance: the run's details, else the saved report's (the same for
+  // anyone holding the link), else rebuilt from the reform policy.
   const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
   const baselinePolicyId = simulations?.[0]?.policyId;
-  // The account's record links the saved reform it was compared with;
-  // that reform's own name is the comparison's.
-  const baselineReform = useSavedReform(accountRecord?.baselineReformId);
-  const recordBaseline =
-    accountRecord?.baselineReformId && baselineReform && baselinePolicyId
+  // The saved report names the reform it was compared with; only its owner
+  // links to that reform.
+  const sharedBaseline =
+    shared?.baselineReform && baselinePolicyId
       ? {
-          reformId: accountRecord.baselineReformId,
+          reformId: reportRecord?.baselineReformId ?? null,
           policyId: String(baselinePolicyId),
-          label: baselineReform.label || 'Untitled reform',
+          label: shared.baselineReform.name || 'Untitled reform',
         }
       : undefined;
   // Without metadata the rebuilt provisions would show raw paths and no
   // baseline, so they count as still loading until it arrives.
   const meta =
     readReportMeta(userReportId) ??
-    reportMetaFromRecord(accountRecord, report?.year, recordBaseline) ??
+    reportMetaFromRecord(shared?.record, report?.year, sharedBaseline) ??
     (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
@@ -151,11 +169,14 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
-  // The store keys records by the API report id as a string.
-  const pin = useReportValidationSnapshot(apiReportId, {
-    calibration,
-    programs: trackRecordPrograms(trackRecord),
-  });
+  const pin = useReportValidationSnapshot(
+    unresolvable ? undefined : userReportId,
+    {
+      calibration,
+      programs: trackRecordPrograms(trackRecord),
+    },
+    shared?.record.validation ?? null
+  );
 
   const title = meta?.title || report?.label || 'Impact report';
 
@@ -200,7 +221,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       );
     }
     // A report that failed to load would otherwise wait here for good.
-    if (loadError) {
+    if (loadError || notFound) {
       return layout(
         <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
           <Title order={1} style={{ margin: 0 }}>

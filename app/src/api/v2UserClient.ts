@@ -8,6 +8,7 @@ import type { V2Envelope, V2PageResult } from '@/types/v2User';
  * or, signed out, this browser's unauthenticated user
  * (`PolicyEngine-Unauthenticated-User: <uuid>`). The server derives the
  * owner from that, so callers never send a user ID in a body or query.
+ * Shared reports (`/v2/shared-reports`) are read with no credential.
  * Responses are the API's `{status, message, result}` envelope, unwrapped
  * to `result`.
  */
@@ -35,10 +36,14 @@ export function isV2ApiError(error: unknown, status?: number): error is V2ApiErr
 
 export type AccessTokenGetter = () => Promise<string | null>;
 
-/** Who requests are made as: a signed-in session, or this browser's unauthenticated user. */
+/**
+ * Who requests are made as: a signed-in session, this browser's
+ * unauthenticated user, or no one (routes anyone may call).
+ */
 export type V2Credentials =
   | { kind: 'session'; getAccessToken: AccessTokenGetter }
-  | { kind: 'unauthenticated'; userId: string };
+  | { kind: 'unauthenticated'; userId: string }
+  | { kind: 'none' };
 
 type QueryValue = string | number | boolean | null | undefined;
 export type V2Query = Record<string, QueryValue>;
@@ -111,6 +116,9 @@ async function readEnvelope(response: Response): Promise<V2Envelope<unknown> | n
 
 /** The header naming who a request is made as. */
 async function credentialHeaders(credentials: V2Credentials): Promise<Record<string, string>> {
+  if (credentials.kind === 'none') {
+    return {};
+  }
   if (credentials.kind === 'unauthenticated') {
     return { [UNAUTHENTICATED_USER_HEADER]: credentials.userId };
   }

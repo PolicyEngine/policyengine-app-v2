@@ -1,13 +1,22 @@
 import { useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { getFlagshipReportStore, type FlagshipReportStore } from '@/api/flagshipReportStore';
+import {
+  findReportRecordByLink,
+  getFlagshipReportStore,
+  parseSharedReportItem,
+  type FlagshipReportRecord,
+  type FlagshipReportStore,
+} from '@/api/flagshipReportStore';
 import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
-import type { ApiStoreContext } from '@/api/v2Associations';
+import { fetchSharedReport } from '@/api/sharedReport';
+import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { unwrapReport } from '@/libs/flagship/reportSchema';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
 
@@ -104,47 +113,52 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
 }
 
 /**
- * This session's record of an API report — the account's when signed in
- * (US/UK), this browser's otherwise — with its title, source note,
- * provisions and the saved reform it was run from. Null when there is
- * none (a report shared from elsewhere).
+ * This session's record a report link names — the account's row when
+ * signed in (US/UK), signed out this browser's unauthenticated user's, and
+ * otherwise this browser's — with the saved reform it was run from. Null
+ * when there is none: a report someone else ran.
  */
-export function useReportRecord(apiReportId: string | undefined) {
+export function useReportRecord(link: string | undefined) {
   const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
-    queryKey: ['flagship-report-record', scope, apiReportId ?? ''],
-    queryFn: () => store.findByApiReportId(apiReportId!),
-    enabled: !!apiReportId,
+    queryKey: ['flagship-report-record', scope, link ?? ''],
+    queryFn: () => findReportRecordByLink(store, link!),
+    enabled: !!link,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
   return data ?? null;
 }
 
-/**
- * The account's record for an API report, so a report opened on another
- * device shows the same header. Signed-in (US/UK) sessions only; null
- * otherwise.
- */
-export function useAccountReportRecord(apiReportId: string | undefined) {
-  const { isAccount } = useFlagshipReportStore();
-  const record = useReportRecord(apiReportId);
-  return isAccount ? record : null;
+/** A saved report as anyone holding its link reads it. */
+export interface SharedReport {
+  /** The owner's title, source note, provisions, budget window and validation. */
+  record: FlagshipReportRecord;
+  /** The owner's saved reform the report was compared with; null for current law. */
+  baselineReform: { name: string | null } | null;
 }
 
 /**
- * One of this session's saved reforms, for naming it (a report's
- * comparison, say); null while it loads, when unset, or once deleted.
+ * The saved report a link names (an account row's ID), read with no
+ * credential, so whoever opens the link sees the report as its owner ran
+ * it. Null data when no saved report has that ID; an unreadable one is an
+ * error.
  */
-export function useSavedReform(reformId: string | null | undefined) {
-  const store = useReformStore();
-  const { scope } = useV3SavedWork();
-  const { data } = useQuery({
-    queryKey: ['saved-reform', scope, reformId ?? ''],
-    queryFn: () => store.findById(reformId!),
-    enabled: !!reformId,
+export function useSharedReport(link: string | undefined) {
+  const countryId = useCurrentCountry();
+  return useQuery({
+    queryKey: ['shared-report', countryId, link ?? ''],
+    queryFn: async (): Promise<SharedReport | null> => {
+      const item = await fetchSharedReport(countryId, link!);
+      return item
+        ? {
+            record: unwrapReport(parseSharedReportItem(item)),
+            baselineReform: item.baseline_reform,
+          }
+        : null;
+    },
+    enabled: !!link && isAccountId(link),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
-  return data ?? null;
 }

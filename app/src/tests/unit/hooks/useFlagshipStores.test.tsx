@@ -11,6 +11,7 @@ import {
   useFlagshipReportStore,
   useReformStore,
   useReportRecord,
+  useSharedReport,
   useV3SavedWork,
 } from '@/hooks/useFlagshipStores';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
@@ -18,9 +19,14 @@ import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { store } from '@/store';
 import {
   ASSOCIATION_IDS,
+  errorResponse,
+  itemResponse,
+  LEGACY_IDS,
   okResponse,
   pageResponse,
   policyItem,
+  reportItem,
+  sharedReportItem,
 } from '@/tests/fixtures/api/v2UserMocks';
 import {
   AuthTestProvider,
@@ -181,6 +187,79 @@ describe('useReportRecord', () => {
 
     // Then
     await waitFor(() => expect(result.current?.reformId).toBe('rf-ran'));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('useReportRecord by link', () => {
+  test("given a signed-in session and its saved report's link then it reads the account's row", async () => {
+    // Given
+    fetchMock.mockImplementation(async (url: string) =>
+      new URL(url).pathname === `/v2/user-reports/${ASSOCIATION_IDS.REPORT}`
+        ? itemResponse(reportItem({ user_policy_id: ASSOCIATION_IDS.REFORM }))
+        : errorResponse(404, 'not found')
+    );
+
+    // When
+    const { result } = renderHook(() => useReportRecord(ASSOCIATION_IDS.REPORT), {
+      wrapper: wrapperFor(signedInAuthValue()),
+    });
+
+    // Then
+    await waitFor(() => expect(result.current?.reformId).toBe(ASSOCIATION_IDS.REFORM));
+  });
+
+  test("given someone else's saved report then this session has no record of it", async () => {
+    // Given: the owner routes answer 404 for another user's row
+    fetchMock.mockResolvedValue(errorResponse(404, 'not found'));
+
+    // When
+    const { result } = renderHook(() => useReportRecord(ASSOCIATION_IDS.REPORT), {
+      wrapper: wrapperFor(signedInAuthValue()),
+    });
+
+    // Then
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(result.current).toBeNull();
+  });
+});
+
+describe('useSharedReport', () => {
+  test("given a saved report's link then anyone reads it with no credential", async () => {
+    // Given
+    fetchMock.mockImplementation(async () =>
+      itemResponse(sharedReportItem({ baseline_reform: { name: 'Plan B' } }))
+    );
+
+    // When: even a signed-in session reads it without its token
+    const { result } = renderHook(() => useSharedReport(ASSOCIATION_IDS.REPORT), {
+      wrapper: wrapperFor(signedInAuthValue()),
+    });
+
+    // Then
+    await waitFor(() => expect(result.current.data).toBeTruthy());
+    expect(result.current.data?.record).toMatchObject({
+      id: ASSOCIATION_IDS.REPORT,
+      apiReportId: String(LEGACY_IDS.REPORT),
+      title: 'CTC to $3,600',
+      reformId: null,
+      baselineReformId: null,
+    });
+    expect(result.current.data?.baselineReform).toEqual({ name: 'Plan B' });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(new URL(url).pathname).toBe(`/v2/shared-reports/${ASSOCIATION_IDS.REPORT}`);
+    expect(init.headers).toEqual({ Accept: 'application/json' });
+  });
+
+  test("given a v1 report's number then nothing is asked: only saved reports are shared", async () => {
+    // When
+    const { result } = renderHook(() => useSharedReport(String(LEGACY_IDS.REPORT)), {
+      wrapper: wrapperFor(makeAuthValue({ status: 'disabled' })),
+    });
+
+    // Then
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(result.current.fetchStatus).toBe('idle');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

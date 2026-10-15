@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import type { ApiStoreContext } from '@/api/v2Associations';
 import { createV2UserClient } from '@/api/v2UserClient';
-import type { MeItem, UserPolicyItem, UserReportItem } from '@/types/v2User';
+import type { MeItem, SharedReportItem, UserPolicyItem, UserReportItem } from '@/types/v2User';
 
 export const TEST_API_BASE = 'https://api.test.policyengine.org';
 export const TEST_ACCESS_TOKEN = 'test-access-token';
@@ -71,6 +71,45 @@ export function reportItem(overrides: Partial<UserReportItem> = {}): UserReportI
     last_run_at: null,
     ...overrides,
   };
+}
+
+/** A saved report as anyone holding its link reads it. */
+export function sharedReportItem(overrides: Partial<SharedReportItem> = {}): SharedReportItem {
+  return {
+    id: ASSOCIATION_IDS.REPORT,
+    country_id: 'us',
+    legacy_report_id: LEGACY_IDS.REPORT,
+    name: 'CTC to $3,600',
+    source_note: 'From chat',
+    provisions: [
+      {
+        path: 'gov.irs.credits.ctc.amount.base[0].amount',
+        breadcrumb: 'Child Tax Credit → Base amount',
+        unit: 'currency-USD',
+        baseline_value: 2000,
+        value: 3600,
+        intervals: null,
+      },
+    ],
+    validation: null,
+    budget_window_years: null,
+    baseline_reform: null,
+    last_run_at: null,
+    created_at: TIMESTAMPS.CREATED,
+    updated_at: TIMESTAMPS.UPDATED,
+    ...overrides,
+  };
+}
+
+/** A client that calls the credential-free routes, and its fetch mock. */
+export function createTestPublicClient() {
+  const fetchMock = vi.fn();
+  const client = createV2UserClient({
+    credentials: { kind: 'none' },
+    baseUrl: TEST_API_BASE,
+    fetchImpl: fetchMock as unknown as typeof fetch,
+  });
+  return { fetchMock, client };
 }
 
 /** `{"status": "ok", "message": null, "result": …}` as a fetch Response. */

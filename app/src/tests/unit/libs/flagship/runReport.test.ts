@@ -39,6 +39,8 @@ const LEGACY_KEYS = [
 ];
 
 const REFORM_ROW_ID = '55555555-5555-4555-8555-555555555555';
+/** The account row a signed-in run writes; its ID is the report's link. */
+const REPORT_ROW_ID = '44444444-4444-4444-8444-444444444444';
 
 const PROVISION = {
   path: 'gov.irs.credits.ctc.amount.base[0].amount',
@@ -462,7 +464,7 @@ describe('runFlagshipReport', () => {
   test('given a signed-in run then exactly one account association is written', async () => {
     // Given
     const accountStore = {
-      create: vi.fn().mockResolvedValue({ id: 'row-1' }),
+      create: vi.fn().mockResolvedValue({ id: REPORT_ROW_ID }),
     } as unknown as FlagshipReportStore;
 
     // When
@@ -477,8 +479,8 @@ describe('runFlagshipReport', () => {
       accountReportStore: accountStore,
     });
 
-    // Then
-    expect(reportId).toBe('55');
+    // Then: the account row's ID is the report's link, which anyone can open
+    expect(reportId).toBe(REPORT_ROW_ID);
     expect(mockCreateReport).toHaveBeenCalledWith('us', {
       simulation_1_id: 101,
       simulation_2_id: 102,
@@ -500,13 +502,13 @@ describe('runFlagshipReport', () => {
     for (const legacyKey of LEGACY_KEYS) {
       expect(localStorage.getItem(legacyKey)).toBeNull();
     }
-    expect(readReportMeta('55')?.title).toBe('CTC expansion');
+    expect(readReportMeta(REPORT_ROW_ID)?.title).toBe('CTC expansion');
   });
 
   test('given a run with a budget window then the account record keeps the window', async () => {
     // Given
     const accountStore = {
-      create: vi.fn().mockResolvedValue({ id: 'row-1' }),
+      create: vi.fn().mockResolvedValue({ id: REPORT_ROW_ID }),
     } as unknown as FlagshipReportStore;
 
     // When
@@ -529,7 +531,7 @@ describe('runFlagshipReport', () => {
   test('given a signed-in run then its provenance stays out of localStorage and goes on sign-out', async () => {
     // Given
     const accountStore = {
-      create: vi.fn().mockResolvedValue({ id: 'row-1' }),
+      create: vi.fn().mockResolvedValue({ id: REPORT_ROW_ID }),
     } as unknown as FlagshipReportStore;
 
     // When
@@ -544,9 +546,9 @@ describe('runFlagshipReport', () => {
 
     // Then: the next person on this browser cannot find it
     expect(localStorage.getItem(REPORT_META_KEY)).toBeNull();
-    expect(readReportMeta('55')?.title).toBe('CTC expansion');
+    expect(readReportMeta(REPORT_ROW_ID)?.title).toBe('CTC expansion');
     forgetAccountReportMeta();
-    expect(readReportMeta('55')).toBeNull();
+    expect(readReportMeta(REPORT_ROW_ID)).toBeNull();
   });
 
   test('given the account association fails then the signed-in run fails', async () => {

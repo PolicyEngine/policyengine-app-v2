@@ -33,12 +33,12 @@ const PROVISIONS: RunReportProvision[] = [
   },
 ];
 
-function renderRun(auth: AuthContextValue) {
+function renderRun(auth: AuthContextValue, push = vi.fn()) {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <ReduxProvider store={store}>
       <CountryProvider value="us">
         <AuthTestProvider value={auth}>
-          <NavigationProvider value={{ push: vi.fn(), replace: vi.fn(), back: vi.fn() }}>
+          <NavigationProvider value={{ push, replace: vi.fn(), back: vi.fn() }}>
             {children}
           </NavigationProvider>
         </AuthTestProvider>
@@ -90,5 +90,19 @@ describe('useRunFlagshipReport', () => {
     await waitFor(() => expect(runFlagshipReport).toHaveBeenCalledTimes(1));
     expect(vi.mocked(runFlagshipReport).mock.calls[0][0].accountReportStore).toBeNull();
     expect(result.current.error).toBeNull();
+  });
+
+  test("given a signed-in run then the report opens at its saved report's link", async () => {
+    // Given: the run answers the account row's ID, which anyone can open
+    const reportRowId = '44444444-4444-4444-8444-444444444444';
+    vi.mocked(runFlagshipReport).mockResolvedValue(reportRowId);
+    const push = vi.fn();
+    const { result } = renderRun(signedInAuthValue(), push);
+
+    // When
+    await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
+
+    // Then
+    expect(push).toHaveBeenCalledWith(`/us/report/${reportRowId}`);
   });
 });

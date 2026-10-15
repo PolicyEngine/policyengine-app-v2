@@ -2,7 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
-import type { LiveValidation } from '@/libs/flagship/reportValidation';
+import { snapshotFromLive, type LiveValidation } from '@/libs/flagship/reportValidation';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { NEWER_RELEASE_ID } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
 
@@ -83,5 +83,24 @@ describe('useReportValidationSnapshot', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(result.current.snapshot).toBeNull();
+  });
+
+  test("given a report someone else ran then the owner's pin shows and nothing is pinned", async () => {
+    // Given: no record in this session, and the shared report's pin
+    const ownersPin = snapshotFromLive({
+      ...settledLive,
+      calibration: { ...mockCalibrationMatches, releaseId: NEWER_RELEASE_ID },
+    });
+
+    // When
+    const { result } = renderHook(() =>
+      useReportValidationSnapshot(API_REPORT_ID, settledLive, ownersPin)
+    );
+
+    // Then: the drift is measured against the owner's pin
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(result.current.snapshot).toEqual(ownersPin);
+    expect(result.current.drift).toHaveLength(1);
+    expect(await new LocalStorageFlagshipReportStore().findMine()).toEqual([]);
   });
 });

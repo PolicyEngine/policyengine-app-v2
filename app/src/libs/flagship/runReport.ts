@@ -18,10 +18,11 @@ import { parseReportMeta, stampReportMeta, type ReportParseResult } from './repo
 /**
  * The run bridge: turns a set of provisions (from a draft reform or a
  * tracked bill) into a full society-wide report — policy → baseline +
- * reform simulations → report record — and returns the API report id
+ * reform simulations → report record — and returns the report's link,
  * whose page auto-starts the calculation and renders the chart
- * dashboard. The API id is the durable one: a link carrying it opens
- * on any device, where the local association id would not.
+ * dashboard. With accounts the link is the report's user-report ID,
+ * which anyone can open with its title and provisions; otherwise it is
+ * the v1 report's ID.
  */
 export interface RunReportProvision {
   path: string;
@@ -75,8 +76,8 @@ export const REPORT_META_KEY = 'pe-flagship-report-meta';
  */
 const accountReportMeta = new Map<string, FlagshipReportMeta>();
 
-function rememberAccountReportMeta(reportId: string, meta: FlagshipReportMeta): void {
-  accountReportMeta.set(reportId, meta);
+function rememberAccountReportMeta(userReportId: string, meta: FlagshipReportMeta): void {
+  accountReportMeta.set(userReportId, meta);
 }
 
 /** Drops the signed-in session's report provenance (on sign-out). */
@@ -258,6 +259,10 @@ export async function createReformPolicy(
   return Number(policyResponse.result.policy_id);
 }
 
+/**
+ * Runs a report and records it. Answers the report's link: the account
+ * row's ID with accounts, otherwise the v1 report's (see reportLink).
+ */
 export async function runFlagshipReport({
   countryId,
   title,
@@ -303,9 +308,10 @@ export async function runFlagshipReport({
     year: String(year),
   };
 
-  // The v1 report comes first; its ID is the report's link. Then exactly
-  // one record of it: through the API with accounts, otherwise this
-  // browser's flagship record (v3 never writes the legacy report keys).
+  // The v1 report comes first. Then exactly one record of it: through the
+  // API with accounts, whose ID is the report's link (anyone can open it),
+  // otherwise this browser's flagship record, with the v1 report's ID as
+  // the link (v3 never writes the legacy report keys).
   const reportMetadata = await createReport(countryId, payload);
   const reportId = String(reportMetadata.id);
   const budgetWindow =
@@ -338,10 +344,11 @@ export async function runFlagshipReport({
     baselineReformId: comparison?.reformId ?? null,
   };
 
+  let link = reportId;
   if (accountReportStore) {
     // A failure fails the run, so a report that opens is one that was saved.
-    rememberAccountReportMeta(reportId, meta);
-    await accountReportStore.create(record);
+    link = (await accountReportStore.create(record)).id;
+    rememberAccountReportMeta(link, meta);
   } else {
     saveReportMeta(reportId, meta);
     // Best-effort: the run already succeeded, and the link opens without it.
@@ -378,5 +385,5 @@ export async function runFlagshipReport({
     });
   }
 
-  return reportId;
+  return link;
 }

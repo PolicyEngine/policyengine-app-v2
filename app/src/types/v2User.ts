@@ -112,6 +112,28 @@ export interface UserReportItem extends AssociationItemBase {
   last_run_at: string | null;
 }
 
+/**
+ * A saved report as anyone holding its link reads it (`/v2/shared-reports`):
+ * the owner and the owner's saved-reform IDs are left out, and the reform it
+ * was compared with is named instead.
+ */
+export interface SharedReportItem {
+  id: string;
+  country_id: AssociationCountryId;
+  legacy_report_id: number | null;
+  name: string | null;
+  source_note: string | null;
+  provisions: ReportProvisionWire[] | null;
+  /** ReportValidationWire on the wire; validated by validationFromWire. */
+  validation: unknown | null;
+  budget_window_years: number | null;
+  /** The owner's saved reform the report was compared with; null for current law. */
+  baseline_reform: { name: string | null } | null;
+  last_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 /* Create and patch bodies (strict on the server: unknown keys are a 400). */
 
 export interface UserPolicyCreateBody {

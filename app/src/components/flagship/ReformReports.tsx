@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { IconArrowRight } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { fetchReportById } from '@/api/report';
 import { Badge, Button, Stack, Text } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
@@ -50,8 +50,8 @@ function ReportStatus({ countryId, apiReportId }: { countryId: CountryId; apiRep
  * What a report compared the reform with, when not current law: the same
  * reform against a saved reform is another report, and reads as one.
  */
-function ReportBaseline({ apiReportId }: { apiReportId: string }) {
-  const baseline = readReportMeta(apiReportId)?.baseline;
+function ReportBaseline({ link }: { link: string }) {
+  const baseline = readReportMeta(link)?.baseline;
   if (!baseline) {
     return null;
   }
@@ -123,7 +123,7 @@ export default function ReformReports({
               >
                 <ReportYear countryId={countryId} report={report} />
               </span>
-              <ReportBaseline apiReportId={report.apiReportId} />
+              <ReportBaseline link={reportLink(report)} />
               <span
                 style={{
                   fontSize: typography.fontSize.xs,
@@ -138,7 +138,7 @@ export default function ReformReports({
                 size="sm"
                 variant="ghost"
                 style={{ marginLeft: 'auto' }}
-                onClick={() => nav.push(`/${countryId}/report/${report.apiReportId}`)}
+                onClick={() => nav.push(`/${countryId}/report/${reportLink(report)}`)}
               >
                 Open
                 <IconArrowRight size={14} />

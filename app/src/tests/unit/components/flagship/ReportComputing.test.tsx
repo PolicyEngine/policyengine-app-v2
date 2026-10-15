@@ -76,11 +76,11 @@ describe('ReportComputingScreen', () => {
 });
 
 describe('ReportUnresolvable', () => {
-  test('given an old sur- link then the page says the report is not found and how to get a link', () => {
+  test('given an old link then the page says the report is not found and how to get a link', () => {
     render(<ReportUnresolvable />);
 
     expect(screen.getByText('Report not found.')).toBeInTheDocument();
-    expect(screen.getByText(/old link that only worked in the browser/i)).toBeInTheDocument();
+    expect(screen.getByText(/old report link, which no longer opens/i)).toBeInTheDocument();
     expect(screen.getByText(/run the reform again from build/i)).toBeInTheDocument();
   });
 });

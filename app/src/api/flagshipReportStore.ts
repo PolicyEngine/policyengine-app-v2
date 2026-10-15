@@ -19,7 +19,12 @@ import {
 } from '@/libs/flagship/reportValidation';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { clampStoreText, MAX_STORE_NOTE_LENGTH } from '@/libs/flagship/storeText';
-import type { ReportProvisionWire, UserReportCreateBody, UserReportItem } from '@/types/v2User';
+import type {
+  ReportProvisionWire,
+  SharedReportItem,
+  UserReportCreateBody,
+  UserReportItem,
+} from '@/types/v2User';
 
 /**
  * Store for flagship report records: a pointer to the computed output on
@@ -29,6 +34,7 @@ import type { ReportProvisionWire, UserReportCreateBody, UserReportItem } from '
  * row for the report, carrying the v3 fields.
  */
 export interface FlagshipReportRecord {
+  /** The account row's ID, which is the report's link (see reportLink); `lfr-…` in this browser. */
   id: string;
   countryId: CountryId;
   /** Report id on api.policyengine.org — the pointer to the outputs. */
@@ -148,6 +154,51 @@ export function parseReportItem(item: UserReportItem): ReportParseResult<Flagshi
       baselineReformId: item.baseline_user_policy_id ?? null,
     })
   );
+}
+
+/**
+ * A shared report (`/v2/shared-reports`) as a record, read through the
+ * report schema like an account row. It carries no links to its owner's
+ * saved reforms: those stay private.
+ */
+export function parseSharedReportItem(
+  item: SharedReportItem
+): ReportParseResult<FlagshipReportRecord> {
+  return parseReportRecord(
+    stampReportRecord({
+      id: item.id,
+      countryId: item.country_id,
+      apiReportId: String(item.legacy_report_id),
+      title: item.name,
+      sourceNote: item.source_note,
+      provisions: provisionsFromWire(item.provisions),
+      createdAt: item.created_at,
+      reformId: null,
+      validation: validationFromWire(item.validation),
+      budgetWindowYears: item.budget_window_years ?? null,
+      baselineReformId: null,
+    })
+  );
+}
+
+/**
+ * A report's link. An account row's ID opens for anyone, through
+ * `/v2/shared-reports`; a record kept only in this browser has nothing to
+ * share, so its link is the v1 report's number.
+ */
+export function reportLink(record: FlagshipReportRecord): string {
+  return isAccountId(record.id) ? record.id : record.apiReportId;
+}
+
+/**
+ * This session's record a report link names: the account row by its ID,
+ * or, in this browser, the first record of the v1 report the link numbers.
+ */
+export function findReportRecordByLink(
+  store: FlagshipReportStore,
+  link: string
+): Promise<FlagshipReportRecord | null> {
+  return isAccountId(link) ? store.findById(link) : store.findByApiReportId(link);
 }
 
 /** An account row as a record; throws ReportSchemaError when unreadable. */
