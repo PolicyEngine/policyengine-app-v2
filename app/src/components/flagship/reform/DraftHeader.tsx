@@ -462,9 +462,16 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
+            flexWrap: 'wrap',
             gap: spacing.sm,
-            fontSize: typography.fontSize.xs,
-            color: colors.text.tertiary,
+            width: 'fit-content',
+            marginLeft: 'auto',
+            padding: `${spacing.xs} ${spacing.md}`,
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: 8,
+            background: colors.gray[50],
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
           }}
         >
           {naming ? (
@@ -495,7 +502,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             />
           ) : (
             <>
-              <span>Runs as “{UNTITLED_REFORM}”.</span>
+              <IconPencil size={14} aria-hidden style={{ color: colors.text.tertiary }} />
+              <span>No name yet. The report will be called “{UNTITLED_REFORM}”.</span>
               <button
                 type="button"
                 onClick={() => setNaming(true)}
@@ -505,6 +513,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
                   background: 'none',
                   padding: 0,
                   font: 'inherit',
+                  fontWeight: typography.fontWeight.semibold,
                   color: colors.primary[700],
                 }}
               >

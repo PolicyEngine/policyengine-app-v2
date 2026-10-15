@@ -193,13 +193,17 @@ describe('DraftHeader', () => {
       addDraftProvision('us', CHANGED);
       renderHeader();
 
-      expect(screen.getByText('Runs as “Untitled reform”.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No name yet. The report will be called “Untitled reform”.')
+      ).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Name it' }));
       const box = screen.getAllByRole('textbox', { name: 'Reform name' }).at(-1)!;
       await user.type(box, 'Bigger EITC{Enter}');
 
       expect(getDraftReform()?.label).toBe('Bigger EITC');
-      expect(screen.queryByText('Runs as “Untitled reform”.')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('No name yet. The report will be called “Untitled reform”.')
+      ).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
       await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
       expect(mockRun.mock.calls[0][0]).toBe('Bigger EITC');
