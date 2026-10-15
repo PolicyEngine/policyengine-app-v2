@@ -47,6 +47,7 @@ import {
   billScoresOtherThanWriteUp,
 } from '@/libs/flagship/billProvisions';
 import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
+import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
@@ -874,7 +875,24 @@ export default function ReformsPage() {
               </Text>
             )}
           </Stack>
-          <ReformReports countryId={countryId} reports={reportsFor(selectedReform.id)} />
+          <ReformReports
+            countryId={countryId}
+            reports={reportsFor(selectedReform.id)}
+            rerunning={runReport.isRunning}
+            onRerun={async (report) => {
+              // The same report on today's model: its reform as it ran, its
+              // year, population, budget window and comparison.
+              const settings = await rerunSettings(countryId, report);
+              await runReport.run(
+                report.title || selectedReform.label || 'Untitled reform',
+                report.sourceNote || SOURCE_LABELS[selectedReform.provenance.source],
+                report.provisions,
+                selectedReform.id,
+                Number(report.year) || undefined,
+                settings
+              );
+            }}
+          />
         </Stack>
       </WorkspaceLayout>
     );

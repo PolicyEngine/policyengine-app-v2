@@ -6,7 +6,10 @@ import ReformReports from '@/components/flagship/ReformReports';
 import { saveReportMeta } from '@/libs/flagship/runReport';
 
 vi.mock('@/api/report', () => ({
-  fetchReportById: vi.fn(async () => ({ status: 'complete' })),
+  fetchReportById: vi.fn(async () => ({
+    status: 'complete',
+    finished_at: '2026-10-14T15:12:00Z',
+  })),
 }));
 
 const record = (overrides: Partial<FlagshipReportRecord>): FlagshipReportRecord => ({
@@ -29,11 +32,14 @@ const META = {
   createdAt: '2026-10-01T00:00:00Z',
 };
 
-function renderReports(reports: FlagshipReportRecord[]) {
+function renderReports(
+  reports: FlagshipReportRecord[],
+  onRerun?: (report: FlagshipReportRecord) => void
+) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <ReformReports countryId="us" reports={reports} />
+      <ReformReports countryId="us" reports={reports} onRerun={onRerun} />
     </QueryClientProvider>
   );
 }
@@ -61,8 +67,8 @@ describe('ReformReports', () => {
     const [againstPlanB, againstCurrentLaw] = within(
       screen.getByRole('region', { name: 'Reports' })
     )
-      .getAllByRole('button', { name: /open/i })
-      .map((button) => button.parentElement!);
+      .getAllByRole('button', { name: /view results|open/i })
+      .map((button) => button.closest('[data-report-row]')!);
     expect(againstPlanB).toHaveTextContent('Compared with Plan B');
     expect(againstCurrentLaw).not.toHaveTextContent('Compared with');
   });
@@ -72,5 +78,22 @@ describe('ReformReports', () => {
 
     expect(screen.getByText('2026 report')).toBeInTheDocument();
     expect(screen.queryByText(/Compared with/)).not.toBeInTheDocument();
+  });
+
+  test('given a finished report then its stored results open as of that run, or it runs again', async () => {
+    // Given
+    const onRerun = vi.fn();
+    const report = record({ apiReportId: '58' });
+    renderReports([report], onRerun);
+
+    // Then — the results are from when the run finished
+    expect(await screen.findByText('Results from Oct 14, 2026')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view results/i })).toBeInTheDocument();
+
+    // When
+    screen.getByRole('button', { name: /re-run/i }).click();
+
+    // Then
+    expect(onRerun).toHaveBeenCalledWith(report);
   });
 });
