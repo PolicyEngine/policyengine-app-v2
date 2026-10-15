@@ -131,9 +131,9 @@ const PARAMETER_MUTED: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-/** A value as the row reads it: yes/no rather than true/false. */
+/** A value as the row reads it: True/False, as Build's switch says. */
 function displayValue(value: unknown, unit: string | null): string {
-  return typeof value === 'boolean' ? (value ? 'Yes' : 'No') : formatValue(value, unit);
+  return typeof value === 'boolean' ? (value ? 'True' : 'False') : formatValue(value, unit);
 }
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
