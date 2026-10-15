@@ -45,7 +45,8 @@ import {
   billReportProvisions,
   billScoresOtherThanWriteUp,
 } from '@/libs/flagship/billProvisions';
-import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
+import { periodLabel } from '@/libs/flagship/draftLabels';
+import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -724,55 +725,80 @@ export default function ReformsPage() {
                 const baseline = first
                   ? currentLawAt(parameter.name, Number(first.startDate.slice(0, 4)))
                   : getCurrentValue(parameters[parameter.name]?.values);
-                const single = parameter.values.length <= 1;
-                const schedule = summarizeIntervals(parameter.values, (value) =>
-                  displayValue(value, unit)
-                );
-                const when = first ? (single ? periodLabel(first) : schedule.when) : '';
+                // One row per period the reform sets, each read against
+                // current law in its own first year.
+                const periods = parameter.values.length > 0 ? parameter.values : [];
                 const parts = resolveBreadcrumb(parameter.name).split(' → ');
                 const name = parts[parts.length - 1] ?? parameter.name;
                 const context = parts.slice(0, -1).join(' → ');
-                return (
-                  <div key={parameter.name} role="row" style={PARAMETER_ROW}>
-                    <div
-                      role="cell"
-                      style={{ minWidth: 0 }}
-                      title={resolveBreadcrumb(parameter.name)}
+                const nameCell = (
+                  <div
+                    role="cell"
+                    style={{ minWidth: 0 }}
+                    title={resolveBreadcrumb(parameter.name)}
+                  >
+                    <Text
+                      style={{
+                        margin: 0,
+                        fontSize: typography.fontSize.sm,
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.primary,
+                      }}
                     >
+                      {name.charAt(0).toUpperCase() + name.slice(1)}
+                    </Text>
+                    {context && (
                       <Text
+                        className="tw:truncate"
                         style={{
                           margin: 0,
-                          fontSize: typography.fontSize.sm,
-                          fontWeight: typography.fontWeight.medium,
-                          color: colors.text.primary,
+                          fontSize: typography.fontSize.xs,
+                          color: colors.text.secondary,
                         }}
                       >
-                        {name.charAt(0).toUpperCase() + name.slice(1)}
+                        {context}
                       </Text>
-                      {context && (
-                        <Text
-                          className="tw:truncate"
-                          style={{
-                            margin: 0,
-                            fontSize: typography.fontSize.xs,
-                            color: colors.text.secondary,
-                          }}
-                        >
-                          {context}
-                        </Text>
-                      )}
-                    </div>
-                    <span role="cell" style={PARAMETER_MUTED}>
-                      {displayValue(baseline, unit)}
-                    </span>
-                    <span role="cell" style={PARAMETER_VALUE}>
-                      {single && first ? displayValue(first.value, unit) : schedule.value}
-                    </span>
-                    <span role="cell" style={PARAMETER_MUTED}>
-                      {when}
-                    </span>
+                    )}
                   </div>
                 );
+                if (periods.length === 0) {
+                  return (
+                    <div key={parameter.name} role="row" style={PARAMETER_ROW}>
+                      {nameCell}
+                      <span role="cell" style={PARAMETER_MUTED}>
+                        {displayValue(baseline, unit)}
+                      </span>
+                      <span role="cell" style={PARAMETER_VALUE} />
+                      <span role="cell" style={PARAMETER_MUTED} />
+                    </div>
+                  );
+                }
+                return periods.map((period, index) => (
+                  <div
+                    key={`${parameter.name}-${period.startDate}`}
+                    role="row"
+                    style={{
+                      ...PARAMETER_ROW,
+                      // A parameter's later periods sit under its name, without a rule between.
+                      ...(index < periods.length - 1 && { borderBottom: 'none', paddingBottom: 0 }),
+                      ...(index > 0 && { paddingTop: spacing.xs }),
+                    }}
+                  >
+                    {index === 0 ? nameCell : <span role="cell" />}
+                    <span role="cell" style={PARAMETER_MUTED}>
+                      {displayValue(
+                        currentLawAt(parameter.name, Number(period.startDate.slice(0, 4))),
+                        unit
+                      )}
+                    </span>
+                    <span role="cell" style={PARAMETER_VALUE}>
+                      {displayValue(period.value, unit)}
+                    </span>
+                    <span role="cell" style={PARAMETER_MUTED}>
+                      {periodLabel(period)}
+                    </span>
+                  </div>
+                ));
               })
             )}
           </div>
@@ -787,16 +813,27 @@ export default function ReformsPage() {
             }}
           >
             <Button
-              onClick={() =>
-                runReport.run(
+              onClick={() => {
+                // A report of these values already exists, done or still
+                // computing: open it rather than starting the wait again.
+                const latest = latestMatchingReport(
+                  selectedReform,
+                  reportsFor(selectedReform.id),
+                  reformRunYear(selectedReform)
+                );
+                if (latest) {
+                  nav.push(`/${countryId}/report/${latest.apiReportId}`);
+                  return;
+                }
+                void runReport.run(
                   reformName,
                   SOURCE_LABELS[selectedReform.provenance.source],
                   reformProvisions(selectedReform),
                   // Links the report record to the saved reform it came from.
                   selectedReform.id,
                   reformRunYear(selectedReform)
-                )
-              }
+                );
+              }}
               disabled={runReport.isRunning}
             >
               <IconChartBar size={16} />
