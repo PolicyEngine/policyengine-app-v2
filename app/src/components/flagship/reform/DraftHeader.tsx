@@ -357,6 +357,10 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const adjusted = draft.provisions.filter((provision) =>
     provisionAdjusts(provision, parameters?.[provision.path]?.values)
   );
+  // Saving keeps only those values, so a new reform that changes nothing
+  // has nothing to save. A saved reform being edited can still go back to
+  // current law.
+  const nothingToSave = empty || (!draft.editingReformId && adjusted.length === 0);
 
   return (
     <section
@@ -420,7 +424,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={empty || saveMutation.isPending}
+            disabled={nothingToSave || saveMutation.isPending}
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>

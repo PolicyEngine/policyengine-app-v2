@@ -555,9 +555,17 @@ describe('DraftHeader', () => {
     expect(getDraftReform()?.label).toBe('CTC expansion');
   });
 
+  test('given nothing differs from current law then a new reform has nothing to save', () => {
+    renderHeader();
+
+    // Saved, it would be a reform that sets nothing.
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
   test('given save then the reform is created with its provenance and the draft clears', async () => {
     const user = userEvent.setup();
     mockCreate.mockResolvedValue({ id: 'rf-1' });
+    updateDraftProvisionValue('gov.irs.credits.ctc.amount.base', 2500);
     renderHeader();
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
