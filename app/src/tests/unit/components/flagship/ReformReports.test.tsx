@@ -52,12 +52,13 @@ const META = {
 
 function renderReports(
   reports: FlagshipReportRecord[],
-  onRerun?: (report: FlagshipReportRecord) => void
+  onRerun?: (report: FlagshipReportRecord) => void,
+  reformName?: (reformId: string) => string | undefined
 ) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <ReformReports countryId="us" reports={reports} onRerun={onRerun} />
+      <ReformReports countryId="us" reports={reports} onRerun={onRerun} reformName={reformName} />
     </QueryClientProvider>
   );
 }
@@ -110,6 +111,18 @@ describe('ReformReports', () => {
 
     // Then
     expect(await screen.findByText('2028 report')).toBeInTheDocument();
+  });
+
+  test('given an account report compared with a saved reform after a reload then it names that reform', () => {
+    // Given: no run details in this page session, only the row's link
+    renderReports(
+      [record({ id: REPORT_ROW_ID, apiReportId: '55', baselineReformId: 'rf-plan-b' })],
+      undefined,
+      (reformId) => (reformId === 'rf-plan-b' ? 'Plan B' : undefined)
+    );
+
+    // Then
+    expect(screen.getByText('Compared with Plan B')).toBeInTheDocument();
   });
 
   test('given an account report compared with a saved reform then it reads so from its link', () => {

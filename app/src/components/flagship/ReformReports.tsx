@@ -51,11 +51,20 @@ function ReportStatus({ status }: { status?: string }) {
 /**
  * What a report compared the reform with, when not current law: the same
  * reform against a saved reform is another report, and reads as one. The
- * run's details are kept under the report's link.
+ * run's details name it in the session that ran it; otherwise an account
+ * record links the saved reform, named from this session's reforms.
  */
-function ReportBaseline({ link }: { link: string }) {
-  const baseline = readReportMeta(link)?.baseline;
-  if (!baseline) {
+function ReportBaseline({
+  report,
+  reformName,
+}: {
+  report: FlagshipReportRecord;
+  reformName?: (reformId: string) => string | null | undefined;
+}) {
+  const label =
+    readReportMeta(reportLink(report))?.baseline?.label ??
+    (report.baselineReformId ? reformName?.(report.baselineReformId) || 'a saved reform' : null);
+  if (!label) {
     return null;
   }
   return (
@@ -63,7 +72,7 @@ function ReportBaseline({ link }: { link: string }) {
       className="tw:truncate"
       style={{ minWidth: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
     >
-      Compared with {baseline.label}
+      Compared with {label}
     </span>
   );
 }
@@ -80,6 +89,7 @@ function ReportRow({
   onOpen,
   onRerun,
   rerunning,
+  reformName,
 }: {
   countryId: CountryId;
   report: FlagshipReportRecord;
@@ -87,6 +97,7 @@ function ReportRow({
   onOpen: () => void;
   onRerun?: () => void;
   rerunning: boolean;
+  reformName?: (reformId: string) => string | null | undefined;
 }) {
   const api = useApiReport(countryId, report.apiReportId);
   // A record saved through the API keeps no year (the report itself
@@ -130,7 +141,7 @@ function ReportRow({
             ? `Results from ${dayjs(finished).format('MMM D, YYYY')}`
             : `Run ${dayjs(report.createdAt).format('MMM D, YYYY')}`}
         </span>
-        <ReportBaseline link={reportLink(report)} />
+        <ReportBaseline report={report} reformName={reformName} />
       </div>
       <span>
         <ReportStatus status={api?.status} />
@@ -172,6 +183,7 @@ export default function ReformReports({
   reports,
   onRerun,
   rerunning = false,
+  reformName,
 }: {
   countryId: CountryId;
   reports: FlagshipReportRecord[];
@@ -179,6 +191,8 @@ export default function ReformReports({
   onRerun?: (report: FlagshipReportRecord) => void;
   /** A run is starting; Re-run waits for it. */
   rerunning?: boolean;
+  /** A saved reform's name, for the reform a report was compared with. */
+  reformName?: (reformId: string) => string | null | undefined;
 }) {
   const nav = useAppNavigate();
   const sorted = [...reports].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -215,6 +229,7 @@ export default function ReformReports({
               onOpen={() => nav.push(`/${countryId}/report/${reportLink(report)}`)}
               onRerun={onRerun && (() => onRerun(report))}
               rerunning={rerunning}
+              reformName={reformName}
             />
           ))}
         </Stack>

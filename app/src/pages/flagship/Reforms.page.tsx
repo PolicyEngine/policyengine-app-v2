@@ -12,7 +12,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
-import { reportLink } from '@/api/flagshipReportStore';
+import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { fetchReportById } from '@/api/report';
 import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
@@ -311,6 +312,8 @@ export default function ReformsPage() {
   const reformStore = useReformStore();
   const { store: reportStore } = useFlagshipReportStore();
   const { scope } = useV3SavedWork();
+  // A re-run whose settings could not be read; the run's own errors are runReport's.
+  const [rerunError, setRerunError] = useState<string | null>(null);
   const {
     bills,
     isConfigured: billsConfigured,
@@ -376,6 +379,30 @@ export default function ReformsPage() {
     unit: parameters?.[path]?.unit ?? null,
     baselineValue: getCurrentValue(parameters?.[path]?.values),
   });
+
+  /** A saved reform of this session's, by its ID. */
+  const savedReform = (reformId: string) => reforms?.find((reform) => reform.id === reformId);
+
+  /**
+   * The year a report scored. A record saved through the API keeps no year
+   * (the report itself carries it), so it is read from the API's record,
+   * as the report rows read it; unknown when that fails.
+   */
+  const reportYear = async (report: FlagshipReportRecord): Promise<string | undefined> => {
+    if (report.year) {
+      return report.year;
+    }
+    try {
+      const apiReport = await queryClient.fetchQuery({
+        queryKey: flagshipReportQueryKeys.status(countryId, report.apiReportId),
+        queryFn: () => fetchReportById(countryId, report.apiReportId),
+        staleTime: 60_000,
+      });
+      return apiReport.year ?? undefined;
+    } catch {
+      return undefined;
+    }
+  };
 
   // As on the bill's report: stored parameters that contradict the bill's
   // write-up (UT SB60's reform and baseline are swapped) would score
@@ -446,8 +473,9 @@ export default function ReformsPage() {
     : null;
 
   const openReform = (reform: Reform) => {
-    // A failed delete belongs to the reform it was tried on.
+    // A failed delete or re-run belongs to the reform it was tried on.
     deleteMutation.reset();
+    setRerunError(null);
     setSelectedId(reform.id!);
   };
 
@@ -835,15 +863,17 @@ export default function ReformsPage() {
             }}
           >
             <Button
-              onClick={() => {
+              onClick={async () => {
                 // A report of these values already exists, done or still
                 // computing: open it at its link rather than starting the
                 // wait again.
-                const latest = latestMatchingReport(
-                  selectedReform,
-                  reportsFor(selectedReform.id),
-                  runYear
+                const reformReports = await Promise.all(
+                  reportsFor(selectedReform.id).map(async (report) => ({
+                    ...report,
+                    year: await reportYear(report),
+                  }))
                 );
+                const latest = latestMatchingReport(selectedReform, reformReports, runYear);
                 if (latest) {
                   nav.push(`/${countryId}/report/${reportLink(latest)}`);
                   return;
@@ -884,9 +914,9 @@ export default function ReformsPage() {
               report.
             </Text>
           )}
-          {runReport.error && (
+          {(runReport.error || rerunError) && (
             <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
-              {runReport.error}
+              {runReport.error || rerunError}
             </Text>
           )}
           {deleteMutation.isError && (
@@ -899,17 +929,30 @@ export default function ReformsPage() {
             countryId={countryId}
             reports={reportsFor(selectedReform.id)}
             rerunning={runReport.isRunning}
+            reformName={(reformId) => {
+              const reform = savedReform(reformId);
+              return reform ? reform.label || 'Untitled reform' : undefined;
+            }}
             onRerun={async (report) => {
+              setRerunError(null);
               // The same report on today's model: its reform as it ran, its
-              // year, population, budget window and comparison.
-              const settings = await rerunSettings(countryId, report);
+              // year, population, budget window and comparison, linked to the
+              // same saved reform.
+              const settings = await rerunSettings(countryId, report, { savedReform }).catch(
+                () => null
+              );
+              if (!settings) {
+                setRerunError('Could not re-run the report. Try again.');
+                return;
+              }
+              const { year, ...runSettings } = settings;
               await runReport.run(
                 report.title || selectedReform.label || 'Untitled reform',
                 report.sourceNote || SOURCE_LABELS[selectedReform.provenance.source],
                 report.provisions,
-                selectedReform.id,
-                Number(report.year) || undefined,
-                settings
+                report.reformId ?? selectedReform.id,
+                year,
+                runSettings
               );
             }}
           />
