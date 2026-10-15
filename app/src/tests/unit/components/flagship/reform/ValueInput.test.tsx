@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import ValueInput from '@/components/flagship/reform/ValueInput';
+import ValueInput, { ValueDisplay } from '@/components/flagship/reform/ValueInput';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 
 const param = (unit: string) =>
@@ -19,7 +19,8 @@ function Harness({
   onCommit,
 }: {
   unit: string;
-  initial: number;
+  /** A number, or "Infinity" for no limit, as metadata sends it. */
+  initial: number | string;
   onCommit: (v: any) => void;
 }) {
   const [value, setValue] = useState<any>(initial);
@@ -107,5 +108,38 @@ describe('ValueInput', () => {
     await user.tab();
 
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  test('given no limit then the box says so, and a visit without typing keeps it', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<Harness unit="currency-USD" initial="Infinity" onCommit={onCommit} />);
+    const box = screen.getByRole('spinbutton');
+
+    expect(box).toHaveValue(null);
+    expect(box).toHaveAttribute('placeholder', 'No limit');
+    await user.click(box);
+    await user.tab();
+
+    // An empty box means 0 elsewhere; here it is the limit left unset.
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  test('given no limit then typing a number sets a limit', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<Harness unit="currency-USD" initial="Infinity" onCommit={onCommit} />);
+
+    await user.type(screen.getByRole('spinbutton'), '150000');
+
+    expect(onCommit).toHaveBeenLastCalledWith(150000);
+  });
+});
+
+describe('ValueDisplay', () => {
+  test('given no limit then it reads as no limit, not as the text Infinity', () => {
+    render(<ValueDisplay param={param('currency-USD')} value="Infinity" />);
+
+    expect(screen.getByText('No limit')).toBeInTheDocument();
   });
 });

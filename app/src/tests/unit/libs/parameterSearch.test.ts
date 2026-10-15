@@ -15,12 +15,14 @@ import {
 } from '@/libs/parameterSearch';
 import {
   buildCrowdedStateParameterCollection,
+  buildFederalCtcParameterCollection,
   buildJurisdictionParameterCollection,
   buildLargeParameterCollection,
   buildSearchQualityParameterCollection,
   CODE_ONLY_STATE,
   CONTRIB_LOCAL_PATH,
   CROWDED_FEDERAL_PATH,
+  CTC_BASE_AMOUNT_PATH,
   FEDERAL_CTC_PATH,
   FEDERAL_TOP_RATE_PATH,
   JURISDICTION_STATE_NAMES,
@@ -236,6 +238,29 @@ describe('search quality with model-shaped metadata', () => {
     // The token prefilter must keep the common case within typeahead latency
     // even when the generated input contains more than 10,000 parameters.
     expect(elapsed).toBeLessThan(500);
+  });
+});
+
+describe('bracket schedule members', () => {
+  const parameters = buildFederalCtcParameterCollection();
+  const index = createParameterSearchIndex(
+    buildParameterSearchEntries(parameters),
+    buildConceptClusters(parameters),
+    buildConceptAliases(parameters)
+  );
+
+  it('given the program name then the per-child amount, labelled only "amount", is among the first results', () => {
+    const results = searchParameters(index, 'child tax credit', 10).map((entry) => entry.path);
+
+    expect(results).toContain(CTC_BASE_AMOUNT_PATH);
+  });
+
+  it('given a bracket member then its entry carries the schedule it belongs to', () => {
+    const entry = buildParameterSearchEntries(parameters).find(
+      (candidate) => candidate.path === CTC_BASE_AMOUNT_PATH
+    );
+
+    expect(entry?.scheduleLabel).toBe('Child Tax Credit amount');
   });
 });
 
