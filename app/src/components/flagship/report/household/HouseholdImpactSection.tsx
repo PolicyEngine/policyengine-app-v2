@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { STATE_NAMES } from '@/api/billFeed';
@@ -10,13 +10,18 @@ import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
+import {
+  HOUSEHOLD_VARIABLE_GROUPS,
+  householdVariableGroup,
+  listsForState,
+} from '@/libs/flagship/householdVariableGroups';
 import { loadParameterDependencies } from '@/libs/flagship/parameterDependencies';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
-import { getInputVariables } from '@/utils/VariableResolver';
+import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
 
 /** Both policies run at once; one household typically takes under a minute. */
 const EXPECTED_MS = 45 * 1000;
@@ -27,6 +32,15 @@ const EXPECTED_MS = 45 * 1000;
  */
 function newHousehold(year: string): Household {
   return Household.starter('us', year).withSPM({ geography_kind: 'national' });
+}
+
+/** The household's state ("CA"), once one is chosen. */
+function householdState(household: Household, year: string): string | null {
+  const householdKey = Object.keys(household.householdData.households ?? {})[0];
+  const state = householdKey
+    ? (household.householdData.households?.[householdKey] as any)?.state_name?.[year]
+    : undefined;
+  return typeof state === 'string' && state ? state : null;
 }
 
 /** "Married · 2 children · New York": who a result is for. */
@@ -210,6 +224,12 @@ function HouseholdCard({
         .flatMap(([, fields]) => fields),
     [basicInputFields]
   );
+  // The variable search lists only the household's own state's programs.
+  const stateCode = householdState(household, year);
+  const variableFilter = useCallback(
+    (variable: VariableInfo) => listsForState(variable, stateCode),
+    [stateCode]
+  );
   // Whether the household can run, as the household builder checks it.
   const validation = useMemo(
     () => HouseholdValidation.isReadyForSimulation(household, 'us', year, metadata),
@@ -288,6 +308,9 @@ function HouseholdCard({
             suggestedVariables={suggestedVariables}
             suggestedLabel="Related to this reform"
             searchRanking="relevance"
+            variableGroupOf={householdVariableGroup}
+            variableGroupOrder={HOUSEHOLD_VARIABLE_GROUPS}
+            variableFilter={variableFilter}
           />
           <div
             style={{
