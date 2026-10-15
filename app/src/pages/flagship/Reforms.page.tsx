@@ -879,7 +879,7 @@ export default function ReformsPage() {
         >
           {(
             [
-              { id: 'bills', label: 'Bills' },
+              { id: 'bills', label: 'Tracked bills' },
               { id: 'yours', label: 'Your library' },
             ] as const
           ).map((option) => {
