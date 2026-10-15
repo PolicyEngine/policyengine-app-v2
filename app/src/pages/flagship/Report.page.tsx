@@ -140,6 +140,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         simulations: { simulation1, simulation2: simulations[1] || null },
         // The bar follows a typical run for this region, not the country.
         estimateByRegion: true,
+        // A failed run says so on its record, so Your reforms can say Failed.
+        recordReportErrors: true,
         populations: {
           household1: null,
           household2: null,

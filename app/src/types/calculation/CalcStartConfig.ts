@@ -57,4 +57,10 @@ export interface CalcStartConfig {
    * Passed through to CalcParams.estimateByRegion. Off by default.
    */
   estimateByRegion?: boolean;
+
+  /**
+   * Write a failed society-wide report run to its report record (optional, v3)
+   * Off by default: a failed run leaves the record as it was.
+   */
+  recordReportErrors?: boolean;
 }

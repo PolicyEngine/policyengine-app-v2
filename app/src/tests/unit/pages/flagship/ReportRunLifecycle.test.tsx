@@ -37,6 +37,13 @@ const META: FlagshipReportMeta = {
   ],
 };
 
+/** The economy endpoint's answer when the run fails on the server. */
+const FAILED_ECONOMY_RESPONSE = {
+  status: 'error' as const,
+  result: null,
+  error: 'Simulation failed: out of memory',
+};
+
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
   useFlagshipReport: () => mockUseFlagshipReport(),
@@ -125,6 +132,38 @@ describe('FlagshipReportPage run lifecycle', () => {
     expect(await screen.findByRole('tab', { name: 'Validation' })).toBeInTheDocument();
     expect(mockFetchEconomy).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(mockMarkReportCompleted).toHaveBeenCalledTimes(1));
+  });
+
+  test('given the run fails then the record says it failed', async () => {
+    // Given
+    mockUseFlagshipReport.mockReturnValue(reportData());
+    mockFetchEconomy.mockResolvedValue(FAILED_ECONOMY_RESPONSE);
+
+    // When
+    renderPage();
+
+    // Then
+    await waitFor(() =>
+      expect(mockMarkReportError).toHaveBeenCalledWith(
+        EXISTING_REPORT.countryId,
+        EXISTING_REPORT_ID,
+        expect.objectContaining({ id: EXISTING_REPORT_ID, status: 'error' }),
+        expect.stringContaining(FAILED_ECONOMY_RESPONSE.error)
+      )
+    );
+  });
+
+  test('given the run fails then nothing is saved as its results', async () => {
+    // Given
+    mockUseFlagshipReport.mockReturnValue(reportData());
+    mockFetchEconomy.mockResolvedValue(FAILED_ECONOMY_RESPONSE);
+
+    // When
+    renderPage();
+
+    // Then
+    await waitFor(() => expect(mockMarkReportError).toHaveBeenCalled());
+    expect(mockMarkReportCompleted).not.toHaveBeenCalled();
   });
 
   describe('given a report whose record is already complete', () => {
