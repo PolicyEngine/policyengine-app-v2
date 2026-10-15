@@ -1,7 +1,10 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
+import HouseholdBuilderForm, {
+  rankVariablesBySearch,
+} from '@/components/household/HouseholdBuilderForm';
 import { Household } from '@/models/Household';
+import type { VariableInfo } from '@/utils/VariableResolver';
 
 // The SPM choice needs the full model metadata; here only its place in the form matters.
 vi.mock('@/components/household/SPMGeographyChoice', () => ({
@@ -50,5 +53,34 @@ describe('HouseholdBuilderForm', () => {
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
     expect(screen.getByText('Household')).toBeInTheDocument();
+  });
+});
+
+describe('rankVariablesBySearch', () => {
+  const variable = (name: string, label: string) => ({ name, label }) as VariableInfo;
+  const VARIABLES = [
+    variable('has_esi', 'Person currently has ESI'),
+    variable('is_parent', 'Is a parent'),
+    variable('rent', 'Rent'),
+    variable('pre_subsidy_rent', 'Pre-subsidy rent'),
+    variable('childcare_expenses', 'Childcare expenses'),
+  ];
+  const names = (list: VariableInfo[]) => list.map((entry) => entry.name);
+
+  test('given a word then whole words lead, and parts of words follow', () => {
+    expect(names(rankVariablesBySearch(VARIABLES, 'rent'))).toEqual([
+      'rent',
+      'pre_subsidy_rent',
+      'is_parent',
+      'has_esi',
+    ]);
+  });
+
+  test('given two words then a variable must match both', () => {
+    expect(names(rankVariablesBySearch(VARIABLES, 'subsidy rent'))).toEqual(['pre_subsidy_rent']);
+  });
+
+  test('given no match then the list is empty', () => {
+    expect(rankVariablesBySearch(VARIABLES, 'pension')).toEqual([]);
   });
 });

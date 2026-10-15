@@ -64,6 +64,59 @@ export interface HouseholdBuilderFormProps {
   suggestedVariables?: string[];
   /** The heading over the suggested variables. */
   suggestedLabel?: string;
+  /**
+   * "relevance" ranks matches (whole words before parts of words, all
+   * words of the search required); "substring", the default, lists every
+   * label containing the text, in metadata order.
+   */
+  searchRanking?: 'substring' | 'relevance';
+}
+
+/**
+ * How well one search word matches a variable: its whole label or name
+ * (0), the start of either (1), the start of a word in them (2), or
+ * inside a word (3, so "rent" still finds "parent" but after "Rent").
+ */
+function wordMatchScore(word: string, label: string, name: string): number | null {
+  if (label === word || name === word) {
+    return 0;
+  }
+  if (label.startsWith(word) || name.startsWith(word)) {
+    return 1;
+  }
+  const wordStart = new RegExp(`(^|[^a-z0-9])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+  if (wordStart.test(label) || wordStart.test(name.replaceAll('_', ' '))) {
+    return 2;
+  }
+  if (label.includes(word) || name.includes(word)) {
+    return 3;
+  }
+  return null;
+}
+
+/** Variables matching every word of the search, best matches first, then shorter labels. */
+export function rankVariablesBySearch(variables: VariableInfo[], search: string): VariableInfo[] {
+  const words = search.toLowerCase().split(/\s+/).filter(Boolean);
+  const scored: Array<{ variable: VariableInfo; score: number }> = [];
+  for (const variable of variables) {
+    const label = variable.label.toLowerCase();
+    const name = variable.name.toLowerCase();
+    let score = 0;
+    for (const word of words) {
+      const wordScore = wordMatchScore(word, label, name);
+      if (wordScore === null) {
+        score = -1;
+        break;
+      }
+      score += wordScore;
+    }
+    if (score >= 0) {
+      scored.push({ variable, score });
+    }
+  }
+  return scored
+    .sort((a, b) => a.score - b.score || a.variable.label.length - b.variable.label.length)
+    .map(({ variable }) => variable);
 }
 
 interface BuilderWarning {
@@ -86,6 +139,7 @@ export default function HouseholdBuilderForm({
   layout = 'stacked',
   suggestedVariables,
   suggestedLabel = 'Suggested',
+  searchRanking = 'substring',
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -159,11 +213,15 @@ export default function HouseholdBuilderForm({
       };
     }
     const search = searchValue.toLowerCase();
-    const filtered = allInputVariables.filter(
-      (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
-    );
+    const filtered =
+      searchRanking === 'relevance'
+        ? rankVariablesBySearch(allInputVariables, searchValue)
+        : allInputVariables.filter(
+            (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
+          );
     return {
-      variables: leadWithSuggested(filtered).slice(0, MAX_DROPDOWN_RESULTS),
+      // A typed search ranks by its own match; suggestions lead only the open list.
+      variables: filtered.slice(0, MAX_DROPDOWN_RESULTS),
       truncated: filtered.length > MAX_DROPDOWN_RESULTS,
     };
   };
@@ -515,7 +573,11 @@ export default function HouseholdBuilderForm({
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={filteredPersonVariables.variables}
                             truncated={filteredPersonVariables.truncated}
-                            suggested={suggestedOrder.size > 0 ? suggestedOrder : undefined}
+                            suggested={
+                              suggestedOrder.size > 0 && !personSearchValue.trim()
+                                ? suggestedOrder
+                                : undefined
+                            }
                             suggestedLabel={suggestedLabel}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             getEntityHint={(variable) => {
@@ -614,7 +676,11 @@ export default function HouseholdBuilderForm({
                   onFocusChange={setIsHouseholdSearchFocused}
                   filteredVariables={filteredHouseholdVariables.variables}
                   truncated={filteredHouseholdVariables.truncated}
-                  suggested={suggestedOrder.size > 0 ? suggestedOrder : undefined}
+                  suggested={
+                    suggestedOrder.size > 0 && !householdSearchValue.trim()
+                      ? suggestedOrder
+                      : undefined
+                  }
                   suggestedLabel={suggestedLabel}
                   onSelect={handleHouseholdVariableSelect}
                   getEntityHint={(variable) => {

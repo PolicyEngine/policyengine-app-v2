@@ -287,6 +287,7 @@ function HouseholdCard({
             layout="columns"
             suggestedVariables={suggestedVariables}
             suggestedLabel="Related to this reform"
+            searchRanking="relevance"
           />
           <div
             style={{
