@@ -140,6 +140,57 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
   });
 
+  test('given another household then each has its own builder and result', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    const first = screen.getByRole('region', { name: 'Household 1' });
+    const second = screen.getByRole('region', { name: 'Household 2' });
+    await user.click(within(second).getByRole('button', { name: 'Married' }));
+
+    // The second household's inputs are its own.
+    expect(within(first).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
+      'single · 0'
+    );
+    expect(within(second).getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
+      'married · 0'
+    );
+
+    await user.click(within(second).getByRole('button', { name: 'Calculate' }));
+    expect(
+      await within(second).findByRole('region', { name: 'Household impact' })
+    ).toBeInTheDocument();
+    expect(
+      within(first).queryByRole('region', { name: 'Household impact' })
+    ).not.toBeInTheDocument();
+  });
+
+  test('given Remove then that household goes, and the others keep their inputs', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    await user.click(
+      within(screen.getByRole('region', { name: 'Household 2' })).getByRole('button', {
+        name: 'Married',
+      })
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Remove household 1' }));
+
+    // The married household is now the first, with its inputs.
+    expect(screen.queryByRole('region', { name: 'Household 2' })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'Household 1' })).getByRole('generic', {
+        name: 'Household builder',
+      })
+    ).toHaveTextContent('married · 0');
+
+    await user.click(screen.getByRole('button', { name: 'Remove household 1' }));
+
+    expect(screen.getByRole('button', { name: 'Add a household' })).toBeInTheDocument();
+  });
+
   test('given the new household then it earns nothing, on national poverty thresholds', async () => {
     const user = userEvent.setup();
     renderSection();
