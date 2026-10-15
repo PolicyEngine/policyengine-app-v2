@@ -35,6 +35,7 @@ import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { tooltipText } from '@/libs/flagship/tooltipText';
 import { getPovertyByRaceCsvRows } from '@/pages/report-output/poverty-impact/povertyChartUtils';
 import type { RootState } from '@/store';
 import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
@@ -118,7 +119,7 @@ export default function PovertyImpactByRaceSubPage({
   const chartData = povertyLabels.map((label, i) => ({
     name: label,
     ...relativeBar(povertyChanges[i], formatPer),
-    hoverText: hoverMessage(label),
+    hoverText: tooltipText(hoverMessage(label)),
   }));
 
   const { plotWidth, plotHeight, probe } = usePlotSize(

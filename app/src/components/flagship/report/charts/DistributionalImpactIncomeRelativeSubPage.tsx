@@ -29,6 +29,7 @@ import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { tooltipText } from '@/libs/flagship/tooltipText';
 import { getDecileRelativeCsvRows } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
@@ -103,7 +104,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
     name: x,
     value: yArray[i],
     label: (yArray[i] > 0 ? '+' : '') + formatPer(yArray[i]),
-    hoverText: hoverMessage(x, yArray[i]),
+    hoverText: tooltipText(hoverMessage(x, yArray[i])),
   }));
 
   const { plotWidth, plotHeight, probe } = usePlotSize(
