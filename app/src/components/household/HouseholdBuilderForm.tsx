@@ -70,6 +70,11 @@ export interface HouseholdBuilderFormProps {
    * label containing the text, in metadata order.
    */
   searchRanking?: 'substring' | 'relevance';
+  /** Groups the variable search (see VariableSearchDropdown); a plain list when unset. */
+  variableGroupOf?: (variable: VariableInfo) => string;
+  variableGroupOrder?: readonly string[];
+  /** Leaves variables out of the search, e.g. other states' programs. */
+  variableFilter?: (variable: VariableInfo) => boolean;
 }
 
 /**
@@ -140,6 +145,9 @@ export default function HouseholdBuilderForm({
   suggestedVariables,
   suggestedLabel = 'Suggested',
   searchRanking = 'substring',
+  variableGroupOf,
+  variableGroupOrder,
+  variableFilter,
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -166,7 +174,13 @@ export default function HouseholdBuilderForm({
   }, []);
 
   // Get all input variables from metadata
-  const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
+  const allInputVariables = useMemo(
+    () =>
+      variableFilter
+        ? getInputVariables(metadata).filter(variableFilter)
+        : getInputVariables(metadata),
+    [metadata, variableFilter]
+  );
   const inputVariableLookup = useMemo(
     () => new Map(allInputVariables.map((variable) => [variable.name, variable])),
     [allInputVariables]
@@ -186,8 +200,9 @@ export default function HouseholdBuilderForm({
     return lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
   };
 
-  // Maximum number of results to display in dropdown for performance
-  const MAX_DROPDOWN_RESULTS = 100;
+  // Maximum number of results to display in dropdown for performance; a
+  // grouped list shows a few per group, so it takes every match.
+  const MAX_DROPDOWN_RESULTS = variableGroupOf ? Infinity : 100;
 
   // Suggested variables lead the list, in their own order; the rest keep theirs.
   const suggestedOrder = useMemo(
@@ -579,6 +594,8 @@ export default function HouseholdBuilderForm({
                                 : undefined
                             }
                             suggestedLabel={suggestedLabel}
+                            groupOf={variableGroupOf}
+                            groupOrder={variableGroupOrder}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
@@ -682,6 +699,8 @@ export default function HouseholdBuilderForm({
                       : undefined
                   }
                   suggestedLabel={suggestedLabel}
+                  groupOf={variableGroupOf}
+                  groupOrder={variableGroupOrder}
                   onSelect={handleHouseholdVariableSelect}
                   getEntityHint={(variable) => {
                     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
