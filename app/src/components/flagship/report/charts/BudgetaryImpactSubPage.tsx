@@ -31,6 +31,16 @@ interface Props {
   fillHeight?: boolean;
 }
 
+/** The bars' names where the full ones do not fit under their bars, as on a phone. */
+const SHORT_NAMES: Record<string, string> = {
+  'Federal tax revenues': 'Federal taxes',
+  'Tax revenues': 'Taxes',
+  'State and local income tax revenues': 'State taxes',
+  'State and local income taxes': 'State taxes',
+  'Benefit spending': 'Benefits',
+  'Net impact': 'Net',
+};
+
 /** "−$296.5m": each bar in its own unit, the minus before the currency symbol. */
 function formatBarAmount(value: number, countryId: CountryId): string {
   const amount = formatCurrencyAbbr(Math.abs(value), countryId, { maximumFractionDigits: 1 });
@@ -109,6 +119,7 @@ export default function BudgetaryImpactSubPage({
     formatBarLabel: (value: number) => formatBarAmount(toAmount(value), countryId),
     fillColor: (datum: WaterfallDatum) => getBudgetFillColor(datum, budgetaryImpact),
     tooltipContent: <BudgetWaterfallTooltip />,
+    shortNames: SHORT_NAMES,
   };
 
   if (fillHeight) {

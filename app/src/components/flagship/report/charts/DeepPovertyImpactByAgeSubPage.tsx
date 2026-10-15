@@ -21,6 +21,7 @@ import {
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
+import { categoryAxisProps } from '@/components/flagship/report/charts/categoryAxis';
 import {
   rateChangeMessage,
   rateChangeTitle,
@@ -43,6 +44,8 @@ import { regionName } from '@/utils/impactChartUtils';
 
 /** Margins around the plot; value labels stay inside it, so the top needs little. */
 const CHART_MARGIN = { top: 12, right: 20, bottom: 20 };
+/** The short name a compact card shows, and any chart where the full one does not fit. */
+const AGE_SHORT_NAMES: Record<string, string> = { 'Working-age adults': 'Adults' };
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -147,9 +150,10 @@ export default function DeepPovertyImpactByAgeSubPage({
       <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis
         dataKey="name"
-        tick={RECHARTS_FONT_STYLE}
-        interval={compact ? 0 : undefined}
-        tickFormatter={(value) => (compact && value === 'Working-age adults' ? 'Adults' : value)}
+        {...categoryAxisProps(povertyLabels, plotWidth, {
+          shortNames: AGE_SHORT_NAMES,
+          preferShort: compact,
+        })}
       />
       <YAxis
         ticks={yTicks}

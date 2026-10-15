@@ -20,6 +20,7 @@ import {
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
+import { categoryAxisProps } from '@/components/flagship/report/charts/categoryAxis';
 import {
   rateChangeMessage,
   relativeBar,
@@ -41,6 +42,12 @@ import { regionName } from '@/utils/impactChartUtils';
 
 /** Margins around the plot; value labels stay inside it, so the top needs little. */
 const CHART_MARGIN = { top: 12, right: 20, bottom: 20 };
+/** The measures' names where the full ones do not fit under their bars. */
+const SHORT_NAMES: Record<string, string> = {
+  'Gini index': 'Gini',
+  'Top 10% share': 'Top 10%',
+  'Top 1% share': 'Top 1%',
+};
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -157,7 +164,10 @@ export default function InequalityImpactSubPage({
     <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
       {probe}
       <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
-      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+      <XAxis
+        dataKey="name"
+        {...categoryAxisProps(labels, plotWidth, { shortNames: SHORT_NAMES })}
+      />
       <YAxis
         ticks={yTicks}
         domain={yDomain}

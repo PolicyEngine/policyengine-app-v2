@@ -20,6 +20,7 @@ import {
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
+import { categoryAxisProps } from '@/components/flagship/report/charts/categoryAxis';
 import {
   rateChangeMessage,
   rateChangeTitle,
@@ -153,7 +154,7 @@ export default function PovertyImpactByRaceSubPage({
     <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
       {probe}
       <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
-      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+      <XAxis dataKey="name" {...categoryAxisProps(povertyLabels, plotWidth)} />
       <YAxis
         ticks={yTicks}
         domain={yDomain}
