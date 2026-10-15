@@ -22,6 +22,7 @@ export function useRunFlagshipReport() {
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,6 +74,7 @@ export function useRunFlagshipReport() {
         sourceNote,
         provisions,
         currentLawId: Number(currentLawId),
+        parameters,
         reformId,
         year,
         region,
