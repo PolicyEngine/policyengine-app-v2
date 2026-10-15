@@ -361,7 +361,8 @@ describe('HouseholdImpactSection', () => {
     ['a network failure', new TypeError('Failed to fetch'), 'Could not reach PolicyEngine.'],
   ])('given %s then the alert reads in plain words', async (_kind, error, message) => {
     const user = userEvent.setup();
-    mockFetchHouseholdCalculation.mockRejectedValueOnce(error);
+    // Every ask fails: a timeout is asked once more, and fails again.
+    mockFetchHouseholdCalculation.mockRejectedValue(error);
     renderSection();
 
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
@@ -369,6 +370,21 @@ describe('HouseholdImpactSection', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(message);
     expect(alert).not.toHaveTextContent(error.message);
+  });
+
+  test('given a timeout then the calculation is asked once more, and its result shows', async () => {
+    const user = userEvent.setup();
+    mockFetchHouseholdCalculation.mockRejectedValueOnce(
+      new Error('Household calculation timed out after 50 seconds (client-side timeout)')
+    );
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    expect(await screen.findByRole('region', { name: 'Household impact' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    // The baseline twice (the timeout, then the second ask) and the reform once.
+    expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(3);
   });
 
   test('given a report outside the US then no household form shows', () => {
