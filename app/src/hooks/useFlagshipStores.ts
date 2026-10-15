@@ -44,7 +44,9 @@ export function useV3SavedWork(): V3SavedWork {
   const { status, subject } = useAuthStatus();
   const countryId = useCountryContext();
   const client = useV2UserClient();
-  const browserUserId = status === 'signed_out' ? getBrowserUserId() : null;
+  // Made only where it is sent: signed out in the US or UK.
+  const browserUserId =
+    status === 'signed_out' && isAssociationCountry(countryId) ? getBrowserUserId() : null;
   return useMemo(() => {
     if (!isAssociationCountry(countryId)) {
       return { account: null, scope: 'browser' };

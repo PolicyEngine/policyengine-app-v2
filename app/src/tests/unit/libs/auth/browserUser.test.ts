@@ -51,4 +51,35 @@ describe('browserUser', () => {
     expect(first).toMatch(UUID_PATTERN);
     expect(getBrowserUserId()).toBe(first);
   });
+
+  test('given a browser without crypto.randomUUID then it still gets a random user ID', () => {
+    // Given: randomUUID needs a secure context; getRandomValues does not
+    const realCrypto = globalThis.crypto;
+    vi.stubGlobal('crypto', {
+      getRandomValues: (bytes: Uint8Array) => realCrypto.getRandomValues(bytes),
+    });
+
+    try {
+      // When
+      const userId = getBrowserUserId();
+
+      // Then
+      expect(userId).toMatch(UUID_PATTERN);
+      expect(getBrowserUserId()).toBe(userId);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  test('given a damaged stored ID then the browser gets a new one the API accepts', () => {
+    // Given
+    localStorage.setItem('pe-browser-user-id', 'not-a-uuid');
+
+    // When
+    const userId = getBrowserUserId();
+
+    // Then
+    expect(userId).toMatch(UUID_PATTERN);
+    expect(localStorage.getItem('pe-browser-user-id')).toBe(userId);
+  });
 });

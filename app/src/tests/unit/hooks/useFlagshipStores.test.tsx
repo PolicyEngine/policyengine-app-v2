@@ -138,6 +138,22 @@ describe('v3 store choice', () => {
     expect(reports.store).toBeInstanceOf(LocalStorageFlagshipReportStore);
     expect(reports.scope).toBe('browser');
   });
+
+  test.each([
+    ['sign-in off', makeAuthValue({ status: 'disabled' }), 'us'],
+    ['signed out outside the US and UK', makeAuthValue(), 'ca'],
+  ] as const)('given %s then no browser user ID is made', (_, auth, countryId) => {
+    // Given
+    localStorage.clear();
+    const wrapper = wrapperFor(auth, countryId);
+
+    // When
+    renderHook(() => useFlagshipReportStore(), { wrapper });
+    renderHook(() => useReformStore(), { wrapper });
+
+    // Then: nothing is saved to the API, so nothing identifies this browser
+    expect(localStorage.getItem('pe-browser-user-id')).toBeNull();
+  });
 });
 
 describe('useReformStore', () => {
