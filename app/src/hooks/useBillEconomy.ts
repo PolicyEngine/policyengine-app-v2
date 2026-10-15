@@ -7,7 +7,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { createReformPolicy } from '@/libs/flagship/runReport';
 import type { RootState } from '@/store';
-import type { CalcStatus } from '@/types/calculation';
+import type { CalcStatus, RunStage } from '@/types/calculation';
 
 const strategy = new SocietyWideCalcStrategy();
 
@@ -18,6 +18,8 @@ export interface BillEconomy {
   queuePosition?: number;
   /** 0–100 while pending: the calculation strategy's estimate from typical run times. */
   progress?: number;
+  /** The run's stage from the API while pending, when it reports one. */
+  runStage?: RunStage;
   reformPolicyId?: string;
   baselinePolicyId?: string;
   year: string;
@@ -118,6 +120,7 @@ export function useBillEconomy(
         : economy.data?.message,
     queuePosition: economy.data?.queuePosition,
     progress: economy.data?.progress,
+    runStage: economy.data?.runStage,
     reformPolicyId,
     baselinePolicyId,
     year,
