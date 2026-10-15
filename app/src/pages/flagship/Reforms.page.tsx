@@ -741,6 +741,7 @@ export default function ReformsPage() {
                       style={{
                         margin: 0,
                         fontSize: typography.fontSize.sm,
+                        lineHeight: '20px',
                         fontWeight: typography.fontWeight.medium,
                         color: colors.text.primary,
                       }}
@@ -773,32 +774,42 @@ export default function ReformsPage() {
                     </div>
                   );
                 }
-                return periods.map((period, index) => (
-                  <div
-                    key={`${parameter.name}-${period.startDate}`}
-                    role="row"
-                    style={{
-                      ...PARAMETER_ROW,
-                      // A parameter's later periods sit under its name, without a rule between.
-                      ...(index < periods.length - 1 && { borderBottom: 'none', paddingBottom: 0 }),
-                      ...(index > 0 && { paddingTop: spacing.xs }),
-                    }}
+                // Each column lists the periods, one line each, so a period
+                // reads straight across; the name sits at the top.
+                const column = (
+                  render: (period: (typeof periods)[number]) => React.ReactNode,
+                  style: React.CSSProperties
+                ) => (
+                  <span
+                    role="cell"
+                    style={{ ...style, display: 'flex', flexDirection: 'column', gap: spacing.xs }}
                   >
-                    {index === 0 ? nameCell : <span role="cell" />}
-                    <span role="cell" style={PARAMETER_MUTED}>
-                      {displayValue(
-                        currentLawAt(parameter.name, Number(period.startDate.slice(0, 4))),
-                        unit
-                      )}
-                    </span>
-                    <span role="cell" style={PARAMETER_VALUE}>
-                      {displayValue(period.value, unit)}
-                    </span>
-                    <span role="cell" style={PARAMETER_MUTED}>
-                      {periodLabel(period)}
-                    </span>
+                    {periods.map((period) => (
+                      <span key={period.startDate} style={{ lineHeight: '20px' }}>
+                        {render(period)}
+                      </span>
+                    ))}
+                  </span>
+                );
+                return (
+                  <div
+                    key={parameter.name}
+                    role="row"
+                    style={{ ...PARAMETER_ROW, alignItems: 'start' }}
+                  >
+                    {nameCell}
+                    {column(
+                      (period) =>
+                        displayValue(
+                          currentLawAt(parameter.name, Number(period.startDate.slice(0, 4))),
+                          unit
+                        ),
+                      PARAMETER_MUTED
+                    )}
+                    {column((period) => displayValue(period.value, unit), PARAMETER_VALUE)}
+                    {column((period) => periodLabel(period), PARAMETER_MUTED)}
                   </div>
-                ));
+                );
               })
             )}
           </div>

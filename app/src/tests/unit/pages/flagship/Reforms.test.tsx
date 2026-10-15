@@ -663,13 +663,14 @@ describe('ReformsPage', () => {
     renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC indexed'));
 
-    // Each period on its own row: its dates and the reform's value then.
-    const rows = within(screen.getByRole('table', { name: 'Parameters' })).getAllByRole('row');
-    expect(rows.slice(1).map((row) => row.textContent)).toEqual([
-      expect.stringMatching(/2500.*2026 only$/),
-      expect.stringMatching(/2550.*2027 only$/),
-      expect.stringMatching(/2600.*from 2028$/),
-    ]);
+    // Each period on its own line, read across: the reform's value, then its dates.
+    const [row] = within(screen.getByRole('table', { name: 'Parameters' }))
+      .getAllByRole('row')
+      .slice(1);
+    const [, , reform, when] = within(row).getAllByRole('cell');
+    const lines = (cell: HTMLElement) => [...cell.children].map((line) => line.textContent);
+    expect(lines(reform)).toEqual(['2500', '2550', '2600']);
+    expect(lines(when)).toEqual(['2026 only', '2027 only', 'from 2028']);
   });
   test('given reports run from a reform then its card counts them and its detail lists them', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
