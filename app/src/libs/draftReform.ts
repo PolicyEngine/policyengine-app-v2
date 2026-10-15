@@ -486,6 +486,19 @@ export function setDraftLabel(label: string): void {
   writeDraft({ ...draft, label });
 }
 
+/**
+ * Records the saved reform a run kept the draft as, so the draft's next
+ * save or run updates that reform rather than adding another. Only the
+ * draft that was saved takes it: one started since keeps its own.
+ */
+export function setDraftSavedAs(reformId: string, startedAt: number | undefined): void {
+  const draft = getSnapshot();
+  if (!draft || draft.startedAt !== startedAt || draft.editingReformId) {
+    return;
+  }
+  writeDraft({ ...draft, editingReformId: reformId });
+}
+
 /** What the run compares the reform with: a saved reform, or current law when unset. */
 export function setDraftBaseline(reformId: string | undefined): void {
   const draft = getSnapshot();

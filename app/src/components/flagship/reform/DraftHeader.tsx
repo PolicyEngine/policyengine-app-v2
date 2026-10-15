@@ -28,6 +28,7 @@ import {
   setDraftBaseline,
   setDraftLabel,
   setDraftPopulation,
+  setDraftSavedAs,
   setDraftWindowYears,
   setDraftYear,
 } from '@/libs/draftReform';
@@ -278,8 +279,10 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // A run keeps its reform: it saves the draft to Your reforms (or
   // updates the saved reform it edits, or reuses a saved one that sets
   // the same values), so the report links to it and both can be found
-  // again after the tab closes. Best-effort: the run goes ahead unsaved
-  // if the store fails.
+  // again after the tab closes. A reused reform stays as it is, its name
+  // too; a new one becomes the reform the draft edits, so running again
+  // after a failed run updates it rather than saving another. Best-effort:
+  // the run goes ahead unsaved if the store fails.
   const [savingForRun, setSavingForRun] = useState(false);
   const saveForRun = async (): Promise<string | undefined> => {
     try {
@@ -295,12 +298,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
       }
       const match = findMatchingReform(await store.findMine(draft.countryId), payload.parameters);
       if (match?.id) {
-        if (payload.label && payload.label !== match.label) {
-          await store.update(match.id, { label: payload.label });
-        }
         return match.id;
       }
-      return (await store.create(payload)).id;
+      const created = (await store.create(payload)).id;
+      if (created) {
+        setDraftSavedAs(created, draft.startedAt);
+      }
+      return created;
     } catch {
       return undefined;
     } finally {
