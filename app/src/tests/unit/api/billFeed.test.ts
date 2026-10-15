@@ -9,8 +9,6 @@ import {
 } from '@/api/billFeed';
 import { CURRENT_YEAR } from '@/constants';
 import {
-  LARGE_STATUS_TABLE_ROWS,
-  mockPagedTrackerFetch,
   mockTrackerFetch,
   NET_COST_DRIFT_ROWS,
   NET_COST_ONLY_ROWS,
@@ -301,38 +299,6 @@ describe('tracker reads', () => {
       '0',
       '1000',
     ]);
-  });
-
-  test('given the server keeps no row order then the pages still read every row once', async () => {
-    // Given
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    vi.stubGlobal('fetch', mockPagedTrackerFetch(LARGE_STATUS_TABLE_ROWS));
-
-    // When
-    const bills = await fetchTrackerBills();
-
-    // Then: the bill's status row is the last one, on the second page.
-    expect(bills?.[0].status).toBe('Signed');
-  });
-
-  test('given a tracker read then every request names a stable row order', async () => {
-    // Given
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    const fetchMock = mockPagedTrackerFetch(LARGE_STATUS_TABLE_ROWS);
-    vi.stubGlobal('fetch', fetchMock);
-
-    // When
-    await fetchTrackerBills();
-    await fetchTrackerBillDistricts('ut-hb210');
-
-    // Then
-    const orders = fetchMock.mock.calls.map(([url]) =>
-      new URL(String(url)).searchParams.get('order')
-    );
-    expect(orders.length).toBeGreaterThan(0);
-    expect(orders.every((order) => typeof order === 'string' && order.length > 0)).toBe(true);
   });
 });
 

@@ -186,23 +186,8 @@ function totalRows(response: Response): number | undefined {
   return total && total !== '*' ? Number(total) : undefined;
 }
 
-/**
- * The columns each tracker table's rows sort by: its key. Postgres keeps
- * no row order without ORDER BY, so pages read by offset with no order
- * can repeat some rows and skip others, and a different set each load.
- */
-const TRACKER_TABLE_ORDER = {
-  research: 'id.asc',
-  reform_impacts: 'id.asc',
-  validation_metadata: 'id.asc',
-  // bill_id is LegiScan's id; the state and bill number break any tie.
-  processed_bills: 'bill_id.asc,state.asc,bill_number.asc',
-} as const;
-
-type TrackerTable = keyof typeof TRACKER_TABLE_ORDER;
-
 async function trackerSelect(
-  table: TrackerTable,
+  table: string,
   select: string,
   /** A PostgREST row filter, e.g. "id=eq.ks-hb2620". */
   filter?: string
@@ -214,7 +199,7 @@ async function trackerSelect(
   // Read page by page: one request stops at the cap and drops the rest.
   const rows: any[] = [];
   for (;;) {
-    const query = `select=${select}${filter ? `&${filter}` : ''}&order=${TRACKER_TABLE_ORDER[table]}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
+    const query = `select=${select}${filter ? `&${filter}` : ''}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
     const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
       headers: {
         apikey: config.anonKey,
