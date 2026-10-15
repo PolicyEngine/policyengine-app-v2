@@ -3,7 +3,6 @@ import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BudgetWindowResponse } from '@/api/budgetWindow';
 import BudgetWindowCard from '@/components/flagship/report/BudgetWindowCard';
-import { budgetWindowQueryKey } from '@/hooks/useBudgetWindow';
 
 const mockFetchBudgetWindow = vi.fn();
 
@@ -37,79 +36,55 @@ const COMPLETE: BudgetWindowResponse = {
   progress: 100,
 };
 
-function renderCard(
-  region?: string,
-  queryClient = newQueryClient(),
-  initialWindow?: { startYear: number; windowSize: number }
-) {
+const TEN_YEARS = { startYear: 2026, windowSize: 10 };
+const THREE_YEARS = { startYear: 2026, windowSize: 3 };
+
+function renderCard(window = TEN_YEARS, region?: string) {
   return render(
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
       <BudgetWindowCard
         countryId="us"
         reformPolicyId="123"
         baselinePolicyId="2"
         region={region}
-        year="2026"
-        initialWindow={initialWindow}
+        window={window}
       />
     </QueryClientProvider>
   );
 }
 
-function newQueryClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
-}
-
-async function pick(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
-  await user.click(screen.getByRole('combobox', { name: label }));
-  await user.click(await screen.findByRole('option', { name: option }));
-}
-
 describe('BudgetWindowCard', () => {
   beforeEach(() => {
     mockFetchBudgetWindow.mockReset();
-    // Radix Select scrolls its options and captures the pointer, which jsdom lacks.
-    Element.prototype.scrollIntoView ??= vi.fn();
-    Element.prototype.hasPointerCapture ??= vi.fn(() => false);
   });
 
-  test('given the card then nothing runs until it is asked for', () => {
-    renderCard();
-
-    expect(screen.getByRole('heading', { name: 'Budget window' })).toBeInTheDocument();
-    expect(screen.getByText('2026–2035')).toBeInTheDocument();
-    expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
-  });
-
-  test('given calculate then the run shows its progress from the API', async () => {
+  test('given the report window then it runs at once, with no controls of its own', async () => {
     mockFetchBudgetWindow.mockResolvedValue({
       status: 'computing',
       message: 'Scoring 2026, 2027 (2 of 10 complete)...',
       result: null,
       progress: 20,
     });
-    const user = userEvent.setup();
     renderCard();
 
-    await user.click(screen.getByRole('button', { name: 'Calculate 10-year budget' }));
-
+    expect(screen.getByRole('heading', { name: 'Budget window' })).toBeInTheDocument();
     expect(await screen.findByText('Calculating the 2026–2035 budget')).toBeInTheDocument();
-    expect(screen.getByText('Scoring 2026, 2027 (2 of 10 complete)')).toBeInTheDocument();
+    expect(await screen.findByText('Scoring 2026, 2027 (2 of 10 complete)')).toBeInTheDocument();
     expect(screen.getByText(/· 20%/)).toBeInTheDocument();
     expect(mockFetchBudgetWindow).toHaveBeenCalledWith('us', '123', '2', {
       region: 'us',
       startYear: 2026,
       windowSize: 10,
     });
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Calculate/ })).not.toBeInTheDocument();
   });
 
   test('given a finished window then each year and the total read as costs', async () => {
     mockFetchBudgetWindow.mockResolvedValue(COMPLETE);
-    const user = userEvent.setup();
-    renderCard();
-    await pick(user, 'Window length', '3 years');
-
-    await user.click(screen.getByRole('button', { name: 'Calculate 3-year budget' }));
+    renderCard(THREE_YEARS);
 
     const table = await screen.findByRole('table');
     expect(within(table).getByRole('rowheader', { name: '2027' })).toBeInTheDocument();
@@ -117,7 +92,6 @@ describe('BudgetWindowCard', () => {
     expect(within(total).getAllByText('−$3.9bn')).toHaveLength(2);
     // A federal reform run nationwide has no state column.
     expect(within(table).queryByText('State tax revenue')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Calculated' })).toBeDisabled();
   });
 
   test('given a state run then federal and state revenue read apart', async () => {
@@ -129,10 +103,7 @@ describe('BudgetWindowCard', () => {
         totals: year('Total', 0, -5e7),
       },
     });
-    const user = userEvent.setup();
-    renderCard('state/de');
-
-    await user.click(screen.getByRole('button', { name: 'Calculate 10-year budget' }));
+    renderCard(TEN_YEARS, 'state/de');
 
     const table = await screen.findByRole('table');
     expect(within(table).getByText('Federal tax revenue')).toBeInTheDocument();
@@ -143,52 +114,6 @@ describe('BudgetWindowCard', () => {
     expect(mockFetchBudgetWindow.mock.calls[0][3]).toMatchObject({ region: 'state/de' });
   });
 
-  test('given a new length after a run then nothing runs until the button', async () => {
-    mockFetchBudgetWindow.mockResolvedValue(COMPLETE);
-    const user = userEvent.setup();
-    renderCard();
-    await user.click(screen.getByRole('button', { name: 'Calculate 10-year budget' }));
-    await screen.findByRole('table');
-
-    await pick(user, 'Window length', '5 years');
-
-    expect(mockFetchBudgetWindow).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('button', { name: 'Calculate 5-year budget' })).toBeEnabled();
-  });
-
-  test('given a window already calculated then it shows again on return, without a new run', async () => {
-    const queryClient = newQueryClient();
-    queryClient.setQueryData(
-      budgetWindowQueryKey('us', '123', '2', { region: 'us', startYear: 2026, windowSize: 10 }),
-      COMPLETE
-    );
-
-    renderCard(undefined, queryClient);
-
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Calculated' })).toBeDisabled();
-    expect(mockFetchBudgetWindow).not.toHaveBeenCalled();
-  });
-
-  test('given a window asked for in Build then it opens running, without a click', async () => {
-    mockFetchBudgetWindow.mockResolvedValue({
-      status: 'computing',
-      message: 'Scoring 2026, 2027 + 3 more (0 of 5 complete)...',
-      result: null,
-      progress: 0,
-    });
-
-    renderCard(undefined, newQueryClient(), { startYear: 2026, windowSize: 5 });
-
-    expect(await screen.findByText('Calculating the 2026–2030 budget')).toBeInTheDocument();
-    expect(mockFetchBudgetWindow).toHaveBeenCalledWith('us', '123', '2', {
-      region: 'us',
-      startYear: 2026,
-      windowSize: 5,
-    });
-    expect(screen.getByRole('combobox', { name: 'Window length' })).toHaveTextContent('5 years');
-  });
-
   test('given a failed window then the error shows with a retry', async () => {
     mockFetchBudgetWindow.mockResolvedValue({
       status: 'error',
@@ -197,8 +122,6 @@ describe('BudgetWindowCard', () => {
     });
     const user = userEvent.setup();
     renderCard();
-
-    await user.click(screen.getByRole('button', { name: 'Calculate 10-year budget' }));
 
     expect(await screen.findByText('The 2031 simulation failed.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Try again' }));

@@ -507,6 +507,39 @@ describe('ReportAdjustPanel', () => {
       });
     });
 
+    test('given only more years then a recompute scores them, under the same name', async () => {
+      // Given
+      Element.prototype.scrollIntoView ??= vi.fn();
+      Element.prototype.hasPointerCapture ??= vi.fn(() => false);
+      mockFindMine.mockResolvedValue([]);
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion' });
+      const user = userEvent.setup();
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ReportAdjustPanel
+            title="CTC expansion"
+            sourceNote=""
+            provisions={[PHASED_CTC_PROVISION]}
+            year="2026"
+          />
+        </QueryClientProvider>
+      );
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      expect(screen.getByRole('combobox', { name: 'Years' })).toHaveTextContent('2026 only');
+      expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+
+      // When
+      await user.click(screen.getByRole('combobox', { name: 'Years' }));
+      await user.click(await screen.findByRole('option', { name: '2026–2035 · 10 years' }));
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockRun.mock.calls[0][0]).toBe('CTC expansion');
+      expect(mockRun.mock.calls[0][5]).toMatchObject({ windowYears: 10 });
+    });
+
     test('given a budget window then a recompute scores the same years', async () => {
       // Given
       mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
@@ -524,7 +557,9 @@ describe('ReportAdjustPanel', () => {
         </QueryClientProvider>
       );
       await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
-      expect(screen.getByText('Years 2026–2028')).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: 'Years' })).toHaveTextContent(
+        '2026–2028 · 3 years'
+      );
 
       // When
       const input = screen.getByLabelText(/maximum credit per child, 2026 only/i);
