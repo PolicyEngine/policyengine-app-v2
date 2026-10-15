@@ -581,7 +581,7 @@ describe('ReformsPage', () => {
 
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
-    expect(screen.getByLabelText(/new value for gov\.irs/i)).toHaveValue(3600);
+    expect(screen.getByLabelText(/^new value for/i)).toHaveValue(3600);
     expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
     expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
@@ -593,7 +593,7 @@ describe('ReformsPage', () => {
     renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
-    const input = screen.getByLabelText(/new value for gov\.irs/i);
+    const input = screen.getByLabelText(/^new value for/i);
     await user.clear(input);
     await user.type(input, '4000');
     await user.click(screen.getByRole('button', { name: /save changes/i }));
@@ -624,7 +624,7 @@ describe('ReformsPage', () => {
     await user.click(await screen.findByText('CTC to $1,000 from 2028'));
 
     expect(screen.getByText('from 2028')).toBeInTheDocument();
-    const input = screen.getByLabelText(/new value for gov\.irs/i);
+    const input = screen.getByLabelText(/^new value for/i);
     await user.clear(input);
     await user.type(input, '1200');
     await user.click(screen.getByRole('button', { name: /save changes/i }));
@@ -661,7 +661,7 @@ describe('ReformsPage', () => {
     await user.click(await screen.findByText('CTC indexed'));
 
     // Read-only here: a schedule changes in Build.
-    expect(screen.queryByLabelText(/new value for gov\.irs/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^new value for/i)).not.toBeInTheDocument();
     expect(screen.getByText('3 periods from 2026')).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText('Reform name'));

@@ -19,6 +19,7 @@ import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
 import ProvisionList from '@/components/flagship/ProvisionList';
+import ValueInput from '@/components/flagship/reform/ValueInput';
 import ReformReports from '@/components/flagship/ReformReports';
 import {
   CARD_GRID_STYLE,
@@ -28,7 +29,6 @@ import {
 } from '@/components/flagship/states';
 import StatTile from '@/components/flagship/StatTile';
 import TrackerHomeButton from '@/components/flagship/TrackerHomeButton';
-import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Stack, Text, Title } from '@/components/ui';
 import { FOREVER } from '@/constants';
@@ -51,13 +51,10 @@ import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import type { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
-import {
-  formatCompactBreadcrumb,
-  formatLabelParts,
-  getHierarchicalLabels,
-} from '@/utils/parameterLabels';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 /** How a reform came about: the report's record keeps it; the page doesn't show it. */
@@ -110,6 +107,34 @@ const editableInPlace = (parameter: Reform['parameters'][number]) => parameter.v
 /** The year a saved reform's report runs: its first change, or this year once that is past. */
 const reformRunYear = (reform: Reform) =>
   billRunYear(reform.parameters.map((parameter) => ({ intervals: parameter.values })));
+
+/** A saved reform's parameter rows: name, current law, the reform's value, when it starts. */
+const PARAMETER_ROW: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) minmax(88px, 140px) minmax(120px, 180px) minmax(64px, 96px)',
+  alignItems: 'center',
+  columnGap: spacing.md,
+  padding: `${spacing.sm} 0`,
+  borderBottom: `1px solid ${colors.border.light}`,
+};
+
+const PARAMETER_HEADING: React.CSSProperties = {
+  fontSize: typography.fontSize.xs,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.secondary,
+};
+
+const PARAMETER_MUTED: React.CSSProperties = {
+  fontSize: typography.fontSize.sm,
+  color: colors.text.secondary,
+  fontVariantNumeric: 'tabular-nums',
+  whiteSpace: 'nowrap',
+};
+
+/** A value as the row reads it: yes/no rather than true/false. */
+function displayValue(value: unknown, unit: string | null): string {
+  return typeof value === 'boolean' ? (value ? 'Yes' : 'No') : formatValue(value, unit);
+}
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -716,7 +741,14 @@ export default function ReformsPage() {
               }}
             />
           </Stack>
-          <Stack style={{ gap: spacing.md }}>
+          <div role="table" aria-label="Parameters">
+            <div role="row" style={{ ...PARAMETER_ROW, paddingTop: 0 }}>
+              {['Parameter', 'Current law', 'Your reform', 'From'].map((heading) => (
+                <span key={heading} role="columnheader" style={PARAMETER_HEADING}>
+                  {heading}
+                </span>
+              ))}
+            </div>
             {selectedReform.parameters.map((parameter) => {
               const unit = parameters?.[parameter.name]?.unit ?? null;
               const first = parameter.values[0];
@@ -729,71 +761,76 @@ export default function ReformsPage() {
                 formatValue(value, unit)
               );
               const when = first ? (editable ? periodLabel(first) : schedule.when) : '';
+              const parts = resolveBreadcrumb(parameter.name).split(' → ');
+              const name = parts[parts.length - 1] ?? parameter.name;
+              const context = parts.slice(0, -1).join(' → ');
+              // A parameter the loaded metadata lacks still edits, by its unit.
+              const param =
+                parameters?.[parameter.name] ??
+                ({ parameter: parameter.name, label: name, unit } as ParameterMetadata);
               return (
-                <Stack
-                  key={parameter.name}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
-                >
-                  <Text
+                <div key={parameter.name} role="row" style={PARAMETER_ROW}>
+                  <div
+                    role="cell"
+                    style={{ minWidth: 0 }}
                     title={resolveBreadcrumb(parameter.name)}
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      fontSize: typography.fontSize.sm,
-                      color: colors.text.primary,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
                   >
-                    {formatCompactBreadcrumb(resolveBreadcrumb(parameter.name))}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: typography.fontSize.sm,
-                      color: colors.text.secondary,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {formatValue(baseline, unit)} →
-                  </Text>
-                  {editable ? (
-                    <ValueInput
-                      value={editedValues[parameter.name]}
-                      onChange={(next) =>
-                        setEditedValues((current) => ({ ...current, [parameter.name]: next }))
-                      }
-                      ariaLabel={`New value for ${parameter.name}`}
-                    />
-                  ) : (
                     <Text
-                      title="Change a schedule in Build"
                       style={{
+                        margin: 0,
                         fontSize: typography.fontSize.sm,
                         fontWeight: typography.fontWeight.medium,
                         color: colors.text.primary,
-                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {schedule.value}
+                      {name.charAt(0).toUpperCase() + name.slice(1)}
                     </Text>
-                  )}
-                  {when && (
-                    <Text
-                      style={{
-                        minWidth: 72,
-                        fontSize: typography.fontSize.xs,
-                        color: colors.text.secondary,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {when}
-                    </Text>
-                  )}
-                </Stack>
+                    {context && (
+                      <Text
+                        className="tw:truncate"
+                        style={{
+                          margin: 0,
+                          fontSize: typography.fontSize.xs,
+                          color: colors.text.secondary,
+                        }}
+                      >
+                        {context}
+                      </Text>
+                    )}
+                  </div>
+                  <span role="cell" style={PARAMETER_MUTED}>
+                    {displayValue(baseline, unit)}
+                  </span>
+                  <div role="cell" style={{ minWidth: 0 }}>
+                    {editable ? (
+                      <ValueInput
+                        param={param}
+                        value={editedValues[parameter.name]}
+                        onChange={(next) =>
+                          setEditedValues((current) => ({ ...current, [parameter.name]: next }))
+                        }
+                        ariaLabel={`New value for ${name}`}
+                      />
+                    ) : (
+                      <span
+                        title="Change a schedule in Build"
+                        style={{
+                          fontSize: typography.fontSize.sm,
+                          fontWeight: typography.fontWeight.medium,
+                          color: colors.text.primary,
+                        }}
+                      >
+                        {schedule.value}
+                      </span>
+                    )}
+                  </div>
+                  <span role="cell" style={PARAMETER_MUTED}>
+                    {when}
+                  </span>
+                </div>
               );
             })}
-          </Stack>
+          </div>
           {saveMutation.isError && (
             <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
               Could not save the changes. Try again.
