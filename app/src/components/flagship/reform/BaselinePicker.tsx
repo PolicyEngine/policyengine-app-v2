@@ -140,28 +140,31 @@ export default function BaselinePicker({ value, onChange, reforms }: BaselinePic
         <button
           type="button"
           aria-label={`Compared with: ${currentLabel}`}
-          className="tw:inline-flex tw:h-9 tw:cursor-pointer tw:items-center tw:rounded-md tw:border tw:border-input tw:bg-white tw:px-3 tw:text-sm tw:whitespace-nowrap tw:shadow-xs tw:transition-colors tw:hover:border-primary-500"
+          className="tw:inline-flex tw:h-11 tw:cursor-pointer tw:items-center tw:rounded-md tw:border tw:border-input tw:bg-white tw:px-3 tw:text-left tw:text-sm tw:whitespace-nowrap tw:shadow-xs tw:transition-colors tw:hover:border-primary-500"
           style={{ gap: spacing.sm, fontFamily: typography.fontFamily.primary, maxWidth: '100%' }}
         >
           <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
             <IconScale size={16} />
           </span>
-          {/* On a phone the icon says it; the choice keeps the room. */}
-          <span
-            className="tw:hidden tw:sm:inline"
-            style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
-          >
-            Compared with
-          </span>
-          <span
-            className="tw:truncate"
-            style={{
-              maxWidth: 200,
-              fontWeight: typography.fontWeight.medium,
-              color: colors.text.primary,
-            }}
-          >
-            {currentLabel}
+          {/* The label over the choice: the bar fits on one line. */}
+          <span className="tw:flex tw:min-w-0 tw:flex-col tw:leading-tight">
+            {/* On a phone the icon says it; the choice keeps the room. */}
+            <span
+              className="tw:hidden tw:sm:inline"
+              style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
+            >
+              Compared with
+            </span>
+            <span
+              className="tw:truncate"
+              style={{
+                maxWidth: 200,
+                fontWeight: typography.fontWeight.medium,
+                color: colors.text.primary,
+              }}
+            >
+              {currentLabel}
+            </span>
           </span>
           <IconChevronDown
             size={14}
