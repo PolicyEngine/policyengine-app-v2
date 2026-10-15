@@ -234,7 +234,7 @@ describe('differenceNotes', () => {
       expect.stringMatching(
         /^Different baselines: JCT scores this provision after the scheduled TCJA expiry/
       ),
-      'Different timing: the source counts a fiscal year; PolicyEngine counts a calendar year.',
+      'Different periods: the source covers fiscal year 2026; PolicyEngine covers calendar year 2026.',
     ]);
   });
 
@@ -263,5 +263,20 @@ describe('differenceNotes', () => {
         )
       )
     ).toEqual([]);
+  });
+
+  test('given another year and an average month then both differences are named', () => {
+    expect(
+      differenceNotes(
+        related(
+          scorecardClaim({ unit_concept: 'persons', latest: { value: 1, status: 'comparable' } })
+        ),
+        '2023 average month',
+        '2024 annual'
+      )
+    ).toEqual([
+      'Different periods: the source covers year 2023; PolicyEngine covers calendar year 2024.',
+      'Different measures: the source counts an average month; PolicyEngine counts everyone over the year, which runs higher.',
+    ]);
   });
 });

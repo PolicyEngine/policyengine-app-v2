@@ -114,11 +114,23 @@ export function differenceNotes(
       'Different baselines: the source and PolicyEngine score the change against different starting policies.'
     );
   }
-  const published = externalPeriod ?? claimPeriod(row);
-  const modelled = pePeriod ?? modelPeriod(row);
-  if (/fiscal|FY/i.test(published ?? '') && modelled?.startsWith('Calendar year')) {
+  const published = externalPeriod ?? claimPeriod(row) ?? '';
+  const modelled = pePeriod ?? modelPeriod(row) ?? '';
+  const years = (text: string) => [...new Set(text.match(/\b20\d{2}\b/g) ?? [])];
+  const fiscal = /fiscal|\bFY\b/i.test(published);
+  const calendar = /calendar|annual/i.test(modelled);
+  const [publishedYear] = years(published);
+  const [modelledYear] = years(modelled);
+  const otherYear = !!publishedYear && !!modelledYear && publishedYear !== modelledYear;
+  if (otherYear || (fiscal && calendar)) {
+    const side = (kind: string, year?: string) => [kind, year].filter(Boolean).join(' ');
     notes.push(
-      'Different timing: the source counts a fiscal year; PolicyEngine counts a calendar year.'
+      `Different periods: the source covers ${side(fiscal ? 'fiscal year' : 'year', publishedYear)}; PolicyEngine covers ${side(calendar ? 'calendar year' : 'year', modelledYear)}.`
+    );
+  }
+  if (/average month/i.test(published) && calendar && row.unit_concept !== 'usd') {
+    notes.push(
+      'Different measures: the source counts an average month; PolicyEngine counts everyone over the year, which runs higher.'
     );
   }
   if (row.diagnosis?.title) {
