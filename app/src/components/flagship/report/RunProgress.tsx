@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Progress, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { formatElapsed } from '@/libs/flagship/reportStages';
+import type { RunStage } from '@/types/calculation';
 
 /** Milliseconds since the component mounted, ticking each second. */
 function useElapsed(): number {
@@ -53,16 +54,52 @@ export function RunLoading({ label }: { label: string }) {
   );
 }
 
+/** One line per stage the API reports; an unknown stage gets no line. */
+export function runStageCaption(runStage?: RunStage): string | undefined {
+  switch (runStage?.stage) {
+    case 'queued':
+      return 'Waiting for a worker';
+    case 'loading_data':
+      return 'Loading the data';
+    case 'baseline':
+      return 'Running current law';
+    case 'reform':
+      return 'Running the reform';
+    case 'simulating':
+      return runStage.segments
+        ? `Running the regions, ${runStage.segments.completed} of ${runStage.segments.total} done`
+        : 'Running the regions';
+    case 'outputs':
+      return 'Calculating the results';
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * The bar's value: the time estimate, held inside the stage the API reports
+ * (from where the stage starts to just before the next one), else the
+ * estimate alone.
+ */
+export function runProgressValue(estimate: number, runStage?: RunStage): number {
+  if (typeof runStage?.floor !== 'number' || typeof runStage.max !== 'number') {
+    return estimate;
+  }
+  return Math.min(Math.max(estimate, runStage.floor), runStage.max);
+}
+
 /**
  * A society-wide run in progress, as a bar: what is running, how long it
- * has taken, and how far along a typical run of this size would be. The
- * API reports no stages for a single-year run, so the bar follows the
- * run's typical duration (the calculation strategy's estimate, held short
- * of the end until the results arrive).
+ * has taken, and how far along it is. The bar follows the run's typical
+ * duration (the calculation strategy's estimate, held short of the end
+ * until the results arrive). When the API reports the run's stage, the
+ * estimate is held inside that stage, and the stage names the line under
+ * the title. The bar never moves backwards.
  */
 export default function RunProgress({
   title,
   progress,
+  runStage,
   detail,
   expectedMs,
   note,
@@ -71,6 +108,8 @@ export default function RunProgress({
   title: string;
   /** 0–100, from the calculation status; absent, the bar follows the clock. */
   progress?: number;
+  /** The run's stage from the API, when it reports one. */
+  runStage?: RunStage;
   /** One line under the title, e.g. a queue position. */
   detail?: string;
   /** How long a run like this one typically takes. */
@@ -79,9 +118,15 @@ export default function RunProgress({
   note?: string;
 }) {
   const elapsed = useElapsed();
-  const value =
+  const estimate =
     typeof progress === 'number' ? progress : Math.min((elapsed / expectedMs) * 100, 95);
+  // The highest value shown so far: a stage's range can start lower than an
+  // earlier estimate (a queued run's path is not known yet).
+  const shown = useRef(0);
+  shown.current = Math.max(shown.current, runProgressValue(estimate, runStage));
+  const value = shown.current;
   const percent = Math.max(0, Math.min(Math.round(value), 99));
+  const line = detail ?? runStageCaption(runStage);
 
   return (
     <Stack role="status" aria-live="polite" style={CARD_STYLE}>
@@ -110,9 +155,9 @@ export default function RunProgress({
         </Text>
       </Stack>
       <Progress value={value} aria-label={`${title}, about ${percent}%`} className="tw:h-2" />
-      {detail && (
+      {line && (
         <Text style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.primary }}>
-          {detail}
+          {line}
         </Text>
       )}
       {note && (
