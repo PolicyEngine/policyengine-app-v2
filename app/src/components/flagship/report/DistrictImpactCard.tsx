@@ -41,6 +41,66 @@ const CONGRESSIONAL_LOSER_COLORS = [
 
 type RankedDistrict = { id: string; label: string; value: number };
 
+/** The most districts each ranking lists. */
+const RANKED_COUNT = 5;
+/** The most decimals a percentage shows. */
+const MAX_PERCENT_DECIMALS = 4;
+
+/** What the rankings say instead when no district moves. */
+const NO_CHANGE_MESSAGES: Record<CongressionalMode, string> = {
+  absolute: "No district's household income changes.",
+  relative: "No district's household income changes.",
+  'winner-pct': 'No district has people gaining income.',
+  'loser-pct': 'No district has people losing income.',
+};
+
+/**
+ * Decimals for percentages of `values` (shares: 0.01 is 1%): enough that
+ * the largest shows two significant figures, from 1 (for 1% or more) up
+ * to 4. A state reform can move every district by thousandths of a
+ * percent, which one decimal reads as 0.0% throughout.
+ */
+export function percentDecimals(values: number[]): number {
+  const largest = Math.max(
+    0,
+    ...values.map((value) => Math.abs(value * 100)).filter((value) => Number.isFinite(value))
+  );
+  if (largest === 0) {
+    return 1;
+  }
+  return Math.min(MAX_PERCENT_DECIMALS, Math.max(1, 1 - Math.floor(Math.log10(largest))));
+}
+
+/** A share as a percentage; one that rounds to zero reads zero, with no minus. */
+export function formatPercentShare(value: number, decimals: number): string {
+  const roundsToZero = Number((value * 100).toFixed(decimals)) === 0;
+  return formatParameterValue(roundsToZero ? 0 : value, '/1', { decimalPlaces: decimals });
+}
+
+/** Whole dollars; an amount that rounds to zero reads $0, with no minus. */
+function formatDollars(value: number): string {
+  return formatParameterValue(Math.round(value) === 0 ? 0 : value, 'currency-USD', {
+    decimalPlaces: 0,
+    includeSymbol: true,
+  });
+}
+
+/**
+ * The districts each ranking lists, from `sorted` (highest first): up to
+ * five at each end, and no district in both, so a state with fewer than
+ * ten districts splits them between the two.
+ */
+export function rankedEnds(sorted: RankedDistrict[]): {
+  top: RankedDistrict[];
+  bottom: RankedDistrict[];
+} {
+  const topCount = Math.min(RANKED_COUNT, Math.ceil(sorted.length / 2));
+  return {
+    top: sorted.slice(0, topCount),
+    bottom: sorted.slice(topCount).slice(-RANKED_COUNT).reverse(),
+  };
+}
+
 /**
  * Renders a column of 5 ranked districts with conditional section headers.
  * For the "top" column (descending order): gains header is "Biggest gains",
@@ -287,16 +347,28 @@ export default function DistrictImpactCard({
   const mapData = isOutcomeMode ? payloadOutcomeData.points : changeMapData;
   const outcomeDisplayData = payloadOutcomeData.points;
 
+  // Percentages with enough decimals that the districts read apart, on
+  // the map, its legend and the rankings alike.
+  const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
+  const formatValue = useMemo(
+    () =>
+      changeMetric === 'absolute' && !isOutcomeMode
+        ? formatDollars
+        : (value: number) => formatPercentShare(value, decimals),
+    [changeMetric, decimals, isOutcomeMode]
+  );
+
   // Map config based on absolute vs relative mode
   const mapConfig = useMemo(() => {
+    const percentTicks = `.${decimals}%`;
     if (congressionalMode === 'winner-pct') {
       return {
         colorScale: {
           colors: CONGRESSIONAL_WINNER_COLORS,
-          tickFormat: '.1%',
+          tickFormat: percentTicks,
           symmetric: false,
         },
-        formatValue: (value: number) => formatParameterValue(value, '/1', { decimalPlaces: 1 }),
+        formatValue,
       };
     }
 
@@ -304,28 +376,22 @@ export default function DistrictImpactCard({
       return {
         colorScale: {
           colors: CONGRESSIONAL_LOSER_COLORS,
-          tickFormat: '.1%',
+          tickFormat: percentTicks,
           symmetric: false,
         },
-        formatValue: (value: number) => formatParameterValue(value, '/1', { decimalPlaces: 1 }),
+        formatValue,
       };
     }
 
     return {
       colorScale: {
         colors: DIVERGING_GRAY_TEAL.colors,
-        tickFormat: changeMetric === 'absolute' ? '$,.0f' : '.1%',
+        tickFormat: changeMetric === 'absolute' ? '$,.0f' : percentTicks,
         symmetric: true,
       },
-      formatValue: (value: number) =>
-        changeMetric === 'absolute'
-          ? formatParameterValue(value, 'currency-USD', {
-              decimalPlaces: 0,
-              includeSymbol: true,
-            })
-          : formatParameterValue(value, '/1', { decimalPlaces: 1 }),
+      formatValue,
     };
-  }, [changeMetric, congressionalMode]);
+  }, [changeMetric, congressionalMode, decimals, formatValue]);
 
   // Build sorted district list for top 5 / bottom 5 display.
   // Labels update automatically when labelLookup populates from metadata.
@@ -359,20 +425,11 @@ export default function DistrictImpactCard({
     return all;
   }, [changeMetric, isOutcomeMode, labelLookup, outcomeDisplayData, savedDistricts]);
 
-  const top5 = sortedDistricts.slice(0, 5);
-  const bottom5 = sortedDistricts.slice(-5).reverse();
-
-  const rankingFormatValue = useMemo(() => {
-    if (changeMetric === 'absolute' && !isOutcomeMode) {
-      return (value: number) =>
-        formatParameterValue(value, 'currency-USD', {
-          decimalPlaces: 0,
-          includeSymbol: true,
-        });
-    }
-
-    return (value: number) => formatParameterValue(value, '/1', { decimalPlaces: 1 });
-  }, [changeMetric, isOutcomeMode]);
+  const { top: topRanked, bottom: bottomRanked } = rankedEnds(sortedDistricts);
+  // Every district at zero, as Loser % reads when no one loses: a ranking
+  // of zeros says nothing, so the card says so instead.
+  const noDistrictMoves =
+    sortedDistricts.length > 0 && sortedDistricts.every((district) => district.value === 0);
 
   const signedHeaders = useMemo(
     () => ({
@@ -477,33 +534,41 @@ export default function DistrictImpactCard({
               gap: spacing.xl,
             }}
           >
-            {isOutcomeMode ? (
+            {noDistrictMoves ? (
+              <Text size="sm" c={colors.text.secondary}>
+                {NO_CHANGE_MESSAGES[congressionalMode]}
+              </Text>
+            ) : isOutcomeMode ? (
               <>
                 <DistrictListColumn
-                  items={top5}
+                  items={topRanked}
                   header={listHeaders.top}
-                  formatValue={rankingFormatValue}
+                  formatValue={formatValue}
                 />
-                <DistrictListColumn
-                  items={bottom5}
-                  header={listHeaders.bottom}
-                  formatValue={rankingFormatValue}
-                />
+                {bottomRanked.length > 0 && (
+                  <DistrictListColumn
+                    items={bottomRanked}
+                    header={listHeaders.bottom}
+                    formatValue={formatValue}
+                  />
+                )}
               </>
             ) : (
               <>
                 <DistrictRankColumn
-                  items={top5}
+                  items={topRanked}
                   gainHeader={signedHeaders.topGain}
                   lossHeader={signedHeaders.topLoss}
-                  formatValue={rankingFormatValue}
+                  formatValue={formatValue}
                 />
-                <DistrictRankColumn
-                  items={bottom5}
-                  gainHeader={signedHeaders.bottomGain}
-                  lossHeader={signedHeaders.bottomLoss}
-                  formatValue={rankingFormatValue}
-                />
+                {bottomRanked.length > 0 && (
+                  <DistrictRankColumn
+                    items={bottomRanked}
+                    gainHeader={signedHeaders.bottomGain}
+                    lossHeader={signedHeaders.bottomLoss}
+                    formatValue={formatValue}
+                  />
+                )}
               </>
             )}
           </div>
