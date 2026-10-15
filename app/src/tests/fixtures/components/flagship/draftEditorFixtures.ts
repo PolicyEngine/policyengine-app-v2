@@ -112,6 +112,19 @@ export const US_REGIONS = [
   },
 ];
 
+/**
+ * A few UK regions, as metadata's economy_options.region lists them. A
+ * constituency and a local authority can share a name (Bedford).
+ */
+export const UK_REGIONS = [
+  { name: 'uk', label: 'the UK', type: 'national' },
+  { name: 'country/england', label: 'England', type: 'country' },
+  { name: 'country/scotland', label: 'Scotland', type: 'country' },
+  { name: 'constituency/Bedford', label: 'Bedford', type: 'constituency' },
+  { name: 'constituency/Aberdeen North', label: 'Aberdeen North', type: 'constituency' },
+  { name: 'local_authority/Bedford', label: 'Bedford', type: 'local_authority' },
+];
+
 export function seedDeductionMetadata({
   regions = [],
 }: { regions?: Array<{ name: string; label: string; type: string }> } = {}) {
