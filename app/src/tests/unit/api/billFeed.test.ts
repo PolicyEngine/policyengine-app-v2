@@ -13,6 +13,7 @@ import {
   LATE_STATUS_ROWS,
   MANY_BILL_ROWS,
   MANY_BILLS,
+  MANY_BILLS_BASELINE_RATE,
   MANY_BILLS_STATUS,
   mockPagedTrackerFetch,
   mockTrackerFetch,
@@ -322,7 +323,7 @@ describe('tracker reads', () => {
     expect([bill.status, bill.legiscanUrl]).toEqual([LATE_STATUS.status, LATE_STATUS.legiscanUrl]);
   });
 
-  test('given every table past one page then each bill reads once, with its run, check and stage', async () => {
+  test('given every table past one page then each bill reads once, with its run, baseline, check and stage', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
     vi.stubGlobal('fetch', mockPagedTrackerFetch(MANY_BILL_ROWS));
@@ -335,12 +336,16 @@ describe('tracker reads', () => {
       listed: bills.length,
       unique: billsWith(() => true),
       withRun: billsWith((bill) => bill.impacts?.revenue !== undefined),
+      withBaseline: billsWith(
+        (bill) => bill.provisions[0]?.baselineIntervals?.[0]?.value === MANY_BILLS_BASELINE_RATE
+      ),
       withCheck: billsWith((bill) => bill.validation?.withinRange === true),
       withStage: billsWith((bill) => bill.status === MANY_BILLS_STATUS),
     }).toEqual({
       listed: MANY_BILLS,
       unique: MANY_BILLS,
       withRun: MANY_BILLS,
+      withBaseline: MANY_BILLS,
       withCheck: MANY_BILLS,
       withStage: MANY_BILLS,
     });

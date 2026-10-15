@@ -121,6 +121,9 @@ export const LATE_STATUS_ROWS: TrackerTableRows = {
 /** Bills enough that every tracker table runs past one page. */
 export const MANY_BILLS = TRACKER_PAGE_LIMIT + 1;
 export const MANY_BILLS_STATUS = 'In Committee';
+/** The rate each of those bills changes, and the law it was compared with. */
+const MANY_BILLS_RATE_PATH = 'gov.states.ok.tax.income.rate';
+export const MANY_BILLS_BASELINE_RATE = 0.0475;
 
 const MANY_BILL_NUMBERS = Array.from({ length: MANY_BILLS }, (_, index) => 1000 + index);
 
@@ -132,10 +135,13 @@ export const MANY_BILL_ROWS: TrackerTableRows = {
     type: 'bill',
     title: `OK HB ${number}`,
   })),
+  // One row serves both reform_impacts reads: the run and its baseline.
   reform_impacts: MANY_BILL_NUMBERS.map((number) => ({
     id: `ok-hb${number}`,
     computed: true,
     budgetary_impact: { stateRevenueImpact: -number * 1000 },
+    reform_params: { [MANY_BILLS_RATE_PATH]: 0.04 },
+    baseline_params: { [MANY_BILLS_RATE_PATH]: MANY_BILLS_BASELINE_RATE },
   })),
   validation_metadata: MANY_BILL_NUMBERS.map((number) => ({
     id: `ok-hb${number}`,
