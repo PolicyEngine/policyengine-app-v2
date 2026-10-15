@@ -151,25 +151,59 @@ export const MANY_BILL_ROWS: TrackerTableRows = {
   })),
 };
 
-/** NY S 4487, filed twice in the status table under two spellings of its number. */
+/** NY S 4487, held twice in the status table under two spellings of its number. */
 export const TWICE_FILED_BILL = {
   id: 'ny-s-4487',
   state: 'NY',
   type: 'bill',
   title: 'NY S 4487',
 } as const;
-/** The later of the two rows: LegiScan gives a later bill a higher id. */
-export const TWICE_FILED_LATER = {
+/** LegiScan's row: a LegiScan bill id (about 2 million) and its finer stage. */
+export const TWICE_FILED_LEGISCAN = {
   bill_id: 1_987_654,
   state: 'NY',
   bill_number: 'S04487',
   status: 'In Committee',
   legiscan_url: 'https://legiscan.com/NY/bill/S04487/2025',
 } as const;
-export const TWICE_FILED_EARLIER = {
-  bill_id: 1_765_432,
+/** OpenStates' row: the monitor hashes its bill id to 10,000,000 or more. */
+export const TWICE_FILED_OPENSTATES = {
+  bill_id: 47_123_456,
   state: 'NY',
   bill_number: 'S 4487',
   status: 'Introduced',
   legiscan_url: 'https://openstates.org/ny/bills/2025-2026/S4487/',
 } as const;
+
+/** The two rows' last action dates, and the row that keeps the bill number. */
+export const TWICE_FILED_CASES = [
+  {
+    when: 'the LegiScan row acted last',
+    winnerName: 'LegiScan',
+    legiscanDate: '2025-05-02',
+    openstatesDate: '2025-03-10',
+    winner: TWICE_FILED_LEGISCAN,
+  },
+  {
+    when: 'the OpenStates row acted last',
+    winnerName: 'OpenStates',
+    legiscanDate: '2025-03-10',
+    openstatesDate: '2025-05-02',
+    winner: TWICE_FILED_OPENSTATES,
+  },
+  {
+    // A timestamp still reads as its day.
+    when: 'both acted the same day',
+    winnerName: 'LegiScan',
+    legiscanDate: '2025-03-10',
+    openstatesDate: '2025-03-10T14:30:00+00:00',
+    winner: TWICE_FILED_LEGISCAN,
+  },
+  {
+    when: 'neither has a date',
+    winnerName: 'LegiScan',
+    legiscanDate: null,
+    openstatesDate: null,
+    winner: TWICE_FILED_LEGISCAN,
+  },
+];

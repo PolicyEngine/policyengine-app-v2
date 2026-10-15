@@ -20,8 +20,9 @@ import {
   NET_COST_ONLY_ROWS,
   TRACKER_NAMING_ROWS,
   TWICE_FILED_BILL,
-  TWICE_FILED_EARLIER,
-  TWICE_FILED_LATER,
+  TWICE_FILED_CASES,
+  TWICE_FILED_LEGISCAN,
+  TWICE_FILED_OPENSTATES,
 } from '@/tests/fixtures/api/billFeedMocks';
 import { TRACKER_HOME } from '@/tests/fixtures/libs/flagship/billTrackerMocks';
 
@@ -345,25 +346,30 @@ describe('tracker reads', () => {
     });
   });
 
-  test('given two status rows under one bill number then the later bill wins in any read order', async () => {
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    const loads = [];
-    for (const processed of [
-      [TWICE_FILED_EARLIER, TWICE_FILED_LATER],
-      [TWICE_FILED_LATER, TWICE_FILED_EARLIER],
-    ]) {
-      vi.stubGlobal(
-        'fetch',
-        mockTrackerFetch({ research: [TWICE_FILED_BILL], processed_bills: processed })
-      );
-      const [bill] = (await fetchTrackerBills())!;
-      loads.push([bill.status, bill.legiscanUrl]);
-    }
+  test.each(TWICE_FILED_CASES)(
+    'given two status rows under one bill number when $when then the $winnerName row wins in any read order',
+    async ({ legiscanDate, openstatesDate, winner }) => {
+      vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+      vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+      const legiscan = { ...TWICE_FILED_LEGISCAN, last_action_date: legiscanDate };
+      const openstates = { ...TWICE_FILED_OPENSTATES, last_action_date: openstatesDate };
+      const loads = [];
+      for (const processed of [
+        [legiscan, openstates],
+        [openstates, legiscan],
+      ]) {
+        vi.stubGlobal(
+          'fetch',
+          mockTrackerFetch({ research: [TWICE_FILED_BILL], processed_bills: processed })
+        );
+        const [bill] = (await fetchTrackerBills())!;
+        loads.push([bill.status, bill.legiscanUrl]);
+      }
 
-    const later = [TWICE_FILED_LATER.status, TWICE_FILED_LATER.legiscan_url];
-    expect(loads).toEqual([later, later]);
-  });
+      const won = [winner.status, winner.legiscan_url];
+      expect(loads).toEqual([won, won]);
+    }
+  );
 });
 
 describe('fetchTrackerBills', () => {
