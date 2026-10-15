@@ -145,6 +145,19 @@ describe('BillExternalEstimates', () => {
     );
   });
 
+  test('given an empty fiscal-note link and no estimate then no fiscal-note row shows', () => {
+    render(
+      <BillExternalEstimates
+        billId="ga-hb1001"
+        validation={{ peEstimate: -800_583_615, fiscalNoteUrl: '  ' }}
+      />
+    );
+
+    const table = screen.getByRole('table', { name: 'Estimates for this bill' });
+    expect(within(table).queryByText('Official fiscal note')).not.toBeInTheDocument();
+    expect(within(table).queryByText('No estimate')).not.toBeInTheDocument();
+  });
+
   test('given a fiscal note with a named source then its row is called by that source', () => {
     // A proxy note (ct-sb78: OFA's score of another bill) must not read as the bill's own.
     render(

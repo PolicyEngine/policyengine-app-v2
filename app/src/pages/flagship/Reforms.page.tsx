@@ -41,7 +41,11 @@ import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { loadProvisionsIntoDraft, loadReformIntoDraft } from '@/libs/draftReform';
 import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
-import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
+import {
+  billAlreadyCurrentLaw,
+  billReportProvisions,
+  billScoresOtherThanWriteUp,
+} from '@/libs/flagship/billProvisions';
 import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
@@ -380,6 +384,13 @@ export default function ReformsPage() {
     });
   };
 
+  // As on the bill's report: stored parameters that contradict the bill's
+  // write-up (UT SB60's reform and baseline are swapped) would score
+  // another change, so neither a report nor a draft starts from them.
+  const billScoresOtherChange = (bill: TrackedBill) =>
+    !billAlreadyCurrentLaw(bill.provisions, parameters, billRunYear(bill.provisions)) &&
+    billScoresOtherThanWriteUp(bill.provisions, bill.changes);
+
   /** Current law for a parameter on 1 January of `year`. */
   const currentLawAt = (path: string, year: number) => {
     const values = parameters?.[path]?.values;
@@ -536,6 +547,7 @@ export default function ReformsPage() {
   // ---- Detail: a tracked bill ----
   if (selectedBill) {
     const provisions = billProvisions(selectedBill);
+    const scoresOtherChange = billScoresOtherChange(selectedBill);
     const impact = selectedBill.impactData;
     const winners = impact?.winnersLosers;
     const betterOff = winners && ((winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0)) * 100;
@@ -598,6 +610,13 @@ export default function ReformsPage() {
               unlock when it lands.
             </Text>
           )}
+          {scoresOtherChange && (
+            <Text style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+              The model parameters the legislative tracker stored for this bill do not match its
+              write-up of the changes, so a report or draft from them would score a different
+              change.
+            </Text>
+          )}
           <Stack
             style={{
               flexDirection: 'row',
@@ -625,7 +644,7 @@ export default function ReformsPage() {
                     { region: billRegion(selectedBill, countryId) }
                   )
                 }
-                disabled={runReport.isRunning || provisions.length === 0}
+                disabled={runReport.isRunning || provisions.length === 0 || scoresOtherChange}
               >
                 <IconChartBar size={16} />
                 {runReport.isRunning ? 'Starting report…' : 'Run impact report'}
@@ -634,7 +653,7 @@ export default function ReformsPage() {
             <Button
               variant="outline"
               onClick={() => openBillAsDraft(selectedBill)}
-              disabled={provisions.length === 0}
+              disabled={provisions.length === 0 || scoresOtherChange}
             >
               <IconPencil size={16} />
               Open as draft reform
