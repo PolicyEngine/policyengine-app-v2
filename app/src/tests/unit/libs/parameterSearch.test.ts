@@ -144,6 +144,62 @@ describe('groupSearchResults', () => {
     expect(groups[0].entries[0].path).toBe('gov.a.x');
   });
 
+  it('given members of two unlabeled schedules then each schedule is one group, bracket by bracket', () => {
+    // As search ranks them for "ctc": brackets interleaved across `base` and `arpa`,
+    // whose own nodes have no label, so every breadcrumb reads "… → Amount → Bracket N".
+    const crumb = (n: number, leaf: string) =>
+      `IRS → Credits → CTC → Amount → Bracket ${n} → ${leaf}`;
+    const groups = groupSearchResults([
+      entry('gov.irs.credits.ctc.amount.base[0].amount', crumb(1, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.base[0].threshold', crumb(1, 'Threshold')),
+      entry('gov.irs.credits.ctc.amount.arpa[0].amount', crumb(1, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.base[1].amount', crumb(2, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.arpa[1].threshold', crumb(2, 'Threshold')),
+      entry('gov.irs.credits.ctc.amount.base[1].threshold', crumb(2, 'Threshold')),
+    ]);
+
+    expect(groups.map((group) => [group.folder, group.schedule])).toEqual([
+      ['IRS → Credits → CTC → Amount → Base', 'gov.irs.credits.ctc.amount.base'],
+      ['IRS → Credits → CTC → Amount → ARPA', 'gov.irs.credits.ctc.amount.arpa'],
+    ]);
+    expect(groups[0].entries.map((e) => e.path)).toEqual([
+      'gov.irs.credits.ctc.amount.base[0].amount',
+      'gov.irs.credits.ctc.amount.base[0].threshold',
+      'gov.irs.credits.ctc.amount.base[1].amount',
+      'gov.irs.credits.ctc.amount.base[1].threshold',
+    ]);
+  });
+
+  it('given a schedule with its own label then the header names it, once', () => {
+    const labeled = (path: string, n: number) => ({
+      ...entry(path, `IRS → EITC → Phase-in rate → Bracket ${n} → Rate`),
+      scheduleLabel: 'Phase-in rate',
+    });
+    const [group] = groupSearchResults([
+      labeled('gov.irs.eitc.phase_in[0].rate', 1),
+      labeled('gov.irs.eitc.phase_in[1].rate', 2),
+    ]);
+
+    expect(group.folder).toBe('IRS → EITC → Phase-in rate');
+    const [ctc] = groupSearchResults([
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[0].amount',
+          'IRS → CTC → Amount → Bracket 1 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[1].amount',
+          'IRS → CTC → Amount → Bracket 2 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+    ]);
+    expect(ctc.folder).toBe('IRS → CTC → Amount → Child Tax Credit ARPA amount');
+  });
+
   it('given no results then no groups return', () => {
     expect(groupSearchResults([])).toEqual([]);
   });

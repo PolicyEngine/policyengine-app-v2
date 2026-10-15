@@ -444,7 +444,10 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             }
           >
             <IconChartBar size={16} />
-            {runReport.isRunning || savingForRun ? 'Starting report…' : `Run ${year} report`}
+            {runReport.isRunning || savingForRun
+              ? 'Starting report…'
+              : // With a budget window, the run covers its years.
+                `Run ${yearsLabel(year, draft.windowYears ?? 1)} report`}
           </Button>
         </div>
       </div>

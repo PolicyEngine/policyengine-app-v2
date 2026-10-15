@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen, userEvent, within } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import type { ParameterSearchEntry } from '@/libs/parameterSearch';
@@ -608,54 +608,45 @@ describe('ParameterSearchBox', () => {
     );
   });
 
-  test('given a group spanning sibling paths then browse opens their shared ancestor', async () => {
-    // Given — two rows whose unlabeled parents (base, actc) fold out of
-    // the breadcrumb, so search groups them under one header
+  test('given members of sibling schedules then each schedule is its own group, by bracket', async () => {
+    // Given — rows whose unlabeled schedules (base, actc) fold out of the
+    // breadcrumb, so their breadcrumbs read alike
     const user = userEvent.setup();
-    const siblings: ParameterSearchEntry[] = [
-      {
-        path: 'gov.irs.credits.ctc.amount.base[0].threshold',
-        label: 'threshold',
-        breadcrumb: 'IRS → Credits → Child tax credit → Amount → Bracket 1 → Threshold',
-        unit: 'currency-USD',
-        description: null,
-        isContrib: false,
-        stateCode: null,
-      },
-      {
-        path: 'gov.irs.credits.ctc.amount.actc[0].threshold',
-        label: 'threshold',
-        breadcrumb: 'IRS → Credits → Child tax credit → Amount → Bracket 1 → Threshold',
-        unit: 'currency-USD',
-        description: null,
-        isContrib: false,
-        stateCode: null,
-      },
-    ];
-    const labels: Record<string, string> = {
-      'gov.irs': 'IRS',
-      'gov.irs.credits': 'Credits',
-      'gov.irs.credits.ctc': 'Child tax credit',
-      'gov.irs.credits.ctc.amount': 'Amount',
-      'gov.irs.credits.ctc.amount.base': 'Base',
-      'gov.irs.credits.ctc.amount.actc': 'ACTC',
-    };
+    const row = (path: string, bracket: number): ParameterSearchEntry => ({
+      path,
+      label: 'threshold',
+      breadcrumb: `IRS → Credits → Child tax credit → Amount → Bracket ${bracket} → Threshold`,
+      unit: 'currency-USD',
+      description: null,
+      isContrib: false,
+      stateCode: null,
+    });
     render(
       <ParameterSearchBox
-        entries={siblings}
+        entries={[
+          row('gov.irs.credits.ctc.amount.base[1].threshold', 2),
+          row('gov.irs.credits.ctc.amount.actc[0].threshold', 1),
+          row('gov.irs.credits.ctc.amount.base[0].threshold', 1),
+        ]}
         onSelect={vi.fn()}
-        labelFor={(path) => labels[path] ?? null}
       />
     );
-    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'bracket');
 
     // When
-    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'threshold');
 
-    // Then — the folder that holds both matched rows, not just the first's
-    expect(screen.getByText('2 parameters')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /open base/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /open actc/i })).toBeInTheDocument();
+    // Then — base's brackets sit together under its own header, in order;
+    // actc's row is not mixed into it
+    const listbox = screen.getByRole('listbox');
+    expect(within(listbox).getByText('Base')).toBeInTheDocument();
+    const options = within(listbox)
+      .getAllByRole('option')
+      .map((option) => option.textContent ?? '');
+    expect(options[0]).toContain('Bracket 1 · Threshold');
+    expect(options[0]).toContain('base[0]');
+    expect(options[1]).toContain('Bracket 2 · Threshold');
+    expect(options[1]).toContain('base[1]');
+    expect(options[2]).toContain('actc[0]');
   });
 
   test('given the combobox then it says that typing filters a list', () => {
