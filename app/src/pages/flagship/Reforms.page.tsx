@@ -48,6 +48,7 @@ import {
 import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
 import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
 import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
+import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -311,7 +312,7 @@ export default function ReformsPage() {
   // The reports this browser ran, by the saved reform each came from: a
   // reform is where its reports are found again.
   const { data: reports } = useQuery({
-    queryKey: ['flagship-reports', countryId],
+    queryKey: flagshipReportQueryKeys.mine(countryId),
     queryFn: () => getFlagshipReportStore().findMine(countryId),
   });
   const reportsFor = (reformId: string | undefined) =>
