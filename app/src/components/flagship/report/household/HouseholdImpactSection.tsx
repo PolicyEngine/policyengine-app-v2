@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { STATE_NAMES } from '@/api/billFeed';
@@ -9,11 +9,14 @@ import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
+import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
+import { loadParameterDependencies } from '@/libs/flagship/parameterDependencies';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
+import { getInputVariables } from '@/utils/VariableResolver';
 
 /** Both policies run at once; one household typically takes under a minute. */
 const EXPECTED_MS = 45 * 1000;
@@ -48,6 +51,44 @@ interface HouseholdImpactSectionProps {
   region?: string;
   baselinePolicyId: string;
   reformPolicyId: string;
+  /** The parameters the reform changes: the household inputs they read lead the variable search. */
+  reformPaths?: string[];
+}
+
+/**
+ * The household inputs the reform's parameters read, nearest first; none
+ * until the dependency map loads, or when it traces none of them.
+ */
+function useSuggestedInputs(paths: string[]): string[] {
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const inputs = useMemo(
+    () => new Set(getInputVariables(metadata).map((variable) => variable.name)),
+    [metadata]
+  );
+  const pathsKey = paths.join('\n');
+  const [suggested, setSuggested] = useState<string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    if (!pathsKey || inputs.size === 0) {
+      setSuggested([]);
+      return;
+    }
+    loadParameterDependencies()
+      .then((map) => {
+        if (!cancelled) {
+          setSuggested(suggestedHouseholdInputs(pathsKey.split('\n'), map, inputs));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSuggested([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathsKey, inputs]);
+  return suggested;
 }
 
 /**
@@ -61,7 +102,9 @@ export default function HouseholdImpactSection({
   year,
   baselinePolicyId,
   reformPolicyId,
+  reformPaths = [],
 }: HouseholdImpactSectionProps) {
+  const suggestedVariables = useSuggestedInputs(reformPaths);
   // Each household by a key of its own, so removing one keeps the others' inputs.
   const [keys, setKeys] = useState<number[]>([]);
   const [nextKey, setNextKey] = useState(1);
@@ -113,6 +156,7 @@ export default function HouseholdImpactSection({
           year={year}
           baselinePolicyId={baselinePolicyId}
           reformPolicyId={reformPolicyId}
+          suggestedVariables={suggestedVariables}
           onRemove={() => setKeys((current) => current.filter((other) => other !== key))}
         />
       ))}
@@ -132,6 +176,7 @@ function HouseholdCard({
   year,
   baselinePolicyId,
   reformPolicyId,
+  suggestedVariables,
   onRemove,
 }: {
   /** "Household 2": its place in the list. */
@@ -139,6 +184,7 @@ function HouseholdCard({
   year: string;
   baselinePolicyId: string;
   reformPolicyId: string;
+  suggestedVariables: string[];
   onRemove: () => void;
 }) {
   // The household as the builder edits it: every input the model takes,
@@ -239,6 +285,8 @@ function HouseholdCard({
             // National poverty thresholds, the model's default, without the choice.
             hideSpmGeography
             layout="columns"
+            suggestedVariables={suggestedVariables}
+            suggestedLabel="Related to this reform"
           />
           <div
             style={{

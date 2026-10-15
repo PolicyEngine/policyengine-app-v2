@@ -37,6 +37,7 @@ import {
   getVariableInfo,
   removeVariableFromEntity,
   resolveEntity,
+  VariableInfo,
 } from '@/utils/VariableResolver';
 import SPMGeographyChoice from './SPMGeographyChoice';
 import VariableRow from './VariableRow';
@@ -59,6 +60,10 @@ export interface HouseholdBuilderFormProps {
   hideSpmGeography?: boolean;
   /** "columns" sets the sections side by side on a wide screen; stacked by default. */
   layout?: 'stacked' | 'columns';
+  /** Variables to list first in the variable search, in order, under their own heading. */
+  suggestedVariables?: string[];
+  /** The heading over the suggested variables. */
+  suggestedLabel?: string;
 }
 
 interface BuilderWarning {
@@ -79,6 +84,8 @@ export default function HouseholdBuilderForm({
   onNumChildrenChange,
   hideSpmGeography = false,
   layout = 'stacked',
+  suggestedVariables,
+  suggestedLabel = 'Suggested',
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -128,11 +135,26 @@ export default function HouseholdBuilderForm({
   // Maximum number of results to display in dropdown for performance
   const MAX_DROPDOWN_RESULTS = 100;
 
+  // Suggested variables lead the list, in their own order; the rest keep theirs.
+  const suggestedOrder = useMemo(
+    () => new Map((suggestedVariables ?? []).map((name, index) => [name, index])),
+    [suggestedVariables]
+  );
+  const leadWithSuggested = (list: VariableInfo[]): VariableInfo[] =>
+    suggestedOrder.size === 0
+      ? list
+      : [
+          ...list
+            .filter((variable) => suggestedOrder.has(variable.name))
+            .sort((a, b) => suggestedOrder.get(a.name)! - suggestedOrder.get(b.name)!),
+          ...list.filter((variable) => !suggestedOrder.has(variable.name)),
+        ];
+
   // Filter variables by search value with result limit for performance
   const filterVariables = (searchValue: string) => {
     if (!searchValue.trim()) {
       return {
-        variables: allInputVariables.slice(0, MAX_DROPDOWN_RESULTS),
+        variables: leadWithSuggested(allInputVariables).slice(0, MAX_DROPDOWN_RESULTS),
         truncated: allInputVariables.length > MAX_DROPDOWN_RESULTS,
       };
     }
@@ -141,7 +163,7 @@ export default function HouseholdBuilderForm({
       (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
     );
     return {
-      variables: filtered.slice(0, MAX_DROPDOWN_RESULTS),
+      variables: leadWithSuggested(filtered).slice(0, MAX_DROPDOWN_RESULTS),
       truncated: filtered.length > MAX_DROPDOWN_RESULTS,
     };
   };
@@ -149,13 +171,13 @@ export default function HouseholdBuilderForm({
   // Memoized filtered variables for person search
   const filteredPersonVariables = useMemo(
     () => filterVariables(personSearchValue),
-    [personSearchValue, allInputVariables]
+    [personSearchValue, allInputVariables, suggestedOrder]
   );
 
   // Memoized filtered variables for household search
   const filteredHouseholdVariables = useMemo(
     () => filterVariables(householdSearchValue),
-    [householdSearchValue, allInputVariables]
+    [householdSearchValue, allInputVariables, suggestedOrder]
   );
 
   const resolveDefaultGroupInstanceName = (variableName: string): string | undefined => {
@@ -493,6 +515,8 @@ export default function HouseholdBuilderForm({
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={filteredPersonVariables.variables}
                             truncated={filteredPersonVariables.truncated}
+                            suggested={suggestedOrder.size > 0 ? suggestedOrder : undefined}
+                            suggestedLabel={suggestedLabel}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
@@ -590,6 +614,8 @@ export default function HouseholdBuilderForm({
                   onFocusChange={setIsHouseholdSearchFocused}
                   filteredVariables={filteredHouseholdVariables.variables}
                   truncated={filteredHouseholdVariables.truncated}
+                  suggested={suggestedOrder.size > 0 ? suggestedOrder : undefined}
+                  suggestedLabel={suggestedLabel}
                   onSelect={handleHouseholdVariableSelect}
                   getEntityHint={(variable) => {
                     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);

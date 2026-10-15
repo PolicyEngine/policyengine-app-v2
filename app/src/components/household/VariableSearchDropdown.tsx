@@ -3,7 +3,7 @@
  * Renders the results list in normal document flow so parent layouts can expand.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
 import { Button, Spinner, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,9 @@ export interface VariableSearchDropdownProps {
   onClose?: () => void;
   /** Whether results were truncated (more available than displayed) */
   truncated?: boolean;
+  /** Variables listed first under their own heading; the rest follow under "All variables". */
+  suggested?: ReadonlyMap<string, number>;
+  suggestedLabel?: string;
 }
 
 // Fixed width for close button column (matches VariableRow's REMOVE_COLUMN_WIDTH)
@@ -53,28 +56,42 @@ export default function VariableSearchDropdown({
   placeholder = 'Search for a variable...',
   loading = false,
   onClose,
+  suggested,
+  suggestedLabel = 'Suggested',
 }: VariableSearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Sort so matching-context variables appear first
+  // Sort so matching-context variables appear first (within the suggested ones, then the rest)
   const sortedVariables = useMemo(() => {
-    if (!getEntityHint) {
-      return filteredVariables;
-    }
-    const matching: VariableInfo[] = [];
-    const different: VariableInfo[] = [];
-    for (const v of filteredVariables) {
-      if (getEntityHint(v)?.show) {
-        different.push(v);
-      } else {
-        matching.push(v);
+    const byContext = (list: VariableInfo[]) => {
+      if (!getEntityHint) {
+        return list;
       }
+      const matching: VariableInfo[] = [];
+      const different: VariableInfo[] = [];
+      for (const v of list) {
+        if (getEntityHint(v)?.show) {
+          different.push(v);
+        } else {
+          matching.push(v);
+        }
+      }
+      return [...matching, ...different];
+    };
+    if (!suggested) {
+      return byContext(filteredVariables);
     }
-    return [...matching, ...different];
-  }, [filteredVariables, getEntityHint]);
+    return [
+      ...byContext(filteredVariables.filter((v) => suggested.has(v.name))),
+      ...byContext(filteredVariables.filter((v) => !suggested.has(v.name))),
+    ];
+  }, [filteredVariables, getEntityHint, suggested]);
+  const suggestedCount = suggested
+    ? sortedVariables.filter((v) => suggested.has(v.name)).length
+    : 0;
 
   // Reset selected index when list changes
   useEffect(() => {
@@ -184,40 +201,55 @@ export default function VariableSearchDropdown({
               <>
                 {sortedVariables.map((variable, index) => {
                   const entityHint = getEntityHint?.(variable);
+                  const heading =
+                    suggestedCount > 0 && index === 0
+                      ? suggestedLabel
+                      : suggestedCount > 0 && index === suggestedCount
+                        ? 'All variables'
+                        : null;
                   return (
-                    <div
-                      key={variable.name}
-                      data-option
-                      role="option"
-                      tabIndex={-1}
-                      aria-selected={index === selectedIndex}
-                      className={cn(
-                        'tw:px-sm tw:py-xs tw:cursor-pointer tw:text-sm',
-                        index === selectedIndex ? 'tw:bg-primary-100' : 'tw:hover:bg-gray-50'
+                    <Fragment key={variable.name}>
+                      {heading && (
+                        <p
+                          role="presentation"
+                          className="tw:px-sm tw:pt-sm tw:pb-xs tw:text-xs tw:font-semibold tw:text-gray-500"
+                        >
+                          {heading}
+                        </p>
                       )}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSelect(variable);
-                      }}
-                    >
-                      <div className="tw:flex tw:items-start tw:gap-xs tw:justify-between tw:flex-nowrap">
-                        <div className="tw:flex-1 tw:min-w-0">
-                          <p className="tw:text-sm tw:truncate">
-                            {sentenceCaseLabel(variable.label)}
-                          </p>
-                          {variable.documentation && (
-                            <p className="tw:text-xs tw:text-gray-500 tw:line-clamp-1">
-                              {variable.documentation}
+                      <div
+                        data-option
+                        role="option"
+                        tabIndex={-1}
+                        aria-selected={index === selectedIndex}
+                        className={cn(
+                          'tw:px-sm tw:py-xs tw:cursor-pointer tw:text-sm',
+                          index === selectedIndex ? 'tw:bg-primary-100' : 'tw:hover:bg-gray-50'
+                        )}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelect(variable);
+                        }}
+                      >
+                        <div className="tw:flex tw:items-start tw:gap-xs tw:justify-between tw:flex-nowrap">
+                          <div className="tw:flex-1 tw:min-w-0">
+                            <p className="tw:text-sm tw:truncate">
+                              {sentenceCaseLabel(variable.label)}
                             </p>
+                            {variable.documentation && (
+                              <p className="tw:text-xs tw:text-gray-500 tw:line-clamp-1">
+                                {variable.documentation}
+                              </p>
+                            )}
+                          </div>
+                          {entityHint?.show && (
+                            <span className="tw:text-xs tw:text-gray-500 tw:italic tw:shrink-0">
+                              {entityHint.label}
+                            </span>
                           )}
                         </div>
-                        {entityHint?.show && (
-                          <span className="tw:text-xs tw:text-gray-500 tw:italic tw:shrink-0">
-                            {entityHint.label}
-                          </span>
-                        )}
                       </div>
-                    </div>
+                    </Fragment>
                   );
                 })}
                 {truncated && (
