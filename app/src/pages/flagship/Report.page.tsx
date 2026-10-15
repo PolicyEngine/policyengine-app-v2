@@ -205,7 +205,28 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       : [];
   const reportYear = report?.year ?? '';
   const [view, setView] = useState<string | null>(null);
-  const [requestedYears, setRequestedYears] = useState<string[]>([]);
+  // The years asked for keep running on the server after the page closes,
+  // so the browser remembers them: back on the report, they show where they
+  // stand rather than as never run.
+  const yearsKey = `pe-flagship-report-years-${userReportId}`;
+  const [requestedYears, setRequestedYearsState] = useState<string[]>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(yearsKey) ?? '[]');
+      return Array.isArray(stored) ? stored.filter((year) => typeof year === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
+  const setRequestedYears = (update: (current: string[]) => string[]) =>
+    setRequestedYearsState((current) => {
+      const next = update(current);
+      try {
+        localStorage.setItem(yearsKey, JSON.stringify(next));
+      } catch {
+        // A private window keeps them for this visit only.
+      }
+      return next;
+    });
   const yearEconomies = useReportYearEconomies({
     countryId: report?.countryId ?? 'us',
     reformPolicyId: reformPolicyId ? String(reformPolicyId) : undefined,
