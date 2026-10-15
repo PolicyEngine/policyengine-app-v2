@@ -756,29 +756,109 @@ export interface ParameterSearchGroup {
   /** Folder breadcrumb (everything above the leaf); '' when unknown */
   folder: string;
   entries: ParameterSearchEntry[];
+  /**
+   * For a bracket schedule's group, the schedule's path
+   * (`gov.irs.credits.ctc.amount.base`): its members, every bracket, in order.
+   */
+  schedule?: string;
+}
+
+/** A bracket member's schedule and place: `…base[1].amount` → `…base`, 1, `amount`. */
+const SCHEDULE_MEMBER = /^(.+)\[(\d+)\]\.([^.[\]]+)$/;
+
+export function scheduleMemberOf(
+  path: string
+): { schedule: string; bracket: number; member: string } | null {
+  const match = SCHEDULE_MEMBER.exec(path);
+  return match ? { schedule: match[1], bracket: Number(match[2]), member: match[3] } : null;
+}
+
+/** Path keys that are acronyms; any other key reads as a word. */
+const KEY_ACRONYMS = new Set([
+  'aca',
+  'actc',
+  'agi',
+  'arpa',
+  'cdcc',
+  'ctc',
+  'eitc',
+  'fpg',
+  'obbba',
+  'snap',
+  'ssi',
+  'tanf',
+  'tcja',
+]);
+
+/** A path key read as a name: `arpa` → "ARPA", `base` → "Base", `joint_filers` → "Joint filers". */
+function keyName(key: string): string {
+  return key
+    .split('_')
+    .map((word, index) =>
+      KEY_ACRONYMS.has(word)
+        ? word.toUpperCase()
+        : index === 0
+          ? word.charAt(0).toUpperCase() + word.slice(1)
+          : word
+    )
+    .join(' ');
+}
+
+/**
+ * A schedule's folder: the members' breadcrumb above "Bracket N", then the
+ * schedule's own name — its label ("Child Tax Credit ARPA amount"), else
+ * its key ("ARPA") — since breadcrumbs skip a schedule's node, and
+ * `…amount.base` and `…amount.arpa` would otherwise read alike.
+ */
+function scheduleFolder(entry: ParameterSearchEntry, schedule: string): string {
+  const parts = entry.breadcrumb.split(' → ').slice(0, -2);
+  const label = entry.scheduleLabel?.trim();
+  const name = label
+    ? label.charAt(0).toUpperCase() + label.slice(1)
+    : keyName(schedule.split('.').pop() ?? schedule);
+  if (parts[parts.length - 1]?.toLowerCase() !== name.toLowerCase()) {
+    parts.push(name);
+  }
+  return parts.join(' → ');
 }
 
 /**
  * Organizes flat results into a hierarchy for display: parameters
  * sharing a parent folder cluster under a folder header (in rank
- * order of their best hit), with folders listed before standalone
- * parameters. Mirrors how the parameter tree is organized, so search
- * results teach the structure instead of flattening it away.
+ * order of their best match). A bracket schedule is one group, keyed by
+ * its path — every bracket together, in order, and never mixed with a
+ * sibling schedule whose breadcrumb reads the same.
  */
 export function groupSearchResults(results: ParameterSearchEntry[]): ParameterSearchGroup[] {
-  const byFolder = new Map<string, ParameterSearchGroup>();
+  const byKey = new Map<string, ParameterSearchGroup>();
   const order: ParameterSearchGroup[] = [];
 
   for (const entry of results) {
-    const parts = entry.breadcrumb.split(' → ');
-    const folder = parts.slice(0, -1).join(' → ');
-    let group = byFolder.get(folder);
+    const member = scheduleMemberOf(entry.path);
+    const key = member
+      ? `schedule:${member.schedule}`
+      : entry.breadcrumb.split(' → ').slice(0, -1).join(' → ');
+    let group = byKey.get(key);
     if (!group) {
-      group = { folder, entries: [] };
-      byFolder.set(folder, group);
+      group = member
+        ? { folder: scheduleFolder(entry, member.schedule), entries: [], schedule: member.schedule }
+        : { folder: key, entries: [] };
+      byKey.set(key, group);
       order.push(group);
     }
     group.entries.push(entry);
+  }
+
+  // A schedule reads bracket by bracket; its members keep their rank order within one.
+  for (const group of order) {
+    if (group.schedule) {
+      const rank = new Map(group.entries.map((entry, index) => [entry.path, index]));
+      group.entries.sort(
+        (a, b) =>
+          (scheduleMemberOf(a.path)?.bracket ?? 0) - (scheduleMemberOf(b.path)?.bracket ?? 0) ||
+          (rank.get(a.path) ?? 0) - (rank.get(b.path) ?? 0)
+      );
+    }
   }
 
   const folders = order.filter((group) => group.entries.length > 1 && group.folder);
