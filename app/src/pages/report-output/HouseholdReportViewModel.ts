@@ -143,7 +143,6 @@ export class HouseholdReportViewModel {
       )
       .map(({ simulation, householdData }) => ({
         id: simulation.id,
-        spmConfig: (simulation.output as HouseholdCalculationResult)?.spm_config,
         spmProvenance: (simulation.output as HouseholdCalculationResult)?.spm_provenance,
         countryId: this.report!.countryId,
         householdData,
