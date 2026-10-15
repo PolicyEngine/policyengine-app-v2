@@ -287,6 +287,23 @@ export function clearDraftReform(): void {
 }
 
 /**
+ * Every draft this browser holds: the one in hand and any set aside for
+ * another country. A signed-in session that ends takes them all, so the
+ * next person on a shared browser inherits none.
+ */
+export function clearAllDraftReforms(): void {
+  try {
+    const setAsideKeys = Array.from({ length: localStorage.length }, (_, index) =>
+      localStorage.key(index)
+    ).filter((key): key is string => !!key?.startsWith(`${STORAGE_KEY}:`));
+    setAsideKeys.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Storage unavailable: nothing was set aside either.
+  }
+  writeDraft(null);
+}
+
+/**
  * The report a run from the draft started. Running hands the draft over
  * to its report: the report's page clears it on opening — not the run
  * itself, which would blank Build while the report loads — so going

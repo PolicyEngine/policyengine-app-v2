@@ -63,6 +63,14 @@ function LeadError({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * The budget-window years asked for on reports opened by a saved report's
+ * link, kept for this page session only: the link opens the report for
+ * anyone, so it is never left in this browser's storage for the next
+ * person here to find.
+ */
+const sharedLinkRequestedYears = new Map<string, string[]>();
+
 interface FlagshipReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
   userReportId?: string;
@@ -245,9 +253,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const [view, setView] = useState<string | null>(null);
   // The years asked for keep running on the server after the page closes,
   // so the browser remembers them: back on the report, they show where they
-  // stand rather than as never run.
+  // stand rather than as never run. A saved report's link keeps them for
+  // this page session only (see sharedLinkRequestedYears).
   const yearsKey = `pe-flagship-report-years-${userReportId}`;
   const [requestedYears, setRequestedYearsState] = useState<string[]>(() => {
+    if (sharedLink) {
+      return sharedLinkRequestedYears.get(userReportId) ?? [];
+    }
     try {
       const stored = JSON.parse(localStorage.getItem(yearsKey) ?? '[]');
       return Array.isArray(stored) ? stored.filter((year) => typeof year === 'string') : [];
@@ -258,6 +270,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const setRequestedYears = (update: (current: string[]) => string[]) =>
     setRequestedYearsState((current) => {
       const next = update(current);
+      if (sharedLink) {
+        sharedLinkRequestedYears.set(userReportId, next);
+        return next;
+      }
       try {
         localStorage.setItem(yearsKey, JSON.stringify(next));
       } catch {

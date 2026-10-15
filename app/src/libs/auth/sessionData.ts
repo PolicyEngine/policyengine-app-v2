@@ -1,4 +1,4 @@
-import { clearDraftReform } from '@/libs/draftReform';
+import { clearAllDraftReforms } from '@/libs/draftReform';
 import { forgetAccountReportMeta } from '@/libs/flagship/runReport';
 
 /**
@@ -7,9 +7,9 @@ import { forgetAccountReportMeta } from '@/libs/flagship/runReport';
  * nor inherits it:
  *
  * - The report provenance stash from signed-in runs (kept in memory only).
- * - The draft reform, which may hold an account reform loaded for editing.
- *   A fingerprint of the account that last had it signed in marks whose
- *   draft it is.
+ * - The draft reform, which may hold an account reform loaded for editing,
+ *   and any draft set aside for another country. A fingerprint of the
+ *   account that last had them signed in marks whose drafts they are.
  *
  * Signed in, v3 writes nothing else to this browser: reforms and reports
  * go to the account.
@@ -51,7 +51,7 @@ function writeDraftOwner(owner: string | null): void {
 /** Signing out: everything the session left goes. */
 export function clearSignedInSessionData(): void {
   forgetAccountReportMeta();
-  clearDraftReform();
+  clearAllDraftReforms();
   writeDraftOwner(null);
 }
 
@@ -78,14 +78,14 @@ export function settleDraftOwner(subject: string | null): void {
   const owner = readDraftOwner();
   if (!subject) {
     if (owner) {
-      clearDraftReform();
+      clearAllDraftReforms();
       writeDraftOwner(null);
     }
     return;
   }
   const fingerprint = subjectFingerprint(subject);
   if (owner && owner !== fingerprint) {
-    clearDraftReform();
+    clearAllDraftReforms();
   }
   writeDraftOwner(fingerprint);
 }

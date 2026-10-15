@@ -7,7 +7,13 @@ import { CountryProvider } from '@/contexts/CountryContext';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { AuthProvider, takeSignInReturnTo } from '@/libs/auth/AuthProvider';
 import type { CountryId } from '@/libs/countries';
-import { clearDraftReform, getDraftReform, startDraftReform } from '@/libs/draftReform';
+import {
+  addDraftProvision,
+  clearDraftReform,
+  getDraftReform,
+  resumeDraftFor,
+  startDraftReform,
+} from '@/libs/draftReform';
 import { readReportMeta, runFlagshipReport } from '@/libs/flagship/runReport';
 import { TEST_ACCESS_TOKEN } from '@/tests/fixtures/api/v2UserMocks';
 import {
@@ -16,6 +22,15 @@ import {
   TEST_AUTH0_SUBJECT,
   TEST_PROFILE,
 } from '@/tests/fixtures/libs/auth/authMocks';
+
+/** A change in a UK draft, so the draft is kept when it is set aside. */
+const UK_DRAFT_PROVISION = {
+  path: 'gov.hmrc.income_tax.rates.uk[0].rate',
+  breadcrumb: 'HMRC → Income tax → Basic rate',
+  unit: '/1',
+  baselineValue: 0.2,
+  value: 0.21,
+};
 
 const auth0 = vi.hoisted(() => ({
   state: {
@@ -285,6 +300,25 @@ describe('AuthProvider', () => {
     expect(getDraftReform()).toBeNull();
   });
 
+  test("given another account signs in then the previous account's draft set aside for another country is dropped too", () => {
+    // Given: a UK draft set aside while a US one was started
+    stubAuthEnv(true);
+    auth0.state.isAuthenticated = true;
+    auth0.state.user = { sub: TEST_AUTH0_SUBJECT };
+    const firstAccount = renderProvider();
+    startDraftReform('uk', 'manual');
+    addDraftProvision('uk', UK_DRAFT_PROVISION);
+    startDraftReform('us', 'manual');
+    firstAccount.unmount();
+
+    // When
+    auth0.state.user = { sub: 'google-oauth2|someone-else' };
+    renderProvider();
+
+    // Then
+    expect(resumeDraftFor('uk')).toBeNull();
+  });
+
   test('given a signed-out draft then signing in keeps it, now as the account’s', () => {
     // Given
     stubAuthEnv(true);
@@ -371,6 +405,9 @@ describe('AuthProvider', () => {
         create: vi.fn().mockResolvedValue({}),
       } as unknown as FlagshipReportStore,
     });
+    // A UK draft set aside while the US one was started.
+    startDraftReform('uk', 'manual');
+    addDraftProvision('uk', UK_DRAFT_PROVISION);
     startDraftReform('us', 'manual');
     renderProvider('us');
 
@@ -380,6 +417,7 @@ describe('AuthProvider', () => {
     // Then
     expect(readReportMeta('56')).toBeNull();
     expect(getDraftReform()).toBeNull();
+    expect(resumeDraftFor('uk')).toBeNull();
     expect(localStorage.getItem('pe-draft-reform-owner')).toBeNull();
     expect(auth0.logout).toHaveBeenCalledWith({
       logoutParams: { returnTo: `${window.location.origin}/us` },

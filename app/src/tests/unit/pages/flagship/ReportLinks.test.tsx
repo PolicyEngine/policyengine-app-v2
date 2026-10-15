@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportData } from '@/hooks/useFlagshipReport';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
@@ -18,6 +18,7 @@ import {
   EXISTING_SIMULATIONS,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
 import { AuthTestProvider, makeAuthValue } from '@/tests/fixtures/libs/auth/authMocks';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockUseFlagshipReport = vi.fn();
 const mockCalcStatus = vi.fn();
@@ -64,6 +65,22 @@ const FAILED_RUN = {
   error: { message: 'The simulation failed' },
   result: null,
 };
+
+/** A finished run: the page shows the report, with its year switcher. */
+const COMPLETE_RUN = {
+  status: 'complete',
+  isComplete: true,
+  isError: false,
+  result: createMockSocietyWideOutput(),
+};
+
+/** Where the report page keeps the budget-window years asked for, per link. */
+const REQUESTED_YEARS_KEY_PREFIX = 'pe-flagship-report-years-';
+
+const requestedYearsKeys = () =>
+  Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)).filter((key) =>
+    key?.startsWith(REQUESTED_YEARS_KEY_PREFIX)
+  );
 
 const SHARED_PATH = `/v2/shared-reports/${ASSOCIATION_IDS.REPORT}`;
 
@@ -171,5 +188,29 @@ describe('FlagshipReportPage links', () => {
 
     // Then
     expect(screen.getByText(/old report link, which no longer opens/i)).toBeInTheDocument();
+  });
+
+  describe('given a finished report with a budget window', () => {
+    beforeEach(() => {
+      mockCalcStatus.mockReturnValue(COMPLETE_RUN);
+      fetchMock.mockImplementation(async (url: string) =>
+        new URL(url).pathname === SHARED_PATH
+          ? itemResponse(sharedReportItem({ budget_window_years: 3 }))
+          : errorResponse(404, 'not found')
+      );
+    });
+
+    test("given a saved report's link then the years asked for stay out of this browser's storage", async () => {
+      // Given
+      const user = userEvent.setup();
+      renderPage(ASSOCIATION_IDS.REPORT);
+
+      // When: another year of the window is asked for
+      await user.click(await screen.findByRole('tab', { name: /^2027,/ }));
+
+      // Then: the link, which opens the report for anyone, is not left behind
+      expect(screen.getByRole('tab', { name: /^2027,/ })).toHaveAttribute('aria-selected', 'true');
+      expect(requestedYearsKeys()).toEqual([]);
+    });
   });
 });
