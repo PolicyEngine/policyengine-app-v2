@@ -43,7 +43,40 @@ describe('defaultHouseholdInput', () => {
       childAges: [],
       earnings: 50000,
       partnerEarnings: 0,
+      headAge: 30,
+      partnerAge: 30,
     });
+  });
+
+  test('given ages, other income, rent and child care then each reaches the household', () => {
+    const payload = buildHouseholdPayload(
+      {
+        ...defaultHouseholdInput(),
+        married: true,
+        headAge: 67,
+        partnerAge: 64,
+        otherIncome: {
+          head: { social_security_retirement: 24000 },
+          partner: { taxable_pension_income: 12000 },
+        },
+        rent: 18000,
+        childcare: 9000,
+      },
+      '2026'
+    );
+
+    const text = JSON.stringify(payload);
+    expect(text).toContain('"social_security_retirement":{"2026":24000}');
+    expect(text).toContain('"taxable_pension_income":{"2026":12000}');
+    expect(text).toContain('"rent":{"2026":18000}');
+    expect(text).toContain('"spm_unit_pre_subsidy_childcare_expenses":{"2026":9000}');
+    expect(text).toContain('"age":{"2026":67}');
+    expect(text).toContain('"age":{"2026":64}');
+  });
+
+  test('given an adult under 18 or a negative amount then the household cannot run', () => {
+    expect(isValidHouseholdInput({ ...defaultHouseholdInput(), headAge: 16 })).toBe(false);
+    expect(isValidHouseholdInput({ ...defaultHouseholdInput(), rent: -5 })).toBe(false);
   });
 
   test("given a state or district report then the household starts in that report's state", () => {
