@@ -71,7 +71,7 @@ describe('report bar charts at phone width', () => {
     const { container } = render(<InequalityImpactSubPage output={REPORT_4332_OUTPUT} />);
 
     await waitFor(() =>
-      expect(categoryLabels(container)).toEqual(['Gini index', 'Top 10% share', 'Top 1% share'])
+      expect(categoryLabels(container)).toEqual(['Gini index', 'Top 10%', 'Top 1%'])
     );
   });
 
@@ -79,11 +79,7 @@ describe('report bar charts at phone width', () => {
     const { container } = render(<BudgetaryImpactSubPage output={REPORT_4332_OUTPUT} />);
 
     await waitFor(() =>
-      expect(categoryLabels(container)).toEqual([
-        'Federal tax revenues',
-        'State and local income tax revenues',
-        'Net impact',
-      ])
+      expect(categoryLabels(container)).toEqual(['Federal taxes', 'State taxes', 'Net impact'])
     );
   });
 
@@ -116,12 +112,7 @@ describe('report bar charts at phone width', () => {
     const { container } = render(<PovertyImpactByAgeSubPage output={REPORT_4332_OUTPUT} />);
 
     await waitFor(() =>
-      expect(categoryLabels(container)).toEqual([
-        'Children',
-        'Working-age adults',
-        'Seniors',
-        'All',
-      ])
+      expect(categoryLabels(container)).toEqual(['Children', 'Adults', 'Seniors', 'All'])
     );
   });
 
@@ -129,12 +120,7 @@ describe('report bar charts at phone width', () => {
     const { container } = render(<DeepPovertyImpactByAgeSubPage output={REPORT_4332_OUTPUT} />);
 
     await waitFor(() =>
-      expect(categoryLabels(container)).toEqual([
-        'Children',
-        'Working-age adults',
-        'Seniors',
-        'All',
-      ])
+      expect(categoryLabels(container)).toEqual(['Children', 'Adults', 'Seniors', 'All'])
     );
   });
 

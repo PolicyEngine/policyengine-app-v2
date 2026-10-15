@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { leadsWithStateRevenue, reportMetrics } from '@/components/flagship/ReportContents';
+import {
+  leadsWithStateRevenue,
+  reportMetrics,
+  winnerShareMetric,
+} from '@/components/flagship/ReportContents';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 describe('reportMetrics', () => {
@@ -17,6 +21,55 @@ describe('reportMetrics', () => {
     expect(reportMetrics(output, 'us', { stateRevenue: true })[0]).toEqual({
       value: '$74.2m',
       label: 'Annual state revenue loss',
+    });
+  });
+
+  test('given more people gain than lose then the second figure is the share of people gaining', () => {
+    // Given: the API's winner shares count people, as in report 4326.
+    const output = createMockSocietyWideOutput();
+    output.intra_decile.all = {
+      'Gain more than 5%': 0.041,
+      'Gain less than 5%': 0.1,
+      'No change': 0.849,
+      'Lose less than 5%': 0.01,
+      'Lose more than 5%': 0,
+    };
+
+    // Then
+    expect(reportMetrics(output, 'us')[1]).toEqual({
+      value: '14.1%',
+      label: 'People gaining income',
+    });
+  });
+
+  test('given more people lose than gain then the second figure is the share of people losing', () => {
+    // Given: 46% of people lose a little and no one gains, as in report 4302.
+    const output = createMockSocietyWideOutput();
+    output.intra_decile.all = {
+      'Gain more than 5%': 0,
+      'Gain less than 5%': 0,
+      'No change': 0.5398,
+      'Lose less than 5%': 0.4602,
+      'Lose more than 5%': 0,
+    };
+
+    // Then
+    expect(reportMetrics(output, 'us')[1]).toEqual({
+      value: '46.0%',
+      label: 'People losing income',
+    });
+  });
+});
+
+describe('winnerShareMetric', () => {
+  test('given no one gains or loses then it reads as no one gaining', () => {
+    expect(winnerShareMetric(0, 0)).toEqual({ value: '0.0%', label: 'People gaining income' });
+  });
+
+  test('given shares that are not numbers then it is unavailable', () => {
+    expect(winnerShareMetric(Number.NaN, Number.NaN)).toEqual({
+      value: 'Unavailable',
+      label: 'People gaining income',
     });
   });
 });

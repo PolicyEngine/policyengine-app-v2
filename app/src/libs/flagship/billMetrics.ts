@@ -1,5 +1,5 @@
 import type { TrackedBill } from '@/api/billFeed';
-import type { ReportMetric } from '@/components/flagship/ReportContents';
+import { winnerShareMetric, type ReportMetric } from '@/components/flagship/ReportContents';
 import { formatCurrencyAbbr } from '@/utils/formatters';
 
 function relativeChange(percentChange: number): string {
@@ -54,7 +54,8 @@ export function storedBillMetrics(
   const winners = impact?.winnersLosers;
   if (winners && (winners.gainMore5Pct !== undefined || winners.gainLess5Pct !== undefined)) {
     const gains = (winners.gainMore5Pct ?? 0) + (winners.gainLess5Pct ?? 0);
-    metrics.push({ value: `${(gains * 100).toFixed(1)}%`, label: 'Households gaining' });
+    const losses = (winners.loseMore5Pct ?? 0) + (winners.loseLess5Pct ?? 0);
+    metrics.push(winnerShareMetric(gains, losses));
   }
 
   const childPoverty = impact?.childPoverty?.percentChange;

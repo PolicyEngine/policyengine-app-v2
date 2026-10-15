@@ -24,10 +24,10 @@ import {
 import {
   fitAxisTitle,
   fixedPlotHeight,
-  getCategoryAxis,
   getWaterfallLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
+import { categoryAxisProps } from '@/components/flagship/report/charts/categoryAxis';
 import { BarValueText } from '@/components/flagship/report/charts/ReportBarLabel';
 import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack } from '@/components/ui';
@@ -52,6 +52,8 @@ export interface ReportWaterfallChartProps {
   formatBarLabel: (value: number) => string;
   fillColor: (datum: WaterfallDatum) => string;
   tooltipContent: ReactElement;
+  /** A shorter name for a bar whose full name does not fit under it. */
+  shortNames?: Record<string, string>;
 }
 
 export default function ReportWaterfallChart({
@@ -63,17 +65,13 @@ export default function ReportWaterfallChart({
   formatBarLabel,
   fillColor,
   tooltipContent,
+  shortNames,
 }: ReportWaterfallChartProps) {
   const { plotWidth, plotHeight, probe } = usePlotSize(
     fillHeight ? undefined : fixedPlotHeight(height, MARGIN)
   );
   const { domain, ticks, placements } = getWaterfallLayout(data, plotHeight);
   // Every bar keeps its label on a narrow screen, wrapped to its slot.
-  const categoryAxis = getCategoryAxis(
-    data.map((datum) => datum.name),
-    plotWidth,
-    RECHARTS_FONT_STYLE
-  );
   const decimals = tickDecimals(ticks);
   const tickFormatter = (value: number) => formatTick(value, decimals);
   const yAxisTitle = fitAxisTitle(yAxisTitles, plotHeight);
@@ -135,9 +133,11 @@ export default function ReportWaterfallChart({
         <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
         <XAxis
           dataKey="name"
-          interval={0}
-          tick={categoryAxis.tick}
-          height={categoryAxis.height}
+          {...categoryAxisProps(
+            data.map((datum) => datum.name),
+            plotWidth,
+            { shortNames }
+          )}
           tickLine={false}
           axisLine={{ stroke: colors.gray[200] }}
         />

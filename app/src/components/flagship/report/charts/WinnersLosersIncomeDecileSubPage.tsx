@@ -4,6 +4,7 @@ import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { TOOLTIP_STYLE } from '@/components/charts';
 import ChartExplanation from '@/components/flagship/report/ChartExplanation';
+import { measureTextWidth } from '@/components/flagship/report/charts/barLayout';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -14,7 +15,7 @@ import {
   getWinnersLosersCsvRows,
 } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
-import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { CHART_EXPORT_KEEP, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -42,6 +43,12 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 };
 
 const BAR_SIZE = 18;
+/** The legend: a 12px swatch, its name 8px on, rows 8px apart. */
+const LEGEND_SWATCH = 12;
+const LEGEND_TEXT_GAP = 8;
+const LEGEND_ROW_GAP = 8;
+const LEGEND_ROW = LEGEND_SWATCH + LEGEND_ROW_GAP;
+const LEGEND_FONT_SIZE = 12;
 const TOOLTIP_POSITION = { x: 72, y: 0 };
 const TOOLTIP_WRAPPER_STYLE = {
   zIndex: 1000,
@@ -49,11 +56,12 @@ const TOOLTIP_WRAPPER_STYLE = {
   maxWidth: 'min(280px, calc(100vw - 32px))',
 };
 
-function WinnersLosersTooltip({ active, payload, label }: any) {
+/** A row's outcome shares on hover. The shares count people, so "All" is everyone. */
+export function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
     return null;
   }
-  const decileLabel = label === 'All' ? 'All households' : `Decile ${label}`;
+  const decileLabel = label === 'All' ? 'All people' : `Decile ${label}`;
   return (
     <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{decileLabel}</p>
@@ -240,41 +248,48 @@ export default function WinnersLosersIncomeDecileSubPage({
     </ResponsiveContainer>
   );
 
+  // Drawn in SVG, so the chart's download keeps the key to its colors. A
+  // few pixels spare keep a name whole if the font loads wider than measured.
+  const legendWidth =
+    LEGEND_SWATCH +
+    LEGEND_TEXT_GAP +
+    4 +
+    Math.ceil(
+      Math.max(...CATEGORIES.map((cat) => measureTextWidth(LEGEND_TEXT_MAP[cat], LEGEND_FONT_SIZE)))
+    );
   const legend = (
     <div
+      {...CHART_EXPORT_KEEP}
       style={{
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        gap: 8,
         paddingLeft: 16,
         paddingRight: 8,
         flexShrink: 0,
       }}
     >
-      {CATEGORIES.map((cat) => (
-        <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 12,
-              height: 12,
-              borderRadius: 2,
-              backgroundColor: COLOR_MAP[cat],
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: typography.fontSize.xs,
-              color: colors.gray[500],
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {LEGEND_TEXT_MAP[cat]}
-          </span>
-        </div>
-      ))}
+      <svg
+        width={legendWidth}
+        height={CATEGORIES.length * LEGEND_ROW - LEGEND_ROW_GAP}
+        aria-label="Legend"
+      >
+        {CATEGORIES.map((cat, index) => (
+          <g key={cat} transform={`translate(0, ${index * LEGEND_ROW})`}>
+            <rect width={LEGEND_SWATCH} height={LEGEND_SWATCH} rx={2} fill={COLOR_MAP[cat]} />
+            <text
+              x={LEGEND_SWATCH + LEGEND_TEXT_GAP}
+              y={LEGEND_SWATCH / 2}
+              dominantBaseline="central"
+              fontSize={LEGEND_FONT_SIZE}
+              fontFamily={typography.fontFamily.primary}
+              fill={colors.gray[500]}
+            >
+              {LEGEND_TEXT_MAP[cat]}
+            </text>
+          </g>
+        ))}
+      </svg>
     </div>
   );
 
@@ -283,7 +298,10 @@ export default function WinnersLosersIncomeDecileSubPage({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ height: allBarHeight, flexShrink: 0 }}>{allBarChart}</div>
+            {/* Kept by the download at its short compact height. */}
+            <div {...CHART_EXPORT_KEEP} style={{ height: allBarHeight, flexShrink: 0 }}>
+              {allBarChart}
+            </div>
             <div style={{ height: gapHeight, flexShrink: 0 }} />
             <div style={{ flex: 1, minHeight: 0 }}>{decileBarChart}</div>
           </div>
@@ -306,7 +324,9 @@ export default function WinnersLosersIncomeDecileSubPage({
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ height: allBarHeight }}>{allBarChart}</div>
+            <div {...CHART_EXPORT_KEEP} style={{ height: allBarHeight }}>
+              {allBarChart}
+            </div>
             <div style={{ height: gapHeight }} />
             <div style={{ height: decileHeight }}>{decileBarChart}</div>
           </div>
