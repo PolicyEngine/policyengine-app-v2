@@ -387,3 +387,16 @@ export async function runFlagshipReport({
 
   return link;
 }
+
+/**
+ * Query keys for this session's reports, as Your reforms lists them by
+ * reform (scoped to whose saved work they are, see V3SavedWork), and for
+ * where each one stands on the API.
+ */
+export const flagshipReportQueryKeys = {
+  all: ['flagship-reports'] as const,
+  mine: (scope: string, countryId: string) => ['flagship-reports', scope, countryId] as const,
+  statuses: ['flagship-report-status'] as const,
+  status: (countryId: string, apiReportId: string) =>
+    ['flagship-report-status', countryId, apiReportId] as const,
+};

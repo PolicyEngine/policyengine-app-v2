@@ -1,20 +1,26 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
+import AllYearsView from '@/components/flagship/report/AllYearsView';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
 import ReportLoadError from '@/components/flagship/report/ReportLoadError';
+import ReportNotSocietyWide from '@/components/flagship/report/ReportNotSocietyWide';
 import ReportView from '@/components/flagship/report/ReportView';
+import ReportYearSwitcher, {
+  ALL_YEARS,
+  type YearStatus,
+} from '@/components/flagship/report/ReportYearSwitcher';
 import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgress';
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Title } from '@/components/ui';
-import { getDurationForCountry } from '@/constants/calculationDurations';
+import { getDurationForRegion } from '@/constants/calculationDurations';
 import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
@@ -24,16 +30,38 @@ import {
   useReportRecord,
   useSharedReport,
 } from '@/hooks/useFlagshipStores';
+import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
+import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
-import { reportBaselineLabel, reportRunBaseline } from '@/libs/flagship/reportBaseline';
+import {
+  reportBaselineLabel,
+  reportBaselineUnknown,
+  reportRunBaseline,
+  UNKNOWN_BASELINE_LABEL,
+} from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
 import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
+
+/** A failed load at the top of the overview, in a dashed box. */
+function LeadError({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        padding: spacing.lg,
+        border: `1px dashed ${colors.border.light}`,
+        borderRadius: spacing.radius.feature,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 interface FlagshipReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
@@ -68,6 +96,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     isLoading,
     error: reportLoadError,
     notFound: reportNotFound,
+    failedPolicyIds,
     retry: retryReport,
   } = useFlagshipReport(
     (sharedLink ? shared?.record.apiReportId : browserLink ? userReportId : undefined) ?? ''
@@ -80,12 +109,16 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const retry = sharedLoadError ? sharedQuery.refetch : retryReport;
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   // This session's own record, when it ran the report: it names the saved
   // reform the report was run from, and holds the validation pin.
   const reportRecord = useReportRecord(unresolvable ? undefined : userReportId);
   // Provenance: the run's details, else the saved report's (the same for
-  // anyone holding the link), else rebuilt from the reform policy.
-  const reformPolicy = policies.find((policy) => policy.id === simulations?.[1]?.policyId);
+  // anyone holding the link), else rebuilt from the reform policy so a
+  // link without accounts validates like the original — read in the
+  // report's year, with every dated value the run had.
+  const reformPolicyId = simulations?.[1]?.policyId;
+  const reformPolicy = policies.find((policy) => policy.id === reformPolicyId);
   const baselinePolicyId = simulations?.[0]?.policyId;
   // The saved report names the reform it was compared with; only its owner
   // links to that reform.
@@ -97,18 +130,33 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           label: shared.baselineReform.name || 'Untitled reform',
         }
       : undefined;
-  // Without metadata the rebuilt provisions would show raw paths and no
-  // baseline, so they count as still loading until it arrives.
   const meta =
     readReportMeta(userReportId) ??
     reportMetaFromRecord(shared?.record, report?.year, sharedBaseline) ??
-    (parameters ? provenanceFromPolicy(reformPolicy, parameters, report?.label) : null);
+    provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year || undefined);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
   const unreadableMeta = useUnreadableReportMeta(userReportId);
   // The reform's provisions are rebuilt from metadata; without it they cannot show.
   const metadata = useFlagshipMetadataStatus();
+  // Rebuilt, the provisions are on their way until the reform policy loads
+  // (it waits for the parameter metadata, so names and current law come
+  // with it): the report waits for them rather than show an empty reform
+  // to adjust. A policy or metadata that failed lets it show without them.
+  const awaitingProvisions =
+    !meta &&
+    !unresolvable &&
+    !!reformPolicyId &&
+    !failedPolicyIds.includes(reformPolicyId) &&
+    metadata.status !== 'error';
+
+  // A household report is the classic calculator's: this page shows
+  // society-wide results only. Run here, it would score one household
+  // and write that over the report's stored outputs.
+  const householdReport = simulations.some(
+    (simulation) => simulation.populationType === 'household'
+  );
 
   // The run handed its draft over to this report; Build starts fresh.
   useEffect(() => {
@@ -118,7 +166,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const calcConfigs = useMemo(() => {
     // Wait for the reform simulation too: starting on the baseline alone
     // scores current law against itself and persists zeros as the result.
-    if (!report?.id || !allSimulationsLoaded(report, simulations)) {
+    if (!report?.id || householdReport || !allSimulationsLoaded(report, simulations)) {
       return null;
     }
     const simulation1 = simulations[0];
@@ -137,6 +185,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         simulations: { simulation1, simulation2: simulations[1] || null },
         // The bar follows a typical run for this region, not the country.
         estimateByRegion: true,
+        // A failed run says so on its record, so Your reforms can say Failed.
+        recordReportErrors: true,
         populations: {
           household1: null,
           household2: null,
@@ -145,7 +195,16 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         },
       } as CalcStartConfig,
     ];
-  }, [report, simulations]);
+  }, [report, simulations, householdReport]);
+
+  // A report whose record is complete opens from the results stored on
+  // it: run again, each open would ask for the economy once more and
+  // write the same results back over the public record. Seeded before
+  // the start below looks, so no run starts for it.
+  useHydrateCalculationCache({
+    report,
+    outputType: calcConfigs && report?.status === 'complete' ? 'societyWide' : undefined,
+  });
 
   useStartCalculationOnLoad({
     enabled: !!report && !!calcConfigs,
@@ -155,17 +214,64 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const output = calcStatus.isComplete ? (calcStatus.result as SocietyWideOutput) : null;
 
-  const reformPolicyId = simulations?.[1]?.policyId;
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
-  const customBaselineLabel = reportBaselineLabel(meta, baselinePolicy);
-  // Adjusted, the report keeps what it was compared with.
-  const runBaseline = reportRunBaseline(meta, baselinePolicyId, customBaselineLabel);
+  // A baseline policy that failed to load is unknown, not current law.
+  const baselineUnknown = reportBaselineUnknown(meta, baselinePolicyId, {
+    currentLawId,
+    failedPolicyIds,
+  });
+  const customBaselineLabel = baselineUnknown
+    ? UNKNOWN_BASELINE_LABEL
+    : reportBaselineLabel(meta, baselinePolicy);
+  // Adjusted, the report keeps what it was compared with; an unknown one gives it nothing to keep.
+  const runBaseline = baselineUnknown
+    ? undefined
+    : reportRunBaseline(meta, baselinePolicyId, customBaselineLabel);
   const region = simulations?.[0]?.populationId;
   // A report on part of the country names it: "California".
   const regionLabel =
     region && report && region !== report.countryId
       ? populationLabel(region, economyRegions)
       : undefined;
+  // A budget window's years. The run scored the first in full; another
+  // year runs once it is opened, or with the rest from the All years view.
+  const windowYears =
+    meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
+      ? Array.from({ length: meta.budgetWindow.windowSize }, (_, index) =>
+          String(meta.budgetWindow!.startYear + index)
+        )
+      : [];
+  const reportYear = report?.year ?? '';
+  const [view, setView] = useState<string | null>(null);
+  // The years asked for keep running on the server after the page closes,
+  // so the browser remembers them: back on the report, they show where they
+  // stand rather than as never run.
+  const yearsKey = `pe-flagship-report-years-${userReportId}`;
+  const [requestedYears, setRequestedYearsState] = useState<string[]>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(yearsKey) ?? '[]');
+      return Array.isArray(stored) ? stored.filter((year) => typeof year === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
+  const setRequestedYears = (update: (current: string[]) => string[]) =>
+    setRequestedYearsState((current) => {
+      const next = update(current);
+      try {
+        localStorage.setItem(yearsKey, JSON.stringify(next));
+      } catch {
+        // A private window keeps them for this visit only.
+      }
+      return next;
+    });
+  const yearEconomies = useReportYearEconomies({
+    countryId: report?.countryId ?? 'us',
+    reformPolicyId: reformPolicyId ? String(reformPolicyId) : undefined,
+    baselinePolicyId: baselinePolicyId ? String(baselinePolicyId) : undefined,
+    region,
+    years: requestedYears.filter((year) => year !== reportYear),
+  });
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
@@ -199,7 +305,18 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     );
   }
 
-  if (!output || isLoading || (!meta && !!reformPolicy)) {
+  if (householdReport) {
+    return layout(
+      <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+        <Title order={1} style={{ margin: 0 }}>
+          {title}
+        </Title>
+        <ReportNotSocietyWide />
+      </Stack>
+    );
+  }
+
+  if (!output || isLoading || awaitingProvisions) {
     if (unresolvable) {
       return layout(
         <Stack
@@ -277,12 +394,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                 : 'Calculating the nationwide results'
             }
             progress={calcStatus.progress}
+            runStage={'runStage' in calcStatus ? calcStatus.runStage : undefined}
             detail={
               typeof calcStatus.queuePosition === 'number' && calcStatus.queuePosition > 0
                 ? `In queue, position ${calcStatus.queuePosition}`
                 : undefined
             }
-            expectedMs={getDurationForCountry(report?.countryId ?? 'us')}
+            expectedMs={getDurationForRegion(report?.countryId ?? 'us', region)}
           />
         ) : (
           <RunLoading label="Loading report" />
@@ -301,6 +419,57 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         : `${Number(singleProvision.value) > Number(singleProvision.baselineValue) ? 'Increasing' : Number(singleProvision.value) < Number(singleProvision.baselineValue) ? 'Reducing' : 'Setting'} the Child Tax Credit`
       : title;
 
+  const shownView = view ?? (windowYears.length > 1 ? ALL_YEARS : reportYear);
+  const allYears = shownView === ALL_YEARS;
+  const year = allYears || !windowYears.includes(shownView) ? reportYear : shownView;
+  const otherYear = year !== reportYear;
+  const yearEconomy = yearEconomies[year];
+  const statusByYear: Record<string, YearStatus> = Object.fromEntries(
+    windowYears.map((windowYear) => {
+      if (windowYear === reportYear) {
+        return [windowYear, output ? 'done' : 'computing'];
+      }
+      const economy = yearEconomies[windowYear];
+      return [
+        windowYear,
+        !economy
+          ? 'not-run'
+          : economy.status === 'complete'
+            ? 'done'
+            : economy.status === 'error'
+              ? 'error'
+              : 'computing',
+      ];
+    })
+  );
+  const requestYears = (years: string[]) =>
+    setRequestedYears((current) => [...new Set([...current, ...years])]);
+  const selectView = (next: string) => {
+    setView(next);
+    if (next !== ALL_YEARS && next !== reportYear) {
+      requestYears([next]);
+    }
+  };
+  const shownOutput = otherYear ? (yearEconomy?.output ?? null) : output;
+  const yearPending =
+    otherYear && yearEconomy?.status !== 'complete' ? (
+      yearEconomy?.status === 'error' ? (
+        <ErrorState
+          compact
+          title={`Could not calculate ${year}`}
+          description={yearEconomy.message}
+          onRetry={yearEconomy.retry}
+        />
+      ) : (
+        <RunProgress
+          title={`Calculating ${year}`}
+          progress={yearEconomy?.progress}
+          runStage={yearEconomy?.runStage}
+          expectedMs={getDurationForRegion(report?.countryId ?? 'us', region)}
+        />
+      )
+    ) : undefined;
+
   return (
     <ReportView
       title={title}
@@ -311,25 +480,63 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
       overviewLead={
-        !meta && metadata.status === 'error' ? (
-          <div
-            style={{
-              padding: spacing.lg,
-              border: `1px dashed ${colors.border.light}`,
-              borderRadius: spacing.radius.feature,
-            }}
-          >
-            <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
-          </div>
-        ) : undefined
+        <>
+          {!meta && metadata.status === 'error' && (
+            <LeadError>
+              <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+            </LeadError>
+          )}
+          {baselineUnknown && (
+            <LeadError>
+              <ErrorState
+                compact
+                title="Could not load the baseline policy"
+                description="The results compare with it, but its name and values are missing."
+                onRetry={retry}
+              />
+            </LeadError>
+          )}
+        </>
       }
       customBaselineLabel={customBaselineLabel}
+      baselineUnknown={baselineUnknown}
       baseline={runBaseline}
-      year={report?.year ?? ''}
+      year={year}
       region={region}
       reformPolicyId={reformPolicyId}
       baselinePolicyId={baselinePolicyId}
-      output={output}
+      output={shownOutput}
+      pending={yearPending}
+      coverYear={allYears ? `${windowYears[0]}–${windowYears[windowYears.length - 1]}` : year}
+      yearSwitcher={
+        windowYears.length > 1 ? (
+          <ReportYearSwitcher
+            years={windowYears}
+            value={shownView}
+            onChange={selectView}
+            statusByYear={statusByYear}
+          />
+        ) : undefined
+      }
+      sectionsOverride={
+        allYears ? (
+          <AllYearsView
+            countryId={report?.countryId ?? 'us'}
+            reformPolicyId={reformPolicyId ? String(reformPolicyId) : undefined}
+            baselinePolicyId={baselinePolicyId ? String(baselinePolicyId) : undefined}
+            region={region}
+            years={windowYears}
+            outputs={Object.fromEntries(
+              windowYears.map((windowYear) => [
+                windowYear,
+                windowYear === reportYear ? output : (yearEconomies[windowYear]?.output ?? null),
+              ])
+            )}
+            statusByYear={statusByYear}
+            onCalculateAll={() => requestYears(windowYears)}
+          />
+        ) : undefined
+      }
       calibration={calibration}
       calibrationPin={pin}
       trackRecord={trackRecord}

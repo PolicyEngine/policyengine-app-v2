@@ -3,6 +3,7 @@ import { IconCheck } from '@tabler/icons-react';
 import { Input } from '@/components/ui';
 import { colors } from '@/designTokens';
 import { cn } from '@/lib/utils';
+import { isUnlimitedValue } from '@/libs/draftReform';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { formatValue } from '@/utils/parameterValues';
@@ -24,6 +25,9 @@ const CURRENCY_PREFIXES: Record<string, string> = {
   currency_GBP: '£',
   GBP: '£',
 };
+
+/** What a value with no limit reads as, in place of "Infinity". */
+export const NO_LIMIT = 'No limit';
 
 /** A stored value as the box shows it: rates as percentages, without float noise. */
 function displayText(value: unknown, percentage: boolean): string {
@@ -67,12 +71,14 @@ export function ValueDisplay({
 }) {
   const percentage = param.unit === '/1';
   const prefix = CURRENCY_PREFIXES[String(param.unit)] ?? '';
-  const numeric = typeof value === 'number';
+  const numeric = typeof value === 'number' && Number.isFinite(value);
   const digits = numeric
     ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString('en-US', {
         maximumFractionDigits: 6,
       })
-    : formatValue(value, param.unit ?? null);
+    : isUnlimitedValue(value)
+      ? NO_LIMIT
+      : formatValue(value, param.unit ?? null);
   return (
     <div
       className="tw:relative tw:flex tw:items-center tw:text-sm"
@@ -95,6 +101,8 @@ export function ValueDisplay({
 function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
   const percentage = param.unit === '/1';
   const prefix = CURRENCY_PREFIXES[String(param.unit)] ?? '';
+  // No limit reads as an empty box that says so; typing a number sets one.
+  const unlimited = isUnlimitedValue(value);
   // While focused, the box shows what is typed, even an empty field;
   // otherwise, the value it stands for.
   const [typed, setTyped] = useState<string | null>(null);
@@ -128,6 +136,7 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
         type="number"
         min={0}
         aria-label={ariaLabel}
+        placeholder={unlimited ? NO_LIMIT : undefined}
         value={typed ?? displayText(value, percentage)}
         onFocus={() => {
           startValue.current = value;
@@ -153,8 +162,9 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
         }}
         onBlur={(event) => {
           let final = value;
-          // "1." or "-" reads as empty to a number box but is not.
-          if (event.target.value === '' && !event.target.validity.badInput) {
+          // "1." or "-" reads as empty to a number box but is not. Left
+          // empty, no limit stays no limit; any other box means 0.
+          if (event.target.value === '' && !event.target.validity.badInput && !unlimited) {
             final = commit('0');
           }
           if (

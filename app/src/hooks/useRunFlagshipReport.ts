@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
 import {
+  flagshipReportQueryKeys,
   runFlagshipReport,
   RunReportBaseline,
   RunReportProvision,
@@ -19,6 +21,7 @@ import { RootState } from '@/store';
 export function useRunFlagshipReport() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
+  const queryClient = useQueryClient();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const reportStore = useFlagshipReportStore();
   const [isRunning, setIsRunning] = useState(false);
@@ -84,6 +87,9 @@ export function useRunFlagshipReport() {
       if (fromDraft) {
         markDraftRun(userReportId);
       }
+      // Your reforms lists the new report at once, not when its cache goes stale.
+      void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.statuses });
       nav.push(`/${countryId}/report/${userReportId}`);
     } catch {
       setError('Could not start the report. Try again.');

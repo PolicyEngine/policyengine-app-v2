@@ -15,7 +15,7 @@ import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts'
 import { ErrorState } from '@/components/flagship/states';
 import { BillExternalEstimates, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text } from '@/components/ui';
-import { getDurationForCountry } from '@/constants/calculationDurations';
+import { getDurationForRegion } from '@/constants/calculationDurations';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
@@ -24,7 +24,11 @@ import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
-import { billAlreadyCurrentLaw, billReportProvisions } from '@/libs/flagship/billProvisions';
+import {
+  billAlreadyCurrentLaw,
+  billReportProvisions,
+  billScoresOtherThanWriteUp,
+} from '@/libs/flagship/billProvisions';
 import { findTrackedBill, trackerUrlForBillId } from '@/libs/flagship/billTracker';
 import { RootState } from '@/store';
 
@@ -105,6 +109,7 @@ function BillOverviewLead({ bill }: { bill: TrackedBill }) {
 /** Why a bill has, or does not yet have, full results. */
 type RunState =
   | 'already-law'
+  | 'write-up-mismatch'
   | 'no-provisions'
   | 'no-metadata'
   | 'not-started'
@@ -115,6 +120,11 @@ const UNAVAILABLE_COPY: Partial<Record<RunState, { title: string; detail: string
     title: 'This bill is already current law.',
     detail:
       "Scored against current law it changes nothing, so there are no full results to show. The estimates here are the legislative tracker's, against the law before the bill.",
+  },
+  'write-up-mismatch': {
+    title: 'The full results are not available for this bill.',
+    detail:
+      "The model parameters the legislative tracker stored for this bill do not match its write-up of the changes, so a run would score a different change. The estimates here are the tracker's.",
   },
   'no-provisions': {
     title: 'The full results cannot be calculated.',
@@ -203,8 +213,9 @@ function FullResultsStatus({
     <RunProgress
       title="Calculating the full results"
       progress={economy.progress}
+      runStage={economy.runStage}
       detail={queued}
-      expectedMs={getDurationForCountry(countryId)}
+      expectedMs={getDurationForRegion(countryId, economy.region)}
       note="Later visits load from the cache."
     />
   );
@@ -212,6 +223,7 @@ function FullResultsStatus({
 
 const STORED_NOTE: Partial<Record<RunState, string>> = {
   'already-law': 'Estimates from the legislative tracker, against the law before this bill',
+  'write-up-mismatch': 'Stored estimates from the legislative tracker · full results unavailable',
   'no-provisions': 'Stored estimates from the legislative tracker · full results unavailable',
   'no-metadata': 'Stored estimates from the legislative tracker · full results unavailable',
   'not-started': 'Stored estimates from the legislative tracker',
@@ -253,22 +265,30 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
     priorLaw: alreadyCurrentLaw,
   });
 
+  // The Policy changes table shows the tracker's write-up; a run scores the
+  // stored parameters. When they disagree (a tracker row with its reform
+  // and baseline swapped), a run would contradict the table above it.
+  const writeUpMismatch =
+    !alreadyCurrentLaw && billScoresOtherThanWriteUp(bill?.provisions ?? [], bill?.changes);
+
   const billPaths = provisions.map((p) => p.path);
   const trackRecord = useModelTrackRecord(billPaths);
   // Only a reader's request starts the run, and it waits for metadata so an
   // enacted bill is recognized before any run starts.
   const economy = useBillEconomy(bill, {
-    enabled: runRequested && metadataLoaded && !alreadyCurrentLaw,
+    enabled: runRequested && metadataLoaded && !alreadyCurrentLaw && !writeUpMismatch,
   });
   const runState: RunState = alreadyCurrentLaw
     ? 'already-law'
-    : provisions.length === 0
-      ? 'no-provisions'
-      : metadataError && !metadataLoaded
-        ? 'no-metadata'
-        : !runRequested
-          ? 'not-started'
-          : economy.status;
+    : writeUpMismatch
+      ? 'write-up-mismatch'
+      : provisions.length === 0
+        ? 'no-provisions'
+        : metadataError && !metadataLoaded
+          ? 'no-metadata'
+          : !runRequested
+            ? 'not-started'
+            : economy.status;
   const startRun = () => setRunRequestedFor(billId);
   // A state bill's data check is against that state's calibration targets.
   const calibration = useCalibrationMatches(
@@ -322,7 +342,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       economyPending={
         <Stack style={{ gap: spacing.lg }}>
           <FullResultsStatus runState={runState} economy={economy} onStart={startRun} />
-          <StoredImpactCharts impact={bill.impactData} />
+          <StoredImpactCharts bill={bill} countryId={countryId} />
         </Stack>
       }
       districtsPending={

@@ -75,6 +75,7 @@ function reportData(overrides: Partial<FlagshipReportData> = {}): FlagshipReport
     isLoading: false,
     error: null,
     notFound: false,
+    failedPolicyIds: [],
     retry: vi.fn(),
     ...overrides,
   };

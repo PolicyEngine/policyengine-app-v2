@@ -9,10 +9,21 @@ import {
 } from '@/api/billFeed';
 import { CURRENT_YEAR } from '@/constants';
 import {
+  LATE_STATUS,
+  LATE_STATUS_ROWS,
+  MANY_BILL_ROWS,
+  MANY_BILLS,
+  MANY_BILLS_BASELINE_RATE,
+  MANY_BILLS_STATUS,
+  mockPagedTrackerFetch,
   mockTrackerFetch,
   NET_COST_DRIFT_ROWS,
   NET_COST_ONLY_ROWS,
   TRACKER_NAMING_ROWS,
+  TWICE_FILED_BILL,
+  TWICE_FILED_CASES,
+  TWICE_FILED_LEGISCAN,
+  TWICE_FILED_OPENSTATES,
 } from '@/tests/fixtures/api/billFeedMocks';
 import { TRACKER_HOME } from '@/tests/fixtures/libs/flagship/billTrackerMocks';
 
@@ -300,6 +311,70 @@ describe('tracker reads', () => {
       '1000',
     ]);
   });
+
+  test('given a status row past the first page then every load finds its stage and link', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    // Pages read with no fixed order repeat rows and skip the rest.
+    vi.stubGlobal('fetch', mockPagedTrackerFetch(LATE_STATUS_ROWS));
+
+    const [bill] = (await fetchTrackerBills())!;
+
+    expect([bill.status, bill.legiscanUrl]).toEqual([LATE_STATUS.status, LATE_STATUS.legiscanUrl]);
+  });
+
+  test('given every table past one page then each bill reads once, with its run, baseline, check and stage', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal('fetch', mockPagedTrackerFetch(MANY_BILL_ROWS));
+
+    const bills = (await fetchTrackerBills())!;
+
+    const billsWith = (has: (bill: (typeof bills)[number]) => boolean) =>
+      new Set(bills.filter(has).map((bill) => bill.id)).size;
+    expect({
+      listed: bills.length,
+      unique: billsWith(() => true),
+      withRun: billsWith((bill) => bill.impacts?.revenue !== undefined),
+      withBaseline: billsWith(
+        (bill) => bill.provisions[0]?.baselineIntervals?.[0]?.value === MANY_BILLS_BASELINE_RATE
+      ),
+      withCheck: billsWith((bill) => bill.validation?.withinRange === true),
+      withStage: billsWith((bill) => bill.status === MANY_BILLS_STATUS),
+    }).toEqual({
+      listed: MANY_BILLS,
+      unique: MANY_BILLS,
+      withRun: MANY_BILLS,
+      withBaseline: MANY_BILLS,
+      withCheck: MANY_BILLS,
+      withStage: MANY_BILLS,
+    });
+  });
+
+  test.each(TWICE_FILED_CASES)(
+    'given two status rows under one bill number when $when then the $winnerName row wins in any read order',
+    async ({ legiscanDate, openstatesDate, winner }) => {
+      vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+      vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+      const legiscan = { ...TWICE_FILED_LEGISCAN, last_action_date: legiscanDate };
+      const openstates = { ...TWICE_FILED_OPENSTATES, last_action_date: openstatesDate };
+      const loads = [];
+      for (const processed of [
+        [legiscan, openstates],
+        [openstates, legiscan],
+      ]) {
+        vi.stubGlobal(
+          'fetch',
+          mockTrackerFetch({ research: [TWICE_FILED_BILL], processed_bills: processed })
+        );
+        const [bill] = (await fetchTrackerBills())!;
+        loads.push([bill.status, bill.legiscanUrl]);
+      }
+
+      const won = [winner.status, winner.legiscan_url];
+      expect(loads).toEqual([won, won]);
+    }
+  );
 });
 
 describe('fetchTrackerBills', () => {
@@ -506,6 +581,51 @@ describe('fetchTrackerBills', () => {
       ['ok-hb1', UNTRACKED_BILL_STATUS],
     ]);
     expect(bills![3].legiscanUrl).toBe('https://legiscan.com/KS/bill/HB2620/2026');
+  });
+
+  test('given an id with words after the bill number then the stage joins by the bill number', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal(
+      'fetch',
+      mockTrackerFetch({
+        research: [
+          // The title names the bill, as the tracker reads it.
+          {
+            id: 'hi-sb3125-hd1',
+            type: 'bill',
+            state: 'HI',
+            title: 'Hawaii SB3125 HD1: tax relief',
+          },
+          {
+            id: 'nj-a1185-marriage-penalty-elimination',
+            type: 'bill',
+            state: 'NJ',
+            title: 'New Jersey A1185: Marriage penalty elimination',
+          },
+          // No bill number in the title: the id's first token names it.
+          { id: 'ut-sb60-bill', type: 'bill', state: 'UT', title: 'Income tax rate reduction' },
+          // A number in the title that names no bill of the state.
+          { id: 'ok-tax-2026', type: 'bill', state: 'OK', title: 'Oklahoma FY 2026 tax plan' },
+        ],
+        processed_bills: [
+          { bill_id: 1, state: 'HI', bill_number: 'SB3125', status: 'Passed Both Chambers' },
+          { bill_id: 2, state: 'NJ', bill_number: 'A1185', status: 'In Committee' },
+          { bill_id: 3, state: 'UT', bill_number: 'SB0060', status: 'Signed into Law' },
+          // The same number in another state is not this bill.
+          { bill_id: 4, state: 'UT', bill_number: 'A1185', status: 'Vetoed' },
+        ],
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills!.map((bill) => [bill.id, bill.status])).toEqual([
+      ['hi-sb3125-hd1', 'Passed Both Chambers'],
+      ['nj-a1185-marriage-penalty-elimination', 'In Committee'],
+      ['ut-sb60-bill', 'Signed into Law'],
+      ['ok-tax-2026', UNTRACKED_BILL_STATUS],
+    ]);
   });
 
   test('given the tracker stores baseline params then the bills carry them', async () => {

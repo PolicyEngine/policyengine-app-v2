@@ -319,6 +319,55 @@ describe('SocietyWideCalcStrategy', () => {
       expect(result.progress).toBeCloseTo(50, 0);
       expect(result).not.toHaveProperty('estimatedDurationMs');
     });
+
+    it('given estimateByRegion and API stage fields then passes the run stage on', () => {
+      // When
+      const result = strategy.transformResponseWithMetadata(
+        {
+          ...mockSocietyWideComputingResponse(),
+          stage: 'simulating',
+          progress: 5,
+          progress_max: 96,
+          segments: { completed: 19, total: 20 },
+        },
+        startedAgo(1000),
+        'us',
+        { estimateByRegion: true }
+      );
+
+      // Then
+      expect(result.runStage).toEqual({
+        stage: 'simulating',
+        floor: 5,
+        max: 96,
+        segments: { completed: 19, total: 20 },
+      });
+    });
+
+    it('given API stage fields without estimateByRegion then the v2 status is unchanged', () => {
+      // When
+      const result = strategy.transformResponseWithMetadata(
+        { ...mockSocietyWideComputingResponse(), stage: 'reform', progress: 67, progress_max: 96 },
+        startedAgo(1000),
+        'us'
+      );
+
+      // Then
+      expect(result).not.toHaveProperty('runStage');
+    });
+
+    it('given estimateByRegion and no API stage fields then there is no run stage', () => {
+      // When
+      const result = strategy.transformResponseWithMetadata(
+        mockSocietyWideComputingResponse(),
+        startedAgo(1000),
+        'us',
+        { estimateByRegion: true }
+      );
+
+      // Then
+      expect(result).not.toHaveProperty('runStage');
+    });
   });
 
   describe('getRefetchConfig', () => {

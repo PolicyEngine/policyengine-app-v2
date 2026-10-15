@@ -7,8 +7,10 @@ import {
   DraftReform,
   draftYear,
   isEditableValue,
+  isUnlimitedValue,
   provisionChanged,
   provisionIntervals,
+  provisionValueInYear,
   provisionVariesOverTime,
   removeDraftProvision,
 } from '@/libs/draftReform';
@@ -19,9 +21,10 @@ import { growthOf, growthPhrase, setValueFromYear } from '@/libs/flagship/uprati
 import { getDateRange } from '@/libs/metadataUtils';
 import { selectAddableParameterPaths } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionDetails from './ProvisionDetails';
-import ValueInput from './ValueInput';
+import ValueInput, { NO_LIMIT } from './ValueInput';
 
 interface DraftRow {
   /** The breakdown's path, or the lone parameter's own */
@@ -37,9 +40,9 @@ export const ROW_GRID =
   'tw:grid tw:items-center tw:gap-3 tw:@max-[480px]:gap-y-2 tw:grid-cols-[minmax(0,1fr)_auto] tw:@min-[480px]:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_136px_64px]';
 export const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
 /** The value cell, under the name across the row on a phone's table. */
-const VALUE_CELL = 'tw:min-w-0 tw:@max-[480px]:col-span-2 tw:@max-[480px]:row-start-2';
+export const VALUE_CELL = 'tw:min-w-0 tw:@max-[480px]:col-span-2 tw:@max-[480px]:row-start-2';
 /** The row's own buttons, beside the name on a phone's table, a fingertip each. */
-const ACTIONS_CELL = 'tw:@max-[480px]:col-start-2 tw:@max-[480px]:row-start-1';
+export const ACTIONS_CELL = 'tw:@max-[480px]:col-start-2 tw:@max-[480px]:row-start-1';
 const ROW_BUTTON =
   'tw:@max-[480px]:size-10 tw:@max-[480px]:items-center tw:@max-[480px]:justify-center';
 
@@ -105,10 +108,13 @@ const summarize = (
 /**
  * A change that starts in another year than the report's: the row's box
  * edits from the report year, so it would split the change in two. Its
- * summary opens the editor, which keeps the start.
+ * summary opens the editor, which keeps the start. A single value with
+ * no dates starts in the current year.
  */
 const startsInOtherYear = (provision: DraftProvision, year: number) => {
-  const start = provision.intervals?.[0]?.startDate;
+  const start = provisionChanged(provision)
+    ? provisionIntervals(provision)[0]?.startDate
+    : undefined;
   return !!start && Number(start.slice(0, 4)) !== year;
 };
 
@@ -172,6 +178,21 @@ export default function DraftTable({
   const tableRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<string | null>(null);
   const year = draftYear(draft);
+  // A row reads as the report year stands, as its details do: current law
+  // then, and the reform's value then — not the values on the day it was added.
+  const currentLawInYear = (provision: DraftProvision) => {
+    const values = parameters?.[provision.path]?.values;
+    const value = values
+      ? new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`)
+      : undefined;
+    return value ?? provision.baselineValue;
+  };
+  const valueInYear = (provision: DraftProvision) =>
+    (provisionChanged(provision) ? provisionValueInYear(provision, year) : null) ??
+    currentLawInYear(provision);
+  // A value with no limit reads as such, not as the text "Infinity".
+  const formatRowValue = (value: unknown, unit: string | null) =>
+    isUnlimitedValue(value) ? NO_LIMIT : formatValue(value, unit);
 
   // Groups depend only on which parameters are in the draft — not on
   // their values — so typing a value never re-scans the index.
@@ -340,7 +361,7 @@ export default function DraftTable({
         const when = whens.length === 1 ? whens[0] : whens.length > 1 ? 'mixed dates' : '';
         const whenTitle =
           whens.length === 1 ? (changed.find((c) => c.when === when)?.whenFull ?? when) : when;
-        const baselineText = lone ? formatValue(lone.baselineValue, lone.unit) : '';
+        const baselineText = lone ? formatRowValue(currentLawInYear(lone), lone.unit) : '';
 
         return (
           <Fragment key={row.key}>
@@ -407,7 +428,7 @@ export default function DraftTable({
                         title={changed[0]?.value}
                         accent={changed.length > 0}
                       >
-                        {changed[0]?.value || formatValue(lone.value, lone.unit)}
+                        {changed[0]?.value || formatRowValue(valueInYear(lone), lone.unit)}
                       </SummaryButton>
                     ) : !isEditableValue(lone.baselineValue) ? (
                       // Only numbers and switches can be offered; this one came
@@ -445,7 +466,7 @@ export default function DraftTable({
                       >
                         <ValueInput
                           param={param}
-                          value={lone.value}
+                          value={valueInYear(lone)}
                           onChange={(next) =>
                             setValueFromYear({
                               countryId: draft.countryId,
@@ -468,7 +489,7 @@ export default function DraftTable({
                         title={changed[0]?.value}
                         accent={changed.length > 0}
                       >
-                        {changed[0]?.value || formatValue(lone.value, lone.unit)}
+                        {changed[0]?.value || formatRowValue(valueInYear(lone), lone.unit)}
                       </SummaryButton>
                     )}
                   </div>

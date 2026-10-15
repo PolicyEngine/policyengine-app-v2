@@ -1,32 +1,35 @@
 import dayjs from 'dayjs';
-import { IconArrowRight } from '@tabler/icons-react';
+import { IconArrowRight, IconRefresh } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { fetchReportById } from '@/api/report';
 import { Badge, Button, Stack, Text } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
-import { readReportMeta } from '@/libs/flagship/runReport';
+import { flagshipReportQueryKeys, readReportMeta } from '@/libs/flagship/runReport';
+import type { RootState } from '@/store';
 
-/** The API's record of a report: its status and year. One request serves both. */
+/** The model version a report's stored results were computed on, when they say. */
+function modelVersionOf(output: unknown): string | null {
+  try {
+    const parsed = typeof output === 'string' ? JSON.parse(output) : output;
+    const version = (parsed as { model_version?: unknown } | null)?.model_version;
+    return typeof version === 'string' ? version : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The API's record of a report: its year, how it ended, and when. */
 function useApiReport(countryId: CountryId, apiReportId: string) {
   return useQuery({
-    queryKey: ['flagship-report-status', countryId, apiReportId],
+    queryKey: flagshipReportQueryKeys.status(countryId, apiReportId),
     queryFn: () => fetchReportById(countryId, apiReportId),
     staleTime: 60_000,
     retry: false,
-  });
-}
-
-/**
- * The year a report scored. A record saved through the API keeps no year
- * (the report itself carries it), so it is read from the API's record.
- */
-function ReportYear({ countryId, report }: { countryId: CountryId; report: FlagshipReportRecord }) {
-  const { data } = useApiReport(countryId, report.apiReportId);
-  const year = report.year ?? data?.year;
-  return <>{year ? `${year} report` : 'Report'}</>;
+  }).data;
 }
 
 /**
@@ -35,12 +38,11 @@ function ReportYear({ countryId, report }: { countryId: CountryId; report: Flags
  * is opened again (the page saves the result), so only a known outcome
  * gets a badge.
  */
-function ReportStatus({ countryId, apiReportId }: { countryId: CountryId; apiReportId: string }) {
-  const { data } = useApiReport(countryId, apiReportId);
-  if (data?.status === 'complete') {
+function ReportStatus({ status }: { status?: string }) {
+  if (status === 'complete') {
     return <Badge variant="secondary">Done</Badge>;
   }
-  if (data?.status === 'error') {
+  if (status === 'error') {
     return <Badge variant="destructive">Failed</Badge>;
   }
   return null;
@@ -48,7 +50,8 @@ function ReportStatus({ countryId, apiReportId }: { countryId: CountryId; apiRep
 
 /**
  * What a report compared the reform with, when not current law: the same
- * reform against a saved reform is another report, and reads as one.
+ * reform against a saved reform is another report, and reads as one. The
+ * run's details are kept under the report's link.
  */
 function ReportBaseline({ link }: { link: string }) {
   const baseline = readReportMeta(link)?.baseline;
@@ -66,6 +69,99 @@ function ReportBaseline({ link }: { link: string }) {
 }
 
 /**
+ * One report: what it scored, when its results are from, and the two ways
+ * on — its stored results as of that run, or a fresh run of the same
+ * report on today's model.
+ */
+function ReportRow({
+  countryId,
+  report,
+  first,
+  onOpen,
+  onRerun,
+  rerunning,
+}: {
+  countryId: CountryId;
+  report: FlagshipReportRecord;
+  first: boolean;
+  onOpen: () => void;
+  onRerun?: () => void;
+  rerunning: boolean;
+}) {
+  const api = useApiReport(countryId, report.apiReportId);
+  // A record saved through the API keeps no year (the report itself
+  // carries it), so it is read from the API's record.
+  const year = report.year ?? api?.year;
+  const done = api?.status === 'complete';
+  const currentModel = useSelector((state: RootState) => state.metadata.version);
+  // The same reform on the same model gives the same results: a re-run
+  // is offered only once the model has moved on from the one that ran it.
+  const ranModel = done ? modelVersionOf(api?.output) : null;
+  const upToDate = !!ranModel && !!currentModel && ranModel === currentModel;
+  const finished = done && api?.finished_at ? api.finished_at : null;
+  return (
+    <div
+      data-report-row=""
+      // Fixed columns, so every report's date, status and actions line up.
+      className="tw:grid tw:grid-cols-[minmax(0,1fr)_72px_96px_132px] tw:max-sm:grid-cols-[minmax(0,1fr)_auto]"
+      style={{
+        alignItems: 'center',
+        columnGap: spacing.md,
+        rowGap: spacing.xs,
+        padding: `${spacing.sm} 0`,
+        borderTop: first ? undefined : `1px solid ${colors.border.light}`,
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <span
+          style={{
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.text.primary,
+          }}
+        >
+          {year ? `${year} report` : 'Report'}
+        </span>
+        <span
+          className="tw:truncate"
+          style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+        >
+          {finished
+            ? `Results from ${dayjs(finished).format('MMM D, YYYY')}`
+            : `Run ${dayjs(report.createdAt).format('MMM D, YYYY')}`}
+        </span>
+        <ReportBaseline link={reportLink(report)} />
+      </div>
+      <span>
+        <ReportStatus status={api?.status} />
+      </span>
+      <span style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {onRerun && upToDate && (
+          <span
+            title={`Ran on model ${ranModel}, the current one`}
+            style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+          >
+            Up to date
+          </span>
+        )}
+        {onRerun && !upToDate && (
+          <Button size="sm" variant="ghost" onClick={onRerun} disabled={rerunning}>
+            <IconRefresh size={14} />
+            Re-run
+          </Button>
+        )}
+      </span>
+      <span style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button size="sm" variant="outline" onClick={onOpen} style={{ width: '100%' }}>
+          {done ? 'View results' : 'Open'}
+          <IconArrowRight size={14} />
+        </Button>
+      </span>
+    </div>
+  );
+}
+
+/**
  * The reports run from one saved reform, newest first: the year each
  * scored, what it compared the reform with when not current law, when
  * it ran, how it ended when the API knows, and a way back to it — the
@@ -74,9 +170,15 @@ function ReportBaseline({ link }: { link: string }) {
 export default function ReformReports({
   countryId,
   reports,
+  onRerun,
+  rerunning = false,
 }: {
   countryId: CountryId;
   reports: FlagshipReportRecord[];
+  /** Runs the report again: same reform, year, population and comparison. */
+  onRerun?: (report: FlagshipReportRecord) => void;
+  /** A run is starting; Re-run waits for it. */
+  rerunning?: boolean;
 }) {
   const nav = useAppNavigate();
   const sorted = [...reports].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -103,47 +205,17 @@ export default function ReformReports({
       ) : (
         <Stack style={{ gap: 0 }}>
           {sorted.map((report, index) => (
-            <div
+            <ReportRow
               key={report.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.md,
-                padding: `${spacing.sm} 0`,
-                borderTop: index > 0 ? `1px solid ${colors.border.light}` : undefined,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.primary,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <ReportYear countryId={countryId} report={report} />
-              </span>
-              <ReportBaseline link={reportLink(report)} />
-              <span
-                style={{
-                  fontSize: typography.fontSize.xs,
-                  color: colors.text.secondary,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Run {dayjs(report.createdAt).format('MMM D, YYYY')}
-              </span>
-              <ReportStatus countryId={countryId} apiReportId={report.apiReportId} />
-              <Button
-                size="sm"
-                variant="ghost"
-                style={{ marginLeft: 'auto' }}
-                onClick={() => nav.push(`/${countryId}/report/${reportLink(report)}`)}
-              >
-                Open
-                <IconArrowRight size={14} />
-              </Button>
-            </div>
+              countryId={countryId}
+              report={report}
+              first={index === 0}
+              // A report opens at its link: the account row's ID, which anyone
+              // can open, or in this browser the v1 report's number.
+              onOpen={() => nav.push(`/${countryId}/report/${reportLink(report)}`)}
+              onRerun={onRerun && (() => onRerun(report))}
+              rerunning={rerunning}
+            />
           ))}
         </Stack>
       )}

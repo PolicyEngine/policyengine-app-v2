@@ -9,12 +9,18 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
-import { loadProvisionsIntoDraft, provisionAdjusts, sameParameterValue } from '@/libs/draftReform';
-import { reportProvisionName } from '@/libs/flagship/draftLabels';
+import {
+  loadProvisionsIntoDraft,
+  provisionAdjusts,
+  provisionIntervals,
+  sameParameterValue,
+} from '@/libs/draftReform';
+import { periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
+import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
-import { Reform } from '@/types/ingredients/Reform';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionSkeleton from './ProvisionSkeleton';
 import PopulationPicker from './reform/PopulationPicker';
@@ -35,24 +41,13 @@ interface ReportAdjustPanelProps {
   year?: string;
   /** What the report is compared with, so a recompute is too; current law when unset. */
   baseline?: RunReportBaseline;
-}
-
-/**
- * True when the reform's parameter set is exactly the given provisions. A
- * reform whose changes could not be loaded matches nothing: its empty
- * parameter list is not its real changes.
- */
-function reformMatches(reform: Reform, provisions: { path: string; value: any }[]): boolean {
-  if (reform.parametersUnavailable || reform.parameters.length !== provisions.length) {
-    return false;
-  }
-  return provisions.every((provision) =>
-    reform.parameters.some(
-      (parameter) =>
-        parameter.name === provision.path &&
-        String(parameter.values[0]?.value) === String(provision.value)
-    )
-  );
+  /** The report's budget window, so a recompute scores the same years. */
+  budgetWindow?: { startYear: number; windowSize: number };
+  /**
+   * The report's baseline policy could not be loaded. A recompute would
+   * compare with current law instead, so it is off.
+   */
+  baselineUnknown?: boolean;
 }
 
 /**
@@ -61,8 +56,24 @@ function reformMatches(reform: Reform, provisions: { path: string; value: any }[
  * reforms this browser saved — an exact match is reused, anything new
  * is saved as its own reform — then runs the pipeline and lands on the
  * new report, linked to that reform. Collapses to a slim edge tab.
+ *
+ * It starts over from the reform whenever the reform changes: a shared
+ * link's provisions can arrive after the results, and the values and
+ * name it edits must be theirs, not those of the empty reform before.
  */
-export default function ReportAdjustPanel({
+export default function ReportAdjustPanel(props: ReportAdjustPanelProps) {
+  const reform = JSON.stringify([
+    props.title,
+    props.provisions.map((provision) => [
+      provision.path,
+      provision.value,
+      provision.intervals ?? null,
+    ]),
+  ]);
+  return <AdjustPanel key={reform} {...props} />;
+}
+
+function AdjustPanel({
   title,
   sourceNote,
   provisions,
@@ -70,6 +81,8 @@ export default function ReportAdjustPanel({
   region,
   year,
   baseline,
+  baselineUnknown = false,
+  budgetWindow,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const nav = useAppNavigate();
@@ -82,6 +95,27 @@ export default function ReportAdjustPanel({
   const [values, setValues] = useState<Record<string, any>>(() =>
     Object.fromEntries(provisions.map((provision) => [provision.path, provision.value]))
   );
+  // A provision set over several periods edits each period's value, on
+  // its own dates, rather than one value over all of them.
+  const periodsOf = (provision: RunReportProvision) =>
+    (provision.intervals?.length ?? 0) > 1 ? provision.intervals! : null;
+  const [periodValues, setPeriodValues] = useState<Record<string, any[]>>(() =>
+    Object.fromEntries(
+      provisions.flatMap((provision) => {
+        const periods = periodsOf(provision);
+        return periods ? [[provision.path, periods.map((period) => period.value)]] : [];
+      })
+    )
+  );
+  const periodChanged = (provision: RunReportProvision) => {
+    const periods = periodsOf(provision);
+    return (
+      !!periods &&
+      periods.some(
+        (period, index) => !sameParameterValue(periodValues[provision.path]?.[index], period.value)
+      )
+    );
+  };
   // Who the recompute runs on: the report's population to start, any other on choice.
   // The whole country is the API's region for it, not a part of it.
   const reportRegion = region && region !== countryId ? region : undefined;
@@ -100,45 +134,99 @@ export default function ReportAdjustPanel({
   const renamed = name.trim() !== '' && name.trim() !== title.trim();
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
 
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const active = provisions.filter((provision) => !removed.has(provision.path));
   const isDirty =
     removed.size > 0 ||
     renamed ||
     population !== reportRegion ||
-    provisions.some((provision) => values[provision.path] !== provision.value);
-  /** A provision with the panel's value: an edit replaces its dates, from the report's year on. */
-  const withPanelValue = (provision: RunReportProvision): RunReportProvision => {
-    const value = values[provision.path];
-    return sameParameterValue(value, provision.value)
-      ? { ...provision }
-      : { ...provision, value, intervals: undefined };
-  };
-  // A recompute with nothing differing from current law has no report to run.
-  const changesLaw = active.some((provision) =>
-    provisionAdjusts(withPanelValue(provision), parameters?.[provision.path]?.values)
-  );
+    provisions.some((provision) =>
+      periodsOf(provision) ? periodChanged(provision) : values[provision.path] !== provision.value
+    );
   const busy = isReconciling || runReport.isRunning;
 
   if (provisions.length === 0) {
     return null;
   }
 
+  // The year a recompute simulates; the current year when the report has none.
+  const runYear = year ? Number(year) : undefined;
+
   /**
-   * The provisions as the panel has them. A value edited here replaces the
-   * provision's own dates — one value, from the report's year on — or the
-   * run would keep the dates and ignore the edit.
+   * The provisions as the panel has them. A value edited here holds from
+   * 1 January of the report's year on, over whatever dated values come
+   * before it (as Build's inline edit sets it): left on the provision's
+   * old dates, or on the current year's, the run would miss the edit.
    */
-  const adjustedProvisions = () => active.map(withPanelValue);
+  const adjustedProvisions = (): RunReportProvision[] =>
+    active.map((provision) => {
+      const periods = periodsOf(provision);
+      if (periods) {
+        if (!periodChanged(provision)) {
+          return { ...provision };
+        }
+        const intervals = periods.map((period, index) => ({
+          ...period,
+          value: periodValues[provision.path][index],
+        }));
+        const inYear = new ValueIntervalCollection(intervals).getValueAtDate(
+          `${runYear ?? CURRENT_YEAR}-01-01`
+        );
+        return {
+          ...provision,
+          value: inYear ?? provision.value,
+          intervals,
+          growth: undefined,
+          growthStart: undefined,
+          growthBase: undefined,
+          growthRoundTo: undefined,
+          growthRound: undefined,
+        };
+      }
+      const value = values[provision.path];
+      if (sameParameterValue(value, provision.value)) {
+        return { ...provision };
+      }
+      const schedule = new ValueIntervalCollection(provisionIntervals(provision));
+      schedule.addInterval({
+        startDate: `${runYear ?? CURRENT_YEAR}-01-01`,
+        endDate: FOREVER,
+        value,
+      });
+      return {
+        ...provision,
+        value,
+        intervals: schedule.getIntervals(),
+        // A value held from one year on no longer grows as the old one did.
+        growth: undefined,
+        growthStart: undefined,
+        growthBase: undefined,
+        growthRoundTo: undefined,
+        growthRound: undefined,
+      };
+    });
+
+  // Current law for a provision: the parameter's own history, or, before
+  // the metadata has it, the current law the report recorded, for every year.
+  const currentLawFor = (provision: RunReportProvision) =>
+    parameterMetadata?.[provision.path]?.values ??
+    (provision.baselineValue !== undefined && provision.baselineValue !== null
+      ? { '0001-01-01': provision.baselineValue }
+      : undefined);
+  // A recompute with nothing differing from current law has no report to run.
+  const changesLaw = adjustedProvisions().some((provision) =>
+    provisionAdjusts(provision, currentLawFor(provision))
+  );
 
   // Back to Build with the reform as the panel has it, to add to it there.
   const editInBuild = () => {
     const label = name.trim() || title;
     loadProvisionsIntoDraft(countryId, adjustedProvisions(), {
       label: label === 'Draft reform' ? '' : label,
-      year: year ? Number(year) : undefined,
+      year: runYear,
       region: population,
       baselineReformId: baseline?.reformId,
+      windowYears: budgetWindow?.windowSize,
     });
     nav.push(`/${countryId}/build`);
   };
@@ -148,11 +236,16 @@ export default function ReportAdjustPanel({
     setIsReconciling(true);
     try {
       const adjusted = adjustedProvisions();
+      // The reform as it runs: every provision with the dated values the
+      // run sends (see provisionPeriods), so what is saved is what ran.
+      const parameters = adjusted.map((provision) => ({
+        name: provision.path,
+        values: provisionIntervals(provision),
+      }));
 
-      // Reconcile with this session's saved reforms: reuse an exact
-      // match, otherwise save the adjusted set as its own reform.
-      const existing = await store.findMine(countryId);
-      const match = existing.find((reform) => reformMatches(reform, adjusted));
+      // Reconcile with this session's saved reforms: reuse one that sets
+      // the same values over the same dates, otherwise save this one.
+      const match = findMatchingReform(await store.findMine(countryId), parameters);
 
       const label = renamed ? name.trim() : `${title} (adjusted)`;
       let reformId: string;
@@ -164,16 +257,7 @@ export default function ReportAdjustPanel({
         const created = await store.create({
           countryId,
           label,
-          parameters: adjusted.map((provision) => ({
-            name: provision.path,
-            values: [
-              {
-                startDate: `${CURRENT_YEAR}-01-01`,
-                endDate: FOREVER,
-                value: provision.value,
-              },
-            ],
-          })),
+          parameters,
           baseline: 'current-law',
           provenance: { source: 'manual', ref: 'report-adjust' },
         });
@@ -182,14 +266,12 @@ export default function ReportAdjustPanel({
         runTitle = created.label || label;
       }
 
-      await runReport.run(
-        runTitle,
-        sourceNote,
-        adjusted,
-        reformId,
-        year ? Number(year) : undefined,
-        { region: population, baseline }
-      );
+      await runReport.run(runTitle, sourceNote, adjusted, reformId, runYear, {
+        region: population,
+        baseline,
+        // The same years as the report: a window's report recomputes as one.
+        windowYears: budgetWindow?.windowSize,
+      });
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
     } finally {
@@ -227,6 +309,13 @@ export default function ReportAdjustPanel({
           }}
           regions={regions}
         />
+        {budgetWindow && budgetWindow.windowSize > 1 && (
+          <Text
+            style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+          >
+            Years {budgetWindow.startYear}–{budgetWindow.startYear + budgetWindow.windowSize - 1}
+          </Text>
+        )}
       </div>
       {loading ? (
         <div style={{ padding: `0 ${spacing.lg}` }}>
@@ -283,42 +372,101 @@ export default function ReportAdjustPanel({
                     <IconX size={14} />
                   </button>
                 </Stack>
-                {/* The value to edit; what it was, quietly beside it, as Build shows it. */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: spacing.sm,
-                  }}
-                >
-                  {typeof values[provision.path] === 'boolean' ? (
-                    <ValueInput
-                      value={values[provision.path]}
-                      onChange={(next) =>
-                        setValues((current) => ({ ...current, [provision.path]: next }))
-                      }
-                      ariaLabel={`New value for ${name}`}
-                    />
-                  ) : (
-                    // Build's box: rates as percentages, amounts with their currency.
-                    <div style={{ width: 150 }}>
-                      <NumberInput
-                        param={{ unit: provision.unit } as ParameterMetadata}
+                {periodsOf(provision) ? (
+                  // Each period on its own line: its dates, then its value to edit.
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+                    {periodsOf(provision)!.map((period, index) => (
+                      <div
+                        key={period.startDate}
+                        style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}
+                      >
+                        <span
+                          style={{
+                            width: 84,
+                            flexShrink: 0,
+                            fontSize: typography.fontSize.xs,
+                            color: colors.text.secondary,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {periodLabel(period)}
+                        </span>
+                        {typeof period.value === 'boolean' ? (
+                          <ValueInput
+                            value={periodValues[provision.path]?.[index]}
+                            onChange={(next) =>
+                              setPeriodValues((current) => ({
+                                ...current,
+                                [provision.path]: current[provision.path].map((value, at) =>
+                                  at === index ? next : value
+                                ),
+                              }))
+                            }
+                            ariaLabel={`${name}, ${periodLabel(period)}`}
+                          />
+                        ) : (
+                          <div style={{ width: 150 }}>
+                            <NumberInput
+                              param={{ unit: provision.unit } as ParameterMetadata}
+                              value={periodValues[provision.path]?.[index]}
+                              onChange={(next) =>
+                                setPeriodValues((current) => ({
+                                  ...current,
+                                  [provision.path]: current[provision.path].map((value, at) =>
+                                    at === index ? next : value
+                                  ),
+                                }))
+                              }
+                              ariaLabel={`${name}, ${periodLabel(period)}`}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+                      Baseline: {formatValue(provision.baselineValue, provision.unit)}
+                    </Text>
+                  </div>
+                ) : (
+                  /* The value to edit; what it was, quietly beside it, as Build shows it. */
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: spacing.sm,
+                    }}
+                  >
+                    {typeof values[provision.path] === 'boolean' ? (
+                      <ValueInput
                         value={values[provision.path]}
                         onChange={(next) =>
                           setValues((current) => ({ ...current, [provision.path]: next }))
                         }
                         ariaLabel={`New value for ${name}`}
                       />
-                    </div>
-                  )}
-                  {!sameParameterValue(values[provision.path], provision.baselineValue) && (
-                    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-                      Baseline: {formatValue(provision.baselineValue, provision.unit)}
-                    </Text>
-                  )}
-                </div>
+                    ) : (
+                      // Build's box: rates as percentages, amounts with their currency.
+                      <div style={{ width: 150 }}>
+                        <NumberInput
+                          param={{ unit: provision.unit } as ParameterMetadata}
+                          value={values[provision.path]}
+                          onChange={(next) =>
+                            setValues((current) => ({ ...current, [provision.path]: next }))
+                          }
+                          ariaLabel={`New value for ${name}`}
+                        />
+                      </div>
+                    )}
+                    {!sameParameterValue(values[provision.path], provision.baselineValue) && (
+                      <Text
+                        style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
+                      >
+                        Baseline: {formatValue(provision.baselineValue, provision.unit)}
+                      </Text>
+                    )}
+                  </div>
+                )}
               </Stack>
             );
           })}
@@ -361,12 +509,17 @@ export default function ReportAdjustPanel({
             {reconcileError || runReport.error}
           </Text>
         )}
-        {isDirty && active.length > 0 && !changesLaw && (
+        {baselineUnknown && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            The baseline policy could not be loaded, so a recompute cannot compare with it.
+          </Text>
+        )}
+        {!baselineUnknown && isDirty && active.length > 0 && !changesLaw && (
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
             Nothing differs from current law. Change a value to recompute.
           </Text>
         )}
-        <Button onClick={recompute} disabled={!isDirty || busy || !changesLaw}>
+        <Button onClick={recompute} disabled={baselineUnknown || !isDirty || busy || !changesLaw}>
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>

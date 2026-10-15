@@ -1,19 +1,31 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   calibrationMatchesForPaths,
+  calibrationTargetLabel,
+  calibrationVariableLabel,
   dashboardTargetsUrl,
   fetchCalibrationTargets,
   geographyForRegion,
+  relevantCalibrationMatches,
   ringForDepth,
   summarizeMatches,
   weightedMeanAbsError,
 } from '@/libs/flagship/calibrationMatching';
 import {
+  mockCalibrationMatches,
   mockCalibrationRows,
+  mockCtcLimitingMatch,
+  mockEitcCalibrationRow,
   POPULACE_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
+  NATIONWIDE,
+  REPORT_4332_REFORM,
+  usReform,
+} from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
+import {
   CTC_BASE_AMOUNT_PATH,
+  EITC_MAX_PATH,
   mockParameterDependencyMap,
   STANDARD_DEDUCTION_PATH,
 } from '@/tests/fixtures/libs/flagship/parameterDependenciesMocks';
@@ -178,5 +190,120 @@ describe('calibrationMatchesForPaths', () => {
 
     expect(result!.matches).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given an EITC path echoing into the CTC then only the EITC targets remain', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        okResponse({
+          releaseId: POPULACE_RELEASE_ID,
+          rows: [...mockCalibrationRows, mockEitcCalibrationRow],
+        })
+      )
+    );
+
+    const result = await calibrationMatchesForPaths([EITC_MAX_PATH], 'US');
+
+    expect(result!.reachedCount).toBeGreaterThan(1);
+    expect(result!.matches.map((match) => match.variable)).toEqual(['eitc']);
+    // The CTC targets it echoes into are kept as related context, not as matches.
+    expect(result!.related!.length).toBeGreaterThan(0);
+    expect(result!.related!.map((match) => match.variable)).not.toContain('eitc');
+  });
+});
+
+describe('relevantCalibrationMatches', () => {
+  test('given report 4332 then its CTC targets drop and no match is left', () => {
+    expect(
+      relevantCalibrationMatches(
+        [...mockCalibrationMatches.matches, mockCtcLimitingMatch],
+        REPORT_4332_REFORM
+      )
+    ).toEqual([]);
+  });
+
+  test('given a CTC reform then its CTC targets stay with their fit', () => {
+    const [refundable] = relevantCalibrationMatches(
+      mockCalibrationMatches.matches,
+      usReform([CTC_BASE_AMOUNT_PATH], NATIONWIDE)
+    );
+
+    expect(refundable.variable).toBe('refundable_ctc');
+    expect(refundable.targetCount).toBe(2);
+    expect(refundable.worst).toBe(mockCalibrationRows[1]);
+  });
+
+  test('given a group with targets of another program then only the changed program stays', () => {
+    const [match] = relevantCalibrationMatches(
+      [
+        {
+          ...mockCalibrationMatches.matches[0],
+          targets: [mockCalibrationRows[2], mockEitcCalibrationRow],
+          targetCount: 2,
+          worst: mockCalibrationRows[2],
+        },
+      ],
+      usReform([EITC_MAX_PATH], NATIONWIDE)
+    );
+
+    expect(match.targets).toEqual([mockEitcCalibrationRow]);
+    expect(match.worst).toBe(mockEitcCalibrationRow);
+    expect(match.meanAbsRelativeError).toBeCloseTo(0.08);
+  });
+});
+
+describe('calibrationTargetLabel', () => {
+  test('given a measure id and a whole-table slice then the quantity names the target', () => {
+    expect(calibrationTargetLabel(mockCalibrationRows[0])).toBe('Amount');
+    expect(calibrationTargetLabel(mockCalibrationRows[1])).toBe('Returns');
+  });
+
+  test('given a slice of the table then the slice follows the quantity', () => {
+    expect(calibrationTargetLabel(mockEitcCalibrationRow)).toBe(
+      'Returns · 18k to 19k · no qualifying children'
+    );
+  });
+
+  test('given a measure id without a quantity word then it reads as words', () => {
+    expect(
+      calibrationTargetLabel({
+        ...mockCalibrationRows[0],
+        sourceMeasureId: 'average_monthly_households',
+        breakdown: '',
+      })
+    ).toBe('Average monthly households');
+  });
+
+  test('given no measure id then the measure names the target', () => {
+    expect(
+      calibrationTargetLabel({
+        ...mockCalibrationRows[0],
+        sourceMeasureId: null,
+        breakdown: null,
+        measure: 'count',
+      })
+    ).toBe('Count');
+  });
+});
+
+describe('calibrationVariableLabel', () => {
+  test('given our own copy then it wins over the model label', () => {
+    expect(calibrationVariableLabel('refundable_ctc', 'refundable CTC')).toBe(
+      'Refundable Child Tax Credit'
+    );
+  });
+
+  test('given the model label then it names the variable', () => {
+    expect(
+      calibrationVariableLabel('ctc_limiting_tax_liability', 'CTC-limiting tax liability')
+    ).toBe('CTC-limiting tax liability');
+    expect(calibrationVariableLabel('snap', 'SNAP allotment')).toBe('SNAP allotment');
+  });
+
+  test('given no label then the name reads as words with its acronyms', () => {
+    expect(calibrationVariableLabel('ctc_limiting_tax_liability')).toBe(
+      'CTC limiting tax liability'
+    );
   });
 });

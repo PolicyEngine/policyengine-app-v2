@@ -15,12 +15,14 @@ import {
 } from '@/libs/parameterSearch';
 import {
   buildCrowdedStateParameterCollection,
+  buildFederalCtcParameterCollection,
   buildJurisdictionParameterCollection,
   buildLargeParameterCollection,
   buildSearchQualityParameterCollection,
   CODE_ONLY_STATE,
   CONTRIB_LOCAL_PATH,
   CROWDED_FEDERAL_PATH,
+  CTC_BASE_AMOUNT_PATH,
   FEDERAL_CTC_PATH,
   FEDERAL_TOP_RATE_PATH,
   JURISDICTION_STATE_NAMES,
@@ -142,6 +144,62 @@ describe('groupSearchResults', () => {
     expect(groups[0].entries[0].path).toBe('gov.a.x');
   });
 
+  it('given members of two unlabeled schedules then each schedule is one group, bracket by bracket', () => {
+    // As search ranks them for "ctc": brackets interleaved across `base` and `arpa`,
+    // whose own nodes have no label, so every breadcrumb reads "… → Amount → Bracket N".
+    const crumb = (n: number, leaf: string) =>
+      `IRS → Credits → CTC → Amount → Bracket ${n} → ${leaf}`;
+    const groups = groupSearchResults([
+      entry('gov.irs.credits.ctc.amount.base[0].amount', crumb(1, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.base[0].threshold', crumb(1, 'Threshold')),
+      entry('gov.irs.credits.ctc.amount.arpa[0].amount', crumb(1, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.base[1].amount', crumb(2, 'Amount')),
+      entry('gov.irs.credits.ctc.amount.arpa[1].threshold', crumb(2, 'Threshold')),
+      entry('gov.irs.credits.ctc.amount.base[1].threshold', crumb(2, 'Threshold')),
+    ]);
+
+    expect(groups.map((group) => [group.folder, group.schedule])).toEqual([
+      ['IRS → Credits → CTC → Amount → Base', 'gov.irs.credits.ctc.amount.base'],
+      ['IRS → Credits → CTC → Amount → ARPA', 'gov.irs.credits.ctc.amount.arpa'],
+    ]);
+    expect(groups[0].entries.map((e) => e.path)).toEqual([
+      'gov.irs.credits.ctc.amount.base[0].amount',
+      'gov.irs.credits.ctc.amount.base[0].threshold',
+      'gov.irs.credits.ctc.amount.base[1].amount',
+      'gov.irs.credits.ctc.amount.base[1].threshold',
+    ]);
+  });
+
+  it('given a schedule with its own label then the header names it, once', () => {
+    const labeled = (path: string, n: number) => ({
+      ...entry(path, `IRS → EITC → Phase-in rate → Bracket ${n} → Rate`),
+      scheduleLabel: 'Phase-in rate',
+    });
+    const [group] = groupSearchResults([
+      labeled('gov.irs.eitc.phase_in[0].rate', 1),
+      labeled('gov.irs.eitc.phase_in[1].rate', 2),
+    ]);
+
+    expect(group.folder).toBe('IRS → EITC → Phase-in rate');
+    const [ctc] = groupSearchResults([
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[0].amount',
+          'IRS → CTC → Amount → Bracket 1 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[1].amount',
+          'IRS → CTC → Amount → Bracket 2 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+    ]);
+    expect(ctc.folder).toBe('IRS → CTC → Amount → Child Tax Credit ARPA amount');
+  });
+
   it('given no results then no groups return', () => {
     expect(groupSearchResults([])).toEqual([]);
   });
@@ -236,6 +294,29 @@ describe('search quality with model-shaped metadata', () => {
     // The token prefilter must keep the common case within typeahead latency
     // even when the generated input contains more than 10,000 parameters.
     expect(elapsed).toBeLessThan(500);
+  });
+});
+
+describe('bracket schedule members', () => {
+  const parameters = buildFederalCtcParameterCollection();
+  const index = createParameterSearchIndex(
+    buildParameterSearchEntries(parameters),
+    buildConceptClusters(parameters),
+    buildConceptAliases(parameters)
+  );
+
+  it('given the program name then the per-child amount, labelled only "amount", is among the first results', () => {
+    const results = searchParameters(index, 'child tax credit', 10).map((entry) => entry.path);
+
+    expect(results).toContain(CTC_BASE_AMOUNT_PATH);
+  });
+
+  it('given a bracket member then its entry carries the schedule it belongs to', () => {
+    const entry = buildParameterSearchEntries(parameters).find(
+      (candidate) => candidate.path === CTC_BASE_AMOUNT_PATH
+    );
+
+    expect(entry?.scheduleLabel).toBe('Child Tax Credit amount');
   });
 });
 
@@ -492,5 +573,80 @@ describe('buildStateNames', () => {
     const names = buildStateNames(buildJurisdictionParameterCollection());
 
     expect([...names.values()]).not.toContain(CODE_ONLY_STATE);
+  });
+});
+
+describe('a query that names a state', () => {
+  const stateEntry = (path: string, breadcrumb: string, stateCode: string | null) => ({
+    path,
+    label: breadcrumb.split(' → ').pop() ?? path,
+    breadcrumb,
+    unit: null,
+    description: null,
+    isContrib: false,
+    stateCode,
+  });
+  const entries = [
+    stateEntry(
+      'gov.states.vt.tax.income.credits.eitc.match',
+      'States → Vermont → EITC → Match',
+      'vt'
+    ),
+    stateEntry(
+      'gov.local.md.montgomery_county.tax.income.credits.eitc.refundable.match',
+      'Local → Maryland → Montgomery County → EITC → Match',
+      'md'
+    ),
+    stateEntry(
+      'gov.states.mt.tax.income.credits.eitc.match',
+      'States → Montana → EITC → Match',
+      'mt'
+    ),
+    stateEntry(
+      'gov.states.ar.tax.income.credits.cdcc.match',
+      'States → Arkansas → CDCC → Match',
+      'ar'
+    ),
+    stateEntry(
+      'gov.states.ks.tax.income.credits.cdcc_fraction',
+      'States → Kansas → Credits → CDCC fraction',
+      'ks'
+    ),
+    stateEntry('gov.irs.credits.eitc.max[0].amount', 'IRS → Credits → EITC → Maximum', null),
+  ];
+  const stateNames = new Map([
+    ['montana', 'mt'],
+    ['vermont', 'vt'],
+    ['maryland', 'md'],
+    ['arkansas', 'ar'],
+    ['kansas', 'ks'],
+  ]);
+  const index = createParameterSearchIndex(entries, [], new Map(), stateNames);
+
+  it('given "Montana EITC" then Montana leads and no other state shows', () => {
+    const found = searchParameters(index, 'Montana EITC', 10).map((entry) => entry.stateCode);
+
+    expect(found[0]).toBe('mt');
+    expect(found).not.toContain('vt');
+    expect(found).not.toContain('md');
+  });
+
+  it('given "Kansas CDCC" then Arkansas, which spells kansas inside it, does not show', () => {
+    const found = searchParameters(index, 'Kansas CDCC', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(['ks']);
+  });
+
+  it('given a state with no such program then other states still show, after it', () => {
+    // Montana has no CDCC parameter here: the search does not come back empty.
+    const found = searchParameters(index, 'Montana CDCC', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(expect.arrayContaining(['ar', 'ks']));
+  });
+
+  it('given no state then every state still matches', () => {
+    const found = searchParameters(index, 'eitc match', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(expect.arrayContaining(['vt', 'md', 'mt']));
   });
 });

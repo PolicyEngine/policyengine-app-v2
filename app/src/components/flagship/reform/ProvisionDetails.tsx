@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconArrowBackUp, IconChartLine, IconChevronDown } from '@tabler/icons-react';
+import { IconArrowBackUp, IconChartLine, IconChevronDown, IconPlus } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import {
   Button,
@@ -74,7 +74,7 @@ const EDIT_MODES: Array<{ label: string; value: EditMode }> = [
   { label: 'Indexed', value: 'indexed' },
 ];
 
-/** Columns in the by-year grid; the last runs on from its year. */
+/** Columns the by-year grid opens with, and adds at a time; the last runs on from its year. */
 const YEAR_COLUMNS = 5;
 
 /** Later years one value previews before the model's last. */
@@ -170,6 +170,19 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
   });
   // The year a schedule's brackets show by year; one value is the report year.
   const [scheduleTab, setScheduleTab] = useState(year);
+  // How many years the by-year grid shows: at least the default, and
+  // enough to reach the latest year the draft already sets.
+  const [yearSpan, setYearSpan] = useState(() => {
+    const latestStart = Math.max(
+      ...members.flatMap((member) =>
+        (provisionFor(member.path)?.intervals ?? []).map((interval) =>
+          Number(interval.startDate.slice(0, 4))
+        )
+      ),
+      year
+    );
+    return Math.max(YEAR_COLUMNS, latestStart - year + 1);
+  });
 
   if (!parameters) {
     return null;
@@ -225,15 +238,18 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     writeIntervals(memberPath, collection.getIntervals());
   };
 
+  const lastYear = Number(maxDate.slice(0, 4));
+  // Added years stop at the model's last year; the first five always show.
+  const shownYears = Math.max(YEAR_COLUMNS, Math.min(yearSpan, lastYear - year + 1));
+  const moreYears = mode === 'byYear' && year + shownYears - 1 < lastYear;
   const years =
-    mode === 'byYear' ? Array.from({ length: YEAR_COLUMNS }, (_, i) => year + i) : [fromYear];
+    mode === 'byYear' ? Array.from({ length: shownYears }, (_, i) => year + i) : [fromYear];
   const scheduleYear =
     mode === 'byYear' && years.includes(scheduleTab)
       ? scheduleTab
       : mode === 'byYear'
         ? year
         : fromYear;
-  const lastYear = Number(maxDate.slice(0, 4));
   // A member grows only if it is money, and as current law only if current law does.
   const memberGrowth = (memberPath: string, choice: Growth): Growth => {
     const param = parameters[memberPath];
@@ -612,6 +628,18 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
               // A lone value reads on one line: when, current law, the new value.
               inline={mode === 'one'}
             />
+          )}
+          {moreYears && (
+            <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setYearSpan(shownYears + YEAR_COLUMNS)}
+              >
+                <IconPlus size={14} />
+                Add {Math.min(YEAR_COLUMNS, lastYear - (year + shownYears - 1))} years
+              </Button>
+            </div>
           )}
         </div>
 

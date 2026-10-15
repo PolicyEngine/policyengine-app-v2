@@ -5,7 +5,7 @@ import {
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
 import { getDurationForCountry, getDurationForRegion } from '@/constants/calculationDurations';
-import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
+import { CalcMetadata, CalcParams, CalcStatus, RunStage } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
 
 /** How a caller wants the run's duration estimated. */
@@ -105,10 +105,13 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       const estimatedDuration = this.getEstimatedDuration(countryId, estimate);
       const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95%
 
+      const runStage = estimate.estimateByRegion ? this.getRunStage(response) : undefined;
+
       return {
         status: 'pending',
         progress,
         ...(estimate.estimateByRegion && { estimatedDurationMs: estimatedDuration }),
+        ...(runStage && { runStage }),
         queuePosition: response.queue_position,
         message: this.getComputingMessage(response.queue_position),
         metadata,
@@ -147,6 +150,24 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       startedAt: Date.now(),
     };
     return this.transformResponseWithMetadata(apiResponse, metadata);
+  }
+
+  /**
+   * The API's stage fields, when it reports any
+   */
+  private getRunStage(response: SocietyWideCalculationResponse): RunStage | undefined {
+    const runStage: RunStage = {};
+    if (typeof response.stage === 'string') {
+      runStage.stage = response.stage;
+    }
+    if (typeof response.progress === 'number' && typeof response.progress_max === 'number') {
+      runStage.floor = response.progress;
+      runStage.max = Math.max(response.progress, response.progress_max);
+    }
+    if (response.segments) {
+      runStage.segments = response.segments;
+    }
+    return Object.keys(runStage).length > 0 ? runStage : undefined;
   }
 
   /**

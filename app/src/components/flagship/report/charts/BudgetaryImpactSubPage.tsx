@@ -13,6 +13,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import type { CountryId } from '@/libs/countries';
+import { tooltipText } from '@/libs/flagship/tooltipText';
 import {
   BudgetWaterfallTooltip,
   formatBillions,
@@ -30,6 +31,16 @@ interface Props {
   chartHeight?: number;
   fillHeight?: boolean;
 }
+
+/** The bars' names where the full ones do not fit under their bars, as on a phone. */
+const SHORT_NAMES: Record<string, string> = {
+  'Federal tax revenues': 'Federal taxes',
+  'Tax revenues': 'Taxes',
+  'State and local income tax revenues': 'State taxes',
+  'State and local income taxes': 'State taxes',
+  'Benefit spending': 'Benefits',
+  'Net impact': 'Net',
+};
 
 /** "−$296.5m": each bar in its own unit, the minus before the currency symbol. */
 function formatBarAmount(value: number, countryId: CountryId): string {
@@ -97,7 +108,10 @@ export default function BudgetaryImpactSubPage({
   const data = computeWaterfallData(
     items.map((item) => ({ ...item, value: item.value / unit.divisor })),
     (value) => formatBarAmount(toAmount(value), countryId)
-  ).map((datum) => ({ ...datum, hoverText: hoverMessage(datum.name, toAmount(datum.value)) }));
+  ).map((datum) => ({
+    ...datum,
+    hoverText: tooltipText(hoverMessage(datum.name, toAmount(datum.value))),
+  }));
 
   const symbol = currencySymbol(countryId);
   const unitName = `${symbol}${unit.suffix}`;
@@ -109,6 +123,7 @@ export default function BudgetaryImpactSubPage({
     formatBarLabel: (value: number) => formatBarAmount(toAmount(value), countryId),
     fillColor: (datum: WaterfallDatum) => getBudgetFillColor(datum, budgetaryImpact),
     tooltipContent: <BudgetWaterfallTooltip />,
+    shortNames: SHORT_NAMES,
   };
 
   if (fillHeight) {

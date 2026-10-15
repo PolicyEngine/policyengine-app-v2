@@ -1,36 +1,29 @@
 import { useQuery } from '@tanstack/react-query';
-import { runFlagshipHousehold, type FlagshipHouseholdInput } from '@/libs/flagship/householdRun';
-
-export const flagshipHouseholdQueryKey = (
-  year: string,
-  baselinePolicyId: string,
-  reformPolicyId: string,
-  input: FlagshipHouseholdInput | null
-) => ['flagship-household', 'us', year, baselinePolicyId, reformPolicyId, input];
+import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
+import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 
 /**
- * A household run for a report, started only once the reader asks — a
- * household takes up to a minute or two under each policy. The same
- * household under the same policies is not run twice on a page.
+ * A household built in full (the household builder's model), run for a
+ * report once the reader asks. Keyed by what is sent, so the same
+ * household is not run twice on a page.
  */
-export function useFlagshipHousehold({
+export function useFlagshipHouseholdPayload({
   year,
   baselinePolicyId,
   reformPolicyId,
-  input,
+  payload,
 }: {
   year: string;
   baselinePolicyId: string;
   reformPolicyId: string;
   /** The household asked for; nothing runs while null. */
-  input: FlagshipHouseholdInput | null;
+  payload: V1HouseholdCreateEnvelope | null;
 }) {
   return useQuery({
-    queryKey: flagshipHouseholdQueryKey(year, baselinePolicyId, reformPolicyId, input),
-    queryFn: () => runFlagshipHousehold({ year, input: input!, baselinePolicyId, reformPolicyId }),
-    enabled: !!input,
-    // A calculated household does not change. A failure has no data, so it
-    // reads as stale: only "Try again" runs it again, not a refocus or reconnect.
+    queryKey: ['flagship-household-full', 'us', year, baselinePolicyId, reformPolicyId, payload],
+    queryFn: () =>
+      runFlagshipHouseholdPayload({ year, payload: payload!, baselinePolicyId, reformPolicyId }),
+    enabled: !!payload,
     staleTime: Infinity,
     retry: false,
     refetchOnWindowFocus: false,

@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { isApiReportId } from '@/hooks/useFlagshipReport';
+import { provenanceFromPolicy, provisionsFromPolicy } from '@/libs/flagship/reportProvenance';
+import { provisionPeriods } from '@/libs/flagship/runReport';
 import {
-  provenanceFromPolicy,
-  provisionsFromPolicy,
-  valueForYear,
-} from '@/libs/flagship/reportProvenance';
+  EXEMPTION_METADATA,
+  EXEMPTION_SCHEDULE_PERIODS,
+  EXEMPTION_SCHEDULE_POLICY,
+  REPORT_YEAR_2028,
+} from '@/tests/fixtures/pages/flagship/sharedReportMocks';
 import type { Policy } from '@/types/ingredients/Policy';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
 
@@ -44,17 +47,6 @@ describe('isApiReportId', () => {
   });
 });
 
-describe('valueForYear', () => {
-  test('given dated intervals then the one covering the year wins', () => {
-    expect(valueForYear(reformPolicy.parameters![0], '2026')).toBe(2500);
-    expect(valueForYear(reformPolicy.parameters![0], '2025')).toBe(2200);
-  });
-
-  test('given no covering interval then the first stands in', () => {
-    expect(valueForYear(reformPolicy.parameters![0], '2010')).toBe(2200);
-  });
-});
-
 describe('provisionsFromPolicy', () => {
   test('given a policy and metadata then provisions carry path, value, baseline, and unit', () => {
     const [provision] = provisionsFromPolicy(reformPolicy, metadataParameters, '2026');
@@ -66,6 +58,38 @@ describe('provisionsFromPolicy', () => {
     });
     expect(provision.baselineValue).toBe(2200);
     expect(provision.breadcrumb).not.toBe(CTC_BASE_PATH);
+  });
+
+  test('given dated values then the provision reads the one in the report year', () => {
+    expect(provisionsFromPolicy(reformPolicy, metadataParameters, '2025')[0].value).toBe(2200);
+    expect(provisionsFromPolicy(reformPolicy, metadataParameters, '2026')[0].value).toBe(2500);
+  });
+
+  test('given a later report year then current law is read in that year', () => {
+    const [provision] = provisionsFromPolicy(
+      EXEMPTION_SCHEDULE_POLICY,
+      EXEMPTION_METADATA,
+      REPORT_YEAR_2028
+    );
+
+    expect(provision.value).toBe(8000);
+    expect(provision.baselineValue).toBe(5200);
+  });
+
+  test('given dated values then the provision keeps every one, as the report ran them', () => {
+    const [provision] = provisionsFromPolicy(
+      EXEMPTION_SCHEDULE_POLICY,
+      EXEMPTION_METADATA,
+      REPORT_YEAR_2028
+    );
+
+    expect(provisionPeriods(provision)).toEqual(EXEMPTION_SCHEDULE_PERIODS);
+  });
+
+  test('given a year the policy does not reach then current law stands as the value', () => {
+    const [provision] = provisionsFromPolicy(reformPolicy, metadataParameters, '2010');
+
+    expect(provision.value).toBe(provision.baselineValue);
   });
 
   test('given a path missing from metadata then the path itself is the breadcrumb', () => {
@@ -85,6 +109,17 @@ describe('provenanceFromPolicy', () => {
     expect(provenanceFromPolicy(reformPolicy, metadataParameters, null)?.title).toBe(
       'CTC to $2,500'
     );
+  });
+
+  test('given the report year then the provisions read that year', () => {
+    const meta = provenanceFromPolicy(
+      EXEMPTION_SCHEDULE_POLICY,
+      EXEMPTION_METADATA,
+      null,
+      REPORT_YEAR_2028
+    );
+
+    expect(meta?.provisions[0].value).toBe(8000);
   });
 
   test('given no policy yet then there is no provenance', () => {

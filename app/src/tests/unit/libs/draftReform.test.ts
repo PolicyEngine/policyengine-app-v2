@@ -4,12 +4,17 @@ import {
   clearDraftReform,
   draftToReform,
   getDraftReform,
+  isEditableValue,
   loadProvisionsIntoDraft,
   loadReformIntoDraft,
   provisionFromSearchEntry,
   removeDraftProvision,
+  resumeDraftFor,
   setDraftBaseline,
   setDraftLabel,
+  setDraftPopulation,
+  setDraftWindowYears,
+  setDraftYear,
   startDraftReform,
   updateDraftProvisionValue,
 } from '@/libs/draftReform';
@@ -23,8 +28,35 @@ const CTC_PROVISION = {
   value: 2000,
 };
 
+const EITC_PROVISION = {
+  path: 'gov.irs.credits.eitc.max[0].amount',
+  breadcrumb: 'IRS → Credits → EITC → Maximum → Bracket 1 → Amount',
+  unit: 'currency-USD',
+  baselineValue: 600,
+  value: 600,
+};
+
+/** A UK parameter, for drafts in two countries at once. */
+const PERSONAL_ALLOWANCE = {
+  path: 'gov.hmrc.income_tax.allowances.personal_allowance.amount',
+  breadcrumb: 'HMRC → Income tax → Personal allowance',
+  unit: 'currency-GBP',
+  baselineValue: 12570,
+  value: 12570,
+};
+
+const MARRIAGE_ALLOWANCE = {
+  path: 'gov.hmrc.income_tax.allowances.marriage_allowance.max',
+  breadcrumb: 'HMRC → Income tax → Marriage allowance → Maximum',
+  unit: 'currency-GBP',
+  baselineValue: 1260,
+  value: 1260,
+};
+
 describe('draftReform', () => {
   beforeEach(() => {
+    // Every country's draft, the ones set aside too.
+    localStorage.clear();
     clearDraftReform();
   });
 
@@ -45,19 +77,49 @@ describe('draftReform', () => {
     expect(getDraftReform()?.provisions[0].value).toBe(2000);
   });
 
-  it('given a draft for another country then adding replaces it with a fresh draft', () => {
+  it('given a draft for another country then adding starts a fresh draft for this one', () => {
     addDraftProvision('us', CTC_PROVISION);
-    addDraftProvision('uk', {
-      path: 'gov.hmrc.income_tax.allowances.personal_allowance.amount',
-      breadcrumb: 'HMRC → Income tax → Personal allowance',
-      unit: 'currency-GBP',
-      baselineValue: 12570,
-      value: 12570,
-    });
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
 
     const draft = getDraftReform();
     expect(draft?.countryId).toBe('uk');
     expect(draft?.provisions).toHaveLength(1);
+  });
+
+  it('given a draft for another country then the first draft is kept for its own country', () => {
+    addDraftProvision('us', CTC_PROVISION);
+    setDraftLabel('US plan');
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
+
+    resumeDraftFor('us');
+
+    expect(getDraftReform()).toMatchObject({
+      countryId: 'us',
+      label: 'US plan',
+      provisions: [CTC_PROVISION],
+    });
+  });
+
+  it('given a country with a draft set aside then adding there goes on with that draft', () => {
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
+    addDraftProvision('us', CTC_PROVISION);
+
+    addDraftProvision('uk', MARRIAGE_ALLOWANCE);
+
+    expect(getDraftReform()?.provisions.map((provision) => provision.path)).toEqual([
+      PERSONAL_ALLOWANCE.path,
+      MARRIAGE_ALLOWANCE.path,
+    ]);
+  });
+
+  it('given a draft is discarded then it does not come back, and the other country keeps its own', () => {
+    addDraftProvision('us', CTC_PROVISION);
+    addDraftProvision('uk', PERSONAL_ALLOWANCE);
+
+    clearDraftReform();
+
+    expect(resumeDraftFor('uk')).toBeNull();
+    expect(resumeDraftFor('us')?.provisions).toEqual([CTC_PROVISION]);
   });
 
   it('given a value update then only that provision changes', () => {
@@ -73,6 +135,25 @@ describe('draftReform', () => {
     removeDraftProvision(CTC_PROVISION.path);
 
     expect(getDraftReform()).toBeNull();
+  });
+
+  it('given the last provision is removed from a named draft then the draft keeps its settings', () => {
+    // The user swaps the one parameter for another: the name and years stay.
+    addDraftProvision('us', CTC_PROVISION);
+    setDraftLabel('QA build flow test');
+    setDraftYear(2027);
+    setDraftWindowYears(10);
+    setDraftPopulation({ scope: 'national', region: 'state/ca' });
+
+    removeDraftProvision(CTC_PROVISION.path);
+
+    expect(getDraftReform()).toMatchObject({
+      label: 'QA build flow test',
+      year: 2027,
+      windowYears: 10,
+      population: { scope: 'national', region: 'state/ca' },
+      provisions: [],
+    });
   });
 
   it('given a label is set then it persists on the draft', () => {
@@ -149,6 +230,34 @@ describe('draftReform', () => {
     expect(reform.parameters[0].values[0].endDate).toBe('2100-12-31');
   });
 
+  it('given a parameter added but left at current law then saving leaves it out', () => {
+    addDraftProvision('us', CTC_PROVISION);
+    addDraftProvision('us', { ...EITC_PROVISION, value: 900 });
+
+    const reform = draftToReform(getDraftReform()!);
+
+    expect(reform.parameters.map((parameter) => parameter.name)).toEqual([EITC_PROVISION.path]);
+  });
+
+  it('given current law then a value reset to it saves as nothing, and a freeze still saves', () => {
+    // Current law moves on in 2027: holding 2,000 from 2026 freezes it.
+    const currentLaw = { '2026-01-01': 2000, '2027-01-01': 2100 };
+    addDraftProvision('us', {
+      ...CTC_PROVISION,
+      intervals: [{ startDate: '2026-01-01', endDate: '2026-12-31', value: 2000 }],
+    });
+    addDraftProvision('us', {
+      ...EITC_PROVISION,
+      intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 600 }],
+    });
+
+    const reform = draftToReform(getDraftReform()!, (path) =>
+      path === CTC_PROVISION.path ? currentLaw : { '2026-01-01': 600, '2027-01-01': 650 }
+    );
+
+    expect(reform.parameters.map((parameter) => parameter.name)).toEqual([EITC_PROVISION.path]);
+  });
+
   it('given a saved reform to compare with then the draft keeps it, and current law clears it', () => {
     addDraftProvision('us', CTC_PROVISION);
 
@@ -178,6 +287,22 @@ describe('draftReform', () => {
     expect(getDraftReform()).not.toHaveProperty('baselineReformId');
   });
 
+  it('given provisions loaded with no source then the draft is hand-built', () => {
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }]);
+
+    expect(getDraftReform()?.source).toBe('manual');
+    expect(getDraftReform()).not.toHaveProperty('sourceRef');
+  });
+
+  it('given provisions loaded from a bill then the draft keeps the bill as its source', () => {
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }], {
+      source: 'bill',
+      sourceRef: 'us-hr1425',
+    });
+
+    expect(getDraftReform()).toMatchObject({ source: 'bill', sourceRef: 'us-hr1425' });
+  });
+
   it('given a search entry and metadata values then provisionFromSearchEntry uses the current value as baseline', () => {
     const provision = provisionFromSearchEntry(
       { path: 'gov.x', breadcrumb: 'X', unit: 'currency-USD' },
@@ -186,5 +311,14 @@ describe('draftReform', () => {
 
     expect(provision.baselineValue).toBe(1500);
     expect(provision.value).toBe(1500);
+  });
+
+  it('given no limit then a number box can set it, while lists and text stay read only', () => {
+    // Metadata sends no limit as the text "Infinity".
+    expect(isEditableValue('Infinity')).toBe(true);
+    expect(isEditableValue('-Infinity')).toBe(true);
+    expect(isEditableValue(2200)).toBe(true);
+    expect(isEditableValue(['employee_medicare_tax'])).toBe(false);
+    expect(isEditableValue('CITIZEN')).toBe(false);
   });
 });

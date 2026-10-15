@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   IconArrowLeft,
   IconCheck,
@@ -19,6 +19,7 @@ import {
   ParameterSearchEntry,
   ParameterSearchFilters,
   ParameterSearchIndex,
+  scheduleMemberOf,
 } from '@/libs/parameterSearch';
 import ScopePicker from './ScopePicker';
 
@@ -112,6 +113,14 @@ function groupFolderPath(entries: ParameterSearchEntry[]): string | null {
     shared = shared.slice(0, depth);
   }
   return shared && shared.length >= 2 ? shared.join('.') : null;
+}
+
+/** A row in a schedule's group names its bracket: "Bracket 2 · Amount". */
+function scheduleRowLabel(schedule: string | undefined, entry: ParameterSearchEntry): string {
+  const member = schedule ? scheduleMemberOf(entry.path) : null;
+  return member
+    ? `Bracket ${member.bracket + 1} · ${capitalizeFirst(entry.label)}`
+    : capitalizeFirst(entry.label);
 }
 
 const CONTRIB_EXPLANATION =
@@ -315,6 +324,9 @@ export default function ParameterSearchBox({
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState(0);
+  // Option ids, so the input can name the highlighted row while focus stays in it.
+  const optionIdPrefix = useId();
+  const optionId = (index: number) => `${optionIdPrefix}-option-${index}`;
   const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
   /**
    * A folder opened from the results: the dropdown shows everything the
@@ -475,6 +487,18 @@ export default function ParameterSearchBox({
 
   let runningIndex = -1;
 
+  const resultsShown =
+    !hideResults && (browsing !== null || (flatEntries.length > 0 && !widerOnly));
+  // The row the arrow keys point at, for screen readers: none while a
+  // folder is pointed at or the list is out of date.
+  const activeOptionId =
+    resultsShown &&
+    !(!browsing && search.stale) &&
+    highlighted >= 0 &&
+    highlighted < flatEntries.length
+      ? optionId(highlighted)
+      : undefined;
+
   const active = query.trim().length > 0 || browsing !== null;
   const noMatches =
     !hideResults &&
@@ -559,6 +583,8 @@ export default function ParameterSearchBox({
           role="combobox"
           aria-expanded={Boolean(browsing) || flatEntries.length > 0}
           aria-controls="parameter-search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={activeOptionId}
           style={{
             flex: 1,
             minWidth: 0,
@@ -736,7 +762,7 @@ export default function ParameterSearchBox({
         </div>
       )}
 
-      {!hideResults && (browsing || (flatEntries.length > 0 && !widerOnly)) && (
+      {resultsShown && (
         <div
           id="parameter-search-results"
           role="listbox"
@@ -885,6 +911,7 @@ export default function ParameterSearchBox({
               {(folderView?.direct ?? []).map((entry, i) => (
                 <button
                   key={entry.path}
+                  id={optionId(i)}
                   type="button"
                   role="option"
                   aria-selected={i === highlighted}
@@ -1037,7 +1064,7 @@ export default function ParameterSearchBox({
             groups.map((group, groupIndex) => {
               const isFolder = group.entries.length > 1 && group.folder;
               return (
-                <div key={group.folder || group.entries[0].path}>
+                <div key={group.schedule ?? (group.folder || group.entries[0].path)}>
                   {isFolder &&
                     (() => {
                       const folderPath = groupFolderPath(group.entries);
@@ -1130,6 +1157,7 @@ export default function ParameterSearchBox({
                     return (
                       <button
                         key={entry.path}
+                        id={optionId(i)}
                         type="button"
                         role="option"
                         aria-selected={i === highlighted}
@@ -1169,7 +1197,7 @@ export default function ParameterSearchBox({
                             }}
                           >
                             {isFolder
-                              ? capitalizeFirst(entry.label)
+                              ? scheduleRowLabel(group.schedule, entry)
                               : entry.breadcrumb || entry.label}
                           </span>
                           <span

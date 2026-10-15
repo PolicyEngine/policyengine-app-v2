@@ -87,6 +87,16 @@ export const DEDUCTION_PARAMETERS = {
       '2029-01-01': 5300,
     },
   },
+  // A threshold current law leaves unlimited, as metadata sends it: the text "Infinity".
+  'gov.irs.credits.cdcc.phase_out.second_start': {
+    parameter: 'gov.irs.credits.cdcc.phase_out.second_start',
+    label: 'CDCC second phase-out start',
+    type: 'parameter',
+    unit: 'currency-USD',
+    economy: true,
+    household: true,
+    values: { '2022-01-01': 'Infinity' },
+  },
   ...deduction('SINGLE', 'SINGLE', 16100),
   ...deduction('JOINT', 'JOINT', 32200),
   ...deduction('HEAD_OF_HOUSEHOLD', 'HEAD OF HOUSEHOLD', 24150),
@@ -98,6 +108,7 @@ export const CTC_PATH = 'gov.irs.credits.ctc.amount.base';
 export const LIST_PATH = 'gov.irs.credits.ctc.refundable.social_security.add';
 export const PHASE_IN_RATE_PATH = 'gov.irs.credits.eitc.phase_in_rate[1].amount';
 export const EXEMPTION_PATH = 'gov.irs.income.exemption.amount';
+export const NO_LIMIT_PATH = 'gov.irs.credits.cdcc.phase_out.second_start';
 
 /** Loads the fixture parameters into the app store, as a metadata fetch would. */
 /** A few US regions, as metadata's economy_options.region lists them. */
@@ -112,9 +123,27 @@ export const US_REGIONS = [
   },
 ];
 
+/**
+ * A few UK regions, as metadata's economy_options.region lists them. A
+ * constituency and a local authority can share a name (Bedford).
+ */
+export const UK_REGIONS = [
+  { name: 'uk', label: 'the UK', type: 'national' },
+  { name: 'country/england', label: 'England', type: 'country' },
+  { name: 'country/scotland', label: 'Scotland', type: 'country' },
+  { name: 'constituency/Bedford', label: 'Bedford', type: 'constituency' },
+  { name: 'constituency/Aberdeen North', label: 'Aberdeen North', type: 'constituency' },
+  { name: 'local_authority/Bedford', label: 'Bedford', type: 'local_authority' },
+];
+
 export function seedDeductionMetadata({
   regions = [],
-}: { regions?: Array<{ name: string; label: string; type: string }> } = {}) {
+  lastYear = 2027,
+}: {
+  regions?: Array<{ name: string; label: string; type: string }>;
+  /** The model's last year (economy_options.time_period runs 2025 to it). */
+  lastYear?: number;
+} = {}) {
   const meta = { arg: 'us', requestId: 'draft-editor-test', requestStatus: 'pending' };
   store.dispatch({ type: fetchMetadataThunk.pending.type, meta });
   store.dispatch({
@@ -130,11 +159,10 @@ export function seedDeductionMetadata({
           variableModules: {},
           economy_options: {
             region: regions,
-            time_period: [
-              { name: 2025, label: '2025' },
-              { name: 2026, label: '2026' },
-              { name: 2027, label: '2027' },
-            ],
+            time_period: Array.from({ length: lastYear - 2024 }, (_, index) => ({
+              name: 2025 + index,
+              label: String(2025 + index),
+            })),
             datasets: [],
           },
           current_law_id: 2,

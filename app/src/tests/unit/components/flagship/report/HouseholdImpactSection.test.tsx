@@ -29,6 +29,48 @@ vi.mock('@/api/householdCalculation', () => ({
   fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
 }));
 
+// The household builder is the v2 builder, tested on its own: here a stand-in
+// makes the same calls it makes, so the section's own work is what is tested.
+vi.mock('@/components/household/HouseholdBuilderForm', () => ({
+  default: ({
+    household,
+    year,
+    maritalStatus,
+    numChildren,
+    onChange,
+    onMaritalStatusChange,
+    onNumChildrenChange,
+  }: any) => (
+    <div aria-label="Household builder">
+      <span>{`${maritalStatus} · ${numChildren}`}</span>
+      <span data-testid="state">
+        {String(
+          (Object.values(household.householdData.households ?? {})[0] as any)?.state_name?.[year] ??
+            ''
+        )}
+      </span>
+      <button type="button" onClick={() => onMaritalStatusChange('married')}>
+        Married
+      </button>
+      <button type="button" onClick={() => onNumChildrenChange(2)}>
+        Two children
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          const { partnerKey } = household.deriveBuilderComposition(year);
+          onChange(household.setPersonVariableAtYear(partnerKey, 'employment_income', year, 20000));
+        }}
+      >
+        Partner earns 20000
+      </button>
+    </div>
+  ),
+}));
+vi.mock('@/utils/HouseholdValidation', () => ({
+  HouseholdValidation: { isReadyForSimulation: () => ({ isValid: true, errors: [] }) },
+}));
+
 function renderSection({ region, countryId = 'us' }: { region?: string; countryId?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -52,11 +94,6 @@ function calculateWith(reformResult: typeof REFORM_RESULT) {
   );
 }
 
-async function pick(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
-  await user.click(screen.getByRole('combobox', { name: label }));
-  await user.click(await screen.findByRole('option', { name: option }));
-}
-
 describe('HouseholdImpactSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -72,12 +109,14 @@ describe('HouseholdImpactSection', () => {
     onlineManager.setOnline(true);
   });
 
-  test('given the section then a default household waits and nothing runs', () => {
+  test('given the section then a default household waits and nothing runs', async () => {
     renderSection();
 
-    expect(screen.getByRole('combobox', { name: 'State' })).toHaveTextContent('California');
-    expect(screen.getByRole('spinbutton', { name: 'Annual earnings' })).toHaveValue(50000);
-    expect(screen.getByRole('button', { name: 'Calculate' })).toBeEnabled();
+    expect(screen.getByRole('generic', { name: 'Household builder' })).toHaveTextContent(
+      'single · 0'
+    );
+    expect(screen.getByTestId('state')).toHaveTextContent('CA');
+    expect(await screen.findByRole('button', { name: 'Calculate' })).toBeEnabled();
     expect(mockCreateHousehold).not.toHaveBeenCalled();
     expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
   });
@@ -85,7 +124,19 @@ describe('HouseholdImpactSection', () => {
   test("given a state's report then the household starts in that state", () => {
     renderSection({ region: 'state/ny' });
 
-    expect(screen.getByRole('combobox', { name: 'State' })).toHaveTextContent('New York');
+    expect(screen.getByTestId('state')).toHaveTextContent('NY');
+  });
+
+  test('given the default household then it earns $50,000, on national poverty thresholds', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    await user.click(await screen.findByRole('button', { name: 'Calculate' }));
+
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
+    const sent = mockCreateHousehold.mock.calls[0][0];
+    expect(sent.data.people.you.employment_income).toEqual({ [HOUSEHOLD_YEAR]: 50000 });
+    expect(JSON.stringify(sent)).toContain('national');
   });
 
   test('given Calculate then the run shows its progress, then the change in net income', async () => {
@@ -115,7 +166,7 @@ describe('HouseholdImpactSection', () => {
     const headline = within(result).getByRole('group', { name: 'Change in annual net income' });
     expect(headline).toHaveTextContent('+$1,000');
     expect(headline).toHaveTextContent('$72,000 → $73,000 (+1.4%)');
-    expect(result).toHaveTextContent('Single · no children · $50,000 earnings · California · 2026');
+    expect(result).toHaveTextContent('Single · no children · California · 2026');
   });
 
   test('given a result then its taxes, benefits and credits that change are listed', async () => {
@@ -182,50 +233,20 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('table', { name: 'Credits and benefits' })).not.toBeInTheDocument();
   });
 
-  test('given a married couple with children then their earnings and ages are sent', async () => {
+  test('given a married couple with children then the builder household is sent', async () => {
     const user = userEvent.setup();
     renderSection();
 
-    await user.click(screen.getByRole('tab', { name: 'Married' }));
-    await user.clear(screen.getByRole('spinbutton', { name: "Partner's annual earnings" }));
-    await user.type(screen.getByRole('spinbutton', { name: "Partner's annual earnings" }), '20000');
-    await pick(user, 'Children', '2');
-    await user.clear(screen.getByRole('spinbutton', { name: 'Child 1 age' }));
-    await user.type(screen.getByRole('spinbutton', { name: 'Child 1 age' }), '3');
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: 'Married' }));
+    await user.click(screen.getByRole('button', { name: 'Two children' }));
+    await user.click(screen.getByRole('button', { name: 'Partner earns 20000' }));
+    await user.click(await screen.findByRole('button', { name: 'Calculate' }));
 
     await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
     const people = mockCreateHousehold.mock.calls[0][0].data.people;
     expect(people['your partner'].employment_income).toEqual({ [HOUSEHOLD_YEAR]: 20000 });
-    expect(people['your first dependent'].age).toEqual({ [HOUSEHOLD_YEAR]: 3 });
-    expect(people['your second dependent'].age).toEqual({ [HOUSEHOLD_YEAR]: 10 });
-  });
-
-  test('given earnings that are not a round thousand then the household still runs', async () => {
-    const user = userEvent.setup();
-    renderSection();
-
-    const earnings = screen.getByRole('spinbutton', { name: 'Annual earnings' });
-    await user.clear(earnings);
-    await user.type(earnings, '52500.50');
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
-
-    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
-    expect(mockCreateHousehold.mock.calls[0][0].data.people.you.employment_income).toEqual({
-      [HOUSEHOLD_YEAR]: 52500.5,
-    });
-  });
-
-  test('given a child aged 18 then the household cannot run', async () => {
-    const user = userEvent.setup();
-    renderSection();
-
-    await pick(user, 'Children', '1');
-    await user.clear(screen.getByRole('spinbutton', { name: 'Child 1 age' }));
-    await user.type(screen.getByRole('spinbutton', { name: 'Child 1 age' }), '18');
-
-    expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
-    expect(screen.getByText(/ages from 0 to 17/)).toBeInTheDocument();
+    expect(people['your first dependent']).toBeDefined();
+    expect(people['your second dependent']).toBeDefined();
   });
 
   test('given a failed run then it says so, and trying again shows the result', async () => {
@@ -236,7 +257,7 @@ describe('HouseholdImpactSection', () => {
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('This household could not be calculated.');
+    expect(alert).toHaveTextContent('This household could not be calculated');
     expect(alert).toHaveTextContent('Household calculation failed');
 
     await user.click(within(alert).getByRole('button', { name: 'Try again' }));

@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
+import { clearDraftReform, draftYear, getDraftReform } from '@/libs/draftReform';
 import ReformsPage from '@/pages/flagship/Reforms.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
@@ -177,6 +178,48 @@ const FEED_BILLS = [
   },
 ];
 
+/** A state bill that first takes effect next year (live: RI S2364, from 2027). */
+const LATER_STATE_BILL = {
+  id: 'ri-s2364',
+  countryId: 'us' as const,
+  jurisdiction: 'Rhode Island',
+  state: 'RI',
+  title: 'Rhode Island S2364: income tax rate cut',
+  status: 'In Committee',
+  summary: 'Cuts the lowest income tax rate from 2027.',
+  provisions: [
+    {
+      path: 'gov.states.ri.tax.income.rates[0].rate',
+      value: 0.0375,
+      intervals: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 0.0375 }],
+      fallbackBreadcrumb: 'Rhode Island → Income tax → Lowest rate',
+    },
+  ],
+};
+
+/**
+ * UT SB60 as the tracker stores it: a write-up of 4.5% → 4.45%, but
+ * reform params of 0.045, the law before the bill.
+ */
+const SWAPPED_STATE_BILL = {
+  id: 'ut-sb60-bill',
+  countryId: 'us' as const,
+  jurisdiction: 'Utah',
+  state: 'UT',
+  title: 'Utah SB60: Income tax rate reduction',
+  status: 'Signed into Law',
+  summary: 'Cuts the income tax rate from 4.5% to 4.45%.',
+  provisions: [
+    {
+      path: 'gov.states.ut.tax.income.rate',
+      value: 0.045,
+      intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.045 }],
+      fallbackBreadcrumb: 'Utah → Income tax → Rate',
+    },
+  ],
+  changes: [{ label: 'Income tax rate', before: '4.5%', after: '4.45%' }],
+};
+
 function renderReforms(path?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const ui = (
@@ -202,6 +245,10 @@ async function chooseFilter(
 }
 
 describe('ReformsPage', () => {
+  afterEach(() => {
+    store.dispatch(clearMetadata());
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     clearDraftReform();
@@ -291,6 +338,53 @@ describe('ReformsPage', () => {
     expect(draft?.source).toBe('bill');
     expect(draft?.label).toBe('Child tax credit expansion proposal');
     expect(draft?.provisions.length).toBeGreaterThan(0);
+  });
+
+  test('given a state bill from a later year opens as a draft then the draft runs as its report does', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([...FEED_BILLS, LATER_STATE_BILL]);
+    renderReforms(`/us/reforms?bill=${LATER_STATE_BILL.id}`);
+
+    await user.click(await screen.findByRole('button', { name: /open as draft reform/i }));
+
+    // The bill's first year and its state, not this year and the whole country.
+    expect(getDraftReform()).toMatchObject({
+      label: LATER_STATE_BILL.title,
+      year: 2027,
+      population: { scope: 'national', region: 'state/ri' },
+      source: 'bill',
+      sourceRef: LATER_STATE_BILL.id,
+      provisions: [{ path: 'gov.states.ri.tax.income.rates[0].rate', value: 0.0375 }],
+    });
+  });
+
+  test('given a federal bill opens as a draft then the draft runs on the whole country', async () => {
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?bill=us-ctc-expansion');
+
+    await user.click(await screen.findByRole('button', { name: /open as draft reform/i }));
+
+    const draft = getDraftReform();
+    expect(draftYear(draft)).toBe(Number(CURRENT_YEAR));
+    // No state region, and still the bill's draft.
+    expect(draft?.population).toEqual({ scope: 'national' });
+    expect(draft).toMatchObject({ source: 'bill', sourceRef: 'us-ctc-expansion' });
+  });
+
+  test('given stored parameters that contradict the write-up then no report or draft starts', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([...FEED_BILLS, SWAPPED_STATE_BILL]);
+    renderReforms(`/us/reforms?bill=${SWAPPED_STATE_BILL.id}`);
+
+    const draftButton = await screen.findByRole('button', { name: /open as draft reform/i });
+    expect(draftButton).toBeDisabled();
+    expect(screen.getByRole('button', { name: /run impact report/i })).toBeDisabled();
+    expect(screen.getByText(/do not match its write-up of the changes/)).toBeInTheDocument();
+
+    await user.click(draftButton);
+
+    expect(getDraftReform()).toBeNull();
+    expect(mockRun).not.toHaveBeenCalled();
   });
 
   test('given the federal level then state bills leave', async () => {
@@ -460,16 +554,16 @@ describe('ReformsPage', () => {
     expect(screen.getByText('Showing 24 of 30 bills')).toBeInTheDocument();
   });
 
-  test('given the Yours tab with no reforms then the invitation shows', async () => {
+  test('given the Your library tab with no reforms then the invitation shows', async () => {
     const user = userEvent.setup();
     renderReforms();
 
-    await user.click(screen.getByRole('button', { name: 'Yours' }));
+    await user.click(screen.getByRole('button', { name: 'Your library' }));
 
     expect(await screen.findByText(/no saved reforms yet/i)).toBeInTheDocument();
   });
 
-  test('given a ?filter=yours deep link then the Yours tab is active', async () => {
+  test('given a ?filter=yours deep link then the Your library tab is active', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     renderReforms('/us/reforms?filter=yours');
 
@@ -479,7 +573,7 @@ describe('ReformsPage', () => {
     expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
 
-  test('given the Yours tab then it lists this browser’s reforms for the country', async () => {
+  test('given the Your library tab then it lists this browser’s reforms for the country', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     renderReforms('/us/reforms?filter=yours');
 
@@ -488,34 +582,28 @@ describe('ReformsPage', () => {
     expect(mockFindMine).toHaveBeenCalledWith('us');
   });
 
-  test('given a reform card is clicked then its provisions edit in place', async () => {
+  test('given a reform card is clicked then its detail reads it, with nothing to edit there', async () => {
+    seedDeductionMetadata();
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
 
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
-    expect(screen.getByLabelText(/new value for gov\.irs/i)).toHaveValue(3600);
-    expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
+    expect(
+      screen.getByRole('heading', { name: 'CTC to $3,600 for children under 6' })
+    ).toBeInTheDocument();
+    const table = screen.getByRole('table', { name: 'Parameters' });
+    expect(table).toHaveTextContent('3600');
+    expect(within(table).queryByRole('textbox')).not.toBeInTheDocument();
+    expect(within(table).queryByRole('spinbutton')).not.toBeInTheDocument();
+    // Changes are made in Build: no save, copy or add-parameters here.
+    for (const name of [/save changes/i, /duplicate/i, /add parameters in build/i]) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeInTheDocument();
     expect(screen.queryByText('From a question')).not.toBeInTheDocument();
   });
-
-  test('given an amended value then save updates the reform', async () => {
-    mockFindMine.mockResolvedValue([CHAT_REFORM]);
-    mockUpdate.mockResolvedValue({ ...CHAT_REFORM });
-    const user = userEvent.setup();
-    renderReforms('/us/reforms?filter=yours');
-    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
-
-    const input = screen.getByLabelText(/new value for gov\.irs/i);
-    await user.clear(input);
-    await user.type(input, '4000');
-    await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
-    expect(mockUpdate.mock.calls[0][1].parameters[0].values[0].value).toBe(4000);
-  });
-
   test('given view full impact report in the reform detail then the run links the saved reform', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     const user = userEvent.setup();
@@ -530,25 +618,27 @@ describe('ReformsPage', () => {
     expect(reformId).toBe('rf-1');
   });
 
-  test('given a value that starts later then the detail says when, and save keeps the start', async () => {
+  test('given the model metadata is still loading then the rows hold their place', async () => {
+    store.dispatch(clearMetadata());
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    const table = screen.getByRole('table', { name: 'Parameters' });
+    expect(within(table).getByRole('status', { name: 'Loading parameters' })).toBeInTheDocument();
+    expect(table).not.toHaveTextContent('3600');
+  });
+
+  test('given a value that starts later then the detail says when', async () => {
+    seedDeductionMetadata();
     mockFindMine.mockResolvedValue([LATER_REFORM]);
-    mockUpdate.mockResolvedValue({ ...LATER_REFORM });
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $1,000 from 2028'));
 
     expect(screen.getByText('from 2028')).toBeInTheDocument();
-    const input = screen.getByLabelText(/new value for gov\.irs/i);
-    await user.clear(input);
-    await user.type(input, '1200');
-    await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
-    expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual([
-      { startDate: '2028-01-01', endDate: '2100-12-31', value: 1200 },
-    ]);
   });
-
   test('given a value that starts later then its report runs in that year, from that date', async () => {
     mockFindMine.mockResolvedValue([LATER_REFORM]);
     const user = userEvent.setup();
@@ -567,27 +657,22 @@ describe('ReformsPage', () => {
     });
   });
 
-  test('given a schedule then the detail reads it, and save leaves it whole', async () => {
+  test('given a schedule then the detail reads it', async () => {
+    seedDeductionMetadata();
     mockFindMine.mockResolvedValue([SCHEDULE_REFORM]);
-    mockUpdate.mockResolvedValue({ ...SCHEDULE_REFORM });
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC indexed'));
 
-    // Read-only here: a schedule changes in Build.
-    expect(screen.queryByLabelText(/new value for gov\.irs/i)).not.toBeInTheDocument();
-    expect(screen.getByText('3 periods from 2026')).toBeInTheDocument();
-
-    await user.clear(screen.getByLabelText('Reform name'));
-    await user.type(screen.getByLabelText('Reform name'), 'CTC indexed to CPI');
-    await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1));
-    expect(mockUpdate.mock.calls[0][1].parameters[0].values).toEqual(
-      SCHEDULE_REFORM.parameters[0].values
-    );
+    // Each period on its own line, read across: the reform's value, then its dates.
+    const [row] = within(screen.getByRole('table', { name: 'Parameters' }))
+      .getAllByRole('row')
+      .slice(1);
+    const [, , reform, when] = within(row).getAllByRole('cell');
+    const lines = (cell: HTMLElement) => [...cell.children].map((line) => line.textContent);
+    expect(lines(reform)).toEqual(['2500', '2550', '2600']);
+    expect(lines(when)).toEqual(['2026 only', '2027 only', 'from 2028']);
   });
-
   test('given reports run from a reform then its card counts them and its detail lists them', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     mockFindReports.mockResolvedValue([
@@ -680,30 +765,132 @@ describe('ReformsPage', () => {
     ).toBeInTheDocument();
   });
 
-  test('given delete in the reform detail then the store delete is called', async () => {
+  test('given delete in the reform detail then it asks first and deletes nothing yet', async () => {
+    // Given
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     mockDelete.mockResolvedValue(undefined);
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
 
+    // When
     await user.click(screen.getByRole('button', { name: /delete/i }));
 
-    expect(mockDelete).toHaveBeenCalledWith('rf-1');
+    // Then
+    const dialog = screen.getByRole('alertdialog', {
+      name: 'Delete “CTC to $3,600 for children under 6”?',
+    });
+    expect(dialog).toBeInTheDocument();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
-  test('given duplicate in the reform detail then a copy is created', async () => {
+  test('given the delete is confirmed then the store delete is called', async () => {
+    // Given
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
-    mockCreate.mockResolvedValue({ id: 'rf-copy' });
+    mockDelete.mockResolvedValue(undefined);
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
     await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
 
-    await user.click(screen.getByRole('button', { name: /duplicate/i }));
-
-    expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ label: 'CTC to $3,600 for children under 6 (copy)' })
+    // When
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete reform' })
     );
+
+    // Then
+    expect(mockDelete).toHaveBeenCalledWith('rf-1');
+  });
+
+  test('given the delete is cancelled then the reform stays', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    // When
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' })
+    );
+
+    // Then
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { name: 'CTC to $3,600 for children under 6' })
+    ).toBeInTheDocument();
+  });
+
+  test('given a reform with reports then the delete prompt says they stay reachable by link', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockFindReports.mockResolvedValue([
+      {
+        id: 'r-a',
+        countryId: 'us',
+        apiReportId: '901',
+        title: 'CTC',
+        sourceNote: null,
+        provisions: [],
+        year: '2026',
+        createdAt: '2026-10-13T15:00:00Z',
+        reformId: 'rf-1',
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await screen.findByText('2026 report');
+
+    // When
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    // Then
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      'Its 1 report leaves this list; it still opens from its link.'
+    );
+  });
+
+  test('given the delete fails then the detail says so', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockDelete.mockRejectedValue(new Error('503'));
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+
+    // When
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete reform' })
+    );
+
+    // Then
+    expect(await screen.findByText(/could not delete/i)).toBeInTheDocument();
+  });
+
+  test('given a failed delete then another reform opens with no error', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([CHAT_REFORM, LATER_REFORM]);
+    mockDelete.mockRejectedValue(new Error('503'));
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    await user.click(screen.getByRole('button', { name: /delete/i }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete reform' })
+    );
+    await screen.findByText(/could not delete/i);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /all reforms/i }));
+    await user.click(await screen.findByText('CTC to $1,000 from 2028'));
+
+    // Then
+    expect(screen.getByRole('heading', { name: 'CTC to $1,000 from 2028' })).toBeInTheDocument();
+    expect(screen.queryByText(/could not delete/i)).not.toBeInTheDocument();
   });
 
   test('given the back link in a detail then the grid returns', async () => {
@@ -764,12 +951,11 @@ describe('ReformsPage', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent(/changes could not be loaded/i);
     expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /add parameters in build/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /duplicate/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled();
   });
 
   test('given a reform whose changes could not load then "Try again" reloads the list', async () => {
+    seedDeductionMetadata();
     mockFindMine.mockResolvedValue([
       { ...CHAT_REFORM, parameters: [], parametersUnavailable: true },
     ]);
@@ -780,8 +966,11 @@ describe('ReformsPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
-    expect(await screen.findByLabelText(/new value for gov\.irs/i)).toHaveValue(3600);
+    await waitFor(() =>
+      expect(screen.getByRole('table', { name: 'Parameters' })).toHaveTextContent('3600')
+    );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeEnabled();
   });
 
   test('given a saved reform that changes nothing then its report cannot run, and it says why', async () => {

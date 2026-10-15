@@ -14,10 +14,12 @@
  */
 
 import { CalibrationRing, ringForDepth } from '@/libs/flagship/calibrationMatching';
+import { relevantComparisons } from '@/libs/flagship/comparisonRelevance';
 import {
   DEFAULT_MAX_DEPTH,
   loadParameterDependencies,
   ReachedVariable,
+  readersOfPath,
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
@@ -51,6 +53,28 @@ export const SCORECARD_URL = 'https://www.policyengine.org/scorecard';
 /** The scorecard's comparison table and its sources-and-method page. */
 export const SCORECARD_COMPARISON_URL = `${SCORECARD_URL}?view=scorecard`;
 export const SCORECARD_METHOD_URL = `${SCORECARD_URL}?view=about`;
+
+/**
+ * Where an entry sits on the scorecard: its comparison table
+ * ("scorecard", the comparison.json rows) or its registry of published
+ * claims ("validation", the populations feed, baseline claims included).
+ */
+export type ScorecardView = 'scorecard' | 'validation';
+
+/**
+ * The closest link the scorecard has to one entry: the view that lists
+ * it, in the entry's country. The scorecard's URL carries only `view` and
+ * `country` (US is its default and stays out); it has no address for a
+ * single entry, so the reader finds the row in that view.
+ */
+export function scorecardEntryUrl(view: ScorecardView, country?: string | null): string {
+  const params = new URLSearchParams({ view });
+  const code = country?.toLowerCase();
+  if (code && code !== 'us') {
+    params.set('country', code);
+  }
+  return `${SCORECARD_URL}?${params}`;
+}
 
 export const PROGRAM_LABELS: Record<string, string> = {
   snap: 'SNAP',
@@ -168,8 +192,10 @@ export async function fetchModelValidation(
 
 /**
  * The scorecard matches for a reform: the programs whose comparison rows
- * were computed from variables its paths reach (to `maxDepth`), with the
- * rows. Null when either the map or the scorecard is unavailable.
+ * were computed from variables its paths reach (to `maxDepth`), kept to
+ * the programs the reform changes, with the rows. The rows are all
+ * national, so the report's region does not narrow them. Null when either
+ * the map or the scorecard is unavailable.
  */
 export async function scorecardMatchesForPaths(
   paths: string[],
@@ -186,10 +212,19 @@ export async function scorecardMatchesForPaths(
   if (fetched === null) {
     return null;
   }
+  const changed = relevantComparisons(
+    fetched.map((row) => ({ program: row.program, geography: 'US', row })),
+    {
+      countryId: 'us',
+      paths,
+      readers: Object.fromEntries(paths.map((path) => [path, readersOfPath(path, map)])),
+      region: 'us',
+    }
+  ).map((entry) => entry.row);
   return {
     modelVersion: map.model.version,
     reachedCount: reached.length,
-    ...summarizeScorecardPrograms(reached, fetched),
+    ...summarizeScorecardPrograms(reached, changed),
   };
 }
 
@@ -213,11 +248,17 @@ export interface ValidationClaim {
   notes?: string;
 }
 
+/** A fiscal note's label: who wrote it, as the tracker stored it, or the generic name. */
+export function fiscalNoteLabel(validation: { fiscalNoteSource?: string }): string {
+  return validation.fiscalNoteSource?.trim() || 'Official fiscal note';
+}
+
 /** Tracker validation_metadata → scorecard-shaped claims. */
 export function claimsFromBillValidation(
   billId: string,
   validation: {
     fiscalNoteEstimate?: number;
+    fiscalNoteSource?: string;
     fiscalNoteUrl?: string;
     peEstimate?: number;
     discrepancyExplanation?: string;
@@ -241,7 +282,9 @@ export function claimsFromBillValidation(
   return [
     ...(typeof validation.fiscalNoteEstimate === 'number'
       ? [
-          claim('Official fiscal note', validation.fiscalNoteEstimate, {
+          // Named by its source: a proxy note (another bill's score) must not
+          // read as this bill's own.
+          claim(fiscalNoteLabel(validation), validation.fiscalNoteEstimate, {
             sourceUrl: validation.fiscalNoteUrl,
             notes: validation.discrepancyExplanation,
           }),

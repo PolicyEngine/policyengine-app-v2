@@ -189,6 +189,13 @@ function totalRows(response: Response): number | undefined {
 async function trackerSelect(
   table: string,
   select: string,
+  /**
+   * A unique column that puts the rows in one fixed order ("bill_id").
+   * With no order, the database can give each page its rows in another
+   * order, so the pages repeat some rows and drop others, and different
+   * ones on each load.
+   */
+  order: string,
   /** A PostgREST row filter, e.g. "id=eq.ks-hb2620". */
   filter?: string
 ): Promise<any[] | null> {
@@ -199,7 +206,7 @@ async function trackerSelect(
   // Read page by page: one request stops at the cap and drops the rest.
   const rows: any[] = [];
   for (;;) {
-    const query = `select=${select}${filter ? `&${filter}` : ''}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
+    const query = `select=${select}${filter ? `&${filter}` : ''}&order=${order}&limit=${TRACKER_PAGE_SIZE}&offset=${rows.length}`;
     const response = await fetch(`${config.url}/rest/v1/${table}?${query}`, {
       headers: {
         apikey: config.anonKey,
@@ -500,6 +507,7 @@ export async function fetchTrackerBillDistricts(
   const rows = await trackerSelect(
     'reform_impacts',
     'district_impacts',
+    'id',
     `id=eq.${encodeURIComponent(billId)}`
   );
   const raw = rows?.[0]?.district_impacts;
@@ -560,11 +568,74 @@ function normalizeBillNumber(value: string): string {
 const processedBillKey = (state: string, billNumber: string) =>
   `${state.toUpperCase()}:${normalizeBillNumber(billNumber)}`;
 
+/** A status row's last action day ("2026-03-04"), or "" when it has none. */
+const lastActionDay = (bill: any): string => {
+  const day = typeof bill.last_action_date === 'string' ? bill.last_action_date.slice(0, 10) : '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : '';
+};
+
+/**
+ * Whether a status row came from LegiScan, read from its link: the
+ * OpenStates and Congress monitors store their own sites' links in the
+ * same column, and the row's source column defaults to "legiscan".
+ */
+const isLegiscanRow = (bill: any): boolean =>
+  /^https?:\/\/(www\.)?legiscan\.com\//i.test(String(bill.legiscan_url ?? ''));
+
+/** A status row's bill id as a number, lowest when it has none. */
+const statusRowId = (bill: any): number => {
+  const id = Number(bill.bill_id ?? NaN);
+  return Number.isFinite(id) ? id : -Infinity;
+};
+
+const statusRowText = (bill: any) =>
+  JSON.stringify([
+    bill.bill_id,
+    bill.state,
+    bill.bill_number,
+    bill.status,
+    bill.legiscan_url,
+    bill.last_action_date,
+  ]);
+
+const ascending = (a: number | string, b: number | string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * Orders two status rows for one bill number, the preferred row last.
+ * The tracker can hold a bill twice under two spellings of its number:
+ * LegiScan's (NY "S04487") and OpenStates' ("S 4487"). The row with the
+ * later last action wins. On the same day, or with no dates, the LegiScan
+ * row wins: it names the stage more finely ("In Committee", where
+ * OpenStates says "Introduced") and links to LegiScan. The bill id and
+ * then the row's contents only fix the order of what is left. They do
+ * not date a bill: OpenStates and Congress ids are hashes, all above
+ * LegiScan's. The same row wins in any read order.
+ */
+function compareStatusRows(a: any, b: any): number {
+  return (
+    ascending(lastActionDay(a), lastActionDay(b)) ||
+    ascending(Number(isLegiscanRow(a)), Number(isLegiscanRow(b))) ||
+    ascending(statusRowId(a), statusRowId(b)) ||
+    ascending(statusRowText(a), statusRowText(b))
+  );
+}
+
+/**
+ * The bill number a title names, as the tracker reads it: the first
+ * letters-then-number ("SB3125", "H. 3492", "A 1185"), not a fiscal year.
+ */
+function titleBillNumber(title: unknown): string | undefined {
+  return typeof title === 'string' ? title.match(/\b(?!FY)([A-Z]{1,3}\.?\s*\d+)/i)?.[1] : undefined;
+}
+
 /**
  * The tracker's status row (processed_bills) for a research entry. The
  * entry's LegiScan link (legiscan_bill_id) names the row when it is set.
  * Otherwise the entry's id names the bill: "ut-sb0060", "ny-s-4487", or
  * "ga-hb463-2026", where a trailing year names the session, not the bill.
+ * An id with words after the number ("hi-sb3125-hd1", "ut-sb60-bill")
+ * finds its row as the tracker does: by the bill number in the title,
+ * then by the id's first part.
  */
 function processedBillFor(
   record: any,
@@ -581,11 +652,24 @@ function processedBillFor(
   if (!state || parts.length === 0) {
     return undefined;
   }
-  const exact = byKey.get(processedBillKey(state, parts.join('')));
-  if (exact || parts.length < 2 || !/^\d{4}$/.test(parts[parts.length - 1])) {
-    return exact;
+  const candidates = [parts.join('')];
+  if (parts.length >= 2 && /^\d{4}$/.test(parts[parts.length - 1])) {
+    candidates.push(parts.slice(0, -1).join(''));
   }
-  return byKey.get(processedBillKey(state, parts.slice(0, -1).join('')));
+  const titled = titleBillNumber(record.title);
+  if (titled) {
+    candidates.push(titled);
+  }
+  if (parts.length >= 2 && /^[a-z]+\d+$/i.test(parts[0])) {
+    candidates.push(parts[0]);
+  }
+  for (const billNumber of candidates) {
+    const row = byKey.get(processedBillKey(state, billNumber));
+    if (row) {
+      return row;
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -595,19 +679,25 @@ function processedBillFor(
 export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
   const [research, impacts, processed, validations, baselines] = await Promise.all([
     // Titled as the tracker shows them: an entry with no title reads as its bill number.
-    trackerSelect('research', '*').then((rows) => rows?.map(withTrackerTitle) ?? null),
+    trackerSelect('research', '*', 'id').then((rows) => rows?.map(withTrackerTitle) ?? null),
     trackerSelect(
       'reform_impacts',
-      'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at'
+      'id,reform_params,provisions,computed,budgetary_impact,poverty_impact,child_poverty_impact,winners_losers,decile_impact,policyengine_us_version,dataset_name,dataset_version,computed_at',
+      'id'
     ),
-    trackerSelect('processed_bills', 'bill_id,state,bill_number,status,legiscan_url'),
+    trackerSelect(
+      'processed_bills',
+      'bill_id,state,bill_number,status,legiscan_url,last_action_date',
+      'bill_id'
+    ),
     trackerSelect(
       'validation_metadata',
-      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against'
+      'id,fiscal_note_source,fiscal_note_url,fiscal_note_estimate,pe_estimate,target_range_low,target_range_high,within_range,difference_from_fiscal_note_pct,discrepancy_explanation,external_analyses,verification,verified_at,validated_against',
+      'id'
     ),
     // The law each bill was compared with. Read on its own, so a tracker
     // without the column yet still serves the rest of the feed.
-    trackerSelect('reform_impacts', 'id,baseline_params').catch(() => null),
+    trackerSelect('reform_impacts', 'id,baseline_params', 'id').catch(() => null),
   ]);
   if (!research) {
     return null;
@@ -621,12 +711,15 @@ export async function fetchTrackerBills(): Promise<TrackedBill[] | null> {
       bill.bill_id === null || bill.bill_id === undefined ? [] : [[String(bill.bill_id), bill]]
     )
   );
-  const processedByKey = new Map(
-    (processed ?? []).map((bill) => [
-      processedBillKey(String(bill.state), String(bill.bill_number)),
-      bill,
-    ])
-  );
+  // Two rows can share a bill number's key: the preferred one holds it.
+  const processedByKey = new Map<string, any>();
+  for (const bill of processed ?? []) {
+    const key = processedBillKey(String(bill.state), String(bill.bill_number));
+    const held = processedByKey.get(key);
+    if (!held || compareStatusRows(held, bill) < 0) {
+      processedByKey.set(key, bill);
+    }
+  }
 
   return research
     .filter((record) => isBillRecord(record))

@@ -3,7 +3,7 @@ import { ErrorState, SkeletonLine, SkeletonRegion } from '@/components/flagship/
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { groupKeyFromPath } from '@/libs/flagship/parameterGroups';
-import { ROW_GRID, WIDE_ONLY } from './DraftTable';
+import { ACTIONS_CELL, ROW_GRID, VALUE_CELL, WIDE_ONLY } from './DraftTable';
 
 /** The search bar and its filter row, as placeholders at their own size. */
 export function SearchBarSkeleton() {
@@ -65,7 +65,9 @@ function DraftTableSkeleton({ rows }: { rows: number }) {
         <span className={WIDE_ONLY} style={headerCell}>
           Current law
         </span>
-        <span style={headerCell}>New value</span>
+        <span className="tw:@max-[480px]:hidden" style={headerCell}>
+          New value
+        </span>
         <span className={WIDE_ONLY} style={headerCell}>
           Effective
         </span>
@@ -84,11 +86,13 @@ function DraftTableSkeleton({ rows }: { rows: number }) {
           <span className={WIDE_ONLY}>
             <SkeletonLine width="70%" />
           </span>
-          <SkeletonLine height={36} />
+          <div className={VALUE_CELL}>
+            <SkeletonLine height={36} />
+          </div>
           <span className={WIDE_ONLY}>
             <SkeletonLine width="80%" height={12} />
           </span>
-          <span />
+          <span className={ACTIONS_CELL} />
         </div>
       ))}
       <div

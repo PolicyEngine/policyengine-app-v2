@@ -132,6 +132,20 @@ describe('BillReportPage', () => {
     expect(screen.getByText('Stored estimates from the legislative tracker')).toBeInTheDocument();
   });
 
+  test('given a federal bill then its stored budget reads as the overview does, not as state revenue', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderReport();
+
+    // When
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    // Then
+    const budget = screen.getByRole('region', { name: 'Budgetary impact' });
+    expect(budget).toHaveTextContent('$225.5bnAnnual revenue loss');
+    expect(budget).not.toHaveTextContent(/state revenue|−/);
+  });
+
   test('given the page and its tabs open then no full run starts until asked', async () => {
     const user = userEvent.setup();
     seedDeductionMetadata();
@@ -152,6 +166,34 @@ describe('BillReportPage', () => {
     expect(
       within(screen.getByRole('tabpanel')).getByText('Calculating the full results')
     ).toBeInTheDocument();
+  });
+
+  test('given a federal bill then economic impacts word its stored budget as the overview does', async () => {
+    const user = userEvent.setup();
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    const budget = within(screen.getByRole('tabpanel')).getByRole('region', {
+      name: 'Budgetary impact',
+    });
+    expect(budget).toHaveTextContent('Annual revenue loss');
+    expect(budget).not.toHaveTextContent(/state revenue/i);
+  });
+
+  test('given a state bill then economic impacts word its stored budget as state revenue', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([
+      { ...TRACKED_BILL, id: 'ut-hb106', jurisdiction: 'Utah', state: 'UT' },
+    ]);
+    renderReport('ut-hb106');
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    const budget = within(screen.getByRole('tabpanel')).getByRole('region', {
+      name: 'Budgetary impact',
+    });
+    expect(budget).toHaveTextContent('Annual state revenue loss');
   });
 
   test('given the overview then summary, date and bill text show; the verdict is in Validation', async () => {
@@ -364,6 +406,45 @@ describe('BillReportPage', () => {
     await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
     expect(screen.getByText('This bill is already current law.')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+  });
+
+  test('given the stored parameters disagree with the write-up then no run is offered and the tracker estimate stays', async () => {
+    const user = userEvent.setup();
+    // UT SB60 as the tracker stores it: a write-up of 4.5% → 4.45%, but
+    // reform params of 0.045, the law before the bill.
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        id: 'ut-sb60-bill',
+        state: 'UT',
+        title: 'Utah SB60: Income tax rate reduction (enacted)',
+        provisions: [
+          {
+            path: 'gov.states.ut.tax.income.rate',
+            value: 0.045,
+            intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.045 }],
+            baselineIntervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.0445 }],
+          },
+        ],
+        changes: [{ label: 'Income tax rate', before: '4.5%', after: '4.45%' }],
+      },
+    ]);
+    renderReport('ut-sb60-bill');
+
+    expect(
+      await screen.findByText(
+        'Stored estimates from the legislative tracker · full results unavailable'
+      )
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      within(panel).getByText('The full results are not available for this bill.')
+    ).toBeInTheDocument();
+    expect(within(panel).queryByRole('button', { name: 'Load full results' })).toBeNull();
+    // The tracker's own estimate still shows.
+    expect(within(panel).getByRole('region', { name: 'Budgetary impact' })).toBeInTheDocument();
+    expect(mockUseBillEconomy).not.toHaveBeenCalledWith(expect.anything(), { enabled: true });
   });
 
   test('given the tracker wrote up the changes then the overview lists them as scored', async () => {

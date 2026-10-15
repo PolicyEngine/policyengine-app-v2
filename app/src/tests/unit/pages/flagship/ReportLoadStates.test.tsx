@@ -14,12 +14,15 @@ import {
   REPORT_NOT_FOUND_ERROR,
   SIMULATION_UNAVAILABLE_ERROR,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
+import { HOUSEHOLD_SIMULATIONS } from '@/tests/fixtures/pages/flagship/sharedReportMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
+import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 
 const mockUseFlagshipReport = vi.fn();
 const mockRetry = vi.fn();
 const mockCalcStatus = vi.fn();
 const mockFetchMetadata = vi.fn();
+const mockStartCalculationOnLoad = vi.fn();
 
 vi.mock('@/hooks/useFlagshipReport', () => ({
   isApiReportId: () => true,
@@ -39,7 +42,7 @@ const IDLE_STATUS = { status: 'idle', isComplete: false, isError: false, result:
 const PENDING_STATUS = { ...IDLE_STATUS, status: 'pending', progress: 20 };
 
 vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
-  useStartCalculationOnLoad: () => undefined,
+  useStartCalculationOnLoad: (args: unknown) => mockStartCalculationOnLoad(args),
 }));
 
 vi.mock('@/hooks/useReportValidationSnapshot', () => ({
@@ -65,6 +68,7 @@ function reportData(overrides: Partial<FlagshipReportData> = {}): FlagshipReport
     isLoading: false,
     error: null,
     notFound: false,
+    failedPolicyIds: [],
     retry: mockRetry,
     ...overrides,
   };
@@ -162,5 +166,46 @@ describe('FlagshipReportPage load states', () => {
     // Then
     expect(screen.getByRole('heading', { name: 'Could not load the report' })).toBeInTheDocument();
     expect(mockRetry).toHaveBeenCalledTimes(1);
+  });
+
+  describe('given a household report', () => {
+    test('then it says this page cannot open it', () => {
+      mockUseFlagshipReport.mockReturnValue(
+        reportData({ report: EXISTING_REPORT, simulations: HOUSEHOLD_SIMULATIONS })
+      );
+
+      renderPage(EXISTING_REPORT_ID);
+
+      expect(screen.getByRole('alert')).toHaveTextContent('This report cannot open here');
+    });
+
+    test('then no calculation starts, so its stored outputs stay as they are', () => {
+      mockUseFlagshipReport.mockReturnValue(
+        reportData({ report: EXISTING_REPORT, simulations: HOUSEHOLD_SIMULATIONS })
+      );
+
+      renderPage(EXISTING_REPORT_ID);
+
+      expect(mockStartCalculationOnLoad).toHaveBeenLastCalledWith(
+        expect.objectContaining({ enabled: false, configs: [] })
+      );
+    });
+
+    test('then a household result is never read as society-wide results', () => {
+      mockCalcStatus.mockReturnValue({
+        status: 'complete',
+        isComplete: true,
+        isError: false,
+        result: mockHouseholdResult(),
+      });
+      mockUseFlagshipReport.mockReturnValue(
+        reportData({ report: EXISTING_REPORT, simulations: HOUSEHOLD_SIMULATIONS })
+      );
+
+      renderPage(EXISTING_REPORT_ID);
+
+      expect(screen.getByRole('alert')).toHaveTextContent('This report cannot open here');
+      expect(screen.queryByRole('tab', { name: 'Validation' })).not.toBeInTheDocument();
+    });
   });
 });
