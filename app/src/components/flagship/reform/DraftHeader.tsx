@@ -37,6 +37,7 @@ import {
 } from '@/libs/draftReform';
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
+import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
@@ -267,6 +268,12 @@ export default function DraftHeader({ draft }: { draft: DraftReform }) {
  * while the reform is longer than the screen, so the run is never a
  * scroll away, and settles in place under the table once the table ends.
  */
+/** What "Save and run" saves and runs, fixed when the button is pressed. */
+interface DraftRunRequest {
+  runDraft: DraftReform;
+  runBaseline: RunReportBaseline | undefined;
+}
+
 export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const nav = useAppNavigate();
   const queryClient = useQueryClient();
@@ -292,11 +299,11 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // Saving changes the reform the draft came from, or saves a new one.
   // When that reform is no longer in this store (deleted, or another
   // user's), the draft is saved as a new reform instead.
-  const saveReform = async (): Promise<Reform> => {
-    const payload = draftToReform(draft, currentLawValues);
-    if (draft.editingReformId) {
+  const saveReform = async (draftToSave: DraftReform): Promise<Reform> => {
+    const payload = draftToReform(draftToSave, currentLawValues);
+    if (draftToSave.editingReformId) {
       try {
-        return await reformStore.update(draft.editingReformId, {
+        return await reformStore.update(draftToSave.editingReformId, {
           label: payload.label,
           parameters: payload.parameters,
           provenance: payload.provenance,
@@ -314,22 +321,24 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // reform it edits, or reusing a saved one that sets the same values),
   // so the report links to it and both can be found again. A reused
   // reform stays as it is, its name too. A save that fails runs nothing.
-  const saveForRun = async (): Promise<{ reform: Reform; reused: boolean }> => {
-    if (!draft.editingReformId) {
-      const payload = draftToReform(draft, currentLawValues);
+  const saveForRun = async (
+    runDraft: DraftReform
+  ): Promise<{ reform: Reform; reused: boolean }> => {
+    if (!runDraft.editingReformId) {
+      const payload = draftToReform(runDraft, currentLawValues);
       const match = findMatchingReform(
-        await reformStore.findMine(draft.countryId),
+        await reformStore.findMine(runDraft.countryId),
         payload.parameters
       );
       if (match?.id) {
         return { reform: match, reused: true };
       }
     }
-    return { reform: await saveReform(), reused: false };
+    return { reform: await saveReform(runDraft), reused: false };
   };
 
   const saveMutation = useMutation({
-    mutationFn: saveReform,
+    mutationFn: () => saveReform(draft),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reforms'] });
       clearDraftReform();
@@ -338,22 +347,30 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   });
 
   // A reform the run saved becomes the one the draft edits, so trying
-  // again after a failed run changes it rather than saving another.
+  // again after a failed run changes it rather than saving another. The
+  // run is the draft as it stood when "Save and run" was pressed, the one
+  // that was saved, whatever is edited while the save is in flight.
   const saveAndRunMutation = useMutation({
-    mutationFn: saveForRun,
-    onSuccess: ({ reform: saved, reused }) => {
+    mutationFn: ({ runDraft }: DraftRunRequest) => saveForRun(runDraft),
+    onSuccess: ({ reform: saved, reused }, { runDraft, runBaseline }) => {
       queryClient.invalidateQueries({ queryKey: ['reforms'] });
       if (!reused) {
         setDraftEditingReform(saved.id!);
       }
+      const runYear = draftYear(runDraft);
       void runReport.run(
-        draft.label.trim() || UNTITLED_REFORM,
-        SOURCE_NOTES[draft.source] ?? 'Draft reform',
+        runDraft.label.trim() || UNTITLED_REFORM,
+        SOURCE_NOTES[runDraft.source] ?? 'Draft reform',
         // Described as they stand in the year the report simulates.
-        provisionsToRun(draft.provisions, year, parameters),
+        provisionsToRun(runDraft.provisions, runYear, parameters),
         saved.id,
-        year,
-        { fromDraft: true, region, windowYears: draft.windowYears, baseline: baseline.forRun }
+        runYear,
+        {
+          fromDraft: true,
+          region: runDraft.population?.region,
+          windowYears: runDraft.windowYears,
+          baseline: runBaseline,
+        }
       );
     },
   });
@@ -440,7 +457,12 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
           <Button
-            onClick={() => saveAndRunMutation.mutate()}
+            onClick={() =>
+              saveAndRunMutation.mutate({
+                runDraft: structuredClone(draft),
+                runBaseline: baseline.forRun,
+              })
+            }
             disabled={
               adjusted.length === 0 ||
               starting ||

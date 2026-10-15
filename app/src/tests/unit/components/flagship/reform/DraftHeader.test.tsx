@@ -230,6 +230,40 @@ describe('DraftHeader', () => {
       expect(mockRun.mock.calls[0][0]).toBe('Untitled reform');
     });
 
+    test('given an edit while the save is in flight then the run is what was saved', async () => {
+      // Given: the save waits until released
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      let releaseSave!: (reform: Reform) => void;
+      mockCreate.mockReturnValue(
+        new Promise<Reform>((resolve) => {
+          releaseSave = resolve;
+        })
+      );
+      renderHeader();
+
+      // When: the value and name change before the save answers
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+      await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+      act(() => {
+        updateDraftProvisionValue(CHANGED.path, 1200);
+        setDraftLabel('Edited after pressing run');
+      });
+      await act(async () => releaseSave({ id: 'rf-new' } as Reform));
+
+      // Then: the run matches the saved reform it links to
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      const savedValues = JSON.stringify(mockCreate.mock.calls[0][0].parameters);
+      expect(savedValues).toContain('900');
+      expect(savedValues).not.toContain('1200');
+      const ranProvision = mockRun.mock.calls[0][2].find(
+        (provision: { path: string }) => provision.path === CHANGED.path
+      );
+      expect(ranProvision.value).toBe(900);
+      expect(mockRun.mock.calls[0][0]).toBe('Untitled reform');
+      expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+    });
+
     test('then the draft is saved to Your reforms and the report links to it', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', CHANGED);
