@@ -35,6 +35,27 @@ describe('DistrictChoroplethMap', () => {
     await waitFor(() => expect(group.getAttribute('transform')).toBe(initialTransform));
   });
 
+  test('given the map then no district is a tab stop', async () => {
+    // Given
+    const { container } = render(<DistrictChoroplethMap data={MOCK_DISTRICT_CHOROPLETH_DATA} />);
+
+    // When
+    await waitFor(() => expect(container.querySelectorAll('path.rsm-geography').length).toBe(4));
+
+    // Then: 437 unnamed stops would sit between the zoom buttons and the lists.
+    expect(container.querySelectorAll('path.rsm-geography:not([tabindex="-1"])')).toHaveLength(0);
+  });
+
+  test('given the map then screen readers hear one named image', async () => {
+    // Given
+    render(<DistrictChoroplethMap data={MOCK_DISTRICT_CHOROPLETH_DATA} />);
+
+    // Then
+    expect(
+      await screen.findByRole('img', { name: /congressional district map/i })
+    ).toBeInTheDocument();
+  });
+
   test('given zoom buttons then zooming in and out changes the view', async () => {
     const { container } = render(<DistrictChoroplethMap data={MOCK_DISTRICT_CHOROPLETH_DATA} />);
     const zoomIn = await screen.findByRole('button', { name: 'Zoom in' });

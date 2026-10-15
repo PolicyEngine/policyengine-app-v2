@@ -24,6 +24,7 @@ import {
 import {
   fitAxisTitle,
   fixedPlotHeight,
+  getCategoryAxis,
   getWaterfallLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
@@ -63,10 +64,16 @@ export default function ReportWaterfallChart({
   fillColor,
   tooltipContent,
 }: ReportWaterfallChartProps) {
-  const { plotHeight, probe } = usePlotSize(
+  const { plotWidth, plotHeight, probe } = usePlotSize(
     fillHeight ? undefined : fixedPlotHeight(height, MARGIN)
   );
   const { domain, ticks, placements } = getWaterfallLayout(data, plotHeight);
+  // Every bar keeps its label on a narrow screen, wrapped to its slot.
+  const categoryAxis = getCategoryAxis(
+    data.map((datum) => datum.name),
+    plotWidth,
+    RECHARTS_FONT_STYLE
+  );
   const decimals = tickDecimals(ticks);
   const tickFormatter = (value: number) => formatTick(value, decimals);
   const yAxisTitle = fitAxisTitle(yAxisTitles, plotHeight);
@@ -128,7 +135,9 @@ export default function ReportWaterfallChart({
         <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
         <XAxis
           dataKey="name"
-          tick={RECHARTS_FONT_STYLE}
+          interval={0}
+          tick={categoryAxis.tick}
+          height={categoryAxis.height}
           tickLine={false}
           axisLine={{ stroke: colors.gray[200] }}
         />

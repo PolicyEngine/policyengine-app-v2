@@ -11,9 +11,10 @@ import {
 } from 'recharts';
 import type { TrackedBill, WinnerShares } from '@/api/billFeed';
 import ReportChartCard from '@/components/flagship/report/ReportChartCard';
+import type { ReportMetric } from '@/components/flagship/ReportContents';
 import { SegmentedControl, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { formatCurrencyAbbr } from '@/utils/formatters';
+import { storedRevenueMetric } from '@/libs/flagship/billMetrics';
 
 const WINNER_SEGMENTS = [
   { key: 'gainMore', label: 'Gain more than 5%', color: colors.primary[600] },
@@ -98,26 +99,16 @@ const dollars = (value: number) =>
 const signedPercent = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(1)}%`;
 
-type StoredBudgetary = NonNullable<TrackedBill['impactData']>['budgetary'];
-
-/** The stored revenue change; as the tracker reads it, net cost stands in where none is stored. */
-const storedRevenue = (budgetary: StoredBudgetary) =>
-  budgetary?.stateRevenueImpact ?? budgetary?.netCost;
+type StoredBill = Pick<TrackedBill, 'state' | 'impacts' | 'impactData'>;
 
 /**
- * The tracker's annual revenue change, as the report's own headline words
- * it: a number, not a chart, across the grid's full width. A state bill's
- * figure is that state's revenue; a federal bill's is not.
+ * The tracker's annual revenue change, in the overview's own words and
+ * sign: a number, not a chart, across the grid's full width.
  */
-function StoredBudget({ budgetary, state }: { budgetary: StoredBudgetary; state?: string }) {
-  const value = storedRevenue(budgetary);
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
+function StoredBudget({ revenue }: { revenue: ReportMetric | null }) {
+  if (!revenue) {
     return null;
   }
-  const amount = formatCurrencyAbbr(Math.abs(value), 'us', { maximumFractionDigits: 1 });
-  const label = `Annual ${state ? 'state ' : ''}revenue ${
-    value < 0 ? 'loss' : value > 0 ? 'gain' : 'change'
-  }`;
   return (
     <section
       aria-label="Budgetary impact"
@@ -136,11 +127,10 @@ function StoredBudget({ budgetary, state }: { budgetary: StoredBudgetary; state?
             color: colors.text.primary,
           }}
         >
-          {value < 0 ? '−' : value > 0 ? '+' : ''}
-          {amount}
+          {revenue.value}
         </span>
         <span style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          {label}
+          {revenue.label}
         </span>
       </div>
     </section>
@@ -153,14 +143,16 @@ function StoredBudget({ budgetary, state }: { budgetary: StoredBudgetary; state?
  * while the full results calculate, or instead of them when they cannot.
  */
 export default function StoredImpactCharts({
-  impact,
-  state,
+  bill,
+  countryId = 'us',
 }: {
-  impact: TrackedBill['impactData'];
-  /** The bill's state; absent for a federal bill. */
-  state?: TrackedBill['state'];
+  bill: StoredBill;
+  countryId?: Parameters<typeof storedRevenueMetric>[1];
 }) {
   const [decileMode, setDecileMode] = useState<'average' | 'relative'>('average');
+  const impact = bill.impactData;
+  // Worded as the overview words it, so the two read the same.
+  const revenue = storedRevenueMetric(bill, countryId);
 
   const average = decileRows(impact?.decile?.average);
   const relative = decileRows(impact?.decile?.relative, 100);
@@ -194,9 +186,8 @@ export default function StoredImpactCharts({
     return change === null ? [] : [{ group, change }];
   });
 
-  const hasBudget = typeof storedRevenue(impact?.budgetary) === 'number';
   if (
-    !hasBudget &&
+    !revenue &&
     average.length + relative.length + winnersRows.length + povertyRows.length === 0
   ) {
     return null;
@@ -211,7 +202,7 @@ export default function StoredImpactCharts({
       }}
     >
       {/* The budget leads, as it does in the full results. */}
-      <StoredBudget budgetary={impact?.budgetary} state={state} />
+      <StoredBudget revenue={revenue} />
 
       {(average.length > 0 || relative.length > 0) && (
         <ReportChartCard

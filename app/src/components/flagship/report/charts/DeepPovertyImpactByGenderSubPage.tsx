@@ -18,6 +18,7 @@ import ChartExplanation from '@/components/flagship/report/ChartExplanation';
 import {
   fitAxisTitle,
   fixedPlotHeight,
+  getCategoryAxis,
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
@@ -144,6 +145,12 @@ export default function DeepPovertyImpactByGenderSubPage({
     { width: plotWidth, height: plotHeight }
   );
   const { domain: yDomain, ticks: yTicks } = layout;
+  // Every bar keeps its label on a narrow screen, wrapped to its slot.
+  const categoryAxis = getCategoryAxis(
+    chartData.map((d) => d.name),
+    plotWidth,
+    RECHARTS_FONT_STYLE
+  );
 
   // Enough decimals that a 0.25% step does not read as 0.3%.
   const tickDigits = Math.max(1, tickDecimals(yTicks.map((v) => v * 100)));
@@ -168,7 +175,7 @@ export default function DeepPovertyImpactByGenderSubPage({
     <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
       {probe}
       <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
-      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+      <XAxis dataKey="name" interval={0} tick={categoryAxis.tick} height={categoryAxis.height} />
       <YAxis
         ticks={yTicks}
         domain={yDomain}

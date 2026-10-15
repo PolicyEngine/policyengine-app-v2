@@ -18,6 +18,7 @@ import ChartExplanation from '@/components/flagship/report/ChartExplanation';
 import {
   fitAxisTitle,
   fixedPlotHeight,
+  getCategoryAxis,
   getValueBarLayout,
   tickDecimals,
 } from '@/components/flagship/report/charts/barLayout';
@@ -142,6 +143,14 @@ export default function DeepPovertyImpactByAgeSubPage({
     { width: plotWidth, height: plotHeight }
   );
   const { domain: yDomain, ticks: yTicks } = layout;
+  // A card says "Adults"; every group keeps its label, wrapped to its slot.
+  const categoryLabel = (name: string) =>
+    compact && name === 'Working-age adults' ? 'Adults' : name;
+  const categoryAxis = getCategoryAxis(
+    chartData.map((d) => categoryLabel(d.name)),
+    plotWidth,
+    RECHARTS_FONT_STYLE
+  );
 
   // Enough decimals that a 0.25% step does not read as 0.3%.
   const tickDigits = Math.max(1, tickDecimals(yTicks.map((v) => v * 100)));
@@ -168,9 +177,10 @@ export default function DeepPovertyImpactByAgeSubPage({
       <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis
         dataKey="name"
-        tick={RECHARTS_FONT_STYLE}
-        interval={compact ? 0 : undefined}
-        tickFormatter={(value) => (compact && value === 'Working-age adults' ? 'Adults' : value)}
+        interval={0}
+        tick={categoryAxis.tick}
+        height={categoryAxis.height}
+        tickFormatter={categoryLabel}
       />
       <YAxis
         ticks={yTicks}

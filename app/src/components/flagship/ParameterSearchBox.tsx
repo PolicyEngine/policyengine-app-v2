@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   IconArrowLeft,
   IconCheck,
@@ -315,6 +315,9 @@ export default function ParameterSearchBox({
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState(0);
+  // Option ids, so the input can name the highlighted row while focus stays in it.
+  const optionIdPrefix = useId();
+  const optionId = (index: number) => `${optionIdPrefix}-option-${index}`;
   const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
   /**
    * A folder opened from the results: the dropdown shows everything the
@@ -475,6 +478,18 @@ export default function ParameterSearchBox({
 
   let runningIndex = -1;
 
+  const resultsShown =
+    !hideResults && (browsing !== null || (flatEntries.length > 0 && !widerOnly));
+  // The row the arrow keys point at, for screen readers: none while a
+  // folder is pointed at or the list is out of date.
+  const activeOptionId =
+    resultsShown &&
+    !(!browsing && search.stale) &&
+    highlighted >= 0 &&
+    highlighted < flatEntries.length
+      ? optionId(highlighted)
+      : undefined;
+
   const active = query.trim().length > 0 || browsing !== null;
   const noMatches =
     !hideResults &&
@@ -559,6 +574,8 @@ export default function ParameterSearchBox({
           role="combobox"
           aria-expanded={Boolean(browsing) || flatEntries.length > 0}
           aria-controls="parameter-search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={activeOptionId}
           style={{
             flex: 1,
             minWidth: 0,
@@ -736,7 +753,7 @@ export default function ParameterSearchBox({
         </div>
       )}
 
-      {!hideResults && (browsing || (flatEntries.length > 0 && !widerOnly)) && (
+      {resultsShown && (
         <div
           id="parameter-search-results"
           role="listbox"
@@ -885,6 +902,7 @@ export default function ParameterSearchBox({
               {(folderView?.direct ?? []).map((entry, i) => (
                 <button
                   key={entry.path}
+                  id={optionId(i)}
                   type="button"
                   role="option"
                   aria-selected={i === highlighted}
@@ -1130,6 +1148,7 @@ export default function ParameterSearchBox({
                     return (
                       <button
                         key={entry.path}
+                        id={optionId(i)}
                         type="button"
                         role="option"
                         aria-selected={i === highlighted}
