@@ -170,7 +170,7 @@ describe('groupSearchResults', () => {
     ]);
   });
 
-  it('given a schedule with its own label then its name is not added again', () => {
+  it('given a schedule with its own label then the header names it, once', () => {
     const labeled = (path: string, n: number) => ({
       ...entry(path, `IRS → EITC → Phase-in rate → Bracket ${n} → Rate`),
       scheduleLabel: 'Phase-in rate',
@@ -181,6 +181,23 @@ describe('groupSearchResults', () => {
     ]);
 
     expect(group.folder).toBe('IRS → EITC → Phase-in rate');
+    const [ctc] = groupSearchResults([
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[0].amount',
+          'IRS → CTC → Amount → Bracket 1 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+      {
+        ...entry(
+          'gov.irs.credits.ctc.amount.arpa[1].amount',
+          'IRS → CTC → Amount → Bracket 2 → Amount'
+        ),
+        scheduleLabel: 'Child Tax Credit ARPA amount',
+      },
+    ]);
+    expect(ctc.folder).toBe('IRS → CTC → Amount → Child Tax Credit ARPA amount');
   });
 
   it('given no results then no groups return', () => {

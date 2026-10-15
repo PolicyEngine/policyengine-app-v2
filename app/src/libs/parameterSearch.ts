@@ -805,15 +805,19 @@ function keyName(key: string): string {
 }
 
 /**
- * A schedule's folder: the members' breadcrumb above "Bracket N", with the
- * schedule's key added when the schedule has no label of its own (its
- * node folds out of breadcrumbs), so `…amount.base` and `…amount.arpa`
- * read apart.
+ * A schedule's folder: the members' breadcrumb above "Bracket N", then the
+ * schedule's own name — its label ("Child Tax Credit ARPA amount"), else
+ * its key ("ARPA") — since breadcrumbs skip a schedule's node, and
+ * `…amount.base` and `…amount.arpa` would otherwise read alike.
  */
 function scheduleFolder(entry: ParameterSearchEntry, schedule: string): string {
   const parts = entry.breadcrumb.split(' → ').slice(0, -2);
-  if (!entry.scheduleLabel) {
-    parts.push(keyName(schedule.split('.').pop() ?? schedule));
+  const label = entry.scheduleLabel?.trim();
+  const name = label
+    ? label.charAt(0).toUpperCase() + label.slice(1)
+    : keyName(schedule.split('.').pop() ?? schedule);
+  if (parts[parts.length - 1]?.toLowerCase() !== name.toLowerCase()) {
+    parts.push(name);
   }
   return parts.join(' → ');
 }
