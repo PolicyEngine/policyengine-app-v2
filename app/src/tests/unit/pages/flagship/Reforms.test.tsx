@@ -685,7 +685,7 @@ describe('ReformsPage', () => {
     expect(lines(reform)).toEqual(['2500', '2550', '2600']);
     expect(lines(when)).toEqual(['2026 only', '2027 only', 'from 2028']);
   });
-  test('given reports run from a reform then its card counts them and its detail lists them', async () => {
+  test('given reports run from a reform then its card shows the last run and its status, and its detail lists them', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     mockFindReports.mockResolvedValue([
       {
@@ -725,7 +725,9 @@ describe('ReformsPage', () => {
     const user = userEvent.setup();
     renderReforms('/us/reforms?filter=yours');
 
-    expect(await screen.findByText('2 reports · latest Oct 14')).toBeInTheDocument();
+    expect(await screen.findByText('Last run Oct 14, 2026')).toBeInTheDocument();
+    // The latest report (902) is still running.
+    expect(await screen.findByText('In progress')).toBeInTheDocument();
     await user.click(screen.getByText('CTC to $3,600 for children under 6'));
 
     const list = screen.getByRole('region', { name: 'Reports' });

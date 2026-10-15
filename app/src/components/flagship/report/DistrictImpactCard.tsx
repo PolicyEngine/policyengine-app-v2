@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { IconX } from '@tabler/icons-react';
 import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { DistrictChoroplethMap } from '@/components/flagship/report/DistrictChoroplethMap';
-import { SegmentedControl, Stack, Text } from '@/components/ui';
+import { Button, SegmentedControl, Stack, Text } from '@/components/ui';
 import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
 import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
@@ -13,6 +14,7 @@ import {
 } from '@/pages/report-output/SocietyWideOverview';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
+import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 export type CongressionalMode = 'absolute' | 'relative' | 'winner-pct' | 'loser-pct';
@@ -101,6 +103,51 @@ export function rankedEnds(sorted: RankedDistrict[]): {
   };
 }
 
+const RANKED_ROW_STYLE: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  gap: 4,
+  lineHeight: 1.5,
+};
+
+/** A ranked district's row: a button that shows its details, when the card offers them. */
+function RankedRow({
+  district,
+  selected,
+  onSelect,
+  children,
+}: {
+  district: RankedDistrict;
+  selected: boolean;
+  onSelect?: (districtId: string) => void;
+  children: ReactNode;
+}) {
+  if (!onSelect) {
+    return <div style={RANKED_ROW_STYLE}>{children}</div>;
+  }
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={`Show details for ${district.label}`}
+      onClick={() => onSelect(district.id)}
+      style={{
+        ...RANKED_ROW_STYLE,
+        width: '100%',
+        padding: 0,
+        border: 'none',
+        borderRadius: spacing.radius.element,
+        background: selected ? colors.primary[50] : 'none',
+        cursor: 'pointer',
+        textAlign: 'left',
+        font: 'inherit',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 /**
  * Renders a column of 5 ranked districts with conditional section headers.
  * For the "top" column (descending order): gains header is "Biggest gains",
@@ -113,11 +160,15 @@ function DistrictRankColumn({
   gainHeader,
   lossHeader,
   formatValue,
+  selectedId,
+  onSelect,
 }: {
   items: RankedDistrict[];
   gainHeader: string;
   lossHeader: string;
   formatValue: (v: number) => string;
+  selectedId?: string | null;
+  onSelect?: (districtId: string) => void;
 }) {
   // Build sections: group consecutive items by sign, assigning headers
   const rows: Array<
@@ -150,14 +201,11 @@ function DistrictRankColumn({
             {row.text}
           </Text>
         ) : (
-          <div
+          <RankedRow
             key={row.district.id}
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 4,
-              lineHeight: 1.5,
-            }}
+            district={row.district}
+            selected={row.district.id === selectedId}
+            onSelect={onSelect}
           >
             <Text
               size="sm"
@@ -187,7 +235,7 @@ function DistrictRankColumn({
             >
               {formatValue(row.district.value)}
             </Text>
-          </div>
+          </RankedRow>
         )
       )}
     </div>
@@ -198,10 +246,14 @@ function DistrictListColumn({
   items,
   header,
   formatValue,
+  selectedId,
+  onSelect,
 }: {
   items: RankedDistrict[];
   header: string;
   formatValue: (v: number) => string;
+  selectedId?: string | null;
+  onSelect?: (districtId: string) => void;
 }) {
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
@@ -215,14 +267,11 @@ function DistrictListColumn({
         {header}
       </Text>
       {items.map((district, index) => (
-        <div
+        <RankedRow
           key={district.id}
-          style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: 4,
-            lineHeight: 1.5,
-          }}
+          district={district}
+          selected={district.id === selectedId}
+          onSelect={onSelect}
         >
           <Text
             size="sm"
@@ -252,7 +301,7 @@ function DistrictListColumn({
           >
             {formatValue(district.value)}
           </Text>
-        </div>
+        </RankedRow>
       ))}
     </div>
   );
@@ -271,6 +320,118 @@ export interface DistrictImpactRow {
   relative_household_income_change?: number;
   winner_percentage?: number;
   loser_percentage?: number;
+  no_change_percentage?: number;
+}
+
+/** A share as a percentage, with two significant figures; one that rounds to zero reads zero. */
+function formatShare(value: number): string {
+  const decimals = percentDecimals([value]);
+  const roundsToZero = Number((value * 100).toFixed(decimals)) === 0;
+  return formatPercent(roundsToZero ? 0 : value, 'us', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
+/** One district's figures, as many as its row has. */
+export function districtDetailFigures(row: DistrictImpactRow): { label: string; value: string }[] {
+  const figures: { label: string; value: string }[] = [
+    {
+      label: 'Average household income change',
+      value: formatCurrency(
+        Math.round(row.average_household_income_change) === 0
+          ? 0
+          : row.average_household_income_change,
+        'us',
+        { maximumFractionDigits: 0 }
+      ),
+    },
+  ];
+  const shares: [string, number | undefined][] = [
+    ['Relative household income change', row.relative_household_income_change],
+    ['People gaining income', row.winner_percentage],
+    ['People losing income', row.loser_percentage],
+    ['People with no change', row.no_change_percentage],
+  ];
+  for (const [label, value] of shares) {
+    if (typeof value === 'number') {
+      figures.push({ label, value: formatShare(value) });
+    }
+  }
+  return figures;
+}
+
+/** The selected district's figures, below the map. */
+function DistrictDetails({
+  row,
+  label,
+  onClose,
+}: {
+  row: DistrictImpactRow;
+  label: string;
+  onClose: () => void;
+}) {
+  return (
+    <section
+      aria-label={`${label} details`}
+      style={{
+        padding: spacing.md,
+        border: `1px solid ${colors.border.light}`,
+        borderRadius: spacing.radius.container,
+        background: colors.background.secondary,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: spacing.sm,
+          marginBottom: spacing.sm,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <Text fw={typography.fontWeight.semibold} c={colors.text.primary}>
+            {label}
+          </Text>
+          <Text size="xs" c={colors.text.tertiary}>
+            {row.district}
+          </Text>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label="Close district details"
+          onClick={onClose}
+        >
+          <IconX size={14} />
+        </Button>
+      </div>
+      <dl
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+          gap: spacing.md,
+          margin: 0,
+        }}
+      >
+        {districtDetailFigures(row).map((figure) => (
+          <div key={figure.label} style={{ minWidth: 0 }}>
+            <dt>
+              <Text size="xs" c={colors.text.secondary}>
+                {figure.label}
+              </Text>
+            </dt>
+            <dd style={{ margin: 0 }}>
+              <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                {figure.value}
+              </Text>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 export default function DistrictImpactCard({
@@ -476,6 +637,26 @@ export default function DistrictImpactCard({
     savedErrorSummary.errorDistrictCount + (isOutcomeMode ? payloadOutcomeData.missingCount : 0);
   const mapErrorStates = savedErrorSummary.errorStateAbbrs;
 
+  // The district whose details show: clicked on the map or in a ranking.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedRow = selectedId
+    ? (savedDistricts?.find((d) => d.district === selectedId) ?? null)
+    : null;
+  const toggleSelected = (districtId: string) =>
+    setSelectedId((current) => (current === districtId ? null : districtId));
+  useEffect(() => {
+    if (!selectedRow) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) {
+        setSelectedId(null);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [selectedRow]);
+
   return (
     <Stack
       style={{
@@ -519,6 +700,8 @@ export default function DistrictImpactCard({
               config={{ ...mapConfig, height: 460 }}
               focusState={stateCode ?? undefined}
               errorStates={mapErrorStates}
+              selectedDistrict={selectedRow?.district ?? null}
+              onDistrictClick={toggleSelected}
             />
           ) : (
             <Text>No congressional district {isOutcomeMode ? 'outcome ' : ''}data available</Text>
@@ -544,12 +727,16 @@ export default function DistrictImpactCard({
                   items={topRanked}
                   header={listHeaders.top}
                   formatValue={formatValue}
+                  selectedId={selectedRow?.district}
+                  onSelect={toggleSelected}
                 />
                 {bottomRanked.length > 0 && (
                   <DistrictListColumn
                     items={bottomRanked}
                     header={listHeaders.bottom}
                     formatValue={formatValue}
+                    selectedId={selectedRow?.district}
+                    onSelect={toggleSelected}
                   />
                 )}
               </>
@@ -560,6 +747,8 @@ export default function DistrictImpactCard({
                   gainHeader={signedHeaders.topGain}
                   lossHeader={signedHeaders.topLoss}
                   formatValue={formatValue}
+                  selectedId={selectedRow?.district}
+                  onSelect={toggleSelected}
                 />
                 {bottomRanked.length > 0 && (
                   <DistrictRankColumn
@@ -567,6 +756,8 @@ export default function DistrictImpactCard({
                     gainHeader={signedHeaders.bottomGain}
                     lossHeader={signedHeaders.bottomLoss}
                     formatValue={formatValue}
+                    selectedId={selectedRow?.district}
+                    onSelect={toggleSelected}
                   />
                 )}
               </>
@@ -574,6 +765,13 @@ export default function DistrictImpactCard({
           </div>
         )}
       </div>
+      {selectedRow && (
+        <DistrictDetails
+          row={selectedRow}
+          label={labelLookup.get(selectedRow.district) ?? `District ${selectedRow.district}`}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </Stack>
   );
 }

@@ -353,15 +353,14 @@ export default function ReportView({
                   'economy',
                   <Stack style={{ gap: spacing.md }}>
                     {output ? <EconomicImpactCharts output={output} /> : economyPending}
-                    {/* The budget over several years, on the reader's request. */}
-                    {reformPolicyId && baselinePolicyId && (
+                    {/* The budget over the report's years, when it scores more than one. */}
+                    {budgetWindow && reformPolicyId && baselinePolicyId && (
                       <BudgetWindowCard
                         countryId={countryId}
                         reformPolicyId={reformPolicyId}
                         baselinePolicyId={baselinePolicyId}
                         region={region}
-                        year={year}
-                        initialWindow={budgetWindow}
+                        window={budgetWindow}
                       />
                     )}
                   </Stack>
@@ -407,6 +406,7 @@ export default function ReportView({
                         region={region}
                         baselinePolicyId={baselinePolicyId}
                         reformPolicyId={reformPolicyId}
+                        reformPaths={provisions.map((provision) => provision.path)}
                       />
                     ) : (
                       <>

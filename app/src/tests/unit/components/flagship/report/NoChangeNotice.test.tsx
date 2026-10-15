@@ -27,7 +27,8 @@ describe('NoChangeNotice', () => {
 
     const notice = screen.getByRole('region', { name: 'No change in this year' });
     expect(notice).toHaveTextContent('This reform changes nothing in 2026');
-    expect(notice).toHaveTextContent('The likely reason:');
+    expect(notice).not.toHaveTextContent('reason');
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
     expect(notice).toHaveTextContent('changes from 2028, after this 2026 report.');
     // A dated reason stands alone: no guesswork beside it.
     expect(notice).not.toHaveTextContent('not in effect');
@@ -100,7 +101,9 @@ describe('NoChangeNotice', () => {
     render(<NoChangeNotice year="2026" provisions={[provision({ value: 2000 })]} />);
 
     const notice = screen.getByRole('region', { name: 'No change in this year' });
-    expect(notice).toHaveTextContent('Every result matches current law. The likely reason:');
+    expect(notice).toHaveTextContent(
+      'Every result matches current law. A program you changed is not in effect'
+    );
     expect(notice).not.toHaveTextContent('same values as');
   });
 });

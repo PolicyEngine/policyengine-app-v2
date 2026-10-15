@@ -49,6 +49,27 @@ function ReportStatus({ status }: { status?: string }) {
 }
 
 /**
+ * A saved reform's latest report on its library card: done, failed, or
+ * still running (any other state the API's record is in).
+ */
+export function LatestReportBadge({
+  countryId,
+  apiReportId,
+}: {
+  countryId: CountryId;
+  apiReportId: string;
+}) {
+  const api = useApiReport(countryId, apiReportId);
+  if (!api) {
+    return null;
+  }
+  if (api.status === 'complete' || api.status === 'error') {
+    return <ReportStatus status={api.status} />;
+  }
+  return <Badge variant="outline">In progress</Badge>;
+}
+
+/**
  * What a report compared the reform with, when not current law: the same
  * reform against a saved reform is another report, and reads as one. The
  * run's details name it in the session that ran it; otherwise an account

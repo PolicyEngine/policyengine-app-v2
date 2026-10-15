@@ -2,7 +2,17 @@ import { useEffect, useState } from 'react';
 import { IconChartBar, IconPencil, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { Button, Input, Stack, Text } from '@/components/ui';
+import {
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Stack,
+  Text,
+} from '@/components/ui';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -15,7 +25,7 @@ import {
   provisionIntervals,
   sameParameterValue,
 } from '@/libs/draftReform';
-import { periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
+import { isUntitledReform, periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -27,6 +37,9 @@ import PopulationPicker from './reform/PopulationPicker';
 import NumberInput from './reform/ValueInput';
 import SidePanel from './SidePanel';
 import ValueInput from './ValueInput';
+
+/** Years a recompute can score: the report's year alone, or a common scoring window. */
+const WINDOW_CHOICES = [1, 3, 5, 10];
 
 interface ReportAdjustPanelProps {
   /** Title of the report being adjusted; the recomputed one appends "(adjusted)". */
@@ -61,6 +74,11 @@ interface ReportAdjustPanelProps {
  * link's provisions can arrive after the results, and the values and
  * name it edits must be theirs, not those of the empty reform before.
  */
+/** "2026 only", or "2026–2035 · 10 years". */
+function yearsText(start: number, size: number): string {
+  return size > 1 ? `${start}–${start + size - 1} · ${size} years` : `${start} only`;
+}
+
 export default function ReportAdjustPanel(props: ReportAdjustPanelProps) {
   const reform = JSON.stringify([
     props.title,
@@ -133,6 +151,12 @@ function AdjustPanel({
   const [name, setName] = useState(title);
   const renamed = name.trim() !== '' && name.trim() !== title.trim();
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  // How many years a recompute scores, from the report's year: the report's own to start.
+  const reportWindow = budgetWindow?.windowSize ?? 1;
+  const [windowYears, setWindowYears] = useState(reportWindow);
+  const windowChoices = Array.from(new Set([...WINDOW_CHOICES, reportWindow])).sort(
+    (a, b) => a - b
+  );
 
   const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const active = provisions.filter((provision) => !removed.has(provision.path));
@@ -140,6 +164,7 @@ function AdjustPanel({
     removed.size > 0 ||
     renamed ||
     population !== reportRegion ||
+    windowYears !== reportWindow ||
     provisions.some((provision) =>
       periodsOf(provision) ? periodChanged(provision) : values[provision.path] !== provision.value
     );
@@ -151,6 +176,7 @@ function AdjustPanel({
 
   // The year a recompute simulates; the current year when the report has none.
   const runYear = year ? Number(year) : undefined;
+  const windowStart = budgetWindow?.startYear ?? runYear ?? Number(CURRENT_YEAR);
 
   /**
    * The provisions as the panel has them. A value edited here holds from
@@ -222,11 +248,11 @@ function AdjustPanel({
   const editInBuild = () => {
     const label = name.trim() || title;
     loadProvisionsIntoDraft(countryId, adjustedProvisions(), {
-      label: label === 'Draft reform' ? '' : label,
+      label: isUntitledReform(label) ? '' : label,
       year: runYear,
       region: population,
       baselineReformId: baseline?.reformId,
-      windowYears: budgetWindow?.windowSize,
+      windowYears: windowYears > 1 ? windowYears : undefined,
     });
     nav.push(`/${countryId}/build`);
   };
@@ -247,7 +273,16 @@ function AdjustPanel({
       // the same values over the same dates, otherwise save this one.
       const match = findMatchingReform(await store.findMine(countryId), parameters);
 
-      const label = renamed ? name.trim() : `${title} (adjusted)`;
+      // Only more or fewer years: the same reform, under its own name.
+      const onlyYears =
+        removed.size === 0 &&
+        population === reportRegion &&
+        provisions.every((provision) =>
+          periodsOf(provision)
+            ? !periodChanged(provision)
+            : sameParameterValue(values[provision.path], provision.value)
+        );
+      const label = renamed ? name.trim() : onlyYears ? title : `${title} (adjusted)`;
       let reformId: string;
       let runTitle: string;
       if (match) {
@@ -269,8 +304,8 @@ function AdjustPanel({
       await runReport.run(runTitle, sourceNote, adjusted, reformId, runYear, {
         region: population,
         baseline,
-        // The same years as the report: a window's report recomputes as one.
-        windowYears: budgetWindow?.windowSize,
+        // The years chosen here; the report's own unless changed.
+        windowYears: windowYears > 1 ? windowYears : undefined,
       });
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
@@ -309,13 +344,30 @@ function AdjustPanel({
           }}
           regions={regions}
         />
-        {budgetWindow && budgetWindow.windowSize > 1 && (
-          <Text
-            style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+        <label style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            Years
+          </span>
+          <Select
+            value={String(windowYears)}
+            onValueChange={(next) => setWindowYears(Number(next))}
           >
-            Years {budgetWindow.startYear}–{budgetWindow.startYear + budgetWindow.windowSize - 1}
-          </Text>
-        )}
+            <SelectTrigger
+              aria-label="Years"
+              className="tw:w-full tw:cursor-pointer tw:bg-white tw:hover:border-primary-500"
+              style={{ fontFamily: typography.fontFamily.primary }}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" align="start">
+              {windowChoices.map((size) => (
+                <SelectItem key={size} value={String(size)} className="tw:cursor-pointer">
+                  {yearsText(windowStart, size)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
       </div>
       {loading ? (
         <div style={{ padding: `0 ${spacing.lg}` }}>

@@ -1,7 +1,8 @@
-import { render, screen, userEvent } from '@test-utils';
+import { act, render, screen, userEvent, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DistrictChoroplethMap } from '@/components/flagship/report/DistrictChoroplethMap';
 import DistrictImpactCard, {
+  districtDetailFigures,
   formatPercentShare,
   percentDecimals,
   rankedEnds,
@@ -160,5 +161,113 @@ describe('district percentages and rankings', () => {
 
     expect(top.map((d) => d.value)).toEqual([12, 11, 10, 9, 8]);
     expect(bottom.map((d) => d.value)).toEqual([1, 2, 3, 4, 5]);
+  });
+});
+
+describe('DistrictImpactCard district details', () => {
+  beforeEach(() => {
+    mockUseCongressionalDistrictData.mockReturnValue({
+      labelLookup: MARYLAND_DISTRICT_LABELS,
+      stateCode: 'MD',
+      startFetch: vi.fn(),
+    });
+  });
+
+  /** The props the card last handed to the map. */
+  const mapProps = () => vi.mocked(DistrictChoroplethMap).mock.calls.at(-1)?.[0];
+
+  test('given a click on a district in the map then its details show and it is outlined', () => {
+    // Given
+    render(<DistrictImpactCard districts={MARYLAND_4327_DISTRICTS} />);
+
+    // When
+    act(() => mapProps()?.onDistrictClick?.('MD-03'));
+
+    // Then
+    const details = screen.getByRole('region', {
+      name: "Maryland's 3rd congressional district details",
+    });
+    expect(within(details).getByText('MD-03')).toBeInTheDocument();
+    expect(within(details).getByText('$11')).toBeInTheDocument();
+    expect(within(details).getByText('0.0100%')).toBeInTheDocument();
+    expect(within(details).getByText('2.4%')).toBeInTheDocument();
+    expect(within(details).getByText('0.0%')).toBeInTheDocument();
+    expect(mapProps()?.selectedDistrict).toBe('MD-03');
+  });
+
+  test('given a click on a ranked district then its details show, and the close button clears them', async () => {
+    // Given
+    render(<DistrictImpactCard districts={MARYLAND_4327_DISTRICTS} />);
+    const row = screen.getByRole('button', {
+      name: "Show details for Maryland's 3rd",
+    });
+
+    // When
+    await userEvent.click(row);
+
+    // Then
+    expect(row).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('region', { name: "Maryland's 3rd congressional district details" })
+    ).toBeInTheDocument();
+
+    // When
+    await userEvent.click(screen.getByRole('button', { name: 'Close district details' }));
+
+    // Then
+    expect(screen.queryByRole('region', { name: /details/ })).not.toBeInTheDocument();
+    expect(mapProps()?.selectedDistrict).toBeNull();
+  });
+
+  test('given a selected district then Escape clears it', async () => {
+    // Given
+    render(<DistrictImpactCard districts={MARYLAND_4327_DISTRICTS} />);
+    act(() => mapProps()?.onDistrictClick?.('MD-05'));
+    expect(screen.getByRole('region', { name: /details/ })).toBeInTheDocument();
+
+    // When
+    await userEvent.keyboard('{Escape}');
+
+    // Then
+    expect(screen.queryByRole('region', { name: /details/ })).not.toBeInTheDocument();
+  });
+
+  test('given a click on the selected district again then its details close', () => {
+    // Given
+    render(<DistrictImpactCard districts={MARYLAND_4327_DISTRICTS} />);
+    act(() => mapProps()?.onDistrictClick?.('MD-05'));
+
+    // When
+    act(() => mapProps()?.onDistrictClick?.('MD-05'));
+
+    // Then
+    expect(screen.queryByRole('region', { name: /details/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('districtDetailFigures', () => {
+  test('given every field then each figure is listed', () => {
+    expect(
+      districtDetailFigures({
+        district: 'CA-52',
+        average_household_income_change: -612.88,
+        relative_household_income_change: -0.041,
+        winner_percentage: 0.12,
+        loser_percentage: 0.53,
+        no_change_percentage: 0.35,
+      })
+    ).toEqual([
+      { label: 'Average household income change', value: '-$613' },
+      { label: 'Relative household income change', value: '-4.1%' },
+      { label: 'People gaining income', value: '12.0%' },
+      { label: 'People losing income', value: '53.0%' },
+      { label: 'People with no change', value: '35.0%' },
+    ]);
+  });
+
+  test('given a stored district with only its average change then only that is listed', () => {
+    expect(
+      districtDetailFigures({ district: 'WY-01', average_household_income_change: -0.2 })
+    ).toEqual([{ label: 'Average household income change', value: '$0' }]);
   });
 });

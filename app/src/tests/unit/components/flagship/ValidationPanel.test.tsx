@@ -279,7 +279,8 @@ describe('BaselineComparisons', () => {
     );
 
     const table = screen.getByRole('table', { name: 'Baseline comparisons' });
-    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    // One row per claim; a claim's notes sit on a line of their own under it.
+    expect(within(table).getAllByRole('rowheader')).toHaveLength(2);
     expect(
       within(table).getByRole('button', { name: TREASURY_CDCC_CLAIM.name })
     ).toBeInTheDocument();

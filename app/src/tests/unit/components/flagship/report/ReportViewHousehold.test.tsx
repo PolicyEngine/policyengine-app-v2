@@ -90,7 +90,7 @@ describe('ReportView household', () => {
     });
 
     await user.click(screen.getByRole('tab', { name: 'Household' }));
-    expect(screen.getByTestId('state')).toHaveTextContent('NY');
+    await user.click(screen.getByRole('button', { name: 'Add a household' }));
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     await waitFor(() => expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2));
@@ -99,7 +99,7 @@ describe('ReportView household', () => {
       REFORM_POLICY_ID,
     ]);
     expect(await screen.findByRole('region', { name: 'Household impact' })).toHaveTextContent(
-      `New York · ${HOUSEHOLD_YEAR}`
+      `Single · no children · ${HOUSEHOLD_YEAR}`
     );
   });
 
@@ -114,7 +114,7 @@ describe('ReportView household', () => {
     expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
   });
 
-  test('given new policies after a run then the household waits for Calculate again', async () => {
+  test('given new policies after a run then the household tab starts again', async () => {
     const user = userEvent.setup();
     const policies = {
       baselinePolicyId: CUSTOM_BASELINE_POLICY_ID,
@@ -123,13 +123,14 @@ describe('ReportView household', () => {
     const { rerenderWith } = renderReport(policies);
 
     await user.click(screen.getByRole('tab', { name: 'Household' }));
+    await user.click(screen.getByRole('button', { name: 'Add a household' }));
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
     expect(await screen.findByRole('region', { name: 'Household impact' })).toBeInTheDocument();
 
     rerenderWith({ ...policies, reformPolicyId: OTHER_REFORM_POLICY_ID });
 
     expect(screen.queryByRole('region', { name: 'Household impact' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Calculate' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add a household' })).toBeInTheDocument();
     expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2);
   });
 });
