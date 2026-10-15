@@ -167,6 +167,21 @@ describe('BillReportPage', () => {
     expect(budget).not.toHaveTextContent(/state revenue/i);
   });
 
+  test('given a state bill then economic impacts word its stored budget as state revenue', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([
+      { ...TRACKED_BILL, id: 'ut-hb106', jurisdiction: 'Utah', state: 'UT' },
+    ]);
+    renderReport('ut-hb106');
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    const budget = within(screen.getByRole('tabpanel')).getByRole('region', {
+      name: 'Budgetary impact',
+    });
+    expect(budget).toHaveTextContent('Annual state revenue loss');
+  });
+
   test('given the overview then summary, date and bill text show; the verdict is in Validation', async () => {
     const user = userEvent.setup();
     renderReport();
