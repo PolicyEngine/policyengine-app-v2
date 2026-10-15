@@ -1,7 +1,26 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { isFlagshipShellEnabled, setFlagshipShellEnabled } from '@/libs/featureFlags';
 
 describe('featureFlags', () => {
+  test('given no flag then the flagship shell is the default', () => {
+    expect(isFlagshipShellEnabled()).toBe(true);
+  });
+
+  test('given the flag set to false then the v2 app is back', () => {
+    vi.stubEnv('VITE_FLAGSHIP_SHELL', 'false');
+    expect(isFlagshipShellEnabled()).toBe(false);
+    vi.unstubAllEnvs();
+    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL', 'false');
+    expect(isFlagshipShellEnabled()).toBe(false);
+  });
+});
+
+// The localStorage override only matters on a build that turns the shell off.
+describe('featureFlags override on a flag-off build', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_FLAGSHIP_SHELL', 'false');
+  });
+
   afterEach(() => {
     setFlagshipShellEnabled(false);
     vi.unstubAllEnvs();
@@ -10,6 +29,7 @@ describe('featureFlags', () => {
   test('given a deployment that does not allow the override then localStorage cannot enable the shell', () => {
     // Neutralize the dev default so this behaves like a production build.
     vi.stubEnv('VITE_FLAGSHIP_OVERRIDE', '');
+    vi.stubEnv('VITE_FLAGSHIP_SHELL', 'false');
     setFlagshipShellEnabled(true);
 
     expect(isFlagshipShellEnabled()).toBe(false);
@@ -17,6 +37,7 @@ describe('featureFlags', () => {
 
   test('given a deployment that allows the override then localStorage enables the shell', () => {
     vi.stubEnv('VITE_FLAGSHIP_OVERRIDE', 'allow');
+    vi.stubEnv('VITE_FLAGSHIP_SHELL', 'false');
     setFlagshipShellEnabled(true);
 
     expect(isFlagshipShellEnabled()).toBe(true);

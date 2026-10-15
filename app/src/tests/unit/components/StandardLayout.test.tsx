@@ -15,9 +15,13 @@ function renderFlagshipShell() {
 describe('StandardLayout', () => {
   afterEach(() => {
     setFlagshipShellEnabled(false);
+    vi.unstubAllEnvs();
   });
 
   test('given component renders then main content can use the full mobile width', () => {
+    // Given the v2 app (a build with the flag set to false)
+    vi.stubEnv('VITE_FLAGSHIP_SHELL', 'false');
+
     // When
     const { container } = renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'us');
 
@@ -29,6 +33,9 @@ describe('StandardLayout', () => {
   });
 
   test('given the flagship flag is off then the legacy sidebar renders and the flagship nav does not', () => {
+    // Given
+    vi.stubEnv('VITE_FLAGSHIP_SHELL', 'false');
+
     // When
     renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'us');
 

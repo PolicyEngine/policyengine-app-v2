@@ -668,9 +668,9 @@ describe('degraded mode (no database configured)', () => {
 });
 
 describe('flag-off deployments (production leak gate)', () => {
-  it('given the flagship flag is off then every handler 404s before touching the db', async () => {
+  it('given the flagship flag set to false then every handler 404s before touching the db', async () => {
     const previous = process.env.NEXT_PUBLIC_FLAGSHIP_SHELL;
-    process.env.NEXT_PUBLIC_FLAGSHIP_SHELL = '';
+    process.env.NEXT_PUBLIC_FLAGSHIP_SHELL = 'false';
 
     try {
       expect((await createReform(postRequest(VALID_PAYLOAD))).status).toBe(404);
