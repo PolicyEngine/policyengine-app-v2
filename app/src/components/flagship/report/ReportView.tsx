@@ -108,6 +108,8 @@ export interface ReportViewProps {
   districtsPending?: ReactNode;
   /** Content above the overview's section cards, e.g. a bill's summary. */
   overviewLead?: ReactNode;
+  /** Above the section tabs: which year the results show, for a budget window. */
+  yearSwitcher?: ReactNode;
   /** Content below the overview's section cards, e.g. data provenance. */
   overviewFooter?: ReactNode;
   calibration: CalibrationMatches | null | undefined;
@@ -151,6 +153,7 @@ export default function ReportView({
   economyPending = pending,
   districtsPending = pending,
   overviewLead,
+  yearSwitcher,
   overviewFooter,
   calibration,
   calibrationPin,
@@ -270,6 +273,8 @@ export default function ReportView({
                 )}
               </Stack>
             </header>
+
+            {yearSwitcher}
 
             <Tabs value={activeTab} onValueChange={selectTab} style={{ gap: spacing.xl }}>
               <TabsList
