@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import AddParameterBar from '@/components/flagship/reform/AddParameterBar';
 import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
@@ -7,7 +8,12 @@ import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Title } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
+import {
+  addDraftProvision,
+  provisionFromSearchEntry,
+  resumeDraftFor,
+  useDraftReform,
+} from '@/libs/draftReform';
 import { focusProvision } from '@/libs/flagship/draftEditorFocus';
 import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
@@ -27,6 +33,11 @@ export default function BuildPage() {
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draft = useDraftReform();
+  // Each country keeps its own draft: one set aside while another
+  // country's was built comes back on its own country's page.
+  useEffect(() => {
+    resumeDraftFor(countryId);
+  }, [countryId]);
   const current = draft && draft.countryId === countryId ? draft : null;
   // Until the index is in, the add bar has nothing to search and the
   // table can't group breakdowns (their members would show apart, then

@@ -6,6 +6,7 @@ import {
   addDraftProvision,
   clearDraftReform,
   getDraftReform,
+  setDraftYear,
   startDraftReform,
   useDraftReform,
 } from '@/libs/draftReform';
@@ -18,6 +19,7 @@ import {
   EXEMPTION_PATH,
   JOINT_PATH,
   LIST_PATH,
+  NO_LIMIT_PATH,
   PHASE_IN_RATE_PATH,
   seedDeductionMetadata,
   SINGLE_PATH,
@@ -29,6 +31,14 @@ const CTC = {
   unit: 'currency-USD',
   baselineValue: 2200,
   value: 2200,
+};
+/** Current law grows it: $5,000 in 2026, $5,100 in 2027. */
+const EXEMPTION = {
+  path: EXEMPTION_PATH,
+  breadcrumb: 'IRS → Income → Exemption → Amount',
+  unit: 'currency-USD',
+  baselineValue: 5000,
+  value: 5000,
 };
 const SINGLE = {
   path: SINGLE_PATH,
@@ -73,6 +83,34 @@ describe('DraftTable', () => {
       { startDate: '2026-01-01', endDate: FOREVER, value: 3000 },
     ]);
     expect(screen.getByText('from 2026')).toBeInTheDocument();
+  });
+
+  test('given a later report year then the row reads and edits from current law in that year', () => {
+    // Added while 2026 current law ($5,000) applied, then the report moves to 2027.
+    addDraftProvision('us', EXEMPTION);
+    setDraftYear(2027);
+    render(<TableHarness />);
+
+    expect(rowValue(EXEMPTION_PATH).value).toBe('5100');
+    expect(screen.getByTitle('$5,100')).toHaveTextContent('$5,100');
+    expect(screen.queryByTitle('$5,000')).not.toBeInTheDocument();
+
+    // Raising it by $200 raises it against 2027 current law.
+    fireEvent.change(rowValue(EXEMPTION_PATH), { target: { value: '5300' } });
+    expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
+      { startDate: '2027-01-01', endDate: FOREVER, value: 5300 },
+    ]);
+  });
+
+  test('given a single value from 2026 and a later report year then the row reads it as its summary', () => {
+    // As Ask or a saved reform adds it: one value, no dates, from the current year on.
+    addDraftProvision('us', { ...EXEMPTION, value: 6000 });
+    setDraftYear(2027);
+    render(<TableHarness />);
+
+    // The box would edit from 2027 and split the change in two; the summary opens the editor.
+    expect(rowValue(EXEMPTION_PATH)).toBeNull();
+    expect(screen.getByRole('button', { name: '$6,000' })).toBeInTheDocument();
   });
 
   test('given a breakdown member then the row stands for the whole breakdown', () => {
@@ -352,9 +390,11 @@ describe('DraftTable', () => {
       await user.click(screen.getByRole('tab', { name: 'Indexed' }));
       fireEvent.change(cell('Child tax credit base amount, 2026'), { target: { value: '3000' } });
 
+      // CPI-U runs to 2028, a year past the model's: the value grows to then.
       expect(provision(CTC_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 3000 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 3090 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 3090 },
+        { startDate: '2028-01-01', endDate: FOREVER, value: 3180 },
       ]);
       await user.click(screen.getByRole('button', { name: 'Close Base amount' }));
       expect(screen.getByText('from 2026 · CPI-U')).toHaveAttribute(
@@ -373,7 +413,8 @@ describe('DraftTable', () => {
       // Indexing a flat amount is itself the change: 2,200 × 1.03.
       expect(provision(CTC_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 2200 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 2266 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 2266 },
+        { startDate: '2028-01-01', endDate: FOREVER, value: 2332 },
       ]);
       expect(screen.getByLabelText('Child tax credit base amount, 2027')).toHaveTextContent(
         '$2,266'
@@ -429,10 +470,13 @@ describe('DraftTable', () => {
       fireEvent.change(cell('Personal exemption amount, 2026'), { target: { value: '6000' } });
 
       // 6,000 grows as 5,000 → 5,100 does (2%) to 6,120, then rounds down
-      // to $100, the step current law's projected values all land on.
+      // to $100, the step current law's projected values all land on — and
+      // goes on growing to 2029, as far as current law projects it.
       expect(provision(EXEMPTION_PATH)?.intervals).toEqual([
         { startDate: '2026-01-01', endDate: '2026-12-31', value: 6000 },
-        { startDate: '2027-01-01', endDate: FOREVER, value: 6100 },
+        { startDate: '2027-01-01', endDate: '2027-12-31', value: 6100 },
+        { startDate: '2028-01-01', endDate: '2028-12-31', value: 6200 },
+        { startDate: '2029-01-01', endDate: FOREVER, value: 6300 },
       ]);
       await user.click(screen.getByRole('button', { name: 'Edit indexing' }));
       expect(screen.getByRole('combobox', { name: 'Indexing' })).toHaveTextContent(
@@ -656,6 +700,46 @@ describe('DraftTable', () => {
 
     expect(screen.getByText(/can.t be changed here/i)).toBeInTheDocument();
     expect(document.querySelector(`[data-path="${LIST_PATH}"]`)).toBeNull();
+  });
+
+  test('given a parameter current law leaves without a limit then its row sets one in place', () => {
+    addDraftProvision('us', {
+      path: NO_LIMIT_PATH,
+      breadcrumb: 'IRS → Credits → CDCC → Phase-out → Second start',
+      unit: 'currency-USD',
+      baselineValue: 'Infinity',
+      value: 'Infinity',
+    });
+    render(<TableHarness />);
+
+    expect(screen.queryByText(/can.t be changed here/i)).not.toBeInTheDocument();
+    expect(rowValue(NO_LIMIT_PATH)).toHaveAttribute('placeholder', 'No limit');
+    fireEvent.change(rowValue(NO_LIMIT_PATH), { target: { value: '150000' } });
+
+    expect(provision(NO_LIMIT_PATH)?.intervals).toEqual([
+      { startDate: '2026-01-01', endDate: FOREVER, value: 150000 },
+    ]);
+  });
+
+  test('given a parameter without a limit is opened then its details set a limit too', async () => {
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: NO_LIMIT_PATH,
+      breadcrumb: 'IRS → Credits → CDCC → Phase-out → Second start',
+      unit: 'currency-USD',
+      baselineValue: 'Infinity',
+      value: 'Infinity',
+    });
+    render(<TableHarness />);
+
+    await user.click(screen.getByRole('button', { name: /^Open .*second/i }));
+    const box = document.querySelector(`[data-path="${NO_LIMIT_PATH}"] input`) as HTMLInputElement;
+    expect(box).toHaveAttribute('placeholder', 'No limit');
+    fireEvent.change(box, { target: { value: '200000' } });
+
+    expect(provision(NO_LIMIT_PATH)?.intervals).toEqual([
+      { startDate: '2026-01-01', endDate: FOREVER, value: 200000 },
+    ]);
   });
 
   test('given list-valued parameters then search and browse never offer them', () => {

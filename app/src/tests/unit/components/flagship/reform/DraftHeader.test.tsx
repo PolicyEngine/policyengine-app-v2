@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, waitFor, within } from '@test-utils';
+import { act, render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import {
@@ -8,6 +8,7 @@ import {
   getDraftReform,
   loadReformIntoDraft,
   setDraftBaseline,
+  setDraftLabel,
   startDraftReform,
   updateDraftProvisionValue,
   useDraftReform,
@@ -199,18 +200,25 @@ describe('DraftHeader', () => {
       expect(mockRun.mock.calls[0][3]).toBe('rf-new');
     });
 
+    // A saved reform holds what differs from current law: the changed value alone.
+    const SAVED_PARAMETERS = [
+      {
+        name: CHANGED.path,
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: CHANGED.value }],
+      },
+    ];
+
     test('then a saved reform with the same values is reused, not copied', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', CHANGED);
-      const draft = getDraftReform()!;
-      const parameters = draft.provisions.map((provision) => ({
-        name: provision.path,
-        values: provision.intervals ?? [
-          { startDate: '2026-01-01', endDate: '2100-12-31', value: provision.value },
-        ],
-      }));
       mockFindMine.mockResolvedValue([
-        { id: 'rf-saved', countryId: 'us', label: 'Mine', parameters, provenance: {} },
+        {
+          id: 'rf-saved',
+          countryId: 'us',
+          label: 'Mine',
+          parameters: SAVED_PARAMETERS,
+          provenance: {},
+        },
       ]);
       renderHeader();
 
@@ -219,6 +227,69 @@ describe('DraftHeader', () => {
       await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
       expect(mockCreate).not.toHaveBeenCalled();
       expect(mockRun.mock.calls[0][3]).toBe('rf-saved');
+    });
+
+    test('then a saved reform with the same values keeps its own name', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      setDraftLabel('My idea');
+      mockFindMine.mockResolvedValue([
+        {
+          id: 'rf-saved',
+          countryId: 'us',
+          label: 'Senate CTC plan',
+          parameters: SAVED_PARAMETERS,
+          provenance: {},
+        },
+      ]);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][3]).toBe('rf-saved');
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    test('then a second run of the same draft updates the reform the first one saved', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+
+      // The run did not open its report (it failed), so the draft stays: change it and run again.
+      act(() => updateDraftProvisionValue(CHANGED.path, 1000));
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(2));
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledWith(
+        'rf-new',
+        expect.objectContaining({
+          parameters: [
+            {
+              name: CHANGED.path,
+              values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 1000 }],
+            },
+          ],
+        })
+      );
+      expect(mockRun.mock.calls[1][3]).toBe('rf-new');
+    });
+
+    test('then the saved reform holds only what the report models', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+      // The child tax credit row was added but left at current law.
+      expect(
+        mockCreate.mock.calls[0][0].parameters.map((parameter: { name: string }) => parameter.name)
+      ).toEqual([CHANGED.path]);
     });
 
     test('then a failed save still runs the report, unlinked', async () => {
@@ -484,9 +555,17 @@ describe('DraftHeader', () => {
     expect(getDraftReform()?.label).toBe('CTC expansion');
   });
 
+  test('given nothing differs from current law then a new reform has nothing to save', () => {
+    renderHeader();
+
+    // Saved, it would be a reform that sets nothing.
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
   test('given save then the reform is created with its provenance and the draft clears', async () => {
     const user = userEvent.setup();
     mockCreate.mockResolvedValue({ id: 'rf-1' });
+    updateDraftProvisionValue('gov.irs.credits.ctc.amount.base', 2500);
     renderHeader();
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -497,6 +576,28 @@ describe('DraftHeader', () => {
       ref: 'ask-keyword-v0',
     });
     await waitFor(() => expect(getDraftReform()).toBeNull());
+  });
+
+  test('given save then a parameter left at current law is not saved as a freeze', async () => {
+    const user = userEvent.setup();
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 900,
+    });
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledTimes(1));
+    expect(mockCreate.mock.calls[0][0].parameters).toEqual([
+      {
+        name: 'gov.irs.credits.eitc.max',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 900 }],
+      },
+    ]);
   });
 
   test('given discard then the draft clears without saving', async () => {

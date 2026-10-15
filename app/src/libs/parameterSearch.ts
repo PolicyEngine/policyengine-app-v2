@@ -33,6 +33,13 @@ export interface ParameterSearchEntry {
    * state (gov.local.xx.*)
    */
   stateCode: string | null;
+  /**
+   * For a bracket member (…ctc.amount.base[0].amount), the label of the
+   * schedule it belongs to ("Child Tax Credit amount"). The breadcrumb
+   * skips the schedule's own node, and the member's label alone says
+   * only "amount", so search reads this alongside it.
+   */
+  scheduleLabel?: string | null;
 }
 
 const STATE_PATH_PATTERN = /^gov\.(?:contrib\.)?(?:states|local)\.([a-z]{2})\./;
@@ -388,6 +395,14 @@ function isSearchableParameter(param: any): param is ParameterMetadata {
   );
 }
 
+/** A bracket member's schedule: `…amount.base[0].amount` → `…amount.base`. */
+const BRACKET_MEMBER_PATTERN = /^(.+)\[\d+\]\.[^.[\]]+$/;
+
+function scheduleLabelOf(path: string, parameters: ParameterMetadataCollection): string | null {
+  const schedule = BRACKET_MEMBER_PATTERN.exec(path)?.[1];
+  return (schedule && parameters[schedule]?.label) || null;
+}
+
 export function buildParameterSearchEntries(
   parameters: ParameterMetadataCollection
 ): ParameterSearchEntry[] {
@@ -403,8 +418,14 @@ export function buildParameterSearchEntries(
         description: param.description ?? null,
         isContrib: param.parameter.startsWith('gov.contrib.'),
         stateCode: STATE_PATH_PATTERN.exec(param.parameter)?.[1] ?? null,
+        scheduleLabel: scheduleLabelOf(param.parameter, parameters),
       };
     });
+}
+
+/** What search reads as an entry's label: a bracket member's schedule, then its own. */
+function searchLabel(entry: ParameterSearchEntry): string {
+  return entry.scheduleLabel ? `${entry.scheduleLabel} ${entry.label}` : entry.label;
 }
 
 const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
@@ -412,8 +433,9 @@ const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
     { name: 'breadcrumb', weight: 0.55 },
     // Leaf labels are often the most information-dense part of the
     // hierarchy, so they get their own strong weight beyond appearing
-    // at the end of the breadcrumb.
-    { name: 'label', weight: 0.3 },
+    // at the end of the breadcrumb. A bracket member's label leads with
+    // its schedule's, which names what "amount" is the amount of.
+    { name: 'label', weight: 0.3, getFn: searchLabel },
     { name: 'path', weight: 0.15 },
   ],
   threshold: 0.35,
@@ -463,7 +485,7 @@ export function createParameterSearchIndex(
     // The canonical phrases go in the haystack too, so an entry spelled
     // one way is found by a query normalized the other way.
     haystacks: entries.map((entry) =>
-      `${entry.breadcrumb} ${entry.label} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)}`.toLowerCase()
+      `${entry.breadcrumb} ${searchLabel(entry)} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)}`.toLowerCase()
     ),
     get fuse() {
       fuseInstance ??= new Fuse(entries, FUSE_OPTIONS);

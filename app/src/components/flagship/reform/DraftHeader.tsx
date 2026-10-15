@@ -28,6 +28,7 @@ import {
   setDraftBaseline,
   setDraftLabel,
   setDraftPopulation,
+  setDraftSavedAs,
   setDraftWindowYears,
   setDraftYear,
 } from '@/libs/draftReform';
@@ -261,6 +262,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
     const values = parameters?.[path]?.values;
     return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
   };
+  // Saving keeps what the run models: the values that differ from current law.
+  const currentLawValues = (path: string) => parameters?.[path]?.values;
   const year = draftYear(draft);
   const yearOptions = taxYears.length > 0 ? taxYears.map((t) => Number(t.value)) : [year];
   // The budget's span from the report's year: the year alone, or a window
@@ -276,13 +279,15 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   // A run keeps its reform: it saves the draft to Your reforms (or
   // updates the saved reform it edits, or reuses a saved one that sets
   // the same values), so the report links to it and both can be found
-  // again after the tab closes. Best-effort: the run goes ahead unsaved
-  // if the store fails.
+  // again after the tab closes. A reused reform stays as it is, its name
+  // too; a new one becomes the reform the draft edits, so running again
+  // after a failed run updates it rather than saving another. Best-effort:
+  // the run goes ahead unsaved if the store fails.
   const [savingForRun, setSavingForRun] = useState(false);
   const saveForRun = async (): Promise<string | undefined> => {
     try {
       const store = getReformStore();
-      const payload = draftToReform(draft);
+      const payload = draftToReform(draft, currentLawValues);
       if (draft.editingReformId) {
         await store.update(draft.editingReformId, {
           label: payload.label,
@@ -293,12 +298,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
       }
       const match = findMatchingReform(await store.findMine(draft.countryId), payload.parameters);
       if (match?.id) {
-        if (payload.label && payload.label !== match.label) {
-          await store.update(match.id, { label: payload.label });
-        }
         return match.id;
       }
-      return (await store.create(payload)).id;
+      const created = (await store.create(payload)).id;
+      if (created) {
+        setDraftSavedAs(created, draft.startedAt);
+      }
+      return created;
     } catch {
       return undefined;
     } finally {
@@ -328,7 +334,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const store = getReformStore();
-      const payload = draftToReform(draft);
+      const payload = draftToReform(draft, currentLawValues);
       if (draft.editingReformId) {
         return store.update(draft.editingReformId, {
           label: payload.label,
@@ -351,6 +357,10 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   const adjusted = draft.provisions.filter((provision) =>
     provisionAdjusts(provision, parameters?.[provision.path]?.values)
   );
+  // Saving keeps only those values, so a new reform that changes nothing
+  // has nothing to save. A saved reform being edited can still go back to
+  // current law.
+  const nothingToSave = empty || (!draft.editingReformId && adjusted.length === 0);
 
   return (
     <section
@@ -414,7 +424,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           <Button
             variant="outline"
             onClick={() => saveMutation.mutate()}
-            disabled={empty || saveMutation.isPending}
+            disabled={nothingToSave || saveMutation.isPending}
           >
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
