@@ -47,6 +47,37 @@ describe('CalibrationMatchSection', () => {
     }
   });
 
+  test('given nothing measures the change but related targets do then they show as related', () => {
+    render(
+      <CalibrationMatchSection
+        matches={{
+          ...mockCalibrationMatches,
+          geography: 'VT',
+          matches: [],
+          related: mockCalibrationMatches.matches.slice(0, 1),
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText(/No calibration target measures the programs this reform changes/)
+    ).toHaveTextContent('Related targets in VT');
+    expect(screen.getByRole('table', { name: 'Related calibration targets' })).toBeInTheDocument();
+  });
+
+  test('given direct matches then related targets do not show', () => {
+    render(
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, related: mockCalibrationMatches.matches }}
+      />
+    );
+
+    expect(screen.getByRole('table', { name: 'Calibration targets' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('table', { name: 'Related calibration targets' })
+    ).not.toBeInTheDocument();
+  });
+
   test('shows each target with its period, values, gap and source link', () => {
     render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
     // One table, so every variable's numbers line up in the same columns.

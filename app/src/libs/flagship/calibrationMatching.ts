@@ -73,7 +73,17 @@ export interface CalibrationMatches {
   /** Variables the reform reaches, calibrated or not. */
   reachedCount: number;
   matches: CalibrationVariableMatch[];
+  /**
+   * Targets in the report's geography that the change reaches through the
+   * model but that do not measure a program it changes (federal income tax
+   * through a state's SALT deduction), nearest first. Context when nothing
+   * measures the change itself.
+   */
+  related?: CalibrationVariableMatch[];
 }
+
+/** How many related groups show when nothing measures the change directly. */
+const RELATED_LIMIT = 4;
 
 export const CALIBRATION_DASHBOARD_URL =
   'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets';
@@ -342,11 +352,17 @@ export async function calibrationMatchesForPaths(
     readers: Object.fromEntries(paths.map((path) => [path, readersOfPath(path, map)])),
     region: geography === 'US' ? 'us' : `state/${geography.toLowerCase()}`,
   };
+  // Every target the change reaches in this geography; the ones measuring
+  // a program it changes lead, the rest are context.
+  const all = summarizeMatches(reached, fetched.rows);
+  const relevant = relevantCalibrationMatches(all, reform);
+  const direct = new Set(relevant.map((match) => match.variable));
   return {
     releaseId: fetched.releaseId,
     geography,
     modelVersion: map.model.version,
     reachedCount: reached.length,
-    matches: relevantCalibrationMatches(summarizeMatches(reached, fetched.rows), reform),
+    matches: relevant,
+    related: all.filter((match) => !direct.has(match.variable)).slice(0, RELATED_LIMIT),
   };
 }

@@ -211,7 +211,9 @@ export function CalibrationMatchSection({
   if (matches === undefined) {
     return card(<ValidationLoading label="Checking calibration targets" />);
   }
-  if (matches.matches.length === 0) {
+  const geographyName = matches.geography === 'US' ? 'the US' : matches.geography;
+  const related = matches.matches.length === 0 ? (matches.related ?? []) : [];
+  if (matches.matches.length === 0 && related.length === 0) {
     // Silence would read as "fine"; loose matches would read as evidence.
     return card(
       <ValidationNote>
@@ -219,58 +221,68 @@ export function CalibrationMatchSection({
       </ValidationNote>
     );
   }
+  const table = (label: string, list: typeof matches.matches) => (
+    <EvidenceTable label={label} columns={CALIBRATION_COLUMNS} grouped>
+      {list.map((match) => {
+        const sources = [
+          ...new Set(match.targets.map((target) => target.sourceLabel ?? target.source)),
+        ].join(', ');
+        const group = calibrationVariableLabel(match.variable, variables?.[match.variable]?.label);
+        return (
+          <tbody key={match.variable}>
+            <tr style={rowStyle}>
+              <th
+                scope="rowgroup"
+                colSpan={CALIBRATION_COLUMNS.length}
+                style={{ ...labelCellStyle, paddingBottom: 0 }}
+              >
+                <span style={{ fontWeight: typography.fontWeight.semibold }}>{group}</span>
+                <CellNote>
+                  <span>
+                    {sources} · {matches.geography}
+                  </span>{' '}
+                  ·{' '}
+                  <a
+                    href={dashboardTargetsUrl({ source: match.worst.source, level })}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
+                  >
+                    View targets
+                  </a>
+                </CellNote>
+              </th>
+            </tr>
+            {match.targets.map((target) => (
+              <tr key={target.name}>
+                <th scope="row" style={labelCellStyle}>
+                  <TargetDetails target={target} group={group} />
+                </th>
+                <td style={numberCellStyle}>{target.period ?? '—'}</td>
+                <td style={numberCellStyle}>{compactNumber(target.target)}</td>
+                <td style={numberCellStyle}>{compactNumber(target.estimate)}</td>
+                <td style={numberCellStyle}>{gapOf(target)}</td>
+              </tr>
+            ))}
+          </tbody>
+        );
+      })}
+    </EvidenceTable>
+  );
 
   return card(
     <>
-      <EvidenceTable label="Calibration targets" columns={CALIBRATION_COLUMNS} grouped>
-        {matches.matches.map((match) => {
-          const sources = [
-            ...new Set(match.targets.map((target) => target.sourceLabel ?? target.source)),
-          ].join(', ');
-          const group = calibrationVariableLabel(
-            match.variable,
-            variables?.[match.variable]?.label
-          );
-          return (
-            <tbody key={match.variable}>
-              <tr style={rowStyle}>
-                <th
-                  scope="rowgroup"
-                  colSpan={CALIBRATION_COLUMNS.length}
-                  style={{ ...labelCellStyle, paddingBottom: 0 }}
-                >
-                  <span style={{ fontWeight: typography.fontWeight.semibold }}>{group}</span>
-                  <CellNote>
-                    <span>
-                      {sources} · {matches.geography}
-                    </span>{' '}
-                    ·{' '}
-                    <a
-                      href={dashboardTargetsUrl({ source: match.worst.source, level })}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
-                    >
-                      View targets
-                    </a>
-                  </CellNote>
-                </th>
-              </tr>
-              {match.targets.map((target) => (
-                <tr key={target.name}>
-                  <th scope="row" style={labelCellStyle}>
-                    <TargetDetails target={target} group={group} />
-                  </th>
-                  <td style={numberCellStyle}>{target.period ?? '—'}</td>
-                  <td style={numberCellStyle}>{compactNumber(target.target)}</td>
-                  <td style={numberCellStyle}>{compactNumber(target.estimate)}</td>
-                  <td style={numberCellStyle}>{gapOf(target)}</td>
-                </tr>
-              ))}
-            </tbody>
-          );
-        })}
-      </EvidenceTable>
+      {related.length > 0 ? (
+        <>
+          <ValidationNote>
+            No calibration target measures the programs this reform changes. Related targets in{' '}
+            {geographyName}, which the change reaches through the model:
+          </ValidationNote>
+          {table('Related calibration targets', related)}
+        </>
+      ) : (
+        table('Calibration targets', matches.matches)
+      )}
       <details style={detailStyle}>
         <summary style={summaryStyle}>Data release</summary>
         <Text style={detailStyle}>
