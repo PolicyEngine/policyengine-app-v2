@@ -469,7 +469,6 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         >
           {naming ? (
             <input
-               
               autoFocus
               value={draft.label}
               onChange={(event) => setDraftLabel(event.target.value)}
