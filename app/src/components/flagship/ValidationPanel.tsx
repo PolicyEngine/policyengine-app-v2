@@ -163,9 +163,10 @@ export function BillExternalEstimates({
       ? [validation.targetRangeLow, validation.targetRangeHigh].sort((a, b) => a - b)
       : null;
   const noteSource = validation.fiscalNoteSource?.trim();
+  // An empty stored link is no link.
+  const noteUrl = validation.fiscalNoteUrl?.trim() || undefined;
   const noteWithoutEstimate =
-    typeof validation.fiscalNoteEstimate !== 'number' &&
-    (validation.fiscalNoteUrl !== undefined || Boolean(noteSource));
+    typeof validation.fiscalNoteEstimate !== 'number' && Boolean(noteUrl || noteSource);
   return (
     <Stack style={{ gap: spacing.md }}>
       <EvidenceTable label="Estimates for this bill" columns={['Source', 'Estimate', 'Gap']}>
@@ -194,7 +195,7 @@ export function BillExternalEstimates({
           <tr style={rowStyle}>
             <th scope="row" style={labelCellStyle}>
               <span>{fiscalNoteLabel(validation)}</span>
-              {validation.fiscalNoteUrl && <ReadSource href={validation.fiscalNoteUrl} />}
+              {noteUrl && <ReadSource href={noteUrl} />}
             </th>
             <td style={numberCellStyle}>No estimate</td>
             <td style={numberCellStyle}>—</td>
@@ -205,9 +206,7 @@ export function BillExternalEstimates({
             <th scope="row" style={labelCellStyle}>
               <span>Accepted range</span>
               {noteWithoutEstimate && noteSource && <CellNote>{noteSource}</CellNote>}
-              {noteWithoutEstimate && validation.fiscalNoteUrl && (
-                <ReadSource href={validation.fiscalNoteUrl} />
-              )}
+              {noteWithoutEstimate && noteUrl && <ReadSource href={noteUrl} />}
             </th>
             <td style={numberCellStyle}>
               {compactMoney(range[0])} to {compactMoney(range[1])}
