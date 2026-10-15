@@ -97,3 +97,12 @@ export function summarizeIntervals(
     when: `${intervals.length} periods from ${startLabel(first.startDate)}`,
   };
 }
+
+/** What an unnamed reform, and its report, is called. */
+export const UNTITLED_REFORM = 'Untitled reform';
+
+/** Whether a reform's name is one the app gave it, not the user ("Draft reform" before). */
+export function isUntitledReform(name: string | null | undefined): boolean {
+  const trimmed = (name ?? '').trim();
+  return trimmed === '' || trimmed === UNTITLED_REFORM || trimmed === 'Draft reform';
+}

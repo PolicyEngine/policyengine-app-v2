@@ -188,6 +188,38 @@ describe('DraftHeader', () => {
       value: 900,
     };
 
+    test('given no name then it runs as Untitled reform, and a quick box names it', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      expect(
+        screen.getByText('No name yet. The report will be called “Untitled reform”.')
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Name it' }));
+      const box = screen.getAllByRole('textbox', { name: 'Reform name' }).at(-1)!;
+      await user.type(box, 'Bigger EITC{Enter}');
+
+      expect(getDraftReform()?.label).toBe('Bigger EITC');
+      expect(
+        screen.queryByText('No name yet. The report will be called “Untitled reform”.')
+      ).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][0]).toBe('Bigger EITC');
+    });
+
+    test('given no name and a run then the report is Untitled reform', async () => {
+      const user = userEvent.setup();
+      addDraftProvision('us', CHANGED);
+      renderHeader();
+
+      await user.click(screen.getByRole('button', { name: /run 2026 report/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      expect(mockRun.mock.calls[0][0]).toBe('Untitled reform');
+    });
+
     test('then the draft is saved to Your reforms and the report links to it', async () => {
       const user = userEvent.setup();
       addDraftProvision('us', CHANGED);

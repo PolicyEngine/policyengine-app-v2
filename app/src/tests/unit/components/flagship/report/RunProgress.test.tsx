@@ -36,6 +36,22 @@ describe('runStageCaption', () => {
 });
 
 describe('RunProgress', () => {
+  test('given a run started before the page opened then the bar picks up at its age, not 0', () => {
+    // Started two minutes ago on another page; a typical run takes four.
+    render(
+      <RunProgress
+        title="Calculating the nationwide results"
+        progress={0}
+        expectedMs={4 * 60_000}
+        startedAt={Date.now() - 2 * 60_000}
+      />
+    );
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('2m');
+    expect(status).toHaveTextContent('50%');
+  });
+
   test('given a run stage then the stage names the line under the title', () => {
     render(
       <RunProgress

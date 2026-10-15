@@ -60,11 +60,24 @@ export default function NoChangeNotice({
     reasons.length === 0 &&
     provisions.some((provision) => sameParameterValue(provision.value, provision.baselineValue));
   const yearText = year || 'the simulated year';
-  const count =
-    reasons.length +
-    (atCurrentLaw ? 1 : 0) +
-    (reasons.length === 0 ? 1 : 0) +
-    (baselineLabel ? 1 : 0);
+  const allReasons = [
+    ...reasons,
+    ...(baselineLabel
+      ? [`The reform sets the same values as ${baselineLabel} in ${yearText}.`]
+      : []),
+    ...(atCurrentLaw ? [`A changed value is at current law in ${yearText}.`] : []),
+    ...(reasons.length === 0
+      ? [
+          `A program you changed is not in effect in ${yearText}: some credits start later or expire.`,
+        ]
+      : []),
+  ];
+  const textStyle = {
+    margin: 0,
+    fontSize: typography.fontSize.sm,
+    lineHeight: 1.5,
+    color: colors.text.secondary,
+  };
 
   return (
     <section
@@ -72,18 +85,18 @@ export default function NoChangeNotice({
       style={{
         display: 'flex',
         gap: spacing.md,
-        padding: spacing.lg,
+        padding: `${spacing.md} ${spacing.lg}`,
         border: `1px solid ${colors.primary[200]}`,
         borderRadius: 12,
         background: colors.primary[50],
       }}
     >
       <IconInfoCircle
-        size={20}
+        size={18}
         aria-hidden
-        style={{ flexShrink: 0, marginTop: 1, color: colors.primary[600] }}
+        style={{ flexShrink: 0, marginTop: 2, color: colors.primary[600] }}
       />
-      <Stack style={{ gap: spacing.sm, minWidth: 0 }}>
+      <Stack style={{ gap: spacing.xs, minWidth: 0 }}>
         <Text
           style={{
             margin: 0,
@@ -94,37 +107,31 @@ export default function NoChangeNotice({
         >
           This reform changes nothing in {yearText}
         </Text>
-        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          Every result matches {baselineLabel || 'current law'}.{' '}
-          {count > 1 ? 'Likely reasons:' : 'The likely reason:'}
-        </Text>
-        <ul
-          style={{
-            margin: 0,
-            paddingLeft: spacing.lg,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: spacing.xs,
-            fontSize: typography.fontSize.sm,
-            color: colors.text.secondary,
-          }}
-        >
-          {reasons.map((reason) => (
-            <li key={reason}>{reason}</li>
-          ))}
-          {baselineLabel && (
-            <li>
-              The reform sets the same values as {baselineLabel} in {yearText}.
-            </li>
-          )}
-          {atCurrentLaw && <li>A changed value is at current law in {yearText}.</li>}
-          {reasons.length === 0 && (
-            <li>
-              A program you changed is not in effect in {yearText}: some credits start later or
-              expire.
-            </li>
-          )}
-        </ul>
+        {allReasons.length === 1 ? (
+          // One reason reads as one sentence, with no list around it.
+          <Text style={textStyle}>
+            Every result matches {baselineLabel || 'current law'}. {allReasons[0]}
+          </Text>
+        ) : (
+          <>
+            <Text style={textStyle}>
+              Every result matches {baselineLabel || 'current law'}. Likely reasons:
+            </Text>
+            <ul
+              style={{
+                ...textStyle,
+                paddingLeft: spacing.lg,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: spacing.xs,
+              }}
+            >
+              {allReasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          </>
+        )}
       </Stack>
     </section>
   );

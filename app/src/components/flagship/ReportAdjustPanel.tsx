@@ -14,7 +14,7 @@ import {
   provisionIntervals,
   sameParameterValue,
 } from '@/libs/draftReform';
-import { periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
+import { isUntitledReform, periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -207,7 +207,7 @@ function AdjustPanel({
   const editInBuild = () => {
     const label = name.trim() || title;
     loadProvisionsIntoDraft(countryId, adjustedProvisions(), {
-      label: label === 'Draft reform' ? '' : label,
+      label: isUntitledReform(label) ? '' : label,
       year: runYear,
       region: population,
       baselineReformId: baseline?.reformId,

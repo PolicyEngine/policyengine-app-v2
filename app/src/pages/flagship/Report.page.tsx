@@ -30,6 +30,7 @@ import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
+import { isUntitledReform } from '@/libs/flagship/draftLabels';
 import {
   reportBaselineLabel,
   reportBaselineUnknown,
@@ -69,6 +70,17 @@ interface FlagshipReportPageProps {
  * The calculation auto-starts and streams in via the standard report
  * machinery.
  */
+/** When the report's run started: the details this browser saved, else the API's record. */
+function runStartedAt(...stamps: Array<string | null | undefined>): number | undefined {
+  for (const stamp of stamps) {
+    const time = stamp ? Date.parse(stamp) : Number.NaN;
+    if (Number.isFinite(time)) {
+      return time;
+    }
+  }
+  return undefined;
+}
+
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
   const params = useParams<{ userReportId: string }>();
   const userReportId = propId ?? params.userReportId ?? '';
@@ -320,7 +332,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
               meta?.provisions.length && report
                 ? () =>
                     loadProvisionsIntoDraft(report.countryId, meta.provisions, {
-                      label: meta.title === 'Draft reform' ? '' : meta.title,
+                      label: isUntitledReform(meta.title) ? '' : meta.title,
                       year: Number(report.year) || undefined,
                       // Back in Build on the population it ran on.
                       region: region && region !== report.countryId ? region : undefined,
@@ -358,6 +370,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                 : undefined
             }
             expectedMs={getDurationForRegion(report?.countryId ?? 'us', region)}
+            // A run begun from Build, then opened again, keeps its clock.
+            startedAt={runStartedAt(meta?.createdAt, report?.requestedAt)}
           />
         ) : (
           <RunLoading label="Loading report" />
