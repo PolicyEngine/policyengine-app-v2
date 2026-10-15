@@ -207,6 +207,9 @@ describe('calibrationMatchesForPaths', () => {
 
     expect(result!.reachedCount).toBeGreaterThan(1);
     expect(result!.matches.map((match) => match.variable)).toEqual(['eitc']);
+    // The CTC targets it echoes into are kept as related context, not as matches.
+    expect(result!.related!.length).toBeGreaterThan(0);
+    expect(result!.related!.map((match) => match.variable)).not.toContain('eitc');
   });
 });
 
