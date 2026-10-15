@@ -4,10 +4,17 @@ import { colors, spacing, typography } from '@/designTokens';
 import { formatElapsed } from '@/libs/flagship/reportStages';
 import type { RunStage } from '@/types/calculation';
 
-/** Milliseconds since the component mounted, ticking each second. */
-function useElapsed(): number {
-  const [started] = useState(() => Date.now());
-  const [now, setNow] = useState(started);
+/**
+ * Milliseconds since the run started — `startedAt` when known (a run begun
+ * on another page), else since the component mounted — ticking each second.
+ */
+function useElapsed(startedAt?: number): number {
+  const [mounted] = useState(() => Date.now());
+  const started =
+    typeof startedAt === 'number' && Number.isFinite(startedAt) && startedAt <= mounted
+      ? startedAt
+      : mounted;
+  const [now, setNow] = useState(mounted);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
@@ -103,6 +110,7 @@ export default function RunProgress({
   detail,
   expectedMs,
   note,
+  startedAt,
 }: {
   /** e.g. "Calculating the nationwide results" */
   title: string;
@@ -116,10 +124,21 @@ export default function RunProgress({
   expectedMs: number;
   /** Extra copy under the bar, e.g. that later visits load from the cache. */
   note?: string;
+  /**
+   * When the run started (epoch ms), when known. A run started earlier, then
+   * opened again, picks up where its clock is rather than at 0.
+   */
+  startedAt?: number;
 }) {
-  const elapsed = useElapsed();
+  const elapsed = useElapsed(startedAt);
+  const byClock = Math.min((elapsed / expectedMs) * 100, 95);
+  // The calculation's own estimate restarts with the page; the run's clock does not.
   const estimate =
-    typeof progress === 'number' ? progress : Math.min((elapsed / expectedMs) * 100, 95);
+    typeof progress === 'number'
+      ? typeof startedAt === 'number'
+        ? Math.max(progress, byClock)
+        : progress
+      : byClock;
   // The highest value shown so far: a stage's range can start lower than an
   // earlier estimate (a queued run's path is not known yet).
   const shown = useRef(0);
