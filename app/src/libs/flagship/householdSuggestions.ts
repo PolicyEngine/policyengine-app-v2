@@ -14,6 +14,13 @@ import {
 const MAX_UPSTREAM = 8;
 const DEFAULT_LIMIT = 12;
 
+/**
+ * Inputs a reader does not describe a household with: survey weights,
+ * reported amounts and take-up draws the microdata sets, and ids.
+ */
+const NOT_HOUSEHOLD_FACTS =
+  /(^|_)(weight|reported|takes_up|takeup|would_claim|id|seed|imputed)($|_)/;
+
 export function suggestedHouseholdInputs(
   paths: string[],
   map: ParameterDependencyMap,
@@ -48,7 +55,7 @@ export function suggestedHouseholdInputs(
     frontier = next;
   }
   return [...distance.entries()]
-    .filter(([variable]) => inputs.has(variable))
+    .filter(([variable]) => inputs.has(variable) && !NOT_HOUSEHOLD_FACTS.test(variable))
     .sort(([a, da], [b, db]) => da - db || a.localeCompare(b))
     .slice(0, limit)
     .map(([variable]) => variable);
