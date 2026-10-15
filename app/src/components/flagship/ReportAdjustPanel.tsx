@@ -14,7 +14,7 @@ import {
   provisionIntervals,
   sameParameterValue,
 } from '@/libs/draftReform';
-import { reportProvisionName } from '@/libs/flagship/draftLabels';
+import { periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -40,6 +40,8 @@ interface ReportAdjustPanelProps {
   year?: string;
   /** What the report is compared with, so a recompute is too; current law when unset. */
   baseline?: RunReportBaseline;
+  /** The report's budget window, so a recompute scores the same years. */
+  budgetWindow?: { startYear: number; windowSize: number };
   /**
    * The report's baseline policy could not be loaded. A recompute would
    * compare with current law instead, so it is off.
@@ -79,6 +81,7 @@ function AdjustPanel({
   year,
   baseline,
   baselineUnknown = false,
+  budgetWindow,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const nav = useAppNavigate();
@@ -90,6 +93,27 @@ function AdjustPanel({
   const [values, setValues] = useState<Record<string, any>>(() =>
     Object.fromEntries(provisions.map((provision) => [provision.path, provision.value]))
   );
+  // A provision set over several periods edits each period's value, on
+  // its own dates, rather than one value over all of them.
+  const periodsOf = (provision: RunReportProvision) =>
+    (provision.intervals?.length ?? 0) > 1 ? provision.intervals! : null;
+  const [periodValues, setPeriodValues] = useState<Record<string, any[]>>(() =>
+    Object.fromEntries(
+      provisions.flatMap((provision) => {
+        const periods = periodsOf(provision);
+        return periods ? [[provision.path, periods.map((period) => period.value)]] : [];
+      })
+    )
+  );
+  const periodChanged = (provision: RunReportProvision) => {
+    const periods = periodsOf(provision);
+    return (
+      !!periods &&
+      periods.some(
+        (period, index) => !sameParameterValue(periodValues[provision.path]?.[index], period.value)
+      )
+    );
+  };
   // Who the recompute runs on: the report's population to start, any other on choice.
   // The whole country is the API's region for it, not a part of it.
   const reportRegion = region && region !== countryId ? region : undefined;
@@ -113,7 +137,9 @@ function AdjustPanel({
     removed.size > 0 ||
     renamed ||
     population !== reportRegion ||
-    provisions.some((provision) => values[provision.path] !== provision.value);
+    provisions.some((provision) =>
+      periodsOf(provision) ? periodChanged(provision) : values[provision.path] !== provision.value
+    );
   const busy = isReconciling || runReport.isRunning;
 
   if (provisions.length === 0) {
@@ -131,6 +157,29 @@ function AdjustPanel({
    */
   const adjustedProvisions = (): RunReportProvision[] =>
     active.map((provision) => {
+      const periods = periodsOf(provision);
+      if (periods) {
+        if (!periodChanged(provision)) {
+          return { ...provision };
+        }
+        const intervals = periods.map((period, index) => ({
+          ...period,
+          value: periodValues[provision.path][index],
+        }));
+        const inYear = new ValueIntervalCollection(intervals).getValueAtDate(
+          `${runYear ?? CURRENT_YEAR}-01-01`
+        );
+        return {
+          ...provision,
+          value: inYear ?? provision.value,
+          intervals,
+          growth: undefined,
+          growthStart: undefined,
+          growthBase: undefined,
+          growthRoundTo: undefined,
+          growthRound: undefined,
+        };
+      }
       const value = values[provision.path];
       if (sameParameterValue(value, provision.value)) {
         return { ...provision };
@@ -162,6 +211,7 @@ function AdjustPanel({
       year: runYear,
       region: population,
       baselineReformId: baseline?.reformId,
+      windowYears: budgetWindow?.windowSize,
     });
     nav.push(`/${countryId}/build`);
   };
@@ -205,6 +255,8 @@ function AdjustPanel({
       await runReport.run(runTitle, sourceNote, adjusted, reformId, runYear, {
         region: population,
         baseline,
+        // The same years as the report: a window's report recomputes as one.
+        windowYears: budgetWindow?.windowSize,
       });
     } catch {
       setReconcileError('Could not start the recompute. Try again.');
@@ -243,6 +295,13 @@ function AdjustPanel({
           }}
           regions={regions}
         />
+        {budgetWindow && budgetWindow.windowSize > 1 && (
+          <Text
+            style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+          >
+            Years {budgetWindow.startYear}–{budgetWindow.startYear + budgetWindow.windowSize - 1}
+          </Text>
+        )}
       </div>
       {loading ? (
         <div style={{ padding: `0 ${spacing.lg}` }}>
@@ -299,42 +358,101 @@ function AdjustPanel({
                     <IconX size={14} />
                   </button>
                 </Stack>
-                {/* The value to edit; what it was, quietly beside it, as Build shows it. */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: spacing.sm,
-                  }}
-                >
-                  {typeof values[provision.path] === 'boolean' ? (
-                    <ValueInput
-                      value={values[provision.path]}
-                      onChange={(next) =>
-                        setValues((current) => ({ ...current, [provision.path]: next }))
-                      }
-                      ariaLabel={`New value for ${name}`}
-                    />
-                  ) : (
-                    // Build's box: rates as percentages, amounts with their currency.
-                    <div style={{ width: 150 }}>
-                      <NumberInput
-                        param={{ unit: provision.unit } as ParameterMetadata}
+                {periodsOf(provision) ? (
+                  // Each period on its own line: its dates, then its value to edit.
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+                    {periodsOf(provision)!.map((period, index) => (
+                      <div
+                        key={period.startDate}
+                        style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}
+                      >
+                        <span
+                          style={{
+                            width: 84,
+                            flexShrink: 0,
+                            fontSize: typography.fontSize.xs,
+                            color: colors.text.secondary,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {periodLabel(period)}
+                        </span>
+                        {typeof period.value === 'boolean' ? (
+                          <ValueInput
+                            value={periodValues[provision.path]?.[index]}
+                            onChange={(next) =>
+                              setPeriodValues((current) => ({
+                                ...current,
+                                [provision.path]: current[provision.path].map((value, at) =>
+                                  at === index ? next : value
+                                ),
+                              }))
+                            }
+                            ariaLabel={`${name}, ${periodLabel(period)}`}
+                          />
+                        ) : (
+                          <div style={{ width: 150 }}>
+                            <NumberInput
+                              param={{ unit: provision.unit } as ParameterMetadata}
+                              value={periodValues[provision.path]?.[index]}
+                              onChange={(next) =>
+                                setPeriodValues((current) => ({
+                                  ...current,
+                                  [provision.path]: current[provision.path].map((value, at) =>
+                                    at === index ? next : value
+                                  ),
+                                }))
+                              }
+                              ariaLabel={`${name}, ${periodLabel(period)}`}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+                      Baseline: {formatValue(provision.baselineValue, provision.unit)}
+                    </Text>
+                  </div>
+                ) : (
+                  /* The value to edit; what it was, quietly beside it, as Build shows it. */
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: spacing.sm,
+                    }}
+                  >
+                    {typeof values[provision.path] === 'boolean' ? (
+                      <ValueInput
                         value={values[provision.path]}
                         onChange={(next) =>
                           setValues((current) => ({ ...current, [provision.path]: next }))
                         }
                         ariaLabel={`New value for ${name}`}
                       />
-                    </div>
-                  )}
-                  {!sameParameterValue(values[provision.path], provision.baselineValue) && (
-                    <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-                      Baseline: {formatValue(provision.baselineValue, provision.unit)}
-                    </Text>
-                  )}
-                </div>
+                    ) : (
+                      // Build's box: rates as percentages, amounts with their currency.
+                      <div style={{ width: 150 }}>
+                        <NumberInput
+                          param={{ unit: provision.unit } as ParameterMetadata}
+                          value={values[provision.path]}
+                          onChange={(next) =>
+                            setValues((current) => ({ ...current, [provision.path]: next }))
+                          }
+                          ariaLabel={`New value for ${name}`}
+                        />
+                      </div>
+                    )}
+                    {!sameParameterValue(values[provision.path], provision.baselineValue) && (
+                      <Text
+                        style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
+                      >
+                        Baseline: {formatValue(provision.baselineValue, provision.unit)}
+                      </Text>
+                    )}
+                  </div>
+                )}
               </Stack>
             );
           })}

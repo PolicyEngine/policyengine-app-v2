@@ -134,7 +134,7 @@ describe('FlagshipReportPage from a shared link', () => {
     await openPanel(user);
 
     // Then
-    expect(screen.getByLabelText(/new value for/i)).toHaveValue(8000);
+    expect(screen.getByLabelText(/personal exemption amount, from 2028/i)).toHaveValue(8000);
     expect(
       screen.getByText(`Baseline: $${EXEMPTION_CURRENT_LAW_2028.toLocaleString('en-US')}`)
     ).toBeInTheDocument();
@@ -202,7 +202,7 @@ describe('FlagshipReportPage from a shared link', () => {
     await openPanel(user);
 
     // Then
-    expect(screen.getByLabelText(/new value for/i)).toHaveValue(8000);
+    expect(screen.getByLabelText(/personal exemption amount, from 2028/i)).toHaveValue(8000);
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
   });
 

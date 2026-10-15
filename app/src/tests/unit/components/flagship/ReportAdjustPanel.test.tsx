@@ -483,19 +483,58 @@ describe('ReportAdjustPanel', () => {
       ]);
     });
 
-    test('given a phased provision then an edit holds from the report year, after its earlier dates', async () => {
+    test('given a phased provision then each period edits on its own dates', async () => {
       // Given
       mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
       renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // Then — one box per period, named by its dates
+      expect(screen.getByLabelText(/maximum credit per child, 2026 only/i)).toBeInTheDocument();
+      const later = screen.getByLabelText(/maximum credit per child, from 2027/i);
 
       // When
-      await editAndRecompute('3600');
+      await user.clear(later);
+      await user.type(later, '3600');
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
 
-      // Then
+      // Then — the other period keeps its value
       expect(provisionPeriods(mockRun.mock.calls[0][2][0])).toEqual({
         '2026-01-01.2026-12-31': 2500,
         '2027-01-01.2100-12-31': 3600,
       });
+    });
+
+    test('given a budget window then a recompute scores the same years', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ReportAdjustPanel
+            title="CTC expansion"
+            sourceNote=""
+            provisions={[PHASED_CTC_PROVISION]}
+            year="2026"
+            budgetWindow={{ startYear: 2026, windowSize: 3 }}
+          />
+        </QueryClientProvider>
+      );
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      expect(screen.getByText('Years 2026–2028')).toBeInTheDocument();
+
+      // When
+      const input = screen.getByLabelText(/maximum credit per child, 2026 only/i);
+      await user.clear(input);
+      await user.type(input, '2600');
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockRun.mock.calls[0][5]).toMatchObject({ windowYears: 3 });
     });
 
     test('given only the population changes then a saved reform with other dates is not reused', async () => {
