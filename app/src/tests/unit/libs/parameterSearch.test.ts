@@ -519,3 +519,78 @@ describe('buildStateNames', () => {
     expect([...names.values()]).not.toContain(CODE_ONLY_STATE);
   });
 });
+
+describe('a query that names a state', () => {
+  const stateEntry = (path: string, breadcrumb: string, stateCode: string | null) => ({
+    path,
+    label: breadcrumb.split(' → ').pop() ?? path,
+    breadcrumb,
+    unit: null,
+    description: null,
+    isContrib: false,
+    stateCode,
+  });
+  const entries = [
+    stateEntry(
+      'gov.states.vt.tax.income.credits.eitc.match',
+      'States → Vermont → EITC → Match',
+      'vt'
+    ),
+    stateEntry(
+      'gov.local.md.montgomery_county.tax.income.credits.eitc.refundable.match',
+      'Local → Maryland → Montgomery County → EITC → Match',
+      'md'
+    ),
+    stateEntry(
+      'gov.states.mt.tax.income.credits.eitc.match',
+      'States → Montana → EITC → Match',
+      'mt'
+    ),
+    stateEntry(
+      'gov.states.ar.tax.income.credits.cdcc.match',
+      'States → Arkansas → CDCC → Match',
+      'ar'
+    ),
+    stateEntry(
+      'gov.states.ks.tax.income.credits.cdcc_fraction',
+      'States → Kansas → Credits → CDCC fraction',
+      'ks'
+    ),
+    stateEntry('gov.irs.credits.eitc.max[0].amount', 'IRS → Credits → EITC → Maximum', null),
+  ];
+  const stateNames = new Map([
+    ['montana', 'mt'],
+    ['vermont', 'vt'],
+    ['maryland', 'md'],
+    ['arkansas', 'ar'],
+    ['kansas', 'ks'],
+  ]);
+  const index = createParameterSearchIndex(entries, [], new Map(), stateNames);
+
+  it('given "Montana EITC" then Montana leads and no other state shows', () => {
+    const found = searchParameters(index, 'Montana EITC', 10).map((entry) => entry.stateCode);
+
+    expect(found[0]).toBe('mt');
+    expect(found).not.toContain('vt');
+    expect(found).not.toContain('md');
+  });
+
+  it('given "Kansas CDCC" then Arkansas, which spells kansas inside it, does not show', () => {
+    const found = searchParameters(index, 'Kansas CDCC', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(['ks']);
+  });
+
+  it('given a state with no such program then other states still show, after it', () => {
+    // Montana has no CDCC parameter here: the search does not come back empty.
+    const found = searchParameters(index, 'Montana CDCC', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(expect.arrayContaining(['ar', 'ks']));
+  });
+
+  it('given no state then every state still matches', () => {
+    const found = searchParameters(index, 'eitc match', 10).map((entry) => entry.stateCode);
+
+    expect(found).toEqual(expect.arrayContaining(['vt', 'md', 'mt']));
+  });
+});

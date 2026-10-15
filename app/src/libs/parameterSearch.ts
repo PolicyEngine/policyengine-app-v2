@@ -141,6 +141,18 @@ function statesNamedIn(query: string, canonical: string, index: ParameterSearchI
   return named;
 }
 
+/** The words of the state names a query names ("new", "york" for "new york eitc"). */
+function stateNameWords(canonical: string, index: ParameterSearchIndex): Set<string> {
+  const words = new Set<string>();
+  const text = ` ${plainWords(canonical)} `;
+  for (const [name] of index.stateNames) {
+    if (text.includes(` ${name} `)) {
+      name.split(' ').forEach((word) => words.add(word));
+    }
+  }
+  return words;
+}
+
 /**
  * Jurisdiction prior: parameters outside the query's jurisdiction — the
  * named states (with their local parameters), or federal when no state
@@ -573,12 +585,20 @@ export function searchParameters(
     return [];
   }
 
+  // A state the query names picks the jurisdiction. Its name matches only
+  // as whole words — "montana" would otherwise credit "vermont" and
+  // "montgomery" by prefix, and "kansas" credits "arkansas" by substring.
+  const namedStates = statesNamedIn(query, trimmed, index);
+  const stateWords = stateNameWords(trimmed, index);
   const tokens = [...new Set(trimmed.split(/\s+/).filter((token) => token.length >= 2))];
 
   // Token score: 1 for an exact substring hit; 0.6 when only a prefix
   // of the token (≥3 chars) appears — derived stemming, so "maximum"
   // still credits entries that say "max" without any word list.
   const tokenScore = (haystack: string, token: string): number => {
+    if (stateWords.has(token)) {
+      return new RegExp(`(^|[^a-z])${token}([^a-z]|$)`).test(haystack) ? 1 : 0;
+    }
     if (haystack.includes(token)) {
       return 1;
     }
@@ -647,8 +667,6 @@ export function searchParameters(
     }
   }
 
-  const namedStates = statesNamedIn(query, trimmed, index);
-
   // Pass 2: keep entries within a tolerance band of the best coverage,
   // so exact-wording entries don't monopolize over close paraphrases.
   // Best-coverage entries are collected first, and within each band the
@@ -659,18 +677,33 @@ export function searchParameters(
     const floor = Math.max(bestCoverage - 0.5, bestCoverage * 0.75, 0.6);
     // Best band in jurisdiction, best band outside, lower band in, lower band outside.
     const buckets: ParameterSearchEntry[][] = [[], [], [], []];
+    const otherStates: ParameterSearchEntry[] = [];
     for (let i = 0; i < index.haystacks.length; i++) {
       if (coverage[i] >= floor) {
         const entry = index.entries[i];
+        // Another state's parameter goes after the named state's and federal
+        // ones: kept, so a near miss still shows, but never ahead of them.
+        if (namedStates.size > 0 && entry.stateCode && !namedStates.has(entry.stateCode)) {
+          otherStates.push(entry);
+          continue;
+        }
         const band = coverage[i] >= bestCoverage ? 0 : 2;
         buckets[band + (inQueryJurisdiction(entry, namedStates) ? 0 : 1)].push(entry);
       }
     }
     const candidates = buckets.flat().slice(0, RERANK_CANDIDATE_CAP);
-    if (candidates.length === 1) {
-      return candidates;
+    const ranked =
+      candidates.length > 1 ? rankWithPriors(candidates, trimmed, limit, namedStates) : candidates;
+    if (ranked.length >= limit || otherStates.length === 0) {
+      return ranked;
     }
-    return rankWithPriors(candidates, trimmed, limit, namedStates);
+    const rest = otherStates.slice(0, RERANK_CANDIDATE_CAP);
+    return [
+      ...ranked,
+      ...(rest.length > 1
+        ? rankWithPriors(rest, trimmed, limit - ranked.length, namedStates)
+        : rest),
+    ].slice(0, limit);
   }
 
   if (!fuzzyFallback) {
