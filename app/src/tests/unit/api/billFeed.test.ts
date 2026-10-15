@@ -553,6 +553,32 @@ describe('fetchTrackerBills', () => {
     ]);
   });
 
+  test('given an id that names no bill number then the stage joins by the title', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal(
+      'fetch',
+      mockTrackerFetch({
+        // Neither the whole id nor its first part is a bill number.
+        research: [
+          {
+            id: 'sc-income-tax-cut',
+            type: 'bill',
+            state: 'SC',
+            title: 'South Carolina H. 3492: Income tax cut',
+          },
+        ],
+        processed_bills: [
+          { bill_id: 5, state: 'SC', bill_number: 'H3492', status: 'Passed One Chamber' },
+        ],
+      })
+    );
+
+    const bills = await fetchTrackerBills();
+
+    expect(bills![0].status).toBe('Passed One Chamber');
+  });
+
   test('given the tracker stores baseline params then the bills carry them', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
