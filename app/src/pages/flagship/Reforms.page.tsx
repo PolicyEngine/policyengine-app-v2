@@ -1,9 +1,8 @@
+import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconArrowLeft,
   IconChartBar,
-  IconCopy,
-  IconDeviceFloppy,
   IconExternalLink,
   IconPencil,
   IconPlus,
@@ -25,13 +24,13 @@ import {
   CardGridSkeleton,
   EmptyState,
   ErrorState,
+  SkeletonLine,
+  SkeletonRegion,
 } from '@/components/flagship/states';
 import StatTile from '@/components/flagship/StatTile';
 import TrackerHomeButton from '@/components/flagship/TrackerHomeButton';
-import ValueInput from '@/components/flagship/ValueInput';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Button, Stack, Text, Title } from '@/components/ui';
-import { FOREVER } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -39,24 +38,22 @@ import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { loadProvisionsIntoDraft, loadReformIntoDraft } from '@/libs/draftReform';
+import { loadProvisionsIntoDraft } from '@/libs/draftReform';
 import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
 import {
   billAlreadyCurrentLaw,
   billReportProvisions,
   billScoresOtherThanWriteUp,
 } from '@/libs/flagship/billProvisions';
-import { periodLabel, summarizeIntervals } from '@/libs/flagship/draftLabels';
+import { periodLabel } from '@/libs/flagship/draftLabels';
+import { latestMatchingReport } from '@/libs/flagship/latestReport';
+import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
-import {
-  formatCompactBreadcrumb,
-  formatLabelParts,
-  getHierarchicalLabels,
-} from '@/utils/parameterLabels';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 /** How a reform came about: the report's record keeps it; the page doesn't show it. */
@@ -99,16 +96,44 @@ interface ProvisionView {
   intervals?: ValueInterval[];
 }
 
-/**
- * A saved value edits in place only as one period: a schedule (several
- * periods, or values grown by an index) is changed in Build, so a save
- * here never flattens it.
- */
-const editableInPlace = (parameter: Reform['parameters'][number]) => parameter.values.length <= 1;
-
 /** The year a saved reform's report runs: its first change, or this year once that is past. */
 const reformRunYear = (reform: Reform) =>
   billRunYear(reform.parameters.map((parameter) => ({ intervals: parameter.values })));
+
+/** A saved reform's parameter rows: name, current law, the reform's value, when it starts. */
+const PARAMETER_ROW: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) minmax(88px, 140px) minmax(120px, 180px) minmax(64px, 96px)',
+  alignItems: 'center',
+  columnGap: spacing.md,
+  padding: `${spacing.sm} 0`,
+  borderBottom: `1px solid ${colors.border.light}`,
+};
+
+const PARAMETER_HEADING: React.CSSProperties = {
+  fontSize: typography.fontSize.xs,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.secondary,
+};
+
+const PARAMETER_VALUE: React.CSSProperties = {
+  fontSize: typography.fontSize.sm,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.primary,
+  fontVariantNumeric: 'tabular-nums',
+};
+
+const PARAMETER_MUTED: React.CSSProperties = {
+  fontSize: typography.fontSize.sm,
+  color: colors.text.secondary,
+  fontVariantNumeric: 'tabular-nums',
+  whiteSpace: 'nowrap',
+};
+
+/** A value as the row reads it: True/False, as Build's switch says. */
+function displayValue(value: unknown, unit: string | null): string {
+  return typeof value === 'boolean' ? (value ? 'True' : 'False') : formatValue(value, unit);
+}
 
 /** Small-caps muted eyebrow — the one structural label cards carry. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -266,7 +291,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 /**
  * Reforms — everything reform-shaped in one calm surface. Two views:
  * Bills (federal and state bills analyzed with the PolicyEngine model,
- * live from the tracker) and Yours (saved reforms, amendable). Cards open a
+ * live from the tracker) and Your library (saved reforms). Cards open a
  * focused detail; every detail ends in the same two verbs — view the
  * full impact report, or open as a draft.
  */
@@ -285,8 +310,6 @@ export default function ReformsPage() {
   const [billFilters, setBillFilters] = useState<BillFilters>(NO_BILL_FILTERS);
   // Deep links (?bill=<id>) open straight into that bill's detail.
   const [selectedId, setSelectedId] = useState<string | null>(() => urlParams.get('bill'));
-  const [editedLabel, setEditedLabel] = useState('');
-  const [editedValues, setEditedValues] = useState<Record<string, any>>({});
 
   const runReport = useRunFlagshipReport();
   const {
@@ -327,48 +350,12 @@ export default function ReformsPage() {
     ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   };
 
-  const saveMutation = useMutation({
-    mutationFn: (reform: Reform) =>
-      getReformStore().update(reform.id!, {
-        label: editedLabel || null,
-        parameters: reform.parameters.map((parameter) =>
-          editableInPlace(parameter)
-            ? {
-                name: parameter.name,
-                values: [
-                  {
-                    // The value changes; the period it applies to stays.
-                    startDate:
-                      parameter.values[0]?.startDate ?? `${new Date().getFullYear()}-01-01`,
-                    endDate: parameter.values[0]?.endDate ?? FOREVER,
-                    value: editedValues[parameter.name],
-                  },
-                ],
-              }
-            : parameter
-        ),
-      }),
-    onSuccess: invalidate,
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (reformId: string) => getReformStore().delete(reformId),
     onSuccess: () => {
       setSelectedId(null);
       invalidate();
     },
-  });
-
-  const duplicateMutation = useMutation({
-    mutationFn: (reform: Reform) =>
-      getReformStore().create({
-        countryId: reform.countryId,
-        label: `${reform.label || 'Untitled reform'} (copy)`,
-        parameters: reform.parameters,
-        baseline: reform.baseline,
-        provenance: reform.provenance,
-      }),
-    onSuccess: invalidate,
   });
 
   const resolveBreadcrumb = (path: string, fallback?: string) =>
@@ -471,13 +458,9 @@ export default function ReformsPage() {
     : null;
 
   const openReform = (reform: Reform) => {
-    // A failed save, delete or copy belongs to the reform it was tried on.
-    saveMutation.reset();
+    // A failed delete belongs to the reform it was tried on.
     deleteMutation.reset();
-    duplicateMutation.reset();
     setSelectedId(reform.id!);
-    setEditedLabel(reform.label ?? '');
-    setEditedValues(Object.fromEntries(reform.parameters.map((p) => [p.name, p.values[0]?.value])));
   };
 
   const openBillAsDraft = (bill: TrackedBill) => {
@@ -492,12 +475,6 @@ export default function ReformsPage() {
     // The draft is Build's page now, not a panel beside this one.
     nav.push(`/${countryId}/build`);
   };
-
-  const isDirty = (reform: Reform) =>
-    editedLabel !== (reform.label ?? '') ||
-    reform.parameters.some(
-      (p) => editableInPlace(p) && editedValues[p.name] !== p.values[0]?.value
-    );
 
   const billStats = (bill: TrackedBill): React.ReactNode => {
     const stats: React.ReactNode[] = [];
@@ -692,110 +669,197 @@ export default function ReformsPage() {
     );
   }
 
-  // ---- Detail: one of your reforms ----
+  // ---- Detail: one of your reforms (read only: changes are made in Build) ----
   if (selectedReform) {
+    const reformName = selectedReform.label || 'Untitled reform';
+    const count = selectedReform.parameters.length;
+    // The store starts with no parameters; names and current law need them.
+    const metadataReady = !!parameters && Object.keys(parameters).length > 0;
     return (
       <WorkspaceLayout>
-        <Stack style={{ gap: spacing.lg }}>
+        <Stack style={{ gap: spacing.xl }}>
           {backLink}
           <Stack style={{ gap: spacing.xs }}>
-            <input
-              value={editedLabel}
-              onChange={(event) => setEditedLabel(event.target.value)}
-              placeholder="Name this reform"
-              aria-label="Reform name"
-              style={{
-                padding: `${spacing.sm} ${spacing.md}`,
-                border: `1px solid ${colors.border.light}`,
-                borderRadius: 8,
-                fontSize: typography.fontSize.lg,
-                fontWeight: typography.fontWeight.medium,
-                fontFamily: typography.fontFamily.primary,
-                maxWidth: 480,
-              }}
-            />
+            <Title order={1} style={{ margin: 0 }}>
+              {reformName}
+            </Title>
+            <Text
+              style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+            >
+              {count} {count === 1 ? 'provision' : 'provisions'}
+              {selectedReform.createdAt
+                ? ` · saved ${dayjs(selectedReform.createdAt).format('MMM D, YYYY')}`
+                : ''}
+            </Text>
           </Stack>
-          <Stack style={{ gap: spacing.md }}>
-            {selectedReform.parameters.map((parameter) => {
-              const unit = parameters?.[parameter.name]?.unit ?? null;
-              const first = parameter.values[0];
-              // Current law where the change starts, not today.
-              const baseline = first
-                ? currentLawAt(parameter.name, Number(first.startDate.slice(0, 4)))
-                : getCurrentValue(parameters?.[parameter.name]?.values);
-              const editable = editableInPlace(parameter);
-              const schedule = summarizeIntervals(parameter.values, (value) =>
-                formatValue(value, unit)
-              );
-              const when = first ? (editable ? periodLabel(first) : schedule.when) : '';
-              return (
-                <Stack
-                  key={parameter.name}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}
-                >
-                  <Text
+
+          <div role="table" aria-label="Parameters">
+            <div role="row" style={{ ...PARAMETER_ROW, paddingTop: 0 }}>
+              {['Parameter', 'Current law', 'Your reform', 'From'].map((heading) => (
+                <span key={heading} role="columnheader" style={PARAMETER_HEADING}>
+                  {heading}
+                </span>
+              ))}
+            </div>
+            {!metadataReady ? (
+              // Names and current law come with the model's metadata: until
+              // then each row holds its place, rather than empty boxes.
+              <SkeletonRegion label="Loading parameters">
+                {selectedReform.parameters.map((parameter) => (
+                  <div key={parameter.name} style={PARAMETER_ROW}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <SkeletonLine width="60%" />
+                      <SkeletonLine width="40%" height={10} />
+                    </div>
+                    <SkeletonLine width={56} />
+                    <SkeletonLine width={64} />
+                    <SkeletonLine width={64} />
+                  </div>
+                ))}
+              </SkeletonRegion>
+            ) : (
+              selectedReform.parameters.map((parameter) => {
+                const unit = parameters[parameter.name]?.unit ?? null;
+                const first = parameter.values[0];
+                // Current law where the change starts, not today.
+                const baseline = first
+                  ? currentLawAt(parameter.name, Number(first.startDate.slice(0, 4)))
+                  : getCurrentValue(parameters[parameter.name]?.values);
+                // One row per period the reform sets, each read against
+                // current law in its own first year.
+                const periods = parameter.values.length > 0 ? parameter.values : [];
+                const parts = resolveBreadcrumb(parameter.name).split(' → ');
+                const name = parts[parts.length - 1] ?? parameter.name;
+                const context = parts.slice(0, -1).join(' → ');
+                const nameCell = (
+                  <div
+                    role="cell"
+                    style={{ minWidth: 0 }}
                     title={resolveBreadcrumb(parameter.name)}
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      fontSize: typography.fontSize.sm,
-                      color: colors.text.primary,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
                   >
-                    {formatCompactBreadcrumb(resolveBreadcrumb(parameter.name))}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: typography.fontSize.sm,
-                      color: colors.text.secondary,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {formatValue(baseline, unit)} →
-                  </Text>
-                  {editable ? (
-                    <ValueInput
-                      value={editedValues[parameter.name]}
-                      onChange={(next) =>
-                        setEditedValues((current) => ({ ...current, [parameter.name]: next }))
-                      }
-                      ariaLabel={`New value for ${parameter.name}`}
-                    />
-                  ) : (
                     <Text
-                      title="Change a schedule in Build"
                       style={{
+                        margin: 0,
                         fontSize: typography.fontSize.sm,
+                        lineHeight: '20px',
                         fontWeight: typography.fontWeight.medium,
                         color: colors.text.primary,
-                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {schedule.value}
+                      {name.charAt(0).toUpperCase() + name.slice(1)}
                     </Text>
-                  )}
-                  {when && (
-                    <Text
-                      style={{
-                        minWidth: 72,
-                        fontSize: typography.fontSize.xs,
-                        color: colors.text.secondary,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {when}
-                    </Text>
-                  )}
-                </Stack>
-              );
-            })}
-          </Stack>
-          {saveMutation.isError && (
-            <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
-              Could not save the changes. Try again.
+                    {context && (
+                      <Text
+                        className="tw:truncate"
+                        style={{
+                          margin: 0,
+                          fontSize: typography.fontSize.xs,
+                          color: colors.text.secondary,
+                        }}
+                      >
+                        {context}
+                      </Text>
+                    )}
+                  </div>
+                );
+                if (periods.length === 0) {
+                  return (
+                    <div key={parameter.name} role="row" style={PARAMETER_ROW}>
+                      {nameCell}
+                      <span role="cell" style={PARAMETER_MUTED}>
+                        {displayValue(baseline, unit)}
+                      </span>
+                      <span role="cell" style={PARAMETER_VALUE} />
+                      <span role="cell" style={PARAMETER_MUTED} />
+                    </div>
+                  );
+                }
+                // Each column lists the periods, one line each, so a period
+                // reads straight across; the name sits at the top.
+                const column = (
+                  render: (period: (typeof periods)[number]) => React.ReactNode,
+                  style: React.CSSProperties
+                ) => (
+                  <span
+                    role="cell"
+                    style={{ ...style, display: 'flex', flexDirection: 'column', gap: spacing.xs }}
+                  >
+                    {periods.map((period) => (
+                      <span key={period.startDate} style={{ lineHeight: '20px' }}>
+                        {render(period)}
+                      </span>
+                    ))}
+                  </span>
+                );
+                return (
+                  <div
+                    key={parameter.name}
+                    role="row"
+                    style={{ ...PARAMETER_ROW, alignItems: 'start' }}
+                  >
+                    {nameCell}
+                    {column(
+                      (period) =>
+                        displayValue(
+                          currentLawAt(parameter.name, Number(period.startDate.slice(0, 4))),
+                          unit
+                        ),
+                      PARAMETER_MUTED
+                    )}
+                    {column((period) => displayValue(period.value, unit), PARAMETER_VALUE)}
+                    {column((period) => periodLabel(period), PARAMETER_MUTED)}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: spacing.sm,
+            }}
+          >
+            <Button
+              onClick={() => {
+                // A report of these values already exists, done or still
+                // computing: open it rather than starting the wait again.
+                const latest = latestMatchingReport(
+                  selectedReform,
+                  reportsFor(selectedReform.id),
+                  reformRunYear(selectedReform)
+                );
+                if (latest) {
+                  nav.push(`/${countryId}/report/${latest.apiReportId}`);
+                  return;
+                }
+                void runReport.run(
+                  reformName,
+                  SOURCE_LABELS[selectedReform.provenance.source],
+                  reformProvisions(selectedReform),
+                  // Links the report record to the saved reform it came from.
+                  selectedReform.id,
+                  reformRunYear(selectedReform)
+                );
+              }}
+              disabled={runReport.isRunning}
+            >
+              <IconChartBar size={16} />
+              {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
+            </Button>
+            <DeleteReformDialog
+              name={reformName}
+              reportCount={reportsFor(selectedReform.id).length}
+              disabled={deleteMutation.isPending}
+              onConfirm={() => deleteMutation.mutate(selectedReform.id!)}
+            />
+          </div>
+          {runReport.error && (
+            <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
+              {runReport.error}
             </Text>
           )}
           {deleteMutation.isError && (
@@ -803,78 +867,25 @@ export default function ReformsPage() {
               Could not delete the reform. Try again.
             </Text>
           )}
-          {duplicateMutation.isError && (
-            <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
-              Could not duplicate the reform. Try again.
-            </Text>
-          )}
-          <Stack
-            style={{
-              flexDirection: 'row',
-              gap: spacing.sm,
-              alignItems: 'center',
-              flexWrap: 'wrap',
+
+          <ReformReports
+            countryId={countryId}
+            reports={reportsFor(selectedReform.id)}
+            rerunning={runReport.isRunning}
+            onRerun={async (report) => {
+              // The same report on today's model: its reform as it ran, its
+              // year, population, budget window and comparison.
+              const settings = await rerunSettings(countryId, report);
+              await runReport.run(
+                report.title || selectedReform.label || 'Untitled reform',
+                report.sourceNote || SOURCE_LABELS[selectedReform.provenance.source],
+                report.provisions,
+                selectedReform.id,
+                Number(report.year) || undefined,
+                settings
+              );
             }}
-          >
-            <Button
-              onClick={() =>
-                runReport.run(
-                  selectedReform.label || 'Untitled reform',
-                  SOURCE_LABELS[selectedReform.provenance.source],
-                  reformProvisions(selectedReform),
-                  // Links the report record to the saved reform it came from.
-                  selectedReform.id,
-                  reformRunYear(selectedReform)
-                )
-              }
-              disabled={runReport.isRunning}
-            >
-              <IconChartBar size={16} />
-              {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
-            </Button>
-            <Button
-              variant="outline"
-              disabled={!isDirty(selectedReform) || saveMutation.isPending}
-              onClick={() => saveMutation.mutate(selectedReform)}
-            >
-              <IconDeviceFloppy size={16} />
-              Save changes
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                loadReformIntoDraft(selectedReform, (path) => ({
-                  breadcrumb: resolveBreadcrumb(path),
-                  unit: parameters?.[path]?.unit ?? null,
-                  baselineValue: getCurrentValue(parameters?.[path]?.values),
-                }));
-                nav.push(`/${countryId}/build`);
-              }}
-            >
-              <IconSearch size={16} />
-              Add parameters in Build
-            </Button>
-            <Button
-              variant="outline"
-              disabled={duplicateMutation.isPending}
-              onClick={() => duplicateMutation.mutate(selectedReform)}
-            >
-              <IconCopy size={16} />
-              Duplicate
-            </Button>
-            <DeleteReformDialog
-              name={selectedReform.label || 'Untitled reform'}
-              reportCount={reportsFor(selectedReform.id).length}
-              disabled={deleteMutation.isPending}
-              onConfirm={() => deleteMutation.mutate(selectedReform.id!)}
-            />
-            {runReport.error && (
-              <Text style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
-                {runReport.error}
-              </Text>
-            )}
-          </Stack>
-          <ReformReports countryId={countryId} reports={reportsFor(selectedReform.id)} />
+          />
         </Stack>
       </WorkspaceLayout>
     );
@@ -916,8 +927,8 @@ export default function ReformsPage() {
         >
           {(
             [
-              { id: 'bills', label: 'Bills' },
-              { id: 'yours', label: 'Yours' },
+              { id: 'bills', label: 'Tracked bills' },
+              { id: 'yours', label: 'Your library' },
             ] as const
           ).map((option) => {
             const active = tab === option.id;
@@ -950,8 +961,10 @@ export default function ReformsPage() {
               </button>
             );
           })}
-          {/* On a phone the filters take a line of their own, under the tabs. */}
-          <div className="tw:flex-1 tw:max-sm:basis-full" />
+        </Stack>
+
+        {/* Search first, then the bill filters beside it. */}
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
           <div
             // On a phone the search fills the line.
             className="tw:max-sm:min-h-10 tw:max-sm:min-w-0 tw:max-sm:grow tw:max-sm:basis-[160px]"
@@ -976,17 +989,16 @@ export default function ReformsPage() {
               }}
             />
           </div>
-        </Stack>
-
-        {tab === 'bills' && billsConfigured && bills.length > 0 && (
-          <BillFeedFilters
-            bills={bills}
-            searched={searchedBills}
-            value={billFilters}
-            onChange={setBillFilters}
-            controlStyle={filterControl}
-          />
-        )}
+          {tab === 'bills' && billsConfigured && bills.length > 0 && (
+            <BillFeedFilters
+              bills={bills}
+              searched={searchedBills}
+              value={billFilters}
+              onChange={setBillFilters}
+              controlStyle={filterControl}
+            />
+          )}
+        </div>
 
         {tab === 'yours' && isPending && <CardGridSkeleton label="Loading your reforms" />}
         {tab === 'yours' && isError && (
