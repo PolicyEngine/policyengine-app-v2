@@ -19,6 +19,7 @@ import {
   ParameterSearchEntry,
   ParameterSearchFilters,
   ParameterSearchIndex,
+  scheduleMemberOf,
 } from '@/libs/parameterSearch';
 import ScopePicker from './ScopePicker';
 
@@ -112,6 +113,14 @@ function groupFolderPath(entries: ParameterSearchEntry[]): string | null {
     shared = shared.slice(0, depth);
   }
   return shared && shared.length >= 2 ? shared.join('.') : null;
+}
+
+/** A row in a schedule's group names its bracket: "Bracket 2 · Amount". */
+function scheduleRowLabel(schedule: string | undefined, entry: ParameterSearchEntry): string {
+  const member = schedule ? scheduleMemberOf(entry.path) : null;
+  return member
+    ? `Bracket ${member.bracket + 1} · ${capitalizeFirst(entry.label)}`
+    : capitalizeFirst(entry.label);
 }
 
 const CONTRIB_EXPLANATION =
@@ -1188,7 +1197,7 @@ export default function ParameterSearchBox({
                             }}
                           >
                             {isFolder
-                              ? capitalizeFirst(entry.label)
+                              ? scheduleRowLabel(group.schedule, entry)
                               : entry.breadcrumb || entry.label}
                           </span>
                           <span
