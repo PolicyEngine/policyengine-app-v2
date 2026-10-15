@@ -98,39 +98,40 @@ function ReportRow({
   return (
     <div
       data-report-row=""
+      // Fixed columns, so every report's date, status and actions line up.
+      className="tw:grid tw:grid-cols-[minmax(0,1fr)_72px_96px_132px] tw:max-sm:grid-cols-[minmax(0,1fr)_auto]"
       style={{
-        display: 'flex',
         alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: `${spacing.xs} ${spacing.md}`,
+        columnGap: spacing.md,
+        rowGap: spacing.xs,
         padding: `${spacing.sm} 0`,
         borderTop: first ? undefined : `1px solid ${colors.border.light}`,
       }}
     >
-      <span
-        style={{
-          fontSize: typography.fontSize.sm,
-          fontWeight: typography.fontWeight.medium,
-          color: colors.text.primary,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {report.year} report
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <span
+          style={{
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.text.primary,
+          }}
+        >
+          {report.year} report
+        </span>
+        <span
+          className="tw:truncate"
+          style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+        >
+          {finished
+            ? `Results from ${dayjs(finished).format('MMM D, YYYY')}`
+            : `Run ${dayjs(report.createdAt).format('MMM D, YYYY')}`}
+        </span>
+        <ReportBaseline apiReportId={report.apiReportId} />
+      </div>
+      <span>
+        <ReportStatus status={api?.status} />
       </span>
-      <ReportBaseline apiReportId={report.apiReportId} />
-      <span
-        style={{
-          fontSize: typography.fontSize.xs,
-          color: colors.text.secondary,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {finished
-          ? `Results from ${dayjs(finished).format('MMM D, YYYY')}`
-          : `Run ${dayjs(report.createdAt).format('MMM D, YYYY')}`}
-      </span>
-      <ReportStatus status={api?.status} />
-      <div style={{ display: 'flex', gap: spacing.xs, marginLeft: 'auto' }}>
+      <span style={{ display: 'flex', justifyContent: 'flex-end' }}>
         {onRerun && upToDate && (
           <span
             title={`Ran on model ${ranModel}, the current one`}
@@ -145,11 +146,13 @@ function ReportRow({
             Re-run
           </Button>
         )}
-        <Button size="sm" variant="outline" onClick={onOpen}>
+      </span>
+      <span style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button size="sm" variant="outline" onClick={onOpen} style={{ width: '100%' }}>
           {done ? 'View results' : 'Open'}
           <IconArrowRight size={14} />
         </Button>
-      </div>
+      </span>
     </div>
   );
 }

@@ -357,13 +357,12 @@ export function plainHouseholdError(error: unknown): Error {
 
 /** Creates the household and calculates it under each policy, at once. */
 async function calculateHousehold(
-  input: FlagshipHouseholdInput,
-  year: string,
+  payload: V1HouseholdCreateEnvelope,
   baselinePolicyId: string,
   reformPolicyId: string
 ) {
   try {
-    const created = await createHousehold(buildHouseholdPayload(input, year));
+    const created = await createHousehold(payload);
     const householdId = String(created.result.household_id);
     const [baseline, reform] = await Promise.all([
       fetchHouseholdCalculation('us', householdId, baselinePolicyId),
@@ -387,9 +386,31 @@ export async function runFlagshipHousehold({
   baselinePolicyId,
   reformPolicyId,
 }: RunFlagshipHouseholdArgs): Promise<FlagshipHouseholdRun> {
-  const { householdId, baseline, reform } = await calculateHousehold(
-    input,
+  return runFlagshipHouseholdPayload({
     year,
+    payload: buildHouseholdPayload(input, year),
+    baselinePolicyId,
+    reformPolicyId,
+  });
+}
+
+/**
+ * The same run for a household built in full (the household builder's
+ * own model, any of its inputs), sent as the builder sends it.
+ */
+export async function runFlagshipHouseholdPayload({
+  year,
+  payload,
+  baselinePolicyId,
+  reformPolicyId,
+}: {
+  year: string;
+  payload: V1HouseholdCreateEnvelope;
+  baselinePolicyId: string;
+  reformPolicyId: string;
+}): Promise<FlagshipHouseholdRun> {
+  const { householdId, baseline, reform } = await calculateHousehold(
+    payload,
     baselinePolicyId,
     reformPolicyId
   );

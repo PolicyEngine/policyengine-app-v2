@@ -23,6 +23,20 @@ vi.mock('@/api/household', () => ({
 vi.mock('@/api/householdCalculation', () => ({
   fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
 }));
+// The v2 household builder, tested on its own, stands in by its state.
+vi.mock('@/components/household/HouseholdBuilderForm', () => ({
+  default: ({ household, year }: any) => (
+    <span data-testid="state">
+      {String(
+        (Object.values(household.householdData.households ?? {})[0] as any)?.state_name?.[year] ??
+          ''
+      )}
+    </span>
+  ),
+}));
+vi.mock('@/utils/HouseholdValidation', () => ({
+  HouseholdValidation: { isReadyForSimulation: () => ({ isValid: true, errors: [] }) },
+}));
 vi.mock('@/api/budgetWindow', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/budgetWindow')>()),
   fetchBudgetWindow: async () => ({ status: 'computing', result: null, progress: 10 }),
@@ -76,7 +90,7 @@ describe('ReportView household', () => {
     });
 
     await user.click(screen.getByRole('tab', { name: 'Household' }));
-    expect(screen.getByRole('combobox', { name: 'State' })).toHaveTextContent('New York');
+    expect(screen.getByTestId('state')).toHaveTextContent('NY');
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     await waitFor(() => expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2));
