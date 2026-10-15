@@ -95,17 +95,20 @@ function YearsPicker({
         <button
           type="button"
           aria-label={`${label}: ${span}`}
-          className="tw:inline-flex tw:h-9 tw:cursor-pointer tw:items-center tw:rounded-md tw:border tw:border-input tw:bg-white tw:px-3 tw:text-sm tw:whitespace-nowrap tw:shadow-xs tw:transition-colors tw:hover:border-primary-500"
+          className="tw:inline-flex tw:h-11 tw:cursor-pointer tw:items-center tw:rounded-md tw:border tw:border-input tw:bg-white tw:px-3 tw:text-left tw:text-sm tw:whitespace-nowrap tw:shadow-xs tw:transition-colors tw:hover:border-primary-500"
           style={{ gap: spacing.sm, fontFamily: typography.fontFamily.primary }}
         >
           <span aria-hidden style={{ display: 'inline-flex', color: colors.text.tertiary }}>
             <IconCalendarEvent size={16} />
           </span>
-          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
-            {label}
-          </span>
-          <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
-            {span}
+          {/* The label over the choice: the bar fits on one line. */}
+          <span className="tw:flex tw:min-w-0 tw:flex-col tw:leading-tight">
+            <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+              {label}
+            </span>
+            <span style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
+              {span}
+            </span>
           </span>
           <IconChevronDown
             size={14}
