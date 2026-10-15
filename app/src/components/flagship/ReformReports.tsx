@@ -7,7 +7,7 @@ import { Badge, Button, Stack, Text } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
-import { readReportMeta } from '@/libs/flagship/runReport';
+import { flagshipReportQueryKeys, readReportMeta } from '@/libs/flagship/runReport';
 
 /**
  * Where a report stands, as the API's record says. A report whose page
@@ -17,7 +17,7 @@ import { readReportMeta } from '@/libs/flagship/runReport';
  */
 function ReportStatus({ countryId, apiReportId }: { countryId: CountryId; apiReportId: string }) {
   const { data } = useQuery({
-    queryKey: ['flagship-report-status', countryId, apiReportId],
+    queryKey: flagshipReportQueryKeys.status(countryId, apiReportId),
     queryFn: () => fetchReportById(countryId, apiReportId),
     staleTime: 60_000,
     retry: false,

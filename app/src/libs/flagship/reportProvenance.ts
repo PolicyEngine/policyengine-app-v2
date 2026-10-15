@@ -6,59 +6,63 @@
  * else: a shared link, another device, or a cleared profile opens the
  * report with no provenance, and validation has nothing to match. The
  * reform policy on the PolicyEngine API carries the same parameter
- * changes, so they are rebuilt from it here.
+ * changes, so they are rebuilt from it here, read in the report's year
+ * as the run that stashed them described them.
  */
 import { CURRENT_YEAR } from '@/constants';
-import { provisionsForYear } from '@/libs/draftReform';
+import { provisionValueInYear } from '@/libs/draftReform';
 import type { FlagshipReportMeta, RunReportProvision } from '@/libs/flagship/runReport';
 import type { Policy } from '@/types/ingredients/Policy';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { getCurrentValue } from '@/utils/parameterValues';
 
+/** Current law for a parameter on 1 January of `year`; today's value before its first date. */
+function currentLawIn(values: Record<string, any> | undefined, year: string): unknown {
+  if (!values) {
+    return undefined;
+  }
+  return (
+    new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`) ?? getCurrentValue(values)
+  );
+}
+
 /**
- * Rebuilds report provisions from a policy's parameter changes, as they
- * stand in the report's year: current law then, the reform's value then,
- * and the reform's own dates. The browser that ran the report stashes
- * the same through `provisionsForYear`.
+ * Rebuilds report provisions from a policy's parameter changes. Each
+ * keeps every dated value the policy sets, so a recompute or an edit
+ * runs the same reform; its value and current law are those of the
+ * report's year.
  */
 export function provisionsFromPolicy(
   policy: Policy | null | undefined,
   parameters: Record<string, any> | null | undefined,
   year: string = CURRENT_YEAR
 ): RunReportProvision[] {
-  const reportYear = Number(year) || Number(CURRENT_YEAR);
-  /** Current law on 1 January of a year; today's value when its dates cannot tell. */
-  const currentLawAt = (path: string, at: number) => {
-    const values = parameters?.[path]?.values;
-    return values
-      ? (new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) ??
-          getCurrentValue(values))
-      : undefined;
-  };
-  const provisions = (policy?.parameters ?? []).map((parameter) => {
+  return (policy?.parameters ?? []).map((parameter) => {
     const metadata = parameters?.[parameter.name];
-    // The dates in order, as the report's dated reasons read them.
-    const intervals = [...(parameter.values ?? [])].sort((a, b) =>
-      a.startDate.localeCompare(b.startDate)
-    );
+    const baselineValue = currentLawIn(metadata?.values, year);
+    const intervals = parameter.values.length > 0 ? parameter.values : undefined;
+    const inYear = intervals
+      ? provisionValueInYear({ value: undefined, intervals }, Number(year))
+      : null;
     return {
       path: parameter.name,
       breadcrumb: metadata
         ? formatLabelParts(getHierarchicalLabels(parameter.name, parameters!))
         : parameter.name,
       unit: metadata?.unit ?? null,
-      baselineValue: getCurrentValue(metadata?.values),
-      value: intervals[0]?.value,
-      ...(intervals.length > 0 && { intervals }),
+      baselineValue,
+      // A year the policy does not reach keeps current law.
+      value: inYear ?? baselineValue,
+      ...(intervals && { intervals }),
     };
   });
-  return provisionsForYear(provisions, reportYear, currentLawAt);
 }
 
 /**
  * Provenance for a report opened without its local stash: the reform
- * policy's changes as provisions, the report's own label as title.
+ * policy's changes as provisions in the report's year, the report's own
+ * label as title.
  */
 export function provenanceFromPolicy(
   policy: Policy | null | undefined,

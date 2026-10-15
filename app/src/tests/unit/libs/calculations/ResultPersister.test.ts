@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { markReportCompleted } from '@/api/report';
+import { markReportCompleted, markReportError } from '@/api/report';
 import { updateSimulationOutput } from '@/api/simulation';
 import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import {
   createTestQueryClient,
   mockCompleteSocietyWideStatus,
+  mockErrorSocietyWideStatus,
   TEST_CALC_IDS,
   TEST_COUNTRIES,
   TEST_YEARS,
@@ -284,6 +285,79 @@ describe('ResultPersister', () => {
           output: { [TEST_CALC_IDS.SIM_1]: result1, [TEST_CALC_IDS.SIM_2]: result2 },
         })
       );
+    });
+  });
+
+  describe('persist a failed report run', () => {
+    it('given a failed society-wide run then the report is marked as failed, with why', async () => {
+      // Given
+      const status = mockErrorSocietyWideStatus();
+      (markReportError as any).mockResolvedValue(undefined);
+
+      // When
+      await persister.persistReportError(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
+
+      // Then
+      expect(markReportError).toHaveBeenCalledWith(
+        TEST_COUNTRIES.US,
+        TEST_CALC_IDS.REPORT_123,
+        expect.objectContaining({ id: TEST_CALC_IDS.REPORT_123, status: 'error' }),
+        '[SOCIETY_WIDE_CALC_ERROR] Simulation failed'
+      );
+    });
+
+    it('given a failed run then nothing is saved as its results', async () => {
+      // Given
+      (markReportError as any).mockResolvedValue(undefined);
+
+      // When
+      await persister.persistReportError(
+        mockErrorSocietyWideStatus(),
+        TEST_COUNTRIES.US,
+        TEST_YEARS.DEFAULT
+      );
+
+      // Then
+      expect(markReportCompleted).not.toHaveBeenCalled();
+    });
+
+    it('given a failed run then the cached report says it failed', async () => {
+      // Given
+      (markReportError as any).mockResolvedValue(undefined);
+
+      // When
+      await persister.persistReportError(
+        mockErrorSocietyWideStatus(),
+        TEST_COUNTRIES.US,
+        TEST_YEARS.DEFAULT
+      );
+
+      // Then
+      expect(
+        queryClient.getQueryData<Report>(reportKeys.byId(TEST_CALC_IDS.REPORT_123))?.status
+      ).toBe('error');
+    });
+
+    it('given the record already says it failed then it is not written again', async () => {
+      // Given
+      queryClient.setQueryData<Report>(reportKeys.byId(TEST_CALC_IDS.REPORT_123), {
+        id: TEST_CALC_IDS.REPORT_123,
+        countryId: TEST_COUNTRIES.US,
+        year: TEST_YEARS.DEFAULT,
+        apiVersion: null,
+        simulationIds: [],
+        status: 'error',
+      });
+
+      // When
+      await persister.persistReportError(
+        mockErrorSocietyWideStatus(),
+        TEST_COUNTRIES.US,
+        TEST_YEARS.DEFAULT
+      );
+
+      // Then
+      expect(markReportError).not.toHaveBeenCalled();
     });
   });
 

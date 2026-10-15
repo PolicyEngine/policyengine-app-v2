@@ -3,13 +3,26 @@ import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
-import type { RunReportBaseline } from '@/libs/flagship/runReport';
+import {
+  provisionPeriods,
+  type RunReportBaseline,
+  type RunReportProvision,
+} from '@/libs/flagship/runReport';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   seedDeductionMetadata,
   US_REGIONS,
 } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import {
+  FLAT_3000_REFORM,
+  FLAT_CTC_PROVISION,
+  PAST_REPORT_YEAR,
+  PHASED_CTC_INTERVALS,
+  PHASED_CTC_PROVISION,
+  PHASED_CTC_REFORM,
+  PHASED_REPORT_YEAR,
+} from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
 
 const mockRun = vi.fn();
 const mockFindMine = vi.fn();
@@ -144,6 +157,26 @@ describe('ReportAdjustPanel', () => {
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
   });
 
+  test('given the provisions arrive after the panel then it shows them, with nothing to recompute', async () => {
+    // Given: a shared link renders the results before the reform policy loads.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const panel = (title: string, provisions: typeof PROVISIONS) => (
+      <QueryClientProvider client={queryClient}>
+        <ReportAdjustPanel title={title} sourceNote="" provisions={provisions} />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(panel('Impact report', []));
+
+    // When
+    rerender(panel('CTC expansion', [PROVISIONS[0]]));
+    await userEvent.setup().click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+    // Then
+    expect(screen.getByLabelText(/new value for maximum credit per child/i)).toHaveValue(2500);
+    expect(screen.getByRole('textbox', { name: 'Reform name' })).toHaveValue('CTC expansion');
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+  });
+
   test('given Edit in Build then the reform as adjusted opens there as the draft', async () => {
     clearDraftReform();
     const user = userEvent.setup();
@@ -223,9 +256,9 @@ describe('ReportAdjustPanel', () => {
     await user.click(screen.getByRole('button', { name: /recompute/i }));
 
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
-    expect(mockRun.mock.calls[0][2]).toEqual([
-      expect.objectContaining({ value: 3600, intervals: undefined }),
-    ]);
+    expect(provisionPeriods(mockRun.mock.calls[0][2][0])).toEqual({
+      '2026-01-01.2100-12-31': 3600,
+    });
   });
 
   test('given the reform is renamed then recompute saves and titles it with the name', async () => {
@@ -395,5 +428,139 @@ describe('ReportAdjustPanel', () => {
 
     await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
     expect(screen.getByRole('button', { name: /recompute/i })).toBeInTheDocument();
+  });
+
+  describe('given the report year and the provision’s dates', () => {
+    function renderOne(provision: RunReportProvision, year: string) {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      return render(
+        <QueryClientProvider client={queryClient}>
+          <ReportAdjustPanel
+            title="CTC expansion"
+            sourceNote=""
+            provisions={[provision]}
+            year={year}
+          />
+        </QueryClientProvider>
+      );
+    }
+
+    async function editAndRecompute(value: string) {
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      const input = screen.getByLabelText(/new value for maximum credit per child/i);
+      await user.clear(input);
+      await user.type(input, value);
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    }
+
+    test('given a past-year report then an edited value runs from that year', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      renderOne(FLAT_CTC_PROVISION, PAST_REPORT_YEAR);
+
+      // When
+      await editAndRecompute('3000');
+
+      // Then
+      const [, , provisions, , year] = mockRun.mock.calls[0];
+      expect(year).toBe(Number(PAST_REPORT_YEAR));
+      expect(provisionPeriods(provisions[0])).toEqual({ '2024-01-01.2100-12-31': 3000 });
+    });
+
+    test('given a past-year report then the saved reform sets the value from that year', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      renderOne(FLAT_CTC_PROVISION, PAST_REPORT_YEAR);
+
+      // When
+      await editAndRecompute('3000');
+
+      // Then
+      expect(mockCreate.mock.calls[0][0].parameters[0].values).toEqual([
+        { startDate: '2024-01-01', endDate: '2100-12-31', value: 3000 },
+      ]);
+    });
+
+    test('given a phased provision then an edit holds from the report year, after its earlier dates', async () => {
+      // Given
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+
+      // When
+      await editAndRecompute('3600');
+
+      // Then
+      expect(provisionPeriods(mockRun.mock.calls[0][2][0])).toEqual({
+        '2026-01-01.2026-12-31': 2500,
+        '2027-01-01.2100-12-31': 3600,
+      });
+    });
+
+    test('given only the population changes then a saved reform with other dates is not reused', async () => {
+      // Given
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockFindMine.mockResolvedValue([FLAT_3000_REFORM]);
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+      await user.click(await screen.findByRole('option', { name: /California/ }));
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      const [runTitle, , , reformId] = mockRun.mock.calls[0];
+      expect(reformId).toBe('rf-new');
+      expect(runTitle).toBe('CTC expansion (adjusted)');
+      store.dispatch(clearMetadata());
+    });
+
+    test('given no saved match then the saved reform has the dates that ran', async () => {
+      // Given
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+      await user.click(await screen.findByRole('option', { name: /California/ }));
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockCreate.mock.calls[0][0].parameters[0].values).toEqual(PHASED_CTC_INTERVALS);
+      expect(provisionPeriods(mockRun.mock.calls[0][2][0])).toEqual({
+        '2026-01-01.2026-12-31': 2500,
+        '2027-01-01.2100-12-31': 3000,
+      });
+      store.dispatch(clearMetadata());
+    });
+
+    test('given the same dated reform is saved then it is reused', async () => {
+      // Given
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockFindMine.mockResolvedValue([FLAT_3000_REFORM, PHASED_CTC_REFORM]);
+      const user = userEvent.setup();
+      renderOne(PHASED_CTC_PROVISION, PHASED_REPORT_YEAR);
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+      await user.click(await screen.findByRole('option', { name: /California/ }));
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockCreate).not.toHaveBeenCalled();
+      expect(mockRun.mock.calls[0][3]).toBe(PHASED_CTC_REFORM.id);
+      store.dispatch(clearMetadata());
+    });
   });
 });
