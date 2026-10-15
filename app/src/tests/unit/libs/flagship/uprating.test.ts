@@ -121,9 +121,9 @@ describe('grownIntervals past the last modelled year', () => {
       BY_HUNDREDS
     );
 
-    expect(
-      provisionAdjusts({ value: 1900, baselineValue: 1900, intervals }, LONG_VALUES)
-    ).toBe(false);
+    expect(provisionAdjusts({ value: 1900, baselineValue: 1900, intervals }, LONG_VALUES)).toBe(
+      false
+    );
   });
 });
 
