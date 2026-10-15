@@ -30,6 +30,7 @@ import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
+import { isUntitledReform } from '@/libs/flagship/draftLabels';
 import {
   reportBaselineLabel,
   reportBaselineUnknown,
@@ -320,7 +321,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
               meta?.provisions.length && report
                 ? () =>
                     loadProvisionsIntoDraft(report.countryId, meta.provisions, {
-                      label: meta.title === 'Draft reform' ? '' : meta.title,
+                      label: isUntitledReform(meta.title) ? '' : meta.title,
                       year: Number(report.year) || undefined,
                       // Back in Build on the population it ran on.
                       region: region && region !== report.countryId ? region : undefined,

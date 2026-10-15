@@ -32,6 +32,7 @@ import {
   setDraftWindowYears,
   setDraftYear,
 } from '@/libs/draftReform';
+import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
@@ -316,7 +317,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
     const reformId = await saveForRun();
     setSavingForRun(false);
     await runReport.run(
-      draft.label || 'Draft reform',
+      draft.label.trim() || UNTITLED_REFORM,
       SOURCE_NOTES[draft.source] ?? 'Draft reform',
       // Described as they stand in the year the report simulates.
       provisionsForYear(adjusted, year, currentLawAt),
@@ -352,6 +353,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   });
 
   const empty = draft.provisions.length === 0;
+  // The quick name box under the run bar, open while the reader types.
+  const [naming, setNaming] = useState(false);
   // The report models what the reform changes: a parameter added but
   // left at current law stays in the draft, out of the run.
   const adjusted = draft.provisions.filter((provision) =>
@@ -452,6 +455,66 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         </div>
       </div>
 
+      {/* An unnamed reform runs as "Untitled reform": said once, with a quick way to name it. */}
+      {adjusted.length > 0 && (!draft.label.trim() || naming) && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: spacing.sm,
+            fontSize: typography.fontSize.xs,
+            color: colors.text.tertiary,
+          }}
+        >
+          {naming ? (
+            <input
+               
+              autoFocus
+              value={draft.label}
+              onChange={(event) => setDraftLabel(event.target.value)}
+              onBlur={() => setNaming(false)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === 'Escape') {
+                  setNaming(false);
+                }
+              }}
+              placeholder="Name your reform"
+              aria-label="Reform name"
+              style={{
+                width: 240,
+                maxWidth: '100%',
+                height: 28,
+                padding: `0 ${spacing.sm}`,
+                border: `1px solid ${colors.border.light}`,
+                borderRadius: 6,
+                background: colors.background.primary,
+                fontSize: typography.fontSize.sm,
+                fontFamily: typography.fontFamily.primary,
+                color: colors.text.primary,
+              }}
+            />
+          ) : (
+            <>
+              <span>Runs as “{UNTITLED_REFORM}”.</span>
+              <button
+                type="button"
+                onClick={() => setNaming(true)}
+                className="tw:cursor-pointer tw:underline tw:underline-offset-2 tw:max-sm:min-h-10"
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  padding: 0,
+                  font: 'inherit',
+                  color: colors.primary[700],
+                }}
+              >
+                Name it
+              </button>
+            </>
+          )}
+        </div>
+      )}
       {/* Unchanged parameters still leave the run quietly; only "nothing changed" is said. */}
       {!empty && adjusted.length === 0 && (
         <p
