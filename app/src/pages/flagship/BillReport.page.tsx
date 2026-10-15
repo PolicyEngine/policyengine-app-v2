@@ -15,7 +15,7 @@ import StoredImpactCharts from '@/components/flagship/report/StoredImpactCharts'
 import { ErrorState } from '@/components/flagship/states';
 import { BillExternalEstimates, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Button, Stack, Text } from '@/components/ui';
-import { getDurationForCountry } from '@/constants/calculationDurations';
+import { getDurationForRegion } from '@/constants/calculationDurations';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
@@ -213,8 +213,9 @@ function FullResultsStatus({
     <RunProgress
       title="Calculating the full results"
       progress={economy.progress}
+      runStage={economy.runStage}
       detail={queued}
-      expectedMs={getDurationForCountry(countryId)}
+      expectedMs={getDurationForRegion(countryId, economy.region)}
       note="Later visits load from the cache."
     />
   );

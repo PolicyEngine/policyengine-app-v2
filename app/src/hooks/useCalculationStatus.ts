@@ -121,6 +121,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
 
     // Keep server data available
     queuePosition: status?.queuePosition,
+    runStage: status?.runStage,
     result: status?.result,
     error: status?.error,
     metadata: status?.metadata,
