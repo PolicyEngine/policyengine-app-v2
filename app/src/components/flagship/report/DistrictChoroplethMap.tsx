@@ -46,9 +46,9 @@ const BORDER_COLOR = colors.white;
 /** Stroke width for district borders */
 const BORDER_WIDTH = 0.5;
 
-/** Outline for the selected district */
+/** Outline for the selected district, in screen pixels at any zoom */
 const SELECTED_BORDER_COLOR = colors.gray[900];
-const SELECTED_BORDER_WIDTH = 2;
+const SELECTED_BORDER_WIDTH = 1.5;
 
 /** Color bar dimensions */
 const COLOR_BAR_WIDTH = 16;
@@ -615,6 +615,8 @@ export function DistrictChoroplethMap({
                           fill={fillColor}
                           stroke={isSelected ? SELECTED_BORDER_COLOR : BORDER_COLOR}
                           strokeWidth={isSelected ? SELECTED_BORDER_WIDTH : BORDER_WIDTH}
+                          // The map scales its shapes to zoom; the outline keeps its width.
+                          vectorEffect={isSelected ? 'non-scaling-stroke' : undefined}
                           style={{
                             default: { outline: 'none' },
                             hover: {

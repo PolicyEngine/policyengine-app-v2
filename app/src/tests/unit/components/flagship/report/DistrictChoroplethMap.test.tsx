@@ -99,7 +99,9 @@ describe('DistrictChoroplethMap', () => {
 
     // Then
     expect(selected).toHaveAttribute('data-selected', 'true');
-    expect(selected).toHaveAttribute('stroke-width', '2');
+    expect(selected).toHaveAttribute('stroke-width', '1.5');
+    // The same width on screen at any zoom, a state's close view too.
+    expect(selected).toHaveAttribute('vector-effect', 'non-scaling-stroke');
     expect(container.querySelectorAll('[data-selected]')).toHaveLength(1);
     const paths = container.querySelectorAll('path.rsm-geography');
     expect(paths[paths.length - 1]).toBe(selected);
