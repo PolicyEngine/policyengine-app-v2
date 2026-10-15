@@ -9,10 +9,21 @@ import {
 } from '@/api/billFeed';
 import { CURRENT_YEAR } from '@/constants';
 import {
+  LATE_STATUS,
+  LATE_STATUS_ROWS,
+  MANY_BILL_ROWS,
+  MANY_BILLS,
+  MANY_BILLS_BASELINE_RATE,
+  MANY_BILLS_STATUS,
+  mockPagedTrackerFetch,
   mockTrackerFetch,
   NET_COST_DRIFT_ROWS,
   NET_COST_ONLY_ROWS,
   TRACKER_NAMING_ROWS,
+  TWICE_FILED_BILL,
+  TWICE_FILED_CASES,
+  TWICE_FILED_LEGISCAN,
+  TWICE_FILED_OPENSTATES,
 } from '@/tests/fixtures/api/billFeedMocks';
 import { TRACKER_HOME } from '@/tests/fixtures/libs/flagship/billTrackerMocks';
 
@@ -301,86 +312,69 @@ describe('tracker reads', () => {
     ]);
   });
 
-  test('given pages read without an order repeat rows then every row still reads once', async () => {
+  test('given a status row past the first page then every load finds its stage and link', async () => {
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    const statuses = Array.from({ length: 1418 }, (_, index) => ({
-      bill_id: index,
-      state: 'UT',
-      bill_number: `HB${index}`,
-      status: 'Introduced',
-    }));
-    statuses[1417] = {
-      bill_id: 1417,
-      state: 'WV',
-      bill_number: 'SB392',
-      status: 'Signed into Law',
-    };
-    const fetchMock = vi.fn(async (url: string) => {
-      const params = new URL(url).searchParams;
-      const table = new URL(url).pathname.split('/').pop();
-      const offset = Number(params.get('offset') ?? 0);
-      const all: any[] =
-        table === 'processed_bills'
-          ? statuses
-          : table === 'research'
-            ? [{ id: 'wv-sb392', state: 'WV', type: 'bill', status: 'published', title: 'SB 392' }]
-            : [];
-      // Without an order the database picks any row order per request, as
-      // seen live: page 2 repeats rows 582-999 of page 1 and skips the rest.
-      const page =
-        params.get('order') || offset === 0
-          ? all.slice(offset, offset + 1000)
-          : all.slice(offset - 418, offset);
-      return {
-        ok: true,
-        headers: new Headers({
-          'content-range': `${offset}-${offset + page.length - 1}/${all.length}`,
-        }),
-        json: async () => page,
-      };
+    // Pages read with no fixed order repeat rows and skip the rest.
+    vi.stubGlobal('fetch', mockPagedTrackerFetch(LATE_STATUS_ROWS));
+
+    const [bill] = (await fetchTrackerBills())!;
+
+    expect([bill.status, bill.legiscanUrl]).toEqual([LATE_STATUS.status, LATE_STATUS.legiscanUrl]);
+  });
+
+  test('given every table past one page then each bill reads once, with its run, baseline, check and stage', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubGlobal('fetch', mockPagedTrackerFetch(MANY_BILL_ROWS));
+
+    const bills = (await fetchTrackerBills())!;
+
+    const billsWith = (has: (bill: (typeof bills)[number]) => boolean) =>
+      new Set(bills.filter(has).map((bill) => bill.id)).size;
+    expect({
+      listed: bills.length,
+      unique: billsWith(() => true),
+      withRun: billsWith((bill) => bill.impacts?.revenue !== undefined),
+      withBaseline: billsWith(
+        (bill) => bill.provisions[0]?.baselineIntervals?.[0]?.value === MANY_BILLS_BASELINE_RATE
+      ),
+      withCheck: billsWith((bill) => bill.validation?.withinRange === true),
+      withStage: billsWith((bill) => bill.status === MANY_BILLS_STATUS),
+    }).toEqual({
+      listed: MANY_BILLS,
+      unique: MANY_BILLS,
+      withRun: MANY_BILLS,
+      withBaseline: MANY_BILLS,
+      withCheck: MANY_BILLS,
+      withStage: MANY_BILLS,
     });
-    vi.stubGlobal('fetch', fetchMock);
+  });
 
-    const bills = await fetchTrackerBills();
+  test.each(TWICE_FILED_CASES)(
+    'given two status rows under one bill number when $when then the $winnerName row wins in any read order',
+    async ({ legiscanDate, openstatesDate, winner }) => {
+      vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
+      vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
+      const legiscan = { ...TWICE_FILED_LEGISCAN, last_action_date: legiscanDate };
+      const openstates = { ...TWICE_FILED_OPENSTATES, last_action_date: openstatesDate };
+      const loads = [];
+      for (const processed of [
+        [legiscan, openstates],
+        [openstates, legiscan],
+      ]) {
+        vi.stubGlobal(
+          'fetch',
+          mockTrackerFetch({ research: [TWICE_FILED_BILL], processed_bills: processed })
+        );
+        const [bill] = (await fetchTrackerBills())!;
+        loads.push([bill.status, bill.legiscanUrl]);
+      }
 
-    expect(bills?.[0].status).toBe('Signed into Law');
-    // Every paged read names a stable order.
-    for (const [url] of fetchMock.mock.calls) {
-      expect(new URL(String(url)).searchParams.get('order')).toBeTruthy();
+      const won = [winner.status, winner.legiscan_url];
+      expect(loads).toEqual([won, won]);
     }
-  });
-
-  test('given two status rows for one bill number then the latest action wins', async () => {
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_URL', 'https://tracker.example.supabase.co');
-    vi.stubEnv('NEXT_PUBLIC_TRACKER_SUPABASE_ANON_KEY', 'anon-key');
-    vi.stubGlobal(
-      'fetch',
-      mockTrackerFetch({
-        research: [{ id: 'mi-hb4170', state: 'MI', type: 'bill', title: 'MI HB 4170' }],
-        processed_bills: [
-          {
-            bill_id: 9,
-            state: 'MI',
-            bill_number: 'HB 4170',
-            status: 'Passed',
-            last_action_date: '2026-06-10',
-          },
-          {
-            bill_id: 3,
-            state: 'MI',
-            bill_number: 'HB4170',
-            status: 'Passed One Chamber',
-            last_action_date: '2026-03-02',
-          },
-        ],
-      })
-    );
-
-    const bills = await fetchTrackerBills();
-
-    expect(bills?.[0].status).toBe('Passed');
-  });
+  );
 });
 
 describe('fetchTrackerBills', () => {
