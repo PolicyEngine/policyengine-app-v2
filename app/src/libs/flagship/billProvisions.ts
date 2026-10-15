@@ -90,28 +90,38 @@ export function billAlreadyCurrentLaw(
   );
 }
 
+/** A write-up value read as one number, with the rounding its digits allow. */
+interface WriteUpNumber {
+  value: number;
+  /** How far the true value can lie from the written one: half its last digit. */
+  tolerance: number;
+  /** Whether the text has its own sign ("+1%", "−0.25%"). */
+  signed: boolean;
+}
+
 /**
- * A write-up value that is one plain number — "4.45%", "$2,000", "-0.5" —
- * with how far its rounding lets the true value lie: half its last digit.
+ * A write-up value that is one plain number — "4.45%", "$2,000", "-0.5".
  * Anything else (words, ranges, several values) reads as nothing.
  */
-function writeUpNumber(text: string): { value: number; tolerance: number } | undefined {
-  const match = text
-    .trim()
-    .match(/^([-\u2212+]?)\s*\$?\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?\s*%?$/);
+function writeUpNumber(text: string): WriteUpNumber | undefined {
+  const match = text.trim().match(/^([-−+]?)\s*\$?\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?\s*%?$/);
   if (!match) {
     return undefined;
   }
   const [, sign, whole, decimals = ''] = match;
   const magnitude = Number(`${whole.replace(/,/g, '')}.${decimals || '0'}`);
   return {
-    value: sign === '-' || sign === '\u2212' ? -magnitude : magnitude,
+    value: sign === '-' || sign === '−' ? -magnitude : magnitude,
     tolerance: 0.5 * 10 ** -decimals.length,
+    signed: sign !== '',
   };
 }
 
-/** Whether a change's parameter, which can hold "{filing_status}", names this path. */
-function changeNamesPath(parameter: string, path: string): boolean {
+/**
+ * Whether a tracker change's parameter, which can hold a placeholder
+ * ("main.{filing_status}.brackets[5].rate"), names this path.
+ */
+export function changeNamesPath(parameter: string, path: string): boolean {
   const pattern = parameter
     .split(/\{[^}]+\}/)
     .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
@@ -119,18 +129,23 @@ function changeNamesPath(parameter: string, path: string): boolean {
   return new RegExp(`^${pattern}$`).test(path);
 }
 
+/** A stored value as a write-up can give it: as stored, or as a percent either way. */
+const writtenForms = (value: number) => [value, value * 100, value / 100];
+
 /**
- * Whether the values a bill's run would score disagree with the tracker's
- * write-up of its changes — the "after" it shows in the Policy changes
- * table. A change is checked against the provisions it names, or against
- * a bill's only provision when the write-up has one change; one that
- * cannot be paired, or whose value is not one number, is not checked. A
- * written value agrees with any value the bill sets, as written or as a
- * percent of it ("4.45%" is 0.0445), within the write-up's rounding.
+ * Whether a bill's run would score the law before the bill instead of the
+ * bill: the stored parameters hold the write-up's "before" value and none
+ * of its "after" value (a tracker row with its reform and baseline
+ * swapped, as UT SB60's is).
  *
- * When they disagree the stored parameters do not describe the bill as
- * written up (a tracker row with its reform and baseline swapped scores
- * the law before the bill), and a run would score some other change.
+ * A change is checked against the provisions it names, all of them
+ * together (one filing status can hold the written value), or against a
+ * bill's only provision when the write-up has one change. A change that
+ * cannot be paired, that is not two plain numbers, or whose "after" is a
+ * step ("+1%" from "4%") is not checked. A written value agrees with a
+ * stored one as written or as a percent ("4.45%" is 0.0445), within the
+ * write-up's rounding. A value in other units ("$1,000" a year for 83.33
+ * a month) agrees with neither, so it flags nothing.
  */
 export function billScoresOtherThanWriteUp(
   provisions: Array<Pick<TrackedBillProvision, 'path' | 'value' | 'intervals'>>,
@@ -140,8 +155,9 @@ export function billScoresOtherThanWriteUp(
     return false;
   }
   return changes.some((change) => {
-    const written = writeUpNumber(change.after);
-    if (!written) {
+    const before = writeUpNumber(change.before);
+    const after = writeUpNumber(change.after);
+    if (!before || !after || (after.signed && !before.signed)) {
       return false;
     }
     const described = change.parameter
@@ -149,15 +165,20 @@ export function billScoresOtherThanWriteUp(
       : provisions.length === 1 && changes.length === 1
         ? provisions
         : [];
-    const near = (scored: number) =>
-      Math.abs(scored - written.value) <=
-      written.tolerance + 1e-9 * Math.max(1, Math.abs(written.value));
-    return described.some((provision) => {
-      const scored = [
+    const scored = described
+      .flatMap((provision) => [
         provision.value,
         ...(provision.intervals ?? []).map((interval) => interval.value),
-      ].filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
-      return scored.length > 0 && !scored.some((value) => near(value) || near(value * 100));
-    });
+      ])
+      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+    const holds = (written: WriteUpNumber) =>
+      scored.some((value) =>
+        writtenForms(value).some(
+          (form) =>
+            Math.abs(form - written.value) <=
+            written.tolerance + 1e-9 * Math.max(1, Math.abs(written.value))
+        )
+      );
+    return holds(before) && !holds(after);
   });
 }
