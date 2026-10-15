@@ -193,6 +193,29 @@ const LATER_STATE_BILL = {
   ],
 };
 
+/**
+ * UT SB60 as the tracker stores it: a write-up of 4.5% → 4.45%, but
+ * reform params of 0.045, the law before the bill.
+ */
+const SWAPPED_STATE_BILL = {
+  id: 'ut-sb60-bill',
+  countryId: 'us' as const,
+  jurisdiction: 'Utah',
+  state: 'UT',
+  title: 'Utah SB60: Income tax rate reduction',
+  status: 'Signed into Law',
+  summary: 'Cuts the income tax rate from 4.5% to 4.45%.',
+  provisions: [
+    {
+      path: 'gov.states.ut.tax.income.rate',
+      value: 0.045,
+      intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.045 }],
+      fallbackBreadcrumb: 'Utah → Income tax → Rate',
+    },
+  ],
+  changes: [{ label: 'Income tax rate', before: '4.5%', after: '4.45%' }],
+};
+
 function renderReforms(path?: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const ui = (
@@ -338,6 +361,22 @@ describe('ReformsPage', () => {
     // No state region, and still the bill's draft.
     expect(draft?.population).toEqual({ scope: 'national' });
     expect(draft).toMatchObject({ source: 'bill', sourceRef: 'us-ctc-expansion' });
+  });
+
+  test('given stored parameters that contradict the write-up then no report or draft starts', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([...FEED_BILLS, SWAPPED_STATE_BILL]);
+    renderReforms(`/us/reforms?bill=${SWAPPED_STATE_BILL.id}`);
+
+    const draftButton = await screen.findByRole('button', { name: /open as draft reform/i });
+    expect(draftButton).toBeDisabled();
+    expect(screen.getByRole('button', { name: /run impact report/i })).toBeDisabled();
+    expect(screen.getByText(/do not match its write-up of the changes/)).toBeInTheDocument();
+
+    await user.click(draftButton);
+
+    expect(getDraftReform()).toBeNull();
+    expect(mockRun).not.toHaveBeenCalled();
   });
 
   test('given the federal level then state bills leave', async () => {
