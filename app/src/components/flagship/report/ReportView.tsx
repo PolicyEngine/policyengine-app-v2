@@ -406,6 +406,7 @@ export default function ReportView({
                         region={region}
                         baselinePolicyId={baselinePolicyId}
                         reformPolicyId={reformPolicyId}
+                        reformPaths={provisions.map((provision) => provision.path)}
                       />
                     ) : (
                       <>

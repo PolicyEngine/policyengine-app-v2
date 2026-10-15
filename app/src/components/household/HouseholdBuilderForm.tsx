@@ -37,6 +37,7 @@ import {
   getVariableInfo,
   removeVariableFromEntity,
   resolveEntity,
+  VariableInfo,
 } from '@/utils/VariableResolver';
 import SPMGeographyChoice from './SPMGeographyChoice';
 import VariableRow from './VariableRow';
@@ -55,6 +56,67 @@ export interface HouseholdBuilderFormProps {
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
   isReadOnly?: boolean;
+  /** Leave out the SPM geography choice; the household keeps its own. */
+  hideSpmGeography?: boolean;
+  /** "columns" sets the sections side by side on a wide screen; stacked by default. */
+  layout?: 'stacked' | 'columns';
+  /** Variables to list first in the variable search, in order, under their own heading. */
+  suggestedVariables?: string[];
+  /** The heading over the suggested variables. */
+  suggestedLabel?: string;
+  /**
+   * "relevance" ranks matches (whole words before parts of words, all
+   * words of the search required); "substring", the default, lists every
+   * label containing the text, in metadata order.
+   */
+  searchRanking?: 'substring' | 'relevance';
+}
+
+/**
+ * How well one search word matches a variable: its whole label or name
+ * (0), the start of either (1), the start of a word in them (2), or
+ * inside a word (3, so "rent" still finds "parent" but after "Rent").
+ */
+function wordMatchScore(word: string, label: string, name: string): number | null {
+  if (label === word || name === word) {
+    return 0;
+  }
+  if (label.startsWith(word) || name.startsWith(word)) {
+    return 1;
+  }
+  const wordStart = new RegExp(`(^|[^a-z0-9])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+  if (wordStart.test(label) || wordStart.test(name.replaceAll('_', ' '))) {
+    return 2;
+  }
+  if (label.includes(word) || name.includes(word)) {
+    return 3;
+  }
+  return null;
+}
+
+/** Variables matching every word of the search, best matches first, then shorter labels. */
+export function rankVariablesBySearch(variables: VariableInfo[], search: string): VariableInfo[] {
+  const words = search.toLowerCase().split(/\s+/).filter(Boolean);
+  const scored: Array<{ variable: VariableInfo; score: number }> = [];
+  for (const variable of variables) {
+    const label = variable.label.toLowerCase();
+    const name = variable.name.toLowerCase();
+    let score = 0;
+    for (const word of words) {
+      const wordScore = wordMatchScore(word, label, name);
+      if (wordScore === null) {
+        score = -1;
+        break;
+      }
+      score += wordScore;
+    }
+    if (score >= 0) {
+      scored.push({ variable, score });
+    }
+  }
+  return scored
+    .sort((a, b) => a.score - b.score || a.variable.label.length - b.variable.label.length)
+    .map(({ variable }) => variable);
 }
 
 interface BuilderWarning {
@@ -73,6 +135,11 @@ export default function HouseholdBuilderForm({
   onChange,
   onMaritalStatusChange,
   onNumChildrenChange,
+  hideSpmGeography = false,
+  layout = 'stacked',
+  suggestedVariables,
+  suggestedLabel = 'Suggested',
+  searchRanking = 'substring',
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -122,19 +189,38 @@ export default function HouseholdBuilderForm({
   // Maximum number of results to display in dropdown for performance
   const MAX_DROPDOWN_RESULTS = 100;
 
+  // Suggested variables lead the list, in their own order; the rest keep theirs.
+  const suggestedOrder = useMemo(
+    () => new Map((suggestedVariables ?? []).map((name, index) => [name, index])),
+    [suggestedVariables]
+  );
+  const leadWithSuggested = (list: VariableInfo[]): VariableInfo[] =>
+    suggestedOrder.size === 0
+      ? list
+      : [
+          ...list
+            .filter((variable) => suggestedOrder.has(variable.name))
+            .sort((a, b) => suggestedOrder.get(a.name)! - suggestedOrder.get(b.name)!),
+          ...list.filter((variable) => !suggestedOrder.has(variable.name)),
+        ];
+
   // Filter variables by search value with result limit for performance
   const filterVariables = (searchValue: string) => {
     if (!searchValue.trim()) {
       return {
-        variables: allInputVariables.slice(0, MAX_DROPDOWN_RESULTS),
+        variables: leadWithSuggested(allInputVariables).slice(0, MAX_DROPDOWN_RESULTS),
         truncated: allInputVariables.length > MAX_DROPDOWN_RESULTS,
       };
     }
     const search = searchValue.toLowerCase();
-    const filtered = allInputVariables.filter(
-      (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
-    );
+    const filtered =
+      searchRanking === 'relevance'
+        ? rankVariablesBySearch(allInputVariables, searchValue)
+        : allInputVariables.filter(
+            (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
+          );
     return {
+      // A typed search ranks by its own match; suggestions lead only the open list.
       variables: filtered.slice(0, MAX_DROPDOWN_RESULTS),
       truncated: filtered.length > MAX_DROPDOWN_RESULTS,
     };
@@ -143,13 +229,13 @@ export default function HouseholdBuilderForm({
   // Memoized filtered variables for person search
   const filteredPersonVariables = useMemo(
     () => filterVariables(personSearchValue),
-    [personSearchValue, allInputVariables]
+    [personSearchValue, allInputVariables, suggestedOrder]
   );
 
   // Memoized filtered variables for household search
   const filteredHouseholdVariables = useMemo(
     () => filterVariables(householdSearchValue),
-    [householdSearchValue, allInputVariables]
+    [householdSearchValue, allInputVariables, suggestedOrder]
   );
 
   const resolveDefaultGroupInstanceName = (variableName: string): string | undefined => {
@@ -308,16 +394,24 @@ export default function HouseholdBuilderForm({
     onChange(newHousehold);
   };
 
+  const columns = layout === 'columns';
+
   return (
-    <Stack gap="lg">
-      <SPMGeographyChoice
-        household={household}
-        year={year}
-        metadata={metadata}
-        onChange={onChange}
-        disabled={disabled}
-        isReadOnly={isReadOnly}
-      />
+    // In columns, each section (family, individuals, household) is a column of the grid.
+    <Stack
+      gap="lg"
+      className={columns ? 'tw:lg:grid tw:lg:grid-cols-3 tw:lg:items-start tw:lg:gap-6' : undefined}
+    >
+      {!hideSpmGeography && (
+        <SPMGeographyChoice
+          household={household}
+          year={year}
+          metadata={metadata}
+          onChange={onChange}
+          disabled={disabled}
+          isReadOnly={isReadOnly}
+        />
+      )}
       {/* Floating notification when variable added to different entity */}
       {warningMessage && (
         <div
@@ -398,10 +492,14 @@ export default function HouseholdBuilderForm({
         </div>
       </Stack>
 
-      <hr className="tw:border-border-light" />
+      {!columns && <hr className="tw:border-border-light" />}
 
       {/* Main Accordion Sections - all open by default */}
-      <Accordion type="multiple" defaultValue={['individuals', 'household-vars']}>
+      <Accordion
+        type="multiple"
+        defaultValue={['individuals', 'household-vars']}
+        className={columns ? 'tw:lg:contents' : undefined}
+      >
         {/* Individuals / Members Section */}
         <AccordionItem value="individuals">
           <AccordionTrigger>
@@ -475,6 +573,12 @@ export default function HouseholdBuilderForm({
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={filteredPersonVariables.variables}
                             truncated={filteredPersonVariables.truncated}
+                            suggested={
+                              suggestedOrder.size > 0 && !personSearchValue.trim()
+                                ? suggestedOrder
+                                : undefined
+                            }
+                            suggestedLabel={suggestedLabel}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
@@ -572,6 +676,12 @@ export default function HouseholdBuilderForm({
                   onFocusChange={setIsHouseholdSearchFocused}
                   filteredVariables={filteredHouseholdVariables.variables}
                   truncated={filteredHouseholdVariables.truncated}
+                  suggested={
+                    suggestedOrder.size > 0 && !householdSearchValue.trim()
+                      ? suggestedOrder
+                      : undefined
+                  }
+                  suggestedLabel={suggestedLabel}
                   onSelect={handleHouseholdVariableSelect}
                   getEntityHint={(variable) => {
                     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
