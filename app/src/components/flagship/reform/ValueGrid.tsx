@@ -1,4 +1,5 @@
-import { Fragment } from 'react';
+import { Fragment, useMemo, useState } from 'react';
+import { STATE_NAMES } from '@/api/billFeed';
 import { colors, spacing, typography } from '@/designTokens';
 import { isEditableValue, sameParameterValue } from '@/libs/draftReform';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -38,6 +39,40 @@ interface ValueGridProps {
    * breakdown or more than one year.
    */
   inline?: boolean;
+}
+
+/** Past this many members, one year's values lay out as a filterable grid, not a table. */
+const MANY_MEMBERS = 12;
+
+/** The jurisdictions a federal parameter keys by that are not states. */
+const OTHER_JURISDICTIONS: Record<string, string> = {
+  PR: 'Puerto Rico',
+  GU: 'Guam',
+  VI: 'U.S. Virgin Islands',
+  AS: 'American Samoa',
+  MP: 'Northern Mariana Islands',
+  FM: 'Micronesia',
+  MH: 'Marshall Islands',
+  PW: 'Palau',
+  AA: 'Armed Forces Americas',
+  AE: 'Armed Forces Europe',
+  AP: 'Armed Forces Pacific',
+};
+
+/**
+ * A member as a reader names it: a state-keyed member by its state's
+ * name ("Alaska", not "Ak"), anything else by its own label. States sort
+ * first, then the territories and military codes.
+ */
+function memberName(member: ValueGridMember): { name: string; rank: number | null } {
+  const key = member.path.split('.').pop() ?? '';
+  if (STATE_NAMES[key]) {
+    return { name: STATE_NAMES[key], rank: 0 };
+  }
+  if (OTHER_JURISDICTIONS[key]) {
+    return { name: OTHER_JURISDICTIONS[key], rank: 1 };
+  }
+  return { name: member.label, rank: null };
 }
 
 const sameValue = (a: any, b: any) =>
@@ -84,6 +119,22 @@ export default function ValueGrid({
 }: ValueGridProps) {
   const lone = members.length === 1;
   const allYears = [...years, ...previewYears];
+
+  if (members.length > MANY_MEMBERS && years.length === 1 && previewYears.length === 0) {
+    return (
+      <MemberValueCards
+        members={members}
+        year={years[0]}
+        parameters={parameters}
+        valueAt={valueAt}
+        baselineAt={baselineAt}
+        onChange={onChange}
+        onFocus={onFocus}
+        lead={lead}
+        footer={footer}
+      />
+    );
+  }
 
   if (inline && lone && allYears.length === 1 && parameters[members[0].path]) {
     const member = members[0];
@@ -478,6 +529,188 @@ export default function ValueGrid({
           )}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/**
+ * One year's values for a breakdown with many members (a value per
+ * state): a grid of compact cells, named and sorted, with a filter and a
+ * switch to show only the changed ones, rather than a table a screen long.
+ */
+function MemberValueCards({
+  members,
+  year,
+  parameters,
+  valueAt,
+  baselineAt,
+  onChange,
+  onFocus,
+  lead,
+  footer,
+}: {
+  members: ValueGridMember[];
+  year: number;
+  parameters: ParameterMetadataCollection;
+  valueAt: (path: string, year: number) => any;
+  baselineAt: (path: string, year: number) => any;
+  onChange: (path: string, year: number, value: any) => void;
+  onFocus: (path: string) => void;
+  lead?: { label: string; content: React.ReactNode };
+  footer?: { label: string; content: React.ReactNode };
+}) {
+  const [filter, setFilter] = useState('');
+  const [changedOnly, setChangedOnly] = useState(false);
+  const named = useMemo(() => {
+    const list = members
+      .filter((member) => parameters[member.path])
+      .map((member) => ({ member, ...memberName(member) }));
+    // A breakdown by jurisdiction sorts by name; any other keeps its own order (age bands, brackets).
+    return list.every((entry) => entry.rank !== null)
+      ? [...list].sort((a, b) => a.rank! - b.rank! || a.name.localeCompare(b.name))
+      : list;
+  }, [members, parameters]);
+  const isChanged = (path: string) => !sameValue(valueAt(path, year), baselineAt(path, year));
+  const changedCount = named.filter(({ member }) => isChanged(member.path)).length;
+  const query = filter.trim().toLowerCase();
+  const shown = named.filter(
+    ({ member, name }) =>
+      (!changedOnly || isChanged(member.path)) &&
+      (!query || name.toLowerCase().includes(query) || member.label.toLowerCase().includes(query))
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: spacing.md,
+        fontFamily: typography.fontFamily.primary,
+        fontSize: typography.fontSize.sm,
+      }}
+    >
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
+        {lead && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+            <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+              {lead.label}
+            </span>
+            {lead.content}
+          </span>
+        )}
+        <input
+          type="search"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+          placeholder={`Filter ${named.length} values…`}
+          aria-label="Filter the values"
+          className="tw:h-9 tw:w-56 tw:rounded-md tw:border tw:border-gray-300 tw:bg-white tw:px-3 tw:text-sm tw:outline-none tw:focus:border-primary-500"
+        />
+        <label
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+            fontSize: typography.fontSize.xs,
+            color: colors.text.secondary,
+            cursor: 'pointer',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={changedOnly}
+            onChange={(event) => setChangedOnly(event.target.checked)}
+          />
+          Changed only ({changedCount})
+        </label>
+      </div>
+
+      {shown.length === 0 ? (
+        <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+          {changedOnly && !query ? 'No value changed yet.' : 'No value matches.'}
+        </span>
+      ) : (
+        <div className="tw:grid tw:gap-2 tw:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+          {shown.map(({ member, name }) => {
+            const param = parameters[member.path];
+            const value = valueAt(member.path, year);
+            const baseline = baselineAt(member.path, year);
+            const changed = !sameValue(value, baseline);
+            const baselineText = formatValue(baseline, param.unit ?? null);
+            return (
+              <div
+                key={member.path}
+                aria-label={`${name}, ${year}`}
+                data-path={member.path}
+                title={`Current law: ${baselineText}`}
+                onFocusCapture={() => onFocus(member.path)}
+                className={changed ? undefined : 'tw:[&_input]:text-gray-500'}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  padding: `${spacing.sm} ${spacing.md}`,
+                  borderRadius: spacing.radius.container,
+                  border: `1px solid ${changed ? colors.primary[200] : colors.border.light}`,
+                  background: changed ? colors.primary[50] : colors.background.primary,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: spacing.sm,
+                  }}
+                >
+                  <span
+                    style={{
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      fontWeight: changed
+                        ? typography.fontWeight.medium
+                        : typography.fontWeight.normal,
+                    }}
+                  >
+                    {name}
+                  </span>
+                  <div style={{ flexShrink: 0, maxWidth: 140 }}>
+                    {isEditableValue(baseline) ? (
+                      <ValueInput
+                        param={param}
+                        value={value}
+                        onChange={(next) => onChange(member.path, year, next)}
+                      />
+                    ) : (
+                      <span
+                        style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+                      >
+                        {baselineText}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {changed && (
+                  <span style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+                    Current law: {baselineText}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {footer && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+          <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+            {footer.label}
+          </span>
+          {footer.content}
+        </div>
+      )}
     </div>
   );
 }
