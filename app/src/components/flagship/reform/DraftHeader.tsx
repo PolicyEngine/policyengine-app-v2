@@ -393,12 +393,11 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   return (
     <section
       aria-label="Reform actions"
-      // To the scroll area's bottom edge, over the page's own padding, so
-      // nothing shows through under the bar as the reform scrolls.
-      className="tw:-mb-lg tw:pb-lg tw:sm:-mb-2xl tw:sm:pb-2xl"
+      // Stuck to the scroll area's very bottom, over the page's own padding
+      // (a sticky bar stops at the padding), so nothing shows under it.
+      className="tw:-bottom-lg tw:pb-lg tw:sm:-bottom-2xl tw:sm:pb-2xl"
       style={{
         position: 'sticky',
-        bottom: 0,
         // Over the reform scrolling under it, but under the add bar (10),
         // whose search results and policy tree open down over the page.
         zIndex: 5,
