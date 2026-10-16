@@ -35,8 +35,8 @@ export type ReformBaseline = (typeof reformBaselines)[number];
  * record in the main PolicyEngine API. When a reform is simulated, it is
  * materialized into a canonical Policy via the existing createPolicy()
  * flow and the resulting id is linked back via policyId. It carries no
- * user identifier: the browser that saved it keeps it in its own index
- * (see libs/flagship/ownedItems).
+ * user identifier: its owner comes from the session (see
+ * hooks/useFlagshipStores).
  */
 export interface Reform {
   id?: string;
@@ -45,6 +45,12 @@ export interface Reform {
   /** Canonical policy id in api.policyengine.org once materialized */
   policyId?: string | null;
   parameters: Parameter[];
+  /**
+   * Set when the reform's changes could not be loaded (a saved reform
+   * whose v1 policy did not load). `parameters` is then empty and must
+   * not be shown, run, matched or saved as the reform's changes.
+   */
+  parametersUnavailable?: boolean;
   baseline: ReformBaseline;
   provenance: ReformProvenance;
   createdAt?: string;

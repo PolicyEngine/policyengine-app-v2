@@ -234,7 +234,10 @@ export function ReportComputingScreen({
   );
 }
 
-/** A link this browser cannot resolve: the report id belongs to another browser's local records. */
+/**
+ * A link that no longer opens: a report's link is its saved report's ID,
+ * and older links carried the v1 report's number or a browser-only ID.
+ */
 export function ReportUnresolvable() {
   return (
     <Card>
@@ -245,12 +248,11 @@ export function ReportUnresolvable() {
           color: colors.text.primary,
         }}
       >
-        This link only opens in the browser that ran the report.
+        Report not found.
       </Text>
       <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-        It carries a local report id. Reports run from now on carry a shareable id in their link;
-        ask for the link again from the browser that created this one, or run the reform afresh from
-        Build.
+        This is an old report link, which no longer opens. Run the reform again from Build to get a
+        new link.
       </Text>
     </Card>
   );

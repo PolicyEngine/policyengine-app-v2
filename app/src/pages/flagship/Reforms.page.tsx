@@ -12,8 +12,9 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { billRunYear, TrackedBill } from '@/api/billFeed';
-import { getFlagshipReportStore } from '@/api/flagshipReportStore';
-import { getReformStore } from '@/api/reformStore';
+import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { fetchReportById } from '@/api/report';
+import { fetchSimulationById } from '@/api/simulation';
 import BillFeedFilters from '@/components/flagship/bills/BillFeedFilters';
 import BillStageBadge from '@/components/flagship/bills/BillStageBadge';
 import DeleteReformDialog from '@/components/flagship/DeleteReformDialog';
@@ -36,9 +37,15 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { billRegion } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
-import { loadProvisionsIntoDraft } from '@/libs/draftReform';
+import {
+  loadProvisionsIntoDraft,
+  provisionsToRun,
+  reformToProvisions,
+  type ProvisionDetails,
+} from '@/libs/draftReform';
 import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
 import {
   billAlreadyCurrentLaw,
@@ -51,7 +58,7 @@ import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
-import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
@@ -86,15 +93,6 @@ const filterControl: React.CSSProperties = {
   fontFamily: typography.fontFamily.primary,
   color: colors.text.secondary,
 };
-
-interface ProvisionView {
-  path: string;
-  breadcrumb: string;
-  unit: string | null;
-  baselineValue: any;
-  value: any;
-  intervals?: ValueInterval[];
-}
 
 /** The year a saved reform's report runs: its first change, or this year once that is past. */
 const reformRunYear = (reform: Reform) =>
@@ -300,6 +298,8 @@ export default function ReformsPage() {
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const currentLawPolicyId =
+    Number(useSelector((state: RootState) => state.metadata.currentLawId)) || undefined;
   const appLocation = useAppLocation();
   const urlParams = useMemo(() => new URLSearchParams(appLocation.search), [appLocation.search]);
 
@@ -312,6 +312,11 @@ export default function ReformsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(() => urlParams.get('bill'));
 
   const runReport = useRunFlagshipReport();
+  const reformStore = useReformStore();
+  const { store: reportStore } = useFlagshipReportStore();
+  const { scope } = useV3SavedWork();
+  // A re-run whose settings could not be read; the run's own errors are runReport's.
+  const [rerunError, setRerunError] = useState<string | null>(null);
   const {
     bills,
     isConfigured: billsConfigured,
@@ -325,17 +330,17 @@ export default function ReformsPage() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ['reforms', countryId],
-    queryFn: () => getReformStore().findMine(countryId),
+    queryKey: ['reforms', scope, countryId],
+    queryFn: () => reformStore.findMine(countryId),
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
 
-  // The reports this browser ran, by the saved reform each came from: a
-  // reform is where its reports are found again.
+  // This session's reports, by the saved reform each came from: a reform
+  // is where its reports are found again.
   const { data: reports } = useQuery({
-    queryKey: flagshipReportQueryKeys.mine(countryId),
-    queryFn: () => getFlagshipReportStore().findMine(countryId),
+    queryKey: flagshipReportQueryKeys.mine(scope, countryId),
+    queryFn: () => reportStore.findMine(countryId),
   });
   const reportsFor = (reformId: string | undefined) =>
     reformId ? (reports ?? []).filter((report) => report.reformId === reformId) : [];
@@ -355,7 +360,7 @@ export default function ReformsPage() {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (reformId: string) => getReformStore().delete(reformId),
+    mutationFn: (reformId: string) => reformStore.delete(reformId),
     onSuccess: () => {
       setSelectedId(null);
       invalidate();
@@ -376,6 +381,57 @@ export default function ReformsPage() {
     });
   };
 
+  const provisionDetails: ProvisionDetails = (path) => ({
+    breadcrumb: resolveBreadcrumb(path),
+    unit: parameters?.[path]?.unit ?? null,
+    baselineValue: getCurrentValue(parameters?.[path]?.values),
+  });
+
+  /** A saved reform of this session's, by its ID. */
+  const savedReform = (reformId: string) => reforms?.find((reform) => reform.id === reformId);
+
+  /**
+   * The year a report scored. A record saved through the API keeps no year
+   * (the report itself carries it), so it is read from the API's record,
+   * as the report rows read it; unknown when that fails.
+   */
+  const reportYear = async (report: FlagshipReportRecord): Promise<string | undefined> => {
+    if (report.year) {
+      return report.year;
+    }
+    try {
+      const apiReport = await queryClient.fetchQuery({
+        queryKey: flagshipReportQueryKeys.status(countryId, report.apiReportId),
+        queryFn: () => fetchReportById(countryId, report.apiReportId),
+        staleTime: 60_000,
+      });
+      return apiReport.year ?? undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  // The policy a report's baseline simulation ran: current law, or the
+  // reform it was compared with, even when its record no longer names it.
+  const reportBaselinePolicyId = async (
+    report: FlagshipReportRecord
+  ): Promise<string | undefined> => {
+    try {
+      const apiReport = await queryClient.fetchQuery({
+        queryKey: flagshipReportQueryKeys.status(countryId, report.apiReportId),
+        queryFn: () => fetchReportById(countryId, report.apiReportId),
+        staleTime: 60_000,
+      });
+      const simulation = await queryClient.fetchQuery({
+        queryKey: flagshipReportQueryKeys.baselineSimulation(countryId, apiReport.simulation_1_id),
+        queryFn: () => fetchSimulationById(countryId, apiReport.simulation_1_id),
+        staleTime: Infinity,
+      });
+      return simulation.policy_id ? String(simulation.policy_id) : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
   // As on the bill's report: stored parameters that contradict the bill's
   // write-up (UT SB60's reform and baseline are swapped) would score
   // another change, so neither a report nor a draft starts from them.
@@ -390,23 +446,6 @@ export default function ReformsPage() {
       ? (new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`) ??
           getCurrentValue(values))
       : undefined;
-  };
-
-  /** The reform as the report runs it: every dated value, described in the run year. */
-  const reformProvisions = (reform: Reform): ProvisionView[] => {
-    const year = reformRunYear(reform);
-    return reform.parameters.map((parameter) => {
-      const baselineValue = currentLawAt(parameter.name, year);
-      const inYear = new ValueIntervalCollection(parameter.values).getValueAtDate(`${year}-01-01`);
-      return {
-        path: parameter.name,
-        breadcrumb: resolveBreadcrumb(parameter.name),
-        unit: parameters?.[parameter.name]?.unit ?? null,
-        baselineValue,
-        value: inYear ?? baselineValue,
-        ...(parameter.values.length > 0 && { intervals: parameter.values }),
-      };
-    });
   };
 
   const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -462,8 +501,9 @@ export default function ReformsPage() {
     : null;
 
   const openReform = (reform: Reform) => {
-    // A failed delete belongs to the reform it was tried on.
+    // A failed delete or re-run belongs to the reform it was tried on.
     deleteMutation.reset();
+    setRerunError(null);
     setSelectedId(reform.id!);
   };
 
@@ -679,6 +719,16 @@ export default function ReformsPage() {
     const count = selectedReform.parameters.length;
     // The store starts with no parameters; names and current law need them.
     const metadataReady = !!parameters && Object.keys(parameters).length > 0;
+    // What the report would run, as Build runs it (dated changes
+    // included); a reform that changes nothing has no report to run.
+    // Run in the reform's own year: its first change, or this year once that is past.
+    const runYear = reformRunYear(selectedReform);
+    const runProvisions = provisionsToRun(
+      reformToProvisions(selectedReform, provisionDetails),
+      runYear,
+      parameters
+    );
+    const changesNothing = !selectedReform.parametersUnavailable && runProvisions.length === 0;
     return (
       <WorkspaceLayout>
         <Stack style={{ gap: spacing.xl }}>
@@ -690,12 +740,25 @@ export default function ReformsPage() {
             <Text
               style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
             >
-              {count} {count === 1 ? 'provision' : 'provisions'}
+              {selectedReform.parametersUnavailable
+                ? 'Changes could not be loaded'
+                : `${count} ${count === 1 ? 'provision' : 'provisions'}`}
               {selectedReform.createdAt
                 ? ` · saved ${dayjs(selectedReform.createdAt).format('MMM D, YYYY')}`
                 : ''}
             </Text>
           </Stack>
+          {selectedReform.parametersUnavailable && (
+            <Stack role="alert" style={{ gap: spacing.sm, alignItems: 'flex-start' }}>
+              <Text style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
+                This reform's changes could not be loaded, so it cannot be run right now. Nothing
+                about it has changed.
+              </Text>
+              <Button variant="outline" onClick={invalidate}>
+                Try again
+              </Button>
+            </Stack>
+          )}
 
           <div role="table" aria-label="Parameters">
             <div role="row" style={{ ...PARAMETER_ROW, paddingTop: 0 }}>
@@ -828,28 +891,44 @@ export default function ReformsPage() {
             }}
           >
             <Button
-              onClick={() => {
+              onClick={async () => {
                 // A report of these values already exists, done or still
-                // computing: open it rather than starting the wait again.
+                // computing: open it at its link rather than starting the
+                // wait again.
+                const reformReports = await Promise.all(
+                  reportsFor(selectedReform.id).map(async (report) => ({
+                    ...report,
+                    year: await reportYear(report),
+                    baselinePolicyId: await reportBaselinePolicyId(report),
+                  }))
+                );
                 const latest = latestMatchingReport(
                   selectedReform,
-                  reportsFor(selectedReform.id),
-                  reformRunYear(selectedReform)
+                  reformReports,
+                  runYear,
+                  currentLawPolicyId
                 );
                 if (latest) {
-                  nav.push(`/${countryId}/report/${latest.apiReportId}`);
+                  nav.push(`/${countryId}/report/${reportLink(latest)}`);
                   return;
                 }
                 void runReport.run(
                   reformName,
                   SOURCE_LABELS[selectedReform.provenance.source],
-                  reformProvisions(selectedReform),
+                  runProvisions,
                   // Links the report record to the saved reform it came from.
                   selectedReform.id,
-                  reformRunYear(selectedReform)
+                  runYear
                 );
               }}
-              disabled={runReport.isRunning}
+              disabled={
+                runReport.isRunning || selectedReform.parametersUnavailable || changesNothing
+              }
+              title={
+                changesNothing
+                  ? 'Adjust at least one value from current law to run the report'
+                  : undefined
+              }
             >
               <IconChartBar size={16} />
               {runReport.isRunning ? 'Starting report…' : 'View full impact report'}
@@ -861,9 +940,17 @@ export default function ReformsPage() {
               onConfirm={() => deleteMutation.mutate(selectedReform.id!)}
             />
           </div>
-          {runReport.error && (
+          {changesNothing && (
+            <Text
+              style={{ margin: 0, fontSize: typography.fontSize.xs, color: colors.text.tertiary }}
+            >
+              Nothing in this reform differs from current law. Adjust at least one value to run the
+              report.
+            </Text>
+          )}
+          {(runReport.error || rerunError) && (
             <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
-              {runReport.error}
+              {runReport.error || rerunError}
             </Text>
           )}
           {deleteMutation.isError && (
@@ -876,17 +963,31 @@ export default function ReformsPage() {
             countryId={countryId}
             reports={reportsFor(selectedReform.id)}
             rerunning={runReport.isRunning}
+            reformName={(reformId) => {
+              const reform = savedReform(reformId);
+              return reform ? reform.label || 'Untitled reform' : undefined;
+            }}
             onRerun={async (report) => {
+              setRerunError(null);
               // The same report on today's model: its reform as it ran, its
-              // year, population, budget window and comparison.
-              const settings = await rerunSettings(countryId, report);
+              // year, population, budget window and comparison, linked to the
+              // same saved reform.
+              const settings = await rerunSettings(countryId, report, {
+                savedReform,
+                currentLawPolicyId,
+              }).catch(() => null);
+              if (!settings) {
+                setRerunError('Could not re-run the report. Try again.');
+                return;
+              }
+              const { year, ...runSettings } = settings;
               await runReport.run(
                 report.title || selectedReform.label || 'Untitled reform',
                 report.sourceNote || SOURCE_LABELS[selectedReform.provenance.source],
                 report.provisions,
-                selectedReform.id,
-                Number(report.year) || undefined,
-                settings
+                report.reformId ?? selectedReform.id,
+                year,
+                runSettings
               );
             }}
           />
@@ -1087,7 +1188,11 @@ export default function ReformsPage() {
             visibleReforms.map((reform) => (
               <Card
                 key={reform.id}
-                eyebrow={`${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`}
+                eyebrow={
+                  reform.parametersUnavailable
+                    ? 'Changes could not be loaded'
+                    : `${reform.parameters.length} provision${reform.parameters.length === 1 ? '' : 's'}`
+                }
                 badge={(() => {
                   const latest = latestReport(reform.id);
                   return latest?.apiReportId ? (

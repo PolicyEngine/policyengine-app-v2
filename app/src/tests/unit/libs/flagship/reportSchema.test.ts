@@ -2,40 +2,28 @@ import { describe, expect, test } from 'vitest';
 import {
   parseReportMeta,
   parseReportRecord,
-  parseReportRow,
   readableReports,
   REPORT_SCHEMA_VERSION,
-  reportProvisionsWireError,
   ReportSchemaError,
-  reportValidationWireError,
   stampReportMeta,
   stampReportRecord,
   unwrapReport,
 } from '@/libs/flagship/reportSchema';
-import { validationToWire } from '@/libs/flagship/reportValidation';
-import { CENTRAL_REPORT_ID } from '@/tests/fixtures/libs/flagship/ownedItemsMocks';
 import {
-  CTC_PROVISION,
   CURRENT_SCHEMA_VERSION,
   currentMeta,
   currentRecord,
   GROWING_PROVISION,
   historicMeta,
   historicRecords,
-  historicRows,
   malformedMeta,
   malformedRecords,
   recordFromNewerVersion,
   recordWithDamagedPin,
   recordWithoutUserId,
-  rowWithoutUserId,
   sparseMeta,
   sparseMetaExpected,
 } from '@/tests/fixtures/libs/flagship/reportSchemaMocks';
-import {
-  MATCHED_AT,
-  mockReportValidationSnapshot,
-} from '@/tests/fixtures/libs/flagship/reportValidationMocks';
 
 /** What a stored value reads back as after a trip through localStorage. */
 function throughStorage(value: unknown): unknown {
@@ -161,87 +149,33 @@ describe('parseReportRecord', () => {
   });
 });
 
-describe('parseReportRow', () => {
-  test.each(historicRows)(
-    'given a central row with %s then it reads as a record',
-    (_n, row, expected) => {
-      expect(parseReportRow(row)).toEqual({ ok: true, value: expected });
-    }
-  );
-
-  test('given a row with provisions that are not a list then it reads as a typed error', () => {
-    const result = parseReportRow({ ...rowWithoutUserId, provisions: 'oops' });
-
-    expect(result.ok ? null : result.error.field).toBe('provisions');
-  });
-
-  test('given a row whose pin is too damaged to convert then it reads without the pin', () => {
-    const row = {
-      ...rowWithoutUserId,
-      validation: { matched_at: MATCHED_AT, calibration: { matches: 'x' } },
+describe('parseReportRecord and the account fields', () => {
+  test('given a budget window and a compared reform then both read back unchanged', () => {
+    const withAccountFields = {
+      ...currentRecord,
+      budgetWindowYears: 10,
+      baselineReformId: 'b5c4d3e2-1f0a-4b9c-8d7e-6f5a4b3c2d1e',
     };
 
-    expect(parseReportRow(row)).toEqual({
+    expect(parseReportRecord(stampReportRecord(withAccountFields))).toEqual({
       ok: true,
-      value: { ...currentRecord, id: CENTRAL_REPORT_ID, validation: null },
+      value: withAccountFields,
     });
   });
 
-  test('given a row that is not an object then it reads as a typed error', () => {
-    const result = parseReportRow('row');
+  test.each([1, 0, 'ten', 2.5])(
+    'given a damaged budget window (%s) then it reads as none rather than failing',
+    (budgetWindowYears) => {
+      const result = parseReportRecord({ ...currentRecord, budgetWindowYears });
 
-    expect(result.ok ? null : result.error.code).toBe('not-an-object');
-  });
-});
+      expect(result).toEqual({ ok: true, value: { ...currentRecord, budgetWindowYears: null } });
+    }
+  );
 
-describe('reportProvisionsWireError', () => {
-  test('given provisions as the client sends them then there is no error', () => {
-    const wire = [
-      {
-        path: CTC_PROVISION.path,
-        breadcrumb: CTC_PROVISION.breadcrumb,
-        unit: CTC_PROVISION.unit,
-        baseline_value: CTC_PROVISION.baselineValue,
-        value: CTC_PROVISION.value,
-      },
-    ];
+  test('given a record without a year then it reads, as account rows leave the year to the report', () => {
+    const { year: _year, ...withoutYear } = currentRecord;
 
-    expect(reportProvisionsWireError(wire)).toBeNull();
-  });
-
-  test('given a provision without a path then the error names it', () => {
-    expect(reportProvisionsWireError([{ breadcrumb: 'CTC', value: 1 }])).toBe(
-      'provisions[0].path must be a non-empty string'
-    );
-  });
-
-  test('given a provision that is not an object then the error names it', () => {
-    expect(reportProvisionsWireError(['CTC'])).toBe('provisions[0] must be an object');
-  });
-});
-
-describe('reportValidationWireError', () => {
-  test('given a pin as the client sends it then there is no error', () => {
-    expect(reportValidationWireError(validationToWire(mockReportValidationSnapshot))).toBeNull();
-  });
-
-  test.each([
-    ['no pin', undefined, 'validation must be a snapshot with matched_at'],
-    [
-      'scorecard programs that are not a list',
-      { ...validationToWire(mockReportValidationSnapshot), scorecard: { programs: 'ctc' } },
-      'validation.scorecard.programs must be an array',
-    ],
-    [
-      'a match depth that is not a number',
-      {
-        ...validationToWire(mockReportValidationSnapshot),
-        calibration: { geography: 'US', reached_count: 1, matches: [{ depth: 'deep' }] },
-      },
-      'validation.calibration.matches[0].depth must be a number',
-    ],
-  ])('given %s then the error names it', (_name, wire, message) => {
-    expect(reportValidationWireError(wire)).toBe(message);
+    expect(parseReportRecord(withoutYear)).toEqual({ ok: true, value: withoutYear });
   });
 });
 

@@ -2,12 +2,14 @@ import dayjs from 'dayjs';
 import { IconArrowRight, IconRefresh } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { fetchReportById } from '@/api/report';
+import { fetchSimulationById } from '@/api/simulation';
 import { Badge, Button, Stack, Text } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
+import { ranAgainstReform, UNNAMED_COMPARISON } from '@/libs/flagship/reportComparison';
 import { flagshipReportQueryKeys, readReportMeta } from '@/libs/flagship/runReport';
 import type { RootState } from '@/store';
 
@@ -22,7 +24,7 @@ function modelVersionOf(output: unknown): string | null {
   }
 }
 
-/** The API's record of a report: how it ended, and when. */
+/** The API's record of a report: its year, how it ended, and when. */
 function useApiReport(countryId: CountryId, apiReportId: string) {
   return useQuery({
     queryKey: flagshipReportQueryKeys.status(countryId, apiReportId),
@@ -70,12 +72,51 @@ export function LatestReportBadge({
 }
 
 /**
- * What a report compared the reform with, when not current law: the same
- * reform against a saved reform is another report, and reads as one.
+ * The policy a report's baseline simulation ran, read only when asked
+ * (`simulationId` set): whether the report was compared with a reform its
+ * record no longer names.
  */
-function ReportBaseline({ apiReportId }: { apiReportId: string }) {
-  const baseline = readReportMeta(apiReportId)?.baseline;
-  if (!baseline) {
+function useBaselinePolicyId(countryId: CountryId, simulationId: string | undefined) {
+  return useQuery({
+    queryKey: flagshipReportQueryKeys.baselineSimulation(countryId, simulationId ?? ''),
+    queryFn: () => fetchSimulationById(countryId, simulationId!),
+    enabled: !!simulationId,
+    staleTime: Infinity,
+    retry: false,
+  }).data?.policy_id;
+}
+
+/**
+ * What a report compared the reform with, when not current law: the same
+ * reform against a saved reform is another report, and reads as one. The
+ * run's details name it in the session that ran it; otherwise an account
+ * record links the saved reform, named from this session's reforms. A
+ * record that no longer links one (the reform was deleted, or the report
+ * recomputed someone else's) shows its comparison by its baseline policy.
+ */
+function ReportBaseline({
+  countryId,
+  report,
+  baselineSimulationId,
+  reformName,
+}: {
+  countryId: CountryId;
+  report: FlagshipReportRecord;
+  baselineSimulationId: string | undefined;
+  reformName?: (reformId: string) => string | null | undefined;
+}) {
+  const namedLabel =
+    readReportMeta(reportLink(report))?.baseline?.label ??
+    (report.baselineReformId ? reformName?.(report.baselineReformId) || UNNAMED_COMPARISON : null);
+  const currentLawPolicyId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const baselinePolicyId = useBaselinePolicyId(
+    countryId,
+    namedLabel ? undefined : baselineSimulationId
+  );
+  const label =
+    namedLabel ??
+    (ranAgainstReform(baselinePolicyId, currentLawPolicyId) ? UNNAMED_COMPARISON : null);
+  if (!label) {
     return null;
   }
   return (
@@ -83,7 +124,7 @@ function ReportBaseline({ apiReportId }: { apiReportId: string }) {
       className="tw:truncate"
       style={{ minWidth: 0, fontSize: typography.fontSize.xs, color: colors.text.secondary }}
     >
-      Compared with {baseline.label}
+      Compared with {label}
     </span>
   );
 }
@@ -100,6 +141,7 @@ function ReportRow({
   onOpen,
   onRerun,
   rerunning,
+  reformName,
 }: {
   countryId: CountryId;
   report: FlagshipReportRecord;
@@ -107,8 +149,12 @@ function ReportRow({
   onOpen: () => void;
   onRerun?: () => void;
   rerunning: boolean;
+  reformName?: (reformId: string) => string | null | undefined;
 }) {
   const api = useApiReport(countryId, report.apiReportId);
+  // A record saved through the API keeps no year (the report itself
+  // carries it), so it is read from the API's record.
+  const year = report.year ?? api?.year;
   const done = api?.status === 'complete';
   const currentModel = useSelector((state: RootState) => state.metadata.version);
   // The same reform on the same model gives the same results: a re-run
@@ -137,7 +183,7 @@ function ReportRow({
             color: colors.text.primary,
           }}
         >
-          {report.year} report
+          {year ? `${year} report` : 'Report'}
         </span>
         <span
           className="tw:truncate"
@@ -147,7 +193,12 @@ function ReportRow({
             ? `Results from ${dayjs(finished).format('MMM D, YYYY')}`
             : `Run ${dayjs(report.createdAt).format('MMM D, YYYY')}`}
         </span>
-        <ReportBaseline apiReportId={report.apiReportId} />
+        <ReportBaseline
+          countryId={countryId}
+          report={report}
+          baselineSimulationId={api?.simulation_1_id}
+          reformName={reformName}
+        />
       </div>
       <span>
         <ReportStatus status={api?.status} />
@@ -189,6 +240,7 @@ export default function ReformReports({
   reports,
   onRerun,
   rerunning = false,
+  reformName,
 }: {
   countryId: CountryId;
   reports: FlagshipReportRecord[];
@@ -196,6 +248,8 @@ export default function ReformReports({
   onRerun?: (report: FlagshipReportRecord) => void;
   /** A run is starting; Re-run waits for it. */
   rerunning?: boolean;
+  /** A saved reform's name, for the reform a report was compared with. */
+  reformName?: (reformId: string) => string | null | undefined;
 }) {
   const nav = useAppNavigate();
   const sorted = [...reports].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -227,9 +281,12 @@ export default function ReformReports({
               countryId={countryId}
               report={report}
               first={index === 0}
-              onOpen={() => nav.push(`/${countryId}/report/${report.apiReportId}`)}
+              // A report opens at its link: the account row's ID, which anyone
+              // can open, or in this browser the v1 report's number.
+              onOpen={() => nav.push(`/${countryId}/report/${reportLink(report)}`)}
               onRerun={onRerun && (() => onRerun(report))}
               rerunning={rerunning}
+              reformName={reformName}
             />
           ))}
         </Stack>

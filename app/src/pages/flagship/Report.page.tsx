@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
 import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
 import AllYearsView from '@/components/flagship/report/AllYearsView';
@@ -24,6 +25,11 @@ import { colors, spacing } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
+import {
+  useFlagshipReportStore,
+  useReportRecord,
+  useSharedReport,
+} from '@/hooks/useFlagshipStores';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useReportValidationSnapshot } from '@/hooks/useReportValidationSnapshot';
 import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
@@ -38,7 +44,7 @@ import {
   UNKNOWN_BASELINE_LABEL,
 } from '@/libs/flagship/reportBaseline';
 import { provenanceFromPolicy } from '@/libs/flagship/reportProvenance';
-import { readReportMeta } from '@/libs/flagship/runReport';
+import { readReportMeta, reportMetaFromRecord } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import { allSimulationsLoaded } from '@/utils/reportSimulations';
@@ -57,6 +63,14 @@ function LeadError({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+/**
+ * The budget-window years asked for on reports opened by a saved report's
+ * link, kept for this page session only: the link opens the report for
+ * anyone, so it is never left in this browser's storage for the next
+ * person here to find.
+ */
+const sharedLinkRequestedYears = new Map<string, string[]>();
 
 interface FlagshipReportPageProps {
   /** Passed by the Next.js route bridge; react-router falls back to params. */
@@ -84,28 +98,61 @@ function runStartedAt(...stamps: Array<string | null | undefined>): number | und
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
   const params = useParams<{ userReportId: string }>();
   const userReportId = propId ?? params.userReportId ?? '';
+  // A report's link is its saved report's ID, which anyone can open with its
+  // owner's details. Without accounts (sign-in off, or outside the US and
+  // UK) nothing is shared, so the link is the v1 report's number; where
+  // accounts exist, such a link is an old one and no longer opens, nor does
+  // an old browser-only "sur-" link.
+  const { isAccount } = useFlagshipReportStore();
+  const sharedLink = isAccountId(userReportId);
+  const browserLink = !isAccount && isApiReportId(userReportId);
+  const unresolvable = !!userReportId && !sharedLink && !browserLink;
+  const sharedQuery = useSharedReport(sharedLink ? userReportId : undefined);
+  const shared = sharedQuery.data ?? null;
   const {
     report,
     simulations,
     policies,
     isLoading,
-    error: loadError,
-    notFound,
+    error: reportLoadError,
+    notFound: reportNotFound,
     failedPolicyIds,
-    retry,
-  } = useFlagshipReport(userReportId);
-  // A local association id from another browser resolves to nothing.
-  const unresolvable = !isLoading && !report && !!userReportId && !isApiReportId(userReportId);
+    retry: retryReport,
+  } = useFlagshipReport(
+    (sharedLink ? shared?.record.apiReportId : browserLink ? userReportId : undefined) ?? ''
+  );
+  // No saved report has the link's ID (deleted, or a bad link).
+  const sharedNotFound = sharedLink && sharedQuery.isSuccess && !shared;
+  const sharedLoadError = sharedLink ? sharedQuery.error : null;
+  const loadError = sharedLoadError ?? reportLoadError;
+  const notFound = sharedNotFound || reportNotFound;
+  const retry = sharedLoadError ? sharedQuery.refetch : retryReport;
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const economyRegions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
-  // Provenance: the local stash from the run, else rebuilt from the reform
-  // policy so a shared link validates like the original — read in the
+  // This session's own record, when it ran the report: it names the saved
+  // reform the report was run from, and holds the validation pin.
+  const reportRecord = useReportRecord(unresolvable ? undefined : userReportId);
+  // Provenance: the run's details, else the saved report's (the same for
+  // anyone holding the link), else rebuilt from the reform policy so a
+  // link without accounts validates like the original — read in the
   // report's year, with every dated value the run had.
   const reformPolicyId = simulations?.[1]?.policyId;
   const reformPolicy = policies.find((policy) => policy.id === reformPolicyId);
+  const baselinePolicyId = simulations?.[0]?.policyId;
+  // The saved report names the reform it was compared with; only its owner
+  // links to that reform.
+  const sharedBaseline =
+    shared?.baselineReform && baselinePolicyId
+      ? {
+          reformId: reportRecord?.baselineReformId ?? null,
+          policyId: String(baselinePolicyId),
+          label: shared.baselineReform.name || 'Untitled reform',
+        }
+      : undefined;
   const meta =
     readReportMeta(userReportId) ??
+    reportMetaFromRecord(shared?.record, report?.year, sharedBaseline) ??
     provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year || undefined);
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
@@ -119,7 +166,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // to adjust. A policy or metadata that failed lets it show without them.
   const awaitingProvisions =
     !meta &&
-    isApiReportId(userReportId) &&
+    !unresolvable &&
     !!reformPolicyId &&
     !failedPolicyIds.includes(reformPolicyId) &&
     metadata.status !== 'error';
@@ -187,7 +234,6 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
 
   const output = calcStatus.isComplete ? (calcStatus.result as SocietyWideOutput) : null;
 
-  const baselinePolicyId = simulations?.[0]?.policyId;
   const baselinePolicy = policies.find((policy) => policy.id === baselinePolicyId);
   // A baseline policy that failed to load is unknown, not current law.
   const baselineUnknown = reportBaselineUnknown(meta, baselinePolicyId, {
@@ -219,9 +265,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const [view, setView] = useState<string | null>(null);
   // The years asked for keep running on the server after the page closes,
   // so the browser remembers them: back on the report, they show where they
-  // stand rather than as never run.
+  // stand rather than as never run. A saved report's link keeps them for
+  // this page session only (see sharedLinkRequestedYears).
   const yearsKey = `pe-flagship-report-years-${userReportId}`;
   const [requestedYears, setRequestedYearsState] = useState<string[]>(() => {
+    if (sharedLink) {
+      return sharedLinkRequestedYears.get(userReportId) ?? [];
+    }
     try {
       const stored = JSON.parse(localStorage.getItem(yearsKey) ?? '[]');
       return Array.isArray(stored) ? stored.filter((year) => typeof year === 'string') : [];
@@ -232,6 +282,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const setRequestedYears = (update: (current: string[]) => string[]) =>
     setRequestedYearsState((current) => {
       const next = update(current);
+      if (sharedLink) {
+        sharedLinkRequestedYears.set(userReportId, next);
+        return next;
+      }
       try {
         localStorage.setItem(yearsKey, JSON.stringify(next));
       } catch {
@@ -249,10 +303,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths);
   const calibration = useCalibrationMatches(provisionPaths, region);
-  // The store keys records by the API report id as a string.
   const pin = useReportValidationSnapshot(
-    report?.id !== undefined && report?.id !== null ? String(report.id) : undefined,
-    { calibration, programs: trackRecordPrograms(trackRecord) }
+    unresolvable ? undefined : userReportId,
+    {
+      calibration,
+      programs: trackRecordPrograms(trackRecord),
+    },
+    shared?.record.validation ?? null
   );
 
   const title = meta?.title || report?.label || 'Impact report';
@@ -309,7 +366,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       );
     }
     // A report that failed to load would otherwise wait here for good.
-    if (loadError) {
+    if (loadError || notFound) {
       return layout(
         <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
           <Title order={1} style={{ margin: 0 }}>
@@ -336,6 +393,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
                       year: Number(report.year) || undefined,
                       // Back in Build on the population it ran on.
                       region: region && region !== report.countryId ? region : undefined,
+                      // Saving the edit changes the reform it was run from.
+                      reformId: reportRecord?.reformId,
                       baselineReformId: meta.baseline?.reformId,
                     })
                 : undefined

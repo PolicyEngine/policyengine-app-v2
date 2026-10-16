@@ -1,9 +1,14 @@
 import { fetchBudgetWindow } from '@/api/budgetWindow';
+import {
+  LocalStorageFlagshipReportStore,
+  type FlagshipReportRecord,
+  type FlagshipReportStore,
+} from '@/api/flagshipReportStore';
 import { createPolicy } from '@/api/policy';
-import { createReportAndAssociateWithUser } from '@/api/report';
+import { createReport } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
-import { CURRENT_YEAR, FOREVER, MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -15,10 +20,11 @@ import { parseReportMeta, stampReportMeta, type ReportParseResult } from './repo
 /**
  * The run bridge: turns a set of provisions (from a draft reform or a
  * tracked bill) into a full society-wide report — policy → baseline +
- * reform simulations → report record — and returns the API report id
+ * reform simulations → report record — and returns the report's link,
  * whose page auto-starts the calculation and renders the chart
- * dashboard. The API id is the durable one: a link carrying it opens
- * on any device, where the local association id would not.
+ * dashboard. With accounts the link is the report's user-report ID,
+ * which anyone can open with its title and provisions; otherwise it is
+ * the v1 report's ID.
  */
 export interface RunReportProvision {
   path: string;
@@ -62,12 +68,29 @@ export interface FlagshipReportMeta {
   baseline?: FlagshipReportBaseline;
 }
 
-const META_KEY = 'pe-flagship-report-meta';
+export const REPORT_META_KEY = 'pe-flagship-report-meta';
+
+/**
+ * Provenance from signed-in runs. It is the account's (its record carries
+ * it to every device), so it is kept for this page session only, never in
+ * localStorage where the next person on this browser would find it, and
+ * is dropped on sign-out.
+ */
+const accountReportMeta = new Map<string, FlagshipReportMeta>();
+
+function rememberAccountReportMeta(userReportId: string, meta: FlagshipReportMeta): void {
+  accountReportMeta.set(userReportId, meta);
+}
+
+/** Drops the signed-in session's report provenance (on sign-out). */
+export function forgetAccountReportMeta(): void {
+  accountReportMeta.clear();
+}
 
 /** Every report's provenance as stored, of any schema version (see reportSchema). */
 function readAllMeta(): Record<string, unknown> {
   try {
-    return JSON.parse(localStorage.getItem(META_KEY) ?? '{}');
+    return JSON.parse(localStorage.getItem(REPORT_META_KEY) ?? '{}');
   } catch {
     return {};
   }
@@ -76,7 +99,10 @@ function readAllMeta(): Record<string, unknown> {
 export function saveReportMeta(userReportId: string, unstamped: FlagshipReportMeta): void {
   const meta = stampReportMeta(unstamped);
   try {
-    localStorage.setItem(META_KEY, JSON.stringify({ ...readAllMeta(), [userReportId]: meta }));
+    localStorage.setItem(
+      REPORT_META_KEY,
+      JSON.stringify({ ...readAllMeta(), [userReportId]: meta })
+    );
   } catch {
     // Provenance header simply won't show if storage is unavailable.
   }
@@ -104,6 +130,10 @@ export function readReportMetaResult(
 
 /** The report's provenance in the current shape; null when none is stored or it can't be read. */
 export function readReportMeta(userReportId: string): FlagshipReportMeta | null {
+  const accountMeta = accountReportMeta.get(userReportId);
+  if (accountMeta) {
+    return accountMeta;
+  }
   const result = readReportMetaResult(userReportId);
   return result?.ok ? result.value : null;
 }
@@ -116,10 +146,38 @@ export function removeReportMeta(userReportId: string): void {
   }
   const { [userReportId]: _removed, ...rest } = all;
   try {
-    localStorage.setItem(META_KEY, JSON.stringify(rest));
+    localStorage.setItem(REPORT_META_KEY, JSON.stringify(rest));
   } catch {
     // It stays stored; the report still opens without it.
   }
+}
+
+/**
+ * A report record's provenance, as the run's own details would give it:
+ * how a report opened on another device, or after a reload, still shows
+ * its title, source, changes, budget window and comparison. A record
+ * without provisions has nothing to show, so it gives none. The record
+ * keeps only the link to its baseline reform, so the caller names it.
+ */
+export function reportMetaFromRecord(
+  record: FlagshipReportRecord | null | undefined,
+  reportYear: string | undefined,
+  baseline?: FlagshipReportBaseline
+): FlagshipReportMeta | null {
+  if (!record || record.provisions.length === 0) {
+    return null;
+  }
+  const startYear = Number(reportYear);
+  return {
+    title: record.title ?? '',
+    sourceNote: record.sourceNote ?? '',
+    provisions: record.provisions,
+    createdAt: record.createdAt,
+    ...(record.budgetWindowYears && record.budgetWindowYears > 1 && startYear
+      ? { budgetWindow: { startYear, windowSize: record.budgetWindowYears } }
+      : {}),
+    ...(baseline && { baseline }),
+  };
 }
 
 /**
@@ -160,6 +218,13 @@ export interface RunFlagshipReportArgs {
   windowYears?: number;
   /** What the reform is compared with; current law when unset. */
   baseline?: RunReportBaseline;
+  /**
+   * With accounts (US/UK): the report store for this session's user, the
+   * account or this browser's unauthenticated user. The run then writes
+   * exactly one `/v2/user-reports` row — with the title, source note,
+   * provisions and reform links — instead of the browser record.
+   */
+  accountReportStore?: FlagshipReportStore | null;
   /** The model's parameters, to check and type each value as v2 does. */
   parameters?: ParameterMetadataCollection;
 }
@@ -209,11 +274,12 @@ function coercePeriods(
 /**
  * Creates (or, since the API dedupes identical policies, finds) the reform
  * policy for a set of provisions — each with its dated changes, or its
- * single value from the current year onward.
+ * single value from the current year onward. The policy carries only the
+ * changes, never a label: names and titles belong to the user's records,
+ * so identical changes always share one policy.
  */
 export async function createReformPolicy(
   countryId: CountryId,
-  title: string,
   provisions: Array<Pick<RunReportProvision, 'path' | 'value' | 'intervals'>>,
   /** The model's parameters: each value is checked and typed against them, as v2's policies are. */
   parameters?: ParameterMetadataCollection
@@ -221,10 +287,14 @@ export async function createReformPolicy(
   const data = Object.fromEntries(
     provisions.map((p) => [p.path, coercePeriods(p.path, provisionPeriods(p), parameters)])
   );
-  const policyResponse = await createPolicy(countryId, { data, label: title || undefined });
+  const policyResponse = await createPolicy(countryId, { data });
   return Number(policyResponse.result.policy_id);
 }
 
+/**
+ * Runs a report and records it. Answers the report's link: the account
+ * row's ID with accounts, otherwise the v1 report's (see reportLink).
+ */
 export async function runFlagshipReport({
   countryId,
   title,
@@ -236,6 +306,7 @@ export async function runFlagshipReport({
   region,
   windowYears,
   baseline: requestedBaseline,
+  accountReportStore,
   parameters,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
@@ -243,17 +314,13 @@ export async function runFlagshipReport({
   }
 
   // Compared with current law, unless a saved reform is chosen instead.
+  // Neither policy carries a name: names live on the user's records.
   const comparison = customBaseline(requestedBaseline, currentLawId);
   const [reformPolicyId, baselineId] = await Promise.all([
-    createReformPolicy(countryId, title, provisions, parameters),
+    createReformPolicy(countryId, provisions, parameters),
     comparison?.policyId ??
       (comparison
-        ? createReformPolicy(
-            countryId,
-            comparison.label,
-            baselineProvisions(comparison),
-            parameters
-          )
+        ? createReformPolicy(countryId, baselineProvisions(comparison), parameters)
         : currentLawId),
   ]);
 
@@ -270,21 +337,21 @@ export async function runFlagshipReport({
     }),
   ]);
 
-  const { metadata } = await createReportAndAssociateWithUser({
-    countryId,
-    userId: MOCK_USER_ID,
-    label: title || undefined,
-    payload: {
-      simulation_1_id: Number(baseline.result.simulation_id),
-      simulation_2_id: Number(reform.result.simulation_id),
-      year: String(year),
-    },
-  });
+  const payload = {
+    simulation_1_id: Number(baseline.result.simulation_id),
+    simulation_2_id: Number(reform.result.simulation_id),
+    year: String(year),
+  };
 
-  const reportId = String(metadata.baseReportId);
+  // The v1 report comes first. Then exactly one record of it: through the
+  // API with accounts, whose ID is the report's link (anyone can open it),
+  // otherwise this browser's flagship record, with the v1 report's ID as
+  // the link (v3 never writes the legacy report keys).
+  const reportMetadata = await createReport(countryId, payload);
+  const reportId = String(reportMetadata.id);
   const budgetWindow =
     windowYears && windowYears > 1 ? { startYear: year, windowSize: windowYears } : undefined;
-  saveReportMeta(reportId, {
+  const meta: FlagshipReportMeta = {
     title,
     sourceNote,
     provisions,
@@ -297,7 +364,35 @@ export async function runFlagshipReport({
         label: comparison.label,
       },
     }),
-  });
+  };
+  const record = {
+    countryId,
+    apiReportId: reportId,
+    title: title || null,
+    sourceNote: sourceNote || null,
+    provisions,
+    year: String(year),
+    reformId: reformId ?? null,
+    // Kept on the record so the report shows its window on any device.
+    budgetWindowYears: budgetWindow?.windowSize ?? null,
+    // The comparison's name is its saved reform's, read from the link.
+    baselineReformId: comparison?.reformId ?? null,
+  };
+
+  let link = reportId;
+  if (accountReportStore) {
+    // A failure fails the run, so a report that opens is one that was saved.
+    link = (await accountReportStore.create(record)).id;
+    rememberAccountReportMeta(link, meta);
+  } else {
+    saveReportMeta(reportId, meta);
+    // Best-effort: the run already succeeded, and the link opens without it.
+    try {
+      await new LocalStorageFlagshipReportStore().create(record);
+    } catch {
+      // The report still opens by its v1 report ID.
+    }
+  }
 
   // Start the report's own calculation now, not when its page opens: the
   // first request queues the job, so a tab closed right after "Run" still
@@ -325,35 +420,21 @@ export async function runFlagshipReport({
     });
   }
 
-  // Record the report centrally (pointer + provenance; never outputs,
-  // never a user id). Best-effort: the run already succeeded, and the
-  // store falls back to localStorage when the database is unconfigured.
-  try {
-    const { getFlagshipReportStore } = await import('@/api/flagshipReportStore');
-    await getFlagshipReportStore().create({
-      countryId,
-      apiReportId: String(metadata.baseReportId),
-      title: title || null,
-      sourceNote: sourceNote || null,
-      provisions,
-      year: String(year),
-      reformId: reformId ?? null,
-    });
-  } catch {
-    // The report still opens via the local association.
-  }
-
-  return reportId;
+  return link;
 }
 
 /**
- * Query keys for the reports this browser ran, as Your reforms lists
- * them by reform, and for where each one stands on the API.
+ * Query keys for this session's reports, as Your reforms lists them by
+ * reform (scoped to whose saved work they are, see V3SavedWork), and for
+ * where each one stands on the API.
  */
 export const flagshipReportQueryKeys = {
   all: ['flagship-reports'] as const,
-  mine: (countryId: string) => ['flagship-reports', countryId] as const,
+  mine: (scope: string, countryId: string) => ['flagship-reports', scope, countryId] as const,
   statuses: ['flagship-report-status'] as const,
   status: (countryId: string, apiReportId: string) =>
     ['flagship-report-status', countryId, apiReportId] as const,
+  /** A report's baseline simulation, as the API's metadata (not the adapted Simulation). */
+  baselineSimulation: (countryId: string, simulationId: string) =>
+    ['flagship-report-baseline-simulation', countryId, simulationId] as const,
 };

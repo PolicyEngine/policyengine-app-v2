@@ -18,6 +18,9 @@ const REFORM = {
   provenance: { source: 'manual' },
 } as Reform;
 
+/** A `/v2/user-reports` row's ID: an account report's link. */
+const ACCOUNT_REPORT_ID = '44444444-4444-4444-8444-444444444444';
+
 const report = (overrides: Partial<FlagshipReportRecord>): FlagshipReportRecord => ({
   id: 'rec',
   countryId: 'us',
@@ -64,5 +67,38 @@ describe('latestMatchingReport', () => {
     expect(
       latestMatchingReport(REFORM, [report({ year: '2027' }), report({ apiReportId: '9' })], 2026)
     ).toBeNull();
+  });
+
+  test('given an account report compared with a saved reform after a reload then it does not open', () => {
+    // Given: no run details in this page session, only the row's link to the saved reform
+    const accountReport = report({ id: ACCOUNT_REPORT_ID, baselineReformId: 'rf-plan-b' });
+
+    // Then
+    expect(latestMatchingReport(REFORM, [accountReport], 2026)).toBeNull();
+  });
+
+  test('given an account report against current law then it opens', () => {
+    // Given
+    const accountReport = report({ id: ACCOUNT_REPORT_ID, baselineReformId: null });
+
+    // Then
+    expect(latestMatchingReport(REFORM, [accountReport], 2026)?.id).toBe(ACCOUNT_REPORT_ID);
+  });
+
+  test('given a report whose baseline ran another reform then it does not open, linked or not', () => {
+    // Given: no run details and no link, but its baseline was not current law
+    const unlinked = {
+      ...report({ id: ACCOUNT_REPORT_ID, baselineReformId: null }),
+      baselinePolicyId: '88',
+    };
+
+    // When / Then
+    expect(latestMatchingReport(REFORM, [unlinked], 2026, 2)).toBeNull();
+  });
+
+  test('given a report whose baseline ran current law then it opens', () => {
+    const againstCurrentLaw = { ...report({ id: ACCOUNT_REPORT_ID }), baselinePolicyId: '2' };
+
+    expect(latestMatchingReport(REFORM, [againstCurrentLaw], 2026, 2)?.id).toBe(ACCOUNT_REPORT_ID);
   });
 });

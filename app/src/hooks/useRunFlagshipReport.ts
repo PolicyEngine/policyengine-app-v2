@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import { markDraftRun } from '@/libs/draftReform';
 import {
   flagshipReportQueryKeys,
@@ -22,6 +23,7 @@ export function useRunFlagshipReport() {
   const countryId = useCurrentCountry();
   const queryClient = useQueryClient();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const reportStore = useFlagshipReportStore();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +82,9 @@ export function useRunFlagshipReport() {
         region,
         windowYears,
         baseline,
+        // With accounts, the run's record goes through the API (the account,
+        // or this browser's unauthenticated user); otherwise this browser's.
+        accountReportStore: reportStore.isAccount ? reportStore.store : null,
       });
       if (fromDraft) {
         markDraftRun(userReportId);

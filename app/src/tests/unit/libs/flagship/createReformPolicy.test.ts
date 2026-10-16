@@ -36,7 +36,6 @@ describe('createReformPolicy', () => {
   test('given numeric text and infinity then they are sent as v2 sends them', async () => {
     await createReformPolicy(
       'us',
-      'CTC',
       [
         {
           path: 'gov.irs.credits.ctc.amount.base[0].amount',
@@ -62,7 +61,6 @@ describe('createReformPolicy', () => {
     await expect(
       createReformPolicy(
         'us',
-        'SNAP',
         [
           {
             path: 'gov.usda.snap.emergency_allotment.allowed',
@@ -79,7 +77,6 @@ describe('createReformPolicy', () => {
   test("given a parameter the metadata lacks (a bill's switch) then its value is sent as it is", async () => {
     await createReformPolicy(
       'us',
-      'Bill',
       [
         {
           path: 'gov.contrib.states.mt.hb1.in_effect',
