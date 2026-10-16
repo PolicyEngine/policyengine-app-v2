@@ -34,6 +34,15 @@ export interface ParameterSearchEntry {
    */
   stateCode: string | null;
   /**
+   * Set on a search result that stands for a federal parameter's whole
+   * breakdown by state (`gov.usda.snap.….MN`, `….MT`, …): the number of
+   * jurisdictions it holds. The entry is one member; picking it opens the
+   * breakdown, so the label and breadcrumb name the parameter, not the state.
+   */
+  jurisdictionCount?: number;
+  /** With `jurisdictionCount`: the parameter's own path, which the states' values sit under. */
+  breakdownPath?: string;
+  /**
    * For a bracket member (…ctc.amount.base[0].amount), the label of the
    * schedule it belongs to ("Child Tax Credit amount"). The breadcrumb
    * skips the schedule's own node, and the member's label alone says
@@ -499,6 +508,55 @@ export interface ParameterSearchIndex {
   stateNames: Map<string, string>;
   /** State codes the entries carry, for recognizing "NY"-style mentions. */
   stateCodes: Set<string>;
+  /**
+   * Per entry, the name of the state its key names (`….MT` → "montana"),
+   * or ''. Kept out of the haystack: only a whole state name in the query
+   * matches it, so "minimum" does not find Minnesota's values by prefix.
+   */
+  stateNameTexts: string[];
+  /** A breakdown by state's parent path → how many jurisdictions it has. */
+  stateBreakdownSizes: Map<string, number>;
+}
+
+/**
+ * `gov.usda.snap.….MN` → `gov.usda.snap.…`: the parameter a value keyed
+ * by a state belongs to, with the state's key — also a part of a state
+ * (`….NY_NYC`, `….AK_NW`), and a state's own breakdown (`….GU.1`, by
+ * household size). Null when no state key ends the path.
+ */
+export function stateBreakdownOf(path: string): { parent: string; state: string } | null {
+  const segments = path.split('.');
+  let end = segments.length;
+  // A state's own breakdown follows its key: sizes, or enum members.
+  while (end > 2 && /^(\d+|[A-Z][A-Z0-9_]*)$/.test(segments[end - 1])) {
+    const state = /^([A-Z]{2})(?:_[A-Z0-9_]+)?$/.exec(segments[end - 1])?.[1];
+    if (state && USPS_CODES.has(state)) {
+      return { parent: segments.slice(0, end - 1).join('.'), state: segments[end - 1] };
+    }
+    end -= 1;
+  }
+  return null;
+}
+
+/**
+ * The breakdown by state `path` is a member of, from the known ones, with
+ * its key there (`MT`, `CONTIGUOUS_US`); null when it is in none.
+ */
+function breakdownMemberOf(
+  path: string,
+  parents: Pick<Set<string>, 'has'>
+): { parent: string; key: string } | null {
+  const segments = path.split('.');
+  for (let end = segments.length; end > 2; end--) {
+    if (!/^(\d+|[A-Z][A-Z0-9_]*)$/.test(segments[end - 1])) {
+      return null;
+    }
+    const parent = segments.slice(0, end - 1).join('.');
+    if (parents.has(parent)) {
+      return { parent, key: segments[end - 1] };
+    }
+  }
+  return null;
 }
 
 export function createParameterSearchIndex(
@@ -518,13 +576,37 @@ export function createParameterSearchIndex(
   let fuseInstance: Fuse<ParameterSearchEntry> | null = null;
   // An entry's state by name, so "montana snap" finds SNAP's Montana values.
   const stateNameOf = new Map([...stateNames].map(([name, code]) => [code, name]));
+  // A breakdown by state, once one key names a state, holds its other
+  // keys too: SNAP's maximum allotment has CONTIGUOUS_US beside AK and HI.
+  const breakdownParents = new Set<string>();
+  for (const entry of entries) {
+    const breakdown = stateBreakdownOf(entry.path);
+    if (breakdown) {
+      breakdownParents.add(breakdown.parent);
+    }
+  }
+  const keysByBreakdown = new Map<string, Set<string>>();
+  for (const entry of entries) {
+    const member = breakdownMemberOf(entry.path, breakdownParents);
+    if (member) {
+      const keys = keysByBreakdown.get(member.parent) ?? new Set<string>();
+      keysByBreakdown.set(member.parent, keys.add(member.key));
+    }
+  }
+  const stateBreakdownSizes = new Map(
+    [...keysByBreakdown].map(([parent, keys]) => [parent, keys.size])
+  );
   return {
     entries,
     // The canonical phrases go in the haystack too, so an entry spelled
     // one way is found by a query normalized the other way.
     haystacks: entries.map((entry) =>
-      `${entry.breadcrumb} ${searchLabel(entry)} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)} ${(entry.stateCode && stateNameOf.get(entry.stateCode)) || ''}`.toLowerCase()
+      `${entry.breadcrumb} ${searchLabel(entry)} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)}`.toLowerCase()
     ),
+    stateNameTexts: entries.map(
+      (entry) => (entry.stateCode && stateNameOf.get(entry.stateCode)?.toLowerCase()) || ''
+    ),
+    stateBreakdownSizes,
     get fuse() {
       fuseInstance ??= new Fuse(entries, FUSE_OPTIONS);
       return fuseInstance;
@@ -604,7 +686,10 @@ export function searchParameters(
   query: string,
   limit = 10,
   filters: ParameterSearchFilters = DEFAULT_SEARCH_FILTERS,
-  { fuzzyFallback = true }: { fuzzyFallback?: boolean } = {}
+  {
+    fuzzyFallback = true,
+    collapseStateBreakdowns = true,
+  }: { fuzzyFallback?: boolean; collapseStateBreakdowns?: boolean } = {}
 ): ParameterSearchEntry[] {
   const trimmed = canonicalizeQuery(query, index.aliases);
   if (trimmed.length < 2) {
@@ -621,9 +706,9 @@ export function searchParameters(
   // Token score: 1 for an exact substring hit; 0.6 when only a prefix
   // of the token (≥3 chars) appears — derived stemming, so "maximum"
   // still credits entries that say "max" without any word list.
-  const tokenScore = (haystack: string, token: string): number => {
+  const tokenScore = (haystack: string, token: string, stateName: string): number => {
     if (stateWords.has(token)) {
-      return new RegExp(`(^|[^a-z])${token}([^a-z]|$)`).test(haystack) ? 1 : 0;
+      return new RegExp(`(^|[^a-z])${token}([^a-z]|$)`).test(`${haystack} ${stateName}`) ? 1 : 0;
     }
     if (haystack.includes(token)) {
       return 1;
@@ -677,7 +762,7 @@ export function searchParameters(
     for (const group of groups) {
       let best = 0;
       for (const variant of group) {
-        const score = tokenScore(haystack, variant);
+        const score = tokenScore(haystack, variant, index.stateNameTexts[i]);
         if (score > best) {
           best = score;
         }
@@ -699,14 +784,30 @@ export function searchParameters(
   // query's own jurisdiction first, so the candidate cap can never crowd
   // them out — "standard deduction" alone matches thousands of state
   // parameters.
+  // Across all jurisdictions, with no state asked for, a federal
+  // parameter's values by state are one result — the breakdown — rather
+  // than one row per state crowding out everything else.
+  const collapse =
+    collapseStateBreakdowns && filters.stateScope === 'all' && namedStates.size === 0;
   if (bestCoverage > 0) {
     const floor = Math.max(bestCoverage - 0.5, bestCoverage * 0.75, 0.6);
+    const breakdownSeen = new Set<string>();
     // Best band in jurisdiction, best band outside, lower band in, lower band outside.
     const buckets: ParameterSearchEntry[][] = [[], [], [], []];
     const otherStates: ParameterSearchEntry[] = [];
     for (let i = 0; i < index.haystacks.length; i++) {
       if (coverage[i] >= floor) {
-        const entry = index.entries[i];
+        let entry = index.entries[i];
+        const breakdown = collapse
+          ? breakdownMemberOf(entry.path, index.stateBreakdownSizes)?.parent
+          : null;
+        if (breakdown) {
+          if (breakdownSeen.has(breakdown)) {
+            continue;
+          }
+          breakdownSeen.add(breakdown);
+          entry = asStateBreakdown(entry, breakdown, index.stateBreakdownSizes.get(breakdown) ?? 1);
+        }
         // Another state's parameter goes after the named state's and federal
         // ones: kept, so a near miss still shows, but never ahead of them.
         if (namedStates.size > 0 && entry.stateCode && !namedStates.has(entry.stateCode)) {
@@ -738,6 +839,26 @@ export function searchParameters(
   return fuzzyMatches(index, trimmed, limit, namedStates)
     .filter((entry) => matchesFilters(entry, filters))
     .slice(0, limit);
+}
+
+/** A breakdown member as the result for its whole breakdown: named for the parameter, not the state. */
+function asStateBreakdown(
+  entry: ParameterSearchEntry,
+  parent: string,
+  size: number
+): ParameterSearchEntry {
+  // The crumbs past the parameter's are the state's key and its own breakdown.
+  const keyDepth = entry.path.split('.').length - parent.split('.').length;
+  const crumbs = entry.breadcrumb.split(' → ');
+  const kept = crumbs.length > keyDepth ? crumbs.slice(0, crumbs.length - keyDepth) : crumbs;
+  return {
+    ...entry,
+    breadcrumb: kept.join(' → '),
+    label: kept[kept.length - 1] ?? entry.label,
+    stateCode: null,
+    jurisdictionCount: size,
+    breakdownPath: parent,
+  };
 }
 
 /**
@@ -936,10 +1057,14 @@ export function countHiddenByFilters(
   limit: number,
   filters: ParameterSearchFilters
 ): number {
-  const unfiltered = searchParameters(index, query, limit, {
-    includeContrib: true,
-    stateScope: 'all',
-  });
+  const unfiltered = searchParameters(
+    index,
+    query,
+    limit,
+    { includeContrib: true, stateScope: 'all' },
+    // Counted row by row, as the filtered search returns them.
+    { collapseStateBreakdowns: false }
+  );
   return unfiltered.filter((entry) => !matchesFilters(entry, filters)).length;
 }
 

@@ -174,7 +174,10 @@ export default function AddParameterBar({
         placeholder={placeholder}
         resultsInFlow={inTable}
         hideResults={!active || browseOpen}
-        inDraft={(path) => draftPaths.has(path)}
+        // A breakdown by state is in the draft once any state's value is.
+        inDraft={(path) =>
+          draftPaths.has(path) || [...draftPaths].some((p) => p.startsWith(`${path}.`))
+        }
         onOpenFolder={(path) => {
           setBrowsePath(path);
           setBrowseOpen(true);
