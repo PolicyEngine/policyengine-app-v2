@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react';
 import { STATE_NAMES } from '@/api/billFeed';
+import { Switch } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { isEditableValue, sameParameterValue } from '@/libs/draftReform';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -648,7 +649,9 @@ function MemberValueCards({
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
+                  justifyContent: 'center',
                   gap: 4,
+                  minHeight: 48,
                   padding: `${spacing.sm} ${spacing.md}`,
                   borderRadius: spacing.radius.container,
                   border: `1px solid ${changed ? colors.primary[200] : colors.border.light}`,
@@ -666,9 +669,7 @@ function MemberValueCards({
                   <span
                     style={{
                       minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      lineHeight: 1.3,
                       fontWeight: changed
                         ? typography.fontWeight.medium
                         : typography.fontWeight.normal,
@@ -677,7 +678,34 @@ function MemberValueCards({
                     {name}
                   </span>
                   <div style={{ flexShrink: 0, maxWidth: 140 }}>
-                    {isEditableValue(baseline) ? (
+                    {param.unit === 'bool' && typeof baseline === 'boolean' ? (
+                      // A switch and the one word it means: the boxed "False · True"
+                      // control is too wide for a cell.
+                      <label
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: spacing.sm,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Switch
+                          checked={value === true}
+                          onCheckedChange={(next) => onChange(member.path, year, next)}
+                          aria-label={name}
+                        />
+                        <span
+                          style={{
+                            width: 34,
+                            fontSize: typography.fontSize.xs,
+                            fontWeight: typography.fontWeight.medium,
+                            color: value === true ? colors.primary[700] : colors.text.secondary,
+                          }}
+                        >
+                          {value === true ? 'True' : 'False'}
+                        </span>
+                      </label>
+                    ) : isEditableValue(baseline) ? (
                       <ValueInput
                         param={param}
                         value={value}
