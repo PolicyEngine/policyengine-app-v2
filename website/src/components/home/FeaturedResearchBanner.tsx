@@ -12,6 +12,11 @@ const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 
 const cards = [
   {
+    href: "/uk/triple-lock",
+    title: "Replacing the triple lock",
+    desc: "What the Burnham plan would save, and which households would have less income",
+  },
+  {
     href: "/uk/energy-autumn-budget",
     title: "Energy bills and the Autumn Budget",
     desc: "What households will pay over the next two winters, and seven ways the Chancellor could help",
