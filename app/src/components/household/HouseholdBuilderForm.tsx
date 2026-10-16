@@ -800,7 +800,7 @@ export default function HouseholdBuilderForm({
 
               {/* Add variable search or link */}
               {!isReadOnly && isHouseholdSearchActive ? (
-                <div className={columns ? 'tw:basis-full tw:max-w-xl' : undefined}>
+                <div className={columns ? 'tw:basis-full tw:max-w-[36rem]' : undefined}>
                   <VariableSearchDropdown
                     searchValue={householdSearchValue}
                     onSearchChange={setHouseholdSearchValue}
