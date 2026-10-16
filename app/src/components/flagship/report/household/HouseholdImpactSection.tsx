@@ -23,8 +23,8 @@ import type { RootState } from '@/store';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
 
-/** Both policies run at once; one household typically takes under a minute. */
-const EXPECTED_MS = 45 * 1000;
+/** Both policies run at once; a household new to the API takes about three minutes. */
+const EXPECTED_MS = 3 * 60 * 1000;
 
 /**
  * A new household: the household builder's own start, one adult and

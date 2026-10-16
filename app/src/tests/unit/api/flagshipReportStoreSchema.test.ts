@@ -1,24 +1,43 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { ApiFlagshipReportStore, LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
+import { beforeEach, describe, expect, test } from 'vitest';
+import {
+  ApiFlagshipReportStore,
+  LocalStorageFlagshipReportStore,
+  provisionsToWire,
+  type NewFlagshipReport,
+} from '@/api/flagshipReportStore';
 import { ReportSchemaError } from '@/libs/flagship/reportSchema';
-import { mockJsonResponse, mockNewReport } from '@/tests/fixtures/api/flagshipStoreMocks';
+import { validationToWire } from '@/libs/flagship/reportValidation';
 import {
-  CENTRAL_REPORT_ID,
-  OWNED_REPORTS_KEY,
-  ownedReport,
-  seedOwnedItems,
-} from '@/tests/fixtures/libs/flagship/ownedItemsMocks';
+  ASSOCIATION_IDS,
+  createTestApiContext,
+  itemResponse,
+  pageResponse,
+  reportItem,
+  TIMESTAMPS,
+} from '@/tests/fixtures/api/v2UserMocks';
 import {
+  API_REPORT_ID,
+  CTC_PROVISION,
   CURRENT_SCHEMA_VERSION,
   currentRecord,
+  GROWING_PROVISION,
   historicRecords,
   LOCAL_REPORT_ID,
   recordFromNewerVersion,
   recordWithoutUserId,
   REPORTS_KEY,
-  rowWithoutUserId,
 } from '@/tests/fixtures/libs/flagship/reportSchemaMocks';
 import { mockReportValidationSnapshot } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
+
+const mockNewReport: NewFlagshipReport = {
+  countryId: 'us',
+  apiReportId: API_REPORT_ID,
+  title: 'CTC to $2,500',
+  sourceNote: 'Hand-built draft',
+  provisions: [CTC_PROVISION],
+  year: '2026',
+  reformId: null,
+};
 
 const UNREADABLE_ID = 'lfr-unreadable';
 const unreadableEntry = { ...recordWithoutUserId, id: UNREADABLE_ID, provisions: 'oops' };
@@ -113,42 +132,76 @@ describe('LocalStorageFlagshipReportStore and the report schema', () => {
 });
 
 describe('ApiFlagshipReportStore and the report schema', () => {
-  const fetchMock = vi.fn();
+  /** The account's row for the report, as /v2/user-reports serves it. */
+  const accountRow = reportItem({
+    legacy_report_id: Number(API_REPORT_ID),
+    name: 'CTC to $2,500',
+    source_note: 'Hand-built draft',
+    provisions: provisionsToWire([CTC_PROVISION, GROWING_PROVISION]),
+    user_policy_id: ASSOCIATION_IDS.REFORM,
+    baseline_user_policy_id: ASSOCIATION_IDS.POLICY,
+    validation: validationToWire(mockReportValidationSnapshot),
+    budget_window_years: 10,
+  });
 
   beforeEach(() => {
-    vi.stubGlobal('fetch', fetchMock);
-    fetchMock.mockReset();
     localStorage.clear();
-    seedOwnedItems(OWNED_REPORTS_KEY, [ownedReport]);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  test('given an account row then it reads in the current shape, growth and links included', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(itemResponse(accountRow));
 
-  test('given a central row then it reads in the current shape', async () => {
-    fetchMock.mockResolvedValue(mockJsonResponse(rowWithoutUserId));
+    // When
+    const record = await new ApiFlagshipReportStore(context).findById(ASSOCIATION_IDS.REPORT);
 
-    const record = await new ApiFlagshipReportStore().findById(CENTRAL_REPORT_ID);
-
-    expect(record).toEqual({ ...currentRecord, id: CENTRAL_REPORT_ID });
+    // Then
+    expect(record).toEqual({
+      id: ASSOCIATION_IDS.REPORT,
+      countryId: 'us',
+      apiReportId: API_REPORT_ID,
+      title: 'CTC to $2,500',
+      sourceNote: 'Hand-built draft',
+      provisions: [CTC_PROVISION, GROWING_PROVISION],
+      createdAt: TIMESTAMPS.CREATED,
+      reformId: ASSOCIATION_IDS.REFORM,
+      validation: mockReportValidationSnapshot,
+      budgetWindowYears: 10,
+      baselineReformId: ASSOCIATION_IDS.POLICY,
+    });
   });
 
   test('given an unreadable row then the list leaves it out', async () => {
-    fetchMock.mockResolvedValue(
-      mockJsonResponse([rowWithoutUserId, { ...rowWithoutUserId, country_id: 'fr' }])
-    );
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const unreadableRow = {
+      ...accountRow,
+      id: 'unreadable-row',
+      provisions: [{ ...provisionsToWire([CTC_PROVISION])[0], path: '' }],
+    };
+    fetchMock.mockResolvedValue(pageResponse([accountRow, unreadableRow]));
 
-    const mine = await new ApiFlagshipReportStore().findMine();
+    // When
+    const mine = await new ApiFlagshipReportStore(context).findMine('us');
 
-    expect(mine.map((record) => record.id)).toEqual([CENTRAL_REPORT_ID]);
+    // Then
+    expect(mine.map((record) => record.id)).toEqual([ASSOCIATION_IDS.REPORT]);
   });
 
   test('given an unreadable row then reading it throws a ReportSchemaError', async () => {
-    fetchMock.mockResolvedValue(mockJsonResponse({ ...rowWithoutUserId, provisions: 'oops' }));
-
-    await expect(new ApiFlagshipReportStore().findById(CENTRAL_REPORT_ID)).rejects.toThrow(
-      ReportSchemaError
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      itemResponse({
+        ...accountRow,
+        provisions: [{ ...provisionsToWire([GROWING_PROVISION])[0], growth_round: 'sideways' }],
+      })
     );
+
+    // When / Then
+    await expect(
+      new ApiFlagshipReportStore(context).findById(ASSOCIATION_IDS.REPORT)
+    ).rejects.toThrow(ReportSchemaError);
   });
 });

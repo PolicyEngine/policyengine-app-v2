@@ -377,6 +377,25 @@ describe('ReportAdjustPanel', () => {
     expect(reformId).toBe('rf-existing');
   });
 
+  test('given a saved reform whose changes could not load then it is skipped, not matched or fatal', async () => {
+    mockFindMine.mockResolvedValue([
+      { id: 'rf-unloaded', label: 'Unloaded', parameters: [], parametersUnavailable: true },
+    ]);
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const user = userEvent.setup();
+    await renderPanel();
+
+    // Removing every provision but one leaves a set an empty reform must not match
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3600');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockRun.mock.calls[0][3]).toBe('rf-new');
+  });
+
   test('given a provision is removed then recompute runs without it', async () => {
     mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
     const user = userEvent.setup();
@@ -403,6 +422,23 @@ describe('ReportAdjustPanel', () => {
 
     await user.click(screen.getByRole('button', { name: /restore 2 removed provisions/i }));
     expect(screen.getByLabelText(/new value for maximum credit per child/i)).toBeInTheDocument();
+  });
+
+  test('given every value is back at current law then recompute waits, and says why', async () => {
+    // Given
+    const user = userEvent.setup();
+    await renderPanel();
+
+    // When: one provision removed, the other set back to its current-law value
+    await user.click(screen.getByRole('button', { name: /remove maximum credit per child/i }));
+    const allotment = screen.getByLabelText(/new value for maximum allotment/i);
+    await user.clear(allotment);
+    await user.type(allotment, '300');
+
+    // Then
+    expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+    expect(screen.getByText(/nothing differs from current law/i)).toBeInTheDocument();
+    expect(mockRun).not.toHaveBeenCalled();
   });
 
   test('given the baseline policy could not be loaded then recompute is off and says why', async () => {

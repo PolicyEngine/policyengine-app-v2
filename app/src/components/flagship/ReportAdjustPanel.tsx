@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { IconChartBar, IconPencil, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { getReformStore } from '@/api/reformStore';
 import {
   Button,
   Input,
@@ -18,9 +17,11 @@ import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useReformStore } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import {
   loadProvisionsIntoDraft,
+  provisionAdjusts,
   provisionIntervals,
   sameParameterValue,
 } from '@/libs/draftReform';
@@ -104,6 +105,7 @@ function AdjustPanel({
   const runReport = useRunFlagshipReport();
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
+  const store = useReformStore();
   const queryClient = useQueryClient();
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [reconcileError, setReconcileError] = useState<string | null>(null);
@@ -156,6 +158,7 @@ function AdjustPanel({
     (a, b) => a - b
   );
 
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
   const active = provisions.filter((provision) => !removed.has(provision.path));
   const isDirty =
     removed.size > 0 ||
@@ -229,6 +232,18 @@ function AdjustPanel({
       };
     });
 
+  // Current law for a provision: the parameter's own history, or, before
+  // the metadata has it, the current law the report recorded, for every year.
+  const currentLawFor = (provision: RunReportProvision) =>
+    parameterMetadata?.[provision.path]?.values ??
+    (provision.baselineValue !== undefined && provision.baselineValue !== null
+      ? { '0001-01-01': provision.baselineValue }
+      : undefined);
+  // A recompute with nothing differing from current law has no report to run.
+  const changesLaw = adjustedProvisions().some((provision) =>
+    provisionAdjusts(provision, currentLawFor(provision))
+  );
+
   // Back to Build with the reform as the panel has it, to add to it there.
   const editInBuild = () => {
     const label = name.trim() || title;
@@ -254,9 +269,8 @@ function AdjustPanel({
         values: provisionIntervals(provision),
       }));
 
-      // Reconcile with this browser's saved reforms: reuse one that sets
+      // Reconcile with this session's saved reforms: reuse one that sets
       // the same values over the same dates, otherwise save this one.
-      const store = getReformStore();
       const match = findMatchingReform(await store.findMine(countryId), parameters);
 
       // Only more or fewer years: the same reform, under its own name.
@@ -552,10 +566,12 @@ function AdjustPanel({
             The baseline policy could not be loaded, so a recompute cannot compare with it.
           </Text>
         )}
-        <Button
-          onClick={recompute}
-          disabled={baselineUnknown || !isDirty || busy || active.length === 0}
-        >
+        {!baselineUnknown && isDirty && active.length > 0 && !changesLaw && (
+          <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.tertiary }}>
+            Nothing differs from current law. Change a value to recompute.
+          </Text>
+        )}
+        <Button onClick={recompute} disabled={baselineUnknown || !isDirty || busy || !changesLaw}>
           <IconChartBar size={16} />
           {busy ? 'Recomputing…' : 'Recompute'}
         </Button>

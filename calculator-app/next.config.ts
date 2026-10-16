@@ -10,6 +10,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WEBSITE_ORIGIN =
   process.env.NEXT_PUBLIC_WEBSITE_URL || "https://policyengine.org";
 
+/** The first of the given build-time environment variables that is set. */
+function envValue(...names: string[]): string {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value) {
+      return value;
+    }
+  }
+  return "";
+}
+
 const nextConfig: NextConfig = {
   // Compile TypeScript files from ../app/src/ (the shared Vite codebase)
   experimental: {
@@ -53,6 +64,23 @@ const nextConfig: NextConfig = {
         ),
         "import.meta.env.VITE_FLAGSHIP_SHELL_UK": JSON.stringify(
           process.env.NEXT_PUBLIC_FLAGSHIP_SHELL_UK || "",
+        ),
+        // Sign-in and the PolicyEngine API origin. Shared code reads the
+        // VITE_* names; either spelling may be set on the deployment.
+        "import.meta.env.VITE_API_URL": JSON.stringify(
+          envValue("NEXT_PUBLIC_API_URL", "VITE_API_URL"),
+        ),
+        "import.meta.env.VITE_AUTH_ENABLED": JSON.stringify(
+          envValue("NEXT_PUBLIC_AUTH_ENABLED", "VITE_AUTH_ENABLED"),
+        ),
+        "import.meta.env.VITE_AUTH0_DOMAIN": JSON.stringify(
+          envValue("NEXT_PUBLIC_AUTH0_DOMAIN", "VITE_AUTH0_DOMAIN"),
+        ),
+        "import.meta.env.VITE_AUTH0_CLIENT_ID": JSON.stringify(
+          envValue("NEXT_PUBLIC_AUTH0_CLIENT_ID", "VITE_AUTH0_CLIENT_ID"),
+        ),
+        "import.meta.env.VITE_AUTH0_AUDIENCE": JSON.stringify(
+          envValue("NEXT_PUBLIC_AUTH0_AUDIENCE", "VITE_AUTH0_AUDIENCE"),
         ),
       }),
     );

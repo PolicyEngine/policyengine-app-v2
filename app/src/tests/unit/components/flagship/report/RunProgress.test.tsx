@@ -1,6 +1,7 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import RunProgress, {
+  clockProgress,
   runProgressValue,
   runStageCaption,
 } from '@/components/flagship/report/RunProgress';
@@ -49,7 +50,7 @@ describe('RunProgress', () => {
 
     const status = screen.getByRole('status');
     expect(status).toHaveTextContent('2m');
-    expect(status).toHaveTextContent('50%');
+    expect(status).toHaveTextContent('43%');
   });
 
   test('given a run stage then the stage names the line under the title', () => {
@@ -101,5 +102,19 @@ describe('RunProgress', () => {
     );
 
     expect(screen.getByText(/· 20%/)).toBeInTheDocument();
+  });
+
+  test('given a run past its typical time then the bar still moves and says it takes longer', () => {
+    expect(clockProgress(60_000, 60_000)).toBe(85);
+    expect(clockProgress(120_000, 60_000)).toBeGreaterThan(90);
+    expect(clockProgress(600_000, 60_000)).toBeLessThan(95);
+    render(
+      <RunProgress
+        title="Calculating this household"
+        expectedMs={60_000}
+        startedAt={Date.now() - 90_000}
+      />
+    );
+    expect(screen.getByText('Taking longer than usual; still calculating')).toBeInTheDocument();
   });
 });

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { IconCheck, IconChevronDown, IconScale } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { getReformStore } from '@/api/reformStore';
 import {
   Command,
   CommandEmpty,
@@ -16,6 +15,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { provisionAdjusts, provisionIntervals, type DraftReform } from '@/libs/draftReform';
 import { sameReformParameters } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
@@ -36,9 +36,12 @@ export function savedReformName(reform: Pick<Reform, 'label'>): string {
  */
 export function useDraftBaseline(draft: DraftReform) {
   const currentLaw = useSelector((state: RootState) => state.metadata.parameters);
+  // This session's saved reforms, cached under the key Your reforms uses.
+  const reformStore = useReformStore();
+  const { scope } = useV3SavedWork();
   const { data: saved, isPending } = useQuery({
-    queryKey: ['reforms', draft.countryId],
-    queryFn: () => getReformStore().findMine(draft.countryId),
+    queryKey: ['reforms', scope, draft.countryId],
+    queryFn: () => reformStore.findMine(draft.countryId),
   });
   // A reform that sets nothing runs as current law, so it is not offered.
   const options = (saved ?? []).filter(

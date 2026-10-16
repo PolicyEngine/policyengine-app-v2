@@ -197,6 +197,24 @@ describe('draftReform', () => {
     expect(draft?.provisions[0].baselineValue).toBe(2000);
   });
 
+  it('given a report reopened for editing with its reform then the draft edits that reform', () => {
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }], {
+      label: 'CTC expansion',
+      year: 2027,
+      reformId: 'rf-ran',
+    });
+
+    const draft = getDraftReform();
+    expect(draft?.editingReformId).toBe('rf-ran');
+    expect(draft?.year).toBe(2027);
+  });
+
+  it('given a report reopened for editing without a reform then saving makes a new one', () => {
+    loadProvisionsIntoDraft('us', [{ ...CTC_PROVISION, value: 3600 }], { label: 'Shared' });
+
+    expect(getDraftReform()?.editingReformId).toBeUndefined();
+  });
+
   it('given a draft then draftToReform produces the store shape with a year-to-forever interval', () => {
     startDraftReform('us', 'bill', 'ut-hb-106');
     addDraftProvision('us', { ...CTC_PROVISION, value: 3600 });

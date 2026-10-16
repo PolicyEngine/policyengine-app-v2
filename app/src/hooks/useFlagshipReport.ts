@@ -5,7 +5,6 @@ import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
-import { useUserReportById } from '@/hooks/useUserReports';
 import { isNotFoundError, retryUnlessNotFound } from '@/libs/flagship/loadError';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
@@ -15,9 +14,11 @@ import { policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
- * A flagship report URL carries the API report id, which anyone can
- * resolve. Links minted before that carry the local association id
- * ("sur-…"), which only the browser that ran the report can resolve.
+ * Whether an ID is a v1 report's number. With accounts, a flagship report
+ * URL carries the saved report's ID instead (see reportLink); without
+ * them, it carries the v1 report's number. Links from the legacy
+ * calculator carried its browser association ID ("sur-…"); v3 does not
+ * read that storage, so they no longer open.
  */
 export function isApiReportId(id: string): boolean {
   return /^\d+$/.test(id);
@@ -47,18 +48,16 @@ export interface FlagshipReportData {
 }
 
 /**
- * Resolves a flagship report by either id form. The API form fetches the
- * report, its simulations, and their policies straight from the
- * PolicyEngine API, so a shared link opens with full provenance on any
- * device; the association form keeps old links working.
+ * Resolves a flagship report by its API report id: the report, its
+ * simulations, and their policies come straight from the PolicyEngine
+ * API, so the report opens on any device. Any other id resolves to
+ * nothing.
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();
   const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
     useParameterMetadata(country);
   const direct = isApiReportId(id);
-
-  const legacy = useUserReportById(id, { enabled: !direct && !!id });
 
   const {
     data: report,
@@ -104,11 +103,11 @@ export function useFlagshipReport(id: string): FlagshipReportData {
 
   if (!direct) {
     return {
-      report: legacy.report,
-      simulations: legacy.simulations,
-      policies: legacy.policies ?? [],
-      isLoading: legacy.isLoading,
-      // A legacy link that resolves to nothing reads as unresolvable.
+      report: undefined,
+      simulations: [],
+      policies: [],
+      isLoading: false,
+      // The page says an id that is not an API report id cannot open.
       error: null,
       notFound: false,
       failedPolicyIds: [],

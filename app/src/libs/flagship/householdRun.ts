@@ -355,6 +355,22 @@ export function plainHouseholdError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
+/**
+ * One policy's calculation, asked once more after the client's timeout:
+ * the API keeps calculating and caches the result, so the second ask
+ * usually returns it at once.
+ */
+async function calculateOnce(householdId: string, policyId: string) {
+  try {
+    return await fetchHouseholdCalculation('us', householdId, policyId);
+  } catch (error) {
+    if (error instanceof Error && /timed out/i.test(error.message)) {
+      return fetchHouseholdCalculation('us', householdId, policyId);
+    }
+    throw error;
+  }
+}
+
 /** Creates the household and calculates it under each policy, at once. */
 async function calculateHousehold(
   payload: V1HouseholdCreateEnvelope,
@@ -365,10 +381,8 @@ async function calculateHousehold(
     const created = await createHousehold(payload);
     const householdId = String(created.result.household_id);
     const [baseline, reform] = await Promise.all([
-      fetchHouseholdCalculation('us', householdId, baselinePolicyId),
-      baselinePolicyId === reformPolicyId
-        ? null
-        : fetchHouseholdCalculation('us', householdId, reformPolicyId),
+      calculateOnce(householdId, baselinePolicyId),
+      baselinePolicyId === reformPolicyId ? null : calculateOnce(householdId, reformPolicyId),
     ]);
     return { householdId, baseline, reform: reform ?? baseline };
   } catch (error) {
