@@ -21,6 +21,8 @@ export interface VariableRowProps {
   showRemoveColumn?: boolean;
   /** The label above the field, not beside it; beside it by default. */
   stacked?: boolean;
+  /** A fixed width in pixels, e.g. for a row of stacked fields; full width by default. */
+  width?: number;
 }
 
 /**
@@ -51,6 +53,7 @@ export default function VariableRow({
   disabled = false,
   showRemoveColumn = false,
   stacked = false,
+  width,
 }: VariableRowProps) {
   const shouldShowColumn = onRemove || showRemoveColumn;
 
@@ -61,6 +64,7 @@ export default function VariableRow({
           ? 'tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-1 tw:gap-y-[6px]'
           : 'tw:flex tw:items-center tw:gap-1 tw:flex-nowrap'
       }
+      style={width ? { width } : undefined}
     >
       <div className={stacked ? 'tw:col-span-2' : 'tw:flex-1'}>
         <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>

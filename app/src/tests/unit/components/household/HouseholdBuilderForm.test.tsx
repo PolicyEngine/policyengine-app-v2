@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { fireEvent, render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HouseholdBuilderForm, {
   rankVariablesBySearch,
@@ -46,10 +46,24 @@ describe('HouseholdBuilderForm', () => {
     expect(screen.getByText('Marital status')).toBeInTheDocument();
   });
 
+  test('given the columns layout then the number of children is typed, any whole number to 10', () => {
+    const onNumChildrenChange = vi.fn();
+    renderForm({ layout: 'columns', onNumChildrenChange });
+
+    const input = screen.getByLabelText('Number of children');
+    fireEvent.change(input, { target: { value: '7' } });
+    expect(onNumChildrenChange).toHaveBeenLastCalledWith(7);
+
+    // A partial or out-of-range entry waits.
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.change(input, { target: { value: '12' } });
+    expect(onNumChildrenChange).toHaveBeenCalledTimes(1);
+  });
+
   test('given the columns layout then family and household share a row, the people follow as cards', () => {
     const { container } = renderForm({ layout: 'columns' });
 
-    expect(container.firstElementChild).toHaveClass('tw:lg:grid-cols-2');
+    expect(container.firstElementChild).toHaveClass('tw:lg:flex-wrap');
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
     expect(screen.getByText('Household')).toBeInTheDocument();

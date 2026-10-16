@@ -8,7 +8,7 @@
  * - Inline search for adding custom variables per person or household-level
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import {
   Accordion,
@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   CardContent,
+  Input,
   Label,
   Select,
   SelectContent,
@@ -122,6 +123,56 @@ export function rankVariablesBySearch(variables: VariableInfo[], search: string)
   return scored
     .sort((a, b) => a.score - b.score || a.variable.label.length - b.variable.label.length)
     .map(({ variable }) => variable);
+}
+
+/** The most children the typed count takes. */
+const MAX_TYPED_CHILDREN = 10;
+
+/**
+ * The number of children as a typed whole number, 0 to 10. A partial or
+ * empty entry waits; the household changes on a whole number in range.
+ */
+function ChildCountInput({
+  id,
+  value,
+  onChange,
+  disabled,
+}: {
+  id: string;
+  value: number;
+  onChange: (count: number) => void;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+  return (
+    <Input
+      id={id}
+      type="number"
+      inputMode="numeric"
+      min={0}
+      max={MAX_TYPED_CHILDREN}
+      step={1}
+      value={text}
+      disabled={disabled}
+      className="tw:w-24 tw:bg-white"
+      onChange={(event) => {
+        setText(event.target.value);
+        const count = Number(event.target.value);
+        if (
+          event.target.value.trim() !== '' &&
+          Number.isInteger(count) &&
+          count >= 0 &&
+          count <= MAX_TYPED_CHILDREN
+        ) {
+          onChange(count);
+        }
+      }}
+      onBlur={() => setText(String(value))}
+    />
+  );
 }
 
 interface BuilderWarning {
@@ -410,6 +461,7 @@ export default function HouseholdBuilderForm({
   };
 
   const columns = layout === 'columns';
+  const childCountId = useId();
 
   return (
     // In columns, the family and household sections share a row; the people
@@ -418,7 +470,7 @@ export default function HouseholdBuilderForm({
       gap="lg"
       className={
         columns
-          ? 'tw:lg:grid tw:lg:grid-cols-2 tw:lg:items-start tw:lg:gap-x-8 tw:lg:gap-y-2'
+          ? 'tw:lg:flex tw:lg:flex-wrap tw:lg:items-start tw:lg:gap-x-6 tw:lg:gap-y-2'
           : undefined
       }
     >
@@ -469,7 +521,13 @@ export default function HouseholdBuilderForm({
       {/* Household Information */}
       <Stack gap="md">
         {/* Marital Status and Children - side by side */}
-        <div className="tw:grid tw:grid-cols-2 tw:gap-4">
+        <div
+          className={
+            columns
+              ? 'tw:flex tw:flex-wrap tw:items-end tw:gap-4'
+              : 'tw:grid tw:grid-cols-2 tw:gap-4'
+          }
+        >
           <div className="tw:flex tw:flex-col tw:gap-[6px]">
             <Label>Marital status</Label>
             <Select
@@ -479,7 +537,7 @@ export default function HouseholdBuilderForm({
               }
               disabled={disabled}
             >
-              <SelectTrigger>
+              <SelectTrigger className={columns ? 'tw:w-40' : undefined}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -490,24 +548,33 @@ export default function HouseholdBuilderForm({
           </div>
 
           <div className="tw:flex tw:flex-col tw:gap-[6px]">
-            <Label>Number of children</Label>
-            <Select
-              value={numChildren.toString()}
-              onValueChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
-              disabled={disabled}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">0</SelectItem>
-                <SelectItem value="1">1</SelectItem>
-                <SelectItem value="2">2</SelectItem>
-                <SelectItem value="3">3</SelectItem>
-                <SelectItem value="4">4</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor={columns ? childCountId : undefined}>Number of children</Label>
+            {columns ? (
+              <ChildCountInput
+                id={childCountId}
+                value={numChildren}
+                onChange={onNumChildrenChange}
+                disabled={disabled}
+              />
+            ) : (
+              <Select
+                value={numChildren.toString()}
+                onValueChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
+                disabled={disabled}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0</SelectItem>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
       </Stack>
@@ -523,7 +590,7 @@ export default function HouseholdBuilderForm({
         {/* Individuals / Members Section */}
         <AccordionItem
           value="individuals"
-          className={columns ? 'tw:lg:order-last tw:lg:col-span-2 tw:border-b-0' : undefined}
+          className={columns ? 'tw:lg:order-last tw:lg:basis-full tw:border-b-0' : undefined}
         >
           <AccordionTrigger>
             <Text fw={typography.fontWeight.medium}>Individuals</Text>
@@ -666,7 +733,7 @@ export default function HouseholdBuilderForm({
             <div
               className={
                 columns
-                  ? 'tw:grid tw:items-end tw:gap-4 tw:sm:grid-cols-2'
+                  ? 'tw:flex tw:flex-wrap tw:items-end tw:gap-4'
                   : 'tw:flex tw:flex-col tw:gap-3'
               }
             >
@@ -689,6 +756,7 @@ export default function HouseholdBuilderForm({
                     disabled={disabled}
                     showRemoveColumn
                     stacked={columns}
+                    width={columns ? 208 : undefined}
                   />
                 );
               })}
@@ -715,6 +783,7 @@ export default function HouseholdBuilderForm({
                     }
                     disabled={disabled}
                     stacked={columns}
+                    width={columns ? 208 : undefined}
                   />
                 );
               })}
@@ -752,7 +821,8 @@ export default function HouseholdBuilderForm({
                   variant="ghost"
                   size="sm"
                   onClick={handleOpenHouseholdSearch}
-                  className="tw:self-start"
+                  // In columns, it ends the row of fields, level with their boxes.
+                  className={columns ? 'tw:h-9' : 'tw:self-start'}
                 >
                   <IconPlus size={14} />
                   Add variable to your household
