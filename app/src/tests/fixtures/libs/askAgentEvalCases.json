@@ -1,0 +1,1493 @@
+[
+  {
+    "id": "al-hb527",
+    "title": "Alabama HB527: Qualified Overtime Compensation Deduction",
+    "description": "Alabama HB527 creates a state income tax deduction of up to $1,000 per taxpayer per year for qualified overtime compensation (the premium portion of overtime pay, per 26 U.S.C. § 225). Joint filers can each claim up to $1,000. As enrolled, the deduction covers tax years 2026-2028; this analysis models the introduced version's 2025-2027 window (same cap and definition).",
+    "state": "AL",
+    "expected": {
+      "gov.contrib.states.al.hb527.cap": 1000,
+      "gov.contrib.states.al.hb527.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "az-hb2636",
+    "title": "Millionaire Income Tax Surcharge (8% above $1M)",
+    "description": "Replaces Arizona's 2.5% flat individual income tax with a two-bracket progressive structure: 2.5% on the first $1M of taxable income, 8% on income above $1M. Same threshold for all filing statuses. Effective TY2027.",
+    "state": "AZ",
+    "expected": {
+      "gov.states.az.tax.income.main.joint[1].rate": 0.08,
+      "gov.states.az.tax.income.main.single[1].rate": 0.08,
+      "gov.states.az.tax.income.main.separate[1].rate": 0.08,
+      "gov.states.az.tax.income.main.joint[1].threshold": 1000000,
+      "gov.states.az.tax.income.main.single[1].threshold": 1000000,
+      "gov.states.az.tax.income.main.separate[1].threshold": 1000000,
+      "gov.states.az.tax.income.main.head_of_household[1].rate": 0.08,
+      "gov.states.az.tax.income.main.head_of_household[1].threshold": 1000000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ca-ab1690",
+    "title": "Young Child Tax Credit Age Expansion",
+    "description": "Expands California's Young Child Tax Credit (YCTC) by gradually increasing the qualifying age from under 6 to under 18 over 12 years (2026-2038). Each year adds one additional age cohort. By 2035, children ages 0-15 would qualify (vs. current 0-5).",
+    "state": "CA",
+    "expected": {
+      "gov.states.ca.tax.income.credits.young_child.ineligible_age": 7
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "ca-ab2591",
+    "title": "Taxing Californians into Poverty Protection Act",
+    "description": "Hypothetical analysis of California AB 2591 (Bains), which allows taxpayers to elect a standard deduction equal to the federal poverty line for their household size, effective tax year 2027.",
+    "state": "CA",
+    "expected": {
+      "gov.contrib.states.ca.ab2591.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "co-hb1062",
+    "title": "CO HB1062: Expand Deduction for Retirement Benefits",
+    "description": "Eliminates the $20,000 (age 55-64) and $24,000 (age 65+) caps on Colorado's pension and annuity income subtraction, allowing taxpayers age 55+ to deduct all qualifying retirement income (pensions, annuities, IRA distributions, Social Security) from state taxable income, effective tax year 2027.",
+    "state": "CO",
+    "expected": {
+      "gov.states.co.tax.income.subtractions.pension.cap.older": 1000000000,
+      "gov.states.co.tax.income.subtractions.pension.cap.younger": 1000000000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-hb5009",
+    "title": "An Act Increasing And Expanding The Property Tax Credit",
+    "description": "Expands Connecticut's property tax credit by tripling the maximum from $300 to $1,000, establishing a $400 minimum floor, and raising income thresholds to benefit more middle-income homeowners.",
+    "state": "CT",
+    "expected": {
+      "gov.contrib.states.ct.hb5009.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-hb5114",
+    "title": "Connecticut Refundable Renters Tax Credit",
+    "description": "Connecticut HB5114 creates a refundable renters tax credit equal to 20% of annual rent paid minus 4% of federal AGI, with a maximum credit of $2,500. Eligible renters must have federal AGI below $75,000 (single/MFS/HoH) or $150,000 (MFJ), rent a primary residence for the full year, and not be claimed as a dependent. Effective for tax years beginning January 1, 2027.",
+    "state": "CT",
+    "expected": {
+      "gov.contrib.states.ct.hb5114.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-hb5133",
+    "title": "Increase Top Marginal Income Tax Rate",
+    "description": "Increases Connecticut's top marginal income tax rate from 6.99% to 7.99% for high earners (single filers over $500,000, joint filers over $1,000,000).",
+    "state": "CT",
+    "expected": {
+      "gov.states.ct.tax.income.rates.joint[6].rate": 0.0799,
+      "gov.states.ct.tax.income.rates.single[6].rate": 0.0799,
+      "gov.states.ct.tax.income.rates.separate[6].rate": 0.0799,
+      "gov.states.ct.tax.income.rates.surviving_spouse[6].rate": 0.0799,
+      "gov.states.ct.tax.income.rates.head_of_household[6].rate": 0.0799
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-hb5134",
+    "title": "Establishing a Refundable Child Tax Credit",
+    "description": "Creates a new refundable child tax credit of $600 per qualifying child (up to 3 children) for Connecticut families with income below $100,000 (single) or $200,000 (joint). Children must be under 18.",
+    "state": "CT",
+    "expected": {
+      "gov.contrib.states.ct.refundable_ctc.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-sb100",
+    "title": "An Act Reducing Certain Personal Income Tax Marginal Rates",
+    "description": "Reduces Connecticut's lowest two marginal income tax rates for taxpayers with AGI below $100,000 (single) or $200,000 (joint). Eliminates tax on the first $10,000/$20,000 of income and cuts the next bracket from 4.5% to 3%.",
+    "state": "CT",
+    "expected": {
+      "gov.contrib.states.ct.sb100.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-sb69",
+    "title": "SB69",
+    "description": "Eliminates Connecticut's state Earned Income Tax Credit (EITC), which currently provides 40% of the federal EITC to eligible low-income working families. We assume the $250 child bonus is also eliminated as the EITC statute is removed from the legal code.",
+    "state": "CT",
+    "expected": {
+      "gov.states.ct.tax.income.credits.eitc.match": 0,
+      "gov.states.ct.tax.income.credits.eitc.qualifying_child_bonus.in_effect": false
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-sb78",
+    "title": "CT SB78: SS Benefit Deduction Threshold Elimination",
+    "description": "Eliminates the qualifying income thresholds for the personal income tax deductions for Social Security benefits. Currently, filers above $75K (single) / $100K (joint) can only deduct 75% of SS benefits; this bill makes 100% deductible for all.",
+    "state": "CT",
+    "expected": {
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.JOINT": 999999999,
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.SINGLE": 999999999,
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.SEPARATE": 999999999,
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.SURVIVING_SPOUSE": 999999999,
+      "gov.states.ct.tax.income.subtractions.social_security.reduction_threshold.HEAD_OF_HOUSEHOLD": 999999999
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ct-tax-rebate-2026",
+    "title": "2026 Tax Rebate (Lamont Proposal)",
+    "description": "Governor Lamont's proposed one-time tax rebate providing $200 per person ($400 for joint filers) to Connecticut residents with income below $200,000 (single) or $400,000 (joint).",
+    "state": "CT",
+    "expected": {
+      "gov.contrib.states.ct.tax_rebate_2026.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "dc-hjr142",
+    "title": "HJR 142: Nullifying DC Tax Conformity Act",
+    "description": "Congressional resolution disapproving the D.C. Income and Franchise Tax Conformity and Revision Emergency Amendment Act of 2025, which would eliminate the $1,000 Child Tax Credit and revert the EITC match for households with children from 100% to 85%.",
+    "state": "DC",
+    "expected": {
+      "gov.states.dc.tax.income.credits.eitc.with_children.match": 0.85
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "de-hb274",
+    "title": "AN ACT TO AMEND TITLE 30 OF THE DELAWARE CODE RELATING TO THE CHILD AND DEPENDENT CARE EXPENSE TAX CREDIT",
+    "description": "Increases Delaware's Child and Dependent Care Credit from 50% to 100% of the federal CDCC, effectively doubling the state credit for eligible taxpayers.",
+    "state": "DE",
+    "expected": {
+      "gov.states.de.tax.income.credits.cdcc.match": 1
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ga-hb1001",
+    "title": "Georgia Income Tax Rate Cut (HB1001)",
+    "description": "Accelerates Georgia's income tax rate reduction to 4.99% starting in 2026. Removes the revenue trigger conditions that could delay the reduction. We do not model the reduction in corporate tax rate to 4.99% in this analysis.",
+    "state": "GA",
+    "expected": {
+      "gov.states.ga.tax.income.main.joint[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[5].rate": 0.0499
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ga-hb463",
+    "title": "Georgia Economic Growth and Tax Relief Act of 2026",
+    "description": "Hypothetical multi-year analysis of Georgia HB463 assuming all revenue growth triggers are met. Compared to a triggered baseline (5.09% in 2026, 4.99% in 2027+), HB463 phases in rate reductions from 4.99% (2026) to 3.99% (2034), increases standard deductions ($30K/$15K joint/single in 2026 to $36K/$18K in 2034), raises the dependent exemption from $4,000 to $6,000, and increases the retirement income exclusion to $70,000 for seniors 65+. EXCLUDES: Tips exemption, overtime exemption, and tax credit repeals.",
+    "state": "GA",
+    "expected": {
+      "gov.states.ga.tax.income.exemptions.dependent": 5000,
+      "gov.states.ga.tax.income.main.joint[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[5].rate": 0.0499,
+      "gov.states.ga.tax.income.deductions.standard.amount.JOINT": 30000,
+      "gov.states.ga.tax.income.deductions.standard.amount.SINGLE": 15000,
+      "gov.states.ga.tax.income.agi.exclusions.retirement.cap.older": 70000,
+      "gov.states.ga.tax.income.deductions.standard.amount.SEPARATE": 15000,
+      "gov.states.ga.tax.income.main.surviving_spouse[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[5].rate": 0.0499,
+      "gov.states.ga.tax.income.deductions.standard.amount.SURVIVING_SPOUSE": 30000,
+      "gov.states.ga.tax.income.deductions.standard.amount.HEAD_OF_HOUSEHOLD": 15000
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "ga-hb463-2026",
+    "title": "Georgia HB 463 (2026): flat income tax rate to 4.99%",
+    "description": "Georgia HB 463 (2026), signed May 11, 2026, sets the state flat individual income tax rate at 4.99% for tax year 2026 — 0.10 percentage points below the previously scheduled 5.09% and 0.20 percentage points below the 2025 rate — and creates temporary AGI exclusions of up to $1,750 each for tips and overtime pay (2026-2028). Impacts on this page measure the 2026 rate acceleration against the prior-law 5.09% schedule using PolicyEngine Georgia data. Measured against the 2025 rate instead, the year-over-year reduction is roughly twice as large; external estimates of that framing are $778M (Governor OPB) and $797-948M (GBPI/ITEP). The tips and overtime exclusions are not scored due to a microdata imputation gap.",
+    "state": "GA",
+    "expected": {
+      "gov.states.ga.tax.income.main.flat_rate": 0.0499,
+      "gov.states.ga.tax.income.agi.exclusions.tips.cap": 1750,
+      "gov.states.ga.tax.income.agi.exclusions.overtime.cap": 1750
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ga-hb880",
+    "title": "HB880",
+    "description": "Hypothetical multi-year analysis of Georgia HB880 assuming all revenue growth triggers are met. Phases in annual income tax rate reductions from 4.99% (2027) to 4.19% (2035), increases standard deductions ($12,000/$24,000 single/joint in 2026 to $17,400/$34,800 in 2035), and raises the dependent exemption ($4,000 in 2026 to $5,800 in 2035). The bill also increases the retirement income exclusion cap from $65,000 to $70,000 for older retirees beginning in 2027.",
+    "state": "GA",
+    "expected": {
+      "gov.states.ga.tax.income.exemptions.dependent": 4200,
+      "gov.states.ga.tax.income.main.joint[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[5].rate": 0.0499,
+      "gov.states.ga.tax.income.deductions.standard.amount.JOINT": 25200,
+      "gov.states.ga.tax.income.deductions.standard.amount.SINGLE": 12600,
+      "gov.states.ga.tax.income.agi.exclusions.retirement.cap.older": 70000,
+      "gov.states.ga.tax.income.deductions.standard.amount.SEPARATE": 12600,
+      "gov.states.ga.tax.income.main.surviving_spouse[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[5].rate": 0.0499,
+      "gov.states.ga.tax.income.deductions.standard.amount.SURVIVING_SPOUSE": 25200,
+      "gov.states.ga.tax.income.deductions.standard.amount.HEAD_OF_HOUSEHOLD": 12600
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "ga-sb168",
+    "title": "SB168: Accelerated Income Tax Elimination",
+    "description": "Reduces Georgia's flat income tax rate from 5.09% to 4.19% for 2026, with 1.0pp annual cuts to eliminate the tax by 2031. Removes revenue trigger conditions and rate floor.",
+    "state": "GA",
+    "expected": {
+      "gov.states.ga.tax.income.main.joint[0].rate": 0.0419,
+      "gov.states.ga.tax.income.main.joint[1].rate": 0.0419,
+      "gov.states.ga.tax.income.main.joint[2].rate": 0.0419,
+      "gov.states.ga.tax.income.main.joint[3].rate": 0.0419,
+      "gov.states.ga.tax.income.main.joint[4].rate": 0.0419,
+      "gov.states.ga.tax.income.main.joint[5].rate": 0.0419,
+      "gov.states.ga.tax.income.main.single[0].rate": 0.0419,
+      "gov.states.ga.tax.income.main.single[1].rate": 0.0419,
+      "gov.states.ga.tax.income.main.single[2].rate": 0.0419,
+      "gov.states.ga.tax.income.main.single[3].rate": 0.0419,
+      "gov.states.ga.tax.income.main.single[4].rate": 0.0419,
+      "gov.states.ga.tax.income.main.single[5].rate": 0.0419,
+      "gov.states.ga.tax.income.main.separate[0].rate": 0.0419,
+      "gov.states.ga.tax.income.main.separate[1].rate": 0.0419,
+      "gov.states.ga.tax.income.main.separate[2].rate": 0.0419,
+      "gov.states.ga.tax.income.main.separate[3].rate": 0.0419,
+      "gov.states.ga.tax.income.main.separate[4].rate": 0.0419,
+      "gov.states.ga.tax.income.main.separate[5].rate": 0.0419,
+      "gov.states.ga.tax.income.main.surviving_spouse[0].rate": 0.0419,
+      "gov.states.ga.tax.income.main.surviving_spouse[1].rate": 0.0419,
+      "gov.states.ga.tax.income.main.surviving_spouse[2].rate": 0.0419,
+      "gov.states.ga.tax.income.main.surviving_spouse[3].rate": 0.0419,
+      "gov.states.ga.tax.income.main.surviving_spouse[4].rate": 0.0419,
+      "gov.states.ga.tax.income.main.surviving_spouse[5].rate": 0.0419,
+      "gov.states.ga.tax.income.main.head_of_household[0].rate": 0.0419,
+      "gov.states.ga.tax.income.main.head_of_household[1].rate": 0.0419,
+      "gov.states.ga.tax.income.main.head_of_household[2].rate": 0.0419,
+      "gov.states.ga.tax.income.main.head_of_household[3].rate": 0.0419,
+      "gov.states.ga.tax.income.main.head_of_household[4].rate": 0.0419,
+      "gov.states.ga.tax.income.main.head_of_household[5].rate": 0.0419
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "ga-sb476",
+    "title": "Income Tax Reduction Act of 2026",
+    "description": "Reduces Georgia income tax rate to 4.99% and increases standard deductions to $50,000 for single filers and $100,000 for joint filers, effective January 1, 2026.",
+    "state": "GA",
+    "expected": {
+      "gov.states.ga.tax.income.main.joint[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.joint[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.single[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.separate[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.surviving_spouse[5].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[0].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[1].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[2].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[3].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[4].rate": 0.0499,
+      "gov.states.ga.tax.income.main.head_of_household[5].rate": 0.0499,
+      "gov.states.ga.tax.income.deductions.standard.amount.JOINT": 100000,
+      "gov.states.ga.tax.income.deductions.standard.amount.SINGLE": 50000,
+      "gov.states.ga.tax.income.deductions.standard.amount.SEPARATE": 50000,
+      "gov.states.ga.tax.income.deductions.standard.amount.SURVIVING_SPOUSE": 50000,
+      "gov.states.ga.tax.income.deductions.standard.amount.HEAD_OF_HOUSEHOLD": 50000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ga-sb520",
+    "title": "Georgia Tax Reform - Progressive Income Tax with Expanded Credits (SB520)",
+    "description": "Shifts Georgia from a flat 5.19% income tax to a graduated system (2%-6%), increases standard deductions to $17,000/$34,000, creates a refundable state EITC at 20% of federal, and expands the child tax credit to $1,250 (refundable). Phase 1 (2026): Standard deduction, CTC, and EITC provisions. Phase 2 (2027): Progressive tax brackets.",
+    "state": "GA",
+    "expected": {
+      "gov.contrib.states.ga.sb520.in_effect": true,
+      "gov.contrib.states.ga.sb520.brackets.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "hi-hb2306",
+    "title": "HB2306 HD1",
+    "description": "Freezes Hawaii income tax bracket thresholds at 2025 levels, increases top three marginal rates by 1pp (9%→10%, 10%→11%, 11%→12%), expands the child and dependent care credit (50%-5% match up to $160k AGI vs current 25%-15% up to $50k), and extends Act 163 enhanced credits (40% EITC, expanded CDCC limits, food/excise credit) through 2032. Effective for taxable years beginning after December 31, 2026.",
+    "state": "HI",
+    "expected": {
+      "gov.contrib.states.hi.hb2306.cdcc.in_effect": true,
+      "gov.states.hi.tax.income.credits.eitc.match": 0.4,
+      "gov.states.hi.tax.income.rates.joint[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.joint[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.joint[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.single[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.single[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.single[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.separate[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.separate[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.separate[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.joint[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.joint[1].threshold": 19200,
+      "gov.states.hi.tax.income.rates.joint[2].threshold": 28800,
+      "gov.states.hi.tax.income.rates.joint[3].threshold": 38400,
+      "gov.states.hi.tax.income.rates.joint[4].threshold": 48000,
+      "gov.states.hi.tax.income.rates.joint[5].threshold": 72000,
+      "gov.states.hi.tax.income.rates.joint[6].threshold": 96000,
+      "gov.states.hi.tax.income.rates.joint[7].threshold": 250000,
+      "gov.states.hi.tax.income.rates.joint[8].threshold": 350000,
+      "gov.states.hi.tax.income.rates.joint[9].threshold": 450000,
+      "gov.states.hi.tax.income.rates.joint[10].threshold": 550000,
+      "gov.states.hi.tax.income.rates.joint[11].threshold": 650000,
+      "gov.states.hi.tax.income.rates.single[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.single[1].threshold": 9600,
+      "gov.states.hi.tax.income.rates.single[2].threshold": 14400,
+      "gov.states.hi.tax.income.rates.single[3].threshold": 19200,
+      "gov.states.hi.tax.income.rates.single[4].threshold": 24000,
+      "gov.states.hi.tax.income.rates.single[5].threshold": 36000,
+      "gov.states.hi.tax.income.rates.single[6].threshold": 48000,
+      "gov.states.hi.tax.income.rates.single[7].threshold": 125000,
+      "gov.states.hi.tax.income.rates.single[8].threshold": 175000,
+      "gov.states.hi.tax.income.rates.single[9].threshold": 225000,
+      "gov.states.hi.tax.income.rates.single[10].threshold": 275000,
+      "gov.states.hi.tax.income.rates.single[11].threshold": 325000,
+      "gov.states.hi.tax.income.rates.separate[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.separate[1].threshold": 9600,
+      "gov.states.hi.tax.income.rates.separate[2].threshold": 14400,
+      "gov.states.hi.tax.income.rates.separate[3].threshold": 19200,
+      "gov.states.hi.tax.income.rates.separate[4].threshold": 24000,
+      "gov.states.hi.tax.income.rates.separate[5].threshold": 36000,
+      "gov.states.hi.tax.income.rates.separate[6].threshold": 48000,
+      "gov.states.hi.tax.income.rates.separate[7].threshold": 125000,
+      "gov.states.hi.tax.income.rates.separate[8].threshold": 175000,
+      "gov.states.hi.tax.income.rates.separate[9].threshold": 225000,
+      "gov.states.hi.tax.income.rates.separate[10].threshold": 275000,
+      "gov.states.hi.tax.income.rates.separate[11].threshold": 325000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.head_of_household[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.surviving_spouse[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.surviving_spouse[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.head_of_household[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.head_of_household[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.surviving_spouse[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.surviving_spouse[1].threshold": 19200,
+      "gov.states.hi.tax.income.rates.surviving_spouse[2].threshold": 28800,
+      "gov.states.hi.tax.income.rates.surviving_spouse[3].threshold": 38400,
+      "gov.states.hi.tax.income.rates.surviving_spouse[4].threshold": 48000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[5].threshold": 72000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[6].threshold": 96000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[7].threshold": 250000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[8].threshold": 350000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[9].threshold": 450000,
+      "gov.states.hi.tax.income.rates.head_of_household[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.head_of_household[1].threshold": 14400,
+      "gov.states.hi.tax.income.rates.head_of_household[2].threshold": 21600,
+      "gov.states.hi.tax.income.rates.head_of_household[3].threshold": 28800,
+      "gov.states.hi.tax.income.rates.head_of_household[4].threshold": 36000,
+      "gov.states.hi.tax.income.rates.head_of_household[5].threshold": 54000,
+      "gov.states.hi.tax.income.rates.head_of_household[6].threshold": 72000,
+      "gov.states.hi.tax.income.rates.head_of_household[7].threshold": 187500,
+      "gov.states.hi.tax.income.rates.head_of_household[8].threshold": 262500,
+      "gov.states.hi.tax.income.rates.head_of_household[9].threshold": 337500,
+      "gov.states.hi.tax.income.rates.surviving_spouse[10].threshold": 550000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[11].threshold": 650000,
+      "gov.states.hi.tax.income.rates.head_of_household[10].threshold": 412500,
+      "gov.states.hi.tax.income.rates.head_of_household[11].threshold": 487500,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[7].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[5].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[7].threshold": 60000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[7].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[7].threshold": 60000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[7].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[7].amount": 0,
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor[0].amount": 10000,
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor[1].amount": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[7].threshold": 60000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[7].threshold": 60000
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "hi-sb3125-hd1",
+    "title": "SB3125 HD1",
+    "description": "Freezes Hawaii income tax bracket thresholds at 2025 levels, increases top three marginal rates by 1pp (9%→10%, 10%→11%, 11%→12%), expands the child and dependent care credit (50%-5% match up to $160k AGI vs current 25%-15% up to $50k), and extends Act 163 enhanced credits (40% EITC, expanded CDCC limits, food/excise credit) through 2032. Effective for taxable years beginning after December 31, 2026.",
+    "state": "HI",
+    "expected": {
+      "gov.contrib.states.hi.hb2306.cdcc.in_effect": true,
+      "gov.states.hi.tax.income.credits.eitc.match": 0.4,
+      "gov.states.hi.tax.income.rates.joint[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.joint[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.joint[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.single[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.single[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.single[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.separate[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.separate[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.separate[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.joint[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.joint[1].threshold": 19200,
+      "gov.states.hi.tax.income.rates.joint[2].threshold": 28800,
+      "gov.states.hi.tax.income.rates.joint[3].threshold": 38400,
+      "gov.states.hi.tax.income.rates.joint[4].threshold": 48000,
+      "gov.states.hi.tax.income.rates.joint[5].threshold": 72000,
+      "gov.states.hi.tax.income.rates.joint[6].threshold": 96000,
+      "gov.states.hi.tax.income.rates.joint[7].threshold": 250000,
+      "gov.states.hi.tax.income.rates.joint[8].threshold": 350000,
+      "gov.states.hi.tax.income.rates.joint[9].threshold": 450000,
+      "gov.states.hi.tax.income.rates.joint[10].threshold": 550000,
+      "gov.states.hi.tax.income.rates.joint[11].threshold": 650000,
+      "gov.states.hi.tax.income.rates.single[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.single[1].threshold": 9600,
+      "gov.states.hi.tax.income.rates.single[2].threshold": 14400,
+      "gov.states.hi.tax.income.rates.single[3].threshold": 19200,
+      "gov.states.hi.tax.income.rates.single[4].threshold": 24000,
+      "gov.states.hi.tax.income.rates.single[5].threshold": 36000,
+      "gov.states.hi.tax.income.rates.single[6].threshold": 48000,
+      "gov.states.hi.tax.income.rates.single[7].threshold": 125000,
+      "gov.states.hi.tax.income.rates.single[8].threshold": 175000,
+      "gov.states.hi.tax.income.rates.single[9].threshold": 225000,
+      "gov.states.hi.tax.income.rates.single[10].threshold": 275000,
+      "gov.states.hi.tax.income.rates.single[11].threshold": 325000,
+      "gov.states.hi.tax.income.rates.separate[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.separate[1].threshold": 9600,
+      "gov.states.hi.tax.income.rates.separate[2].threshold": 14400,
+      "gov.states.hi.tax.income.rates.separate[3].threshold": 19200,
+      "gov.states.hi.tax.income.rates.separate[4].threshold": 24000,
+      "gov.states.hi.tax.income.rates.separate[5].threshold": 36000,
+      "gov.states.hi.tax.income.rates.separate[6].threshold": 48000,
+      "gov.states.hi.tax.income.rates.separate[7].threshold": 125000,
+      "gov.states.hi.tax.income.rates.separate[8].threshold": 175000,
+      "gov.states.hi.tax.income.rates.separate[9].threshold": 225000,
+      "gov.states.hi.tax.income.rates.separate[10].threshold": 275000,
+      "gov.states.hi.tax.income.rates.separate[11].threshold": 325000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.head_of_household[9].rate": 0.1,
+      "gov.states.hi.tax.income.rates.surviving_spouse[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.surviving_spouse[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.head_of_household[10].rate": 0.11,
+      "gov.states.hi.tax.income.rates.head_of_household[11].rate": 0.12,
+      "gov.states.hi.tax.income.rates.surviving_spouse[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.surviving_spouse[1].threshold": 19200,
+      "gov.states.hi.tax.income.rates.surviving_spouse[2].threshold": 28800,
+      "gov.states.hi.tax.income.rates.surviving_spouse[3].threshold": 38400,
+      "gov.states.hi.tax.income.rates.surviving_spouse[4].threshold": 48000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[5].threshold": 72000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[6].threshold": 96000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[7].threshold": 250000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[8].threshold": 350000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[9].threshold": 450000,
+      "gov.states.hi.tax.income.rates.head_of_household[0].threshold": 0,
+      "gov.states.hi.tax.income.rates.head_of_household[1].threshold": 14400,
+      "gov.states.hi.tax.income.rates.head_of_household[2].threshold": 21600,
+      "gov.states.hi.tax.income.rates.head_of_household[3].threshold": 28800,
+      "gov.states.hi.tax.income.rates.head_of_household[4].threshold": 36000,
+      "gov.states.hi.tax.income.rates.head_of_household[5].threshold": 54000,
+      "gov.states.hi.tax.income.rates.head_of_household[6].threshold": 72000,
+      "gov.states.hi.tax.income.rates.head_of_household[7].threshold": 187500,
+      "gov.states.hi.tax.income.rates.head_of_household[8].threshold": 262500,
+      "gov.states.hi.tax.income.rates.head_of_household[9].threshold": 337500,
+      "gov.states.hi.tax.income.rates.surviving_spouse[10].threshold": 550000,
+      "gov.states.hi.tax.income.rates.surviving_spouse[11].threshold": 650000,
+      "gov.states.hi.tax.income.rates.head_of_household[10].threshold": 412500,
+      "gov.states.hi.tax.income.rates.head_of_household[11].threshold": 487500,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[7].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[5].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.joint[7].threshold": 60000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[7].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.single[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.separate[7].threshold": 60000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[7].amount": 0,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[0].amount": 220,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[1].amount": 200,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[2].amount": 170,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[3].amount": 140,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[4].amount": 110,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[5].amount": 90,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[6].amount": 70,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[7].amount": 0,
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor[0].amount": 10000,
+      "gov.states.hi.tax.income.credits.cdcc.dependent_care_benefits.expense_floor[1].amount": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.surviving_spouse[7].threshold": 60000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[1].threshold": 15000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[2].threshold": 20000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[3].threshold": 25000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[4].threshold": 30000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[5].threshold": 40000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[6].threshold": 50000,
+      "gov.states.hi.tax.income.credits.food_excise_tax.amount.head_of_household[7].threshold": 60000
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "ia-hf1020",
+    "title": "Child and Dependent Care Credit Expansion",
+    "description": "Modifies the Iowa child and dependent care credit by removing the $90,000 income cap and simplifying from 7 brackets to 4. Taxpayers with Iowa net income of $25,000 or more receive 50% of the federal credit (up from 30-40% for middle-income and 0% for high-income). Retroactive to January 1, 2025.",
+    "state": "IA",
+    "expected": {
+      "gov.states.ia.tax.income.credits.child_care.fraction[4].amount": 0.5,
+      "gov.states.ia.tax.income.credits.child_care.fraction[5].amount": 0.5,
+      "gov.states.ia.tax.income.credits.child_care.fraction[6].amount": 0.5
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "id-sb1450",
+    "title": "Idaho SB1450 - Child Tax Credit Permanent Extension",
+    "description": "Extends Idaho's $205 nonrefundable child tax credit indefinitely by removing the January 1, 2026 sunset date.",
+    "state": "ID",
+    "expected": {
+      "gov.contrib.states.id.s1450.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "il-hb4680",
+    "title": "Illinois EITC Enhancement",
+    "description": "Increases the Illinois Earned Income Tax Credit match from 20% to 30% of the federal EITC, effective January 1, 2026.",
+    "state": "IL",
+    "expected": {
+      "gov.states.il.tax.income.credits.eitc.match": 0.3
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ks-hb2620",
+    "title": "Kansas EITC Increase (HB2620)",
+    "description": "Increases the Kansas earned income tax credit from 17% to 18% of the federal EITC.",
+    "state": "KS",
+    "expected": {
+      "gov.states.ks.tax.income.credits.eitc_fraction": 0.18
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ks-hb2629",
+    "title": "Kansas Standard Deduction Increase (HB2629)",
+    "description": "Kansas HB2629 increases the standard deduction base amounts for all filing statuses effective tax year 2026: single from $3,605 to $3,805, joint from $8,240 to $8,640, head of household from $6,180 to $6,480.",
+    "state": "KS",
+    "expected": {
+      "gov.states.ks.tax.income.deductions.standard.base_amount.JOINT": 8640,
+      "gov.states.ks.tax.income.deductions.standard.base_amount.SINGLE": 3805,
+      "gov.states.ks.tax.income.deductions.standard.base_amount.SEPARATE": 4320,
+      "gov.states.ks.tax.income.deductions.standard.base_amount.SURVIVING_SPOUSE": 8640,
+      "gov.states.ks.tax.income.deductions.standard.base_amount.HEAD_OF_HOUSEHOLD": 6480
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ma-h5007",
+    "title": "An Act relative to reducing the state personal income tax rate from 5% to 4%",
+    "description": "Initiative petition to reduce Massachusetts' personal income tax rate from 5% to 4% through a three-year phase-in: 4.67% in 2027, 4.33% in 2028, and 4.00% starting in 2029. Applies to both Part A (interest/dividends) and Part B (regular income). Does not affect the 4% surtax on income over $1M.",
+    "state": "MA",
+    "expected": {
+      "gov.states.ma.tax.income.rates.part_b": 0.0467,
+      "gov.states.ma.tax.income.rates.part_a.dividends": 0.0467
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "md-hb411",
+    "title": "Income Tax - Standard Deduction - Alteration",
+    "description": "Increases the Maryland standard deduction from $3,350 to $4,100 for single filers and from $6,700 to $8,200 for joint filers, heads of household, and surviving spouses, effective tax year 2026. Also updates the COLA base amounts.",
+    "state": "MD",
+    "expected": {
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.JOINT": 8200,
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.SINGLE": 4100,
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.SEPARATE": 4100,
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.SURVIVING_SPOUSE": 8200,
+      "gov.states.md.tax.income.deductions.standard.flat_deduction.amount.HEAD_OF_HOUSEHOLD": 8200
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "mi-hb4055",
+    "title": "House Bill 4055",
+    "description": "Creates a refundable state child tax credit equal to 50% of the federal child tax credit under IRC Section 24, effective January 1, 2025.",
+    "state": "MI",
+    "expected": {
+      "gov.contrib.states.mi.ctc.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "mi-hb4170",
+    "title": "House Bill 4170",
+    "description": "Amends the Income Tax Act to reduce Michigan's flat individual income tax rate from 4.25% to 4.05%, effective for tax years beginning after December 31, 2024 (retroactive to TY 2025).",
+    "state": "MI",
+    "expected": {
+      "gov.states.mi.tax.income.rate": 0.0405
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mi-hb5519",
+    "title": "House Bill 5519",
+    "description": "Reduces Michigan flat individual income tax rate from 4.25% to 3.9%, effective January 1, 2026.",
+    "state": "MI",
+    "expected": {
+      "gov.states.mi.tax.income.rate": 0.039
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mi-invest-in-kids",
+    "title": "Invest in MI Kids (2026 Ballot Initiative)",
+    "description": "Constitutional amendment imposing a 5% income tax surcharge on income above $500,000 (single) or $1 million (joint) to fund K-12 education.",
+    "state": "MI",
+    "expected": {
+      "gov.contrib.states.mi.surtax.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "mn-hf100",
+    "title": "MN HF 100: Unlimited Social Security Subtraction",
+    "description": "Removes the income-based phaseout on Minnesota's Social Security benefit subtraction, allowing all filers to subtract 100% of taxable Social Security income regardless of AGI.",
+    "state": "MN",
+    "expected": {
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.JOINT": 10000000,
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.SINGLE": 10000000,
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.SEPARATE": 10000000,
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.SURVIVING_SPOUSE": 10000000,
+      "gov.states.mn.tax.income.subtractions.social_security.reduction.start.HEAD_OF_HOUSEHOLD": 10000000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mn-hf154",
+    "title": "First-Tier Income Tax Rate Reduction",
+    "description": "Reduces Minnesota's first-tier individual income tax rate from 5.35% to 2.8%, a 2.55 percentage point cut affecting all filing statuses. Also rebases statutory bracket thresholds to 2025 inflation-adjusted values (no real-world threshold change). Effective for tax years beginning after December 31, 2024.",
+    "state": "MN",
+    "expected": {
+      "gov.states.mn.tax.income.rates.joint[0].rate": 0.028,
+      "gov.states.mn.tax.income.rates.single[0].rate": 0.028,
+      "gov.states.mn.tax.income.rates.separate[0].rate": 0.028,
+      "gov.states.mn.tax.income.rates.surviving_spouse[0].rate": 0.028,
+      "gov.states.mn.tax.income.rates.head_of_household[0].rate": 0.028
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mn-hf2197-ctc-wfc-marriage-penalty",
+    "title": "MN HF2197: CTC Marriage Penalty + WFC Reform",
+    "description": "Increases CTC phaseout threshold for joint filers to $75,000 and other filers to $37,500, eliminates WFC for childless adults",
+    "state": "MN",
+    "expected": {
+      "gov.states.mn.tax.income.credits.cwfc.phase_out.threshold.joint": 75000,
+      "gov.states.mn.tax.income.credits.cwfc.phase_out.threshold.other": 37500,
+      "gov.states.mn.tax.income.credits.cwfc.wfc.eligible.childless_adult_age.minimum": 999
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mn-hf2502-ctc-marriage-penalty",
+    "title": "MN HF2502: CTC Marriage Penalty Elimination",
+    "description": "Increases child credit phaseout threshold for joint filers from $35,000 to $63,900 to eliminate marriage penalty",
+    "state": "MN",
+    "expected": {
+      "gov.states.mn.tax.income.credits.cwfc.phase_out.threshold.joint": 63900
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mn-hf4621",
+    "title": "MN HF 4621: Increase child tax credit to $2,000",
+    "description": "Increases the Minnesota child tax credit (part of the Working Family Credit) from $1,750 to $2,000 per qualifying child.",
+    "state": "MN",
+    "expected": {
+      "gov.states.mn.tax.income.credits.cwfc.ctc.amount": 2000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mn-hf4890",
+    "title": "Establishing a fifth individual income tax bracket and expanding the Minnesota Child Credit",
+    "description": "Minnesota HF4890 adds a fifth individual income tax bracket at 10.15% applying to high-income filers ($1,000,000 joint, $600,000 single, $800,000 head of household), restructures the four existing brackets, and increases the Minnesota Child Credit to $2,000 per qualifying child.",
+    "state": "MN",
+    "expected": {
+      "gov.contrib.states.mn.hf4890.in_effect": true,
+      "gov.states.mn.tax.income.credits.cwfc.ctc.amount": 2000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mo-sb1240",
+    "title": "Eliminates the individual income tax",
+    "description": "Eliminates Missouri individual income tax for all tax years beginning on or after January 1, 2027, reducing rates from 2.0%-4.7% to 0%.",
+    "state": "MO",
+    "expected": {
+      "gov.states.mo.tax.income.rates[0].rate": 0,
+      "gov.states.mo.tax.income.rates[1].rate": 0,
+      "gov.states.mo.tax.income.rates[2].rate": 0,
+      "gov.states.mo.tax.income.rates[3].rate": 0,
+      "gov.states.mo.tax.income.rates[4].rate": 0,
+      "gov.states.mo.tax.income.rates[5].rate": 0,
+      "gov.states.mo.tax.income.rates[6].rate": 0,
+      "gov.states.mo.tax.income.rates[7].rate": 0,
+      "gov.states.mo.tax.income.rates[8].rate": 0
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "mo-sb458",
+    "title": "Flat 4.0% Income Tax + Federal Tax Deduction Elimination",
+    "description": "Replaces Missouri's graduated income tax brackets (0%-4.7%) with a flat 4.0% rate on all taxable income, effective January 1, 2026. Also eliminates Missouri's federal income tax deduction (§143.171), which currently allows filers to deduct 5-35% of federal taxes paid. Includes a trigger mechanism for further rate reductions toward zero contingent on a constitutional amendment (not modeled).",
+    "state": "MO",
+    "expected": {
+      "gov.states.mo.tax.income.rates[0].rate": 0.04,
+      "gov.states.mo.tax.income.rates[1].rate": 0.04,
+      "gov.states.mo.tax.income.rates[2].rate": 0.04,
+      "gov.states.mo.tax.income.rates[3].rate": 0.04,
+      "gov.states.mo.tax.income.rates[4].rate": 0.04,
+      "gov.states.mo.tax.income.rates[6].rate": 0.04,
+      "gov.states.mo.tax.income.rates[7].rate": 0.04,
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate[0].amount": 0,
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate[1].amount": 0,
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate[2].amount": 0,
+      "gov.states.mo.tax.income.deductions.federal_income_tax.rate[3].amount": 0
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ms-sb2869",
+    "title": "Senate Bill 2869",
+    "description": "Freezes the Mississippi income tax rate at 4% permanently, reversing the HB1 (Build Up Mississippi Act) phase-out schedule that would reduce the rate to 3% by 2030 and eventually eliminate it.",
+    "state": "MS",
+    "expected": {
+      "gov.states.ms.tax.income.rate[1].rate": 0.04
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "nc-h459",
+    "title": "NC H459: Income Tax Rate Reduction Trigger Mods",
+    "description": "Freezes the North Carolina flat individual income tax rate at 4.25% for tax years 2026 through 2028, preventing the scheduled reduction to 3.99%. Suspends the rate reduction trigger mechanism and reinstates it for 2029+ with a shortened trigger table. Motivated by Hurricane Helene recovery costs.",
+    "state": "NC",
+    "expected": {
+      "gov.states.nc.tax.income.rate": 0.0425
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "nc-s211",
+    "title": "NC S211: 5% EITC",
+    "description": "Reenacts NC state EITC at 5% of federal credit for tax years 2025-2027. Sunsets after December 31, 2027.",
+    "state": "NC",
+    "expected": {
+      "gov.contrib.states.nc.eitc.match": 0.05,
+      "gov.contrib.states.nc.eitc.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "nc-s304",
+    "title": "NC S304: 10% EITC",
+    "description": "Reenacts North Carolina state EITC at 10% of the federal credit. NC eliminated its EITC in 2014; this restores it at double the previous 5% rate. Effective January 1, 2025.",
+    "state": "NC",
+    "expected": {
+      "gov.contrib.states.nc.eitc.match": 0.1,
+      "gov.contrib.states.nc.eitc.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "nd-hb1388",
+    "title": "Marriage Penalty Elimination (HB1388)",
+    "description": "North Dakota HB1388 eliminates the marriage penalty by restructuring income tax bracket thresholds so MFJ equals 2x single, HoH equals 1.5x single, and MFS uses the single schedule. It also repeals the existing marriage penalty credit (capped at ~$312). The bill passed the House 91-0 but failed in the Senate 13-33.",
+    "state": "ND",
+    "expected": {
+      "gov.states.nd.tax.income.rates.joint[1].threshold": 96950,
+      "gov.states.nd.tax.income.rates.joint[2].threshold": 489650,
+      "gov.states.nd.tax.income.rates.single[1].threshold": 48475,
+      "gov.states.nd.tax.income.rates.single[2].threshold": 244825,
+      "gov.states.nd.tax.income.rates.separate[1].threshold": 48475,
+      "gov.states.nd.tax.income.rates.separate[2].threshold": 244825,
+      "gov.states.nd.tax.income.credits.marriage_penalty.maximum": 0,
+      "gov.states.nd.tax.income.rates.surviving_spouse[1].threshold": 96950,
+      "gov.states.nd.tax.income.rates.surviving_spouse[2].threshold": 489650,
+      "gov.states.nd.tax.income.rates.head_of_household[1].threshold": 72713,
+      "gov.states.nd.tax.income.rates.head_of_household[2].threshold": 367238
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ne-lb710",
+    "title": "LB710",
+    "description": "Nebraska LB710 doubles the state earned income tax credit match rate from 10% to 20% of the federal EITC, effective January 1, 2025.",
+    "state": "NE",
+    "expected": {
+      "gov.states.ne.tax.income.credits.eitc.fraction": 0.2
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "nj-a1185-marriage-penalty-elimination",
+    "title": "NJ A1185/S2401: Marriage Penalty Elimination Act",
+    "description": "Revises joint filer rate brackets to eliminate the marriage penalty by widening the 1.4% and 1.75% brackets and removing the 2.45% bracket for joint, head of household, and surviving spouse filers.",
+    "state": "NJ",
+    "expected": {
+      "gov.states.nj.tax.income.main.joint[2].rate": 0.0175,
+      "gov.states.nj.tax.income.main.joint[1].threshold": 40000,
+      "gov.states.nj.tax.income.main.joint[2].threshold": 40001,
+      "gov.states.nj.tax.income.main.surviving_spouse[2].rate": 0.0175,
+      "gov.states.nj.tax.income.main.head_of_household[2].rate": 0.0175,
+      "gov.states.nj.tax.income.main.surviving_spouse[1].threshold": 40000,
+      "gov.states.nj.tax.income.main.surviving_spouse[2].threshold": 40001,
+      "gov.states.nj.tax.income.main.head_of_household[1].threshold": 40000,
+      "gov.states.nj.tax.income.main.head_of_household[2].threshold": 40001
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ny-a05435",
+    "title": "A05435 - Increases Top Two Income Tax Brackets",
+    "description": "Increases the personal income tax rate on taxable income between $5M and $25M from 10.30% to 10.80%, and on income over $25M from 10.90% to 11.40%. Also updates the supplemental tax incremental benefit to reflect the higher rates.",
+    "state": "NY",
+    "expected": {
+      "gov.states.ny.tax.income.main.joint[7].rate": 0.108,
+      "gov.states.ny.tax.income.main.joint[8].rate": 0.114,
+      "gov.states.ny.tax.income.main.single[7].rate": 0.108,
+      "gov.states.ny.tax.income.main.single[8].rate": 0.114,
+      "gov.states.ny.tax.income.main.separate[7].rate": 0.108,
+      "gov.states.ny.tax.income.main.separate[8].rate": 0.114,
+      "gov.states.ny.tax.income.main.surviving_spouse[7].rate": 0.108,
+      "gov.states.ny.tax.income.main.surviving_spouse[8].rate": 0.114,
+      "gov.states.ny.tax.income.main.head_of_household[7].rate": 0.108,
+      "gov.states.ny.tax.income.main.head_of_household[8].rate": 0.114,
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.joint[4].amount": 57500,
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.single[3].amount": 57500,
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.separate[3].amount": 57500,
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.surviving_spouse[4].amount": 57500,
+      "gov.states.ny.tax.income.supplemental.incremental_benefit.head_of_household[3].amount": 57500
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ny-a06774",
+    "title": "Enhanced Child and Dependent Care Credit Act",
+    "description": "Increases the NY child and dependent care credit to 110% of the federal credit for taxpayers with NY AGI up to $50,000.",
+    "state": "NY",
+    "expected": {
+      "gov.contrib.states.ny.a06774.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ny-a5661",
+    "title": "A5661: Increase NY EITC to 45%",
+    "description": "Increases New York's Earned Income Tax Credit match rate from 30% to 45% of the federal EITC.",
+    "state": "NY",
+    "expected": {
+      "gov.states.ny.tax.income.credits.eitc.match": 0.45
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ny-s4487",
+    "title": "Supplemental Empire State Child Credit for Newborns",
+    "description": "Creates a $1,000 refundable supplemental credit for each qualifying newborn (child born in current or previous tax year, ages 0-1). This is in addition to the existing Empire State Child Credit. Effective April 1, 2026.",
+    "state": "NY",
+    "expected": {
+      "gov.contrib.states.ny.s04487.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ny-s9077",
+    "title": "NY S9077: Empire State Child Credit Expansion",
+    "description": "Extends and expands the Empire State Child Credit through 2030+. Increases credit amounts annually and raises age eligibility to include 17-year-olds. Effective: January 1, 2027.",
+    "state": "NY",
+    "expected": {
+      "gov.states.ny.tax.income.credits.ctc.post_2024.in_effect": true,
+      "gov.states.ny.tax.income.credits.ctc.post_2024.phase_out.increment": 1000,
+      "gov.states.ny.tax.income.credits.ctc.post_2024.amount[0].amount": 1150,
+      "gov.states.ny.tax.income.credits.ctc.post_2024.amount[1].amount": 750,
+      "gov.states.ny.tax.income.credits.ctc.post_2024.amount[2].threshold": 18
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "ny-s9110",
+    "title": "NY S9110: Personal Income Tax Rate Reform",
+    "description": "New York S9110 phases in over 10 years (2026-2035) an exemption of the first $100,000 of income for joint filers ($50,000 for single filers) from state income tax. The bill also simplifies the rate structure from 9 brackets to 6 and includes a 4% rate on income above the exempt threshold up to $500,000, with higher rates for millionaires. Top brackets (10.30% and 10.90%) expire in 2033.",
+    "state": "NY",
+    "expected": {
+      "gov.contrib.states.ny.s9110.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ok-hb2229",
+    "title": "Oklahoma HB2229: Double the State EITC",
+    "description": "Oklahoma HB2229 would double the state EITC match rate from 5% to 10% of the federal credit, effective for tax year 2026.",
+    "state": "OK",
+    "expected": {
+      "gov.states.ok.tax.income.credits.earned_income.eitc_fraction": 0.1
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ok-sb2156",
+    "title": "Oklahoma Income Tax Elimination (SB2156)",
+    "description": "Eliminates Oklahoma's personal income tax by setting all bracket rates (currently 2.5%, 3.5%, and 4.5%) to 0% for all filing statuses, effective November 1, 2026.",
+    "state": "OK",
+    "expected": {
+      "gov.states.ok.tax.income.rates.joint[1].rate": 0,
+      "gov.states.ok.tax.income.rates.joint[2].rate": 0,
+      "gov.states.ok.tax.income.rates.joint[3].rate": 0,
+      "gov.states.ok.tax.income.rates.single[1].rate": 0,
+      "gov.states.ok.tax.income.rates.single[2].rate": 0,
+      "gov.states.ok.tax.income.rates.single[3].rate": 0,
+      "gov.states.ok.tax.income.rates.separate[1].rate": 0,
+      "gov.states.ok.tax.income.rates.separate[2].rate": 0,
+      "gov.states.ok.tax.income.rates.separate[3].rate": 0,
+      "gov.states.ok.tax.income.rates.surviving_spouse[1].rate": 0,
+      "gov.states.ok.tax.income.rates.surviving_spouse[2].rate": 0,
+      "gov.states.ok.tax.income.rates.surviving_spouse[3].rate": 0,
+      "gov.states.ok.tax.income.rates.head_of_household[1].rate": 0,
+      "gov.states.ok.tax.income.rates.head_of_household[2].rate": 0,
+      "gov.states.ok.tax.income.rates.head_of_household[3].rate": 0
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "or-sb1507",
+    "title": "Oregon SB1507: EITC Match Rate Increase",
+    "description": "One provision of Oregon state budget bill SB1507 raises the EITC match rate effective for tax year 2026. The match rate increases to 17% for families with young children (under 3) and 14% for others.",
+    "state": "OR",
+    "expected": {
+      "gov.states.or.tax.income.credits.eitc.match.no_young_child": 0.14,
+      "gov.states.or.tax.income.credits.eitc.match.has_young_child": 0.17
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ri-h7313",
+    "title": "High-Earner Income Tax Surcharge",
+    "description": "Creates a 3% additional tax on Rhode Island taxable income exceeding ,000 (in 2026 dollars), effective for tax years 2027 and thereafter, raising the effective top marginal rate from 5.99% to 8.99%.",
+    "state": "RI",
+    "expected": {
+      "gov.contrib.states.ri.high_earner_tax.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ri-hb8338",
+    "title": "House Bill 8338",
+    "description": "Rhode Island HB8338 creates a refundable child tax credit of $660 per qualifying child (age 18 or under) for tax year 2027. The credit phases out by 20 percentage points for each $7,590 above $265,965 AGI. Amounts adjust annually for inflation. The bill also eliminates the dependent exemption for children who qualify for the new CTC.",
+    "state": "RI",
+    "expected": {
+      "gov.contrib.states.ri.ctc.amount": 660,
+      "gov.contrib.states.ri.ctc.age_limit": 19,
+      "gov.contrib.states.ri.ctc.in_effect": true,
+      "gov.contrib.states.ri.ctc.refundability.cap": 100000,
+      "gov.contrib.states.ri.dependent_exemption.amount": 0,
+      "gov.contrib.states.ri.ctc.young_child_boost.amount": 0,
+      "gov.contrib.states.ri.dependent_exemption.in_effect": true,
+      "gov.contrib.states.ri.ctc.stepped_phaseout.increment": 7590,
+      "gov.contrib.states.ri.ctc.stepped_phaseout.threshold": 265965,
+      "gov.contrib.states.ri.ctc.young_child_boost.age_limit": 6,
+      "gov.contrib.states.ri.dependent_exemption.phaseout.rate": 0,
+      "gov.contrib.states.ri.ctc.stepped_phaseout.rate_per_step": 0.2,
+      "gov.contrib.states.ri.dependent_exemption.age_limit.in_effect": true,
+      "gov.contrib.states.ri.dependent_exemption.age_limit.threshold": 19
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "ri-s2364",
+    "title": "Rhode Island EITC Increase (S2364)",
+    "description": "Rhode Island S2364 increases the state earned-income tax credit from 16% to 30% of the federal earned-income credit, effective for tax years beginning on or after January 1, 2027.",
+    "state": "RI",
+    "expected": {
+      "gov.states.ri.tax.income.credits.eitc.match": 0.3
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ri-sb2672",
+    "title": "S2672",
+    "description": "Rhode Island SB2676 reduces personal income tax rates by 10% phased in over five years (2027-2031). All three brackets are reduced by 2% annually: first bracket from 3.75% to 3.38%, second bracket from 4.75% to 4.28%, third bracket from 5.99% to 5.39%. This analysis assumes no pause to the income tax reductions under the fiscal oversight provisions.",
+    "state": "RI",
+    "expected": {
+      "gov.states.ri.tax.income.rate[0].rate": 0.0368,
+      "gov.states.ri.tax.income.rate[1].rate": 0.0466,
+      "gov.states.ri.tax.income.rate[2].rate": 0.0587
+    },
+    "contrib": false,
+    "multiPeriod": true
+  },
+  {
+    "id": "sc-h3492",
+    "title": "Analysis of South Carolina H.3492: Making the state EITC partially refundable",
+    "description": "South Carolina H.3492 makes the state EITC partially refundable (50% of the nonrefundable amount), effective for tax year 2026.",
+    "state": "SC",
+    "expected": {
+      "gov.contrib.states.sc.h3492.in_effect": true
+    },
+    "contrib": true,
+    "multiPeriod": false
+  },
+  {
+    "id": "us-hr1425",
+    "title": "HR 1425: Child Tax Credit to $5,000, fully refundable",
+    "description": "HR 1425 amends IRC §24 to raise the Child Tax Credit to $5,000 per qualifying child (from the current-law $2,200 base), make it fully refundable, and remove the income phase-out. PolicyEngine models it by setting the base CTC amount to $5,000, enabling full refundability, and zeroing the phase-out from tax year 2025, against current law including OBBBA.",
+    "state": null,
+    "expected": {
+      "gov.irs.credits.ctc.phase_out.amount": 0,
+      "gov.irs.credits.ctc.amount.base[0].amount": 5000,
+      "gov.irs.credits.ctc.refundable.fully_refundable": true
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "us-hr904",
+    "title": "HR 904: No Tax on Social Security",
+    "description": "HR 904 repeals the inclusion of Social Security benefits in gross income under IRC § 86, ending federal income taxation of Social Security benefits for all recipients. PolicyEngine models the repeal by zeroing both tiers of the taxability formula from tax year 2026, on top of current law including the OBBBA senior deduction.",
+    "state": null,
+    "expected": {
+      "gov.irs.social_security.taxability.rate.base.excess": 0,
+      "gov.irs.social_security.taxability.rate.base.benefit_cap": 0,
+      "gov.irs.social_security.taxability.rate.additional.excess": 0,
+      "gov.irs.social_security.taxability.rate.additional.bracket": 0,
+      "gov.irs.social_security.taxability.rate.additional.benefit_cap": 0
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ut-hb210",
+    "title": "Utah HB210 S2: Marriage Penalty Removal",
+    "description": "Removes marriage penalties in Utah tax credits by equalizing phase-out thresholds for single and head-of-household filers, and creates a new marriage tax credit. Effective January 1, 2026.",
+    "state": "UT",
+    "expected": {
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SINGLE": 27000,
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.HEAD_OF_HOUSEHOLD": 27000,
+      "gov.states.ut.tax.income.credits.retirement.phase_out.threshold.SINGLE": 16000,
+      "gov.states.ut.tax.income.credits.ss_benefits.phase_out.threshold.SINGLE": 45000,
+      "gov.states.ut.tax.income.credits.taxpayer.phase_out.threshold.HEAD_OF_HOUSEHOLD": 18625.8,
+      "gov.states.ut.tax.income.credits.retirement.phase_out.threshold.HEAD_OF_HOUSEHOLD": 16000,
+      "gov.states.ut.tax.income.credits.ss_benefits.phase_out.threshold.HEAD_OF_HOUSEHOLD": 45000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ut-hb290",
+    "title": "Utah HB290: CTC Phaseout Threshold Increase",
+    "description": "Utah HB290 raises child tax credit phaseout thresholds effective for tax year 2026. Single/HOH increases to $49k, Joint to $61k, and MFS to $30.5k, benefiting more middle-income families.",
+    "state": "UT",
+    "expected": {
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.JOINT": 61000,
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SINGLE": 49000,
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SEPARATE": 30500,
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.SURVIVING_SPOUSE": 61000,
+      "gov.states.ut.tax.income.credits.ctc.reduction.start.HEAD_OF_HOUSEHOLD": 49000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ut-sb60",
+    "title": "Utah SB60: Income tax rate reduction (enacted)",
+    "description": "Utah Senate Bill 60 reduced the state flat income tax rate from 4.5% to 4.45%, effective 2026.",
+    "state": "UT",
+    "expected": {
+      "gov.states.ut.tax.income.rate": 0.0445
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "ut-sb60-bill",
+    "title": "Utah SB60: Income tax rate reduction (enacted)",
+    "description": "Utah Senate Bill 60 reduced the state flat income tax rate from 4.5% to 4.45%, effective 2026.",
+    "state": "UT",
+    "expected": {
+      "gov.states.ut.tax.income.rate": 0.045
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "va-hb12",
+    "title": "Income tax; standard deduction — removes sunset, makes permanent",
+    "description": "Removes the sunset provision on Virginia's enhanced standard deduction amounts of $8,750 (single) / $17,500 (married filing jointly). Without this bill, these amounts revert to $3,000 / $6,000 after tax year 2026.",
+    "state": "VA",
+    "expected": {
+      "gov.states.va.tax.income.deductions.standard.JOINT": 17500,
+      "gov.states.va.tax.income.deductions.standard.SINGLE": 8750,
+      "gov.states.va.tax.income.deductions.standard.SEPARATE": 8750,
+      "gov.states.va.tax.income.deductions.standard.SURVIVING_SPOUSE": 8750,
+      "gov.states.va.tax.income.deductions.standard.HEAD_OF_HOUSEHOLD": 8750
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "va-hb979",
+    "title": "Virginia HB979: Income Tax Reform",
+    "description": "Virginia HB979 proposes comprehensive income tax reform effective January 1, 2027. The bill increases standard deductions (single: $3k to $10k, joint: $6k to $20k) and adds new tax brackets for high earners (8% on income $600k-$1M, 10% on income over $1M).",
+    "state": "VA",
+    "expected": {
+      "gov.contrib.states.va.hb979.in_effect": true,
+      "gov.states.va.tax.income.deductions.standard.JOINT": 20000,
+      "gov.states.va.tax.income.deductions.standard.SINGLE": 10000,
+      "gov.states.va.tax.income.deductions.standard.SEPARATE": 10000,
+      "gov.states.va.tax.income.deductions.standard.SURVIVING_SPOUSE": 10000,
+      "gov.states.va.tax.income.deductions.standard.HEAD_OF_HOUSEHOLD": 15000
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "wi-ab1030",
+    "title": "AB1030: Increase Wisconsin EITC",
+    "description": "Increases Wisconsin's Earned Income Tax Credit to 34% of the federal credit for all filers with children (up from 4%/11%/34%) and creates a new 15% credit for childless filers.",
+    "state": "WI",
+    "expected": {
+      "gov.states.wi.tax.income.credits.earned_income.fraction[0].amount": 0.15,
+      "gov.states.wi.tax.income.credits.earned_income.fraction[1].amount": 0.34,
+      "gov.states.wi.tax.income.credits.earned_income.fraction[2].amount": 0.34
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "wv-hb4927",
+    "title": "Abolish West Virginia Personal Income Tax",
+    "description": "West Virginia HB4927 abolishes the personal income tax by setting all bracket rates to 0% for tax years beginning after December 31, 2026.",
+    "state": "WV",
+    "expected": {
+      "gov.states.wv.tax.income.rates.head[0].rate": 0,
+      "gov.states.wv.tax.income.rates.head[1].rate": 0,
+      "gov.states.wv.tax.income.rates.head[2].rate": 0,
+      "gov.states.wv.tax.income.rates.head[3].rate": 0,
+      "gov.states.wv.tax.income.rates.head[4].rate": 0,
+      "gov.states.wv.tax.income.rates.joint[0].rate": 0,
+      "gov.states.wv.tax.income.rates.joint[1].rate": 0,
+      "gov.states.wv.tax.income.rates.joint[2].rate": 0,
+      "gov.states.wv.tax.income.rates.joint[3].rate": 0,
+      "gov.states.wv.tax.income.rates.joint[4].rate": 0,
+      "gov.states.wv.tax.income.rates.single[0].rate": 0,
+      "gov.states.wv.tax.income.rates.single[1].rate": 0,
+      "gov.states.wv.tax.income.rates.single[2].rate": 0,
+      "gov.states.wv.tax.income.rates.single[3].rate": 0,
+      "gov.states.wv.tax.income.rates.single[4].rate": 0,
+      "gov.states.wv.tax.income.rates.separate[0].rate": 0,
+      "gov.states.wv.tax.income.rates.separate[1].rate": 0,
+      "gov.states.wv.tax.income.rates.separate[2].rate": 0,
+      "gov.states.wv.tax.income.rates.separate[3].rate": 0,
+      "gov.states.wv.tax.income.rates.separate[4].rate": 0,
+      "gov.states.wv.tax.income.rates.surviving_spouse[0].rate": 0,
+      "gov.states.wv.tax.income.rates.surviving_spouse[1].rate": 0,
+      "gov.states.wv.tax.income.rates.surviving_spouse[2].rate": 0,
+      "gov.states.wv.tax.income.rates.surviving_spouse[3].rate": 0,
+      "gov.states.wv.tax.income.rates.surviving_spouse[4].rate": 0
+    },
+    "contrib": false,
+    "multiPeriod": false
+  },
+  {
+    "id": "wv-sb392",
+    "title": "SB392",
+    "description": "Reduces West Virginia personal income tax rates across all five brackets by approximately 10%, effective January 1, 2026. The bill lowers rates from 2.22%-4.82% to 2.00%-4.34%.",
+    "state": "WV",
+    "expected": {
+      "gov.states.wv.tax.income.rates.head[0].rate": 0.02,
+      "gov.states.wv.tax.income.rates.head[1].rate": 0.0266,
+      "gov.states.wv.tax.income.rates.head[2].rate": 0.03,
+      "gov.states.wv.tax.income.rates.head[3].rate": 0.04,
+      "gov.states.wv.tax.income.rates.head[4].rate": 0.0434,
+      "gov.states.wv.tax.income.rates.joint[0].rate": 0.02,
+      "gov.states.wv.tax.income.rates.joint[1].rate": 0.0266,
+      "gov.states.wv.tax.income.rates.joint[2].rate": 0.03,
+      "gov.states.wv.tax.income.rates.joint[3].rate": 0.04,
+      "gov.states.wv.tax.income.rates.joint[4].rate": 0.0434,
+      "gov.states.wv.tax.income.rates.single[0].rate": 0.02,
+      "gov.states.wv.tax.income.rates.single[1].rate": 0.0266,
+      "gov.states.wv.tax.income.rates.single[2].rate": 0.03,
+      "gov.states.wv.tax.income.rates.single[3].rate": 0.04,
+      "gov.states.wv.tax.income.rates.single[4].rate": 0.0434,
+      "gov.states.wv.tax.income.rates.separate[0].rate": 0.02,
+      "gov.states.wv.tax.income.rates.separate[1].rate": 0.0266,
+      "gov.states.wv.tax.income.rates.separate[2].rate": 0.03,
+      "gov.states.wv.tax.income.rates.separate[3].rate": 0.04,
+      "gov.states.wv.tax.income.rates.separate[4].rate": 0.0434,
+      "gov.states.wv.tax.income.rates.surviving_spouse[0].rate": 0.02,
+      "gov.states.wv.tax.income.rates.surviving_spouse[1].rate": 0.0266,
+      "gov.states.wv.tax.income.rates.surviving_spouse[2].rate": 0.03,
+      "gov.states.wv.tax.income.rates.surviving_spouse[3].rate": 0.04,
+      "gov.states.wv.tax.income.rates.surviving_spouse[4].rate": 0.0434
+    },
+    "contrib": false,
+    "multiPeriod": false
+  }
+]
