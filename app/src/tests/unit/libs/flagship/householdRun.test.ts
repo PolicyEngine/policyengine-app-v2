@@ -262,6 +262,9 @@ describe('runFlagshipHousehold', () => {
     ]);
     expect(run.householdId).toBe(String(CREATED_HOUSEHOLD_ID));
     expect(run.netIncome.change).toBe(1000);
+    // Each calculated household is kept for the v2 breakdowns.
+    expect(run.baseline).toBe(BASELINE_RESULT);
+    expect(run.reform).toBe(REFORM_RESULT);
   });
 
   test('given the same policy as baseline and reform then it is calculated once', async () => {

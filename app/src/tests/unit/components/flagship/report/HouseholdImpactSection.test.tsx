@@ -67,6 +67,25 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
     </div>
   ),
 }));
+// The v2 breakdowns, tested on their own: a stand-in shows what each is given.
+vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
+  >()),
+  default: ({ view, source }: any) => (
+    <div aria-label="Breakdown">
+      {[
+        view,
+        source.householdId,
+        source.year,
+        source.baselinePolicyId,
+        source.reformPolicyId,
+        source.baseline.households['your household'].household_net_income[source.year],
+        source.reform.households['your household'].household_net_income[source.year],
+      ].join(' · ')}
+    </div>
+  ),
+}));
 vi.mock('@/utils/HouseholdValidation', () => ({
   HouseholdValidation: { isReadyForSimulation: () => ({ isValid: true, errors: [] }) },
 }));
@@ -222,7 +241,9 @@ describe('HouseholdImpactSection', () => {
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     expect(await screen.findByRole('status')).toHaveTextContent('Calculating this household');
-    expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
+    // While it runs, the inputs fold to one line, with editing held until it ends.
+    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit household' })).toBeDisabled();
 
     finish();
 
@@ -250,7 +271,9 @@ describe('HouseholdImpactSection', () => {
     expect(within(credits).getByRole('row', { name: /Child Tax Credit/ })).toHaveTextContent(
       '+$1,000'
     );
-    // The household on screen is the one in the form: nothing to run again.
+    // The result leads; the inputs open again on Edit household, with nothing to run again.
+    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit household' }));
     expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
   });
 
@@ -279,6 +302,66 @@ describe('HouseholdImpactSection', () => {
       await screen.findByText("No change in this household's taxes or benefits.")
     ).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  test('given a result then a switcher offers the v2 breakdowns, each opened only when chosen', async () => {
+    const user = userEvent.setup();
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    expect(
+      within(result)
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent)
+    ).toEqual(['Summary', 'Net income', 'Varying earnings', 'Marginal tax rates']);
+    // The summary first, and no breakdown until one is chosen.
+    expect(within(result).getByRole('tab', { name: 'Summary' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(within(result).getByRole('table', { name: 'Taxes and benefits' })).toBeInTheDocument();
+    expect(within(result).queryByLabelText('Breakdown')).not.toBeInTheDocument();
+
+    await user.click(within(result).getByRole('tab', { name: 'Varying earnings' }));
+
+    // The headline stays; the breakdown reads this household's run.
+    expect(
+      within(result).getByRole('group', { name: 'Change in annual net income' })
+    ).toHaveTextContent('+$1,000');
+    expect(within(result).getByLabelText('Breakdown')).toHaveTextContent(
+      `earnings-variation · ${CREATED_HOUSEHOLD_ID} · ${HOUSEHOLD_YEAR} · ${BASELINE_POLICY_ID} · ${REFORM_POLICY_ID} · 72000 · 73000`
+    );
+    expect(within(result).queryByRole('table')).not.toBeInTheDocument();
+
+    await user.click(within(result).getByRole('tab', { name: 'Marginal tax rates' }));
+    expect(within(result).getByLabelText('Breakdown')).toHaveTextContent(/^marginal-tax-rates/);
+
+    await user.click(within(result).getByRole('tab', { name: 'Summary' }));
+    expect(within(result).getByRole('table', { name: 'Taxes and benefits' })).toBeInTheDocument();
+    expect(within(result).queryByLabelText('Breakdown')).not.toBeInTheDocument();
+    // Switching outputs runs nothing more for the household.
+    expect(mockCreateHousehold).toHaveBeenCalledTimes(1);
+    expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2);
+  });
+
+  test('given two households then each switches its own breakdowns', async () => {
+    const user = userEvent.setup();
+    renderSection();
+    await user.click(screen.getByRole('button', { name: 'Add another household' }));
+    const first = screen.getByRole('region', { name: 'Household 1' });
+    const second = screen.getByRole('region', { name: 'Household 2' });
+    await user.click(within(first).getByRole('button', { name: 'Calculate' }));
+    await user.click(within(second).getByRole('button', { name: 'Calculate' }));
+    await within(first).findByRole('region', { name: 'Household impact' });
+    await within(second).findByRole('region', { name: 'Household impact' });
+
+    await user.click(within(second).getByRole('tab', { name: 'Net income' }));
+
+    expect(within(second).getByLabelText('Breakdown')).toHaveTextContent(/^net-income/);
+    expect(within(first).queryByLabelText('Breakdown')).not.toBeInTheDocument();
+    expect(within(first).getByRole('table', { name: 'Taxes and benefits' })).toBeInTheDocument();
   });
 
   test('given a bigger credit the household cannot claim then no credit change is shown', async () => {

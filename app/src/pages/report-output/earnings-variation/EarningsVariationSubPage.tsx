@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState, type ReactNode } from 'react';
 import { IconCheck, IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
@@ -38,6 +38,10 @@ interface Props {
   households?: HouseholdCalculationOutput[];
   baselineVariation?: HouseholdCalculationOutput | null;
   reformVariation?: HouseholdCalculationOutput | null;
+  /** What shows while the variation calculates; a spinner and a line by default. */
+  renderLoading?: () => ReactNode;
+  /** Leave out the SPM methodology footnote under the chart; shown by default. */
+  hideSpmFootnote?: boolean;
 }
 
 /**
@@ -54,6 +58,8 @@ export default function EarningsVariationSubPage({
   households: _households,
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
+  renderLoading,
+  hideSpmFootnote = false,
 }: Props) {
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -234,6 +240,9 @@ export default function EarningsVariationSubPage({
   }
 
   if (isLoading) {
+    if (renderLoading) {
+      return <>{renderLoading()}</>;
+    }
     return (
       <Group className="tw:gap-sm tw:items-center">
         <Spinner size="sm" />
@@ -378,10 +387,12 @@ export default function EarningsVariationSubPage({
           year={normalizedReportYear}
         />
       )}
-      <SPMMethodologyFootnote
-        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
-        context="variation"
-      />
+      {!hideSpmFootnote && (
+        <SPMMethodologyFootnote
+          output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+          context="variation"
+        />
+      )}
     </Stack>
   );
 }

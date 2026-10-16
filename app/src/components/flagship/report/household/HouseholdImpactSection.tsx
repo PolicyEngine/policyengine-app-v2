@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { STATE_NAMES } from '@/api/billFeed';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
@@ -239,6 +239,10 @@ function HouseholdCard({
   const running = !!requested && run.isFetching;
   const failed = !!requested && !running && run.isError;
   const result = requested && !running ? run.data : undefined;
+  // Once a household runs, its result leads: the inputs fold to one line
+  // until the reader edits them again.
+  const [editing, setEditing] = useState(true);
+  const showInputs = editing || !requested || failed;
   // The household on screen, or on its way, is the one in the builder.
   const sameAsShown =
     !!requested &&
@@ -285,7 +289,28 @@ function HouseholdCard({
         </Button>
       </div>
       <Stack style={{ gap: spacing.lg, padding: spacing.lg }}>
-        <div style={{ minWidth: 0 }}>
+        {!showInputs && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: spacing.md,
+            }}
+          >
+            <Text
+              style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+            >
+              {describeHousehold(household, year)}
+            </Text>
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)} disabled={running}>
+              <IconPencil size={14} aria-hidden />
+              Edit household
+            </Button>
+          </div>
+        )}
+        <div style={{ minWidth: 0, display: showInputs ? undefined : 'none' }}>
           <HouseholdBuilderForm
             household={household}
             metadata={metadata}
@@ -331,6 +356,7 @@ function HouseholdCard({
                 } else {
                   setRequested({ payload, summary: describeHousehold(household, year) });
                 }
+                setEditing(false);
               }}
               disabled={running || !validation.isValid || sameAsShown}
             >
@@ -362,7 +388,20 @@ function HouseholdCard({
           )}
 
           {result && requested && (
-            <HouseholdImpactResult impact={result} summary={`${requested.summary} · ${year}`} />
+            <HouseholdImpactResult
+              impact={result}
+              summary={`${requested.summary} · ${year}`}
+              breakdowns={{
+                countryId: 'us',
+                year,
+                householdId: result.householdId,
+                baselinePolicyId,
+                reformPolicyId,
+                baseline: result.baseline,
+                reform: result.reform,
+                gains: Math.round(result.netIncome.change) > 0,
+              }}
+            />
           )}
         </Stack>
       </Stack>
