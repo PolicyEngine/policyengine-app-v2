@@ -657,12 +657,19 @@ export default function HouseholdBuilderForm({
         </AccordionItem>
 
         {/* Household Variables Section */}
-        <AccordionItem value="household-vars">
-          <AccordionTrigger>
+        <AccordionItem value="household-vars" className={columns ? 'tw:lg:border-b-0' : undefined}>
+          {/* In columns, the household's fields sit beside the family's, under their own labels. */}
+          <AccordionTrigger className={columns ? 'tw:lg:hidden' : undefined}>
             <Text fw={typography.fontWeight.medium}>Household</Text>
           </AccordionTrigger>
           <AccordionContent>
-            <Stack gap="md">
+            <div
+              className={
+                columns
+                  ? 'tw:grid tw:items-end tw:gap-4 tw:sm:grid-cols-2'
+                  : 'tw:flex tw:flex-col tw:gap-3'
+              }
+            >
               {/* Basic household inputs (like state_name) */}
               {basicNonPersonFields.map((fieldName) => {
                 const variable = getVariableInfo(fieldName, metadata);
@@ -681,6 +688,7 @@ export default function HouseholdBuilderForm({
                     onChange={onChange}
                     disabled={disabled}
                     showRemoveColumn
+                    stacked={columns}
                   />
                 );
               })}
@@ -706,6 +714,7 @@ export default function HouseholdBuilderForm({
                         : () => handleRemoveHouseholdVariable(varName, entityName)
                     }
                     disabled={disabled}
+                    stacked={columns}
                   />
                 );
               })}
@@ -749,7 +758,7 @@ export default function HouseholdBuilderForm({
                   Add variable to your household
                 </Button>
               ) : null}
-            </Stack>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

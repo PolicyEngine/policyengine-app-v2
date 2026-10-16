@@ -19,6 +19,8 @@ export interface VariableRowProps {
   disabled?: boolean;
   /** Reserve space for remove button column (for alignment with removable rows) */
   showRemoveColumn?: boolean;
+  /** The label above the field, not beside it; beside it by default. */
+  stacked?: boolean;
 }
 
 /**
@@ -48,15 +50,22 @@ export default function VariableRow({
   onRemove,
   disabled = false,
   showRemoveColumn = false,
+  stacked = false,
 }: VariableRowProps) {
   const shouldShowColumn = onRemove || showRemoveColumn;
 
   return (
-    <div className="tw:flex tw:items-center tw:gap-1 tw:flex-nowrap">
-      <div className="tw:flex-1">
+    <div
+      className={
+        stacked
+          ? 'tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-1 tw:gap-y-[6px]'
+          : 'tw:flex tw:items-center tw:gap-1 tw:flex-nowrap'
+      }
+    >
+      <div className={stacked ? 'tw:col-span-2' : 'tw:flex-1'}>
         <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
       </div>
-      <div className="tw:flex-1">
+      <div className={stacked ? 'tw:min-w-0' : 'tw:flex-1'}>
         <VariableInput
           variable={{ ...variable, label: '' }}
           household={household}
