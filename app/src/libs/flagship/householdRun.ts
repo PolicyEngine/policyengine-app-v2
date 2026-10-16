@@ -337,6 +337,12 @@ export interface RunFlagshipHouseholdArgs {
 
 export interface FlagshipHouseholdRun extends FlagshipHouseholdImpact {
   householdId: string;
+  /**
+   * The calculated household under each policy, as the API returns it:
+   * what the v2 household breakdowns read.
+   */
+  baseline: HouseholdCalculationData;
+  reform: HouseholdCalculationData;
 }
 
 /**
@@ -428,7 +434,7 @@ export async function runFlagshipHouseholdPayload({
     baselinePolicyId,
     reformPolicyId
   );
-  return { householdId, ...compareHouseholds(baseline, reform, year) };
+  return { householdId, baseline, reform, ...compareHouseholds(baseline, reform, year) };
 }
 
 /** "Single · 2 children · $50,000 · California": the household a result is for. */

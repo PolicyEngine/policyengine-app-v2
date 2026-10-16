@@ -362,7 +362,20 @@ function HouseholdCard({
           )}
 
           {result && requested && (
-            <HouseholdImpactResult impact={result} summary={`${requested.summary} · ${year}`} />
+            <HouseholdImpactResult
+              impact={result}
+              summary={`${requested.summary} · ${year}`}
+              breakdowns={{
+                countryId: 'us',
+                year,
+                householdId: result.householdId,
+                baselinePolicyId,
+                reformPolicyId,
+                baseline: result.baseline,
+                reform: result.reform,
+                gains: Math.round(result.netIncome.change) > 0,
+              }}
+            />
           )}
         </Stack>
       </Stack>

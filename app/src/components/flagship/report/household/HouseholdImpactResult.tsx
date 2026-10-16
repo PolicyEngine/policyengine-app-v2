@@ -1,5 +1,10 @@
-import { useId, type CSSProperties } from 'react';
-import { Stack, Text, Title } from '@/components/ui';
+import { useId, useState, type CSSProperties } from 'react';
+import HouseholdBreakdowns, {
+  HOUSEHOLD_BREAKDOWN_VIEWS,
+  type HouseholdBreakdownSource,
+  type HouseholdBreakdownView,
+} from '@/components/flagship/report/household/HouseholdBreakdowns';
+import { SegmentedControl, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
 import { formatCurrency } from '@/utils/formatters';
@@ -117,19 +122,63 @@ function ChangeTable({
   );
 }
 
+/** The v3 summary: the taxes and benefits, and the credits and benefits, the reform changes. */
+function SummaryTables({
+  impact,
+  noChange,
+  change,
+}: {
+  impact: FlagshipHouseholdImpact;
+  noChange: boolean;
+  change: number;
+}) {
+  const { netIncome, components, programs } = impact;
+  return noChange ? (
+    <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+      No change in this household&apos;s taxes or benefits.
+    </Text>
+  ) : (
+    <>
+      {(components.length > 0 || change !== 0) && (
+        <ChangeTable
+          label="Taxes and benefits"
+          lines={components}
+          total={{
+            id: 'net_income',
+            label: 'Net income',
+            baseline: netIncome.baseline,
+            reform: netIncome.reform,
+            change: netIncome.change,
+            effect: netIncome.change,
+          }}
+        />
+      )}
+      {programs.length > 0 && <ChangeTable label="Credits and benefits" lines={programs} />}
+    </>
+  );
+}
+
+const VIEW_OPTIONS = [{ value: 'summary', label: 'Summary' }, ...HOUSEHOLD_BREAKDOWN_VIEWS];
+
 /**
  * A household's result: the change in its net income first, then the
  * taxes and benefits that make it up, then the credits and benefits
- * within them that the reform changes.
+ * within them that the reform changes. Given the household run, a
+ * switcher under the headline also offers the v2 household report's
+ * breakdowns of it.
  */
 export default function HouseholdImpactResult({
   impact,
   summary,
+  breakdowns,
 }: {
   impact: FlagshipHouseholdImpact;
   /** The household the result is for, e.g. "Single · no children · $50,000 earnings · Ohio · 2026". */
   summary: string;
+  /** The household run the v2 breakdowns read; without it, only the summary shows. */
+  breakdowns?: HouseholdBreakdownSource;
 }) {
+  const [view, setView] = useState<'summary' | HouseholdBreakdownView>('summary');
   const { netIncome, components, programs } = impact;
   const change = Math.round(netIncome.change);
   const percent =
@@ -199,28 +248,24 @@ export default function HouseholdImpactResult({
         </span>
       </div>
 
-      {noChange ? (
-        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-          No change in this household&apos;s taxes or benefits.
-        </Text>
+      {breakdowns && (
+        <div style={{ overflowX: 'auto' }}>
+          <SegmentedControl
+            animated
+            size="xs"
+            value={view}
+            onValueChange={(next) => setView(next as typeof view)}
+            options={VIEW_OPTIONS}
+          />
+        </div>
+      )}
+
+      {breakdowns && view !== 'summary' ? (
+        <div style={{ minWidth: 0 }}>
+          <HouseholdBreakdowns view={view} source={breakdowns} />
+        </div>
       ) : (
-        <>
-          {(components.length > 0 || change !== 0) && (
-            <ChangeTable
-              label="Taxes and benefits"
-              lines={components}
-              total={{
-                id: 'net_income',
-                label: 'Net income',
-                baseline: netIncome.baseline,
-                reform: netIncome.reform,
-                change: netIncome.change,
-                effect: netIncome.change,
-              }}
-            />
-          )}
-          {programs.length > 0 && <ChangeTable label="Credits and benefits" lines={programs} />}
-        </>
+        <SummaryTables impact={impact} noChange={noChange} change={change} />
       )}
     </section>
   );
