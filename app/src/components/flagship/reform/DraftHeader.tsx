@@ -393,6 +393,9 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
   return (
     <section
       aria-label="Reform actions"
+      // To the scroll area's bottom edge, over the page's own padding, so
+      // nothing shows through under the bar as the reform scrolls.
+      className="tw:-mb-lg tw:pb-lg tw:sm:-mb-2xl tw:sm:pb-2xl"
       style={{
         position: 'sticky',
         bottom: 0,
@@ -402,7 +405,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         display: 'flex',
         flexDirection: 'column',
         gap: spacing.xs,
-        padding: `${spacing.md} 0`,
+        paddingTop: spacing.md,
         // The page's own grey, so the bar reads as part of the page: only a
         // hairline above it parts the reform scrolling underneath.
         borderTop: `1px solid ${colors.border.light}`,
@@ -446,6 +449,52 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             marginLeft: 'auto',
           }}
         >
+          {/* An unnamed reform runs as "Untitled reform": said in the bar's own row, with a quick way to name it. */}
+          {adjusted.length > 0 &&
+            (!draft.label.trim() || naming) &&
+            (naming ? (
+              <input
+                autoFocus
+                value={draft.label}
+                onChange={(event) => setDraftLabel(event.target.value)}
+                onBlur={() => setNaming(false)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === 'Escape') {
+                    setNaming(false);
+                  }
+                }}
+                placeholder="Name your reform"
+                aria-label="Reform name"
+                style={{
+                  width: 220,
+                  maxWidth: '100%',
+                  height: 36,
+                  padding: `0 ${spacing.sm}`,
+                  border: `1px solid ${colors.border.light}`,
+                  borderRadius: 6,
+                  background: colors.background.primary,
+                  fontSize: typography.fontSize.sm,
+                  fontFamily: typography.fontFamily.primary,
+                  color: colors.text.primary,
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                  fontSize: typography.fontSize.sm,
+                  color: colors.text.secondary,
+                }}
+              >
+                <span>No name yet. The report will be called “{UNTITLED_REFORM}”.</span>
+                <Button size="sm" variant="ghost" onClick={() => setNaming(true)}>
+                  <IconPencil size={14} aria-hidden />
+                  Name it
+                </Button>
+              </span>
+            ))}
           <Button variant="ghost" onClick={() => clearDraftReform()}>
             Discard
           </Button>
@@ -485,65 +534,6 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         </div>
       </div>
 
-      {/* An unnamed reform runs as "Untitled reform": said once, with a quick way to name it. */}
-      {adjusted.length > 0 && (!draft.label.trim() || naming) && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            flexWrap: 'wrap',
-            columnGap: spacing.lg,
-            rowGap: spacing.sm,
-            width: 'fit-content',
-            maxWidth: '100%',
-            marginLeft: 'auto',
-            marginTop: spacing.sm,
-            padding: `${spacing.sm} ${spacing.sm} ${spacing.sm} ${spacing.lg}`,
-            border: `1px solid ${colors.border.light}`,
-            borderRadius: 10,
-            background: colors.gray[50],
-            fontSize: typography.fontSize.sm,
-            color: colors.text.secondary,
-          }}
-        >
-          {naming ? (
-            <input
-              autoFocus
-              value={draft.label}
-              onChange={(event) => setDraftLabel(event.target.value)}
-              onBlur={() => setNaming(false)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === 'Escape') {
-                  setNaming(false);
-                }
-              }}
-              placeholder="Name your reform"
-              aria-label="Reform name"
-              style={{
-                width: 240,
-                maxWidth: '100%',
-                height: 28,
-                padding: `0 ${spacing.sm}`,
-                border: `1px solid ${colors.border.light}`,
-                borderRadius: 6,
-                background: colors.background.primary,
-                fontSize: typography.fontSize.sm,
-                fontFamily: typography.fontFamily.primary,
-                color: colors.text.primary,
-              }}
-            />
-          ) : (
-            <>
-              <span>No name yet. The report will be called “{UNTITLED_REFORM}”.</span>
-              <Button size="sm" variant="outline" onClick={() => setNaming(true)}>
-                <IconPencil size={14} aria-hidden />
-                Name it
-              </Button>
-            </>
-          )}
-        </div>
-      )}
       {/* Unchanged parameters still leave the run quietly; only "nothing changed" is said. */}
       {!empty && adjusted.length === 0 && (
         <p
