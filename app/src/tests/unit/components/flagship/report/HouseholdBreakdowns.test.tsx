@@ -118,7 +118,9 @@ describe('HouseholdBreakdowns', () => {
   test('given earnings variation then the v2 page asks for the household under each policy', async () => {
     renderBreakdowns('earnings-variation');
 
-    expect(await screen.findByText('Loading earnings variation...')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Calculating the household across earnings')
+    ).toBeInTheDocument();
     expect(mockFetchPolicyById.mock.calls).toEqual([
       ['us', BASELINE_POLICY_ID],
       ['us', REFORM_POLICY_ID],
@@ -146,13 +148,19 @@ describe('HouseholdBreakdowns', () => {
 
   test('given marginal tax rates after earnings variation then the policies are not fetched again', async () => {
     const { show } = renderBreakdowns('earnings-variation');
-    await screen.findByText('Loading earnings variation...');
+    await screen.findByText('Calculating the household across earnings');
 
     show('marginal-tax-rates');
+    // The same run, as a bar, under the other output's name.
+    expect(
+      await screen.findByText('Calculating marginal tax rates across earnings')
+    ).toBeInTheDocument();
     show('net-income');
     show('earnings-variation');
 
-    expect(await screen.findByText('Loading earnings variation...')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Calculating the household across earnings')
+    ).toBeInTheDocument();
     expect(mockFetchPolicyById).toHaveBeenCalledTimes(2);
   });
 
@@ -179,7 +187,9 @@ describe('HouseholdBreakdowns', () => {
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
-    expect(await screen.findByText('Loading earnings variation...')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Calculating the household across earnings')
+    ).toBeInTheDocument();
   });
 });
 

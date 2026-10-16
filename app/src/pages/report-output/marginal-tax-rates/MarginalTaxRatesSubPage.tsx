@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Area,
@@ -55,6 +55,8 @@ interface Props {
   households?: HouseholdCalculationOutput[];
   baselineVariation?: HouseholdCalculationOutput | null;
   reformVariation?: HouseholdCalculationOutput | null;
+  /** What shows while the variation calculates; a spinner and a line by default. */
+  renderLoading?: () => ReactNode;
 }
 
 type ViewMode = 'both' | 'difference';
@@ -94,6 +96,7 @@ export default function MarginalTaxRatesSubPage({
   households: _households,
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
+  renderLoading,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
@@ -289,6 +292,9 @@ export default function MarginalTaxRatesSubPage({
   }
 
   if (isLoading) {
+    if (renderLoading) {
+      return <>{renderLoading()}</>;
+    }
     return (
       <Group className="tw:gap-sm tw:items-center">
         <Spinner size="sm" />

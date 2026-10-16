@@ -1,4 +1,5 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import RunProgress from '@/components/flagship/report/RunProgress';
 import { ErrorState } from '@/components/flagship/states';
 import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import { Spinner, Stack, Text } from '@/components/ui';
@@ -22,6 +23,12 @@ export const HOUSEHOLD_BREAKDOWN_VIEWS = [
 ] as const;
 
 export type HouseholdBreakdownView = (typeof HOUSEHOLD_BREAKDOWN_VIEWS)[number]['value'];
+
+/**
+ * A variation calculates the household across a range of earnings under
+ * each policy: like a household run, a few minutes on the API today.
+ */
+const VARIATION_EXPECTED_MS = 3 * 60 * 1000;
 
 /** What the v2 breakdowns read: the household run, its policies and its year. */
 export interface HouseholdBreakdownSource {
@@ -104,6 +111,12 @@ export default function HouseholdBreakdowns({
   );
   // Only the variation outputs send the policies; fetched when one opens.
   const needsPolicies = view === 'earnings-variation' || view === 'marginal-tax-rates';
+  // Both outputs read one variation run: its clock starts when either first
+  // opens, so switching between them keeps the bar where it is.
+  const [variationStartedAt, setVariationStartedAt] = useState<number | null>(null);
+  if (needsPolicies && variationStartedAt === null) {
+    setVariationStartedAt(Date.now());
+  }
   const policyQuery = useFlagshipHouseholdPolicies({
     countryId,
     policyIds,
@@ -159,6 +172,18 @@ export default function HouseholdBreakdowns({
         reform={reform}
         simulations={simulations}
         policies={policyQuery.policies}
+        renderLoading={() => (
+          <RunProgress
+            title={
+              view === 'earnings-variation'
+                ? 'Calculating the household across earnings'
+                : 'Calculating marginal tax rates across earnings'
+            }
+            expectedMs={VARIATION_EXPECTED_MS}
+            startedAt={variationStartedAt ?? undefined}
+            note="Both views use this one calculation, so the other opens at once."
+          />
+        )}
       />
     );
   }
