@@ -86,13 +86,12 @@ interface FlagshipReportPageProps {
  */
 /** When the report's run started: the details this browser saved, else the API's record. */
 function runStartedAt(...stamps: Array<string | null | undefined>): number | undefined {
-  for (const stamp of stamps) {
-    const time = stamp ? Date.parse(stamp) : Number.NaN;
-    if (Number.isFinite(time)) {
-      return time;
-    }
-  }
-  return undefined;
+  // The latest one: a report asked for again (its earlier run lost or
+  // failed) starts its clock over, not from when it was first created.
+  const times = stamps
+    .map((stamp) => (stamp ? Date.parse(stamp) : Number.NaN))
+    .filter((time) => Number.isFinite(time));
+  return times.length > 0 ? Math.max(...times) : undefined;
 }
 
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {

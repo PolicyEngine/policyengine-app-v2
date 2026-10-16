@@ -97,4 +97,8 @@ describe('formatElapsed', () => {
   test('given over a minute then minutes and seconds', () => {
     expect(formatElapsed(83_000)).toBe('1m 23s');
   });
+
+  test('given over an hour then hours and minutes, not thousands of minutes', () => {
+    expect(formatElapsed((1402 * 60 + 47) * 1000)).toBe('23h 22m');
+  });
 });
