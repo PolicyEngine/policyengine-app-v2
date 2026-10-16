@@ -3,7 +3,7 @@
  */
 
 import { IconX } from '@tabler/icons-react';
-import { Button, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { Button, Label, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import type { Household } from '@/models/Household';
 import { VariableInfo } from '@/utils/VariableResolver';
 import VariableInput from './VariableInput';
@@ -67,7 +67,12 @@ export default function VariableRow({
       style={width ? { width } : undefined}
     >
       <div className={stacked ? 'tw:col-span-2' : 'tw:flex-1'}>
-        <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
+        {stacked ? (
+          // The same label as the builder's own fields, so stacked fields line up with them.
+          <Label>{sentenceCaseLabel(variable.label)}</Label>
+        ) : (
+          <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
+        )}
       </div>
       <div className={stacked ? 'tw:min-w-0' : 'tw:flex-1'}>
         <VariableInput

@@ -817,16 +817,19 @@ export default function HouseholdBuilderForm({
                   }}
                 />
               ) : !isReadOnly ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleOpenHouseholdSearch}
-                  // In columns, it ends the row of fields, level with their boxes.
-                  className={columns ? 'tw:h-9' : 'tw:self-start'}
-                >
-                  <IconPlus size={14} />
-                  Add variable to your household
-                </Button>
+                <>
+                  {/* In columns, the add link starts a line of its own, under the fields. */}
+                  {columns && <div aria-hidden className="tw:basis-full tw:h-0" />}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleOpenHouseholdSearch}
+                    className="tw:self-start"
+                  >
+                    <IconPlus size={14} />
+                    Add variable to your household
+                  </Button>
+                </>
               ) : null}
             </div>
           </AccordionContent>
