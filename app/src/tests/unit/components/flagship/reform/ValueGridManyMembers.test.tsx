@@ -89,4 +89,54 @@ describe('ValueGrid with many members', () => {
     expect(within(cell).getByText('False')).toBeInTheDocument();
     expect(screen.getByLabelText('Changed only (0)')).toBeInTheDocument();
   });
+
+  test('given several years then the table names the states, filters them, and uses switches', async () => {
+    const user = userEvent.setup();
+    render(
+      <ValueGrid
+        members={CODES.map((code) => ({ path: path(code), label: code }))}
+        years={[2026, 2027]}
+        openEnded
+        parameters={PARAMETERS}
+        valueAt={(p) => p === path('MT')}
+        baselineAt={() => false}
+        onChange={vi.fn()}
+        focusedPath=""
+        onFocus={vi.fn()}
+      />
+    );
+    expect(screen.getAllByRole('rowheader')[0]).toHaveTextContent('Alabama');
+    expect(screen.getByRole('switch', { name: 'Montana, 2027' })).toBeChecked();
+
+    await user.type(screen.getByLabelText('Filter the values'), 'ala');
+    expect(screen.getAllByRole('rowheader').map((row) => row.textContent)).toEqual([
+      'Alabama',
+      'Alaska',
+    ]);
+  });
+
+  test('given parts of a state then each reads as the state and its part', () => {
+    const keys = [...CODES, 'NY_NYC', 'NY_NAS'];
+    const parameters = Object.fromEntries(
+      keys.map((code) => [
+        path(code),
+        { ...PARAMETERS[path('AK')], parameter: path(code), label: code },
+      ])
+    ) as unknown as ParameterMetadataCollection;
+    render(
+      <ValueGrid
+        members={keys.map((code) => ({ path: path(code), label: code }))}
+        years={[2026]}
+        openEnded
+        parameters={parameters}
+        valueAt={() => false}
+        baselineAt={() => false}
+        onChange={vi.fn()}
+        focusedPath=""
+        onFocus={vi.fn()}
+      />
+    );
+    expect(screen.getByLabelText('New York (NYC), 2026')).toBeInTheDocument();
+    expect(screen.getByLabelText('New York (NAS), 2026')).toBeInTheDocument();
+  });
 });
