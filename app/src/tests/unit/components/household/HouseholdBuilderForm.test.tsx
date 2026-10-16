@@ -46,10 +46,10 @@ describe('HouseholdBuilderForm', () => {
     expect(screen.getByText('Marital status')).toBeInTheDocument();
   });
 
-  test('given the columns layout then the sections sit in a grid, without the divider', () => {
+  test('given the columns layout then family and household share a row, the people follow as cards', () => {
     const { container } = renderForm({ layout: 'columns' });
 
-    expect(container.firstElementChild).toHaveClass('tw:lg:grid-cols-3');
+    expect(container.firstElementChild).toHaveClass('tw:lg:grid-cols-2');
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
     expect(screen.getByText('Household')).toBeInTheDocument();

@@ -412,10 +412,15 @@ export default function HouseholdBuilderForm({
   const columns = layout === 'columns';
 
   return (
-    // In columns, each section (family, individuals, household) is a column of the grid.
+    // In columns, the family and household sections share a row; the people
+    // follow across the full width, one card each, as many to a row as fit.
     <Stack
       gap="lg"
-      className={columns ? 'tw:lg:grid tw:lg:grid-cols-3 tw:lg:items-start tw:lg:gap-6' : undefined}
+      className={
+        columns
+          ? 'tw:lg:grid tw:lg:grid-cols-2 tw:lg:items-start tw:lg:gap-x-8 tw:lg:gap-y-2'
+          : undefined
+      }
     >
       {!hideSpmGeography && (
         <SPMGeographyChoice
@@ -516,17 +521,37 @@ export default function HouseholdBuilderForm({
         className={columns ? 'tw:lg:contents' : undefined}
       >
         {/* Individuals / Members Section */}
-        <AccordionItem value="individuals">
+        <AccordionItem
+          value="individuals"
+          className={columns ? 'tw:lg:order-last tw:lg:col-span-2 tw:border-b-0' : undefined}
+        >
           <AccordionTrigger>
             <Text fw={typography.fontWeight.medium}>Individuals</Text>
           </AccordionTrigger>
           <AccordionContent>
-            <Accordion type="multiple" key={people.join(',')} defaultValue={people}>
+            <Accordion
+              type="multiple"
+              key={people.join(',')}
+              defaultValue={people}
+              className={
+                columns
+                  ? 'tw:grid tw:items-start tw:gap-3 tw:sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]'
+                  : undefined
+              }
+            >
               {people.map((person) => {
                 const personVars = getPersonVariables(person);
 
                 return (
-                  <AccordionItem key={person} value={person}>
+                  <AccordionItem
+                    key={person}
+                    value={person}
+                    className={
+                      columns
+                        ? 'tw:rounded-lg tw:border tw:last:border-b tw:border-border-light tw:px-3'
+                        : undefined
+                    }
+                  >
                     <AccordionTrigger>
                       <Text fw={typography.fontWeight.semibold} size="sm">
                         {getPersonDisplayNameCapitalized(person)}
