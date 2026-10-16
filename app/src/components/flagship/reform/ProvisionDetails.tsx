@@ -547,13 +547,15 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
 
         {/* One value's start leads its grid; above a schedule or a grown series, it stands apart. */}
         {group?.brackets && (mode === 'one' || mode === 'indexed') && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+          // Not a label: a label spans the row, so a click anywhere on it
+          // would open the year list. The list names itself.
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
             <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
               Applies from
             </span>
             {appliesFrom}
             {growthButton}
-          </label>
+          </div>
         )}
 
         {/* A new mode fades in rather than snapping. */}
