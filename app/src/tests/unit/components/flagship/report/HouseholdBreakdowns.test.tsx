@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import HouseholdBreakdowns, {
+  toAppCalculationData,
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
@@ -179,5 +180,23 @@ describe('HouseholdBreakdowns', () => {
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
     expect(await screen.findByText('Loading earnings variation...')).toBeInTheDocument();
+  });
+});
+
+describe('toAppCalculationData', () => {
+  test("given the API's snake-case groups then they take the app keys the v2 readers use", () => {
+    const converted = toAppCalculationData({
+      people: { you: { age: { 2026: 30 } } },
+      households: { 'your household': { household_tax: { 2026: 1 } } },
+      tax_units: { 'your tax unit': { income_tax: { 2026: 2 } } },
+      spm_units: { 'your household': { snap: { 2026: 3 } } },
+      marital_units: { 'your marital unit': {} },
+      families: { 'your family': {} },
+    } as any) as any;
+
+    expect(Object.keys(converted).sort()).toEqual(
+      ['families', 'households', 'maritalUnits', 'people', 'spmUnits', 'taxUnits'].sort()
+    );
+    expect(converted.taxUnits['your tax unit'].income_tax).toEqual({ 2026: 2 });
   });
 });

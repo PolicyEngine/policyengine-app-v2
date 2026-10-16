@@ -5,6 +5,7 @@ import { Spinner, Stack, Text } from '@/components/ui';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
+import { normalizeHouseholdGroupAppKey } from '@/models/household/schema';
 import EarningsVariationSubPage from '@/pages/report-output/earnings-variation/EarningsVariationSubPage';
 import MarginalTaxRatesSubPage from '@/pages/report-output/marginal-tax-rates/MarginalTaxRatesSubPage';
 import type {
@@ -38,6 +39,19 @@ export interface HouseholdBreakdownSource {
 }
 
 /**
+ * The household as the v2 outputs read it: the API names its groups in
+ * snake case ("tax_units"), the v2 readers by the app's keys ("taxUnits").
+ */
+export function toAppCalculationData(data: HouseholdCalculationData): HouseholdCalculationData {
+  return Object.fromEntries(
+    Object.entries(data as unknown as Record<string, unknown>).map(([key, value]) => [
+      key === 'people' ? key : (normalizeHouseholdGroupAppKey(key) ?? key),
+      value,
+    ])
+  ) as unknown as HouseholdCalculationData;
+}
+
+/**
  * One v2 household output for a v3 household, with the v2 component
  * itself. The v2 components read the report's year from context and the
  * household and policies as a v2 report holds them (calculation outputs,
@@ -56,7 +70,7 @@ export default function HouseholdBreakdowns({
     () => ({
       id: householdId,
       countryId: countryId as HouseholdCalculationOutput['countryId'],
-      householdData: source.baseline,
+      householdData: toAppCalculationData(source.baseline),
     }),
     [countryId, householdId, source.baseline]
   );
@@ -67,7 +81,7 @@ export default function HouseholdBreakdowns({
         : {
             id: householdId,
             countryId: countryId as HouseholdCalculationOutput['countryId'],
-            householdData: source.reform,
+            householdData: toAppCalculationData(source.reform),
           },
     [countryId, householdId, samePolicy, source.reform]
   );
