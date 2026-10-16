@@ -1,16 +1,12 @@
 /**
  * Feature flags for in-progress product work.
  *
- * The flagship shell (Ask / Tracker / Build / Library navigation) ships
- * dark: off unless enabled by environment variable at build time or by a
- * localStorage override at runtime, so production behavior is unchanged
- * until the shell is ready.
- *
- * Enable locally either way:
- * - env: VITE_FLAGSHIP_SHELL=true
- * - console: localStorage.setItem('pe-flagship-shell', 'on') and reload
- *   (honored only where FLAGSHIP_OVERRIDE=allow is set — dev servers and
- *   the beta deployment, never production)
+ * The flagship shell (Ask / Tracker / Build / Library navigation) is the
+ * US app's default: on unless the build sets the flag to "false"
+ * (NEXT_PUBLIC_FLAGSHIP_SHELL=false, or VITE_FLAGSHIP_SHELL=false), which
+ * brings back the v2 app. The UK stays on v2 until its own flag is "true"
+ * (NEXT_PUBLIC_FLAGSHIP_SHELL_UK=true, or VITE_FLAGSHIP_SHELL_UK=true).
+ * The v2 code stays in place until it is removed.
  */
 
 const FLAGSHIP_SHELL_STORAGE_KEY = 'pe-flagship-shell';
@@ -47,25 +43,44 @@ function isOverrideAllowed(): boolean {
  * Next.js (NEXT_PUBLIC_* is inlined into both bundles), so SSR-safe
  * code paths can rely on it without hydration mismatches.
  */
-export function isFlagshipShellEnvEnabled(): boolean {
+export function isFlagshipShellEnvEnabled(countryId?: string): boolean {
+  if (countryId === 'uk') {
+    return isUkFlagshipEnvEnabled();
+  }
   const viteValue =
     typeof import.meta !== 'undefined'
       ? (import.meta.env?.VITE_FLAGSHIP_SHELL as string | undefined)
       : undefined;
-  if (viteValue === 'true') {
-    return true;
+  if (viteValue === 'false') {
+    return false;
   }
 
   // Next.js statically inlines NEXT_PUBLIC_* in server and client builds
-  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL === 'true') {
-    return true;
+  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL === 'false') {
+    return false;
   }
 
-  return false;
+  return true;
 }
 
-export function isFlagshipShellEnabled(): boolean {
-  if (isFlagshipShellEnvEnabled()) {
+/** The UK's own switch: v2 until it is "true". */
+function isUkFlagshipEnvEnabled(): boolean {
+  const viteValue =
+    typeof import.meta !== 'undefined'
+      ? (import.meta.env?.VITE_FLAGSHIP_SHELL_UK as string | undefined)
+      : undefined;
+  if (viteValue === 'true') {
+    return true;
+  }
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL_UK === 'true';
+}
+
+/**
+ * Whether a country's app is the flagship shell. Without a country, the
+ * US rule applies.
+ */
+export function isFlagshipShellEnabled(countryId?: string): boolean {
+  if (isFlagshipShellEnvEnabled(countryId)) {
     return true;
   }
   if (!isOverrideAllowed()) {
