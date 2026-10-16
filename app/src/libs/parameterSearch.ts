@@ -42,6 +42,19 @@ export interface ParameterSearchEntry {
   scheduleLabel?: string | null;
 }
 
+/**
+ * The postal codes a federal parameter keys its per-jurisdiction values
+ * by: the states, DC, the territories, the freely associated states and
+ * the military codes. Fixed, not read from the metadata, which names some
+ * states only by their code.
+ */
+const USPS_CODES = new Set(
+  (
+    'AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ ' +
+    'NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC PR GU VI AS MP FM MH PW AA AE AP'
+  ).split(' ')
+);
+
 const STATE_PATH_PATTERN = /^gov\.(?:contrib\.)?(?:states|local)\.([a-z]{2})\./;
 
 /**
@@ -420,13 +433,11 @@ export function buildParameterSearchEntries(
 ): ParameterSearchEntry[] {
   // A federal program's value for one state ("gov.usda.snap.….MT") is that
   // state's, like a parameter under gov.states: its key names the state.
-  const knownStates = new Set(buildStateNames(parameters).values());
   const stateKeyOf = (path: string): string | null => {
     const segments = path.split('.');
     for (let i = segments.length - 1; i > 0; i--) {
-      const code = segments[i].toLowerCase();
-      if (/^[A-Z]{2}$/.test(segments[i]) && knownStates.has(code)) {
-        return code;
+      if (USPS_CODES.has(segments[i])) {
+        return segments[i].toLowerCase();
       }
     }
     return null;

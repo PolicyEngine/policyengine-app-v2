@@ -49,4 +49,14 @@ describe('state-keyed federal parameters', () => {
     // Another state's value of it comes after, if at all.
     expect(paths.indexOf('gov.usda.snap.child_support.VT')).not.toBe(0);
   });
+
+  test('given the jurisdiction filter then a state keeps its values and Federal leaves them out', () => {
+    const paths = (stateScope: string) =>
+      searchParameters(index, 'snap', 10, { ...DEFAULT_SEARCH_FILTERS, stateScope }).map(
+        (entry) => entry.path
+      );
+    expect(paths('mt')).toEqual(['gov.usda.snap.child_support.MT']);
+    expect(paths('federal')).not.toContain('gov.usda.snap.child_support.MT');
+    expect(paths('federal')).not.toContain('gov.usda.snap.child_support.VT');
+  });
 });
