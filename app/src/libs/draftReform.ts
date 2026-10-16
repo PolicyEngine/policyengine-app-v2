@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { getCurrentValue } from '@/utils/parameterValues';
 
@@ -286,6 +287,118 @@ export function clearDraftReform(): void {
 }
 
 /**
+ * Every draft this browser holds: the one in hand and any set aside for
+ * another country. A signed-in session that ends takes them all, so the
+ * next person on a shared browser inherits none.
+ */
+export function clearAllDraftReforms(): void {
+  try {
+    const setAsideKeys = Array.from({ length: localStorage.length }, (_, index) =>
+      localStorage.key(index)
+    ).filter((key): key is string => !!key?.startsWith(`${STORAGE_KEY}:`));
+    setAsideKeys.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Storage unavailable: nothing was set aside either.
+  }
+  writeDraft(null);
+}
+
+/**
+ * Drafts held out of sight for the account that had them, when a page
+ * loads signed out and cannot tell whether that account's session ended or
+ * only failed to restore (a timeout, a lost connection). They return if
+ * that account signs in again, and go when another does, on sign-out, or
+ * after a refresh token's idle lifetime.
+ */
+const HELD_KEY = `${STORAGE_KEY}-held`;
+const HELD_DRAFT_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+
+interface HeldDrafts {
+  /** The fingerprint of the account that had the drafts signed in. */
+  owner: string;
+  heldAt: number;
+  /** Stored drafts by storage key: the one in hand and any set aside. */
+  drafts: Record<string, string>;
+}
+
+/** Every stored draft key: the one in hand and any set aside for another country. */
+function storedDraftKeys(): string[] {
+  return Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)).filter(
+    (key): key is string => key === STORAGE_KEY || !!key?.startsWith(`${STORAGE_KEY}:`)
+  );
+}
+
+/** The held drafts, when there are any and they have not expired. */
+function readHeldDrafts(): HeldDrafts | null {
+  try {
+    const held = JSON.parse(localStorage.getItem(HELD_KEY) ?? 'null') as HeldDrafts | null;
+    if (!held || typeof held.owner !== 'string' || typeof held.heldAt !== 'number') {
+      return null;
+    }
+    return Date.now() - held.heldAt > HELD_DRAFT_LIFETIME_MS ? null : held;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Moves every draft out of sight, held for `owner`. Drafts already held for
+ * the same account are kept alongside, the ones in hand winning.
+ */
+export function holdAllDraftReforms(owner: string): void {
+  try {
+    const earlier = readHeldDrafts();
+    const drafts: Record<string, string> = earlier?.owner === owner ? { ...earlier.drafts } : {};
+    for (const key of storedDraftKeys()) {
+      drafts[key] = localStorage.getItem(key)!;
+    }
+    if (Object.keys(drafts).length > 0) {
+      const held: HeldDrafts = { owner, heldAt: Date.now(), drafts };
+      localStorage.setItem(HELD_KEY, JSON.stringify(held));
+    }
+  } catch {
+    // Storage unavailable: nothing was stored to hold.
+  }
+  clearAllDraftReforms();
+}
+
+/**
+ * Brings back the drafts held for `owner`, into any slot not taken since;
+ * drafts held for another account are dropped. Either way none stay held.
+ */
+export function restoreHeldDraftReforms(owner: string): void {
+  const held = readHeldDrafts();
+  dropHeldDraftReforms();
+  if (!held || held.owner !== owner) {
+    return;
+  }
+  try {
+    for (const [key, stored] of Object.entries(held.drafts)) {
+      if (localStorage.getItem(key) === null) {
+        localStorage.setItem(key, stored);
+      }
+    }
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  } catch {
+    // Storage unavailable: the drafts cannot come back.
+  }
+}
+
+/** Drops the held drafts: on sign-out, or (`expiredOnly`) once they have waited too long. */
+export function dropHeldDraftReforms({
+  expiredOnly = false,
+}: { expiredOnly?: boolean } = {}): void {
+  try {
+    if (expiredOnly && (readHeldDrafts() || localStorage.getItem(HELD_KEY) === null)) {
+      return;
+    }
+    localStorage.removeItem(HELD_KEY);
+  } catch {
+    // Storage unavailable: nothing was held.
+  }
+}
+
+/**
  * The report a run from the draft started. Running hands the draft over
  * to its report: the report's page clears it on opening — not the run
  * itself, which would blank Build while the report loads — so going
@@ -306,7 +419,8 @@ export function clearDraftAfterRun(userReportId: string): void {
 
 /**
  * A report's reform back in the draft, to edit and run again — or a
- * bill's, with the bill as its source.
+ * bill's, with the bill as its source. With the saved reform the report
+ * was run from, saving changes that reform.
  */
 export function loadProvisionsIntoDraft(
   countryId: CountryId,
@@ -315,6 +429,7 @@ export function loadProvisionsIntoDraft(
     label?: string;
     year?: number;
     region?: string;
+    reformId?: string | null;
     baselineReformId?: string | null;
     /** Years of budget to score with the run, e.g. 3. */
     windowYears?: number;
@@ -332,6 +447,7 @@ export function loadProvisionsIntoDraft(
     ...(options.sourceRef ? { sourceRef: options.sourceRef } : {}),
     startedAt: Date.now(),
     ...(options.year ? { year: options.year } : {}),
+    ...(options.reformId ? { editingReformId: options.reformId } : {}),
     ...(options.baselineReformId ? { baselineReformId: options.baselineReformId } : {}),
     ...(options.windowYears && options.windowYears > 1 ? { windowYears: options.windowYears } : {}),
   });
@@ -502,6 +618,29 @@ export function setDraftYear(year: number): void {
 }
 
 /**
+ * What a report runs for a set of provisions in `year`: only those that
+ * change the law, each as it stands in that year. Build and a saved
+ * reform's run both use it, so a reform reports the same either way.
+ */
+export function provisionsToRun(
+  provisions: DraftProvision[],
+  year: number,
+  parameters: ParameterMetadataCollection | null | undefined
+): DraftProvision[] {
+  const currentLawAt = (path: string, at: number) => {
+    const values = parameters?.[path]?.values;
+    return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
+  };
+  return provisionsForYear(
+    provisions.filter((provision) =>
+      provisionAdjusts(provision, parameters?.[provision.path]?.values)
+    ),
+    year,
+    currentLawAt
+  );
+}
+
+/**
  * The provisions as they stand in one year — current law then, and the
  * reform's value then — so a report's "current law → new value" lines
  * describe the year it simulates, not the year a value was typed.
@@ -594,31 +733,49 @@ export function setDraftPopulation(population: DraftPopulation): void {
   writeDraft({ ...draft, population });
 }
 
+/** Display details and current law for a parameter path. */
+export type ProvisionDetails = (path: string) => {
+  breadcrumb: string;
+  unit: string | null;
+  baselineValue: any;
+};
+
+/** A saved reform's parameters as provisions: one value from this year on, or its dated changes. */
+export function reformToProvisions(reform: Reform, resolve: ProvisionDetails): DraftProvision[] {
+  return reform.parameters.map((parameter) => {
+    const { breadcrumb, unit, baselineValue } = resolve(parameter.name);
+    const single =
+      parameter.values.length === 1 &&
+      parameter.values[0].startDate === `${CURRENT_YEAR}-01-01` &&
+      parameter.values[0].endDate === FOREVER;
+    return {
+      path: parameter.name,
+      breadcrumb,
+      unit,
+      baselineValue,
+      value: parameter.values[0]?.value ?? baselineValue,
+      // Anything but one value from this year on keeps its dates.
+      ...(!single && parameter.values.length > 0 && { intervals: parameter.values }),
+    };
+  });
+}
+
+/** Marks the draft as the saved reform `reformId`, so the next save changes it. */
+export function setDraftEditingReform(reformId: string): void {
+  const draft = getSnapshot();
+  if (!draft) {
+    return;
+  }
+  writeDraft({ ...draft, editingReformId: reformId });
+}
+
 /** Loads a saved reform into the composer for editing. */
-export function loadReformIntoDraft(
-  reform: Reform,
-  resolve: (path: string) => { breadcrumb: string; unit: string | null; baselineValue: any }
-): void {
+export function loadReformIntoDraft(reform: Reform, resolve: ProvisionDetails): void {
   writeDraft({
     countryId: reform.countryId,
     label: reform.label ?? '',
     population: { scope: 'national' },
-    provisions: reform.parameters.map((parameter) => {
-      const { breadcrumb, unit, baselineValue } = resolve(parameter.name);
-      const single =
-        parameter.values.length === 1 &&
-        parameter.values[0].startDate === `${CURRENT_YEAR}-01-01` &&
-        parameter.values[0].endDate === FOREVER;
-      return {
-        path: parameter.name,
-        breadcrumb,
-        unit,
-        baselineValue,
-        value: parameter.values[0]?.value ?? baselineValue,
-        // Anything but one value from this year on keeps its dates.
-        ...(!single && parameter.values.length > 0 && { intervals: parameter.values }),
-      };
-    }),
+    provisions: reformToProvisions(reform, resolve),
     source: reform.provenance.source,
     sourceRef: reform.provenance.ref,
     editingReformId: reform.id,

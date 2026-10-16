@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, renderWithCountry, screen, userEvent, within } from '@test-utils';
+import { render, renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { clearDraftReform, draftYear, getDraftReform } from '@/libs/draftReform';
+import { saveReportMeta } from '@/libs/flagship/runReport';
 import ReformsPage from '@/pages/flagship/Reforms.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
@@ -54,6 +55,18 @@ vi.mock('@/api/report', async (importOriginal) => ({
   fetchReportById: async (_countryId: string, reportId: string) => ({
     id: reportId,
     status: reportId === '901' ? 'complete' : 'pending',
+    year: reportId === '904' ? '2028' : '2026',
+    simulation_1_id: '9',
+  }),
+}));
+
+// Every report's baseline simulation: Maryland, run against policy 88.
+vi.mock('@/api/simulation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/simulation')>()),
+  fetchSimulationById: async () => ({
+    population_type: 'geography',
+    population_id: 'state/md',
+    policy_id: '88',
   }),
 }));
 
@@ -728,6 +741,32 @@ describe('ReformsPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/us/report/902');
   });
 
+  test('given a report record saved through the API then its year comes from the report', async () => {
+    // Given: API records keep no year; the API report carries it
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+    mockFindReports.mockResolvedValue([
+      {
+        id: 'r-api',
+        countryId: 'us',
+        apiReportId: '904',
+        title: 'CTC',
+        sourceNote: null,
+        provisions: [],
+        createdAt: '2026-10-14T09:00:00Z',
+        reformId: 'rf-1',
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    // When
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+    // Then
+    const list = screen.getByRole('region', { name: 'Reports' });
+    expect(await within(list).findByText('2028 report')).toBeInTheDocument();
+  });
+
   test('given a reform with no reports then its card and detail say so', async () => {
     mockFindMine.mockResolvedValue([CHAT_REFORM]);
     const user = userEvent.setup();
@@ -902,5 +941,224 @@ describe('ReformsPage', () => {
     renderReforms();
 
     expect(await screen.findByText(/no analyzed bills yet/i)).toBeInTheDocument();
+  });
+
+  test('given a reform whose changes could not load then its card and detail say so', async () => {
+    mockFindMine.mockResolvedValue([
+      CHAT_REFORM,
+      {
+        ...CHAT_REFORM,
+        id: 'rf-2',
+        label: 'Unloadable reform',
+        parameters: [],
+        parametersUnavailable: true,
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    // The other reform still lists normally
+    expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
+    expect(screen.getByText('Changes could not be loaded')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Unloadable reform'));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/changes could not be loaded/i);
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled();
+  });
+
+  test('given a reform whose changes could not load then "Try again" reloads the list', async () => {
+    seedDeductionMetadata();
+    mockFindMine.mockResolvedValue([
+      { ...CHAT_REFORM, parameters: [], parametersUnavailable: true },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+    await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+    mockFindMine.mockResolvedValue([CHAT_REFORM]);
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('table', { name: 'Parameters' })).toHaveTextContent('3600')
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeEnabled();
+  });
+
+  test('given a saved reform that changes nothing then its report cannot run, and it says why', async () => {
+    // Given: current law already sets the base amount to $2,200 from 2026
+    seedDeductionMetadata();
+    try {
+      mockFindMine.mockResolvedValue([
+        {
+          ...CHAT_REFORM,
+          parameters: [
+            {
+              name: 'gov.irs.credits.ctc.amount.base',
+              values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2200 }],
+            },
+          ],
+        },
+      ]);
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+
+      // When
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+      // Then
+      expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
+      expect(
+        screen.getByText(/nothing in this reform differs from current law/i)
+      ).toBeInTheDocument();
+      expect(mockRun).not.toHaveBeenCalled();
+    } finally {
+      store.dispatch(clearMetadata());
+    }
+  });
+
+  describe('given a report to open again or re-run', () => {
+    beforeEach(() => localStorage.clear());
+
+    /** A `/v2/user-reports` row's ID: an account report's link. */
+    const ACCOUNT_REPORT_ROW_ID = '44444444-4444-4444-8444-444444444444';
+
+    /** The saved reform the reports were compared with. */
+    const PLAN_B_REFORM: Reform = {
+      ...CHAT_REFORM,
+      id: 'rf-plan-b',
+      label: 'Plan B',
+      policyId: '87',
+    };
+
+    /** CHAT_REFORM's provision, as its report ran it. */
+    const RUN_PROVISION = {
+      path: 'gov.irs.credits.ctc.amount.base[0].amount',
+      breadcrumb: 'IRS → Credits → CTC → Base amount',
+      unit: 'currency-USD',
+      baselineValue: 2000,
+      value: 3600,
+      intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3600 }],
+    };
+
+    /**
+     * An account report: the row keeps no year (its v1 report, 904, ran
+     * 2028), a ten-year window, and the saved reform it was compared with.
+     */
+    const ACCOUNT_REPORT = {
+      id: ACCOUNT_REPORT_ROW_ID,
+      countryId: 'us',
+      apiReportId: '904',
+      title: 'CTC',
+      sourceNote: 'Hand-built',
+      provisions: [RUN_PROVISION],
+      createdAt: '2026-10-14T09:00:00Z',
+      reformId: 'rf-1',
+      budgetWindowYears: 10,
+      baselineReformId: 'rf-plan-b',
+    };
+
+    /** A report kept in this browser: its link is the v1 report's number. */
+    const BROWSER_REPORT = {
+      id: 'lfr-local1',
+      countryId: 'us',
+      apiReportId: '902',
+      title: 'CTC',
+      sourceNote: 'Hand-built',
+      provisions: [RUN_PROVISION],
+      year: '2026',
+      createdAt: '2026-10-14T09:00:00Z',
+      reformId: 'rf-1',
+    };
+
+    async function openReform(reports: object[]) {
+      mockFindMine.mockResolvedValue([CHAT_REFORM, PLAN_B_REFORM]);
+      mockFindReports.mockResolvedValue(reports);
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+      return user;
+    }
+
+    test('given an account report then Re-run keeps its year, window and comparison, linked to the same reform', async () => {
+      // Given: no run details in this page session, only the row
+      const user = await openReform([ACCOUNT_REPORT]);
+      const list = screen.getByRole('region', { name: 'Reports' });
+      expect(within(list).getByText('Compared with Plan B')).toBeInTheDocument();
+
+      // When
+      await user.click(within(list).getByRole('button', { name: /re-run/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      const [title, sourceNote, provisions, reformId, year, settings] = mockRun.mock.calls[0];
+      expect({ title, sourceNote, provisions, reformId, year }).toEqual({
+        title: 'CTC',
+        sourceNote: 'Hand-built',
+        provisions: [RUN_PROVISION],
+        reformId: 'rf-1',
+        year: 2028,
+      });
+      expect(settings).toEqual({
+        region: 'state/md',
+        windowYears: 10,
+        baseline: { reformId: 'rf-plan-b', label: 'Plan B', policyId: 88 },
+      });
+    });
+
+    test('given a report kept in this browser then Re-run keeps the details stored under its v1 report', async () => {
+      // Given
+      saveReportMeta('902', {
+        title: 'CTC',
+        sourceNote: 'Hand-built',
+        provisions: [RUN_PROVISION],
+        createdAt: '2026-10-14T09:00:00Z',
+        budgetWindow: { startYear: 2026, windowSize: 3 },
+        baseline: { reformId: 'rf-plan-b', policyId: '88', label: 'Plan B' },
+      });
+      const user = await openReform([BROWSER_REPORT]);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+      const [, , , reformId, year, settings] = mockRun.mock.calls[0];
+      expect({ reformId, year }).toEqual({ reformId: 'rf-1', year: 2026 });
+      expect(settings).toEqual({
+        region: 'state/md',
+        windowYears: 3,
+        baseline: { reformId: 'rf-plan-b', label: 'Plan B', policyId: 88 },
+      });
+    });
+
+    test('given a finished account report then View results opens its link, not the v1 report', async () => {
+      // Given: report 901 is complete
+      const user = await openReform([{ ...ACCOUNT_REPORT, apiReportId: '901' }]);
+
+      // When
+      await user.click(await screen.findByRole('button', { name: /view results/i }));
+
+      // Then
+      expect(mockNavigate).toHaveBeenCalledWith(`/us/report/${ACCOUNT_REPORT_ROW_ID}`);
+    });
+
+    test('given an account report of the same values then View full impact report opens its link', async () => {
+      // Given: against current law, in the reform's year (its v1 report's: 2026)
+      const user = await openReform([
+        { ...ACCOUNT_REPORT, apiReportId: '905', budgetWindowYears: null, baselineReformId: null },
+      ]);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /view full impact report/i }));
+
+      // Then
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith(`/us/report/${ACCOUNT_REPORT_ROW_ID}`)
+      );
+      expect(mockRun).not.toHaveBeenCalled();
+    });
   });
 });

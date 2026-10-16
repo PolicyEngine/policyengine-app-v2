@@ -54,6 +54,7 @@ export function useBillEconomy(
 ): BillEconomy {
   const countryId = useCurrentCountry();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const region = bill ? billRegion(bill, countryId) : countryId;
   const provisions = bill?.provisions ?? [];
   // A bill from a later year is scored in its first year: earlier, it changes nothing.
@@ -61,7 +62,7 @@ export function useBillEconomy(
 
   const policy = useQuery({
     queryKey: ['flagship-bill-policy', countryId, bill?.id, provisions],
-    queryFn: () => createReformPolicy(countryId, bill!.title, provisions),
+    queryFn: () => createReformPolicy(countryId, provisions, parameters),
     enabled: enabled && !!bill && provisions.length > 0,
     staleTime: Infinity,
   });

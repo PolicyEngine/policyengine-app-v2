@@ -1,4 +1,5 @@
-import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { reportLink, type FlagshipReportRecord } from '@/api/flagshipReportStore';
+import { ranAgainstReform } from '@/libs/flagship/reportComparison';
 import { readReportMeta } from '@/libs/flagship/runReport';
 import type { Reform } from '@/types/ingredients/Reform';
 
@@ -14,24 +15,46 @@ function valueKey(
   )}`;
 }
 
+/** A report with the policy its baseline simulation ran, when the API's record was read. */
+export type ReportWithBaseline = FlagshipReportRecord & { baselinePolicyId?: string };
+
+/**
+ * Whether a report was compared with something other than current law:
+ * the run's details say so in the session that ran it (kept under the
+ * report's link), the record links the saved reform it was compared with,
+ * or its baseline simulation ran a policy other than current law.
+ */
+function comparedWithSavedReform(
+  report: ReportWithBaseline,
+  currentLawPolicyId: number | undefined
+): boolean {
+  return (
+    !!readReportMeta(reportLink(report))?.baseline ||
+    !!report.baselineReformId ||
+    ranAgainstReform(report.baselinePolicyId, currentLawPolicyId) === true
+  );
+}
+
 /**
  * The report a saved reform's "View full impact report" opens: its newest
  * report for the year it runs, against current law, that ran the reform's
  * values as they are now. Null when there is none — then it runs one.
  * A report still computing is the one to open: its calculation goes on
- * on the server, so a new run would only start the wait again.
+ * on the server, so a new run would only start the wait again. Records
+ * saved through the API keep no year, so the caller fills it in.
  */
 export function latestMatchingReport(
   reform: Reform,
-  reports: FlagshipReportRecord[],
-  year: number
+  reports: ReportWithBaseline[],
+  year: number,
+  currentLawPolicyId?: number
 ): FlagshipReportRecord | null {
   const reformKey = reform.parameters
     .map((parameter) => valueKey(parameter.name, parameter.values))
     .sort()
     .join('|');
   const matching = reports.filter((report) => {
-    if (report.year !== String(year) || readReportMeta(report.apiReportId)?.baseline) {
+    if (report.year !== String(year) || comparedWithSavedReform(report, currentLawPolicyId)) {
       return false;
     }
     const reportKey = report.provisions

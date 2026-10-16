@@ -7,8 +7,8 @@
  *    API report id; and
  *  - its record (`FlagshipReportRecord`): the pointer to the API report
  *    plus the same provenance, kept by the report store — the
- *    calculator-app routes (Postgres), or this browser's localStorage
- *    when they are unconfigured.
+ *    `/v2/user-reports` row on the Public API (US and UK), or this
+ *    browser's localStorage (accounts off, and the other countries).
  *
  * Fields were added over time without a version, so every read goes
  * through a parser here. It upgrades an older shape to the current one,
@@ -23,7 +23,9 @@
  *      `budgetWindow` and `baseline`.
  *      Record: id, userId, countryId, apiReportId, title, sourceNote,
  *      provisions, year, createdAt; later `reformId` and `validation`,
- *      and then `userId` was dropped.
+ *      and then `userId` was dropped. `budgetWindowYears` and
+ *      `baselineReformId` came with the account rows; a record without
+ *      them reads as having no window and current law as its baseline.
  *  2 — the same fields, stamped, with defaults filled and no `userId`.
  *
  * To add a field: add it to the type and give it a rule below (the rule
@@ -33,18 +35,17 @@
  * does not know is dropped on read, so a field is only safe to write
  * once its rule is here.
  *
- * Central rows have no version column: their columns are versioned by
- * the database migrations, and the routes always serve the current
- * columns. The rows' JSON fields (provisions, validation) follow the
- * same rules as the browser's records, on the way in and on the way out.
+ * Account rows have no version column: the Public API's migrations
+ * version their columns, and it always serves the current ones. The
+ * store reads each row through the record rule, so its JSON fields
+ * (provisions, validation) follow the same rules as the browser's.
  */
 import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
 import { CountryId, countryIds } from '@/libs/countries';
 import type { CalibrationRing } from '@/libs/flagship/calibrationMatching';
-import {
-  validationFromWire,
-  type ReportValidationMatch,
-  type ReportValidationSnapshot,
+import type {
+  ReportValidationMatch,
+  ReportValidationSnapshot,
 } from '@/libs/flagship/reportValidation';
 import type { FlagshipReportMeta, RunReportProvision } from '@/libs/flagship/runReport';
 import type { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -318,12 +319,22 @@ const recordRule = shape<FlagshipReportRecord>({
   title: nullableText,
   sourceNote: nullableText,
   provisions: provisionsRule,
-  year: requiredText,
+  // Account rows leave the year to the API report itself.
+  year: optional(requiredText),
   createdAt: text(''),
   reformId: nullableText,
   // The pin is a cache of what validation matched: a damaged one is
   // dropped, and the report pins again, rather than the record failing.
   validation: orNull(validationRule),
+  // A damaged window is dropped, as the report can still be read without one.
+  budgetWindowYears: optional(
+    orNull((value, field) =>
+      Number.isInteger(value) && (value as number) >= 2
+        ? (value as number)
+        : fail(field, 'a whole number of years, at least 2')
+    )
+  ),
+  baselineReformId: nullableText,
 });
 
 /* Upgrades, keyed by the version they upgrade from. */
@@ -336,7 +347,7 @@ const META_UPGRADES: Record<number, Upgrade> = {
 };
 
 const RECORD_UPGRADES: Record<number, Upgrade> = {
-  // Records saved before ownership moved to edit tokens carry the shared user id.
+  // Records saved before user ids were dropped from browser records carry one.
   1: ({ userId: _userId, ...stored }) => stored,
 };
 
@@ -397,87 +408,6 @@ export function parseReportMeta(stored: unknown): ReportParseResult<FlagshipRepo
 /** Reads a stored report record, of any version, in the current shape. */
 export function parseReportRecord(stored: unknown): ReportParseResult<FlagshipReportRecord> {
   return parseVersioned(stored, RECORD_UPGRADES, recordRule);
-}
-
-/** Provisions as the central store speaks them (snake_case), in the record's names. */
-function provisionsFromWire(provisions: unknown): unknown {
-  if (!Array.isArray(provisions)) {
-    return provisions;
-  }
-  return provisions.map((provision) =>
-    isJsonObject(provision)
-      ? {
-          path: provision.path,
-          breadcrumb: provision.breadcrumb,
-          unit: provision.unit,
-          baselineValue: provision.baseline_value,
-          value: provision.value,
-        }
-      : provision
-  );
-}
-
-/** A validation pin from the wire; one too damaged to convert reads as none. */
-function validationFromWireOrNull(wire: unknown): ReportValidationSnapshot | null {
-  try {
-    return validationFromWire(wire);
-  } catch {
-    return null;
-  }
-}
-
-/** Reads a central store row (the routes' snake_case wire form) as a record. */
-export function parseReportRow(row: unknown): ReportParseResult<FlagshipReportRecord> {
-  if (!isJsonObject(row)) {
-    return parseReportRecord(row);
-  }
-  return parseReportRecord({
-    // The routes serve the current columns (see above).
-    schemaVersion: REPORT_SCHEMA_VERSION,
-    id: row.id,
-    countryId: row.country_id,
-    apiReportId: row.api_report_id,
-    title: row.title,
-    sourceNote: row.source_note,
-    provisions: provisionsFromWire(row.provisions),
-    year: row.year,
-    createdAt: row.created_at,
-    reformId: row.reform_id,
-    validation: validationFromWireOrNull(row.validation),
-  });
-}
-
-/** The rule's error message for this value, or null when it fits. */
-function wireError<T>(rule: Rule<T>, value: unknown, field: string): string | null {
-  try {
-    rule(value, field);
-    return null;
-  } catch (error) {
-    if (error instanceof FieldError) {
-      return error.message;
-    }
-    throw error;
-  }
-}
-
-/**
- * Why a create body's provisions (snake_case) break the report schema,
- * or null when they fit: the same rules the client reads them back with.
- */
-export function reportProvisionsWireError(provisions: unknown): string | null {
-  return wireError(provisionsRule, provisionsFromWire(provisions), 'provisions');
-}
-
-/**
- * Why a validation pin (snake_case) breaks the report schema, or null
- * when it fits: the same rules the client reads it back with.
- */
-export function reportValidationWireError(validation: unknown): string | null {
-  const snapshot = validationFromWireOrNull(validation);
-  if (!snapshot) {
-    return 'validation must be a snapshot with matched_at';
-  }
-  return wireError(validationRule, snapshot, 'validation');
 }
 
 /** Provenance as it is written: stamped with the current version. */

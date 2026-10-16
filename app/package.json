@@ -35,7 +35,7 @@
     "chromatic": "VITE_APP_MODE=website chromatic --only-changed --build-script-name='storybook:build'"
   },
   "dependencies": {
-    "policyengine-household-wizard": "^0.1.0",
+    "@auth0/auth0-react": "2.27.0",
     "@policyengine/ui-kit": "^0.4.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@tabler/icons-react": "^3.34.0",
@@ -53,6 +53,7 @@
     "html-to-image": "^1.11.13",
     "jsonp": "^0.2.1",
     "lucide-react": "^0.575.0",
+    "policyengine-household-wizard": "^0.1.0",
     "radix-ui": "^1.4.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

@@ -1,33 +1,40 @@
+import {
+  AccountAssociationRoutes,
+  isAccountId,
+  isLegacyId,
+  type ApiStoreContext,
+} from '@/api/v2Associations';
 import { CountryId } from '@/libs/countries';
 import {
-  addOwnedItem,
-  editTokenHeaders,
-  findOwnedReportByApiReportId,
-  isUuid,
-  ItemNotOwnedError,
-  readOwnedItems,
-} from '@/libs/flagship/ownedItems';
-import {
   parseReportRecord,
-  parseReportRow,
   readableReports,
   stampReportRecord,
   unwrapReport,
+  type ReportParseResult,
 } from '@/libs/flagship/reportSchema';
-import { ReportValidationSnapshot, validationToWire } from '@/libs/flagship/reportValidation';
-import { RunReportProvision } from '@/libs/flagship/runReport';
-import { clampStoreText } from '@/libs/flagship/storeText';
+import {
+  ReportValidationSnapshot,
+  validationFromWire,
+  validationToWire,
+} from '@/libs/flagship/reportValidation';
+import type { RunReportProvision } from '@/libs/flagship/runReport';
+import { clampStoreText, MAX_STORE_NOTE_LENGTH } from '@/libs/flagship/storeText';
+import type {
+  ReportProvisionWire,
+  SharedReportItem,
+  UserReportCreateBody,
+  UserReportItem,
+} from '@/types/v2User';
 
 /**
- * Store for flagship report records: a pointer to the computed output
- * on the PolicyEngine API plus the provenance snapshot for the report
- * header. Central Supabase-backed store first, localStorage fallback
- * when it is unconfigured — same resilience pattern as the reform
- * store, and the same ownership model: no user identifier on the
- * server, this browser's index of the records it created, and an edit
- * token on every change.
+ * Store for flagship report records: a pointer to the computed output on
+ * the PolicyEngine API plus the provenance snapshot for the report
+ * header. Signed out (and outside the US and UK) records live in
+ * localStorage; signed in, a record is the account's `/v2/user-reports`
+ * row for the report, carrying the v3 fields.
  */
 export interface FlagshipReportRecord {
+  /** The account row's ID, which is the report's link (see reportLink); `lfr-…` in this browser. */
   id: string;
   countryId: CountryId;
   /** Report id on api.policyengine.org — the pointer to the outputs. */
@@ -35,174 +42,247 @@ export interface FlagshipReportRecord {
   title: string | null;
   sourceNote: string | null;
   provisions: RunReportProvision[];
-  year: string;
+  /** The simulated year; localStorage records only (the report itself carries it). */
+  year?: string;
   createdAt: string;
   /** Saved reform this report came from, when known. */
   reformId?: string | null;
   /** What validation matched this report against, pinned at match time. */
   validation?: ReportValidationSnapshot | null;
+  /** Years in the budget window run with the report, from its year; none for one year. */
+  budgetWindowYears?: number | null;
+  /**
+   * The saved reform the report was compared with, when not current law.
+   * Its name is the baseline's label, so no label is stored here.
+   */
+  baselineReformId?: string | null;
 }
 
 export type NewFlagshipReport = Omit<FlagshipReportRecord, 'id' | 'createdAt' | 'validation'>;
 
+/** Newest first. */
+function newestFirst(records: FlagshipReportRecord[]): FlagshipReportRecord[] {
+  return [...records].sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+}
+
 export interface FlagshipReportStore {
   create: (report: NewFlagshipReport) => Promise<FlagshipReportRecord>;
-  /** The records this browser saved, newest first. */
+  /** This session's records, newest first. */
   findMine: (countryId?: string) => Promise<FlagshipReportRecord[]>;
   findById: (id: string) => Promise<FlagshipReportRecord | null>;
-  /** The record this browser saved for an API report, when it has one. */
+  /** The record pointing at an API report, when this session has one. */
   findByApiReportId: (apiReportId: string) => Promise<FlagshipReportRecord | null>;
   /** Pins the validation snapshot to a record. */
   saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
 }
 
-class ReportStoreUnavailableError extends Error {
-  constructor() {
-    super('Report store unavailable');
-    this.name = 'ReportStoreUnavailableError';
-  }
+/** A provision's growth settings on the wire, each only when set. */
+function growthToWire(provision: RunReportProvision): Partial<ReportProvisionWire> {
+  return {
+    ...(provision.growth ? { growth: provision.growth } : {}),
+    ...(provision.growthStart !== undefined ? { growth_start: provision.growthStart } : {}),
+    ...(provision.growthBase !== undefined ? { growth_base: provision.growthBase } : {}),
+    ...(provision.growthRoundTo !== undefined ? { growth_round_to: provision.growthRoundTo } : {}),
+    ...(provision.growthRound ? { growth_round: provision.growthRound } : {}),
+  };
 }
 
-function throwIfUnavailable(response: Response): void {
-  if (response.status === 503 || response.status === 404) {
-    throw new ReportStoreUnavailableError();
-  }
+/** Provisions on the wire: snake_case, dated changes as start_date/end_date. */
+export function provisionsToWire(provisions: RunReportProvision[]): ReportProvisionWire[] {
+  return provisions.map((provision) => ({
+    path: provision.path,
+    breadcrumb: provision.breadcrumb,
+    unit: provision.unit ?? null,
+    baseline_value: provision.baselineValue ?? null,
+    value: provision.value ?? null,
+    intervals:
+      provision.intervals && provision.intervals.length > 0
+        ? provision.intervals.map((interval) => ({
+            start_date: interval.startDate,
+            end_date: interval.endDate,
+            value: interval.value ?? null,
+          }))
+        : null,
+    ...growthToWire(provision),
+  }));
 }
 
-/** The central store took its limit of new records this minute (429). */
-class ReportStoreBusyError extends Error {
-  constructor() {
-    super('Report store is taking no new records this minute');
-    this.name = 'ReportStoreBusyError';
-  }
+export function provisionsFromWire(
+  wire: ReportProvisionWire[] | null | undefined
+): RunReportProvision[] {
+  return (wire ?? []).map((provision) => ({
+    path: provision.path,
+    breadcrumb: provision.breadcrumb,
+    unit: provision.unit ?? null,
+    baselineValue: provision.baseline_value,
+    value: provision.value,
+    ...(provision.intervals && provision.intervals.length > 0
+      ? {
+          intervals: provision.intervals.map((interval) => ({
+            startDate: interval.start_date,
+            endDate: interval.end_date,
+            value: interval.value as any,
+          })),
+        }
+      : {}),
+    ...(provision.growth ? { growth: provision.growth } : {}),
+    ...(provision.growth_start != null ? { growthStart: provision.growth_start } : {}),
+    ...(provision.growth_base != null ? { growthBase: provision.growth_base } : {}),
+    ...(provision.growth_round_to != null ? { growthRoundTo: provision.growth_round_to } : {}),
+    ...(provision.growth_round ? { growthRound: provision.growth_round } : {}),
+  }));
 }
 
-/** Ids per batch read, so the query string stays well under URL limits. */
-const IDS_PER_REQUEST = 50;
-
-function newestFirst(a: FlagshipReportRecord, b: FlagshipReportRecord): number {
-  return b.createdAt.localeCompare(a.createdAt);
+/**
+ * An account row as a record, read through the report schema (see
+ * reportSchema) like a browser record, so a damaged field is a typed
+ * error instead of a crash in the UI.
+ */
+export function parseReportItem(item: UserReportItem): ReportParseResult<FlagshipReportRecord> {
+  return parseReportRecord(
+    stampReportRecord({
+      id: item.id,
+      countryId: item.country_id,
+      apiReportId: String(item.legacy_report_id),
+      title: item.name,
+      sourceNote: item.source_note,
+      provisions: provisionsFromWire(item.provisions),
+      createdAt: item.created_at,
+      reformId: item.user_policy_id,
+      validation: validationFromWire(item.validation),
+      budgetWindowYears: item.budget_window_years ?? null,
+      baselineReformId: item.baseline_user_policy_id ?? null,
+    })
+  );
 }
 
-/** A central row as a record (see reportSchema); throws ReportSchemaError when unreadable. */
-function fromMetadata(data: unknown): FlagshipReportRecord {
-  return unwrapReport(parseReportRow(data));
+/**
+ * A shared report (`/v2/shared-reports`) as a record, read through the
+ * report schema like an account row. It carries no links to its owner's
+ * saved reforms: those stay private.
+ */
+export function parseSharedReportItem(
+  item: SharedReportItem
+): ReportParseResult<FlagshipReportRecord> {
+  return parseReportRecord(
+    stampReportRecord({
+      id: item.id,
+      countryId: item.country_id,
+      apiReportId: String(item.legacy_report_id),
+      title: item.name,
+      sourceNote: item.source_note,
+      provisions: provisionsFromWire(item.provisions),
+      createdAt: item.created_at,
+      reformId: null,
+      validation: validationFromWire(item.validation),
+      budgetWindowYears: item.budget_window_years ?? null,
+      baselineReformId: null,
+    })
+  );
 }
 
+/**
+ * A report's link. An account row's ID opens for anyone, through
+ * `/v2/shared-reports`; a record kept only in this browser has nothing to
+ * share, so its link is the v1 report's number.
+ */
+export function reportLink(record: FlagshipReportRecord): string {
+  return isAccountId(record.id) ? record.id : record.apiReportId;
+}
+
+/**
+ * This session's record a report link names: the account row by its ID,
+ * or, in this browser, the first record of the v1 report the link numbers.
+ */
+export function findReportRecordByLink(
+  store: FlagshipReportStore,
+  link: string
+): Promise<FlagshipReportRecord | null> {
+  return isAccountId(link) ? store.findById(link) : store.findByApiReportId(link);
+}
+
+/** An account row as a record; throws ReportSchemaError when unreadable. */
+export function recordFromItem(item: UserReportItem): FlagshipReportRecord {
+  return unwrapReport(parseReportItem(item));
+}
+
+/** A link to a saved reform, when it is one of the account's rows. */
+const accountLink = (reformId: string | null | undefined) =>
+  isAccountId(reformId) ? reformId : null;
+
+/**
+ * Flagship report records as the account's `/v2/user-reports` rows. Only
+ * account IDs open: a record saved in this browser while signed out
+ * (`lfr-…`) answers BrowserOnlyIdError.
+ */
 export class ApiFlagshipReportStore implements FlagshipReportStore {
-  private readonly BASE_URL = '/api/reports';
+  private readonly routes: AccountAssociationRoutes<UserReportItem>;
+
+  constructor(private readonly context: ApiStoreContext) {
+    this.routes = new AccountAssociationRoutes(context, 'user-reports', 'Report');
+  }
+
+  private creationBody(report: NewFlagshipReport): UserReportCreateBody {
+    // Links must be the account's own rows; a reform saved in this
+    // browser while signed out is not linked.
+    const userPolicyId = accountLink(report.reformId);
+    const baselineUserPolicyId = accountLink(report.baselineReformId);
+    return {
+      country_id: this.routes.writeCountry(report.countryId),
+      legacy_report_id: Number(report.apiReportId),
+      name: clampStoreText(report.title) || null,
+      source_note: clampStoreText(report.sourceNote, MAX_STORE_NOTE_LENGTH) || null,
+      provisions: provisionsToWire(report.provisions),
+      ...(userPolicyId ? { user_policy_id: userPolicyId } : {}),
+      ...(baselineUserPolicyId ? { baseline_user_policy_id: baselineUserPolicyId } : {}),
+      ...(report.budgetWindowYears && report.budgetWindowYears > 1
+        ? { budget_window_years: report.budgetWindowYears }
+        : {}),
+      last_run_at: new Date().toISOString(),
+    };
+  }
 
   async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
-    const response = await fetch(this.BASE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        country_id: report.countryId,
-        api_report_id: report.apiReportId,
-        // Shortened to the store's text limit, so a long bill title saves.
-        title: clampStoreText(report.title),
-        source_note: clampStoreText(report.sourceNote),
-        provisions: report.provisions.map((p) => ({
-          path: p.path,
-          breadcrumb: p.breadcrumb,
-          unit: p.unit,
-          baseline_value: p.baselineValue,
-          value: p.value,
-        })),
-        year: report.year,
-        // A reform still in the localStorage fallback has no central row
-        // to point at.
-        reform_id: report.reformId && isUuid(report.reformId) ? report.reformId : null,
-      }),
-    });
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      if (response.status === 429) {
-        throw new ReportStoreBusyError();
-      }
-      throw new Error('Failed to save the report record');
-    }
-    const { edit_token: editToken, ...data } = await response.json();
-    const record = fromMetadata(data);
-    addOwnedItem('reports', {
-      id: record.id,
-      countryId: record.countryId,
-      apiReportId: record.apiReportId,
-      editToken,
-    });
-    return record;
+    return recordFromItem(await this.routes.create(this.creationBody(report)));
   }
 
   async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
-    const ids = readOwnedItems('reports', countryId).map((item) => item.id);
-    const records: FlagshipReportRecord[] = [];
-    for (let start = 0; start < ids.length; start += IDS_PER_REQUEST) {
-      const params = new URLSearchParams({
-        ids: ids.slice(start, start + IDS_PER_REQUEST).join(','),
-      });
-      const response = await fetch(`${this.BASE_URL}?${params}`);
-      if (!response.ok) {
-        throwIfUnavailable(response);
-        throw new Error('Failed to load reports');
-      }
-      // A row that can't be read is left out of the list, not fatal to it.
-      const rows: unknown = await response.json();
-      records.push(...readableReports((Array.isArray(rows) ? rows : []).map(parseReportRow)));
+    if (countryId && countryId !== this.context.countryId) {
+      return [];
     }
-    return records.sort(newestFirst);
+    const items = await this.routes.list();
+    // A row that can't be read is left out of the list, not fatal to it.
+    return newestFirst(
+      readableReports(
+        items.filter((item) => isLegacyId(item.legacy_report_id)).map(parseReportItem)
+      )
+    );
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
-    const response = await fetch(`${this.BASE_URL}/${id}`);
-    if (response.status === 404) {
-      return null;
-    }
-    if (!response.ok) {
-      throwIfUnavailable(response);
-      throw new Error('Failed to load the report');
-    }
-    return fromMetadata(await response.json());
+    const item = await this.routes.get(id);
+    return item && isLegacyId(item.legacy_report_id) ? recordFromItem(item) : null;
   }
 
-  /**
-   * Resolved through this browser's index: API report ids are sequential
-   * integers, so the server offers no lookup by them.
-   */
   async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
-    const owned = findOwnedReportByApiReportId(apiReportId);
-    return owned ? this.findById(owned.id) : null;
+    if (!isLegacyId(apiReportId)) {
+      return null;
+    }
+    const item = await this.routes.findFirst({ legacy_report_id: apiReportId });
+    return item ? recordFromItem(item) : null;
   }
 
   async saveValidation(
     id: string,
     snapshot: ReportValidationSnapshot
   ): Promise<FlagshipReportRecord> {
-    const response = await fetch(`${this.BASE_URL}/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...editTokenHeaders('reports', id) },
-      body: JSON.stringify({ validation: validationToWire(snapshot) }),
-    });
-    // Item-level 404 means the record is gone, not that the store is.
-    if (response.status === 503) {
-      throw new ReportStoreUnavailableError();
-    }
-    if (response.status === 403) {
-      throw new ItemNotOwnedError();
-    }
-    if (!response.ok) {
-      throw new Error('Failed to save the validation snapshot');
-    }
-    return fromMetadata(await response.json());
+    return recordFromItem(await this.routes.patch(id, { validation: validationToWire(snapshot) }));
   }
 }
 
-const LOCAL_KEY = 'pe-flagship-reports';
+export const FLAGSHIP_REPORTS_KEY = 'pe-flagship-reports';
 
-/**
- * The browser-only fallback. Everything in it was saved in this
- * browser, so all of it is "mine" — including records saved before the
- * central store dropped user ids, which still carry a userId field.
- */
+/** Records saved in this browser (accounts off, or outside the US and UK). */
 export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   /**
    * The entries as stored, of any schema version. Writes keep the ones
@@ -210,7 +290,7 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
    */
   private readStored(): unknown[] {
     try {
-      const parsed = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]');
+      const parsed = JSON.parse(localStorage.getItem(FLAGSHIP_REPORTS_KEY) ?? '[]');
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
@@ -219,7 +299,7 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
 
   private write(entries: unknown[]): void {
     try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(entries));
+      localStorage.setItem(FLAGSHIP_REPORTS_KEY, JSON.stringify(entries));
     } catch {
       // Reports simply won't persist locally.
     }
@@ -258,9 +338,9 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   }
 
   async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
-    return this.read()
-      .filter((record) => !countryId || record.countryId === countryId)
-      .sort(newestFirst);
+    return newestFirst(
+      this.read().filter((record) => !countryId || record.countryId === countryId)
+    );
   }
 
   async findById(id: string): Promise<FlagshipReportRecord | null> {
@@ -286,93 +366,7 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
   }
 }
 
-let centralUnavailable = false;
-
-class ResilientFlagshipReportStore implements FlagshipReportStore {
-  constructor(
-    private readonly api: FlagshipReportStore = new ApiFlagshipReportStore(),
-    private readonly local: FlagshipReportStore = new LocalStorageFlagshipReportStore()
-  ) {}
-
-  private async withFallback<T>(
-    run: (store: FlagshipReportStore) => Promise<T>,
-    whenUnavailable: (store: FlagshipReportStore) => Promise<T> = run
-  ): Promise<T> {
-    if (!centralUnavailable) {
-      try {
-        return await run(this.api);
-      } catch (error) {
-        if (!(error instanceof ReportStoreUnavailableError)) {
-          throw error;
-        }
-        centralUnavailable = true;
-      }
-    }
-    return whenUnavailable(this.local);
-  }
-
-  // A busy central store (429) takes this one record locally and stays
-  // in use for the next.
-  async create(report: NewFlagshipReport): Promise<FlagshipReportRecord> {
-    try {
-      return await this.withFallback((store) => store.create(report));
-    } catch (error) {
-      if (error instanceof ReportStoreBusyError) {
-        return this.local.create(report);
-      }
-      throw error;
-    }
-  }
-
-  // Records already in the localStorage fallback stay there with their
-  // ids: lists show them beside the central ones, and pins stay local.
-  async findMine(countryId?: string): Promise<FlagshipReportRecord[]> {
-    const local = await this.local.findMine(countryId);
-    const central = await this.withFallback(
-      (store) => store.findMine(countryId),
-      async () => []
-    );
-    return [...central, ...local].sort(newestFirst);
-  }
-
-  async findById(id: string): Promise<FlagshipReportRecord | null> {
-    const local = await this.local.findById(id);
-    if (local) {
-      return local;
-    }
-    return this.withFallback(
-      (store) => store.findById(id),
-      async () => null
-    );
-  }
-
-  async findByApiReportId(apiReportId: string): Promise<FlagshipReportRecord | null> {
-    const local = await this.local.findByApiReportId(apiReportId);
-    if (local) {
-      return local;
-    }
-    return this.withFallback(
-      (store) => store.findByApiReportId(apiReportId),
-      async () => null
-    );
-  }
-
-  async saveValidation(
-    id: string,
-    snapshot: ReportValidationSnapshot
-  ): Promise<FlagshipReportRecord> {
-    if (await this.local.findById(id)) {
-      return this.local.saveValidation(id, snapshot);
-    }
-    return this.withFallback((store) => store.saveValidation(id, snapshot));
-  }
-}
-
-/** Test hook: reset the remembered central-store availability. */
-export function resetFlagshipReportStoreAvailability(): void {
-  centralUnavailable = false;
-}
-
-export function getFlagshipReportStore(): FlagshipReportStore {
-  return new ResilientFlagshipReportStore();
+/** The report store for a session: the account's when given one, else localStorage. */
+export function getFlagshipReportStore(account?: ApiStoreContext | null): FlagshipReportStore {
+  return account ? new ApiFlagshipReportStore(account) : new LocalStorageFlagshipReportStore();
 }

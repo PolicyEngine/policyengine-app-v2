@@ -22,6 +22,17 @@ function useElapsed(startedAt?: number): number {
   return now - started;
 }
 
+/**
+ * The bar by the clock alone: steady to 85% over the typical run, then
+ * slowing toward 95%, so a run that takes longer still moves.
+ */
+export function clockProgress(elapsed: number, expectedMs: number): number {
+  if (elapsed <= expectedMs) {
+    return (elapsed / expectedMs) * 85;
+  }
+  return 85 + 10 * (1 - Math.exp(-(elapsed - expectedMs) / expectedMs));
+}
+
 /** The run's card. */
 const CARD_STYLE: React.CSSProperties = {
   display: 'flex',
@@ -131,7 +142,7 @@ export default function RunProgress({
   startedAt?: number;
 }) {
   const elapsed = useElapsed(startedAt);
-  const byClock = Math.min((elapsed / expectedMs) * 100, 95);
+  const byClock = clockProgress(elapsed, expectedMs);
   // The calculation's own estimate restarts with the page; the run's clock does not.
   const estimate =
     typeof progress === 'number'
@@ -145,7 +156,10 @@ export default function RunProgress({
   shown.current = Math.max(shown.current, runProgressValue(estimate, runStage));
   const value = shown.current;
   const percent = Math.max(0, Math.min(Math.round(value), 99));
-  const line = detail ?? runStageCaption(runStage);
+  const line =
+    detail ??
+    runStageCaption(runStage) ??
+    (elapsed > expectedMs ? 'Taking longer than usual; still calculating' : undefined);
 
   return (
     <Stack role="status" aria-live="polite" style={CARD_STYLE}>

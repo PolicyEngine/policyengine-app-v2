@@ -23,6 +23,10 @@
     "jsdom": "^26.1.0",
     "turbo": "^2.5.3"
   },
+  "overrides": {
+    "@auth0/auth0-auth-js": "1.15.0",
+    "@auth0/auth0-spa-js": "2.27.0"
+  },
   "packageManager": "bun@1.2.21",
   "engines": {
     "node": ">=22.0.0"

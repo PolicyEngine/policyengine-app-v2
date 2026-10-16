@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { ReformAdapter } from '@/adapters/ReformAdapter';
-import { clampStoreText, MAX_STORE_TEXT_LENGTH } from '@/libs/flagship/storeText';
+import {
+  clampStoreText,
+  MAX_STORE_NAME_LENGTH,
+  MAX_STORE_NOTE_LENGTH,
+} from '@/libs/flagship/storeText';
 
 describe('clampStoreText', () => {
   test('given text within the limit then it passes unchanged, as do null and undefined', () => {
@@ -9,28 +12,36 @@ describe('clampStoreText', () => {
     expect(clampStoreText(undefined)).toBeUndefined();
   });
 
-  test('given a long bill title then it is cut to the store limit with an ellipsis', () => {
-    const title = 'A'.repeat(MAX_STORE_TEXT_LENGTH + 40);
+  test('given a long bill title then it is cut to the name limit with an ellipsis', () => {
+    const title = 'A'.repeat(MAX_STORE_NAME_LENGTH + 40);
 
     const clamped = clampStoreText(title);
 
-    expect(clamped).toHaveLength(MAX_STORE_TEXT_LENGTH);
+    expect(clamped).toHaveLength(MAX_STORE_NAME_LENGTH);
     expect(clamped.endsWith('…')).toBe(true);
   });
 
-  test('given a reform with a long label then its create and update payloads keep within the limit', () => {
-    const label = 'B'.repeat(MAX_STORE_TEXT_LENGTH + 1);
+  test('given a long note then it is cut to the note limit', () => {
+    const note = 'B'.repeat(MAX_STORE_NOTE_LENGTH + 1);
 
-    const created = ReformAdapter.toCreationPayload({
-      countryId: 'us',
-      label,
-      parameters: [],
-      baseline: 'current-law',
-      provenance: { source: 'bill' },
-    });
-    const updated = ReformAdapter.toUpdatePayload({ label });
+    expect(clampStoreText(note, MAX_STORE_NOTE_LENGTH)).toHaveLength(MAX_STORE_NOTE_LENGTH);
+  });
 
-    expect(created.label).toHaveLength(MAX_STORE_TEXT_LENGTH);
-    expect(updated.label).toHaveLength(MAX_STORE_TEXT_LENGTH);
+  test('given an emoji at the cut then it is kept whole, never split into half a character', () => {
+    // 253 letters put the emoji (two UTF-16 units) across the old cut point.
+    const title = `${'A'.repeat(MAX_STORE_NAME_LENGTH - 2)}🎉${'B'.repeat(20)}`;
+
+    const clamped = clampStoreText(title);
+
+    expect(Array.from(clamped)).toHaveLength(MAX_STORE_NAME_LENGTH);
+    expect(clamped.endsWith('🎉…')).toBe(true);
+    expect(clamped.isWellFormed()).toBe(true);
+  });
+
+  test('given a name with emoji within the limit in characters then it is not cut', () => {
+    // 250 emoji are 500 UTF-16 units but 250 characters, as the API counts.
+    const title = '🎉'.repeat(MAX_STORE_NAME_LENGTH - 5);
+
+    expect(clampStoreText(title)).toBe(title);
   });
 });

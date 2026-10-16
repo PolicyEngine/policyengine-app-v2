@@ -53,8 +53,9 @@ describe('useBillEconomy', () => {
     await waitFor(() => expect(result.current.status).toBe('complete'));
     expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
       data: { 'gov.states.ut.tax.income.rate': { [`${CURRENT_YEAR}-01-01.2100-12-31`]: 0.0445 } },
-      label: 'Utah SB60',
     });
+    // The policy carries only the changes; the bill's title is never sent.
+    expect(mockCreatePolicy.mock.calls[0][1]).not.toHaveProperty('label');
     expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '98557', '2', {
       region: 'state/ut',
       time_period: CURRENT_YEAR,
@@ -83,8 +84,9 @@ describe('useBillEconomy', () => {
     // A 2027 change scored in 2026 would show an effect the bill does not have then.
     expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
       data: { 'gov.states.ut.tax.income.rate': { '2027-01-01.2100-12-31': 0.044 } },
-      label: 'Utah SB60',
     });
+    // The policy carries only the changes; the bill's title is never sent.
+    expect(mockCreatePolicy.mock.calls[0][1]).not.toHaveProperty('label');
     expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '98557', '2', {
       region: 'state/ut',
       time_period: '2027',

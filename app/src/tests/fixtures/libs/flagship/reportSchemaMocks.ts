@@ -1,18 +1,17 @@
 /**
- * Report records and provenance in every shape the app has stored, from
- * git history (`git log -p` on runReport.ts, flagshipReportStore.ts and
- * calculator-app/src/db/serialize.ts), with what each reads as today.
+ * Report records and provenance in every shape the app has stored in the
+ * browser, from git history (`git log -p` on runReport.ts and
+ * flagshipReportStore.ts), with what each reads as today.
  */
 import type { FlagshipReportRecord } from '@/api/flagshipReportStore';
 import type { ReportMetaFields } from '@/libs/flagship/reportSchema';
-import { validationToWire } from '@/libs/flagship/reportValidation';
 import type { FlagshipReportMeta, RunReportProvision } from '@/libs/flagship/runReport';
-import {
-  API_REPORT_ID,
-  CENTRAL_REFORM_ID,
-  CENTRAL_REPORT_ID,
-} from '@/tests/fixtures/libs/flagship/ownedItemsMocks';
 import { mockReportValidationSnapshot } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
+
+/** The report on the PolicyEngine API that the records point at. */
+export const API_REPORT_ID = '4512';
+/** A saved reform a record links to. */
+export const SAVED_REFORM_ID = '0b6f0c1e-5d0a-4c38-9a51-6c7f2f3e8a01';
 
 export const REPORT_META_KEY = 'pe-flagship-report-meta';
 export const REPORTS_KEY = 'pe-flagship-reports';
@@ -163,7 +162,7 @@ export const recordFromStorageBeat = {
 };
 
 /** b2a09635 "Adjust panel: … reform reconciliation": the saved reform it ran from. */
-export const recordWithReformLink = { ...recordFromStorageBeat, reformId: CENTRAL_REFORM_ID };
+export const recordWithReformLink = { ...recordFromStorageBeat, reformId: SAVED_REFORM_ID };
 
 /** f8294f90 "Pin what each report's validation was matched against". */
 export const recordWithValidation = {
@@ -186,70 +185,21 @@ const recordBase: FlagshipReportRecord = {
   createdAt: CREATED_AT,
   reformId: null,
   validation: null,
+  // Records saved before comparisons could be chosen read as current law.
+  baselineReformId: null,
 };
 
 export const currentRecord: FlagshipReportRecord = {
   ...recordBase,
-  reformId: CENTRAL_REFORM_ID,
+  reformId: SAVED_REFORM_ID,
   validation: mockReportValidationSnapshot,
 };
 
 export const historicRecords: Array<[string, unknown, FlagshipReportRecord]> = [
   ['the first record, with the shared user id', recordFromStorageBeat, recordBase],
-  ['a reform link', recordWithReformLink, { ...recordBase, reformId: CENTRAL_REFORM_ID }],
+  ['a reform link', recordWithReformLink, { ...recordBase, reformId: SAVED_REFORM_ID }],
   ['a validation pin', recordWithValidation, currentRecord],
   ['no user id', recordWithoutUserId, currentRecord],
-];
-
-/* Central rows, as the calculator-app routes serve them (snake_case). */
-
-const CTC_PROVISION_WIRE = {
-  path: CTC_PROVISION.path,
-  breadcrumb: CTC_PROVISION.breadcrumb,
-  unit: CTC_PROVISION.unit,
-  baseline_value: CTC_PROVISION.baselineValue,
-  value: CTC_PROVISION.value,
-};
-
-/** 6c23805e: user_id, and no validation column yet. */
-export const rowFromStorageBeat = {
-  id: CENTRAL_REPORT_ID,
-  user_id: 'anonymous',
-  country_id: 'us',
-  api_report_id: API_REPORT_ID,
-  title: 'CTC to $2,500',
-  source_note: 'Hand-built draft',
-  provisions: [CTC_PROVISION_WIRE],
-  reform_id: null,
-  year: '2026',
-  created_at: CREATED_AT,
-};
-
-/** f8294f90: the validation column. */
-export const rowWithValidation = {
-  ...rowFromStorageBeat,
-  reform_id: CENTRAL_REFORM_ID,
-  validation: validationToWire(mockReportValidationSnapshot),
-};
-
-/** ec399555: no user_id; today's row. */
-const { user_id: _userIdColumn, ...rowWithoutUserIdFields } = rowWithValidation;
-export const rowWithoutUserId = rowWithoutUserIdFields;
-
-const rowRecordBase: FlagshipReportRecord = { ...recordBase, id: CENTRAL_REPORT_ID };
-
-export const historicRows: Array<[string, unknown, FlagshipReportRecord]> = [
-  ['the first row, without a validation column', rowFromStorageBeat, rowRecordBase],
-  [
-    'a validation column',
-    rowWithValidation,
-    { ...rowRecordBase, reformId: CENTRAL_REFORM_ID, validation: mockReportValidationSnapshot },
-  ],
-  [
-    'no user_id',
-    rowWithoutUserId,
-    { ...rowRecordBase, reformId: CENTRAL_REFORM_ID, validation: mockReportValidationSnapshot },
-  ],
 ];
 
 /* Unreadable: [name, stored, error code, offending field]. */
