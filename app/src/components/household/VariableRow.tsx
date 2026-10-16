@@ -3,7 +3,7 @@
  */
 
 import { IconX } from '@tabler/icons-react';
-import { Button, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { Button, Label, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import type { Household } from '@/models/Household';
 import { VariableInfo } from '@/utils/VariableResolver';
 import VariableInput from './VariableInput';
@@ -19,6 +19,10 @@ export interface VariableRowProps {
   disabled?: boolean;
   /** Reserve space for remove button column (for alignment with removable rows) */
   showRemoveColumn?: boolean;
+  /** The label above the field, not beside it; beside it by default. */
+  stacked?: boolean;
+  /** A fixed width in pixels, e.g. for a row of stacked fields; full width by default. */
+  width?: number;
 }
 
 /**
@@ -48,15 +52,29 @@ export default function VariableRow({
   onRemove,
   disabled = false,
   showRemoveColumn = false,
+  stacked = false,
+  width,
 }: VariableRowProps) {
   const shouldShowColumn = onRemove || showRemoveColumn;
 
   return (
-    <div className="tw:flex tw:items-center tw:gap-1 tw:flex-nowrap">
-      <div className="tw:flex-1">
-        <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
+    <div
+      className={
+        stacked
+          ? 'tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-1 tw:gap-y-[6px]'
+          : 'tw:flex tw:items-center tw:gap-1 tw:flex-nowrap'
+      }
+      style={width ? { width } : undefined}
+    >
+      <div className={stacked ? 'tw:col-span-2' : 'tw:flex-1'}>
+        {stacked ? (
+          // The same label as the builder's own fields, so stacked fields line up with them.
+          <Label>{sentenceCaseLabel(variable.label)}</Label>
+        ) : (
+          <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
+        )}
       </div>
-      <div className="tw:flex-1">
+      <div className={stacked ? 'tw:min-w-0' : 'tw:flex-1'}>
         <VariableInput
           variable={{ ...variable, label: '' }}
           household={household}

@@ -8,7 +8,7 @@
  * - Inline search for adding custom variables per person or household-level
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import {
   Accordion,
@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   CardContent,
+  Input,
   Label,
   Select,
   SelectContent,
@@ -122,6 +123,56 @@ export function rankVariablesBySearch(variables: VariableInfo[], search: string)
   return scored
     .sort((a, b) => a.score - b.score || a.variable.label.length - b.variable.label.length)
     .map(({ variable }) => variable);
+}
+
+/** The most children the typed count takes. */
+const MAX_TYPED_CHILDREN = 10;
+
+/**
+ * The number of children as a typed whole number, 0 to 10. A partial or
+ * empty entry waits; the household changes on a whole number in range.
+ */
+function ChildCountInput({
+  id,
+  value,
+  onChange,
+  disabled,
+}: {
+  id: string;
+  value: number;
+  onChange: (count: number) => void;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+  return (
+    <Input
+      id={id}
+      type="number"
+      inputMode="numeric"
+      min={0}
+      max={MAX_TYPED_CHILDREN}
+      step={1}
+      value={text}
+      disabled={disabled}
+      className="tw:w-36 tw:bg-white"
+      onChange={(event) => {
+        setText(event.target.value);
+        const count = Number(event.target.value);
+        if (
+          event.target.value.trim() !== '' &&
+          Number.isInteger(count) &&
+          count >= 0 &&
+          count <= MAX_TYPED_CHILDREN
+        ) {
+          onChange(count);
+        }
+      }}
+      onBlur={() => setText(String(value))}
+    />
+  );
 }
 
 interface BuilderWarning {
@@ -410,12 +461,18 @@ export default function HouseholdBuilderForm({
   };
 
   const columns = layout === 'columns';
+  const childCountId = useId();
 
   return (
-    // In columns, each section (family, individuals, household) is a column of the grid.
+    // In columns, the family and household sections share a row; the people
+    // follow across the full width, one card each, as many to a row as fit.
     <Stack
       gap="lg"
-      className={columns ? 'tw:lg:grid tw:lg:grid-cols-3 tw:lg:items-start tw:lg:gap-6' : undefined}
+      className={
+        columns
+          ? 'tw:lg:flex-row tw:lg:flex-wrap tw:lg:items-start tw:lg:gap-x-6 tw:lg:gap-y-2'
+          : undefined
+      }
     >
       {!hideSpmGeography && (
         <SPMGeographyChoice
@@ -464,7 +521,13 @@ export default function HouseholdBuilderForm({
       {/* Household Information */}
       <Stack gap="md">
         {/* Marital Status and Children - side by side */}
-        <div className="tw:grid tw:grid-cols-2 tw:gap-4">
+        <div
+          className={
+            columns
+              ? 'tw:flex tw:flex-wrap tw:items-end tw:gap-4'
+              : 'tw:grid tw:grid-cols-2 tw:gap-4'
+          }
+        >
           <div className="tw:flex tw:flex-col tw:gap-[6px]">
             <Label>Marital status</Label>
             <Select
@@ -474,7 +537,7 @@ export default function HouseholdBuilderForm({
               }
               disabled={disabled}
             >
-              <SelectTrigger>
+              <SelectTrigger className={columns ? 'tw:w-40' : undefined}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -485,24 +548,33 @@ export default function HouseholdBuilderForm({
           </div>
 
           <div className="tw:flex tw:flex-col tw:gap-[6px]">
-            <Label>Number of children</Label>
-            <Select
-              value={numChildren.toString()}
-              onValueChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
-              disabled={disabled}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">0</SelectItem>
-                <SelectItem value="1">1</SelectItem>
-                <SelectItem value="2">2</SelectItem>
-                <SelectItem value="3">3</SelectItem>
-                <SelectItem value="4">4</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor={columns ? childCountId : undefined}>Number of children</Label>
+            {columns ? (
+              <ChildCountInput
+                id={childCountId}
+                value={numChildren}
+                onChange={onNumChildrenChange}
+                disabled={disabled}
+              />
+            ) : (
+              <Select
+                value={numChildren.toString()}
+                onValueChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
+                disabled={disabled}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0</SelectItem>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
       </Stack>
@@ -516,17 +588,37 @@ export default function HouseholdBuilderForm({
         className={columns ? 'tw:lg:contents' : undefined}
       >
         {/* Individuals / Members Section */}
-        <AccordionItem value="individuals">
+        <AccordionItem
+          value="individuals"
+          className={columns ? 'tw:lg:order-last tw:lg:w-full tw:border-b-0' : undefined}
+        >
           <AccordionTrigger>
             <Text fw={typography.fontWeight.medium}>Individuals</Text>
           </AccordionTrigger>
           <AccordionContent>
-            <Accordion type="multiple" key={people.join(',')} defaultValue={people}>
+            <Accordion
+              type="multiple"
+              key={people.join(',')}
+              defaultValue={people}
+              className={
+                columns
+                  ? 'tw:grid tw:items-start tw:gap-3 tw:sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]'
+                  : undefined
+              }
+            >
               {people.map((person) => {
                 const personVars = getPersonVariables(person);
 
                 return (
-                  <AccordionItem key={person} value={person}>
+                  <AccordionItem
+                    key={person}
+                    value={person}
+                    className={
+                      columns
+                        ? 'tw:rounded-lg tw:border tw:last:border-b tw:border-border-light tw:px-3'
+                        : undefined
+                    }
+                  >
                     <AccordionTrigger>
                       <Text fw={typography.fontWeight.semibold} size="sm">
                         {getPersonDisplayNameCapitalized(person)}
@@ -632,12 +724,29 @@ export default function HouseholdBuilderForm({
         </AccordionItem>
 
         {/* Household Variables Section */}
-        <AccordionItem value="household-vars">
-          <AccordionTrigger>
+        <AccordionItem
+          value="household-vars"
+          // In columns, the household's fields join the family's row, and its
+          // add link starts the next line at the left.
+          className={columns ? 'tw:lg:contents' : undefined}
+        >
+          {/* In columns, the household's fields sit beside the family's, under their own labels. */}
+          <AccordionTrigger className={columns ? 'tw:lg:hidden' : undefined}>
             <Text fw={typography.fontWeight.medium}>Household</Text>
           </AccordionTrigger>
-          <AccordionContent>
-            <Stack gap="md">
+          <AccordionContent
+            className={
+              columns ? 'tw:lg:contents tw:flex tw:flex-wrap tw:items-end tw:gap-4' : undefined
+            }
+            style={columns ? { display: 'contents' } : undefined}
+          >
+            <div
+              className={
+                columns
+                  ? 'tw:flex tw:flex-col tw:gap-3 tw:lg:contents'
+                  : 'tw:flex tw:flex-col tw:gap-3'
+              }
+            >
               {/* Basic household inputs (like state_name) */}
               {basicNonPersonFields.map((fieldName) => {
                 const variable = getVariableInfo(fieldName, metadata);
@@ -656,6 +765,8 @@ export default function HouseholdBuilderForm({
                     onChange={onChange}
                     disabled={disabled}
                     showRemoveColumn
+                    stacked={columns}
+                    width={columns ? 208 : undefined}
                   />
                 );
               })}
@@ -681,50 +792,58 @@ export default function HouseholdBuilderForm({
                         : () => handleRemoveHouseholdVariable(varName, entityName)
                     }
                     disabled={disabled}
+                    stacked={columns}
+                    width={columns ? 208 : undefined}
                   />
                 );
               })}
 
               {/* Add variable search or link */}
               {!isReadOnly && isHouseholdSearchActive ? (
-                <VariableSearchDropdown
-                  searchValue={householdSearchValue}
-                  onSearchChange={setHouseholdSearchValue}
-                  onFocusChange={setIsHouseholdSearchFocused}
-                  filteredVariables={filteredHouseholdVariables.variables}
-                  truncated={filteredHouseholdVariables.truncated}
-                  suggested={
-                    suggestedOrder.size > 0 && !householdSearchValue.trim()
-                      ? suggestedOrder
-                      : undefined
-                  }
-                  suggestedLabel={suggestedLabel}
-                  groupOf={variableGroupOf}
-                  groupOrder={variableGroupOrder}
-                  onSelect={handleHouseholdVariableSelect}
-                  getEntityHint={(variable) => {
-                    const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
-                    return { show: isPerson, label: 'Person' };
-                  }}
-                  disabled={disabled}
-                  onClose={() => {
-                    setIsHouseholdSearchActive(false);
-                    setHouseholdSearchValue('');
-                    setIsHouseholdSearchFocused(false);
-                  }}
-                />
+                <div className={columns ? 'tw:basis-full tw:max-w-[36rem]' : undefined}>
+                  <VariableSearchDropdown
+                    searchValue={householdSearchValue}
+                    onSearchChange={setHouseholdSearchValue}
+                    onFocusChange={setIsHouseholdSearchFocused}
+                    filteredVariables={filteredHouseholdVariables.variables}
+                    truncated={filteredHouseholdVariables.truncated}
+                    suggested={
+                      suggestedOrder.size > 0 && !householdSearchValue.trim()
+                        ? suggestedOrder
+                        : undefined
+                    }
+                    suggestedLabel={suggestedLabel}
+                    groupOf={variableGroupOf}
+                    groupOrder={variableGroupOrder}
+                    onSelect={handleHouseholdVariableSelect}
+                    getEntityHint={(variable) => {
+                      const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+                      return { show: isPerson, label: 'Person' };
+                    }}
+                    disabled={disabled}
+                    onClose={() => {
+                      setIsHouseholdSearchActive(false);
+                      setHouseholdSearchValue('');
+                      setIsHouseholdSearchFocused(false);
+                    }}
+                  />
+                </div>
               ) : !isReadOnly ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleOpenHouseholdSearch}
-                  className="tw:self-start"
-                >
-                  <IconPlus size={14} />
-                  Add variable to your household
-                </Button>
+                <>
+                  {/* In columns, the add link starts a line of its own, under the fields. */}
+                  {columns && <div aria-hidden className="tw:basis-full tw:h-0" />}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleOpenHouseholdSearch}
+                    className="tw:self-start"
+                  >
+                    <IconPlus size={14} />
+                    Add variable to your household
+                  </Button>
+                </>
               ) : null}
-            </Stack>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

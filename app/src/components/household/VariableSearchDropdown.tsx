@@ -274,7 +274,8 @@ export default function VariableSearchDropdown({
               <div
                 role="group"
                 aria-label="Variable groups"
-                className="tw:flex tw:flex-wrap tw:gap-1.5 tw:border-b tw:border-gray-100 tw:p-2"
+                // One scrolling line of chips, each kept whole, however narrow the list.
+                className="tw:flex tw:gap-1.5 tw:overflow-x-auto tw:border-b tw:border-gray-100 tw:px-2 tw:py-2 tw:[scrollbar-width:thin]"
               >
                 {[{ key: null, label: 'All' }, ...grouped.chips].map((chip) => (
                   <button
@@ -287,7 +288,7 @@ export default function VariableSearchDropdown({
                       setActiveGroup(chip.key);
                     }}
                     className={cn(
-                      'tw:cursor-pointer tw:rounded-full tw:border tw:px-2.5 tw:py-0.5 tw:text-xs',
+                      'tw:inline-flex tw:shrink-0 tw:cursor-pointer tw:items-center tw:gap-1.5 tw:whitespace-nowrap tw:rounded-full tw:border tw:px-3 tw:py-1 tw:text-xs tw:font-medium tw:transition-colors',
                       activeGroup === chip.key
                         ? 'tw:border-primary-600 tw:bg-primary-600 tw:text-white'
                         : 'tw:border-gray-200 tw:bg-white tw:text-gray-700 tw:hover:border-gray-300'
@@ -295,7 +296,16 @@ export default function VariableSearchDropdown({
                   >
                     {chip.label}
                     {chip.key !== null && 'items' in chip && (
-                      <span className="tw:ml-1 tw:opacity-70">{chip.items.length}</span>
+                      <span
+                        className={cn(
+                          'tw:rounded-full tw:px-1.5 tw:text-[10px] tw:leading-4 tw:tabular-nums',
+                          activeGroup === chip.key
+                            ? 'tw:bg-white/20 tw:text-white'
+                            : 'tw:bg-gray-100 tw:text-gray-600'
+                        )}
+                      >
+                        {chip.items.length}
+                      </span>
                     )}
                   </button>
                 ))}
