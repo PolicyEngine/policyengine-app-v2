@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isFlagshipShellEnabled, isFlagshipShellEnvEnabled } from "@/libs/featureFlags";
+import { useParams } from "next/navigation";
+import {
+  isFlagshipShellEnabled,
+  isFlagshipShellEnvEnabled,
+} from "@/libs/featureFlags";
 
 /**
  * Flagship shell routes render only when the feature flag is on
@@ -14,15 +18,21 @@ import { isFlagshipShellEnabled, isFlagshipShellEnvEnabled } from "@/libs/featur
  * the shared NotFoundPage, which uses react-router APIs that are
  * unavailable under Next.js server rendering.
  */
-export default function FlagshipGate({ children }: { children: React.ReactNode }) {
-  const envEnabled = isFlagshipShellEnvEnabled();
+export default function FlagshipGate({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // Each country has its own switch: the UK stays on v2 until its flag is on.
+  const { countryId } = useParams<{ countryId: string }>();
+  const envEnabled = isFlagshipShellEnvEnabled(countryId);
   const [storageEnabled, setStorageEnabled] = useState(false);
 
   useEffect(() => {
     if (!envEnabled) {
-      setStorageEnabled(isFlagshipShellEnabled());
+      setStorageEnabled(isFlagshipShellEnabled(countryId));
     }
-  }, [envEnabled]);
+  }, [envEnabled, countryId]);
 
   if (!envEnabled && !storageEnabled) {
     return (

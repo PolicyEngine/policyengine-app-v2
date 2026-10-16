@@ -2,9 +2,11 @@
  * Feature flags for in-progress product work.
  *
  * The flagship shell (Ask / Tracker / Build / Library navigation) is the
- * app's default: on unless the build sets the flag to "false"
+ * US app's default: on unless the build sets the flag to "false"
  * (NEXT_PUBLIC_FLAGSHIP_SHELL=false, or VITE_FLAGSHIP_SHELL=false), which
- * brings back the v2 app. The v2 code stays in place until it is removed.
+ * brings back the v2 app. The UK stays on v2 until its own flag is "true"
+ * (NEXT_PUBLIC_FLAGSHIP_SHELL_UK=true, or VITE_FLAGSHIP_SHELL_UK=true).
+ * The v2 code stays in place until it is removed.
  */
 
 const FLAGSHIP_SHELL_STORAGE_KEY = 'pe-flagship-shell';
@@ -41,7 +43,10 @@ function isOverrideAllowed(): boolean {
  * Next.js (NEXT_PUBLIC_* is inlined into both bundles), so SSR-safe
  * code paths can rely on it without hydration mismatches.
  */
-export function isFlagshipShellEnvEnabled(): boolean {
+export function isFlagshipShellEnvEnabled(countryId?: string): boolean {
+  if (countryId === 'uk') {
+    return isUkFlagshipEnvEnabled();
+  }
   const viteValue =
     typeof import.meta !== 'undefined'
       ? (import.meta.env?.VITE_FLAGSHIP_SHELL as string | undefined)
@@ -58,8 +63,24 @@ export function isFlagshipShellEnvEnabled(): boolean {
   return true;
 }
 
-export function isFlagshipShellEnabled(): boolean {
-  if (isFlagshipShellEnvEnabled()) {
+/** The UK's own switch: v2 until it is "true". */
+function isUkFlagshipEnvEnabled(): boolean {
+  const viteValue =
+    typeof import.meta !== 'undefined'
+      ? (import.meta.env?.VITE_FLAGSHIP_SHELL_UK as string | undefined)
+      : undefined;
+  if (viteValue === 'true') {
+    return true;
+  }
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL_UK === 'true';
+}
+
+/**
+ * Whether a country's app is the flagship shell. Without a country, the
+ * US rule applies.
+ */
+export function isFlagshipShellEnabled(countryId?: string): boolean {
+  if (isFlagshipShellEnvEnabled(countryId)) {
     return true;
   }
   if (!isOverrideAllowed()) {

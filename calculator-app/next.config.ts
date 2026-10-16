@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
         "import.meta.env.VITE_FLAGSHIP_SHELL": JSON.stringify(
           process.env.NEXT_PUBLIC_FLAGSHIP_SHELL || "",
         ),
+        "import.meta.env.VITE_FLAGSHIP_SHELL_UK": JSON.stringify(
+          process.env.NEXT_PUBLIC_FLAGSHIP_SHELL_UK || "",
+        ),
       }),
     );
 

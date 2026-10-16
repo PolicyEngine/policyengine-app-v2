@@ -45,6 +45,15 @@ describe('StandardLayout', () => {
     expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument();
   });
 
+  test('given a UK page then the v2 chrome renders, while the UK has no flag of its own', () => {
+    // When
+    renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'uk');
+
+    // Then
+    expect(screen.getByText('Sidebar')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Build' })).not.toBeInTheDocument();
+  });
+
   test('given the flagship flag is on then the flagship top bar replaces the legacy chrome', () => {
     // Given
     setFlagshipShellEnabled(true);

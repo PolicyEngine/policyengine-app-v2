@@ -6,6 +6,17 @@ describe('featureFlags', () => {
     expect(isFlagshipShellEnabled()).toBe(true);
   });
 
+  test('given the UK with no flag of its own then it stays on v2, while the US is on v3', () => {
+    expect(isFlagshipShellEnabled('uk')).toBe(false);
+    expect(isFlagshipShellEnabled('us')).toBe(true);
+  });
+
+  test('given the UK flag set to true then the UK is on v3', () => {
+    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL_UK', 'true');
+    expect(isFlagshipShellEnabled('uk')).toBe(true);
+    vi.unstubAllEnvs();
+  });
+
   test('given the flag set to false then the v2 app is back', () => {
     vi.stubEnv('VITE_FLAGSHIP_SHELL', 'false');
     expect(isFlagshipShellEnabled()).toBe(false);

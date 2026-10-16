@@ -12,6 +12,7 @@ import {
 } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
+import { useCurrentCountry } from './hooks/useCurrentCountry';
 import { isFlagshipShellEnabled } from './libs/featureFlags';
 import BillReportPage from './pages/flagship/BillReport.page';
 import BuildPage from './pages/flagship/Build.page';
@@ -131,7 +132,7 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <Navigate to={isFlagshipShellEnabled() ? 'build' : 'reports'} replace />,
+                  element: <CountryLanding />,
                 },
                 // Flagship shell routes (feature-flagged; see libs/featureFlags.ts)
                 ...(isFlagshipShellEnabled()
@@ -191,6 +192,12 @@ const router = createBrowserRouter(
     basename: import.meta.env.BASE_URL,
   }
 );
+
+/** A country's first page: Build where its app is the flagship shell, else Reports. */
+function CountryLanding() {
+  const countryId = useCurrentCountry();
+  return <Navigate to={isFlagshipShellEnabled(countryId) ? 'build' : 'reports'} replace />;
+}
 
 export function CalculatorRouter() {
   return <RouterProvider router={router} />;
