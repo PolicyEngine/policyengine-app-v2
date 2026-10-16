@@ -118,6 +118,7 @@ export default function HouseholdBreakdowns({
           baseline={baseline}
           reform={reform}
           borderColor={source.gains ? colors.primary[700] : colors.text.secondary}
+          unchangedShowsValue
         />
         <Text
           style={{
