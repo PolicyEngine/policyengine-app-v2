@@ -13,25 +13,32 @@ import {
 } from 'recharts';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
-import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import { ChartWatermark, ImpactTooltip } from '@/components/charts';
 import ChartExplanation from '@/components/flagship/report/ChartExplanation';
+import {
+  fitAxisTitle,
+  fixedPlotHeight,
+  getValueBarLayout,
+  tickDecimals,
+} from '@/components/flagship/report/charts/barLayout';
+import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
+import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { tooltipText } from '@/libs/flagship/tooltipText';
 import { getDecileAverageCsvRows } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import {
-  getClampedChartHeight,
-  getNiceTicks,
-  getYAxisLayout,
-  RECHARTS_FONT_STYLE,
-} from '@/utils/chartUtils';
-import { currencySymbol, formatCurrency, ordinal, precision } from '@/utils/formatters';
+import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { formatCurrency, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+
+/** Margins around the plot; value labels stay inside it, so the top needs little. */
+const CHART_MARGIN = { top: 12, right: 20, bottom: 30 };
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -107,17 +114,33 @@ export default function DistributionalImpactIncomeAverageSubPage({
     name: x,
     value: yArray[i],
     label: formatCur(yArray[i]),
-    hoverText: hoverMessage(x, yArray[i]),
+    hoverText: tooltipText(hoverMessage(x, yArray[i])),
   }));
 
-  const values = chartData.map((d) => d.value);
-  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
-  const yTicks = getNiceTicks(yDomain);
+  const { plotWidth, plotHeight, probe } = usePlotSize(
+    fillHeight ? undefined : fixedPlotHeight(chartHeight, CHART_MARGIN)
+  );
+  const layout = getValueBarLayout(
+    chartData.map((d) => d.value),
+    chartData.map((d) => d.label),
+    { width: plotWidth, height: plotHeight }
+  );
+  const { domain: yDomain, ticks: yTicks } = layout;
 
-  const prefix = currencySymbol(countryId);
-
-  const yTickFormatter = (v: number) => `${prefix}${v.toLocaleString()}`;
-  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+  // "-$5", as the bar labels write it, not "$-5".
+  const tickDigits = tickDecimals(yTicks);
+  const yTickFormatter = (v: number) =>
+    formatCurrency(v, countryId, {
+      minimumFractionDigits: tickDigits,
+      maximumFractionDigits: tickDigits,
+    });
+  const axisTitle = fitAxisTitle(
+    compact
+      ? ['Income change', 'Change']
+      : ['Absolute change in household income', 'Income change', 'Change'],
+    plotHeight
+  );
+  const yAxis = getYAxisLayout(yTicks, !!axisTitle, yTickFormatter);
 
   // Description text
   const description = (
@@ -128,30 +151,37 @@ export default function DistributionalImpactIncomeAverageSubPage({
   );
 
   const barChart = (
-    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: yAxis.marginLeft }}>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+    <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
+      {probe}
+      <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
         <Label value="Income decile" position="bottom" offset={10} style={RECHARTS_FONT_STYLE} />
       </XAxis>
       <YAxis
         ticks={yTicks}
-        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        domain={yDomain}
         tick={RECHARTS_FONT_STYLE}
         tickLine={false}
         tickFormatter={yTickFormatter}
         width={yAxis.yAxisWidth}
       >
-        <Label
-          value={compact ? 'Income change' : 'Absolute change in household income'}
-          angle={-90}
-          position="center"
-          dx={yAxis.labelDx}
-          style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
-        />
+        {axisTitle && (
+          <Label
+            value={axisTitle}
+            angle={-90}
+            position="center"
+            dx={yAxis.labelDx}
+            style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
+          />
+        )}
       </YAxis>
       <ReferenceLine y={0} stroke={colors.gray[600]} strokeWidth={1} />
       <Tooltip content={<ImpactTooltip />} />
-      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />} isAnimationActive={false}>
+      <Bar
+        dataKey="value"
+        label={<ReportBarLabel data={chartData} layout={layout} />}
+        isAnimationActive={false}
+      >
         {chartData.map((entry, index) => (
           <Cell key={index} fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]} />
         ))}

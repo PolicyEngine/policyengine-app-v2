@@ -24,6 +24,19 @@ export function provisionName(provision: Pick<DraftProvision, 'breadcrumb' | 'pa
 }
 
 /**
+ * A report provision's name, as the report's table and adjust panel say
+ * it. The child tax credit's base amount reads as what it is, the
+ * maximum credit per child; everything else as `provisionName`.
+ */
+export function reportProvisionName(
+  provision: Pick<DraftProvision, 'breadcrumb' | 'path'>
+): string {
+  return provision.path.startsWith('gov.irs.credits.ctc.amount.base')
+    ? 'Maximum credit per child'
+    : provisionName(provision);
+}
+
+/**
  * A change as a reader says it: "$1,700 → $2,500", or for a set of
  * variables, what the reform takes out and puts in.
  */
@@ -83,4 +96,13 @@ export function summarizeIntervals(
     value: from === to ? from : `${from} → ${to}`,
     when: `${intervals.length} periods from ${startLabel(first.startDate)}`,
   };
+}
+
+/** What an unnamed reform, and its report, is called. */
+export const UNTITLED_REFORM = 'Untitled reform';
+
+/** Whether a reform's name is one the app gave it, not the user ("Draft reform" before). */
+export function isUntitledReform(name: string | null | undefined): boolean {
+  const trimmed = (name ?? '').trim();
+  return trimmed === '' || trimmed === UNTITLED_REFORM || trimmed === 'Draft reform';
 }

@@ -1,10 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { render, screen, userEvent, within } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BillEconomy } from '@/hooks/useBillEconomy';
 import BillReportPage from '@/pages/flagship/BillReport.page';
+import { clearMetadata } from '@/reducers/metadataReducer';
+import { store } from '@/store';
+import { seedDeductionMetadata } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
+import { seedMetadataError } from '@/tests/fixtures/hooks/useFlagshipMetadataStatusMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
-import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
+import { TRACKED_BILL, UNLISTED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const mockCalibrationMatchesForPaths = vi.fn();
@@ -18,14 +22,24 @@ vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => {
 });
 
 const mockFetchTrackerBills = vi.fn();
+const mockFetchTrackerBillDistricts = vi.fn();
 
 vi.mock('@/api/billFeed', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/billFeed')>();
   return {
     ...actual,
     fetchTrackerBills: () => mockFetchTrackerBills(),
+    fetchTrackerBillDistricts: (id: string) => mockFetchTrackerBillDistricts(id),
   };
 });
+
+vi.mock('@/components/flagship/report/DistrictImpactCard', () => ({
+  default: ({ districts, modes }: { districts?: unknown[]; modes?: string[] }) => (
+    <div>
+      District map: {districts?.length ?? 'full results'} · {modes?.join(', ') ?? 'all views'}
+    </div>
+  ),
+}));
 
 const mockIsAlreadyCurrentLaw = vi.fn();
 
@@ -39,6 +53,12 @@ vi.mock('@/libs/flagship/billMetrics', async (importOriginal) => {
 });
 
 const mockUseBillEconomy = vi.fn();
+const mockFetchMetadata = vi.fn();
+
+vi.mock('@/api/metadata', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/metadata')>()),
+  fetchMetadata: (...args: unknown[]) => mockFetchMetadata(...args),
+}));
 
 vi.mock('@/hooks/useBillEconomy', () => ({
   useBillEconomy: (...args: unknown[]) => mockUseBillEconomy(...args),
@@ -76,9 +96,16 @@ describe('BillReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
+    mockFetchTrackerBillDistricts.mockResolvedValue(null);
     mockUseBillEconomy.mockReturnValue(economy());
     mockIsAlreadyCurrentLaw.mockReturnValue(undefined);
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
+    // Tests that seed metadata must not leave it loaded for the next one.
+    store.dispatch(clearMetadata());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   test('given a bill then it uses the saved report sections', async () => {
@@ -92,31 +119,130 @@ describe('BillReportPage', () => {
       'Household',
       'Validation',
     ]);
-    expect(screen.getByText('US · In committee')).toBeInTheDocument();
+    // The title names the bill; no place-and-status line runs under it.
+    expect(screen.queryByText('US · In committee')).not.toBeInTheDocument();
   });
 
-  test('given the full run is calculating then the overview leads with stored estimates', async () => {
+  test('given the page opens then the overview leads with stored estimates', async () => {
     renderReport();
 
     expect(await screen.findByText('$225.5bn')).toBeInTheDocument();
     expect(screen.getByText('Annual revenue loss')).toBeInTheDocument();
     expect(screen.getByText('39.9% decrease')).toBeInTheDocument();
+    expect(screen.getByText('Stored estimates from the legislative tracker')).toBeInTheDocument();
+  });
+
+  test('given a federal bill then its stored budget reads as the overview does, not as state revenue', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderReport();
+
+    // When
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    // Then
+    const budget = screen.getByRole('region', { name: 'Budgetary impact' });
+    expect(budget).toHaveTextContent('$225.5bnAnnual revenue loss');
+    expect(budget).not.toHaveTextContent(/state revenue|−/);
+  });
+
+  test('given the page and its tabs open then no full run starts until asked', async () => {
+    const user = userEvent.setup();
+    seedDeductionMetadata();
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
     expect(
-      screen.getByText('Stored estimates from the legislative tracker · full results calculating')
+      within(screen.getByRole('tabpanel')).getByText('The full results are not loaded.')
+    ).toBeInTheDocument();
+    expect(mockUseBillEconomy).not.toHaveBeenCalledWith(expect.anything(), { enabled: true });
+
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+    expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: TRACKED_BILL.id }),
+      { enabled: true }
+    );
+    expect(
+      within(screen.getByRole('tabpanel')).getByText('Calculating the full results')
     ).toBeInTheDocument();
   });
 
-  test('given the overview then summary, sponsor, date, bill text link, and verdict show', async () => {
+  test('given a federal bill then economic impacts word its stored budget as the overview does', async () => {
+    const user = userEvent.setup();
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    const budget = within(screen.getByRole('tabpanel')).getByRole('region', {
+      name: 'Budgetary impact',
+    });
+    expect(budget).toHaveTextContent('Annual revenue loss');
+    expect(budget).not.toHaveTextContent(/state revenue/i);
+  });
+
+  test('given a state bill then economic impacts word its stored budget as state revenue', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockResolvedValue([
+      { ...TRACKED_BILL, id: 'ut-hb106', jurisdiction: 'Utah', state: 'UT' },
+    ]);
+    renderReport('ut-hb106');
+
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+
+    const budget = within(screen.getByRole('tabpanel')).getByRole('region', {
+      name: 'Budgetary impact',
+    });
+    expect(budget).toHaveTextContent('Annual state revenue loss');
+  });
+
+  test('given the overview then summary, date and bill text show; the verdict is in Validation', async () => {
+    const user = userEvent.setup();
     renderReport();
 
     expect(await screen.findByText(/Raises the CTC to \$5,000/)).toBeInTheDocument();
-    expect(screen.getByText(/Sponsored by Rep\. Mackenzie/)).toBeInTheDocument();
+    // The tracker's author field is a post's author as often as a sponsor; it isn't shown.
+    expect(screen.queryByText(/Sponsored by/)).not.toBeInTheDocument();
     expect(screen.getByText(/Analyzed July 6, 2026/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /bill text/i })).toHaveAttribute(
       'href',
       TRACKED_BILL.sourceUrl
     );
-    expect(screen.getAllByText(/Within fiscal-note range/).length).toBeGreaterThanOrEqual(1);
+    expect(
+      within(screen.getByRole('tabpanel')).queryByText(/fiscal-note range/)
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+    expect(
+      within(screen.getByRole('tabpanel')).getAllByText(/Within fiscal-note range/).length
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  test('given a tracked bill then the overview links to its tracker page', async () => {
+    renderReport();
+
+    const link = await screen.findByRole('link', { name: /bill tracker/i });
+    expect(link).toHaveAttribute('href', TRACKED_BILL.trackerUrl);
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  test('given the tracker id in upper case then the same report opens', async () => {
+    renderReport('US-HR1425');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title })
+    ).toBeInTheDocument();
+  });
+
+  test('given a bill not in the feed then it links to that bill in the tracker', async () => {
+    mockFetchTrackerBills.mockResolvedValue([]);
+    renderReport(UNLISTED_BILL.id);
+
+    expect(await screen.findByText('This bill is not in the feed.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /bill tracker/i })).toHaveAttribute(
+      'href',
+      UNLISTED_BILL.trackerUrl
+    );
   });
 
   test('given the full run is calculating then economic impacts show its progress', async () => {
@@ -125,14 +251,22 @@ describe('BillReportPage', () => {
     renderReport();
 
     await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
 
-    expect(screen.getByText('Calculating the full results…')).toBeInTheDocument();
-    expect(screen.getByText(/^In queue \(position 2\)\. A bill/)).toBeInTheDocument();
+    expect(screen.getByText('Calculating the full results')).toBeInTheDocument();
+    // A bar, with the queue position under it.
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('In queue (position 2)')).toBeInTheDocument();
+    expect(screen.getByText('Later visits load from the cache.')).toBeInTheDocument();
+    expect(screen.queryByText(/Estimated from typical run times/)).not.toBeInTheDocument();
     expect(screen.queryByText('Economic impact charts')).not.toBeInTheDocument();
     // The tracker's stored detail fills the wait.
     expect(screen.getByText('Income change by decile')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
-    expect(screen.getByText('Poverty rate, before and after')).toBeInTheDocument();
+    expect(screen.getByText('Poverty rate change')).toBeInTheDocument();
+    // The change only: the rates before and after (16.9% → 14.5%) stay out.
+    expect(screen.queryByText('16.9%')).not.toBeInTheDocument();
+    expect(screen.queryByText('Current law')).not.toBeInTheDocument();
   });
 
   test('given the full results then the overview and charts use them', async () => {
@@ -142,14 +276,16 @@ describe('BillReportPage', () => {
     );
     renderReport();
 
-    expect(await screen.findByText('Annual government savings')).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+    expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(screen.getByText('Annual government savings')).toBeInTheDocument();
     expect(screen.getByText('13.3% decrease')).toBeInTheDocument();
     expect(
       screen.queryByText(/Stored estimates from the legislative tracker/)
     ).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
-    expect(screen.getByText('Economic impact charts')).toBeInTheDocument();
   });
 
   test('given the full run fails then it says so and can retry', async () => {
@@ -157,17 +293,18 @@ describe('BillReportPage', () => {
     mockUseBillEconomy.mockReturnValue(economy({ status: 'error', message: 'Worker lost' }));
     renderReport();
 
-    expect(
-      await screen.findByText(
-        'Stored estimates from the legislative tracker · full results unavailable'
-      )
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
-    expect(screen.getByText('The full results could not be calculated.')).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
+    expect(screen.getByText('The full results could not be calculated')).toBeInTheDocument();
     expect(screen.getByText('Worker lost')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(mockRetry).toHaveBeenCalled();
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(
+      screen.getByText('Stored estimates from the legislative tracker · full results unavailable')
+    ).toBeInTheDocument();
   });
 
   test('given the validation tab then external checks and the tracker provenance render', async () => {
@@ -176,7 +313,10 @@ describe('BillReportPage', () => {
 
     await user.click(await screen.findByRole('tab', { name: 'Validation' }));
 
-    expect(screen.getByText('External checks for this bill')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'External estimates' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Estimates for this bill' })).toBeInTheDocument();
     expect(screen.getByText('-$225.5B')).toBeInTheDocument();
     expect(screen.getByText('CRFB')).toBeInTheDocument();
     expect(screen.getByText(/later effective date/)).toBeInTheDocument();
@@ -184,6 +324,29 @@ describe('BillReportPage', () => {
       screen.getByText(
         'Tracker estimate: policyengine-us 1.729.3 · populace-us 1.17.0 · computed July 9, 2026'
       )
+    ).toBeInTheDocument();
+  });
+
+  test('given a bill without external checks then validation says no estimate is available', async () => {
+    const user = userEvent.setup();
+    // Each request gets its own body: the scorecard feeds answer with no rows.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+    );
+    mockFetchTrackerBills.mockResolvedValue([{ ...TRACKED_BILL, validation: undefined }]);
+    renderReport();
+
+    await user.click(await screen.findByRole('tab', { name: 'Validation' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      await within(panel).findByText('No external estimate is available for this reform.')
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText(/fiscal-note range/)).not.toBeInTheDocument();
+    // The tracker's provenance still says where the stored estimate came from.
+    expect(
+      within(panel).getByText(/^Tracker estimate: policyengine-us 1\.729\.3/)
     ).toBeInTheDocument();
   });
 
@@ -215,9 +378,11 @@ describe('BillReportPage', () => {
   });
 
   test('given metadata is still loading then the full run waits for it', async () => {
+    const user = userEvent.setup();
     renderReport();
 
-    await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title });
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    await user.click(screen.getByRole('button', { name: 'Load full results' }));
     expect(mockUseBillEconomy).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: TRACKED_BILL.id }),
       { enabled: false }
@@ -243,6 +408,210 @@ describe('BillReportPage', () => {
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
   });
 
+  test('given the stored parameters disagree with the write-up then no run is offered and the tracker estimate stays', async () => {
+    const user = userEvent.setup();
+    // UT SB60 as the tracker stores it: a write-up of 4.5% → 4.45%, but
+    // reform params of 0.045, the law before the bill.
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        id: 'ut-sb60-bill',
+        state: 'UT',
+        title: 'Utah SB60: Income tax rate reduction (enacted)',
+        provisions: [
+          {
+            path: 'gov.states.ut.tax.income.rate',
+            value: 0.045,
+            intervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.045 }],
+            baselineIntervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0.0445 }],
+          },
+        ],
+        changes: [{ label: 'Income tax rate', before: '4.5%', after: '4.45%' }],
+      },
+    ]);
+    renderReport('ut-sb60-bill');
+
+    expect(
+      await screen.findByText(
+        'Stored estimates from the legislative tracker · full results unavailable'
+      )
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    const panel = screen.getByRole('tabpanel');
+    expect(
+      within(panel).getByText('The full results are not available for this bill.')
+    ).toBeInTheDocument();
+    expect(within(panel).queryByRole('button', { name: 'Load full results' })).toBeNull();
+    // The tracker's own estimate still shows.
+    expect(within(panel).getByRole('region', { name: 'Budgetary impact' })).toBeInTheDocument();
+    expect(mockUseBillEconomy).not.toHaveBeenCalledWith(expect.anything(), { enabled: true });
+  });
+
+  test('given the tracker wrote up the changes then the overview lists them as scored', async () => {
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        changes: [
+          {
+            label: 'Maximum credit per child',
+            before: '$2,200',
+            after: '$5,000',
+            explanation: 'Raises the credit for each qualifying child.',
+            section: 'Section 2',
+          },
+        ],
+      },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    expect(within(list).getByText('Maximum credit per child')).toBeInTheDocument();
+    expect(
+      within(list).getByText('Raises the credit for each qualifying child.')
+    ).toBeInTheDocument();
+    expect(within(list).getByText('Section 2')).toBeInTheDocument();
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['$2,200', '$5,000', 'Jan 1, 2026', 'No end date']);
+    expect(
+      within(list)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent)
+    ).toEqual(['Change', 'Before', 'After', 'Start', 'End']);
+    // The top box keeps the title only.
+    const cover = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    expect(cover).not.toHaveTextContent('→');
+  });
+
+  test('given the metadata is still loading then provisions show placeholders, not paths', async () => {
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    expect(
+      within(list).getByRole('status', { name: 'Loading parameter names' })
+    ).toBeInTheDocument();
+    // No raw path such as "gov.irs.credits.ctc.amount.base[0].amount" while it loads.
+    expect(list).not.toHaveTextContent(/gov\./);
+  });
+
+  test('given an enacted bill without a write-up then its values read alone, not as current law', async () => {
+    seedDeductionMetadata();
+    mockIsAlreadyCurrentLaw.mockReturnValue(true);
+    // Today's law already has the bill's $2,200.
+    mockFetchTrackerBills.mockResolvedValue([
+      { ...TRACKED_BILL, provisions: [{ path: 'gov.irs.credits.ctc.amount.base', value: 2200 }] },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    expect(within(list).getByText('Maximum credit per child')).toBeInTheDocument();
+    // The parameter's own description is the detail.
+    expect(within(list).getByText('Maximum credit per qualifying child.')).toBeInTheDocument();
+    // Its results compare with the law before it, so today's law is not its "before".
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    // No "before" is known: the cell says so rather than inventing one.
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['—', '$2,200', 'Jan 1, 2026', 'No end date']);
+    expect(list).not.toHaveTextContent(/current law|now law/);
+    expect(list).toHaveTextContent(/compare them with the law before the bill/);
+    store.dispatch(clearMetadata());
+  });
+
+  test('given an enacted bill with the tracker’s baseline then the overview shows what it changed from', async () => {
+    seedDeductionMetadata();
+    mockIsAlreadyCurrentLaw.mockReturnValue(true);
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        provisions: [
+          {
+            path: 'gov.irs.credits.ctc.amount.base',
+            value: 2200,
+            baselineIntervals: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
+          },
+        ],
+      },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    const row = within(list).getByRole('row', { name: /Maximum credit per child/ });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent)
+    ).toEqual(['$2,000', '$2,200', 'Jan 1, 2026', 'No end date']);
+    expect(list).not.toHaveTextContent(/compare them with the law before the bill/);
+    store.dispatch(clearMetadata());
+  });
+
+  test('given dated provisions then each tracker row takes the dates of the parameter it names', async () => {
+    const dated = (path: string, startDate: string, endDate: string, value: number) => ({
+      path,
+      value,
+      intervals: [{ startDate, endDate, value }],
+    });
+    mockFetchTrackerBills.mockResolvedValue([
+      {
+        ...TRACKED_BILL,
+        provisions: [
+          dated('gov.states.ny.tax.income.main.single[7].rate', '2026-01-01', '2026-12-31', 0.108),
+          dated('gov.states.ny.tax.income.main.joint[7].rate', '2026-01-01', '2026-12-31', 0.108),
+          dated('gov.states.ny.tax.income.credits.eitc.match', '2027-01-01', '2100-12-31', 0.35),
+        ],
+        changes: [
+          {
+            label: 'Top rate',
+            before: '10.30%',
+            after: '10.80%',
+            parameter: 'gov.states.ny.tax.income.main.{filing_status}[7].rate',
+          },
+          { label: 'EITC match', before: '30%', after: '35%' },
+        ],
+      },
+    ]);
+    renderReport();
+
+    const list = await screen.findByRole('region', { name: 'Policy changes' });
+    const cells = (name: RegExp) =>
+      within(within(list).getByRole('row', { name }))
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent);
+    // "{filing_status}" matches every filing status the bill sets.
+    expect(cells(/Top rate/)).toEqual(['10.30%', '10.80%', 'Jan 1, 2026', 'Dec 31, 2026']);
+    // No parameter named, and the provisions' dates differ: none are claimed.
+    expect(cells(/EITC match/)).toEqual(['30%', '35%', '—', '—']);
+  });
+
+  test('given stored districts then the districts tab maps them until the full results load', async () => {
+    const user = userEvent.setup();
+    mockFetchTrackerBillDistricts.mockResolvedValue([
+      { district: 'KS-01', average_household_income_change: 5, winner_percentage: 0.04 },
+      { district: 'KS-02', average_household_income_change: 3, winner_percentage: 0.02 },
+    ]);
+    renderReport();
+
+    // The overview says districts are there, though no full run has started.
+    expect(
+      await screen.findByText('Compare income changes across districts on a map.')
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+
+    const panel = screen.getByRole('tabpanel');
+    expect(within(panel).getByText('The full results are not loaded.')).toBeInTheDocument();
+    // No relative change is stored, so that view is not offered.
+    expect(
+      await within(panel).findByText('District map: 2 · absolute, winner-pct, loser-pct')
+    ).toBeInTheDocument();
+    expect(mockFetchTrackerBillDistricts).toHaveBeenCalledWith(TRACKED_BILL.id);
+  });
+
   test('given a bill with no mapped provisions then it says the results cannot be calculated', async () => {
     const user = userEvent.setup();
     mockFetchTrackerBills.mockResolvedValue([{ ...TRACKED_BILL, provisions: [] }]);
@@ -255,12 +624,55 @@ describe('BillReportPage', () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
     expect(screen.getByText(/provisions are mapped to model parameters yet/)).toBeInTheDocument();
-    expect(screen.queryByText('Calculating the full results…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Calculating the full results')).not.toBeInTheDocument();
   });
 
   test('given an unknown bill then says it is not in the feed', async () => {
     renderReport('missing-bill');
 
-    expect(await screen.findByText('This bill is not in the current feed.')).toBeInTheDocument();
+    expect(await screen.findByText('This bill is not in the feed.')).toBeInTheDocument();
+  });
+
+  test('given the feed is loading then the report placeholder holds its place', () => {
+    mockFetchTrackerBills.mockReturnValue(new Promise(() => {}));
+
+    renderReport();
+
+    expect(screen.getByRole('status', { name: 'Loading the bill' })).toBeInTheDocument();
+  });
+
+  test('given the feed failed then try again asks for it again', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchTrackerBills.mockRejectedValue(new Error('tracker down'));
+    renderReport();
+    // The feed retries once before failing, so give it past the retry delay.
+    await screen.findByText('Could not load the bill feed', {}, { timeout: 5000 });
+    mockFetchTrackerBills.mockResolvedValue([TRACKED_BILL]);
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(
+      await screen.findByRole('heading', { level: 1, name: TRACKED_BILL.title })
+    ).toBeInTheDocument();
+  });
+
+  test('given the model metadata failed then the full results say so and ask for it again', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchMetadata.mockReturnValue(new Promise(() => {}));
+    seedMetadataError();
+    renderReport();
+    await user.click(await screen.findByRole('tab', { name: 'Economic impacts' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load the parameters');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    expect(mockFetchMetadata).toHaveBeenCalledWith('us');
+    expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument();
   });
 });

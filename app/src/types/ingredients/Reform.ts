@@ -31,19 +31,26 @@ export type ReformBaseline = (typeof reformBaselines)[number];
 /**
  * The canonical reform object of the flagship app.
  *
- * A Reform is user-owned, mutable content — unlike Policy, which is an
- * immutable record in the main PolicyEngine API. When a reform is
- * simulated, it is materialized into a canonical Policy via the existing
- * createPolicy() flow and the resulting id is linked back via policyId.
+ * A Reform is mutable content — unlike Policy, which is an immutable
+ * record in the main PolicyEngine API. When a reform is simulated, it is
+ * materialized into a canonical Policy via the existing createPolicy()
+ * flow and the resulting id is linked back via policyId. It carries no
+ * user identifier: its owner comes from the session (see
+ * hooks/useFlagshipStores).
  */
 export interface Reform {
   id?: string;
-  userId: string;
   countryId: (typeof countryIds)[number];
   label?: string | null;
   /** Canonical policy id in api.policyengine.org once materialized */
   policyId?: string | null;
   parameters: Parameter[];
+  /**
+   * Set when the reform's changes could not be loaded (a saved reform
+   * whose v1 policy did not load). `parameters` is then empty and must
+   * not be shown, run, matched or saved as the reform's changes.
+   */
+  parametersUnavailable?: boolean;
   baseline: ReformBaseline;
   provenance: ReformProvenance;
   createdAt?: string;

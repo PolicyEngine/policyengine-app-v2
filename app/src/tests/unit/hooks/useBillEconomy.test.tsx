@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { billRegion, useBillEconomy } from '@/hooks/useBillEconomy';
+import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 const { mockCreatePolicy, mockFetchSocietyWide } = vi.hoisted(() => ({
@@ -52,8 +53,9 @@ describe('useBillEconomy', () => {
     await waitFor(() => expect(result.current.status).toBe('complete'));
     expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
       data: { 'gov.states.ut.tax.income.rate': { [`${CURRENT_YEAR}-01-01.2100-12-31`]: 0.0445 } },
-      label: 'Utah SB60',
     });
+    // The policy carries only the changes; the bill's title is never sent.
+    expect(mockCreatePolicy.mock.calls[0][1]).not.toHaveProperty('label');
     expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '98557', '2', {
       region: 'state/ut',
       time_period: CURRENT_YEAR,
@@ -61,6 +63,35 @@ describe('useBillEconomy', () => {
     expect(result.current.output).toBe(output);
     expect(result.current.reformPolicyId).toBe('98557');
     expect(result.current.baselinePolicyId).toBe('2');
+  });
+
+  test('given a bill from a later year then it runs in that year with its own dates', async () => {
+    mockFetchSocietyWide.mockResolvedValue({ status: 'ok', result: createMockSocietyWideOutput() });
+    const later = {
+      ...BILL,
+      provisions: [
+        {
+          path: 'gov.states.ut.tax.income.rate',
+          value: 0.044,
+          intervals: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 0.044 }],
+        },
+      ],
+    };
+
+    const { result } = renderHook(() => useBillEconomy(later), { wrapper });
+
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    // A 2027 change scored in 2026 would show an effect the bill does not have then.
+    expect(mockCreatePolicy).toHaveBeenCalledWith('us', {
+      data: { 'gov.states.ut.tax.income.rate': { '2027-01-01.2100-12-31': 0.044 } },
+    });
+    // The policy carries only the changes; the bill's title is never sent.
+    expect(mockCreatePolicy.mock.calls[0][1]).not.toHaveProperty('label');
+    expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '98557', '2', {
+      region: 'state/ut',
+      time_period: '2027',
+    });
+    expect(result.current.year).toBe('2027');
   });
 
   test('given the run is queued then it stays pending with the queue message', async () => {
@@ -76,6 +107,20 @@ describe('useBillEconomy', () => {
     await waitFor(() => expect(result.current.message).toMatch(/3/));
     expect(result.current.status).toBe('pending');
     expect(result.current.output).toBeNull();
+  });
+
+  test('given a state bill then the run asks for the region estimate', async () => {
+    mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+    const execute = vi.spyOn(SocietyWideCalcStrategy.prototype, 'execute');
+
+    renderHook(() => useBillEconomy(BILL), { wrapper });
+
+    await waitFor(() => expect(execute).toHaveBeenCalled());
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({ region: 'state/ut', estimateByRegion: true }),
+      expect.anything()
+    );
+    execute.mockRestore();
   });
 
   test('given the run fails then the error is reported', async () => {

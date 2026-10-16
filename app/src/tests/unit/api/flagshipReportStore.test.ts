@@ -1,18 +1,28 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import {
   ApiFlagshipReportStore,
+  getFlagshipReportStore,
   LocalStorageFlagshipReportStore,
   NewFlagshipReport,
+  provisionsFromWire,
+  provisionsToWire,
 } from '@/api/flagshipReportStore';
+import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { validationToWire } from '@/libs/flagship/reportValidation';
+import {
+  ASSOCIATION_IDS,
+  createTestApiContext,
+  fetchCall,
+  itemResponse,
+  pageResponse,
+  reportItem,
+} from '@/tests/fixtures/api/v2UserMocks';
 import { mockReportValidationSnapshot } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
 
-const USER_ID = 'user-123';
 const API_REPORT_ID = '4512';
 const OTHER_API_REPORT_ID = '9999';
 
 const newReport: NewFlagshipReport = {
-  userId: USER_ID,
   countryId: 'us',
   apiReportId: API_REPORT_ID,
   title: 'CTC to $2,500',
@@ -35,13 +45,24 @@ describe('LocalStorageFlagshipReportStore', () => {
     localStorage.clear();
   });
 
-  test('given a created report then it is found by its API report id for that user', async () => {
+  test('given a created report then it is found by its API report id', async () => {
     const store = new LocalStorageFlagshipReportStore();
     const created = await store.create(newReport);
 
-    await expect(store.findByApiReportId(USER_ID, API_REPORT_ID)).resolves.toEqual(created);
-    await expect(store.findByApiReportId(USER_ID, OTHER_API_REPORT_ID)).resolves.toBeNull();
-    await expect(store.findByApiReportId('someone-else', API_REPORT_ID)).resolves.toBeNull();
+    await expect(store.findByApiReportId(API_REPORT_ID)).resolves.toEqual(created);
+    await expect(store.findByApiReportId(OTHER_API_REPORT_ID)).resolves.toBeNull();
+  });
+
+  test('given reports in two countries then findMine lists one country, newest first', async () => {
+    const store = new LocalStorageFlagshipReportStore();
+    const older = await store.create(newReport);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const newer = await store.create({ ...newReport, apiReportId: OTHER_API_REPORT_ID });
+    await store.create({ ...newReport, countryId: 'uk' });
+
+    const usRecords = await store.findMine('us');
+
+    expect(usRecords.map((record) => record.id)).toEqual([newer.id, older.id]);
   });
 
   test('given a saved validation then it persists on the record', async () => {
@@ -64,54 +85,264 @@ describe('LocalStorageFlagshipReportStore', () => {
   });
 });
 
-describe('ApiFlagshipReportStore', () => {
-  const fetchMock = vi.fn();
+const DATED_PROVISION = {
+  path: 'gov.irs.credits.ctc.amount.base[0].amount',
+  breadcrumb: 'IRS → Credits → CTC → Amount',
+  unit: 'currency-USD',
+  baselineValue: 2200,
+  value: 2500,
+  intervals: [
+    { startDate: '2026-01-01', endDate: '2026-12-31', value: 2500 },
+    { startDate: '2027-01-01', endDate: '2100-12-31', value: 3000 },
+  ],
+};
 
-  beforeEach(() => {
-    vi.stubGlobal('fetch', fetchMock);
-    fetchMock.mockReset();
-  });
+const DATED_PROVISION_WIRE = {
+  path: 'gov.irs.credits.ctc.amount.base[0].amount',
+  breadcrumb: 'IRS → Credits → CTC → Amount',
+  unit: 'currency-USD',
+  baseline_value: 2200,
+  value: 2500,
+  intervals: [
+    { start_date: '2026-01-01', end_date: '2026-12-31', value: 2500 },
+    { start_date: '2027-01-01', end_date: '2100-12-31', value: 3000 },
+  ],
+};
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+describe('provisions wire mapping', () => {
+  test('given a growing provision then its growth settings round-trip in snake_case', () => {
+    const growing = {
+      ...DATED_PROVISION,
+      growth: 'gov.bls.cpi.cpi_u',
+      growthStart: 2027,
+      growthBase: 2026,
+      growthRoundTo: 50,
+      growthRound: 'down' as const,
+    };
 
-  const storedRow = {
-    id: 'rp-1',
-    user_id: USER_ID,
-    country_id: 'us',
-    api_report_id: API_REPORT_ID,
-    title: 'CTC to $2,500',
-    source_note: 'Hand-built draft',
-    provisions: [],
-    reform_id: null,
-    year: '2026',
-    validation: validationToWire(mockReportValidationSnapshot),
-    created_at: '2026-09-07T00:00:00.000Z',
-  };
+    const [wire] = provisionsToWire([growing]);
 
-  test('given an API report id then the list route is queried for it and the pin decoded', async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => [storedRow] });
-    const store = new ApiFlagshipReportStore();
-
-    const record = await store.findByApiReportId(USER_ID, API_REPORT_ID);
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      `/api/reports?user_id=${USER_ID}&api_report_id=${API_REPORT_ID}`
-    );
-    expect(record?.validation).toEqual(mockReportValidationSnapshot);
-  });
-
-  test('given a snapshot then it is PATCHed in wire form', async () => {
-    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => storedRow });
-    const store = new ApiFlagshipReportStore();
-
-    await store.saveValidation('rp-1', mockReportValidationSnapshot);
-
-    expect(fetchMock).toHaveBeenCalledWith('/api/reports/rp-1', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ validation: validationToWire(mockReportValidationSnapshot) }),
+    expect(wire).toMatchObject({
+      growth: 'gov.bls.cpi.cpi_u',
+      growth_start: 2027,
+      growth_base: 2026,
+      growth_round_to: 50,
+      growth_round: 'down',
     });
+    expect(provisionsFromWire([wire])).toEqual([growing]);
+  });
+
+  test('given a fixed provision then the wire carries no growth keys', () => {
+    const [wire] = provisionsToWire([DATED_PROVISION]);
+
+    expect(Object.keys(wire).filter((key) => key.startsWith('growth'))).toEqual([]);
+  });
+
+  test('given dated provisions then they map to snake_case with start_date and end_date', () => {
+    expect(provisionsToWire([DATED_PROVISION])).toEqual([DATED_PROVISION_WIRE]);
+  });
+
+  test('given a single-value provision then intervals are null on the wire', () => {
+    expect(provisionsToWire(newReport.provisions)[0].intervals).toBeNull();
+  });
+
+  test('given wire provisions then they map back to camelCase', () => {
+    expect(provisionsFromWire([DATED_PROVISION_WIRE])).toEqual([DATED_PROVISION]);
+    expect(provisionsFromWire(null)).toEqual([]);
+  });
+});
+
+describe('ApiFlagshipReportStore', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  test('given a run then one /v2/user-reports row carries the v3 fields', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      itemResponse(
+        reportItem({
+          legacy_report_id: Number(API_REPORT_ID),
+          name: 'CTC to $2,500',
+          source_note: 'Hand-built draft',
+          provisions: provisionsToWire(newReport.provisions),
+          user_policy_id: ASSOCIATION_IDS.REFORM,
+        }),
+        201
+      )
+    );
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    const record = await store.create({ ...newReport, reformId: ASSOCIATION_IDS.REFORM });
+
+    // Then
+    const call = fetchCall(fetchMock);
+    expect(call.path).toBe('/v2/user-reports');
+    expect(call.body).toEqual({
+      country_id: 'us',
+      legacy_report_id: Number(API_REPORT_ID),
+      name: 'CTC to $2,500',
+      source_note: 'Hand-built draft',
+      provisions: provisionsToWire(newReport.provisions),
+      user_policy_id: ASSOCIATION_IDS.REFORM,
+      last_run_at: expect.any(String),
+    });
+    expect(call.body).not.toHaveProperty('user_id');
+    expect(call.body).not.toHaveProperty('year');
+    expect(record).toMatchObject({
+      id: ASSOCIATION_IDS.REPORT,
+      apiReportId: API_REPORT_ID,
+      title: 'CTC to $2,500',
+      sourceNote: 'Hand-built draft',
+      reformId: ASSOCIATION_IDS.REFORM,
+      provisions: newReport.provisions,
+    });
+  });
+
+  test('given a budget window then the row carries its years and reads them back', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(itemResponse(reportItem({ budget_window_years: 10 }), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    const record = await store.create({ ...newReport, budgetWindowYears: 10 });
+
+    // Then
+    expect(fetchCall(fetchMock).body.budget_window_years).toBe(10);
+    expect(record.budgetWindowYears).toBe(10);
+  });
+
+  test('given a one-year run then the row has no budget window', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(async () => itemResponse(reportItem(), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.create({ ...newReport, budgetWindowYears: 1 });
+    const record = await store.create({ ...newReport, budgetWindowYears: null });
+
+    // Then
+    expect(fetchCall(fetchMock, 0).body).not.toHaveProperty('budget_window_years');
+    expect(fetchCall(fetchMock, 1).body).not.toHaveProperty('budget_window_years');
+    expect(record).not.toHaveProperty('budgetWindowYears');
+  });
+
+  test('given a comparison with a saved reform then the row links it, unless browser-only', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(async () => itemResponse(reportItem(), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.create({ ...newReport, baselineReformId: ASSOCIATION_IDS.POLICY });
+    await store.create({ ...newReport, baselineReformId: 'rf-browser1' });
+
+    // Then
+    expect(fetchCall(fetchMock, 0).body.baseline_user_policy_id).toBe(ASSOCIATION_IDS.POLICY);
+    expect(fetchCall(fetchMock, 1).body).not.toHaveProperty('baseline_user_policy_id');
+  });
+
+  test('given a reform saved in this browser then the account row is not linked to it', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockImplementation(async () => itemResponse(reportItem(), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.create({ ...newReport, reformId: ASSOCIATION_IDS.REFORM });
+    await store.create({ ...newReport, reformId: 'rf-browser1' });
+
+    // Then
+    expect(fetchCall(fetchMock, 0).body.user_policy_id).toBe(ASSOCIATION_IDS.REFORM);
+    expect(fetchCall(fetchMock, 1).body).not.toHaveProperty('user_policy_id');
+  });
+
+  test('given a UK run while the store is in the US then the row is written in the UK', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext('us');
+    fetchMock.mockResolvedValue(itemResponse(reportItem({ country_id: 'uk' }), 201));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.create({ ...newReport, countryId: 'uk' });
+
+    // Then
+    const call = fetchCall(fetchMock);
+    expect(call.query).toEqual({ country_id: 'uk' });
+    expect(call.body.country_id).toBe('uk');
+  });
+
+  test('given an API report id then findByApiReportId filters by legacy_report_id', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(
+      pageResponse([reportItem({ legacy_report_id: Number(API_REPORT_ID) })])
+    );
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    const record = await store.findByApiReportId(API_REPORT_ID);
+
+    // Then
+    expect(fetchCall(fetchMock).query).toEqual({
+      country_id: 'us',
+      legacy_report_id: API_REPORT_ID,
+      limit: '1',
+    });
+    expect(record?.apiReportId).toBe(API_REPORT_ID);
+  });
+
+  test('given a snapshot then saveValidation patches the validation wire format', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const wire = validationToWire(mockReportValidationSnapshot);
+    fetchMock.mockResolvedValue(itemResponse(reportItem({ validation: wire })));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    const record = await store.saveValidation(ASSOCIATION_IDS.REPORT, mockReportValidationSnapshot);
+
+    // Then
+    const call = fetchCall(fetchMock);
+    expect(call.method).toBe('PATCH');
+    expect(call.path).toBe(`/v2/user-reports/${ASSOCIATION_IDS.REPORT}`);
+    expect(call.body).toEqual({ validation: wire });
+    expect(record.validation).toEqual(mockReportValidationSnapshot);
+  });
+});
+
+describe('ApiFlagshipReportStore with records saved in this browser', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  test('given an lfr- record saved while signed out then signed in it is refused, not read locally', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const localRecord = await new LocalStorageFlagshipReportStore().create(newReport);
+    const store = new ApiFlagshipReportStore(context);
+
+    // When / Then
+    await expect(store.findById(localRecord.id)).rejects.toBeInstanceOf(BrowserOnlyIdError);
+    await expect(
+      store.saveValidation(localRecord.id, mockReportValidationSnapshot)
+    ).rejects.toBeInstanceOf(BrowserOnlyIdError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('getFlagshipReportStore', () => {
+  test('given no account then records stay in localStorage', () => {
+    expect(getFlagshipReportStore(null)).toBeInstanceOf(LocalStorageFlagshipReportStore);
+  });
+
+  test('given an account then records go to the account', () => {
+    expect(getFlagshipReportStore(createTestApiContext().context)).toBeInstanceOf(
+      ApiFlagshipReportStore
+    );
   });
 });

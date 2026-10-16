@@ -51,4 +51,16 @@ export interface CalcStartConfig {
    * Used to mark the parent report as complete after all simulations finish
    */
   reportId?: string;
+
+  /**
+   * Estimate a society-wide run's duration from its region (optional, v3)
+   * Passed through to CalcParams.estimateByRegion. Off by default.
+   */
+  estimateByRegion?: boolean;
+
+  /**
+   * Write a failed society-wide report run to its report record (optional, v3)
+   * Off by default: a failed run leaves the record as it was.
+   */
+  recordReportErrors?: boolean;
 }

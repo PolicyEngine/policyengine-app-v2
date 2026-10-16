@@ -33,6 +33,13 @@ export interface ParameterSearchEntry {
    * state (gov.local.xx.*)
    */
   stateCode: string | null;
+  /**
+   * For a bracket member (…ctc.amount.base[0].amount), the label of the
+   * schedule it belongs to ("Child Tax Credit amount"). The breadcrumb
+   * skips the schedule's own node, and the member's label alone says
+   * only "amount", so search reads this alongside it.
+   */
+  scheduleLabel?: string | null;
 }
 
 const STATE_PATH_PATTERN = /^gov\.(?:contrib\.)?(?:states|local)\.([a-z]{2})\./;
@@ -132,6 +139,18 @@ function statesNamedIn(query: string, canonical: string, index: ParameterSearchI
     }
   }
   return named;
+}
+
+/** The words of the state names a query names ("new", "york" for "new york eitc"). */
+function stateNameWords(canonical: string, index: ParameterSearchIndex): Set<string> {
+  const words = new Set<string>();
+  const text = ` ${plainWords(canonical)} `;
+  for (const [name] of index.stateNames) {
+    if (text.includes(` ${name} `)) {
+      name.split(' ').forEach((word) => words.add(word));
+    }
+  }
+  return words;
 }
 
 /**
@@ -388,6 +407,14 @@ function isSearchableParameter(param: any): param is ParameterMetadata {
   );
 }
 
+/** A bracket member's schedule: `…amount.base[0].amount` → `…amount.base`. */
+const BRACKET_MEMBER_PATTERN = /^(.+)\[\d+\]\.[^.[\]]+$/;
+
+function scheduleLabelOf(path: string, parameters: ParameterMetadataCollection): string | null {
+  const schedule = BRACKET_MEMBER_PATTERN.exec(path)?.[1];
+  return (schedule && parameters[schedule]?.label) || null;
+}
+
 export function buildParameterSearchEntries(
   parameters: ParameterMetadataCollection
 ): ParameterSearchEntry[] {
@@ -403,8 +430,14 @@ export function buildParameterSearchEntries(
         description: param.description ?? null,
         isContrib: param.parameter.startsWith('gov.contrib.'),
         stateCode: STATE_PATH_PATTERN.exec(param.parameter)?.[1] ?? null,
+        scheduleLabel: scheduleLabelOf(param.parameter, parameters),
       };
     });
+}
+
+/** What search reads as an entry's label: a bracket member's schedule, then its own. */
+function searchLabel(entry: ParameterSearchEntry): string {
+  return entry.scheduleLabel ? `${entry.scheduleLabel} ${entry.label}` : entry.label;
 }
 
 const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
@@ -412,8 +445,9 @@ const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
     { name: 'breadcrumb', weight: 0.55 },
     // Leaf labels are often the most information-dense part of the
     // hierarchy, so they get their own strong weight beyond appearing
-    // at the end of the breadcrumb.
-    { name: 'label', weight: 0.3 },
+    // at the end of the breadcrumb. A bracket member's label leads with
+    // its schedule's, which names what "amount" is the amount of.
+    { name: 'label', weight: 0.3, getFn: searchLabel },
     { name: 'path', weight: 0.15 },
   ],
   threshold: 0.35,
@@ -463,7 +497,7 @@ export function createParameterSearchIndex(
     // The canonical phrases go in the haystack too, so an entry spelled
     // one way is found by a query normalized the other way.
     haystacks: entries.map((entry) =>
-      `${entry.breadcrumb} ${entry.label} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)}`.toLowerCase()
+      `${entry.breadcrumb} ${searchLabel(entry)} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)}`.toLowerCase()
     ),
     get fuse() {
       fuseInstance ??= new Fuse(entries, FUSE_OPTIONS);
@@ -551,12 +585,20 @@ export function searchParameters(
     return [];
   }
 
+  // A state the query names picks the jurisdiction. Its name matches only
+  // as whole words — "montana" would otherwise credit "vermont" and
+  // "montgomery" by prefix, and "kansas" credits "arkansas" by substring.
+  const namedStates = statesNamedIn(query, trimmed, index);
+  const stateWords = stateNameWords(trimmed, index);
   const tokens = [...new Set(trimmed.split(/\s+/).filter((token) => token.length >= 2))];
 
   // Token score: 1 for an exact substring hit; 0.6 when only a prefix
   // of the token (≥3 chars) appears — derived stemming, so "maximum"
   // still credits entries that say "max" without any word list.
   const tokenScore = (haystack: string, token: string): number => {
+    if (stateWords.has(token)) {
+      return new RegExp(`(^|[^a-z])${token}([^a-z]|$)`).test(haystack) ? 1 : 0;
+    }
     if (haystack.includes(token)) {
       return 1;
     }
@@ -625,8 +667,6 @@ export function searchParameters(
     }
   }
 
-  const namedStates = statesNamedIn(query, trimmed, index);
-
   // Pass 2: keep entries within a tolerance band of the best coverage,
   // so exact-wording entries don't monopolize over close paraphrases.
   // Best-coverage entries are collected first, and within each band the
@@ -637,18 +677,33 @@ export function searchParameters(
     const floor = Math.max(bestCoverage - 0.5, bestCoverage * 0.75, 0.6);
     // Best band in jurisdiction, best band outside, lower band in, lower band outside.
     const buckets: ParameterSearchEntry[][] = [[], [], [], []];
+    const otherStates: ParameterSearchEntry[] = [];
     for (let i = 0; i < index.haystacks.length; i++) {
       if (coverage[i] >= floor) {
         const entry = index.entries[i];
+        // Another state's parameter goes after the named state's and federal
+        // ones: kept, so a near miss still shows, but never ahead of them.
+        if (namedStates.size > 0 && entry.stateCode && !namedStates.has(entry.stateCode)) {
+          otherStates.push(entry);
+          continue;
+        }
         const band = coverage[i] >= bestCoverage ? 0 : 2;
         buckets[band + (inQueryJurisdiction(entry, namedStates) ? 0 : 1)].push(entry);
       }
     }
     const candidates = buckets.flat().slice(0, RERANK_CANDIDATE_CAP);
-    if (candidates.length === 1) {
-      return candidates;
+    const ranked =
+      candidates.length > 1 ? rankWithPriors(candidates, trimmed, limit, namedStates) : candidates;
+    if (ranked.length >= limit || otherStates.length === 0) {
+      return ranked;
     }
-    return rankWithPriors(candidates, trimmed, limit, namedStates);
+    const rest = otherStates.slice(0, RERANK_CANDIDATE_CAP);
+    return [
+      ...ranked,
+      ...(rest.length > 1
+        ? rankWithPriors(rest, trimmed, limit - ranked.length, namedStates)
+        : rest),
+    ].slice(0, limit);
   }
 
   if (!fuzzyFallback) {
@@ -734,29 +789,109 @@ export interface ParameterSearchGroup {
   /** Folder breadcrumb (everything above the leaf); '' when unknown */
   folder: string;
   entries: ParameterSearchEntry[];
+  /**
+   * For a bracket schedule's group, the schedule's path
+   * (`gov.irs.credits.ctc.amount.base`): its members, every bracket, in order.
+   */
+  schedule?: string;
+}
+
+/** A bracket member's schedule and place: `…base[1].amount` → `…base`, 1, `amount`. */
+const SCHEDULE_MEMBER = /^(.+)\[(\d+)\]\.([^.[\]]+)$/;
+
+export function scheduleMemberOf(
+  path: string
+): { schedule: string; bracket: number; member: string } | null {
+  const match = SCHEDULE_MEMBER.exec(path);
+  return match ? { schedule: match[1], bracket: Number(match[2]), member: match[3] } : null;
+}
+
+/** Path keys that are acronyms; any other key reads as a word. */
+const KEY_ACRONYMS = new Set([
+  'aca',
+  'actc',
+  'agi',
+  'arpa',
+  'cdcc',
+  'ctc',
+  'eitc',
+  'fpg',
+  'obbba',
+  'snap',
+  'ssi',
+  'tanf',
+  'tcja',
+]);
+
+/** A path key read as a name: `arpa` → "ARPA", `base` → "Base", `joint_filers` → "Joint filers". */
+function keyName(key: string): string {
+  return key
+    .split('_')
+    .map((word, index) =>
+      KEY_ACRONYMS.has(word)
+        ? word.toUpperCase()
+        : index === 0
+          ? word.charAt(0).toUpperCase() + word.slice(1)
+          : word
+    )
+    .join(' ');
+}
+
+/**
+ * A schedule's folder: the members' breadcrumb above "Bracket N", then the
+ * schedule's own name — its label ("Child Tax Credit ARPA amount"), else
+ * its key ("ARPA") — since breadcrumbs skip a schedule's node, and
+ * `…amount.base` and `…amount.arpa` would otherwise read alike.
+ */
+function scheduleFolder(entry: ParameterSearchEntry, schedule: string): string {
+  const parts = entry.breadcrumb.split(' → ').slice(0, -2);
+  const label = entry.scheduleLabel?.trim();
+  const name = label
+    ? label.charAt(0).toUpperCase() + label.slice(1)
+    : keyName(schedule.split('.').pop() ?? schedule);
+  if (parts[parts.length - 1]?.toLowerCase() !== name.toLowerCase()) {
+    parts.push(name);
+  }
+  return parts.join(' → ');
 }
 
 /**
  * Organizes flat results into a hierarchy for display: parameters
  * sharing a parent folder cluster under a folder header (in rank
- * order of their best hit), with folders listed before standalone
- * parameters. Mirrors how the parameter tree is organized, so search
- * results teach the structure instead of flattening it away.
+ * order of their best match). A bracket schedule is one group, keyed by
+ * its path — every bracket together, in order, and never mixed with a
+ * sibling schedule whose breadcrumb reads the same.
  */
 export function groupSearchResults(results: ParameterSearchEntry[]): ParameterSearchGroup[] {
-  const byFolder = new Map<string, ParameterSearchGroup>();
+  const byKey = new Map<string, ParameterSearchGroup>();
   const order: ParameterSearchGroup[] = [];
 
   for (const entry of results) {
-    const parts = entry.breadcrumb.split(' → ');
-    const folder = parts.slice(0, -1).join(' → ');
-    let group = byFolder.get(folder);
+    const member = scheduleMemberOf(entry.path);
+    const key = member
+      ? `schedule:${member.schedule}`
+      : entry.breadcrumb.split(' → ').slice(0, -1).join(' → ');
+    let group = byKey.get(key);
     if (!group) {
-      group = { folder, entries: [] };
-      byFolder.set(folder, group);
+      group = member
+        ? { folder: scheduleFolder(entry, member.schedule), entries: [], schedule: member.schedule }
+        : { folder: key, entries: [] };
+      byKey.set(key, group);
       order.push(group);
     }
     group.entries.push(entry);
+  }
+
+  // A schedule reads bracket by bracket; its members keep their rank order within one.
+  for (const group of order) {
+    if (group.schedule) {
+      const rank = new Map(group.entries.map((entry, index) => [entry.path, index]));
+      group.entries.sort(
+        (a, b) =>
+          (scheduleMemberOf(a.path)?.bracket ?? 0) - (scheduleMemberOf(b.path)?.bracket ?? 0) ||
+          (rank.get(a.path) ?? 0) - (rank.get(b.path) ?? 0)
+      );
+    }
   }
 
   const folders = order.filter((group) => group.entries.length > 1 && group.folder);

@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import type { TrackedBill } from '@/api/billFeed';
+import { billRunYear, type TrackedBill } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { createReformPolicy } from '@/libs/flagship/runReport';
 import type { RootState } from '@/store';
-import type { CalcStatus } from '@/types/calculation';
+import type { CalcStatus, RunStage } from '@/types/calculation';
 
 const strategy = new SocietyWideCalcStrategy();
 
@@ -17,6 +16,10 @@ export interface BillEconomy {
   status: 'pending' | 'complete' | 'error';
   message?: string;
   queuePosition?: number;
+  /** 0–100 while pending: the calculation strategy's estimate from typical run times. */
+  progress?: number;
+  /** The run's stage from the API while pending, when it reports one. */
+  runStage?: RunStage;
   reformPolicyId?: string;
   baselinePolicyId?: string;
   year: string;
@@ -51,12 +54,15 @@ export function useBillEconomy(
 ): BillEconomy {
   const countryId = useCurrentCountry();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const region = bill ? billRegion(bill, countryId) : countryId;
   const provisions = bill?.provisions ?? [];
+  // A bill from a later year is scored in its first year: earlier, it changes nothing.
+  const year = String(billRunYear(provisions));
 
   const policy = useQuery({
     queryKey: ['flagship-bill-policy', countryId, bill?.id, provisions],
-    queryFn: () => createReformPolicy(countryId, bill!.title, provisions),
+    queryFn: () => createReformPolicy(countryId, provisions, parameters),
     enabled: enabled && !!bill && provisions.length > 0,
     staleTime: Infinity,
   });
@@ -75,7 +81,7 @@ export function useBillEconomy(
   );
 
   const economy = useQuery({
-    queryKey: ['flagship-bill-economy', countryId, reformPolicyId, baselinePolicyId, region],
+    queryKey: ['flagship-bill-economy', countryId, reformPolicyId, baselinePolicyId, region, year],
     queryFn: () =>
       strategy.execute(
         {
@@ -84,8 +90,9 @@ export function useBillEconomy(
           policyIds: { baseline: baselinePolicyId!, reform: reformPolicyId },
           populationId: region,
           region,
-          year: CURRENT_YEAR,
+          year,
           calcId: metadata.calcId,
+          estimateByRegion: true,
         },
         metadata
       ),
@@ -113,9 +120,11 @@ export function useBillEconomy(
           : 'The calculation could not be started.'
         : economy.data?.message,
     queuePosition: economy.data?.queuePosition,
+    progress: economy.data?.progress,
+    runStage: economy.data?.runStage,
     reformPolicyId,
     baselinePolicyId,
-    year: CURRENT_YEAR,
+    year,
     region,
     retry: () => {
       if (policy.isError) {

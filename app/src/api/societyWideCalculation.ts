@@ -29,6 +29,12 @@ export interface SocietyWideCalculationResponse {
   result: SocietyWideReportOutput | null;
   error?: string;
   policyengine_bundle?: PolicyEngineBundle | null;
+  /** Optional stage fields while computing (policyengine-sim-api#781 via the API). */
+  stage?: string;
+  progress?: number;
+  progress_max?: number;
+  stage_started_at?: string;
+  segments?: { completed: number; total: number };
 }
 
 function mergePolicyEngineBundle(

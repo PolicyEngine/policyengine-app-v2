@@ -1,9 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { IconExternalLink } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
+import { IconExternalLink, IconInfoCircle } from '@tabler/icons-react';
 import { Stack, Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
-import { SCORECARD_URL } from '@/libs/flagship/modelValidation';
+import { scorecardEntryUrl } from '@/libs/flagship/modelValidation';
 import {
   loadParameterDependencies,
   variablesReachedByPaths,
@@ -16,12 +16,20 @@ import {
 } from '@/libs/flagship/scorecardComparisons';
 import {
   cardStyle,
+  CellNote,
   detailStyle,
   EvidenceHeader,
+  EvidenceTable,
   EvidenceValues,
+  gapText,
+  labelCellStyle,
   linkStyle,
-  panelStyle,
+  numberCellStyle,
+  rowButtonStyle,
+  rowStyle,
   summaryStyle,
+  ValidationNote,
+  ValidationSubheading,
 } from './ValidationDisplay';
 
 const matchLabels = {
@@ -40,6 +48,7 @@ const sourceNames: Record<string, string> = {
   tpc: 'Tax Policy Center',
   cpsp: 'Center on Poverty and Social Policy',
   pwbm: 'Penn Wharton Budget Model',
+  treasury: 'US Treasury',
 };
 const metricNames: Record<string, string> = {
   revenue_change: 'Change in tax revenue',
@@ -65,40 +74,106 @@ function displayTitle(title: string): string {
     .trim();
   return cleaned ? cleaned[0].toUpperCase() + cleaned.slice(1) : title;
 }
-function modelPeriod(row: RelatedScorecardClaim): string {
+/** The model's period when the receipt records one; null says nothing, so nothing shows. */
+function modelPeriod(row: RelatedScorecardClaim): string | null {
   const receipt = [row.latest?.construction, ...(row.latest?.annotations ?? [])].join(' ');
   const years = [...new Set([...receipt.matchAll(/\bCY\s*(20\d{2})/gi)].map((match) => match[1]))];
-  return years.length === 1 ? `Calendar year ${years[0]}` : 'Period not recorded separately';
+  return years.length === 1 ? `Calendar year ${years[0]}` : null;
 }
 
-function comparisonReason(
+/**
+ * Why a comparison's two numbers can differ for reasons other than the
+ * model: a different baseline, a different period, a different measure.
+ * Each is one sentence; none when the comparison is like for like.
+ */
+export function differenceNotes(
   row: RelatedScorecardClaim,
   externalPeriod?: string,
   pePeriod?: string
-): string {
-  const notes = [row.latest?.construction, ...(row.latest?.annotations ?? [])].join(' ');
-  if (row.diagnosis?.title) {
-    return 'The source and model measure different concepts; see the explanation below.';
-  }
-  if (/eligib/.test(row.metric) && /claims.calibrated|claims.shaped/i.test(notes)) {
-    return 'PolicyEngine uses a claims-based proxy; the external source estimates eligibility.';
-  }
-  const baselineDiffers =
-    /LAST-IN-STACK|different (?:stacking )?baseline|baseline (?:definitions?|assumptions?) (?:differ|mismatch)/i.test(
-      notes
+): string[] {
+  const receipt = [row.latest?.construction, ...(row.latest?.annotations ?? [])].join(' ');
+  const status = row.latest?.status_effective ?? row.latest?.status;
+  const notes: string[] = [];
+  // A run stacked where JCT stacks the provision has JCT's baseline.
+  const stackedLikeSource = row.latest?.baseline?.startsWith('obbba_stack_below') ?? false;
+  if (isJctCtc(row) && !stackedLikeSource) {
+    notes.push(
+      'Different baselines: JCT scores this provision after the scheduled TCJA expiry and the bill’s provisions 1–3; PolicyEngine scores it against full current law, so interactions with personal exemptions, AMT and SALT differ.'
     );
-  const calendar = pePeriod ?? modelPeriod(row);
-  const fiscal = /fiscal|FY/i.test(externalPeriod ?? claimPeriod(row));
-  if (baselineDiffers && fiscal && calendar.startsWith('Calendar year')) {
-    return 'Different starting policies and timing: the source uses a fiscal year; PolicyEngine uses a calendar year.';
+  } else if (
+    (!isJctCtc(row) &&
+      /LAST-IN-STACK|different (?:stacking )?baseline|baseline (?:definitions?|assumptions?) (?:differ|mismatch)/i.test(
+        receipt
+      )) ||
+    (row.claim_baseline &&
+      row.latest?.baseline &&
+      row.claim_baseline !== row.latest.baseline &&
+      row.reform_framework !== 'baseline')
+  ) {
+    notes.push(
+      'Different baselines: the source and PolicyEngine score the change against different starting policies.'
+    );
   }
-  if (fiscal && calendar.startsWith('Calendar year')) {
-    return `Different timing: the source uses a fiscal year; PolicyEngine uses ${calendar.toLowerCase()}.`;
+  const published = externalPeriod ?? claimPeriod(row) ?? '';
+  const modelled = pePeriod ?? modelPeriod(row) ?? '';
+  const years = (text: string) => [...new Set(text.match(/\b20\d{2}\b/g) ?? [])];
+  const fiscal = /fiscal|\bFY\b/i.test(published);
+  const calendar = /calendar|annual/i.test(modelled);
+  const [publishedYear] = years(published);
+  const [modelledYear] = years(modelled);
+  const otherYear = !!publishedYear && !!modelledYear && publishedYear !== modelledYear;
+  if (otherYear || (fiscal && calendar)) {
+    const side = (kind: string, year?: string) => [kind, year].filter(Boolean).join(' ');
+    notes.push(
+      `Different periods: the source covers ${side(fiscal ? 'fiscal year' : 'year', publishedYear)}; PolicyEngine covers ${side(calendar ? 'calendar year' : 'year', modelledYear)}.`
+    );
   }
-  if (baselineDiffers) {
-    return 'The source and PolicyEngine start from different baseline policies.';
+  if (/average month/i.test(published) && calendar && row.unit_concept !== 'usd') {
+    notes.push(
+      'Different measures: the source counts an average month; PolicyEngine counts everyone over the year, which runs higher.'
+    );
   }
-  return 'The scorecard flags this comparison as approximate but does not specify the reason in a structured field. Check the source and calculation notes before interpreting the gap.';
+  if (row.diagnosis?.title) {
+    notes.push(`Different measures: ${row.diagnosis.title}`);
+  } else if (/eligib/.test(row.metric) && /claims.calibrated|claims.shaped/i.test(receipt)) {
+    notes.push(
+      'Different measures: PolicyEngine uses a claims-based proxy; the source estimates eligibility.'
+    );
+  }
+  if (notes.length === 0 && status === 'constructed') {
+    notes.push(
+      'The scorecard marks this comparison as approximate; read the source and calculation notes before reading the gap.'
+    );
+  }
+  return notes;
+}
+
+/** The notes under a comparison: why its numbers can differ, before the gap is read. */
+function DifferenceNotes({ notes }: { notes: string[] }) {
+  if (notes.length === 0) {
+    return null;
+  }
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: spacing.sm,
+        padding: `${spacing.sm} ${spacing.md}`,
+        borderRadius: 8,
+        background: colors.gray[50],
+        fontSize: typography.fontSize.xs,
+        lineHeight: 1.5,
+        color: colors.text.secondary,
+      }}
+    >
+      <IconInfoCircle size={14} aria-hidden style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {notes.map((note) => (
+          <span key={note}>{note}</span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function isJctCtc(row: RelatedScorecardClaim) {
@@ -157,6 +232,7 @@ function ComparisonContext({ row }: { row: RelatedScorecardClaim }) {
             ],
           ]);
   if (isJctCtc(row)) {
+    const period = modelPeriod(row);
     const reversed = row.latest?.construction?.includes('scored as expiry reversal');
     const stacked =
       row.latest?.baseline === 'obbba_stack_below__jcx_producer__obbba_child_tax_credit';
@@ -231,7 +307,7 @@ function ComparisonContext({ row }: { row: RelatedScorecardClaim }) {
           {reversed
             ? 'This run keeps other enacted tax changes in place while reversing the CTC expiry. JCT starts with only the bill’s tax-rate, standard-deduction and personal-exemption changes applied. Those different tax rules affect how much CTC families can receive.'
             : stacked
-              ? `This run adds the CTC changes after the bill’s tax-rate, standard-deduction and personal-exemption changes. Model period: ${modelPeriod(row)}; check the source year below.`
+              ? `This run adds the CTC changes after the bill’s tax-rate, standard-deduction and personal-exemption changes.${period ? ` Model period: ${period}; check the source year below.` : ''}`
               : 'The stored calculation does not provide enough detail to confirm the starting tax rules.'}
         </Text>
       </Stack>
@@ -301,132 +377,54 @@ const baselineDescriptions: Record<string, string[][]> = {
   ],
 };
 
-export function ScorecardClaimCard({
-  row,
-  presentation,
-  showDetails = false,
-}: {
-  showDetails?: boolean;
+/** How a claim reads in its row and dialog, when the caller words it better than the claim. */
+export interface ClaimPresentation {
+  title: string;
+  sourceName?: string;
+  externalPeriod?: string;
+  modelPeriod?: string;
+  externalValue?: string;
+  peValue?: string;
+  /** Where the claim sits on the scorecard, when not its registry of published claims. */
+  scorecardUrl?: string;
+}
+
+/** A scorecard claim, and how to present it. */
+export interface ScorecardClaimEntry {
   row: RelatedScorecardClaim;
-  presentation?: {
-    title: string;
-    sourceName?: string;
-    externalPeriod?: string;
-    modelPeriod?: string;
-    externalValue?: string;
-    peValue?: string;
-  };
-}) {
-  const latest = row.latest;
-  const status = latest?.status_effective ?? latest?.status ?? 'not_computed';
+  presentation?: ClaimPresentation;
+}
+
+function claimTitle(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
+  return (
+    presentation?.title ??
+    (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name))
+  );
+}
+
+/** The claim's own place on the scorecard, as close as the scorecard's links reach. */
+function claimScorecardUrl(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
+  return presentation?.scorecardUrl ?? scorecardEntryUrl('validation', row.country);
+}
+
+/** The source, and the geography when the claim records one: "Joint Committee on Taxation · US". */
+function claimWhere(row: RelatedScorecardClaim, presentation?: ClaimPresentation): string {
   const sourceName =
     presentation?.sourceName ?? sourceNames[row.source] ?? human(row.source).toUpperCase();
+  return [sourceName, row.geography && human(row.geography)].filter(Boolean).join(' · ');
+}
+
+/** Everything the scorecard records about one claim, for its detail dialog. */
+export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry) {
+  const latest = row.latest;
+  const status = latest?.status_effective ?? latest?.status ?? 'not_computed';
   const sourceUrl = safeUrl(row.url);
-  if (!showDetails) {
-    const title =
-      presentation?.title ??
-      (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name));
-    const published =
-      presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept);
-    const modeled = presentation?.peValue ?? claimValue(latest?.value, row.unit_concept);
-    const gap =
-      typeof latest?.value === 'number' &&
-      typeof row.external_value === 'number' &&
-      row.external_value !== 0
-        ? `${(((latest.value - row.external_value) / Math.abs(row.external_value)) * 100).toFixed(1)}%`
-        : '—';
-    return (
-      <div style={{ ...cardStyle, overflowX: 'auto' }}>
-        <table
-          style={{ width: '100%', borderCollapse: 'collapse', fontSize: typography.fontSize.sm }}
-        >
-          <thead>
-            <tr>
-              {['Comparison', 'Published estimate', 'PolicyEngine estimate', 'Gap'].map((label) => (
-                <th
-                  key={label}
-                  style={{
-                    padding: spacing.sm,
-                    textAlign: label === 'Comparison' ? 'left' : 'right',
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  {label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr style={{ borderTop: `1px solid ${colors.border.light}` }}>
-              <td style={{ padding: spacing.sm, width: '40%' }}>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button
-                      type="button"
-                      style={{
-                        ...linkStyle,
-                        background: 'none',
-                        border: 0,
-                        padding: 0,
-                        font: 'inherit',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {title}
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent
-                    aria-describedby={undefined}
-                    style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
-                  >
-                    <DialogTitle>
-                      {row.reform_framework === 'baseline'
-                        ? 'Baseline comparison'
-                        : 'Related reform comparison'}
-                    </DialogTitle>
-                    <ScorecardClaimCard row={row} presentation={presentation} showDetails />
-                  </DialogContent>
-                </Dialog>
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  {sourceName} · {human(row.geography)}
-                </Text>
-                {sourceUrl && (
-                  <a href={sourceUrl} target="_blank" rel="noreferrer" style={linkStyle}>
-                    Read source
-                  </a>
-                )}
-              </td>
-              <td style={{ padding: spacing.sm, textAlign: 'right' }}>
-                {published}
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  {presentation?.externalPeriod ?? claimPeriod(row)}
-                </Text>
-              </td>
-              <td style={{ padding: spacing.sm, textAlign: 'right' }}>
-                {modeled}
-                <Text style={{ ...detailStyle, margin: 0 }}>
-                  {presentation?.modelPeriod ?? modelPeriod(row)}
-                </Text>
-              </td>
-              <td style={{ padding: spacing.sm, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                {gap}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  }
 
   return (
     <Stack style={cardStyle}>
       <EvidenceHeader
-        title={
-          presentation?.title ??
-          (isJctCtc(row) ? 'CTC: $1,000 → $2,200, plus other rule changes' : displayTitle(row.name))
-        }
-        subtitle={`${sourceName} · ${human(row.geography)}`}
+        title={claimTitle(row, presentation)}
+        subtitle={claimWhere(row, presentation)}
         href={sourceUrl}
       />
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
@@ -458,7 +456,7 @@ export function ScorecardClaimCard({
         left={{
           label: 'Published estimate',
           value: presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept),
-          note: presentation?.externalPeriod ?? claimPeriod(row),
+          note: presentation?.externalPeriod ?? (claimPeriod(row) || undefined),
         }}
         right={{
           label:
@@ -466,17 +464,12 @@ export function ScorecardClaimCard({
               ? 'PolicyEngine estimate'
               : 'PolicyEngine scorecard estimate',
           value: presentation?.peValue ?? claimValue(latest?.value, row.unit_concept),
-          note: presentation?.modelPeriod ?? modelPeriod(row),
+          note: presentation?.modelPeriod ?? modelPeriod(row) ?? undefined,
         }}
       />
-      {status === 'constructed' &&
-        !isJctCtc(row) &&
-        !baselineDescriptions[`${row.source}:${row.source_column}`] && (
-          <Text style={{ ...detailStyle, margin: 0 }}>
-            {comparisonReason(row, presentation?.externalPeriod, presentation?.modelPeriod)}
-          </Text>
-        )}
-      {row.diagnosis?.title && <Text style={detailStyle}>{row.diagnosis.title}</Text>}
+      <DifferenceNotes
+        notes={differenceNotes(row, presentation?.externalPeriod, presentation?.modelPeriod)}
+      />
       <details style={detailStyle}>
         <summary style={summaryStyle}>
           {row.reform_framework === 'baseline'
@@ -552,172 +545,210 @@ export function ScorecardClaimCard({
   );
 }
 
-export function ScorecardComparisonResults({
-  result,
-  baselineContent,
-  reportContext,
-  feedStatus,
-}: {
-  result: ScorecardComparisonsResult;
-  baselineContent?: ReactNode;
-  reportContext?: ReactNode;
-  feedStatus?: string;
-}) {
-  const baseline = result.rows.filter((row) => row.reform_framework === 'baseline');
-  const reforms = result.rows.filter((row) => row.reform_framework !== 'baseline');
+/** One claim as a table row: what is compared, both values, and the gap. */
+function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
+  const sourceUrl = safeUrl(row.url);
+  const smallLink = { ...linkStyle, fontSize: typography.fontSize.xs };
+  // Only a period that is recorded; "not recorded" under every value says nothing.
+  const publishedNote = presentation?.externalPeriod ?? claimPeriod(row);
+  const peNote = presentation?.modelPeriod ?? modelPeriod(row);
+  const notes = differenceNotes(row, presentation?.externalPeriod, presentation?.modelPeriod);
   return (
-    <Stack style={{ gap: spacing.lg }}>
-      {[
-        {
-          title: 'Baseline comparisons',
-          description: 'How the model compares with published measures of existing programs.',
-          rows: baseline,
-        },
-        {
-          title: 'Related reform comparisons',
-          description:
-            'How PolicyEngine scored other published policy changes. These are not a validation of this report’s exact reform or cost.',
-          rows: reforms,
-        },
-      ].map(({ title, description, rows }) => (
-        <Stack key={title} style={panelStyle}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: spacing.md,
-            }}
-          >
-            <Text
-              style={{
-                fontWeight: typography.fontWeight.semibold,
-                fontSize: typography.fontSize.lg,
-                margin: 0,
-              }}
+    <>
+      <tr style={rowStyle}>
+        <th scope="row" style={labelCellStyle}>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button type="button" style={rowButtonStyle}>
+                {claimTitle(row, presentation)}
+              </button>
+            </DialogTrigger>
+            <DialogContent
+              aria-describedby={undefined}
+              style={{ maxWidth: 720, maxHeight: '85dvh', overflowY: 'auto' }}
             >
-              {title}
-            </Text>
-            <a href={SCORECARD_URL} target="_blank" rel="noreferrer" style={linkStyle}>
-              View scorecard <IconExternalLink size={16} aria-hidden="true" />
+              <DialogTitle>
+                {row.reform_framework === 'baseline'
+                  ? 'Baseline comparison'
+                  : 'Related reform comparison'}
+              </DialogTitle>
+              <ScorecardClaimDetails row={row} presentation={presentation} />
+            </DialogContent>
+          </Dialog>
+          <CellNote>{claimWhere(row, presentation)}</CellNote>
+          <CellNote>
+            {sourceUrl && (
+              <>
+                <a href={sourceUrl} target="_blank" rel="noreferrer" style={smallLink}>
+                  Read source
+                </a>
+                {' · '}
+              </>
+            )}
+            <a
+              href={claimScorecardUrl(row, presentation)}
+              target="_blank"
+              rel="noreferrer"
+              style={smallLink}
+            >
+              View in scorecard
             </a>
-          </div>
-          {title !== 'Baseline comparisons' && (
-            <Text style={{ ...detailStyle, margin: 0 }}>{description}</Text>
-          )}
-          {title === 'Related reform comparisons' && reportContext}
-          {title === 'Baseline comparisons' && baselineContent}
-          {feedStatus && <Text style={detailStyle}>{feedStatus}</Text>}
-          {rows.length ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1fr)',
-                gap: spacing.md,
-                alignItems: 'start',
-              }}
-            >
-              {rows.map((row) => (
-                <ScorecardClaimCard key={row.claim_id} row={row} />
-              ))}
-            </div>
-          ) : feedStatus || (title === 'Baseline comparisons' && baselineContent) ? null : (
-            <Text style={detailStyle}>
-              No linked {title === 'Related reform comparisons' ? 'reform' : 'baseline'} comparisons
-              were found in the published scorecard feed.
-            </Text>
-          )}
-        </Stack>
+          </CellNote>
+        </th>
+        <td style={numberCellStyle}>
+          {presentation?.externalValue ?? claimValue(row.external_value, row.unit_concept)}
+          {publishedNote && <CellNote>{publishedNote}</CellNote>}
+        </td>
+        <td style={numberCellStyle}>
+          {presentation?.peValue ?? claimValue(row.latest?.value, row.unit_concept)}
+          {peNote && <CellNote>{peNote}</CellNote>}
+        </td>
+        <td style={numberCellStyle}>{gapText(row.latest?.value, row.external_value)}</td>
+      </tr>
+      {notes.length > 0 && (
+        // Under the row it explains, across all four columns.
+        <tr>
+          <td colSpan={4} style={{ padding: `0 0 ${spacing.md}` }}>
+            <DifferenceNotes notes={notes} />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+/** Scorecard claims in one table, so their numbers line up. Each title opens its details. */
+export function ScorecardClaimTable({
+  label,
+  entries,
+}: {
+  label: string;
+  entries: ScorecardClaimEntry[];
+}) {
+  return (
+    <EvidenceTable label={label} columns={['Comparison', 'Published', 'PolicyEngine', 'Gap']}>
+      {entries.map((entry) => (
+        <ScorecardClaimRow
+          key={entry.row.claim_id}
+          row={entry.row}
+          presentation={entry.presentation}
+        />
       ))}
-      <details style={detailStyle}>
-        <summary style={summaryStyle}>Coverage and last update</summary>
-        <Text style={detailStyle}>
-          Coverage is limited to published claims with a recorded variable, program, parameter path
-          or shared source line item.{' '}
-          {result.unmappedCount > 0
-            ? `${result.unmappedCount} claims in this country have no usable mapping and were not matched. `
-            : ''}
-          Absence of a match does not establish that no external estimate exists.
-          {result.built ? ` Scorecard export: ${result.built}.` : ''}
-        </Text>
-      </details>
+    </EvidenceTable>
+  );
+}
+
+/** Published scorecard estimates of other policies that change the same rules. */
+export function RelatedReformEstimates({ rows }: { rows: RelatedScorecardClaim[] }) {
+  return (
+    <Stack style={{ gap: spacing.sm }}>
+      <ValidationSubheading>Related reforms</ValidationSubheading>
+      <ValidationNote>
+        Published scores of policies that change the same rules. They do not score this exact
+        reform.
+      </ValidationNote>
+      <ScorecardClaimTable label="Related reforms" entries={rows.map((row) => ({ row }))} />
     </Stack>
   );
 }
 
-export default function ScorecardComparisons({
-  countryId,
-  paths,
-  baselineContent,
-  reportContext,
-}: {
-  countryId: string;
-  paths: string[];
-  baselineContent?: ReactNode;
-  reportContext?: ReactNode;
-}) {
+/** What the scorecard match covers, collapsed. */
+export function ScorecardCoverage({ result }: { result: ScorecardComparisonsResult }) {
+  return (
+    <details style={detailStyle}>
+      <summary style={summaryStyle}>Coverage</summary>
+      <Text style={detailStyle}>
+        Matches cover scorecard claims with a recorded variable, program, parameter path or source
+        line item.
+        {result.unmappedCount > 0
+          ? ` ${result.unmappedCount} claims in this country have no usable mapping.`
+          : ''}
+        {result.built ? ` Scorecard export: ${result.built}.` : ''}
+      </Text>
+    </details>
+  );
+}
+
+/**
+ * The published scorecard claims linked to a reform: `undefined` while
+ * loading, `null` when the feed is unavailable.
+ */
+export type ScorecardComparisonsState = ScorecardComparisonsResult | null | undefined;
+
+const NO_COMPARISONS: ScorecardComparisonsResult = { built: null, rows: [], unmappedCount: 0 };
+
+/** The claims that score a policy change, apart from those that measure today's programs. */
+export function splitScorecardRows(result: ScorecardComparisonsState): {
+  reforms: RelatedScorecardClaim[];
+  baseline: RelatedScorecardClaim[];
+} {
+  const rows = result?.rows ?? [];
+  return {
+    reforms: rows.filter((row) => row.reform_framework !== 'baseline'),
+    baseline: rows.filter((row) => row.reform_framework === 'baseline'),
+  };
+}
+
+async function fetchScorecardComparisons(
+  countryId: string,
+  paths: string[],
+  signal: AbortSignal
+): Promise<ScorecardComparisonsResult> {
+  let variables: string[] = [];
+  // The committed dependency map is US-only. Never use it for another country.
+  if (countryId === 'us') {
+    try {
+      variables = variablesReachedByPaths(paths, await loadParameterDependencies()).map(
+        (entry) => entry.variable
+      );
+    } catch {
+      /* Recorded parameter paths still allow conservative matching. */
+    }
+  }
+  const response = await fetch('/api/scorecard-comparisons', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal,
+    body: JSON.stringify({ country: countryId, paths, variables }),
+  });
+  if (!response.ok) {
+    throw new Error('Scorecard unavailable');
+  }
+  return (await response.json()) as ScorecardComparisonsResult;
+}
+
+/** Fetches the published scorecard claims linked to a reform's parameter paths. */
+export function useScorecardComparisons(
+  countryId: string,
+  paths: string[]
+): ScorecardComparisonsState {
   const requestKey = JSON.stringify({ countryId, paths });
   const [state, setState] = useState<{ key: string; result: ScorecardComparisonsResult | null }>();
   useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
     const request = JSON.parse(requestKey) as { countryId: string; paths: string[] };
     if (!request.paths.length) {
-      return () => controller.abort();
+      return;
     }
-    (async () => {
-      let variables: string[] = [];
-      // The committed dependency map is US-only. Never use it for another country.
-      if (request.countryId === 'us') {
-        try {
-          variables = variablesReachedByPaths(request.paths, await loadParameterDependencies()).map(
-            (entry) => entry.variable
-          );
-        } catch {
-          /* Recorded parameter paths still allow conservative matching. */
+    let cancelled = false;
+    const controller = new AbortController();
+    fetchScorecardComparisons(request.countryId, request.paths, controller.signal)
+      .then((result) => {
+        if (!cancelled) {
+          setState({ key: requestKey, result });
         }
-      }
-      const response = await fetch('/api/scorecard-comparisons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({ country: request.countryId, paths: request.paths, variables }),
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setState({ key: requestKey, result: null });
+        }
       });
-      if (!response.ok) {
-        throw new Error('Scorecard unavailable');
-      }
-      const result = (await response.json()) as ScorecardComparisonsResult;
-      if (!cancelled) {
-        setState({ key: requestKey, result });
-      }
-    })().catch(() => {
-      if (!cancelled) {
-        setState({ key: requestKey, result: null });
-      }
-    });
     return () => {
       cancelled = true;
       controller.abort();
     };
   }, [requestKey]);
   if (!paths.length) {
-    return <Text>No parameter changes are available to match to scorecard comparisons.</Text>;
+    return NO_COMPARISONS;
   }
-  const pending = state?.key !== requestKey;
-  return (
-    <ScorecardComparisonResults
-      baselineContent={baselineContent}
-      reportContext={reportContext}
-      result={
-        !pending && state?.result ? state.result : { built: null, rows: [], unmappedCount: 0 }
-      }
-      feedStatus={
-        pending
-          ? 'Loading published scorecard comparisons…'
-          : state?.result === null
-            ? 'The published comparison feed is temporarily unavailable. Existing baseline evidence remains available below.'
-            : undefined
-      }
-    />
-  );
+  return state?.key === requestKey ? state.result : undefined;
 }

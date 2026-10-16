@@ -25,6 +25,42 @@ export interface ReportMetric {
 }
 
 /**
+ * The overview's winners figure: the share of people whose net income
+ * rises, or the share whose net income falls when more people lose than
+ * gain. The winner shares count people, not households: the API weights
+ * them by the people in each household.
+ */
+export function winnerShareMetric(gains: number, losses: number): ReportMetric {
+  const share = (value: number) => `${(value * 100).toFixed(1)}%`;
+  if (!Number.isFinite(gains)) {
+    return { value: 'Unavailable', label: 'People gaining income' };
+  }
+  if (Number.isFinite(losses) && losses > gains) {
+    return { value: share(losses), label: 'People losing income' };
+  }
+  return { value: share(gains), label: 'People gaining income' };
+}
+
+/**
+ * Whether a report leads with state revenue: a state reform (every
+ * provision a state parameter) run on part of the country. A federal
+ * reform run on one state leads with its full budget effect there; its
+ * state revenue change is mostly nil.
+ */
+export function leadsWithStateRevenue(
+  region: string | undefined,
+  provisions: Array<{ path: string }>
+): boolean {
+  const subnational =
+    !!region && (region.startsWith('state/') || region.startsWith('congressional_district/'));
+  return (
+    subnational &&
+    provisions.length > 0 &&
+    provisions.every((provision) => /^gov\.(contrib\.)?states\./.test(provision.path))
+  );
+}
+
+/**
  * The overview's headline numbers from a completed society-wide run. A
  * run on one state's data leads with that state's revenue, the figure
  * state fiscal notes and the tracker report, rather than the combined
@@ -37,6 +73,7 @@ export function reportMetrics(
 ): ReportMetric[] {
   const distribution = output.intra_decile.all;
   const gains = distribution['Gain more than 5%'] + distribution['Gain less than 5%'];
+  const losses = distribution['Lose more than 5%'] + distribution['Lose less than 5%'];
   const budget = stateRevenue
     ? output.budget.state_tax_revenue_impact
     : output.budget.budgetary_impact;
@@ -64,10 +101,7 @@ export function reportMetrics(
                 ? 'Annual government savings'
                 : 'Annual budget change',
         },
-    {
-      value: Number.isFinite(gains) ? `${(gains * 100).toFixed(1)}%` : 'Unavailable',
-      label: 'Households gaining',
-    },
+    winnerShareMetric(gains, losses),
     {
       value: povertyChange(output.poverty.poverty.child),
       label: 'Child poverty · relative change',

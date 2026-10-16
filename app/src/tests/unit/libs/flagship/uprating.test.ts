@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { FOREVER } from '@/constants';
+import { provisionAdjusts } from '@/libs/draftReform';
 import {
   alreadyGrows,
   canGrow,
@@ -79,12 +80,59 @@ describe('grownIntervals', () => {
   });
 });
 
+describe('grownIntervals past the last modelled year', () => {
+  // Current law projects the amount to 2031, past the model's last year (2028).
+  const LONG_VALUES = {
+    '2026-01-01': 1700,
+    '2027-01-01': 1800,
+    '2029-01-01': 1900,
+    '2030-01-01': 2000,
+    '2031-01-01': 2100,
+  };
+  const LONG = param('currency-USD', LONG_VALUES);
+  const BY_HUNDREDS = { roundTo: 100, round: 'down' as const };
+
+  test('given a series that runs past the last modelled year then the value grows to its end', () => {
+    const intervals = grownIntervals(
+      3400,
+      2026,
+      2028,
+      'current_law',
+      LONG,
+      PARAMETERS,
+      growthTiming(2026),
+      BY_HUNDREDS
+    );
+
+    // A budget window can reach past 2028: those years grow too, not hold.
+    expect(intervals.at(-1)).toEqual({ startDate: '2031-01-01', endDate: FOREVER, value: 4200 });
+  });
+
+  test("given current law's rate on current law's own value then it is current law in every year", () => {
+    // Set from 2029, after the model's last year, at current law's $1,900.
+    const intervals = grownIntervals(
+      1900,
+      2029,
+      2028,
+      'current_law',
+      LONG,
+      PARAMETERS,
+      growthTiming(2029),
+      BY_HUNDREDS
+    );
+
+    expect(provisionAdjusts({ value: 1900, baselineValue: 1900, intervals }, LONG_VALUES)).toBe(
+      false
+    );
+  });
+});
+
 describe('growthOf', () => {
   const indexed = param('currency-USD', { ...INDEXED_VALUES, '2029-01-01': 17400 });
 
-  test("given a new value on an amount current law indexes then current law's rate", () => {
-    expect(growthOf(undefined, indexed)).toBe('current_law');
-    expect(growthOf({ value: 17400, baselineValue: 17400 }, indexed)).toBe('current_law');
+  test('given a new value on an amount current law indexes then none, until Indexed is chosen', () => {
+    expect(growthOf(undefined, indexed)).toBe('fixed');
+    expect(growthOf({ value: 17400, baselineValue: 17400 }, indexed)).toBe('fixed');
   });
 
   test('given an amount current law holds then none', () => {
@@ -182,6 +230,7 @@ describe('rounding', () => {
       { roundTo: 100, round: 'down' }
     ).map((interval) => interval.value);
 
-    expect(values).toEqual([1005, 1000]);
+    // The index runs to 2028, so the value grows to then, past the model's 2027.
+    expect(values).toEqual([1005, 1000, 1000]);
   });
 });

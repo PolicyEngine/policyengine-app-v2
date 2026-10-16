@@ -171,6 +171,25 @@ export const mockPendingSocietyWideStatusWithMessage = (
 });
 
 /**
+ * Mock CalcStatus for a society-wide calculation that failed on the server
+ */
+export const mockErrorSocietyWideStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
+  status: 'error',
+  error: {
+    code: 'SOCIETY_WIDE_CALC_ERROR',
+    message: 'Simulation failed',
+    retryable: true,
+  },
+  metadata: {
+    calcId: TEST_CALC_IDS.REPORT_1,
+    calcType: 'societyWide',
+    targetType: 'report',
+    startedAt: Date.now(),
+  },
+  ...overrides,
+});
+
+/**
  * Mock query key for calculation
  */
 export const mockCalculationQueryKey = (calcId: string) => ['calculation', calcId];

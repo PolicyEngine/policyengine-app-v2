@@ -6,6 +6,12 @@ on:
       - main
       - master
 
+# A new push to a PR replaces its earlier run: the old one is cancelled
+# rather than left in the org's shared runner queue.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   guard-app-dir:
     name: Guard app/ directory

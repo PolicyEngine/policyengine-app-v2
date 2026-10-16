@@ -55,6 +55,25 @@ export const mockCompleteSocietyWideStatus = (overrides?: Partial<CalcStatus>): 
 });
 
 /**
+ * Mock CalcStatus for a society-wide report run that failed on the server
+ */
+export const mockErrorSocietyWideStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
+  status: 'error',
+  error: {
+    code: 'SOCIETY_WIDE_CALC_ERROR',
+    message: 'Simulation failed',
+    retryable: true,
+  },
+  metadata: {
+    calcId: TEST_CALC_IDS.REPORT_123,
+    targetType: 'report',
+    calcType: 'societyWide',
+    startedAt: Date.now(),
+  },
+  ...overrides,
+});
+
+/**
  * Mock complete CalcStatus for household simulation
  */
 export const mockCompleteHouseholdStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({

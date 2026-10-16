@@ -17,8 +17,8 @@ export interface SupporterCardProps {
 export default function SupporterCard({ supporter, projects }: SupporterCardProps) {
   return (
     <div className="tw:mb-4xl tw:p-2xl tw:border tw:border-border-light tw:rounded-element tw:shadow-[0_2px_4px_rgba(0,0,0,0.05)]">
-      <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-lg tw:mb-2xl">
-        {supporter.logoUrl && (
+      <div className="tw:flex tw:flex-col tw:sm:flex-row tw:sm:items-center tw:gap-lg tw:mb-2xl">
+        {supporter.logoUrl ? (
           <a
             href={supporter.websiteUrl}
             target="_blank"
@@ -32,8 +32,11 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
               className="tw:w-[150px] tw:sm:w-[200px] tw:h-[60px] tw:sm:h-[80px] tw:object-contain tw:object-left-center"
             />
           </a>
+        ) : (
+          // Keep the text column aligned with cards that have a logo.
+          <div aria-hidden="true" className="tw:hidden tw:sm:block tw:shrink-0 tw:w-[200px]" />
         )}
-        <p className="tw:text-base tw:leading-relaxed">
+        <p className="tw:flex-1 tw:min-w-0 tw:text-base tw:leading-relaxed">
           {supporter.websiteUrl ? (
             <a
               href={supporter.websiteUrl}

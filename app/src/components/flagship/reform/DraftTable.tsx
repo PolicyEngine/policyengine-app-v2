@@ -7,8 +7,10 @@ import {
   DraftReform,
   draftYear,
   isEditableValue,
+  isUnlimitedValue,
   provisionChanged,
   provisionIntervals,
+  provisionValueInYear,
   provisionVariesOverTime,
   removeDraftProvision,
 } from '@/libs/draftReform';
@@ -19,9 +21,10 @@ import { growthOf, growthPhrase, setValueFromYear } from '@/libs/flagship/uprati
 import { getDateRange } from '@/libs/metadataUtils';
 import { selectAddableParameterPaths } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionDetails from './ProvisionDetails';
-import ValueInput from './ValueInput';
+import ValueInput, { NO_LIMIT } from './ValueInput';
 
 interface DraftRow {
   /** The breakdown's path, or the lone parameter's own */
@@ -31,10 +34,17 @@ interface DraftRow {
 }
 
 // Narrow tables drop the current-law and when columns; the row's
-// details still have both.
-const ROW_GRID =
-  'tw:grid tw:items-center tw:gap-3 tw:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_136px_64px]';
-const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
+// details still have both. A phone's table puts the new value on a line
+// of its own under the name, so the name keeps the row's width.
+export const ROW_GRID =
+  'tw:grid tw:items-center tw:gap-3 tw:@max-[480px]:gap-y-2 tw:grid-cols-[minmax(0,1fr)_auto] tw:@min-[480px]:grid-cols-[minmax(0,1fr)_150px_64px] tw:@min-[640px]:grid-cols-[minmax(0,1fr)_110px_150px_136px_64px]';
+export const WIDE_ONLY = 'tw:hidden tw:@min-[640px]:block';
+/** The value cell, under the name across the row on a phone's table. */
+export const VALUE_CELL = 'tw:min-w-0 tw:@max-[480px]:col-span-2 tw:@max-[480px]:row-start-2';
+/** The row's own buttons, beside the name on a phone's table, a fingertip each. */
+export const ACTIONS_CELL = 'tw:@max-[480px]:col-start-2 tw:@max-[480px]:row-start-1';
+const ROW_BUTTON =
+  'tw:@max-[480px]:size-10 tw:@max-[480px]:items-center tw:@max-[480px]:justify-center';
 
 /** One line, cut with an ellipsis: list values run to dozens of names. */
 const truncate: React.CSSProperties = {
@@ -95,6 +105,19 @@ const summarize = (
   return summarizeIntervals(intervals, (value) => formatValue(value, provision.unit));
 };
 
+/**
+ * A change that starts in another year than the report's: the row's box
+ * edits from the report year, so it would split the change in two. Its
+ * summary opens the editor, which keeps the start. A single value with
+ * no dates starts in the current year.
+ */
+const startsInOtherYear = (provision: DraftProvision, year: number) => {
+  const start = provisionChanged(provision)
+    ? provisionIntervals(provision)[0]?.startDate
+    : undefined;
+  return !!start && Number(start.slice(0, 4)) !== year;
+};
+
 /** A row's value as text that opens the row: a schedule, or a breakdown's changes. */
 function SummaryButton({
   children,
@@ -138,7 +161,14 @@ function SummaryButton({
  * and when it applies. A pick opens its row — one open at a time — to
  * the ways of setting its value, with the value focused.
  */
-export default function DraftTable({ draft }: { draft: DraftReform }) {
+export default function DraftTable({
+  draft,
+  addRow,
+}: {
+  draft: DraftReform;
+  /** The table's last row: where the next parameter is added. */
+  addRow?: React.ReactNode;
+}) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draftable = useSelector(selectAddableParameterPaths);
   const lastYear = Number(useSelector(getDateRange).maxDate.slice(0, 4));
@@ -148,6 +178,21 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
   const tableRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<string | null>(null);
   const year = draftYear(draft);
+  // A row reads as the report year stands, as its details do: current law
+  // then, and the reform's value then — not the values on the day it was added.
+  const currentLawInYear = (provision: DraftProvision) => {
+    const values = parameters?.[provision.path]?.values;
+    const value = values
+      ? new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`)
+      : undefined;
+    return value ?? provision.baselineValue;
+  };
+  const valueInYear = (provision: DraftProvision) =>
+    (provisionChanged(provision) ? provisionValueInYear(provision, year) : null) ??
+    currentLawInYear(provision);
+  // A value with no limit reads as such, not as the text "Infinity".
+  const formatRowValue = (value: unknown, unit: string | null) =>
+    isUnlimitedValue(value) ? NO_LIMIT : formatValue(value, unit);
 
   // Groups depend only on which parameters are in the draft — not on
   // their values — so typing a value never re-scans the index.
@@ -177,6 +222,27 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
 
   const toggle = (key: string, open?: boolean) =>
     setOpenKey((current) => ((open ?? current !== key) ? key : null));
+
+  /**
+   * A click anywhere on a row opens or closes it — its name, its current
+   * law, the space between — except on a control, which keeps its own job:
+   * the value box, the switch, the summary, the row's own buttons.
+   */
+  const onRowClick = (key: string) => (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(
+        'button, input, select, textarea, a, label, [role="switch"], [role="combobox"]'
+      )
+    ) {
+      return;
+    }
+    // A drag to select text is not a click on the row.
+    if (window.getSelection()?.toString()) {
+      return;
+    }
+    toggle(key);
+  };
 
   // Focus the pending pick's value, selected so typing replaces it — or
   // the switch a yes/no parameter shows instead. False while its control
@@ -252,9 +318,11 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
         <span className={WIDE_ONLY} style={headerCell}>
           Current law
         </span>
-        <span style={headerCell}>New value</span>
+        <span className="tw:@max-[480px]:hidden" style={headerCell}>
+          New value
+        </span>
         <span className={WIDE_ONLY} style={headerCell}>
-          When
+          Effective
         </span>
         <span />
       </div>
@@ -269,7 +337,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
             color: colors.text.secondary,
           }}
         >
-          No parameters yet — add one above.
+          No parameters yet.
         </p>
       )}
 
@@ -293,12 +361,15 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
         const when = whens.length === 1 ? whens[0] : whens.length > 1 ? 'mixed dates' : '';
         const whenTitle =
           whens.length === 1 ? (changed.find((c) => c.when === when)?.whenFull ?? when) : when;
-        const baselineText = lone ? formatValue(lone.baselineValue, lone.unit) : '';
+        const baselineText = lone ? formatRowValue(currentLawInYear(lone), lone.unit) : '';
 
         return (
           <Fragment key={row.key}>
+            {/* A mouse shortcut: the name and the arrow are the row's keyboard controls. */}
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
-              className={ROW_GRID}
+              className={`${ROW_GRID} tw:cursor-pointer ${open ? '' : 'tw:hover:bg-gray-50'}`}
+              onClick={onRowClick(row.key)}
               style={{
                 padding: `${spacing.sm} ${spacing.lg}`,
                 borderTop: index > 0 ? `1px solid ${colors.border.light}` : undefined,
@@ -335,23 +406,31 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                 </span>
               </button>
 
-              {/* Open, the row is a heading: its details below show every value. */}
+              {/* Open, the row keeps its columns, read-only: the details below edit them. */}
               {lone ? (
                 <>
                   <span
                     className={WIDE_ONLY}
-                    title={open ? undefined : baselineText}
+                    title={baselineText}
                     style={{
                       ...truncate,
                       fontSize: typography.fontSize.sm,
                       color: colors.text.secondary,
                     }}
                   >
-                    {open ? null : baselineText}
+                    {baselineText}
                   </span>
 
-                  <div style={{ minWidth: 0 }}>
-                    {open ? null : !isEditableValue(lone.baselineValue) ? (
+                  <div className={VALUE_CELL}>
+                    {open ? (
+                      <SummaryButton
+                        onClick={() => toggle(row.key, true)}
+                        title={changed[0]?.value}
+                        accent={changed.length > 0}
+                      >
+                        {changed[0]?.value || formatRowValue(valueInYear(lone), lone.unit)}
+                      </SummaryButton>
+                    ) : !isEditableValue(lone.baselineValue) ? (
                       // Only numbers and switches can be offered; this one came
                       // from an older saved reform.
                       <span
@@ -366,9 +445,10 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                         Can&apos;t be changed here
                       </span>
                     ) : // A value that grows still edits in place: the box sets
-                    // where it starts.
+                    // where it starts — unless it starts in another year.
                     (!provisionVariesOverTime(lone) ||
                         growthPhrase(lone.growth, draft.countryId)) &&
+                      !startsInOtherYear(lone, year) &&
                       param ? (
                       <div
                         data-path={lone.path}
@@ -386,7 +466,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                       >
                         <ValueInput
                           param={param}
-                          value={lone.value}
+                          value={valueInYear(lone)}
                           onChange={(next) =>
                             setValueFromYear({
                               countryId: draft.countryId,
@@ -409,14 +489,16 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                         title={changed[0]?.value}
                         accent={changed.length > 0}
                       >
-                        {changed[0]?.value || formatValue(lone.value, lone.unit)}
+                        {changed[0]?.value || formatRowValue(valueInYear(lone), lone.unit)}
                       </SummaryButton>
                     )}
                   </div>
                 </>
               ) : (
-                <div className="tw:@min-[640px]:col-span-2" style={{ minWidth: 0 }}>
-                  {open ? null : (
+                <>
+                  {/* A breakdown has a value for each member: its details list them. */}
+                  <span className={WIDE_ONLY} />
+                  <div className={VALUE_CELL}>
                     <SummaryButton
                       onClick={() => toggle(row.key, true)}
                       title={groupSummary || undefined}
@@ -424,20 +506,23 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                     >
                       {groupSummary || 'No values changed yet'}
                     </SummaryButton>
-                  )}
-                </div>
+                  </div>
+                </>
               )}
 
               <span className={WIDE_ONLY}>
-                {open || !when ? null : <Chip title={whenTitle}>{when}</Chip>}
+                {when ? <Chip title={whenTitle}>{when}</Chip> : null}
               </span>
 
-              <span style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <span
+                className={ACTIONS_CELL}
+                style={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}
+              >
                 <button
                   type="button"
                   onClick={() => toggle(row.key)}
                   aria-label={open ? `Hide ${name} details` : `Show ${name} details`}
-                  className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100"
+                  className={`tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100 ${ROW_BUTTON}`}
                   style={{
                     display: 'inline-flex',
                     padding: spacing.xs,
@@ -458,7 +543,7 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
                   type="button"
                   onClick={() => row.provisions.forEach((p) => removeDraftProvision(p.path))}
                   aria-label={`Remove ${name}`}
-                  className="tw:cursor-pointer tw:text-gray-400 tw:hover:bg-gray-100 tw:hover:text-gray-700"
+                  className={`tw:cursor-pointer tw:text-gray-400 tw:hover:bg-gray-100 tw:hover:text-gray-700 ${ROW_BUTTON}`}
                   style={{
                     display: 'inline-flex',
                     padding: spacing.xs,
@@ -495,6 +580,19 @@ export default function DraftTable({ draft }: { draft: DraftReform }) {
           </Fragment>
         );
       })}
+
+      {addRow && (
+        <div
+          style={{
+            padding: `${spacing.md} ${spacing.lg}`,
+            borderTop: `1px solid ${colors.border.light}`,
+            borderRadius: `0 0 ${spacing.radius.feature} ${spacing.radius.feature}`,
+            background: colors.gray[50],
+          }}
+        >
+          {addRow}
+        </div>
+      )}
     </div>
   );
 }

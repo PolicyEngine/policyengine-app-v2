@@ -1,5 +1,111 @@
 [
   {
+    "title": "Universities UK's £6bn National Insurance proposal",
+    "outlet": "Tax Policy Associates",
+    "date": "2026-09-10",
+    "url": "https://taxpolicy.org.uk/2026/09/10/universities-uk-national-insurance-proposal/",
+    "image": "tpa-universities-uk-ni.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "Nationalisation is not a growth strategy",
+    "outlet": "CapX",
+    "date": "2026-09-01",
+    "url": "https://capx.co/nationalisation-is-not-a-growth-strategy",
+    "image": "capx-nationalisation-growth.jpg",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "Mansion tax valuation: the agent's guide",
+    "outlet": "LonRes",
+    "date": "2026-08-27",
+    "url": "https://lonres.com/public/mansion-tax-valuation-the-agents-guide-lonres/",
+    "image": "lonres-mansion-tax-valuation.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "'We're not scroungers – we need it': PIP claimants slam Reform's plan to axe benefits",
+    "outlet": "The Independent",
+    "date": "2026-08-18",
+    "url": "https://www.independent.co.uk/news/uk/home-news/reform-benefits-policy-pip-anger-b3034324.html",
+    "image": "independent-reform-pip-headline.jpg",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "PIP benefits face major overhaul as claimants fear losing vital financial support",
+    "outlet": "Econostrum",
+    "date": "2026-08-18",
+    "url": "https://en.econostrum.info/uk/pip-benefits-face-major-overhaul/",
+    "image": "econostrum-pip-overhaul.jpg",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "The good work effect: how high-quality work can lead a jobs recovery",
+    "outlet": "New Economics Foundation",
+    "date": "2026-07-28",
+    "url": "https://neweconomics.org/2026/07/the-good-work-effect",
+    "image": "nef-good-work-effect-cover.jpg",
+    "tags": ["uk", "policy"],
+    "featured": true
+  },
+  {
+    "title": "Londoners face £1,000 property tax rise as Andy Burnham to become PM",
+    "outlet": "The Standard",
+    "date": "2026-07-17",
+    "url": "https://www.standard.co.uk/news/politics/andy-burnham-tax-london-land-value-council-stamp-duty-b1286586.html",
+    "image": "standard-burnham-property-tax.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "What would a land value tax actually do?",
+    "outlet": "Tax Policy Associates",
+    "date": "2026-07-12",
+    "url": "https://taxpolicy.org.uk/2026/07/12/what-would-a-land-value-tax-actually-do/",
+    "image": "tpa-land-value-tax.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "Burnham's land value tax: who wins and loses",
+    "outlet": "Money Meister",
+    "date": "2026-07-10",
+    "url": "https://www.moneymeister.co.uk/blog/andy-burnham-land-value-tax-uk",
+    "image": "moneymeister-burnham-lvt.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "Annual report and accounts 2025-26",
+    "outlet": "Office for Budget Responsibility",
+    "date": "2026-06-25",
+    "url": "https://assets.publishing.service.gov.uk/media/6a3cfb3c33bc5beefd3c49d2/E03598728_OBR_ARA_25-26_Accessible.pdf",
+    "image": "obr-annual-report-2025-26-cover.jpg",
+    "tags": ["uk", "policy"],
+    "featured": true
+  },
+  {
+    "title": "Andy Burnham's property tax raids set to leave hundreds of thousands of Britons £1,000 worse off",
+    "outlet": "GB News",
+    "date": "2026-06-23",
+    "url": "https://www.gbnews.com/money/andy-burnham-property-tax-london",
+    "image": "gbnews-burnham-property-tax.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "Burnham's £1,000 tax shock: London homeowners face land levy battle",
+    "outlet": "London Property News",
+    "date": "2026-06-23",
+    "url": "https://londonlovesproperty.com/burnhams-1000-tax-shock-london-homeowners-face-land-levy-battle/",
+    "image": "londonlovesproperty-burnham-land-levy.jpg",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "A modern system for fair rents: how to make private renting affordable",
+    "outlet": "New Economics Foundation",
+    "date": "2026-05-13",
+    "url": "https://new-economicsf.files.svdcdn.com/production/files/A-modern-system-for-fair-rents.pdf?dm=1778670498",
+    "image": "nef-fair-rents.jpg",
+    "tags": ["uk", "policy"]
+  },
+  {
     "title": "Distribution of Personal Income",
     "outlet": "U.S. Bureau of Economic Analysis",
     "date": "2026-06-16",
@@ -32,8 +138,7 @@
     "date": "2026-07-03",
     "url": "https://www.smf.co.uk/commentary_podcasts/ai-looks-set-to-squeeze-junior-hiring-the-fix-already-exists-in-law/",
     "image": "smf-ai-junior-hiring-ni.jpg",
-    "tags": ["uk", "tax"],
-    "featured": true
+    "tags": ["uk", "tax"]
   },
   {
     "title": "How replacing council tax with a flat land value tax would affect households in the UK",
@@ -142,8 +247,7 @@
     "date": "2026-02-17",
     "url": "https://arxiv.org/pdf/2602.15607",
     "image": "arxiv-carbon-budget.webp",
-    "tags": ["uk", "policy"],
-    "featured": true
+    "tags": ["uk", "policy"]
   },
   {
     "title": "Informing policy using micro-simulations",

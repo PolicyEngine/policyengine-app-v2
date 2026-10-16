@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { getFlagshipReportStore } from '@/api/flagshipReportStore';
+import { findReportRecordByLink } from '@/api/flagshipReportStore';
+import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
 import {
   isLiveValidationSettled,
   LiveValidation,
@@ -16,16 +17,19 @@ export interface ReportValidationState {
 }
 
 /**
- * Pins the live validation to the report's store record the first time
- * both checks settle, and reports drift between that pin and what the
- * checks see now. Best-effort: a report without a store record (the
- * central store was unavailable at run time) simply never pins.
+ * Pins the live validation to the record the report's link names the
+ * first time both checks settle, and reports drift between that pin and
+ * what the checks see now. Only the session that ran the report pins;
+ * anyone else sees the owner's pin (`sharedSnapshot`), when there is one.
+ * Best-effort: a report without a record (storage was unavailable at run
+ * time) simply never pins.
  */
 export function useReportValidationSnapshot(
-  userId: string,
-  apiReportId: string | undefined,
-  live: LiveValidation
+  userReportId: string | undefined,
+  live: LiveValidation,
+  sharedSnapshot: ReportValidationSnapshot | null = null
 ): ReportValidationState {
+  const { store } = useFlagshipReportStore();
   const [snapshot, setSnapshot] = useState<ReportValidationSnapshot | null>(null);
   const [recordId, setRecordId] = useState<string | null>(null);
   const pinned = useRef(false);
@@ -35,11 +39,10 @@ export function useReportValidationSnapshot(
     pinned.current = false;
     setSnapshot(null);
     setRecordId(null);
-    if (!apiReportId) {
+    if (!userReportId) {
       return;
     }
-    getFlagshipReportStore()
-      .findByApiReportId(userId, apiReportId)
+    findReportRecordByLink(store, userReportId)
       .then((record) => {
         if (cancelled || !record) {
           return;
@@ -56,7 +59,7 @@ export function useReportValidationSnapshot(
     return () => {
       cancelled = true;
     };
-  }, [userId, apiReportId]);
+  }, [store, userReportId]);
 
   const settled = isLiveValidationSettled(live);
   useEffect(() => {
@@ -65,7 +68,7 @@ export function useReportValidationSnapshot(
     }
     pinned.current = true;
     const fresh = snapshotFromLive(live);
-    getFlagshipReportStore()
+    store
       .saveValidation(recordId, fresh)
       .then((record) => setSnapshot(record.validation ?? fresh))
       .catch(() => {
@@ -74,5 +77,6 @@ export function useReportValidationSnapshot(
     // `live` is read once at pin time; re-running on its identity would re-pin.
   }, [recordId, settled]);
 
-  return { snapshot, drift: snapshot ? validationDrift(snapshot, live) : [] };
+  const shown = snapshot ?? sharedSnapshot;
+  return { snapshot: shown, drift: shown ? validationDrift(shown, live) : [] };
 }

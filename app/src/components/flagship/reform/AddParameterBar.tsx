@@ -3,10 +3,12 @@ import { IconListTree, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import PolicyBrowser from '@/components/flagship/policyBrowser/PolicyBrowser';
-import { Spinner } from '@/components/ui';
+import ParametersStatus from '@/components/flagship/reform/ParametersStatus';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useDraftReform } from '@/libs/draftReform';
+import { PHONE_QUERY } from '@/libs/flagship/viewport';
 import { getStateLabels } from '@/libs/metadataUtils';
 import {
   ParameterSearchEntry,
@@ -24,9 +26,25 @@ const SEARCH_PLACEHOLDERS: Record<string, string> = {
   uk: 'Add a parameter — search by name, e.g. personal allowance',
 };
 
+/** Once the reform has a parameter, the bar says a reform takes more than one. */
+const ANOTHER_PLACEHOLDERS: Record<string, string> = {
+  us: 'Add another parameter — search by name, e.g. earned income tax credit',
+  uk: 'Add another parameter — search by name, e.g. child benefit',
+};
+
+/** A phone's bar has no room for the example, so it only asks. */
+const PHONE_PLACEHOLDER = 'Add a parameter';
+const PHONE_ANOTHER_PLACEHOLDER = 'Add another parameter';
+
 interface AddParameterBarProps {
   onPick: (entry: ParameterSearchEntry) => void;
   autoFocus?: boolean;
+  /**
+   * The bar as the reform table's last row: it asks for another
+   * parameter, and its results and the policy tree open in the page's
+   * flow under it — scrolled into view — rather than over the page.
+   */
+  inTable?: boolean;
 }
 
 /**
@@ -35,34 +53,11 @@ interface AddParameterBarProps {
  * out of the way the moment a parameter is picked — the reform below
  * stays the page.
  */
-/**
- * The parameter index takes a moment on the US tree. The page shows
- * this once, in the add bar's own footprint, so nothing jumps when the
- * bar and the reform below it arrive.
- */
-export function ParametersLoading() {
-  return (
-    <div
-      aria-live="polite"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.sm,
-        padding: `${spacing.lg} ${spacing.xl}`,
-        border: `1px dashed ${colors.border.medium}`,
-        borderRadius: spacing.radius.feature,
-        fontSize: typography.fontSize.sm,
-        color: colors.text.secondary,
-      }}
-    >
-      <Spinner size="sm" />
-      Loading parameters…
-    </div>
-  );
-}
-
-export default function AddParameterBar({ onPick, autoFocus = false }: AddParameterBarProps) {
+export default function AddParameterBar({
+  onPick,
+  autoFocus = false,
+  inTable = false,
+}: AddParameterBarProps) {
   const countryId = useCurrentCountry();
   const entries = useSelector(selectParameterSearchEntries);
   const clusters = useSelector(selectConceptClusters);
@@ -77,6 +72,13 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
   const draftPaths = new Set(
     draft?.countryId === countryId ? draft.provisions.map((p) => p.path) : []
   );
+
+  const phone = useMediaQuery(PHONE_QUERY);
+  const placeholder = phone
+    ? inTable
+      ? PHONE_ANOTHER_PLACEHOLDER
+      : PHONE_PLACEHOLDER
+    : (inTable ? ANOTHER_PLACEHOLDERS : SEARCH_PLACEHOLDERS)[countryId];
 
   const containerRef = useRef<HTMLDivElement>(null);
   // Results show while the bar is in use; a click elsewhere puts them away.
@@ -115,8 +117,31 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
     setBrowseOpen(false);
   };
 
+  // At the foot of the reform, what opens under the bar — results, the
+  // policy tree — would start below the screen. When the bar grows, bring
+  // it up so what opened has the room. Results arrive a moment after the
+  // typing (the search runs in the background), so the growth, not the
+  // keystroke, is the cue.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!inTable || !container || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    let height = container.offsetHeight;
+    const observer = new ResizeObserver(() => {
+      const next = container.offsetHeight;
+      if (next > height + 40) {
+        container.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+      }
+      height = next;
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [inTable, entries.length]);
+
+  // Until the index is in, the bar's place holds its loading (or failed) state.
   if (entries.length === 0) {
-    return <ParametersLoading />;
+    return <ParametersStatus />;
   }
 
   return (
@@ -133,7 +158,9 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
           setActive(false);
         }
       }}
-      style={{ position: 'relative', zIndex: 10 }}
+      // Over the page, its dropdowns float above what follows; in the
+      // table, they are the page and pass under the run bar like it.
+      style={{ position: 'relative', zIndex: inTable ? undefined : 10 }}
     >
       <ParameterSearchBox
         entries={entries}
@@ -144,7 +171,8 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
         labelFor={(path) => parameters?.[path]?.label ?? null}
         backgroundSearch
         autoFocus={autoFocus}
-        placeholder={SEARCH_PLACEHOLDERS[countryId]}
+        placeholder={placeholder}
+        resultsInFlow={inTable}
         hideResults={!active || browseOpen}
         inDraft={(path) => draftPaths.has(path)}
         onOpenFolder={(path) => {
@@ -157,12 +185,12 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
             type="button"
             onClick={() => setBrowseOpen((open) => !open)}
             aria-expanded={browseOpen}
-            className="tw:cursor-pointer tw:border tw:border-border-light tw:bg-white tw:hover:border-border-medium"
+            // A fingertip tall on a phone.
+            className="tw:h-[30px] tw:cursor-pointer tw:border tw:border-border-light tw:bg-white tw:hover:border-border-medium tw:max-sm:h-10"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: spacing.xs,
-              height: 30,
               padding: `0 ${spacing.sm}`,
               borderRadius: spacing.radius.container,
               fontSize: typography.fontSize.xs,
@@ -178,15 +206,15 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
 
       {browseOpen && (
         <div
+          // On a phone the close button is a fingertip tall: the tree starts under it.
+          className="tw:p-lg tw:max-sm:pt-4xl"
           style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
+            ...(inTable
+              ? { position: 'relative' as const }
+              : { position: 'absolute' as const, top: '100%', left: 0, right: 0 }),
             marginTop: spacing.sm,
             maxHeight: '70vh',
             overflowY: 'auto',
-            padding: spacing.lg,
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.feature,
             background: colors.gray[50],
@@ -197,7 +225,7 @@ export default function AddParameterBar({ onPick, autoFocus = false }: AddParame
             type="button"
             onClick={() => setBrowseOpen(false)}
             aria-label="Close the policy tree"
-            className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100"
+            className="tw:cursor-pointer tw:text-gray-500 tw:hover:bg-gray-100 tw:max-sm:size-10 tw:max-sm:items-center tw:max-sm:justify-center"
             style={{
               position: 'absolute',
               top: spacing.sm,
