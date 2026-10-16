@@ -241,7 +241,9 @@ describe('HouseholdImpactSection', () => {
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
 
     expect(await screen.findByRole('status')).toHaveTextContent('Calculating this household');
-    expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
+    // While it runs, the inputs fold to one line, with editing held until it ends.
+    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit household' })).toBeDisabled();
 
     finish();
 
@@ -269,7 +271,9 @@ describe('HouseholdImpactSection', () => {
     expect(within(credits).getByRole('row', { name: /Child Tax Credit/ })).toHaveTextContent(
       '+$1,000'
     );
-    // The household on screen is the one in the form: nothing to run again.
+    // The result leads; the inputs open again on Edit household, with nothing to run again.
+    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit household' }));
     expect(screen.getByRole('button', { name: 'Calculate' })).toBeDisabled();
   });
 

@@ -4,7 +4,7 @@ import HouseholdBreakdowns, {
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
-import { SegmentedControl, Stack, Text, Title } from '@/components/ui';
+import { Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
 import { formatCurrency } from '@/utils/formatters';
@@ -186,6 +186,13 @@ export default function HouseholdImpactResult({
   const noChange = change === 0 && components.length === 0 && programs.length === 0;
   const id = useId();
 
+  // The changes that drive the result, largest first: what a reader looks for next.
+  const drivers = [...programs, ...components]
+    .filter((line) => Math.round(line.change) !== 0)
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+    .filter((line, index, all) => all.findIndex((other) => other.label === line.label) === index)
+    .slice(0, 3);
+
   return (
     <section
       aria-labelledby={`${id}-heading`}
@@ -199,7 +206,7 @@ export default function HouseholdImpactResult({
         background: colors.background.primary,
       }}
     >
-      <Stack style={{ gap: spacing.xs }}>
+      <Stack style={{ gap: 2 }}>
         <Title id={`${id}-heading`} order={3} style={{ margin: 0 }}>
           Household impact
         </Title>
@@ -208,55 +215,143 @@ export default function HouseholdImpactResult({
         </Text>
       </Stack>
 
+      {/* The headline beside what drives it, so the result reads at a glance. */}
       <div
-        role="group"
-        aria-labelledby={`${id}-net`}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: spacing.sm,
-          borderLeft: `2px solid ${colors.primary[200]}`,
-          paddingLeft: spacing.lg,
-        }}
+        className="tw:grid tw:gap-4 tw:md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+        style={{ alignItems: 'stretch' }}
       >
-        <span
+        <div
+          role="group"
+          aria-labelledby={`${id}-net`}
           style={{
-            fontSize: typography.fontSize['4xl'],
-            fontWeight: typography.fontWeight.semibold,
-            fontVariantNumeric: 'tabular-nums',
-            color: effectColor(change),
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing.xs,
+            padding: spacing.lg,
+            borderRadius: 10,
+            background: change > 0 ? colors.primary[50] : colors.gray[50],
           }}
         >
-          {signedMoney(change)}
-        </span>
-        <span
-          id={`${id}-net`}
-          style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
-        >
-          Change in annual net income
-        </span>
-        <span
-          style={{
-            fontSize: typography.fontSize.sm,
-            color: colors.text.secondary,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {money(netIncome.baseline)} → {money(netIncome.reform)}
-          {percent !== null &&
-            ` (${percent > 0 ? '+' : '−'}${Math.abs(percent) < 0.1 ? '<0.1' : Math.abs(percent).toFixed(1)}%)`}
-        </span>
+          <span
+            id={`${id}-net`}
+            style={{
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.medium,
+              color: colors.text.secondary,
+            }}
+          >
+            Change in annual net income
+          </span>
+          <span
+            style={{
+              fontSize: typography.fontSize['4xl'],
+              lineHeight: 1.1,
+              fontWeight: typography.fontWeight.semibold,
+              fontVariantNumeric: 'tabular-nums',
+              color: effectColor(change),
+            }}
+          >
+            {signedMoney(change)}
+          </span>
+          <span
+            style={{
+              fontSize: typography.fontSize.sm,
+              color: colors.text.secondary,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {money(netIncome.baseline)} → {money(netIncome.reform)}
+            {percent !== null &&
+              ` (${percent > 0 ? '+' : '−'}${Math.abs(percent) < 0.1 ? '<0.1' : Math.abs(percent).toFixed(1)}%)`}
+          </span>
+        </div>
+        {drivers.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: spacing.sm,
+              padding: spacing.lg,
+              borderRadius: 10,
+              border: `1px solid ${colors.border.light}`,
+            }}
+          >
+            <span
+              style={{
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.medium,
+                color: colors.text.secondary,
+              }}
+            >
+              What changes
+            </span>
+            {drivers.map((line) => (
+              <div
+                key={line.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: spacing.md,
+                  fontSize: typography.fontSize.sm,
+                }}
+              >
+                <span style={{ color: colors.text.primary }}>{line.label}</span>
+                <span
+                  style={{
+                    fontVariantNumeric: 'tabular-nums',
+                    fontWeight: typography.fontWeight.medium,
+                    color: effectColor(line.effect),
+                  }}
+                >
+                  {signedMoney(line.change)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {breakdowns && (
-        <div style={{ overflowX: 'auto' }}>
-          <SegmentedControl
-            animated
-            size="xs"
-            value={view}
-            onValueChange={(next) => setView(next as typeof view)}
-            options={VIEW_OPTIONS}
-          />
+        // A tab per output: the summary, then the v2 household report's breakdowns.
+        <div
+          role="tablist"
+          aria-label="Household outputs"
+          style={{
+            display: 'flex',
+            gap: spacing.lg,
+            overflowX: 'auto',
+            borderBottom: `1px solid ${colors.border.light}`,
+          }}
+        >
+          {VIEW_OPTIONS.map((option) => {
+            const selected = view === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setView(option.value as typeof view)}
+                className="tw:cursor-pointer tw:hover:text-gray-900"
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  padding: `${spacing.sm} 0`,
+                  marginBottom: -1,
+                  borderBottom: `2px solid ${selected ? colors.primary[600] : 'transparent'}`,
+                  whiteSpace: 'nowrap',
+                  fontSize: typography.fontSize.sm,
+                  fontFamily: typography.fontFamily.primary,
+                  fontWeight: selected
+                    ? typography.fontWeight.semibold
+                    : typography.fontWeight.normal,
+                  color: selected ? colors.text.primary : colors.text.secondary,
+                }}
+              >
+                {option.label}
+              </button>
+            );
+          })}
         </div>
       )}
 
