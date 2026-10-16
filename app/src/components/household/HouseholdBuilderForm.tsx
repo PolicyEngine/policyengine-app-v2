@@ -157,7 +157,7 @@ function ChildCountInput({
       step={1}
       value={text}
       disabled={disabled}
-      className="tw:w-24 tw:bg-white"
+      className="tw:w-36 tw:bg-white"
       onChange={(event) => {
         setText(event.target.value);
         const count = Number(event.target.value);
@@ -724,16 +724,26 @@ export default function HouseholdBuilderForm({
         </AccordionItem>
 
         {/* Household Variables Section */}
-        <AccordionItem value="household-vars" className={columns ? 'tw:lg:border-b-0' : undefined}>
+        <AccordionItem
+          value="household-vars"
+          // In columns, the household's fields join the family's row, and its
+          // add link starts the next line at the left.
+          className={columns ? 'tw:lg:contents' : undefined}
+        >
           {/* In columns, the household's fields sit beside the family's, under their own labels. */}
           <AccordionTrigger className={columns ? 'tw:lg:hidden' : undefined}>
             <Text fw={typography.fontWeight.medium}>Household</Text>
           </AccordionTrigger>
-          <AccordionContent>
+          <AccordionContent
+            className={
+              columns ? 'tw:lg:contents tw:flex tw:flex-wrap tw:items-end tw:gap-4' : undefined
+            }
+            style={columns ? { display: 'contents' } : undefined}
+          >
             <div
               className={
                 columns
-                  ? 'tw:flex tw:flex-wrap tw:items-end tw:gap-4'
+                  ? 'tw:flex tw:flex-col tw:gap-3 tw:lg:contents'
                   : 'tw:flex tw:flex-col tw:gap-3'
               }
             >
@@ -790,32 +800,34 @@ export default function HouseholdBuilderForm({
 
               {/* Add variable search or link */}
               {!isReadOnly && isHouseholdSearchActive ? (
-                <VariableSearchDropdown
-                  searchValue={householdSearchValue}
-                  onSearchChange={setHouseholdSearchValue}
-                  onFocusChange={setIsHouseholdSearchFocused}
-                  filteredVariables={filteredHouseholdVariables.variables}
-                  truncated={filteredHouseholdVariables.truncated}
-                  suggested={
-                    suggestedOrder.size > 0 && !householdSearchValue.trim()
-                      ? suggestedOrder
-                      : undefined
-                  }
-                  suggestedLabel={suggestedLabel}
-                  groupOf={variableGroupOf}
-                  groupOrder={variableGroupOrder}
-                  onSelect={handleHouseholdVariableSelect}
-                  getEntityHint={(variable) => {
-                    const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
-                    return { show: isPerson, label: 'Person' };
-                  }}
-                  disabled={disabled}
-                  onClose={() => {
-                    setIsHouseholdSearchActive(false);
-                    setHouseholdSearchValue('');
-                    setIsHouseholdSearchFocused(false);
-                  }}
-                />
+                <div className={columns ? 'tw:basis-full tw:max-w-xl' : undefined}>
+                  <VariableSearchDropdown
+                    searchValue={householdSearchValue}
+                    onSearchChange={setHouseholdSearchValue}
+                    onFocusChange={setIsHouseholdSearchFocused}
+                    filteredVariables={filteredHouseholdVariables.variables}
+                    truncated={filteredHouseholdVariables.truncated}
+                    suggested={
+                      suggestedOrder.size > 0 && !householdSearchValue.trim()
+                        ? suggestedOrder
+                        : undefined
+                    }
+                    suggestedLabel={suggestedLabel}
+                    groupOf={variableGroupOf}
+                    groupOrder={variableGroupOrder}
+                    onSelect={handleHouseholdVariableSelect}
+                    getEntityHint={(variable) => {
+                      const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+                      return { show: isPerson, label: 'Person' };
+                    }}
+                    disabled={disabled}
+                    onClose={() => {
+                      setIsHouseholdSearchActive(false);
+                      setHouseholdSearchValue('');
+                      setIsHouseholdSearchFocused(false);
+                    }}
+                  />
+                </div>
               ) : !isReadOnly ? (
                 <>
                   {/* In columns, the add link starts a line of its own, under the fields. */}
