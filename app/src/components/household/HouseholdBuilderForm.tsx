@@ -470,7 +470,7 @@ export default function HouseholdBuilderForm({
       gap="lg"
       className={
         columns
-          ? 'tw:lg:flex tw:lg:flex-wrap tw:lg:items-start tw:lg:gap-x-6 tw:lg:gap-y-2'
+          ? 'tw:lg:flex-row tw:lg:flex-wrap tw:lg:items-start tw:lg:gap-x-6 tw:lg:gap-y-2'
           : undefined
       }
     >
@@ -590,7 +590,7 @@ export default function HouseholdBuilderForm({
         {/* Individuals / Members Section */}
         <AccordionItem
           value="individuals"
-          className={columns ? 'tw:lg:order-last tw:lg:basis-full tw:border-b-0' : undefined}
+          className={columns ? 'tw:lg:order-last tw:lg:w-full tw:border-b-0' : undefined}
         >
           <AccordionTrigger>
             <Text fw={typography.fontWeight.medium}>Individuals</Text>

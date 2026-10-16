@@ -63,7 +63,7 @@ describe('HouseholdBuilderForm', () => {
   test('given the columns layout then family and household share a row, the people follow as cards', () => {
     const { container } = renderForm({ layout: 'columns' });
 
-    expect(container.firstElementChild).toHaveClass('tw:lg:flex-wrap');
+    expect(container.firstElementChild).toHaveClass('tw:lg:flex-row');
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
     expect(screen.getByText('Household')).toBeInTheDocument();
