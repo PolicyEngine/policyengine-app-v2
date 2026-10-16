@@ -418,6 +418,19 @@ function scheduleLabelOf(path: string, parameters: ParameterMetadataCollection):
 export function buildParameterSearchEntries(
   parameters: ParameterMetadataCollection
 ): ParameterSearchEntry[] {
+  // A federal program's value for one state ("gov.usda.snap.….MT") is that
+  // state's, like a parameter under gov.states: its key names the state.
+  const knownStates = new Set(buildStateNames(parameters).values());
+  const stateKeyOf = (path: string): string | null => {
+    const segments = path.split('.');
+    for (let i = segments.length - 1; i > 0; i--) {
+      const code = segments[i].toLowerCase();
+      if (/^[A-Z]{2}$/.test(segments[i]) && knownStates.has(code)) {
+        return code;
+      }
+    }
+    return null;
+  };
   return Object.values(parameters)
     .filter(isSearchableParameter)
     .map((param) => {
@@ -429,7 +442,7 @@ export function buildParameterSearchEntries(
         unit: param.unit ?? null,
         description: param.description ?? null,
         isContrib: param.parameter.startsWith('gov.contrib.'),
-        stateCode: STATE_PATH_PATTERN.exec(param.parameter)?.[1] ?? null,
+        stateCode: STATE_PATH_PATTERN.exec(param.parameter)?.[1] ?? stateKeyOf(param.parameter),
         scheduleLabel: scheduleLabelOf(param.parameter, parameters),
       };
     });
@@ -492,12 +505,14 @@ export function createParameterSearchIndex(
   // Fuse construction over ~20k entries costs hundreds of ms and is only
   // needed when the fast prefilter finds nothing, so build it lazily.
   let fuseInstance: Fuse<ParameterSearchEntry> | null = null;
+  // An entry's state by name, so "montana snap" finds SNAP's Montana values.
+  const stateNameOf = new Map([...stateNames].map(([name, code]) => [code, name]));
   return {
     entries,
     // The canonical phrases go in the haystack too, so an entry spelled
     // one way is found by a query normalized the other way.
     haystacks: entries.map((entry) =>
-      `${entry.breadcrumb} ${searchLabel(entry)} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)}`.toLowerCase()
+      `${entry.breadcrumb} ${searchLabel(entry)} ${entry.path} ${entry.path.replace(/[._]/g, ' ')} ${entryConceptText(entry, aliases)} ${(entry.stateCode && stateNameOf.get(entry.stateCode)) || ''}`.toLowerCase()
     ),
     get fuse() {
       fuseInstance ??= new Fuse(entries, FUSE_OPTIONS);

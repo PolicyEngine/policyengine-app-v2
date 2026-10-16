@@ -1,0 +1,52 @@
+import { describe, expect, test } from 'vitest';
+import {
+  buildParameterSearchEntries,
+  buildStateNames,
+  createParameterSearchIndex,
+  DEFAULT_SEARCH_FILTERS,
+  searchParameters,
+} from '@/libs/parameterSearch';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+
+const parameter = (path: string, label: string) => ({
+  parameter: path,
+  label,
+  type: 'parameter',
+  unit: 'currency-USD',
+  economy: true,
+  household: true,
+  values: { '2020-01-01': 100 },
+});
+const node = (path: string, label: string) => ({ parameter: path, label, type: 'parameterNode' });
+
+const PARAMETERS = {
+  'gov.states.mt': node('gov.states.mt', 'Montana'),
+  'gov.states.vt': node('gov.states.vt', 'Vermont'),
+  'gov.usda.snap': node('gov.usda.snap', 'Supplemental Nutrition Assistance Program (SNAP)'),
+  'gov.usda.snap.child_support.MT': parameter('gov.usda.snap.child_support.MT', 'MT'),
+  'gov.usda.snap.child_support.VT': parameter('gov.usda.snap.child_support.VT', 'VT'),
+  'gov.states.mt.dhs.tanf.max_unit_size': parameter(
+    'gov.states.mt.dhs.tanf.max_unit_size',
+    'Montana TANF maximum unit size'
+  ),
+} as unknown as ParameterMetadataCollection;
+
+describe('state-keyed federal parameters', () => {
+  const entries = buildParameterSearchEntries(PARAMETERS);
+  const index = createParameterSearchIndex(entries, [], new Map(), buildStateNames(PARAMETERS));
+
+  test("given a federal program's value for a state then it carries that state", () => {
+    expect(
+      entries.find((entry) => entry.path === 'gov.usda.snap.child_support.MT')?.stateCode
+    ).toBe('mt');
+  });
+
+  test('given a state and a federal program then that state’s value of the program leads', () => {
+    const paths = searchParameters(index, 'montana snap', 5, DEFAULT_SEARCH_FILTERS).map(
+      (entry) => entry.path
+    );
+    expect(paths[0]).toBe('gov.usda.snap.child_support.MT');
+    // Another state's value of it comes after, if at all.
+    expect(paths.indexOf('gov.usda.snap.child_support.VT')).not.toBe(0);
+  });
+});
