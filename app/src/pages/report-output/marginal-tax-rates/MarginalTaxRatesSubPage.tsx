@@ -57,6 +57,8 @@ interface Props {
   reformVariation?: HouseholdCalculationOutput | null;
   /** What shows while the variation calculates; a spinner and a line by default. */
   renderLoading?: () => ReactNode;
+  /** Leave out the SPM methodology footnote under the chart; shown by default. */
+  hideSpmFootnote?: boolean;
 }
 
 type ViewMode = 'both' | 'difference';
@@ -97,6 +99,7 @@ export default function MarginalTaxRatesSubPage({
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
   renderLoading,
+  hideSpmFootnote = false,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
@@ -500,10 +503,12 @@ export default function MarginalTaxRatesSubPage({
         {renderChart()}
         <ChartWatermark />
       </div>
-      <SPMMethodologyFootnote
-        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
-        context="variation"
-      />
+      {!hideSpmFootnote && (
+        <SPMMethodologyFootnote
+          output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+          context="variation"
+        />
+      )}
     </Stack>
   );
 }
