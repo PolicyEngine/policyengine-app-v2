@@ -571,7 +571,13 @@ function MemberValueCards({
       ? [...list].sort((a, b) => a.rank! - b.rank! || a.name.localeCompare(b.name))
       : list;
   }, [members, parameters]);
-  const isChanged = (path: string) => !sameValue(valueAt(path, year), baselineAt(path, year));
+  // Yes/no values compare as yes or no: some are stored as 0 and 1.
+  const asYes = (value: unknown) => value === true || value === 1;
+  const differs = (path: string, value: unknown, baseline: unknown) =>
+    parameters[path]?.unit === 'bool'
+      ? asYes(value) !== asYes(baseline)
+      : !sameValue(value, baseline);
+  const isChanged = (path: string) => differs(path, valueAt(path, year), baselineAt(path, year));
   const changedCount = named.filter(({ member }) => isChanged(member.path)).length;
   const query = filter.trim().toLowerCase();
   const shown = named.filter(
@@ -636,8 +642,13 @@ function MemberValueCards({
             const param = parameters[member.path];
             const value = valueAt(member.path, year);
             const baseline = baselineAt(member.path, year);
-            const changed = !sameValue(value, baseline);
-            const baselineText = formatValue(baseline, param.unit ?? null);
+            const changed = differs(member.path, value, baseline);
+            const baselineText =
+              param.unit === 'bool'
+                ? asYes(baseline)
+                  ? 'true'
+                  : 'false'
+                : formatValue(baseline, param.unit ?? null);
             return (
               <div
                 key={member.path}
@@ -678,7 +689,7 @@ function MemberValueCards({
                     {name}
                   </span>
                   <div style={{ flexShrink: 0, maxWidth: 140 }}>
-                    {param.unit === 'bool' && typeof baseline === 'boolean' ? (
+                    {param.unit === 'bool' ? (
                       // A switch and the one word it means: the boxed "False · True"
                       // control is too wide for a cell.
                       <label
@@ -690,7 +701,8 @@ function MemberValueCards({
                         }}
                       >
                         <Switch
-                          checked={value === true}
+                          // Some yes/no values are stored as 0 and 1.
+                          checked={asYes(value)}
                           onCheckedChange={(next) => onChange(member.path, year, next)}
                           aria-label={name}
                         />
@@ -699,10 +711,10 @@ function MemberValueCards({
                             width: 34,
                             fontSize: typography.fontSize.xs,
                             fontWeight: typography.fontWeight.medium,
-                            color: value === true ? colors.primary[700] : colors.text.secondary,
+                            color: asYes(value) ? colors.primary[700] : colors.text.secondary,
                           }}
                         >
-                          {value === true ? 'True' : 'False'}
+                          {asYes(value) ? 'True' : 'False'}
                         </span>
                       </label>
                     ) : isEditableValue(baseline) ? (

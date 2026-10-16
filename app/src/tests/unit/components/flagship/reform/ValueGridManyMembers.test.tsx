@@ -65,4 +65,28 @@ describe('ValueGrid with many members', () => {
     expect(cells).toHaveLength(1);
     expect(within(cells[0]).getByText('Current law: false')).toBeInTheDocument();
   });
+
+  test('given a yes/no value stored as 0 then it is a switch too, unchanged until switched', () => {
+    const parameters = {
+      ...PARAMETERS,
+      [path('PR')]: { ...PARAMETERS[path('PR')], values: { '0000-01-01': 0 } },
+    } as unknown as ParameterMetadataCollection;
+    render(
+      <ValueGrid
+        members={CODES.map((code) => ({ path: path(code), label: code }))}
+        years={[2026]}
+        openEnded
+        parameters={parameters}
+        valueAt={(p) => (p === path('PR') ? 0 : false)}
+        baselineAt={(p) => (p === path('PR') ? 0 : false)}
+        onChange={vi.fn()}
+        focusedPath=""
+        onFocus={vi.fn()}
+      />
+    );
+    const cell = screen.getByLabelText('Puerto Rico, 2026');
+    expect(within(cell).getByRole('switch', { name: 'Puerto Rico' })).not.toBeChecked();
+    expect(within(cell).getByText('False')).toBeInTheDocument();
+    expect(screen.getByLabelText('Changed only (0)')).toBeInTheDocument();
+  });
 });
