@@ -31,11 +31,6 @@ const cards = [
     title: "A targeted energy bill discount",
     desc: "Who would gain, and at what cost, from the Resolution Foundation's proposal",
   },
-  {
-    href: "/uk/middle-east-war-living-standards",
-    title: "The Middle East war and living standards",
-    desc: "How rising energy, fuel and food prices affect UK household budgets",
-  },
 ];
 
 export default function FeaturedResearchBanner({
