@@ -21,6 +21,7 @@ import { FONT_SIZES, INGREDIENT_COLORS } from '@/pages/reportBuilder/constants';
 import { HouseholdCreationContent } from '@/pages/reportBuilder/modals/population';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
+import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getModelMetadataError } from '@/utils/spmSelection';
 
@@ -204,14 +205,15 @@ function HouseholdBuilderForYear({
       return;
     }
 
-    const payload = household.toV1CreationPayload();
+    const householdToSave = withSupportedBuilderClaimantRoles(household, metadata, reportYear);
+    const payload = householdToSave.toV1CreationPayload();
 
     setSaveError(null);
     try {
       const result = await createHousehold(payload);
 
       const householdId = result.result.household_id;
-      onSubmitSuccess(householdId, household.withId(householdId));
+      onSubmitSuccess(householdId, householdToSave.withId(householdId));
     } catch (err) {
       setSaveError(err instanceof Error ? err : new Error('Unable to save household.'));
     }

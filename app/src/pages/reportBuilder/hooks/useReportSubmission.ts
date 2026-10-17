@@ -52,6 +52,7 @@ export function useReportSubmission({
   onSuccess,
 }: UseReportSubmissionArgs): UseReportSubmissionReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const metadata = useSelector((state: RootState) => state.metadata);
   const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
@@ -75,6 +76,7 @@ export function useReportSubmission({
         countryId,
         currentLawId,
         reportYear: reportState.year,
+        metadata,
       });
 
       journeyProfiler?.markEnd?.('report-submit-simulations', 'api-call');
@@ -138,6 +140,7 @@ export function useReportSubmission({
     reportState,
     countryId,
     currentLawId,
+    metadata,
     createReport,
     onSuccess,
   ]);
