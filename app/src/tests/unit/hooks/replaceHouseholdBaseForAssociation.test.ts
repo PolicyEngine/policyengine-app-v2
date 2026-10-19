@@ -81,4 +81,24 @@ describe('replaceHouseholdBaseForAssociation', () => {
       })
     );
   });
+
+  test('given its own way to create the household then that is used, not the v1 route', async () => {
+    vi.mocked(createHousehold).mockClear();
+    const v2HouseholdId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const createHouseholdId = vi.fn().mockResolvedValue(v2HouseholdId);
+    const store = {
+      update: vi.fn().mockResolvedValue({ ...association, householdId: v2HouseholdId }),
+    };
+
+    await replaceHouseholdBaseForAssociation({
+      association,
+      nextHousehold,
+      store,
+      createHouseholdId,
+    });
+
+    expect(createHousehold).not.toHaveBeenCalled();
+    expect(createHouseholdId).toHaveBeenCalledTimes(1);
+    expect(store.update).toHaveBeenCalledWith(TEST_ASSOCIATION_ID, { householdId: v2HouseholdId });
+  });
 });
