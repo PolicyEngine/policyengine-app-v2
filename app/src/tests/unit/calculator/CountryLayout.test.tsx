@@ -11,9 +11,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 // The provider tree fetches metadata; this suite is about the layout's own
-// validation, so the providers pass their children straight through.
+// validation, so the providers become a marked pass-through.
 vi.mock('../../../../../calculator-app/src/app/[countryId]/providers', () => ({
-  CalculatorProviders: ({ children }: { children: React.ReactNode }) => children,
+  CalculatorProviders: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="calculator-providers">{children}</div>
+  ),
 }));
 
 /** Route params as Next.js passes them, already resolved so `use()` reads them synchronously. */
@@ -37,7 +39,9 @@ describe('calculator country layout', () => {
         <CountryProbe />
       </CountryLayout>
     );
-    expect(screen.getByText('Country: uk')).toBeInTheDocument();
+    expect(screen.getByTestId('calculator-providers')).toContainElement(
+      screen.getByText('Country: uk')
+    );
     expect(replace).not.toHaveBeenCalled();
   });
 
