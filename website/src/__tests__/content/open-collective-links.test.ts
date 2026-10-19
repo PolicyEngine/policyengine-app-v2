@@ -24,15 +24,8 @@ const TEXT_EXTENSIONS = new Set([
   ".yml",
 ]);
 
-// The legacy Vite copy of the donate page is not served in production, and
-// the guard-app-dir CI job blocks edits to it, so it keeps its old link until
-// the legacy website pages are deleted. This file holds sample links.
-const ALLOWED_FILES = new Set([
-  "app/src/pages/Donate.page.tsx",
-  "app/src/tests/fixtures/pages/DonateMocks.ts",
-  "app/src/tests/unit/pages/Donate.test.tsx",
-  relative(REPO_ROOT, __filename),
-]);
+// This file holds sample links.
+const ALLOWED_FILES = new Set([relative(REPO_ROOT, __filename)]);
 
 // Tracked files only, so build output, ignored files and nested worktrees in a
 // local checkout don't count. Symlinks are skipped; their targets are tracked.
@@ -51,7 +44,7 @@ function trackedTextFiles(): string[] {
 }
 
 describe("Open Collective links", () => {
-  test("nothing outside the legacy donate page links to PolicyEngine's or PSL's collective", () => {
+  test("nothing links to PolicyEngine's or PSL's collective", () => {
     const files = trackedTextFiles();
     expect(files).toContain("website/src/app/[countryId]/donate/page.tsx");
     expect(files).toContain(
