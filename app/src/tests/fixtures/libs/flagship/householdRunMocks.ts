@@ -1,4 +1,4 @@
-import type { FlagshipHouseholdInput } from '@/libs/flagship/householdRun';
+import { Household } from '@/models/Household';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
 
 export const HOUSEHOLD_YEAR = '2026';
@@ -8,13 +8,14 @@ export const CUSTOM_BASELINE_POLICY_ID = '45678';
 export const REFORM_POLICY_ID = '98765';
 export const CREATED_HOUSEHOLD_ID = 54321;
 
-export const MARRIED_TWO_CHILDREN: FlagshipHouseholdInput = {
-  state: 'NY',
-  married: true,
-  childAges: [4, 12],
-  earnings: 60000,
-  partnerEarnings: 25000,
-};
+/** A country without household result lines in v3. */
+export const COUNTRY_WITHOUT_HOUSEHOLD_LINES = 'ca';
+
+/** A married couple with two children, as the household builder sends it to the v1 API. */
+export const US_COUPLE_WITH_CHILDREN_PAYLOAD = Household.starter('us', HOUSEHOLD_YEAR)
+  .withBuilderMaritalStatus(HOUSEHOLD_YEAR, 'married')
+  .withBuilderChildCount(HOUSEHOLD_YEAR, 2)
+  .toV1CreationPayload();
 
 interface ResultValues {
   netIncome: number;
