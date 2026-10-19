@@ -21,6 +21,8 @@ export interface VariableRowProps {
   showRemoveColumn?: boolean;
   /** The label above the field, not beside it; beside it by default. */
   stacked?: boolean;
+  /** Whole-number inputs take digits only and step up and down (see VariableInput). */
+  wholeNumbers?: boolean;
   /** A fixed width in pixels, e.g. for a row of stacked fields; full width by default. */
   width?: number;
 }
@@ -54,6 +56,7 @@ export default function VariableRow({
   showRemoveColumn = false,
   stacked = false,
   width,
+  wholeNumbers = false,
 }: VariableRowProps) {
   const shouldShowColumn = onRemove || showRemoveColumn;
 
@@ -91,6 +94,8 @@ export default function VariableRow({
           entityName={entityName}
           onChange={onChange}
           disabled={disabled}
+          wholeNumbers={wholeNumbers}
+          stepLabel={sentenceCaseLabel(variable.label)}
         />
       </div>
       {shouldShowColumn && (
