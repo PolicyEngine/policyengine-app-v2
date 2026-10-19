@@ -6,9 +6,8 @@
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
     "dev:calculator": "VITE_APP_MODE=calculator vite",
-    "build": "bun run generate-llms-txt && bun run generate-sitemap && bun run build:calculator",
+    "build": "bun run generate-sitemap && bun run build:calculator",
     "build:calculator": "VITE_APP_MODE=calculator vite build",
-    "generate-llms-txt": "tsx scripts/generate-llms-txt.ts",
     "generate-prerender": "tsx scripts/generate-prerender.ts",
     "generate-sitemap": "tsx scripts/generate-sitemap.ts",
     "evaluate-search": "tsx scripts/evaluate-parameter-search.ts",

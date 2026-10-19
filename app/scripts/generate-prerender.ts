@@ -120,8 +120,8 @@ function primaryCountry(tags: string[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// Content transformation (duplicated from generate-llms-txt.ts to keep
-// scripts independent)
+// Content transformation (copied from the Vite app's generate-llms-txt.ts,
+// since removed; the website now builds llms.txt in website/src/lib/llmsTxt.ts)
 // ---------------------------------------------------------------------------
 
 function extractChartSummary(plotlyJson: string, caption?: string): string {
