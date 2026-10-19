@@ -102,7 +102,7 @@ function ReportSection({ label, children }: { label: string; children: React.Rea
  *
  * It calculates through API v1's household routes, as the report section
  * does, until v3's household calculations move to v2. No route renders it
- * yet: it comes with v3's move to v2.
+ * yet: see `pages/flagship/householdEntryPoints.ts`.
  */
 export default function HouseholdReportPage({
   countryId,
