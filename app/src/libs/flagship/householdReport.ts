@@ -1,9 +1,21 @@
-import type { Household } from '@/models/Household';
+import type { CountryId } from '@/libs/countries';
+import { Household } from '@/models/Household';
 
 /**
  * Helpers for v3's standalone household report: one household, run under
  * a baseline and, optionally, a reform.
  */
+
+/**
+ * A new household for the report, as the report section starts one: the
+ * household builder's own start, one adult and nothing else set, and for
+ * the US national poverty thresholds, which the SPM geography choice can
+ * change.
+ */
+export function newReportHousehold(countryId: CountryId, year: string): Household {
+  const household = Household.starter(countryId, year);
+  return countryId === 'us' ? household.withSPM({ geography_kind: 'national' }) : household;
+}
 
 /**
  * Inputs every household carries that say nothing on a chart against
