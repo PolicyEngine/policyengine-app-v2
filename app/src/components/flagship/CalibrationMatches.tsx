@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { STATE_NAMES } from '@/api/billFeed';
 import { Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
 import {
+  calibrationFitForGeography,
   CalibrationMatches,
   calibrationMatchesForPaths,
   CalibrationRing,
   calibrationTargetLabel,
   CalibrationTargetRow,
   calibrationVariableLabel,
+  CLOSE_FIT_ERROR,
   dashboardTargetsUrl,
+  GeographyCalibrationFit,
   geographyForRegion,
 } from '@/libs/flagship/calibrationMatching';
 import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation';
@@ -29,6 +33,7 @@ import {
   ValidationCard,
   ValidationLoading,
   ValidationNote,
+  ValidationSubheading,
 } from './ValidationDisplay';
 
 /**
@@ -123,6 +128,40 @@ export function useCalibrationMatches(
   return matches;
 }
 
+/**
+ * A state's overall data fit, whatever the reform changes. `undefined`
+ * while loading, `null` when the dashboard is unavailable; a national
+ * geography is not asked for.
+ */
+export function useGeographyCalibrationFit(
+  geography: string | null
+): GeographyCalibrationFit | null | undefined {
+  const [fit, setFit] = useState<GeographyCalibrationFit | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFit(undefined);
+    if (!geography || geography === 'US') {
+      return;
+    }
+    calibrationFitForGeography(geography).then((result) => {
+      if (!cancelled) {
+        setFit(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [geography]);
+
+  return fit;
+}
+
+/** A state code as a reader names it: "DC" reads "District of Columbia". */
+export function geographyName(geography: string): string {
+  return geography === 'US' ? 'the US' : (STATE_NAMES[geography] ?? geography);
+}
+
 /** The pin a report carries, and why it may no longer describe the live check. */
 export interface CalibrationPin {
   snapshot: ReportValidationSnapshot | null;
@@ -202,6 +241,100 @@ function TargetDetails({ target, group }: { target: CalibrationTargetRow; group:
   );
 }
 
+/** A target's period, values and gap, in the table's number columns. */
+function TargetCells({ target }: { target: CalibrationTargetRow }) {
+  return (
+    <>
+      <td style={numberCellStyle}>{target.period ?? '—'}</td>
+      <td style={numberCellStyle}>{compactNumber(target.target)}</td>
+      <td style={numberCellStyle}>{compactNumber(target.estimate)}</td>
+      <td style={numberCellStyle}>{gapOf(target)}</td>
+    </>
+  );
+}
+
+/** A target's heading outside a variable group: the variable it measures, else its own label. */
+function targetGroup(
+  target: CalibrationTargetRow,
+  labels: Record<string, { label?: string | null }> | null | undefined
+): string {
+  const variable = target.policyengineVariables[0];
+  return variable
+    ? calibrationVariableLabel(variable, labels?.[variable]?.label)
+    : calibrationVariableLabel(target.variable.trim().replaceAll(' ', '_'));
+}
+
+/**
+ * How well the data fits a state overall, whatever the reform changes:
+ * how many targets, the share that fits closely, the weighted error, and
+ * the worst fits by name, with the dashboard's view of the state. Context
+ * after the reform's own targets.
+ */
+export function GeographyFitSection({ geography }: { geography: string }) {
+  const fit = useGeographyCalibrationFit(geography);
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+  const name = geographyName(geography);
+  const heading = <ValidationSubheading>{name} data fit</ValidationSubheading>;
+  if (fit === undefined) {
+    return (
+      <>
+        {heading}
+        <ValidationLoading label={`Checking ${name} calibration targets`} />
+      </>
+    );
+  }
+  if (fit === null || fit.targetCount === 0) {
+    return (
+      <>
+        {heading}
+        <ValidationNote>
+          {fit === null
+            ? `The ${name} calibration targets are temporarily unavailable.`
+            : `The data has no calibration target in ${name}.`}
+        </ValidationNote>
+      </>
+    );
+  }
+  return (
+    <>
+      {heading}
+      <ValidationNote>
+        How well the data fits {name} overall, whatever the reform changes.{' '}
+        {fit.targetCount.toLocaleString('en-US')} targets, {percentText(fit.closeFitShare)} within{' '}
+        {percentText(CLOSE_FIT_ERROR)} of the official value; mean gap{' '}
+        {percentText(fit.meanAbsRelativeError)}, weighted by target size.
+      </ValidationNote>
+      <EvidenceTable
+        label={`Worst-fit calibration targets in ${name}`}
+        columns={CALIBRATION_COLUMNS}
+      >
+        {fit.worst.map((target) => {
+          const group = targetGroup(target, variables);
+          return (
+            <tr key={target.name} style={rowStyle}>
+              <th scope="row" style={labelCellStyle}>
+                <span style={{ display: 'block' }}>{group}</span>
+                <CellNote>
+                  <TargetDetails target={target} group={group} />
+                </CellNote>
+              </th>
+              <TargetCells target={target} />
+            </tr>
+          );
+        })}
+      </EvidenceTable>
+      <a
+        href={dashboardTargetsUrl({ level: 'state', geography })}
+        target="_blank"
+        rel="noreferrer"
+        style={linkStyle}
+      >
+        View all {name} targets in dashboard
+      </a>
+    </>
+  );
+}
+
 export function CalibrationMatchSection({
   matches,
   pin,
@@ -219,6 +352,10 @@ export function CalibrationMatchSection({
       linkLabel="View dashboard"
     >
       {content}
+      {/* A state's overall fit follows the reform's own targets, as context. */}
+      {matches && matches.geography !== 'US' && (
+        <GeographyFitSection geography={matches.geography} />
+      )}
     </ValidationCard>
   );
   if (matches === null) {
@@ -227,7 +364,7 @@ export function CalibrationMatchSection({
   if (matches === undefined) {
     return card(<ValidationLoading label="Checking calibration targets" />);
   }
-  const geographyName = matches.geography === 'US' ? 'the US' : matches.geography;
+  const placeName = geographyName(matches.geography);
   const related = matches.matches.length === 0 ? (matches.related ?? []) : [];
   if (matches.reachedCount === 0) {
     // Not "nothing measures it": the model map has no record of what it moves.
@@ -283,10 +420,7 @@ export function CalibrationMatchSection({
                 <th scope="row" style={labelCellStyle}>
                   <TargetDetails target={target} group={group} />
                 </th>
-                <td style={numberCellStyle}>{target.period ?? '—'}</td>
-                <td style={numberCellStyle}>{compactNumber(target.target)}</td>
-                <td style={numberCellStyle}>{compactNumber(target.estimate)}</td>
-                <td style={numberCellStyle}>{gapOf(target)}</td>
+                <TargetCells target={target} />
               </tr>
             ))}
           </tbody>
@@ -299,9 +433,10 @@ export function CalibrationMatchSection({
     <>
       {related.length > 0 ? (
         <>
+          {/* Not "no target measures it": these targets are measured, just not of a changed program. */}
           <ValidationNote>
-            No calibration target measures the programs this reform changes. Related targets in{' '}
-            {geographyName}, which the change reaches through the model:
+            These targets in {placeName} do not measure a program this reform changes, but the
+            change reaches them through the model:
           </ValidationNote>
           {table('Related calibration targets', related)}
         </>

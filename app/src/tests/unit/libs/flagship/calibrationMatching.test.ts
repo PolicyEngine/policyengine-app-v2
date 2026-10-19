@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
+  calibrationFitForGeography,
   calibrationMatchesForPaths,
   calibrationTargetLabel,
   calibrationVariableLabel,
   dashboardTargetsUrl,
   fetchCalibrationTargets,
+  fetchGeographyCalibrationTargets,
   geographyForRegion,
   relevantCalibrationMatches,
   ringForDepth,
+  summarizeGeographyFit,
   summarizeMatches,
   weightedMeanAbsError,
 } from '@/libs/flagship/calibrationMatching';
@@ -15,6 +18,7 @@ import {
   mockCalibrationMatches,
   mockCalibrationRows,
   mockCtcLimitingMatch,
+  mockDcFitRows,
   mockEitcCalibrationRow,
   POPULACE_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
@@ -71,6 +75,67 @@ describe('dashboardTargetsUrl', () => {
     expect(dashboardTargetsUrl({})).toBe(
       'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets'
     );
+  });
+
+  test('given a state then the targets page is filtered to it', () => {
+    expect(dashboardTargetsUrl({ level: 'state', geography: 'DC' })).toBe(
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?level=state&geography=DC'
+    );
+  });
+});
+
+describe('fetchGeographyCalibrationTargets', () => {
+  test('given a state then the route is asked for all its targets', async () => {
+    const fetchMock = vi.fn(async () =>
+      okResponse({ releaseId: POPULACE_RELEASE_ID, rows: mockDcFitRows })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchGeographyCalibrationTargets('DC');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/calibration-targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variables: [], geography: 'DC', all: true }),
+    });
+    expect(result).toEqual({ releaseId: POPULACE_RELEASE_ID, rows: mockDcFitRows });
+  });
+
+  test('given the route fails then null returns', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false }) as Response)
+    );
+
+    await expect(calibrationFitForGeography('DC')).resolves.toBeNull();
+  });
+});
+
+describe('summarizeGeographyFit', () => {
+  test('given a state’s targets then it counts them, the close fits, the weighted gap and the worst', () => {
+    const fit = summarizeGeographyFit('DC', POPULACE_RELEASE_ID, [...mockDcFitRows].reverse(), 3);
+
+    expect(fit.targetCount).toBe(5);
+    // DC income tax (6.5%), returns (2%) and population (0.1%) are within 10%.
+    expect(fit.closeFitShare).toBeCloseTo(3 / 5);
+    expect(fit.meanAbsRelativeError).toBeCloseTo(weightedMeanAbsError(mockDcFitRows));
+    expect(fit.worst).toEqual(mockDcFitRows.slice(0, 3));
+  });
+
+  test('given targets of other places or without a fit then they are left out', () => {
+    const fit = summarizeGeographyFit('DC', null, [
+      ...mockCalibrationRows,
+      { ...mockDcFitRows[0], relativeError: null },
+    ]);
+
+    expect(fit).toEqual({
+      releaseId: null,
+      geography: 'DC',
+      targetCount: 0,
+      closeFitShare: 0,
+      meanAbsRelativeError: 0,
+      worst: [],
+    });
   });
 });
 

@@ -95,6 +95,17 @@ const PROGRAM_ALIASES: Record<string, string[]> = {
   wi_eic: ['wi_earned_income_credit'],
 };
 
+/**
+ * Program ids that, measured in a state, are that state's own program,
+ * and the path words its parameters sit under: income tax collections
+ * measured in DC (state_income_tax) are DC's income tax, whose rules are
+ * gov.states.dc.tax.income.…, so a change there is a change to the
+ * program the target measures.
+ */
+const STATE_PROGRAM_PATHS: Record<string, string[]> = {
+  state_income_tax: ['tax', 'income'],
+};
+
 /** A name's words, without its entity and qualifiers; all of them when nothing else is left. */
 function nameTokens(name: string): string[] {
   const tokens = name.replace(ENTITY, '').split('_').filter(Boolean);
@@ -160,6 +171,10 @@ function comparisonPrograms(
     .split('+')
     .flatMap((id) => PROGRAM_ALIASES[id] ?? [id])
     .map((name) => {
+      const statePath = STATE_PROGRAM_PATHS[name];
+      if (statePath && geography !== NATIONAL) {
+        return { owner: geography, family: statePath };
+      }
       const tokens = name.split('_');
       // "md_eitc" measured in Maryland is Maryland's program; "eitc" there is the federal one.
       const statesOwn =
