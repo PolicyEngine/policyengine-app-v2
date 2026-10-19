@@ -14,6 +14,7 @@ import {
   calibrationVariableLabel,
   CLOSE_FIT_ERROR,
   dashboardTargetsUrl,
+  formatCalibrationValue,
   GeographyCalibrationFit,
   geographyForRegion,
 } from '@/libs/flagship/calibrationMatching';
@@ -63,16 +64,6 @@ export function describeDepth(depth: number): string {
 export const ATTENTION_ERROR = 0.25;
 
 const CALIBRATION_COLUMNS = ['Target', 'Period', 'Official', 'PolicyEngine', 'Gap'];
-
-function compactNumber(value: number | null): string {
-  return value === null
-    ? '—'
-    : value.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 1 });
-}
-
-function exactNumber(value: number | null): string {
-  return value?.toLocaleString('en-US', { maximumFractionDigits: 2 }) ?? '—';
-}
 
 function gapOf(target: CalibrationTargetRow): string {
   return target.relativeError === null ? '—' : percentText(target.relativeError);
@@ -213,8 +204,8 @@ function TargetDetails({ target, group }: { target: CalibrationTargetRow; group:
             ['Geography', target.geography],
             ['Period', target.period ?? '—'],
             ['Measure', target.measure ?? '—'],
-            ['Official', exactNumber(target.target)],
-            ['PolicyEngine', exactNumber(target.estimate)],
+            ['Official', formatCalibrationValue(target.target, target, 'exact')],
+            ['PolicyEngine', formatCalibrationValue(target.estimate, target, 'exact')],
             ['Gap', gapOf(target)],
           ].map(([field, value]) => (
             <div key={field} style={{ display: 'contents' }}>
@@ -246,8 +237,8 @@ function TargetCells({ target }: { target: CalibrationTargetRow }) {
   return (
     <>
       <td style={numberCellStyle}>{target.period ?? '—'}</td>
-      <td style={numberCellStyle}>{compactNumber(target.target)}</td>
-      <td style={numberCellStyle}>{compactNumber(target.estimate)}</td>
+      <td style={numberCellStyle}>{formatCalibrationValue(target.target, target)}</td>
+      <td style={numberCellStyle}>{formatCalibrationValue(target.estimate, target)}</td>
       <td style={numberCellStyle}>{gapOf(target)}</td>
     </>
   );
@@ -323,14 +314,18 @@ export function GeographyFitSection({ geography }: { geography: string }) {
           );
         })}
       </EvidenceTable>
+      {/* The dashboard reads no geography from its URL, so the reader picks the state there. */}
       <a
-        href={dashboardTargetsUrl({ level: 'state', geography })}
+        href={dashboardTargetsUrl({ level: 'state' })}
         target="_blank"
         rel="noreferrer"
         style={linkStyle}
       >
-        View all {name} targets in dashboard
+        View state targets in dashboard
       </a>
+      <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
+        Choose {geography} under Geography there to see only {name}.
+      </Text>
     </>
   );
 }

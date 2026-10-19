@@ -15,7 +15,8 @@ const soiRow = (
   sourceLabel: 'IRS Statistics of Income',
   variable,
   policyengineVariables,
-  measure: 'total',
+  // As the dashboard serves them: returns and claims are counts, amounts are dollar totals.
+  measure: /_(returns|claims)@/.test(name) ? 'count' : 'total',
   // The dashboard's measure id is the id's last segment: "…actc_amount@2024" → "actc_amount".
   sourceMeasureId: name.split('.').pop()!.split('@')[0],
   breakdown: 'All · All',

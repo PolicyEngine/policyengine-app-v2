@@ -179,9 +179,15 @@ describe('CalibrationMatchSection', () => {
     expect(rows[1]).toHaveTextContent('-79.3%');
     expect(rows[2]).toHaveTextContent('State income tax');
     expect(within(rows[2]).getByRole('button', { name: 'Collections · t40' })).toBeInTheDocument();
+    // Dollar targets carry the currency: $3.0bn of DC income tax reads "$3B".
+    expect(rows[2]).toHaveTextContent('$3B');
+    expect(rows[2]).toHaveTextContent('$3.2B');
+    // The dashboard reads no geography from its URL, so the link says where to pick it.
+    const link = screen.getByRole('link', { name: 'View state targets in dashboard' });
+    expect(link).toHaveAttribute('href', expect.stringMatching(/\?level=state$/));
     expect(
-      screen.getByRole('link', { name: 'View all District of Columbia targets in dashboard' })
-    ).toHaveAttribute('href', expect.stringContaining('level=state&geography=DC'));
+      screen.getByText('Choose DC under Geography there to see only District of Columbia.')
+    ).toBeInTheDocument();
   });
 
   test('given the state fit is unavailable then the summary says so', async () => {
@@ -233,8 +239,11 @@ describe('CalibrationMatchSection', () => {
     ).toEqual(['Target', 'Period', 'Official', 'PolicyEngine', 'Gap']);
     expect(screen.getByText('Refundable Child Tax Credit')).toBeInTheDocument();
     expect(screen.getAllByText('IRS Statistics of Income · US')).toHaveLength(2);
+    // Returns are counts; amounts are dollars.
     expect(screen.getByText('940K')).toBeInTheDocument();
     expect(screen.getAllByText('1M')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('$1M').length).toBeGreaterThan(0);
+    expect(screen.getByText('$1.3M')).toBeInTheDocument();
     expect(screen.getByText('-6.0%')).toBeInTheDocument();
     expect(screen.getAllByText('2024')).toHaveLength(3);
     expect(screen.getByRole('button', { name: 'Returns' })).toHaveAttribute(
@@ -262,6 +271,15 @@ describe('CalibrationMatchSection', () => {
     ).toBeInTheDocument();
     expect(within(dialog).getByText('940,000')).toBeInTheDocument();
     expect(within(dialog).getByText('1,000,000')).toBeInTheDocument();
+  });
+
+  test('given a dollar target then its exact values carry the currency', () => {
+    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Amount' })[0]);
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('$1,000,000')).toBeInTheDocument();
+    expect(within(dialog).getByText('$1,020,000')).toBeInTheDocument();
   });
 
   test('given a group named for a raw model variable then it reads as words', () => {
