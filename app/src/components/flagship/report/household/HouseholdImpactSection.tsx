@@ -53,8 +53,9 @@ const EXPECTED_MS = 3 * 60 * 1000;
 
 /**
  * A new household: the household builder's own start, one adult and
- * nothing else set. A US household is measured against national poverty
- * thresholds; only the US model has them.
+ * nothing else set. A US household starts on national poverty
+ * thresholds, which the builder's SPM geography choice can change to a
+ * county's; only the US model has them.
  */
 function newHousehold(countryId: CountryId, year: string): Household {
   const household = Household.starter(countryId, year);
@@ -511,8 +512,6 @@ function HouseholdCard({
               setHousehold(household.withBuilderChildCount(year, count))
             }
             disabled={running}
-            // National poverty thresholds, the model's default, without the choice.
-            hideSpmGeography
             layout="columns"
             suggestedVariables={suggestedVariables}
             suggestedLabel="Related to this reform"
@@ -577,6 +576,11 @@ function HouseholdCard({
             <HouseholdImpactResult
               impact={result}
               countryId={countryId}
+              methodology={{
+                baseline: result.provenance.baseline,
+                // One calculation served both policies: its methodology shows once.
+                reform: baselinePolicyId === reformPolicyId ? null : result.provenance.reform,
+              }}
               summary={`${requested.summary} · ${year}`}
               breakdowns={{
                 countryId,
