@@ -321,7 +321,7 @@ export default function VariableSearchDropdown({
                     <option value="">All categories</option>
                     {grouped.chips.map((chip) => (
                       <option key={chip.key} value={chip.key}>
-                        {chip.label} ({chip.items.length})
+                        {chip.label}
                       </option>
                     ))}
                   </select>
@@ -347,18 +347,13 @@ export default function VariableSearchDropdown({
                           setActiveGroup(chip.key);
                         }}
                         className={cn(
-                          'tw:flex tw:w-full tw:cursor-pointer tw:items-center tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5 tw:text-left tw:text-sm tw:transition-colors',
+                          'tw:flex tw:w-full tw:cursor-pointer tw:items-center tw:rounded-md tw:px-2 tw:py-1.5 tw:text-left tw:text-sm tw:transition-colors',
                           activeGroup === chip.key
                             ? 'tw:bg-primary-50 tw:font-medium tw:text-primary-700'
                             : 'tw:text-gray-700 tw:hover:bg-gray-50'
                         )}
                       >
                         <span className="tw:min-w-0 tw:truncate">{chip.label}</span>
-                        {chip.key !== null && 'items' in chip && (
-                          <span className="tw:shrink-0 tw:text-xs tw:tabular-nums tw:text-gray-500">
-                            {chip.items.length}
-                          </span>
-                        )}
                       </button>
                     ))}
                   </div>
