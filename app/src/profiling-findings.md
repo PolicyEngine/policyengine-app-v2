@@ -1,5 +1,7 @@
 # Performance profiling findings
 
+> Historical report. It profiled the Vite calculator build, whose entry, router and guards (`CalculatorApp.tsx`, `CalculatorRouter.tsx`, `CountryGuard`, `MetadataGuard`, `MetadataLazyLoader`) were deleted in #1331; the calculator now runs from `calculator-app/`. File references below are as they were when it was written.
+
 Profiled the full user journey from app init to completed report output using the `JourneyProfiler` utility (browser Performance API marks). Total wall-clock time: **~259s (4.3 minutes)**.
 
 ## Journey breakdown

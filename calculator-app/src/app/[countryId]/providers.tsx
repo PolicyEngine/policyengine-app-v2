@@ -14,10 +14,12 @@ import { setCurrentCountry } from "@/reducers/metadataReducer";
 import { AppDispatch, store } from "@/store";
 import { cacheMonitor } from "@/utils/cacheMonitor";
 
-// React Query devtools; renders nothing outside development.
-const DevTools = dynamic(() => import("@/components/DevTools"), {
-  ssr: false,
-});
+// React Query devtools, development only: production builds replace this
+// with a no-op, so neither chunk ships.
+const DevTools =
+  process.env.NODE_ENV === "development"
+    ? dynamic(() => import("@/components/DevTools"), { ssr: false })
+    : () => null;
 
 /**
  * The calculator's provider tree (Redux, React Query, etc.), shared by every
