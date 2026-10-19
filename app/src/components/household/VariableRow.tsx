@@ -66,10 +66,18 @@ export default function VariableRow({
       }
       style={width ? { width } : undefined}
     >
-      <div className={stacked ? 'tw:col-span-2' : 'tw:flex-1'}>
+      <div className={stacked ? 'tw:col-span-2 tw:min-w-0' : 'tw:flex-1'}>
         {stacked ? (
-          // The same label as the builder's own fields, so stacked fields line up with them.
-          <Label>{sentenceCaseLabel(variable.label)}</Label>
+          // The same label as the builder's own fields, so stacked fields line up
+          // with them: one line, so a long name does not push its box down.
+          <Label
+            className="tw:block tw:truncate"
+            title={[sentenceCaseLabel(variable.label), variable.documentation]
+              .filter(Boolean)
+              .join(': ')}
+          >
+            {sentenceCaseLabel(variable.label)}
+          </Label>
         ) : (
           <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
         )}

@@ -8,7 +8,7 @@
  * - Inline search for adding custom variables per person or household-level
  */
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import {
   Accordion,
@@ -41,6 +41,7 @@ import {
   VariableInfo,
 } from '@/utils/VariableResolver';
 import SPMGeographyChoice from './SPMGeographyChoice';
+import type { CommonInput } from './VariablePickerDialog';
 import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
 
@@ -76,6 +77,21 @@ export interface HouseholdBuilderFormProps {
   variableGroupOrder?: readonly string[];
   /** Leaves variables out of the search, e.g. other states' programs. */
   variableFilter?: (variable: VariableInfo) => boolean;
+  /**
+   * Each search lists only its own entity's inputs: a person's, person
+   * variables; the household's, every group entity's (household, tax
+   * unit, SPM unit, family, marital unit — one of each here). Off, either
+   * search lists every input and routes a pick to its entity, with a note.
+   */
+  searchByEntity?: boolean;
+  /** With `variableGroupOf`: a group's parts, as subheadings when that group is chosen. */
+  variableSubgroupOf?: (variable: VariableInfo) => string | null;
+  variableSubgroupOrder?: readonly string[];
+  /** With `variableGroupOf`: the picker's tiles, topic icons and display names. */
+  variablePickerCommon?: CommonInput[];
+  variableGroupIcon?: (group: string) => ReactNode;
+  variableNameOf?: (variable: VariableInfo) => string;
+  variableDescribe?: (variable: VariableInfo) => string | undefined;
 }
 
 /**
@@ -199,6 +215,13 @@ export default function HouseholdBuilderForm({
   variableGroupOf,
   variableGroupOrder,
   variableFilter,
+  searchByEntity = false,
+  variableSubgroupOf,
+  variableSubgroupOrder,
+  variablePickerCommon,
+  variableGroupIcon,
+  variableNameOf,
+  variableDescribe,
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -237,6 +260,13 @@ export default function HouseholdBuilderForm({
     [allInputVariables]
   );
 
+  // A field's name as the picker lists it, where the builder is given one.
+  const named = (variable: VariableInfo): VariableInfo => ({
+    ...variable,
+    label: variableNameOf ? variableNameOf(variable) : variable.label,
+    documentation: variableDescribe?.(variable) ?? variable.documentation,
+  });
+
   // Get list of people, sorted in display order (you, partner, dependents)
   const people = useMemo(() => household.getSortedPersonNames(), [household]);
 
@@ -270,19 +300,32 @@ export default function HouseholdBuilderForm({
           ...list.filter((variable) => !suggestedOrder.has(variable.name)),
         ];
 
+  // Each entity's own inputs, when each search lists only its own.
+  const scopedInputs = useMemo(() => {
+    if (!searchByEntity) {
+      return { person: allInputVariables, group: allInputVariables };
+    }
+    const person: VariableInfo[] = [];
+    const group: VariableInfo[] = [];
+    for (const variable of allInputVariables) {
+      (resolveEntity(variable.name, metadata)?.isPerson === false ? group : person).push(variable);
+    }
+    return { person, group };
+  }, [allInputVariables, metadata, searchByEntity]);
+
   // Filter variables by search value with result limit for performance
-  const filterVariables = (searchValue: string) => {
+  const filterVariables = (searchValue: string, inputs: VariableInfo[] = allInputVariables) => {
     if (!searchValue.trim()) {
       return {
-        variables: leadWithSuggested(allInputVariables).slice(0, MAX_DROPDOWN_RESULTS),
-        truncated: allInputVariables.length > MAX_DROPDOWN_RESULTS,
+        variables: leadWithSuggested(inputs).slice(0, MAX_DROPDOWN_RESULTS),
+        truncated: inputs.length > MAX_DROPDOWN_RESULTS,
       };
     }
     const search = searchValue.toLowerCase();
     const filtered =
       searchRanking === 'relevance'
-        ? rankVariablesBySearch(allInputVariables, searchValue)
-        : allInputVariables.filter(
+        ? rankVariablesBySearch(inputs, searchValue)
+        : inputs.filter(
             (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
           );
     return {
@@ -293,16 +336,35 @@ export default function HouseholdBuilderForm({
   };
 
   // Memoized filtered variables for person search
-  const filteredPersonVariables = useMemo(
-    () => filterVariables(personSearchValue),
-    [personSearchValue, allInputVariables, suggestedOrder]
-  );
+  const filteredPersonVariables = useMemo(() => {
+    // Scoped, the search leaves out what the person already has.
+    const has = new Set(
+      searchByEntity && activePersonSearch
+        ? [...basicPersonFields, ...household.getPersonLevelVariables(activePersonSearch)]
+        : []
+    );
+    return filterVariables(
+      personSearchValue,
+      has.size > 0 ? scopedInputs.person.filter((v) => !has.has(v.name)) : scopedInputs.person
+    );
+  }, [personSearchValue, scopedInputs, suggestedOrder, activePersonSearch, household]);
 
   // Memoized filtered variables for household search
-  const filteredHouseholdVariables = useMemo(
-    () => filterVariables(householdSearchValue),
-    [householdSearchValue, allInputVariables, suggestedOrder]
-  );
+  const filteredHouseholdVariables = useMemo(() => {
+    // Scoped, the search leaves out what the household already has.
+    const has = new Set(
+      searchByEntity
+        ? [
+            ...basicNonPersonFields,
+            ...household.getHouseholdLevelVariables().map(({ name }) => name),
+          ]
+        : []
+    );
+    return filterVariables(
+      householdSearchValue,
+      has.size > 0 ? scopedInputs.group.filter((v) => !has.has(v.name)) : scopedInputs.group
+    );
+  }, [householdSearchValue, scopedInputs, suggestedOrder, household]);
 
   const resolveDefaultGroupInstanceName = (variableName: string): string | undefined => {
     const entityInfo = resolveEntity(variableName, metadata);
@@ -635,7 +697,7 @@ export default function HouseholdBuilderForm({
                           return (
                             <VariableRow
                               key={fieldName}
-                              variable={variable}
+                              variable={named(variable)}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -656,7 +718,7 @@ export default function HouseholdBuilderForm({
                           return (
                             <VariableRow
                               key={varName}
-                              variable={variable}
+                              variable={named(variable)}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -688,13 +750,20 @@ export default function HouseholdBuilderForm({
                             suggestedLabel={suggestedLabel}
                             groupOf={variableGroupOf}
                             groupOrder={variableGroupOrder}
+                            subgroupOf={variableSubgroupOf}
+                            subgroupOrder={variableSubgroupOrder}
+                            common={variablePickerCommon}
+                            groupIcon={variableGroupIcon}
+                            nameOf={variableNameOf}
+                            describe={variableDescribe}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
+                            title={`Add a variable to ${getPersonDisplayName(person)}`}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
                                 variable.name,
                                 metadata
                               );
-                              return { show: !isPerson, label: 'Household' };
+                              return { show: !searchByEntity && !isPerson, label: 'Household' };
                             }}
                             disabled={disabled}
                             onClose={() => {
@@ -742,8 +811,9 @@ export default function HouseholdBuilderForm({
           >
             <div
               className={
+                // Never wider than the screen: an open search list would widen it.
                 columns
-                  ? 'tw:flex tw:flex-col tw:gap-3 tw:lg:contents'
+                  ? 'tw:flex tw:w-full tw:min-w-0 tw:flex-col tw:gap-3 tw:lg:contents'
                   : 'tw:flex tw:flex-col tw:gap-3'
               }
             >
@@ -757,7 +827,7 @@ export default function HouseholdBuilderForm({
                 return (
                   <VariableRow
                     key={fieldName}
-                    variable={variable}
+                    variable={named(variable)}
                     household={household}
                     metadata={metadata}
                     year={year}
@@ -780,7 +850,7 @@ export default function HouseholdBuilderForm({
                 return (
                   <VariableRow
                     key={`${entity}-${entityName}-${varName}`}
-                    variable={variable}
+                    variable={named(variable)}
                     household={household}
                     metadata={metadata}
                     year={year}
@@ -800,34 +870,47 @@ export default function HouseholdBuilderForm({
 
               {/* Add variable search or link */}
               {!isReadOnly && isHouseholdSearchActive ? (
-                <div className={columns ? 'tw:basis-full tw:max-w-[36rem]' : undefined}>
-                  <VariableSearchDropdown
-                    searchValue={householdSearchValue}
-                    onSearchChange={setHouseholdSearchValue}
-                    onFocusChange={setIsHouseholdSearchFocused}
-                    filteredVariables={filteredHouseholdVariables.variables}
-                    truncated={filteredHouseholdVariables.truncated}
-                    suggested={
-                      suggestedOrder.size > 0 && !householdSearchValue.trim()
-                        ? suggestedOrder
-                        : undefined
-                    }
-                    suggestedLabel={suggestedLabel}
-                    groupOf={variableGroupOf}
-                    groupOrder={variableGroupOrder}
-                    onSelect={handleHouseholdVariableSelect}
-                    getEntityHint={(variable) => {
-                      const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
-                      return { show: isPerson, label: 'Person' };
-                    }}
-                    disabled={disabled}
-                    onClose={() => {
-                      setIsHouseholdSearchActive(false);
-                      setHouseholdSearchValue('');
-                      setIsHouseholdSearchFocused(false);
-                    }}
-                  />
-                </div>
+                <>
+                  {/* In columns, the search takes the add link's place: a line of
+                      its own under the fields. A width cap alone keeps it in their
+                      row, where it has no label and sits above their boxes. */}
+                  {columns && <div aria-hidden className="tw:basis-full tw:h-0" />}
+                  <div className={columns ? 'tw:w-full tw:max-w-[42rem]' : undefined}>
+                    <VariableSearchDropdown
+                      searchValue={householdSearchValue}
+                      onSearchChange={setHouseholdSearchValue}
+                      onFocusChange={setIsHouseholdSearchFocused}
+                      filteredVariables={filteredHouseholdVariables.variables}
+                      truncated={filteredHouseholdVariables.truncated}
+                      suggested={
+                        suggestedOrder.size > 0 && !householdSearchValue.trim()
+                          ? suggestedOrder
+                          : undefined
+                      }
+                      suggestedLabel={suggestedLabel}
+                      groupOf={variableGroupOf}
+                      groupOrder={variableGroupOrder}
+                      subgroupOf={variableSubgroupOf}
+                      subgroupOrder={variableSubgroupOrder}
+                      common={variablePickerCommon}
+                      groupIcon={variableGroupIcon}
+                      nameOf={variableNameOf}
+                      describe={variableDescribe}
+                      onSelect={handleHouseholdVariableSelect}
+                      title="Add a variable to your household"
+                      getEntityHint={(variable) => {
+                        const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+                        return { show: !searchByEntity && isPerson, label: 'Person' };
+                      }}
+                      disabled={disabled}
+                      onClose={() => {
+                        setIsHouseholdSearchActive(false);
+                        setHouseholdSearchValue('');
+                        setIsHouseholdSearchFocused(false);
+                      }}
+                    />
+                  </div>
+                </>
               ) : !isReadOnly ? (
                 <>
                   {/* In columns, the add link starts a line of its own, under the fields. */}

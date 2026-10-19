@@ -54,30 +54,4 @@ describe('VariableSearchDropdown', () => {
       'Alimony income',
     ]);
   });
-
-  test('given groups then chips filter the list, and each group shows under its heading', async () => {
-    const user = userEvent.setup();
-    const groupOf = (v: VariableInfo) => (v.name === 'rent' ? 'Housing' : 'Income');
-    render(
-      <VariableSearchDropdown
-        searchValue=""
-        onSearchChange={vi.fn()}
-        onFocusChange={vi.fn()}
-        filteredVariables={VARIABLES}
-        onSelect={vi.fn()}
-        groupOf={groupOf}
-        groupOrder={['Income', 'Housing']}
-      />
-    );
-    await user.click(screen.getByRole('textbox'));
-
-    expect(screen.getByText('Income', { selector: 'p' })).toBeInTheDocument();
-    expect(screen.getByText('Housing', { selector: 'p' })).toBeInTheDocument();
-    expect(screen.getAllByRole('option')).toHaveLength(3);
-
-    await user.click(screen.getByRole('button', { name: /Housing/ }));
-
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Rent']);
-    expect(screen.getByRole('button', { name: /Housing/ })).toHaveAttribute('aria-pressed', 'true');
-  });
 });

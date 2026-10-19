@@ -81,6 +81,46 @@ describe('rankVariablesBySearch', () => {
   ];
   const names = (list: VariableInfo[]) => list.map((entry) => entry.name);
 
+  test('given searchByEntity then a person lists person inputs and the household the rest', async () => {
+    const variable = (name: string, label: string, entity: string) => ({
+      name,
+      label,
+      entity,
+      isInputVariable: true,
+      valueType: 'float',
+      moduleName: 'household.income.person.misc',
+    });
+    const metadata = {
+      entities: {
+        person: { plural: 'people', label: 'Person', is_person: true },
+        tax_unit: { plural: 'tax_units', label: 'Tax unit' },
+        household: { plural: 'households', label: 'Household' },
+      },
+      variables: {
+        tip_income: variable('tip_income', 'Tip income', 'person'),
+        rent: variable('rent', 'Rent', 'household'),
+        tax_unit_childcare: variable('tax_unit_childcare', 'Childcare', 'tax_unit'),
+      },
+    };
+    const groupOf = () => 'Income';
+    const optionsIn = () =>
+      screen
+        .getAllByRole('option')
+        .filter((option) => option.hasAttribute('data-option'))
+        .map((option) => option.textContent);
+    const { unmount } = renderForm({ metadata, searchByEntity: true, variableGroupOf: groupOf });
+
+    fireEvent.click(screen.getByRole('button', { name: /Add variable to you$/ }));
+    fireEvent.mouseDown(screen.getAllByRole('button', { name: 'Income' })[0]);
+    expect(optionsIn()).toEqual(['Tip income']);
+    unmount();
+
+    renderForm({ metadata, searchByEntity: true, variableGroupOf: groupOf });
+    fireEvent.click(screen.getByRole('button', { name: 'Add variable to your household' }));
+    fireEvent.mouseDown(screen.getAllByRole('button', { name: 'Income' })[0]);
+    expect(optionsIn().sort()).toEqual(['Childcare', 'Rent']);
+  });
+
   test('given a word then whole words lead, and parts of words follow', () => {
     expect(names(rankVariablesBySearch(VARIABLES, 'rent'))).toEqual([
       'rent',
