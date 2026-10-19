@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_WEBSITE_URL: string;
   readonly VITE_CALCULATOR_URL: string;
   readonly VITE_FLAGSHIP_SHELL?: string;
+  readonly VITE_FLAGSHIP_SHELL_UK?: string;
   readonly VITE_FLAGSHIP_OVERRIDE?: string;
   readonly VITE_API_URL?: string;
   readonly VITE_AUTH_ENABLED?: string;
