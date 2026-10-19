@@ -73,6 +73,8 @@ describe('VariableSearchDropdown', () => {
 
     expect(screen.getByText('Income', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('Housing', { selector: 'p' })).toBeInTheDocument();
+    // Grouped, the search opens as a dialog of its own.
+    expect(screen.getByRole('dialog', { name: 'Add a variable' })).toBeInTheDocument();
     // The list's rows; the phone's category choice has options of its own.
     const rows = () =>
       screen.getAllByRole('option').filter((option) => option.hasAttribute('data-option'));

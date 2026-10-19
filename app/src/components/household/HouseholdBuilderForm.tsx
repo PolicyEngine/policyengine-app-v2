@@ -689,6 +689,7 @@ export default function HouseholdBuilderForm({
                             groupOf={variableGroupOf}
                             groupOrder={variableGroupOrder}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
+                            title={`Add a variable to ${getPersonDisplayName(person)}`}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
                                 variable.name,
@@ -822,6 +823,7 @@ export default function HouseholdBuilderForm({
                       groupOf={variableGroupOf}
                       groupOrder={variableGroupOrder}
                       onSelect={handleHouseholdVariableSelect}
+                      title="Add a variable to your household"
                       getEntityHint={(variable) => {
                         const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
                         return { show: isPerson, label: 'Person' };
