@@ -336,3 +336,40 @@ describe('ReportView districts by country', () => {
     }
   );
 });
+
+describe('ReportView analytics', () => {
+  afterEach(() => {
+    delete window.gtag;
+  });
+
+  test('given tabs opened then each sends one event with its tab and the region kind only', async () => {
+    const user = userEvent.setup();
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Higher CTC"
+          sourceNote="Hand-built"
+          provisions={[]}
+          year="2026"
+          region="state/ca"
+          output={null}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+
+    // The open tab again sends nothing.
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    await user.click(screen.getByRole('tab', { name: 'Household' }));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+
+    expect(gtag.mock.calls).toEqual([
+      ['event', 'report_tab_viewed', { country_id: 'us', tab: 'household', region_kind: 'state' }],
+      ['event', 'report_tab_viewed', { country_id: 'us', tab: 'districts', region_kind: 'state' }],
+    ]);
+  });
+});

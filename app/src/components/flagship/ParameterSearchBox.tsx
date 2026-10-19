@@ -23,9 +23,20 @@ import {
 } from '@/libs/parameterSearch';
 import ScopePicker from './ScopePicker';
 
+/** Where a picked result sat, for analytics: never the query text. */
+export interface ParameterSearchPick {
+  /** Its place in the list shown, from 1. */
+  rank: number;
+  /** A breakdown row (one parameter per state, say), not one parameter. */
+  isBreakdown: boolean;
+  /** Picked from an opened folder rather than from the search's results. */
+  inFolder: boolean;
+  queryLength: number;
+}
+
 interface ParameterSearchBoxProps {
   entries: ParameterSearchEntry[];
-  onSelect: (entry: ParameterSearchEntry) => void;
+  onSelect: (entry: ParameterSearchEntry, pick: ParameterSearchPick) => void;
   /** Prebuilt index (e.g. the store-memoized one); skips a rebuild per mount */
   index?: ParameterSearchIndex;
   placeholder?: string;
@@ -438,7 +449,12 @@ export default function ParameterSearchBox({
     if (!browsing && search.stale) {
       return;
     }
-    onSelect(entry);
+    onSelect(entry, {
+      rank: flatEntries.indexOf(entry) + 1,
+      isBreakdown: !!entry.breakdownPath,
+      inFolder: browsing !== null,
+      queryLength: query.trim().length,
+    });
     if (keepResultsOnSelect) {
       return;
     }
