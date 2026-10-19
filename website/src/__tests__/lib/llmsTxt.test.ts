@@ -193,6 +193,17 @@ describe("describeIframe", () => {
     );
   });
 
+  test("given youtu.be and youtube-nocookie embeds then they are videos too", () => {
+    expect(describeIframe(' src="https://youtu.be/abc_DEF"')).toBe(
+      "[Interactive: YouTube video](https://youtu.be/abc_DEF)",
+    );
+    expect(
+      describeIframe(' src="https://www.youtube-nocookie.com/embed/abc"'),
+    ).toBe(
+      "[Interactive: YouTube video](https://www.youtube-nocookie.com/embed/abc)",
+    );
+  });
+
   test("given a page-relative src then it resolves against the article", () => {
     expect(describeIframe(' src="embed.html"', ARTICLE_URL)).toBe(
       `[Interactive: embed](${SITE_URL}/us/research/embed.html)`,
@@ -329,6 +340,36 @@ describe("transformArticleMarkdown", () => {
     expect(result).toContain(longFence);
     expect(result).toContain(tildeFence);
     expect(result).toContain("[Chart: Tilde]");
+  });
+
+  test("given a plotly fence with CRLF lines or extra info words then it is summarised", () => {
+    const crlf = '```plotly\r\n{"layout":{"title":"CRLF"}}\r\n```\r\n';
+    const titled = '```plotly Figure 1\n{"layout":{"title":"Titled"}}\n```';
+
+    // The fence takes its closing line's CR; the LF after it stays.
+    expect(transformArticleMarkdown(crlf)).toBe("[Chart: CRLF]\n");
+    expect(transformArticleMarkdown(titled)).toBe("[Chart: Titled]");
+    expect(
+      transformArticleMarkdown(
+        '``` plotly\n{"layout":{"title":"Spaced"}}\n```',
+      ),
+    ).toBe("[Chart: Spaced]");
+  });
+
+  test("given a backtick line with backticks in its info then it is not a fence", () => {
+    // CommonMark reads "``` `a` ```" as inline code, not an opening fence.
+    const markdown =
+      '``` `a` ```\n\n```plotly\n{"layout":{"title":"After"}}\n```';
+
+    const result = transformArticleMarkdown(markdown);
+
+    expect(result).toBe("``` `a` ```\n\n[Chart: After]");
+  });
+
+  test("given a one-word footnote then it is not read as a link reference", () => {
+    expect(transformArticleMarkdown("[^1]: methodology", ARTICLE_URL)).toBe(
+      "[^1]: methodology",
+    );
   });
 
   test("given an unclosed fence then the rest of the article is code", () => {
@@ -537,6 +578,14 @@ describe("notebookToMarkdown", () => {
         outputs: [{ output_type: "stream" }],
       },
       {
+        // Not JSON: the whole output is kept, rows and all.
+        cell_type: "code",
+        source: ["df"],
+        outputs: [
+          { data: { "text/plain": ["   a  b\n", "0  1  2\n", "1  3  4"] } },
+        ],
+      },
+      {
         // The article page renders only a code cell's first output.
         cell_type: "code",
         source: ["display(note); fig"],
@@ -564,6 +613,7 @@ describe("notebookToMarkdown", () => {
         "[Chart: type: scatter; series: £200/month]",
         "1.025",
         "1.5",
+        "```\na  b\n0  1  2\n1  3  4\n```",
         "Only the first output.",
       ].join("\n\n"),
     );
@@ -810,6 +860,24 @@ describe("buildLlmsFile with generated posts", () => {
       }),
       params,
     );
+  });
+
+  test("given a title with a line break then its header line joins it", () => {
+    const source = sourceFor([
+      {
+        slug: "t",
+        date: "2026-01-01",
+        tags: ["us"],
+        title: "Line one\nline two",
+        description: "D\u2028E",
+        authors: [],
+        body: "Body",
+      },
+    ]);
+    const lines = buildLlmsFile("llms-full.txt", source).split("\n");
+
+    expect(lines).toContain("# Line one line two");
+    expect(lines).toContain("Description: D E");
   });
 
   test("given an author id with no entry then the id is shown", () => {

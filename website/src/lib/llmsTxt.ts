@@ -319,6 +319,26 @@ function transformProse(text: string, base: string): string {
 }
 
 /**
+ * The fenced code blocks in `markdown`, in order. A backtick line whose info
+ * string holds a backtick is not a fence (CommonMark reads it as inline
+ * code), so the search resumes on the next line.
+ */
+export function codeFences(markdown: string): RegExpExecArray[] {
+  const pattern = new RegExp(CODE_FENCE.source, "gm");
+  const fences: RegExpExecArray[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(markdown)) !== null) {
+    const [fence, , char, info] = match;
+    if (char === "`" && info.includes("`")) {
+      pattern.lastIndex = match.index + fence.indexOf("\n") + 1;
+      continue;
+    }
+    fences.push(match);
+  }
+  return fences;
+}
+
+/**
  * Turn article markdown into the text the llms files carry. Plotly fences
  * become one-line summaries, other fences stay as written, and links resolve
  * against `base`, the article's own URL.
@@ -329,11 +349,12 @@ export function transformArticleMarkdown(
 ): string {
   let result = "";
   let last = 0;
-  for (const match of markdown.matchAll(CODE_FENCE)) {
+  for (const match of codeFences(markdown)) {
     const [fence, , , info, body] = match;
+    // The page picks the language from the info string's first word.
+    const language = info.trim().split(/\s+/)[0];
     result += transformProse(markdown.slice(last, match.index), base);
-    result +=
-      info.trim() === "plotly" ? summarizePlotlyJson(body.trim()) : fence;
+    result += language === "plotly" ? summarizePlotlyJson(body.trim()) : fence;
     last = match.index + fence.length;
   }
   return result + transformProse(markdown.slice(last), base);
@@ -349,14 +370,19 @@ function joinSource(source: unknown): string {
   return "";
 }
 
-/** A text/plain output, as the page renders it: only its first element. */
+/**
+ * A text/plain output. Like the page, read its first element as JSON; when
+ * that fails, keep the whole output as a code block, where the page shows it
+ * as a JSON array.
+ */
 function plainTextOutput(data: unknown): string | null {
   const text = Array.isArray(data) ? String(data[0] ?? "") : joinSource(data);
   let value: unknown;
   try {
     value = parseJSONSafe(text);
   } catch {
-    return text.trim() ? "```\n" + text.trim() + "\n```" : null;
+    const whole = joinSource(data).trim();
+    return whole ? "```\n" + whole + "\n```" : null;
   }
   if (typeof value === "string" || typeof value === "number") {
     return String(value);
