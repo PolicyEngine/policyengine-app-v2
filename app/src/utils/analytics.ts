@@ -1,9 +1,10 @@
 /**
  * GA4 event tracking utility
  *
- * Wraps window.gtag calls. The gtag script is loaded via the HTML files
- * (website.html / calculator.html). This module provides typed helpers
- * so components don't call window.gtag directly.
+ * Wraps window.gtag calls. The gtag script is loaded by the page shell
+ * (calculator-app/src/app/layout.tsx, or calculator.html in the Vite build).
+ * This module provides typed helpers so components don't call window.gtag
+ * directly.
  */
 
 declare global {

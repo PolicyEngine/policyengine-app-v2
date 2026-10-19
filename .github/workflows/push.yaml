@@ -77,7 +77,7 @@ jobs:
           FAILED=0
           # Extract all policyengine.github.io URLs from page components,
           # stripping template-literal expressions like ${countryId} and ?query params
-          for raw_url in $(grep -roh "https://policyengine\.github\.io/[^'\"]*" app/src/pages/ | sort -u); do
+          for raw_url in $(grep -roh "https://policyengine\.github\.io/[^'\"]*" app/src/pages/ website/src/app/ | sort -u); do
             # Remove template expressions (${...}) and query strings for the health check
             url=$(echo "$raw_url" | sed 's/\${[^}]*}//g' | sed 's/?.*//')
             # Remove trailing slash for consistency

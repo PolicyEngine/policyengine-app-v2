@@ -2,23 +2,13 @@
 
 ## app/ directory — what goes where
 
-The `app/` directory contains the legacy Vite build. Some parts have been ported to Next.js, others are still active.
+The `app/` directory holds the calculator code. `calculator-app/` (Next.js) compiles it through `externalDir`, with `@/*` mapped to `app/src/*`; `app/` also keeps a Vite build of the calculator. The website lives only in `website/`: the Vite copies of its pages were deleted after the Next.js cutover (#817).
 
-**Ported to `website/` (do not modify in `app/`):**
-
-- Website components: `home/`, `shared/static/`, `Footer.tsx`, `FooterSubscribe.tsx`, `blog/BlogPostCard.tsx`, `blog/BlogPostGrid.tsx`, `blog/ResearchFilters.tsx`
-  - Note: `homeHeader/` and `shared/HomeHeader.tsx` were also ported to `website/src/components/Header.tsx`, but the calculator-app still renders `HomeHeader` via `StandardLayout`, so these remain editable in `app/`. Keep the calculator header in sync with the website header when the website one changes.
-- Website pages: `Home`, `Research`, `Blog`, `Team`, `Supporters`, `Donate`, `Privacy`, `Terms`, `Brand*`, `Citations`, `AppPage`
-- Production website routing — new rewrites go in `website/next.config.ts`, not `website/vercel.json`
-
-**Still active in `app/` (safe to modify):**
-
-- Calculator components (report builder, household, charts, sidebar, etc.) — `calculator-app/` imports these via `externalDir`
-- Calculator pages (report output, pathways, etc.)
-- `app/src/data/` — shared data files (posts.json, citations.json, apps.json, authors.json)
-- `app/public/assets/` — shared static assets
-
-CI will warn if a PR modifies website-specific files in `app/`.
+- Calculator components and pages (report builder, household, charts, sidebar, report output, pathways, etc.) live in `app/src/`.
+- `homeHeader/` and `shared/HomeHeader.tsx` are the calculator's header, rendered by `StandardLayout`. The website's header is `website/src/components/Header.tsx`; keep the calculator header in sync when the website one changes.
+- `app/src/data/` holds data the website shares (posts.json and the article files, authors.json, citations.json, apps.json, events.json); `website/src/data/` links to these files.
+- `app/public/assets/` holds static assets that the website build copies in.
+- Website pages and components go in `website/src/`. New website rewrites go in `website/next.config.ts`, not `website/vercel.json`.
 
 ## Visual standards
 
@@ -106,7 +96,7 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
 ### The shell rule
 
-**Everything served on policyengine.org carries the PolicyEngine site shell — header/nav and footer — and zone children must render it themselves** (the aca-calc / snap-qc-sim pattern: global nav with the wordmark, Research, Model, API, Donate, plus the site footer links). There is no shelled fallthrough for zone paths: the website proxies each tool's path straight to the child, and `AppPage`/apps.json alone has **no production route** (removing a zone rewrite 404s the path — see #1143/#1144). The `app-zone-shell-audit` enforces the header on zone routes; `SHELL_BRAND_EXEMPT_SOURCES` is empty and stays that way — the last nine bare legacy children shipped their shells in August 2026, and new zone embeds must render the shell from day one.
+**Everything served on policyengine.org carries the PolicyEngine site shell — header/nav and footer — and zone children must render it themselves** (the aca-calc / snap-qc-sim pattern: global nav with the wordmark, Research, Model, API, Donate, plus the site footer links). There is no shelled fallthrough for zone paths: the website proxies each tool's path straight to the child, and an apps.json entry alone has **no production route** (removing a zone rewrite 404s the path — see #1143/#1144). The `app-zone-shell-audit` enforces the header on zone routes; `SHELL_BRAND_EXEMPT_SOURCES` is empty and stays that way — the last nine bare legacy children shipped their shells in August 2026, and new zone embeds must render the shell from day one.
 
 ### Next.js multizones (default for all new tools)
 
@@ -123,13 +113,7 @@ Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/Polic
 
 ### GitHub Pages iframes (legacy)
 
-A few static GitHub Pages sites are still embedded via iframes in `app/src/pages/`. Do not add new ones — use multizones.
-
-| Route                             | Component               | Embed source                                 |
-| --------------------------------- | ----------------------- | -------------------------------------------- |
-| `/:countryId/2025-year-in-review` | `YearInReview.page.tsx` | `policyengine.github.io/2025-year-in-review` |
-
-CI automatically checks these embed URLs on every push and PR (the `check-embeds` job in `pr.yaml` and `push.yaml`).
+No route embeds a GitHub Pages site as a whole page any more: the 2025 year in review is now a zone (`website/src/data/appZoneRoutes.ts`). Do not add page-level iframe embeds — use multizones. Research articles can still embed `policyengine.github.io` charts in their markdown. The `check-embeds` job in `pr.yaml` and `push.yaml` doesn't scan articles; it checks that `policyengine.github.io` URLs under `app/src/pages/` and `website/src/app/` return 200.
 
 ### Host-only `website/vercel.json` rewrites
 
