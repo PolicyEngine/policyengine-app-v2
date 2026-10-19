@@ -37,6 +37,12 @@ export interface VariableSearchDropdownProps {
   /** Variables listed first under their own heading; the rest follow under "All variables". */
   suggested?: ReadonlyMap<string, number>;
   suggestedLabel?: string;
+  /**
+   * With `groupOf`: a group's parts, shown as subheadings when that group
+   * is chosen (Income → wages, investments, …), in `subgroupOrder`.
+   */
+  subgroupOf?: (variable: VariableInfo) => string | null;
+  subgroupOrder?: readonly string[];
   /** With `groupOf`: the dialog's title. */
   title?: string;
   /**
@@ -89,6 +95,8 @@ export default function VariableSearchDropdown({
   suggestedLabel = 'Suggested',
   groupOf,
   title = 'Add a variable',
+  subgroupOf,
+  subgroupOrder = [],
   groupOrder = [],
 }: VariableSearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -159,7 +167,21 @@ export default function VariableSearchDropdown({
         .sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
         .map(([group, items]) => ({ key: group, label: group, items, more: 0 })),
     ];
-    const chosen = all.find((section) => section.key === activeGroup);
+    let chosen = all.find((section) => section.key === activeGroup);
+    // A chosen group with parts reads part by part, each in label order;
+    // a typed search keeps its own ranking.
+    if (chosen && subgroupOf && !searchValue.trim()) {
+      const partRank = (variable: VariableInfo) => {
+        const index = subgroupOrder.indexOf(subgroupOf(variable) ?? '');
+        return index === -1 ? subgroupOrder.length : index;
+      };
+      chosen = {
+        ...chosen,
+        items: [...chosen.items].sort(
+          (a, b) => partRank(a) - partRank(b) || a.label.localeCompare(b.label)
+        ),
+      };
+    }
     const sections = chosen
       ? [chosen]
       : all.map((section) => ({
@@ -176,6 +198,9 @@ export default function VariableSearchDropdown({
     suggestedCount,
     suggestedLabel,
     activeGroup,
+    subgroupOf,
+    subgroupOrder,
+    searchValue,
   ]);
   // The options in the order they show: the grouped list's, or the plain one.
   const displayVariables = grouped
@@ -368,38 +393,53 @@ export default function VariableSearchDropdown({
                         {section.items.map((variable, at) => {
                           const index = offset + at;
                           const entityHint = getEntityHint?.(variable);
+                          const part =
+                            activeGroup === section.key && subgroupOf ? subgroupOf(variable) : null;
+                          const partStarts =
+                            !!part && (at === 0 || subgroupOf!(section.items[at - 1]) !== part);
                           return (
-                            <div
-                              key={variable.name}
-                              data-option
-                              role="option"
-                              tabIndex={-1}
-                              aria-selected={index === selectedIndex}
-                              className={cn(
-                                'tw:flex tw:cursor-pointer tw:items-start tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5',
-                                index === selectedIndex ? 'tw:bg-primary-50' : 'tw:hover:bg-gray-50'
-                              )}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleSelect(variable);
-                              }}
-                            >
-                              <div className="tw:min-w-0 tw:flex-1">
-                                <p className="tw:truncate tw:text-sm tw:text-gray-900">
-                                  {sentenceCaseLabel(variable.label)}
+                            <Fragment key={variable.name}>
+                              {partStarts && (
+                                <p
+                                  role="presentation"
+                                  className="tw:px-2 tw:pt-3 tw:pb-1 tw:text-xs tw:font-semibold tw:text-gray-700"
+                                >
+                                  {part}
                                 </p>
-                                {variable.documentation && (
-                                  <p className="tw:line-clamp-1 tw:text-xs tw:text-gray-500">
-                                    {variable.documentation}
+                              )}
+                              <div
+                                data-option
+                                role="option"
+                                tabIndex={-1}
+                                aria-selected={index === selectedIndex}
+                                className={cn(
+                                  'tw:flex tw:cursor-pointer tw:items-start tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5',
+                                  index === selectedIndex
+                                    ? 'tw:bg-primary-50'
+                                    : 'tw:hover:bg-gray-50'
+                                )}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleSelect(variable);
+                                }}
+                              >
+                                <div className="tw:min-w-0 tw:flex-1">
+                                  <p className="tw:truncate tw:text-sm tw:text-gray-900">
+                                    {sentenceCaseLabel(variable.label)}
                                   </p>
+                                  {variable.documentation && (
+                                    <p className="tw:line-clamp-1 tw:text-xs tw:text-gray-500">
+                                      {variable.documentation}
+                                    </p>
+                                  )}
+                                </div>
+                                {entityHint?.show && (
+                                  <span className="tw:shrink-0 tw:rounded tw:bg-gray-100 tw:px-1.5 tw:py-0.5 tw:text-[11px] tw:text-gray-600">
+                                    {entityHint.label}
+                                  </span>
                                 )}
                               </div>
-                              {entityHint?.show && (
-                                <span className="tw:shrink-0 tw:rounded tw:bg-gray-100 tw:px-1.5 tw:py-0.5 tw:text-[11px] tw:text-gray-600">
-                                  {entityHint.label}
-                                </span>
-                              )}
-                            </div>
+                            </Fragment>
                           );
                         })}
                         {section.more > 0 && (

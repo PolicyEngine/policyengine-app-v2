@@ -67,3 +67,76 @@ export function listsForState(variable: VariableInfo, stateCode: string | null):
   const state = programState(variable);
   return state === null || (!!stateCode && state === stateCode.toLowerCase());
 }
+
+/** Income's parts, in the order a reader looks for them. */
+export const HOUSEHOLD_INCOME_SUBGROUPS = [
+  'Wages and work',
+  'Self-employment and business',
+  'Investments',
+  'Retirement',
+  'Other income',
+] as const;
+
+const WORK_MODULES = new Set([
+  'hourly_wage',
+  'hours_worked_last_week',
+  'is_paid_hourly',
+  'is_union_member_or_covered',
+  'tip_income',
+  'fsla_overtime_premium',
+  'weekly_hours_worked',
+  'dependent_care_employer_benefits',
+]);
+const BUSINESS_MODULES = new Set(['self_employment', 'farm', 'estate']);
+const INVESTMENT_MODULES = new Set([
+  'capital_gains',
+  'dividends',
+  'interest',
+  'us_govt_interest_person',
+  'property_sales_net_capital_gain',
+  'form_4972_lumpsum_distributions',
+]);
+
+/**
+ * The part of its group a variable reads under, from its module: Income
+ * splits into wages, business, investments, retirement and the rest.
+ * Null for groups without parts.
+ */
+export function householdVariableSubgroup(variable: VariableInfo): string | null {
+  if (householdVariableGroup(variable) !== 'Income') {
+    return null;
+  }
+  // `household.income.person.dividends…` → "dividends"; a module at the top keeps its own name.
+  const parts = (variable.moduleName ?? '').split('.');
+  const leaf = ['person', 'tax_unit', 'spm_unit', 'household'].includes(parts[2])
+    ? parts[3]
+    : parts[2];
+  if (WORK_MODULES.has(leaf)) {
+    return 'Wages and work';
+  }
+  if (BUSINESS_MODULES.has(leaf)) {
+    return 'Self-employment and business';
+  }
+  if (INVESTMENT_MODULES.has(leaf)) {
+    return 'Investments';
+  }
+  if (leaf === 'retirement') {
+    return 'Retirement';
+  }
+  return 'Other income';
+}
+
+/**
+ * Inputs a reader does not describe a household with: amounts the survey
+ * reports for a whole unit, analysts' incidence inputs, and inputs the
+ * model keeps only for old API callers.
+ */
+export function describesAHousehold(variable: VariableInfo): boolean {
+  const module = variable.moduleName ?? '';
+  return !(
+    /^deprecated/i.test(variable.documentation ?? '') ||
+    /(^|_)reported($|_)/.test(variable.name) ||
+    module.startsWith('household.income.spm_unit') ||
+    module.startsWith('household.income.household.cbo')
+  );
+}

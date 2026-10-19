@@ -11,8 +11,11 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
 import {
+  describesAHousehold,
+  HOUSEHOLD_INCOME_SUBGROUPS,
   HOUSEHOLD_VARIABLE_GROUPS,
   householdVariableGroup,
+  householdVariableSubgroup,
   listsForState,
 } from '@/libs/flagship/householdVariableGroups';
 import { loadParameterDependencies } from '@/libs/flagship/parameterDependencies';
@@ -224,10 +227,11 @@ function HouseholdCard({
         .flatMap(([, fields]) => fields),
     [basicInputFields]
   );
-  // The variable search lists only the household's own state's programs.
+  // The variable search lists only the household's own state's programs,
+  // and only inputs that describe a household (no survey-reported totals).
   const stateCode = householdState(household, year);
   const variableFilter = useCallback(
-    (variable: VariableInfo) => listsForState(variable, stateCode),
+    (variable: VariableInfo) => listsForState(variable, stateCode) && describesAHousehold(variable),
     [stateCode]
   );
   // Whether the household can run, as the household builder checks it.
@@ -336,6 +340,9 @@ function HouseholdCard({
             variableGroupOf={householdVariableGroup}
             variableGroupOrder={HOUSEHOLD_VARIABLE_GROUPS}
             variableFilter={variableFilter}
+            variableSubgroupOf={householdVariableSubgroup}
+            variableSubgroupOrder={HOUSEHOLD_INCOME_SUBGROUPS}
+            searchByEntity
           />
           <div
             style={{

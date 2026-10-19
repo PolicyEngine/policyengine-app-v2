@@ -76,6 +76,16 @@ export interface HouseholdBuilderFormProps {
   variableGroupOrder?: readonly string[];
   /** Leaves variables out of the search, e.g. other states' programs. */
   variableFilter?: (variable: VariableInfo) => boolean;
+  /**
+   * Each search lists only its own entity's inputs: a person's, person
+   * variables; the household's, every group entity's (household, tax
+   * unit, SPM unit, family, marital unit — one of each here). Off, either
+   * search lists every input and routes a pick to its entity, with a note.
+   */
+  searchByEntity?: boolean;
+  /** With `variableGroupOf`: a group's parts, as subheadings when that group is chosen. */
+  variableSubgroupOf?: (variable: VariableInfo) => string | null;
+  variableSubgroupOrder?: readonly string[];
 }
 
 /**
@@ -199,6 +209,9 @@ export default function HouseholdBuilderForm({
   variableGroupOf,
   variableGroupOrder,
   variableFilter,
+  searchByEntity = false,
+  variableSubgroupOf,
+  variableSubgroupOrder,
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -270,19 +283,32 @@ export default function HouseholdBuilderForm({
           ...list.filter((variable) => !suggestedOrder.has(variable.name)),
         ];
 
+  // Each entity's own inputs, when each search lists only its own.
+  const scopedInputs = useMemo(() => {
+    if (!searchByEntity) {
+      return { person: allInputVariables, group: allInputVariables };
+    }
+    const person: VariableInfo[] = [];
+    const group: VariableInfo[] = [];
+    for (const variable of allInputVariables) {
+      (resolveEntity(variable.name, metadata)?.isPerson === false ? group : person).push(variable);
+    }
+    return { person, group };
+  }, [allInputVariables, metadata, searchByEntity]);
+
   // Filter variables by search value with result limit for performance
-  const filterVariables = (searchValue: string) => {
+  const filterVariables = (searchValue: string, inputs: VariableInfo[] = allInputVariables) => {
     if (!searchValue.trim()) {
       return {
-        variables: leadWithSuggested(allInputVariables).slice(0, MAX_DROPDOWN_RESULTS),
-        truncated: allInputVariables.length > MAX_DROPDOWN_RESULTS,
+        variables: leadWithSuggested(inputs).slice(0, MAX_DROPDOWN_RESULTS),
+        truncated: inputs.length > MAX_DROPDOWN_RESULTS,
       };
     }
     const search = searchValue.toLowerCase();
     const filtered =
       searchRanking === 'relevance'
-        ? rankVariablesBySearch(allInputVariables, searchValue)
-        : allInputVariables.filter(
+        ? rankVariablesBySearch(inputs, searchValue)
+        : inputs.filter(
             (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
           );
     return {
@@ -294,14 +320,14 @@ export default function HouseholdBuilderForm({
 
   // Memoized filtered variables for person search
   const filteredPersonVariables = useMemo(
-    () => filterVariables(personSearchValue),
-    [personSearchValue, allInputVariables, suggestedOrder]
+    () => filterVariables(personSearchValue, scopedInputs.person),
+    [personSearchValue, scopedInputs, suggestedOrder]
   );
 
   // Memoized filtered variables for household search
   const filteredHouseholdVariables = useMemo(
-    () => filterVariables(householdSearchValue),
-    [householdSearchValue, allInputVariables, suggestedOrder]
+    () => filterVariables(householdSearchValue, scopedInputs.group),
+    [householdSearchValue, scopedInputs, suggestedOrder]
   );
 
   const resolveDefaultGroupInstanceName = (variableName: string): string | undefined => {
@@ -688,6 +714,8 @@ export default function HouseholdBuilderForm({
                             suggestedLabel={suggestedLabel}
                             groupOf={variableGroupOf}
                             groupOrder={variableGroupOrder}
+                            subgroupOf={variableSubgroupOf}
+                            subgroupOrder={variableSubgroupOrder}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             title={`Add a variable to ${getPersonDisplayName(person)}`}
                             getEntityHint={(variable) => {
@@ -695,7 +723,7 @@ export default function HouseholdBuilderForm({
                                 variable.name,
                                 metadata
                               );
-                              return { show: !isPerson, label: 'Household' };
+                              return { show: !searchByEntity && !isPerson, label: 'Household' };
                             }}
                             disabled={disabled}
                             onClose={() => {
@@ -822,11 +850,13 @@ export default function HouseholdBuilderForm({
                       suggestedLabel={suggestedLabel}
                       groupOf={variableGroupOf}
                       groupOrder={variableGroupOrder}
+                      subgroupOf={variableSubgroupOf}
+                      subgroupOrder={variableSubgroupOrder}
                       onSelect={handleHouseholdVariableSelect}
                       title="Add a variable to your household"
                       getEntityHint={(variable) => {
                         const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
-                        return { show: isPerson, label: 'Person' };
+                        return { show: !searchByEntity && isPerson, label: 'Person' };
                       }}
                       disabled={disabled}
                       onClose={() => {
