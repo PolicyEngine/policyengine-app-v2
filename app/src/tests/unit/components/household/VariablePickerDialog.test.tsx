@@ -39,8 +39,8 @@ function renderPicker(props: Partial<React.ComponentProps<typeof VariablePickerD
       subgroupOf={(v) => PARTS[v.name] ?? null}
       subgroupOrder={['Wages and work', 'Investments']}
       common={[
-        { name: 'pre_subsidy_rent', label: 'Rent', icon: null },
-        { name: 'not_offered_here', label: 'Gas', icon: null },
+        { name: 'pre_subsidy_rent', label: 'Rent' },
+        { name: 'not_offered_here', label: 'Gas' },
       ]}
       {...props}
     />
@@ -51,17 +51,18 @@ function renderPicker(props: Partial<React.ComponentProps<typeof VariablePickerD
 const rows = () => screen.queryAllByRole('option').map((option) => option.textContent);
 
 describe('VariablePickerDialog', () => {
-  test('given it opens then the common inputs it offers lead, as tiles', async () => {
+  test('given it opens then the featured inputs it offers lead, listed by name', async () => {
     const user = userEvent.setup();
-    const { onSelect } = renderPicker();
+    const { onSelect } = renderPicker({
+      nameOf: (v) => (v.name === 'pre_subsidy_rent' ? 'Rent' : v.label),
+    });
 
     expect(screen.getByRole('dialog', { name: 'Add a variable to you' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Rent' })).toBeInTheDocument();
-    // A tile for an input this picker does not offer is left out.
-    expect(screen.queryByRole('button', { name: 'Gas' })).not.toBeInTheDocument();
-    expect(rows()).toEqual([]);
+    // An input this picker does not offer is left out.
+    expect(rows()).toEqual(['Rent']);
+    expect(screen.getByRole('listbox', { name: 'Featured' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Rent' }));
+    await user.click(screen.getByRole('option', { name: 'Rent' }));
     expect(onSelect).toHaveBeenCalledWith(VARIABLES[0]);
   });
 
@@ -97,13 +98,22 @@ describe('VariablePickerDialog', () => {
     expect(screen.getByText('Rent paid for the home')).toBeInTheDocument();
   });
 
-  test('given the reform suggests inputs then the first view lists them', () => {
+  test('given the reform suggests inputs then the first view lists them after the featured', () => {
     renderPicker({
-      suggested: new Map([['hourly_wage', 0]]),
+      suggested: new Map([
+        ['hourly_wage', 0],
+        ['tip_income', 1],
+      ]),
       suggestedLabel: 'Related to this reform',
     });
 
     expect(screen.getByText('Related to this reform')).toBeInTheDocument();
-    expect(rows()).toEqual(['Hourly wage']);
+    expect(rows()).toEqual(['Pre subsidy rent', 'Hourly wage', 'Tip income']);
+  });
+
+  test('given the reform suggests one input only then no related list shows', () => {
+    renderPicker({ suggested: new Map([['hourly_wage', 0]]) });
+
+    expect(screen.queryByText('Related to this reform')).not.toBeInTheDocument();
   });
 });

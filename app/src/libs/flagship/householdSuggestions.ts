@@ -10,22 +10,32 @@ import {
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
-/** Steps upstream from the changed variables: enough for rent → housing cost → SNAP. */
-const MAX_UPSTREAM = 8;
-const DEFAULT_LIMIT = 12;
+/**
+ * Steps upstream from the changed variables: enough for rent → housing
+ * cost → SNAP. Further, nearly every input is upstream of a tax credit
+ * through adjusted gross income, and the list stops saying anything.
+ */
+const MAX_UPSTREAM = 4;
+const DEFAULT_LIMIT = 40;
 
 /**
  * Inputs a reader does not describe a household with: survey weights,
  * reported amounts and take-up draws the microdata sets, and ids.
  */
 const NOT_HOUSEHOLD_FACTS =
-  /(^|_)(weight|reported|takes_up|takeup|would_claim|id|seed|imputed)($|_)/;
+  /(^|_)(weight|reported|takes_up|takeup|would_claim|would_file|id|seed|imputed)($|_)/;
+
+/** A state program's own input (`il_pass_through_…`, `ut_additions`): not a household's fact. */
+const STATE_PROGRAM_INPUT =
+  /^(al|ak|az|ar|ca|co|ct|de|dc|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy)_/;
 
 export function suggestedHouseholdInputs(
   paths: string[],
   map: ParameterDependencyMap,
   inputs: Set<string>,
-  limit: number = DEFAULT_LIMIT
+  limit: number = DEFAULT_LIMIT,
+  /** Inputs a household commonly has, listed ahead of the rest at any distance. */
+  preferred: ReadonlySet<string> = new Set()
 ): string[] {
   // The variables the parameters feed, and the ones one step on.
   const start = variablesReachedByPaths(paths, map, 1).map((entry) => entry.variable);
@@ -55,8 +65,16 @@ export function suggestedHouseholdInputs(
     frontier = next;
   }
   return [...distance.entries()]
-    .filter(([variable]) => inputs.has(variable) && !NOT_HOUSEHOLD_FACTS.test(variable))
-    .sort(([a, da], [b, db]) => da - db || a.localeCompare(b))
+    .filter(
+      ([variable]) =>
+        inputs.has(variable) &&
+        !NOT_HOUSEHOLD_FACTS.test(variable) &&
+        !STATE_PROGRAM_INPUT.test(variable)
+    )
+    .sort(
+      ([a, da], [b, db]) =>
+        Number(preferred.has(b)) - Number(preferred.has(a)) || da - db || a.localeCompare(b)
+    )
     .slice(0, limit)
     .map(([variable]) => variable);
 }

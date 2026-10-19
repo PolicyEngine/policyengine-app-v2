@@ -407,6 +407,7 @@ export default function ReportView({
                         baselinePolicyId={baselinePolicyId}
                         reformPolicyId={reformPolicyId}
                         reformPaths={provisions.map((provision) => provision.path)}
+                        reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
                       />
                     ) : (
                       <>

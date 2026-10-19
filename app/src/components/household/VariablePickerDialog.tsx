@@ -1,6 +1,6 @@
 /**
  * The household builder's variable picker as a dialog: the inputs most
- * households need first, as tiles, then topics to browse, and a search
+ * households need first, then topics to browse, and a search
  * across everything. A chosen topic lists its inputs by name, part by
  * part; the input under the pointer is described once, below the list.
  */
@@ -10,12 +10,11 @@ import { Dialog, DialogContent, DialogTitle, Spinner } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { VariableInfo } from '@/utils/VariableResolver';
 
-/** An input offered as a tile on the picker's first view. */
+/** An input the picker features on its first view. */
 export interface CommonInput {
   name: string;
-  /** A short name for the tile, e.g. "Rent" for `pre_subsidy_rent`. */
+  /** A short name, e.g. "Rent" for `pre_subsidy_rent`. */
   label: string;
-  icon: ReactNode;
 }
 
 export interface VariablePickerDialogProps {
@@ -31,7 +30,7 @@ export interface VariablePickerDialogProps {
   groupIcon?: (group: string) => ReactNode;
   subgroupOf?: (variable: VariableInfo) => string | null;
   subgroupOrder?: readonly string[];
-  /** Tiles on the first view; those not among `variables` are left out. */
+  /** Featured on the first view; those not among `variables` are left out. */
   common?: CommonInput[];
   /** Inputs the report's reform makes worth filling in, listed on the first view. */
   suggested?: ReadonlyMap<string, number>;
@@ -79,20 +78,25 @@ export default function VariablePickerDialog({
   const name = (variable: VariableInfo) => nameOf?.(variable) ?? sentenceCase(variable.label);
 
   const byName = useMemo(() => new Map(variables.map((v) => [v.name, v])), [variables]);
-  const tiles = useMemo(
-    () => common.filter((input) => byName.has(input.name)).slice(0, FEATURED),
+  const featured = useMemo(
+    () =>
+      common
+        .filter((input) => byName.has(input.name))
+        .slice(0, FEATURED)
+        .map((input) => byName.get(input.name)!),
     [common, byName]
   );
-  const related = useMemo(
-    () =>
-      suggested
-        ? variables
-            .filter((v) => suggested.has(v.name))
-            .sort((a, b) => suggested.get(a.name)! - suggested.get(b.name)!)
-            .slice(0, RELATED_SHOWN)
-        : [],
-    [variables, suggested]
-  );
+  const related = useMemo(() => {
+    const shown = new Set(featured.map((v) => v.name));
+    const list = suggested
+      ? variables
+          .filter((v) => suggested.has(v.name) && !shown.has(v.name))
+          .sort((a, b) => suggested.get(a.name)! - suggested.get(b.name)!)
+          .slice(0, RELATED_SHOWN)
+      : [];
+    // One lone input reads as noise, not as what the reform turns on.
+    return list.length >= 2 ? list : [];
+  }, [variables, suggested, featured]);
   const topics = useMemo(() => {
     const present = new Set(variables.map(groupOf));
     const rank = (group: string) => {
@@ -117,9 +121,9 @@ export default function VariablePickerDialog({
         .filter((v) => groupOf(v) === topic)
         .sort((a, b) => partRank(a) - partRank(b) || name(a).localeCompare(name(b)));
     }
-    return related;
+    return [...featured, ...related];
     // `name` reads `nameOf`, which the dependencies cover.
-  }, [searching, topic, variables, related, groupOf, subgroupOf, subgroupOrder, nameOf]);
+  }, [searching, topic, variables, featured, related, groupOf, subgroupOf, subgroupOrder, nameOf]);
 
   useEffect(() => setPointed(-1), [rows]);
   useEffect(() => {
@@ -278,23 +282,11 @@ export default function VariablePickerDialog({
               </div>
             ) : firstView ? (
               <div className="tw:flex tw:flex-col tw:gap-6">
-                {tiles.length > 0 && (
+                {featured.length > 0 && (
                   <section>
-                    <p className="tw:mb-2 tw:text-xs tw:font-medium tw:text-gray-500">Featured</p>
-                    <div className="tw:grid tw:grid-cols-2 tw:gap-2 tw:sm:grid-cols-3">
-                      {tiles.map((input) => (
-                        <button
-                          key={input.name}
-                          type="button"
-                          onClick={() => onSelect(byName.get(input.name)!)}
-                          className="tw:flex tw:cursor-pointer tw:flex-col tw:items-start tw:gap-2 tw:rounded-lg tw:border tw:border-gray-200 tw:p-3 tw:text-left tw:transition-colors tw:hover:border-primary-300 tw:hover:bg-primary-50/40"
-                        >
-                          <span className="tw:flex tw:text-primary-600" aria-hidden>
-                            {input.icon}
-                          </span>
-                          <span className="tw:text-sm tw:text-gray-900">{input.label}</span>
-                        </button>
-                      ))}
+                    <p className="tw:mb-1 tw:text-xs tw:font-medium tw:text-gray-500">Featured</p>
+                    <div role="listbox" aria-label="Featured">
+                      {featured.map(row)}
                     </div>
                   </section>
                 )}
@@ -304,7 +296,7 @@ export default function VariablePickerDialog({
                       {suggestedLabel}
                     </p>
                     <div role="listbox" aria-label={suggestedLabel}>
-                      {related.map(row)}
+                      {related.map((variable, at) => row(variable, featured.length + at))}
                     </div>
                   </section>
                 )}

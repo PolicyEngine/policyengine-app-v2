@@ -75,12 +75,16 @@ interface HouseholdImpactSectionProps {
   reformPolicyId: string;
   /** The parameters the reform changes: the household inputs they read lead the variable search. */
   reformPaths?: string[];
+  /** The report found the reform changes nothing in its year: no input is suggested. */
+  reformChangesNothing?: boolean;
 }
 
 /**
  * The household inputs the reform's parameters read, nearest first; none
  * until the dependency map loads, or when it traces none of them.
  */
+const PREFERRED_INPUTS = new Set(COMMON_HOUSEHOLD_INPUTS.map((input) => input.name));
+
 function useSuggestedInputs(paths: string[]): string[] {
   const metadata = useSelector((state: RootState) => state.metadata);
   const inputs = useMemo(
@@ -98,7 +102,9 @@ function useSuggestedInputs(paths: string[]): string[] {
     loadParameterDependencies()
       .then((map) => {
         if (!cancelled) {
-          setSuggested(suggestedHouseholdInputs(pathsKey.split('\n'), map, inputs));
+          setSuggested(
+            suggestedHouseholdInputs(pathsKey.split('\n'), map, inputs, undefined, PREFERRED_INPUTS)
+          );
         }
       })
       .catch(() => {
@@ -125,8 +131,10 @@ export default function HouseholdImpactSection({
   baselinePolicyId,
   reformPolicyId,
   reformPaths = [],
+  reformChangesNothing = false,
 }: HouseholdImpactSectionProps) {
-  const suggestedVariables = useSuggestedInputs(reformPaths);
+  // A reform that changes nothing in the year makes no input worth suggesting.
+  const suggestedVariables = useSuggestedInputs(reformChangesNothing ? [] : reformPaths);
   // Each household by a key of its own, so removing one keeps the others' inputs.
   const [keys, setKeys] = useState<number[]>([]);
   const [nextKey, setNextKey] = useState(1);
