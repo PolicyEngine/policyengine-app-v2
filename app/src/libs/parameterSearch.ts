@@ -875,6 +875,33 @@ const COVERAGE_SHORTFALL_WEIGHT = 1;
  */
 const EXACT_LABEL_BONUS = 0.15;
 
+/**
+ * Taken off the re-ranked score of an entry whose own label the query
+ * contains, word for word, with the rest of the query found in its
+ * hierarchy: "higher rate of income tax" is the main schedule's "Higher
+ * rate" before the "Property higher rate" or the "Dividends higher
+ * rate", whose labels add a qualifier the query never asked for. The
+ * schedules' own labels cannot tell them apart: every one of them is an
+ * income tax schedule. Smaller than the exact bonus, so a label that is
+ * the whole query still leads.
+ */
+const CONTAINED_LABEL_BONUS = 0.08;
+
+/** The label bonus an entry earns for a query (see EXACT_LABEL_BONUS, CONTAINED_LABEL_BONUS). */
+function labelBonus(entry: ParameterSearchEntry, exact: string, queryWords: Set<string>): number {
+  if (isKeyLabel(entry.path, entry.label)) {
+    return 0;
+  }
+  const label = plainWords(entry.label);
+  if (label === exact) {
+    return EXACT_LABEL_BONUS;
+  }
+  const words = label.split(' ').filter((word) => !INITIALISM_SKIP.has(word));
+  return words.length > 0 && words.every((word) => queryWords.has(word))
+    ? CONTAINED_LABEL_BONUS
+    : 0;
+}
+
 /** Fuzzy-rank candidates, then adjust by the derived priors. */
 function rankWithPriors(
   candidates: ParameterSearchEntry[],
@@ -884,6 +911,7 @@ function rankWithPriors(
   shortfall?: Map<ParameterSearchEntry, number>
 ): ParameterSearchEntry[] {
   const exact = plainWords(query);
+  const queryWords = new Set(exact.split(' '));
   const ranked = new Fuse(candidates, RERANK_FUSE_OPTIONS)
     .search(query)
     .map((result) => ({
@@ -891,9 +919,7 @@ function rankWithPriors(
       adjusted:
         adjustedScore(result.score, result.item, namedStates) +
         COVERAGE_SHORTFALL_WEIGHT * (shortfall?.get(result.item) ?? 0) -
-        (plainWords(result.item.label) === exact && !isKeyLabel(result.item.path, result.item.label)
-          ? EXACT_LABEL_BONUS
-          : 0),
+        labelBonus(result.item, exact, queryWords),
     }))
     .sort((a, b) => a.adjusted - b.adjusted)
     .slice(0, limit)

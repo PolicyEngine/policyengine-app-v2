@@ -68,15 +68,17 @@ export const CALIBRATION_DASHBOARD_URL =
   'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets';
 
 /**
- * The dashboard's targets page filtered by source, by level (national or
- * state) and by geography (a state code), the filter names its
- * target-diagnostics API takes. It does not address a single target in
- * the URL, so this is the closest deep link.
+ * The dashboard's targets page filtered by source and by level (national
+ * or state). These are the only target filters its page reads from the
+ * URL (calibration-diagnostics frontend/app/microcosm/targets/page.tsx
+ * reads scope, source, level, release, start and country); its geography
+ * filter always starts empty, so a state is not passed. It does not
+ * address a single target in the URL either, so this is the closest
+ * deep link.
  */
 export function dashboardTargetsUrl(filters: {
   source?: string | null;
   level?: 'national' | 'state' | null;
-  geography?: string | null;
 }): string {
   const params = new URLSearchParams();
   if (filters.source) {
@@ -85,11 +87,48 @@ export function dashboardTargetsUrl(filters: {
   if (filters.level) {
     params.set('level', filters.level);
   }
-  if (filters.geography) {
-    params.set('geography', filters.geography);
-  }
   const query = params.toString();
   return query ? `${CALIBRATION_DASHBOARD_URL}?${query}` : CALIBRATION_DASHBOARD_URL;
+}
+
+/**
+ * What a target's values count. The dashboard serves no unit field; its
+ * `measure` says it. Every "total" target in the live release is a
+ * dollar sum (SOI amounts, SNAP benefits, TANF funds, SSI payments, tax
+ * collections, JCT expenditures) and every "count" target counts
+ * returns, claims, enrollees or people. The targets are US-only, so
+ * money is USD.
+ */
+export type CalibrationValueKind = 'money' | 'count' | 'number';
+
+export function calibrationValueKind(
+  target: Pick<CalibrationTargetRow, 'measure'>
+): CalibrationValueKind {
+  if (target.measure === 'total') {
+    return 'money';
+  }
+  return target.measure === 'count' ? 'count' : 'number';
+}
+
+/**
+ * A target's official or modelled value: compact for the table ("$3.2B",
+ * "20.6K"), exact for its details ("$3,212,345.68", "20,601").
+ */
+export function formatCalibrationValue(
+  value: number | null,
+  target: Pick<CalibrationTargetRow, 'measure'>,
+  style: 'compact' | 'exact' = 'compact'
+): string {
+  if (value === null) {
+    return '—';
+  }
+  const money = calibrationValueKind(target) === 'money';
+  return value.toLocaleString('en-US', {
+    ...(money ? { style: 'currency', currency: 'USD' } : {}),
+    ...(style === 'compact' ? { notation: 'compact' } : {}),
+    minimumFractionDigits: 0,
+    maximumFractionDigits: style === 'compact' ? 1 : 2,
+  });
 }
 
 /** Primary within one hop, mechanism to four, then the system echoing. */
