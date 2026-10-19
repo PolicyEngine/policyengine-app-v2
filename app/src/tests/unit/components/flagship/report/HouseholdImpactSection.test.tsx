@@ -419,6 +419,23 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  test('given a failed run and a fixed input then trying again sends the household as it is now', async () => {
+    const user = userEvent.setup();
+    mockFetchHouseholdCalculation.mockRejectedValueOnce(new Error('Household calculation failed'));
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    const alert = await screen.findByRole('alert');
+
+    await user.click(screen.getByRole('button', { name: 'Married' }));
+    await user.click(screen.getByRole('button', { name: 'Partner earns 20000' }));
+    await user.click(within(alert).getByRole('button', { name: 'Try again' }));
+
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
+    const people = mockCreateHousehold.mock.calls[1][0].data.people;
+    expect(people['your partner'].employment_income).toEqual({ [HOUSEHOLD_YEAR]: 20000 });
+  });
+
   test('given a failed run then refocusing the page or reconnecting does not run it again', async () => {
     const user = userEvent.setup();
     mockFetchHouseholdCalculation.mockRejectedValueOnce(new Error('Household calculation failed'));

@@ -266,6 +266,20 @@ function HouseholdCard({
     [household, countryId, year, metadata]
   );
 
+  const calculate = () => {
+    const payload = household.toV1CreationPayload();
+    // The same household again, after a failure, asks once more.
+    if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
+      void run.refetch();
+    } else {
+      setRequested({
+        payload,
+        summary: describeHousehold(household, year, countryId, metadata?.variables),
+      });
+    }
+    setEditing(false);
+  };
+
   const running = !!requested && run.isFetching;
   const failed = !!requested && !running && run.isError;
   const result = requested && !running ? run.data : undefined;
@@ -385,19 +399,7 @@ function HouseholdCard({
           >
             <Button
               size="sm"
-              onClick={() => {
-                const payload = household.toV1CreationPayload();
-                // The same household again, after a failure, asks once more.
-                if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
-                  void run.refetch();
-                } else {
-                  setRequested({
-                    payload,
-                    summary: describeHousehold(household, year, countryId, metadata?.variables),
-                  });
-                }
-                setEditing(false);
-              }}
+              onClick={calculate}
               disabled={running || !validation.isValid || sameAsShown}
             >
               Calculate
@@ -423,7 +425,8 @@ function HouseholdCard({
                   <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
                 )
               }
-              onRetry={run.refetch}
+              // The household as it is now: an input fixed after the failure counts.
+              onRetry={validation.isValid ? calculate : run.refetch}
             />
           )}
 
