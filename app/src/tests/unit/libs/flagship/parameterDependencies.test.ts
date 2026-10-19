@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
+  hasParameterDependencies,
+  loadParameterDependencies,
   normalizeParameterPath,
   ParameterDependencyMap,
   readersOfPath,
@@ -84,5 +86,28 @@ describe('variablesReachedByPaths', () => {
 
   test('given unrelated paths then nothing is reached', () => {
     expect(variablesReachedByPaths([STANDARD_DEDUCTION_PATH], map)).toEqual([]);
+  });
+});
+
+describe('each country has its own traced map', () => {
+  test.each(['us', 'uk'])('given %s then it has a traced map', (countryId) => {
+    expect(hasParameterDependencies(countryId)).toBe(true);
+  });
+
+  test('given a country without a traced model then it has none', () => {
+    expect(hasParameterDependencies('ca')).toBe(false);
+  });
+
+  test("given the UK then the map is traced from policyengine-uk, with the UK's parameters", async () => {
+    const map = await loadParameterDependencies('uk');
+
+    expect(map.model.package).toBe('policyengine-uk');
+    expect(readersOfPath('gov.dwp.universal_credit.elements.child.amount', map)).toContain(
+      'uc_individual_child_element'
+    );
+  });
+
+  test('given no country then the US map loads, as the validation surfaces read it', async () => {
+    expect((await loadParameterDependencies()).model.package).toBe('policyengine-us');
   });
 });
