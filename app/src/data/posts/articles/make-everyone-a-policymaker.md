@@ -44,7 +44,7 @@ We’re excited to see these use cases, though we recognise we have a ways to go
 
 - PolicyEngine US, and then other countries.
 
-If you’d like to financially support our work, you can [make a donation through the PSL Foundation](https://opencollective.com/psl) (please email [contact@policyengine.org](mailto:contact@policyengine.org) to ensure your donation is properly routed). We also welcome technical contributions through GitHub (we’re entirely open source), as well as any other feedback or ideas via [contact@policyengine.org](mailto:contact@policyengine.org). To stay up to date, you can [sign up for our newsletter](https://mailchi.mp/7b89fef927ca/general) and follow us on [Twitter](http://twitter.com/thepolicyengine), [Facebook](http://facebook.com/thepolicyengine), [LinkedIn](https://linkedin.com/company/thepolicyengine), and [Instagram](http://instagram.com/policyengine).
+If you’d like to financially support our work, you can [make a donation through the PSL Foundation](https://policyengine.org/us/donate) (please email [contact@policyengine.org](mailto:contact@policyengine.org) to ensure your donation is properly routed). We also welcome technical contributions through GitHub (we’re entirely open source), as well as any other feedback or ideas via [contact@policyengine.org](mailto:contact@policyengine.org). To stay up to date, you can [sign up for our newsletter](https://mailchi.mp/7b89fef927ca/general) and follow us on [Twitter](http://twitter.com/thepolicyengine), [Facebook](http://facebook.com/thepolicyengine), [LinkedIn](https://linkedin.com/company/thepolicyengine), and [Instagram](http://instagram.com/policyengine).
 
 Thank you for joining us on our journey toward better public policy.
 
