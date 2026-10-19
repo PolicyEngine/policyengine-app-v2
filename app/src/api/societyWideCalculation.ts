@@ -1,3 +1,4 @@
+import { normalizeSocietyWideOutput } from '@/adapters/societyWideOutputNormalizer';
 import { BASE_URL } from '@/constants';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
@@ -101,5 +102,6 @@ export async function fetchSocietyWideCalculation(
   }
 
   const data: SocietyWideCalculationResponse = await response.json();
-  return mergePolicyEngineBundle(data);
+  // UK geography impacts arrive as lists of areas; the app reads them keyed by name.
+  return mergePolicyEngineBundle({ ...data, result: normalizeSocietyWideOutput(data.result) });
 }

@@ -1,0 +1,234 @@
+[
+  {
+    "id": "personal-allowance",
+    "query": "personal allowance",
+    "expectedPaths": ["gov.hmrc.income_tax.allowances.personal_allowance.amount"]
+  },
+  {
+    "id": "personal-allowance-taper",
+    "query": "personal allowance taper threshold",
+    "expectedPaths": ["gov.hmrc.income_tax.allowances.personal_allowance.maximum_ANI"]
+  },
+  {
+    "id": "income-tax-basic-rate",
+    "query": "income tax basic rate",
+    "expectedPaths": ["gov.hmrc.income_tax.rates.uk[0].rate"]
+  },
+  {
+    "id": "basic-rate",
+    "query": "basic rate",
+    "expectedPaths": ["gov.hmrc.income_tax.rates.uk[0].rate"]
+  },
+  {
+    "id": "higher-rate",
+    "query": "higher rate of income tax",
+    "expectedPaths": ["gov.hmrc.income_tax.rates.uk[1].rate"]
+  },
+  {
+    "id": "higher-rate-threshold",
+    "query": "higher rate threshold",
+    "expectedPaths": ["gov.hmrc.income_tax.rates.uk[1].threshold"]
+  },
+  {
+    "id": "additional-rate",
+    "query": "additional rate of income tax",
+    "expectedPaths": ["gov.hmrc.income_tax.rates.uk[2].rate"]
+  },
+  {
+    "id": "employee-ni",
+    "query": "employee NI rate",
+    "expectedPaths": ["gov.hmrc.national_insurance.class_1.rates.employee.main"]
+  },
+  {
+    "id": "employee-national-insurance",
+    "query": "employee national insurance main rate",
+    "expectedPaths": ["gov.hmrc.national_insurance.class_1.rates.employee.main"]
+  },
+  {
+    "id": "employer-ni",
+    "query": "employer national insurance rate",
+    "expectedPaths": ["gov.hmrc.national_insurance.class_1.rates.employer"]
+  },
+  {
+    "id": "ni-primary-threshold",
+    "query": "NI primary threshold",
+    "expectedPaths": ["gov.hmrc.national_insurance.class_1.thresholds.primary_threshold"]
+  },
+  {
+    "id": "national-insurance",
+    "query": "national insurance",
+    "expectedPrefixes": ["gov.hmrc.national_insurance"]
+  },
+  {
+    "id": "child-benefit",
+    "query": "child benefit",
+    "expectedPaths": [
+      "gov.hmrc.child_benefit.amount.eldest",
+      "gov.hmrc.child_benefit.amount.additional"
+    ]
+  },
+  {
+    "id": "uc-standard-allowance",
+    "query": "universal credit standard allowance",
+    "expectedPaths": [
+      "gov.dwp.universal_credit.standard_allowance.amount.SINGLE_YOUNG",
+      "gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD",
+      "gov.dwp.universal_credit.standard_allowance.amount.COUPLE_YOUNG",
+      "gov.dwp.universal_credit.standard_allowance.amount.COUPLE_OLD"
+    ]
+  },
+  {
+    "id": "uc-work-allowance",
+    "query": "UC work allowance",
+    "expectedPaths": [
+      "gov.dwp.universal_credit.means_test.work_allowance.with_housing",
+      "gov.dwp.universal_credit.means_test.work_allowance.without_housing"
+    ]
+  },
+  {
+    "id": "uc-taper",
+    "query": "taper rate",
+    "expectedPaths": ["gov.dwp.universal_credit.means_test.reduction_rate"]
+  },
+  {
+    "id": "uc-taper-acronym",
+    "query": "UC taper",
+    "expectedPaths": ["gov.dwp.universal_credit.means_test.reduction_rate"]
+  },
+  {
+    "id": "uc-child-element",
+    "query": "UC child element",
+    "expectedPaths": [
+      "gov.dwp.universal_credit.elements.child.amount",
+      "gov.dwp.universal_credit.elements.child.first.higher_amount"
+    ]
+  },
+  {
+    "id": "two-child-limit",
+    "query": "two child limit",
+    "expectedPaths": [
+      "gov.dwp.universal_credit.elements.child.limit.child_count",
+      "gov.dwp.tax_credits.child_tax_credit.limit.child_count"
+    ]
+  },
+  {
+    "id": "benefit-cap",
+    "query": "benefit cap",
+    "expectedPrefixes": ["gov.dwp.benefit_cap"]
+  },
+  {
+    "id": "pension-credit",
+    "query": "pension credit minimum guarantee",
+    "expectedPaths": [
+      "gov.dwp.pension_credit.guarantee_credit.minimum_guarantee.SINGLE",
+      "gov.dwp.pension_credit.guarantee_credit.minimum_guarantee.COUPLE"
+    ]
+  },
+  {
+    "id": "pension-credit-single",
+    "query": "pension credit single",
+    "expectedPaths": ["gov.dwp.pension_credit.guarantee_credit.minimum_guarantee.SINGLE"]
+  },
+  {
+    "id": "state-pension",
+    "query": "state pension",
+    "expectedPaths": [
+      "gov.dwp.state_pension.new_state_pension.amount",
+      "gov.dwp.state_pension.basic_state_pension.amount"
+    ]
+  },
+  {
+    "id": "triple-lock",
+    "query": "triple lock",
+    "expectedPrefixes": ["gov.dwp.state_pension.triple_lock"]
+  },
+  {
+    "id": "council-tax-reduction",
+    "query": "council tax reduction",
+    "expectedPrefixes": ["gov.local_authorities"]
+  },
+  {
+    "id": "scottish-income-tax",
+    "query": "scottish income tax rates",
+    "expectedPrefixes": ["gov.hmrc.income_tax.rates.scotland"]
+  },
+  {
+    "id": "vat",
+    "query": "VAT",
+    "expectedPaths": ["gov.hmrc.vat.standard_rate", "gov.hmrc.vat.reduced_rate"]
+  },
+  {
+    "id": "vat-standard-rate",
+    "query": "VAT standard rate",
+    "expectedPaths": ["gov.hmrc.vat.standard_rate"]
+  },
+  {
+    "id": "stamp-duty",
+    "query": "stamp duty",
+    "expectedPrefixes": ["gov.hmrc.stamp_duty"]
+  },
+  {
+    "id": "capital-gains",
+    "query": "capital gains tax",
+    "expectedPaths": ["gov.hmrc.cgt.basic_rate", "gov.hmrc.cgt.higher_rate"]
+  },
+  {
+    "id": "capital-gains-plain",
+    "query": "capital gains",
+    "expectedPrefixes": ["gov.hmrc.cgt"]
+  },
+  {
+    "id": "cgt-annual-exempt",
+    "query": "CGT annual exempt amount",
+    "expectedPaths": ["gov.hmrc.cgt.annual_exempt_amount"]
+  },
+  {
+    "id": "dividend-allowance",
+    "query": "dividend allowance",
+    "expectedPaths": ["gov.hmrc.income_tax.allowances.dividend_allowance"]
+  },
+  {
+    "id": "dividend-rates",
+    "query": "dividend tax rates",
+    "expectedPaths": [
+      "gov.hmrc.income_tax.rates.dividends[0].rate",
+      "gov.hmrc.income_tax.rates.dividends[1].rate",
+      "gov.hmrc.income_tax.rates.dividends[2].rate"
+    ]
+  },
+  {
+    "id": "marriage-allowance",
+    "query": "marriage allowance",
+    "expectedPaths": ["gov.hmrc.income_tax.allowances.marriage_allowance.max"]
+  },
+  {
+    "id": "personal-savings-allowance",
+    "query": "personal savings allowance",
+    "expectedPrefixes": ["gov.hmrc.income_tax.allowances.personal_savings_allowance"]
+  },
+  {
+    "id": "winter-fuel",
+    "query": "winter fuel payment",
+    "expectedPrefixes": ["gov.dwp.winter_fuel_payment.amount"]
+  },
+  {
+    "id": "carers-allowance",
+    "query": "carer's allowance rate",
+    "expectedPaths": ["gov.dwp.carers_allowance.rate"]
+  },
+  {
+    "id": "pip",
+    "query": "PIP",
+    "expectedPrefixes": ["gov.dwp.pip"]
+  },
+  {
+    "id": "lha",
+    "query": "LHA",
+    "expectedPrefixes": ["gov.dwp.LHA"]
+  },
+  {
+    "id": "housing-benefit-taper",
+    "query": "housing benefit withdrawal rate",
+    "expectedPaths": ["gov.dwp.housing_benefit.means_test.withdrawal_rate"]
+  }
+]

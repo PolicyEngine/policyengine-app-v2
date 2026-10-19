@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { fireEvent, render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HouseholdBuilderForm, {
   rankVariablesBySearch,
@@ -46,10 +46,24 @@ describe('HouseholdBuilderForm', () => {
     expect(screen.getByText('Marital status')).toBeInTheDocument();
   });
 
-  test('given the columns layout then the sections sit in a grid, without the divider', () => {
+  test('given the columns layout then the number of children is typed, any whole number to 10', () => {
+    const onNumChildrenChange = vi.fn();
+    renderForm({ layout: 'columns', onNumChildrenChange });
+
+    const input = screen.getByLabelText('Number of children');
+    fireEvent.change(input, { target: { value: '7' } });
+    expect(onNumChildrenChange).toHaveBeenLastCalledWith(7);
+
+    // A partial or out-of-range entry waits.
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.change(input, { target: { value: '12' } });
+    expect(onNumChildrenChange).toHaveBeenCalledTimes(1);
+  });
+
+  test('given the columns layout then family and household share a row, the people follow as cards', () => {
     const { container } = renderForm({ layout: 'columns' });
 
-    expect(container.firstElementChild).toHaveClass('tw:lg:grid-cols-3');
+    expect(container.firstElementChild).toHaveClass('tw:lg:flex-row');
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
     expect(screen.getByText('Household')).toBeInTheDocument();
@@ -66,6 +80,46 @@ describe('rankVariablesBySearch', () => {
     variable('childcare_expenses', 'Childcare expenses'),
   ];
   const names = (list: VariableInfo[]) => list.map((entry) => entry.name);
+
+  test('given searchByEntity then a person lists person inputs and the household the rest', async () => {
+    const variable = (name: string, label: string, entity: string) => ({
+      name,
+      label,
+      entity,
+      isInputVariable: true,
+      valueType: 'float',
+      moduleName: 'household.income.person.misc',
+    });
+    const metadata = {
+      entities: {
+        person: { plural: 'people', label: 'Person', is_person: true },
+        tax_unit: { plural: 'tax_units', label: 'Tax unit' },
+        household: { plural: 'households', label: 'Household' },
+      },
+      variables: {
+        tip_income: variable('tip_income', 'Tip income', 'person'),
+        rent: variable('rent', 'Rent', 'household'),
+        tax_unit_childcare: variable('tax_unit_childcare', 'Childcare', 'tax_unit'),
+      },
+    };
+    const groupOf = () => 'Income';
+    const optionsIn = () =>
+      screen
+        .getAllByRole('option')
+        .filter((option) => option.hasAttribute('data-option'))
+        .map((option) => option.textContent);
+    const { unmount } = renderForm({ metadata, searchByEntity: true, variableGroupOf: groupOf });
+
+    fireEvent.click(screen.getByRole('button', { name: /Add variable to you$/ }));
+    fireEvent.mouseDown(screen.getAllByRole('button', { name: 'Income' })[0]);
+    expect(optionsIn()).toEqual(['Tip income']);
+    unmount();
+
+    renderForm({ metadata, searchByEntity: true, variableGroupOf: groupOf });
+    fireEvent.click(screen.getByRole('button', { name: 'Add variable to your household' }));
+    fireEvent.mouseDown(screen.getAllByRole('button', { name: 'Income' })[0]);
+    expect(optionsIn().sort()).toEqual(['Childcare', 'Rent']);
+  });
 
   test('given a word then whole words lead, and parts of words follow', () => {
     expect(names(rankVariablesBySearch(VARIABLES, 'rent'))).toEqual([

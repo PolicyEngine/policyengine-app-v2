@@ -256,3 +256,66 @@ export function withRacePoverty(
     poverty_by_race: { ...byRace, poverty: { ...byRace.poverty, [race]: rate } },
   } as SocietyWideReportOutput;
 }
+
+/** A UK result's wealth deciles: households gain more the wealthier they are. */
+export const UK_WEALTH_DECILE = {
+  average: {
+    '1': 0,
+    '2': 213.34,
+    '3': 480.72,
+    '4': 703.5,
+    '5': 764.0,
+    '6': 859.95,
+    '7': 876.18,
+    '8': 1054.03,
+    '9': 965.36,
+    '10': 978.58,
+  },
+  relative: {
+    '1': 0,
+    '2': 0.0058,
+    '3': 0.0101,
+    '4': 0.0144,
+    '5': 0.0145,
+    '6': 0.0142,
+    '7': 0.0146,
+    '8': 0.0157,
+    '9': 0.0145,
+    '10': 0.0131,
+  },
+};
+
+/** A UK result's winners and losers by wealth decile: 30% gain, 70% see no change. */
+export const UK_INTRA_WEALTH_DECILE = {
+  all: {
+    'Gain more than 5%': 0.1,
+    'Gain less than 5%': 0.2,
+    'No change': 0.7,
+    'Lose less than 5%': 0,
+    'Lose more than 5%': 0,
+  },
+  deciles: {
+    'Gain more than 5%': Array(10).fill(0.1),
+    'Gain less than 5%': Array(10).fill(0.2),
+    'No change': Array(10).fill(0.7),
+    'Lose less than 5%': Array(10).fill(0),
+    'Lose more than 5%': Array(10).fill(0),
+  },
+};
+
+/** A UK result's budget by program: £2.0bn more income tax, £0.5bn more universal credit. */
+export const UK_DETAILED_BUDGET = {
+  income_tax: { baseline: 300e9, reform: 302e9, difference: 2e9 },
+  universal_credit: { baseline: 70e9, reform: 70.5e9, difference: -0.5e9 },
+  child_benefit: { baseline: 16.9e9, reform: 16.9e9, difference: 0 },
+};
+
+/** Report 4332's results with the UK's own breakdowns added: wealth deciles and programs. */
+export function withUKBreakdowns(output: SocietyWideReportOutput): SocietyWideReportOutput {
+  return {
+    ...withBudget(output, { federal: 1.5e9, state: 0 }),
+    wealth_decile: UK_WEALTH_DECILE,
+    intra_wealth_decile: UK_INTRA_WEALTH_DECILE,
+    detailed_budget: UK_DETAILED_BUDGET,
+  } as unknown as SocietyWideReportOutput;
+}

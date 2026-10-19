@@ -272,3 +272,67 @@ describe('ReportView validation', () => {
     expect(within(panel).queryByText('Not comparable')).not.toBeInTheDocument();
   });
 });
+
+describe('ReportView districts by country', () => {
+  const renderIn = (countryId: string, region?: string) => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Higher personal allowance"
+          sourceNote="Hand-built"
+          provisions={[]}
+          year="2026"
+          region={region}
+          output={null}
+          districtsPending={<p>Maps load with the results</p>}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>,
+      countryId
+    );
+  };
+
+  test('given a US report then the tab and the card read districts, as before', () => {
+    renderIn('us');
+
+    expect(screen.getByRole('tab', { name: 'Districts' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Explore districts' })).toHaveTextContent(
+      'District impacts'
+    );
+  });
+
+  test('given a UK report then the tab and the card read local areas', async () => {
+    const user = userEvent.setup();
+    renderIn('uk');
+
+    expect(screen.queryByRole('tab', { name: 'Districts' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
+      'Compare income changes across constituencies and local authorities on a map.'
+    );
+
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    expect(
+      screen.getByRole('heading', { name: 'Constituencies and local authorities' })
+    ).toBeInTheDocument();
+  });
+
+  test('given a UK report on a country then it keeps the local areas tab', () => {
+    renderIn('uk', 'country/scotland');
+
+    expect(screen.getByRole('tab', { name: 'Local areas' })).toBeInTheDocument();
+  });
+
+  test.each(['constituency/Bedford', 'local_authority/Bedford'])(
+    'given a UK report on %s then it has no local areas tab or card',
+    (region) => {
+      renderIn('uk', region);
+
+      expect(screen.queryByRole('tab', { name: 'Local areas' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Explore local areas' })).not.toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Household' })).toBeInTheDocument();
+    }
+  );
+});

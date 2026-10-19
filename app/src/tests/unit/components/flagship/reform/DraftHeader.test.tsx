@@ -110,8 +110,10 @@ describe('DraftHeader', () => {
           text === 'Discard' || text === 'Save' || /^Save and run 2026 report$/.test(text ?? '')
       );
     expect(verbs).toEqual(['Discard', 'Save', 'Save and run 2026 report']);
-    // It stays in view at the bottom of the window while the reform is long.
-    expect(bar).toHaveStyle({ position: 'sticky', bottom: '0px' });
+    // It stays in view at the bottom of the window while the reform is long,
+    // stuck over the page's bottom padding so nothing shows under it.
+    expect(bar).toHaveStyle({ position: 'sticky' });
+    expect(bar).toHaveClass('tw:-bottom-lg', 'tw:sm:-bottom-2xl');
   });
 
   test('given nothing changed yet then the run waits for a change', () => {

@@ -2,6 +2,11 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
+  EXPECTED_BY_CONSTITUENCY,
+  EXPECTED_BY_LOCAL_AUTHORITY,
+  LIST_SHAPE_UK_RESULT,
+} from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
+import {
   ERROR_MESSAGES,
   HTTP_STATUS,
   mockCompletedResponse,
@@ -351,6 +356,29 @@ describe('societyWide API', () => {
           },
         })
       );
+    });
+
+    test('given a UK result with list-shape area impacts then returns them keyed by name', async () => {
+      // Given
+      const params = { region: 'uk', time_period: CURRENT_YEAR };
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({ status: 'ok', result: LIST_SHAPE_UK_RESULT })
+      );
+
+      // When
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        params
+      );
+
+      // Then
+      const result = response.result as any;
+      expect(result.constituency_impact).toEqual({ by_constituency: EXPECTED_BY_CONSTITUENCY });
+      expect(result.local_authority_impact).toEqual({
+        by_local_authority: EXPECTED_BY_LOCAL_AUTHORITY,
+      });
     });
   });
 });

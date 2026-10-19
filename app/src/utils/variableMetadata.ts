@@ -32,6 +32,7 @@ export function getNormalizedVariableMetadata(variable: Record<string, any> | nu
 
   return {
     defaultValue: rawVariable.defaultValue ?? rawVariable.default_value,
+    definitionPeriod: rawVariable.definitionPeriod ?? rawVariable.definition_period,
     documentation: rawVariable.documentation || rawVariable.description,
     entity: rawVariable.entity ?? '',
     hiddenInput: rawVariable.hiddenInput ?? rawVariable.hidden_input ?? false,

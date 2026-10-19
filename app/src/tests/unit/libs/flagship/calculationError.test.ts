@@ -24,6 +24,16 @@ describe('describeCalculationError', () => {
     expect(summary.body).toContain('Unknown parameter gov.x');
   });
 
+  test('given a 400 because the API worker is not ready then it is a retryable server fault', () => {
+    const summary = describeCalculationError(
+      '[SOCIETY_WIDE_CALC_FAILED] Society-wide calculation failed (400): {"status": "error", "message": "Cannot validate the selected worker\'s canonical SPM capability", "result": null, "errors": [{"code": "SPM_CONFIGURATION_UNAVAILABLE", "message": "Cannot validate the selected worker\'s canonical SPM capability"}]}'
+    );
+
+    expect(summary.retryable).toBe(true);
+    expect(summary.title).toBe('The API could not run this right now');
+    expect(summary.body).not.toContain('Edit the reform');
+  });
+
   test('given a timeout then it suggests a second try', () => {
     expect(describeCalculationError('Request timed out after 300s').title).toBe(
       'The calculation took too long'

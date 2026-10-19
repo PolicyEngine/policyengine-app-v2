@@ -3,6 +3,7 @@ import { BillValidation } from '@/api/billFeed';
 import { describeDepth, RING_LABELS } from '@/components/flagship/CalibrationMatches';
 import { Stack } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   claimsFromBillValidation,
@@ -10,13 +11,13 @@ import {
   METRIC_LABELS,
   ModelValidationRow,
   PROGRAM_LABELS,
-  SCORECARD_COMPARISON_URL,
   scorecardEntryUrl,
   ScorecardMatches,
   scorecardMatchesForPaths,
 } from '@/libs/flagship/modelValidation';
 import { loadParameterDependencies, readersOfPath } from '@/libs/flagship/parameterDependencies';
 import type { RelatedScorecardClaim } from '@/libs/flagship/scorecardComparisons';
+import { currencySymbol } from '@/utils/formatters';
 import { ScorecardClaimTable, type ScorecardClaimEntry } from './ScorecardComparisons';
 import {
   CellNote,
@@ -41,16 +42,17 @@ import {
  *   reform changes in the report's jurisdiction.
  */
 
-function compactMoney(value: number): string {
+/** "$1.2B", "-£3.4M", "$950": `symbol` is the country's money sign. */
+function compactMoney(value: number, symbol: string = '$'): string {
   const abs = Math.abs(value);
   const sign = value < 0 ? '-' : '';
   if (abs >= 1e9) {
-    return `${sign}$${(abs / 1e9).toFixed(1)}B`;
+    return `${sign}${symbol}${(abs / 1e9).toFixed(1)}B`;
   }
   if (abs >= 1e6) {
-    return `${sign}$${(abs / 1e6).toFixed(1)}M`;
+    return `${sign}${symbol}${(abs / 1e6).toFixed(1)}M`;
   }
-  return `${sign}$${Math.round(abs).toLocaleString()}`;
+  return `${sign}${symbol}${Math.round(abs).toLocaleString()}`;
 }
 
 function metricLabel(row: ModelValidationRow): string {
@@ -67,7 +69,8 @@ function metricValue(row: ModelValidationRow, value: number): string {
     return `${(value * 100).toFixed(1)}%`;
   }
   if (row.metric.includes('benefit')) {
-    return compactMoney(value);
+    // The track record is the US model's, so its money is in dollars.
+    return compactMoney(value, '$');
   }
   if (Math.abs(value) >= 1e6) {
     return `${(value / 1e6).toFixed(1)}M`;
@@ -157,6 +160,7 @@ export function BillExternalEstimates({
   // External numbers render from scorecard-shaped claims, so tracker
   // rows today and scorecard shard rows tomorrow are interchangeable.
   const claims = claimsFromBillValidation(billId, validation);
+  const symbol = currencySymbol(useCurrentCountry());
   const peEstimate = validation.peEstimate;
   const range =
     typeof validation.targetRangeLow === 'number' && typeof validation.targetRangeHigh === 'number'
@@ -176,7 +180,7 @@ export function BillExternalEstimates({
               <span style={{ fontWeight: typography.fontWeight.medium }}>PolicyEngine</span>
             </th>
             <td style={{ ...numberCellStyle, fontWeight: typography.fontWeight.medium }}>
-              {compactMoney(peEstimate)}
+              {compactMoney(peEstimate, symbol)}
             </td>
             <td style={numberCellStyle}>—</td>
           </tr>
@@ -187,7 +191,7 @@ export function BillExternalEstimates({
               <span>{claim.source}</span>
               {claim.sourceUrl && <ReadSource href={claim.sourceUrl} />}
             </th>
-            <td style={numberCellStyle}>{compactMoney(claim.externalValue)}</td>
+            <td style={numberCellStyle}>{compactMoney(claim.externalValue, symbol)}</td>
             <td style={numberCellStyle}>{gapText(peEstimate, claim.externalValue)}</td>
           </tr>
         ))}
@@ -209,7 +213,7 @@ export function BillExternalEstimates({
               {noteWithoutEstimate && noteUrl && <ReadSource href={noteUrl} />}
             </th>
             <td style={numberCellStyle}>
-              {compactMoney(range[0])} to {compactMoney(range[1])}
+              {compactMoney(range[0], symbol)} to {compactMoney(range[1], symbol)}
             </td>
             <td style={numberCellStyle} />
           </tr>
@@ -253,16 +257,25 @@ export function trackRecordPrograms(trackRecord: ModelTrackRecord): string[] | n
  * Fetches the track record as soon as the paths are known — call this
  * at page level, not inside a tab panel, so the request runs in
  * parallel with the rest of the report instead of starting on tab
- * click (inactive tab panels are unmounted).
+ * click (inactive tab panels are unmounted). The track record is the
+ * US model's (its dependency map and comparison table are US-only), so
+ * another country gets an empty one, and an unknown country waits.
  */
-export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
+export function useModelTrackRecord(
+  paths: string[],
+  countryId: string | undefined
+): ModelTrackRecord {
   const [trackRecord, setTrackRecord] = useState<ModelTrackRecord>(undefined);
   const pathsKey = paths.join('\n');
 
   useEffect(() => {
     let cancelled = false;
     const resolvedPaths = pathsKey ? pathsKey.split('\n') : [];
-    if (resolvedPaths.length === 0) {
+    if (!countryId) {
+      setTrackRecord(undefined);
+      return;
+    }
+    if (countryId !== 'us' || resolvedPaths.length === 0) {
       setTrackRecord({ modelVersion: '', reachedCount: 0, programs: [], rows: [] });
       return;
     }
@@ -276,7 +289,7 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
     return () => {
       cancelled = true;
     };
-  }, [pathsKey]);
+  }, [pathsKey, countryId]);
 
   return trackRecord;
 }
@@ -387,6 +400,7 @@ export function BaselineComparisons({
   scorecardRows,
   baselineLabel,
   reform,
+  countryId = 'us',
 }: {
   trackRecord: ModelTrackRecord;
   /** The published scorecard's baseline claims for the reform; undefined while loading. */
@@ -398,9 +412,12 @@ export function BaselineComparisons({
   baselineLabel?: string | null;
   /** The reform and the report's region, which pick the comparisons; undefined while loading. */
   reform: ReformScope | undefined;
+  /** The report's country: the scorecard link names it, and only a US report shows the US track record. */
+  countryId?: string;
 }) {
+  const usTrackRecord = countryId === 'us' ? trackRecord : null;
   const candidates = [
-    ...(trackRecord ? trackRecordClaims(trackRecord) : []),
+    ...(usTrackRecord ? trackRecordClaims(usTrackRecord) : []),
     ...(scorecardRows ?? []).map((row) => ({ row })),
   ];
   const relevant = new Set(
@@ -421,9 +438,13 @@ export function BaselineComparisons({
     );
   } else if (entries.length > 0) {
     content = <ScorecardClaimTable label="Baseline comparisons" entries={entries} />;
-  } else if (trackRecord === undefined || scorecardRows === undefined || reform === undefined) {
+  } else if (
+    (countryId === 'us' && trackRecord === undefined) ||
+    scorecardRows === undefined ||
+    reform === undefined
+  ) {
     content = <ValidationLoading label="Loading baseline comparisons" />;
-  } else if (trackRecord === null || scorecardRows === null) {
+  } else if ((countryId === 'us' && trackRecord === null) || scorecardRows === null) {
     content = <ValidationNote>Baseline comparisons are temporarily unavailable.</ValidationNote>;
   } else {
     // Silence would read as "fine"; loose matches would read as evidence.
@@ -437,7 +458,7 @@ export function BaselineComparisons({
     <ValidationCard
       id="baseline-comparisons"
       title="Baseline comparisons"
-      href={SCORECARD_COMPARISON_URL}
+      href={scorecardEntryUrl('scorecard', countryId)}
       linkLabel="View scorecard"
     >
       {content}

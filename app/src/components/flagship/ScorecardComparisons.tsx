@@ -14,6 +14,7 @@ import {
   type RelatedScorecardClaim,
   type ScorecardComparisonsResult,
 } from '@/libs/flagship/scorecardComparisons';
+import { comparableValues, revenueSignText, signNote } from '@/libs/flagship/signConvention';
 import {
   cardStyle,
   CellNote,
@@ -144,6 +145,10 @@ export function differenceNotes(
     notes.push(
       'The scorecard marks this comparison as approximate; read the source and calculation notes before reading the gap.'
     );
+  }
+  const sign = signNote(row);
+  if (sign) {
+    notes.push(sign);
   }
   return notes;
 }
@@ -480,8 +485,8 @@ export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry
           <ComparisonContext row={row} />
           {row.metric === 'revenue_change' && (
             <Text style={{ ...detailStyle, margin: 0 }}>
-              Negative amounts mean lower tax revenue. Both figures refer to the scorecard’s
-              compared policy, not this report’s reform.
+              {revenueSignText(row)} Both figures refer to the scorecard’s compared policy, not this
+              report’s reform.
             </Text>
           )}
 
@@ -545,6 +550,12 @@ export function ScorecardClaimDetails({ row, presentation }: ScorecardClaimEntry
   );
 }
 
+/** The gap with both figures on PolicyEngine's sign; a dash when the sign is unclear. */
+export function claimGap(row: RelatedScorecardClaim): string {
+  const values = comparableValues(row);
+  return values ? gapText(values.model, values.published) : '—';
+}
+
 /** One claim as a table row: what is compared, both values, and the gap. */
 function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
   const sourceUrl = safeUrl(row.url);
@@ -603,7 +614,7 @@ function ScorecardClaimRow({ row, presentation }: ScorecardClaimEntry) {
           {presentation?.peValue ?? claimValue(row.latest?.value, row.unit_concept)}
           {peNote && <CellNote>{peNote}</CellNote>}
         </td>
-        <td style={numberCellStyle}>{gapText(row.latest?.value, row.external_value)}</td>
+        <td style={numberCellStyle}>{claimGap(row)}</td>
       </tr>
       {notes.length > 0 && (
         // Under the row it explains, across all four columns.

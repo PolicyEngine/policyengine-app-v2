@@ -139,3 +139,96 @@ export const LOW_EARNER_REFORM_RESULT = householdResult({
   ctcValue: 1125,
   grossCtc: 6000,
 });
+
+interface UkResultValues {
+  netIncome: number;
+  incomeTax: number;
+  nationalInsurance: number;
+  councilTax?: number;
+  councilTaxReduction?: number;
+  universalCredit?: number;
+  childBenefit?: number;
+}
+
+/**
+ * A calculated UK household as the v1 API returns it: people, one benefit
+ * unit ("benunits") and one household. Benefits are the household's
+ * total; Council Tax Reduction is one of them.
+ */
+export function ukHouseholdResult({
+  netIncome,
+  incomeTax,
+  nationalInsurance,
+  councilTax = 0,
+  councilTaxReduction = 0,
+  universalCredit = 0,
+  childBenefit = 0,
+}: UkResultValues): HouseholdCalculationData {
+  return {
+    people: {
+      you: {
+        age: at(30),
+        income_tax: at(incomeTax),
+        national_insurance: at(nationalInsurance),
+        state_pension: at(0),
+      },
+    },
+    benunits: {
+      'your benefit unit': {
+        members: ['you'],
+        universal_credit: at(universalCredit),
+        child_benefit: at(childBenefit),
+        benefit_cap_reduction: at(0),
+      },
+    },
+    households: {
+      'your household': {
+        members: ['you'],
+        household_net_income: at(netIncome),
+        household_benefits: at(universalCredit + childBenefit + councilTaxReduction),
+        council_tax: at(councilTax),
+        council_tax_reduction: at(councilTaxReduction),
+        region: at('LONDON'),
+      },
+    },
+  } as unknown as HouseholdCalculationData;
+}
+
+/**
+ * A single adult earning £30,000 in 2026 under current law, as the UK API
+ * calculated it: £24,939.55 net of £3,486 Income Tax, £1,394.40 National
+ * Insurance and a £180 TV licence.
+ */
+export const UK_BASELINE_RESULT = ukHouseholdResult({
+  netIncome: 24939.55,
+  incomeTax: 3486,
+  nationalInsurance: 1394.4,
+});
+
+/** A higher personal allowance: £500 less Income Tax. */
+export const UK_REFORM_RESULT = ukHouseholdResult({
+  netIncome: 25439.55,
+  incomeTax: 2986,
+  nationalInsurance: 1394.4,
+});
+
+/** A renting family on Universal Credit and Child Benefit, with a £1,800 Council Tax bill. */
+export const UK_FAMILY_BASELINE_RESULT = ukHouseholdResult({
+  netIncome: 34588.01,
+  incomeTax: 486,
+  nationalInsurance: 194.4,
+  councilTax: 1800,
+  universalCredit: 19911.06,
+  childBenefit: 2337.4,
+});
+
+/** £600 more Universal Credit, and £300 of Council Tax Reduction. */
+export const UK_FAMILY_REFORM_RESULT = ukHouseholdResult({
+  netIncome: 35488.01,
+  incomeTax: 486,
+  nationalInsurance: 194.4,
+  councilTax: 1800,
+  councilTaxReduction: 300,
+  universalCredit: 20511.06,
+  childBenefit: 2337.4,
+});

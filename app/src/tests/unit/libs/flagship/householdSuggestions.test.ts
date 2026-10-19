@@ -63,6 +63,20 @@ describe('suggestedHouseholdInputs', () => {
     expect(suggestedHouseholdInputs(['gov.irs.unknown'], MAP, INPUTS)).toEqual([]);
   });
 
+  test('given a state prefix then it is a US state program only in the US', () => {
+    const map = {
+      ...MAP,
+      consumers: { ...MAP.consumers, in_FE: ['snap_net_income'] },
+    } as ParameterDependencyMap;
+    const inputs = new Set([...INPUTS, 'in_FE']);
+    const paths = ['gov.usda.snap.emergency_allotment.allowed'];
+
+    expect(suggestedHouseholdInputs(paths, map, inputs)).not.toContain('in_FE');
+    expect(suggestedHouseholdInputs(paths, map, inputs, undefined, new Set(), 'uk')).toContain(
+      'in_FE'
+    );
+  });
+
   test('given a limit then only that many are suggested', () => {
     expect(
       suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS, 1)

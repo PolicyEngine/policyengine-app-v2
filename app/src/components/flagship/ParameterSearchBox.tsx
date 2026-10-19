@@ -275,6 +275,18 @@ function EntryBadges({
           in draft
         </span>
       )}
+      {entry.jurisdictionCount && (
+        <span
+          style={{
+            ...badgeStyle,
+            color: colors.text.secondary,
+            background: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+          }}
+        >
+          {entry.jurisdictionCount} jurisdictions
+        </span>
+      )}
       {entry.stateCode && (
         <span
           style={{
@@ -1211,7 +1223,8 @@ export default function ParameterSearchBox({
                               maxWidth: '45%',
                             }}
                           >
-                            {currentValueFor?.(entry) && (
+                            {/* A breakdown's row stands for every state: no one value is its own. */}
+                            {!entry.jurisdictionCount && currentValueFor?.(entry) && (
                               <span
                                 title={currentValueFor(entry) ?? undefined}
                                 style={{
@@ -1227,7 +1240,10 @@ export default function ParameterSearchBox({
                                 {currentValueFor(entry)}
                               </span>
                             )}
-                            <EntryBadges entry={entry} inDraft={inDraft?.(entry.path)} />
+                            <EntryBadges
+                              entry={entry}
+                              inDraft={inDraft?.(entry.breakdownPath ?? entry.path)}
+                            />
                           </span>
                         </div>
                         <div
@@ -1240,7 +1256,7 @@ export default function ParameterSearchBox({
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {entry.path}
+                          {entry.breakdownPath ? `${entry.breakdownPath}.*` : entry.path}
                         </div>
                       </button>
                     );

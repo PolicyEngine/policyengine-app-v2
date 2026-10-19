@@ -1,0 +1,17 @@
+{
+  "metadataVersion": "2.130.1",
+  "country": "uk",
+  "suites": {
+    "queries": {
+      "cases": 41,
+      "hitRate": {
+        "5": 0.9512195121951219,
+        "10": 1,
+        "20": 1
+      },
+      "mrr": 0.8585946573751451,
+      "medianRank": 1,
+      "misses": []
+    }
+  }
+}
