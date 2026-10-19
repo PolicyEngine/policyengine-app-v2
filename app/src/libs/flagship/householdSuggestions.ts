@@ -25,7 +25,11 @@ const DEFAULT_LIMIT = 40;
 const NOT_HOUSEHOLD_FACTS =
   /(^|_)(weight|reported|takes_up|takeup|would_claim|would_file|id|seed|imputed)($|_)/;
 
-/** A state program's own input (`il_pass_through_…`, `ut_additions`): not a household's fact. */
+/**
+ * A US state program's own input (`il_pass_through_…`, `ut_additions`):
+ * not a household's fact. US only: elsewhere the prefixes are words
+ * (the UK's `in_FE` is not Indiana's).
+ */
 const STATE_PROGRAM_INPUT =
   /^(al|ak|az|ar|ca|co|ct|de|dc|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy)_/;
 
@@ -35,7 +39,8 @@ export function suggestedHouseholdInputs(
   inputs: Set<string>,
   limit: number = DEFAULT_LIMIT,
   /** Inputs a household commonly has, listed ahead of the rest at any distance. */
-  preferred: ReadonlySet<string> = new Set()
+  preferred: ReadonlySet<string> = new Set(),
+  countryId: string = 'us'
 ): string[] {
   // The variables the parameters feed, and the ones one step on.
   const start = variablesReachedByPaths(paths, map, 1).map((entry) => entry.variable);
@@ -69,7 +74,7 @@ export function suggestedHouseholdInputs(
       ([variable]) =>
         inputs.has(variable) &&
         !NOT_HOUSEHOLD_FACTS.test(variable) &&
-        !STATE_PROGRAM_INPUT.test(variable)
+        !(countryId === 'us' && STATE_PROGRAM_INPUT.test(variable))
     )
     .sort(
       ([a, da], [b, db]) =>
