@@ -14,6 +14,7 @@
  * mechanism is usually the interacted quantity that bounds the data-side
  * bias of the estimate, so ordering is by depth, nearest first.
  */
+import type { CalibrationTargetRow } from '@/libs/flagship/calibrationTargets';
 import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   DEFAULT_MAX_DEPTH,
@@ -23,29 +24,7 @@ import {
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
 
-export interface CalibrationTargetRow {
-  name: string;
-  source: string;
-  sourceLabel: string | null;
-  /** The dashboard's label for the measured quantity, e.g. "refundable ctc". */
-  variable: string;
-  policyengineVariables: string[];
-  measure: string | null;
-  /** The dashboard's id for the measured quantity, e.g. "ctc_amount". */
-  sourceMeasureId?: string | null;
-  /** The target's slice of the source table, e.g. "18k to 19k · no qualifying children · All". */
-  breakdown?: string | null;
-  level: 'national' | 'state';
-  /** "US" for national targets, else the state code. */
-  geography: string;
-  period: number | string | null;
-  target: number | null;
-  estimate: number | null;
-  /** (estimate − target) ÷ target, as a fraction. */
-  relativeError: number | null;
-  targetRole: string | null;
-  sourceUrl: string | null;
-}
+export type { CalibrationTargetRow };
 
 export type CalibrationRing = 'primary' | 'mechanism' | 'downstream';
 
@@ -89,13 +68,15 @@ export const CALIBRATION_DASHBOARD_URL =
   'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets';
 
 /**
- * The dashboard's targets page filtered the way it accepts: by source and
- * by level (national or state). It does not address a single target or a
- * geography in the URL, so this is the closest deep link.
+ * The dashboard's targets page filtered by source, by level (national or
+ * state) and by geography (a state code), the filter names its
+ * target-diagnostics API takes. It does not address a single target in
+ * the URL, so this is the closest deep link.
  */
 export function dashboardTargetsUrl(filters: {
   source?: string | null;
   level?: 'national' | 'state' | null;
+  geography?: string | null;
 }): string {
   const params = new URLSearchParams();
   if (filters.source) {
@@ -103,6 +84,9 @@ export function dashboardTargetsUrl(filters: {
   }
   if (filters.level) {
     params.set('level', filters.level);
+  }
+  if (filters.geography) {
+    params.set('geography', filters.geography);
   }
   const query = params.toString();
   return query ? `${CALIBRATION_DASHBOARD_URL}?${query}` : CALIBRATION_DASHBOARD_URL;
@@ -319,6 +303,85 @@ export async function fetchCalibrationTargets(
   } catch {
     return null;
   }
+}
+
+/**
+ * Fetches every target in `geography`, whatever it measures, worst fit
+ * first. Null when the route is unavailable.
+ */
+export async function fetchGeographyCalibrationTargets(
+  geography: string
+): Promise<{ releaseId: string | null; rows: CalibrationTargetRow[] } | null> {
+  try {
+    const response = await fetch('/api/calibration-targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variables: [], geography, all: true }),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const payload = await response.json();
+    return {
+      releaseId: typeof payload?.releaseId === 'string' ? payload.releaseId : null,
+      rows: Array.isArray(payload?.rows) ? payload.rows : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** A target within this share of its official value counts as a close fit. */
+export const CLOSE_FIT_ERROR = 0.1;
+
+/** How many of a geography's worst-fit targets its summary lists. */
+const GEOGRAPHY_WORST_LIMIT = 5;
+
+/** How well the data fits one geography overall, whatever a reform changes. */
+export interface GeographyCalibrationFit {
+  releaseId: string | null;
+  geography: string;
+  targetCount: number;
+  /** The share of targets within CLOSE_FIT_ERROR of the official value, as a fraction. */
+  closeFitShare: number;
+  /** |relativeError| weighted by |target|, as a fraction; 0 with no targets. */
+  meanAbsRelativeError: number;
+  /** The worst-fit targets, worst first. */
+  worst: CalibrationTargetRow[];
+}
+
+/** Summarizes a geography's targets: count, close-fit share, weighted error, worst rows. */
+export function summarizeGeographyFit(
+  geography: string,
+  releaseId: string | null,
+  rows: CalibrationTargetRow[],
+  worstLimit: number = GEOGRAPHY_WORST_LIMIT
+): GeographyCalibrationFit {
+  const fitted = rows
+    .filter((row) => row.geography === geography && typeof row.relativeError === 'number')
+    .sort((a, b) => Math.abs(b.relativeError!) - Math.abs(a.relativeError!));
+  return {
+    releaseId,
+    geography,
+    targetCount: fitted.length,
+    closeFitShare:
+      fitted.length === 0
+        ? 0
+        : fitted.filter((row) => Math.abs(row.relativeError!) <= CLOSE_FIT_ERROR).length /
+          fitted.length,
+    meanAbsRelativeError: fitted.length === 0 ? 0 : weightedMeanAbsError(fitted),
+    worst: fitted.slice(0, worstLimit),
+  };
+}
+
+/** A geography's overall data fit, or null when the route is unavailable. */
+export async function calibrationFitForGeography(
+  geography: string
+): Promise<GeographyCalibrationFit | null> {
+  const fetched = await fetchGeographyCalibrationTargets(geography);
+  return fetched === null
+    ? null
+    : summarizeGeographyFit(geography, fetched.releaseId, fetched.rows);
 }
 
 /**

@@ -4,10 +4,16 @@ import {
   CalibrationMatchSection,
   useCalibrationMatches,
 } from '@/components/flagship/CalibrationMatches';
-import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
+import {
+  summarizeGeographyFit,
+  type CalibrationMatches,
+  type GeographyCalibrationFit,
+} from '@/libs/flagship/calibrationMatching';
 import {
   mockCalibrationMatches,
   mockCtcLimitingMatch,
+  mockDcFitRows,
+  mockDcIncomeTaxRow,
   POPULACE_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
@@ -18,11 +24,24 @@ import {
 const mockCalibrationMatchesForPaths =
   vi.fn<(paths: string[], geography: string) => Promise<CalibrationMatches | null>>();
 
+const mockCalibrationFitForGeography =
+  vi.fn<(geography: string) => Promise<GeographyCalibrationFit | null>>();
+
 vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/calibrationMatching')>()),
   calibrationMatchesForPaths: (paths: string[], geography: string) =>
     mockCalibrationMatchesForPaths(paths, geography),
+  calibrationFitForGeography: (geography: string) => mockCalibrationFitForGeography(geography),
 }));
+
+/** DC's overall fit over its five fixture targets, the three worst listed. */
+const dcFit = (): GeographyCalibrationFit =>
+  summarizeGeographyFit('DC', POPULACE_RELEASE_ID, mockDcFitRows, 3);
+
+beforeEach(() => {
+  mockCalibrationFitForGeography.mockReset();
+  mockCalibrationFitForGeography.mockResolvedValue(dcFit());
+});
 
 /** A UK parameter that is also in the US dependency map. */
 const UK_ELASTICITY_PATH = 'gov.simulation.capital_gains_responses.elasticity';
@@ -46,7 +65,7 @@ describe('CalibrationMatchSection', () => {
     ).toBeInTheDocument();
   });
 
-  test('given no target of a changed program then one plain line says so', () => {
+  test('given no target of a changed program then one plain line says so', async () => {
     render(
       <CalibrationMatchSection
         matches={{ ...mockCalibrationMatches, geography: 'CA', reachedCount: 33, matches: [] }}
@@ -57,7 +76,10 @@ describe('CalibrationMatchSection', () => {
     expect(
       screen.getByText('No calibration target measures the programs this reform changes.')
     ).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    // Only the state's overall fit has a table; the reform has none.
+    await screen.findByRole('heading', { name: 'California data fit' });
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    expect(screen.queryByRole('table', { name: /^(Related )?calibration targets$/i })).toBeNull();
   });
 
   test('given the map traces nothing the reform changes then it says so, not "no target"', () => {
@@ -73,7 +95,7 @@ describe('CalibrationMatchSection', () => {
     expect(screen.queryByText(/No calibration target measures/)).not.toBeInTheDocument();
   });
 
-  test('given nothing measures the change but related targets do then they show as related', () => {
+  test('given nothing measures the change but related targets do then they show as related', async () => {
     render(
       <CalibrationMatchSection
         matches={{
@@ -85,10 +107,105 @@ describe('CalibrationMatchSection', () => {
       />
     );
 
+    // Related targets are measured, so the card must not say no target measures anything.
+    expect(screen.queryByText(/No calibration target measures/)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/No calibration target measures the programs this reform changes/)
-    ).toHaveTextContent('Related targets in VT');
+      screen.getByText(/These targets in Vermont do not measure a program this reform changes/)
+    ).toHaveTextContent('the change reaches them through the model');
     expect(screen.getByRole('table', { name: 'Related calibration targets' })).toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'Vermont data fit' });
+  });
+
+  test('given a DC CTC reform matching the DC income tax target then it shows as a direct match', async () => {
+    render(
+      <CalibrationMatchSection
+        matches={{
+          ...mockCalibrationMatches,
+          geography: 'DC',
+          matches: [
+            {
+              variable: 'state_income_tax',
+              depth: 3,
+              via: 'dc_income_tax',
+              ring: 'mechanism',
+              targets: [mockDcIncomeTaxRow],
+              targetCount: 1,
+              meanAbsRelativeError: 0.0646,
+              worst: mockDcIncomeTaxRow,
+            },
+          ],
+        }}
+      />
+    );
+
+    const table = screen.getByRole('table', { name: 'Calibration targets' });
+    expect(within(table).getByText('State income tax')).toBeInTheDocument();
+    expect(within(table).getByRole('button', { name: 'Collections · t40' })).toBeInTheDocument();
+    expect(within(table).getByText('6.5%')).toBeInTheDocument();
+    expect(screen.queryByText(/No calibration target measures/)).not.toBeInTheDocument();
+    await screen.findByRole('table', {
+      name: 'Worst-fit calibration targets in District of Columbia',
+    });
+  });
+
+  test('given a state report then the state’s overall data fit follows, as context', async () => {
+    render(
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, geography: 'DC', matches: [], related: [] }}
+      />
+    );
+
+    // The reform-specific line comes first, then the state summary.
+    expect(
+      screen.getByText('No calibration target measures the programs this reform changes.')
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'District of Columbia data fit' })
+    ).toBeInTheDocument();
+    expect(mockCalibrationFitForGeography).toHaveBeenCalledWith('DC');
+    expect(
+      screen.getByText(
+        /How well the data fits District of Columbia overall, whatever the reform changes\./
+      )
+    ).toHaveTextContent('5 targets, 60.0% within 10.0% of the official value');
+    const table = screen.getByRole('table', {
+      name: 'Worst-fit calibration targets in District of Columbia',
+    });
+    const rows = within(table).getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Rental income');
+    expect(rows[0]).toHaveTextContent('9739%');
+    expect(rows[1]).toHaveTextContent('TANF');
+    expect(rows[1]).toHaveTextContent('-79.3%');
+    expect(rows[2]).toHaveTextContent('State income tax');
+    expect(within(rows[2]).getByRole('button', { name: 'Collections · t40' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'View all District of Columbia targets in dashboard' })
+    ).toHaveAttribute('href', expect.stringContaining('level=state&geography=DC'));
+  });
+
+  test('given the state fit is unavailable then the summary says so', async () => {
+    mockCalibrationFitForGeography.mockResolvedValue(null);
+    render(
+      <CalibrationMatchSection
+        matches={{ ...mockCalibrationMatches, geography: 'DC', matches: [], related: [] }}
+      />
+    );
+
+    expect(
+      await screen.findByText(
+        'The District of Columbia calibration targets are temporarily unavailable.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  test('given a national report then no state summary is fetched or shown', async () => {
+    render(<CalibrationMatchSection matches={mockCalibrationMatches} />);
+
+    await act(async () => {});
+    expect(mockCalibrationFitForGeography).not.toHaveBeenCalled();
+    expect(screen.queryByText(/data fit/)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('table')).toHaveLength(1);
   });
 
   test('given direct matches then related targets do not show', () => {
