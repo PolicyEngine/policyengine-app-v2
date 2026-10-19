@@ -22,9 +22,9 @@ import RunProgress, { RunLoading } from '@/components/flagship/report/RunProgres
 import { ReportUnresolvable } from '@/components/flagship/ReportComputing';
 import { ErrorState } from '@/components/flagship/states';
 import { trackRecordPrograms, useModelTrackRecord } from '@/components/flagship/ValidationPanel';
-import { Stack, Title } from '@/components/ui';
+import { Stack, Text, Title } from '@/components/ui';
 import { getDurationForRegion } from '@/constants/calculationDurations';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { isApiReportId, useFlagshipReport } from '@/hooks/useFlagshipReport';
@@ -40,6 +40,7 @@ import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
 import { isUntitledReform } from '@/libs/flagship/draftLabels';
+import { isDerivedFromNational } from '@/libs/flagship/regionalOutput';
 import {
   reportBaselineLabel,
   reportBaselineUnknown,
@@ -209,6 +210,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
         estimateByRegion: true,
         // A failed run says so on its record, so Your reforms can say Failed.
         recordReportErrors: true,
+        // A state already in a nationwide result held here opens with it.
+        reuseNationalRegions: true,
         populations: {
           household1: null,
           household2: null,
@@ -567,6 +570,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             statusByYear={statusByYear}
             onCalculateAll={() => requestYears(windowYears)}
           />
+        ) : undefined
+      }
+      overviewFooter={
+        isDerivedFromNational(shownOutput) && regionLabel ? (
+          <Text
+            style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+          >
+            From the nationwide run: the same data and weights, filtered to {regionLabel}.
+          </Text>
         ) : undefined
       }
       calibration={calibration}

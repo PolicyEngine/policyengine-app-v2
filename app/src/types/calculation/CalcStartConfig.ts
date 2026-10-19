@@ -63,4 +63,11 @@ export interface CalcStartConfig {
    * Off by default: a failed run leaves the record as it was.
    */
   recordReportErrors?: boolean;
+
+  /**
+   * Open a US state report from a nationwide result this session already
+   * holds, when it carries the state's block (optional, v3; see
+   * libs/flagship/regionalOutput). Off by default: every run asks the API.
+   */
+  reuseNationalRegions?: boolean;
 }

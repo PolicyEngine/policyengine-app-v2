@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
+import { findRegionalOutput, nationalEconomyKey } from '@/libs/flagship/regionalOutput';
 import {
   provisionPeriods,
   type RunReportBaseline,
@@ -23,6 +25,11 @@ import {
   PHASED_CTC_REFORM,
   PHASED_REPORT_YEAR,
 } from '@/tests/fixtures/components/flagship/reportAdjustPanelMocks';
+import {
+  mockNationalOutput,
+  mockNationalOutputWithCalifornia,
+  REGIONAL_TEST,
+} from '@/tests/fixtures/libs/flagship/regionalOutputMocks';
 
 const mockRun = vi.fn();
 const mockFindMine = vi.fn();
@@ -77,11 +84,19 @@ async function renderPanel({
   year,
   baseline,
   baselineUnknown,
+  output,
+  reformPolicyId,
+  baselinePolicyId,
+  budgetWindow,
 }: {
   region?: string;
   year?: string;
   baseline?: RunReportBaseline;
   baselineUnknown?: boolean;
+  output?: SocietyWideReportOutput | null;
+  reformPolicyId?: string;
+  baselinePolicyId?: string;
+  budgetWindow?: { startYear: number; windowSize: number };
 } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
@@ -94,12 +109,16 @@ async function renderPanel({
         year={year}
         baseline={baseline}
         baselineUnknown={baselineUnknown}
+        output={output}
+        reformPolicyId={reformPolicyId}
+        baselinePolicyId={baselinePolicyId}
+        budgetWindow={budgetWindow}
       />
     </QueryClientProvider>
   );
   // Collapsed by default — expand via the edge tab before interacting.
   await userEvent.setup().click(screen.getByRole('button', { name: /open adjust parameters/i }));
-  return result;
+  return { ...result, queryClient };
 }
 
 describe('ReportAdjustPanel', () => {
@@ -293,6 +312,91 @@ describe('ReportAdjustPanel', () => {
     await waitFor(() => expect(mockRun).toHaveBeenCalled());
     expect(mockRun.mock.calls[0][5]).toEqual({ region: 'state/ca' });
     store.dispatch(clearMetadata());
+  });
+
+  describe('given a nationwide report whose results carry each state', () => {
+    const NATIONWIDE = {
+      region: 'us',
+      year: REGIONAL_TEST.YEAR,
+      reformPolicyId: REGIONAL_TEST.REFORM_ID,
+      baselinePolicyId: REGIONAL_TEST.BASELINE_ID,
+    };
+    const pickCalifornia = async (user: ReturnType<typeof userEvent.setup>) => {
+      await user.click(screen.getByRole('button', { name: 'Population: Nationwide' }));
+      await user.click(await screen.findByRole('option', { name: /California/ }));
+    };
+
+    test('given only the state changes then its new report opens with the state block', async () => {
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      // The run reads the cache as the report's start would.
+      let foundAtRun: unknown = null;
+      const user = userEvent.setup();
+      const { queryClient } = await renderPanel({
+        ...NATIONWIDE,
+        output: mockNationalOutputWithCalifornia(),
+      });
+      mockRun.mockImplementation(async () => {
+        foundAtRun = findRegionalOutput(queryClient, {
+          countryId: 'us',
+          reformPolicyId: REGIONAL_TEST.REFORM_ID,
+          baselinePolicyId: REGIONAL_TEST.BASELINE_ID,
+          region: 'state/ca',
+          year: REGIONAL_TEST.YEAR,
+        });
+      });
+
+      await pickCalifornia(user);
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockRun.mock.calls[0][5]).toEqual({ region: 'state/ca' });
+      expect((foundAtRun as SocietyWideReportOutput | null)?.budget.budgetary_impact).toBe(
+        -1_000_000
+      );
+      store.dispatch(clearMetadata());
+    });
+
+    test('given a value changes too then nothing is kept for the state', async () => {
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      const { queryClient } = await renderPanel({
+        ...NATIONWIDE,
+        output: mockNationalOutputWithCalifornia(),
+      });
+
+      const input = screen.getByLabelText(/new value for maximum credit per child/i);
+      await user.clear(input);
+      await user.type(input, '3600');
+      await pickCalifornia(user);
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(
+        queryClient.getQueryData(
+          nationalEconomyKey('us', REGIONAL_TEST.REFORM_ID, REGIONAL_TEST.BASELINE_ID, '2026')
+        )
+      ).toBeUndefined();
+      store.dispatch(clearMetadata());
+    });
+
+    test('given results without state blocks then the recompute runs as before', async () => {
+      seedDeductionMetadata({ regions: US_REGIONS });
+      mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+      const user = userEvent.setup();
+      const { queryClient } = await renderPanel({ ...NATIONWIDE, output: mockNationalOutput() });
+
+      await pickCalifornia(user);
+      await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+      await waitFor(() => expect(mockRun).toHaveBeenCalled());
+      expect(mockRun.mock.calls[0][5]).toEqual({ region: 'state/ca' });
+      expect(
+        queryClient.getQueryCache().findAll({ queryKey: ['flagship-national-economy'] })
+      ).toEqual([]);
+      store.dispatch(clearMetadata());
+    });
   });
 
   test('given a nationwide report then recompute stays nationwide', async () => {
