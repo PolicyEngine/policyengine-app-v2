@@ -420,12 +420,63 @@ export function getHouseholdReproductionUnavailableReason(
   return null;
 }
 
+/** The household results a reproduction's DataFrame holds: in every country's model. */
+const DATAFRAME_HOUSEHOLD_VARIABLES = [
+  'household_net_income',
+  'household_market_income',
+  'household_tax',
+  'household_benefits',
+] as const;
+
+/**
+ * Code that turns the simulation's results into a pandas DataFrame, for
+ * charts and further analysis (issue #1095). A point calculation gives one
+ * row per result; an earnings variation gives one row per earnings level,
+ * with the household's earnings beside each result.
+ */
+function getDataFrameCode(year: number, earningVariation: boolean): string[] {
+  const variables = DATAFRAME_HOUSEHOLD_VARIABLES.map((name) => `"${name}"`).join(', ');
+  if (!earningVariation) {
+    return [
+      '',
+      '# The household results as a pandas DataFrame, for charts and analysis.',
+      'import pandas as pd',
+      '',
+      `variables = [${variables}]`,
+      'df = pd.DataFrame(',
+      '    {',
+      '        "variable": variables,',
+      `        "value": [float(simulation.calculate(variable, ${year}).sum()) for variable in variables],`,
+      '    }',
+      ')',
+      'print(df)',
+    ];
+  }
+  return [
+    '',
+    '# The results at each earnings level as a pandas DataFrame, ready to chart.',
+    'import pandas as pd',
+    '',
+    'df = pd.DataFrame(',
+    '    {',
+    `        "employment_income": simulation.calculate("employment_income", ${year}, map_to="household"),`,
+    ...DATAFRAME_HOUSEHOLD_VARIABLES.map(
+      (name) => `        "${name}": simulation.calculate("${name}", ${year}),`
+    ),
+    '    }',
+    ')',
+    'print(df)',
+  ];
+}
+
 /** Each block runs in its own notebook so different resolved versions stay isolated. */
 export function getHouseholdReproducibilityCode(
   countryId: string,
   reproduction: HouseholdReproduction,
   year: number | null,
-  earningVariation: boolean = false
+  earningVariation: boolean = false,
+  /** Ends the block with code that puts the results in a pandas DataFrame. */
+  includeDataFrame: boolean = false
 ): string[] {
   const { role, household, policy, policyengineVersion, modelVersion, spmConfig } = reproduction;
   if (getHouseholdReproductionUnavailableReason(countryId, reproduction, year)) {
@@ -474,6 +525,7 @@ export function getHouseholdReproducibilityCode(
       role,
       spmConfig
     ),
+    ...(includeDataFrame ? getDataFrameCode(year!, earningVariation) : []),
   ];
 }
 
