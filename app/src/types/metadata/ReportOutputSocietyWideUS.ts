@@ -160,4 +160,15 @@ export interface ReportOutputSocietyWideUS {
     };
   };
   wealth_decile: null;
+  /**
+   * Optional (policyengine-sim-api#829): on a nationwide result, each
+   * state's results from the same run, keyed by region ("state/ca"), in
+   * the shape and units of that state's own run. Absent on older results.
+   */
+  regions?: Record<string, ReportOutputSocietyWideUS>;
+  /**
+   * Set by the app, never the API: the result is a state's block of a
+   * nationwide run (see regionalOutputFrom), not a run of its own.
+   */
+  derived_from?: 'national';
 }

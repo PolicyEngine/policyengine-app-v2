@@ -1,5 +1,7 @@
+import { QueryClient } from '@tanstack/react-query';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { FlagshipReportRecord, FlagshipReportStore } from '@/api/flagshipReportStore';
+import { rememberNationalOutput } from '@/libs/flagship/regionalOutput';
 import {
   forgetAccountReportMeta,
   readReportMeta,
@@ -7,6 +9,10 @@ import {
   reportMetaFromRecord,
   runFlagshipReport,
 } from '@/libs/flagship/runReport';
+import {
+  mockNationalOutput,
+  mockNationalOutputWithCalifornia,
+} from '@/tests/fixtures/libs/flagship/regionalOutputMocks';
 
 const mockCreatePolicy = vi.fn();
 const mockCreateSimulation = vi.fn();
@@ -165,6 +171,49 @@ describe('runFlagshipReport', () => {
     expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '2', {
       region: 'state/de',
       time_period: '2027',
+    });
+  });
+
+  describe('given a nationwide result this session holds', () => {
+    const stateRun = (queryClient: QueryClient) =>
+      runFlagshipReport({
+        countryId: 'us',
+        title: 'CTC expansion',
+        sourceNote: '',
+        provisions: [PROVISION],
+        currentLawId: 2,
+        year: 2026,
+        region: 'state/ca',
+        queryClient,
+      });
+    const nationwide = {
+      countryId: 'us',
+      reformPolicyId: '77',
+      baselinePolicyId: '2',
+      year: '2026',
+    };
+
+    test('given it carries the state then no calculation starts, nationwide or for the state', async () => {
+      const queryClient = new QueryClient();
+      rememberNationalOutput(queryClient, nationwide, mockNationalOutputWithCalifornia());
+
+      await expect(stateRun(queryClient)).resolves.toBe('55');
+
+      expect(mockFetchSocietyWide).not.toHaveBeenCalled();
+    });
+
+    test('given it has no state blocks then the state calculation starts as before', async () => {
+      mockFetchSocietyWide.mockResolvedValue({ status: 'computing', result: null });
+      const queryClient = new QueryClient();
+      rememberNationalOutput(queryClient, nationwide, mockNationalOutput());
+
+      await stateRun(queryClient);
+
+      expect(mockFetchSocietyWide).toHaveBeenCalledTimes(1);
+      expect(mockFetchSocietyWide).toHaveBeenCalledWith('us', '77', '2', {
+        region: 'state/ca',
+        time_period: '2026',
+      });
     });
   });
 

@@ -85,6 +85,8 @@ export function useRunFlagshipReport() {
         // With accounts, the run's record goes through the API (the account,
         // or this browser's unauthenticated user); otherwise this browser's.
         accountReportStore: reportStore.isAccount ? reportStore.store : null,
+        // A state already in a nationwide result held here opens with it.
+        queryClient,
       });
       if (fromDraft) {
         markDraftRun(userReportId);

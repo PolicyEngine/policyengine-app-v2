@@ -1,4 +1,5 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
+import { findRegionalOutput } from '@/libs/flagship/regionalOutput';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import type { CalcMetadata, CalcParams, CalcStartConfig, CalcStatus } from '@/types/calculation';
 import { trackSimulationCompleted } from '@/utils/analytics';
@@ -79,8 +80,27 @@ export class CalcOrchestrator {
       this.queryClient.setQueryData(queryOptions.queryKey, computingStatus);
     }
 
+    // Opt-in (v3): a state's results already in a nationwide result this
+    // session holds open at once, and are persisted as a run's would be.
+    // Read from the cache only; no request is made for them.
+    const fromNational =
+      config.reuseNationalRegions &&
+      config.targetType === 'report' &&
+      metadata.calcType === 'societyWide' &&
+      params.region
+        ? findRegionalOutput(this.queryClient, {
+            countryId: params.countryId,
+            reformPolicyId: params.policyIds.reform || params.policyIds.baseline,
+            baselinePolicyId: params.policyIds.baseline,
+            region: params.region,
+            year: params.year,
+          })
+        : null;
+
     // Execute initial queryFn
-    const initialStatus = await queryOptions.queryFn();
+    const initialStatus: CalcStatus = fromNational
+      ? { status: 'complete', result: fromNational, metadata }
+      : await queryOptions.queryFn();
 
     // Set result in cache
     this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { IconChartBar, IconPencil, IconX } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
   Button,
   Input,
@@ -27,6 +28,7 @@ import {
 } from '@/libs/draftReform';
 import { isUntitledReform, periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
+import { regionalOutputFrom, rememberNationalOutput } from '@/libs/flagship/regionalOutput';
 import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -61,6 +63,14 @@ interface ReportAdjustPanelProps {
    * compare with current law instead, so it is off.
    */
   baselineUnknown?: boolean;
+  /**
+   * The results the report shows, and the policies they ran on. A
+   * nationwide result that carries each state's block lets a recompute
+   * on one state open with it (see regionalOutput).
+   */
+  output?: SocietyWideReportOutput | null;
+  reformPolicyId?: string;
+  baselinePolicyId?: string;
 }
 
 /**
@@ -101,6 +111,9 @@ function AdjustPanel({
   baseline,
   baselineUnknown = false,
   budgetWindow,
+  output,
+  reformPolicyId,
+  baselinePolicyId,
 }: ReportAdjustPanelProps) {
   const runReport = useRunFlagshipReport();
   const nav = useAppNavigate();
@@ -273,15 +286,41 @@ function AdjustPanel({
       // the same values over the same dates, otherwise save this one.
       const match = findMatchingReform(await store.findMine(countryId), parameters);
 
-      // Only more or fewer years: the same reform, under its own name.
-      const onlyYears =
+      // The same reform values as the report's, over the same dates.
+      const sameValues =
         removed.size === 0 &&
-        population === reportRegion &&
         provisions.every((provision) =>
           periodsOf(provision)
             ? !periodChanged(provision)
             : sameParameterValue(values[provision.path], provision.value)
         );
+      // Only more or fewer years: the same reform, under its own name.
+      const onlyYears = sameValues && population === reportRegion;
+      // Only one state of a nationwide report, in the same year with the
+      // same comparison: the state's block of these results, when they
+      // carry it, opens the new report at once instead of a new run.
+      const onlyState =
+        sameValues &&
+        !reportRegion &&
+        !!population &&
+        windowYears === 1 &&
+        reportWindow === 1 &&
+        !!year &&
+        !!reformPolicyId &&
+        !!baselinePolicyId &&
+        !!regionalOutputFrom(output, population);
+      if (onlyState) {
+        rememberNationalOutput(
+          queryClient,
+          {
+            countryId,
+            reformPolicyId: reformPolicyId!,
+            baselinePolicyId: baselinePolicyId!,
+            year: year!,
+          },
+          output
+        );
+      }
       const label = renamed ? name.trim() : onlyYears ? title : `${title} (adjusted)`;
       let reformId: string;
       let runTitle: string;

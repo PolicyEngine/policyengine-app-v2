@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
 import { ResultPersister } from '@/libs/calculations/ResultPersister';
+import { rememberNationalOutput } from '@/libs/flagship/regionalOutput';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import {
   createMockManager,
   createTestQueryClient,
+  mockCalculationQueryKey,
   mockCompleteHouseholdStatus,
   mockErrorSocietyWideStatus,
   mockHouseholdCalcConfig,
@@ -19,6 +21,10 @@ import {
   TEST_POPULATION_IDS,
   TEST_YEARS,
 } from '@/tests/fixtures/libs/calculations/orchestratorMocks';
+import {
+  mockNationalOutput,
+  mockNationalOutputWithCalifornia,
+} from '@/tests/fixtures/libs/flagship/regionalOutputMocks';
 import type { CalcStatus } from '@/types/calculation';
 
 // Mock dependencies
@@ -402,6 +408,81 @@ describe('CalcOrchestrator', () => {
       await vi.waitFor(() =>
         expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.REPORT_1, 'report')
       );
+    });
+  });
+
+  describe('state from a nationwide result', () => {
+    const stateConfig = (reuseNationalRegions?: boolean) => {
+      const base = mockSocietyWideCalcConfig();
+      return mockSocietyWideCalcConfig({
+        ...(reuseNationalRegions !== undefined && { reuseNationalRegions }),
+        populations: {
+          ...base.populations,
+          geography1: { ...base.populations.geography1!, geographyId: 'state/ca' },
+        },
+      });
+    };
+    const nationwide = {
+      countryId: TEST_COUNTRIES.US,
+      reformPolicyId: 'policy-2',
+      baselinePolicyId: 'policy-1',
+      year: '2024',
+    };
+    const startWith = async (config: ReturnType<typeof stateConfig>) => {
+      const mockQueryFn = vi.fn().mockResolvedValue(mockPendingSocietyWideStatus());
+      (calculationQueries.forReport as any).mockReturnValue(
+        mockSocietyWideQueryOptions(TEST_CALC_IDS.REPORT_1, mockQueryFn)
+      );
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
+      await orchestrator.startCalculation(config);
+      return mockQueryFn;
+    };
+
+    it('given the state block in the cache then it completes at once and is persisted, with no request', async () => {
+      // Given
+      rememberNationalOutput(queryClient, nationwide, mockNationalOutputWithCalifornia());
+
+      // When
+      const mockQueryFn = await startWith(stateConfig(true));
+
+      // Then
+      expect(mockQueryFn).not.toHaveBeenCalled();
+      const status = queryClient.getQueryData<CalcStatus>(
+        mockCalculationQueryKey(TEST_CALC_IDS.REPORT_1)
+      );
+      expect(status?.status).toBe('complete');
+      expect((status?.result as any).derived_from).toBe('national');
+      expect(mockResultPersister.persist).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'complete' }),
+        TEST_COUNTRIES.US,
+        '2024'
+      );
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.REPORT_1, 'report');
+    });
+
+    it('given a nationwide result without regions then the run asks the API as before', async () => {
+      // Given
+      rememberNationalOutput(queryClient, nationwide, mockNationalOutput());
+
+      // When
+      const mockQueryFn = await startWith(stateConfig(true));
+
+      // Then
+      // Asked, then polled while it runs.
+      expect(mockQueryFn).toHaveBeenCalled();
+      expect(mockResultPersister.persist).not.toHaveBeenCalled();
+    });
+
+    it('given a caller that does not opt in then the run asks the API as before', async () => {
+      // Given
+      rememberNationalOutput(queryClient, nationwide, mockNationalOutputWithCalifornia());
+
+      // When
+      const mockQueryFn = await startWith(stateConfig());
+
+      // Then
+      expect(mockQueryFn).toHaveBeenCalled();
+      expect(mockResultPersister.persist).not.toHaveBeenCalled();
     });
   });
 

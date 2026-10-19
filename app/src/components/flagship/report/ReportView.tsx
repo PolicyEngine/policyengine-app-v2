@@ -476,6 +476,9 @@ export default function ReportView({
           baseline={baseline}
           baselineUnknown={baselineUnknown}
           budgetWindow={budgetWindow}
+          output={output}
+          reformPolicyId={reformPolicyId}
+          baselinePolicyId={baselinePolicyId}
         />
       </div>
     </div>

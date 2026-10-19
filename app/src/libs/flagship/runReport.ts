@@ -1,3 +1,4 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { fetchBudgetWindow } from '@/api/budgetWindow';
 import {
   LocalStorageFlagshipReportStore,
@@ -10,6 +11,7 @@ import { createSimulation } from '@/api/simulation';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { CountryId } from '@/libs/countries';
+import { findRegionalOutput } from '@/libs/flagship/regionalOutput';
 import { baselineProvisions, customBaseline } from '@/libs/flagship/reportBaseline';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
@@ -227,6 +229,12 @@ export interface RunFlagshipReportArgs {
   accountReportStore?: FlagshipReportStore | null;
   /** The model's parameters, to check and type each value as v2 does. */
   parameters?: ParameterMetadataCollection;
+  /**
+   * This session's query cache. A state run whose results are already in
+   * a nationwide result held there (see regionalOutput) starts no
+   * calculation of its own: its report opens with them.
+   */
+  queryClient?: QueryClient;
 }
 
 /**
@@ -308,6 +316,7 @@ export async function runFlagshipReport({
   baseline: requestedBaseline,
   accountReportStore,
   parameters,
+  queryClient,
 }: RunFlagshipReportArgs): Promise<string> {
   if (provisions.length === 0) {
     throw new Error('Cannot run a report with no provisions');
@@ -399,14 +408,28 @@ export async function runFlagshipReport({
   // gets its result, waiting for the link. The page asks with the same
   // reform, baseline, region and year, so it checks on this job.
   // A failure here never fails the run: the report page asks again.
-  void Promise.resolve()
-    .then(() =>
-      fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(baselineId), {
-        region: region ?? countryId,
-        time_period: String(year),
-      })
-    )
-    .catch(() => undefined);
+  // A state already in a nationwide result this session holds needs no
+  // run: its report opens with that result (see regionalOutput).
+  const fromNational =
+    !!queryClient &&
+    !!region &&
+    !!findRegionalOutput(queryClient, {
+      countryId,
+      reformPolicyId: String(reformPolicyId),
+      baselinePolicyId: String(baselineId),
+      region,
+      year: String(year),
+    });
+  if (!fromNational) {
+    void Promise.resolve()
+      .then(() =>
+        fetchSocietyWideCalculation(countryId, String(reformPolicyId), String(baselineId), {
+          region: region ?? countryId,
+          time_period: String(year),
+        })
+      )
+      .catch(() => undefined);
+  }
 
   // The window was asked for with the run: start it now, alongside the
   // report, rather than when the report page opens. The first request

@@ -13,6 +13,8 @@ const mockPolicies = vi.hoisted(() => ({ current: [] as unknown[] }));
 // The policies that failed to load, by id.
 const mockFailedPolicyIds = vi.hoisted(() => ({ current: [] as string[] }));
 const mockRetry = vi.fn();
+// Who the report ran on: the country, or a state ("state/ca").
+const mockRegion = vi.hoisted(() => ({ current: 'us' }));
 
 const META: FlagshipReportMeta = {
   title: 'Test Reform',
@@ -36,8 +38,8 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
   useFlagshipReport: () => ({
     report: { id: 'r1', countryId: 'us', year: '2026', label: 'Test Reform' },
     simulations: [
-      { id: 's1', populationId: 'us', policyId: '2' },
-      { id: 's2', populationId: 'us', policyId: '9' },
+      { id: 's1', populationId: mockRegion.current, policyId: '2' },
+      { id: 's2', populationId: mockRegion.current, policyId: '9' },
     ],
     policies: mockPolicies.current,
     isLoading: false,
@@ -99,6 +101,7 @@ describe('FlagshipReportPage', () => {
     mockFailedPolicyIds.current = [];
     mockRetry.mockReset();
     mockStartCalculationOnLoad.mockReset();
+    mockRegion.current = 'us';
   });
 
   afterEach(() => {
@@ -121,6 +124,56 @@ describe('FlagshipReportPage', () => {
         configs: [expect.objectContaining({ calcId: 'r1', estimateByRegion: true })],
       })
     );
+  });
+
+  test('given the report runs then a state may open from a nationwide result', () => {
+    mockCalcStatus.mockReturnValue({
+      status: 'pending',
+      isComplete: false,
+      isError: false,
+      progress: 0,
+      result: null,
+    });
+
+    renderPage();
+
+    expect(mockStartCalculationOnLoad).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configs: [expect.objectContaining({ reuseNationalRegions: true })],
+      })
+    );
+  });
+
+  describe('given a state report', () => {
+    const completeWith = (result: unknown) =>
+      mockCalcStatus.mockReturnValue({
+        status: 'complete',
+        isComplete: true,
+        isError: false,
+        result,
+      });
+
+    test('given its result came from the nationwide run then the report says so', () => {
+      mockRegion.current = 'state/ca';
+      completeWith({ ...createMockSocietyWideOutput(), derived_from: 'national' });
+
+      renderPage();
+
+      expect(
+        screen.getByText(
+          'From the nationwide run: the same data and weights, filtered to California.'
+        )
+      ).toBeInTheDocument();
+    });
+
+    test('given a run of its own then no such note shows', () => {
+      mockRegion.current = 'state/ca';
+      completeWith(createMockSocietyWideOutput());
+
+      renderPage();
+
+      expect(screen.queryByText(/From the nationwide run/)).not.toBeInTheDocument();
+    });
   });
 
   test('given the run is still calculating then the page is the wait, without the adjust panel', () => {
