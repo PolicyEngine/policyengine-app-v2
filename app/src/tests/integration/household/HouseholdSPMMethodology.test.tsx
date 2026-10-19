@@ -46,12 +46,11 @@ describe('SPM point and axes receipts in app-owned report methodology', () => {
       if (url.endsWith('/calculate-full')) {
         const request = JSON.parse(options!.body as string);
         const role = request.spm.geography_kind === 'national' ? 'baseline' : 'reform';
-        const axes = reviewOutput(role, true);
+        const axes = reviewOutput(role, true, request.spm.geography_kind);
         return new Response(
           JSON.stringify({
             status: 'ok',
             result: axes.householdData,
-            spm_config: request.spm,
             spm_provenance: axes.spmProvenance,
           })
         );
@@ -102,7 +101,6 @@ describe('SPM point and axes receipts in app-owned report methodology', () => {
           output: {
             status: 'ok' as const,
             result: point.householdData,
-            spm_config: point.spmConfig,
             spm_provenance: point.spmProvenance,
           },
         };

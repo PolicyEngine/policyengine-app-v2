@@ -12,6 +12,7 @@ import {
   TEST_POPULATION_IDS,
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/adapters/SimulationAdapterMocks';
+import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 
 describe('SimulationAdapter', () => {
   describe('fromMetadata', () => {
@@ -149,6 +150,21 @@ describe('SimulationAdapter', () => {
 
       // Then
       expect(result.output).toBe('invalid-json');
+    });
+
+    it('given persisted household output with the superseded sibling config then marks it pending', () => {
+      const result = SimulationAdapter.fromMetadata(
+        mockSimulationMetadata({
+          output: {
+            result: { people: {} },
+            spm_config: { geography_kind: 'national' },
+            spm_provenance: SPM_RECEIPT,
+          },
+        })
+      );
+
+      expect(result.status).toBe('pending');
+      expect(result.output).toBeNull();
     });
   });
 

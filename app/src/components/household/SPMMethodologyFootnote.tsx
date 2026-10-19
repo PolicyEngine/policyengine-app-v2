@@ -1,3 +1,4 @@
+import SPMProvenanceDetails from '@/components/report/SPMProvenanceDetails';
 import { Stack, Text } from '@/components/ui';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 
@@ -36,14 +37,7 @@ export default function SPMMethodologyFootnote({
             {' · '}
             {item!.spmProvenance!.scenario}
           </summary>
-          <Text size="sm">Forecast: {item!.spmProvenance!.forecast_id}</Text>
-          <pre className="tw:overflow-auto tw:whitespace-pre-wrap tw:break-all tw:text-xs">
-            {JSON.stringify(
-              { spm_config: item!.spmConfig, spm_provenance: item!.spmProvenance },
-              null,
-              2
-            )}
-          </pre>
+          <SPMProvenanceDetails label={label} receipt={item!.spmProvenance!} />
         </details>
       ))}
     </Stack>

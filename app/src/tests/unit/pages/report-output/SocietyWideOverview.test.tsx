@@ -7,6 +7,7 @@ import SocietyWideOverview, {
   getDistrictPayloadAvailability,
   hasCompleteDistrictOutcomePayload,
 } from '@/pages/report-output/SocietyWideOverview';
+import { mockUSReportOutput } from '@/tests/fixtures/api/societyWideMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 // Budget with every component exactly zero (an exact no-op). The mock's shallow
@@ -115,6 +116,21 @@ describe('SocietyWideOverview', () => {
       typography.fontFamily.primary,
       typography.fontFamily.primary,
     ]);
+  });
+
+  test('given US comparison provenance then displays baseline and reform receipts', () => {
+    render(<SocietyWideOverview output={mockUSReportOutput} />);
+
+    expect(
+      screen.getByRole('region', { name: 'SPM society-wide methodology' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Baseline SPM provenance' })).toHaveTextContent(
+      'Executions: 20'
+    );
+    expect(screen.getByRole('region', { name: 'Reform SPM provenance' })).toHaveTextContent(
+      mockUSReportOutput.spm_provenance.reform.receipt.forecast_sha256
+    );
+    expect(screen.queryByText('median_diagnostics')).not.toBeInTheDocument();
   });
 
   describe('budgetary impact section', () => {

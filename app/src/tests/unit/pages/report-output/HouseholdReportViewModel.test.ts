@@ -3,7 +3,7 @@ import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/
 import { HouseholdReportViewModel } from '@/pages/report-output/HouseholdReportViewModel';
 import { mockHouseholdResult } from '@/tests/fixtures/api/householdCalculationMocks';
 import { CORRECTIVE_SPM_ERRORS, FAILED_SPM_REPORT } from '@/tests/fixtures/spm/reportErrorMocks';
-import { NATIONAL_SPM, SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
+import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 
@@ -61,7 +61,6 @@ describe('HouseholdReportViewModel', () => {
         status: 'complete',
         output: {
           result: mockHouseholdResult.householdData,
-          spm_config: NATIONAL_SPM,
           spm_provenance: SPM_RECEIPT,
           policyengine_bundle: {
             policyengine_version: '3.4.1',
@@ -77,7 +76,6 @@ describe('HouseholdReportViewModel', () => {
         id: 'sim-1',
         countryId: 'us',
         householdData: mockHouseholdResult.householdData,
-        spmConfig: NATIONAL_SPM,
         spmProvenance: SPM_RECEIPT,
       },
     ]);

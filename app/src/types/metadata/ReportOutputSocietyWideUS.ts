@@ -1,6 +1,8 @@
+import type { SPMComparisonProvenance } from '@/types/spm';
 import { USCongressionalDistrictBreakdown } from './ReportOutputSocietyWideByCongressionalDistrict';
 
 export interface ReportOutputSocietyWideUS {
+  spm_provenance: SPMComparisonProvenance;
   budget: {
     baseline_net_income: number;
     benefit_spending_impact: number;

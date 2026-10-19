@@ -5,7 +5,7 @@ import type {
   V1HouseholdCreateEnvelope,
   V1HouseholdMetadataEnvelope,
 } from '@/models/household/v1Types';
-import { REPRODUCTION_CONFIGS } from '@/tests/fixtures/pages/report-output/reproduce-in-python/householdSPMReproductionMocks';
+import { REPRODUCTION_RECEIPTS } from '@/tests/fixtures/pages/report-output/reproduce-in-python/householdSPMReproductionMocks';
 import {
   GENERIC_ENVELOPES,
   GENERIC_HOUSEHOLD_IDS,
@@ -17,6 +17,12 @@ import {
 import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import type { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
+import {
+  buildSPMSelectionFromProvenance,
+  parseSPMSelection,
+  type SPMProvenance,
+  type SPMSelection,
+} from '@/types/spm';
 
 export const ORIGINAL_YEAR = '2026';
 export const SUPPORTED_YEAR = '2023';
@@ -32,6 +38,35 @@ export const YEAR_SAVE_ERROR = {
   message: 'The selected SPM artifact could not be saved. Choose SPM settings again.',
 };
 
+function provenanceForStoredSelection(
+  selection: SPMSelection,
+  template: SPMProvenance
+): SPMProvenance {
+  if (
+    !selection.forecast_content_sha256 ||
+    !selection.scenario ||
+    !selection.county_vintage ||
+    selection.as_of === undefined
+  ) {
+    throw new Error('The calculation fixture requires a fully pinned SPM request selection');
+  }
+  const common = {
+    ...template,
+    forecast_sha256: selection.forecast_content_sha256,
+    scenario: selection.scenario,
+    county_vintage: selection.county_vintage,
+    as_of: selection.as_of,
+    years: [SUPPORTED_YEAR],
+  };
+  return selection.geography_kind === 'metro'
+    ? {
+        ...common,
+        geography_kind: selection.geography_kind,
+        geography_id: selection.geography_id,
+      }
+    : { ...common, geography_kind: selection.geography_kind, geography_id: null };
+}
+
 export function yearRecoveryHouseholds(year = ORIGINAL_YEAR) {
   return GENERIC_HOUSEHOLD_IDS.map((id, index) => {
     const secondPerson = index === 0 ? 'your partner' : 'your child';
@@ -41,7 +76,7 @@ export function yearRecoveryHouseholds(year = ORIGINAL_YEAR) {
       countryId: 'us',
       year: Number(year),
       label: index === 0 ? 'Baseline family' : 'Reform family',
-      spm: { ...REPRODUCTION_CONFIGS[index], county_vintage: '2020' },
+      spm: buildSPMSelectionFromProvenance(REPRODUCTION_RECEIPTS[index]),
       householdData: {
         people: {
           you: {
@@ -188,6 +223,10 @@ export class ReportYearRecoveryHTTP extends GenericOrchestrationHTTP {
         const householdData = JSON.parse(
           JSON.stringify(storedHousehold.household_json)
         ) as HouseholdCalculationResult['result'];
+        const spmProvenance = provenanceForStoredSelection(
+          parseSPMSelection(storedHousehold.spm),
+          GENERIC_ENVELOPES[index].spm_provenance!
+        );
         const envelope: HouseholdCalculationResult = {
           ...GENERIC_ENVELOPES[index],
           result: {
@@ -199,14 +238,7 @@ export class ReportYearRecoveryHTTP extends GenericOrchestrationHTTP {
               },
             },
           },
-          spm_config: storedHousehold.spm,
-          spm_provenance: {
-            ...GENERIC_ENVELOPES[index].spm_provenance!,
-            forecast_sha256: storedHousehold.spm!.forecast_content_sha256!,
-            scenario: storedHousehold.spm!.scenario!,
-            geography_kind: storedHousehold.spm!.geography_kind,
-            years: { [SUPPORTED_YEAR]: { source: 'forecast' } },
-          },
+          spm_provenance: spmProvenance,
         };
         return new Response(JSON.stringify({ status: 'ok', ...envelope }));
       }
