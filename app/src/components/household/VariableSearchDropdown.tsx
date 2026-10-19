@@ -5,7 +5,16 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
-import { Button, Spinner, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import {
+  Button,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  Spinner,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { VariableInfo } from '@/utils/VariableResolver';
 
@@ -85,6 +94,7 @@ export default function VariableSearchDropdown({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
 
   // Sort so matching-context variables appear first (within the suggested ones, then the rest)
   const sortedVariables = useMemo(() => {
@@ -241,176 +251,198 @@ export default function VariableSearchDropdown({
   return (
     <div className="tw:flex tw:items-start tw:gap-xs tw:flex-nowrap">
       <div className="tw:flex-1 tw:min-w-0">
-        <div className="tw:relative">
-          <IconSearch
-            size={16}
-            className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
-          />
-          <input
-            ref={inputRef}
-            className={cn(
-              'tw:w-full tw:h-9 tw:pl-8 tw:pr-8 tw:rounded-element tw:border tw:border-gray-300',
-              'tw:text-sm tw:outline-none tw:focus:border-primary-500 tw:focus:ring-1 tw:focus:ring-primary-500',
-              disabled && 'tw:opacity-50 tw:cursor-not-allowed'
-            )}
-            placeholder={placeholder}
-            value={searchValue}
-            onChange={(e) => {
-              onSearchChange(e.currentTarget.value);
-              if (!isOpen) {
-                openDropdown();
-              }
-            }}
-            onClick={openDropdown}
-            onFocus={openDropdown}
-            onBlur={closeUnlessFocusInside}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            autoFocus
-          />
-          <IconChevronDown
-            size={14}
-            className="tw:absolute tw:right-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
-          />
-        </div>
+        {/* A grouped list floats over the page at its own width: in a narrow
+            person card, a list as wide as the box leaves no room for both the
+            categories and the variables. */}
+        <Popover open={isOpen && !!grouped}>
+          <PopoverAnchor asChild>
+            <div ref={anchorRef} className="tw:relative">
+              <IconSearch
+                size={16}
+                className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
+              />
+              <input
+                ref={inputRef}
+                className={cn(
+                  'tw:w-full tw:h-9 tw:pl-8 tw:pr-8 tw:rounded-element tw:border tw:border-gray-300',
+                  'tw:text-sm tw:outline-none tw:focus:border-primary-500 tw:focus:ring-1 tw:focus:ring-primary-500',
+                  disabled && 'tw:opacity-50 tw:cursor-not-allowed'
+                )}
+                placeholder={placeholder}
+                value={searchValue}
+                onChange={(e) => {
+                  onSearchChange(e.currentTarget.value);
+                  if (!isOpen) {
+                    openDropdown();
+                  }
+                }}
+                onClick={openDropdown}
+                onFocus={openDropdown}
+                onBlur={closeUnlessFocusInside}
+                onKeyDown={handleKeyDown}
+                disabled={disabled}
+                autoFocus
+              />
+              <IconChevronDown
+                size={14}
+                className="tw:absolute tw:right-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
+              />
+            </div>
+          </PopoverAnchor>
 
-        {isOpen && grouped && (
-          <div
-            ref={listRef}
-            className="tw:mt-1 tw:w-full tw:bg-white tw:border tw:border-gray-200 tw:rounded-lg tw:shadow-lg"
-          >
-            {grouped.chips.length > 1 && (
-              // On a phone the categories are one compact choice above the list.
-              <div className="tw:border-b tw:border-gray-100 tw:p-2 tw:sm:hidden">
-                <select
-                  aria-label="Variable category"
-                  value={activeGroup ?? ''}
-                  onChange={(e) => setActiveGroup(e.currentTarget.value || null)}
-                  onBlur={closeUnlessFocusInside}
-                  className="tw:h-8 tw:w-full tw:rounded-element tw:border tw:border-gray-200 tw:bg-white tw:px-2 tw:text-sm"
-                >
-                  <option value="">All categories</option>
-                  {grouped.chips.map((chip) => (
-                    <option key={chip.key} value={chip.key}>
-                      {chip.label} ({chip.items.length})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div className="tw:flex">
+          {grouped && (
+            <PopoverContent
+              ref={listRef}
+              align="start"
+              collisionPadding={16}
+              // The search keeps focus while the list is open.
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onEscapeKeyDown={closeDropdown}
+              onInteractOutside={(e) => {
+                if (anchorRef.current?.contains(e.target as Node)) {
+                  e.preventDefault();
+                  return;
+                }
+                closeDropdown();
+              }}
+              className="tw:w-[min(40rem,calc(100vw-2rem))] tw:rounded-lg tw:border tw:border-gray-200 tw:bg-white tw:p-0 tw:shadow-lg"
+            >
               {grouped.chips.length > 1 && (
-                // Wider, the categories are a column beside the list: every one
-                // in view at once, read top to bottom, none scrolled out of sight.
-                <div
-                  role="group"
-                  aria-label="Variable groups"
-                  className="tw:hidden tw:max-h-[360px] tw:w-52 tw:shrink-0 tw:flex-col tw:gap-px tw:overflow-y-auto tw:border-r tw:border-gray-100 tw:p-1 tw:sm:flex"
-                >
-                  {[{ key: null, label: 'All categories' }, ...grouped.chips].map((chip) => (
-                    <button
-                      key={chip.key ?? 'all'}
-                      type="button"
-                      aria-pressed={activeGroup === chip.key}
-                      // Keeps the search focused, so the list stays open.
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setActiveGroup(chip.key);
-                      }}
-                      className={cn(
-                        'tw:flex tw:w-full tw:cursor-pointer tw:items-center tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5 tw:text-left tw:text-sm tw:transition-colors',
-                        activeGroup === chip.key
-                          ? 'tw:bg-primary-50 tw:font-medium tw:text-primary-700'
-                          : 'tw:text-gray-700 tw:hover:bg-gray-50'
-                      )}
-                    >
-                      <span className="tw:min-w-0 tw:truncate">{chip.label}</span>
-                      {chip.key !== null && 'items' in chip && (
-                        <span className="tw:shrink-0 tw:text-xs tw:tabular-nums tw:text-gray-500">
-                          {chip.items.length}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                // On a phone the categories are one compact choice above the list.
+                <div className="tw:border-b tw:border-gray-100 tw:p-2 tw:sm:hidden">
+                  <select
+                    aria-label="Variable category"
+                    value={activeGroup ?? ''}
+                    onChange={(e) => setActiveGroup(e.currentTarget.value || null)}
+                    onBlur={closeUnlessFocusInside}
+                    className="tw:h-8 tw:w-full tw:rounded-element tw:border tw:border-gray-200 tw:bg-white tw:px-2 tw:text-sm"
+                  >
+                    <option value="">All categories</option>
+                    {grouped.chips.map((chip) => (
+                      <option key={chip.key} value={chip.key}>
+                        {chip.label} ({chip.items.length})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
-              <div className="tw:max-h-[360px] tw:min-w-0 tw:flex-1 tw:overflow-y-auto tw:p-1">
-                {loading ? (
-                  <div className="tw:flex tw:items-center tw:justify-center tw:p-md">
-                    <Spinner size="sm" />
+              <div className="tw:flex tw:h-[360px] tw:max-h-[50vh]">
+                {grouped.chips.length > 1 && (
+                  // Wider, the categories are a column beside the list: every one
+                  // in view at once, read top to bottom, none scrolled out of sight.
+                  <div
+                    role="group"
+                    aria-label="Variable groups"
+                    className="tw:hidden tw:w-52 tw:shrink-0 tw:flex-col tw:gap-px tw:overflow-y-auto tw:border-r tw:border-gray-100 tw:p-1 tw:sm:flex"
+                  >
+                    {[{ key: null, label: 'All categories' }, ...grouped.chips].map((chip) => (
+                      <button
+                        key={chip.key ?? 'all'}
+                        type="button"
+                        aria-pressed={activeGroup === chip.key}
+                        // Keeps the search focused, so the list stays open.
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setActiveGroup(chip.key);
+                        }}
+                        className={cn(
+                          'tw:flex tw:w-full tw:cursor-pointer tw:items-center tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5 tw:text-left tw:text-sm tw:transition-colors',
+                          activeGroup === chip.key
+                            ? 'tw:bg-primary-50 tw:font-medium tw:text-primary-700'
+                            : 'tw:text-gray-700 tw:hover:bg-gray-50'
+                        )}
+                      >
+                        <span className="tw:min-w-0 tw:truncate">{chip.label}</span>
+                        {chip.key !== null && 'items' in chip && (
+                          <span className="tw:shrink-0 tw:text-xs tw:tabular-nums tw:text-gray-500">
+                            {chip.items.length}
+                          </span>
+                        )}
+                      </button>
+                    ))}
                   </div>
-                ) : displayVariables.length === 0 ? (
-                  <p className="tw:text-sm tw:text-gray-500 tw:p-md tw:text-center">
-                    No variables found
-                  </p>
-                ) : (
-                  grouped.sections.map((section) => {
-                    const offset = displayVariables.indexOf(section.items[0]);
-                    return (
-                      <div key={section.key} className="tw:pb-1">
-                        <p
-                          role="presentation"
-                          className="tw:sticky tw:top-0 tw:z-10 tw:bg-white tw:px-2 tw:pt-2 tw:pb-1 tw:text-[11px] tw:font-semibold tw:uppercase tw:tracking-wide tw:text-gray-500"
-                        >
-                          {section.label}
-                        </p>
-                        {section.items.map((variable, at) => {
-                          const index = offset + at;
-                          const entityHint = getEntityHint?.(variable);
-                          return (
-                            <div
-                              key={variable.name}
-                              data-option
-                              role="option"
-                              tabIndex={-1}
-                              aria-selected={index === selectedIndex}
-                              className={cn(
-                                'tw:flex tw:cursor-pointer tw:items-start tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5',
-                                index === selectedIndex ? 'tw:bg-primary-50' : 'tw:hover:bg-gray-50'
-                              )}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleSelect(variable);
-                              }}
-                            >
-                              <div className="tw:min-w-0 tw:flex-1">
-                                <p className="tw:truncate tw:text-sm tw:text-gray-900">
-                                  {sentenceCaseLabel(variable.label)}
-                                </p>
-                                {variable.documentation && (
-                                  <p className="tw:line-clamp-1 tw:text-xs tw:text-gray-500">
-                                    {variable.documentation}
+                )}
+                <div className="tw:min-w-0 tw:flex-1 tw:overflow-y-auto tw:p-1">
+                  {loading ? (
+                    <div className="tw:flex tw:items-center tw:justify-center tw:p-md">
+                      <Spinner size="sm" />
+                    </div>
+                  ) : displayVariables.length === 0 ? (
+                    <p className="tw:text-sm tw:text-gray-500 tw:p-md tw:text-center">
+                      No variables found
+                    </p>
+                  ) : (
+                    grouped.sections.map((section) => {
+                      const offset = displayVariables.indexOf(section.items[0]);
+                      return (
+                        <div key={section.key} className="tw:pb-1">
+                          <p
+                            role="presentation"
+                            className="tw:sticky tw:top-0 tw:z-10 tw:bg-white tw:px-2 tw:pt-2 tw:pb-1 tw:text-[11px] tw:font-semibold tw:uppercase tw:tracking-wide tw:text-gray-500"
+                          >
+                            {section.label}
+                          </p>
+                          {section.items.map((variable, at) => {
+                            const index = offset + at;
+                            const entityHint = getEntityHint?.(variable);
+                            return (
+                              <div
+                                key={variable.name}
+                                data-option
+                                role="option"
+                                tabIndex={-1}
+                                aria-selected={index === selectedIndex}
+                                className={cn(
+                                  'tw:flex tw:cursor-pointer tw:items-start tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5',
+                                  index === selectedIndex
+                                    ? 'tw:bg-primary-50'
+                                    : 'tw:hover:bg-gray-50'
+                                )}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleSelect(variable);
+                                }}
+                              >
+                                <div className="tw:min-w-0 tw:flex-1">
+                                  <p className="tw:truncate tw:text-sm tw:text-gray-900">
+                                    {sentenceCaseLabel(variable.label)}
                                   </p>
+                                  {variable.documentation && (
+                                    <p className="tw:line-clamp-1 tw:text-xs tw:text-gray-500">
+                                      {variable.documentation}
+                                    </p>
+                                  )}
+                                </div>
+                                {entityHint?.show && (
+                                  <span className="tw:shrink-0 tw:rounded tw:bg-gray-100 tw:px-1.5 tw:py-0.5 tw:text-[11px] tw:text-gray-600">
+                                    {entityHint.label}
+                                  </span>
                                 )}
                               </div>
-                              {entityHint?.show && (
-                                <span className="tw:shrink-0 tw:rounded tw:bg-gray-100 tw:px-1.5 tw:py-0.5 tw:text-[11px] tw:text-gray-600">
-                                  {entityHint.label}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                        {section.more > 0 && (
-                          <button
-                            type="button"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              setActiveGroup(section.key);
-                            }}
-                            className="tw:cursor-pointer tw:px-2 tw:py-1 tw:text-xs tw:font-medium tw:text-primary-700 tw:hover:underline"
-                          >
-                            Show all {section.items.length + section.more}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
+                            );
+                          })}
+                          {section.more > 0 && (
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setActiveGroup(section.key);
+                              }}
+                              className="tw:cursor-pointer tw:px-2 tw:py-1 tw:text-xs tw:font-medium tw:text-primary-700 tw:hover:underline"
+                            >
+                              Show all {section.items.length + section.more}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </PopoverContent>
+          )}
+        </Popover>
 
         {isOpen && !grouped && (
           <div
