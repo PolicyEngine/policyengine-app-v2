@@ -9,22 +9,27 @@ import { Household } from '@/models/Household';
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
+  BASELINE_RUN_BUNDLE,
+  calculationResponse,
   COUNTRY_WITHOUT_HOUSEHOLD_LINES,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
   householdResult,
   LOW_EARNER_BASELINE_RESULT,
   LOW_EARNER_REFORM_RESULT,
+  NATIONAL_SPM_CONFIG,
   REFORM_POLICY_ID,
   REFORM_RESULT,
   REFORM_RESULT_LOSS,
   REFORM_RESULT_WITH_REMAINDER,
+  REFORM_RUN_BUNDLE,
   UK_BASELINE_RESULT,
   UK_FAMILY_BASELINE_RESULT,
   UK_FAMILY_REFORM_RESULT,
   UK_REFORM_RESULT,
   US_COUPLE_WITH_CHILDREN_PAYLOAD,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
+import { SPM_RECEIPT } from '@/tests/fixtures/spm/spmMocks';
 
 const mockCreateHousehold = vi.fn();
 const mockFetchHouseholdCalculation = vi.fn();
@@ -32,8 +37,14 @@ const mockFetchHouseholdCalculation = vi.fn();
 vi.mock('@/api/household', () => ({
   createHousehold: (...args: unknown[]) => mockCreateHousehold(...args),
 }));
+/** How each policy's calculation was made, as its response says it: nothing unless a test sets it. */
+const mockCalculationProvenance = vi.fn();
 vi.mock('@/api/householdCalculation', () => ({
-  fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
+  fetchHouseholdCalculationWithBundle: async (...args: unknown[]) =>
+    calculationResponse(
+      await mockFetchHouseholdCalculation(...args),
+      mockCalculationProvenance(...args)
+    ),
 }));
 
 describe('readHouseholdTotal', () => {
@@ -265,6 +276,7 @@ describe('runFlagshipHouseholdPayload', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCalculationProvenance.mockReset();
     mockCreateHousehold.mockResolvedValue({ result: { household_id: CREATED_HOUSEHOLD_ID } });
     mockFetchHouseholdCalculation.mockImplementation(
       async (_country: string, _household: string, policyId: string) =>
@@ -295,6 +307,51 @@ describe('runFlagshipHouseholdPayload', () => {
 
     expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(1);
     expect(run.netIncome.change).toBe(0);
+  });
+
+  test('given each response names its .py bundle and SPM provenance then the run keeps them per policy', async () => {
+    mockCalculationProvenance.mockImplementation(
+      (_country: string, _household: string, policyId: string) => ({
+        policyengine_bundle:
+          policyId === BASELINE_POLICY_ID ? BASELINE_RUN_BUNDLE : REFORM_RUN_BUNDLE,
+        spm_config: NATIONAL_SPM_CONFIG,
+        spm_provenance: SPM_RECEIPT,
+      })
+    );
+
+    const run = await runFlagshipHouseholdPayload(runArgs);
+
+    expect(run.provenance).toEqual({
+      baseline: {
+        policyengineBundle: BASELINE_RUN_BUNDLE,
+        spmConfig: NATIONAL_SPM_CONFIG,
+        spmProvenance: SPM_RECEIPT,
+      },
+      reform: {
+        policyengineBundle: REFORM_RUN_BUNDLE,
+        spmConfig: NATIONAL_SPM_CONFIG,
+        spmProvenance: SPM_RECEIPT,
+      },
+    });
+  });
+
+  test('given one calculation for both policies then the reform reads its provenance', async () => {
+    mockCalculationProvenance.mockReturnValue({ policyengine_bundle: BASELINE_RUN_BUNDLE });
+
+    const run = await runFlagshipHouseholdPayload({
+      ...runArgs,
+      reformPolicyId: BASELINE_POLICY_ID,
+    });
+
+    expect(run.provenance.reform).toEqual(run.provenance.baseline);
+    expect(run.provenance.reform.policyengineBundle).toEqual(BASELINE_RUN_BUNDLE);
+  });
+
+  test('given responses without a bundle or SPM provenance then the run says none, not a guess', async () => {
+    const run = await runFlagshipHouseholdPayload(runArgs);
+
+    expect(run.provenance.baseline).toEqual({ policyengineBundle: null });
+    expect(run.provenance.reform).toEqual({ policyengineBundle: null });
   });
 
   test('given a calculation failure then the run fails with it', async () => {

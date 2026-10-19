@@ -1,5 +1,8 @@
+import type { HouseholdCalculationResult } from '@/api/householdCalculation';
+import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { Household } from '@/models/Household';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
+import type { SPMSelection } from '@/types/spm';
 
 export const HOUSEHOLD_YEAR = '2026';
 export const BASELINE_POLICY_ID = '2';
@@ -7,6 +10,28 @@ export const BASELINE_POLICY_ID = '2';
 export const CUSTOM_BASELINE_POLICY_ID = '45678';
 export const REFORM_POLICY_ID = '98765';
 export const CREATED_HOUSEHOLD_ID = 54321;
+
+/** The .py bundle a calculation response names (synthetic versions, never published pins). */
+export const BASELINE_RUN_BUNDLE: PolicyEngineBundle = {
+  policyengine_version: '9.1.0',
+  model_version: '8.1.0',
+  data_version: null,
+  dataset: null,
+};
+export const REFORM_RUN_BUNDLE: PolicyEngineBundle = {
+  ...BASELINE_RUN_BUNDLE,
+  model_version: '8.2.0',
+};
+/** The SPM settings a US calculation response echoes. */
+export const NATIONAL_SPM_CONFIG: SPMSelection = { geography_kind: 'national' };
+
+/** One policy's calculation as the v1 API answers it: the result and how it was made. */
+export function calculationResponse(
+  result: HouseholdCalculationData,
+  provenance: Omit<HouseholdCalculationResult, 'result'> = {}
+): HouseholdCalculationResult {
+  return { result, policyengine_bundle: null, ...provenance };
+}
 
 /** A country without household result lines in v3. */
 export const COUNTRY_WITHOUT_HOUSEHOLD_LINES = 'ca';

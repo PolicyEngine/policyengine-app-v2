@@ -1,8 +1,13 @@
 import { createHousehold } from '@/api/household';
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import {
+  fetchHouseholdCalculationWithBundle,
+  type HouseholdCalculationResult,
+} from '@/api/householdCalculation';
+import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import type { CountryId } from '@/libs/countries';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
+import type { SPMProvenance, SPMSelection } from '@/types/spm';
 
 /**
  * A household run for the flagship report: a household built in the
@@ -320,6 +325,29 @@ export interface FlagshipHouseholdRun extends FlagshipHouseholdImpact {
    */
   baseline: HouseholdCalculationData;
   reform: HouseholdCalculationData;
+  /**
+   * How each policy's calculation was made, as its response says: the
+   * methodology footnote and Reproduce in Python read it.
+   */
+  provenance: { baseline: HouseholdCalculationProvenance; reform: HouseholdCalculationProvenance };
+}
+
+/** What one calculation response says about how it was made. */
+export interface HouseholdCalculationProvenance {
+  /** The .py bundle that calculated it; null when the response names none. */
+  policyengineBundle: PolicyEngineBundle | null;
+  /** The SPM settings the calculation used (US households only). */
+  spmConfig?: SPMSelection;
+  /** The SPM forecast and thresholds the calculation read (US households only). */
+  spmProvenance?: SPMProvenance;
+}
+
+function provenanceOf(response: HouseholdCalculationResult): HouseholdCalculationProvenance {
+  return {
+    policyengineBundle: response.policyengine_bundle ?? null,
+    ...(response.spm_config ? { spmConfig: response.spm_config } : {}),
+    ...(response.spm_provenance ? { spmProvenance: response.spm_provenance } : {}),
+  };
 }
 
 /**
@@ -343,12 +371,16 @@ export function plainHouseholdError(error: unknown): Error {
  * the API keeps calculating and caches the result, so the second ask
  * usually returns it at once.
  */
-async function calculateOnce(countryId: string, householdId: string, policyId: string) {
+async function calculateOnce(
+  countryId: string,
+  householdId: string,
+  policyId: string
+): Promise<HouseholdCalculationResult> {
   try {
-    return await fetchHouseholdCalculation(countryId, householdId, policyId);
+    return await fetchHouseholdCalculationWithBundle(countryId, householdId, policyId);
   } catch (error) {
     if (error instanceof Error && /timed out/i.test(error.message)) {
-      return fetchHouseholdCalculation(countryId, householdId, policyId);
+      return fetchHouseholdCalculationWithBundle(countryId, householdId, policyId);
     }
     throw error;
   }
@@ -399,8 +431,9 @@ export async function runFlagshipHouseholdPayload({
   );
   return {
     householdId,
-    baseline,
-    reform,
-    ...compareHouseholds(baseline, reform, year, payload.country_id),
+    baseline: baseline.result,
+    reform: reform.result,
+    provenance: { baseline: provenanceOf(baseline), reform: provenanceOf(reform) },
+    ...compareHouseholds(baseline.result, reform.result, year, payload.country_id),
   };
 }

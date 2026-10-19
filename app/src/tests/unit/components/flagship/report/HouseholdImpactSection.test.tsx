@@ -10,6 +10,7 @@ import HouseholdImpactSection from '@/components/flagship/report/household/House
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
+  calculationResponse,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
   LOW_EARNER_BASELINE_RESULT,
@@ -28,7 +29,8 @@ vi.mock('@/api/household', () => ({
   createHousehold: (...args: unknown[]) => mockCreateHousehold(...args),
 }));
 vi.mock('@/api/householdCalculation', () => ({
-  fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
+  fetchHouseholdCalculationWithBundle: async (...args: unknown[]) =>
+    calculationResponse(await mockFetchHouseholdCalculation(...args)),
 }));
 
 // The household builder is the v2 builder, tested on its own: here a stand-in
