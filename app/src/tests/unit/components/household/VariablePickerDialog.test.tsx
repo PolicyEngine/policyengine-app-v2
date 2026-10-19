@@ -1,6 +1,6 @@
 import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import VariablePickerDialog from '@/components/household/VariablePickerDialog';
+import VariablePickerDialog, { inputKind } from '@/components/household/VariablePickerDialog';
 import type { VariableInfo } from '@/utils/VariableResolver';
 
 const input = (name: string, label: string, documentation?: string) =>
@@ -95,7 +95,7 @@ describe('VariablePickerDialog', () => {
     expect(screen.queryByText('Rent paid for the home')).not.toBeInTheDocument();
     await user.hover(screen.getByRole('option', { name: 'Rent' }));
 
-    expect(screen.getByText('Rent paid for the home')).toBeInTheDocument();
+    expect(screen.getByText(/^Rent paid for the home ·/)).toBeInTheDocument();
   });
 
   test('given the reform suggests inputs then the first view lists them after the featured', () => {
@@ -115,5 +115,34 @@ describe('VariablePickerDialog', () => {
     renderPicker({ suggested: new Map([['hourly_wage', 0]]) });
 
     expect(screen.queryByText('Related to this reform')).not.toBeInTheDocument();
+  });
+
+  test('given an input without documentation then our description and its kind describe it', async () => {
+    const user = userEvent.setup();
+    renderPicker({
+      searchValue: 'gas',
+      variables: [
+        { ...input('gas_expense', 'Gas expense'), unit: 'currency-USD', definitionPeriod: 'year' },
+      ] as VariableInfo[],
+      describe: () => 'What the household pays for natural gas in a year.',
+    });
+
+    await user.hover(screen.getByRole('option', { name: 'Gas expense' }));
+
+    expect(
+      screen.getByText('What the household pays for natural gas in a year. · Dollars per year')
+    ).toBeInTheDocument();
+  });
+});
+
+describe('inputKind', () => {
+  test('given unit, type and period then it names the kind of value', () => {
+    const kind = (fields: Partial<VariableInfo>) =>
+      inputKind({ ...input('x', 'X'), valueType: 'float', ...fields } as VariableInfo);
+    expect(kind({ unit: 'currency-USD', definitionPeriod: 'year' })).toBe('Dollars per year');
+    expect(kind({ unit: 'currency-USD', definitionPeriod: 'month' })).toBe('Dollars per month');
+    expect(kind({ valueType: 'bool' })).toBe('Yes or no');
+    expect(kind({ valueType: 'Enum' })).toBe('One of a list');
+    expect(kind({ valueType: 'int' })).toBe('Number');
   });
 });

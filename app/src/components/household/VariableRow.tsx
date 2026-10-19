@@ -70,7 +70,12 @@ export default function VariableRow({
         {stacked ? (
           // The same label as the builder's own fields, so stacked fields line up
           // with them: one line, so a long name does not push its box down.
-          <Label className="tw:block tw:truncate" title={sentenceCaseLabel(variable.label)}>
+          <Label
+            className="tw:block tw:truncate"
+            title={[sentenceCaseLabel(variable.label), variable.documentation]
+              .filter(Boolean)
+              .join(': ')}
+          >
             {sentenceCaseLabel(variable.label)}
           </Label>
         ) : (

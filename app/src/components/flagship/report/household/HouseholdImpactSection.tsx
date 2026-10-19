@@ -5,6 +5,7 @@ import { STATE_NAMES } from '@/api/billFeed';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import {
   COMMON_HOUSEHOLD_INPUTS,
+  householdInputDescription,
   householdInputName,
   householdTopicIcon,
 } from '@/components/flagship/report/household/householdPickerInputs';
@@ -359,6 +360,7 @@ function HouseholdCard({
             variablePickerCommon={COMMON_HOUSEHOLD_INPUTS}
             variableGroupIcon={householdTopicIcon}
             variableNameOf={householdInputName}
+            variableDescribe={householdInputDescription}
           />
           <div
             style={{

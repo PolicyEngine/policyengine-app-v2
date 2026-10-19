@@ -91,6 +91,7 @@ export interface HouseholdBuilderFormProps {
   variablePickerCommon?: CommonInput[];
   variableGroupIcon?: (group: string) => ReactNode;
   variableNameOf?: (variable: VariableInfo) => string;
+  variableDescribe?: (variable: VariableInfo) => string | undefined;
 }
 
 /**
@@ -220,6 +221,7 @@ export default function HouseholdBuilderForm({
   variablePickerCommon,
   variableGroupIcon,
   variableNameOf,
+  variableDescribe,
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -259,8 +261,11 @@ export default function HouseholdBuilderForm({
   );
 
   // A field's name as the picker lists it, where the builder is given one.
-  const named = (variable: VariableInfo): VariableInfo =>
-    variableNameOf ? { ...variable, label: variableNameOf(variable) } : variable;
+  const named = (variable: VariableInfo): VariableInfo => ({
+    ...variable,
+    label: variableNameOf ? variableNameOf(variable) : variable.label,
+    documentation: variableDescribe?.(variable) ?? variable.documentation,
+  });
 
   // Get list of people, sorted in display order (you, partner, dependents)
   const people = useMemo(() => household.getSortedPersonNames(), [household]);
@@ -750,6 +755,7 @@ export default function HouseholdBuilderForm({
                             common={variablePickerCommon}
                             groupIcon={variableGroupIcon}
                             nameOf={variableNameOf}
+                            describe={variableDescribe}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             title={`Add a variable to ${getPersonDisplayName(person)}`}
                             getEntityHint={(variable) => {
@@ -889,6 +895,7 @@ export default function HouseholdBuilderForm({
                       common={variablePickerCommon}
                       groupIcon={variableGroupIcon}
                       nameOf={variableNameOf}
+                      describe={variableDescribe}
                       onSelect={handleHouseholdVariableSelect}
                       title="Add a variable to your household"
                       getEntityHint={(variable) => {

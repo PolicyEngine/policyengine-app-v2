@@ -41,6 +41,7 @@ export interface VariableSearchDropdownProps {
   common?: CommonInput[];
   groupIcon?: (group: string) => ReactNode;
   nameOf?: (variable: VariableInfo) => string;
+  describe?: (variable: VariableInfo) => string | undefined;
   /** With `groupOf`: the dialog's title. */
   title?: string;
   /**
@@ -87,6 +88,7 @@ export default function VariableSearchDropdown({
   common,
   groupIcon,
   nameOf,
+  describe,
   groupOrder = [],
 }: VariableSearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -212,6 +214,7 @@ export default function VariableSearchDropdown({
         suggested={suggested}
         suggestedLabel={suggestedLabel}
         nameOf={nameOf}
+        describe={describe}
         loading={loading}
         disabled={disabled}
       />

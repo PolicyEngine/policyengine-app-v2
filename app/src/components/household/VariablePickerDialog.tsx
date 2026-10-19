@@ -15,6 +15,34 @@ export interface CommonInput {
   name: string;
   /** A short name, e.g. "Rent" for `pre_subsidy_rent`. */
   label: string;
+  /** One line on what to enter, where the model has none. */
+  description?: string;
+}
+
+/**
+ * What kind of value an input takes, from the model's unit, type and
+ * period: "Dollars per year", "Yes or no", "Number".
+ */
+export function inputKind(variable: VariableInfo): string {
+  const per =
+    variable.definitionPeriod === 'month'
+      ? ' per month'
+      : variable.definitionPeriod === 'year'
+        ? ' per year'
+        : '';
+  if (variable.valueType === 'bool') {
+    return 'Yes or no';
+  }
+  if (variable.valueType === 'Enum') {
+    return 'One of a list';
+  }
+  if (variable.unit === 'currency-USD' || variable.unit === 'currency-GBP') {
+    return `${variable.unit === 'currency-GBP' ? 'Pounds' : 'Dollars'}${per}`;
+  }
+  if (variable.unit === '/1') {
+    return 'Rate';
+  }
+  return 'Number';
 }
 
 export interface VariablePickerDialogProps {
@@ -37,6 +65,8 @@ export interface VariablePickerDialogProps {
   suggestedLabel?: string;
   /** A display name for an input, where the model's label is long or technical. */
   nameOf?: (variable: VariableInfo) => string;
+  /** What to enter for an input, where the model's documentation is missing. */
+  describe?: (variable: VariableInfo) => string | undefined;
   placeholder?: string;
   loading?: boolean;
   disabled?: boolean;
@@ -66,6 +96,7 @@ export default function VariablePickerDialog({
   suggested,
   suggestedLabel = 'Related to this reform',
   nameOf,
+  describe,
   placeholder = 'Search inputs, e.g. rent',
   loading = false,
   disabled = false,
@@ -362,7 +393,9 @@ export default function VariablePickerDialog({
                 {name(described)}
               </p>
               <p className="tw:line-clamp-1 tw:text-xs tw:text-gray-600">
-                {described.documentation || 'No description in the model.'}
+                {[describe?.(described) ?? described.documentation, inputKind(described)]
+                  .filter(Boolean)
+                  .join(' · ')}
               </p>
             </>
           ) : (
