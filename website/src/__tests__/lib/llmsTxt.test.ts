@@ -4,7 +4,9 @@ import { describe, expect, test } from "vitest";
 import {
   INDEX_RECENT_COUNT,
   RECENT_ARCHIVE_COUNT,
+  CODE_FENCE,
   SITE_URL,
+  absoluteUrl,
   articleToLlmsMarkdown,
   buildLlmsFile,
   describeIframe,
@@ -17,12 +19,28 @@ import {
 } from "@/lib/llmsTxt";
 import type { Notebook } from "@/types/blog";
 
-const CHART_LINE = /^\[Chart: [^\n]*\]$/;
-const CODE_FENCE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*\r?$/gm;
+/** One line: no line terminator of any kind. */
+const CHART_LINE = /^\[Chart: [^\n\r\v\f\u0085\u2028\u2029]*\]$/;
+const LINE_BREAK = /[\n\r\v\f\u0085\u2028\u2029]/;
+const ARTICLE_URL = `${SITE_URL}/us/research/an-article`;
 
 function outsideFences(text: string): string {
   return text.replace(CODE_FENCE, "");
 }
+
+describe("absoluteUrl", () => {
+  test("given each kind of target then it resolves as a browser would", () => {
+    expect(absoluteUrl("/us/x")).toBe(`${SITE_URL}/us/x`);
+    expect(absoluteUrl("next", ARTICLE_URL)).toBe(
+      `${SITE_URL}/us/research/next`,
+    );
+    expect(absoluteUrl("../calc", ARTICLE_URL)).toBe(`${SITE_URL}/us/calc`);
+    expect(absoluteUrl("#part", ARTICLE_URL)).toBe("#part");
+    expect(absoluteUrl("//e.org/x")).toBe("//e.org/x");
+    expect(absoluteUrl("https://e.org/a b")).toBe("https://e.org/a b");
+    expect(absoluteUrl("mailto:a@b.org")).toBe("mailto:a@b.org");
+  });
+});
 
 function urlLines(text: string): string[] {
   return [...text.matchAll(/^URL: (.+)$/gm)].map((m) => m[1]);
@@ -83,6 +101,45 @@ describe("summarizePlotlyFigure", () => {
     );
   });
 
+  test("given figure-shaped values with any strings then the summary is one line", () => {
+    // Any code points, line breaks included, in every field the summary reads.
+    const anyText = fc.string({ unit: "binary", maxLength: 20 });
+    const titled = fc.oneof(
+      anyText,
+      anyText.map((text) => ({ text })),
+    );
+    const figure = fc.record({
+      layout: fc.record({
+        title: titled,
+        xaxis: fc.record({ title: titled }),
+        yaxis: fc.record({ title: titled }),
+      }),
+      data: fc.array(fc.record({ type: anyText, name: titled }), {
+        maxLength: 14,
+      }),
+    });
+    fc.assert(
+      fc.property(figure, (value) => {
+        expect(summarizePlotlyFigure(value)).toMatch(CHART_LINE);
+      }),
+    );
+  });
+
+  test("given a trace type or title with a line break then it is joined", () => {
+    expect(
+      summarizePlotlyFigure({
+        layout: { title: "A\u0085B" },
+        data: [{ type: "bar\nscatter" }],
+      }),
+    ).toBe("[Chart: A B; type: bar scatter]");
+  });
+
+  test("given an escaped pound sign in a series name then it is decoded", () => {
+    expect(
+      summarizePlotlyFigure({ data: [{ name: "\\u00a3200/month" }] }),
+    ).toBe("[Chart: series: £200/month]");
+  });
+
   test("given any figure-shaped value then its title text is kept", () => {
     const text = fc.stringMatching(
       /^[A-Za-z0-9][A-Za-z0-9 ]{0,20}[A-Za-z0-9]$/,
@@ -119,6 +176,26 @@ describe("describeIframe", () => {
   test("given a site-relative src then the link is absolute", () => {
     expect(describeIframe(' src="/us/tool"')).toBe(
       `[Interactive: tool](${SITE_URL}/us/tool)`,
+    );
+  });
+
+  test("given a title with brackets then the link text escapes them", () => {
+    expect(
+      describeIframe(' src="https://e.org/m.html" title="Budget [draft] map"'),
+    ).toBe("[Interactive: Budget \\[draft\\] map](https://e.org/m.html)");
+  });
+
+  test("given an untitled YouTube embed then it is named as a video", () => {
+    expect(
+      describeIframe(' src="https://www.youtube.com/embed/_Y0EWjmHyy0"'),
+    ).toBe(
+      "[Interactive: YouTube video](https://www.youtube.com/embed/_Y0EWjmHyy0)",
+    );
+  });
+
+  test("given a page-relative src then it resolves against the article", () => {
+    expect(describeIframe(' src="embed.html"', ARTICLE_URL)).toBe(
+      `[Interactive: embed](${SITE_URL}/us/research/embed.html)`,
     );
   });
 
@@ -199,6 +276,77 @@ describe("transformArticleMarkdown", () => {
     expect(result).toContain(`Text [a](${SITE_URL}/b)`);
   });
 
+  test("given page-relative links then they resolve as on the article page", () => {
+    // Given
+    const markdown = [
+      "See [ECPS](enhanced-cps-beta), [the calculator](../aca-calc) and [notes](#notes).",
+      "![A chart](images/chart.png) <a href='other-post'>other</a>",
+      "[ref]: methodology",
+      "[^1]: A footnote, not a link: keep it as written.",
+      "[Note]: this line is a sentence, not a definition.",
+      'Write `[a](relative)` and `src="x.png"` in inline code as is.',
+      "[mail](mailto:hello@policyengine.org) [site](https://e.org/x)",
+    ].join("\n");
+
+    // When
+    const result = transformArticleMarkdown(markdown, ARTICLE_URL);
+
+    // Then
+    expect(result).toContain(
+      `[ECPS](${SITE_URL}/us/research/enhanced-cps-beta)`,
+    );
+    expect(result).toContain(`[the calculator](${SITE_URL}/us/aca-calc)`);
+    expect(result).toContain("[notes](#notes)");
+    expect(result).toContain(
+      `![A chart](${SITE_URL}/us/research/images/chart.png)`,
+    );
+    expect(result).toContain(`<a href='${SITE_URL}/us/research/other-post'>`);
+    expect(result).toContain(`[ref]: ${SITE_URL}/us/research/methodology`);
+    expect(result).toContain(
+      "[^1]: A footnote, not a link: keep it as written.",
+    );
+    expect(result).toContain(
+      "[Note]: this line is a sentence, not a definition.",
+    );
+    expect(result).toContain('`[a](relative)` and `src="x.png"`');
+    expect(result).toContain("[mail](mailto:hello@policyengine.org)");
+    expect(result).toContain("[site](https://e.org/x)");
+  });
+
+  test("given fences of other lengths and kinds then they are code too", () => {
+    // Given
+    const longFence =
+      '````md\n```plotly\n{}\n```\n<iframe src="/x"></iframe>\n````';
+    const tildeFence = "~~~\n[a](/b) <script>x()</script>\n~~~";
+    const tildePlotly = '~~~plotly\n{"layout":{"title":"Tilde"}}\n~~~';
+
+    // When
+    const result = transformArticleMarkdown(
+      [longFence, tildeFence, tildePlotly].join("\n\n"),
+    );
+
+    // Then
+    expect(result).toContain(longFence);
+    expect(result).toContain(tildeFence);
+    expect(result).toContain("[Chart: Tilde]");
+  });
+
+  test("given an unclosed fence then the rest of the article is code", () => {
+    const markdown = 'Text [a](/b)\n\n```\n[c](/d) <iframe src="/e"></iframe>';
+
+    expect(transformArticleMarkdown(markdown)).toBe(
+      `Text [a](${SITE_URL}/b)\n\n\`\`\`\n[c](/d) <iframe src="/e"></iframe>`,
+    );
+  });
+
+  test("given an HTML comment then it is dropped, embeds and all", () => {
+    expect(
+      transformArticleMarkdown(
+        'A <!-- <iframe src="https://e.org/x"></iframe> --> B',
+      ),
+    ).toBe("A  B");
+  });
+
   test("given a chart block then its JSON data is kept", () => {
     const chart = '```chart\n{"type":"bar","title":"T","data":[]}\n```';
 
@@ -249,6 +397,14 @@ describe("transformArticleMarkdown", () => {
     word.map((w) => `<iframe src="https://e.org/${w}" />`),
     word.map((w) => `<script async src="https://e.org/${w}.js"></script>`),
     word.map((w) => "```python\nprint('[" + w + "](/x)')\n```"),
+    word.map((w) => "~~~\n[" + w + "](" + w + ")\n~~~"),
+    word.map((w) => `[${w}](${w.toLowerCase()}-post)`),
+    word.map((w) => `[${w}](../${w.toLowerCase()})`),
+    word.map((w) => `![${w}](img/${w}.png)`),
+    word.map((w) => `<a href="${w}.html">${w}</a>`),
+    word.map((w) => `[${w}]: ${w.toLowerCase()}`),
+    word.map((w) => `[${w}](#${w.toLowerCase()})`),
+    word.map((w) => `<!-- ${w} <iframe src="/${w}"></iframe> -->`),
     plotlyFence,
   );
   const articleMarkdown = fc
@@ -258,8 +414,8 @@ describe("transformArticleMarkdown", () => {
   test("given article-shaped markdown then rewriting it again changes nothing", () => {
     fc.assert(
       fc.property(articleMarkdown, (markdown) => {
-        const once = transformArticleMarkdown(markdown);
-        expect(transformArticleMarkdown(once)).toBe(once);
+        const once = transformArticleMarkdown(markdown, ARTICLE_URL);
+        expect(transformArticleMarkdown(once, ARTICLE_URL)).toBe(once);
       }),
     );
   });
@@ -267,11 +423,20 @@ describe("transformArticleMarkdown", () => {
   test("given article-shaped markdown then no embed or relative link survives outside code", () => {
     fc.assert(
       fc.property(articleMarkdown, (markdown) => {
-        const text = outsideFences(transformArticleMarkdown(markdown));
-        expect(text).not.toMatch(/<iframe|<script|```plotly/i);
-        expect(text).not.toMatch(/\]\(\/(?!\/)/);
-        expect(text).not.toMatch(/\s(?:src|href)="\/(?!\/)/);
-        expect(text).not.toMatch(/^\[[^\]]+\]: \/(?!\/)/m);
+        const text = outsideFences(
+          transformArticleMarkdown(markdown, ARTICLE_URL),
+        );
+        expect(text).not.toMatch(/<iframe|<script|<!--|```plotly/i);
+        const targets = [
+          ...[...text.matchAll(/\]\(([^)\s]+)/g)].map((m) => m[1]),
+          ...[...text.matchAll(/\s(?:src|href)=["']([^"']*)/g)].map(
+            (m) => m[1],
+          ),
+          ...[...text.matchAll(/^\[[^\]^]+\]: (\S+)/gm)].map((m) => m[1]),
+        ];
+        for (const target of targets) {
+          expect(target).toMatch(/^(?:https:\/\/|#)/);
+        }
       }),
     );
   });
@@ -280,8 +445,8 @@ describe("transformArticleMarkdown", () => {
     fc.assert(
       fc.property(articleMarkdown, (markdown) => {
         const fences = [...markdown.matchAll(CODE_FENCE)]
-          .map((m) => m[0])
-          .filter((f) => !f.trimStart().startsWith("```plotly"));
+          .filter((m) => m[3].trim() !== "plotly")
+          .map((m) => m[0]);
         const result = transformArticleMarkdown(markdown);
         for (const fence of fences) expect(result).toContain(fence);
       }),
@@ -361,6 +526,12 @@ describe("notebookToMarkdown", () => {
         outputs: [{ data: { "text/plain": ["1.025"] } }],
       },
       {
+        // The page renders only the first element of a text/plain array.
+        cell_type: "code",
+        source: ["pair"],
+        outputs: [{ data: { "text/plain": ["1.5", "2.5"] } }],
+      },
+      {
         cell_type: "code",
         source: ["print('x')"],
         outputs: [{ output_type: "stream" }],
@@ -392,6 +563,7 @@ describe("notebookToMarkdown", () => {
         '```plotly\n{"layout":{"title":{"text":"From markdown"}}}\n```',
         "[Chart: type: scatter; series: £200/month]",
         "1.025",
+        "1.5",
         "Only the first output.",
       ].join("\n\n"),
     );
@@ -430,12 +602,15 @@ describe("buildLlmsFile with generated posts", () => {
   const post = fc.record({
     slug: fc.stringMatching(/^[a-z][a-z0-9-]{0,12}$/),
     date,
-    tags: fc.shuffledSubarray(countryTags),
+    tags: fc
+      .tuple(fc.shuffledSubarray(countryTags), fc.option(text))
+      .map(([tags, extra]) => (extra === null ? tags : [...tags, extra])),
     title: text,
     description: text,
     authors: fc.subarray(["ada", "grace", "unknown-id"]),
     body: fc.stringMatching(/^[A-Za-z0-9 ]{1,40}$/),
   });
+  const authorNames = fc.record({ ada: text, grace: text });
   const postList = fc.uniqueArray(post, {
     selector: (p) => p.slug,
     maxLength: RECENT_ARCHIVE_COUNT + 12,
@@ -443,6 +618,10 @@ describe("buildLlmsFile with generated posts", () => {
 
   function sourceFor(
     generated: Array<{ body: string } & Omit<LlmsPost, "filename">>,
+    names: { ada: string; grace: string } = {
+      ada: "Ada Lovelace",
+      grace: "Grace Hopper",
+    },
   ): LlmsSource {
     const bodies = new Map(generated.map((p) => [`${p.slug}.md`, p.body]));
     return {
@@ -455,10 +634,7 @@ describe("buildLlmsFile with generated posts", () => {
         slug: p.slug,
         filename: `${p.slug}.md`,
       })),
-      authors: {
-        ada: { name: "Ada Lovelace" },
-        grace: { name: "Grace Hopper" },
-      },
+      authors: { ada: { name: names.ada }, grace: { name: names.grace } },
       loadArticle: (filename) => bodies.get(filename) ?? "",
     };
   }
@@ -494,12 +670,14 @@ describe("buildLlmsFile with generated posts", () => {
     fc.assert(
       fc.property(postList, (generated) => {
         const source = sourceFor(generated);
+        const fullUrls = urlLines(buildLlmsFile("llms-full.txt", source));
         for (const country of ["us", "uk"] as const) {
           const file = buildLlmsFile(`llms-research-${country}.txt`, source);
-          const expected = generated
-            .filter((p) => p.tags.includes(country))
-            .map(postUrl);
-          expect([...urlLines(file)].sort()).toEqual(expected.sort());
+          const tagged = new Set(
+            generated.filter((p) => p.tags.includes(country)).map(postUrl),
+          );
+          // The same posts, in the full archive's order.
+          expect(urlLines(file)).toEqual(fullUrls.filter((u) => tagged.has(u)));
         }
       }),
       params,
@@ -544,6 +722,9 @@ describe("buildLlmsFile with generated posts", () => {
         expect(index).toContain(`Full text of ${tagged("us")} articles on US`);
         expect(index).toContain(`Full text of ${tagged("uk")} articles on UK`);
         expect(index).toContain(`Full text of all ${generated.length} `);
+        expect(index).toContain(
+          `Full text of the ${Math.min(RECENT_ARCHIVE_COUNT, generated.length)} most recent articles`,
+        );
       }),
       params,
     );
@@ -603,14 +784,28 @@ describe("buildLlmsFile with generated posts", () => {
     );
   });
 
-  test("given titles with line breaks then every header field stays on one line", () => {
+  test("given any titles, descriptions, tags and author names then each header field is one line", () => {
     fc.assert(
-      fc.property(postList, (generated) => {
-        const full = buildLlmsFile("llms-full.txt", sourceFor(generated));
-        for (const field of ["URL", "Date", "Authors", "Tags", "Description"]) {
-          expect(
-            full.match(new RegExp(`^${field}: `, "gm")) ?? [],
-          ).toHaveLength(generated.length);
+      fc.property(postList, authorNames, (generated, names) => {
+        const full = buildLlmsFile(
+          "llms-full.txt",
+          sourceFor(generated, names),
+        );
+        const blocks = articleBlocks(full);
+        expect(blocks).toHaveLength(generated.length);
+        for (const block of blocks) {
+          const lines = block.split("\n");
+          expect(lines[0]).toBe("---");
+          expect(lines[1].startsWith("# ")).toBe(true);
+          ["URL", "Date", "Authors", "Tags", "Description"].forEach(
+            (field, i) =>
+              expect(lines[2 + i].startsWith(`${field}: `)).toBe(true),
+          );
+          expect(lines[7]).toBe("---");
+          expect(lines[8]).toBe("");
+          for (const line of lines.slice(1, 7)) {
+            expect(line).not.toMatch(LINE_BREAK);
+          }
         }
       }),
       params,

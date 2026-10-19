@@ -6,10 +6,12 @@
  * - /llms-research-us.txt and /llms-research-uk.txt: every US or UK article.
  * - /llms-full.txt: every article.
  *
- * The article files hold each post as markdown. Plotly charts become one-line
- * summaries, iframes become links, scripts are dropped and site-relative
- * links become absolute. Notebook posts become the markdown the article page
- * renders: markdown cells plus the first output of each code cell.
+ * The article files hold each post as markdown, in the research page's
+ * order. Plotly charts become one-line summaries, iframes become links,
+ * scripts and HTML comments are dropped, and relative links resolve against
+ * the article's URL, as they do on its page. Fenced code is left as written.
+ * Notebook posts become the markdown the article page renders: markdown cells
+ * plus the first output of each code cell.
  *
  * The force-static route handlers in src/app/llms*.txt/ serve these, so the
  * files are built with the site from posts.json, authors.json and the
@@ -20,9 +22,10 @@ import authorsData from "@/data/posts/authors.json";
 import {
   getPostCountryId,
   getPostsSorted,
+  getResearchItems,
 } from "@/data/posts/postTransformers";
 import { getArticleContent } from "@/lib/articles";
-import { parseJSONSafe } from "@/lib/notebookUtils";
+import { decode, parseJSONSafe } from "@/lib/notebookUtils";
 import { toPostIsoDate } from "@/lib/postDate";
 import type {
   AuthorsCollection,
@@ -60,9 +63,21 @@ export interface LlmsSource {
   loadArticle: (filename: string) => string;
 }
 
+/**
+ * The posts in the order the research page lists them. That page re-sorts
+ * posts together with apps, so same-day posts can sit in a different order
+ * there than in getPostsSorted().
+ */
+function postsInResearchPageOrder(): BlogPost[] {
+  const bySlug = new Map(getPostsSorted().map((post) => [post.slug, post]));
+  return getResearchItems()
+    .filter((item) => !item.isApp)
+    .map((item) => bySlug.get(item.slug)!);
+}
+
 export function defaultLlmsSource(): LlmsSource {
   return {
-    posts: getPostsSorted(),
+    posts: postsInResearchPageOrder(),
     authors: authorsData as AuthorsCollection,
     loadArticle: getArticleContent,
   };
@@ -72,9 +87,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** Collapse whitespace runs, for chart and iframe labels. */
+/** Collapse whitespace runs (\s misses U+0085), for chart and iframe labels. */
 function oneLine(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
+  return text.replace(/[\s\u0085]+/g, " ").trim();
 }
 
 /** Join lines with a space, keeping other characters (such as NBSP) as written. */
@@ -87,8 +102,24 @@ function linkText(text: string): string {
   return singleLine(text).replace(/[\\[\]]/g, "\\$&");
 }
 
-export function absoluteUrl(url: string): string {
-  return url.startsWith("/") && !url.startsWith("//") ? SITE_URL + url : url;
+const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+
+/**
+ * Resolve a link target the way a browser on `base` would, so links still
+ * work when read from /llms-full.txt. Absolute and protocol-relative URLs,
+ * fragments and empty targets are returned unchanged.
+ */
+export function absoluteUrl(
+  url: string,
+  base: string = `${SITE_URL}/`,
+): string {
+  if (!url || url.startsWith("#") || url.startsWith("//")) return url;
+  if (URL_SCHEME.test(url)) return url;
+  try {
+    return new URL(url, base).toString();
+  } catch {
+    return url;
+  }
 }
 
 export function postUrl(post: Pick<LlmsPost, "slug" | "tags">): string {
@@ -109,7 +140,9 @@ function plotlyText(value: unknown): string | undefined {
         : undefined;
   if (raw === undefined) return undefined;
   const text = oneLine(
-    raw.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]*>/g, ""),
+    decode(raw)
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/<[^>]*>/g, ""),
   );
   return text || undefined;
 }
@@ -139,8 +172,10 @@ export function summarizePlotlyFigure(figure: unknown): string {
     const types = [
       ...new Set(
         traces
-          .map((trace) => trace.type)
-          .filter((type): type is string => typeof type === "string"),
+          .map((trace) =>
+            typeof trace.type === "string" ? oneLine(trace.type) : "",
+          )
+          .filter(Boolean),
       ),
     ];
     if (types.length > 0) parts.push(`type: ${types.join(", ")}`);
@@ -174,11 +209,15 @@ function summarizePlotlyJson(raw: string): string {
 /*  Markdown                                                           */
 /* ------------------------------------------------------------------ */
 
-/** A ```plotly fence; either fence line may be indented or end in spaces. */
-const PLOTLY_FENCE =
-  /^[ \t]*```plotly[ \t]*\r?\n([\s\S]*?)^[ \t]*```[ \t]*\r?$/gm;
-/** Any other fenced code block, left as written. */
-const CODE_FENCE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*\r?$/gm;
+/**
+ * A fenced code block, as CommonMark reads one: three or more backticks or
+ * tildes, closed by a line of at least as many of the same character, or by
+ * the end of the document. Groups: fence, fence character, info, body.
+ */
+export const CODE_FENCE =
+  /^[ \t]*((`|~)\2{2,})([^\n]*)\n([\s\S]*?)(?:^[ \t]*\1\2*[ \t]*\r?$|(?![\s\S]))/gm;
+const INLINE_CODE = /`[^`\n]+`/g;
+const HTML_COMMENT = /<!--[\s\S]*?-->/g;
 const SCRIPT_OR_STYLE = /<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi;
 /** An iframe and its fallback content, stopping before any later iframe. */
 const CLOSED_IFRAME =
@@ -186,9 +225,12 @@ const CLOSED_IFRAME =
 /** A self-closing or unclosed iframe tag. */
 const BARE_IFRAME = /<iframe\b([^>]*)>/gi;
 const HTML_ATTRIBUTE = /(?:^|\s)([a-z-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
-const RELATIVE_MARKDOWN_LINK = /(\]\(\s*<?)\/(?!\/)/g;
-const RELATIVE_REFERENCE_LINK = /^([ \t]*\[[^\]\n]+\]:[ \t]*<?)\/(?!\/)/gm;
-const RELATIVE_HTML_URL = /(\s(?:src|href)\s*=\s*["'])\/(?!\/)/gi;
+const MARKDOWN_LINK_TARGET = /(\]\(\s*<?)([^)\s>]+)/g;
+/** A link reference definition, "[label]: target", not a footnote. */
+const REFERENCE_DEFINITION =
+  /^([ \t]*\[(?!\^)[^\]\n]+\]:[ \t]*<?)([^\s>]+)(?=>?(?:[ \t]+(?:"[^"\n]*"|'[^'\n]*'|\([^)\n]*\)))?[ \t]*\r?$)/gm;
+const HTML_URL_ATTRIBUTE = /(\s(?:src|href)\s*=\s*)(["'])(.*?)\2/gi;
+const YOUTUBE_HOST = /(^|\.)(youtube(-nocookie)?\.com|youtu\.be)$/i;
 
 function iframeAttributes(attributes: string): Record<string, string> {
   const result: Record<string, string> = {};
@@ -198,60 +240,103 @@ function iframeAttributes(attributes: string): Record<string, string> {
   return result;
 }
 
-/** "[Interactive: title](src)", naming it from its URL when it has no title. */
-export function describeIframe(attributes: string): string {
-  const { src = "", title = "" } = iframeAttributes(attributes);
+function nameFromUrl(src: string, base: string): string {
+  let url: URL;
+  try {
+    url = new URL(src, base);
+  } catch {
+    return "";
+  }
+  if (YOUTUBE_HOST.test(url.hostname)) return "YouTube video";
   const lastSegment =
-    src
-      .split(/[?#]/)[0]
+    url.pathname
       .split("/")
       .filter(Boolean)
       .pop()
       ?.replace(/\.html?$/i, "") ?? "";
-  const name =
+  return oneLine(lastSegment.replace(/[-_]/g, " "));
+}
+
+/** "[Interactive: title](src)", naming it from its URL when it has no title. */
+export function describeIframe(
+  attributes: string,
+  base: string = `${SITE_URL}/`,
+): string {
+  const { src = "", title = "" } = iframeAttributes(attributes);
+  const target = src.trim();
+  const name = (
     oneLine(title) ||
-    oneLine(lastSegment.replace(/[-_]/g, " ")) ||
-    "see the original article";
-  return src.trim()
-    ? `[Interactive: ${name}](${absoluteUrl(src.trim())})`
+    nameFromUrl(target, base) ||
+    "see the original article"
+  ).replace(/[\\[\]]/g, "\\$&");
+  return target
+    ? `[Interactive: ${name}](${absoluteUrl(target, base)})`
     : `[Interactive: ${name}]`;
 }
 
-/** Changes that apply only outside fenced code blocks. */
-function transformProse(text: string): string {
-  return text
-    .replace(SCRIPT_OR_STYLE, "")
-    .replace(CLOSED_IFRAME, (_, attributes: string) =>
-      describeIframe(attributes),
-    )
-    .replace(BARE_IFRAME, (_, attributes: string) =>
-      describeIframe(attributes.replace(/\/\s*$/, "")),
-    )
-    .replace(RELATIVE_MARKDOWN_LINK, `$1${SITE_URL}/`)
-    .replace(RELATIVE_REFERENCE_LINK, `$1${SITE_URL}/`)
-    .replace(RELATIVE_HTML_URL, `$1${SITE_URL}/`);
-}
-
-/** Apply `transform` to the text outside fenced code blocks. */
-function outsideCodeFences(
-  markdown: string,
+/** Apply `transform` to text outside inline code spans. */
+function outsideInlineCode(
+  text: string,
   transform: (text: string) => string,
 ): string {
   let result = "";
   let last = 0;
-  for (const match of markdown.matchAll(CODE_FENCE)) {
-    result += transform(markdown.slice(last, match.index)) + match[0];
+  for (const match of text.matchAll(INLINE_CODE)) {
+    result += transform(text.slice(last, match.index)) + match[0];
     last = match.index + match[0].length;
   }
-  return result + transform(markdown.slice(last));
+  return result + transform(text.slice(last));
 }
 
-/** Turn article markdown into the text the llms files carry. */
-export function transformArticleMarkdown(markdown: string): string {
-  const withChartSummaries = markdown.replace(PLOTLY_FENCE, (_, json: string) =>
-    summarizePlotlyJson(json.trim()),
+/** Changes to the text outside fenced code blocks. */
+function transformProse(text: string, base: string): string {
+  return outsideInlineCode(text, (prose) =>
+    prose
+      .replace(HTML_COMMENT, "")
+      .replace(SCRIPT_OR_STYLE, "")
+      .replace(CLOSED_IFRAME, (_, attributes: string) =>
+        describeIframe(attributes, base),
+      )
+      .replace(BARE_IFRAME, (_, attributes: string) =>
+        describeIframe(attributes.replace(/\/\s*$/, ""), base),
+      )
+      .replace(
+        MARKDOWN_LINK_TARGET,
+        (_, prefix: string, target: string) =>
+          prefix + absoluteUrl(target, base),
+      )
+      .replace(
+        REFERENCE_DEFINITION,
+        (_, prefix: string, target: string) =>
+          prefix + absoluteUrl(target, base),
+      )
+      .replace(
+        HTML_URL_ATTRIBUTE,
+        (_, prefix: string, quote: string, target: string) =>
+          prefix + quote + absoluteUrl(target, base) + quote,
+      ),
   );
-  return outsideCodeFences(withChartSummaries, transformProse);
+}
+
+/**
+ * Turn article markdown into the text the llms files carry. Plotly fences
+ * become one-line summaries, other fences stay as written, and links resolve
+ * against `base`, the article's own URL.
+ */
+export function transformArticleMarkdown(
+  markdown: string,
+  base: string = `${SITE_URL}/`,
+): string {
+  let result = "";
+  let last = 0;
+  for (const match of markdown.matchAll(CODE_FENCE)) {
+    const [fence, , , info, body] = match;
+    result += transformProse(markdown.slice(last, match.index), base);
+    result +=
+      info.trim() === "plotly" ? summarizePlotlyJson(body.trim()) : fence;
+    last = match.index + fence.length;
+  }
+  return result + transformProse(markdown.slice(last), base);
 }
 
 /* ------------------------------------------------------------------ */
@@ -264,7 +349,9 @@ function joinSource(source: unknown): string {
   return "";
 }
 
-function plainTextOutput(text: string): string | null {
+/** A text/plain output, as the page renders it: only its first element. */
+function plainTextOutput(data: unknown): string | null {
+  const text = Array.isArray(data) ? String(data[0] ?? "") : joinSource(data);
   let value: unknown;
   try {
     value = parseJSONSafe(text);
@@ -291,11 +378,14 @@ function codeCellMarkdown(cell: NotebookCell): string | null {
   if (plotly) return summarizePlotlyFigure(plotly);
   if (data["text/markdown"]) return joinSource(data["text/markdown"]);
   if (data["text/html"]) return null;
-  if (data["text/plain"])
-    return plainTextOutput(joinSource(data["text/plain"]));
+  if (data["text/plain"]) return plainTextOutput(data["text/plain"]);
   return null;
 }
 
+/**
+ * Markdown cells and code-cell outputs, in order. Raw cells are left out; the
+ * page shows them only as a JSON dump.
+ */
 export function notebookToMarkdown(notebook: Notebook): string {
   const blocks: string[] = [];
   for (const cell of notebook.cells ?? []) {
@@ -311,11 +401,15 @@ export function notebookToMarkdown(notebook: Notebook): string {
 }
 
 /** The llms text of one article file, markdown or notebook. */
-export function articleToLlmsMarkdown(filename: string, raw: string): string {
+export function articleToLlmsMarkdown(
+  filename: string,
+  raw: string,
+  base: string = `${SITE_URL}/`,
+): string {
   const markdown = filename.endsWith(".ipynb")
     ? notebookToMarkdown(JSON.parse(raw) as Notebook)
     : raw;
-  return transformArticleMarkdown(markdown).trim();
+  return transformArticleMarkdown(markdown, base).trim();
 }
 
 /* ------------------------------------------------------------------ */
@@ -343,7 +437,7 @@ export function formatArticle(
     `URL: ${postUrl(post)}`,
     `Date: ${toPostIsoDate(post.date, "date")}`,
     `Authors: ${singleLine(authorNames)}`,
-    `Tags: ${post.tags.join(", ")}`,
+    `Tags: ${post.tags.map(singleLine).join(", ")}`,
     `Description: ${singleLine(post.description)}`,
     "---",
     "",
@@ -361,7 +455,11 @@ function buildArchive(
   const articles = posts.map((post) =>
     formatArticle(
       post,
-      articleToLlmsMarkdown(post.filename, source.loadArticle(post.filename)),
+      articleToLlmsMarkdown(
+        post.filename,
+        source.loadArticle(post.filename),
+        postUrl(post),
+      ),
       source.authors,
     ),
   );

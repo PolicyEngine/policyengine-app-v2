@@ -8,10 +8,14 @@ import * as ukRoute from "@/app/llms-research-uk.txt/route";
 import * as usRoute from "@/app/llms-research-us.txt/route";
 import * as indexRoute from "@/app/llms.txt/route";
 import sitemap from "@/app/sitemap";
-import { getPostsSorted } from "@/data/posts/postTransformers";
+import {
+  getPostsSorted,
+  getResearchItems,
+} from "@/data/posts/postTransformers";
 import { getAllSlugs } from "@/lib/articles";
 import { VALID_COUNTRIES } from "@/lib/countries";
 import {
+  CODE_FENCE,
   INDEX_RECENT_COUNT,
   LLMS_FILE_NAMES,
   RECENT_ARCHIVE_COUNT,
@@ -30,7 +34,14 @@ const ROUTES: Record<LlmsFileName, { GET: () => Response; dynamic: string }> = {
 };
 
 const WEBSITE_ROOT = join(__dirname, "../../..");
-const CODE_FENCE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*\r?$/gm;
+
+/** The posts as the research page lists them. */
+function postsInResearchPageOrder() {
+  const bySlug = new Map(getPostsSorted().map((post) => [post.slug, post]));
+  return getResearchItems()
+    .filter((item) => !item.isApp)
+    .map((item) => bySlug.get(item.slug)!);
+}
 
 function urlLines(text: string): string[] {
   return [...text.matchAll(/^URL: (.+)$/gm)].map((m) => m[1]);
@@ -94,7 +105,7 @@ describe("llms.txt index", () => {
     }
   });
 
-  test("given the index then it lists the newest posts in the website's post order", () => {
+  test("given the index then it lists the newest posts as the research page does", () => {
     const listed = [
       ...files["llms.txt"]
         .split("## Research by country")[0]
@@ -102,7 +113,7 @@ describe("llms.txt index", () => {
     ].map((m) => m[1]);
 
     expect(listed).toEqual(
-      getPostsSorted().slice(0, INDEX_RECENT_COUNT).map(postUrl),
+      postsInResearchPageOrder().slice(0, INDEX_RECENT_COUNT).map(postUrl),
     );
   });
 
@@ -141,10 +152,13 @@ describe("llms.txt index", () => {
 });
 
 describe("llms article files from the real posts", () => {
-  const posts = getPostsSorted();
+  const posts = postsInResearchPageOrder();
 
-  test("given the full archive then it holds every post once, in the website's post order", () => {
-    expect(urlLines(files["llms-full.txt"])).toEqual(posts.map(postUrl));
+  test("given the full archive then it holds every post once, in research-page order", () => {
+    const urls = urlLines(files["llms-full.txt"]);
+
+    expect(urls).toEqual(posts.map(postUrl));
+    expect([...urls].sort()).toEqual(getPostsSorted().map(postUrl).sort());
   });
 
   test("given the country files then each holds exactly its tagged posts", () => {
@@ -211,13 +225,23 @@ describe("llms article files from the real posts", () => {
       expect(text).not.toContain("```plotly");
       expect(text).not.toMatch(/"cell_type"\s*:/);
       expect(text).not.toContain("application/vnd.plotly.v1+json");
-      expect(prose).not.toMatch(/<iframe|<script/i);
-      expect(prose).not.toMatch(/\]\(\s*<?\/(?!\/)/);
-      expect(prose).not.toMatch(/\s(?:src|href)\s*=\s*["']\/(?!\/)/i);
+      expect(prose).not.toMatch(/<iframe|<script|<!--/i);
+      // Every link target resolves from /llms-full.txt: absolute, a
+      // fragment, or a mailto: link.
+      const targets = [
+        ...[...prose.matchAll(/\]\(\s*<?([^)\s>]+)/g)].map((m) => m[1]),
+        ...[...prose.matchAll(/\s(?:src|href)\s*=\s*(["'])(.*?)\1/gi)].map(
+          (m) => m[2],
+        ),
+      ];
+      expect(targets.length).toBeGreaterThan(0);
+      for (const target of targets) {
+        expect(target).toMatch(/^(?:https?:\/\/|#|mailto:|tel:)/);
+      }
       for (const line of text
         .split("\n")
         .filter((l) => l.startsWith("[Chart: "))) {
-        expect(line).toMatch(/^\[Chart: [^\n]*\]$/);
+        expect(line).toMatch(/^\[Chart: [^\r\v\f\u0085\u2028\u2029]*\]$/);
       }
     },
   );
