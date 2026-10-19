@@ -8,7 +8,7 @@
  * - Inline search for adding custom variables per person or household-level
  */
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import {
   Accordion,
@@ -41,6 +41,7 @@ import {
   VariableInfo,
 } from '@/utils/VariableResolver';
 import SPMGeographyChoice from './SPMGeographyChoice';
+import type { CommonInput } from './VariablePickerDialog';
 import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
 
@@ -86,6 +87,10 @@ export interface HouseholdBuilderFormProps {
   /** With `variableGroupOf`: a group's parts, as subheadings when that group is chosen. */
   variableSubgroupOf?: (variable: VariableInfo) => string | null;
   variableSubgroupOrder?: readonly string[];
+  /** With `variableGroupOf`: the picker's tiles, topic icons and display names. */
+  variablePickerCommon?: CommonInput[];
+  variableGroupIcon?: (group: string) => ReactNode;
+  variableNameOf?: (variable: VariableInfo) => string;
 }
 
 /**
@@ -212,6 +217,9 @@ export default function HouseholdBuilderForm({
   searchByEntity = false,
   variableSubgroupOf,
   variableSubgroupOrder,
+  variablePickerCommon,
+  variableGroupIcon,
+  variableNameOf,
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -319,16 +327,35 @@ export default function HouseholdBuilderForm({
   };
 
   // Memoized filtered variables for person search
-  const filteredPersonVariables = useMemo(
-    () => filterVariables(personSearchValue, scopedInputs.person),
-    [personSearchValue, scopedInputs, suggestedOrder]
-  );
+  const filteredPersonVariables = useMemo(() => {
+    // Scoped, the search leaves out what the person already has.
+    const has = new Set(
+      searchByEntity && activePersonSearch
+        ? [...basicPersonFields, ...household.getPersonLevelVariables(activePersonSearch)]
+        : []
+    );
+    return filterVariables(
+      personSearchValue,
+      has.size > 0 ? scopedInputs.person.filter((v) => !has.has(v.name)) : scopedInputs.person
+    );
+  }, [personSearchValue, scopedInputs, suggestedOrder, activePersonSearch, household]);
 
   // Memoized filtered variables for household search
-  const filteredHouseholdVariables = useMemo(
-    () => filterVariables(householdSearchValue, scopedInputs.group),
-    [householdSearchValue, scopedInputs, suggestedOrder]
-  );
+  const filteredHouseholdVariables = useMemo(() => {
+    // Scoped, the search leaves out what the household already has.
+    const has = new Set(
+      searchByEntity
+        ? [
+            ...basicNonPersonFields,
+            ...household.getHouseholdLevelVariables().map(({ name }) => name),
+          ]
+        : []
+    );
+    return filterVariables(
+      householdSearchValue,
+      has.size > 0 ? scopedInputs.group.filter((v) => !has.has(v.name)) : scopedInputs.group
+    );
+  }, [householdSearchValue, scopedInputs, suggestedOrder, household]);
 
   const resolveDefaultGroupInstanceName = (variableName: string): string | undefined => {
     const entityInfo = resolveEntity(variableName, metadata);
@@ -716,6 +743,9 @@ export default function HouseholdBuilderForm({
                             groupOrder={variableGroupOrder}
                             subgroupOf={variableSubgroupOf}
                             subgroupOrder={variableSubgroupOrder}
+                            common={variablePickerCommon}
+                            groupIcon={variableGroupIcon}
+                            nameOf={variableNameOf}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             title={`Add a variable to ${getPersonDisplayName(person)}`}
                             getEntityHint={(variable) => {
@@ -852,6 +882,9 @@ export default function HouseholdBuilderForm({
                       groupOrder={variableGroupOrder}
                       subgroupOf={variableSubgroupOf}
                       subgroupOrder={variableSubgroupOrder}
+                      common={variablePickerCommon}
+                      groupIcon={variableGroupIcon}
+                      nameOf={variableNameOf}
                       onSelect={handleHouseholdVariableSelect}
                       title="Add a variable to your household"
                       getEntityHint={(variable) => {

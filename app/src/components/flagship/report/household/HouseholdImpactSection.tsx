@@ -3,6 +3,11 @@ import { IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { STATE_NAMES } from '@/api/billFeed';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
+import {
+  COMMON_HOUSEHOLD_INPUTS,
+  householdInputName,
+  householdTopicIcon,
+} from '@/components/flagship/report/household/householdPickerInputs';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import { ErrorState } from '@/components/flagship/states';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
@@ -343,6 +348,9 @@ function HouseholdCard({
             variableSubgroupOf={householdVariableSubgroup}
             variableSubgroupOrder={HOUSEHOLD_INCOME_SUBGROUPS}
             searchByEntity
+            variablePickerCommon={COMMON_HOUSEHOLD_INPUTS}
+            variableGroupIcon={householdTopicIcon}
+            variableNameOf={householdInputName}
           />
           <div
             style={{

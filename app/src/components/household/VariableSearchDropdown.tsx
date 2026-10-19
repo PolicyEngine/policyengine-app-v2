@@ -3,18 +3,12 @@
  * Renders the results list in normal document flow so parent layouts can expand.
  */
 
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Spinner,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui';
+import VariablePickerDialog, {
+  type CommonInput,
+} from '@/components/household/VariablePickerDialog';
+import { Button, Spinner, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { VariableInfo } from '@/utils/VariableResolver';
 
@@ -43,26 +37,19 @@ export interface VariableSearchDropdownProps {
    */
   subgroupOf?: (variable: VariableInfo) => string | null;
   subgroupOrder?: readonly string[];
+  /** With `groupOf`: the picker's tiles, topic icons and display names. */
+  common?: CommonInput[];
+  groupIcon?: (group: string) => ReactNode;
+  nameOf?: (variable: VariableInfo) => string;
   /** With `groupOf`: the dialog's title. */
   title?: string;
   /**
-   * Groups the list (with chips to show one group) when given; the plain
-   * list otherwise. The order names the groups in the order they show.
+   * Opens the search as a picker dialog (VariablePickerDialog), its inputs
+   * in these groups, when given; the plain inline list otherwise. The
+   * order names the groups in the order they show.
    */
   groupOf?: (variable: VariableInfo) => string;
   groupOrder?: readonly string[];
-}
-
-/** In the grouped list's "All" view, each group shows this many before "Show all". */
-const GROUP_PREVIEW = 6;
-const SUGGESTED_GROUP = '__suggested';
-
-interface VariableSection {
-  key: string;
-  label: string;
-  items: VariableInfo[];
-  /** Variables in the group beyond those shown. */
-  more: number;
 }
 
 // Fixed width for close button column (matches VariableRow's REMOVE_COLUMN_WIDTH)
@@ -97,11 +84,12 @@ export default function VariableSearchDropdown({
   title = 'Add a variable',
   subgroupOf,
   subgroupOrder = [],
+  common,
+  groupIcon,
+  nameOf,
   groupOrder = [],
 }: VariableSearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // The group the grouped list shows; all of them when null.
-  const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -135,82 +123,12 @@ export default function VariableSearchDropdown({
     ? sortedVariables.filter((v) => suggested.has(v.name)).length
     : 0;
 
-  // The grouped list: its chips (every group with a match) and its sections.
-  const grouped = useMemo(() => {
-    if (!groupOf) {
-      return null;
-    }
-    const byGroup = new Map<string, VariableInfo[]>();
-    for (const variable of sortedVariables) {
-      if (suggested?.has(variable.name)) {
-        continue;
-      }
-      const group = groupOf(variable);
-      byGroup.set(group, [...(byGroup.get(group) ?? []), variable]);
-    }
-    const rank = (group: string) => {
-      const index = groupOrder.indexOf(group);
-      return index === -1 ? groupOrder.length : index;
-    };
-    const all: VariableSection[] = [
-      ...(suggestedCount > 0
-        ? [
-            {
-              key: SUGGESTED_GROUP,
-              label: suggestedLabel,
-              items: sortedVariables.filter((v) => suggested?.has(v.name)),
-              more: 0,
-            },
-          ]
-        : []),
-      ...[...byGroup.entries()]
-        .sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
-        .map(([group, items]) => ({ key: group, label: group, items, more: 0 })),
-    ];
-    let chosen = all.find((section) => section.key === activeGroup);
-    // A chosen group with parts reads part by part, each in label order;
-    // a typed search keeps its own ranking.
-    if (chosen && subgroupOf && !searchValue.trim()) {
-      const partRank = (variable: VariableInfo) => {
-        const index = subgroupOrder.indexOf(subgroupOf(variable) ?? '');
-        return index === -1 ? subgroupOrder.length : index;
-      };
-      chosen = {
-        ...chosen,
-        items: [...chosen.items].sort(
-          (a, b) => partRank(a) - partRank(b) || a.label.localeCompare(b.label)
-        ),
-      };
-    }
-    const sections = chosen
-      ? [chosen]
-      : all.map((section) => ({
-          ...section,
-          items: section.items.slice(0, GROUP_PREVIEW),
-          more: Math.max(0, section.items.length - GROUP_PREVIEW),
-        }));
-    return { chips: all, sections };
-  }, [
-    groupOf,
-    groupOrder,
-    sortedVariables,
-    suggested,
-    suggestedCount,
-    suggestedLabel,
-    activeGroup,
-    subgroupOf,
-    subgroupOrder,
-    searchValue,
-  ]);
-  // The options in the order they show: the grouped list's, or the plain one.
-  const displayVariables = grouped
-    ? grouped.sections.flatMap((section) => section.items)
-    : sortedVariables;
+  const displayVariables = sortedVariables;
 
   // Reset selected index when list changes
   useEffect(() => {
     setSelectedIndex(-1);
-  }, [sortedVariables, activeGroup]);
+  }, [sortedVariables]);
 
   const openDropdown = () => {
     setIsOpen(true);
@@ -275,210 +193,28 @@ export default function VariableSearchDropdown({
     inputRef.current?.focus();
   }, []);
 
-  // Grouped, the search is a dialog of its own, centered over the page: a
-  // list in place takes the width of where it opens — in a person card,
-  // too narrow for the categories and the variables side by side.
-  if (grouped) {
+  // Grouped, the search is a dialog of its own, centered over the page.
+  if (groupOf) {
     return (
-      <Dialog
-        open
-        onOpenChange={(open) => {
-          if (!open) {
-            handleClose();
-          }
-        }}
-      >
-        <DialogContent
-          aria-describedby={undefined}
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-            inputRef.current?.focus();
-          }}
-          className="tw:flex tw:h-[min(40rem,85vh)] tw:flex-col tw:gap-0 tw:overflow-hidden tw:bg-white tw:p-0 tw:sm:max-w-[56rem]"
-        >
-          <div className="tw:border-b tw:border-gray-100 tw:p-4 tw:pr-12">
-            <DialogTitle className="tw:mb-3 tw:text-base">{title}</DialogTitle>
-            <div className="tw:relative">
-              <IconSearch
-                size={16}
-                className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
-              />
-              <input
-                ref={inputRef}
-                className={cn(
-                  'tw:w-full tw:h-9 tw:pl-8 tw:pr-3 tw:rounded-element tw:border tw:border-gray-300',
-                  'tw:text-sm tw:outline-none tw:focus:border-primary-500 tw:focus:ring-1 tw:focus:ring-primary-500',
-                  disabled && 'tw:opacity-50 tw:cursor-not-allowed'
-                )}
-                placeholder={placeholder}
-                value={searchValue}
-                onChange={(e) => onSearchChange(e.currentTarget.value)}
-                onKeyDown={handleKeyDown}
-                disabled={disabled}
-                autoFocus
-              />
-            </div>
-          </div>
-          <div ref={listRef} className="tw:flex tw:min-h-0 tw:flex-1 tw:flex-col">
-            {grouped.chips.length > 1 && (
-              // On a phone the categories are one compact choice above the list.
-              <div className="tw:border-b tw:border-gray-100 tw:p-2 tw:sm:hidden">
-                <select
-                  aria-label="Variable category"
-                  value={activeGroup ?? ''}
-                  onChange={(e) => setActiveGroup(e.currentTarget.value || null)}
-                  onBlur={closeUnlessFocusInside}
-                  className="tw:h-8 tw:w-full tw:rounded-element tw:border tw:border-gray-200 tw:bg-white tw:px-2 tw:text-sm"
-                >
-                  <option value="">All categories</option>
-                  {grouped.chips.map((chip) => (
-                    <option key={chip.key} value={chip.key}>
-                      {chip.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <div className="tw:flex tw:min-h-0 tw:flex-1">
-              {grouped.chips.length > 1 && (
-                // Wider, the categories are a column beside the list: every one
-                // in view at once, read top to bottom, none scrolled out of sight.
-                <div
-                  role="group"
-                  aria-label="Variable groups"
-                  className="tw:hidden tw:w-52 tw:shrink-0 tw:flex-col tw:gap-px tw:overflow-y-auto tw:border-r tw:border-gray-100 tw:p-1 tw:sm:flex"
-                >
-                  {[{ key: null, label: 'All categories' }, ...grouped.chips].map((chip) => (
-                    <button
-                      key={chip.key ?? 'all'}
-                      type="button"
-                      aria-pressed={activeGroup === chip.key}
-                      // Keeps the search focused, so the list stays open.
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setActiveGroup(chip.key);
-                      }}
-                      className={cn(
-                        'tw:flex tw:w-full tw:cursor-pointer tw:items-center tw:rounded-md tw:px-2 tw:py-1.5 tw:text-left tw:text-sm tw:transition-colors',
-                        activeGroup === chip.key
-                          ? 'tw:bg-primary-50 tw:font-medium tw:text-primary-700'
-                          : 'tw:text-gray-700 tw:hover:bg-gray-50'
-                      )}
-                    >
-                      <span className="tw:min-w-0 tw:truncate">{chip.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="tw:min-w-0 tw:flex-1 tw:overflow-y-auto tw:p-1">
-                {loading ? (
-                  <div className="tw:flex tw:items-center tw:justify-center tw:p-md">
-                    <Spinner size="sm" />
-                  </div>
-                ) : displayVariables.length === 0 ? (
-                  <p className="tw:text-sm tw:text-gray-500 tw:p-md tw:text-center">
-                    No variables found
-                  </p>
-                ) : (
-                  grouped.sections.map((section) => {
-                    const offset = displayVariables.indexOf(section.items[0]);
-                    return (
-                      <div key={section.key} className="tw:pb-1">
-                        <p
-                          role="presentation"
-                          className="tw:sticky tw:top-0 tw:z-10 tw:bg-white tw:px-2 tw:pt-2 tw:pb-1 tw:text-[11px] tw:font-semibold tw:uppercase tw:tracking-wide tw:text-gray-500"
-                        >
-                          {section.label}
-                        </p>
-                        {section.items.map((variable, at) => {
-                          const index = offset + at;
-                          const entityHint = getEntityHint?.(variable);
-                          const part =
-                            activeGroup === section.key && subgroupOf ? subgroupOf(variable) : null;
-                          const partStarts =
-                            !!part && (at === 0 || subgroupOf!(section.items[at - 1]) !== part);
-                          return (
-                            <Fragment key={variable.name}>
-                              {partStarts && (
-                                <p
-                                  role="presentation"
-                                  className="tw:px-2 tw:pt-3 tw:pb-1 tw:text-xs tw:font-semibold tw:text-gray-700"
-                                >
-                                  {part}
-                                </p>
-                              )}
-                              <div
-                                data-option
-                                role="option"
-                                tabIndex={-1}
-                                aria-selected={index === selectedIndex}
-                                className={cn(
-                                  'tw:flex tw:cursor-pointer tw:items-start tw:justify-between tw:gap-2 tw:rounded-md tw:px-2 tw:py-1.5',
-                                  index === selectedIndex
-                                    ? 'tw:bg-primary-50'
-                                    : 'tw:hover:bg-gray-50'
-                                )}
-                                // Pointing at a row shows its description below the list.
-                                onMouseEnter={() => setSelectedIndex(index)}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleSelect(variable);
-                                }}
-                              >
-                                {/* A name only: the description shows once, below the list. */}
-                                <p className="tw:min-w-0 tw:flex-1 tw:truncate tw:text-sm tw:text-gray-900">
-                                  {sentenceCaseLabel(variable.label)}
-                                </p>
-                                {entityHint?.show && (
-                                  <span className="tw:shrink-0 tw:rounded tw:bg-gray-100 tw:px-1.5 tw:py-0.5 tw:text-[11px] tw:text-gray-600">
-                                    {entityHint.label}
-                                  </span>
-                                )}
-                              </div>
-                            </Fragment>
-                          );
-                        })}
-                        {section.more > 0 && (
-                          <button
-                            type="button"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              setActiveGroup(section.key);
-                            }}
-                            className="tw:cursor-pointer tw:px-2 tw:py-1 tw:text-xs tw:font-medium tw:text-primary-700 tw:hover:underline"
-                          >
-                            Show all {section.items.length + section.more}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
-          {/* What the pointed-at (or arrowed-to) variable is, in one place. */}
-          <div
-            aria-live="polite"
-            className="tw:h-20 tw:shrink-0 tw:border-t tw:border-gray-100 tw:bg-gray-50 tw:px-4 tw:py-3"
-          >
-            {displayVariables[selectedIndex] ? (
-              <>
-                <p className="tw:truncate tw:text-sm tw:font-medium tw:text-gray-900">
-                  {sentenceCaseLabel(displayVariables[selectedIndex].label)}
-                </p>
-                <p className="tw:line-clamp-2 tw:text-xs tw:text-gray-600">
-                  {displayVariables[selectedIndex].documentation || 'No description in the model.'}
-                </p>
-              </>
-            ) : (
-              <p className="tw:text-xs tw:text-gray-500">
-                Point to a variable to see what it means.
-              </p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <VariablePickerDialog
+        title={title}
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+        variables={filteredVariables}
+        onSelect={handleSelect}
+        onClose={handleClose}
+        groupOf={groupOf}
+        groupOrder={groupOrder}
+        groupIcon={groupIcon}
+        subgroupOf={subgroupOf}
+        subgroupOrder={subgroupOrder}
+        common={common}
+        suggested={suggested}
+        suggestedLabel={suggestedLabel}
+        nameOf={nameOf}
+        loading={loading}
+        disabled={disabled}
+      />
     );
   }
 
@@ -518,7 +254,7 @@ export default function VariableSearchDropdown({
           />
         </div>
 
-        {isOpen && !grouped && (
+        {isOpen && (
           <div
             ref={listRef}
             className="tw:mt-1 tw:w-full tw:bg-white tw:border tw:border-gray-200 tw:rounded-element tw:shadow-lg tw:max-h-[200px] tw:overflow-y-auto"

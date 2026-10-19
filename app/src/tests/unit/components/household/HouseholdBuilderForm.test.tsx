@@ -111,11 +111,13 @@ describe('rankVariablesBySearch', () => {
     const { unmount } = renderForm({ metadata, searchByEntity: true, variableGroupOf: groupOf });
 
     fireEvent.click(screen.getByRole('button', { name: /Add variable to you$/ }));
+    fireEvent.mouseDown(screen.getAllByRole('button', { name: 'Income' })[0]);
     expect(optionsIn()).toEqual(['Tip income']);
     unmount();
 
     renderForm({ metadata, searchByEntity: true, variableGroupOf: groupOf });
     fireEvent.click(screen.getByRole('button', { name: 'Add variable to your household' }));
+    fireEvent.mouseDown(screen.getAllByRole('button', { name: 'Income' })[0]);
     expect(optionsIn().sort()).toEqual(['Childcare', 'Rent']);
   });
 
