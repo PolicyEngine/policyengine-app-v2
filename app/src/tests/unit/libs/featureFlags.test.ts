@@ -6,14 +6,15 @@ describe('featureFlags', () => {
     expect(isFlagshipShellEnabled()).toBe(true);
   });
 
-  test('given the UK with no flag of its own then it stays on v2, while the US is on v3', () => {
-    expect(isFlagshipShellEnabled('uk')).toBe(false);
+  test('given the UK with no flag of its own then it is on v3, like the US', () => {
+    expect(isFlagshipShellEnabled('uk')).toBe(true);
     expect(isFlagshipShellEnabled('us')).toBe(true);
   });
 
-  test('given the UK flag set to true then the UK is on v3', () => {
-    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL_UK', 'true');
-    expect(isFlagshipShellEnabled('uk')).toBe(true);
+  test('given the UK flag set to false then the UK is back on v2, and the US stays on v3', () => {
+    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL_UK', 'false');
+    expect(isFlagshipShellEnabled('uk')).toBe(false);
+    expect(isFlagshipShellEnabled('us')).toBe(true);
     vi.unstubAllEnvs();
   });
 
@@ -76,6 +77,7 @@ describe('featureFlags override on a flag-off build', () => {
 
   test('given the US override then the UK keeps its own, and the reverse', () => {
     vi.stubEnv('VITE_FLAGSHIP_OVERRIDE', 'allow');
+    vi.stubEnv('VITE_FLAGSHIP_SHELL_UK', 'false');
     setFlagshipShellEnabled(true);
     expect(isFlagshipShellEnabled('us')).toBe(true);
     expect(isFlagshipShellEnabled('uk')).toBe(false);
