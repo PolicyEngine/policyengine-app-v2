@@ -109,3 +109,14 @@ export function routeRequests(
   });
   return requests;
 }
+
+/** The saved family as the store opens it. */
+export const SAVED_FAMILY = {
+  id: SAVED_HOUSEHOLD_IDS.FAMILY,
+  countryId: 'us' as const,
+  label: FAMILY_LABEL,
+  householdId: V2_HOUSEHOLD_IDS.FAMILY,
+  household: FAMILY_HOUSEHOLD.withId(V2_HOUSEHOLD_IDS.FAMILY),
+  createdAt: TIMESTAMPS.CREATED,
+  updatedAt: TIMESTAMPS.UPDATED,
+};
