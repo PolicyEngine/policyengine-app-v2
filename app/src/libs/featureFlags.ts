@@ -10,6 +10,11 @@
  */
 
 const FLAGSHIP_SHELL_STORAGE_KEY = 'pe-flagship-shell';
+/** The UK's own override, so each country can be previewed on its own. */
+const FLAGSHIP_SHELL_UK_STORAGE_KEY = 'pe-flagship-shell-uk';
+
+const storageKeyFor = (countryId?: string) =>
+  countryId === 'uk' ? FLAGSHIP_SHELL_UK_STORAGE_KEY : FLAGSHIP_SHELL_STORAGE_KEY;
 
 /**
  * Whether the localStorage override may activate the shell. Off unless
@@ -88,19 +93,20 @@ export function isFlagshipShellEnabled(countryId?: string): boolean {
   }
 
   try {
-    return localStorage.getItem(FLAGSHIP_SHELL_STORAGE_KEY) === 'on';
+    return localStorage.getItem(storageKeyFor(countryId)) === 'on';
   } catch {
     // localStorage unavailable (SSR, privacy mode) — flag stays off
     return false;
   }
 }
 
-export function setFlagshipShellEnabled(enabled: boolean): void {
+/** Turns the override on or off for a country; without one, the US. */
+export function setFlagshipShellEnabled(enabled: boolean, countryId?: string): void {
   try {
     if (enabled) {
-      localStorage.setItem(FLAGSHIP_SHELL_STORAGE_KEY, 'on');
+      localStorage.setItem(storageKeyFor(countryId), 'on');
     } else {
-      localStorage.removeItem(FLAGSHIP_SHELL_STORAGE_KEY);
+      localStorage.removeItem(storageKeyFor(countryId));
     }
   } catch {
     // localStorage unavailable — nothing to persist

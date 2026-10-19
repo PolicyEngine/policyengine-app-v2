@@ -73,4 +73,17 @@ describe('featureFlags override on a flag-off build', () => {
     localStorage.setItem('pe-flagship-shell', 'yes-please');
     expect(isFlagshipShellEnabled()).toBe(false);
   });
+
+  test('given the US override then the UK keeps its own, and the reverse', () => {
+    vi.stubEnv('VITE_FLAGSHIP_OVERRIDE', 'allow');
+    setFlagshipShellEnabled(true);
+    expect(isFlagshipShellEnabled('us')).toBe(true);
+    expect(isFlagshipShellEnabled('uk')).toBe(false);
+
+    setFlagshipShellEnabled(false);
+    setFlagshipShellEnabled(true, 'uk');
+    expect(isFlagshipShellEnabled('uk')).toBe(true);
+    expect(isFlagshipShellEnabled('us')).toBe(false);
+    setFlagshipShellEnabled(false, 'uk');
+  });
 });

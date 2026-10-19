@@ -134,20 +134,23 @@ const router = createBrowserRouter(
                   index: true,
                   element: <CountryLanding />,
                 },
-                // Flagship shell routes (feature-flagged; see libs/featureFlags.ts)
-                ...(isFlagshipShellEnabled()
-                  ? [
-                      // Ask is paused; its links land on Build.
-                      { path: 'home', element: <Navigate to="../build" replace /> },
-                      { path: 'ask', element: <Navigate to="../build" replace /> },
-                      { path: 'build', element: <BuildPage /> },
-                      { path: 'reforms', element: <ReformsPage /> },
-                      { path: 'tracker', element: <LegacyReformsRedirect /> },
-                      { path: 'library', element: <LegacyReformsRedirect /> },
-                      { path: 'report/bill/:billId', element: <BillReportPage /> },
-                      { path: 'report/:userReportId', element: <FlagshipReportPage /> },
-                    ]
-                  : []),
+                // Flagship shell routes (feature-flagged per country; see
+                // libs/featureFlags.ts). The router is built once for every
+                // country, so each route checks its own country's flag.
+                {
+                  element: <FlagshipRoutes />,
+                  children: [
+                    // Ask is paused; its links land on Build.
+                    { path: 'home', element: <Navigate to="../build" replace /> },
+                    { path: 'ask', element: <Navigate to="../build" replace /> },
+                    { path: 'build', element: <BuildPage /> },
+                    { path: 'reforms', element: <ReformsPage /> },
+                    { path: 'tracker', element: <LegacyReformsRedirect /> },
+                    { path: 'library', element: <LegacyReformsRedirect /> },
+                    { path: 'report/bill/:billId', element: <BillReportPage /> },
+                    { path: 'report/:userReportId', element: <FlagshipReportPage /> },
+                  ],
+                },
                 {
                   path: 'reports',
                   element: <ReportsPage />,
@@ -192,6 +195,19 @@ const router = createBrowserRouter(
     basename: import.meta.env.BASE_URL,
   }
 );
+
+/**
+ * The flagship shell's routes, for a country whose app is the shell; any
+ * other country's links to them land on its Reports page.
+ */
+export function FlagshipRoutes() {
+  const countryId = useCurrentCountry();
+  return isFlagshipShellEnabled(countryId) ? (
+    <Outlet />
+  ) : (
+    <Navigate to={`/${countryId}/reports`} replace />
+  );
+}
 
 /** A country's first page: Build where its app is the flagship shell, else Reports. */
 function CountryLanding() {
