@@ -7,6 +7,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from '
 import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
 import VariablePickerDialog, {
   type CommonInput,
+  type VariablePickSource,
 } from '@/components/household/VariablePickerDialog';
 import { Button, Spinner, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -17,7 +18,8 @@ export interface VariableSearchDropdownProps {
   onSearchChange: (value: string) => void;
   onFocusChange: (focused: boolean) => void;
   filteredVariables: VariableInfo[];
-  onSelect: (variable: VariableInfo) => void;
+  /** The pick, and the list it came from (the inline list counts as the search). */
+  onSelect: (variable: VariableInfo, source: VariablePickSource) => void;
   /** Function to get entity hint for a variable (e.g., "Person" or "Household") */
   getEntityHint?: (variable: VariableInfo) => { show: boolean; label: string } | null;
   disabled?: boolean;
@@ -155,8 +157,8 @@ export default function VariableSearchDropdown({
     }, 150);
   };
 
-  const handleSelect = (variable: VariableInfo) => {
-    onSelect(variable);
+  const handleSelect = (variable: VariableInfo, source: VariablePickSource = 'search') => {
+    onSelect(variable, source);
     closeDropdown();
   };
 

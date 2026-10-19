@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import AddParameterBar from '@/components/flagship/reform/AddParameterBar';
 import { clearDraftReform } from '@/libs/draftReform';
@@ -54,5 +54,41 @@ describe('AddParameterBar placeholder', () => {
 
     // Then
     expect(search()).toHaveAttribute('placeholder', 'Add another parameter');
+  });
+});
+
+describe('AddParameterBar analytics', () => {
+  beforeEach(() => {
+    clearDraftReform();
+    seedDeductionMetadata();
+    mockScreenWidth(SCREEN_WIDTHS.DESKTOP);
+  });
+
+  afterEach(() => {
+    delete window.gtag;
+    vi.restoreAllMocks();
+    store.dispatch(clearMetadata());
+  });
+
+  test('given a search result picked then one event sends its rank and the query length, not the query', async () => {
+    const user = userEvent.setup();
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    const onPick = vi.fn();
+    render(<AddParameterBar onPick={onPick} autoFocus />);
+
+    await user.type(search(), 'personal exemption');
+    const options = await screen.findAllByRole('option');
+    await user.click(options[0]);
+
+    expect(onPick).toHaveBeenCalledTimes(1);
+    expect(gtag.mock.calls).toEqual([
+      [
+        'event',
+        'parameter_search_selected',
+        { country_id: 'us', rank: 1, is_breakdown: false, in_folder: false, query_length: 18 },
+      ],
+    ]);
+    expect(JSON.stringify(gtag.mock.calls)).not.toContain('exemption');
   });
 });

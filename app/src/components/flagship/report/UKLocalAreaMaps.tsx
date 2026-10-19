@@ -4,6 +4,7 @@ import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { LocalAuthoritySubPage } from '@/pages/report-output/LocalAuthoritySubPage';
+import { trackLocalAreaMapToggled } from '@/utils/analytics';
 
 type UKAreaKind = 'constituencies' | 'local-authorities';
 
@@ -24,7 +25,16 @@ export default function UKLocalAreaMaps({ output }: { output: SocietyWideReportO
         <SegmentedControl
           animated
           value={areaKind}
-          onValueChange={(value) => setAreaKind(value as UKAreaKind)}
+          onValueChange={(value) => {
+            const next = value as UKAreaKind;
+            if (next !== areaKind) {
+              trackLocalAreaMapToggled({
+                countryId: 'uk',
+                area: next === 'constituencies' ? 'constituencies' : 'local_authorities',
+              });
+            }
+            setAreaKind(next);
+          }}
           size="xs"
           options={AREA_OPTIONS}
         />

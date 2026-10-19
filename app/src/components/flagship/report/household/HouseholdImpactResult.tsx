@@ -8,6 +8,7 @@ import { Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
 import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
+import { trackHouseholdOutputViewed, type HouseholdOutputTab } from '@/utils/analytics';
 import { formatCurrency } from '@/utils/formatters';
 
 /** Whole dollars (or pounds), with a true minus sign: "−$1,200", "−£1,200". */
@@ -171,6 +172,14 @@ function SummaryTables({
 }
 
 const VIEW_OPTIONS = [{ value: 'summary', label: 'Summary' }, ...HOUSEHOLD_BREAKDOWN_VIEWS];
+
+/** Each output tab as analytics names it. */
+const VIEW_ANALYTICS_NAMES: Record<'summary' | HouseholdBreakdownView, HouseholdOutputTab> = {
+  summary: 'summary',
+  'net-income': 'net_income',
+  'earnings-variation': 'varying_earnings',
+  'marginal-tax-rates': 'marginal_tax_rates',
+};
 
 /**
  * A household's result: the change in its net income first, then the
@@ -346,7 +355,14 @@ export default function HouseholdImpactResult({
                 type="button"
                 role="tab"
                 aria-selected={selected}
-                onClick={() => setView(option.value as typeof view)}
+                onClick={() => {
+                  const next = option.value as typeof view;
+                  // Sent per tab opened: a click on the open tab sends nothing.
+                  if (next !== view) {
+                    trackHouseholdOutputViewed({ countryId, tab: VIEW_ANALYTICS_NAMES[next] });
+                  }
+                  setView(next);
+                }}
                 className="tw:cursor-pointer tw:hover:text-gray-900"
                 style={{
                   border: 'none',

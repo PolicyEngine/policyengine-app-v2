@@ -63,7 +63,7 @@ describe('VariablePickerDialog', () => {
     expect(screen.getByRole('listbox', { name: 'Featured' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('option', { name: 'Rent' }));
-    expect(onSelect).toHaveBeenCalledWith(VARIABLES[0]);
+    expect(onSelect).toHaveBeenCalledWith(VARIABLES[0], 'featured');
   });
 
   test('given a topic then its inputs list by name, part by part', async () => {
@@ -109,6 +109,35 @@ describe('VariablePickerDialog', () => {
 
     expect(screen.getByText('Related to this reform')).toBeInTheDocument();
     expect(rows()).toEqual(['Pre subsidy rent', 'Hourly wage', 'Tip income']);
+  });
+
+  test('given picks from a topic, the search and the related list then each names its source', async () => {
+    const user = userEvent.setup();
+    const { onSelect } = renderPicker({
+      suggested: new Map([
+        ['hourly_wage', 0],
+        ['tip_income', 1],
+      ]),
+    });
+
+    await user.click(screen.getByRole('option', { name: 'Hourly wage' }));
+    await user.click(screen.getAllByRole('button', { name: 'Income' })[0]);
+    await user.click(screen.getByRole('option', { name: 'Tip income' }));
+
+    expect(onSelect.mock.calls).toEqual([
+      [VARIABLES[3], 'related'],
+      [VARIABLES[1], 'topic'],
+    ]);
+  });
+
+  test('given a search pick by Enter then its source is the search', async () => {
+    const user = userEvent.setup();
+    const { onSelect } = renderPicker({ searchValue: 'tip', variables: [VARIABLES[1]] });
+
+    await user.click(screen.getByRole('textbox', { name: 'Search inputs' }));
+    await user.keyboard('{ArrowDown}{Enter}');
+
+    expect(onSelect).toHaveBeenCalledWith(VARIABLES[1], 'search');
   });
 
   test('given the reform suggests one input only then no related list shows', () => {
