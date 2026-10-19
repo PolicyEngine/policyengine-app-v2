@@ -258,6 +258,10 @@ export default function HouseholdBuilderForm({
     [allInputVariables]
   );
 
+  // A field's name as the picker lists it, where the builder is given one.
+  const named = (variable: VariableInfo): VariableInfo =>
+    variableNameOf ? { ...variable, label: variableNameOf(variable) } : variable;
+
   // Get list of people, sorted in display order (you, partner, dependents)
   const people = useMemo(() => household.getSortedPersonNames(), [household]);
 
@@ -688,7 +692,7 @@ export default function HouseholdBuilderForm({
                           return (
                             <VariableRow
                               key={fieldName}
-                              variable={variable}
+                              variable={named(variable)}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -709,7 +713,7 @@ export default function HouseholdBuilderForm({
                           return (
                             <VariableRow
                               key={varName}
-                              variable={variable}
+                              variable={named(variable)}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -817,7 +821,7 @@ export default function HouseholdBuilderForm({
                 return (
                   <VariableRow
                     key={fieldName}
-                    variable={variable}
+                    variable={named(variable)}
                     household={household}
                     metadata={metadata}
                     year={year}
@@ -840,7 +844,7 @@ export default function HouseholdBuilderForm({
                 return (
                   <VariableRow
                     key={`${entity}-${entityName}-${varName}`}
-                    variable={variable}
+                    variable={named(variable)}
                     household={household}
                     metadata={metadata}
                     year={year}

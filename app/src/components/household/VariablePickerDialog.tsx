@@ -43,7 +43,7 @@ export interface VariablePickerDialogProps {
   disabled?: boolean;
 }
 
-const MOST_USED = 9;
+const FEATURED = 9;
 const RELATED_SHOWN = 6;
 const SEARCH_SHOWN = 80;
 
@@ -80,7 +80,7 @@ export default function VariablePickerDialog({
 
   const byName = useMemo(() => new Map(variables.map((v) => [v.name, v])), [variables]);
   const tiles = useMemo(
-    () => common.filter((input) => byName.has(input.name)).slice(0, MOST_USED),
+    () => common.filter((input) => byName.has(input.name)).slice(0, FEATURED),
     [common, byName]
   );
   const related = useMemo(
@@ -265,7 +265,7 @@ export default function VariablePickerDialog({
                   <span className="tw:flex tw:shrink-0 tw:text-current" aria-hidden>
                     {group ? groupIcon?.(group) : <IconLayoutGrid size={16} />}
                   </span>
-                  <span className="tw:min-w-0 tw:truncate">{group ?? 'Most used'}</span>
+                  <span className="tw:min-w-0 tw:truncate">{group ?? 'Featured'}</span>
                 </button>
               );
             })}
@@ -280,7 +280,7 @@ export default function VariablePickerDialog({
               <div className="tw:flex tw:flex-col tw:gap-6">
                 {tiles.length > 0 && (
                   <section>
-                    <p className="tw:mb-2 tw:text-xs tw:font-medium tw:text-gray-500">Most used</p>
+                    <p className="tw:mb-2 tw:text-xs tw:font-medium tw:text-gray-500">Featured</p>
                     <div className="tw:grid tw:grid-cols-2 tw:gap-2 tw:sm:grid-cols-3">
                       {tiles.map((input) => (
                         <button
