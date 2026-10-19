@@ -152,7 +152,7 @@
      };
      ```
 
-7. **Mock LazyPlot when testing blog components**: Plotly is lazy-loaded via `LazyPlot`. Mock it in blog/notebook tests:
+7. **Mock LazyPlot when testing blog components**: Plotly is lazy-loaded via `LazyPlot` (`website/src/components/blog/LazyPlot.tsx`). Mock it in website blog/notebook tests:
 
    ```typescript
    vi.mock('@/components/blog/LazyPlot', () => ({ LazyPlot: vi.fn(() => null) }));

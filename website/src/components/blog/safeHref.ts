@@ -1,9 +1,6 @@
 /**
  * Return true if `href` can safely be rendered as the `href` attribute of an
  * `<a>` tag inside user-supplied markdown.
- *
- * Keep this in sync with app/src/components/blog/safeHref.ts until the
- * duplication tracked in #990 is removed.
  */
 const SAFE_SCHEMES = new Set(["http:", "https:", "mailto:", "tel:"]);
 

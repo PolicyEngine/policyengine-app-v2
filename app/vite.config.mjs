@@ -4,11 +4,12 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-// Determine which app to build based on VITE_APP_MODE env var
-// All dev/build scripts must explicitly set this variable
+// The Vite build holds only the calculator; the website is the Next.js app in
+// website/. All dev/build scripts must still set VITE_APP_MODE=calculator.
 const appMode = process.env.VITE_APP_MODE;
 
-// Port configuration - automatically discovered by scripts/dev-server.mjs
+// Port configuration - set by scripts/dev-server.mjs, or by
+// website/scripts/dev-server.mjs, which also passes the Next.js website's port.
 // Only set during dev server; undefined during tests and builds
 const websitePort = process.env.WEBSITE_PORT ? parseInt(process.env.WEBSITE_PORT, 10) : undefined;
 const calculatorPort = process.env.CALCULATOR_PORT
@@ -21,32 +22,27 @@ const websiteUrl = websitePort ? `http://localhost:${websitePort}` : undefined;
 const calculatorUrl = calculatorPort ? `http://localhost:${calculatorPort}` : undefined;
 
 // Validate for dev/build; skip for tests (vitest loads this config but doesn't use appMode)
-if (!process.env.VITEST && (!appMode || !['website', 'calculator'].includes(appMode))) {
+if (!process.env.VITEST && appMode !== 'calculator') {
   throw new Error(
-    `VITE_APP_MODE must be "website" or "calculator". Got: "${appMode}"\n` +
-      'Use npm scripts: dev:website, dev:calculator, build:website, build:calculator'
+    `VITE_APP_MODE must be "calculator". Got: "${appMode}"\n` +
+      'Use npm scripts: dev:calculator, build:calculator'
   );
 }
 
-function getHtmlFile() {
-  return appMode === 'calculator' ? 'calculator.html' : 'website.html';
-}
+const HTML_FILE = 'calculator.html';
 
 function getInputConfig() {
-  return { main: resolve(__dirname, getHtmlFile()) };
+  return { main: resolve(__dirname, HTML_FILE) };
 }
 
 /**
  * SPA fallback plugin for dev server.
  *
- * In production, vercel.json handles rewrites (e.g., "/(.*)" -> "/website.html").
- * Vite's dev server doesn't read vercel.json, so this plugin replicates that behavior.
- *
- * TODO: Remove this plugin when website and calculator are split into separate repos,
- * each with their own index.html and standard Vite SPA config.
+ * Serves calculator.html for every client-side route, since the entry is not
+ * index.html and Vite's dev server only falls back to index.html.
  */
 function spaFallbackPlugin() {
-  const htmlFile = getHtmlFile();
+  const htmlFile = HTML_FILE;
 
   const isStaticAsset = (url) => url.includes('.');
   const isViteInternal = (url) => url.startsWith('/@');
@@ -87,18 +83,11 @@ export default defineConfig({
   base: process.env.BASE_URL || '/',
   server: {
     // Use discovered ports in dev, defaults otherwise
-    port: appMode === 'calculator' ? (calculatorPort ?? 3001) : (websitePort ?? 3000),
+    port: calculatorPort ?? 3001,
     strictPort: true,
-    proxy: {
-      '/us/california-wealth-tax/embed': {
-        target: 'https://california-wealth-tax.vercel.app',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
   },
   define: viteDefines,
-  // Use separate cache directories for website and calculator to avoid conflicts
+  // Separate cache directory per VITE_APP_MODE (tests run without one)
   cacheDir: `node_modules/.vite-${appMode || 'default'}`,
   optimizeDeps: {
     // Force pre-bundle ESM-only packages that cause issues

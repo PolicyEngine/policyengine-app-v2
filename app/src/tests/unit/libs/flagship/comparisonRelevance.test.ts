@@ -104,6 +104,22 @@ describe('relevantComparisons', () => {
     ]);
   });
 
+  test('given a state income tax rule then that state’s income tax collections are its program', () => {
+    const DC_CTC_PATH = 'gov.states.dc.tax.income.credits.ctc.amount';
+    const collections = (geography: string) => ({ program: 'state_income_tax', geography });
+    const claims = [collections('DC'), collections('MD')];
+
+    // DC's income tax rule changes DC's income tax, in a DC or a nationwide report.
+    for (const region of ['state/dc', NATIONWIDE]) {
+      expect(
+        relevantComparisons(claims, usReform([DC_CTC_PATH], region, { [DC_CTC_PATH]: ['dc_ctc'] }))
+      ).toEqual([collections('DC')]);
+    }
+    // A federal rule, or a DC rule outside its income tax, only echoes into it.
+    expect(relevantComparisons(claims, usReform([EITC_MAX_PATH], 'state/dc'))).toEqual([]);
+    expect(relevantComparisons(claims, usReform([DC_SNAP_MINIMUM_PATH], 'state/dc'))).toEqual([]);
+  });
+
   test('given a state option of a federal program then that state and the nation show', () => {
     const reform = usReform([DC_SNAP_MINIMUM_PATH], NATIONWIDE, {
       [DC_SNAP_MINIMUM_PATH]: ['snap_min_allotment'],
