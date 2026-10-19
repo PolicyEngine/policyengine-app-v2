@@ -92,6 +92,12 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/research",
         permanent: true,
       },
+      // Legacy /methodology → the model documentation
+      {
+        source: "/:countryId/methodology",
+        destination: "/:countryId/model",
+        permanent: true,
+      },
       // OBBBA household explorer: every older slug, and the misspelled or
       // mis-prefixed links still published elsewhere, lands on
       // /us/obbba-households (suffix and query kept). These run before the

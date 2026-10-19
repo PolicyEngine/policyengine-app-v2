@@ -113,7 +113,7 @@ Reference PRs to copy from: [#1047 South Carolina 2026](https://github.com/Polic
 
 ### GitHub Pages iframes (legacy)
 
-No page embeds a GitHub Pages site any more: the 2025 year in review is now a zone (`website/src/data/appZoneRoutes.ts`). Do not add iframe embeds — use multizones. If a `policyengine.github.io` URL does appear under `app/src/pages/` or `website/src/app/`, the `check-embeds` job in `pr.yaml` and `push.yaml` checks that it returns 200.
+No route embeds a GitHub Pages site as a whole page any more: the 2025 year in review is now a zone (`website/src/data/appZoneRoutes.ts`). Do not add page-level iframe embeds — use multizones. Research articles can still embed `policyengine.github.io` charts in their markdown. The `check-embeds` job in `pr.yaml` and `push.yaml` doesn't scan articles; it checks that `policyengine.github.io` URLs under `app/src/pages/` and `website/src/app/` return 200.
 
 ### Host-only `website/vercel.json` rewrites
 

@@ -546,7 +546,7 @@ export default async function middleware(request: Request) {
 
   // State legislative tracker: proxy crawlers to Modal for SEO
   // (pre-rendered HTML with canonical policyengine.org URLs, structured data, sitemap)
-  // Regular users fall through to the catch-all rewrite → website.html → iframe
+  // Regular users fall through to the normal route
   if (url.pathname.startsWith(TRACKER_PREFIX)) {
     if (
       isCrawler(userAgent) ||

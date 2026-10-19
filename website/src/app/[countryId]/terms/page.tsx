@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 const TERMS_HISTORY_URL =
   "https://github.com/PolicyEngine/policyengine-app-v2/commits/main/website/src/app/%5BcountryId%5D/terms/page.tsx";
 // The legacy Vite copy of this page was deleted, so its history is pinned to
-// the last commit that changed it; a /commits/main/ link to a deleted path is empty.
+// the last commit that changed it; a /commits/main/ link to a deleted path
+// can show no history.
 const LEGACY_TERMS_HISTORY_URL =
   "https://github.com/PolicyEngine/policyengine-app-v2/commits/28f1cb8f79071a4bbf825678411c4e8969262ae7/app/src/pages/Terms.page.tsx";
 const V1_TERMS_HISTORY_URL =
