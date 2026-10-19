@@ -62,6 +62,9 @@ const nextConfig: NextConfig = {
         "import.meta.env.VITE_FLAGSHIP_SHELL": JSON.stringify(
           process.env.NEXT_PUBLIC_FLAGSHIP_SHELL || "",
         ),
+        "import.meta.env.VITE_FLAGSHIP_SHELL_UK": JSON.stringify(
+          process.env.NEXT_PUBLIC_FLAGSHIP_SHELL_UK || "",
+        ),
         // Sign-in and the PolicyEngine API origin. Shared code reads the
         // VITE_* names; either spelling may be set on the deployment.
         "import.meta.env.VITE_API_URL": JSON.stringify(
