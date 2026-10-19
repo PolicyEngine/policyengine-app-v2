@@ -1,6 +1,10 @@
-import { fireEvent, render, screen, within } from '@test-utils';
-import { describe, expect, test } from 'vitest';
-import { CalibrationMatchSection } from '@/components/flagship/CalibrationMatches';
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  CalibrationMatchSection,
+  useCalibrationMatches,
+} from '@/components/flagship/CalibrationMatches';
+import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
 import {
   mockCalibrationMatches,
   mockCtcLimitingMatch,
@@ -10,6 +14,18 @@ import {
   mockReportValidationSnapshot,
   NEWER_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
+
+const mockCalibrationMatchesForPaths =
+  vi.fn<(paths: string[], geography: string) => Promise<CalibrationMatches | null>>();
+
+vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/libs/flagship/calibrationMatching')>()),
+  calibrationMatchesForPaths: (paths: string[], geography: string) =>
+    mockCalibrationMatchesForPaths(paths, geography),
+}));
+
+/** A UK parameter that is also in the US dependency map. */
+const UK_ELASTICITY_PATH = 'gov.simulation.capital_gains_responses.elasticity';
 
 describe('CalibrationMatchSection', () => {
   test('given the dashboard is unreachable then an honest note renders', () => {
@@ -180,5 +196,38 @@ describe('CalibrationMatchSection', () => {
 
     expect(screen.getByText('Data release')).toBeInTheDocument();
     expect(screen.getByText(`${POPULACE_RELEASE_ID} · policyengine-us 1.808.0`)).not.toBeVisible();
+  });
+});
+
+describe('useCalibrationMatches', () => {
+  beforeEach(() => {
+    mockCalibrationMatchesForPaths.mockReset();
+    mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
+  });
+
+  test('given a UK report then no US calibration target is fetched', async () => {
+    const { result } = renderHook(() => useCalibrationMatches([UK_ELASTICITY_PATH], 'uk', 'uk'));
+
+    await waitFor(() => expect(result.current).toBeNull());
+    expect(mockCalibrationMatchesForPaths).not.toHaveBeenCalled();
+  });
+
+  test('given the country is not known yet then nothing is fetched', async () => {
+    const { result } = renderHook(() =>
+      useCalibrationMatches([UK_ELASTICITY_PATH], undefined, undefined)
+    );
+
+    await act(async () => {});
+    expect(result.current).toBeUndefined();
+    expect(mockCalibrationMatchesForPaths).not.toHaveBeenCalled();
+  });
+
+  test('given a US state report then the state targets are fetched as before', async () => {
+    const { result } = renderHook(() =>
+      useCalibrationMatches([UK_ELASTICITY_PATH], 'state/ca', 'us')
+    );
+
+    await waitFor(() => expect(result.current).toEqual(mockCalibrationMatches));
+    expect(mockCalibrationMatchesForPaths).toHaveBeenCalledWith([UK_ELASTICITY_PATH], 'CA');
   });
 });

@@ -120,10 +120,10 @@ describe('groupSearchResults', () => {
     stateCode: null,
   });
 
-  it('given results sharing a folder then they cluster under it, folders before standalones', () => {
+  it('given results sharing a folder then they cluster under it', () => {
     const groups = groupSearchResults([
-      entry('gov.a.solo', 'A → Solo'),
       entry('gov.b.ctc.amount', 'B → CTC → Amount'),
+      entry('gov.a.solo', 'A → Solo'),
       entry('gov.b.ctc.phase_out', 'B → CTC → Phase-out'),
       entry('gov.c.other', 'C → Other'),
     ]);
@@ -135,6 +135,23 @@ describe('groupSearchResults', () => {
     ]);
     expect(groups[1].entries[0].path).toBe('gov.a.solo');
     expect(groups[2].entries[0].path).toBe('gov.c.other');
+  });
+
+  it('given the best match is alone in its folder then its group still leads', () => {
+    // UK "basic rate": the income tax basic rate ranks first, then three
+    // capital gains rates that share a folder.
+    const groups = groupSearchResults([
+      entry('gov.hmrc.income_tax.rates.uk[0].rate', 'HMRC → Income Tax → Basic rate'),
+      entry('gov.hmrc.cgt.basic_rate', 'HMRC → CGT → Basic rate'),
+      entry('gov.hmrc.cgt.higher_rate', 'HMRC → CGT → Higher rate'),
+      entry('gov.hmrc.cgt.additional_rate', 'HMRC → CGT → Additional rate'),
+    ]);
+
+    expect(groups.map((group) => group.entries[0].path)).toEqual([
+      'gov.hmrc.income_tax.rates.uk[0].rate',
+      'gov.hmrc.cgt.basic_rate',
+    ]);
+    expect(groups[1].entries).toHaveLength(3);
   });
 
   it('given only singleton results then every group is standalone in rank order', () => {

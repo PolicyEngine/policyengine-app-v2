@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { isUnlimitedValue } from '@/libs/draftReform';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { formatValue } from '@/utils/parameterValues';
+import { CURRENCY_UNIT_SYMBOLS, formatValue, isPercentageUnit } from '@/utils/parameterValues';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
 interface ValueInputProps {
@@ -16,15 +16,6 @@ interface ValueInputProps {
   /** The box's name, where no labelled wrapper names it. */
   ariaLabel?: string;
 }
-
-const CURRENCY_PREFIXES: Record<string, string> = {
-  'currency-USD': '$',
-  currency_USD: '$',
-  USD: '$',
-  'currency-GBP': '£',
-  currency_GBP: '£',
-  GBP: '£',
-};
 
 /** What a value with no limit reads as, in place of "Infinity". */
 export const NO_LIMIT = 'No limit';
@@ -69,8 +60,8 @@ export function ValueDisplay({
   boxed?: boolean;
   style?: React.CSSProperties;
 }) {
-  const percentage = param.unit === '/1';
-  const prefix = CURRENCY_PREFIXES[String(param.unit)] ?? '';
+  const percentage = isPercentageUnit(param.unit);
+  const prefix = CURRENCY_UNIT_SYMBOLS[String(param.unit)] ?? '';
   const numeric = typeof value === 'number' && Number.isFinite(value);
   const digits = numeric
     ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString('en-US', {
@@ -99,8 +90,8 @@ export function ValueDisplay({
 }
 
 function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
-  const percentage = param.unit === '/1';
-  const prefix = CURRENCY_PREFIXES[String(param.unit)] ?? '';
+  const percentage = isPercentageUnit(param.unit);
+  const prefix = CURRENCY_UNIT_SYMBOLS[String(param.unit)] ?? '';
   // No limit reads as an empty box that says so; typing a number sets one.
   const unlimited = isUnlimitedValue(value);
   // While focused, the box shows what is typed, even an empty field;

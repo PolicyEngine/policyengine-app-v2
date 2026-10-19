@@ -73,15 +73,23 @@ function gapOf(target: CalibrationTargetRow): string {
   return target.relativeError === null ? '—' : percentText(target.relativeError);
 }
 
+/** Calibration diagnostics cover the US model and its targets only, for now. */
+export function hasCalibrationDiagnostics(countryId: string | null | undefined): boolean {
+  return countryId === 'us';
+}
+
 /**
  * Resolves the matches as soon as the paths and region are known — call
  * at page level so the request runs alongside the rest of the report.
- * `undefined` while loading, `null` when the map or dashboard is
- * unavailable.
+ * `undefined` while loading (or while the country is unknown), `null`
+ * when the map or dashboard is unavailable, or when the country has no
+ * calibration diagnostics: the map and targets are US-only, so another
+ * country never asks for them.
  */
 export function useCalibrationMatches(
   paths: string[],
-  region: string | null | undefined
+  region: string | null | undefined,
+  countryId: string | undefined
 ): CalibrationMatches | null | undefined {
   const [matches, setMatches] = useState<CalibrationMatches | null | undefined>(undefined);
   const pathsKey = paths.join('\n');
@@ -90,6 +98,14 @@ export function useCalibrationMatches(
   useEffect(() => {
     let cancelled = false;
     const resolvedPaths = pathsKey ? pathsKey.split('\n') : [];
+    if (!countryId) {
+      setMatches(undefined);
+      return;
+    }
+    if (!hasCalibrationDiagnostics(countryId)) {
+      setMatches(null);
+      return;
+    }
     if (resolvedPaths.length === 0) {
       setMatches({ releaseId: null, geography, modelVersion: '', reachedCount: 0, matches: [] });
       return;
@@ -102,7 +118,7 @@ export function useCalibrationMatches(
     return () => {
       cancelled = true;
     };
-  }, [pathsKey, geography]);
+  }, [pathsKey, geography, countryId]);
 
   return matches;
 }

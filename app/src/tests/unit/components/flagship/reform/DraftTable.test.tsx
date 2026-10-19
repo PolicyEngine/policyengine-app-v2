@@ -330,6 +330,17 @@ describe('DraftTable', () => {
       );
     };
 
+    test('then a click beside the start year does not open the year list', async () => {
+      const user = userEvent.setup();
+      await openSchedule(user);
+
+      // The start's row is not a label: a label spans the row and opens its list on any click.
+      const caption = screen.getByText('Applies from');
+      expect(caption.closest('label')).toBeNull();
+      await user.click(caption.parentElement!);
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+
     test('then it opens as a table, a bracket per row, each threshold beside its rate', async () => {
       const user = userEvent.setup();
       await openSchedule(user);

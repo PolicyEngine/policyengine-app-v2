@@ -123,6 +123,107 @@ describe('humanizeSegment', () => {
     expect(humanizeSegment('HEAD_OF_HOUSEHOLD')).toBe('Head of household');
     expect(humanizeSegment('Standard deduction')).toBe('Standard deduction');
   });
+
+  test.each([
+    ['NORTHERN_IRELAND', 'Northern Ireland'],
+    ['UNITED KINGDOM', 'United Kingdom'],
+    ['ENGLAND OUTSIDE LONDON', 'England outside London'],
+    ['EAST_OF_ENGLAND', 'East of England'],
+    ['YORKSHIRE_AND_THE_HUMBER', 'Yorkshire and the Humber'],
+    ['WEST_MIDLANDS', 'West Midlands'],
+    ['ARMAGH CITY BANBRIDGE AND CRAIGAVON', 'Armagh City Banbridge and Craigavon'],
+    ['NEWRY_MOURNE_AND_DOWN', 'Newry Mourne and Down'],
+    ['BELFAST', 'Belfast'],
+  ])('given the UK place %s then it reads as the proper name %s', (segment, expected) => {
+    expect(humanizeSegment(segment)).toBe(expected);
+  });
+
+  test('given a sentence-case UK label then its place names keep their capitals', () => {
+    expect(humanizeSegment('United kingdom private rental prices growth')).toBe(
+      'United Kingdom private rental prices growth'
+    );
+    expect(humanizeSegment('Northern ireland private rental prices growth')).toBe(
+      'Northern Ireland private rental prices growth'
+    );
+  });
+
+  test.each([
+    ['SINGLE', 'Single'],
+    ['SURVIVING_SPOUSE', 'Surviving spouse'],
+    ['ADAMS_COUNTY_CO', 'Adams county co'],
+    ['BALTIMORE_CITY_MD', 'Baltimore city md'],
+    ['CA', 'Ca'],
+  ])('given the US member %s then it reads as before, %s', (segment, expected) => {
+    expect(humanizeSegment(segment)).toBe(expected);
+  });
+});
+
+describe('parameterGroup for the UK', () => {
+  const UK_PARAMETERS: ParameterMetadataCollection = {
+    ...node('gov.dwp.universal_credit.standard_allowance', 'Standard allowance'),
+    ...node('gov.dwp.universal_credit.standard_allowance.amount', 'amount'),
+    ...node(
+      'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD',
+      'Universal Credit single amount (over 25)'
+    ),
+    ...node(
+      'gov.dwp.universal_credit.standard_allowance.amount.COUPLE_OLD',
+      'Universal Credit couple amount (one over 25)'
+    ),
+    ...node('gov.local_authorities.domestic_rates', 'Domestic Rates'),
+    ...node('gov.local_authorities.domestic_rates.rates', 'rates'),
+    ...node('gov.local_authorities.domestic_rates.rates.BELFAST', 'BELFAST'),
+    ...node(
+      'gov.local_authorities.domestic_rates.rates.ARMAGH_CITY_BANBRIDGE_AND_CRAIGAVON',
+      'ARMAGH CITY BANBRIDGE AND CRAIGAVON'
+    ),
+    ...node('gov.dft.bus.boardings_per_trip', 'bus boardings per trip'),
+    ...node('gov.dft.bus.boardings_per_trip.LONDON', 'LONDON'),
+    ...node('gov.dft.bus.boardings_per_trip.ENGLAND_OUTSIDE_LONDON', 'ENGLAND OUTSIDE LONDON'),
+  };
+  const UK_DRAFTABLE = new Set([
+    'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD',
+    'gov.dwp.universal_credit.standard_allowance.amount.COUPLE_OLD',
+    'gov.local_authorities.domestic_rates.rates.BELFAST',
+    'gov.local_authorities.domestic_rates.rates.ARMAGH_CITY_BANBRIDGE_AND_CRAIGAVON',
+    'gov.dft.bus.boardings_per_trip.LONDON',
+    'gov.dft.bus.boardings_per_trip.ENGLAND_OUTSIDE_LONDON',
+  ]);
+
+  test('given a group whose own label is "amount" then the setting above names it', () => {
+    const group = parameterGroup(
+      'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD',
+      UK_PARAMETERS,
+      UK_DRAFTABLE
+    );
+    expect(group?.label).toBe('Standard allowance amount');
+  });
+
+  test('given Northern Ireland councils then the group and its members read as names', () => {
+    const group = parameterGroup(
+      'gov.local_authorities.domestic_rates.rates.BELFAST',
+      UK_PARAMETERS,
+      UK_DRAFTABLE
+    );
+    expect(group?.label).toBe('Domestic Rates');
+    expect(group?.members.map((member) => member.label)).toEqual([
+      'Belfast',
+      'Armagh City Banbridge and Craigavon',
+    ]);
+  });
+
+  test('given regions then the members keep their capitals', () => {
+    const group = parameterGroup(
+      'gov.dft.bus.boardings_per_trip.LONDON',
+      UK_PARAMETERS,
+      UK_DRAFTABLE
+    );
+    expect(group?.label).toBe('Bus boardings per trip');
+    expect(group?.members.map((member) => member.label)).toEqual([
+      'London',
+      'England outside London',
+    ]);
+  });
 });
 
 describe('bracketFieldLabel', () => {

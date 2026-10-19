@@ -1,13 +1,13 @@
-import dayjs from 'dayjs';
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import type { BillChange } from '@/api/billFeed';
 import ProvisionSkeleton from '@/components/flagship/ProvisionSkeleton';
 import { CURRENT_YEAR, FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { sameParameterValue } from '@/libs/draftReform';
 import { changeNamesPath } from '@/libs/flagship/billProvisions';
-import { describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
+import { dayLabel, describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatValue } from '@/utils/parameterValues';
@@ -84,9 +84,6 @@ function provisionDates(provision: Pick<RunReportProvision, 'intervals'>): Chang
   };
 }
 
-const dateText = (date: string) => dayjs(date).format('MMM D, YYYY');
-const endText = (date: string) => (date === FOREVER ? 'No end date' : dateText(date));
-
 /**
  * What the reform changes, as a table: a row each with the change's
  * name and what it does, then its value before and after. A tracked
@@ -115,6 +112,10 @@ export default function ReportChanges({
   /** The first value column's heading: "Current law" when the results compare with something else. */
   beforeLabel?: string;
 }) {
+  const countryId = useCurrentCountry();
+  // Dates as the country writes them: "Jan 1, 2026" in the US, "1 Jan 2026" in the UK.
+  const dateText = (date: string) => dayLabel(date, countryId);
+  const endText = (date: string) => (date === FOREVER ? 'No end date' : dateText(date));
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const variables = useSelector((state: RootState) => state.metadata.variables);
   const variableLabel = (name: string) => variables?.[name]?.label ?? name;

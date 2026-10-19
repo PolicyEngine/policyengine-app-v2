@@ -4,7 +4,10 @@ import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
-import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
+import {
+  nationalPopulationLabel,
+  populationLabel,
+} from '@/components/flagship/reform/PopulationPicker';
 import AllYearsView from '@/components/flagship/report/AllYearsView';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
@@ -86,13 +89,12 @@ interface FlagshipReportPageProps {
  */
 /** When the report's run started: the details this browser saved, else the API's record. */
 function runStartedAt(...stamps: Array<string | null | undefined>): number | undefined {
-  for (const stamp of stamps) {
-    const time = stamp ? Date.parse(stamp) : Number.NaN;
-    if (Number.isFinite(time)) {
-      return time;
-    }
-  }
-  return undefined;
+  // The latest one: a report asked for again (its earlier run lost or
+  // failed) starts its clock over, not from when it was first created.
+  const times = stamps
+    .map((stamp) => (stamp ? Date.parse(stamp) : Number.NaN))
+    .filter((time) => Number.isFinite(time));
+  return times.length > 0 ? Math.max(...times) : undefined;
 }
 
 export default function FlagshipReportPage({ userReportId: propId }: FlagshipReportPageProps) {
@@ -301,8 +303,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     years: requestedYears.filter((year) => year !== reportYear),
   });
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
-  const trackRecord = useModelTrackRecord(provisionPaths);
-  const calibration = useCalibrationMatches(provisionPaths, region);
+  const trackRecord = useModelTrackRecord(provisionPaths, report?.countryId);
+  const calibration = useCalibrationMatches(provisionPaths, region, report?.countryId);
   const pin = useReportValidationSnapshot(
     unresolvable ? undefined : userReportId,
     {
@@ -505,7 +507,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       title={title}
       heading={coverTitle}
       sourceNote={meta?.sourceNote || ''}
-      populationLabel={regionLabel ?? 'Nationwide'}
+      populationLabel={regionLabel ?? nationalPopulationLabel(report?.countryId)}
       // A window asked for in Build opens running.
       budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}

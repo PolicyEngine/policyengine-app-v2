@@ -8,8 +8,10 @@ import {
   plainHouseholdError,
   readHouseholdTotal,
   runFlagshipHousehold,
+  runFlagshipHouseholdPayload,
   stateFromRegion,
 } from '@/libs/flagship/householdRun';
+import { Household } from '@/models/Household';
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
@@ -23,6 +25,10 @@ import {
   REFORM_RESULT,
   REFORM_RESULT_LOSS,
   REFORM_RESULT_WITH_REMAINDER,
+  UK_BASELINE_RESULT,
+  UK_FAMILY_BASELINE_RESULT,
+  UK_FAMILY_REFORM_RESULT,
+  UK_REFORM_RESULT,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
 
 const mockCreateHousehold = vi.fn();
@@ -235,6 +241,86 @@ describe('compareHouseholds', () => {
   });
 });
 
+describe('compareHouseholds for the UK', () => {
+  test('given an Income Tax cut then Income Tax is the one changed part', () => {
+    const impact = compareHouseholds(UK_BASELINE_RESULT, UK_REFORM_RESULT, HOUSEHOLD_YEAR, 'uk');
+
+    expect(impact.netIncome).toEqual({ baseline: 24939.55, reform: 25439.55, change: 500 });
+    expect(impact.components).toEqual([
+      {
+        id: 'income_tax',
+        label: 'Income Tax',
+        baseline: 3486,
+        reform: 2986,
+        change: -500,
+        effect: 500,
+      },
+    ]);
+    expect(impact.programs).toEqual([]);
+  });
+
+  test('given more Universal Credit and Council Tax Reduction then each benefit lists, and Benefits counts them once', () => {
+    const impact = compareHouseholds(
+      UK_FAMILY_BASELINE_RESULT,
+      UK_FAMILY_REFORM_RESULT,
+      HOUSEHOLD_YEAR,
+      'uk'
+    );
+
+    expect(impact.netIncome.change).toBeCloseTo(900);
+    // The gross bill does not move, so no "Other" makes up a double count.
+    expect(impact.components.map((line) => [line.label, Math.round(line.effect)])).toEqual([
+      ['Benefits', 900],
+    ]);
+    expect(impact.programs.map((line) => [line.label, Math.round(line.change)])).toEqual([
+      ['Universal Credit', 600],
+      ['Council Tax Reduction', 300],
+    ]);
+  });
+
+  test('given a UK result then no US line is read', () => {
+    const impact = compareHouseholds(UK_BASELINE_RESULT, UK_REFORM_RESULT, HOUSEHOLD_YEAR, 'uk');
+
+    expect(impact.components.map((line) => line.id)).not.toContain('federal_income_tax');
+  });
+
+  test('given a benefit unit total then it is read from the benefit units', () => {
+    expect(
+      readHouseholdTotal(UK_FAMILY_BASELINE_RESULT, 'benunits', 'universal_credit', HOUSEHOLD_YEAR)
+    ).toBe(19911.06);
+  });
+});
+
+describe('runFlagshipHouseholdPayload for the UK', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCreateHousehold.mockResolvedValue({ result: { household_id: CREATED_HOUSEHOLD_ID } });
+    mockFetchHouseholdCalculation.mockImplementation(
+      async (_country: string, _household: string, policyId: string) =>
+        policyId === BASELINE_POLICY_ID ? UK_BASELINE_RESULT : UK_REFORM_RESULT
+    );
+  });
+
+  test('given a UK household then it is calculated by the UK API, with UK lines', async () => {
+    const payload = Household.starter('uk', HOUSEHOLD_YEAR).toV1CreationPayload();
+
+    const run = await runFlagshipHouseholdPayload({
+      year: HOUSEHOLD_YEAR,
+      payload,
+      baselinePolicyId: BASELINE_POLICY_ID,
+      reformPolicyId: REFORM_POLICY_ID,
+    });
+
+    expect(mockCreateHousehold).toHaveBeenCalledWith(payload);
+    expect(mockFetchHouseholdCalculation.mock.calls).toEqual([
+      ['uk', String(CREATED_HOUSEHOLD_ID), BASELINE_POLICY_ID],
+      ['uk', String(CREATED_HOUSEHOLD_ID), REFORM_POLICY_ID],
+    ]);
+    expect(run.netIncome.change).toBe(500);
+    expect(run.components.map((line) => line.label)).toEqual(['Income Tax']);
+  });
+});
+
 describe('runFlagshipHousehold', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -262,6 +348,9 @@ describe('runFlagshipHousehold', () => {
     ]);
     expect(run.householdId).toBe(String(CREATED_HOUSEHOLD_ID));
     expect(run.netIncome.change).toBe(1000);
+    // Each calculated household is kept for the v2 breakdowns.
+    expect(run.baseline).toBe(BASELINE_RESULT);
+    expect(run.reform).toBe(REFORM_RESULT);
   });
 
   test('given the same policy as baseline and reform then it is calculated once', async () => {
@@ -329,6 +418,12 @@ describe('describeHouseholdInput', () => {
     );
     expect(describeHouseholdInput(defaultHouseholdInput())).toBe(
       'Single · no children · $50,000 earnings · California'
+    );
+  });
+
+  test('given the UK then amounts read in pounds', () => {
+    expect(describeHouseholdInput(MARRIED_TWO_CHILDREN, 'uk')).toContain(
+      '£60,000 and £25,000 earnings'
     );
   });
 });

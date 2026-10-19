@@ -29,6 +29,13 @@ interface PopulationPickerProps {
   onChange: (region: string | undefined) => void;
   /** The country's regions, from metadata (economy_options.region). */
   regions: PopulationRegion[];
+  /** The country, for what the whole of it reads as: "UK-wide" for the UK. */
+  countryId?: string;
+}
+
+/** What the whole country reads as: "UK-wide" for the UK, as v2 says it; "Nationwide" otherwise. */
+export function nationalPopulationLabel(countryId?: string): string {
+  return countryId === 'uk' ? 'UK-wide' : 'Nationwide';
 }
 
 const STATE_PREFIX = 'state/';
@@ -116,14 +123,18 @@ function nounList(nouns: string[]): string {
 }
 
 /**
- * What the trigger shows for a region: "Nationwide", "California",
+ * What the trigger shows for a region: "Nationwide" ("UK-wide"), "California",
  * "California's 1st", "England", "Bedford (constituency)". Before
  * metadata lists the regions — while it loads — a region still reads by
  * name (a district by its code), never as "state/ar".
  */
-export function populationLabel(value: string, regions: PopulationRegion[]): string {
+export function populationLabel(
+  value: string,
+  regions: PopulationRegion[],
+  countryId?: string
+): string {
   if (!value) {
-    return 'Nationwide';
+    return nationalPopulationLabel(countryId);
   }
   const kind = kindOf(value);
   const region = regions.find((candidate) => candidate.name === value);
@@ -146,7 +157,12 @@ export function populationLabel(value: string, regions: PopulationRegion[]): str
  * ("ca", "CA-01") and they list only once something is typed. A
  * household is coming.
  */
-export default function PopulationPicker({ value, onChange, regions }: PopulationPickerProps) {
+export default function PopulationPicker({
+  value,
+  onChange,
+  regions,
+  countryId,
+}: PopulationPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const kinds = REGION_KINDS.map((kind) => ({
@@ -154,7 +170,8 @@ export default function PopulationPicker({ value, onChange, regions }: Populatio
     members: regions.filter((region) => region.name.startsWith(kind.prefix)),
   })).filter(({ members }) => members.length > 0);
   const nouns = nounList(kinds.map(({ kind }) => kind.noun));
-  const currentLabel = populationLabel(value, regions);
+  const currentLabel = populationLabel(value, regions, countryId);
+  const nationalLabel = nationalPopulationLabel(countryId);
 
   const choose = (region: string | undefined) => {
     onChange(region);
@@ -266,11 +283,11 @@ export default function PopulationPicker({ value, onChange, regions }: Populatio
             <CommandEmpty>No matching {nouns}</CommandEmpty>
             <CommandGroup>
               <CommandItem
-                value="Nationwide"
+                value={nationalLabel}
                 onSelect={() => choose(undefined)}
                 style={{ justifyContent: 'space-between', cursor: 'pointer' }}
               >
-                <span>Nationwide</span>
+                <span>{nationalLabel}</span>
                 {check(!value)}
               </CommandItem>
               <CommandItem value="A household" disabled style={{ justifyContent: 'space-between' }}>

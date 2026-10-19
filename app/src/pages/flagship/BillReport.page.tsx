@@ -272,7 +272,7 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
     !alreadyCurrentLaw && billScoresOtherThanWriteUp(bill?.provisions ?? [], bill?.changes);
 
   const billPaths = provisions.map((p) => p.path);
-  const trackRecord = useModelTrackRecord(billPaths);
+  const trackRecord = useModelTrackRecord(billPaths, countryId);
   // Only a reader's request starts the run, and it waits for metadata so an
   // enacted bill is recognized before any run starts.
   const economy = useBillEconomy(bill, {
@@ -293,7 +293,8 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   // A state bill's data check is against that state's calibration targets.
   const calibration = useCalibrationMatches(
     billPaths,
-    bill?.state ? `state/${bill.state.toLowerCase()}` : undefined
+    bill?.state ? `state/${bill.state.toLowerCase()}` : undefined,
+    countryId
   );
 
   if (!bill) {
