@@ -3,7 +3,6 @@ import dependencyMap from '@/data/flagship/parameterDependencies.json';
 import { relevantCalibrationMatches, summarizeMatches } from '@/libs/flagship/calibrationMatching';
 import {
   normalizeCalibrationTarget,
-  ROLE_JOIN_VARIABLES,
   targetsForGeography,
   targetsForVariables,
 } from '@/libs/flagship/calibrationTargets';
@@ -26,39 +25,23 @@ import {
 const map = dependencyMap as unknown as ParameterDependencyMap;
 
 describe('normalizeCalibrationTarget', () => {
-  test('given no model variable and a role that is one then the role is the join key', () => {
+  test('given listed model variables then they are the join key', () => {
     expect(normalizeCalibrationTarget(rawDcIncomeTaxTarget)).toEqual(mockDcIncomeTaxRow);
   });
 
-  test('given no model variable and a role that is not one then nothing joins', () => {
-    const row = normalizeCalibrationTarget(rawDcPopulationTarget)!;
-
-    expect(row.policyengineVariables).toEqual([]);
-    expect(row.variablesFromRole).toBeUndefined();
-    expect(row.targetRole).toBe('population_age');
-  });
-
-  test('given listed model variables then they win over the role', () => {
+  test('given no listed model variable then nothing joins, whatever the role', () => {
     const row = normalizeCalibrationTarget({
       ...rawDcIncomeTaxTarget,
-      policyengine_variables: ['dc_income_tax'],
+      policyengine_variables: [],
     })!;
 
-    expect(row.policyengineVariables).toEqual(['dc_income_tax']);
-    expect(row.variablesFromRole).toBeUndefined();
+    expect(row.policyengineVariables).toEqual([]);
+    expect(row.targetRole).toBe('state_income_tax');
+    expect(normalizeCalibrationTarget(rawDcPopulationTarget)!.policyengineVariables).toEqual([]);
   });
 
   test('given no name then no row', () => {
     expect(normalizeCalibrationTarget({ target_role: 'state_income_tax' })).toBeNull();
-  });
-
-  test('the roles that join are model variables, not dashboard groups', () => {
-    const traced = new Set([...Object.keys(map.consumers), ...Object.values(map.consumers).flat()]);
-
-    expect([...ROLE_JOIN_VARIABLES]).toEqual(['state_income_tax']);
-    for (const role of ROLE_JOIN_VARIABLES) {
-      expect(traced.has(role)).toBe(true);
-    }
   });
 });
 
@@ -116,10 +99,8 @@ describe('report 4592: a DC CTC change in a DC report', () => {
     expect(relevant[0].worst).toBe(mockDcIncomeTaxRow);
   });
 
-  test('without the role fallback the target would not match', () => {
-    const all = summarizeMatches(reached, [
-      { ...mockDcIncomeTaxRow, policyengineVariables: [], variablesFromRole: undefined },
-    ]);
+  test('without listed model variables the target would not match', () => {
+    const all = summarizeMatches(reached, [{ ...mockDcIncomeTaxRow, policyengineVariables: [] }]);
 
     expect(all).toEqual([]);
   });

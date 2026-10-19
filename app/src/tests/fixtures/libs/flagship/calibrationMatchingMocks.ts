@@ -125,7 +125,8 @@ export const rawDcIncomeTaxTarget = {
   measure: 'total',
   target_role: 'state_income_tax',
   source_measure_id: 'collections',
-  policyengine_variables: [],
+  // The dashboard lists it since calibration-diagnostics#229.
+  policyengine_variables: ['state_income_tax'],
   breakdown: 't40',
   period: 2024,
   source_url: null,
@@ -150,14 +151,13 @@ export const rawDcPopulationTarget = {
   period: 2024,
 };
 
-/** DC's income tax collections target, normalized: it joins on its role. */
+/** DC's income tax collections target, normalized. */
 export const mockDcIncomeTaxRow: CalibrationTargetRow = {
   name: rawDcIncomeTaxTarget.name,
   source: 'state_income_tax',
   sourceLabel: 'State income tax',
   variable: 'collections',
   policyengineVariables: ['state_income_tax'],
-  variablesFromRole: true,
   measure: 'total',
   sourceMeasureId: 'collections',
   breakdown: 't40',
