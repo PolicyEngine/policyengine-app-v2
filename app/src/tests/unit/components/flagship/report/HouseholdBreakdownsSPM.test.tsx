@@ -29,8 +29,16 @@ vi.mock('@/hooks/useParameterMetadata', () => ({
 // The v2 variation pages, tested on their own: stand-ins show whether the
 // SPM methodology footnote under their chart is left out.
 vi.mock('@/pages/report-output/earnings-variation/EarningsVariationSubPage', () => ({
-  default: ({ hideSpmFootnote }: { hideSpmFootnote?: boolean }) => (
-    <div aria-label="Earnings variation">{hideSpmFootnote ? 'footnote hidden' : 'footnote'}</div>
+  default: ({
+    hideSpmFootnote,
+    alsoOfferInputs,
+  }: {
+    hideSpmFootnote?: boolean;
+    alsoOfferInputs?: string[];
+  }) => (
+    <div aria-label="Earnings variation" data-inputs={(alsoOfferInputs ?? []).join(' ')}>
+      {hideSpmFootnote ? 'footnote hidden' : 'footnote'}
+    </div>
   ),
 }));
 vi.mock('@/pages/report-output/marginal-tax-rates/MarginalTaxRatesSubPage', () => ({
@@ -50,11 +58,11 @@ const SOURCE: HouseholdBreakdownSource = {
   gains: true,
 };
 
-function renderBreakdowns(view: HouseholdBreakdownView) {
+function renderBreakdowns(view: HouseholdBreakdownView, source = SOURCE) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <HouseholdBreakdowns view={view} source={SOURCE} />
+      <HouseholdBreakdowns view={view} source={source} />
     </QueryClientProvider>
   );
 }
@@ -75,4 +83,19 @@ describe('HouseholdBreakdowns SPM methodology', () => {
       expect(await screen.findByLabelText(pageName)).toHaveTextContent(/^footnote$/);
     }
   );
+
+  test("given the household's own amount inputs then the earnings variation offers them", async () => {
+    renderBreakdowns('earnings-variation', { ...SOURCE, householdInputs: ['tip_income'] });
+
+    expect(await screen.findByLabelText('Earnings variation')).toHaveAttribute(
+      'data-inputs',
+      'tip_income'
+    );
+  });
+
+  test('given no household inputs then the earnings variation offers none, as in the report section', async () => {
+    renderBreakdowns('earnings-variation');
+
+    expect(await screen.findByLabelText('Earnings variation')).toHaveAttribute('data-inputs', '');
+  });
 });

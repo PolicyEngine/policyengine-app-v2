@@ -42,6 +42,12 @@ interface Props {
   renderLoading?: () => ReactNode;
   /** Leave out the SPM methodology footnote under the chart; shown by default. */
   hideSpmFootnote?: boolean;
+  /**
+   * Inputs the household itself sets, offered beside the calculated
+   * variables (issue #1096): tip income, for a household with tips. Other
+   * inputs stay out, as an input does not move with earnings.
+   */
+  alsoOfferInputs?: string[];
 }
 
 /**
@@ -60,6 +66,7 @@ export default function EarningsVariationSubPage({
   reformVariation: providedReformVariation = null,
   renderLoading,
   hideSpmFootnote = false,
+  alsoOfferInputs,
 }: Props) {
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -136,7 +143,9 @@ export default function EarningsVariationSubPage({
   const resolvedBaselineVariation = providedBaselineVariation ?? baselineVariation ?? null;
   const resolvedReformVariation = providedReformVariation ?? reformVariation ?? null;
 
-  // Build variable options (only non-input variables with array values)
+  // Build variable options: calculated variables with array values, and
+  // any of the household's own inputs it was asked to offer.
+  const offeredInputs = useMemo(() => new Set(alsoOfferInputs ?? []), [alsoOfferInputs]);
   const variableOptions = useMemo(() => {
     if (!reportYear || !resolvedBaselineVariation?.householdData?.people) {
       return [];
@@ -145,8 +154,12 @@ export default function EarningsVariationSubPage({
     return Object.keys(metadata.variables)
       .filter((varName) => {
         const variable = metadata.variables[varName];
-        // Exclude input variables and marginal_tax_rate (has its own page)
-        if (!variable || variable.isInputVariable || varName === 'marginal_tax_rate') {
+        // Exclude other inputs and marginal_tax_rate (has its own page)
+        if (
+          !variable ||
+          (variable.isInputVariable && !offeredInputs.has(varName)) ||
+          varName === 'marginal_tax_rate'
+        ) {
           return false;
         }
 
@@ -164,7 +177,7 @@ export default function EarningsVariationSubPage({
         value: varName,
         label: metadata.variables[varName]?.label || varName,
       }));
-  }, [metadata, normalizedReportYear, reportYear, resolvedBaselineVariation]);
+  }, [metadata, normalizedReportYear, offeredInputs, reportYear, resolvedBaselineVariation]);
   const sortedVariableOptions = useMemo(
     () =>
       [...variableOptions].sort(
