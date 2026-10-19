@@ -61,26 +61,21 @@ async function findAvailablePort(start) {
 }
 
 async function main() {
-  // Find two available ports
-  const websitePort = await findAvailablePort(3000);
-  const calculatorPort = await findAvailablePort(websitePort + 1);
+  // The website is the Next.js app in website/; to run it beside the Vite
+  // calculator, use website/scripts/dev-server.mjs instead.
+  const calculatorPort = await findAvailablePort(3001);
 
-  console.log(`\n  Dev servers: Website :${websitePort}, Calculator :${calculatorPort}\n`);
+  console.log(`\n  Dev server: Calculator :${calculatorPort}\n`);
 
-  // Start both servers with discovered ports
   const env = {
     ...process.env,
-    WEBSITE_PORT: String(websitePort),
     CALCULATOR_PORT: String(calculatorPort),
   };
 
-  // Use a single command string for proper shell parsing
-  const command = `npx concurrently --names website,calc --prefix-colors blue,green "npm run dev:website" "npm run dev:calculator"`;
-
-  const child = spawn(command, [], { env, stdio: 'inherit', shell: true });
+  const child = spawn('bun run dev:calculator', [], { env, stdio: 'inherit', shell: true });
 
   child.on('error', (err) => {
-    console.error('Failed to start dev servers:', err);
+    console.error('Failed to start dev server:', err);
     process.exit(1);
   });
 
