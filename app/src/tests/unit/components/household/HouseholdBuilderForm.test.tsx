@@ -121,6 +121,61 @@ describe('rankVariablesBySearch', () => {
     expect(optionsIn().sort()).toEqual(['Childcare', 'Rent']);
   });
 
+  test('given the columns layout then the number of children steps up and down and takes no decimals', () => {
+    const onNumChildrenChange = vi.fn();
+    renderForm({ layout: 'columns', numChildren: 2, onNumChildrenChange });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Increase number of children' }));
+    expect(onNumChildrenChange).toHaveBeenLastCalledWith(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease number of children' }));
+    expect(onNumChildrenChange).toHaveBeenLastCalledWith(1);
+
+    const input = screen.getByLabelText('Number of children');
+    fireEvent.change(input, { target: { value: '2.5' } });
+    expect(input).toHaveValue('25');
+  });
+
+  test('given the columns layout then a whole-number input steps and drops a decimal point', () => {
+    const onChange = vi.fn();
+    const metadata = {
+      entities: {
+        person: { plural: 'people', label: 'Person', is_person: true },
+        household: { plural: 'households', label: 'Household' },
+      },
+      variables: {
+        num_bedrooms: {
+          name: 'num_bedrooms',
+          label: 'Number of bedrooms',
+          entity: 'household',
+          isInputVariable: true,
+          valueType: 'int',
+          defaultValue: 0,
+        },
+      },
+    };
+    const household = Household.starter('us', YEAR).withSPM({ geography_kind: 'national' });
+    renderForm({
+      layout: 'columns',
+      metadata,
+      household,
+      basicNonPersonFields: ['num_bedrooms'],
+      onChange,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Increase Number of bedrooms' }));
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    const input = screen.getByPlaceholderText(/^Enter/);
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '3.7' } });
+    expect(input).toHaveValue('37');
+  });
+
+  test('given the stacked layout then whole-number inputs keep no step buttons, as before', () => {
+    renderForm();
+    expect(screen.queryByRole('button', { name: /^Increase / })).not.toBeInTheDocument();
+  });
+
   test('given a word then whole words lead, and parts of words follow', () => {
     expect(names(rankVariablesBySearch(VARIABLES, 'rent'))).toEqual([
       'rent',

@@ -6,7 +6,8 @@
  * Main research/blog listing page with filtering and search.
  * Displays both blog posts and apps with displayWithResearch: true.
  *
- * Ported from app/src/pages/Research.page.tsx with minimal changes:
+ * Ported from the legacy Vite app's research page (since deleted) with minimal
+ * changes:
  *   - react-router Link -> next/link
  *   - design tokens -> website token alias
  *   - useCurrentCountry() -> countryId prop

@@ -13,69 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  guard-app-dir:
-    name: Guard app/ directory
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check for website-related changes to app/
-        run: |
-          # Get files changed in this PR (vs base branch)
-          ALL_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-
-          # Website-specific paths in app/ that have been ported to website/
-          # and should no longer be modified in app/.
-          # Calculator components (report builder, household, charts, etc.) are
-          # still legitimately modified in app/ since calculator-app/ imports from there.
-          # Note: HomeHeader.tsx and homeHeader/ were ported to website but
-          # are still actively used by the calculator-app (StandardLayout →
-          # HomeHeader). They are now de facto calculator components, so
-          # they're intentionally NOT in this guard list.
-          WEBSITE_BLOCKED=$(echo "$ALL_CHANGED" | grep -E \
-            -e '^app/src/components/home/' \
-            -e '^app/src/components/shared/static/' \
-            -e '^app/src/components/Footer\.tsx' \
-            -e '^app/src/components/FooterSubscribe\.tsx' \
-            -e '^app/src/components/blog/BlogPostCard\.tsx' \
-            -e '^app/src/components/blog/BlogPostGrid\.tsx' \
-            -e '^app/src/components/blog/ResearchFilters\.tsx' \
-            -e '^app/src/components/blog/blogStyles\.ts' \
-            -e '^app/src/pages/Home\.page\.tsx' \
-            -e '^app/src/pages/Research\.page\.tsx' \
-            -e '^app/src/pages/Blog\.page\.tsx' \
-            -e '^app/src/pages/Team\.page\.tsx' \
-            -e '^app/src/pages/Supporters\.page\.tsx' \
-            -e '^app/src/pages/Donate\.page\.tsx' \
-            -e '^app/src/pages/Privacy\.page\.tsx' \
-            -e '^app/src/pages/Terms\.page\.tsx' \
-            -e '^app/src/pages/Brand' \
-            -e '^app/src/pages/Citations\.page\.tsx' \
-            -e '^app/src/pages/AppPage\.tsx' \
-          || true)
-
-          BLOCKED="$WEBSITE_BLOCKED"
-          BLOCKED=$(echo "$BLOCKED" | sed '/^$/d')
-
-          if [ -n "$BLOCKED" ]; then
-            echo "::error::⚠️ Migration guard: the following files have been ported to the Next.js website."
-            echo "This check is temporary — it will be removed after the Next.js cutover (#817)."
-            echo ""
-            echo "Files flagged:"
-            echo "$BLOCKED"
-            echo ""
-            echo "These files now have Next.js equivalents in website/. Make your changes there instead."
-            echo "Calculator components in app/ (report builder, household, charts, etc.) are fine to modify."
-            echo ""
-            echo "  - Website pages/components → website/src/"
-            echo "  - app/src/data/*, app/public/assets/* → OK (shared data)"
-            echo ""
-            exit 1
-          fi
-
   lint:
     name: Lint and format
     runs-on: ubuntu-latest
@@ -145,23 +82,6 @@ jobs:
       - name: Run website tests
         working-directory: ./website
         run: bun run test
-
-  check-markdown-drift:
-    name: Check MarkdownFormatter drift
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Verify MarkdownFormatter copies have matching top-level API
-        run: bunx tsx scripts/check-markdown-drift.ts
 
   check-embeds:
     name: Check embedded site URLs

@@ -238,14 +238,16 @@ describe('ReportValidation', () => {
       countryId: 'uk',
       region: 'uk',
       paths: ['gov.simulation.capital_gains_responses.elasticity'],
-      // Even if a caller hands over US results, a UK report does not show them.
-      calibration: mockCalibrationMatches,
+      // Even if a caller hands over US results, a UK report does not show them,
+      // nor a US state's overall data fit.
+      calibration: { ...mockCalibrationMatches, geography: 'DC' },
     });
 
     const calibration = card('Data calibration');
     expect(
       within(calibration).getByText('Calibration diagnostics are available for US reports for now.')
     ).toBeInTheDocument();
+    expect(within(calibration).queryByText(/data fit/)).not.toBeInTheDocument();
     expect(within(calibration).queryByRole('table')).not.toBeInTheDocument();
     expect(within(calibration).queryByRole('link')).not.toBeInTheDocument();
     expect(
