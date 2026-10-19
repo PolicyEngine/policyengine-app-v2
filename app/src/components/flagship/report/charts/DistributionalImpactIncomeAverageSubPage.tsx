@@ -30,7 +30,10 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import { tooltipText } from '@/libs/flagship/tooltipText';
-import { getDecileAverageCsvRows } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
+import {
+  getDecileAverageCsvRows,
+  type DecileBreakdown,
+} from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
@@ -46,6 +49,8 @@ interface Props {
   title?: string;
   fillHeight?: boolean;
   compact?: boolean;
+  /** Households ranked by wealth rather than income: the UK's wealth deciles. */
+  breakdown?: DecileBreakdown;
 }
 
 export default function DistributionalImpactIncomeAverageSubPage({
@@ -54,6 +59,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
   title,
   fillHeight = false,
   compact = false,
+  breakdown = 'income',
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -62,7 +68,8 @@ export default function DistributionalImpactIncomeAverageSubPage({
   const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data - object with keys "1", "2", ..., "10"
-  const decileAverage = output.decile.average;
+  const wealth = breakdown === 'wealth';
+  const decileAverage = (wealth ? output.wealth_decile?.average : output.decile.average) ?? {};
 
   // Convert to arrays for plotting
   const xArray = Object.keys(decileAverage);
@@ -85,7 +92,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
   const hoverMessage = (x: string, y: number) =>
     absoluteChangeMessage(
       'This reform',
-      `the income of households in the ${ordinal(Number(x))} decile`,
+      `the income of households in the ${ordinal(Number(x))}${wealth ? ' wealth' : ''} decile`,
       y,
       0,
       formatCur
@@ -143,7 +150,12 @@ export default function DistributionalImpactIncomeAverageSubPage({
   const yAxis = getYAxisLayout(yTicks, !!axisTitle, yTickFormatter);
 
   // Description text
-  const description = (
+  const description = wealth ? (
+    <Text size="sm" c="dimmed">
+      PolicyEngine reports net income as the income a household takes home in a year, after taxes
+      and transfers. Wealth deciles contain an equal number of people (ranked by wealth).
+    </Text>
+  ) : (
     <Text size="sm" c="dimmed">
       PolicyEngine sorts households into ten equally-populated groups according to their baseline{' '}
       {countryId === 'uk' ? 'equivalised' : 'equivalized'} household net income.
@@ -155,7 +167,12 @@ export default function DistributionalImpactIncomeAverageSubPage({
       {probe}
       <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
-        <Label value="Income decile" position="bottom" offset={10} style={RECHARTS_FONT_STYLE} />
+        <Label
+          value={wealth ? 'Wealth decile' : 'Income decile'}
+          position="bottom"
+          offset={10}
+          style={RECHARTS_FONT_STYLE}
+        />
       </XAxis>
       <YAxis
         ticks={yTicks}
@@ -208,9 +225,9 @@ export default function DistributionalImpactIncomeAverageSubPage({
   return (
     <ChartContainer
       title={title ?? getChartTitle()}
-      downloadFilename="distributional-impact-income-average.svg"
-      csvFilename="distributional-impact-income-average.csv"
-      csvData={getDecileAverageCsvRows(output)}
+      downloadFilename={`distributional-impact-${breakdown}-average.svg`}
+      csvFilename={`distributional-impact-${breakdown}-average.csv`}
+      csvData={getDecileAverageCsvRows(output, breakdown)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

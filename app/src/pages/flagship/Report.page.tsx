@@ -4,7 +4,10 @@ import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
-import { populationLabel } from '@/components/flagship/reform/PopulationPicker';
+import {
+  nationalPopulationLabel,
+  populationLabel,
+} from '@/components/flagship/reform/PopulationPicker';
 import AllYearsView from '@/components/flagship/report/AllYearsView';
 import ReportCalculationError from '@/components/flagship/report/ReportCalculationError';
 import ReportDetailsError from '@/components/flagship/report/ReportDetailsError';
@@ -504,7 +507,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       title={title}
       heading={coverTitle}
       sourceNote={meta?.sourceNote || ''}
-      populationLabel={regionLabel ?? 'Nationwide'}
+      populationLabel={regionLabel ?? nationalPopulationLabel(report?.countryId)}
       // A window asked for in Build opens running.
       budgetWindow={meta?.budgetWindow}
       provisions={meta?.provisions ?? []}

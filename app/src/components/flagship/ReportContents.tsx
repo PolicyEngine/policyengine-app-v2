@@ -109,19 +109,38 @@ export function reportMetrics(
   ];
 }
 
+/** The districts card's words; a UK report's reads constituencies and local authorities. */
+export interface DistrictsCardCopy {
+  title: string;
+  action: string;
+  preview: string;
+}
+
+const DISTRICTS_CARD_COPY: DistrictsCardCopy = {
+  title: 'District impacts',
+  action: 'Explore districts',
+  preview: 'Compare income changes across districts on a map.',
+};
+
 export default function ReportContents({
   metrics,
   metricsNote,
   districtAvailable,
+  districtsCopy = DISTRICTS_CARD_COPY,
+  showDistricts = true,
   onOpen,
 }: {
   metrics: ReportMetric[];
   /** Shown under the headline numbers, e.g. that they are stored estimates. */
   metricsNote?: React.ReactNode;
   districtAvailable: boolean;
+  /** The districts card's words, when the country names its areas otherwise. */
+  districtsCopy?: DistrictsCardCopy;
+  /** Off, the overview has no districts card: the report has no districts section. */
+  showDistricts?: boolean;
   onOpen: (section: string) => void;
 }) {
-  const sections = [
+  const allSections = [
     {
       id: 'economy',
       title: 'Economic impacts',
@@ -131,11 +150,11 @@ export default function ReportContents({
     },
     {
       id: 'districts',
-      title: 'District impacts',
+      title: districtsCopy.title,
       icon: IconMap2,
-      action: 'Explore districts',
+      action: districtsCopy.action,
       preview: districtAvailable
-        ? 'Compare income changes across districts on a map.'
+        ? districtsCopy.preview
         : 'District-level impacts are not available for this report’s scope.',
     },
     {
@@ -153,6 +172,9 @@ export default function ReportContents({
       preview: 'Examine the data fit and evidence behind the estimates.',
     },
   ];
+  const sections = showDistricts
+    ? allSections
+    : allSections.filter((section) => section.id !== 'districts');
   return (
     <Stack style={{ gap: spacing.md }}>
       <div

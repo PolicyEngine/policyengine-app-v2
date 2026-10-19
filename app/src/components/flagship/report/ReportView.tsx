@@ -10,10 +10,12 @@ import HouseholdImpactSection from '@/components/flagship/report/household/House
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
+import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
   leadsWithStateRevenue,
   reportMetrics,
+  type DistrictsCardCopy,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
 import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
@@ -23,8 +25,8 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
 import type { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
-import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
+import { isUKLocalLevelRegion } from '@/utils/geographyUtils';
 import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
 
 const SECTIONS = [
@@ -34,6 +36,15 @@ const SECTIONS = [
   { id: 'household', label: 'Household' },
   { id: 'validation', label: 'Validation' },
 ];
+
+/** A UK report's districts are its constituencies and local authorities. */
+const UK_DISTRICTS_TAB_LABEL = 'Local areas';
+const UK_DISTRICTS_HEADING = 'Constituencies and local authorities';
+const UK_DISTRICTS_CARD_COPY: DistrictsCardCopy = {
+  title: 'Local area impacts',
+  action: 'Explore local areas',
+  preview: 'Compare income changes across constituencies and local authorities on a map.',
+};
 
 function SectionHeading({ id, title }: { id: string; title: string }) {
   return (
@@ -206,6 +217,15 @@ export default function ReportView({
     year,
     region,
   });
+  // A UK report on one constituency or local authority has no maps of
+  // them, as in v2: no tab, no overview card.
+  const isUK = countryId === 'uk';
+  const showDistrictsSection = !(isUK && isUKLocalLevelRegion(region));
+  const sections = SECTIONS.filter(
+    (section) => section.id !== 'districts' || showDistrictsSection
+  ).map((section) =>
+    isUK && section.id === 'districts' ? { ...section, label: UK_DISTRICTS_TAB_LABEL } : section
+  );
   const metrics = output
     ? reportMetrics(output, countryId, {
         stateRevenue: leadsWithStateRevenue(region, provisions),
@@ -296,7 +316,7 @@ export default function ReportView({
                     paddingBottom: spacing.sm,
                   }}
                 >
-                  {SECTIONS.map((section) => (
+                  {sections.map((section) => (
                     <TabsTrigger
                       key={section.id}
                       value={section.id}
@@ -332,7 +352,9 @@ export default function ReportView({
                     <ReportContents
                       metrics={metrics}
                       metricsNote={output ? undefined : storedMetricsNote}
-                      districtAvailable={districtScope || countryId === 'uk'}
+                      districtAvailable={districtScope || isUK}
+                      districtsCopy={isUK ? UK_DISTRICTS_CARD_COPY : undefined}
+                      showDistricts={showDistrictsSection}
                       onOpen={openReportSection}
                     />
                     {/* A window asked for in Build: its progress, then its total, here too. */}
@@ -365,33 +387,35 @@ export default function ReportView({
                     )}
                   </Stack>
                 )}
-                {tabPanel(
-                  'districts',
-                  <Stack style={{ gap: spacing.md }}>
-                    <SectionHeading id="districts" title="Districts" />
-                    {!output && districtsPending}
-                    {output && showUSDistricts && (
-                      <CongressionalDistrictDataProvider
-                        reformPolicyId={reformPolicyId ?? ''}
-                        baselinePolicyId={baselinePolicyId ?? ''}
-                        year={year}
-                        region={region}
-                      >
-                        <DistrictImpactCard output={output} />
-                      </CongressionalDistrictDataProvider>
-                    )}
-                    {output && !showUSDistricts && countryId === 'uk' && (
-                      <ConstituencySubPage output={output} />
-                    )}
-                    {output && !showUSDistricts && countryId !== 'uk' && (
-                      <Text
-                        style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
-                      >
-                        District-level impacts are not available for this report's scope.
-                      </Text>
-                    )}
-                  </Stack>
-                )}
+                {showDistrictsSection &&
+                  tabPanel(
+                    'districts',
+                    <Stack style={{ gap: spacing.md }}>
+                      <SectionHeading
+                        id="districts"
+                        title={isUK ? UK_DISTRICTS_HEADING : 'Districts'}
+                      />
+                      {!output && districtsPending}
+                      {output && showUSDistricts && (
+                        <CongressionalDistrictDataProvider
+                          reformPolicyId={reformPolicyId ?? ''}
+                          baselinePolicyId={baselinePolicyId ?? ''}
+                          year={year}
+                          region={region}
+                        >
+                          <DistrictImpactCard output={output} />
+                        </CongressionalDistrictDataProvider>
+                      )}
+                      {output && !showUSDistricts && isUK && <UKLocalAreaMaps output={output} />}
+                      {output && !showUSDistricts && !isUK && (
+                        <Text
+                          style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                        >
+                          District-level impacts are not available for this report's scope.
+                        </Text>
+                      )}
+                    </Stack>
+                  )}
                 {tabPanel(
                   'household',
                   <Stack style={{ gap: spacing.md }}>

@@ -13,6 +13,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
   WINNERS_LOSERS_CATEGORIES as CATEGORIES,
   getWinnersLosersCsvRows,
+  type DecileBreakdown,
 } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
 import { CHART_EXPORT_KEEP, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
@@ -24,6 +25,8 @@ interface Props {
   chartHeight?: number;
   fillHeight?: boolean;
   compact?: boolean;
+  /** Households ranked by wealth rather than income: the UK's wealth deciles. */
+  breakdown?: DecileBreakdown;
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -90,25 +93,29 @@ export default function WinnersLosersIncomeDecileSubPage({
   chartHeight: _chartHeight,
   fillHeight = false,
   compact = false,
+  breakdown = 'income',
 }: Props) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // Extract data
-  const deciles = output.intra_decile.deciles;
-  const all = output.intra_decile.all;
+  const wealth = breakdown === 'wealth';
+  // A result without wealth deciles reads as no change rather than failing.
+  const intraDecile = wealth ? output.intra_wealth_decile : output.intra_decile;
+  const deciles = (intraDecile?.deciles ?? {}) as Partial<Record<string, number[]>>;
+  const all = (intraDecile?.all ?? {}) as Partial<Record<string, number>>;
   const decileNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   // Transform data for Recharts
   const decileData = decileNumbers.map((decile) => ({
     name: decile.toString(),
-    ...Object.fromEntries(CATEGORIES.map((cat) => [cat, deciles[cat][decile - 1]])),
+    ...Object.fromEntries(CATEGORIES.map((cat) => [cat, deciles[cat]?.[decile - 1] ?? 0])),
   }));
 
   const allData = [
     {
       name: 'All',
-      ...Object.fromEntries(CATEGORIES.map((cat) => [cat, all[cat]])),
+      ...Object.fromEntries(CATEGORIES.map((cat) => [cat, all[cat] ?? 0])),
     },
   ];
 
@@ -119,8 +126,9 @@ export default function WinnersLosersIncomeDecileSubPage({
 
   // Generate chart title
   const getChartTitle = () => {
-    const totalAhead = all['Gain more than 5%'] + all['Gain less than 5%'];
-    const totalBehind = all['Lose more than 5%'] + all['Lose less than 5%'];
+    const share = (cat: string) => all[cat] ?? 0;
+    const totalAhead = share('Gain more than 5%') + share('Gain less than 5%');
+    const totalBehind = share('Lose more than 5%') + share('Lose less than 5%');
     const percent = (n: number) => formatPercent(n, countryId, { maximumFractionDigits: 0 });
     const totalAheadTerm = percent(totalAhead);
     const totalBehindTerm = percent(totalBehind);
@@ -141,7 +149,12 @@ export default function WinnersLosersIncomeDecileSubPage({
   };
 
   // Description text
-  const description = (
+  const description = wealth ? (
+    <Text size="sm" c="dimmed">
+      The chart shows the distribution of winners and losers from the reform, grouped by wealth
+      decile. Wealth deciles contain an equal number of people (ranked by wealth).
+    </Text>
+  ) : (
     <Text size="sm" c="dimmed">
       PolicyEngine sorts households into ten equally-populated groups according to their baseline{' '}
       {countryId === 'uk' ? 'equivalised' : 'equivalized'} household net income.
@@ -222,7 +235,7 @@ export default function WinnersLosersIncomeDecileSubPage({
           interval={0}
         >
           <Label
-            value="Income decile"
+            value={wealth ? 'Wealth decile' : 'Income decile'}
             angle={-90}
             position="insideLeft"
             style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
@@ -317,9 +330,9 @@ export default function WinnersLosersIncomeDecileSubPage({
   return (
     <ChartContainer
       title={getChartTitle()}
-      downloadFilename="winners-losers-income-decile.svg"
-      csvFilename="winners-losers-income-decile.csv"
-      csvData={getWinnersLosersCsvRows(output)}
+      downloadFilename={`winners-losers-${breakdown}-decile.svg`}
+      csvFilename={`winners-losers-${breakdown}-decile.csv`}
+      csvData={getWinnersLosersCsvRows(output, breakdown)}
     >
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
