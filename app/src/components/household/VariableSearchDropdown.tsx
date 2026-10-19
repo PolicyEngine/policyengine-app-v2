@@ -418,21 +418,17 @@ export default function VariableSearchDropdown({
                                     ? 'tw:bg-primary-50'
                                     : 'tw:hover:bg-gray-50'
                                 )}
+                                // Pointing at a row shows its description below the list.
+                                onMouseEnter={() => setSelectedIndex(index)}
                                 onMouseDown={(e) => {
                                   e.preventDefault();
                                   handleSelect(variable);
                                 }}
                               >
-                                <div className="tw:min-w-0 tw:flex-1">
-                                  <p className="tw:truncate tw:text-sm tw:text-gray-900">
-                                    {sentenceCaseLabel(variable.label)}
-                                  </p>
-                                  {variable.documentation && (
-                                    <p className="tw:line-clamp-1 tw:text-xs tw:text-gray-500">
-                                      {variable.documentation}
-                                    </p>
-                                  )}
-                                </div>
+                                {/* A name only: the description shows once, below the list. */}
+                                <p className="tw:min-w-0 tw:flex-1 tw:truncate tw:text-sm tw:text-gray-900">
+                                  {sentenceCaseLabel(variable.label)}
+                                </p>
                                 {entityHint?.show && (
                                   <span className="tw:shrink-0 tw:rounded tw:bg-gray-100 tw:px-1.5 tw:py-0.5 tw:text-[11px] tw:text-gray-600">
                                     {entityHint.label}
@@ -460,6 +456,26 @@ export default function VariableSearchDropdown({
                 )}
               </div>
             </div>
+          </div>
+          {/* What the pointed-at (or arrowed-to) variable is, in one place. */}
+          <div
+            aria-live="polite"
+            className="tw:h-20 tw:shrink-0 tw:border-t tw:border-gray-100 tw:bg-gray-50 tw:px-4 tw:py-3"
+          >
+            {displayVariables[selectedIndex] ? (
+              <>
+                <p className="tw:truncate tw:text-sm tw:font-medium tw:text-gray-900">
+                  {sentenceCaseLabel(displayVariables[selectedIndex].label)}
+                </p>
+                <p className="tw:line-clamp-2 tw:text-xs tw:text-gray-600">
+                  {displayVariables[selectedIndex].documentation || 'No description in the model.'}
+                </p>
+              </>
+            ) : (
+              <p className="tw:text-xs tw:text-gray-500">
+                Point to a variable to see what it means.
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>

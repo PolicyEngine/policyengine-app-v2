@@ -114,4 +114,29 @@ describe('VariableSearchDropdown', () => {
         .map((option) => option.textContent)
     ).toEqual(['Rent']);
   });
+
+  test('given a grouped list then rows show names, and the pointed-at one is described below', async () => {
+    const user = userEvent.setup();
+    const described = [
+      { ...VARIABLES[2], documentation: 'Rent paid for the home' },
+      VARIABLES[0],
+    ] as VariableInfo[];
+    render(
+      <VariableSearchDropdown
+        searchValue=""
+        onSearchChange={vi.fn()}
+        onFocusChange={vi.fn()}
+        filteredVariables={described}
+        onSelect={vi.fn()}
+        groupOf={() => 'Housing'}
+      />
+    );
+
+    expect(screen.queryByText('Rent paid for the home')).not.toBeInTheDocument();
+    expect(screen.getByText('Point to a variable to see what it means.')).toBeInTheDocument();
+
+    await user.hover(screen.getByRole('option', { name: 'Rent' }));
+
+    expect(screen.getByText('Rent paid for the home')).toBeInTheDocument();
+  });
 });
