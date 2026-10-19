@@ -64,15 +64,25 @@ export class ReformNotFoundError extends Error {
 export class LocalStorageReformStore implements ReformStore {
   private readonly STORAGE_KEY = 'reforms';
   private readonly materializePolicy: MaterializeReformPolicy;
+  private readonly getParameterMetadata: NonNullable<ApiReformStoreOptions['getParameterMetadata']>;
 
-  constructor(options: Pick<ApiReformStoreOptions, 'materializePolicy'> = {}) {
+  constructor(
+    options: Pick<ApiReformStoreOptions, 'materializePolicy' | 'getParameterMetadata'> = {}
+  ) {
     this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
+    this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
   }
 
   async create(reform: NewReform): Promise<Reform> {
     const policyId = isLegacyId(reform.policyId)
       ? String(reform.policyId)
-      : String(await this.materializePolicy(reform.countryId, reform.parameters));
+      : String(
+          await this.materializePolicy(
+            reform.countryId,
+            reform.parameters,
+            this.getParameterMetadata() ?? undefined
+          )
+        );
 
     // Generate a unique ID for local storage
     // Format: "rf-[short-timestamp][random]"
@@ -112,7 +122,13 @@ export class LocalStorageReformStore implements ReformStore {
     // Changed parameters are a new v1 policy; a rename keeps the policy.
     const policyId =
       updates.parameters !== undefined
-        ? String(await this.materializePolicy(existing.countryId, updates.parameters))
+        ? String(
+            await this.materializePolicy(
+              existing.countryId,
+              updates.parameters,
+              this.getParameterMetadata() ?? undefined
+            )
+          )
         : (updates.policyId ?? existing.policyId);
 
     // Read again after the request, so a change made meanwhile is kept.
@@ -215,11 +231,16 @@ function provenanceFromWire(wire: ProvenanceWire | null): ReformProvenance {
 /** Materializes parameters as an unlabelled v1 policy; returns its ID. */
 export type MaterializeReformPolicy = (
   countryId: string,
-  parameters: Parameter[]
+  parameters: Parameter[],
+  /** The model's parameters, to type each value as a run types it. */
+  metadata?: ParameterMetadataCollection
 ) => Promise<number>;
 
 export interface ApiReformStoreOptions {
-  /** Current parameter metadata, for coercing values read back from v1 policies. */
+  /**
+   * Current parameter metadata: it types the values a saved policy sends,
+   * as a run sends them, and coerces values read back from v1 policies.
+   */
   getParameterMetadata?: () => ParameterMetadataCollection | null | undefined;
   materializePolicy?: MaterializeReformPolicy;
   /** Reads a v1 policy's parameter map. */
@@ -229,10 +250,14 @@ export interface ApiReformStoreOptions {
 /**
  * The v1 policy for a set of parameters, via the run bridge's policy
  * creation. The reform's name stays on its user record, never the policy.
+ * With the metadata, each value is typed as a run types it ("15000" →
+ * 15000, Infinity as the API spells it), so the saved policy and the
+ * run's are the same one.
  */
 export function materializeReformPolicy(
   countryId: string,
-  parameters: Parameter[]
+  parameters: Parameter[],
+  metadata?: ParameterMetadataCollection
 ): Promise<number> {
   return createReformPolicy(
     countryId as Reform['countryId'],
@@ -240,7 +265,8 @@ export function materializeReformPolicy(
       path: parameter.name,
       value: parameter.values[0]?.value,
       intervals: parameter.values,
-    }))
+    })),
+    metadata
   );
 }
 
@@ -279,7 +305,11 @@ export class ApiReformStore implements ReformStore {
     const countryId = this.routes.writeCountry(reform.countryId);
     const legacyPolicyId = isLegacyId(reform.policyId)
       ? Number(reform.policyId)
-      : await this.materializePolicy(countryId, reform.parameters);
+      : await this.materializePolicy(
+          countryId,
+          reform.parameters,
+          this.getParameterMetadata() ?? undefined
+        );
     return {
       country_id: countryId,
       legacy_policy_id: legacyPolicyId,
@@ -334,7 +364,8 @@ export class ApiReformStore implements ReformStore {
     if (updates.parameters !== undefined) {
       body.legacy_policy_id = await this.materializePolicy(
         this.context.countryId,
-        updates.parameters
+        updates.parameters,
+        this.getParameterMetadata() ?? undefined
       );
     } else if (updates.policyId !== undefined && isLegacyId(updates.policyId)) {
       body.legacy_policy_id = Number(updates.policyId);

@@ -9,6 +9,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { dayLabel } from '@/libs/flagship/draftLabels';
 
 export interface DatePreset {
   label: string;
@@ -34,8 +36,9 @@ interface PolicyDatePickerProps {
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTHS = Array.from({ length: 12 }, (_, month) => dayjs().month(month).format('MMMM'));
 
-export const formatPolicyDate = (value: string) =>
-  value === FOREVER ? 'No end date' : dayjs(value).format('MMM D, YYYY');
+/** A policy date as the country writes it: "Jan 1, 2026" in the US, "1 Jan 2026" in the UK. */
+export const formatPolicyDate = (value: string, countryId: string = 'us') =>
+  value === FOREVER ? 'No end date' : dayLabel(value, countryId);
 
 const selectStyle: React.CSSProperties = {
   height: 28,
@@ -77,6 +80,7 @@ export default function PolicyDatePicker({
   rangeEnd,
   presets,
 }: PolicyDatePickerProps) {
+  const countryId = useCurrentCountry();
   const [open, setOpen] = useState(false);
   const anchor = value === FOREVER ? rangeStart : value;
   const [view, setView] = useState<Dayjs>(dayjs(anchor).startOf('month'));
@@ -113,7 +117,7 @@ export default function PolicyDatePicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`${label}: ${formatPolicyDate(value)}`}
+          aria-label={`${label}: ${formatPolicyDate(value, countryId)}`}
           className="tw:cursor-pointer tw:transition-colors tw:hover:border-primary-500"
           style={{
             display: 'flex',
@@ -132,7 +136,7 @@ export default function PolicyDatePicker({
           }}
         >
           <IconCalendarEvent size={16} color={colors.text.tertiary} aria-hidden />
-          <span style={{ flex: 1 }}>{formatPolicyDate(value)}</span>
+          <span style={{ flex: 1 }}>{formatPolicyDate(value, countryId)}</span>
           <IconChevronDown size={14} color={colors.text.tertiary} aria-hidden />
         </button>
       </PopoverTrigger>
@@ -222,7 +226,7 @@ export default function PolicyDatePicker({
                 <button
                   type="button"
                   disabled={disabled}
-                  aria-label={day.format('MMMM D, YYYY')}
+                  aria-label={dayLabel(day, countryId, { long: true })}
                   aria-pressed={selected}
                   onClick={() => choose(iso)}
                   className={selected ? undefined : 'tw:cursor-pointer tw:hover:bg-primary-100'}

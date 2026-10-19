@@ -102,7 +102,7 @@ const summarize = (
       whenFull: `${from}, ${growth}${timingNote(provision, Number(intervals[0].startDate.slice(0, 4)))}`,
     };
   }
-  return summarizeIntervals(intervals, (value) => formatValue(value, provision.unit));
+  return summarizeIntervals(intervals, (value) => formatValue(value, provision.unit), countryId);
 };
 
 /**

@@ -3,6 +3,7 @@ import { BillValidation } from '@/api/billFeed';
 import { describeDepth, RING_LABELS } from '@/components/flagship/CalibrationMatches';
 import { Stack } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   claimsFromBillValidation,
@@ -16,6 +17,7 @@ import {
 } from '@/libs/flagship/modelValidation';
 import { loadParameterDependencies, readersOfPath } from '@/libs/flagship/parameterDependencies';
 import type { RelatedScorecardClaim } from '@/libs/flagship/scorecardComparisons';
+import { currencySymbol } from '@/utils/formatters';
 import { ScorecardClaimTable, type ScorecardClaimEntry } from './ScorecardComparisons';
 import {
   CellNote,
@@ -40,16 +42,17 @@ import {
  *   reform changes in the report's jurisdiction.
  */
 
-function compactMoney(value: number): string {
+/** "$1.2B", "-£3.4M", "$950": `symbol` is the country's money sign. */
+function compactMoney(value: number, symbol: string = '$'): string {
   const abs = Math.abs(value);
   const sign = value < 0 ? '-' : '';
   if (abs >= 1e9) {
-    return `${sign}$${(abs / 1e9).toFixed(1)}B`;
+    return `${sign}${symbol}${(abs / 1e9).toFixed(1)}B`;
   }
   if (abs >= 1e6) {
-    return `${sign}$${(abs / 1e6).toFixed(1)}M`;
+    return `${sign}${symbol}${(abs / 1e6).toFixed(1)}M`;
   }
-  return `${sign}$${Math.round(abs).toLocaleString()}`;
+  return `${sign}${symbol}${Math.round(abs).toLocaleString()}`;
 }
 
 function metricLabel(row: ModelValidationRow): string {
@@ -66,7 +69,8 @@ function metricValue(row: ModelValidationRow, value: number): string {
     return `${(value * 100).toFixed(1)}%`;
   }
   if (row.metric.includes('benefit')) {
-    return compactMoney(value);
+    // The track record is the US model's, so its money is in dollars.
+    return compactMoney(value, '$');
   }
   if (Math.abs(value) >= 1e6) {
     return `${(value / 1e6).toFixed(1)}M`;
@@ -156,6 +160,7 @@ export function BillExternalEstimates({
   // External numbers render from scorecard-shaped claims, so tracker
   // rows today and scorecard shard rows tomorrow are interchangeable.
   const claims = claimsFromBillValidation(billId, validation);
+  const symbol = currencySymbol(useCurrentCountry());
   const peEstimate = validation.peEstimate;
   const range =
     typeof validation.targetRangeLow === 'number' && typeof validation.targetRangeHigh === 'number'
@@ -175,7 +180,7 @@ export function BillExternalEstimates({
               <span style={{ fontWeight: typography.fontWeight.medium }}>PolicyEngine</span>
             </th>
             <td style={{ ...numberCellStyle, fontWeight: typography.fontWeight.medium }}>
-              {compactMoney(peEstimate)}
+              {compactMoney(peEstimate, symbol)}
             </td>
             <td style={numberCellStyle}>—</td>
           </tr>
@@ -186,7 +191,7 @@ export function BillExternalEstimates({
               <span>{claim.source}</span>
               {claim.sourceUrl && <ReadSource href={claim.sourceUrl} />}
             </th>
-            <td style={numberCellStyle}>{compactMoney(claim.externalValue)}</td>
+            <td style={numberCellStyle}>{compactMoney(claim.externalValue, symbol)}</td>
             <td style={numberCellStyle}>{gapText(peEstimate, claim.externalValue)}</td>
           </tr>
         ))}
@@ -208,7 +213,7 @@ export function BillExternalEstimates({
               {noteWithoutEstimate && noteUrl && <ReadSource href={noteUrl} />}
             </th>
             <td style={numberCellStyle}>
-              {compactMoney(range[0])} to {compactMoney(range[1])}
+              {compactMoney(range[0], symbol)} to {compactMoney(range[1], symbol)}
             </td>
             <td style={numberCellStyle} />
           </tr>
