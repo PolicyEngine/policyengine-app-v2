@@ -4,9 +4,8 @@ import { countryIds, type CountryId } from '@/libs/countries';
 /**
  * Returns the current country ID from context.
  *
- * The country is set by a CountryProvider higher in the tree:
- * - In the react-router catch-all: CountryGuard reads useParams and provides it
- * - In extracted Next.js pages: [countryId]/layout.tsx reads Next.js params and provides it
+ * The country is set by a CountryProvider higher in the tree: calculator-app's
+ * [countryId]/layout.tsx reads the Next.js params and provides it.
  *
  * @returns The country ID
  * @throws {Error} If called outside a CountryProvider or if country is invalid

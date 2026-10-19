@@ -1,34 +1,29 @@
-# Mantine Vite template
+# app
 
-## Features
+Calculator source shared by the Next.js calculator in `calculator-app/`, which compiles `app/src` through `externalDir` with `@/*` mapped to `app/src/*`. `app/` has no build or dev server of its own: run the website and calculator from the repository root with `bun run dev`. Vite here only runs Storybook (and Chromatic) and Vitest.
 
-This template comes with the following features:
+## Scripts
 
-- [PostCSS](https://postcss.org/) with [mantine-postcss-preset](https://mantine.dev/styles/postcss-preset)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Storybook](https://storybook.js.org/)
-- [Vitest](https://vitest.dev/) setup with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
-- ESLint setup with [eslint-config-mantine](https://github.com/mantinedev/eslint-config-mantine)
-
-## npm scripts
-
-## Build and dev scripts
-
-- `dev` – start development server
-- `build` – build production version of the app
-- `preview` – locally preview production build
-
-### Testing scripts
+### Checks
 
 - `typecheck` – checks TypeScript types
-- `lint` – runs ESLint
-- `prettier:check` – checks files with Prettier
-- `vitest` – runs vitest tests
-- `vitest:watch` – starts vitest watch
-- `test` – runs `vitest`, `prettier:check`, `lint` and `typecheck` scripts
+- `lint` – runs ESLint and Stylelint
+- `prettier` – checks formatting with Prettier
+- `prettier:write` – formats files with Prettier
+- `check` – runs `typecheck`, `eslint` and `prettier`
+- `test` / `vitest` – runs the Vitest suite
+- `vitest:watch` – runs Vitest in watch mode
+- `test-all` – runs `prettier`, `eslint`, `typecheck` and `vitest`
 
-### Other scripts
+### Storybook
 
-- `storybook` – starts storybook dev server
-- `storybook:build` – build production storybook bundle to `storybook-static`
-- `prettier:write` – formats all files with Prettier
+- `storybook` – starts the Storybook dev server on port 6006
+- `storybook:build` – builds the static Storybook to `storybook-static`
+- `chromatic` – publishes changed stories to Chromatic
+
+### Data and search
+
+- `generate-llms-txt` – writes the llms.txt files into `public/`
+- `evaluate-search` – evaluates parameter search against its cases
+- `refresh-search-eval-cases` – refreshes the parameter search evaluation cases
+- `build-parameter-dependencies` – rebuilds the parameter dependency map

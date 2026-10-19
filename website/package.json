@@ -4,7 +4,6 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "sh -c 'next dev --turbopack --port ${PORT:-3000}'",
-    "dev:full": "node scripts/dev-server.mjs",
     "build": "bash scripts/build.sh",
     "build:next": "next build",
     "start": "next start",

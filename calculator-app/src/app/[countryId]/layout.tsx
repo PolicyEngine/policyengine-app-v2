@@ -11,7 +11,7 @@ import { countryIds, type CountryId } from "@/libs/countries";
 /**
  * Layout for extracted Next.js pages under /:countryId/*.
  * Provides CountryContext, NavigationContext, and LocationContext
- * so shared components work identically in both router contexts.
+ * to the shared components in app/src.
  * This comment exists to force calculator-next redeploys when needed.
  * This line is a no-op touch for the calculator-app Vercel project.
  * This additional comment exists only to retrigger calculator-next deployment.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { QueryNormalizerProvider } from "@normy/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider, useDispatch } from "react-redux";
@@ -13,10 +14,14 @@ import { setCurrentCountry } from "@/reducers/metadataReducer";
 import { AppDispatch, store } from "@/store";
 import { cacheMonitor } from "@/utils/cacheMonitor";
 
+// React Query devtools; renders nothing outside development.
+const DevTools = dynamic(() => import("@/components/DevTools"), {
+  ssr: false,
+});
+
 /**
- * Same provider tree as CalculatorApp, minus the router.
- * Used by extracted Next.js route pages so that shared hooks
- * (Redux, React Query, etc.) work identically.
+ * The calculator's provider tree (Redux, React Query, etc.), shared by every
+ * Next.js route page so that the hooks in app/src work identically.
  */
 export function CalculatorProviders({
   children,
@@ -47,6 +52,14 @@ export function CalculatorProviders({
     cacheMonitor.init(queryClient);
   }, [queryClient]);
 
+  // Development only: registers window.__journeyProfiler for profiling the
+  // report journey from the browser console (see utils/journeyProfiler.ts).
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production") {
+      void import("@/utils/journeyProfiler");
+    }
+  }, []);
+
   return (
     <AppProvider mode="calculator">
       <Provider store={store}>
@@ -60,6 +73,7 @@ export function CalculatorProviders({
             <TooltipProvider>
               <CalcOrchestratorProvider>
                 <MetadataBootstrap>{children}</MetadataBootstrap>
+                <DevTools />
               </CalcOrchestratorProvider>
             </TooltipProvider>
           </QueryClientProvider>
@@ -70,8 +84,7 @@ export function CalculatorProviders({
 }
 
 /**
- * Syncs the country to Redux and triggers a non-blocking metadata fetch,
- * mirroring CountryGuard + MetadataLazyLoader from the React Router tree.
+ * Syncs the country to Redux and triggers a non-blocking metadata fetch.
  */
 function MetadataBootstrap({ children }: { children: React.ReactNode }) {
   const countryId = useCurrentCountry();
