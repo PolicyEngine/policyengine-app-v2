@@ -68,7 +68,7 @@ describe("llms route handlers", () => {
     },
   );
 
-  // Next.js fails the build when a public file and a route share a path.
+  // A static llms*.txt here would compete with the route for its path.
   test("given website/public then no llms file shadows a route", () => {
     const publicFiles = readdirSync(join(WEBSITE_ROOT, "public"));
     expect(publicFiles.filter((f) => /^llms.*\.txt$/.test(f))).toEqual([]);
@@ -94,7 +94,7 @@ describe("llms.txt index", () => {
     }
   });
 
-  test("given the index then it lists the newest research as the research page does", () => {
+  test("given the index then it lists the newest posts in the website's post order", () => {
     const listed = [
       ...files["llms.txt"]
         .split("## Research by country")[0]
@@ -143,7 +143,7 @@ describe("llms.txt index", () => {
 describe("llms article files from the real posts", () => {
   const posts = getPostsSorted();
 
-  test("given the full archive then it holds every post once, in research-page order", () => {
+  test("given the full archive then it holds every post once, in the website's post order", () => {
     expect(urlLines(files["llms-full.txt"])).toEqual(posts.map(postUrl));
   });
 
