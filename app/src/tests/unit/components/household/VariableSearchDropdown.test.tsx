@@ -73,11 +73,43 @@ describe('VariableSearchDropdown', () => {
 
     expect(screen.getByText('Income', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('Housing', { selector: 'p' })).toBeInTheDocument();
-    expect(screen.getAllByRole('option')).toHaveLength(3);
+    // The list's rows; the phone's category choice has options of its own.
+    const rows = () =>
+      screen.getAllByRole('option').filter((option) => option.hasAttribute('data-option'));
+    expect(rows()).toHaveLength(3);
 
     await user.click(screen.getByRole('button', { name: /Housing/ }));
 
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Rent']);
+    expect(rows().map((option) => option.textContent)).toEqual(['Rent']);
     expect(screen.getByRole('button', { name: /Housing/ })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('given groups on a phone then one category choice filters the list', async () => {
+    const user = userEvent.setup();
+    const groupOf = (v: VariableInfo) => (v.name === 'rent' ? 'Housing' : 'Income');
+    render(
+      <VariableSearchDropdown
+        searchValue=""
+        onSearchChange={vi.fn()}
+        onFocusChange={vi.fn()}
+        filteredVariables={VARIABLES}
+        onSelect={vi.fn()}
+        groupOf={groupOf}
+        groupOrder={['Income', 'Housing']}
+      />
+    );
+    await user.click(screen.getByRole('textbox'));
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Variable category' }),
+      'Housing'
+    );
+
+    expect(
+      screen
+        .getAllByRole('option')
+        .filter((option) => option.hasAttribute('data-option'))
+        .map((option) => option.textContent)
+    ).toEqual(['Rent']);
   });
 });

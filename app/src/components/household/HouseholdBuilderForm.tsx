@@ -742,8 +742,9 @@ export default function HouseholdBuilderForm({
           >
             <div
               className={
+                // Never wider than the screen: an open search list would widen it.
                 columns
-                  ? 'tw:flex tw:flex-col tw:gap-3 tw:lg:contents'
+                  ? 'tw:flex tw:w-full tw:min-w-0 tw:flex-col tw:gap-3 tw:lg:contents'
                   : 'tw:flex tw:flex-col tw:gap-3'
               }
             >
@@ -800,34 +801,40 @@ export default function HouseholdBuilderForm({
 
               {/* Add variable search or link */}
               {!isReadOnly && isHouseholdSearchActive ? (
-                <div className={columns ? 'tw:basis-full tw:max-w-[36rem]' : undefined}>
-                  <VariableSearchDropdown
-                    searchValue={householdSearchValue}
-                    onSearchChange={setHouseholdSearchValue}
-                    onFocusChange={setIsHouseholdSearchFocused}
-                    filteredVariables={filteredHouseholdVariables.variables}
-                    truncated={filteredHouseholdVariables.truncated}
-                    suggested={
-                      suggestedOrder.size > 0 && !householdSearchValue.trim()
-                        ? suggestedOrder
-                        : undefined
-                    }
-                    suggestedLabel={suggestedLabel}
-                    groupOf={variableGroupOf}
-                    groupOrder={variableGroupOrder}
-                    onSelect={handleHouseholdVariableSelect}
-                    getEntityHint={(variable) => {
-                      const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
-                      return { show: isPerson, label: 'Person' };
-                    }}
-                    disabled={disabled}
-                    onClose={() => {
-                      setIsHouseholdSearchActive(false);
-                      setHouseholdSearchValue('');
-                      setIsHouseholdSearchFocused(false);
-                    }}
-                  />
-                </div>
+                <>
+                  {/* In columns, the search takes the add link's place: a line of
+                      its own under the fields. A width cap alone keeps it in their
+                      row, where it has no label and sits above their boxes. */}
+                  {columns && <div aria-hidden className="tw:basis-full tw:h-0" />}
+                  <div className={columns ? 'tw:w-full tw:max-w-[42rem]' : undefined}>
+                    <VariableSearchDropdown
+                      searchValue={householdSearchValue}
+                      onSearchChange={setHouseholdSearchValue}
+                      onFocusChange={setIsHouseholdSearchFocused}
+                      filteredVariables={filteredHouseholdVariables.variables}
+                      truncated={filteredHouseholdVariables.truncated}
+                      suggested={
+                        suggestedOrder.size > 0 && !householdSearchValue.trim()
+                          ? suggestedOrder
+                          : undefined
+                      }
+                      suggestedLabel={suggestedLabel}
+                      groupOf={variableGroupOf}
+                      groupOrder={variableGroupOrder}
+                      onSelect={handleHouseholdVariableSelect}
+                      getEntityHint={(variable) => {
+                        const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+                        return { show: isPerson, label: 'Person' };
+                      }}
+                      disabled={disabled}
+                      onClose={() => {
+                        setIsHouseholdSearchActive(false);
+                        setHouseholdSearchValue('');
+                        setIsHouseholdSearchFocused(false);
+                      }}
+                    />
+                  </div>
+                </>
               ) : !isReadOnly ? (
                 <>
                   {/* In columns, the add link starts a line of its own, under the fields. */}
