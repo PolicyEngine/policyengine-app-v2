@@ -2,7 +2,9 @@ import { describe, expect, test } from 'vitest';
 import {
   describesAHousehold,
   householdVariableGroup,
+  householdVariableGroupOf,
   householdVariableSubgroup,
+  householdVariableSubgroupOf,
   listsForState,
 } from '@/libs/flagship/householdVariableGroups';
 import type { VariableInfo } from '@/utils/VariableResolver';
@@ -97,5 +99,112 @@ describe('describesAHousehold', () => {
     expect(describesAHousehold(input('tip_income', 'household.income.person.tip_income'))).toBe(
       true
     );
+  });
+
+  test('given US ids and weights then they are left out, and the US inputs beside them kept', () => {
+    expect(
+      describesAHousehold(input('tax_unit_id', 'household.demographic.identifiers.tax_unit_id'))
+    ).toBe(false);
+    expect(
+      describesAHousehold(
+        input('household_weight', 'household.demographic.weights.household_weight')
+      )
+    ).toBe(false);
+    for (const [name, moduleName] of [
+      ['age', 'household.demographic.person.age'],
+      ['is_tax_unit_dependent', 'household.demographic.tax_unit.is_tax_unit_dependent'],
+      ['takes_up_snap_if_eligible', 'gov.usda.snap.takes_up_snap_if_eligible'],
+      ['state_name', 'household.demographic.geographic.state.state_name'],
+      ['pension_income', 'household.income.person.pension_income'],
+    ]) {
+      expect(describesAHousehold(input(name, moduleName))).toBe(true);
+    }
+  });
+
+  test.each([
+    'person_id',
+    'benunit_id',
+    'household_id',
+    'person_benunit_id',
+    'person_household_id',
+    'person_benunit_role',
+    'role',
+    'people',
+    'families',
+    'households',
+    'household_weight',
+    'raw_person_weight',
+    'original_weight',
+    'would_claim_uc',
+    'would_evade_tv_licence_fee',
+    'baseline_child_benefit_entitlement',
+    'in_original_frs',
+    'spi_imputed',
+    'uc_migrated',
+    'attends_private_school_random_draw',
+    'base_net_income',
+    'nhs_outpatient_spending',
+    'dfe_education_spending',
+    'bus_subsidy_spending',
+    'pension_income',
+  ])('given the UK microdata input %s then it is left out', (name) => {
+    expect(describesAHousehold(input(name, ''), 'uk')).toBe(false);
+  });
+
+  test.each([
+    'age',
+    'rent',
+    'savings',
+    'private_pension_income',
+    'is_disabled_for_benefits',
+    'uc_is_in_startup_period',
+    'region',
+  ])('given the UK input %s then it is kept', (name) => {
+    expect(describesAHousehold(input(name, ''), 'uk')).toBe(true);
+  });
+});
+
+describe('UK household variable groups', () => {
+  // The UK model files no input under a module.
+  const uk = (name: string) => ({ name, label: name, moduleName: '' }) as VariableInfo;
+  const groupOf = householdVariableGroupOf('uk');
+  const subgroupOf = householdVariableSubgroupOf('uk');
+
+  test.each([
+    ['employment_income_before_lsr', 'Income', 'Wages and work'],
+    ['statutory_sick_pay', 'Income', 'Wages and work'],
+    ['self_employment_income', 'Income', 'Self-employment and business'],
+    ['owned_company_income_share', 'Income', 'Self-employment and business'],
+    ['dividend_income', 'Income', 'Investments'],
+    ['capital_gains_residential_property', 'Income', 'Investments'],
+    ['private_pension_income', 'Income', 'Retirement'],
+    ['maintenance_income', 'Income', 'Other income'],
+    ['age', 'People', null],
+    ['pip_dl_category', 'People', null],
+    ['region', 'People', null],
+    ['rent', 'Housing and utilities', null],
+    ['council_tax_band', 'Housing and utilities', null],
+    ['mortgage_interest_repayment', 'Housing and utilities', null],
+    ['electricity_consumption', 'Housing and utilities', null],
+    ['outpatient_visits', 'Health', null],
+    ['childcare_expenses', 'Other expenses', null],
+    ['car_fuel_type', 'Other expenses', null],
+    ['food_and_non_alcoholic_beverages_consumption', 'Other expenses', null],
+    ['wine_litres', 'Other expenses', null],
+    ['savings', 'Assets', null],
+    ['mortgage_debt', 'Assets', null],
+    ['uc_is_in_startup_period', 'Benefits and taxes', null],
+    ['tax_free_childcare_on_qualifying_leave', 'Benefits and taxes', null],
+    ['child_benefit_opts_out', 'Benefits and taxes', null],
+    ['an_input_no_rule_names', 'Other', null],
+  ])('given %s then it groups under %s, %s', (name, group, subgroup) => {
+    expect(groupOf(uk(name))).toBe(group);
+    expect(subgroupOf(uk(name))).toBe(subgroup);
+  });
+
+  test('given the US then inputs still group by module', () => {
+    expect(householdVariableGroupOf('us')).toBe(householdVariableGroup);
+    expect(householdVariableSubgroupOf('us')).toBe(householdVariableSubgroup);
+    expect(householdVariableGroup(uk('rent'))).toBe('Other');
   });
 });

@@ -6,20 +6,21 @@ import HouseholdBreakdowns, {
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import { Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import type { CountryId } from '@/libs/countries';
 import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
 import { formatCurrency } from '@/utils/formatters';
 
-/** Whole dollars, with a true minus sign: "−$1,200". */
-function money(value: number): string {
+/** Whole dollars (or pounds), with a true minus sign: "−$1,200", "−£1,200". */
+function money(value: number, countryId: CountryId): string {
   const rounded = Math.round(value);
-  const text = formatCurrency(Math.abs(rounded), 'us', { maximumFractionDigits: 0 });
+  const text = formatCurrency(Math.abs(rounded), countryId, { maximumFractionDigits: 0 });
   return rounded < 0 ? `−${text}` : text;
 }
 
 /** A change, always signed: "+$1,200", "−$300", "$0". */
-function signedMoney(value: number): string {
+function signedMoney(value: number, countryId: CountryId): string {
   const rounded = Math.round(value);
-  return rounded > 0 ? `+${money(rounded)}` : money(rounded);
+  return rounded > 0 ? `+${money(rounded, countryId)}` : money(rounded, countryId);
 }
 
 /** Gains read in the brand teal, losses in red. */
@@ -50,10 +51,12 @@ function ChangeTable({
   label,
   lines,
   total,
+  countryId,
 }: {
   label: string;
   lines: HouseholdLineChange[];
   total?: HouseholdLineChange;
+  countryId: CountryId;
 }) {
   const rows = total ? [...lines, total] : lines;
   return (
@@ -108,10 +111,14 @@ function ChangeTable({
                 >
                   {line.label}
                 </th>
-                <td style={bodyCell}>{line.baseline === null ? '—' : money(line.baseline)}</td>
-                <td style={bodyCell}>{line.reform === null ? '—' : money(line.reform)}</td>
+                <td style={bodyCell}>
+                  {line.baseline === null ? '—' : money(line.baseline, countryId)}
+                </td>
+                <td style={bodyCell}>
+                  {line.reform === null ? '—' : money(line.reform, countryId)}
+                </td>
                 <td style={{ ...bodyCell, color: effectColor(line.effect) }}>
-                  {signedMoney(line.change)}
+                  {signedMoney(line.change, countryId)}
                 </td>
               </tr>
             );
@@ -127,10 +134,12 @@ function SummaryTables({
   impact,
   noChange,
   change,
+  countryId,
 }: {
   impact: FlagshipHouseholdImpact;
   noChange: boolean;
   change: number;
+  countryId: CountryId;
 }) {
   const { netIncome, components, programs } = impact;
   return noChange ? (
@@ -143,6 +152,7 @@ function SummaryTables({
         <ChangeTable
           label="Taxes and benefits"
           lines={components}
+          countryId={countryId}
           total={{
             id: 'net_income',
             label: 'Net income',
@@ -153,7 +163,9 @@ function SummaryTables({
           }}
         />
       )}
-      {programs.length > 0 && <ChangeTable label="Credits and benefits" lines={programs} />}
+      {programs.length > 0 && (
+        <ChangeTable label="Credits and benefits" lines={programs} countryId={countryId} />
+      )}
     </>
   );
 }
@@ -171,12 +183,15 @@ export default function HouseholdImpactResult({
   impact,
   summary,
   breakdowns,
+  countryId = 'us',
 }: {
   impact: FlagshipHouseholdImpact;
   /** The household the result is for, e.g. "Single · no children · $50,000 earnings · Ohio · 2026". */
   summary: string;
   /** The household run the v2 breakdowns read; without it, only the summary shows. */
   breakdowns?: HouseholdBreakdownSource;
+  /** The report's country: its currency. */
+  countryId?: CountryId;
 }) {
   const [view, setView] = useState<'summary' | HouseholdBreakdownView>('summary');
   const { netIncome, components, programs } = impact;
@@ -251,7 +266,7 @@ export default function HouseholdImpactResult({
               color: effectColor(change),
             }}
           >
-            {signedMoney(change)}
+            {signedMoney(change, countryId)}
           </span>
           <span
             style={{
@@ -260,7 +275,7 @@ export default function HouseholdImpactResult({
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            {money(netIncome.baseline)} → {money(netIncome.reform)}
+            {money(netIncome.baseline, countryId)} → {money(netIncome.reform, countryId)}
             {percent !== null &&
               ` (${percent > 0 ? '+' : '−'}${Math.abs(percent) < 0.1 ? '<0.1' : Math.abs(percent).toFixed(1)}%)`}
           </span>
@@ -303,7 +318,7 @@ export default function HouseholdImpactResult({
                     color: effectColor(line.effect),
                   }}
                 >
-                  {signedMoney(line.change)}
+                  {signedMoney(line.change, countryId)}
                 </span>
               </div>
             ))}
@@ -360,7 +375,7 @@ export default function HouseholdImpactResult({
           <HouseholdBreakdowns view={view} source={breakdowns} />
         </div>
       ) : (
-        <SummaryTables impact={impact} noChange={noChange} change={change} />
+        <SummaryTables impact={impact} noChange={noChange} change={change} countryId={countryId} />
       )}
     </section>
   );

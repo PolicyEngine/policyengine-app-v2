@@ -1,6 +1,7 @@
 import { STATE_NAMES } from '@/api/billFeed';
 import { createHousehold } from '@/api/household';
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import type { CountryId } from '@/libs/countries';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { HouseholdCalculationData } from '@/types/calculation/household';
@@ -121,7 +122,7 @@ export function buildHouseholdPayload(
   return household.toV1CreationPayload();
 }
 
-type EntityPlural = 'people' | 'households' | 'tax_units' | 'spm_units';
+type EntityPlural = 'people' | 'households' | 'tax_units' | 'spm_units' | 'benunits';
 
 /** The app's camel-case keys, for results already in the app's shape. */
 const APP_KEYS: Record<EntityPlural, string> = {
@@ -129,6 +130,7 @@ const APP_KEYS: Record<EntityPlural, string> = {
   households: 'households',
   tax_units: 'taxUnits',
   spm_units: 'spmUnits',
+  benunits: 'benunits',
 };
 
 /**
@@ -171,7 +173,7 @@ interface LineDefinition {
 }
 
 /** The parts of net income a reform most often moves; with "Other", they sum to its change. */
-const COMPONENTS: LineDefinition[] = [
+const US_COMPONENTS: LineDefinition[] = [
   {
     id: 'federal_income_tax',
     label: 'Federal income tax',
@@ -208,31 +210,113 @@ const COMPONENTS: LineDefinition[] = [
 ];
 
 /**
+ * The UK's: net income is market income plus benefits, less taxes and
+ * pension contributions. Council Tax is the gross bill, as household
+ * taxes count it; Council Tax Reduction is one of the household's
+ * benefits, so it counts once, under Benefits.
+ */
+const UK_COMPONENTS: LineDefinition[] = [
+  {
+    id: 'income_tax',
+    label: 'Income Tax',
+    sign: -1,
+    sources: [{ entity: 'people', variable: 'income_tax' }],
+  },
+  {
+    id: 'national_insurance',
+    label: 'National Insurance',
+    sign: -1,
+    sources: [{ entity: 'people', variable: 'national_insurance' }],
+  },
+  {
+    id: 'council_tax',
+    label: 'Council Tax',
+    sign: -1,
+    sources: [{ entity: 'households', variable: 'council_tax' }],
+  },
+  {
+    id: 'benefits',
+    label: 'Benefits',
+    sign: 1,
+    sources: [{ entity: 'households', variable: 'household_benefits' }],
+  },
+];
+
+/**
  * Credits and benefits within those parts, listed when a reform changes
  * them. Each is what the household receives: the Child Tax Credit is
  * `ctc_value`, the credit after the tax-liability and refundability
  * limits, not the gross `ctc` entitlement.
  */
-const PROGRAMS: LineDefinition[] = [
-  ['ctc_value', 'Child Tax Credit', 'tax_units'],
-  ['eitc', 'Earned Income Tax Credit', 'tax_units'],
-  ['cdcc', 'Child and Dependent Care Credit', 'tax_units'],
-  ['state_ctc', 'State child tax credit', 'tax_units'],
-  ['state_eitc', 'State earned income tax credit', 'tax_units'],
-  ['state_cdcc', 'State child care credit', 'tax_units'],
-  ['aca_ptc', 'Premium Tax Credit', 'tax_units'],
-  ['snap', 'SNAP', 'spm_units'],
-  ['tanf', 'TANF', 'spm_units'],
-  ['ssi', 'SSI', 'people'],
-  ['wic', 'WIC', 'people'],
-  ['medicaid', 'Medicaid', 'people'],
-  ['chip', 'CHIP', 'people'],
-].map(([variable, label, entity]) => ({
-  id: variable,
-  label,
-  sign: 1 as const,
-  sources: [{ entity: entity as EntityPlural, variable }],
-}));
+const US_PROGRAMS: LineDefinition[] = (
+  [
+    ['ctc_value', 'Child Tax Credit', 'tax_units'],
+    ['eitc', 'Earned Income Tax Credit', 'tax_units'],
+    ['cdcc', 'Child and Dependent Care Credit', 'tax_units'],
+    ['state_ctc', 'State child tax credit', 'tax_units'],
+    ['state_eitc', 'State earned income tax credit', 'tax_units'],
+    ['state_cdcc', 'State child care credit', 'tax_units'],
+    ['aca_ptc', 'Premium Tax Credit', 'tax_units'],
+    ['snap', 'SNAP', 'spm_units'],
+    ['tanf', 'TANF', 'spm_units'],
+    ['ssi', 'SSI', 'people'],
+    ['wic', 'WIC', 'people'],
+    ['medicaid', 'Medicaid', 'people'],
+    ['chip', 'CHIP', 'people'],
+  ] as const
+).map(([variable, label, entity]) => benefitLine(variable, label, entity));
+
+/**
+ * The UK's benefits, each as the household receives it: Universal Credit
+ * after the benefit cap. The benefit cap's own reduction is less net
+ * income, so a larger one reads as a loss.
+ */
+const UK_PROGRAMS: LineDefinition[] = [
+  ...(
+    [
+      ['universal_credit', 'Universal Credit', 'benunits'],
+      ['child_benefit', 'Child Benefit', 'benunits'],
+      ['pension_credit', 'Pension Credit', 'benunits'],
+      ['housing_benefit', 'Housing Benefit', 'benunits'],
+      ['child_tax_credit', 'Child Tax Credit', 'benunits'],
+      ['working_tax_credit', 'Working Tax Credit', 'benunits'],
+      ['income_support', 'Income Support', 'benunits'],
+      ['esa_income', 'Income-based ESA', 'benunits'],
+      ['jsa_income', 'Income-based JSA', 'benunits'],
+      ['state_pension', 'State Pension', 'people'],
+      ['pip', 'Personal Independence Payment', 'people'],
+      ['dla', 'Disability Living Allowance', 'people'],
+      ['attendance_allowance', 'Attendance Allowance', 'people'],
+      ['carers_allowance', "Carer's Allowance", 'people'],
+      ['scottish_child_payment', 'Scottish Child Payment', 'people'],
+      ['tax_free_childcare', 'Tax-Free Childcare', 'people'],
+      ['council_tax_reduction', 'Council Tax Reduction', 'households'],
+      ['winter_fuel_allowance', 'Winter Fuel Payment', 'households'],
+    ] as const
+  ).map(([variable, label, entity]) => benefitLine(variable, label, entity)),
+  {
+    id: 'benefit_cap_reduction',
+    label: 'Benefit cap reduction',
+    sign: -1,
+    sources: [{ entity: 'benunits', variable: 'benefit_cap_reduction' }],
+  },
+];
+
+function benefitLine(variable: string, label: string, entity: EntityPlural): LineDefinition {
+  return { id: variable, label, sign: 1, sources: [{ entity, variable }] };
+}
+
+/** Each country's parts of net income and programs; a country without its own reads the US's. */
+const LINES: Partial<
+  Record<CountryId, { components: LineDefinition[]; programs: LineDefinition[] }>
+> = {
+  us: { components: US_COMPONENTS, programs: US_PROGRAMS },
+  uk: { components: UK_COMPONENTS, programs: UK_PROGRAMS },
+};
+
+function linesFor(countryId: string) {
+  return LINES[countryId as CountryId] ?? LINES.us!;
+}
 
 export interface HouseholdLineChange {
   id: string;
@@ -297,17 +381,19 @@ const changed = (line: HouseholdLineChange | null): line is HouseholdLineChange 
 export function compareHouseholds(
   baseline: HouseholdCalculationData,
   reform: HouseholdCalculationData,
-  year: string
+  year: string,
+  countryId: string = 'us'
 ): FlagshipHouseholdImpact {
+  const lines = linesFor(countryId);
   const before = readHouseholdTotal(baseline, 'households', 'household_net_income', year);
   const after = readHouseholdTotal(reform, 'households', 'household_net_income', year);
   if (before === null || after === null) {
     throw new Error(`The result has no net income for ${year}.`);
   }
   const netChange = after - before;
-  const components = COMPONENTS.map((definition) =>
-    lineChange(definition, baseline, reform, year)
-  ).filter(changed);
+  const components = lines.components
+    .map((definition) => lineChange(definition, baseline, reform, year))
+    .filter(changed);
   const remainder = netChange - components.reduce((sum, line) => sum + line.effect, 0);
   if (Math.abs(remainder) >= NEGLIGIBLE) {
     components.push({
@@ -322,9 +408,9 @@ export function compareHouseholds(
   return {
     netIncome: { baseline: before, reform: after, change: netChange },
     components,
-    programs: PROGRAMS.map((definition) => lineChange(definition, baseline, reform, year)).filter(
-      changed
-    ),
+    programs: lines.programs
+      .map((definition) => lineChange(definition, baseline, reform, year))
+      .filter(changed),
   };
 }
 
@@ -366,18 +452,18 @@ export function plainHouseholdError(error: unknown): Error {
  * the API keeps calculating and caches the result, so the second ask
  * usually returns it at once.
  */
-async function calculateOnce(householdId: string, policyId: string) {
+async function calculateOnce(countryId: string, householdId: string, policyId: string) {
   try {
-    return await fetchHouseholdCalculation('us', householdId, policyId);
+    return await fetchHouseholdCalculation(countryId, householdId, policyId);
   } catch (error) {
     if (error instanceof Error && /timed out/i.test(error.message)) {
-      return fetchHouseholdCalculation('us', householdId, policyId);
+      return fetchHouseholdCalculation(countryId, householdId, policyId);
     }
     throw error;
   }
 }
 
-/** Creates the household and calculates it under each policy, at once. */
+/** Creates the household and calculates it under each policy, at once, in its own country. */
 async function calculateHousehold(
   payload: V1HouseholdCreateEnvelope,
   baselinePolicyId: string,
@@ -386,9 +472,12 @@ async function calculateHousehold(
   try {
     const created = await createHousehold(payload);
     const householdId = String(created.result.household_id);
+    const countryId = payload.country_id;
     const [baseline, reform] = await Promise.all([
-      calculateOnce(householdId, baselinePolicyId),
-      baselinePolicyId === reformPolicyId ? null : calculateOnce(householdId, reformPolicyId),
+      calculateOnce(countryId, householdId, baselinePolicyId),
+      baselinePolicyId === reformPolicyId
+        ? null
+        : calculateOnce(countryId, householdId, reformPolicyId),
     ]);
     return { householdId, baseline, reform: reform ?? baseline };
   } catch (error) {
@@ -434,12 +523,20 @@ export async function runFlagshipHouseholdPayload({
     baselinePolicyId,
     reformPolicyId
   );
-  return { householdId, baseline, reform, ...compareHouseholds(baseline, reform, year) };
+  return {
+    householdId,
+    baseline,
+    reform,
+    ...compareHouseholds(baseline, reform, year, payload.country_id),
+  };
 }
 
 /** "Single · 2 children · $50,000 · California": the household a result is for. */
-export function describeHouseholdInput(input: FlagshipHouseholdInput): string {
-  const money = (value: number) => formatCurrency(value, 'us', { maximumFractionDigits: 0 });
+export function describeHouseholdInput(
+  input: FlagshipHouseholdInput,
+  countryId: CountryId = 'us'
+): string {
+  const money = (value: number) => formatCurrency(value, countryId, { maximumFractionDigits: 0 });
   const children = input.childAges.length;
   return [
     input.married ? 'Married' : 'Single',

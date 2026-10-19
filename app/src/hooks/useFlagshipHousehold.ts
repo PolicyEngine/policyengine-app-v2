@@ -10,7 +10,7 @@ import type { Policy } from '@/types/ingredients/Policy';
 
 /**
  * A household built in full (the household builder's model), run for a
- * report once the reader asks. Keyed by what is sent, so the same
+ * report once the reader asks, in the payload's own country. Keyed by what is sent, so the same
  * household is not run twice on a page.
  */
 export function useFlagshipHouseholdPayload({
@@ -26,7 +26,14 @@ export function useFlagshipHouseholdPayload({
   payload: V1HouseholdCreateEnvelope | null;
 }) {
   return useQuery({
-    queryKey: ['flagship-household-full', 'us', year, baselinePolicyId, reformPolicyId, payload],
+    queryKey: [
+      'flagship-household-full',
+      payload?.country_id ?? null,
+      year,
+      baselinePolicyId,
+      reformPolicyId,
+      payload,
+    ],
     queryFn: () =>
       runFlagshipHouseholdPayload({ year, payload: payload!, baselinePolicyId, reformPolicyId }),
     enabled: !!payload,

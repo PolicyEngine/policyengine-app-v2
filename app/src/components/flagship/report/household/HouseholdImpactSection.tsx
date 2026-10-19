@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { STATE_NAMES } from '@/api/billFeed';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import {
-  COMMON_HOUSEHOLD_INPUTS,
-  householdInputDescription,
-  householdInputName,
+  commonHouseholdInputs,
+  householdInputDescriptionOf,
+  householdInputNameOf,
   householdTopicIcon,
 } from '@/components/flagship/report/household/householdPickerInputs';
 import RunProgress from '@/components/flagship/report/RunProgress';
@@ -15,16 +14,21 @@ import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
+import type { CountryId } from '@/libs/countries';
+import { describeHousehold, householdState } from '@/libs/flagship/householdDescription';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
 import {
   describesAHousehold,
   HOUSEHOLD_INCOME_SUBGROUPS,
   HOUSEHOLD_VARIABLE_GROUPS,
-  householdVariableGroup,
-  householdVariableSubgroup,
+  householdVariableGroupOf,
+  householdVariableSubgroupOf,
   listsForState,
 } from '@/libs/flagship/householdVariableGroups';
-import { loadParameterDependencies } from '@/libs/flagship/parameterDependencies';
+import {
+  hasParameterDependencies,
+  loadParameterDependencies,
+} from '@/libs/flagship/parameterDependencies';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
@@ -32,38 +36,20 @@ import type { RootState } from '@/store';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
 
+/** The countries whose results, inputs and currency the section knows. */
+const HOUSEHOLD_COUNTRIES = new Set(['us', 'uk']);
+
 /** Both policies run at once; a household new to the API takes about three minutes. */
 const EXPECTED_MS = 3 * 60 * 1000;
 
 /**
  * A new household: the household builder's own start, one adult and
- * nothing else set, measured against national poverty thresholds.
+ * nothing else set. A US household is measured against national poverty
+ * thresholds; only the US model has them.
  */
-function newHousehold(year: string): Household {
-  return Household.starter('us', year).withSPM({ geography_kind: 'national' });
-}
-
-/** The household's state ("CA"), once one is chosen. */
-function householdState(household: Household, year: string): string | null {
-  const householdKey = Object.keys(household.householdData.households ?? {})[0];
-  const state = householdKey
-    ? (household.householdData.households?.[householdKey] as any)?.state_name?.[year]
-    : undefined;
-  return typeof state === 'string' && state ? state : null;
-}
-
-/** "Married · 2 children · New York": who a result is for. */
-function describeHousehold(household: Household, year: string): string {
-  const { maritalStatus, numChildren } = household.deriveBuilderComposition(year);
-  const householdKey = Object.keys(household.householdData.households ?? {})[0];
-  const state = householdKey
-    ? (household.householdData.households?.[householdKey] as any)?.state_name?.[year]
-    : undefined;
-  return [
-    maritalStatus === 'married' ? 'Married' : 'Single',
-    numChildren === 0 ? 'no children' : numChildren === 1 ? '1 child' : `${numChildren} children`,
-    ...(typeof state === 'string' ? [STATE_NAMES[state] ?? state] : []),
-  ].join(' · ');
+function newHousehold(countryId: CountryId, year: string): Household {
+  const household = Household.starter(countryId, year);
+  return countryId === 'us' ? household.withSPM({ geography_kind: 'national' }) : household;
 }
 
 interface HouseholdImpactSectionProps {
@@ -82,17 +68,20 @@ interface HouseholdImpactSectionProps {
 
 /**
  * The household inputs the reform's parameters read, nearest first; none
- * until the dependency map loads, or when it traces none of them.
+ * until the dependency map loads, or when it traces none of them, or for
+ * a country without a traced map.
  */
-const PREFERRED_INPUTS = new Set(COMMON_HOUSEHOLD_INPUTS.map((input) => input.name));
-
-function useSuggestedInputs(paths: string[]): string[] {
+function useSuggestedInputs(paths: string[], countryId: string): string[] {
   const metadata = useSelector((state: RootState) => state.metadata);
   const inputs = useMemo(
     () => new Set(getInputVariables(metadata).map((variable) => variable.name)),
     [metadata]
   );
-  const pathsKey = paths.join('\n');
+  const preferred = useMemo(
+    () => new Set(commonHouseholdInputs(countryId).map((input) => input.name)),
+    [countryId]
+  );
+  const pathsKey = hasParameterDependencies(countryId) ? paths.join('\n') : '';
   const [suggested, setSuggested] = useState<string[]>([]);
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +93,14 @@ function useSuggestedInputs(paths: string[]): string[] {
       .then((map) => {
         if (!cancelled) {
           setSuggested(
-            suggestedHouseholdInputs(pathsKey.split('\n'), map, inputs, undefined, PREFERRED_INPUTS)
+            suggestedHouseholdInputs(
+              pathsKey.split('\n'),
+              map,
+              inputs,
+              undefined,
+              preferred,
+              countryId
+            )
           );
         }
       })
@@ -116,7 +112,7 @@ function useSuggestedInputs(paths: string[]): string[] {
     return () => {
       cancelled = true;
     };
-  }, [pathsKey, inputs]);
+  }, [pathsKey, inputs, preferred, countryId]);
   return suggested;
 }
 
@@ -135,7 +131,7 @@ export default function HouseholdImpactSection({
   reformChangesNothing = false,
 }: HouseholdImpactSectionProps) {
   // A reform that changes nothing in the year makes no input worth suggesting.
-  const suggestedVariables = useSuggestedInputs(reformChangesNothing ? [] : reformPaths);
+  const suggestedVariables = useSuggestedInputs(reformChangesNothing ? [] : reformPaths, countryId);
   // Each household by a key of its own, so removing one keeps the others' inputs.
   const [keys, setKeys] = useState<number[]>([]);
   const [nextKey, setNextKey] = useState(1);
@@ -144,10 +140,10 @@ export default function HouseholdImpactSection({
     setNextKey((key) => key + 1);
   };
 
-  if (countryId !== 'us') {
+  if (!HOUSEHOLD_COUNTRIES.has(countryId)) {
     return (
       <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
-        Household impacts are available for US reports.
+        Household impacts are available for US and UK reports.
       </Text>
     );
   }
@@ -184,6 +180,7 @@ export default function HouseholdImpactSection({
         <HouseholdCard
           key={key}
           label={`Household ${index + 1}`}
+          countryId={countryId as CountryId}
           year={year}
           baselinePolicyId={baselinePolicyId}
           reformPolicyId={reformPolicyId}
@@ -204,6 +201,7 @@ export default function HouseholdImpactSection({
 /** One household: its builder, its Calculate, and its result. */
 function HouseholdCard({
   label,
+  countryId,
   year,
   baselinePolicyId,
   reformPolicyId,
@@ -212,6 +210,8 @@ function HouseholdCard({
 }: {
   /** "Household 2": its place in the list. */
   label: string;
+  /** The report's country: the household's model, currency and inputs. */
+  countryId: CountryId;
   year: string;
   baselinePolicyId: string;
   reformPolicyId: string;
@@ -222,7 +222,7 @@ function HouseholdCard({
   // per person and per household, as in the household builder.
   const metadata = useSelector((state: RootState) => state.metadata);
   const basicInputFields = useSelector(getBasicInputFields);
-  const [household, setHousehold] = useState(() => newHousehold(year));
+  const [household, setHousehold] = useState(() => newHousehold(countryId, year));
   const [requested, setRequested] = useState<{
     payload: V1HouseholdCreateEnvelope;
     summary: string;
@@ -243,15 +243,27 @@ function HouseholdCard({
   );
   // The variable search lists only the household's own state's programs,
   // and only inputs that describe a household (no survey-reported totals).
-  const stateCode = householdState(household, year);
+  const stateCode = householdState(household, year, countryId);
   const variableFilter = useCallback(
-    (variable: VariableInfo) => listsForState(variable, stateCode) && describesAHousehold(variable),
-    [stateCode]
+    (variable: VariableInfo) =>
+      listsForState(variable, stateCode) && describesAHousehold(variable, countryId),
+    [stateCode, countryId]
+  );
+  // The picker's groups, featured inputs and names, for the country's model.
+  const picker = useMemo(
+    () => ({
+      groupOf: householdVariableGroupOf(countryId),
+      subgroupOf: householdVariableSubgroupOf(countryId),
+      common: commonHouseholdInputs(countryId),
+      nameOf: householdInputNameOf(countryId),
+      describe: householdInputDescriptionOf(countryId),
+    }),
+    [countryId]
   );
   // Whether the household can run, as the household builder checks it.
   const validation = useMemo(
-    () => HouseholdValidation.isReadyForSimulation(household, 'us', year, metadata),
-    [household, year, metadata]
+    () => HouseholdValidation.isReadyForSimulation(household, countryId, year, metadata),
+    [household, countryId, year, metadata]
   );
 
   const running = !!requested && run.isFetching;
@@ -320,7 +332,7 @@ function HouseholdCard({
             <Text
               style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}
             >
-              {describeHousehold(household, year)}
+              {describeHousehold(household, year, countryId, metadata?.variables)}
             </Text>
             <Button size="sm" variant="outline" onClick={() => setEditing(true)} disabled={running}>
               <IconPencil size={14} aria-hidden />
@@ -351,16 +363,16 @@ function HouseholdCard({
             suggestedVariables={suggestedVariables}
             suggestedLabel="Related to this reform"
             searchRanking="relevance"
-            variableGroupOf={householdVariableGroup}
+            variableGroupOf={picker.groupOf}
             variableGroupOrder={HOUSEHOLD_VARIABLE_GROUPS}
             variableFilter={variableFilter}
-            variableSubgroupOf={householdVariableSubgroup}
+            variableSubgroupOf={picker.subgroupOf}
             variableSubgroupOrder={HOUSEHOLD_INCOME_SUBGROUPS}
             searchByEntity
-            variablePickerCommon={COMMON_HOUSEHOLD_INPUTS}
+            variablePickerCommon={picker.common}
             variableGroupIcon={householdTopicIcon}
-            variableNameOf={householdInputName}
-            variableDescribe={householdInputDescription}
+            variableNameOf={picker.nameOf}
+            variableDescribe={picker.describe}
           />
           <div
             style={{
@@ -379,7 +391,10 @@ function HouseholdCard({
                 if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
                   void run.refetch();
                 } else {
-                  setRequested({ payload, summary: describeHousehold(household, year) });
+                  setRequested({
+                    payload,
+                    summary: describeHousehold(household, year, countryId, metadata?.variables),
+                  });
                 }
                 setEditing(false);
               }}
@@ -415,9 +430,10 @@ function HouseholdCard({
           {result && requested && (
             <HouseholdImpactResult
               impact={result}
+              countryId={countryId}
               summary={`${requested.summary} · ${year}`}
               breakdowns={{
-                countryId: 'us',
+                countryId,
                 year,
                 householdId: result.householdId,
                 baselinePolicyId,
