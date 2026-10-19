@@ -232,4 +232,24 @@ describe('ReportValidation', () => {
     expect(mockUseScorecardComparisons).toHaveBeenCalledWith('us', [CTC_PATH]);
     expect(screen.queryByText('Not comparable')).not.toBeInTheDocument();
   });
+
+  test('given a UK report then one line says calibration is US-only and no US data shows', async () => {
+    await renderValidation({
+      countryId: 'uk',
+      region: 'uk',
+      paths: ['gov.simulation.capital_gains_responses.elasticity'],
+      // Even if a caller hands over US results, a UK report does not show them.
+      calibration: mockCalibrationMatches,
+    });
+
+    const calibration = card('Data calibration');
+    expect(
+      within(calibration).getByText('Calibration diagnostics are available for US reports for now.')
+    ).toBeInTheDocument();
+    expect(within(calibration).queryByRole('table')).not.toBeInTheDocument();
+    expect(within(calibration).queryByRole('link')).not.toBeInTheDocument();
+    expect(
+      within(card('Baseline comparisons')).getByRole('link', { name: /view scorecard/i })
+    ).toHaveAttribute('href', 'https://www.policyengine.org/scorecard?view=scorecard&country=uk');
+  });
 });

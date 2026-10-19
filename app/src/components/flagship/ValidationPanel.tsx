@@ -10,7 +10,6 @@ import {
   METRIC_LABELS,
   ModelValidationRow,
   PROGRAM_LABELS,
-  SCORECARD_COMPARISON_URL,
   scorecardEntryUrl,
   ScorecardMatches,
   scorecardMatchesForPaths,
@@ -253,16 +252,25 @@ export function trackRecordPrograms(trackRecord: ModelTrackRecord): string[] | n
  * Fetches the track record as soon as the paths are known — call this
  * at page level, not inside a tab panel, so the request runs in
  * parallel with the rest of the report instead of starting on tab
- * click (inactive tab panels are unmounted).
+ * click (inactive tab panels are unmounted). The track record is the
+ * US model's (its dependency map and comparison table are US-only), so
+ * another country gets an empty one, and an unknown country waits.
  */
-export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
+export function useModelTrackRecord(
+  paths: string[],
+  countryId: string | undefined
+): ModelTrackRecord {
   const [trackRecord, setTrackRecord] = useState<ModelTrackRecord>(undefined);
   const pathsKey = paths.join('\n');
 
   useEffect(() => {
     let cancelled = false;
     const resolvedPaths = pathsKey ? pathsKey.split('\n') : [];
-    if (resolvedPaths.length === 0) {
+    if (!countryId) {
+      setTrackRecord(undefined);
+      return;
+    }
+    if (countryId !== 'us' || resolvedPaths.length === 0) {
       setTrackRecord({ modelVersion: '', reachedCount: 0, programs: [], rows: [] });
       return;
     }
@@ -276,7 +284,7 @@ export function useModelTrackRecord(paths: string[]): ModelTrackRecord {
     return () => {
       cancelled = true;
     };
-  }, [pathsKey]);
+  }, [pathsKey, countryId]);
 
   return trackRecord;
 }
@@ -387,6 +395,7 @@ export function BaselineComparisons({
   scorecardRows,
   baselineLabel,
   reform,
+  countryId = 'us',
 }: {
   trackRecord: ModelTrackRecord;
   /** The published scorecard's baseline claims for the reform; undefined while loading. */
@@ -398,9 +407,12 @@ export function BaselineComparisons({
   baselineLabel?: string | null;
   /** The reform and the report's region, which pick the comparisons; undefined while loading. */
   reform: ReformScope | undefined;
+  /** The report's country: the scorecard link names it, and only a US report shows the US track record. */
+  countryId?: string;
 }) {
+  const usTrackRecord = countryId === 'us' ? trackRecord : null;
   const candidates = [
-    ...(trackRecord ? trackRecordClaims(trackRecord) : []),
+    ...(usTrackRecord ? trackRecordClaims(usTrackRecord) : []),
     ...(scorecardRows ?? []).map((row) => ({ row })),
   ];
   const relevant = new Set(
@@ -421,9 +433,13 @@ export function BaselineComparisons({
     );
   } else if (entries.length > 0) {
     content = <ScorecardClaimTable label="Baseline comparisons" entries={entries} />;
-  } else if (trackRecord === undefined || scorecardRows === undefined || reform === undefined) {
+  } else if (
+    (countryId === 'us' && trackRecord === undefined) ||
+    scorecardRows === undefined ||
+    reform === undefined
+  ) {
     content = <ValidationLoading label="Loading baseline comparisons" />;
-  } else if (trackRecord === null || scorecardRows === null) {
+  } else if ((countryId === 'us' && trackRecord === null) || scorecardRows === null) {
     content = <ValidationNote>Baseline comparisons are temporarily unavailable.</ValidationNote>;
   } else {
     // Silence would read as "fine"; loose matches would read as evidence.
@@ -437,7 +453,7 @@ export function BaselineComparisons({
     <ValidationCard
       id="baseline-comparisons"
       title="Baseline comparisons"
-      href={SCORECARD_COMPARISON_URL}
+      href={scorecardEntryUrl('scorecard', countryId)}
       linkLabel="View scorecard"
     >
       {content}

@@ -9,7 +9,15 @@ export interface ScorecardClaim {
   source_column?: string;
   url?: string;
   publication_title?: string;
-  conditions?: { bill_version?: string; provision?: string; option?: string };
+  conditions?: {
+    bill_version?: string;
+    provision?: string;
+    option?: string;
+    /** The source's sign convention, as free text; see signConvention.ts. */
+    sign_convention?: string | null;
+    /** "unsigned" when the source prints a size and names the direction in words. */
+    change_direction?: string | null;
+  };
   program?: string | null;
   geography?: string;
   metric: string;

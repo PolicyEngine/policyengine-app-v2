@@ -19,6 +19,10 @@ import {
   stackedJctCtcClaim,
   utahBaselineClaim,
 } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
+import {
+  PERSONAL_ALLOWANCE_1PCT,
+  ukClaim,
+} from '@/tests/fixtures/libs/flagship/signConventionMocks';
 
 describe('scorecard evidence presentation', () => {
   test('given a related reform then shows source-policy counterparts, periods and baseline caveats', () => {
@@ -170,6 +174,50 @@ describe('scorecard evidence presentation', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     await userEvent.click(screen.getByText('Compared policy and baseline'));
     expect(screen.getByRole('table', { name: 'Related reforms', hidden: true })).toBeVisible();
+  });
+
+  test('given HMRC’s unsigned personal allowance cost then the gap compares magnitudes and says so', () => {
+    render(
+      <ScorecardClaimTable label="Related reforms" entries={[{ row: PERSONAL_ALLOWANCE_1PCT }]} />
+    );
+
+    const cells = within(screen.getByRole('row', { name: /^Change personal allowance by 1%/ }))
+      .getAllByRole('cell')
+      .map((cell) => cell.textContent);
+    // The published figure shows as published; the gap is +13.1%, not -213%.
+    expect(cells).toEqual(['£1.0B2026', '-£1.1B', '13.1%']);
+    expect(screen.getByText(/The gap compares magnitudes\./)).toBeInTheDocument();
+  });
+
+  test('given a source that counts a cost as positive then the gap uses PolicyEngine’s sign', () => {
+    const row = ukClaim({
+      metric: 'revenue_change',
+      convention: 'positive = cost to the Exchequer',
+      external: 2e9,
+      value: -1.8e9,
+    });
+    render(<ScorecardClaimTable label="Related reforms" entries={[{ row }]} />);
+
+    const cells = within(screen.getByRole('row', { name: /^UK claim/ }))
+      .getAllByRole('cell')
+      .map((cell) => cell.textContent);
+    expect(cells).toEqual(['£2.0B2026', '-£1.8B', '10.0%']);
+    expect(
+      screen.getByText(/the source counts this change with the opposite sign/)
+    ).toBeInTheDocument();
+  });
+
+  test('given an unclear sign convention then no gap shows and the note says to compare magnitudes', () => {
+    const row = ukClaim({ metric: 'gdp_level_effect', convention: 'positive = higher GDP' });
+    render(<ScorecardClaimTable label="Related reforms" entries={[{ row }]} />);
+
+    const cells = within(screen.getByRole('row', { name: /^UK claim/ }))
+      .getAllByRole('cell')
+      .map((cell) => cell.textContent);
+    expect(cells[2]).toBe('—');
+    expect(
+      screen.getByText('The source’s sign convention is unclear; compare the magnitudes.')
+    ).toBeInTheDocument();
   });
 });
 
