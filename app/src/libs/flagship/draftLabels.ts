@@ -60,19 +60,36 @@ export function describeChange(
 
 const isYearStart = (date: string) => date.endsWith('-01-01');
 const isYearEnd = (date: string) => date.endsWith('-12-31');
-const day = (date: string) => dayjs(date).format('MMM D, YYYY');
-const startLabel = (date: string) => (isYearStart(date) ? date.slice(0, 4) : day(date));
+
+/**
+ * A day as the country writes it: "Jan 1, 2026" in the US, "1 Jan 2026"
+ * in the UK. `long` spells the month out: "January 1, 2026", "1 January 2026".
+ */
+export function dayLabel(
+  date: string | Date | dayjs.Dayjs,
+  countryId: string = 'us',
+  { long = false }: { long?: boolean } = {}
+): string {
+  const month = long ? 'MMMM' : 'MMM';
+  return dayjs(date).format(countryId === 'uk' ? `D ${month} YYYY` : `${month} D, YYYY`);
+}
+
+const startLabel = (date: string, countryId: string) =>
+  isYearStart(date) ? date.slice(0, 4) : dayLabel(date, countryId);
 
 /** When one change applies: "from 2027", "2027 only", "2027–2029", or its dates. */
-export function periodLabel({ startDate, endDate }: Pick<ValueInterval, 'startDate' | 'endDate'>) {
+export function periodLabel(
+  { startDate, endDate }: Pick<ValueInterval, 'startDate' | 'endDate'>,
+  countryId: string = 'us'
+) {
   if (endDate === FOREVER) {
-    return `from ${startLabel(startDate)}`;
+    return `from ${startLabel(startDate, countryId)}`;
   }
   if (isYearStart(startDate) && isYearEnd(endDate)) {
     const [from, to] = [startDate.slice(0, 4), endDate.slice(0, 4)];
     return from === to ? `${from} only` : `${from}–${to}`;
   }
-  return `${day(startDate)} – ${day(endDate)}`;
+  return `${dayLabel(startDate, countryId)} – ${dayLabel(endDate, countryId)}`;
 }
 
 /**
@@ -82,19 +99,20 @@ export function periodLabel({ startDate, endDate }: Pick<ValueInterval, 'startDa
  */
 export function summarizeIntervals(
   intervals: ValueInterval[],
-  formatScalar: (value: unknown) => string
+  formatScalar: (value: unknown) => string,
+  countryId: string = 'us'
 ): { value: string; when: string } {
   if (intervals.length === 0) {
     return { value: '', when: '' };
   }
   const [first, last] = [intervals[0], intervals[intervals.length - 1]];
   if (intervals.length === 1) {
-    return { value: formatScalar(first.value), when: periodLabel(first) };
+    return { value: formatScalar(first.value), when: periodLabel(first, countryId) };
   }
   const [from, to] = [formatScalar(first.value), formatScalar(last.value)];
   return {
     value: from === to ? from : `${from} → ${to}`,
-    when: `${intervals.length} periods from ${startLabel(first.startDate)}`,
+    when: `${intervals.length} periods from ${startLabel(first.startDate, countryId)}`,
   };
 }
 

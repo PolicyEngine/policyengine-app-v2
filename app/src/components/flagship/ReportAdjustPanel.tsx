@@ -441,7 +441,7 @@ function AdjustPanel({
                             fontVariantNumeric: 'tabular-nums',
                           }}
                         >
-                          {periodLabel(period)}
+                          {periodLabel(period, countryId)}
                         </span>
                         {typeof period.value === 'boolean' ? (
                           <ValueInput
@@ -454,7 +454,7 @@ function AdjustPanel({
                                 ),
                               }))
                             }
-                            ariaLabel={`${name}, ${periodLabel(period)}`}
+                            ariaLabel={`${name}, ${periodLabel(period, countryId)}`}
                           />
                         ) : (
                           <div style={{ width: 150 }}>
@@ -469,7 +469,7 @@ function AdjustPanel({
                                   ),
                                 }))
                               }
-                              ariaLabel={`${name}, ${periodLabel(period)}`}
+                              ariaLabel={`${name}, ${periodLabel(period, countryId)}`}
                             />
                           </div>
                         )}

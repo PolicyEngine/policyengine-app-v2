@@ -68,7 +68,7 @@ describe('ApiReformStore', () => {
     const created = await store.create(mockReformInput);
 
     // Then
-    expect(materializePolicy).toHaveBeenCalledWith('us', mockReformInput.parameters);
+    expect(materializePolicy).toHaveBeenCalledWith('us', mockReformInput.parameters, undefined);
     const call = fetchCall(fetchMock);
     expect(call.path).toBe('/v2/user-policies');
     expect(call.body).toEqual({
@@ -83,6 +83,25 @@ describe('ApiReformStore', () => {
       policyId: String(MATERIALIZED_POLICY_ID),
       parameters: mockReformInput.parameters,
     });
+  });
+
+  it('given parameter metadata, when created, then the policy is typed against it', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext('us');
+    const materializePolicy = vi.fn().mockResolvedValue(MATERIALIZED_POLICY_ID);
+    const metadata = { 'gov.irs.credits.ctc.amount.base[0]': { type: 'parameter' } } as any;
+    const store = new ApiReformStore(context, {
+      materializePolicy,
+      fetchPolicyJson: vi.fn().mockResolvedValue(POLICY_JSON),
+      getParameterMetadata: () => metadata,
+    });
+    fetchMock.mockResolvedValue(itemResponse(reformRow, 201));
+
+    // When
+    await store.create(mockReformInput);
+
+    // Then
+    expect(materializePolicy).toHaveBeenCalledWith('us', mockReformInput.parameters, metadata);
   });
 
   it('given a long name, when created, then it is shortened to the account limit', async () => {
@@ -278,7 +297,7 @@ describe('ApiReformStore', () => {
     await store.create({ ...mockReformInput, countryId: 'uk' });
 
     // Then
-    expect(materializePolicy).toHaveBeenCalledWith('uk', mockReformInput.parameters);
+    expect(materializePolicy).toHaveBeenCalledWith('uk', mockReformInput.parameters, undefined);
     const call = fetchCall(fetchMock);
     expect(call.query).toEqual({ country_id: 'uk' });
     expect(call.body.country_id).toBe('uk');
@@ -356,7 +375,7 @@ describe('LocalStorageReformStore', () => {
   it('given a reform, when created, then its v1 policy is created and its ID kept in this browser', async () => {
     const created = await store.create(mockReformInput);
 
-    expect(materializePolicy).toHaveBeenCalledWith('us', mockReformInput.parameters);
+    expect(materializePolicy).toHaveBeenCalledWith('us', mockReformInput.parameters, undefined);
     expect(created.policyId).toBe(String(MATERIALIZED_POLICY_ID));
     expect((await store.findById(created.id!))?.policyId).toBe(String(MATERIALIZED_POLICY_ID));
   });
@@ -407,7 +426,7 @@ describe('LocalStorageReformStore', () => {
 
     const updated = await store.update(created.id!, { parameters });
 
-    expect(materializePolicy).toHaveBeenLastCalledWith('us', parameters);
+    expect(materializePolicy).toHaveBeenLastCalledWith('us', parameters, undefined);
     expect(updated.policyId).toBe(String(REPLACEMENT_POLICY_ID));
     expect((await store.findById(created.id!))?.parameters).toEqual(parameters);
   });

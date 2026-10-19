@@ -15,6 +15,7 @@ import type { ReportMetric } from '@/components/flagship/ReportContents';
 import { SegmentedControl, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { storedRevenueMetric } from '@/libs/flagship/billMetrics';
+import { currencySymbol } from '@/utils/formatters';
 
 const WINNER_SEGMENTS = [
   { key: 'gainMore', label: 'Gain more than 5%', color: colors.primary[600] },
@@ -92,9 +93,9 @@ function povertyPercentChange(rates: PovertyRates | undefined): number | null {
   return null;
 }
 
-/** "−$24", not "$-24". */
-const dollars = (value: number) =>
-  `${value < 0 ? '−' : ''}$${Math.round(Math.abs(value)).toLocaleString()}`;
+/** "−$24" (or "−£24"), not "$-24". */
+const money = (value: number, symbol: string) =>
+  `${value < 0 ? '−' : ''}${symbol}${Math.round(Math.abs(value)).toLocaleString()}`;
 
 const signedPercent = (value: number) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(1)}%`;
@@ -150,6 +151,7 @@ export default function StoredImpactCharts({
   countryId?: Parameters<typeof storedRevenueMetric>[1];
 }) {
   const [decileMode, setDecileMode] = useState<'average' | 'relative'>('average');
+  const dollars = (value: number) => money(value, currencySymbol(countryId));
   const impact = bill.impactData;
   // Worded as the overview words it, so the two read the same.
   const revenue = storedRevenueMetric(bill, countryId);
