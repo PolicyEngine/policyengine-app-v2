@@ -41,6 +41,7 @@ import {
   VariableInfo,
 } from '@/utils/VariableResolver';
 import SPMGeographyChoice from './SPMGeographyChoice';
+import { WholeNumberStepper } from './VariableInput';
 import type { CommonInput } from './VariablePickerDialog';
 import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
@@ -163,31 +164,51 @@ function ChildCountInput({
   useEffect(() => {
     setText(String(value));
   }, [value]);
+  const step = (delta: number) => {
+    const next = Math.min(MAX_TYPED_CHILDREN, Math.max(0, value + delta));
+    if (next !== value) {
+      onChange(next);
+    }
+  };
   return (
-    <Input
-      id={id}
-      type="number"
-      inputMode="numeric"
-      min={0}
-      max={MAX_TYPED_CHILDREN}
-      step={1}
-      value={text}
-      disabled={disabled}
-      className="tw:w-36 tw:bg-white"
-      onChange={(event) => {
-        setText(event.target.value);
-        const count = Number(event.target.value);
-        if (
-          event.target.value.trim() !== '' &&
-          Number.isInteger(count) &&
-          count >= 0 &&
-          count <= MAX_TYPED_CHILDREN
-        ) {
-          onChange(count);
-        }
-      }}
-      onBlur={() => setText(String(value))}
-    />
+    <div className="tw:relative tw:w-36">
+      <Input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        value={text}
+        disabled={disabled}
+        // Room for the step buttons; a count has no decimal point to type.
+        className="tw:w-36 tw:bg-white tw:pr-8"
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            step(event.key === 'ArrowUp' ? 1 : -1);
+          }
+        }}
+        onChange={(event) => {
+          const digits = event.target.value.replace(/\D/g, '');
+          setText(digits);
+          const count = Number(digits);
+          if (
+            digits !== '' &&
+            Number.isInteger(count) &&
+            count >= 0 &&
+            count <= MAX_TYPED_CHILDREN
+          ) {
+            onChange(count);
+          }
+        }}
+        onBlur={() => setText(String(value))}
+      />
+      <WholeNumberStepper
+        label="number of children"
+        onStep={step}
+        canDecrease={value > 0}
+        canIncrease={value < MAX_TYPED_CHILDREN}
+        disabled={disabled}
+      />
+    </div>
   );
 }
 
@@ -705,6 +726,7 @@ export default function HouseholdBuilderForm({
                               onChange={onChange}
                               disabled={disabled}
                               showRemoveColumn
+                              wholeNumbers={columns}
                             />
                           );
                         })}
@@ -730,6 +752,7 @@ export default function HouseholdBuilderForm({
                                   : () => handleRemovePersonVariable(varName, person)
                               }
                               disabled={disabled}
+                              wholeNumbers={columns}
                             />
                           );
                         })}
@@ -836,6 +859,7 @@ export default function HouseholdBuilderForm({
                     disabled={disabled}
                     showRemoveColumn
                     stacked={columns}
+                    wholeNumbers={columns}
                     width={columns ? 208 : undefined}
                   />
                 );
@@ -863,6 +887,7 @@ export default function HouseholdBuilderForm({
                     }
                     disabled={disabled}
                     stacked={columns}
+                    wholeNumbers={columns}
                     width={columns ? 208 : undefined}
                   />
                 );

@@ -36,6 +36,17 @@ describe('PolicyDatePicker', () => {
     expect(screen.getByRole('button', { name: 'From: Oct 1, 2030' })).toBeInTheDocument();
   });
 
+  test('given the UK then dates read day first', async () => {
+    const user = userEvent.setup();
+    render(<Harness />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: 'From: 1 Jan 2026' }));
+    await user.selectOptions(screen.getByLabelText('Month'), '3');
+    await user.click(screen.getByRole('button', { name: '6 April 2026' }));
+
+    expect(screen.getByRole('button', { name: 'From: 6 Apr 2026' })).toBeInTheDocument();
+  });
+
   test('given a preset then it is chosen in one click', async () => {
     const user = userEvent.setup();
     render(<Harness />);

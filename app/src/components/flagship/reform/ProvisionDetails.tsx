@@ -481,7 +481,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
         paramName: member.path,
         label: member.label,
         changes: provisionIntervals(provision).map((interval, index) => {
-          const period = periodLabel(interval);
+          const period = periodLabel(interval, draft.countryId);
           return {
             index,
             period: group ? `${member.label}: ${period}` : period,

@@ -17,6 +17,8 @@ import {
   REFORM_POLICY_ID,
   REFORM_RESULT,
   REFORM_RESULT_LOSS,
+  UK_BASELINE_RESULT,
+  UK_REFORM_RESULT,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
 
 const mockCreateHousehold = vi.fn();
@@ -40,8 +42,12 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
     onChange,
     onMaritalStatusChange,
     onNumChildrenChange,
+    variablePickerCommon,
   }: any) => (
-    <div aria-label="Household builder">
+    <div
+      aria-label="Household builder"
+      data-featured={variablePickerCommon.map((input: any) => input.name).join(' ')}
+    >
       <span>{`${maritalStatus} · ${numChildren}`}</span>
       <span data-testid="state">
         {String(
@@ -73,7 +79,7 @@ vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (imp
     typeof import('@/components/flagship/report/household/HouseholdBreakdowns')
   >()),
   default: ({ view, source }: any) => (
-    <div aria-label="Breakdown">
+    <div aria-label="Breakdown" data-country={source.countryId}>
       {[
         view,
         source.householdId,
@@ -108,7 +114,7 @@ function renderSection({
     </QueryClientProvider>
   );
   // Most tests start from a household already added.
-  if (added && countryId === 'us') {
+  if (added && (countryId === 'us' || countryId === 'uk')) {
     act(() => screen.getByRole('button', { name: 'Add a household' }).click());
   }
   return view;
@@ -413,6 +419,23 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  test('given a failed run and a fixed input then trying again sends the household as it is now', async () => {
+    const user = userEvent.setup();
+    mockFetchHouseholdCalculation.mockRejectedValueOnce(new Error('Household calculation failed'));
+    renderSection();
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    const alert = await screen.findByRole('alert');
+
+    await user.click(screen.getByRole('button', { name: 'Married' }));
+    await user.click(screen.getByRole('button', { name: 'Partner earns 20000' }));
+    await user.click(within(alert).getByRole('button', { name: 'Try again' }));
+
+    await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(2));
+    const people = mockCreateHousehold.mock.calls[1][0].data.people;
+    expect(people['your partner'].employment_income).toEqual({ [HOUSEHOLD_YEAR]: 20000 });
+  });
+
   test('given a failed run then refocusing the page or reconnecting does not run it again', async () => {
     const user = userEvent.setup();
     mockFetchHouseholdCalculation.mockRejectedValueOnce(new Error('Household calculation failed'));
@@ -470,10 +493,77 @@ describe('HouseholdImpactSection', () => {
     expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(3);
   });
 
-  test('given a report outside the US then no household form shows', () => {
-    renderSection({ countryId: 'uk' });
+  test('given a report outside the US and the UK then no household form shows', () => {
+    renderSection({ countryId: 'ca' });
 
-    expect(screen.getByText('Household impacts are available for US reports.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Calculate' })).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Household impacts are available for US and UK reports.')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add a household' })).not.toBeInTheDocument();
+  });
+
+  describe('given a UK report', () => {
+    beforeEach(() => {
+      mockFetchHouseholdCalculation.mockImplementation(
+        async (_country: string, _household: string, policyId: string) =>
+          policyId === BASELINE_POLICY_ID ? UK_BASELINE_RESULT : UK_REFORM_RESULT
+      );
+    });
+
+    test('then a UK household is sent, with no US poverty thresholds, to the UK API', async () => {
+      const user = userEvent.setup();
+      renderSection({ countryId: 'uk' });
+
+      await user.click(await screen.findByRole('button', { name: 'Calculate' }));
+
+      await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
+      const sent = mockCreateHousehold.mock.calls[0][0];
+      expect(sent.country_id).toBe('uk');
+      expect(Object.keys(sent.data).sort()).toEqual(['benunits', 'households', 'people']);
+      expect(JSON.stringify(sent)).not.toContain('spm');
+      await waitFor(() =>
+        expect(mockFetchHouseholdCalculation.mock.calls).toEqual([
+          ['uk', String(CREATED_HOUSEHOLD_ID), BASELINE_POLICY_ID],
+          ['uk', String(CREATED_HOUSEHOLD_ID), REFORM_POLICY_ID],
+        ])
+      );
+    });
+
+    test('then the result reads in pounds, with UK taxes', async () => {
+      const user = userEvent.setup();
+      renderSection({ countryId: 'uk' });
+
+      await user.click(await screen.findByRole('button', { name: 'Calculate' }));
+
+      const result = await screen.findByRole('region', { name: 'Household impact' });
+      const headline = within(result).getByRole('group', { name: 'Change in annual net income' });
+      expect(headline).toHaveTextContent('+£500');
+      expect(headline).toHaveTextContent('£24,940 → £25,440 (+2.0%)');
+      const parts = within(result).getByRole('table', { name: 'Taxes and benefits' });
+      expect(within(parts).getByRole('row', { name: /Income Tax/ })).toHaveTextContent(
+        '£3,486£2,986−£500'
+      );
+      expect(result).not.toHaveTextContent('$');
+    });
+
+    test("then the picker features the UK's inputs", () => {
+      renderSection({ countryId: 'uk' });
+      const featured = screen
+        .getByRole('generic', { name: 'Household builder' })
+        .getAttribute('data-featured');
+      expect(featured).toContain('council_tax_band');
+      expect(featured).not.toContain('pre_subsidy_rent');
+    });
+
+    test("then the breakdowns read the UK household's run", async () => {
+      const user = userEvent.setup();
+      renderSection({ countryId: 'uk' });
+      await user.click(await screen.findByRole('button', { name: 'Calculate' }));
+      const result = await screen.findByRole('region', { name: 'Household impact' });
+
+      await user.click(within(result).getByRole('tab', { name: 'Net income' }));
+
+      expect(within(result).getByLabelText('Breakdown')).toHaveAttribute('data-country', 'uk');
+    });
   });
 });

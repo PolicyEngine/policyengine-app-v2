@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import {
   Input,
   Select,
@@ -31,6 +32,13 @@ export interface VariableInputProps {
   entityName?: string; // Required for person-level variables
   onChange: (newHousehold: HouseholdModel) => void;
   disabled?: boolean;
+  /**
+   * A whole-number input takes digits only and steps up and down, by
+   * button or arrow key; off, it takes any number, as before.
+   */
+  wholeNumbers?: boolean;
+  /** The input's name for its step buttons, when its label is shown elsewhere. */
+  stepLabel?: string;
 }
 
 export default function VariableInput({
@@ -41,6 +49,8 @@ export default function VariableInput({
   entityName,
   onChange,
   disabled = false,
+  wholeNumbers = false,
+  stepLabel,
 }: VariableInputProps) {
   const resolvedVariable = {
     ...variable,
@@ -91,8 +101,19 @@ export default function VariableInput({
     }
   }, [isEditingTextValue, resolvedVariable.valueType, textValue]);
 
+  const stepsWholeNumbers = wholeNumbers && resolvedVariable.valueType === 'int';
+
   const handleNumericInputChange = (nextValue: string) => {
-    setNumericInputValue(nextValue);
+    // A whole number has no decimal point to type.
+    setNumericInputValue(stepsWholeNumbers ? nextValue.replace(/[^\d-]/g, '') : nextValue);
+  };
+
+  // One more or one less, never below zero.
+  const stepBy = (delta: number) => {
+    const next = Math.max(0, Math.round(rawNumericValue) + delta);
+    if (next !== rawNumericValue) {
+      handleChange(next);
+    }
   };
 
   const commitNumericInputValue = () => {
@@ -227,6 +248,10 @@ export default function VariableInput({
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   e.currentTarget.blur();
+                } else if (stepsWholeNumbers && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                  stepBy(e.key === 'ArrowUp' ? 1 : -1);
                 }
               }}
               onChange={(e) => handleNumericInputChange(e.currentTarget.value)}
@@ -235,10 +260,19 @@ export default function VariableInput({
               className={[
                 numericFormatting.prefix ? 'tw:pl-8' : '',
                 numericFormatting.suffix ? 'tw:pr-10' : '',
+                stepsWholeNumbers ? 'tw:pr-8' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
             />
+            {stepsWholeNumbers && (
+              <WholeNumberStepper
+                label={stepLabel || resolvedVariable.label}
+                onStep={stepBy}
+                canDecrease={rawNumericValue > 0}
+                disabled={disabled}
+              />
+            )}
             {numericFormatting.suffix && (
               <span
                 className="tw:absolute tw:right-3 tw:top-1/2 tw:-translate-y-1/2 tw:text-sm tw:text-gray-500"
@@ -272,6 +306,49 @@ export default function VariableInput({
         </div>
       );
   }
+}
+
+/** Up and down buttons inside a whole-number input's right edge. */
+export function WholeNumberStepper({
+  label,
+  onStep,
+  canDecrease,
+  canIncrease = true,
+  disabled,
+}: {
+  label: string;
+  onStep: (delta: number) => void;
+  canDecrease: boolean;
+  canIncrease?: boolean;
+  disabled?: boolean;
+}) {
+  const button =
+    'tw:flex tw:h-1/2 tw:w-6 tw:cursor-pointer tw:items-center tw:justify-center tw:text-gray-500 tw:hover:bg-gray-100 tw:hover:text-gray-800 tw:disabled:cursor-not-allowed tw:disabled:opacity-40';
+  return (
+    <div className="tw:absolute tw:top-px tw:right-px tw:bottom-px tw:flex tw:flex-col tw:overflow-hidden tw:rounded-r-[inherit] tw:border-l tw:border-gray-200">
+      <button
+        type="button"
+        aria-label={`Increase ${label}`}
+        className={button}
+        // Keeps a typed value from committing over the step.
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => onStep(1)}
+        disabled={disabled || !canIncrease}
+      >
+        <IconChevronUp size={12} aria-hidden />
+      </button>
+      <button
+        type="button"
+        aria-label={`Decrease ${label}`}
+        className={`${button} tw:border-t tw:border-gray-200`}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => onStep(-1)}
+        disabled={disabled || !canDecrease}
+      >
+        <IconChevronDown size={12} aria-hidden />
+      </button>
+    </div>
+  );
 }
 
 function parseNumericInput(value: string): number | null {

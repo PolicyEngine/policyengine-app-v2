@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatValue, getCurrentValue, parseValueFromQuestion } from '@/utils/parameterValues';
+import {
+  currencySymbolForUnit,
+  formatValue,
+  getCurrentValue,
+  isPercentageUnit,
+  parseValueFromQuestion,
+} from '@/utils/parameterValues';
 
 describe('getCurrentValue', () => {
   it('given dated values then returns the latest not-in-the-future value', () => {
@@ -47,7 +53,36 @@ describe('formatValue', () => {
     [false, null, 'false'],
     [undefined, null, '—'],
     ['text', null, 'text'],
+    // UK parameters spell pounds three ways.
+    [16000, 'GBP', '£16,000'],
+    [1, 'currency_GBP', '£1'],
+    [2000, 'USD', '$2,000'],
+    // The sign goes before the symbol.
+    [-500, 'currency-GBP', '−£500'],
+    [-500, 'currency-USD', '−$500'],
+    [0.5, 'marginal-rate', '50%'],
   ])('given %s with unit %s then renders %s', (value, unit, expected) => {
     expect(formatValue(value, unit as string | null)).toBe(expected);
+  });
+});
+
+describe('currencySymbolForUnit', () => {
+  it.each([
+    ['currency-GBP', '£'],
+    ['GBP', '£'],
+    ['currency_GBP', '£'],
+    ['currency-USD', '$'],
+    ['/1', null],
+    [null, null],
+  ])('given unit %s then %s', (unit, expected) => {
+    expect(currencySymbolForUnit(unit)).toBe(expected);
+  });
+});
+
+describe('isPercentageUnit', () => {
+  it('given a rate unit then true; money then false', () => {
+    expect(isPercentageUnit('/1')).toBe(true);
+    expect(isPercentageUnit('marginal-rate')).toBe(true);
+    expect(isPercentageUnit('GBP')).toBe(false);
   });
 });

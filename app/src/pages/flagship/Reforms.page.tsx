@@ -52,7 +52,7 @@ import {
   billReportProvisions,
   billScoresOtherThanWriteUp,
 } from '@/libs/flagship/billProvisions';
-import { periodLabel } from '@/libs/flagship/draftLabels';
+import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
@@ -60,6 +60,7 @@ import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
+import { currencySymbol } from '@/utils/formatters';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
@@ -296,6 +297,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 export default function ReformsPage() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
+  const currency = currencySymbol(countryId);
   const queryClient = useQueryClient();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const currentLawPolicyId =
@@ -351,11 +353,7 @@ export default function ReformsPage() {
   const reportsLine = (reformId: string | undefined) => {
     const latest = latestReport(reformId);
     return latest
-      ? `Last run ${new Date(latest.createdAt).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })}`
+      ? `Last run ${dayLabel(new Date(latest.createdAt), countryId)}`
       : 'No reports yet';
   };
 
@@ -528,7 +526,7 @@ export default function ReformsPage() {
       stats.push(
         <Stat
           key="revenue"
-          value={`${revenue < 0 ? '\u2212' : '+'}$${display}${label ? ` ${label}` : ''}`}
+          value={`${revenue < 0 ? '\u2212' : '+'}${currency}${display}${label ? ` ${label}` : ''}`}
           label="revenue"
         />
       );
@@ -582,7 +580,7 @@ export default function ReformsPage() {
     const revenue = selectedBill.impacts?.revenue ?? impact?.budgetary?.stateRevenueImpact;
     const money = (value: number) => {
       const { display, label } = formatBudgetaryImpact(value);
-      return `${value < 0 ? '−' : '+'}$${display}${label ? ` ${label}` : ''}`;
+      return `${value < 0 ? '−' : '+'}${currency}${display}${label ? ` ${label}` : ''}`;
     };
     const hasTiles =
       typeof revenue === 'number' ||
@@ -874,7 +872,7 @@ export default function ReformsPage() {
                       PARAMETER_MUTED
                     )}
                     {column((period) => displayValue(period.value, unit), PARAMETER_VALUE)}
-                    {column((period) => periodLabel(period), PARAMETER_MUTED)}
+                    {column((period) => periodLabel(period, countryId), PARAMETER_MUTED)}
                   </div>
                 );
               })

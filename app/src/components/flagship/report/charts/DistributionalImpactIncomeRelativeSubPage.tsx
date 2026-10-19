@@ -30,7 +30,10 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import { tooltipText } from '@/libs/flagship/tooltipText';
-import { getDecileRelativeCsvRows } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
+import {
+  getDecileRelativeCsvRows,
+  type DecileBreakdown,
+} from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
@@ -45,6 +48,8 @@ interface Props {
   chartHeight?: number;
   fillHeight?: boolean;
   compact?: boolean;
+  /** Households ranked by wealth rather than income: the UK's wealth deciles. */
+  breakdown?: DecileBreakdown;
 }
 
 export default function DistributionalImpactIncomeRelativeSubPage({
@@ -52,6 +57,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   chartHeight: chartHeightProp,
   fillHeight = false,
   compact = false,
+  breakdown = 'income',
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -60,7 +66,8 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data - object with keys "1", "2", ..., "10"
-  const decileRelative = output.decile.relative;
+  const wealth = breakdown === 'wealth';
+  const decileRelative = (wealth ? output.wealth_decile?.relative : output.decile.relative) ?? {};
 
   // Convert to arrays for plotting
   const xArray = Object.keys(decileRelative);
@@ -77,7 +84,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
 
   // Generate hover message
   const hoverMessage = (x: string, y: number) => {
-    const obj = `the income of households in the ${ordinal(Number(x))} decile`;
+    const obj = `the income of households in the ${ordinal(Number(x))}${wealth ? ' wealth' : ''} decile`;
     return relativeChangeMessage('This reform', obj, y, 0.001, countryId);
   };
 
@@ -129,7 +136,12 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   const yAxis = getYAxisLayout(yTicks, !!axisTitle, yTickFormatter);
 
   // Description text
-  const description = (
+  const description = wealth ? (
+    <Text size="sm" c="dimmed">
+      PolicyEngine reports net income as the income a household takes home in a year, after taxes
+      and transfers. Wealth deciles contain an equal number of people (ranked by wealth).
+    </Text>
+  ) : (
     <Text size="sm" c="dimmed">
       PolicyEngine sorts households into ten equally-populated groups according to their baseline{' '}
       {countryId === 'uk' ? 'equivalised' : 'equivalized'} household net income.
@@ -141,7 +153,12 @@ export default function DistributionalImpactIncomeRelativeSubPage({
       {probe}
       <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
-        <Label value="Income decile" position="bottom" offset={10} style={RECHARTS_FONT_STYLE} />
+        <Label
+          value={wealth ? 'Wealth decile' : 'Income decile'}
+          position="bottom"
+          offset={10}
+          style={RECHARTS_FONT_STYLE}
+        />
       </XAxis>
       <YAxis
         ticks={yTicks}
@@ -194,9 +211,9 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   return (
     <ChartContainer
       title={getChartTitle()}
-      downloadFilename="distributional-impact-income-relative.svg"
-      csvFilename="distributional-impact-income-relative.csv"
-      csvData={getDecileRelativeCsvRows(output)}
+      downloadFilename={`distributional-impact-${breakdown}-relative.svg`}
+      csvFilename={`distributional-impact-${breakdown}-relative.csv`}
+      csvData={getDecileRelativeCsvRows(output, breakdown)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

@@ -1,6 +1,9 @@
 import { render, screen, userEvent, within } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import PopulationPicker, { populationLabel } from '@/components/flagship/reform/PopulationPicker';
+import PopulationPicker, {
+  nationalPopulationLabel,
+  populationLabel,
+} from '@/components/flagship/reform/PopulationPicker';
 import { UK_REGIONS } from '@/tests/fixtures/components/flagship/draftEditorFixtures';
 
 const REGIONS = [
@@ -26,6 +29,13 @@ describe('populationLabel', () => {
 });
 
 describe('populationLabel for the UK', () => {
+  test('given the whole UK then it reads UK-wide, and the US still reads Nationwide', () => {
+    expect(populationLabel('', UK_REGIONS, 'uk')).toBe('UK-wide');
+    expect(populationLabel('', REGIONS, 'us')).toBe('Nationwide');
+    expect(nationalPopulationLabel('uk')).toBe('UK-wide');
+    expect(nationalPopulationLabel()).toBe('Nationwide');
+  });
+
   test('given a UK country then it reads by name', () => {
     expect(populationLabel('country/england', UK_REGIONS)).toBe('England');
   });
@@ -76,5 +86,19 @@ describe('PopulationPicker', () => {
     await user.click(within(constituencies).getByRole('option', { name: 'Bedford' }));
 
     expect(onChange).toHaveBeenCalledWith('constituency/Bedford');
+  });
+
+  test('given the UK then the trigger and the whole-country choice read UK-wide', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <PopulationPicker value="" onChange={onChange} regions={UK_REGIONS} countryId="uk" />,
+      'uk'
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Population: UK-wide' }));
+    await user.click(screen.getByRole('option', { name: 'UK-wide' }));
+
+    expect(onChange).toHaveBeenCalledWith(undefined);
   });
 });

@@ -125,6 +125,26 @@ describe("nextConfig redirects", () => {
       permanent: false,
     });
   });
+
+  test("sends the legacy /methodology path to the model docs, which are proxied", async () => {
+    const redirects = await getRedirects();
+    expect(redirects).toContainEqual({
+      source: "/:countryId/methodology",
+      destination: "/:countryId/model",
+      permanent: true,
+    });
+
+    const rewrites = await nextConfig.rewrites!();
+    if (Array.isArray(rewrites)) {
+      throw new Error("Expected rewrites to be grouped by phase.");
+    }
+    const sources = [
+      ...(rewrites.beforeFiles ?? []),
+      ...(rewrites.afterFiles ?? []),
+      ...(rewrites.fallback ?? []),
+    ].map((rewrite) => rewrite.source);
+    expect(sources).toContain("/:countryId/model");
+  });
 });
 
 describe("OBBBA household explorer routes", () => {

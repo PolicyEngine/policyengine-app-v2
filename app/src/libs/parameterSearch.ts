@@ -2,9 +2,9 @@ import { createSelector } from '@reduxjs/toolkit';
 import Fuse, { IFuseOptions } from 'fuse.js';
 import type { RootState } from '@/store';
 import { ParameterMetadata, ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
-import { formatLabelParts, getHierarchicalLabels } from '../utils/parameterLabels';
+import { formatLabelParts } from '../utils/parameterLabels';
 import { getCurrentValue } from '../utils/parameterValues';
-import { priorFactor } from './searchPriors';
+import { priorFactor, priorOffset } from './searchPriors';
 
 /**
  * Universal parameter search for the flagship shell.
@@ -49,7 +49,23 @@ export interface ParameterSearchEntry {
    * only "amount", so search reads this alongside it.
    */
   scheduleLabel?: string | null;
+  /** Everyday names the metadata never uses (see SEARCH_KEYWORDS). */
+  keywords?: string;
 }
+
+/**
+ * Everyday names for parameters whose labels and descriptions never use
+ * them, so no derivation can reach them: what a searcher calls the UC
+ * taper is "Universal Credit earned income reduction rate" in the model.
+ * Keyed by exact path, so a name applies only where its parameter
+ * exists. Last resort — fix a label upstream when one can say it.
+ */
+export const SEARCH_KEYWORDS: Readonly<Record<string, string>> = {
+  'gov.dwp.universal_credit.means_test.reduction_rate': 'taper rate',
+  'gov.dwp.universal_credit.elements.child.limit.child_count': 'two child limit',
+  'gov.dwp.tax_credits.child_tax_credit.limit.child_count': 'two child limit',
+  'gov.hmrc.income_tax.allowances.personal_allowance.maximum_ANI': 'taper threshold',
+};
 
 /**
  * The postal codes a federal parameter keys its per-jurisdiction values
@@ -301,6 +317,20 @@ const ALIAS_DOMINANCE = 0.6;
 /** Words too structural to carry an initialism's meaning. */
 const INITIALISM_SKIP = new Set(['and', 'or', 'of', 'the', 'for', 'to', 'in', 'a', 'an']);
 
+/** A path's last key without its bracket index: `…base[0]` → `base`. */
+function lastKeyOf(path: string): string {
+  return (path.split('.').pop() ?? path).replace(/\[\d+\]$/, '');
+}
+
+/**
+ * Whether a label only restates its path key, exactly (`NORTHERN_IRELAND`
+ * → "NORTHERN IRELAND", `vat` → "vat"): a placeholder the model filled
+ * in, not a name anyone wrote.
+ */
+export function isKeyLabel(path: string, label: string): boolean {
+  return label.trim() === lastKeyOf(path).replace(/_/g, ' ');
+}
+
 function normalizePhrase(label: string): string {
   return label.toLowerCase().replace(/\.$/, '').replace(/\s+/g, ' ').trim();
 }
@@ -332,7 +362,18 @@ export function buildConceptAliases(collection: ParameterMetadataCollection): Ma
   for (const node of Object.values(collection) as any[]) {
     const path: string | undefined = node?.parameter;
     const label: string | undefined = node?.label;
-    if (!path || !label) {
+    // Contributed reforms name proposals, not the programs a searcher
+    // abbreviates ("UBI Center" is not what "UC" means); a label that
+    // only restates its key ("NORTHERN IRELAND" on `…NORTHERN_IRELAND`)
+    // was never written as a name; and what search never shows
+    // (gov.abolitions) cannot say what a query means. None gets a vote.
+    if (
+      !path ||
+      !label ||
+      path.startsWith('gov.contrib.') ||
+      EXCLUDED_PATH_PATTERNS.some((pattern) => path.includes(pattern)) ||
+      isKeyLabel(path, label)
+    ) {
       continue;
     }
     const phrase = normalizePhrase(label);
@@ -437,12 +478,145 @@ function scheduleLabelOf(path: string, parameters: ParameterMetadataCollection):
   return (schedule && parameters[schedule]?.label) || null;
 }
 
+/**
+ * Whether the metadata keys values by US state: only a model with
+ * `gov.states` does. Elsewhere a two-letter key is not a postal code — a
+ * UK key `WA` or `SC` must not read as Washington or South Carolina.
+ */
+export function hasStateKeys(paths: Iterable<string>): boolean {
+  for (const path of paths) {
+    if (path === 'gov.states' || path.startsWith('gov.states.')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Keys that name a place, read as a place ("Business rates revenue:
+ * London") rather than as a qualifier ("Pension Credit minimum guarantee
+ * (single)"). The UK's nations and regions, which the model keys values by.
+ */
+const PLACE_KEYS = new Set([
+  'UNITED_KINGDOM',
+  'GREAT_BRITAIN',
+  'ENGLAND',
+  'ENGLAND_OUTSIDE_LONDON',
+  'SCOTLAND',
+  'WALES',
+  'NORTHERN_IRELAND',
+  'LONDON',
+  'NORTH_EAST',
+  'NORTH_WEST',
+  'YORKSHIRE',
+  'YORKSHIRE_AND_THE_HUMBER',
+  'EAST_MIDLANDS',
+  'WEST_MIDLANDS',
+  'EAST_OF_ENGLAND',
+  'SOUTH_EAST',
+  'SOUTH_WEST',
+]);
+
+const MINOR_WORDS = new Set(['and', 'of', 'the', 'upon', 'on']);
+
+function placeName(key: string): string {
+  return key
+    .toLowerCase()
+    .split('_')
+    .map((word, index) =>
+      index > 0 && MINOR_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)
+    )
+    .join(' ');
+}
+
+/** Above this many key-labelled members, a parent's members keep their keys (see memberLabelOf). */
+const MAX_NAMED_MEMBERS = 16;
+
+/** Per parent, how many of its leaves are labelled only with their key. */
+function countKeyLabelledMembers(parameters: ParameterMetadataCollection): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const param of Object.values(parameters) as any[]) {
+    const path: string | undefined = param?.parameter;
+    if (param?.type === 'parameter' && path && param.label && isKeyLabel(path, param.label)) {
+      const parent = path.slice(0, path.lastIndexOf('.'));
+      counts.set(parent, (counts.get(parent) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+/**
+ * A leaf labelled only with its key (`minimum_guarantee.SINGLE` →
+ * "SINGLE", `revenue.LONDON` → "LONDON") says nothing on its own and
+ * nothing to a search for its program. Read it as its parent's member:
+ * "Pension Credit minimum guarantee (single)", "Revenue: London". Null
+ * when the label is a real one, or the parent has no name to lend.
+ */
+function memberLabelOf(
+  path: string,
+  label: string,
+  parameters: ParameterMetadataCollection,
+  stateKeys: boolean,
+  membersByParent: Map<string, number>
+): string | null {
+  const key = lastKeyOf(path);
+  if (!/^[A-Z][A-Z0-9_]*$/.test(key) || !isKeyLabel(path, label)) {
+    return null;
+  }
+  // A state's value of a federal parameter is a breakdown member, named apart.
+  if (stateKeys && USPS_CODES.has(key.split('_')[0])) {
+    return null;
+  }
+  const parentPath = path.slice(0, path.lastIndexOf('.'));
+  const parentLabel = parameters[parentPath]?.label?.trim();
+  if (!parentLabel || isKeyLabel(parentPath, parentLabel)) {
+    return null;
+  }
+  // A long list of keys (a value per county) is a lookup table: its
+  // members say no more than the parent, and a hundred copies of the
+  // parent's name would crowd out the parameters a search is after.
+  if ((membersByParent.get(parentPath) ?? 0) > MAX_NAMED_MEMBERS) {
+    return null;
+  }
+  const parent = parentLabel.charAt(0).toUpperCase() + parentLabel.slice(1);
+  const isPlace = PLACE_KEYS.has(key) || path.startsWith('gov.local_authorities.');
+  return isPlace
+    ? `${parent}: ${placeName(key)}`
+    : `${parent} (${key.toLowerCase().replace(/_/g, ' ')})`;
+}
+
+/**
+ * Breadcrumb labels as the tree shows them, except that a key standing in
+ * for a label reads as a name: `vat` → "VAT", `uc_deductions` → "UC
+ * deductions", rather than "Vat" and "Uc deductions".
+ */
+function breadcrumbLabels(path: string, parameters: ParameterMetadataCollection): string[] {
+  // As getHierarchicalLabels: every labelled node below `gov`, first letter capitalized.
+  const parts = path.split('.');
+  return parts.slice(1).flatMap((_, i) => {
+    const nodePath = parts.slice(0, i + 2).join('.');
+    const label = parameters[nodePath]?.label;
+    if (!label) {
+      return [];
+    }
+    if (isKeyLabel(nodePath, label) && /^[a-z][a-z0-9_]*$/.test(lastKeyOf(nodePath))) {
+      return [keyName(lastKeyOf(nodePath))];
+    }
+    return [label.charAt(0).toUpperCase() + label.slice(1)];
+  });
+}
+
 export function buildParameterSearchEntries(
   parameters: ParameterMetadataCollection
 ): ParameterSearchEntry[] {
+  const stateKeys = hasStateKeys(Object.keys(parameters));
+  const membersByParent = countKeyLabelledMembers(parameters);
   // A federal program's value for one state ("gov.usda.snap.….MT") is that
   // state's, like a parameter under gov.states: its key names the state.
   const stateKeyOf = (path: string): string | null => {
+    if (!stateKeys) {
+      return null;
+    }
     const segments = path.split('.');
     for (let i = segments.length - 1; i > 0; i--) {
       if (USPS_CODES.has(segments[i])) {
@@ -454,23 +628,60 @@ export function buildParameterSearchEntries(
   return Object.values(parameters)
     .filter(isSearchableParameter)
     .map((param) => {
-      const labels = getHierarchicalLabels(param.parameter, parameters);
+      const labels = breadcrumbLabels(param.parameter, parameters);
+      const memberLabel = memberLabelOf(
+        param.parameter,
+        param.label,
+        parameters,
+        stateKeys,
+        membersByParent
+      );
+      if (memberLabel && labels.length > 0) {
+        labels[labels.length - 1] = memberLabel;
+      }
       return {
         path: param.parameter,
-        label: param.label ?? param.parameter,
+        label: memberLabel ?? param.label ?? param.parameter,
         breadcrumb: formatLabelParts(labels),
         unit: param.unit ?? null,
         description: param.description ?? null,
         isContrib: param.parameter.startsWith('gov.contrib.'),
         stateCode: STATE_PATH_PATTERN.exec(param.parameter)?.[1] ?? stateKeyOf(param.parameter),
         scheduleLabel: scheduleLabelOf(param.parameter, parameters),
+        ...(SEARCH_KEYWORDS[param.parameter] ? { keywords: SEARCH_KEYWORDS[param.parameter] } : {}),
       };
     });
 }
 
-/** What search reads as an entry's label: a bracket member's schedule, then its own. */
-function searchLabel(entry: ParameterSearchEntry): string {
+/**
+ * Labels with their acronyms spelled out, per entry, set as an index is
+ * built: "NI employer rate" also reads "national insurance", so a query
+ * canonicalized to the phrase ranks it by its label, not only its path.
+ */
+const spelledOutLabels = new WeakMap<ParameterSearchEntry, string>();
+
+/** The phrases a label's capitalized acronyms stand for ("NI" → "national insurance"). */
+function acronymExpansions(label: string, aliases: Map<string, string>): string {
+  const phrases = new Set<string>();
+  for (const word of label.split(/[^A-Za-z]+/)) {
+    const phrase = /^[A-Z]{2,}$/.test(word) ? aliases.get(word.toLowerCase()) : undefined;
+    if (phrase) {
+      phrases.add(phrase);
+    }
+  }
+  return [...phrases].join(' ');
+}
+
+/** A bracket member's schedule label, then its own. */
+function labelWithSchedule(entry: ParameterSearchEntry): string {
   return entry.scheduleLabel ? `${entry.scheduleLabel} ${entry.label}` : entry.label;
+}
+
+/** What search reads as an entry's label: with its schedule, acronyms spelled out, and keywords. */
+function searchLabel(entry: ParameterSearchEntry): string {
+  return [labelWithSchedule(entry), spelledOutLabels.get(entry), entry.keywords]
+    .filter(Boolean)
+    .join(' ');
 }
 
 const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
@@ -488,6 +699,9 @@ const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
   minMatchCharLength: 2,
   includeScore: true,
 };
+
+/** Coverage credit for a structural word ("and", "for") found as a word: a tie-breaker. */
+const STRUCTURAL_WORD_SCORE = 0.1;
 
 /** Cap on how many prefiltered candidates get fuzzy re-ranked per query. */
 const RERANK_CANDIDATE_CAP = 4000;
@@ -565,6 +779,12 @@ export function createParameterSearchIndex(
   aliases = new Map<string, string>(),
   stateNames = new Map<string, string>()
 ): ParameterSearchIndex {
+  for (const entry of entries) {
+    const spelledOut = acronymExpansions(labelWithSchedule(entry), aliases);
+    if (spelledOut) {
+      spelledOutLabels.set(entry, spelledOut);
+    }
+  }
   const clusterByMember = new Map<string, string[]>();
   for (const cluster of clusters) {
     for (const member of cluster) {
@@ -578,8 +798,10 @@ export function createParameterSearchIndex(
   const stateNameOf = new Map([...stateNames].map(([name, code]) => [code, name]));
   // A breakdown by state, once one key names a state, holds its other
   // keys too: SNAP's maximum allotment has CONTIGUOUS_US beside AK and HI.
+  // Only a model with gov.states keys values by postal code.
   const breakdownParents = new Set<string>();
-  for (const entry of entries) {
+  const stateKeys = hasStateKeys(entries.map((entry) => entry.path));
+  for (const entry of stateKeys ? entries : []) {
     const breakdown = stateBreakdownOf(entry.path);
     if (breakdown) {
       breakdownParents.add(breakdown.parent);
@@ -633,21 +855,45 @@ function adjustedScore(
   namedStates: Set<string>
 ): number {
   const jurisdiction = inQueryJurisdiction(entry, namedStates) ? 1 : OUT_OF_JURISDICTION_FACTOR;
-  return (score ?? 0.5) * priorFactor(entry.path) * jurisdiction;
+  return (score ?? 0.5) * priorFactor(entry.path) * jurisdiction + priorOffset(entry.path);
 }
+
+/**
+ * Weight of a candidate's coverage shortfall — the share of the query's
+ * words it lacks against the best candidate — in its re-ranked score.
+ * Fuzzy scoring alone reads "employer" as nearly "employee"; the word
+ * match already knew better.
+ */
+const COVERAGE_SHORTFALL_WEIGHT = 1;
+
+/**
+ * Taken off the re-ranked score of an entry whose own label is the query,
+ * word for word: "basic rate" is the parameter labelled "Basic rate"
+ * before it is any of the labels that merely contain it ("Capital Gains
+ * Tax basic rate"). A label that only restates its key ("capital gains"
+ * on `…indices.capital_gains`) was never written as a name and earns nothing.
+ */
+const EXACT_LABEL_BONUS = 0.15;
 
 /** Fuzzy-rank candidates, then adjust by the derived priors. */
 function rankWithPriors(
   candidates: ParameterSearchEntry[],
   query: string,
   limit: number,
-  namedStates: Set<string>
+  namedStates: Set<string>,
+  shortfall?: Map<ParameterSearchEntry, number>
 ): ParameterSearchEntry[] {
+  const exact = plainWords(query);
   const ranked = new Fuse(candidates, RERANK_FUSE_OPTIONS)
     .search(query)
     .map((result) => ({
       entry: result.item,
-      adjusted: adjustedScore(result.score, result.item, namedStates),
+      adjusted:
+        adjustedScore(result.score, result.item, namedStates) +
+        COVERAGE_SHORTFALL_WEIGHT * (shortfall?.get(result.item) ?? 0) -
+        (plainWords(result.item.label) === exact && !isKeyLabel(result.item.path, result.item.label)
+          ? EXACT_LABEL_BONUS
+          : 0),
     }))
     .sort((a, b) => a.adjusted - b.adjusted)
     .slice(0, limit)
@@ -706,9 +952,46 @@ export function searchParameters(
   // Token score: 1 for an exact substring hit; 0.6 when only a prefix
   // of the token (≥3 chars) appears — derived stemming, so "maximum"
   // still credits entries that say "max" without any word list.
-  const tokenScore = (haystack: string, token: string, stateName: string): number => {
+  // A short token is a word, not a fragment: "uc" is not in "reduced",
+  // nor "vat" in "private". Two letters match a whole word; three, the
+  // start of one, so "tax" still finds "taxable".
+  const patterns = new Map<string, RegExp>();
+  const wordPattern = (token: string, whole: boolean): RegExp => {
+    const key = `${whole ? 'w' : 's'}:${token}`;
+    let pattern = patterns.get(key);
+    if (!pattern) {
+      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      pattern = new RegExp(`(^|[^a-z0-9])${escaped}${whole ? '([^a-z0-9]|$)' : ''}`);
+      patterns.set(key, pattern);
+    }
+    return pattern;
+  };
+  const tokenScore = (
+    haystack: string,
+    token: string,
+    stateName: string,
+    entry: ParameterSearchEntry
+  ): number => {
     if (stateWords.has(token)) {
-      return new RegExp(`(^|[^a-z])${token}([^a-z]|$)`).test(`${haystack} ${stateName}`) ? 1 : 0;
+      return wordPattern(token, true).test(`${haystack} ${stateName}`) ? 1 : 0;
+    }
+    // Structural words carry little meaning ("free and reduced price
+    // meals"): as a whole word they only break ties, and their absence
+    // never pushes an entry below the coverage floor.
+    if (INITIALISM_SKIP.has(token)) {
+      return wordPattern(token, true).test(haystack) ? STRUCTURAL_WORD_SCORE : 0;
+    }
+    if (token.length <= 3) {
+      if (!haystack.includes(token)) {
+        return 0;
+      }
+      // A state's own code in its path is not the word: "or" in "in or
+      // out of work" is not Oregon (a capitalized "OR" names it instead).
+      const text =
+        token === entry.stateCode
+          ? `${entry.breadcrumb} ${searchLabel(entry)}`.toLowerCase()
+          : haystack;
+      return wordPattern(token, token.length === 2).test(text) ? 1 : 0;
     }
     if (haystack.includes(token)) {
       return 1;
@@ -762,7 +1045,7 @@ export function searchParameters(
     for (const group of groups) {
       let best = 0;
       for (const variant of group) {
-        const score = tokenScore(haystack, variant, index.stateNameTexts[i]);
+        const score = tokenScore(haystack, variant, index.stateNameTexts[i], index.entries[i]);
         if (score > best) {
           best = score;
         }
@@ -795,6 +1078,7 @@ export function searchParameters(
     // Best band in jurisdiction, best band outside, lower band in, lower band outside.
     const buckets: ParameterSearchEntry[][] = [[], [], [], []];
     const otherStates: ParameterSearchEntry[] = [];
+    const shortfall = new Map<ParameterSearchEntry, number>();
     for (let i = 0; i < index.haystacks.length; i++) {
       if (coverage[i] >= floor) {
         let entry = index.entries[i];
@@ -808,6 +1092,7 @@ export function searchParameters(
           breakdownSeen.add(breakdown);
           entry = asStateBreakdown(entry, breakdown, index.stateBreakdownSizes.get(breakdown) ?? 1);
         }
+        shortfall.set(entry, (bestCoverage - coverage[i]) / groups.length);
         // Another state's parameter goes after the named state's and federal
         // ones: kept, so a near miss still shows, but never ahead of them.
         if (namedStates.size > 0 && entry.stateCode && !namedStates.has(entry.stateCode)) {
@@ -820,7 +1105,9 @@ export function searchParameters(
     }
     const candidates = buckets.flat().slice(0, RERANK_CANDIDATE_CAP);
     const ranked =
-      candidates.length > 1 ? rankWithPriors(candidates, trimmed, limit, namedStates) : candidates;
+      candidates.length > 1
+        ? rankWithPriors(candidates, trimmed, limit, namedStates, shortfall)
+        : candidates;
     if (ranked.length >= limit || otherStates.length === 0) {
       return ranked;
     }
@@ -828,7 +1115,7 @@ export function searchParameters(
     return [
       ...ranked,
       ...(rest.length > 1
-        ? rankWithPriors(rest, trimmed, limit - ranked.length, namedStates)
+        ? rankWithPriors(rest, trimmed, limit - ranked.length, namedStates, shortfall)
         : rest),
     ].slice(0, limit);
   }
@@ -955,6 +1242,7 @@ export function scheduleMemberOf(
 
 /** Path keys that are acronyms; any other key reads as a word. */
 const KEY_ACRONYMS = new Set([
+  // US
   'aca',
   'actc',
   'agi',
@@ -968,6 +1256,22 @@ const KEY_ACRONYMS = new Set([
   'ssi',
   'tanf',
   'tcja',
+  // UK
+  'badr',
+  'cgt',
+  'dfe',
+  'dwp',
+  'esa',
+  'hitc',
+  'hmrc',
+  'jsa',
+  'lha',
+  'ni',
+  'obr',
+  'ons',
+  'pip',
+  'uc',
+  'vat',
 ]);
 
 /** A path key read as a name: `arpa` → "ARPA", `base` → "Base", `joint_filers` → "Joint filers". */
@@ -1004,10 +1308,11 @@ function scheduleFolder(entry: ParameterSearchEntry, schedule: string): string {
 
 /**
  * Organizes flat results into a hierarchy for display: parameters
- * sharing a parent folder cluster under a folder header (in rank
- * order of their best match). A bracket schedule is one group, keyed by
- * its path — every bracket together, in order, and never mixed with a
- * sibling schedule whose breadcrumb reads the same.
+ * sharing a parent folder cluster under a folder header, and groups —
+ * folders and single results alike — follow the rank of their best
+ * match. A bracket schedule is one group, keyed by its path — every
+ * bracket together, in order, and never mixed with a sibling schedule
+ * whose breadcrumb reads the same.
  */
 export function groupSearchResults(results: ParameterSearchEntry[]): ParameterSearchGroup[] {
   const byKey = new Map<string, ParameterSearchGroup>();
@@ -1041,9 +1346,9 @@ export function groupSearchResults(results: ParameterSearchEntry[]): ParameterSe
     }
   }
 
-  const folders = order.filter((group) => group.entries.length > 1 && group.folder);
-  const standalone = order.filter((group) => group.entries.length === 1 || !group.folder);
-  return [...folders, ...standalone];
+  // Groups keep the rank of their best entry: a folder of three weaker
+  // matches does not jump ahead of the single best one.
+  return order;
 }
 
 /**
