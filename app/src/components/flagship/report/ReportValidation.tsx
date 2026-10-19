@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import {
   CalibrationMatchSection,
+  hasCalibrationDiagnostics,
   type CalibrationPin,
 } from '@/components/flagship/CalibrationMatches';
 import {
@@ -127,12 +128,22 @@ export default function ReportValidation({
         scorecard={scorecard}
         baselineLabel={baselineLabel}
       />
-      <CalibrationMatchSection matches={calibration} pin={calibrationPin} />
+      {hasCalibrationDiagnostics(countryId) ? (
+        <CalibrationMatchSection matches={calibration} pin={calibrationPin} />
+      ) : (
+        // The dependency map and calibration targets are the US model's.
+        <ValidationCard id="data-calibration" title="Data calibration">
+          <ValidationNote>
+            Calibration diagnostics are available for US reports for now.
+          </ValidationNote>
+        </ValidationCard>
+      )}
       <BaselineComparisons
         trackRecord={trackRecord}
         scorecardRows={scorecard === undefined ? undefined : scorecard === null ? null : baseline}
         baselineLabel={baselineLabel}
         reform={readers && { countryId, paths, readers, region }}
+        countryId={countryId}
       />
     </Stack>
   );

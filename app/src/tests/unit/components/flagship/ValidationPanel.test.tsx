@@ -1,10 +1,11 @@
-import { render, screen, within } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { act, render, renderHook, screen, waitFor, within } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { BillValidation } from '@/api/billFeed';
 import {
   BaselineComparisons,
   BillExternalEstimates,
   trackRecordClaims,
+  useModelTrackRecord,
 } from '@/components/flagship/ValidationPanel';
 import { SCORECARD_COMPARISON_URL, type ScorecardMatches } from '@/libs/flagship/modelValidation';
 import {
@@ -22,6 +23,17 @@ import {
 } from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
 import { utahBaselineClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
+
+const mockScorecardMatchesForPaths = vi.fn<(paths: string[]) => Promise<ScorecardMatches | null>>();
+
+vi.mock('@/libs/flagship/modelValidation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/libs/flagship/modelValidation')>()),
+  scorecardMatchesForPaths: (paths: string[]) => mockScorecardMatchesForPaths(paths),
+}));
+
+/** A UK parameter that is also in the US dependency map. */
+const UK_ELASTICITY_PATH = 'gov.simulation.capital_gains_responses.elasticity';
+const EMPTY_UK_TRACK_RECORD = { modelVersion: '', reachedCount: 0, programs: [], rows: [] };
 
 /** The scorecard's registry of published claims, where baseline claims are listed. */
 const SCORECARD_CLAIMS_URL = 'https://www.policyengine.org/scorecard?view=validation';
@@ -334,6 +346,78 @@ describe('BaselineComparisons', () => {
       SCORECARD_COMPARISON_URL
     );
     expect(scorecardLink('Utah Child Tax Credit')).toHaveAttribute('href', SCORECARD_CLAIMS_URL);
+  });
+
+  test('given a US report then the card links the US scorecard', () => {
+    render(
+      <BaselineComparisons trackRecord={null} scorecardRows={null} reform={REPORT_4332_REFORM} />
+    );
+
+    expect(screen.getByRole('link', { name: /view scorecard/i })).toHaveAttribute(
+      'href',
+      SCORECARD_COMPARISON_URL
+    );
+  });
+
+  test('given a UK report then the US track record never shows and the scorecard link names the UK', () => {
+    render(
+      <BaselineComparisons
+        countryId="uk"
+        trackRecord={SNAP_AND_CTC_TRACK_RECORD}
+        scorecardRows={[]}
+        reform={{ countryId: 'uk', paths: [UK_ELASTICITY_PATH], readers: {}, region: 'uk' }}
+      />
+    );
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByText(/SNAP/)).not.toBeInTheDocument();
+    expect(screen.getByText(NO_COMPARISON)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view scorecard/i })).toHaveAttribute(
+      'href',
+      'https://www.policyengine.org/scorecard?view=scorecard&country=uk'
+    );
+  });
+
+  test('given a UK report without a track record then it does not wait for one', () => {
+    render(
+      <BaselineComparisons
+        countryId="uk"
+        trackRecord={undefined}
+        scorecardRows={[]}
+        reform={{ countryId: 'uk', paths: [UK_ELASTICITY_PATH], readers: {}, region: 'uk' }}
+      />
+    );
+
+    expect(screen.getByText(NO_COMPARISON)).toBeInTheDocument();
+  });
+});
+
+describe('useModelTrackRecord', () => {
+  beforeEach(() => {
+    mockScorecardMatchesForPaths.mockReset();
+    mockScorecardMatchesForPaths.mockResolvedValue(SNAP_AND_CTC_TRACK_RECORD);
+  });
+
+  test('given a UK report then the US track record is not fetched', async () => {
+    const { result } = renderHook(() => useModelTrackRecord([UK_ELASTICITY_PATH], 'uk'));
+
+    await waitFor(() => expect(result.current).toEqual(EMPTY_UK_TRACK_RECORD));
+    expect(mockScorecardMatchesForPaths).not.toHaveBeenCalled();
+  });
+
+  test('given the country is not known yet then nothing is fetched', async () => {
+    const { result } = renderHook(() => useModelTrackRecord([UK_ELASTICITY_PATH], undefined));
+
+    await act(async () => {});
+    expect(result.current).toBeUndefined();
+    expect(mockScorecardMatchesForPaths).not.toHaveBeenCalled();
+  });
+
+  test('given a US report then the track record is fetched as before', async () => {
+    const { result } = renderHook(() => useModelTrackRecord([SNAP_DEDUCTION_PATH], 'us'));
+
+    await waitFor(() => expect(result.current).toEqual(SNAP_AND_CTC_TRACK_RECORD));
+    expect(mockScorecardMatchesForPaths).toHaveBeenCalledWith([SNAP_DEDUCTION_PATH]);
   });
 });
 

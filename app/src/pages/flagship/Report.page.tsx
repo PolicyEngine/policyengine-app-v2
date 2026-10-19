@@ -300,8 +300,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     years: requestedYears.filter((year) => year !== reportYear),
   });
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
-  const trackRecord = useModelTrackRecord(provisionPaths);
-  const calibration = useCalibrationMatches(provisionPaths, region);
+  const trackRecord = useModelTrackRecord(provisionPaths, report?.countryId);
+  const calibration = useCalibrationMatches(provisionPaths, region, report?.countryId);
   const pin = useReportValidationSnapshot(
     unresolvable ? undefined : userReportId,
     {
