@@ -83,6 +83,26 @@ jobs:
         working-directory: ./website
         run: bun run test
 
+  public-api-client:
+    name: PolicyEngine API client is current
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Regenerates the types from the checked-in OpenAPI document and fails
+      # when src/api/publicApi/schema.d.ts differs from the result.
+      - name: Check the generated client against its OpenAPI document
+        working-directory: ./app
+        run: bun run public-api:check
+
   check-embeds:
     name: Check embedded site URLs
     runs-on: ubuntu-latest
