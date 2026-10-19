@@ -13,7 +13,8 @@ export interface ReportOutputSocietyWideUK {
   cliff_impact: Record<string, any> | null;
   constituency_impact: {
     by_constituency: ReportOutputSocietyWideByConstituency;
-    outcomes_by_region: {
+    /** Absent from results in the API's newer list shape (see normalizeSocietyWideOutput). */
+    outcomes_by_region?: {
       england: {
         'Gain less than 5%': number;
         'Gain more than 5%': number;

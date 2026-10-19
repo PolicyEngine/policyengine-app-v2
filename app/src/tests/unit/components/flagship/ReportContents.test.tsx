@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest';
-import {
+import { render, screen } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
+import ReportContents, {
   leadsWithStateRevenue,
   reportMetrics,
   winnerShareMetric,
@@ -94,5 +95,43 @@ describe('leadsWithStateRevenue', () => {
   test('given a nationwide run then it leads with the full budget effect', () => {
     expect(leadsWithStateRevenue('us', state)).toBe(false);
     expect(leadsWithStateRevenue(undefined, state)).toBe(false);
+  });
+});
+
+describe('ReportContents', () => {
+  test('given no districts copy then the card reads districts', () => {
+    render(<ReportContents metrics={[]} districtAvailable onOpen={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: 'Explore districts' })).toHaveTextContent(
+      'Compare income changes across districts on a map.'
+    );
+  });
+
+  test('given districts copy then the card reads it', () => {
+    render(
+      <ReportContents
+        metrics={[]}
+        districtAvailable
+        districtsCopy={{
+          title: 'Local area impacts',
+          action: 'Explore local areas',
+          preview: 'Compare income changes across constituencies and local authorities on a map.',
+        }}
+        onOpen={vi.fn()}
+      />
+    );
+
+    const card = screen.getByRole('button', { name: 'Explore local areas' });
+    expect(card).toHaveTextContent('Local area impacts');
+    expect(card).toHaveTextContent('constituencies and local authorities');
+  });
+
+  test('given districts hidden then the overview has no districts card', () => {
+    render(
+      <ReportContents metrics={[]} districtAvailable showDistricts={false} onOpen={vi.fn()} />
+    );
+
+    expect(screen.queryByRole('button', { name: 'Explore districts' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Explore household impacts' })).toBeInTheDocument();
   });
 });

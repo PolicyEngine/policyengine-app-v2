@@ -343,6 +343,7 @@ function AdjustPanel({
             setPopulation(next);
           }}
           regions={regions}
+          countryId={countryId}
         />
         <label style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
           <span style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>

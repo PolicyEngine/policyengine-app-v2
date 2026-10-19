@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import BudgetaryImpactByProgramSubPage from '@/components/flagship/report/charts/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from '@/components/flagship/report/charts/BudgetaryImpactSubPage';
 import DeepPovertyImpactByAgeSubPage from '@/components/flagship/report/charts/DeepPovertyImpactByAgeSubPage';
 import DeepPovertyImpactByGenderSubPage from '@/components/flagship/report/charts/DeepPovertyImpactByGenderSubPage';
@@ -14,7 +16,10 @@ import ReportChartCard from '@/components/flagship/report/ReportChartCard';
 import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { getBudgetCsvRows } from '@/pages/report-output/budgetary-impact/budgetChartUtils';
+import {
+  getBudgetCsvRows,
+  getDetailedBudgetCsvRows,
+} from '@/pages/report-output/budgetary-impact/budgetChartUtils';
 import {
   getDecileAverageCsvRows,
   getDecileRelativeCsvRows,
@@ -26,6 +31,7 @@ import {
   getPovertyByGenderCsvRows,
   getPovertyByRaceCsvRows,
 } from '@/pages/report-output/poverty-impact/povertyChartUtils';
+import type { RootState } from '@/store';
 
 type PovertyDepth = 'regular' | 'deep';
 type PovertyBreakdown = 'by-age' | 'by-gender' | 'by-race';
@@ -65,7 +71,11 @@ const DECILE_MODE_OPTIONS = [
  */
 export default function EconomicImpactCharts({ output }: { output: SocietyWideReportOutput }) {
   const countryId = useCurrentCountry();
+  const metadata = useSelector((state: RootState) => state.metadata);
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
+  const [wealthDecileMode, setWealthDecileMode] = useState<DecileMode>('absolute');
+  // The UK's results also break the budget down by program and rank households by wealth.
+  const isUK = countryId === 'uk';
   const [povertyDepth, setPovertyDepth] = useState<PovertyDepth>('regular');
   const [povertyBreakdown, setPovertyBreakdown] = useState<PovertyBreakdown>('by-age');
   const breakdownOptions = getBreakdownOptions(povertyDepth, countryId);
@@ -119,6 +129,27 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
       ? 'distributional-impact-income-average'
       : 'distributional-impact-income-relative';
 
+  const wealthDecileChart = (compact: boolean) =>
+    wealthDecileMode === 'absolute' ? (
+      <DistributionalImpactIncomeAverageSubPage
+        output={output}
+        breakdown="wealth"
+        compact={compact}
+        fillHeight
+      />
+    ) : (
+      <DistributionalImpactIncomeRelativeSubPage
+        output={output}
+        breakdown="wealth"
+        compact={compact}
+        fillHeight
+      />
+    );
+  const wealthDecileFilename =
+    wealthDecileMode === 'absolute'
+      ? 'distributional-impact-wealth-average'
+      : 'distributional-impact-wealth-relative';
+
   return (
     <Stack gap="lg">
       <div
@@ -138,6 +169,18 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
         >
           <BudgetaryImpactSubPage output={output} fillHeight />
         </ReportChartCard>
+
+        {isUK && (
+          <ReportChartCard
+            title="Budgetary impact by program"
+            fullWidth
+            downloadFilename="budgetary-impact-by-program.svg"
+            csvFilename="budgetary-impact-by-program.csv"
+            csvData={getDetailedBudgetCsvRows(output, metadata)}
+          >
+            <BudgetaryImpactByProgramSubPage output={output} fillHeight />
+          </ReportChartCard>
+        )}
 
         <ReportChartCard
           title="Income change by decile"
@@ -218,6 +261,53 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
         >
           <InequalityImpactSubPage output={output} compact trimAxisZeros fillHeight />
         </ReportChartCard>
+
+        {isUK && (
+          <ReportChartCard
+            title="Income change by wealth decile"
+            focusedContent={wealthDecileChart(false)}
+            controls={
+              <SegmentedControl
+                animated
+                value={wealthDecileMode}
+                onValueChange={(value) => setWealthDecileMode(value as DecileMode)}
+                size="xs"
+                options={DECILE_MODE_OPTIONS}
+              />
+            }
+            downloadFilename={`${wealthDecileFilename}.svg`}
+            csvFilename={`${wealthDecileFilename}.csv`}
+            csvData={
+              wealthDecileMode === 'absolute'
+                ? getDecileAverageCsvRows(output, 'wealth')
+                : getDecileRelativeCsvRows(output, 'wealth')
+            }
+          >
+            <div key={wealthDecileMode} className="tw:h-full tw:motion-safe:fade-in-soft">
+              {wealthDecileChart(true)}
+            </div>
+          </ReportChartCard>
+        )}
+
+        {isUK && (
+          <ReportChartCard
+            title="Winners and losers by wealth decile"
+            focusedChartHeight={340}
+            focusedContent={
+              <WinnersLosersIncomeDecileSubPage output={output} breakdown="wealth" fillHeight />
+            }
+            downloadFilename="winners-losers-wealth-decile.svg"
+            csvFilename="winners-losers-wealth-decile.csv"
+            csvData={getWinnersLosersCsvRows(output, 'wealth')}
+          >
+            <WinnersLosersIncomeDecileSubPage
+              output={output}
+              breakdown="wealth"
+              compact
+              fillHeight
+            />
+          </ReportChartCard>
+        )}
       </div>
     </Stack>
   );

@@ -432,6 +432,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             value={region ?? ''}
             onChange={(next) => setDraftPopulation({ scope: 'national', region: next })}
             regions={regions}
+            countryId={draft.countryId}
           />
           <BaselinePicker
             value={baseline.reform?.id}
