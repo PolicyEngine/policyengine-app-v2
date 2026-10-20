@@ -135,3 +135,7 @@ export const householdVariationKeys = {
       personName,
     ] as const,
 };
+
+export const countryKeys = {
+  all: ['countries'] as const,
+};

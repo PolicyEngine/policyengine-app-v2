@@ -7,6 +7,7 @@ import { CountryProvider } from '../src/contexts/CountryContext';
 import { LocationProvider } from '../src/contexts/LocationContext';
 import { NavigationProvider } from '../src/contexts/NavigationContext';
 import { store } from '../src/store';
+import { TestQueryClientProvider } from './queryClient';
 
 function RouterContextBridge({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -31,13 +32,15 @@ export function render(ui: React.ReactNode, countryId: string = 'us') {
     wrapper: ({ children }: { children: React.ReactNode }) => (
       <AppProvider mode="website">
         <ReduxProvider store={store}>
-          <MemoryRouter>
-            <CountryProvider value={countryId as any}>
-              <RouterContextBridge>
-                <TooltipProvider>{children}</TooltipProvider>
-              </RouterContextBridge>
-            </CountryProvider>
-          </MemoryRouter>
+          <TestQueryClientProvider>
+            <MemoryRouter>
+              <CountryProvider value={countryId as any}>
+                <RouterContextBridge>
+                  <TooltipProvider>{children}</TooltipProvider>
+                </RouterContextBridge>
+              </CountryProvider>
+            </MemoryRouter>
+          </TestQueryClientProvider>
         </ReduxProvider>
       </AppProvider>
     ),

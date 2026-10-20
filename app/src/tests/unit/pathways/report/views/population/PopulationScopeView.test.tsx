@@ -1,5 +1,6 @@
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCountryCapability } from '@/hooks/useCountries';
 import PopulationScopeView from '@/pathways/report/views/population/PopulationScopeView';
 import {
   mockOnBack,
@@ -10,10 +11,83 @@ import {
   TEST_COUNTRY_ID,
 } from '@/tests/fixtures/pathways/report/views/PopulationViewMocks';
 
+vi.mock('@/hooks/useCountries', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/hooks/useCountries')>()),
+  useCountryCapability: vi.fn(),
+}));
+
+const mockUseCountryCapability = vi.mocked(useCountryCapability);
+
+function listCountryCapability(countryId: 'us' | 'uk', societyWideEnabled: boolean) {
+  mockUseCountryCapability.mockReturnValue({
+    id: countryId,
+    name: countryId === 'us' ? 'United States' : 'United Kingdom',
+    householdEnabled: true,
+    societyWideEnabled,
+  });
+}
+
 describe('PopulationScopeView', () => {
   beforeEach(() => {
     resetAllMocks();
     vi.clearAllMocks();
+    listCountryCapability('us', true);
+  });
+
+  describe('Household-only countries', () => {
+    test('given a household-only country then offers only the custom household option', () => {
+      // Given
+      listCountryCapability('uk', false);
+
+      // When
+      render(
+        <PopulationScopeView
+          countryId="uk"
+          regionData={mockRegionData}
+          onScopeSelected={mockOnScopeSelected}
+        />
+      );
+
+      // Then
+      expect(screen.getByRole('radio', { name: /custom household/i })).toBeChecked();
+      expect(screen.queryByRole('radio', { name: /uk-wide/i })).not.toBeInTheDocument();
+      expect(screen.getAllByRole('radio')).toHaveLength(1);
+    });
+
+    test('given a household-only country when the scope is submitted then a household scope is chosen', async () => {
+      // Given
+      const user = userEvent.setup();
+      listCountryCapability('uk', false);
+      render(
+        <PopulationScopeView
+          countryId="uk"
+          regionData={mockRegionData}
+          onScopeSelected={mockOnScopeSelected}
+        />
+      );
+
+      // When
+      await user.click(screen.getByRole('button', { name: /select scope/i }));
+
+      // Then
+      expect(mockOnScopeSelected).toHaveBeenCalledWith(null, 'household');
+    });
+
+    test('given a society-wide country then national and household options are both offered', () => {
+      // When
+      render(
+        <PopulationScopeView
+          countryId="us"
+          regionData={mockRegionData}
+          onScopeSelected={mockOnScopeSelected}
+        />
+      );
+
+      // Then
+      expect(screen.getByRole('radio', { name: /all households nationally/i })).toBeChecked();
+      expect(screen.getByRole('radio', { name: /custom household/i })).toBeInTheDocument();
+      expect(mockUseCountryCapability).toHaveBeenCalledWith('us');
+    });
   });
 
   describe('Basic rendering', () => {

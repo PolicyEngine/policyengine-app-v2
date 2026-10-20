@@ -1,7 +1,15 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import CountrySelector from '@/components/homeHeader/CountrySelector';
+import { FALLBACK_COUNTRIES, useCountries } from '@/hooks/useCountries';
 import { MOCK_PATHS } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
+
+vi.mock('@/hooks/useCountries', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/hooks/useCountries')>()),
+  useCountries: vi.fn(),
+}));
+
+const mockUseCountries = vi.mocked(useCountries);
 
 const mockNavigate = vi.fn();
 
@@ -16,6 +24,53 @@ vi.mock('react-router-dom', async () => {
 describe('CountrySelector', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseCountries.mockReturnValue({ countries: FALLBACK_COUNTRIES, isFallback: true });
+  });
+
+  test('given the Public API lists the countries then the dropdown shows its names', async () => {
+    // Given
+    const { userEvent } = await import('@test-utils');
+    const user = userEvent.setup();
+    mockUseCountries.mockReturnValue({
+      countries: [
+        {
+          id: 'us',
+          name: 'United States of America',
+          householdEnabled: true,
+          societyWideEnabled: true,
+        },
+        { id: 'uk', name: 'United Kingdom', householdEnabled: true, societyWideEnabled: true },
+      ],
+      isFallback: false,
+    });
+
+    // When
+    renderWithCountry(<CountrySelector />, 'us');
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+
+    // Then
+    expect(screen.getByText('United States of America')).toBeInTheDocument();
+    expect(screen.getByText('United Kingdom')).toBeInTheDocument();
+  });
+
+  test('given the Public API lists only the US then only the US is offered', async () => {
+    // Given
+    const { userEvent } = await import('@test-utils');
+    const user = userEvent.setup();
+    mockUseCountries.mockReturnValue({
+      countries: [
+        { id: 'us', name: 'United States', householdEnabled: true, societyWideEnabled: true },
+      ],
+      isFallback: false,
+    });
+
+    // When
+    renderWithCountry(<CountrySelector />, 'us');
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
+
+    // Then
+    expect(screen.getByText('United States')).toBeInTheDocument();
+    expect(screen.queryByText('United Kingdom')).not.toBeInTheDocument();
   });
 
   test('given component renders then displays country selector button', () => {

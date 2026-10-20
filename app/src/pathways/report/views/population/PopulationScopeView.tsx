@@ -9,7 +9,8 @@
 
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
-import { Stack } from '@/components/ui';
+import { Label, RadioGroup, RadioGroupItem, Stack } from '@/components/ui';
+import { useCountryCapability } from '@/hooks/useCountries';
 import { countryIds } from '@/libs/countries';
 import type { Region } from '@/models/region';
 import { Geography } from '@/types/ingredients/Geography';
@@ -47,8 +48,11 @@ export default function PopulationScopeView({
   onBack,
   onCancel,
 }: PopulationScopeViewProps) {
-  const [scope, setScope] = useState<ScopeType>(US_REGION_TYPES.NATIONAL);
+  const [chosenScope, setScope] = useState<ScopeType>(US_REGION_TYPES.NATIONAL);
   const [selectedRegion, setSelectedRegion] = useState('');
+  // A household-only country offers no society-wide (geographic) scope.
+  const { societyWideEnabled } = useCountryCapability(countryId);
+  const scope: ScopeType = societyWideEnabled ? chosenScope : 'household';
 
   // Get region options based on country
   const usStates = countryId === 'us' ? getUSStates(regionData) : [];
@@ -96,7 +100,14 @@ export default function PopulationScopeView({
 
   const formInputs = (
     <Stack>
-      {countryId === 'uk' ? (
+      {!societyWideEnabled ? (
+        <RadioGroup value="household">
+          <div className="tw:flex tw:items-center tw:gap-2">
+            <RadioGroupItem value="household" id="scope-household" />
+            <Label htmlFor="scope-household">Custom household</Label>
+          </div>
+        </RadioGroup>
+      ) : countryId === 'uk' ? (
         <UKGeographicOptions
           scope={scope as UKScopeType}
           selectedRegion={selectedRegion}

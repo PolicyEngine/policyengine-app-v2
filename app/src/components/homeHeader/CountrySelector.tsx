@@ -3,15 +3,13 @@ import { IconWorld } from '@tabler/icons-react';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, typography } from '@/designTokens';
+import { useCountries } from '@/hooks/useCountries';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-
-const countries = [
-  { id: 'us', label: 'United States' },
-  { id: 'uk', label: 'United Kingdom' },
-];
 
 export default function CountrySelector() {
   const countryId = useCurrentCountry();
+  // The Public API's country list, limited to countries the app supports.
+  const { countries } = useCountries();
   const nav = useAppNavigate();
   const location = useAppLocation();
   const [open, setOpen] = useState(false);
@@ -161,7 +159,7 @@ export default function CountrySelector() {
                     e.currentTarget.style.color = colors.primary[800];
                   }}
                 >
-                  {country.label}
+                  {country.name}
                   {countryId === country.id && (
                     <span style={{ marginLeft: 'auto', fontSize: '12px', opacity: 0.6 }}>✓</span>
                   )}
