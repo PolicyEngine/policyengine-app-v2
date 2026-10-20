@@ -23,6 +23,7 @@ const mockFindMine = vi.fn();
 const mockDelete = vi.fn();
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
+const mockIsAccountUnavailable = vi.fn(() => false);
 
 vi.mock('@/api/reformStore', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/reformStore')>();
@@ -33,6 +34,7 @@ vi.mock('@/api/reformStore', async (importOriginal) => {
       delete: mockDelete,
       create: mockCreate,
       update: mockUpdate,
+      isAccountUnavailable: mockIsAccountUnavailable,
     }),
   };
 });
@@ -583,6 +585,55 @@ describe('ReformsPage', () => {
     expect(screen.queryByText(/HB 106/)).not.toBeInTheDocument();
     // How the reform came about isn't shown on its card.
     expect(screen.queryByText('From a question')).not.toBeInTheDocument();
+  });
+
+  test('given a reform saved on this device then its card says so until it is in the account', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([{ ...CHAT_REFORM, pendingSync: true }, LATER_REFORM]);
+
+    // When
+    renderReforms('/us/reforms?filter=yours');
+
+    // Then: only the waiting reform is marked, and no outage note without one
+    const card = (await screen.findByText('CTC to $3,600 for children under 6')).closest(
+      '[role="button"]'
+    ) as HTMLElement;
+    expect(within(card).getByText('Saved on this device')).toBeInTheDocument();
+    const other = screen
+      .getByText('CTC to $1,000 from 2028')
+      .closest('[role="button"]') as HTMLElement;
+    expect(within(other).queryByText('Saved on this device')).not.toBeInTheDocument();
+    expect(screen.queryByText(/account is unavailable/i)).not.toBeInTheDocument();
+  });
+
+  test('given a save just kept on this device then the library says so in place of an error', async () => {
+    // Given
+    mockFindMine.mockResolvedValue([{ ...CHAT_REFORM, pendingSync: true }]);
+
+    // When
+    renderReforms('/us/reforms?filter=yours&saved=device');
+
+    // Then
+    expect(
+      await screen.findByText(
+        "Saved on this device. Your account is unavailable right now; we'll add this reform to it when it's back."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Could not load your reforms')).not.toBeInTheDocument();
+  });
+
+  test('given the account is unavailable then the library says the list may be incomplete', async () => {
+    // Given
+    mockIsAccountUnavailable.mockReturnValue(true);
+    mockFindMine.mockResolvedValue([{ ...CHAT_REFORM, pendingSync: true }]);
+
+    // When
+    renderReforms('/us/reforms?filter=yours');
+
+    // Then
+    expect(await screen.findByText(/this list may be incomplete/i)).toBeInTheDocument();
+    expect(screen.getByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
+    mockIsAccountUnavailable.mockReturnValue(false);
   });
 
   test('given the Your library tab then it lists this browser’s reforms for the country', async () => {

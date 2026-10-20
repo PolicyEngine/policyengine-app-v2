@@ -769,6 +769,22 @@ export function setDraftEditingReform(reformId: string): void {
   writeDraft({ ...draft, editingReformId: reformId });
 }
 
+/**
+ * A reform kept on this device was added to the account under a new ID:
+ * the draft that edits it, or compares with it, follows it there.
+ */
+export function replaceDraftReformId(fromId: string, toId: string): void {
+  const draft = getSnapshot();
+  if (!draft || (draft.editingReformId !== fromId && draft.baselineReformId !== fromId)) {
+    return;
+  }
+  writeDraft({
+    ...draft,
+    ...(draft.editingReformId === fromId && { editingReformId: toId }),
+    ...(draft.baselineReformId === fromId && { baselineReformId: toId }),
+  });
+}
+
 /** Loads a saved reform into the composer for editing. */
 export function loadReformIntoDraft(reform: Reform, resolve: ProvisionDetails): void {
   writeDraft({

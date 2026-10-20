@@ -31,7 +31,7 @@ import {
 import StatTile from '@/components/flagship/StatTile';
 import TrackerHomeButton from '@/components/flagship/TrackerHomeButton';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
-import { Button, Stack, Text, Title } from '@/components/ui';
+import { Badge, Button, Stack, Text, Title } from '@/components/ui';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -56,6 +56,13 @@ import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
+import {
+  LIBRARY_INCOMPLETE_NOTE,
+  SAVED_ON_DEVICE_BADGE,
+  SAVED_ON_DEVICE_NOTE,
+  SAVED_ON_DEVICE_PARAM,
+  SAVED_ON_DEVICE_VALUE,
+} from '@/libs/flagship/savedOnDevice';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -337,6 +344,12 @@ export default function ReformsPage() {
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reforms'] });
+  // While the account is unavailable, the list holds only this device's
+  // reforms; a save just kept here says so in place of an error.
+  const listIncomplete = !!reforms && !!reformStore.isAccountUnavailable?.();
+  const anyPending = (reforms ?? []).some((reform) => reform.pendingSync);
+  const justSavedOnDevice =
+    urlParams.get(SAVED_ON_DEVICE_PARAM) === SAVED_ON_DEVICE_VALUE && anyPending;
 
   // This session's reports, by the saved reform each came from: a reform
   // is where its reports are found again.
@@ -1107,6 +1120,14 @@ export default function ReformsPage() {
         {tab === 'yours' && isError && (
           <ErrorState title="Could not load your reforms" onRetry={invalidate} />
         )}
+        {tab === 'yours' && !isPending && !isError && (justSavedOnDevice || listIncomplete) && (
+          <Text
+            role="status"
+            style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+          >
+            {listIncomplete ? LIBRARY_INCOMPLETE_NOTE : SAVED_ON_DEVICE_NOTE}
+          </Text>
+        )}
 
         {tab === 'bills' && billsLoading && <CardGridSkeleton label="Loading bills" withStats />}
         {tab === 'bills' && billsError && (
@@ -1193,9 +1214,18 @@ export default function ReformsPage() {
                 }
                 badge={(() => {
                   const latest = latestReport(reform.id);
-                  return latest?.apiReportId ? (
+                  const report = latest?.apiReportId ? (
                     <LatestReportBadge countryId={countryId} apiReportId={latest.apiReportId} />
-                  ) : undefined;
+                  ) : null;
+                  // Until it is added to the account, a reform kept here says so.
+                  return reform.pendingSync ? (
+                    <>
+                      <Badge variant="outline">{SAVED_ON_DEVICE_BADGE}</Badge>
+                      {report}
+                    </>
+                  ) : (
+                    (report ?? undefined)
+                  );
                 })()}
                 title={reform.label || 'Untitled reform'}
                 body={reportsLine(reform.id)}
