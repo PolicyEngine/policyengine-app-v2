@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
@@ -213,10 +213,23 @@ export default function ReportView({
       pendingReveal.reveal();
     }
   }, [pendingReveal, activeTab]);
+  // Radix Tabs opens the tab that takes focus, which is how the arrow,
+  // Home and End keys move between tabs. A click opens its tab on press,
+  // before focus arrives, so a tab opening on focus was reached by keyboard.
+  const openingOnFocusRef = useRef(false);
+  function markTabFocused() {
+    openingOnFocusRef.current = true;
+    // Radix opens the tab in the same focus event, right after this.
+    queueMicrotask(() => {
+      openingOnFocusRef.current = false;
+    });
+  }
   function selectTab(section: string) {
+    const keyboardMove = openingOnFocusRef.current;
+    openingOnFocusRef.current = false;
     // Sent per tab opened, from the click: the open tab again sends
     // nothing and adds no history entry.
-    if (openTab(section)) {
+    if (openTab(section, { keyboardMove })) {
       trackReportTabViewed({
         countryId,
         tab: section,
@@ -362,6 +375,7 @@ export default function ReportView({
                     <TabsTrigger
                       key={section.id}
                       value={section.id}
+                      onFocus={markTabFocused}
                       style={{
                         flex: '0 0 auto',
                         padding: `${spacing.sm} ${spacing.md}`,

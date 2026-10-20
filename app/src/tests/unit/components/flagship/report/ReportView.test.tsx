@@ -422,21 +422,29 @@ describe('ReportView section history', () => {
   };
 
   /** Renders the report at a fixed address, with navigation recorded rather than followed. */
-  const renderAtAddress = (search: string, countryId = 'us', region?: string) => {
+  const renderAtAddressRecordingNavigation = (
+    search: string,
+    countryId = 'us',
+    region?: string
+  ) => {
     const push = vi.fn();
+    const replace = vi.fn();
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
         <LocationProvider value={{ pathname: '/us/report/3741', search }}>
-          <NavigationProvider value={{ push, replace: vi.fn(), back: vi.fn() }}>
+          <NavigationProvider value={{ push, replace, back: vi.fn() }}>
             {reportView({ region })}
           </NavigationProvider>
         </LocationProvider>
       </QueryClientProvider>,
       countryId
     );
-    return push;
+    return { push, replace };
   };
+
+  const renderAtAddress = (search: string, countryId = 'us', region?: string) =>
+    renderAtAddressRecordingNavigation(search, countryId, region).push;
 
   const selectedTab = () => screen.getByRole('tab', { selected: true });
   const addressQuery = () => screen.getByLabelText('Address query');
@@ -502,6 +510,57 @@ describe('ReportView section history', () => {
     await user.click(screen.getByRole('tab', { name: 'Districts' }));
 
     expect(push.mock.calls).toEqual([['/us/report/3741'], ['/us/report/3741?tab=districts']]);
+  });
+
+  test('given arrow keys moving across several tabs then Back returns to the overview', async () => {
+    const user = userEvent.setup();
+    renderWithHistory();
+
+    // Clicking the open tab only focuses it.
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    for (const tabName of ['Economic impacts', 'Districts', 'Household']) {
+      await user.keyboard('{ArrowRight}');
+      await waitFor(() => expect(selectedTab()).toHaveAccessibleName(tabName));
+    }
+
+    await goBack();
+
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Overview'));
+    expect(addressQuery()).toBeEmptyDOMElement();
+  });
+
+  test('given an arrow key leaving the overview then the section is a new history entry', async () => {
+    const user = userEvent.setup();
+    const { push, replace } = renderAtAddressRecordingNavigation('');
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    await user.keyboard('{ArrowRight}');
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/us/report/3741?tab=economy'));
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  test('given an arrow key moving from one section to another then it replaces the entry', async () => {
+    const user = userEvent.setup();
+    const { push, replace } = renderAtAddressRecordingNavigation('?tab=economy');
+
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    await user.keyboard('{ArrowRight}');
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/us/report/3741?tab=districts'));
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  test('given a click after an arrow key move then the clicked section is a new entry', async () => {
+    const user = userEvent.setup();
+    const { push, replace } = renderAtAddressRecordingNavigation('?tab=economy');
+
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    await user.keyboard('{ArrowRight}');
+    await waitFor(() => expect(replace).toHaveBeenCalledTimes(1));
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    expect(push.mock.calls).toEqual([['/us/report/3741?tab=validation']]);
   });
 
   test('given an address naming a section then that section opens', () => {

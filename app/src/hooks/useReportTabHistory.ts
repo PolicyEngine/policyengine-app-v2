@@ -24,6 +24,17 @@ export function reportTabUrl(pathname: string, search: string, tab: string): str
   return query ? `${pathname}?${query}` : pathname;
 }
 
+export interface OpenReportTabOptions {
+  /**
+   * The section was reached by moving between tabs with the arrow, Home or
+   * End keys, which opens each tab passed. Moving from one section to
+   * another this way replaces the open section's history entry instead of
+   * adding one per tab; leaving the Overview still adds one, so Back
+   * returns to it.
+   */
+  keyboardMove?: boolean;
+}
+
 /**
  * The report section the URL names, and how to open another. Each section
  * opened is a new browser history entry, so Back returns to the section
@@ -32,8 +43,8 @@ export function reportTabUrl(pathname: string, search: string, tab: string): str
  */
 export function useReportTabHistory(availableTabs: readonly string[]): {
   activeTab: string;
-  /** Opens the section as a new history entry; false when it is already open or opening. */
-  openTab: (tab: string) => boolean;
+  /** Opens the section; false when it is already open or opening. */
+  openTab: (tab: string, options?: OpenReportTabOptions) => boolean;
 } {
   const { pathname, search } = useAppLocation();
   const nav = useAppNavigate();
@@ -46,12 +57,18 @@ export function useReportTabHistory(availableTabs: readonly string[]): {
   useEffect(() => {
     openingTabRef.current = null;
   }, [search]);
-  const openTab = (tab: string) => {
-    if (tab === (openingTabRef.current ?? activeTab)) {
+  const openTab = (tab: string, { keyboardMove = false }: OpenReportTabOptions = {}) => {
+    const currentTab = openingTabRef.current ?? activeTab;
+    if (tab === currentTab) {
       return false;
     }
     openingTabRef.current = tab;
-    nav.push(reportTabUrl(pathname, search, tab));
+    const url = reportTabUrl(pathname, search, tab);
+    if (keyboardMove && currentTab !== REPORT_OVERVIEW_TAB) {
+      nav.replace(url);
+    } else {
+      nav.push(url);
+    }
     return true;
   };
   return { activeTab, openTab };
