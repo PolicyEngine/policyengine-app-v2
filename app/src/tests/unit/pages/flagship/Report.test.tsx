@@ -1,9 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
 import { clearDraftReform, getDraftReform } from '@/libs/draftReform';
 import type { FlagshipReportMeta } from '@/libs/flagship/runReport';
 import FlagshipReportPage from '@/pages/flagship/Report.page';
+import { RENAMED_REPORT_TITLE } from '@/tests/fixtures/libs/flagship/reportRenameMocks';
 import { scorecardClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
@@ -358,5 +360,71 @@ describe('FlagshipReportPage', () => {
       )
     ).toBeInTheDocument();
     expect(within(panel).getAllByText('Not comparable')).toHaveLength(2);
+  });
+
+  describe('given who renames a finished report', () => {
+    /** The session's own record of report r1, as a run kept in this browser writes it. */
+    async function seedOwnReportRecord() {
+      await new LocalStorageFlagshipReportStore().create({
+        countryId: 'us',
+        apiReportId: 'r1',
+        title: META.title,
+        sourceNote: META.sourceNote,
+        provisions: META.provisions,
+        year: '2026',
+        reformId: null,
+      });
+    }
+
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    test('given the session that ran the report then it renames its record, never the v1 report', async () => {
+      // Given
+      const user = userEvent.setup();
+      const fetchSpy = vi.fn(async (_requestUrl: RequestInfo | URL) =>
+        Response.json({ built: null, rows: [], unmappedCount: 0 })
+      );
+      vi.stubGlobal('fetch', fetchSpy);
+      await seedOwnReportRecord();
+      mockCalcStatus.mockReturnValue(COMPLETE);
+      renderPage();
+
+      // When
+      await user.click(await screen.findByRole('button', { name: 'Rename report' }));
+      const nameField = screen.getByRole('textbox', { name: 'Report name' });
+      await user.clear(nameField);
+      await user.type(nameField, `${RENAMED_REPORT_TITLE}{Enter}`);
+
+      // Then
+      expect(
+        await screen.findByRole('heading', { level: 1, name: RENAMED_REPORT_TITLE })
+      ).toBeInTheDocument();
+      expect((await new LocalStorageFlagshipReportStore().findByApiReportId('r1'))?.title).toBe(
+        RENAMED_REPORT_TITLE
+      );
+      const v1ReportRequests = fetchSpy.mock.calls.filter(([url]) =>
+        /\/(us|uk)\/report/.test(String(url))
+      );
+      expect(v1ReportRequests).toEqual([]);
+    });
+
+    test('given someone without their own record of the report then the title has no rename', async () => {
+      // Given: no record of r1 in this browser
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+      );
+      mockCalcStatus.mockReturnValue(COMPLETE);
+
+      // When
+      renderPage();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      // Then
+      expect(screen.getByRole('heading', { level: 1, name: META.title })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Rename report' })).not.toBeInTheDocument();
+    });
   });
 });
