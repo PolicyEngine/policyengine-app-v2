@@ -225,6 +225,20 @@ describe('HouseholdReportPage', () => {
     expect(reproduce).toHaveTextContent(`policyengine-us ${REFORM_RUN_BUNDLE.model_version}`);
   });
 
+  test('given a failed calculation then trying again calculates the same household again', async () => {
+    mockFetchHouseholdCalculation.mockRejectedValueOnce(new Error('Household calculation failed'));
+    renderReport({ household: FAMILY_HOUSEHOLD });
+    const user = await calculate();
+
+    await user.click(await screen.findByRole('button', { name: 'Try again' }));
+
+    const result = await screen.findByRole('region', { name: 'Household net income' });
+    expect(within(result).getByRole('group', { name: 'Annual net income' })).toHaveTextContent(
+      '$72,000'
+    );
+    expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2);
+  });
+
   test("given another year then the household's inputs move to it before it runs (issue #498)", async () => {
     const user = userEvent.setup();
     renderReport({ household: FAMILY_HOUSEHOLD });

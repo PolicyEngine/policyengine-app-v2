@@ -188,7 +188,14 @@ export default function HouseholdReportPage({
   };
 
   const calculate = () => {
-    setRequested({ household, payload: household.toV1CreationPayload() });
+    const payload = household.toV1CreationPayload();
+    // The same household again after a failure is the same query, which
+    // keeps its error until it is asked again, as the report section does.
+    if (requested && run.isError && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
+      void run.refetch();
+      return;
+    }
+    setRequested({ household, payload });
   };
 
   const summary = `${describeHousehold(household, year, countryId, metadata?.variables)} · ${year}`;
