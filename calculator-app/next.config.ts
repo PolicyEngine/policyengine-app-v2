@@ -39,10 +39,9 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  webpack: (config, { dev }) => {
+  webpack: (config, { dev, webpack }) => {
     // Polyfill import.meta.env for shared code written for Vite.
     // These are replaced at build time — no runtime cost.
-    const webpack = require("webpack");
     config.plugins.push(
       new webpack.DefinePlugin({
         "import.meta.env.DEV": JSON.stringify(dev),

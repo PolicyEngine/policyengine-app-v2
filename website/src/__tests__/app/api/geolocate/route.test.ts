@@ -99,9 +99,11 @@ describe("GET /api/geolocate", () => {
   test("given upstream 5xx then 502 with empty body (no key leak)", async () => {
     // Given
     process.env.IPAPI_CO_KEY = "secret-test-key";
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response("Internal Server Error", { status: 500 }),
-    );
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response("Internal Server Error", { status: 500 }),
+      );
 
     // When
     const response = await GET();

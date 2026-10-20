@@ -32,9 +32,13 @@ test:
 
 lint:
 	cd app && bun run lint
+	cd website && bun run lint
+	cd calculator-app && bun run lint
 
 format:
 	cd app && bun run prettier:write
+	cd website && bun run format
+	cd calculator-app && bun run format
 
 clean:
 	rm -rf website/.next calculator-app/.next app/node_modules node_modules packages/*/node_modules

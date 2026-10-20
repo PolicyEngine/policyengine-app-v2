@@ -1,10 +1,10 @@
 "use client";
-import { useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
-import { YearPicker } from './year-picker';
+import { useState } from "react";
+import type { Meta, StoryObj } from "@storybook/react";
+import { YearPicker } from "./year-picker";
 
 const meta: Meta<typeof YearPicker> = {
-  title: 'UI/YearPicker',
+  title: "UI/YearPicker",
   component: YearPicker,
   decorators: [
     (Story) => (

@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import { IconArrowRight, IconX } from "@tabler/icons-react";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 const BANNER_DISMISSED_KEY = "featured-research-banner-dismissed";
 

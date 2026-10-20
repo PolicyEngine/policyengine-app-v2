@@ -1,11 +1,11 @@
 "use client";
-import dayjs from 'dayjs';
-import * as React from 'react';
-import { useState } from 'react';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { cn } from '@/lib/utils';
-import { Button } from './button';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import dayjs from "dayjs";
+import * as React from "react";
+import { useState } from "react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
+import { Button } from "./button";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 interface DatePickerProps {
   value: Date | null | undefined;
@@ -17,40 +17,40 @@ interface DatePickerProps {
   className?: string;
 }
 
-const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAYS_OF_WEEK = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 function DatePicker({
   value,
   onChange,
   minDate,
   maxDate,
-  placeholder = 'Select date',
-  displayFormat = 'MMM. D, YYYY',
+  placeholder = "Select date",
+  displayFormat = "MMM. D, YYYY",
   className,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const initialMonth = value ? dayjs(value) : dayjs();
-  const [viewMonth, setViewMonth] = useState(initialMonth.startOf('month'));
+  const [viewMonth, setViewMonth] = useState(initialMonth.startOf("month"));
 
   const displayText = value ? dayjs(value).format(displayFormat) : placeholder;
 
   // Generate calendar days for the current view month
-  const startOfMonth = viewMonth.startOf('month');
-  const endOfMonth = viewMonth.endOf('month');
+  const startOfMonth = viewMonth.startOf("month");
+  const endOfMonth = viewMonth.endOf("month");
   const startDay = startOfMonth.day(); // 0 = Sunday
   const daysInMonth = viewMonth.daysInMonth();
 
   // Build 6 rows x 7 cols grid
   const calendarDays: (dayjs.Dayjs | null)[] = [];
   for (let i = 0; i < startDay; i++) {
-    calendarDays.push(startOfMonth.subtract(startDay - i, 'day'));
+    calendarDays.push(startOfMonth.subtract(startDay - i, "day"));
   }
   for (let i = 1; i <= daysInMonth; i++) {
     calendarDays.push(viewMonth.date(i));
   }
   const remaining = 42 - calendarDays.length;
   for (let i = 1; i <= remaining; i++) {
-    calendarDays.push(endOfMonth.add(i, 'day'));
+    calendarDays.push(endOfMonth.add(i, "day"));
   }
 
   const handleSelect = (day: dayjs.Dayjs) => {
@@ -59,10 +59,10 @@ function DatePicker({
   };
 
   const isDateDisabled = (day: dayjs.Dayjs) => {
-    if (minDate && day.isBefore(dayjs(minDate), 'day')) {
+    if (minDate && day.isBefore(dayjs(minDate), "day")) {
       return true;
     }
-    if (maxDate && day.isAfter(dayjs(maxDate), 'day')) {
+    if (maxDate && day.isAfter(dayjs(maxDate), "day")) {
       return true;
     }
     return false;
@@ -74,9 +74,9 @@ function DatePicker({
         <button
           type="button"
           className={cn(
-            'tw:border-input tw:flex tw:h-9 tw:w-full tw:items-center tw:justify-between tw:rounded-md tw:border tw:px-3 tw:py-2 tw:text-sm tw:shadow-xs tw:transition-[color,box-shadow] tw:outline-none',
-            !value && 'tw:text-muted-foreground',
-            className
+            "tw:border-input tw:flex tw:h-9 tw:w-full tw:items-center tw:justify-between tw:rounded-md tw:border tw:px-3 tw:py-2 tw:text-sm tw:shadow-xs tw:transition-[color,box-shadow] tw:outline-none",
+            !value && "tw:text-muted-foreground",
+            className,
           )}
         >
           {displayText}
@@ -89,15 +89,17 @@ function DatePicker({
           <Button
             variant="ghost"
             size="icon-xs"
-            onClick={() => setViewMonth((m) => m.subtract(1, 'month'))}
+            onClick={() => setViewMonth((m) => m.subtract(1, "month"))}
           >
             <IconChevronLeft size={14} />
           </Button>
-          <span className="tw:text-sm tw:font-medium">{viewMonth.format('MMMM YYYY')}</span>
+          <span className="tw:text-sm tw:font-medium">
+            {viewMonth.format("MMMM YYYY")}
+          </span>
           <Button
             variant="ghost"
             size="icon-xs"
-            onClick={() => setViewMonth((m) => m.add(1, 'month'))}
+            onClick={() => setViewMonth((m) => m.add(1, "month"))}
           >
             <IconChevronRight size={14} />
           </Button>
@@ -120,9 +122,9 @@ function DatePicker({
               return <div key={i} />;
             }
             const isCurrentMonth = day.month() === viewMonth.month();
-            const isSelected = value && day.isSame(dayjs(value), 'day');
+            const isSelected = value && day.isSame(dayjs(value), "day");
             const isDisabled = isDateDisabled(day);
-            const isToday = day.isSame(dayjs(), 'day');
+            const isToday = day.isSame(dayjs(), "day");
 
             return (
               <button
@@ -131,13 +133,13 @@ function DatePicker({
                 disabled={isDisabled}
                 onClick={() => handleSelect(day)}
                 className={cn(
-                  'tw:h-8 tw:w-full tw:rounded-md tw:text-sm tw:transition-colors',
+                  "tw:h-8 tw:w-full tw:rounded-md tw:text-sm tw:transition-colors",
                   isSelected
-                    ? 'tw:bg-primary tw:text-primary-foreground tw:font-medium'
-                    : 'tw:hover:bg-accent tw:hover:text-accent-foreground',
-                  !isCurrentMonth && !isSelected && 'tw:text-muted-foreground',
-                  isToday && !isSelected && 'tw:font-semibold',
-                  isDisabled && 'tw:opacity-30 tw:pointer-events-none'
+                    ? "tw:bg-primary tw:text-primary-foreground tw:font-medium"
+                    : "tw:hover:bg-accent tw:hover:text-accent-foreground",
+                  !isCurrentMonth && !isSelected && "tw:text-muted-foreground",
+                  isToday && !isSelected && "tw:font-semibold",
+                  isDisabled && "tw:opacity-30 tw:pointer-events-none",
                 )}
               >
                 {day.date()}
