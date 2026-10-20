@@ -34,15 +34,15 @@ describe('FlagshipRoutes', () => {
     expect(screen.getByText('Build page')).toBeInTheDocument();
   });
 
-  test('given the UK without its own flag then its flagship route lands on Reports', () => {
+  test('given the UK flag off then its flagship route lands on Reports', () => {
     mockCountry = 'uk';
+    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL_UK', 'false');
     renderAt('/uk/build');
     expect(screen.getByText('Reports page')).toBeInTheDocument();
   });
 
-  test('given the UK flag on then the UK flagship route renders', () => {
+  test('given the UK with no flag of its own then its flagship route renders', () => {
     mockCountry = 'uk';
-    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL_UK', 'true');
     renderAt('/uk/build');
     expect(screen.getByText('Build page')).toBeInTheDocument();
   });

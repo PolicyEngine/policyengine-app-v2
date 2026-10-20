@@ -26,7 +26,7 @@ export default function FlagshipGate({
 }: {
   children: React.ReactNode;
 }) {
-  // Each country has its own switch: the UK stays on v2 until its flag is on.
+  // Each country has its own switch, so the UK can go back to v2 alone.
   const { countryId } = useParams<{ countryId: string }>();
   const router = useRouter();
   const envEnabled = isFlagshipShellEnvEnabled(countryId);
