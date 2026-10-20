@@ -58,7 +58,7 @@ If any violations are found, fix them by moving the code to the appropriate fixt
 
 Run the specific test files that were created or modified using:
 ```
-cd app && npx vitest run <space-separated list of test file paths relative to app/>
+cd app && bun run vitest -- <space-separated list of test file paths relative to app/>
 ```
 
 Do NOT run the entire test suite. Only run the tests you wrote or modified.
