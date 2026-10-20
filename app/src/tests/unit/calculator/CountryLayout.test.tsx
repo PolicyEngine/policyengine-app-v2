@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import * as fs from 'fs';
 import * as path from 'path';
+// Not @test-utils: its render wraps a CountryProvider('us') of its own, which
+// would hide a layout that failed to provide the country.
 import { render, screen } from '@testing-library/react';
 import fc from 'fast-check';
 import { beforeEach, describe, expect, test, vi } from 'vitest';

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { colors } from "@/designTokens";
+import { colors, typography } from "@/designTokens";
 
 export const metadata: Metadata = {
   title: "Page not found | PolicyEngine calculator",
@@ -15,11 +15,14 @@ export default function NotFound() {
     <div className="tw:flex tw:flex-col tw:items-center tw:justify-center tw:h-screen tw:gap-4">
       <p
         className="tw:text-6xl tw:font-bold"
-        style={{ color: colors.primary[500], lineHeight: 1 }}
+        style={{
+          color: colors.primary[500],
+          lineHeight: typography.lineHeight.none,
+        }}
       >
         404
       </p>
-      <p className="tw:text-sm" style={{ color: colors.gray[500] }}>
+      <p className="tw:text-sm" style={{ color: colors.text.secondary }}>
         This page could not be found.
       </p>
       <Link

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import NotFound, { metadata } from '../../../../../calculator-app/src/app/not-found';
 
