@@ -120,6 +120,8 @@ vi.mock('@/utils/HouseholdValidation', () => ({
 
 /** The years the model's metadata lists for the report. */
 const MODEL_YEARS = [2026, 2027];
+/** A model year after the households' own (they are built in 2026). */
+const LATER_MODEL_YEAR = '2027';
 
 function renderReport(props: Partial<React.ComponentProps<typeof HouseholdReportPage>> = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -245,6 +247,23 @@ describe('HouseholdReportPage', () => {
     );
     expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2);
   });
+
+  test.each([
+    ['a household', { household: FAMILY_HOUSEHOLD }],
+    ['a saved household', { savedHousehold: SAVED_FAMILY }],
+  ])(
+    "given %s from another year then the report opens it in the report's year",
+    async (_opening, openingProps) => {
+      renderReport({ ...openingProps, year: LATER_MODEL_YEAR });
+
+      await calculate();
+
+      await waitFor(() => expect(mockCreateHousehold).toHaveBeenCalledTimes(1));
+      expect(mockCreateHousehold.mock.calls[0][0].data.people.you.age).toEqual({
+        [LATER_MODEL_YEAR]: 30,
+      });
+    }
+  );
 
   test("given another year then the household's inputs move to it before it runs (issue #498)", async () => {
     const user = userEvent.setup();

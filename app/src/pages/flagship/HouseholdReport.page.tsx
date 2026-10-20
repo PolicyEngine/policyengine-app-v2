@@ -36,7 +36,10 @@ const EXPECTED_MS = 3 * 60 * 1000;
 export interface HouseholdReportPageProps {
   /** The household's country: its model, currency and inputs. */
   countryId: 'us' | 'uk';
-  /** The year the report opens in; the reader can choose another. */
+  /**
+   * The year the report opens in; the household it opens with moves to it.
+   * The reader can choose another.
+   */
   year: string;
   /** The household the report opens with; a new household when absent. */
   household?: Household;
@@ -71,6 +74,27 @@ function versionsOf(provenance: HouseholdCalculationProvenance, countryId: strin
       provenance.spmProvenance?.runtime_versions?.[`policyengine-${countryId}`] ??
       null,
   };
+}
+
+/**
+ * The household the report opens with, moved into the year it opens in,
+ * as choosing a year or a saved household moves it. A household that
+ * cannot move (inputs in several years) opens in its own year, with the
+ * reason, so the year shown is always the one its inputs are in.
+ */
+function openingHousehold(
+  household: Household,
+  year: string
+): { household: Household; year: string; yearError: string | null } {
+  try {
+    return { household: copyHouseholdToYear(household, year), year, yearError: null };
+  } catch (error) {
+    return {
+      household,
+      year: household.year === null ? year : String(household.year),
+      yearError: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 /** One section of the report, named for assistive technology. */
@@ -120,17 +144,21 @@ export default function HouseholdReportPage({
   const taxYears = useSelector(getTaxYears);
   const baselinePolicyId = givenBaselinePolicyId ?? String(metadata.currentLawId);
   const runsReform = !!reformPolicyId && reformPolicyId !== baselinePolicyId;
-  const [year, setYear] = useState(initialYear);
+  const [opening] = useState(() =>
+    openingHousehold(
+      initialSaved?.household ?? initialHousehold ?? newReportHousehold(countryId, initialYear),
+      initialYear
+    )
+  );
+  const [year, setYear] = useState(opening.year);
   const [saved, setSaved] = useState<SavedHousehold | null>(initialSaved);
   // The save form's key: how many saved households the picker has opened.
   // The form starts again, with the opened household's label, only then; a
   // save keeps it, so its confirmation, or its warning that both versions
   // are now saved, stays on screen (an edit's saved household has a new id).
   const [savedHouseholdOpenings, setSavedHouseholdOpenings] = useState(0);
-  const [household, setHousehold] = useState<Household>(
-    () => initialSaved?.household ?? initialHousehold ?? newReportHousehold(countryId, initialYear)
-  );
-  const [yearError, setYearError] = useState<string | null>(null);
+  const [household, setHousehold] = useState<Household>(opening.household);
+  const [yearError, setYearError] = useState<string | null>(opening.yearError);
   const [requested, setRequested] = useState<HouseholdRequest | null>(null);
 
   const run = useFlagshipHouseholdPayload({
