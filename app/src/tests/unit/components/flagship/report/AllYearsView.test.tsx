@@ -3,17 +3,19 @@ import { describe, expect, test, vi } from 'vitest';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import AllYearsView from '@/components/flagship/report/AllYearsView';
 
+const budgetWindow = vi.hoisted(() => ({ perYear: -600e6 }));
+
 vi.mock('@/hooks/useBudgetWindow', () => ({
   useBudgetWindow: () => ({
     data: {
       status: 'ok',
       result: {
         annualImpacts: [
-          { year: 2026, budgetaryImpact: -600e6 },
-          { year: 2027, budgetaryImpact: -600e6 },
-          { year: 2028, budgetaryImpact: -600e6 },
+          { year: 2026, budgetaryImpact: budgetWindow.perYear },
+          { year: 2027, budgetaryImpact: budgetWindow.perYear },
+          { year: 2028, budgetaryImpact: budgetWindow.perYear },
         ],
-        totals: { year: 'Total', budgetaryImpact: -1.8e9 },
+        totals: { year: 'Total', budgetaryImpact: budgetWindow.perYear * 3 },
       },
     },
   }),
@@ -60,5 +62,27 @@ describe('AllYearsView', () => {
 
     await user.click(screen.getByRole('button', { name: 'Calculate 2028' }));
     expect(onCalculateAll).toHaveBeenCalled();
+  });
+
+  test('given a UK window with no budget change then it reads £0', () => {
+    budgetWindow.perYear = 0;
+    render(
+      <AllYearsView
+        countryId="uk"
+        reformPolicyId="1"
+        baselinePolicyId="2"
+        years={['2026', '2027', '2028']}
+        outputs={{ '2026': OUTPUT_2026, '2027': null, '2028': null }}
+        statusByYear={{ '2026': 'done', '2027': 'computing', '2028': 'not-run' }}
+        onCalculateAll={vi.fn()}
+      />
+    );
+
+    const budget = within(screen.getByRole('table')).getByRole('row', {
+      name: /budgetary impact/i,
+    });
+    expect(budget).toHaveTextContent('£0');
+    expect(budget).not.toHaveTextContent('$');
+    budgetWindow.perYear = -600e6;
   });
 });

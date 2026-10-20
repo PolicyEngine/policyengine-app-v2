@@ -40,7 +40,7 @@ describe('EconomicImpactCharts', () => {
 
 describe('EconomicImpactCharts for the UK', () => {
   const UK_CARDS = [
-    'Budgetary impact by program',
+    'Budgetary impact by programme',
     'Income change by wealth decile',
     'Winners and losers by wealth decile',
   ];
@@ -74,7 +74,7 @@ describe('EconomicImpactCharts for the UK', () => {
 
     render(<EconomicImpactCharts output={withUKBreakdowns(REPORT_4332_OUTPUT)} />);
 
-    const programs = card('Budgetary impact by program');
+    const programs = card('Budgetary impact by programme');
     expect(programs).toHaveTextContent('Budgetary impact (£bn)');
     for (const label of ['£2.0bn', '−£500.0m', '£1.5bn']) {
       expect(programs).toHaveTextContent(label);

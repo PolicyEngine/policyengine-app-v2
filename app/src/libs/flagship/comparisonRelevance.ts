@@ -21,6 +21,11 @@
  * state report keeps that state's comparisons (its own programs, and
  * federal programs measured there) and the national comparisons of the
  * federal programs the reform changes. Other states never show.
+ *
+ * Jurisdiction, UK: a report on one nation (country/wales) keeps only the
+ * comparisons that cover that nation: the UK's, Great Britain's (not in
+ * Northern Ireland), and the nation's own and its regions'. Another
+ * nation's comparisons never show. A UK-wide report keeps them all.
  */
 import { normalizeParameterPath } from './parameterDependencies';
 
@@ -28,7 +33,7 @@ import { normalizeParameterPath } from './parameterDependencies';
 export interface ComparisonScope {
   /** The program the comparison measures, as the scorecard names it: "cdcc", "md_eitc". */
   program?: string | null;
-  /** "US" for a national comparison, else a state code. */
+  /** "US" for a national comparison, else a state code; for the UK "UK", "GB" or a nation. */
   geography?: string | null;
   /** "parameter": the comparison's receipt names a parameter the reform changes. */
   matchBasis?: string;
@@ -41,7 +46,7 @@ export interface ReformScope {
   paths: string[];
   /** The variables that read each path directly, from the traced dependency map. */
   readers: Record<string, string[]>;
-  /** The report's region: "us", "state/md", "congressional_district/MD-05". */
+  /** The report's region: "us", "state/md", "congressional_district/MD-05", "country/wales". */
   region?: string | null;
 }
 
@@ -120,6 +125,58 @@ interface ProgramSignal {
   owner: string | null;
   /** National or a state code; null for a local or territory parameter. */
   applies: string | null;
+}
+
+/** The UK's nations, by the region key the app gives a nation report. */
+const UK_NATIONS = ['england', 'scotland', 'wales', 'northern_ireland'] as const;
+type UkNation = (typeof UK_NATIONS)[number];
+
+/** England's regions, as comparisons name them: each lies in England only. */
+const ENGLISH_REGIONS = new Set([
+  'london',
+  'north east',
+  'north west',
+  'yorkshire and the humber',
+  'east midlands',
+  'west midlands',
+  'east',
+  'east of england',
+  'south east',
+  'south west',
+]);
+
+/** The nation a UK report covers: "country/wales" or "wales"; null for the whole UK. */
+function ukReportNation(region: string | null | undefined): UkNation | null {
+  const key = (region ?? '').toLowerCase().replace(/^country\//, '');
+  return (UK_NATIONS as readonly string[]).includes(key) ? (key as UkNation) : null;
+}
+
+/**
+ * The nations a UK comparison covers: "Scotland" is Scotland's, "GB"
+ * every nation but Northern Ireland. Null when it names the whole UK or
+ * an area the app does not know, which every report keeps.
+ */
+function ukComparisonNations(geography: string | null | undefined): UkNation[] | null {
+  const name = (geography ?? '').trim().toLowerCase().replace(/_/g, ' ');
+  if (name === 'gb' || name === 'great britain') {
+    return ['england', 'scotland', 'wales'];
+  }
+  if (name === 'england and wales') {
+    return ['england', 'wales'];
+  }
+  if (name === 'england' || ENGLISH_REGIONS.has(name)) {
+    return ['england'];
+  }
+  if (name === 'scotland') {
+    return ['scotland'];
+  }
+  if (name === 'wales') {
+    return ['wales'];
+  }
+  if (name === 'northern ireland' || name === 'ni') {
+    return ['northern_ireland'];
+  }
+  return null;
 }
 
 function stateCode(code: string | null | undefined): string | null {
@@ -221,7 +278,12 @@ export function relevantComparisons<T extends ComparisonScope>(
     ? /^(?:state\/([a-z]{2})|congressional_district\/([a-z]{2})-\d+)$/i.exec(reform.region ?? '')
     : null;
   const report = (reportState && stateCode(reportState[1] ?? reportState[2])) || NATIONAL;
+  const ukNation = reform.countryId.toLowerCase() === 'uk' ? ukReportNation(reform.region) : null;
   return comparisons.filter((comparison) => {
+    // Another nation's comparison never describes a nation report.
+    if (ukNation && !(ukComparisonNations(comparison.geography) ?? [ukNation]).includes(ukNation)) {
+      return false;
+    }
     const geography = (us && stateCode(comparison.geography)) || NATIONAL;
     // Another state's comparison never describes a state report.
     if (report !== NATIONAL && geography !== NATIONAL && geography !== report) {

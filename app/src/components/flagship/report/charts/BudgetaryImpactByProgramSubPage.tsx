@@ -45,18 +45,73 @@ function formatBarAmount(value: number, countryId: CountryId): string {
   return `${value < 0 ? MINUS : ''}${amount}`;
 }
 
-/** The programs a reform changes, by name, with their budget changes. */
+/**
+ * The benefit programmes in a detailed budget. The simulation API reports
+ * each programme's own total, so a benefit's change is a change in
+ * spending, and it costs the budget when it rises.
+ */
+const BENEFIT_PROGRAMS = new Set([
+  'universal_credit',
+  'child_benefit',
+  'pension_credit',
+  'income_support',
+  'working_tax_credit',
+  'child_tax_credit',
+  'tax_credits',
+  'state_pension',
+  'snap',
+  'tanf',
+  'ssi',
+  'social_security',
+  'medicare',
+  'medicaid',
+  'eitc',
+  'ctc',
+]);
+
+/**
+ * Whether the benefits' differences are spending changes, to negate into
+ * budget changes. The simulation API sends spending; the legacy API sent
+ * each benefit already as its budget effect. The sign that lets the bars
+ * add up to the total tells the two apart; spending wins a tie.
+ */
+function benefitsAreSpending(
+  detailedBudget: Record<string, ProgramBudgetItem>,
+  budgetaryImpact: number | undefined
+): boolean {
+  let taxes = 0;
+  let benefits = 0;
+  for (const [key, values] of Object.entries(detailedBudget)) {
+    if (typeof values?.difference !== 'number') {
+      continue;
+    }
+    if (BENEFIT_PROGRAMS.has(key)) {
+      benefits += values.difference;
+    } else {
+      taxes += values.difference;
+    }
+  }
+  if (typeof budgetaryImpact !== 'number' || !Number.isFinite(budgetaryImpact)) {
+    return true;
+  }
+  return (
+    Math.abs(taxes - benefits - budgetaryImpact) <= Math.abs(taxes + benefits - budgetaryImpact)
+  );
+}
+
+/** The programs a reform changes, by name, with each one's effect on the budget. */
 export function getChangedPrograms(
   output: SocietyWideReportOutput,
   variableLabels: Record<string, { label?: string } | undefined>
 ): Array<{ key: string; label: string; value: number }> {
   const detailedBudget = (output.detailed_budget ?? {}) as Record<string, ProgramBudgetItem>;
+  const negateBenefits = benefitsAreSpending(detailedBudget, output.budget?.budgetary_impact);
   return Object.entries(detailedBudget)
     .filter(([, values]) => typeof values?.difference === 'number' && values.difference !== 0)
     .map(([key, values]) => ({
       key,
       label: variableLabels[key]?.label || key,
-      value: values.difference,
+      value: negateBenefits && BENEFIT_PROGRAMS.has(key) ? -values.difference : values.difference,
     }));
 }
 
@@ -78,14 +133,15 @@ export default function BudgetaryImpactByProgramSubPage({
 
   const budgetaryImpact = output.budget.budgetary_impact;
   const programs = getChangedPrograms(output, metadata.variables ?? {});
+  const programWord = countryId === 'uk' ? 'programme' : 'program';
 
   if (programs.length === 0) {
     return (
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {output.detailed_budget
-            ? 'This reform has no impact on individual programs.'
-            : 'Detailed budgetary impact by program is not available for this report.'}
+            ? `This reform has no impact on individual ${programWord}s.`
+            : `Detailed budgetary impact by ${programWord} is not available for this report.`}
         </Text>
       </Stack>
     );
@@ -102,7 +158,7 @@ export default function BudgetaryImpactByProgramSubPage({
 
   const hoverMessage = (name: string, amount: number) => {
     const object =
-      name === 'Total' ? 'the budget deficit' : `the ${name} program's budgetary impact`;
+      name === 'Total' ? 'the budget deficit' : `the ${name} ${programWord}'s budgetary impact`;
     return absoluteChangeMessage(
       'This reform',
       object,

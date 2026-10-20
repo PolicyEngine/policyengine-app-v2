@@ -15,7 +15,9 @@ export default function ReportNotSocietyWide() {
   return (
     <ErrorState
       title="This report cannot open here"
-      description="It is a household report. This page shows nationwide and state results only."
+      description={`It is a household report. This page shows ${
+        countryId === 'uk' ? 'UK-wide and nation' : 'nationwide and state'
+      } results only.`}
       actions={
         <Button variant="outline" onClick={() => nav.push(`/${countryId}/build`)}>
           Back to Build

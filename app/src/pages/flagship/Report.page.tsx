@@ -386,6 +386,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           </Title>
           <ReportCalculationError
             message={calcStatus.error?.message}
+            scope={
+              regionLabel
+                ? `for ${regionLabel}`
+                : report?.countryId === 'uk'
+                  ? 'UK-wide'
+                  : 'nationwide'
+            }
             // The reform comes back as a draft to edit; without it, Build starts blank.
             onEdit={
               meta?.provisions.length && report

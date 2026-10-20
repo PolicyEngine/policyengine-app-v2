@@ -37,6 +37,23 @@ describe('getChangedPrograms', () => {
       { key: 'universal_credit', label: 'universal_credit', value: -0.5e9 },
     ]);
   });
+
+  test('given benefit spending changes then they become budget changes that add up to the total', () => {
+    // A Wales report's shape: income tax falls and Universal Credit spending rises.
+    const output = {
+      ...UK_OUTPUT,
+      budget: { ...UK_OUTPUT.budget, budgetary_impact: -21.57e9 },
+      detailed_budget: {
+        income_tax: { baseline: 300e9, reform: 280e9, difference: -20e9 },
+        universal_credit: { baseline: 70e9, reform: 71.57e9, difference: 1.57e9 },
+      },
+    } as typeof UK_OUTPUT;
+
+    const programs = getChangedPrograms(output, {});
+
+    expect(programs.map((program) => program.value)).toEqual([-20e9, -1.57e9]);
+    expect(programs.reduce((sum, program) => sum + program.value, 0)).toBeCloseTo(-21.57e9);
+  });
 });
 
 describe('BudgetaryImpactByProgramSubPage', () => {
@@ -44,7 +61,7 @@ describe('BudgetaryImpactByProgramSubPage', () => {
     render(<BudgetaryImpactByProgramSubPage output={REPORT_4332_OUTPUT} fillHeight />, 'uk');
 
     expect(
-      screen.getByText('Detailed budgetary impact by program is not available for this report.')
+      screen.getByText('Detailed budgetary impact by programme is not available for this report.')
     ).toBeInTheDocument();
   });
 
@@ -57,7 +74,7 @@ describe('BudgetaryImpactByProgramSubPage', () => {
     render(<BudgetaryImpactByProgramSubPage output={output} fillHeight />, 'uk');
 
     expect(
-      screen.getByText('This reform has no impact on individual programs.')
+      screen.getByText('This reform has no impact on individual programmes.')
     ).toBeInTheDocument();
   });
 });

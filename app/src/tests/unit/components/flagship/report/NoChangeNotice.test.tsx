@@ -106,4 +106,11 @@ describe('NoChangeNotice', () => {
     );
     expect(notice).not.toHaveTextContent('same values as');
   });
+
+  test('given a UK report then it says programme', () => {
+    render(<NoChangeNotice year="2026" provisions={[provision({ value: 2000 })]} />, 'uk');
+
+    const notice = screen.getByRole('region', { name: 'No change in this year' });
+    expect(notice).toHaveTextContent('A programme you changed is not in effect in 2026');
+  });
 });
