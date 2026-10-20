@@ -5,7 +5,7 @@ import type { ParameterMetadataCollection } from '@/types/metadata/parameterMeta
 import type { ValuesList } from '@/types/subIngredients/valueInterval';
 
 /**
- * The v3 workspace's model metadata from the PolicyEngine API's v2 routes,
+ * The v3 workspace's model metadata from the Public API's v2 routes,
  * in the shape `GET /{country}/metadata` returns, so everything that reads
  * the metadata store works unchanged:
  *

@@ -30,12 +30,16 @@ import { coercePolicyParameterValue, resolvePolicyParameterValueSpec } from '@/u
 /**
  * Store for the flagship app's reform objects.
  *
- * Either way, saving a reform materializes its parameters as a v1 policy
- * (`POST /{country}/policy`, which dedupes identical ones), and a save
- * that cannot create the policy fails. Signed out (and outside the US and
- * UK) the reform, with its policy ID, lives in localStorage. Signed in, it
- * is a row in the account's `/v2/user-policies` carrying the policy ID,
- * the name, the baseline, and the provenance.
+ * Saving a reform first makes its parameters a policy, and a save that
+ * cannot create the policy fails. Where saved work is in the browser
+ * (sign-in not configured, or outside the US and UK) the reform, with the
+ * ID of its v1 policy (`POST /{country}/policy`), lives in localStorage.
+ * Where it is in the account, signed in or signed out, the reform is a row
+ * in `/v2/user-policies` carrying the name, the baseline, the provenance
+ * and the policy: a v1 policy (`legacy_policy_id`, ApiReformStore) before
+ * the switch, and a `/v2/policies` policy (`policy_id`, ApiV2ReformStore)
+ * after it. V3_API_ROUTES picks the account store. Both APIs deduplicate
+ * identical policies.
  */
 export type NewReform = Omit<Reform, 'id' | 'createdAt' | 'updatedAt'>;
 export type ReformUpdates = Partial<Omit<Reform, 'id' | 'countryId' | 'createdAt' | 'updatedAt'>>;

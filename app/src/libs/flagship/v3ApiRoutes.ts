@@ -1,7 +1,7 @@
 import type { MetadataRoutes } from '@/types/metadata';
 
 /**
- * Which PolicyEngine API routes the v3 workspace uses.
+ * Which Public API routes (policyengine-api) the v3 workspace uses.
  *
  * - 'v1': `GET /{country}/metadata` for the model, and saved reforms as
  *   `/v2/user-policies` rows pointing at v1 policies (`POST /{country}/policy`,
