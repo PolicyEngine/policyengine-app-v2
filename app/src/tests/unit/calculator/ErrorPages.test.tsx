@@ -87,12 +87,61 @@ describe('firstPathSegment', () => {
     );
   });
 
+  // Next.js decodes route params once with decodeURIComponent, and usePathname()
+  // keeps the path's percent-encoding.
+  test.each([
+    ['/%75k/reports', 'uk'],
+    ['/%75%6B', 'uk'],
+    ['/%55K/reports', 'UK'],
+    ['/%2575k/reports', '%75k'],
+    ['/uk%2Freports', 'uk/reports'],
+    ['/%E0%A4%A/reports', '%E0%A4%A'],
+  ])('given the path %s then its first segment is %j', (pathname, segment) => {
+    expect(firstPathSegment(pathname)).toBe(segment);
+  });
+
+  test('given a supported country with any of its letters percent-encoded then its first segment is that country', () => {
+    const encodings = (letter: string) => {
+      const hex = letter.charCodeAt(0).toString(16);
+      return [letter, `%${hex.toLowerCase()}`, `%${hex.toUpperCase()}`];
+    };
+    fc.assert(
+      fc.property(
+        fc
+          .constantFrom(...countryIds)
+          .chain((countryId) =>
+            fc.tuple(
+              fc.constant(countryId),
+              fc.tuple(...[...countryId].map((letter) => fc.constantFrom(...encodings(letter))))
+            )
+          ),
+        fc.array(pathSegment),
+        ([countryId, letters], rest) => {
+          const pathname = `/${[letters.join(''), ...rest].join('/')}`;
+          expect(firstPathSegment(pathname)).toBe(countryId);
+        }
+      )
+    );
+  });
+
   test('given any path then the Reports link from it is a supported country’s', () => {
     fc.assert(
       fc.property(fc.array(pathSegment), (segments) => {
         const pathname = `/${segments.join('/')}`;
         expect(supportedReportsHrefs).toContain(reportsHref(firstPathSegment(pathname)));
       })
+    );
+  });
+
+  test('given any mix of percent signs, hex digits and slashes then finding the first segment does not throw', () => {
+    const pathChar = fc.constantFrom('%', '/', '0', '5', '7', 'A', 'E', 'F', 'k', 'u');
+    fc.assert(
+      fc.property(
+        fc.array(pathChar).map((chars) => `/${chars.join('')}`),
+        (pathname) => {
+          expect(() => firstPathSegment(pathname)).not.toThrow();
+        }
+      )
     );
   });
 });
@@ -127,6 +176,8 @@ describe('calculator error pages', () => {
       ['/xx/reports', '/us/reports'],
       ['/UK/reports', '/us/reports'],
       ['/llms.txt', '/us/reports'],
+      ['/%75k/reports', '/uk/reports'],
+      ['/%E0%A4%A/reports', '/us/reports'],
     ])('given the path %s then it links to %s', (pathname, href) => {
       mockPathname = pathname;
       render(<GlobalError error={error} reset={reset} />);

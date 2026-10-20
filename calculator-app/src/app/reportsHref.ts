@@ -13,7 +13,20 @@ export function reportsHref(countryId: unknown): string {
 /**
  * The first segment of a URL path, which is the country on country routes:
  * `"uk"` for `/uk/reports`. Undefined for `/`.
+ *
+ * The segment is decoded, as Next.js decodes route params: `usePathname()`
+ * gives `/%75k/reports` for a request to that path, while the route's
+ * `countryId` is `"uk"`.
  */
 export function firstPathSegment(pathname: string): string | undefined {
-  return pathname.split("/").filter(Boolean)[0];
+  const segment = pathname.split("/").filter(Boolean)[0];
+  if (segment === undefined) {
+    return undefined;
+  }
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    // Malformed percent-encoding, which Next.js rejects as a route param.
+    return segment;
+  }
 }
