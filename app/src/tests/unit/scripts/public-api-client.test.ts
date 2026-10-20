@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { readFile } from 'node:fs/promises';
-import type { OpenAPI3 } from 'openapi-typescript';
 import { describe, expect, it } from 'vitest';
+import {
+  ECONOMY_OPTIONS_DOCUMENT,
+  GENERATION_TIMEOUT_MS,
+} from '@/tests/fixtures/scripts/publicApiClientMocks';
 import {
   compareGeneratedTypes,
   GENERATED_SCHEMA_PATH,
@@ -9,51 +12,7 @@ import {
   OPENAPI_DOCUMENT_PATH,
   openapiDocumentLocation,
   serializeOpenapiDocument,
-} from './public-api-client';
-
-const GENERATION_TIMEOUT_MS = 30000;
-
-/** A one-route document in the shape the API publishes. */
-const ECONOMY_OPTIONS_DOCUMENT: OpenAPI3 = {
-  openapi: '3.1.0',
-  info: { title: 'PolicyEngine API', version: '0.0.0' },
-  paths: {
-    '/v2/economy-options': {
-      get: {
-        operationId: 'get_economy_options',
-        parameters: [
-          { name: 'country_id', in: 'query', required: true, schema: { type: 'string' } },
-        ],
-        responses: {
-          '200': {
-            description: 'Successful Response',
-            content: {
-              'application/json': {
-                schema: { $ref: '#/components/schemas/EconomyOptionsResponse' },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  components: {
-    schemas: {
-      EconomyOptionsResponse: {
-        type: 'object',
-        required: ['status', 'result'],
-        properties: {
-          status: { type: 'string', const: 'ok' },
-          result: {
-            type: 'object',
-            required: ['current_law_id'],
-            properties: { current_law_id: { type: 'integer' } },
-          },
-        },
-      },
-    },
-  },
-};
+} from '../../../../scripts/public-api-client';
 
 describe('public-api-client', () => {
   it(
