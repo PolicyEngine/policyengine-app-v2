@@ -96,11 +96,14 @@ describe("apps.json", () => {
     expect(invalid.map((app) => app.slug)).toEqual([]);
   });
 
+  // Research card keys (getResearchItemKey) rely on slugs having no "/".
   test("slugs are URL-safe", () => {
     const invalid = apps.filter((app) => !/^[a-z0-9-]+$/.test(app.slug ?? ""));
     expect(invalid.map((app) => app.slug)).toEqual([]);
   });
 
+  // Slugs repeat across countries (the US and UK "marriage" apps), so pages
+  // and research card keys identify an app by its country and slug.
   test("country and slug pairs are unique", () => {
     expect(
       duplicates(apps.map((app) => `${app.countryId}/${app.slug}`)),

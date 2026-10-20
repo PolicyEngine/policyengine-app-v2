@@ -8,6 +8,7 @@ import {
   getPostsSorted,
   getLocationTags,
   getTopicTags,
+  getResearchItemKey,
   getResearchItems,
   topicLabels,
   locationLabels,
@@ -138,6 +139,90 @@ describe("getResearchItems", () => {
   test("given the research items then sorting them again changes nothing", () => {
     const items = getResearchItems();
     expect([...items].sort(compareResearchItems)).toEqual(items);
+  });
+
+  test("given the research items then no two share a card key", () => {
+    const keys = getResearchItems().map(getResearchItemKey);
+    expect(keys.filter((key, i) => keys.indexOf(key) !== i)).toEqual([]);
+  });
+});
+
+describe("getResearchItemKey", () => {
+  const card = (isApp: boolean, countryId: string, slug: string) => ({
+    isApp,
+    countryId,
+    slug,
+  });
+
+  test("given the US and UK apps with one slug then their keys differ", () => {
+    expect(getResearchItemKey(card(true, "us", "marriage"))).not.toBe(
+      getResearchItemKey(card(true, "uk", "marriage")),
+    );
+  });
+
+  test("given a post and an app with one slug then their keys differ", () => {
+    expect(getResearchItemKey(card(false, "us", "marriage"))).not.toBe(
+      getResearchItemKey(card(true, "us", "marriage")),
+    );
+  });
+
+  test("given one post under two countries then its key is the same", () => {
+    expect(getResearchItemKey(card(false, "us", "marriage"))).toBe(
+      getResearchItemKey(card(false, "uk", "marriage")),
+    );
+  });
+
+  type Card = { isApp: boolean; countryId: string; slug: string };
+  // A post is its slug, since post slugs are unique; an app is its country
+  // and slug.
+  const sameCard = (a: Card, b: Card) =>
+    a.isApp === b.isApp &&
+    a.slug === b.slug &&
+    (!a.isApp || a.countryId === b.countryId);
+  // Slugs are as apps.json allows them (the "slugs are URL-safe" data test).
+  // Country ids with "-" or "/" check that the key never mistakes part of a
+  // country for part of a slug: with a "-" separator, us-x + x and us + x-x
+  // would share a key.
+  const COUNTRIES = ["us", "uk", "us-x", "us/"];
+  const SLUGS = ["marriage", "x", "x-x", "-"];
+
+  test("given every pair of cards from a small pool then their keys match only when they are the same card", () => {
+    const pool = [true, false].flatMap((isApp) =>
+      COUNTRIES.flatMap((countryId) =>
+        SLUGS.map((slug) => card(isApp, countryId, slug)),
+      ),
+    );
+    for (const a of pool) {
+      for (const b of pool) {
+        expect(
+          getResearchItemKey(a) === getResearchItemKey(b),
+          JSON.stringify([a, b]),
+        ).toBe(sameCard(a, b));
+      }
+    }
+  });
+
+  test("given any two cards then their keys match only when they are the same card", () => {
+    const item = fc.record({
+      isApp: fc.boolean(),
+      countryId: fc.oneof(
+        { weight: 3, arbitrary: fc.constantFrom(...COUNTRIES) },
+        { weight: 1, arbitrary: fc.string() },
+      ),
+      slug: fc.oneof(
+        { weight: 3, arbitrary: fc.constantFrom(...SLUGS) },
+        { weight: 1, arbitrary: fc.stringMatching(/^[a-z0-9-]+$/) },
+      ),
+    });
+
+    fc.assert(
+      fc.property(item, item, (a, b) => {
+        expect(getResearchItemKey(a) === getResearchItemKey(b)).toBe(
+          sameCard(a, b),
+        );
+      }),
+      { numRuns: 1000 },
+    );
   });
 });
 

@@ -208,6 +208,20 @@ export const locationLabels: TagLabels = {
   "us-wy": "Wyoming",
 };
 
+/**
+ * The React key for a research card. Post slugs are unique, but an app slug
+ * is unique only within its country (the US and UK apps are both "marriage"),
+ * so an app's key also names its country. App slugs never contain "/", so
+ * distinct apps always get distinct keys.
+ */
+export function getResearchItemKey(
+  item: Pick<ResearchItem, "isApp" | "countryId" | "slug">,
+): string {
+  return item.isApp
+    ? `app-${item.countryId}/${item.slug}`
+    : `post-${item.slug}`;
+}
+
 const POST_COUNTRY_IDS = ["us", "uk", "ca", "ng"];
 
 /**

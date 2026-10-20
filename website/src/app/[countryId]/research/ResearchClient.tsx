@@ -47,6 +47,7 @@ import HeroSection from "@/components/static/HeroSection";
 import { useDisplayCategory } from "@/components/blog/useDisplayCategory";
 import {
   getLocationTags,
+  getResearchItemKey,
   getResearchItems,
   getTopicLabel,
   getTopicTags,
@@ -322,11 +323,7 @@ export function BlogPostCard({
 
 /* ─── BlogPostGrid ─── */
 
-function itemKey(item: ResearchSearchResult) {
-  return `${item.isApp ? "app" : "post"}-${item.slug}`;
-}
-
-function BlogPostGrid({
+export function BlogPostGrid({
   items,
   countryId,
 }: {
@@ -337,7 +334,7 @@ function BlogPostGrid({
   const [newKeys, setNewKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const currentKeys = new Set(items.map(itemKey));
+    const currentKeys = new Set(items.map(getResearchItemKey));
     const prevKeys = prevKeysRef.current;
 
     // Keys that are new (not in previous set)
@@ -362,11 +359,12 @@ function BlogPostGrid({
     <>
       <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4">
         {items.map((item, i) => {
-          const key = itemKey(item);
+          const key = getResearchItemKey(item);
           const isNew = newKeys.has(key);
           const newIndex = isNew
-            ? items.filter((it, j) => j <= i && newKeys.has(itemKey(it)))
-                .length - 1
+            ? items.filter(
+                (it, j) => j <= i && newKeys.has(getResearchItemKey(it)),
+              ).length - 1
             : 0;
 
           return (
