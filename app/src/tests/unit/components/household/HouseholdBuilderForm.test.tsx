@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HouseholdBuilderForm, {
+  PEOPLE_GRID_CLASSES,
   rankVariablesBySearch,
 } from '@/components/household/HouseholdBuilderForm';
 import { Household } from '@/models/Household';
@@ -67,6 +68,45 @@ describe('HouseholdBuilderForm', () => {
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
     expect(screen.getByText('Household')).toBeInTheDocument();
+  });
+
+  test('given the columns layout then the people sit at most four to a row, fewer as the section narrows', () => {
+    renderForm({ layout: 'columns' });
+
+    const peopleGrid = screen.getByText('You').closest('[data-slot="accordion"]');
+    expect(peopleGrid).toHaveClass(...PEOPLE_GRID_CLASSES.split(' '));
+    expect(peopleGrid?.className).not.toContain('auto-fill');
+    // The column counts follow the Individuals section's width, not the window's.
+    const individualsSection = screen
+      .getByText('Individuals')
+      .closest('[data-slot="accordion-item"]');
+    expect(individualsSection).toHaveClass('tw:@container');
+  });
+
+  test('given each width step of the people grid then it holds at most four cards of at least 260px', () => {
+    const minimumCardWidthPx = 260;
+    const gapPx = 12; // tw:gap-3
+    expect(PEOPLE_GRID_CLASSES).toContain('tw:gap-3');
+
+    const columnCounts = [...PEOPLE_GRID_CLASSES.matchAll(/grid-cols-(\d+)/g)].map((match) =>
+      Number(match[1])
+    );
+    expect(Math.max(...columnCounts)).toBe(4);
+
+    const widthSteps = [...PEOPLE_GRID_CLASSES.matchAll(/@min-\[(\d+)px\]:grid-cols-(\d+)/g)];
+    expect(widthSteps.length).toBeGreaterThan(0);
+    for (const [, sectionWidth, columnCount] of widthSteps) {
+      const columns = Number(columnCount);
+      const cardWidthPx = (Number(sectionWidth) - (columns - 1) * gapPx) / columns;
+      expect(cardWidthPx).toBeGreaterThanOrEqual(minimumCardWidthPx);
+    }
+  });
+
+  test('given the stacked layout then the people are not laid out as a grid of cards', () => {
+    renderForm();
+
+    const peopleList = screen.getByText('You').closest('[data-slot="accordion"]');
+    expect(peopleList?.className ?? '').not.toContain('tw:grid');
   });
 });
 
