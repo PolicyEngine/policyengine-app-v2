@@ -20,6 +20,7 @@
 
 import authorsData from "@/data/posts/authors.json";
 import {
+  compareNewestFirst,
   getPostCountryId,
   getPostsSorted,
   getResearchItems,
@@ -63,11 +64,7 @@ export interface LlmsSource {
   loadArticle: (filename: string) => string;
 }
 
-/**
- * The posts in the order the research page lists them. That page re-sorts
- * posts together with apps, so same-day posts can sit in a different order
- * there than in getPostsSorted().
- */
+/** The posts in the order the research page lists them. */
 function postsInResearchPageOrder(): BlogPost[] {
   const bySlug = new Map(getPostsSorted().map((post) => [post.slug, post]));
   return getResearchItems()
@@ -444,9 +441,7 @@ export function articleToLlmsMarkdown(
 
 /** Newest first; the sort is stable, so posts with equal dates keep order. */
 function newestFirst<T extends { date: string }>(posts: readonly T[]): T[] {
-  return [...posts].sort((a, b) =>
-    a.date < b.date ? 1 : a.date > b.date ? -1 : 0,
-  );
+  return [...posts].sort(compareNewestFirst);
 }
 
 export function formatArticle(
