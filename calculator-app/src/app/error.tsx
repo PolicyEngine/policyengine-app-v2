@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { colors } from "@/designTokens";
+import { firstPathSegment, reportsHref } from "./reportsHref";
 
 export default function GlobalError({
   error,
@@ -10,6 +12,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // This page also shows for errors outside a country route, such as on `/`,
+  // so it takes the country from the path when the path has one.
+  const reportsPath = reportsHref(firstPathSegment(usePathname()));
+
   useEffect(() => {
     console.error("[Calculator] Global error:", error);
   }, [error]);
@@ -35,9 +41,8 @@ export default function GlobalError({
         </button>
         {/* A full page load rather than a client-side navigation, so the
             client state that may have caused the error is discarded. */}
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
-          href="/us/reports"
+          href={reportsPath}
           className="tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:border tw:rounded-md"
           style={{
             borderColor: colors.border.light,
