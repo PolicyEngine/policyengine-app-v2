@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@test-utils';
+import { fireEvent, render, screen, within } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import ReportChartCard from '@/components/flagship/report/ReportChartCard';
 
@@ -34,6 +34,21 @@ describe('ReportChartCard', () => {
     expect(card.style.flexDirection).toBe('column');
   });
 
+  test('given a card in the grid then its frame and bordered body fill the card', () => {
+    render(
+      <ReportChartCard title="Winners and losers">
+        <div>Compact chart</div>
+      </ReportChartCard>
+    );
+    const chartArea = screen.getByText('Compact chart').parentElement!.parentElement!;
+    const borderedBody = chartArea.parentElement!;
+    const frame = borderedBody.parentElement!;
+    // Without these, the section stretches but the visible box stays short.
+    expect(borderedBody).toHaveClass('tw:flex', 'tw:flex-1', 'tw:flex-col');
+    expect(frame).toHaveClass('tw:flex-1');
+    expect(frame.parentElement!.tagName).toBe('SECTION');
+  });
+
   test('given a half-width card then its chart area grows from the clamped minimum height', () => {
     render(
       <ReportChartCard title="Winners and losers">
@@ -63,13 +78,18 @@ describe('ReportChartCard', () => {
     expect(chartArea.style.minHeight).toBe('280px');
   });
 
-  test('given no full-detail chart then the dialog shows the card chart', () => {
+  test('given no full-detail chart then the dialog shows the card chart at its fixed height', () => {
     render(
       <ReportChartCard title="Budgetary impact" fullWidth>
         <div>Budget chart</div>
       </ReportChartCard>
     );
     fireEvent.click(screen.getByRole('button', { name: 'Expand Budgetary impact' }));
-    expect(screen.getByRole('dialog')).toHaveTextContent('Budget chart');
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('Budget chart');
+    // The dialog keeps its explicit height rather than the grid's growing chart area.
+    const dialogChartBox = within(dialog).getByText('Budget chart').parentElement!;
+    expect(dialogChartBox).toHaveStyle({ height: 'min(55dvh, 440px)' });
+    expect(dialogChartBox.style.position).toBe('');
   });
 });
