@@ -23,9 +23,12 @@ export const V3_WORKSPACE_ROUTE_GROUP = '(workspace)';
 
 /**
  * Where model metadata loads from for a page in this route group (the
- * segment below `[countryId]`): v3 follows V3_API_ROUTES; everything else
- * stays on v1.
+ * segment below `[countryId]`): v3 follows `v3Routes` (V3_API_ROUTES unless
+ * a test names the routes after the switch); everything else stays on v1.
  */
-export function metadataRoutesForRouteGroup(routeGroup: string | null): V3ApiRoutes {
-  return routeGroup === V3_WORKSPACE_ROUTE_GROUP ? V3_API_ROUTES : 'v1';
+export function metadataRoutesForRouteGroup(
+  routeGroup: string | null,
+  v3Routes: V3ApiRoutes = V3_API_ROUTES
+): V3ApiRoutes {
+  return routeGroup === V3_WORKSPACE_ROUTE_GROUP ? v3Routes : 'v1';
 }

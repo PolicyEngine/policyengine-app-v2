@@ -8,12 +8,17 @@ describe('v3ApiRoutes', () => {
     expect(V3_API_ROUTES).toBe('v1');
   });
 
-  test('given the v3 workspace route group then metadata follows V3_API_ROUTES', () => {
+  test('given the v3 workspace route group then metadata follows the v3 routes', () => {
+    expect(metadataRoutesForRouteGroup('(workspace)', 'v2')).toBe('v2');
+    expect(metadataRoutesForRouteGroup('(workspace)', 'v1')).toBe('v1');
+  });
+
+  test('given no v3 routes then the workspace route group follows V3_API_ROUTES', () => {
     expect(metadataRoutesForRouteGroup('(workspace)')).toBe(V3_API_ROUTES);
   });
 
   test('given the legacy calculator or no route group then metadata stays on v1', () => {
-    expect(metadataRoutesForRouteGroup('(calculator)')).toBe('v1');
-    expect(metadataRoutesForRouteGroup(null)).toBe('v1');
+    expect(metadataRoutesForRouteGroup('(calculator)', 'v2')).toBe('v1');
+    expect(metadataRoutesForRouteGroup(null, 'v2')).toBe('v1');
   });
 });
