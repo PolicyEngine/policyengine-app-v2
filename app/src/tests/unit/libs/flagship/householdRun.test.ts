@@ -11,7 +11,7 @@ import {
   BASELINE_RESULT,
   BASELINE_RUN_BUNDLE,
   calculationResponse,
-  COUNTRY_WITHOUT_HOUSEHOLD_LINES,
+  COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
   householdResult,
@@ -174,15 +174,15 @@ describe('compareHouseholds', () => {
     expect(() => compareHouseholds(missing, BASELINE_RESULT, HOUSEHOLD_YEAR, 'us')).toThrow();
   });
 
-  test('given a country without household result lines then the comparison fails, not reads as the US', () => {
+  test('given a country without household result rows then the comparison fails, not reads as the US', () => {
     expect(() =>
       compareHouseholds(
         BASELINE_RESULT,
         REFORM_RESULT,
         HOUSEHOLD_YEAR,
-        COUNTRY_WITHOUT_HOUSEHOLD_LINES
+        COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS
       )
-    ).toThrow(`Household results are not available for ${COUNTRY_WITHOUT_HOUSEHOLD_LINES}.`);
+    ).toThrow(`Household results are not available for ${COUNTRY_WITHOUT_HOUSEHOLD_RESULT_ROWS}.`);
   });
 });
 

@@ -17,7 +17,7 @@ import {
 
 /**
  * Acceptance checks for UK households in v3's report section, from issues
- * #358 (a UK household the v1 API once failed to calculate) and #562 (the
+ * #358 (a UK household the Public API once failed to calculate) and #562 (the
  * UK household checklist: several people, an input on the benefit unit,
  * the report's policies, the whole run). Saving and reusing a household
  * (#562's second item) belongs to the standalone household report.

@@ -212,7 +212,11 @@ const LINES: Partial<
   uk: { components: UK_COMPONENTS, programs: UK_PROGRAMS },
 };
 
-/** A country's lines; another country has none, and is never read as the US. */
+/**
+ * The rows a country's result lists (its `LINES` entry: parts of net
+ * income and programs). A country without an entry has none, and is never
+ * read as the US.
+ */
 function linesFor(countryId: string) {
   const lines = LINES[countryId as CountryId];
   if (!lines) {
