@@ -60,7 +60,7 @@ describe("getPostsSorted", () => {
         `${posts[i - 1].slug} then ${posts[i].slug}`,
       ).toBeGreaterThan(POSTS_JSON_INDEX.get(posts[i - 1].slug)!);
     }
-    // posts.json has same-date posts (12 pairs in October 2026).
+    // posts.json has same-date posts (12 pairs as of October 2026).
     expect(ties).toBeGreaterThan(0);
   });
 
@@ -144,21 +144,38 @@ describe("getResearchItems", () => {
 describe("date comparators", () => {
   // A few days, with and without times, so generated dates often tie.
   const date = fc.oneof(
-    fc
-      .tuple(
-        fc.constantFrom("2023-01-12", "2025-10-28", "2026-03-25"),
-        fc.constantFrom("", " 00:00:01", " 12:00", " 12:00:00"),
-      )
-      .map(([day, time]) => day + time),
-    fc
-      .date({
-        min: new Date("2016-01-01T00:00:00Z"),
-        max: new Date("2030-12-31T00:00:00Z"),
-        noInvalidDate: true,
-      })
-      .map((d) => d.toISOString().slice(0, 19).replace("T", " ")),
+    {
+      weight: 3,
+      arbitrary: fc
+        .tuple(
+          fc.constantFrom("2023-01-12", "2025-10-28", "2026-03-25"),
+          fc.constantFrom("", " 00:00:01", " 12:00", " 12:00:00"),
+        )
+        .map(([day, time]) => day + time),
+    },
+    {
+      weight: 1,
+      arbitrary: fc
+        .date({
+          min: new Date("2016-01-01T00:00:00Z"),
+          max: new Date("2030-12-31T00:00:00Z"),
+          noInvalidDate: true,
+        })
+        .map((d) => d.toISOString().slice(0, 19).replace("T", " ")),
+    },
   );
   const item = fc.record({ date, isApp: fc.boolean() });
+  // Mostly from two dates, so three items often share a date and kind.
+  const tieProneItem = fc.oneof(
+    { weight: 1, arbitrary: item },
+    {
+      weight: 3,
+      arbitrary: fc.record({
+        date: fc.constantFrom("2025-10-28", "2025-10-28 12:00:00"),
+        isApp: fc.boolean(),
+      }),
+    },
+  );
   const sign = (n: number) => Math.sign(n) + 0;
 
   test.each([
@@ -168,7 +185,7 @@ describe("date comparators", () => {
     "given any items then %s is a consistent comparator",
     (_, compare) => {
       fc.assert(
-        fc.property(item, item, item, (a, b, c) => {
+        fc.property(tieProneItem, tieProneItem, tieProneItem, (a, b, c) => {
           expect(compare(a, a)).toBe(0);
           expect(sign(compare(b, a))).toBe(sign(-compare(a, b)));
           if (compare(a, b) <= 0 && compare(b, c) <= 0) {

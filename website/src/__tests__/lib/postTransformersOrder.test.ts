@@ -39,34 +39,42 @@ afterEach(() => {
 
 // A few days, with and without times, so generated dates often tie.
 const date = fc.oneof(
-  fc
-    .tuple(
-      fc.constantFrom("2023-01-12", "2025-10-28", "2026-03-25"),
-      fc.constantFrom("", " 00:00:01", " 12:00", " 12:00:00"),
-    )
-    .map(([day, time]) => day + time),
-  fc
-    .date({
-      min: new Date("2016-01-01T00:00:00Z"),
-      max: new Date("2030-12-31T00:00:00Z"),
-      noInvalidDate: true,
-    })
-    .map((d) => d.toISOString().slice(0, 19).replace("T", " ")),
+  {
+    weight: 3,
+    arbitrary: fc
+      .tuple(
+        fc.constantFrom("2023-01-12", "2025-10-28", "2026-03-25"),
+        fc.constantFrom("", " 00:00:01", " 12:00", " 12:00:00"),
+      )
+      .map(([day, time]) => day + time),
+  },
+  {
+    weight: 1,
+    arbitrary: fc
+      .date({
+        min: new Date("2016-01-01T00:00:00Z"),
+        max: new Date("2030-12-31T00:00:00Z"),
+        noInvalidDate: true,
+      })
+      .map((d) => d.toISOString().slice(0, 19).replace("T", " ")),
+  },
 );
 
-const postFiles = fc.array(date, { maxLength: 30 }).map((dates) =>
-  dates.map(
-    (postDate, i): GeneratedPost => ({
-      title: `Post ${i}`,
-      description: "",
-      date: postDate,
-      authors: [],
-      tags: ["us"],
-      filename: `post_${i}.md`,
-      image: "",
-    }),
-  ),
-);
+const postFiles = fc
+  .array(date, { maxLength: 30, size: "medium" })
+  .map((dates) =>
+    dates.map(
+      (postDate, i): GeneratedPost => ({
+        title: `Post ${i}`,
+        description: "",
+        date: postDate,
+        authors: [],
+        tags: ["us"],
+        filename: `post_${i}.md`,
+        image: "",
+      }),
+    ),
+  );
 
 const appFiles = fc
   .array(
@@ -76,7 +84,7 @@ const appFiles = fc
       displayWithResearch: fc.boolean(),
       countryId: fc.constantFrom("us", "uk"),
     }),
-    { maxLength: 15 },
+    { maxLength: 15, size: "medium" },
   )
   .map((apps) =>
     apps.map(
