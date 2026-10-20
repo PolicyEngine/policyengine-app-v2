@@ -84,7 +84,7 @@ jobs:
         run: bun run test
 
   public-api-client:
-    name: PolicyEngine API client is current
+    name: Public API client is current
     runs-on: ubuntu-latest
 
     steps:

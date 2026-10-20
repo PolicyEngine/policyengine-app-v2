@@ -1,6 +1,6 @@
 /**
- * TypeScript types for the PolicyEngine API's v2 routes, generated from the
- * API's OpenAPI document (`GET /v2/openapi.json`).
+ * TypeScript types for the Public API's v2 routes (policyengine-api),
+ * generated from its OpenAPI document (`GET /v2/openapi.json`).
  *
  * The document is checked in beside the generated types, so a build never
  * calls the API, and CI can check that the types match the document:
@@ -95,7 +95,7 @@ async function checkGeneratedTypes(): Promise<boolean> {
   const checkedInTypes = await readFile(GENERATED_SCHEMA_PATH, 'utf8');
   const { upToDate } = await compareGeneratedTypes(openapiDocument, checkedInTypes);
   if (upToDate) {
-    console.info('The generated PolicyEngine API types match openapi.json.');
+    console.info('The generated Public API types match openapi.json.');
     return true;
   }
   console.error(

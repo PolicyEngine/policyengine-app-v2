@@ -9,8 +9,8 @@ import { BASE_URL } from '@/constants';
 import type { paths } from './schema';
 
 /**
- * A typed client for the PolicyEngine API's v2 routes, generated from the
- * API's OpenAPI document (see scripts/public-api-client.ts). Route paths,
+ * A typed client for the Public API's v2 routes (policyengine-api), generated
+ * from its OpenAPI document (see scripts/public-api-client.ts). Route paths,
  * query parameters, bodies and responses are checked against
  * src/api/publicApi/schema.d.ts at compile time.
  */
