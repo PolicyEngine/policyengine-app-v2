@@ -40,5 +40,12 @@ export default defineConfig([
       ],
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    // A link to app/public, which holds built assets.
+    "public/**",
+    "next-env.d.ts",
+  ]),
 ]);

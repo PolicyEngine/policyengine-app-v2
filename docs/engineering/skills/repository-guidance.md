@@ -123,6 +123,6 @@ No route embeds a GitHub Pages site as a whole page any more: the 2025 year in r
 
 ## Before committing
 
-1. Run `cd app && bun run prettier -- --write .` to format
-2. Run `bun run lint` to check for errors
-3. CI uses `--max-warnings 0` so fix all warnings
+1. Run `make format` to format `app/`, `website/` and `calculator-app/` with Prettier. `app/` has its own Prettier config; `website/` and `calculator-app/` use Prettier's defaults.
+2. Run `make lint` to run ESLint (and Stylelint in `app/`) in all three.
+3. CI fails on ESLint warnings as well as errors (`--max-warnings 0`), and on files Prettier would reformat, so fix all of them.

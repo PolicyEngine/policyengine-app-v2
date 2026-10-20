@@ -35,9 +35,17 @@ jobs:
         working-directory: ./app
         run: bun run eslint
 
+      - name: Check formatting with Prettier (website)
+        working-directory: ./website
+        run: bun run format:check
+
       - name: Run ESLint (website)
         working-directory: ./website
         run: bun run lint
+
+      - name: Check formatting with Prettier (calculator)
+        working-directory: ./calculator-app
+        run: bun run format:check
 
       - name: Run ESLint (calculator)
         working-directory: ./calculator-app

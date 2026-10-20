@@ -33,6 +33,9 @@ export default defineConfig([
     "out/**",
     "build/**",
     "coverage/**",
+    // A link to app/public; scripts/build.sh swaps in a copy of its built
+    // assets during a build.
+    "public/**",
     "next-env.d.ts",
   ]),
 ]);
