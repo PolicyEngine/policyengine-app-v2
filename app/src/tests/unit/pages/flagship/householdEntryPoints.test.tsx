@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import PopulationPicker from '@/components/flagship/reform/PopulationPicker';
@@ -51,6 +51,28 @@ function specifierOf(path: string): string | null {
   return `@/${relative(APP_SOURCE, path).replace(/\.(ts|tsx)$/, '')}`;
 }
 
+/** Every module a source file names: imports (static, dynamic, side effect), re-exports, requires. */
+function importedSpecifiers(source: string): string[] {
+  const specifierPattern =
+    /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*)(['"])([^'"]+)\1/g;
+  return [...source.matchAll(specifierPattern)].map((match) => match[2]);
+}
+
+/**
+ * The app specifier an import names, however it is written: "@/…" as is,
+ * and a relative path ("./HouseholdReport.page") resolved from the
+ * importing file. Package imports name no app module.
+ */
+function appSpecifierOf(importer: string, specifier: string): string | null {
+  if (specifier.startsWith('@/')) {
+    return specifier.replace(/\.(ts|tsx)$/, '');
+  }
+  if (specifier.startsWith('.')) {
+    return specifierOf(resolve(dirname(importer), specifier));
+  }
+  return null;
+}
+
 describe('household entry points before the switch', () => {
   test('given Build\'s population picker then "A household" is listed, but cannot be chosen', async () => {
     const user = userEvent.setup();
@@ -67,12 +89,11 @@ describe('household entry points before the switch', () => {
   test('given the app and calculator sources then only the household modules import one another', () => {
     const importers = [...sourceFiles(APP_SOURCE), ...sourceFiles(CALCULATOR_SOURCE)]
       .filter((path) => !UNROUTED_MODULES.includes(specifierOf(path) ?? ''))
-      .filter((path) => {
-        const source = readFileSync(path, 'utf8');
-        return UNROUTED_MODULES.some(
-          (specifier) => source.includes(`'${specifier}'`) || source.includes(`"${specifier}"`)
-        );
-      })
+      .filter((path) =>
+        importedSpecifiers(readFileSync(path, 'utf8')).some((specifier) =>
+          UNROUTED_MODULES.includes(appSpecifierOf(path, specifier) ?? '')
+        )
+      )
       .map((path) => relative(resolve(APP_SOURCE, '../..'), path));
 
     expect(importers).toEqual([]);
