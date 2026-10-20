@@ -25,6 +25,29 @@ export type TagLabels = Record<string, string>;
 
 const COUNTRY_IDS = ["us", "uk", "ng", "ca", "global"] as const;
 
+/**
+ * Newest first. Dates are compared as strings ("2025-10-28" or
+ * "2025-10-28 12:00:00"), and equal dates compare equal, so a sort keeps
+ * their input order: Array.prototype.sort is stable.
+ */
+export function compareNewestFirst(
+  a: Pick<ResearchItem, "date">,
+  b: Pick<ResearchItem, "date">,
+): number {
+  return a.date < b.date ? 1 : a.date > b.date ? -1 : 0;
+}
+
+/**
+ * The research page's order: newest first, and apps before posts on the same
+ * date. Items that still tie keep their order in apps.json or posts.json.
+ */
+export function compareResearchItems(
+  a: Pick<ResearchItem, "date" | "isApp">,
+  b: Pick<ResearchItem, "date" | "isApp">,
+): number {
+  return compareNewestFirst(a, b) || Number(b.isApp) - Number(a.isApp);
+}
+
 // Lazy-initialized processed data
 let _postsSorted: BlogPost[] | null = null;
 let _locationTags: string[] | null = null;
@@ -33,9 +56,7 @@ let _topicTags: string[] | null = null;
 function initPosts() {
   if (_postsSorted) return;
 
-  _postsSorted = [...(postsData as BlogPost[])].sort((a, b) =>
-    a.date < b.date ? 1 : -1,
-  );
+  _postsSorted = [...(postsData as BlogPost[])].sort(compareNewestFirst);
 
   for (const post of _postsSorted) {
     const filenameWithoutExt = post.filename.substring(
@@ -199,7 +220,7 @@ export function getPostCountryId(post: Pick<BlogPost, "tags">): string {
 
 /**
  * Get combined research items (posts + apps with displayWithResearch)
- * sorted by date (newest first)
+ * in the research page's order (see compareResearchItems).
  */
 export function getResearchItems(): ResearchItem[] {
   const postItems: ResearchItem[] = getPostsSorted().map((post) => ({
@@ -230,5 +251,5 @@ export function getResearchItems(): ResearchItem[] {
       countryId: app.countryId,
     }));
 
-  return [...postItems, ...appItems].sort((a, b) => (a.date < b.date ? 1 : -1));
+  return [...postItems, ...appItems].sort(compareResearchItems);
 }
