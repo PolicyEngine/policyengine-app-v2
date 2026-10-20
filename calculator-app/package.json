@@ -6,6 +6,8 @@
     "dev": "sh -c 'next dev --port ${PORT:-3001}'",
     "build": "next build",
     "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -38,12 +40,15 @@
     "tailwindcss": "^4.2.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@types/react-plotly.js": "^2.6.3",
     "@types/react-simple-maps": "^3.0.6",
+    "eslint": "^9.29.0",
+    "eslint-config-next": "^15.3.3",
     "postcss": "^8.5.4",
     "typescript": "^5.8.0"
   }

@@ -33,6 +33,9 @@ export default function CountryError({
         >
           Try again
         </button>
+        {/* A full page load rather than a client-side navigation, so the
+            client state that may have caused the error is discarded. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/us/reports"
           className="tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:border tw:rounded-md"

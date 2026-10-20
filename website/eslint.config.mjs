@@ -14,7 +14,10 @@ export default defineConfig([
     extends: ["next/core-web-vitals", "next/typescript"],
     settings: {
       next: {
-        rootDir: "website/",
+        // Absolute, so @next/next/no-html-link-for-pages finds src/app
+        // whichever folder ESLint runs from. A relative "website/" matched
+        // nothing when run from website/, which turned the rule off.
+        rootDir: __dirname,
       },
     },
   }),
