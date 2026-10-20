@@ -147,6 +147,9 @@ export function claimValue(value: number | null | undefined, unit: string): stri
       style: 'currency',
       currency,
       notation: 'compact',
+      // Set explicitly: left out, the minimum depends on the JavaScript engine
+      // ("£1.0B" on older V8, "£1B" on newer), as in formatCalibrationValue.
+      minimumFractionDigits: 0,
       maximumFractionDigits: 1,
     }).format(value);
   }
