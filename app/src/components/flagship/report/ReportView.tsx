@@ -65,7 +65,10 @@ function SectionHeading({ id, title }: { id: string; title: string }) {
 }
 
 export interface ReportViewProps {
-  /** The reform's name, for the adjust panel. */
+  /**
+   * The report's name: the name `onRename` changes, and the adjust panel's
+   * starting reform name.
+   */
   title: string;
   /** The cover heading; defaults to the title. */
   heading?: string;

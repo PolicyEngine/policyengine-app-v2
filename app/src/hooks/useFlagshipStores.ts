@@ -115,12 +115,6 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
   );
 }
 
-/**
- * This session's record a report link names — the account's row when
- * signed in (US/UK), signed out this browser's unauthenticated user's, and
- * otherwise this browser's — with the saved reform it was run from. Null
- * when there is none: a report someone else ran.
- */
 /** The cache key of this session's record for a report link (see useReportRecord). */
 const reportRecordQueryKey = (scope: string, link: string) =>
   ['flagship-report-record', scope, link] as const;
@@ -129,6 +123,12 @@ const reportRecordQueryKey = (scope: string, link: string) =>
 const sharedReportQueryKey = (countryId: string, link: string) =>
   ['shared-report', countryId, link] as const;
 
+/**
+ * This session's record a report link names — the account's row when
+ * signed in (US/UK), signed out this browser's unauthenticated user's, and
+ * otherwise this browser's — with the saved reform it was run from. Null
+ * when there is none: a report someone else ran.
+ */
 export function useReportRecord(link: string | undefined) {
   const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
