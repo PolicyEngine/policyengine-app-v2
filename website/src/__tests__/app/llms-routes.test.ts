@@ -174,8 +174,8 @@ describe("llms article files from the real posts", () => {
     const full = files["llms-full.txt"];
     const articlesOf = (text: string) => text.slice(text.indexOf("\n---\n"));
 
-    expect(urlLines(recent)).toHaveLength(
-      Math.min(RECENT_ARCHIVE_COUNT, posts.length),
+    expect(urlLines(recent)).toEqual(
+      posts.slice(0, RECENT_ARCHIVE_COUNT).map(postUrl),
     );
     expect(articlesOf(full).startsWith(articlesOf(recent))).toBe(true);
     expect(recent.length).toBeLessThan(full.length);
