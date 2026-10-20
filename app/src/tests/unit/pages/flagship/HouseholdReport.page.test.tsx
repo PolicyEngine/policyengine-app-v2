@@ -99,6 +99,12 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
         >
           Add tip income
         </button>
+        <button
+          type="button"
+          onClick={() => onChange(household.withBuilderMaritalStatus(year, 'single'))}
+        >
+          Make single
+        </button>
       </div>
     );
   },
@@ -264,6 +270,17 @@ describe('HouseholdReportPage', () => {
       });
     }
   );
+
+  test('given the household edited after its result then the result still describes the household calculated', async () => {
+    renderReport({ household: FAMILY_HOUSEHOLD });
+    const user = await calculate();
+    const result = await screen.findByRole('region', { name: 'Household net income' });
+
+    await user.click(screen.getByRole('button', { name: 'Make single' }));
+
+    expect(result).toHaveTextContent('Married · 2 children');
+    expect(result).not.toHaveTextContent('Single');
+  });
 
   test("given another year then the household's inputs move to it before it runs (issue #498)", async () => {
     const user = userEvent.setup();

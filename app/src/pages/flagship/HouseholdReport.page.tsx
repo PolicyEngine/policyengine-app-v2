@@ -232,7 +232,11 @@ export default function HouseholdReportPage({
     setRequested({ household, payload });
   };
 
-  const summary = `${describeHousehold(household, year, countryId, metadata?.variables)} · ${year}`;
+  // The household the result is for: the one calculated, not the builder's
+  // household if the reader has edited it since (a year change clears the result).
+  const summary = requested
+    ? `${describeHousehold(requested.household, year, countryId, metadata?.variables)} · ${year}`
+    : '';
   const comparison = runsReform
     ? `${reformLabel ?? 'Reform'} compared with ${baselineLabel}`
     : `Under ${baselineLabel}`;
