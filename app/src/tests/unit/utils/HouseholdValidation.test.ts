@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
+import { UNSUPPORTED_COUNTRY_ID } from '@/tests/fixtures/constants';
 import { RESOLVED_LEGACY_METADATA } from '@/tests/fixtures/spm/spmMocks';
 import {
   mockBoolMetadata,
@@ -132,11 +133,11 @@ describe('HouseholdValidation', () => {
       );
     });
 
-    test('given Canada household when validating then uses default group strategy', () => {
+    test('given an unsupported country when validating then uses default group strategy', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
-        VALIDATION_COUNTRIES.CA,
+        UNSUPPORTED_COUNTRY_ID,
         VALIDATION_YEARS.DEFAULT
       );
 

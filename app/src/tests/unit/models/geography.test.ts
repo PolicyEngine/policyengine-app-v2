@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import type { CountryId } from '@/libs/countries';
 import {
   buildCanonicalGeography,
   findRegionRecord,
@@ -99,6 +100,6 @@ describe('geography model helpers', () => {
 
   test('given an unsupported country display name then it falls back to upper-case', () => {
     expect(getCountryDisplayName('us')).toBe('United States');
-    expect(getCountryDisplayName('ca')).toBe('Canada');
+    expect(getCountryDisplayName('ca' as CountryId)).toBe('CA');
   });
 });

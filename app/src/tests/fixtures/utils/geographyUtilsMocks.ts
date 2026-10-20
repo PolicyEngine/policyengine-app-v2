@@ -4,14 +4,13 @@ import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 export const TEST_COUNTRY_CODES = {
   US: 'us',
   UK: 'uk',
-  CA: 'ca',
+  REMOVED_CANADA: 'ca',
   UNKNOWN: 'zz',
 } as const;
 
 export const EXPECTED_COUNTRY_LABELS = {
   US: 'United States',
   UK: 'United Kingdom',
-  CA: 'Canada',
   UNKNOWN: 'Unknown country',
 } as const;
 

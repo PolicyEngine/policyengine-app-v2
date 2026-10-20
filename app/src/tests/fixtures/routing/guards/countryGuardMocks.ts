@@ -8,6 +8,10 @@
 export const VALID_COUNTRIES = {
   US: 'us',
   UK: 'uk',
+} as const;
+
+// Countries the app no longer serves; their URLs are treated as invalid
+export const REMOVED_COUNTRIES = {
   CA: 'ca',
   NG: 'ng',
   IL: 'il',
@@ -54,7 +58,11 @@ export const TEST_PATHS = {
   // Valid paths
   US_POLICIES: '/us/policies',
   UK_HOUSEHOLD: '/uk/household/123',
+
+  // Paths under countries the app no longer serves
   CA_REPORTS: '/ca/reports/annual/2025',
+  NG_POLICIES: '/ng/policies',
+  IL_REPORTS: '/il/reports',
 
   // Invalid country paths
   INVALID_SIMPLE: '/invalid/policies',

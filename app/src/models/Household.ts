@@ -453,9 +453,6 @@ const HOUSEHOLD_COUNTRY_STRATEGIES: Partial<Record<CountryId, HouseholdCountrySt
   uk: {
     applyPersonDefaults: applyUKDefaultGroups,
   },
-  ca: DEFAULT_COUNTRY_STRATEGY,
-  ng: DEFAULT_COUNTRY_STRATEGY,
-  il: DEFAULT_COUNTRY_STRATEGY,
 };
 
 function getHouseholdCountryStrategy(countryId: CountryId): HouseholdCountryStrategy {

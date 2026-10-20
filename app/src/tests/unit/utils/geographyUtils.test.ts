@@ -36,12 +36,12 @@ describe('geographyUtils', () => {
       expect(result).toBe(EXPECTED_COUNTRY_LABELS.UK);
     });
 
-    it('given CA code then returns Canada', () => {
+    it('given the removed Canada code then returns Unknown country', () => {
       // When
-      const result = getCountryLabel(TEST_COUNTRY_CODES.CA);
+      const result = getCountryLabel(TEST_COUNTRY_CODES.REMOVED_CANADA);
 
       // Then
-      expect(result).toBe(EXPECTED_COUNTRY_LABELS.CA);
+      expect(result).toBe(EXPECTED_COUNTRY_LABELS.UNKNOWN);
     });
 
     it('given unknown code then returns Unknown Country', () => {
@@ -188,9 +188,9 @@ describe('geographyUtils', () => {
       expect(result).toBe('constituency');
     });
 
-    it('given CA then returns constituency', () => {
+    it('given a code other than US then returns constituency', () => {
       // When
-      const result = getRegionType(TEST_COUNTRY_CODES.CA);
+      const result = getRegionType(TEST_COUNTRY_CODES.UNKNOWN);
 
       // Then
       expect(result).toBe('constituency');

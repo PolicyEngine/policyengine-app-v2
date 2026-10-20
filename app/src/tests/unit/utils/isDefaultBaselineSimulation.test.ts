@@ -157,7 +157,7 @@ describe('getDefaultBaselineLabel', () => {
       expect(result).toBe(EXPECTED_LABELS.UK);
     });
 
-    test('given CA country code then returns Canada label', () => {
+    test('given removed CA country code then returns uppercase code in label', () => {
       // When
       const result = getDefaultBaselineLabel(TEST_COUNTRIES.CA);
 
@@ -165,7 +165,7 @@ describe('getDefaultBaselineLabel', () => {
       expect(result).toBe(EXPECTED_LABELS.CA);
     });
 
-    test('given NG country code then returns Nigeria label', () => {
+    test('given removed NG country code then returns uppercase code in label', () => {
       // When
       const result = getDefaultBaselineLabel(TEST_COUNTRIES.NG);
 
@@ -173,7 +173,7 @@ describe('getDefaultBaselineLabel', () => {
       expect(result).toBe(EXPECTED_LABELS.NG);
     });
 
-    test('given IL country code then returns Israel label', () => {
+    test('given removed IL country code then returns uppercase code in label', () => {
       // When
       const result = getDefaultBaselineLabel(TEST_COUNTRIES.IL);
 
@@ -199,9 +199,6 @@ describe('countryNames', () => {
     expect(countryNames).toEqual({
       us: 'United States',
       uk: 'United Kingdom',
-      ca: 'Canada',
-      ng: 'Nigeria',
-      il: 'Israel',
     });
   });
 
@@ -209,13 +206,17 @@ describe('countryNames', () => {
     // Then
     expect(countryNames[TEST_COUNTRIES.US]).toBe('United States');
     expect(countryNames[TEST_COUNTRIES.UK]).toBe('United Kingdom');
-    expect(countryNames[TEST_COUNTRIES.CA]).toBe('Canada');
-    expect(countryNames[TEST_COUNTRIES.NG]).toBe('Nigeria');
-    expect(countryNames[TEST_COUNTRIES.IL]).toBe('Israel');
   });
 
   test('given unknown country code then returns undefined', () => {
     // Then
     expect(countryNames[TEST_COUNTRIES.UNKNOWN]).toBeUndefined();
+  });
+
+  test('given removed country codes then returns undefined', () => {
+    // Then
+    expect(countryNames[TEST_COUNTRIES.CA]).toBeUndefined();
+    expect(countryNames[TEST_COUNTRIES.NG]).toBeUndefined();
+    expect(countryNames[TEST_COUNTRIES.IL]).toBeUndefined();
   });
 });

@@ -1,4 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
+import type { CountryId } from '@/libs/countries';
 
 /**
  * Test constants for use across all test files
@@ -13,6 +14,13 @@ export const TEST_COUNTRIES = {
   UK: 'uk',
   CA: 'ca',
 } as const;
+
+/**
+ * A country code the app no longer serves (Canada), typed as a country ID
+ * to exercise the runtime guards that handle a country from a URL or
+ * storage that has no saved-work support.
+ */
+export const UNSUPPORTED_COUNTRY_ID = TEST_COUNTRIES.CA as string as CountryId;
 
 export const TEST_USER_IDS = {
   USER_123: 'user-123',

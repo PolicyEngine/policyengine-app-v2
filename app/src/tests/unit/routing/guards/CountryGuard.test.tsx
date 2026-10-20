@@ -52,41 +52,21 @@ describe('CountryGuard', () => {
       expect(getByTestId(TEST_IDS.PROTECTED_CONTENT)).toBeDefined();
       expect(mockNavigate).not.toHaveBeenCalled();
     });
+  });
 
-    test('given CA country then renders children', () => {
-      // Given
-      const initialPath = TEST_PATHS.CA_REPORTS;
-
-      // When
-      const { getByTestId } = renderCountryGuardWithStore(initialPath);
-
-      // Then
-      expect(getByTestId(TEST_IDS.PROTECTED_CONTENT)).toBeDefined();
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-
-    test('given NG country then renders children', () => {
-      // Given
-      const initialPath = '/ng/policies';
-
-      // When
-      const { getByTestId } = renderCountryGuardWithStore(initialPath);
+  describe('Removed countries', () => {
+    test.each([
+      ['CA', TEST_PATHS.CA_REPORTS],
+      ['NG', TEST_PATHS.NG_POLICIES],
+      ['IL', TEST_PATHS.IL_REPORTS],
+    ])('given %s country then redirects to root without rendering', (_label, initialPath) => {
+      // Given & When
+      const { queryByTestId, store } = renderCountryGuardWithStore(initialPath);
 
       // Then
-      expect(getByTestId(TEST_IDS.PROTECTED_CONTENT)).toBeDefined();
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-
-    test('given IL country then renders children', () => {
-      // Given
-      const initialPath = '/il/reports';
-
-      // When
-      const { getByTestId } = renderCountryGuardWithStore(initialPath);
-
-      // Then
-      expect(getByTestId(TEST_IDS.PROTECTED_CONTENT)).toBeDefined();
-      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(queryByTestId(TEST_IDS.PROTECTED_CONTENT)).toBeNull();
+      expect(mockNavigate).toHaveBeenCalledWith(EXPECTED_REDIRECTS.ROOT_REDIRECT, true);
+      expect(store.getState().metadata.currentCountry).toBeNull();
     });
   });
 
@@ -273,9 +253,6 @@ describe('CountryGuard', () => {
       const testCases = [
         { path: '/us/test', country: VALID_COUNTRIES.US },
         { path: '/uk/test', country: VALID_COUNTRIES.UK },
-        { path: '/ca/test', country: VALID_COUNTRIES.CA },
-        { path: '/ng/test', country: VALID_COUNTRIES.NG },
-        { path: '/il/test', country: VALID_COUNTRIES.IL },
       ];
 
       testCases.forEach(({ path }) => {

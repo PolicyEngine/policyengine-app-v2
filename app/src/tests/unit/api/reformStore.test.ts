@@ -16,6 +16,7 @@ import {
   pageResponse,
   policyItem,
 } from '@/tests/fixtures/api/v2UserMocks';
+import { UNSUPPORTED_COUNTRY_ID } from '@/tests/fixtures/constants';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockReformInput: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -309,7 +310,7 @@ describe('ApiReformStore', () => {
     fetchMock.mockResolvedValue(itemResponse({ ...reformRow, country_id: 'uk' }, 201));
 
     // When
-    await store.create({ ...mockReformInput, countryId: 'ca' });
+    await store.create({ ...mockReformInput, countryId: UNSUPPORTED_COUNTRY_ID });
 
     // Then
     expect(fetchCall(fetchMock).body.country_id).toBe('uk');

@@ -16,6 +16,7 @@ import {
 } from '@/hooks/useFlagshipStores';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
+import type { CountryId } from '@/libs/countries';
 import { store } from '@/store';
 import {
   ASSOCIATION_IDS,
@@ -28,6 +29,7 @@ import {
   reportItem,
   sharedReportItem,
 } from '@/tests/fixtures/api/v2UserMocks';
+import { UNSUPPORTED_COUNTRY_ID } from '@/tests/fixtures/constants';
 import {
   AuthTestProvider,
   makeAuthValue,
@@ -70,7 +72,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function wrapperFor(auth: AuthContextValue, countryId: 'us' | 'uk' | 'ca' = 'us') {
+function wrapperFor(auth: AuthContextValue, countryId: CountryId = 'us') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return ({ children }: { children: React.ReactNode }) => (
     <ReduxProvider store={store}>
@@ -123,8 +125,8 @@ describe('v3 store choice', () => {
 
   test.each([
     ['sign-in off', makeAuthValue({ status: 'disabled' }), 'uk'],
-    ['signed out outside the US and UK', makeAuthValue(), 'ca'],
-    ['signed in outside the US and UK', signedInAuthValue(), 'ca'],
+    ['signed out outside the US and UK', makeAuthValue(), UNSUPPORTED_COUNTRY_ID],
+    ['signed in outside the US and UK', signedInAuthValue(), UNSUPPORTED_COUNTRY_ID],
   ] as const)('given %s then reforms and reports stay in this browser', (_, auth, countryId) => {
     // Given
     const wrapper = wrapperFor(auth, countryId);
@@ -141,7 +143,7 @@ describe('v3 store choice', () => {
 
   test.each([
     ['sign-in off', makeAuthValue({ status: 'disabled' }), 'us'],
-    ['signed out outside the US and UK', makeAuthValue(), 'ca'],
+    ['signed out outside the US and UK', makeAuthValue(), UNSUPPORTED_COUNTRY_ID],
   ] as const)('given %s then no browser user ID is made', (_, auth, countryId) => {
     // Given
     localStorage.clear();

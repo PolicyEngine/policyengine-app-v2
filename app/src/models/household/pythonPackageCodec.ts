@@ -111,11 +111,20 @@ export function buildPythonPackageHouseholdDataFromAppInput(args: {
   return householdData;
 }
 
+/** The lowest upper end of the earnings variation range, in each country's currency. */
+const VARIATION_EARNINGS_FLOOR: Record<CountryId, number> = {
+  us: 200_000,
+  uk: 200_000,
+};
+const DEFAULT_VARIATION_EARNINGS_FLOOR = 200_000;
+
 export function getPythonPackageHouseholdVariationMaxEarnings(
   currentEarnings: number,
   countryId: string
 ): number {
-  return Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
+  const floor =
+    VARIATION_EARNINGS_FLOOR[countryId as CountryId] ?? DEFAULT_VARIATION_EARNINGS_FLOOR;
+  return Math.max(floor, 2 * currentEarnings);
 }
 
 function getPythonPackageVariationPersonKey(

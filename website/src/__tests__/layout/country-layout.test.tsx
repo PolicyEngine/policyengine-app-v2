@@ -11,7 +11,9 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
 }));
 
-import CountryLayout from "../../app/[countryId]/layout";
+import CountryLayout, {
+  generateStaticParams,
+} from "../../app/[countryId]/layout";
 
 describe("CountryLayout", () => {
   test("renders children for valid country", async () => {
@@ -44,6 +46,26 @@ describe("CountryLayout", () => {
       screen.getByRole("link", { name: /developer tools/i }),
     ).toHaveAttribute("href", "/us/dev-tools");
   });
+
+  test("builds country pages for the US and the UK only", () => {
+    expect(generateStaticParams()).toEqual([
+      { countryId: "us" },
+      { countryId: "uk" },
+    ]);
+  });
+
+  test.each(["ca", "ng", "il"])(
+    "calls notFound for the removed country %s",
+    async (countryId) => {
+      await expect(
+        CountryLayout({
+          children: <div>Content</div>,
+          params: Promise.resolve({ countryId }),
+        }),
+      ).rejects.toThrow("NEXT_NOT_FOUND");
+      expect(notFound).toHaveBeenCalled();
+    },
+  );
 
   test("calls notFound for invalid country", async () => {
     await expect(
