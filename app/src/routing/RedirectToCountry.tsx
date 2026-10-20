@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Spinner } from '@/components/ui';
+import { countryIds } from '@/libs/countries';
 import { geolocationService } from './geolocation/GeolocationService';
 
 /**
@@ -12,7 +13,8 @@ export function RedirectToCountry() {
   const [isDetecting, setIsDetecting] = useState(true);
 
   /**
-   * Checks if cached country data is still valid (within 4 hours)
+   * Checks if cached country data is still valid (within 4 hours, and a
+   * country the app still serves)
    */
   function getCachedCountry(): string | null {
     const cachedData = localStorage.getItem('detectedCountry');
@@ -23,13 +25,17 @@ export function RedirectToCountry() {
     try {
       const { country, timestamp } = JSON.parse(cachedData);
       const fourHoursInMs = 4 * 60 * 60 * 1000;
+      // A browser can hold a country cached before the app stopped serving
+      // it (Canada, Nigeria, Israel). Redirecting there would bounce back to
+      // `/` from the country guard and loop, so detect the country again.
+      const allowedCountryIds: readonly string[] = countryIds;
 
       // Check if cache is still valid
-      if (Date.now() - timestamp < fourHoursInMs) {
+      if (Date.now() - timestamp < fourHoursInMs && allowedCountryIds.includes(country)) {
         return country;
       }
 
-      // Cache expired, clean it up
+      // Cache expired or names a removed country, clean it up
       localStorage.removeItem('detectedCountry');
     } catch {
       // Invalid cached data format

@@ -17,6 +17,14 @@ export const MOCK_EXPIRED_CACHE = JSON.stringify({
 
 export const MOCK_INVALID_CACHE = 'invalid json';
 
+/** Canada, which a browser may still have cached from before the app stopped serving it. */
+export const REMOVED_COUNTRY_ID = 'ca';
+
+export const MOCK_CACHED_REMOVED_COUNTRY = JSON.stringify({
+  country: REMOVED_COUNTRY_ID,
+  timestamp: Date.now(),
+});
+
 export function mockLocalStorage() {
   const store: Record<string, string> = {};
 

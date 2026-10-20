@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { renderHook, waitFor } from '@test-utils';
+import { render, renderHook, waitFor } from '@test-utils';
+import { Navigate } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { geolocationService } from '@/routing/geolocation/GeolocationService';
+import { RedirectToCountry } from '@/routing/RedirectToCountry';
+import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
 import {
   CACHED_COUNTRY_KEY,
+  MOCK_CACHED_REMOVED_COUNTRY,
   MOCK_CACHED_UK,
   MOCK_CACHED_US,
   MOCK_EXPIRED_CACHE,
@@ -17,10 +22,18 @@ vi.mock('@/routing/geolocation/GeolocationService', () => ({
   },
 }));
 
-// Mock Navigate to avoid router issues
-vi.mock('react-router-dom', () => ({
-  Navigate: () => null,
+// Record each redirect instead of navigating
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router-dom')>()),
+  Navigate: vi.fn(() => null),
 }));
+
+const mockNavigate = vi.mocked(Navigate);
+
+function lastRedirectTarget(): string | undefined {
+  const lastRedirectProps = mockNavigate.mock.calls.at(-1)?.[0];
+  return lastRedirectProps?.to as string | undefined;
+}
 
 describe('RedirectToCountry', () => {
   let localStorageMock: ReturnType<typeof mockLocalStorage>;
@@ -32,6 +45,35 @@ describe('RedirectToCountry', () => {
       value: localStorageMock,
       writable: true,
     });
+  });
+
+  test('given a cached country the app no longer serves then redirects to a newly detected country', async () => {
+    // Given
+    localStorageMock.setItem(CACHED_COUNTRY_KEY, MOCK_CACHED_REMOVED_COUNTRY);
+    vi.mocked(geolocationService.detectCountry).mockResolvedValue(TEST_COUNTRIES.UK);
+
+    // When
+    render(<RedirectToCountry />);
+
+    // Then
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalled());
+    expect(lastRedirectTarget()).toBe(`/${TEST_COUNTRIES.UK}`);
+    expect(JSON.parse(localStorageMock.getItem(CACHED_COUNTRY_KEY)!).country).toBe(
+      TEST_COUNTRIES.UK
+    );
+  });
+
+  test('given a cached country the app serves then redirects to it without detecting again', async () => {
+    // Given
+    localStorageMock.setItem(CACHED_COUNTRY_KEY, MOCK_CACHED_UK);
+
+    // When
+    render(<RedirectToCountry />);
+
+    // Then
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalled());
+    expect(lastRedirectTarget()).toBe(`/${TEST_COUNTRIES.UK}`);
+    expect(geolocationService.detectCountry).not.toHaveBeenCalled();
   });
 
   test('given valid cached country then returns cached value', async () => {
