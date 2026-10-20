@@ -138,7 +138,10 @@ export interface SharedReportItem {
 
 export interface UserPolicyCreateBody {
   country_id: AssociationCountryId;
-  legacy_policy_id: number;
+  /** A v2 policy (`/v2/policies`); a row needs this or legacy_policy_id. */
+  policy_id?: string;
+  /** A v1 policy (`POST /{country}/policy`). */
+  legacy_policy_id?: number;
   name?: string | null;
   description?: string | null;
   baseline?: BaselineWire | null;
@@ -148,7 +151,7 @@ export interface UserPolicyCreateBody {
 export type UserPolicyPatchBody = Partial<
   Pick<
     UserPolicyCreateBody,
-    'legacy_policy_id' | 'name' | 'description' | 'baseline' | 'provenance'
+    'policy_id' | 'legacy_policy_id' | 'name' | 'description' | 'baseline' | 'provenance'
   >
 >;
 

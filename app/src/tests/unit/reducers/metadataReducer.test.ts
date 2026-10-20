@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as metadataApi from '@/api/metadata';
+import * as v2MetadataApi from '@/api/publicApi/metadata';
 import * as buildParameterTreeModule from '@/libs/buildParameterTree';
 import metadataReducer, {
   clearMetadata,
   fetchMetadataThunk,
+  metadataRequest,
   setCurrentCountry,
 } from '@/reducers/metadataReducer';
 import {
@@ -38,6 +40,7 @@ import {
 
 // Mock the API and buildParameterTree modules
 vi.mock('@/api/metadata');
+vi.mock('@/api/publicApi/metadata');
 vi.mock('@/libs/buildParameterTree');
 
 describe('metadataReducer', () => {
@@ -375,6 +378,84 @@ describe('metadataReducer', () => {
       state = metadataReducer(state, clearMetadata());
       expectCurrentCountry(state, TEST_COUNTRY_UK);
       expectEmptyMetadata(state);
+    });
+  });
+
+  describe('metadata routes', () => {
+    const V2_CATALOG = {
+      policyengineVersion: '6.7.5',
+      taxBenefitModelId: '0b6c4f6e-7c55-5d47-9a51-4e9f5fbbf001',
+      parameterIds: { 'gov.tax.income_tax': '6a1f0c1e-1111-5aaa-8bbb-000000000001' },
+    };
+
+    test('given a v2 request then the v2 routes are read and remembered', async () => {
+      // Given
+      const apiPayload = createMockApiPayload();
+      apiPayload.result.v2Catalog = V2_CATALOG;
+      vi.mocked(v2MetadataApi.fetchV2Metadata).mockResolvedValue(apiPayload);
+      const store = configureStore({ reducer: { metadata: metadataReducer } });
+
+      // When
+      await store.dispatch(fetchMetadataThunk({ countryId: TEST_COUNTRY_US, routes: 'v2' }));
+
+      // Then
+      expect(v2MetadataApi.fetchV2Metadata).toHaveBeenCalledWith(TEST_COUNTRY_US);
+      expect(metadataApi.fetchMetadata).not.toHaveBeenCalled();
+      const state = store.getState().metadata;
+      expect(state.routes).toBe('v2');
+      expect(state.v2Catalog).toEqual(V2_CATALOG);
+      expect(state.version).toBe(TEST_VERSION);
+    });
+
+    test('given a country alone then the v1 route is read, as before', async () => {
+      // Given
+      vi.mocked(metadataApi.fetchMetadata).mockResolvedValue(createMockApiPayload());
+      const store = configureStore({ reducer: { metadata: metadataReducer } });
+
+      // When
+      await store.dispatch(fetchMetadataThunk(TEST_COUNTRY_US));
+
+      // Then
+      expect(metadataApi.fetchMetadata).toHaveBeenCalledWith(TEST_COUNTRY_US);
+      expect(v2MetadataApi.fetchV2Metadata).not.toHaveBeenCalled();
+      const state = store.getState().metadata;
+      expect(state.routes).toBe('v1');
+      expect(state.v2Catalog).toBeNull();
+    });
+
+    test('given a pending v1 load then a v2 request runs once and wins', async () => {
+      // Given
+      let finishV2Load: (payload: ReturnType<typeof createMockApiPayload>) => void = () => {};
+      vi.mocked(metadataApi.fetchMetadata).mockReturnValue(new Promise(() => {}));
+      vi.mocked(v2MetadataApi.fetchV2Metadata).mockReturnValue(
+        new Promise((resolve) => {
+          finishV2Load = resolve;
+        })
+      );
+      const store = configureStore({ reducer: { metadata: metadataReducer } });
+      store.dispatch(fetchMetadataThunk(TEST_COUNTRY_US));
+
+      // When: v2 is requested twice while it loads
+      const v2Load = store.dispatch(
+        fetchMetadataThunk({ countryId: TEST_COUNTRY_US, routes: 'v2' })
+      );
+      store.dispatch(fetchMetadataThunk({ countryId: TEST_COUNTRY_US, routes: 'v2' }));
+      finishV2Load(createMockApiPayload());
+      await v2Load;
+
+      // Then
+      expect(v2MetadataApi.fetchV2Metadata).toHaveBeenCalledTimes(1);
+      expect(store.getState().metadata.routes).toBe('v2');
+      expect(store.getState().metadata.loading).toBe(false);
+      expect(store.getState().metadata.version).toBe(TEST_VERSION);
+    });
+
+    test('given routes then the request keeps the v1 form for v1', () => {
+      expect(metadataRequest(TEST_COUNTRY_UK, 'v1')).toBe(TEST_COUNTRY_UK);
+      expect(metadataRequest(TEST_COUNTRY_UK, 'v2')).toEqual({
+        countryId: TEST_COUNTRY_UK,
+        routes: 'v2',
+      });
     });
   });
 });

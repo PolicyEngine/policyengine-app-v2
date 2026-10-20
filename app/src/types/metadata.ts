@@ -19,6 +19,21 @@ export interface MetadataRegionEntry {
   state_name?: string;
 }
 
+/**
+ * The v2 catalog identities a v2 saved reform needs to create policies
+ * (`POST /v2/policies` takes catalog UUIDs, not parameter paths).
+ */
+export interface V2CatalogReference {
+  /** The PolicyEngine.py version the catalog belongs to; policies are created for it. */
+  policyengineVersion: string;
+  taxBenefitModelId: string;
+  /** Each government parameter's catalog UUID, by parameter path. */
+  parameterIds: Record<string, string>;
+}
+
+/** Which API routes model metadata was loaded from. */
+export type MetadataRoutes = 'v1' | 'v2';
+
 export interface MetadataApiPayload {
   status: string;
   message: string | null;
@@ -40,6 +55,8 @@ export interface MetadataApiPayload {
     };
     version: string;
     spm?: SPMMetadata;
+    /** Set only when the metadata came from the v2 routes. */
+    v2Catalog?: V2CatalogReference;
   };
 }
 
@@ -85,6 +102,10 @@ export interface MetadataState {
   };
   version: string | null;
   spm?: SPMMetadata;
+  /** The routes the current (or pending) metadata comes from; absent means v1. */
+  routes?: MetadataRoutes;
+  /** The v2 catalog identities, when the metadata came from the v2 routes. */
+  v2Catalog?: V2CatalogReference | null;
 
   // Computed parameter tree for policy creation UI (built when metadata is fetched)
   parameterTree: ParameterTreeNode | null;

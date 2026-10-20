@@ -8,7 +8,12 @@ import {
   type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
-import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
+import {
+  fetchV1PolicyJson,
+  fetchV2PolicyItem,
+  getReformStore,
+  type ReformStore,
+} from '@/api/reformStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -65,27 +70,46 @@ export function useV3SavedWork(): V3SavedWork {
 const v1PolicyJsonKey = (countryId: string, policyId: string) =>
   ['v1-policy-json', countryId, policyId] as const;
 
+/** A v2 policy (`GET /v2/policies/{id}`), per country. */
+const v2PolicyKey = (countryId: string, policyId: string) =>
+  ['v2-policy', countryId, policyId] as const;
+
 /** How long a fetched v1 policy stays cached without a reader. */
 const V1_POLICY_JSON_GC_TIME = 30 * 60 * 1000;
 
+/**
+ * The reform store for this session. Which policies it makes (v1 or v2)
+ * follows V3_API_ROUTES (see libs/flagship/v3ApiRoutes).
+ */
 export function useReformStore(): ReformStore {
   const { account } = useV3SavedWork();
   const parameters = useSelector((state: RootState) => state.metadata?.parameters);
-  // Read through a ref so metadata arriving later does not rebuild the store.
+  const v2Catalog = useSelector((state: RootState) => state.metadata?.v2Catalog);
+  // Read through refs so metadata arriving later does not rebuild the store.
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
+  const v2CatalogRef = useRef(v2Catalog);
+  v2CatalogRef.current = v2Catalog;
   const queryClient = useQueryClient();
 
   return useMemo(
     () =>
       getReformStore(account, {
         getParameterMetadata: () => parametersRef.current,
-        // v1 policies never change, so each is fetched once per session
+        getV2Catalog: () => v2CatalogRef.current,
+        // Policies never change, so each is fetched once per session
         // rather than on every list of the account's reforms.
         fetchPolicyJson: (countryId, policyId) =>
           queryClient.fetchQuery({
             queryKey: v1PolicyJsonKey(countryId, policyId),
             queryFn: () => fetchV1PolicyJson(countryId, policyId),
+            staleTime: Infinity,
+            gcTime: V1_POLICY_JSON_GC_TIME,
+          }),
+        fetchV2Policy: (countryId, policyId) =>
+          queryClient.fetchQuery({
+            queryKey: v2PolicyKey(countryId, policyId),
+            queryFn: () => fetchV2PolicyItem(countryId, policyId),
             staleTime: Infinity,
             gcTime: V1_POLICY_JSON_GC_TIME,
           }),
