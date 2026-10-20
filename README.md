@@ -1,6 +1,6 @@
 # PolicyEngine app v2
 
-A modern web application for policy analysis and simulation, built with React, TypeScript, and Mantine.
+A modern web application for policy analysis and simulation, built with React, TypeScript, and Next.js.
 
 ## Getting started
 
@@ -16,20 +16,26 @@ make install
 
 ### Development
 
-Start the development server:
+Start the website and calculator dev servers:
 
 ```bash
 make dev
 ```
 
-The application will be available at http://localhost:5173
+The website runs on the first free port from 3000 (http://localhost:3000) and the calculator on the next free port after it. Set `WEBSITE_PORT` or `CALCULATOR_PORT` to pin either one.
 
 ### Building
 
-Build for production:
+Build the website and the calculator:
 
 ```bash
 make build
+```
+
+### Storybook
+
+```bash
+cd app && bun run storybook
 ```
 
 ### Testing
@@ -93,17 +99,18 @@ build time (see `calculator-app/.env.example`), alongside
 
 ```
 .
-├── app/                  # Main application code
-│   ├── src/             # Source files
-│   ├── public/          # Static assets
-│   └── package.json     # Dependencies
+├── website/             # Next.js website (policyengine.org)
+├── calculator-app/      # Next.js calculator (app.policyengine.org)
+├── app/                 # Calculator source shared by calculator-app, Storybook and Vitest
+│   ├── src/             # Source files and the data files the website reads
+│   └── public/          # Static files (calculator-app/public links here)
 ├── .github/             # GitHub Actions workflows
-└── Makefile            # Build commands
+└── Makefile             # Build commands
 ```
 
 ## Deployment
 
-The application automatically deploys to GitHub Pages when changes are pushed to the main branch.
+Vercel builds and deploys two projects from this repository: `policyengine-website` (root `website/`, serving policyengine.org) and `policyengine-calculator-next` (root `calculator-app/`, serving app.policyengine.org). Pushes to main deploy to production, and pull requests get preview deployments.
 
 ## Development workflow
 
@@ -117,8 +124,8 @@ The application automatically deploys to GitHub Pages when changes are pushed to
 
 - React 19
 - TypeScript
-- Mantine UI
-- Vite
+- Next.js
+- Vite (Storybook and Vitest only)
 - Redux Toolkit
 - React Query
 - React Router

@@ -7,8 +7,7 @@ describe("encodeJsonForScript", () => {
     const encoded = encodeJsonForScript(payload);
 
     expect(encoded).not.toContain("<");
-    // '>' is not escaped (only '<' can terminate a script tag); this mirrors
-    // the shared behavior used by middleware.ts.
+    // '>' is not escaped: only '<' can terminate a script tag.
     expect(encoded).toContain("\\u003cscript>alert(1)\\u003c/script>");
   });
 

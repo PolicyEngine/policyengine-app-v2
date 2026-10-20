@@ -315,8 +315,8 @@ export function calibrationTargetLabel(target: CalibrationTargetRow): string {
 
 /**
  * Fetches the targets that measure any of `variables` in `geography`.
- * Returns null when the route is unavailable (Vite build, dashboard
- * unreachable) so callers can render an honest note.
+ * Returns null when the route is unavailable (outside calculator-app, as in
+ * Storybook, or the dashboard unreachable) so callers can render an honest note.
  */
 export async function fetchCalibrationTargets(
   variables: string[],

@@ -2,12 +2,12 @@
 
 ## app/ directory — what goes where
 
-The `app/` directory holds the calculator code. `calculator-app/` (Next.js) compiles it through `externalDir`, with `@/*` mapped to `app/src/*`; `app/` also keeps a Vite build of the calculator. The website lives only in `website/`: the Vite copies of its pages were deleted after the Next.js cutover (#817).
+The `app/` directory holds the calculator code. `calculator-app/` (Next.js) compiles it through `externalDir`, with `@/*` mapped to `app/src/*`; `app/` has no build of its own, and Vite there only runs Storybook and Vitest. The website lives only in `website/`: the Vite copies of its pages were deleted after the Next.js cutover (#817), and the Vite calculator build after it.
 
 - Calculator components and pages (report builder, household, charts, sidebar, report output, pathways, etc.) live in `app/src/`.
 - `homeHeader/` and `shared/HomeHeader.tsx` are the calculator's header, rendered by `StandardLayout`. The website's header is `website/src/components/Header.tsx`; keep the calculator header in sync when the website one changes.
 - `app/src/data/` holds data the website shares (posts.json and the article files, authors.json, citations.json, apps.json, events.json); `website/src/data/` links to these files.
-- `app/public/assets/` holds static assets that the website build copies in.
+- `app/public/assets/` holds static assets that the website build copies in. `calculator-app/public` is a symlink to `app/public`, so everything in `app/public` is served on app.policyengine.org.
 - Website pages and components go in `website/src/`. New website rewrites go in `website/next.config.ts`, not `website/vercel.json`.
 
 ## Visual standards
@@ -88,9 +88,11 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
 ## Project structure
 
-- `app/` is the Vite project root
-- `app/public/` - Static assets served at exact URLs
-- `app/src/` - Source code processed by bundler
+- `website/` - the Next.js website, deployed to policyengine.org (Vercel project `policyengine-website`)
+- `calculator-app/` - the Next.js calculator, deployed to app.policyengine.org (Vercel project `policyengine-calculator-next`)
+- `app/src/` - calculator source shared by `calculator-app/`, plus the data files the website reads
+- `app/public/` - static files; served on app.policyengine.org through the `calculator-app/public` symlink, and `app/public/assets/` is copied into the website build
+- Run both apps locally with `bun run dev` (the website on the first free port from 3000, the calculator on the next free port after it)
 
 ## Embedded sites
 

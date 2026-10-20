@@ -165,8 +165,8 @@ export function summarizeScorecardPrograms(
 
 /**
  * Fetches comparison rows computed from any of `variables`. Returns null
- * when the route is unavailable (Vite build, scorecard unreachable) so
- * callers can render an honest note.
+ * when the route is unavailable (outside calculator-app, as in Storybook, or
+ * the scorecard unreachable) so callers can render an honest note.
  */
 export async function fetchModelValidation(
   variables: string[]

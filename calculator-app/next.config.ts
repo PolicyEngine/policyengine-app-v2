@@ -52,7 +52,6 @@ const nextConfig: NextConfig = {
           dev ? "development" : "production",
         ),
         "import.meta.env.SSR": "false",
-        "import.meta.env.VITE_APP_MODE": JSON.stringify("calculator"),
         "import.meta.env.VITE_WEBSITE_URL": JSON.stringify(
           process.env.NEXT_PUBLIC_WEBSITE_URL || "",
         ),

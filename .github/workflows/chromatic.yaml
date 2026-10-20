@@ -41,5 +41,3 @@ jobs:
           --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           ${{ github.event_name == 'push' && '--auto-accept-changes' || '' }}
           ${{ github.event_name == 'pull_request' && format('--patch-build={0}...main', github.head_ref) || '' }}
-        env:
-          VITE_APP_MODE: calculator

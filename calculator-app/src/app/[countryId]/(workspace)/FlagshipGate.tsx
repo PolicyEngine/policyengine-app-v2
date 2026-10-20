@@ -18,8 +18,8 @@ import { flagshipFallbackRedirect } from "./flagshipFallback";
  * SSR notes: the env flag is inlined into both server and client
  * bundles, so it renders consistently. The localStorage override only
  * exists client-side, so it is read after mount, and nothing redirects
- * before it is. The fallback avoids the shared NotFoundPage, which uses
- * react-router APIs that are unavailable under Next.js server rendering.
+ * before it is. The not-found fallback is plain markup with no router
+ * APIs, so it also renders on the server.
  */
 export default function FlagshipGate({
   children,
