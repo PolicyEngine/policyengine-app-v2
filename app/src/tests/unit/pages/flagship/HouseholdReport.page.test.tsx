@@ -58,17 +58,35 @@ vi.mock('@/api/householdCalculation', () => ({
     });
   },
 }));
+const mockFetchPolicyById = vi.fn();
 vi.mock('@/api/policy', () => ({
-  fetchPolicyById: async (countryId: string, policyId: string) => ({
+  fetchPolicyById: (...args: unknown[]) => mockFetchPolicyById(...args),
+}));
+
+/** A policy as the Public API returns it: no parameter changes unless given. */
+function policyMetadata(countryId: string, policyId: string, policyJson = {}) {
+  return {
     id: policyId,
     country_id: countryId,
     api_version: '1',
     label: null,
-    policy_json: {},
-  }),
-}));
+    policy_json: policyJson,
+  };
+}
+
+/** A UK reform's parameter change, which only the reform's Python block may set. */
+const REFORM_PARAMETER = 'gov.dwp.universal_credit.elements.child.amount';
+const REFORM_POLICY_JSON = { [REFORM_PARAMETER]: { '2026-01-01.2100-12-31': 3000 } };
+/** The model's metadata for that parameter, which reading the reform's policy needs. */
+const REFORM_PARAMETER_METADATA = {
+  [REFORM_PARAMETER]: {
+    type: 'parameter',
+    parameter: REFORM_PARAMETER,
+    values: { '2026-01-01': 2900 },
+  },
+};
 vi.mock('@/hooks/useParameterMetadata', () => ({
-  useParameterMetadata: () => ({ parameters: {}, isReady: true }),
+  useParameterMetadata: () => ({ parameters: REFORM_PARAMETER_METADATA, isReady: true }),
 }));
 vi.mock('@/hooks/useFlagshipStores', () => ({
   useV3SavedWork: () => mockSavedWork(),
@@ -169,6 +187,9 @@ describe('HouseholdReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSavedWork.mockReturnValue({ account: null, scope: 'browser' });
+    mockFetchPolicyById.mockImplementation(async (countryId: string, policyId: string) =>
+      policyMetadata(countryId, policyId)
+    );
     mockCreateHousehold.mockResolvedValue({ result: { household_id: CREATED_HOUSEHOLD_ID } });
     mockFetchHouseholdCalculation.mockImplementation(
       async (_country: string, _household: string, policyId: string) =>
@@ -238,6 +259,42 @@ describe('HouseholdReportPage', () => {
       `Resolved with policyengine.py ${BASELINE_RUN_BUNDLE.policyengine_version}`
     );
     expect(reproduce).toHaveTextContent(`policyengine-us ${REFORM_RUN_BUNDLE.model_version}`);
+  });
+
+  test('given both policies then each Python block reproduces its own policy', async () => {
+    mockFetchHouseholdCalculation.mockResolvedValue(UK_BASELINE_RESULT);
+    mockFetchPolicyById.mockImplementation(async (countryId: string, policyId: string) =>
+      policyMetadata(countryId, policyId, policyId === REFORM_POLICY_ID ? REFORM_POLICY_JSON : {})
+    );
+    renderReport({ countryId: 'uk', reformPolicyId: REFORM_POLICY_ID });
+
+    await calculate();
+
+    const reformBlock = await screen.findByRole('region', { name: 'Reform simulation' });
+    await waitFor(() => expect(reformBlock).toHaveTextContent(REFORM_PARAMETER));
+    expect(screen.getByRole('region', { name: 'Baseline simulation' })).not.toHaveTextContent(
+      REFORM_PARAMETER
+    );
+  });
+
+  test("given the baseline's policy failing to load then no Python block is given the reform's policy", async () => {
+    mockFetchHouseholdCalculation.mockResolvedValue(UK_BASELINE_RESULT);
+    mockFetchPolicyById.mockImplementation(async (countryId: string, policyId: string) => {
+      if (policyId === BASELINE_POLICY_ID) {
+        throw new Error('Policy could not be loaded');
+      }
+      return policyMetadata(countryId, policyId, REFORM_POLICY_JSON);
+    });
+    renderReport({ countryId: 'uk', reformPolicyId: REFORM_POLICY_ID });
+
+    await calculate();
+
+    expect(await screen.findByText("The report's policies could not be loaded")).toBeVisible();
+    const baselineBlock = screen.getByRole('region', { name: 'Baseline simulation' });
+    expect(baselineBlock).toHaveTextContent(
+      "Load this simulation's household and policy to generate its code."
+    );
+    expect(baselineBlock).not.toHaveTextContent(REFORM_PARAMETER);
   });
 
   test('given a failed calculation then trying again calculates the same household again', async () => {

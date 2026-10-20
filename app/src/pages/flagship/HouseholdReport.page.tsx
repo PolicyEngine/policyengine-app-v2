@@ -246,7 +246,11 @@ export default function HouseholdReportPage({
       ? (runsReform ? (['baseline', 'reform'] as const) : (['baseline'] as const)).map(
           (role, index) => {
             const provenance = result.provenance[role];
-            const policy = policyQuery.policies[index] as Policy | undefined;
+            // Each block's own policy, by id: when one policy fails to load,
+            // the other is never given to its block, which says it cannot load.
+            const policy: Policy | undefined = policyQuery.policies.find(
+              (loaded) => loaded.id === policyIds[index]
+            );
             return {
               role,
               household: requested.household,
