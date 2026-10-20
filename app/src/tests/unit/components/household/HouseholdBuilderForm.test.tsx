@@ -121,6 +121,46 @@ describe('rankVariablesBySearch', () => {
     expect(optionsIn().sort()).toEqual(['Childcare', 'Rent']);
   });
 
+  test('given a picker opened and an input added then it says so once, by entity and source', () => {
+    const variable = (name: string, label: string, entity: string) => ({
+      name,
+      label,
+      entity,
+      isInputVariable: true,
+      valueType: 'float',
+      defaultValue: 0,
+      moduleName: 'household.income.person.misc',
+    });
+    const metadata = {
+      entities: {
+        person: { plural: 'people', label: 'Person', is_person: true },
+        household: { plural: 'households', label: 'Household' },
+      },
+      variables: {
+        tip_income: variable('tip_income', 'Tip income', 'person'),
+        rent: variable('rent', 'Rent', 'household'),
+      },
+    };
+    const onVariablePickerOpen = vi.fn();
+    const onVariableAdd = vi.fn();
+    renderForm({
+      metadata,
+      searchByEntity: true,
+      variableGroupOf: () => 'Income',
+      onVariablePickerOpen,
+      onVariableAdd,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add variable to your household' }));
+    fireEvent.mouseDown(screen.getAllByRole('button', { name: 'Income' })[0]);
+    fireEvent.mouseDown(screen.getByRole('option', { name: 'Rent' }));
+
+    expect(onVariablePickerOpen.mock.calls).toEqual([['group']]);
+    expect(onVariableAdd.mock.calls).toEqual([
+      [{ variable: 'rent', source: 'topic', entity: 'group' }],
+    ]);
+  });
+
   test('given the columns layout then the number of children steps up and down and takes no decimals', () => {
     const onNumChildrenChange = vi.fn();
     renderForm({ layout: 'columns', numChildren: 2, onNumChildrenChange });

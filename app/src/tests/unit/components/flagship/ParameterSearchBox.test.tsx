@@ -127,7 +127,8 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(onSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'gov.irs.credits.ctc.amount' })
+      expect.objectContaining({ path: 'gov.irs.credits.ctc.amount' }),
+      expect.objectContaining({ isBreakdown: false, inFolder: false, queryLength: 9 })
     );
     expect(input).toHaveValue('');
   });
@@ -232,7 +233,8 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(onSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'gov.irs.credits.eitc.max' })
+      expect.objectContaining({ path: 'gov.irs.credits.eitc.max' }),
+      expect.objectContaining({ inFolder: false, queryLength: 4 })
     );
   });
 
@@ -510,7 +512,8 @@ describe('ParameterSearchBox', () => {
     await user.click(screen.getByText('Phase-in rate'));
 
     expect(onSelectEntry).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'gov.irs.credits.eitc.phase_in_rate' })
+      expect.objectContaining({ path: 'gov.irs.credits.eitc.phase_in_rate' }),
+      expect.objectContaining({ inFolder: true })
     );
   });
 

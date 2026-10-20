@@ -15,7 +15,8 @@ const soiRow = (
   sourceLabel: 'IRS Statistics of Income',
   variable,
   policyengineVariables,
-  measure: 'total',
+  // As the dashboard serves them: returns and claims are counts, amounts are dollar totals.
+  measure: /_(returns|claims)@/.test(name) ? 'count' : 'total',
   // The dashboard's measure id is the id's last segment: "…actc_amount@2024" → "actc_amount".
   sourceMeasureId: name.split('.').pop()!.split('@')[0],
   breakdown: 'All · All',
@@ -125,7 +126,8 @@ export const rawDcIncomeTaxTarget = {
   measure: 'total',
   target_role: 'state_income_tax',
   source_measure_id: 'collections',
-  policyengine_variables: [],
+  // The dashboard lists it since calibration-diagnostics#229.
+  policyengine_variables: ['state_income_tax'],
   breakdown: 't40',
   period: 2024,
   source_url: null,
@@ -150,14 +152,13 @@ export const rawDcPopulationTarget = {
   period: 2024,
 };
 
-/** DC's income tax collections target, normalized: it joins on its role. */
+/** DC's income tax collections target, normalized. */
 export const mockDcIncomeTaxRow: CalibrationTargetRow = {
   name: rawDcIncomeTaxTarget.name,
   source: 'state_income_tax',
   sourceLabel: 'State income tax',
   variable: 'collections',
   policyengineVariables: ['state_income_tax'],
-  variablesFromRole: true,
   measure: 'total',
   sourceMeasureId: 'collections',
   breakdown: 't40',

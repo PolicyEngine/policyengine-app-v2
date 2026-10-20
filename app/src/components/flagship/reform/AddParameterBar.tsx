@@ -19,6 +19,7 @@ import {
   selectParameterSearchIndex,
 } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
+import { trackParameterSearchSelected } from '@/utils/analytics';
 import { formatValue, getCurrentValue } from '@/utils/parameterValues';
 
 const SEARCH_PLACEHOLDERS: Record<string, string> = {
@@ -167,7 +168,10 @@ export default function AddParameterBar({
         clusters={clusters}
         stateLabels={stateLabels}
         index={searchIndex}
-        onSelect={pick}
+        onSelect={(entry, searchPick) => {
+          trackParameterSearchSelected({ countryId, ...searchPick });
+          pick(entry);
+        }}
         labelFor={(path) => parameters?.[path]?.label ?? null}
         backgroundSearch
         autoFocus={autoFocus}

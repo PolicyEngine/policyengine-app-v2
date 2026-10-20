@@ -11,14 +11,8 @@ export interface CalibrationTargetRow {
   sourceLabel: string | null;
   /** The dashboard's label for the measured quantity, e.g. "refundable ctc". */
   variable: string;
-  /** The model variables the target joins to; the target's role when the dashboard lists none. */
+  /** The model variables the target joins to, as the dashboard lists them. */
   policyengineVariables: string[];
-  /**
-   * True when `policyengineVariables` is the target's role, not the
-   * dashboard's own list: the dashboard records no model variable for
-   * the target, but its role names one.
-   */
-  variablesFromRole?: boolean;
   measure: string | null;
   /** The dashboard's id for the measured quantity, e.g. "ctc_amount". */
   sourceMeasureId?: string | null;
@@ -36,17 +30,6 @@ export interface CalibrationTargetRow {
   sourceUrl: string | null;
 }
 
-/**
- * Target roles that are model variable names, so a target with that
- * role and no listed model variable can join on the role. From the live
- * release (populace-us-2024-spm-20260915): the roles of targets without
- * model variables are population_age, soi_fiscal_distribution,
- * jct_tax_expenditure and state_income_tax, and only state_income_tax is
- * a policyengine-us variable. The 44 state income tax collections
- * targets carry it.
- */
-export const ROLE_JOIN_VARIABLES: ReadonlySet<string> = new Set(['state_income_tax']);
-
 /** One dashboard target as a row, or null when it has no name. */
 export function normalizeCalibrationTarget(raw: any): CalibrationTargetRow | null {
   if (typeof raw?.name !== 'string') {
@@ -57,15 +40,12 @@ export function normalizeCalibrationTarget(raw: any): CalibrationTargetRow | nul
     ? raw.policyengine_variables.filter((v: unknown): v is string => typeof v === 'string')
     : [];
   const targetRole = typeof raw.target_role === 'string' ? raw.target_role : null;
-  const fromRole =
-    listed.length === 0 && targetRole !== null && ROLE_JOIN_VARIABLES.has(targetRole);
   return {
     name: raw.name,
     source: String(raw.source ?? ''),
     sourceLabel: typeof raw.source_label === 'string' ? raw.source_label : null,
     variable: String(raw.variable ?? ''),
-    policyengineVariables: fromRole ? [targetRole!] : listed,
-    ...(fromRole ? { variablesFromRole: true } : {}),
+    policyengineVariables: listed,
     measure: typeof raw.measure === 'string' ? raw.measure : null,
     // What the target counts and which slice of its table, for a readable name.
     sourceMeasureId: typeof raw.source_measure_id === 'string' ? raw.source_measure_id : null,

@@ -738,6 +738,40 @@ describe('DraftHeader', () => {
     expect(mockCreate).toHaveBeenCalledTimes(1);
   });
 
+  test('given save and run then one event says where and how much it runs, with no values', async () => {
+    const user = userEvent.setup();
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    addDraftProvision('us', {
+      path: 'gov.irs.credits.eitc.max',
+      breadcrumb: 'IRS → Credits → EITC → Maximum',
+      unit: 'currency-USD',
+      baselineValue: 600,
+      value: 913,
+    });
+    mockCreate.mockResolvedValue({ id: 'rf-1' });
+    renderHeader();
+
+    await user.click(screen.getByRole('button', { name: 'Save and run 2026 report' }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+    expect(gtag.mock.calls).toEqual([
+      [
+        'event',
+        'report_run_started',
+        {
+          country_id: 'us',
+          region_kind: 'national',
+          years_in_window: 1,
+          provision_count: 1,
+          baseline: 'current_law',
+        },
+      ],
+    ]);
+    expect(JSON.stringify(gtag.mock.calls)).not.toContain('913');
+    delete window.gtag;
+  });
+
   test('given save and run then the reform is saved first and the report is linked to it', async () => {
     // Given
     const user = userEvent.setup();

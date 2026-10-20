@@ -295,6 +295,38 @@ describe('ReportAdjustPanel', () => {
     store.dispatch(clearMetadata());
   });
 
+  test('given a recompute then one event says what kind of change, with no values', async () => {
+    mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    const user = userEvent.setup();
+    await renderPanel({ region: 'state/va', year: '2027' });
+
+    const input = screen.getByLabelText(/new value for maximum credit per child/i);
+    await user.clear(input);
+    await user.type(input, '3612');
+    await user.click(screen.getByRole('button', { name: /recompute/i }));
+
+    await waitFor(() => expect(mockRun).toHaveBeenCalled());
+    expect(gtag.mock.calls).toEqual([
+      [
+        'event',
+        'report_adjusted',
+        {
+          country_id: 'us',
+          region_kind: 'state',
+          values_changed: true,
+          years_changed: false,
+          region_changed: false,
+          provisions_removed: 0,
+          renamed: false,
+        },
+      ],
+    ]);
+    expect(JSON.stringify(gtag.mock.calls)).not.toContain('3612');
+    delete window.gtag;
+  });
+
   test('given a nationwide report then recompute stays nationwide', async () => {
     mockCreate.mockResolvedValue({ id: 'rf-new', label: 'CTC expansion (adjusted)' });
     const user = userEvent.setup();

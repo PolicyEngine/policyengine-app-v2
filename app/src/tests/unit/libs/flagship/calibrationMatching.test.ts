@@ -3,10 +3,12 @@ import {
   calibrationFitForGeography,
   calibrationMatchesForPaths,
   calibrationTargetLabel,
+  calibrationValueKind,
   calibrationVariableLabel,
   dashboardTargetsUrl,
   fetchCalibrationTargets,
   fetchGeographyCalibrationTargets,
+  formatCalibrationValue,
   geographyForRegion,
   relevantCalibrationMatches,
   ringForDepth,
@@ -77,10 +79,32 @@ describe('dashboardTargetsUrl', () => {
     );
   });
 
-  test('given a state then the targets page is filtered to it', () => {
-    expect(dashboardTargetsUrl({ level: 'state', geography: 'DC' })).toBe(
-      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?level=state&geography=DC'
+  test('given only a level then the targets page is filtered to it', () => {
+    expect(dashboardTargetsUrl({ level: 'state' })).toBe(
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?level=state'
     );
+  });
+});
+
+describe('formatCalibrationValue', () => {
+  test('given a total target then its values read as dollars', () => {
+    expect(formatCalibrationValue(3_048_229_000, { measure: 'total' })).toBe('$3B');
+    expect(formatCalibrationValue(3_245_012_820, { measure: 'total' })).toBe('$3.2B');
+    expect(formatCalibrationValue(279_800_000, { measure: 'total' })).toBe('$279.8M');
+    expect(formatCalibrationValue(3_212_345.678, { measure: 'total' }, 'exact')).toBe(
+      '$3,212,345.68'
+    );
+  });
+
+  test('given a count target then its values stay counts', () => {
+    expect(formatCalibrationValue(20_600, { measure: 'count' })).toBe('20.6K');
+    expect(formatCalibrationValue(20_601, { measure: 'count' }, 'exact')).toBe('20,601');
+  });
+
+  test('given no measure or no value then a plain number or a dash returns', () => {
+    expect(calibrationValueKind({ measure: null })).toBe('number');
+    expect(formatCalibrationValue(1_500, { measure: null })).toBe('1.5K');
+    expect(formatCalibrationValue(null, { measure: 'total' })).toBe('—');
   });
 });
 

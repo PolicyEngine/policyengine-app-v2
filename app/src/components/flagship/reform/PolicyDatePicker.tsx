@@ -34,6 +34,12 @@ interface PolicyDatePickerProps {
 }
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+/** Countries whose calendars start the week on Monday; the rest start on Sunday, as the US does. */
+const MONDAY_FIRST = new Set(['uk']);
+
+/** The first day of a calendar week, as dayjs numbers it: 0 Sunday, 1 Monday. */
+export const weekStartFor = (countryId: string): 0 | 1 => (MONDAY_FIRST.has(countryId) ? 1 : 0);
 const MONTHS = Array.from({ length: 12 }, (_, month) => dayjs().month(month).format('MMMM'));
 
 /** A policy date as the country writes it: "Jan 1, 2026" in the US, "1 Jan 2026" in the UK. */
@@ -91,10 +97,12 @@ export default function PolicyDatePicker({
   const shadeEnd = rangeEnd === FOREVER ? max : dayjs(rangeEnd);
   const start = dayjs(rangeStart);
 
+  const weekStart = weekStartFor(countryId);
+  const weekdays = [...WEEKDAYS.slice(weekStart), ...WEEKDAYS.slice(0, weekStart)];
   const first = view.startOf('month');
-  const days = Array.from({ length: 42 }, (_, i) =>
-    first.subtract(first.day(), 'day').add(i, 'day')
-  );
+  // Days shown before the 1st: back to the week's first day.
+  const lead = (first.day() - weekStart + 7) % 7;
+  const days = Array.from({ length: 42 }, (_, i) => first.subtract(lead, 'day').add(i, 'day'));
   const canBack = view.isAfter(min, 'month');
   const canForward = view.isBefore(max, 'month');
 
@@ -196,7 +204,7 @@ export default function PolicyDatePicker({
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: 2 }}>
-          {WEEKDAYS.map((day) => (
+          {weekdays.map((day) => (
             <span
               key={day}
               style={{
