@@ -21,6 +21,15 @@ import {
   rawDcIncomeTaxTarget,
   rawDcPopulationTarget,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
+import {
+  mockGbCarersAllowanceRow,
+  mockScotlandHigherRateRow,
+  mockUkItlRow,
+  mockWalesIncomeTaxRow,
+  rawLondonPopulationTarget,
+  rawScotlandHigherRateTarget,
+  rawWalesIncomeTaxTarget,
+} from '@/tests/fixtures/libs/flagship/ukCalibrationMocks';
 
 const map = dependencyMap as unknown as ParameterDependencyMap;
 
@@ -103,5 +112,56 @@ describe('report 4592: a DC CTC change in a DC report', () => {
     const all = summarizeMatches(reached, [{ ...mockDcIncomeTaxRow, policyengineVariables: [] }]);
 
     expect(all).toEqual([]);
+  });
+});
+
+describe('UK calibration targets', () => {
+  test('given a UK target then its area, level, programme, label and currency are read', () => {
+    expect(normalizeCalibrationTarget(rawWalesIncomeTaxTarget, 'uk')).toEqual(
+      mockWalesIncomeTaxRow
+    );
+  });
+
+  test('given a UK count then it stays a count, without a currency', () => {
+    expect(normalizeCalibrationTarget(rawScotlandHigherRateTarget, 'uk')).toEqual(
+      mockScotlandHigherRateRow
+    );
+  });
+
+  test('given an English region then its level is region and it measures no programme', () => {
+    const row = normalizeCalibrationTarget(rawLondonPopulationTarget, 'uk')!;
+
+    expect(row.level).toBe('region');
+    expect(row.geography).toBe('London');
+    expect(row.policyengineVariables).toEqual([]);
+  });
+
+  test('given a citation in the label then the label drops it', () => {
+    const row = normalizeCalibrationTarget(
+      {
+        ...rawWalesIncomeTaxTarget,
+        target_label: 'Scottish Child Payment spending [scotgov Budget 2026-27]',
+      },
+      'uk'
+    )!;
+
+    expect(row.targetLabel).toBe('Scottish Child Payment spending');
+  });
+
+  test('given several geographies then only their targets of the programmes come back', () => {
+    const rows = targetsForVariables(
+      [mockWalesIncomeTaxRow, mockUkItlRow, mockScotlandHigherRateRow, mockGbCarersAllowanceRow],
+      ['income_tax'],
+      ['Wales', 'Great Britain', 'United Kingdom'],
+      500
+    );
+
+    expect(rows).toEqual([mockWalesIncomeTaxRow, mockUkItlRow]);
+  });
+
+  test('given one UK geography then all its targets come back', () => {
+    expect(
+      targetsForGeography([mockWalesIncomeTaxRow, mockUkItlRow, mockScotlandHigherRateRow], 'Wales')
+    ).toEqual([mockWalesIncomeTaxRow]);
   });
 });

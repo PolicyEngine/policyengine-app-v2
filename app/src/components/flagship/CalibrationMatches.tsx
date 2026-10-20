@@ -5,6 +5,7 @@ import { Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
 import {
+  CalibrationCountry,
   calibrationFitForGeography,
   CalibrationMatches,
   calibrationMatchesForPaths,
@@ -17,8 +18,11 @@ import {
   formatCalibrationValue,
   GeographyCalibrationFit,
   geographyForRegion,
+  isNationalGeography,
+  ukCalibrationMatchesForPaths,
 } from '@/libs/flagship/calibrationMatching';
 import type { ReportValidationSnapshot } from '@/libs/flagship/reportValidation';
+import { ukCalibrationProgramLabel } from '@/libs/flagship/ukCalibrationPrograms';
 import type { RootState } from '@/store';
 import {
   CellNote,
@@ -69,9 +73,13 @@ function gapOf(target: CalibrationTargetRow): string {
   return target.relativeError === null ? '—' : percentText(target.relativeError);
 }
 
-/** Calibration diagnostics cover the US model and its targets only, for now. */
+/**
+ * Calibration diagnostics cover the US and the UK: the dashboard serves
+ * both countries' targets. The US joins them through the traced
+ * dependency map, the UK through its programme table.
+ */
 export function hasCalibrationDiagnostics(countryId: string | null | undefined): boolean {
-  return countryId === 'us';
+  return countryId === 'us' || countryId === 'uk';
 }
 
 /**
@@ -79,8 +87,7 @@ export function hasCalibrationDiagnostics(countryId: string | null | undefined):
  * at page level so the request runs alongside the rest of the report.
  * `undefined` while loading (or while the country is unknown), `null`
  * when the map or dashboard is unavailable, or when the country has no
- * calibration diagnostics: the map and targets are US-only, so another
- * country never asks for them.
+ * calibration diagnostics (neither the US nor the UK), so it never asks.
  */
 export function useCalibrationMatches(
   paths: string[],
@@ -89,7 +96,7 @@ export function useCalibrationMatches(
 ): CalibrationMatches | null | undefined {
   const [matches, setMatches] = useState<CalibrationMatches | null | undefined>(undefined);
   const pathsKey = paths.join('\n');
-  const geography = geographyForRegion(region);
+  const geography = geographyForRegion(region, countryId);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,10 +110,21 @@ export function useCalibrationMatches(
       return;
     }
     if (resolvedPaths.length === 0) {
-      setMatches({ releaseId: null, geography, modelVersion: '', reachedCount: 0, matches: [] });
+      setMatches({
+        releaseId: null,
+        geography,
+        modelVersion: '',
+        reachedCount: 0,
+        matches: [],
+        ...(countryId === 'uk' ? { countryId } : {}),
+      });
       return;
     }
-    calibrationMatchesForPaths(resolvedPaths, geography).then((result) => {
+    const match =
+      countryId === 'uk'
+        ? ukCalibrationMatchesForPaths(resolvedPaths, geography)
+        : calibrationMatchesForPaths(resolvedPaths, geography);
+    match.then((result) => {
       if (!cancelled) {
         setMatches(result);
       }
@@ -120,22 +138,23 @@ export function useCalibrationMatches(
 }
 
 /**
- * A state's overall data fit, whatever the reform changes. `undefined`
- * while loading, `null` when the dashboard is unavailable; a national
- * geography is not asked for.
+ * A state's (or UK nation's) overall data fit, whatever the reform
+ * changes. `undefined` while loading, `null` when the dashboard is
+ * unavailable; a national geography is not asked for.
  */
 export function useGeographyCalibrationFit(
-  geography: string | null
+  geography: string | null,
+  countryId: CalibrationCountry = 'us'
 ): GeographyCalibrationFit | null | undefined {
   const [fit, setFit] = useState<GeographyCalibrationFit | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
     setFit(undefined);
-    if (!geography || geography === 'US') {
+    if (!geography || isNationalGeography(geography)) {
       return;
     }
-    calibrationFitForGeography(geography).then((result) => {
+    calibrationFitForGeography(geography, countryId).then((result) => {
       if (!cancelled) {
         setFit(result);
       }
@@ -143,14 +162,28 @@ export function useGeographyCalibrationFit(
     return () => {
       cancelled = true;
     };
-  }, [geography]);
+  }, [geography, countryId]);
 
   return fit;
 }
 
-/** A state code as a reader names it: "DC" reads "District of Columbia". */
+/**
+ * A geography as a reader names it: "DC" reads "District of Columbia",
+ * "United Kingdom" reads "the UK"; a UK nation is already its name.
+ */
 export function geographyName(geography: string): string {
-  return geography === 'US' ? 'the US' : (STATE_NAMES[geography] ?? geography);
+  if (geography === 'US') {
+    return 'the US';
+  }
+  if (geography === 'United Kingdom') {
+    return 'the UK';
+  }
+  return STATE_NAMES[geography] ?? geography;
+}
+
+/** Programs, or programmes in a UK report. */
+function programsWord(countryId: CalibrationCountry): string {
+  return countryId === 'uk' ? 'programmes' : 'programs';
 }
 
 /** The pin a report carries, and why it may no longer describe the live check. */
@@ -174,7 +207,15 @@ function PinNote({ pin }: { pin: CalibrationPin }) {
 }
 
 /** A target's name, opening its exact values; the dashboard id rides along as a tooltip. */
-function TargetDetails({ target, group }: { target: CalibrationTargetRow; group: string }) {
+function TargetDetails({
+  target,
+  group,
+  countryId = 'us',
+}: {
+  target: CalibrationTargetRow;
+  group: string;
+  countryId?: CalibrationCountry;
+}) {
   const label = calibrationTargetLabel(target);
   return (
     <Dialog>
@@ -220,7 +261,11 @@ function TargetDetails({ target, group }: { target: CalibrationTargetRow; group:
           </a>
         )}
         <a
-          href={dashboardTargetsUrl({ source: target.source, level: target.level })}
+          href={dashboardTargetsUrl({
+            source: target.source,
+            level: target.level,
+            country: countryId,
+          })}
           target="_blank"
           rel="noreferrer"
           style={linkStyle}
@@ -244,25 +289,41 @@ function TargetCells({ target }: { target: CalibrationTargetRow }) {
   );
 }
 
-/** A target's heading outside a variable group: the variable it measures, else its own label. */
+/**
+ * A target's heading outside a variable group: the variable it measures,
+ * else its own label. A UK target reads as its programme, else the
+ * dashboard's name for its table ("Survey of Personal Incomes").
+ */
 function targetGroup(
   target: CalibrationTargetRow,
   labels: Record<string, { label?: string | null }> | null | undefined
 ): string {
   const variable = target.policyengineVariables[0];
+  if (target.variableLabel) {
+    const label = (variable && ukCalibrationProgramLabel(variable)) || target.variableLabel;
+    if (label) {
+      return label;
+    }
+  }
   return variable
     ? calibrationVariableLabel(variable, labels?.[variable]?.label)
     : calibrationVariableLabel(target.variable.trim().replaceAll(' ', '_'));
 }
 
 /**
- * How well the data fits a state overall, whatever the reform changes:
- * how many targets, the share that fits closely, the weighted error, and
- * the worst fits by name, with the dashboard's view of the state. Context
- * after the reform's own targets.
+ * How well the data fits a state (or UK nation) overall, whatever the
+ * reform changes: how many targets, the share that fits closely, the
+ * weighted error, and the worst fits by name, with the dashboard's view
+ * of the state. Context after the reform's own targets.
  */
-export function GeographyFitSection({ geography }: { geography: string }) {
-  const fit = useGeographyCalibrationFit(geography);
+export function GeographyFitSection({
+  geography,
+  countryId = 'us',
+}: {
+  geography: string;
+  countryId?: CalibrationCountry;
+}) {
+  const fit = useGeographyCalibrationFit(geography, countryId);
   const variables = useSelector((state: RootState) => state.metadata.variables);
   const name = geographyName(geography);
   const heading = <ValidationSubheading>{name} data fit</ValidationSubheading>;
@@ -306,7 +367,7 @@ export function GeographyFitSection({ geography }: { geography: string }) {
               <th scope="row" style={labelCellStyle}>
                 <span style={{ display: 'block' }}>{group}</span>
                 <CellNote>
-                  <TargetDetails target={target} group={group} />
+                  <TargetDetails target={target} group={group} countryId={countryId} />
                 </CellNote>
               </th>
               <TargetCells target={target} />
@@ -316,12 +377,16 @@ export function GeographyFitSection({ geography }: { geography: string }) {
       </EvidenceTable>
       {/* The dashboard reads no geography from its URL, so the reader picks the state there. */}
       <a
-        href={dashboardTargetsUrl({ level: 'state' })}
+        href={
+          countryId === 'uk'
+            ? dashboardTargetsUrl({ level: 'country', country: 'uk' })
+            : dashboardTargetsUrl({ level: 'state' })
+        }
         target="_blank"
         rel="noreferrer"
         style={linkStyle}
       >
-        View state targets in dashboard
+        {countryId === 'uk' ? 'View UK targets in dashboard' : 'View state targets in dashboard'}
       </a>
       <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
         Choose {geography} under Geography there to see only {name}.
@@ -338,18 +403,27 @@ export function CalibrationMatchSection({
   pin?: CalibrationPin;
 }) {
   const variables = useSelector((state: RootState) => state.metadata.variables);
-  const level = matches ? (matches.geography === 'US' ? 'national' : 'state') : null;
+  const countryId: CalibrationCountry = matches?.countryId ?? 'us';
+  const uk = countryId === 'uk';
+  // UK nations and the UK itself are the dashboard's "country" level.
+  const level = matches
+    ? uk
+      ? 'country'
+      : matches.geography === 'US'
+        ? 'national'
+        : 'state'
+    : null;
   const card = (content: React.ReactNode) => (
     <ValidationCard
       id="data-calibration"
       title="Data calibration"
-      href={dashboardTargetsUrl({ level })}
+      href={dashboardTargetsUrl({ level, country: countryId })}
       linkLabel="View dashboard"
     >
       {content}
-      {/* A state's overall fit follows the reform's own targets, as context. */}
-      {matches && matches.geography !== 'US' && (
-        <GeographyFitSection geography={matches.geography} />
+      {/* A state's (or nation's) overall fit follows the reform's own targets, as context. */}
+      {matches && !isNationalGeography(matches.geography) && (
+        <GeographyFitSection geography={matches.geography} countryId={countryId} />
       )}
     </ValidationCard>
   );
@@ -361,6 +435,14 @@ export function CalibrationMatchSection({
   }
   const placeName = geographyName(matches.geography);
   const related = matches.matches.length === 0 ? (matches.related ?? []) : [];
+  if (matches.reachedCount === 0 && uk) {
+    // The UK programme table knows no programme these parameters change.
+    return card(
+      <ValidationNote>
+        No calibration target measures the programmes this reform changes.
+      </ValidationNote>
+    );
+  }
   if (matches.reachedCount === 0) {
     // Not "nothing measures it": the model map has no record of what it moves.
     return card(
@@ -374,7 +456,7 @@ export function CalibrationMatchSection({
     // Silence would read as "fine"; loose matches would read as evidence.
     return card(
       <ValidationNote>
-        No calibration target measures the programs this reform changes.
+        No calibration target measures the {programsWord(countryId)} this reform changes.
       </ValidationNote>
     );
   }
@@ -384,7 +466,13 @@ export function CalibrationMatchSection({
         const sources = [
           ...new Set(match.targets.map((target) => target.sourceLabel ?? target.source)),
         ].join(', ');
-        const group = calibrationVariableLabel(match.variable, variables?.[match.variable]?.label);
+        const group =
+          (uk && ukCalibrationProgramLabel(match.variable)) ||
+          calibrationVariableLabel(match.variable, variables?.[match.variable]?.label);
+        // A UK group spans the report's nation and the wider areas around it.
+        const where = matches.geographies
+          ? [...new Set(match.targets.map((target) => target.geography))].join(', ')
+          : matches.geography;
         return (
           <tbody key={match.variable}>
             <tr style={rowStyle}>
@@ -396,11 +484,15 @@ export function CalibrationMatchSection({
                 <span style={{ fontWeight: typography.fontWeight.semibold }}>{group}</span>
                 <CellNote>
                   <span>
-                    {sources} · {matches.geography}
+                    {sources} · {where}
                   </span>{' '}
                   ·{' '}
                   <a
-                    href={dashboardTargetsUrl({ source: match.worst.source, level })}
+                    href={dashboardTargetsUrl({
+                      source: match.worst.source,
+                      level: uk ? match.worst.level : level,
+                      country: countryId,
+                    })}
                     target="_blank"
                     rel="noreferrer"
                     style={{ ...linkStyle, fontSize: typography.fontSize.xs }}
@@ -413,7 +505,7 @@ export function CalibrationMatchSection({
             {match.targets.map((target) => (
               <tr key={target.name}>
                 <th scope="row" style={labelCellStyle}>
-                  <TargetDetails target={target} group={group} />
+                  <TargetDetails target={target} group={group} countryId={countryId} />
                 </th>
                 <TargetCells target={target} />
               </tr>
@@ -430,8 +522,8 @@ export function CalibrationMatchSection({
         <>
           {/* Not "no target measures it": these targets are measured, just not of a changed program. */}
           <ValidationNote>
-            These targets in {placeName} do not measure a program this reform changes, but the
-            change reaches them through the model:
+            These targets in {placeName} do not measure a {uk ? 'programme' : 'program'} this reform
+            changes, but the change reaches them through the model:
           </ValidationNote>
           {table('Related calibration targets', related)}
         </>

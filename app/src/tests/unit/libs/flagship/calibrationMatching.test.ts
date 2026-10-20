@@ -14,6 +14,8 @@ import {
   ringForDepth,
   summarizeGeographyFit,
   summarizeMatches,
+  ukCalibrationGeographies,
+  ukCalibrationMatchesForPaths,
   weightedMeanAbsError,
 } from '@/libs/flagship/calibrationMatching';
 import {
@@ -35,6 +37,17 @@ import {
   mockParameterDependencyMap,
   STANDARD_DEDUCTION_PATH,
 } from '@/tests/fixtures/libs/flagship/parameterDependenciesMocks';
+import {
+  mockGbCarersAllowanceRow,
+  mockScotlandHigherRateRow,
+  mockUkItlRow,
+  mockWalesIncomeTaxRow,
+  UK_BASIC_RATE_PATH,
+  UK_CARERS_EARNINGS_LIMIT_PATH,
+  UK_ELASTICITY_PATH,
+  UK_RELEASE_ID,
+  UK_RELIEF_AGE_PATH,
+} from '@/tests/fixtures/libs/flagship/ukCalibrationMocks';
 
 vi.mock('@/libs/flagship/parameterDependencies', async (importOriginal) => {
   const original = await importOriginal<typeof import('@/libs/flagship/parameterDependencies')>();
@@ -394,5 +407,164 @@ describe('calibrationVariableLabel', () => {
     expect(calibrationVariableLabel('ctc_limiting_tax_liability')).toBe(
       'CTC limiting tax liability'
     );
+  });
+});
+
+describe('UK calibration matching', () => {
+  test('given UK report regions then the dashboard’s area names return', () => {
+    expect(geographyForRegion('uk', 'uk')).toBe('United Kingdom');
+    expect(geographyForRegion(undefined, 'uk')).toBe('United Kingdom');
+    expect(geographyForRegion('country/wales', 'uk')).toBe('Wales');
+    expect(geographyForRegion('country/england', 'uk')).toBe('England');
+    expect(geographyForRegion('country/scotland', 'uk')).toBe('Scotland');
+    expect(geographyForRegion('country/northern_ireland', 'uk')).toBe('Northern Ireland');
+    expect(geographyForRegion('country/ni', 'uk')).toBe('Northern Ireland');
+    expect(geographyForRegion('wales', 'uk')).toBe('Wales');
+  });
+
+  test('given a constituency or local authority then the UK returns, its nation unknown', () => {
+    expect(geographyForRegion('constituency/Cardiff West', 'uk')).toBe('United Kingdom');
+    expect(geographyForRegion('local_authority/Cardiff', 'uk')).toBe('United Kingdom');
+  });
+
+  test('given a US region without a country then the US reading is unchanged', () => {
+    expect(geographyForRegion('country/wales')).toBe('US');
+    expect(geographyForRegion('state/ca', 'us')).toBe('CA');
+  });
+
+  test('given a nation then its targets and the wider areas that contain it are read', () => {
+    expect(ukCalibrationGeographies('Wales')).toEqual([
+      'Wales',
+      'England and Wales',
+      'Great Britain',
+      'United Kingdom',
+    ]);
+    expect(ukCalibrationGeographies('Scotland')).toEqual([
+      'Scotland',
+      'Great Britain',
+      'United Kingdom',
+    ]);
+    expect(ukCalibrationGeographies('Northern Ireland')).toEqual([
+      'Northern Ireland',
+      'United Kingdom',
+    ]);
+    expect(ukCalibrationGeographies('United Kingdom')).toEqual([
+      'United Kingdom',
+      'Great Britain',
+      'England and Wales',
+    ]);
+  });
+
+  test('given the UK then the dashboard link opens its UK view', () => {
+    expect(dashboardTargetsUrl({ source: 'hmrc', level: 'country', country: 'uk' })).toBe(
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?country=uk&source=hmrc&level=country'
+    );
+    expect(dashboardTargetsUrl({ level: 'state', country: 'us' })).toBe(
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?level=state'
+    );
+  });
+
+  test('given a sterling target then its values read as pounds', () => {
+    expect(formatCalibrationValue(3_245_012_820, mockUkItlRow)).toBe('£3.2B');
+    expect(formatCalibrationValue(1_000_000, mockUkItlRow, 'exact')).toBe('£1,000,000');
+    expect(formatCalibrationValue(20_600, mockScotlandHigherRateRow)).toBe('20.6K');
+  });
+
+  test('given a UK target then its label is the dashboard’s, with the band when the label names none', () => {
+    expect(calibrationTargetLabel(mockWalesIncomeTaxRow)).toBe(
+      'Income Tax liabilities by region, total income 50,000 to 70,000'
+    );
+    expect(calibrationTargetLabel(mockUkItlRow)).toBe(
+      'Income Tax liabilities by total income band · Total income from GBP 200 000 to GBP 500 000'
+    );
+    expect(calibrationTargetLabel(mockGbCarersAllowanceRow)).toBe('Carers allowance');
+  });
+
+  test('report 4684: a basic-rate change in Wales matches Wales’s and the UK’s Income Tax targets', async () => {
+    const fetchMock = vi.fn(async () =>
+      okResponse({
+        releaseId: UK_RELEASE_ID,
+        // As the route answers: the asked geographies' targets of the asked programmes.
+        rows: [mockUkItlRow, mockWalesIncomeTaxRow],
+      })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await ukCalibrationMatchesForPaths([UK_BASIC_RATE_PATH], 'Wales');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/calibration-targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        variables: ['income_tax'],
+        geography: 'Wales',
+        country: 'uk',
+        geographies: ['Wales', 'England and Wales', 'Great Britain', 'United Kingdom'],
+      }),
+    });
+    expect(result).toMatchObject({
+      releaseId: UK_RELEASE_ID,
+      geography: 'Wales',
+      countryId: 'uk',
+      reachedCount: 1,
+      related: [],
+    });
+    expect(result!.matches.map((match) => match.variable)).toEqual(['income_tax']);
+    // Wales first, then the UK, whatever the fit.
+    expect(result!.matches[0].targets).toEqual([mockWalesIncomeTaxRow, mockUkItlRow]);
+  });
+
+  test('report 4686: a UK-wide change matches Carer’s Allowance and Income Tax', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        okResponse({ releaseId: UK_RELEASE_ID, rows: [mockUkItlRow, mockGbCarersAllowanceRow] })
+      )
+    );
+
+    const result = await ukCalibrationMatchesForPaths(
+      [UK_CARERS_EARNINGS_LIMIT_PATH, UK_RELIEF_AGE_PATH],
+      'United Kingdom'
+    );
+
+    expect(result!.matches.map((match) => match.variable).sort()).toEqual([
+      'carers_allowance',
+      'income_tax',
+    ]);
+  });
+
+  test('given a parameter no programme covers then nothing is fetched and nothing matches', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await ukCalibrationMatchesForPaths([UK_ELASTICITY_PATH], 'United Kingdom');
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ reachedCount: 0, matches: [], countryId: 'uk' });
+  });
+
+  test('given the route fails then null returns', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false }) as Response)
+    );
+
+    await expect(ukCalibrationMatchesForPaths([UK_BASIC_RATE_PATH], 'Wales')).resolves.toBeNull();
+  });
+
+  test('given a nation then its overall fit is asked of the UK dashboard', async () => {
+    const fetchMock = vi.fn(async () =>
+      okResponse({ releaseId: UK_RELEASE_ID, rows: [mockWalesIncomeTaxRow] })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const fit = await calibrationFitForGeography('Wales', 'uk');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/calibration-targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variables: [], geography: 'Wales', all: true, country: 'uk' }),
+    });
+    expect(fit).toMatchObject({ geography: 'Wales', targetCount: 1 });
   });
 });
