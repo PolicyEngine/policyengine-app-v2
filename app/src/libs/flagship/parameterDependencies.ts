@@ -144,13 +144,12 @@ export function hasParameterDependencies(countryId: string): boolean {
 const cached = new Map<string, Promise<ParameterDependencyMap>>();
 
 /**
- * A country's traced map, loaded once per session. Without a country it is
- * the US map, which the validation surfaces (calibration, scorecard, track
- * record) read.
+ * A country's traced map, loaded once per session. Every caller names its
+ * country, so none is given the US map by default: the validation surfaces
+ * (calibration, scorecard, track record) ask for the US map, as their data
+ * is the US model's.
  */
-export function loadParameterDependencies(
-  countryId: string = 'us'
-): Promise<ParameterDependencyMap> {
+export function loadParameterDependencies(countryId: string): Promise<ParameterDependencyMap> {
   const loader = MAP_LOADERS[countryId];
   if (!loader) {
     return Promise.reject(new Error(`No traced parameter map for ${countryId}.`));

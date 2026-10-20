@@ -258,8 +258,9 @@ export function trackRecordPrograms(trackRecord: ModelTrackRecord): string[] | n
  * at page level, not inside a tab panel, so the request runs in
  * parallel with the rest of the report instead of starting on tab
  * click (inactive tab panels are unmounted). The track record is the
- * US model's (its dependency map and comparison table are US-only), so
- * another country gets an empty one, and an unknown country waits.
+ * US model's (it reads the US dependency map, and its comparison table
+ * is US-only), so another country gets an empty one, and an unknown
+ * country waits.
  */
 export function useModelTrackRecord(
   paths: string[],
@@ -352,8 +353,9 @@ const NO_READERS: Record<string, string[]> = {};
 
 /**
  * The variables that read each reform path directly, from the traced
- * dependency map: `undefined` while it loads. The map is US-only, so
- * another country, or a map that fails to load, matches on the paths alone.
+ * dependency map: `undefined` while it loads. Only the US map is read here,
+ * as the validation data is the US model's, so another country, or a map
+ * that fails to load, matches on the paths alone.
  */
 export function useReformReaders(
   countryId: string,
@@ -368,7 +370,7 @@ export function useReformReaders(
     }
     const request = JSON.parse(requestKey) as { paths: string[] };
     let cancelled = false;
-    loadParameterDependencies()
+    loadParameterDependencies('us')
       .then((map) =>
         Object.fromEntries(request.paths.map((path) => [path, readersOfPath(path, map)]))
       )

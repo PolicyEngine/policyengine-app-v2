@@ -107,7 +107,14 @@ describe('each country has its own traced map', () => {
     );
   });
 
-  test('given no country then the US map loads, as the validation surfaces read it', async () => {
-    expect((await loadParameterDependencies()).model.package).toBe('policyengine-us');
+  test('given the US then the map is traced from policyengine-us, as the validation surfaces read it', async () => {
+    expect((await loadParameterDependencies('us')).model.package).toBe('policyengine-us');
+  });
+
+  test('given no country then no map loads, so no caller is given the US map by default', async () => {
+    // @ts-expect-error Every caller names its country.
+    await expect(loadParameterDependencies()).rejects.toThrow(
+      'No traced parameter map for undefined.'
+    );
   });
 });

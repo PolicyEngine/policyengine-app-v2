@@ -203,7 +203,7 @@ export async function scorecardMatchesForPaths(
 ): Promise<ScorecardMatches | null> {
   let map;
   try {
-    map = await loadParameterDependencies();
+    map = await loadParameterDependencies('us');
   } catch {
     return null;
   }
