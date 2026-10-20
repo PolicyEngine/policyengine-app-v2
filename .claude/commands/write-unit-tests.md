@@ -7,7 +7,7 @@ Write unit tests for the files or features described by the user. Follow these s
 
 ## Step 1: Read the test guidelines
 
-Read `app/src/tests/CLAUDE.md` in full. All tests MUST follow these conventions:
+Read `docs/engineering/skills/testing.md` in full. All tests MUST follow these conventions:
 - Import `render`, `screen`, `userEvent` from `@test-utils` (not `@testing-library/react`)
 - Import `describe`, `test`, `expect`, `vi` from `vitest`
 - Use Given-When-Then naming: `test('given X then Y', ...)`
