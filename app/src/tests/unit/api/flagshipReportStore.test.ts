@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import {
   ApiFlagshipReportStore,
+  EmptyReportTitleError,
   getFlagshipReportStore,
   LocalStorageFlagshipReportStore,
   NewFlagshipReport,
@@ -17,6 +18,13 @@ import {
   pageResponse,
   reportItem,
 } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  BLANK_REPORT_TITLE,
+  CLAMPED_REPORT_TITLE,
+  OVERLONG_REPORT_TITLE,
+  RENAMED_REPORT_TITLE,
+  UNTRIMMED_RENAMED_REPORT_TITLE,
+} from '@/tests/fixtures/libs/flagship/reportRenameMocks';
 import { mockReportValidationSnapshot } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
 
 const API_REPORT_ID = '4512';
@@ -80,6 +88,52 @@ describe('LocalStorageFlagshipReportStore', () => {
     const store = new LocalStorageFlagshipReportStore();
 
     await expect(store.saveValidation('lfr-missing', mockReportValidationSnapshot)).rejects.toThrow(
+      'Report not found'
+    );
+  });
+
+  test('given a rename then the record keeps the trimmed new title and nothing else changes', async () => {
+    // Given
+    const store = new LocalStorageFlagshipReportStore();
+    const created = await store.create(newReport);
+
+    // When
+    const renamed = await store.rename(created.id, UNTRIMMED_RENAMED_REPORT_TITLE);
+
+    // Then
+    expect(renamed).toEqual({ ...created, title: RENAMED_REPORT_TITLE });
+    const reloaded = await new LocalStorageFlagshipReportStore().findById(created.id);
+    expect(reloaded).toEqual({ ...created, title: RENAMED_REPORT_TITLE });
+  });
+
+  test('given a name longer than the API takes then the rename saves it shortened', async () => {
+    // Given
+    const store = new LocalStorageFlagshipReportStore();
+    const created = await store.create(newReport);
+
+    // When
+    const renamed = await store.rename(created.id, OVERLONG_REPORT_TITLE);
+
+    // Then
+    expect(renamed.title).toBe(CLAMPED_REPORT_TITLE);
+  });
+
+  test('given a blank name then the rename is refused and the title stays', async () => {
+    // Given
+    const store = new LocalStorageFlagshipReportStore();
+    const created = await store.create(newReport);
+
+    // When / Then
+    await expect(store.rename(created.id, BLANK_REPORT_TITLE)).rejects.toBeInstanceOf(
+      EmptyReportTitleError
+    );
+    expect((await store.findById(created.id))?.title).toBe(newReport.title);
+  });
+
+  test('given an unknown record then renaming it fails', async () => {
+    const store = new LocalStorageFlagshipReportStore();
+
+    await expect(store.rename('lfr-missing', RENAMED_REPORT_TITLE)).rejects.toThrow(
       'Report not found'
     );
   });
@@ -313,6 +367,50 @@ describe('ApiFlagshipReportStore', () => {
     expect(call.body).toEqual({ validation: wire });
     expect(record.validation).toEqual(mockReportValidationSnapshot);
   });
+
+  test('given a rename then only the row name is patched, trimmed', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(itemResponse(reportItem({ name: RENAMED_REPORT_TITLE })));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    const record = await store.rename(ASSOCIATION_IDS.REPORT, UNTRIMMED_RENAMED_REPORT_TITLE);
+
+    // Then: one PATCH of the saved report's row; no v1 report route is called
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const call = fetchCall(fetchMock);
+    expect(call.method).toBe('PATCH');
+    expect(call.path).toBe(`/v2/user-reports/${ASSOCIATION_IDS.REPORT}`);
+    expect(call.query).toEqual({ country_id: 'us' });
+    expect(call.body).toEqual({ name: RENAMED_REPORT_TITLE });
+    expect(record.title).toBe(RENAMED_REPORT_TITLE);
+  });
+
+  test('given a name longer than the API takes then the rename sends it shortened', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    fetchMock.mockResolvedValue(itemResponse(reportItem({ name: CLAMPED_REPORT_TITLE })));
+    const store = new ApiFlagshipReportStore(context);
+
+    // When
+    await store.rename(ASSOCIATION_IDS.REPORT, OVERLONG_REPORT_TITLE);
+
+    // Then
+    expect(fetchCall(fetchMock).body).toEqual({ name: CLAMPED_REPORT_TITLE });
+  });
+
+  test('given a blank name then the rename is refused without a request', async () => {
+    // Given
+    const { fetchMock, context } = createTestApiContext();
+    const store = new ApiFlagshipReportStore(context);
+
+    // When / Then
+    await expect(store.rename(ASSOCIATION_IDS.REPORT, BLANK_REPORT_TITLE)).rejects.toBeInstanceOf(
+      EmptyReportTitleError
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
 
 describe('ApiFlagshipReportStore with records saved in this browser', () => {
@@ -331,6 +429,9 @@ describe('ApiFlagshipReportStore with records saved in this browser', () => {
     await expect(
       store.saveValidation(localRecord.id, mockReportValidationSnapshot)
     ).rejects.toBeInstanceOf(BrowserOnlyIdError);
+    await expect(store.rename(localRecord.id, RENAMED_REPORT_TITLE)).rejects.toBeInstanceOf(
+      BrowserOnlyIdError
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

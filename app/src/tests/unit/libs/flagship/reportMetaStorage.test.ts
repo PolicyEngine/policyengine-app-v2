@@ -4,8 +4,10 @@ import {
   readReportMeta,
   readReportMetaResult,
   removeReportMeta,
+  renameReportMeta,
   saveReportMeta,
 } from '@/libs/flagship/runReport';
+import { RENAMED_REPORT_TITLE } from '@/tests/fixtures/libs/flagship/reportRenameMocks';
 import {
   CURRENT_SCHEMA_VERSION,
   currentMeta,
@@ -112,6 +114,37 @@ describe('report provenance in localStorage', () => {
     removeReportMeta(REPORT_ID);
 
     expect(storedMeta()).toEqual({ [OTHER_REPORT_ID]: metaFromRunBridge });
+  });
+
+  test('given a renamed report then its provenance takes the new title and keeps the rest', () => {
+    // Given
+    saveReportMeta(REPORT_ID, currentMeta);
+    saveReportMeta(OTHER_REPORT_ID, metaFromRunBridge);
+
+    // When
+    renameReportMeta(REPORT_ID, RENAMED_REPORT_TITLE);
+
+    // Then
+    expect(readReportMeta(REPORT_ID)).toEqual({ ...currentMeta, title: RENAMED_REPORT_TITLE });
+    expect(readReportMeta(OTHER_REPORT_ID)).toEqual(metaFromRunBridge);
+  });
+
+  test('given no provenance for a renamed report then nothing is stored', () => {
+    renameReportMeta(REPORT_ID, RENAMED_REPORT_TITLE);
+
+    expect(localStorage.getItem(REPORT_META_KEY)).toBeNull();
+  });
+
+  test('given unreadable provenance for a renamed report then it is left as stored', () => {
+    // Given
+    const damaged = { ...metaFromRunBridge, provisions: 'oops' };
+    seedMeta({ [REPORT_ID]: damaged });
+
+    // When
+    renameReportMeta(REPORT_ID, RENAMED_REPORT_TITLE);
+
+    // Then
+    expect(storedMeta()).toEqual({ [REPORT_ID]: damaged });
   });
 
   test('given no provenance for the report then removing it leaves the stash alone', () => {

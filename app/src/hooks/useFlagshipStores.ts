@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import {
   findReportRecordByLink,
@@ -17,6 +17,7 @@ import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
+import { flagshipReportQueryKeys, renameReportMeta } from '@/libs/flagship/runReport';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
 
@@ -120,10 +121,18 @@ export function useFlagshipReportStore(): FlagshipReportStoreSelection {
  * otherwise this browser's — with the saved reform it was run from. Null
  * when there is none: a report someone else ran.
  */
+/** The cache key of this session's record for a report link (see useReportRecord). */
+const reportRecordQueryKey = (scope: string, link: string) =>
+  ['flagship-report-record', scope, link] as const;
+
+/** The cache key of a saved report as anyone holding its link reads it (see useSharedReport). */
+const sharedReportQueryKey = (countryId: string, link: string) =>
+  ['shared-report', countryId, link] as const;
+
 export function useReportRecord(link: string | undefined) {
   const { store, scope } = useFlagshipReportStore();
   const { data } = useQuery({
-    queryKey: ['flagship-report-record', scope, link ?? ''],
+    queryKey: reportRecordQueryKey(scope, link ?? ''),
     queryFn: () => findReportRecordByLink(store, link!),
     enabled: !!link,
     staleTime: 5 * 60 * 1000,
@@ -149,7 +158,7 @@ export interface SharedReport {
 export function useSharedReport(link: string | undefined) {
   const countryId = useCurrentCountry();
   return useQuery({
-    queryKey: ['shared-report', countryId, link ?? ''],
+    queryKey: sharedReportQueryKey(countryId, link ?? ''),
     queryFn: async (): Promise<SharedReport | null> => {
       const item = await fetchSharedReport(countryId, link!);
       return item
@@ -162,5 +171,34 @@ export function useSharedReport(link: string | undefined) {
     enabled: !!link && isAccountId(link),
     staleTime: 5 * 60 * 1000,
     retry: 1,
+  });
+}
+
+/**
+ * Renames this session's record of the report at `link` (see
+ * useReportRecord): the account's `/v2/user-reports` row, or the record
+ * in this browser. Only that record's title changes; the v1 report it
+ * points at keeps its label. Once saved, the new title is put wherever the
+ * report page reads one, so the page shows it straight away: the run
+ * details this browser keeps, this session's record, and the saved report
+ * as its link reads it; and Your reforms lists its reports again.
+ */
+export function useRenameReport(link: string) {
+  const { store, scope } = useFlagshipReportStore();
+  const countryId = useCurrentCountry();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ record, title }: { record: FlagshipReportRecord; title: string }) =>
+      store.rename(record.id, title),
+    onSuccess: (renamed) => {
+      const title = renamed.title ?? '';
+      renameReportMeta(link, title);
+      queryClient.setQueryData(reportRecordQueryKey(scope, link), renamed);
+      queryClient.setQueryData<SharedReport | null>(
+        sharedReportQueryKey(countryId, link),
+        (shared) => (shared ? { ...shared, record: { ...shared.record, title } } : shared)
+      );
+      void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
+    },
   });
 }

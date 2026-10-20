@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiFlagshipReportStore, LocalStorageFlagshipReportStore } from '@/api/flagshipReportStore';
@@ -10,12 +10,14 @@ import { CountryProvider } from '@/contexts/CountryContext';
 import {
   useFlagshipReportStore,
   useReformStore,
+  useRenameReport,
   useReportRecord,
   useSharedReport,
   useV3SavedWork,
 } from '@/hooks/useFlagshipStores';
 import type { AuthContextValue } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
+import { readReportMeta, saveReportMeta } from '@/libs/flagship/runReport';
 import { store } from '@/store';
 import {
   ASSOCIATION_IDS,
@@ -34,6 +36,8 @@ import {
   signedInAuthValue,
   TEST_AUTH0_SUBJECT,
 } from '@/tests/fixtures/libs/auth/authMocks';
+import { RENAMED_REPORT_TITLE } from '@/tests/fixtures/libs/flagship/reportRenameMocks';
+import { metaFromRunBridge } from '@/tests/fixtures/libs/flagship/reportSchemaMocks';
 
 const REFORM_POLICY_ID = 95762;
 const REFORM_ROW = policyItem({
@@ -276,6 +280,101 @@ describe('useSharedReport', () => {
     // Then
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(result.current.fetchStatus).toBe('idle');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+/** Requests to a v1 report route (`/{country}/report…`), which a rename must never make. */
+function v1ReportRequests(): number {
+  return fetchMock.mock.calls.filter(([url]) =>
+    /^\/(us|uk)\/report/.test(new URL(String(url)).pathname)
+  ).length;
+}
+
+describe('useRenameReport', () => {
+  test("given a signed-in owner renames a report then only its row's name is patched and every read takes it", async () => {
+    // Given: the owner's row, and the saved report as its link reads it
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      const { pathname } = new URL(url);
+      if (pathname === `/v2/shared-reports/${ASSOCIATION_IDS.REPORT}`) {
+        return itemResponse(sharedReportItem());
+      }
+      if (pathname === `/v2/user-reports/${ASSOCIATION_IDS.REPORT}`) {
+        return itemResponse(
+          reportItem(init?.method === 'PATCH' ? { name: RENAMED_REPORT_TITLE } : {})
+        );
+      }
+      return errorResponse(404, 'not found');
+    });
+    const { result } = renderHook(
+      () => ({
+        record: useReportRecord(ASSOCIATION_IDS.REPORT),
+        shared: useSharedReport(ASSOCIATION_IDS.REPORT),
+        rename: useRenameReport(ASSOCIATION_IDS.REPORT),
+      }),
+      { wrapper: wrapperFor(signedInAuthValue()) }
+    );
+    await waitFor(() => expect(result.current.record).toBeTruthy());
+    await waitFor(() => expect(result.current.shared.data).toBeTruthy());
+
+    // When
+    await act(async () => {
+      await result.current.rename.mutateAsync({
+        record: result.current.record!,
+        title: RENAMED_REPORT_TITLE,
+      });
+    });
+
+    // Then
+    const patches = fetchMock.mock.calls.filter(
+      ([, init]) => (init as RequestInit | undefined)?.method === 'PATCH'
+    );
+    expect(patches).toHaveLength(1);
+    expect(new URL(String(patches[0][0])).pathname).toBe(
+      `/v2/user-reports/${ASSOCIATION_IDS.REPORT}`
+    );
+    expect(JSON.parse(String((patches[0][1] as RequestInit).body))).toEqual({
+      name: RENAMED_REPORT_TITLE,
+    });
+    expect(v1ReportRequests()).toBe(0);
+    await waitFor(() => expect(result.current.record?.title).toBe(RENAMED_REPORT_TITLE));
+    expect(result.current.shared.data?.record.title).toBe(RENAMED_REPORT_TITLE);
+  });
+
+  test('given a report kept in this browser then the rename changes its record and run details, with no request', async () => {
+    // Given: sign-in off, so the report's link is its v1 report's number
+    localStorage.clear();
+    const link = String(LEGACY_IDS.REPORT);
+    await new LocalStorageFlagshipReportStore().create({
+      countryId: 'us',
+      apiReportId: link,
+      title: metaFromRunBridge.title,
+      sourceNote: null,
+      provisions: [],
+      year: '2026',
+      reformId: null,
+    });
+    saveReportMeta(link, metaFromRunBridge);
+    const { result } = renderHook(
+      () => ({ record: useReportRecord(link), rename: useRenameReport(link) }),
+      { wrapper: wrapperFor(makeAuthValue({ status: 'disabled' })) }
+    );
+    await waitFor(() => expect(result.current.record).toBeTruthy());
+
+    // When
+    await act(async () => {
+      await result.current.rename.mutateAsync({
+        record: result.current.record!,
+        title: RENAMED_REPORT_TITLE,
+      });
+    });
+
+    // Then
+    await waitFor(() => expect(result.current.record?.title).toBe(RENAMED_REPORT_TITLE));
+    expect((await new LocalStorageFlagshipReportStore().findByApiReportId(link))?.title).toBe(
+      RENAMED_REPORT_TITLE
+    );
+    expect(readReportMeta(link)).toEqual({ ...metaFromRunBridge, title: RENAMED_REPORT_TITLE });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
