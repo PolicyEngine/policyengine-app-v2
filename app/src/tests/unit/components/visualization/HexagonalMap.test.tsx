@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import {
   MOCK_HEX_MAP_DATA,
@@ -207,5 +207,47 @@ describe('HexagonalMap', () => {
     // Then
     const polygons = container.querySelectorAll('polygon');
     expect(polygons).toHaveLength(4);
+  });
+  test('given no selection props then hexagons carry no selection attributes', () => {
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
+
+    expect(container.querySelector('[data-area-id]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-selected]')).not.toBeInTheDocument();
+  });
+
+  test('given onSelect then clicking a hexagon passes its id', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} onSelect={onSelect} />);
+
+    await user.click(container.querySelector('[data-area-id="edinburgh-central"]')!);
+
+    expect(onSelect).toHaveBeenCalledWith('edinburgh-central');
+  });
+
+  test('given a selected id then that hexagon is outlined and drawn last', () => {
+    const { container } = render(
+      <HexagonalMap data={MOCK_HEX_MAP_DATA} selectedId="westminster-north" onSelect={vi.fn()} />
+    );
+
+    const hexagons = container.querySelectorAll('polygon[data-area-id]');
+    const selected = container.querySelector('[data-selected]')!;
+    expect(selected).toHaveAttribute('data-area-id', 'westminster-north');
+    expect(selected).toHaveAttribute('stroke-width', '1.5');
+    expect(hexagons[hexagons.length - 1]).toBe(selected);
+    expect(screen.getByTestId('hex-selection-ring')).toBeInTheDocument();
+  });
+
+  test('given no selected id then no selection ring is drawn', () => {
+    render(<HexagonalMap data={MOCK_HEX_MAP_DATA} onSelect={vi.fn()} />);
+
+    expect(screen.queryByTestId('hex-selection-ring')).not.toBeInTheDocument();
+  });
+
+  test('given insetWatermark then the logo has padding clear of the frame', () => {
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} insetWatermark />);
+
+    const logoWrapper = container.querySelector('img')!.parentElement!;
+    expect(logoWrapper.style.padding).toBe('4px 8px');
   });
 });

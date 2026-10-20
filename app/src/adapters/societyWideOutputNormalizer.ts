@@ -34,11 +34,13 @@ function keyAreaRowsByName(
     if (!name) {
       continue;
     }
+    const code = row?.[codeField];
     byName[name] = {
       x: row.x,
       y: row.y,
       average_household_income_change: row.average_household_income_change,
       relative_household_income_change: row.relative_household_income_change,
+      ...(code && { code }),
     };
   }
   return byName;

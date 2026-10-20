@@ -450,7 +450,7 @@ export function BaselineComparisons({
     // Silence would read as "fine"; loose matches would read as evidence.
     content = (
       <ValidationNote>
-        No scorecard comparison measures the programs this reform changes.
+        {`No scorecard comparison measures the ${countryId === 'uk' ? 'programmes' : 'programs'} this reform changes.`}
       </ValidationNote>
     );
   }

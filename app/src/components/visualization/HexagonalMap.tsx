@@ -19,6 +19,18 @@ interface HexagonalMapProps {
 
   /** Optional ref to the map container for image export */
   exportRef?: React.Ref<HTMLDivElement>;
+
+  /** Opt-in: the id of the hexagon to outline as selected. */
+  selectedId?: string | null;
+
+  /** Opt-in: called with a hexagon's id when it is clicked. */
+  onSelect?: (id: string) => void;
+
+  /**
+   * Opt-in: keep the logo watermark clear of the map's frame. Without it the
+   * logo sits flush in the bottom-right corner, where the rounded frame clips it.
+   */
+  insetWatermark?: boolean;
 }
 
 /** Generate SVG polygon points for a flat-topped hexagon centered at (cx, cy) */
@@ -33,12 +45,29 @@ function hexPoints(cx: number, cy: number, size: number): string {
   return points.join(' ');
 }
 
+/**
+ * Outline of the selected hexagon: a dark ring with a white core, so it
+ * reads on the darkest fill and the lightest alike.
+ */
+const SELECTED_STROKE_COLOR = colors.gray[900];
+const SELECTED_STROKE_WIDTH = 1.5;
+const SELECTED_RING_WIDTH = 3;
+const SELECTED_CORE_COLOR = colors.white;
+const SELECTED_CORE_WIDTH = 1;
+
 /** Color bar width in SVG units */
 const COLOR_BAR_WIDTH = 12;
 /** Color bar right margin */
 const COLOR_BAR_MARGIN = 60;
 
-export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps) {
+export function HexagonalMap({
+  data,
+  config = {},
+  exportRef,
+  selectedId,
+  onSelect,
+  insetWatermark = false,
+}: HexagonalMapProps) {
   const [tooltip, setTooltip] = useState<{
     text: string;
     x: number;
@@ -78,6 +107,21 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
       y: point.y * scale,
     }));
   }, [data, fullConfig.coordinateScale]);
+
+  // The selected hexagon draws last, so no neighbour covers its outline.
+  const drawOrder = useMemo(() => {
+    if (!selectedId) {
+      return positionedData;
+    }
+    return [
+      ...positionedData.filter((point) => point.id !== selectedId),
+      ...positionedData.filter((point) => point.id === selectedId),
+    ];
+  }, [positionedData, selectedId]);
+
+  const selectedPoint = selectedId
+    ? (positionedData.find((point) => point.id === selectedId) ?? null)
+    : null;
 
   // Calculate data bounds
   const dataBounds = useMemo(() => {
@@ -150,20 +194,24 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
         style={{ display: 'block' }}
       >
         {/* Hexagon data points */}
-        {positionedData.map((point) => {
+        {drawOrder.map((point) => {
           const cx = toSvgX(point.x);
           const cy = toSvgY(point.y);
           const fill = interpolateColor(point.value, colorRange.min, colorRange.max, scaleColors);
           const hoverText = generateHoverText(point, fullConfig.formatValue!);
+          const isSelected = !!selectedId && point.id === selectedId;
 
           return (
             <polygon
               key={point.id}
               points={hexPoints(cx, cy, hexPixelSize)}
               fill={fill}
-              stroke={colors.background.primary}
-              strokeWidth={0.5}
+              stroke={isSelected ? SELECTED_STROKE_COLOR : colors.background.primary}
+              strokeWidth={isSelected ? SELECTED_STROKE_WIDTH : 0.5}
               style={{ cursor: 'pointer' }}
+              onClick={onSelect ? () => onSelect(point.id) : undefined}
+              data-area-id={onSelect ? point.id : undefined}
+              data-selected={isSelected || undefined}
               onMouseEnter={(e) => {
                 const rect = (
                   e.currentTarget.ownerSVGElement as SVGSVGElement
@@ -178,6 +226,26 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
             />
           );
         })}
+
+        {/* The selected hexagon's ring, over its neighbours; clicks pass through. */}
+        {selectedPoint && (
+          <g data-export-exclude pointerEvents="none" data-testid="hex-selection-ring">
+            <polygon
+              points={hexPoints(toSvgX(selectedPoint.x), toSvgY(selectedPoint.y), hexPixelSize)}
+              fill="none"
+              stroke={SELECTED_STROKE_COLOR}
+              strokeWidth={SELECTED_RING_WIDTH}
+              strokeLinejoin="round"
+            />
+            <polygon
+              points={hexPoints(toSvgX(selectedPoint.x), toSvgY(selectedPoint.y), hexPixelSize)}
+              fill="none"
+              stroke={SELECTED_CORE_COLOR}
+              strokeWidth={SELECTED_CORE_WIDTH}
+              strokeLinejoin="round"
+            />
+          </g>
+        )}
 
         {/* Color bar */}
         {fullConfig.showColorBar && positionedData.length > 0 && (
@@ -216,7 +284,13 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
         </div>
       )}
       {/* PolicyEngine logo watermark */}
-      <div style={{ padding: `${spacing.xs}px ${spacing.sm}px` }}>
+      <div
+        style={{
+          padding: insetWatermark
+            ? `${spacing.xs} ${spacing.sm}`
+            : `${spacing.xs}px ${spacing.sm}px`,
+        }}
+      >
         <ChartWatermark />
       </div>
     </div>

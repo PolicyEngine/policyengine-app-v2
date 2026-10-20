@@ -155,7 +155,7 @@ function RankedRow({
  * For the "bottom" column (ascending order): losses header is "Biggest losses",
  * gains header is "Smallest gains".
  */
-function DistrictRankColumn({
+export function DistrictRankColumn({
   items,
   gainHeader,
   lossHeader,
@@ -372,8 +372,33 @@ function DistrictDetails({
   onClose: () => void;
 }) {
   return (
+    <AreaDetails
+      title={label}
+      subtitle={row.district}
+      figures={districtDetailFigures(row)}
+      closeLabel="Close district details"
+      onClose={onClose}
+    />
+  );
+}
+
+/** A selected area's name and figures, in a panel with a close button. */
+export function AreaDetails({
+  title,
+  subtitle,
+  figures,
+  closeLabel,
+  onClose,
+}: {
+  title: string;
+  subtitle?: string;
+  figures: { label: string; value: string }[];
+  closeLabel: string;
+  onClose: () => void;
+}) {
+  return (
     <section
-      aria-label={`${label} details`}
+      aria-label={`${title} details`}
       style={{
         padding: spacing.md,
         border: `1px solid ${colors.border.light}`,
@@ -392,18 +417,15 @@ function DistrictDetails({
       >
         <div style={{ minWidth: 0 }}>
           <Text fw={typography.fontWeight.semibold} c={colors.text.primary}>
-            {label}
+            {title}
           </Text>
-          <Text size="xs" c={colors.text.tertiary}>
-            {row.district}
-          </Text>
+          {subtitle && (
+            <Text size="xs" c={colors.text.tertiary}>
+              {subtitle}
+            </Text>
+          )}
         </div>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label="Close district details"
-          onClick={onClose}
-        >
+        <Button variant="ghost" size="icon-xs" aria-label={closeLabel} onClick={onClose}>
           <IconX size={14} />
         </Button>
       </div>
@@ -415,7 +437,7 @@ function DistrictDetails({
           margin: 0,
         }}
       >
-        {districtDetailFigures(row).map((figure) => (
+        {figures.map((figure) => (
           <div key={figure.label} style={{ minWidth: 0 }}>
             <dt>
               <Text size="xs" c={colors.text.secondary}>

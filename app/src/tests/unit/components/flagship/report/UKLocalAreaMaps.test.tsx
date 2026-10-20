@@ -1,9 +1,22 @@
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen, userEvent, within } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { normalizeSocietyWideOutput } from '@/adapters/societyWideOutputNormalizer';
-import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
+import UKLocalAreaMaps, {
+  areaNation,
+  ukAreaDetailFigures,
+} from '@/components/flagship/report/UKLocalAreaMaps';
 import { LIST_SHAPE_UK_RESULT } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
+import {
+  UK_LOCAL_AREAS_OUTPUT,
+  UK_LOCAL_AREAS_OUTPUT_NO_CODES,
+  UK_WIDE_REGION,
+  WALES_REGION,
+} from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { MOCK_UK_REPORT_OUTPUT_WITH_LA } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+
+function hexagon(container: HTMLElement, name: string): Element {
+  return container.querySelector(`[data-area-id="${name}"]`)!;
+}
 
 describe('UKLocalAreaMaps', () => {
   test('given a UK report then it opens on the constituency map', () => {
@@ -53,5 +66,160 @@ describe('UKLocalAreaMaps', () => {
     expect(screen.queryByText('No constituency data available')).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
     expect(screen.queryByText('No local authority data available')).not.toBeInTheDocument();
+  });
+
+  test('given no local authority data then the card says so', async () => {
+    const user = userEvent.setup();
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} />, 'uk');
+
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    expect(screen.getByText('No local authority data available')).toBeInTheDocument();
+  });
+
+  test('given a hexagon clicked then its details show with the nation and pound and percent changes', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(hexagon(container, 'Clwyd East'));
+
+    const details = screen.getByRole('region', { name: 'Clwyd East details' });
+    expect(within(details).getByText('Wales')).toBeInTheDocument();
+    expect(within(details).getByText('Average household income change')).toBeInTheDocument();
+    expect(within(details).getByText('-£355')).toBeInTheDocument();
+    expect(within(details).getByText('Relative household income change')).toBeInTheDocument();
+    expect(within(details).getByText('-1.3%')).toBeInTheDocument();
+    expect(hexagon(container, 'Clwyd East')).toHaveAttribute('data-selected', 'true');
+  });
+
+  test('given the selected hexagon clicked again then its details close', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(hexagon(container, 'Gower'));
+    await user.click(hexagon(container, 'Gower'));
+
+    expect(screen.queryByRole('region', { name: 'Gower details' })).not.toBeInTheDocument();
+    expect(container.querySelector('[data-selected]')).not.toBeInTheDocument();
+  });
+
+  test('given a ranked area clicked then its details show and its row is pressed', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: 'Show details for Gower' }));
+
+    expect(screen.getByRole('region', { name: 'Gower details' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show details for Gower' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(hexagon(container, 'Gower')).toHaveAttribute('data-selected', 'true');
+  });
+
+  test('given details open then Escape or the close button clears them', async () => {
+    const user = userEvent.setup();
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: 'Show details for Gower' }));
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('region', { name: 'Gower details' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Show details for Gower' }));
+    await user.click(screen.getByRole('button', { name: 'Close constituency details' }));
+    expect(screen.queryByRole('region', { name: 'Gower details' })).not.toBeInTheDocument();
+  });
+
+  test('given an area found by name then its details show', async () => {
+    const user = userEvent.setup();
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: /find a constituency/i }));
+    await user.keyboard('Monmouth');
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByRole('region', { name: 'Monmouthshire details' })).toBeInTheDocument();
+  });
+
+  test('given the area kind switched then the selection clears', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(hexagon(container, 'Gower'));
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    expect(screen.queryByRole('region', { name: /details/ })).not.toBeInTheDocument();
+    await user.click(hexagon(container, 'Cardiff'));
+    expect(screen.getByRole('region', { name: 'Cardiff details' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Close local authority details' })
+    ).toBeInTheDocument();
+  });
+
+  test('given relative mode then the rankings show percentages', async () => {
+    const user = userEvent.setup();
+    render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(screen.getByRole('tab', { name: 'Relative' }));
+
+    expect(
+      screen.getByText('Relative household income change by constituency')
+    ).toBeInTheDocument();
+    const gower = screen.getByRole('button', { name: 'Show details for Gower' });
+    expect(within(gower).getByText('0.7%')).toBeInTheDocument();
+  });
+
+  test('given a Wales report without codes then the details name Wales from the region', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} region={WALES_REGION} />,
+      'uk'
+    );
+
+    await user.click(hexagon(container, 'Gower'));
+
+    const details = screen.getByRole('region', { name: 'Gower details' });
+    expect(within(details).getByText('Wales')).toBeInTheDocument();
+  });
+
+  test('given the hex map then its logo has padding clear of the frame', () => {
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    expect(container.querySelector('img')!.parentElement!.style.padding).toBe('4px 8px');
+  });
+});
+
+describe('areaNation', () => {
+  const area = {
+    x: 0,
+    y: 0,
+    average_household_income_change: 0,
+    relative_household_income_change: 0,
+  };
+
+  test('given ONS codes then each names its nation', () => {
+    expect(areaNation({ ...area, code: 'E14001063' })).toBe('England');
+    expect(areaNation({ ...area, code: 'W07000081' })).toBe('Wales');
+    expect(areaNation({ ...area, code: 'S14000021' })).toBe('Scotland');
+    expect(areaNation({ ...area, code: 'N06000001' })).toBe('Northern Ireland');
+  });
+
+  test('given no code then the region names the nation, and a UK-wide region names none', () => {
+    expect(areaNation(area, WALES_REGION)).toBe('Wales');
+    expect(areaNation(area, UK_WIDE_REGION)).toBeNull();
+    expect(areaNation(area)).toBeNull();
+  });
+});
+
+describe('ukAreaDetailFigures', () => {
+  test('given a change that rounds to zero then it reads zero with no minus', () => {
+    const figures = ukAreaDetailFigures({
+      x: 0,
+      y: 0,
+      average_household_income_change: -0.4,
+      relative_household_income_change: -0,
+    });
+
+    expect(figures.map((figure) => figure.value)).toEqual(['£0', '0.0%']);
   });
 });
