@@ -1,5 +1,7 @@
-import OptimisedImage from '@/components/ui/OptimisedImage';
-import SupportedProject, { SupportedProject as SupportedProjectType } from './SupportedProject';
+import OptimisedImage from "@/components/ui/OptimisedImage";
+import SupportedProject, {
+  SupportedProject as SupportedProjectType,
+} from "./SupportedProject";
 
 export interface Supporter {
   id: string;
@@ -14,7 +16,10 @@ export interface SupporterCardProps {
   projects: SupportedProjectType[];
 }
 
-export default function SupporterCard({ supporter, projects }: SupporterCardProps) {
+export default function SupporterCard({
+  supporter,
+  projects,
+}: SupporterCardProps) {
   return (
     <div className="tw:mb-4xl tw:p-2xl tw:border tw:border-border-light tw:rounded-element tw:shadow-[0_2px_4px_rgba(0,0,0,0.05)]">
       <div className="tw:flex tw:flex-col tw:sm:flex-row tw:sm:items-center tw:gap-lg tw:mb-2xl">
@@ -34,7 +39,10 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
           </a>
         ) : (
           // Keep the text column aligned with cards that have a logo.
-          <div aria-hidden="true" className="tw:hidden tw:sm:block tw:shrink-0 tw:w-[200px]" />
+          <div
+            aria-hidden="true"
+            className="tw:hidden tw:sm:block tw:shrink-0 tw:w-[200px]"
+          />
         )}
         <p className="tw:flex-1 tw:min-w-0 tw:text-base tw:leading-relaxed">
           {supporter.websiteUrl ? (
@@ -48,7 +56,7 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
             </a>
           ) : (
             <span className="tw:font-bold">{supporter.name}</span>
-          )}{' '}
+          )}{" "}
           &mdash; {supporter.description}
         </p>
       </div>

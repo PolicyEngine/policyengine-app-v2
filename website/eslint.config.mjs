@@ -22,10 +22,7 @@ export default defineConfig([
     },
   }),
   {
-    files: [
-      "src/app/layout.tsx",
-      "src/components/ui/OptimisedImage.tsx",
-    ],
+    files: ["src/app/layout.tsx", "src/components/ui/OptimisedImage.tsx"],
     rules: {
       "@next/next/no-img-element": "off",
       "@next/next/no-page-custom-font": "off",

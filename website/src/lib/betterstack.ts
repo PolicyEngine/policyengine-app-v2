@@ -97,7 +97,10 @@ async function fetchAllIncidents(
     `/api/v3/incidents?monitor_id=${monitorId}&from=${from}&to=${to}&per_page=50`;
 
   while (path) {
-    const data: BetterStackIncidentResponse = await fetchBetterStack(path, token);
+    const data: BetterStackIncidentResponse = await fetchBetterStack(
+      path,
+      token,
+    );
     if (data.data) {
       incidents.push(...data.data);
     }
@@ -170,7 +173,10 @@ async function fetchMonitorData(
   token: string,
 ): Promise<MonitorData> {
   const [monitorRes, slaRes, incidents] = await Promise.all([
-    fetchBetterStack<BetterStackMonitorResponse>(`/api/v2/monitors/${monitorId}`, token),
+    fetchBetterStack<BetterStackMonitorResponse>(
+      `/api/v2/monitors/${monitorId}`,
+      token,
+    ),
     fetchBetterStack<BetterStackSlaResponse>(
       `/api/v2/monitors/${monitorId}/sla?from=${from}&to=${to}`,
       token,
@@ -207,7 +213,9 @@ export async function fetchStatusPageData(
 
   const { from, to, dates } = getDateRange();
   const monitors = await Promise.all(
-    monitorIds.map((monitorId) => fetchMonitorData(monitorId, from, to, dates, token)),
+    monitorIds.map((monitorId) =>
+      fetchMonitorData(monitorId, from, to, dates, token),
+    ),
   );
 
   return {
