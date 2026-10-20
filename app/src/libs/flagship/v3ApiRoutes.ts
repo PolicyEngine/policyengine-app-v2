@@ -1,3 +1,5 @@
+import type { MetadataRoutes } from '@/types/metadata';
+
 /**
  * Which PolicyEngine API routes the v3 workspace uses.
  *
@@ -14,7 +16,7 @@
  * (and the test that pins it). The legacy calculator, the `(calculator)` route
  * group, stays on v1 regardless.
  */
-export type V3ApiRoutes = 'v1' | 'v2';
+export type V3ApiRoutes = MetadataRoutes;
 
 export const V3_API_ROUTES: V3ApiRoutes = 'v1';
 

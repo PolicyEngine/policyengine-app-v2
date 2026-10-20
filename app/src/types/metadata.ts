@@ -31,7 +31,11 @@ export interface V2CatalogReference {
   parameterIds: Record<string, string>;
 }
 
-/** Which API routes model metadata was loaded from. */
+/**
+ * Which API routes model metadata was loaded from: v1's
+ * `GET /{country}/metadata` or the v2 catalog routes. v3's choice between
+ * them (V3ApiRoutes in libs/flagship/v3ApiRoutes) is the same type.
+ */
 export type MetadataRoutes = 'v1' | 'v2';
 
 export interface MetadataApiPayload {
