@@ -171,6 +171,39 @@ describe('relevantComparisons', () => {
     ).toEqual([UK_PARAMETER_CLAIM]);
   });
 
+  test('given a UK nation report then only the comparisons that cover that nation show', () => {
+    const claim = (geography: string) => ({ ...UK_PARAMETER_CLAIM, geography });
+    const uk = claim('UK');
+    const gb = claim('GB');
+    const scotland = claim('Scotland');
+    const wales = claim('Wales');
+    const london = claim('London');
+    const englandAndWales = claim('England and Wales');
+    const all = [uk, gb, scotland, wales, london, englandAndWales];
+    const ukReform = (region: string) => ({
+      countryId: 'uk',
+      paths: ['gov.dwp.universal_credit.elements.child.amount'],
+      readers: {},
+      region,
+    });
+
+    expect(relevantComparisons(all, ukReform('country/wales'))).toEqual([
+      uk,
+      gb,
+      wales,
+      englandAndWales,
+    ]);
+    expect(relevantComparisons(all, ukReform('wales'))).toEqual([uk, gb, wales, englandAndWales]);
+    expect(relevantComparisons(all, ukReform('country/northern_ireland'))).toEqual([uk]);
+    expect(relevantComparisons(all, ukReform('country/england'))).toEqual([
+      uk,
+      gb,
+      london,
+      englandAndWales,
+    ]);
+    expect(relevantComparisons(all, ukReform('uk'))).toEqual(all);
+  });
+
   test('given model variable names then entity and status words do not hide the program', () => {
     const target = (program: string) => ({ program, geography: 'US' });
     const kept = (program: string, path: string, readers: string[] = []) =>

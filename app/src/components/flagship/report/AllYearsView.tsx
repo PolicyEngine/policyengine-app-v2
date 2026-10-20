@@ -3,7 +3,7 @@ import { winnerShareMetric } from '@/components/flagship/ReportContents';
 import { Button, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBudgetWindow } from '@/hooks/useBudgetWindow';
-import { formatCurrencyAbbr } from '@/utils/formatters';
+import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 import type { YearStatus } from './ReportYearSwitcher';
 
 /** A signed relative change, "−2.1%", or "No change". */
@@ -27,7 +27,7 @@ function money(value: number, countryId: string): string {
     return '—';
   }
   if (Math.abs(value) < 1000) {
-    return '$0';
+    return `${currencySymbol(countryId as 'us')}0`;
   }
   const amount = formatCurrencyAbbr(Math.abs(value), countryId as 'us', {
     maximumFractionDigits: 1,

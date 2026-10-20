@@ -305,9 +305,12 @@ export default function ReformsPage() {
   const appLocation = useAppLocation();
   const urlParams = useMemo(() => new URLSearchParams(appLocation.search), [appLocation.search]);
 
-  const [tab, setTab] = useState<Tab>(() =>
+  // The bill tracker follows US bills only; elsewhere the library is all there is.
+  const billsAvailable = countryId === 'us';
+  const [chosenTab, setTab] = useState<Tab>(() =>
     urlParams.get('filter') === 'yours' ? 'yours' : 'bills'
   );
+  const tab: Tab = billsAvailable ? chosenTab : 'yours';
   const [query, setQuery] = useState('');
   const [billFilters, setBillFilters] = useState<BillFilters>(NO_BILL_FILTERS);
   // Deep links (?bill=<id>) open straight into that bill's detail.
@@ -1030,7 +1033,7 @@ export default function ReformsPage() {
         >
           {(
             [
-              { id: 'bills', label: 'Tracked bills' },
+              ...(billsAvailable ? [{ id: 'bills', label: 'Tracked bills' } as const] : []),
               { id: 'yours', label: 'Your library' },
             ] as const
           ).map((option) => {
