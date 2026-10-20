@@ -1,6 +1,7 @@
 /**
- * v3's household features that work only on API v2, gathered in one place:
- * the standalone household report and saved households (plan item 1D-2).
+ * v3's household features that work only on the Public API's v2 routes,
+ * gathered in one place: the standalone household report and saved
+ * households (plan item 1D-2).
  *
  * Saved households live on the Public API's `/v2/households` and
  * `/v2/user-households`, and household reports will be saved through
@@ -25,9 +26,9 @@
  *    `workspaceRoutes.ts` and `libs/flagship/shellRoutes.ts`, and a link in
  *    the workspace navigation.
  *
- * `HouseholdReportPage` calculates through API v1's household routes, as the
- * report section does; 3B-2 moves it to `/v2/household-calculations` before
- * 4A-1.
+ * `HouseholdReportPage` calculates through the Public API's v1 household
+ * routes, as the report section does; 3B-2 moves it to
+ * `/v2/household-calculations` before 4A-1.
  */
 export { default as HouseholdReportPage } from '@/pages/flagship/HouseholdReport.page';
 export { default as SavedHouseholdsPage } from '@/pages/flagship/SavedHouseholds.page';

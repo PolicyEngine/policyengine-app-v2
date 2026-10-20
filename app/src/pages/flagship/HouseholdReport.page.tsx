@@ -124,9 +124,9 @@ function ReportSection({ label, children }: { label: string; children: React.Rea
  * (with a pandas DataFrame option, issue #1095). With accounts, a saved
  * household can be opened, and the household saved or its edits saved.
  *
- * It calculates through API v1's household routes, as the report section
- * does, until v3's household calculations move to v2. No route renders it
- * yet: see `pages/flagship/householdEntryPoints.ts`.
+ * It calculates through the Public API's v1 household routes, as the
+ * report section does, until v3's household calculations move to v2. No
+ * route renders it yet: see `pages/flagship/householdEntryPoints.ts`.
  */
 export default function HouseholdReportPage({
   countryId,
