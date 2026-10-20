@@ -10,15 +10,7 @@ import {
   useSaveHousehold,
 } from '@/hooks/useSavedHouseholds';
 import type { Household } from '@/models/Household';
-
-/** Whether two households have the same content, whatever their ids and labels. */
-function sameContent(first: Household, second: Household): boolean {
-  return (
-    JSON.stringify(first.toV1CreationPayload().data) ===
-      JSON.stringify(second.toV1CreationPayload().data) &&
-    JSON.stringify(first.spm ?? null) === JSON.stringify(second.spm ?? null)
-  );
-}
+import { haveSameStoredContent } from '@/models/household/v2DocumentCodec';
 
 const SAVED_HOUSEHOLDS_UNAVAILABLE = 'Saved households are not available here.';
 
@@ -57,7 +49,7 @@ export default function SaveHouseholdForm({
     );
   }
 
-  const contentChanged = !saved || !sameContent(household, saved.household);
+  const contentChanged = !saved || !haveSameStoredContent(household, saved.household);
   const labelChanged = !saved || label.trim() !== (saved.label ?? '');
   const nothingToSave = !!saved && !contentChanged && !labelChanged;
 

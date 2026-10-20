@@ -317,6 +317,8 @@ describe('HouseholdReportPage', () => {
       await user.click(screen.getByRole('button', { name: 'Save household' }));
 
       expect(await screen.findByText('Saved')).toHaveAttribute('role', 'status');
+      // The stored household reads back with the same content: nothing is left to save.
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     });
 
     test('given an edit whose earlier version cannot be removed then the report says both are saved', async () => {

@@ -1,6 +1,6 @@
 import type { vi } from 'vitest';
 import { Household } from '@/models/Household';
-import { householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
+import { householdFromV2Item, householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
 import { PE_USER_ID, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
 import type { UserHouseholdItem, V2HouseholdItem } from '@/types/v2Households';
 
@@ -109,6 +109,15 @@ export function routeRequests(
   });
   return requests;
 }
+
+/**
+ * The family as `/v2/households` returns it and the store reads it back:
+ * the same content, with its groups in the document's name order ("your
+ * first dependent's marital unit" before "your marital unit").
+ */
+export const FAMILY_HOUSEHOLD_AS_STORED = householdFromV2Item(
+  v2HouseholdItem(FAMILY_HOUSEHOLD, V2_HOUSEHOLD_IDS.FAMILY)
+);
 
 /** The saved family as the store opens it. */
 export const SAVED_FAMILY = {

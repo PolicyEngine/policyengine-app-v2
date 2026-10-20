@@ -5,6 +5,7 @@ import SaveHouseholdForm from '@/components/flagship/household/SaveHouseholdForm
 import {
   EDITED_FAMILY_HOUSEHOLD,
   FAMILY_HOUSEHOLD,
+  FAMILY_HOUSEHOLD_AS_STORED,
   FAMILY_LABEL,
   RETIRED_LABEL,
   routeRequests,
@@ -125,6 +126,16 @@ describe('SaveHouseholdForm', () => {
   test('given a saved household unchanged then there is nothing to save', () => {
     signedInSession();
     renderForm({ household: SAVED_FAMILY.household, saved: SAVED_FAMILY });
+
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+  });
+
+  test('given the builder household and the same household as stored then there is nothing to save', () => {
+    signedInSession();
+    renderForm({
+      household: FAMILY_HOUSEHOLD,
+      saved: { ...SAVED_FAMILY, household: FAMILY_HOUSEHOLD_AS_STORED },
+    });
 
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
   });
