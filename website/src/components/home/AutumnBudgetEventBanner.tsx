@@ -1,7 +1,7 @@
 import { colors, spacing, typography } from "@/designTokens";
 
 const EVENT_URL =
-  "https://www.eventbrite.co.uk/e/autumn-budget-2026-policyengines-same-day-first-look-tickets-2003359829178";
+  "https://us06web.zoom.us/meeting/register/2DLUeZAbRwKkKEK-2JrFrQ";
 
 export default function AutumnBudgetEventBanner({
   countryId,
