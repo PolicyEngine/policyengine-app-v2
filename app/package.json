@@ -4,7 +4,6 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "generate-llms-txt": "tsx scripts/generate-llms-txt.ts",
     "evaluate-search": "tsx scripts/evaluate-parameter-search.ts",
     "refresh-search-eval-cases": "tsx scripts/refresh-parameter-search-cases.ts",
     "build-parameter-dependencies": "python3 scripts/build-parameter-dependency-map.py",

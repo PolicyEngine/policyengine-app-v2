@@ -23,7 +23,6 @@ Calculator source shared by the Next.js calculator in `calculator-app/`, which c
 
 ### Data and search
 
-- `generate-llms-txt` – writes the llms.txt files into `public/`
 - `evaluate-search` – evaluates parameter search against its cases
 - `refresh-search-eval-cases` – refreshes the parameter search evaluation cases
 - `build-parameter-dependencies` – rebuilds the parameter dependency map

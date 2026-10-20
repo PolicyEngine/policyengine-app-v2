@@ -187,6 +187,16 @@ export const locationLabels: TagLabels = {
   "us-wy": "Wyoming",
 };
 
+const POST_COUNTRY_IDS = ["us", "uk", "ca", "ng"];
+
+/**
+ * The country a post belongs to: its first country tag, or "us" when it has
+ * none. Research cards and llms.txt links use this country.
+ */
+export function getPostCountryId(post: Pick<BlogPost, "tags">): string {
+  return post.tags.find((tag) => POST_COUNTRY_IDS.includes(tag)) || "us";
+}
+
 /**
  * Get combined research items (posts + apps with displayWithResearch)
  * sorted by date (newest first)
@@ -201,8 +211,7 @@ export function getResearchItems(): ResearchItem[] {
     image: post.image,
     slug: post.slug,
     isApp: false,
-    countryId:
-      post.tags.find((tag) => ["us", "uk", "ca", "ng"].includes(tag)) || "us",
+    countryId: getPostCountryId(post),
   }));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
