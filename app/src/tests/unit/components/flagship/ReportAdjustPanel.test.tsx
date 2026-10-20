@@ -177,6 +177,70 @@ describe('ReportAdjustPanel', () => {
     expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
   });
 
+  describe('given the report is renamed while the panel is open', () => {
+    const renderRenamablePanel = () => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const panel = (reportName: string) => (
+        <QueryClientProvider client={queryClient}>
+          <ReportAdjustPanel title={reportName} sourceNote="" provisions={PROVISIONS} />
+        </QueryClientProvider>
+      );
+      const { rerender } = render(panel('CTC expansion'));
+      return { renameReport: (reportName: string) => rerender(panel(reportName)) };
+    };
+
+    test('then the edited values stay, and the reform name follows the report', async () => {
+      // Given
+      const user = userEvent.setup();
+      const { renameReport } = renderRenamablePanel();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      const creditInput = screen.getByLabelText(/new value for maximum credit per child/i);
+      await user.clear(creditInput);
+      await user.type(creditInput, '3600');
+
+      // When
+      renameReport('Bigger child credit');
+
+      // Then
+      expect(screen.getByLabelText(/new value for maximum credit per child/i)).toHaveValue(3600);
+      expect(screen.getByRole('textbox', { name: 'Reform name' })).toHaveValue(
+        'Bigger child credit'
+      );
+      expect(screen.getByRole('button', { name: /recompute/i })).toBeEnabled();
+    });
+
+    test('then a reform name typed in the panel stays', async () => {
+      // Given
+      const user = userEvent.setup();
+      const { renameReport } = renderRenamablePanel();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      const reformName = screen.getByRole('textbox', { name: 'Reform name' });
+      await user.clear(reformName);
+      await user.type(reformName, 'My adjusted credit');
+
+      // When
+      renameReport('Bigger child credit');
+
+      // Then
+      expect(screen.getByRole('textbox', { name: 'Reform name' })).toHaveValue(
+        'My adjusted credit'
+      );
+    });
+
+    test('then a name the report already had is no change to recompute', async () => {
+      // Given
+      const user = userEvent.setup();
+      const { renameReport } = renderRenamablePanel();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+
+      // When
+      renameReport('Bigger child credit');
+
+      // Then
+      expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+    });
+  });
+
   test('given Edit in Build then the reform as adjusted opens there as the draft', async () => {
     clearDraftReform();
     const user = userEvent.setup();
