@@ -70,9 +70,27 @@ describe('householdInputDescriptionOf', () => {
     expect(householdInputDescriptionOf('us')(variable('num_bedrooms', 'bedrooms'))).toBeUndefined();
   });
 
-  test("given the model's documentation then it shows first", () => {
-    expect(householdInputDescriptionOf('uk')(variable('rent', 'Rent', 'Rent paid.'))).toBe(
-      'Rent paid.'
-    );
+  test("given a featured input with the model's documentation then ours still shows", () => {
+    // The model's notes for its dataset are not for a reader.
+    expect(
+      householdInputDescriptionOf('uk')(
+        variable(
+          'council_tax',
+          'Council Tax',
+          'Gross annual Council Tax liability. This is currently supplied by the household dataset.'
+        )
+      )
+    ).toBe("The household's Council Tax bill for a year, before any Council Tax Reduction.");
+    expect(
+      householdInputDescriptionOf('us')(
+        variable('tip_income', 'tip income', 'Tip income, from the dataset.')
+      )
+    ).toBe('Tips received in a year, in cash or through an employer.');
+  });
+
+  test("given an input that is not featured then the model's documentation shows", () => {
+    expect(
+      householdInputDescriptionOf('uk')(variable('num_vehicles', 'Vehicles', 'Cars owned.'))
+    ).toBe('Cars owned.');
   });
 });

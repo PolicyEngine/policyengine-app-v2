@@ -24,6 +24,7 @@ import {
   householdVariableGroupOf,
   householdVariableSubgroupOf,
   listsForState,
+  twinsABasicInput,
 } from '@/libs/flagship/householdVariableGroups';
 import {
   hasParameterDependencies,
@@ -52,13 +53,59 @@ const HOUSEHOLD_COUNTRIES = new Set(['us', 'uk']);
 const EXPECTED_MS = 3 * 60 * 1000;
 
 /**
+ * Where a household in each UK nation lives unless the reader says
+ * otherwise: the nation's region, with its capital's local authority and
+ * Broad Rental Market Area, so the three name one place. England has no
+ * one region; its households keep the model's defaults.
+ */
+const UK_NATION_PLACES: Record<string, Record<string, string>> = {
+  scotland: { region: 'SCOTLAND', local_authority: 'CITY_OF_EDINBURGH', brma: 'LOTHIAN' },
+  wales: { region: 'WALES', local_authority: 'CARDIFF', brma: 'CARDIFF' },
+  ni: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
+  northern_ireland: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
+};
+
+/** A UK report's nation's place, for "country/scotland"; none for any other region. */
+export function ukNationPlace(region: string | undefined): Record<string, string> | null {
+  const match = /^country\/(.+)$/i.exec(region ?? '');
+  return (match && UK_NATION_PLACES[match[1].toLowerCase()]) || null;
+}
+
+/**
  * A new household: the household builder's own start, one adult and
  * nothing else set. A US household is measured against national poverty
- * thresholds; only the US model has them.
+ * thresholds; only the US model has them. A UK household in a report on
+ * Scotland, Wales or Northern Ireland starts there.
  */
-function newHousehold(countryId: CountryId, year: string): Household {
+function newHousehold(countryId: CountryId, year: string, region?: string): Household {
   const household = Household.starter(countryId, year);
-  return countryId === 'us' ? household.withSPM({ geography_kind: 'national' }) : household;
+  if (countryId === 'us') {
+    return household.withSPM({ geography_kind: 'national' });
+  }
+  const place = countryId === 'uk' ? ukNationPlace(region) : null;
+  const group = household.getPreferredGroupName('households');
+  if (!place || !group) {
+    return household;
+  }
+  return Object.entries(place).reduce(
+    (current, [name, value]) =>
+      current.setEntityVariableAtYear('households', group, name, year, value),
+    household
+  );
+}
+
+/**
+ * A person's name as a country's builder shows it: a UK household's
+ * dependants are its children ("your first child"), as the UK model's
+ * benefits count them; the US keeps "dependent", which a tax unit's
+ * dependants are called. Only the name shown changes, never the key.
+ */
+export function householdPersonNameOf(
+  countryId: string
+): ((personKey: string) => string) | undefined {
+  return countryId === 'uk'
+    ? (personKey) => personKey.replace(/\bdependent\b/, 'child')
+    : undefined;
 }
 
 /** What the builder sets for each person it adds: not an input the reader chose. */
@@ -73,11 +120,12 @@ const ADDED_PERSON_DEFAULTS = new Set(['age', 'is_tax_unit_dependent']);
 export function nonDefaultInputCount(
   household: Household,
   countryId: CountryId,
-  year: string
+  year: string,
+  region?: string
 ): number {
   const keyOf = (scope: string, name: string, value: unknown) =>
     `${scope}|${name}|${JSON.stringify(value)}`;
-  const starter = newHousehold(countryId, year);
+  const starter = newHousehold(countryId, year, region);
   const starterPeople = new Set(starter.personNames);
   const starterKeys = new Set([
     ...starter.personNames.flatMap((person) =>
@@ -195,6 +243,7 @@ function useSuggestedInputs(paths: string[], countryId: string): string[] {
 export default function HouseholdImpactSection({
   countryId,
   year,
+  region,
   baselinePolicyId,
   reformPolicyId,
   reformPaths = [],
@@ -259,6 +308,7 @@ export default function HouseholdImpactSection({
           label={`Household ${index + 1}`}
           countryId={countryId as CountryId}
           year={year}
+          region={region}
           baselinePolicyId={baselinePolicyId}
           reformPolicyId={reformPolicyId}
           suggestedVariables={suggestedVariables}
@@ -281,6 +331,7 @@ function HouseholdCard({
   label,
   countryId,
   year,
+  region,
   baselinePolicyId,
   reformPolicyId,
   suggestedVariables,
@@ -294,6 +345,8 @@ function HouseholdCard({
   /** The report's country: the household's model, currency and inputs. */
   countryId: CountryId;
   year: string;
+  /** The report's population: a UK nation's households start there. */
+  region?: string;
   baselinePolicyId: string;
   reformPolicyId: string;
   suggestedVariables: string[];
@@ -303,7 +356,7 @@ function HouseholdCard({
   // per person and per household, as in the household builder.
   const metadata = useSelector((state: RootState) => state.metadata);
   const basicInputFields = useSelector(getBasicInputFields);
-  const [household, setHousehold] = useState(() => newHousehold(countryId, year));
+  const [household, setHousehold] = useState(() => newHousehold(countryId, year, region));
   const [requested, setRequested] = useState<{
     payload: V1HouseholdCreateEnvelope;
     summary: string;
@@ -323,12 +376,16 @@ function HouseholdCard({
     [basicInputFields]
   );
   // The variable search lists only the household's own state's programs,
-  // and only inputs that describe a household (no survey-reported totals).
+  // only inputs that describe a household (no survey-reported totals), and
+  // not the twin of a field the builder already shows.
   const stateCode = householdState(household, year, countryId);
+  const basicPersonFields = basicInputFields.person;
   const variableFilter = useCallback(
     (variable: VariableInfo) =>
-      listsForState(variable, stateCode) && describesAHousehold(variable, countryId),
-    [stateCode, countryId]
+      listsForState(variable, stateCode) &&
+      describesAHousehold(variable, countryId) &&
+      !twinsABasicInput(variable, basicPersonFields ?? []),
+    [stateCode, countryId, basicPersonFields]
   );
   // The picker's groups, featured inputs and names, for the country's model.
   const picker = useMemo(
@@ -338,6 +395,7 @@ function HouseholdCard({
       common: commonHouseholdInputs(countryId),
       nameOf: householdInputNameOf(countryId),
       describe: householdInputDescriptionOf(countryId),
+      personNameOf: householdPersonNameOf(countryId),
     }),
     [countryId]
   );
@@ -359,7 +417,7 @@ function HouseholdCard({
     pendingRun.current = {
       startedAt: Date.now(),
       peopleCount: household.personCount,
-      nonDefaultInputs: nonDefaultInputCount(household, countryId, year),
+      nonDefaultInputs: nonDefaultInputCount(household, countryId, year, region),
       sawRunning: false,
     };
   };
@@ -527,6 +585,8 @@ function HouseholdCard({
             variableGroupIcon={householdTopicIcon}
             variableNameOf={picker.nameOf}
             variableDescribe={picker.describe}
+            personDisplayNameOf={picker.personNameOf}
+            labelInputs
             onVariablePickerOpen={(entity) => trackHouseholdPickerOpened({ countryId, entity })}
             onVariableAdd={({ variable, source, entity }) =>
               trackHouseholdVariableAdded({ countryId, variable, source, entity })

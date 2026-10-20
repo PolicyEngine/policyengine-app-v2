@@ -25,6 +25,11 @@ export interface VariableRowProps {
   wholeNumbers?: boolean;
   /** A fixed width in pixels, e.g. for a row of stacked fields; full width by default. */
   width?: number;
+  /**
+   * The input's accessible name, e.g. "Age, you". Unset, the input has no
+   * name of its own, as before: the label beside it is not tied to it.
+   */
+  inputLabel?: string;
 }
 
 /**
@@ -57,6 +62,7 @@ export default function VariableRow({
   stacked = false,
   width,
   wholeNumbers = false,
+  inputLabel,
 }: VariableRowProps) {
   const shouldShowColumn = onRemove || showRemoveColumn;
 
@@ -96,6 +102,7 @@ export default function VariableRow({
           disabled={disabled}
           wholeNumbers={wholeNumbers}
           stepLabel={sentenceCaseLabel(variable.label)}
+          ariaLabel={inputLabel}
         />
       </div>
       {shouldShowColumn && (
