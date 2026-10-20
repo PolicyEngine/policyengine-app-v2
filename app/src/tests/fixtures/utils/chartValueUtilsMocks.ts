@@ -51,6 +51,25 @@ export const EXPECTED_FORMATS = {
   NEGATIVE: '-$100.50',
 } as const;
 
+// Compact tick values. Without an explicit minimum number of fraction digits,
+// Node 20 and 22 (older V8) pad whole amounts ("$1.0B") and later versions
+// don't ("$1B"), so these pin the output on every runtime.
+export const COMPACT_TICK_VALUES = {
+  ONE_BILLION: 1_000_000_000,
+  TWO_MILLION: 2_000_000,
+  ONE_AND_A_HALF_BILLION: 1_500_000_000,
+  ONE_POINT_ZERO_FOUR_BILLION: 1_040_000_000,
+  NEGATIVE_TWO_AND_A_HALF_BILLION: -2_500_000_000,
+} as const;
+
+export const EXPECTED_COMPACT_TICKS = {
+  USD_ONE_BILLION: '$1B',
+  GBP_TWO_MILLION: '£2m',
+  USD_ONE_AND_A_HALF_BILLION: '$1.5B',
+  USD_ONE_POINT_ZERO_FOUR_BILLION: '$1.04B',
+  GBP_NEGATIVE_TWO_AND_A_HALF_BILLION: '-£2.5bn',
+} as const;
+
 // Sample data arrays for axis formatting
 export const SAMPLE_DATE_VALUES = ['2020-01-01', '2023-06-15', '2025-12-31'];
 
