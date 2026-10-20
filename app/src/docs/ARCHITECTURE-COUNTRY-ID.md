@@ -23,7 +23,10 @@ All country-specific routes are nested under the country ID parameter:
 
 - `/us/reports` - US reports page
 - `/uk/policies` - UK policies page
-- `/ca/simulations` - Canada simulations page
+
+The app serves the US and the UK (`countryIds` in `src/libs/countries.ts`).
+Canada, Nigeria and Israel are no longer served, so `/ca/*`, `/ng/*` and
+`/il/*` are invalid and redirect to `/`.
 
 ### 2. CountryGuard
 
