@@ -1,12 +1,24 @@
-import { render, screen, userEvent } from '@test-utils';
+import { fireEvent, render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import { HexagonalMap } from '@/components/visualization/HexagonalMap';
+import { HexagonalMap, zoomAbout } from '@/components/visualization/HexagonalMap';
 import {
   MOCK_HEX_MAP_DATA,
   MOCK_MIXED_VALUES,
   MOCK_NEGATIVE_VALUES,
   MOCK_POSITIVE_VALUES,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
+
+// jsdom has no PointerEvent; a MouseEvent with a pointer id is enough for the map's drag.
+if (typeof window.PointerEvent === 'undefined') {
+  class TestPointerEvent extends MouseEvent {
+    pointerId: number;
+    constructor(type: string, init: PointerEventInit = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+    }
+  }
+  window.PointerEvent = TestPointerEvent as unknown as typeof PointerEvent;
+}
 
 describe('HexagonalMap', () => {
   test('given minimal data then renders SVG with one hexagon', () => {
@@ -249,5 +261,117 @@ describe('HexagonalMap', () => {
 
     const logoWrapper = container.querySelector('img')!.parentElement!;
     expect(logoWrapper.style.padding).toBe('4px 8px');
+  });
+  test('given no zoomable prop then the map renders as before, with no zoom controls', () => {
+    const { container } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
+
+    expect(screen.queryByRole('button', { name: 'Zoom in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reset view' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('hex-map-zoom-layer')).not.toBeInTheDocument();
+    const svg = container.querySelector('svg')!;
+    // The hexagons sit directly in the SVG, with no zoom or clip group around them.
+    expect([...svg.children].filter((child) => child.tagName === 'polygon')).toHaveLength(4);
+    expect(svg.querySelector('clipPath')).not.toBeInTheDocument();
+    expect(svg.getAttribute('style')).toBe('display: block;');
+  });
+
+  test('given zoomable then zoom in, zoom out and reset change the view', async () => {
+    const user = userEvent.setup();
+    render(<HexagonalMap data={MOCK_HEX_MAP_DATA} zoomable />);
+    const layer = () => screen.getByTestId('hex-map-zoom-layer').getAttribute('transform');
+
+    expect(layer()).toContain('scale(1)');
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(layer()).toContain('scale(1.5)');
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(screen.getByRole('button', { name: 'Zoom out' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Reset view' }));
+    expect(layer()).toBe('translate(0 0) scale(1)');
+  });
+
+  test('given zoomable then a drag pans the map and does not select the hexagon under it', () => {
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap data={MOCK_HEX_MAP_DATA} zoomable onSelect={onSelect} />
+    );
+    const svg = container.querySelector('svg')!;
+    const hexagon = container.querySelector('[data-area-id="westminster-north"]')!;
+
+    fireEvent.pointerDown(svg, { pointerId: 1, button: 0, clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(svg, { pointerId: 1, clientX: 40, clientY: 30 });
+    fireEvent.pointerUp(svg, { pointerId: 1, clientX: 40, clientY: 30 });
+    fireEvent.click(hexagon);
+
+    expect(screen.getByTestId('hex-map-zoom-layer')).toHaveAttribute(
+      'transform',
+      'translate(30 20) scale(1)'
+    );
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test('given zoomed in then a click still selects a hexagon', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const { container } = render(
+      <HexagonalMap data={MOCK_HEX_MAP_DATA} zoomable onSelect={onSelect} />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    await user.click(container.querySelector('[data-area-id="belfast-east"]')!);
+
+    expect(onSelect).toHaveBeenCalledWith('belfast-east');
+  });
+
+  test('given zoomable and a selection then the outline keeps its screen width', () => {
+    const { container } = render(
+      <HexagonalMap
+        data={MOCK_HEX_MAP_DATA}
+        zoomable
+        selectedId="cardiff-south"
+        onSelect={vi.fn()}
+      />
+    );
+
+    expect(container.querySelector('[data-selected]')).toHaveAttribute(
+      'vector-effect',
+      'non-scaling-stroke'
+    );
+    screen
+      .getByTestId('hex-selection-ring')
+      .querySelectorAll('polygon')
+      .forEach((ring) => expect(ring).toHaveAttribute('vector-effect', 'non-scaling-stroke'));
+  });
+
+  test('given formatColorBarTick then the legend ticks use it, and plain numbers without it', () => {
+    const { container, unmount } = render(<HexagonalMap data={MOCK_HEX_MAP_DATA} />);
+    const ticks = () => [...container.querySelectorAll('text')].map((text) => text.textContent);
+    expect(ticks()).not.toContain('£1235');
+    unmount();
+
+    const formatted = render(
+      <HexagonalMap
+        data={MOCK_HEX_MAP_DATA}
+        config={{ formatColorBarTick: (value) => `£${Math.round(value)}` }}
+      />
+    );
+    const labels = [...formatted.container.querySelectorAll('text')].map((t) => t.textContent);
+    expect(labels).toContain('£1235');
+    expect(labels).toContain('£0');
+  });
+});
+
+describe('zoomAbout', () => {
+  test('given a zoom about a point then that point stays where it is', () => {
+    const view = zoomAbout({ k: 1, x: 0, y: 0 }, 2, 100, 50);
+
+    expect(view).toEqual({ k: 2, x: -100, y: -50 });
+    // The point (100, 50) maps to 100 * 2 - 100 = 100 and 50 * 2 - 50 = 50.
+  });
+
+  test('given a zoom past the limits then it stops at 0.5 and 20', () => {
+    expect(zoomAbout({ k: 1, x: 0, y: 0 }, 100, 0, 0).k).toBe(20);
+    expect(zoomAbout({ k: 1, x: 0, y: 0 }, 0.1, 0, 0).k).toBe(0.5);
   });
 });

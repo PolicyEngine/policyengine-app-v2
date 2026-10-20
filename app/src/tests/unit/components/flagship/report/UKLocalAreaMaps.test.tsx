@@ -189,6 +189,43 @@ describe('UKLocalAreaMaps', () => {
   });
 });
 
+describe('UKLocalAreaMaps map controls and legend', () => {
+  function legendTicks(container: HTMLElement): string[] {
+    return [...container.querySelectorAll('svg text')].map((text) => text.textContent ?? '');
+  }
+
+  test('given absolute mode then the legend reads in pounds', () => {
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    const ticks = legendTicks(container);
+    expect(ticks).toContain('£0');
+    expect(ticks.every((tick) => tick.includes('£'))).toBe(true);
+  });
+
+  test('given relative mode then the legend reads in percentages', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(screen.getByRole('tab', { name: 'Relative' }));
+
+    const ticks = legendTicks(container);
+    expect(ticks).toContain('0.0%');
+    expect(ticks).toContain('1.3%');
+    expect(ticks.every((tick) => tick.endsWith('%'))).toBe(true);
+  });
+
+  test('given the map zoomed in then a hexagon click still shows its details', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT} />, 'uk');
+
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    await user.click(hexagon(container, 'Gower'));
+
+    expect(screen.getByRole('region', { name: 'Gower details' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reset view' })).toBeInTheDocument();
+  });
+});
+
 describe('areaNation', () => {
   const area = {
     x: 0,

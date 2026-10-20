@@ -337,11 +337,14 @@ export default function UKLocalAreaMaps({
                   symmetric: true,
                 },
                 formatValue,
+                // The legend reads in the rankings' units: pounds or percentages.
+                formatColorBarTick: formatValue,
               }}
               exportRef={mapRef}
               selectedId={selectedArea ? selectedName : null}
               onSelect={toggleSelected}
               insetWatermark
+              zoomable
             />
           </div>
           <div
