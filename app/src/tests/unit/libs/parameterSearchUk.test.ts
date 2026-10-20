@@ -78,6 +78,16 @@ describe('UK ranking signals', () => {
     expect(search('basic rate')[0]).toBe(UK_PATHS.incomeTaxBasic);
   });
 
+  test('given a query containing a label then it leads labels that add a qualifier', () => {
+    // Every schedule here is an income tax schedule; only the main one's
+    // label is "Higher rate" alone, without "Property" or "Dividends".
+    const paths = search('higher rate of income tax');
+
+    expect(paths[0]).toBe(UK_PATHS.incomeTaxHigher);
+    expect(paths).toContain(UK_PATHS.propertyHigher);
+    expect(paths).toContain(UK_PATHS.dividendsHigher);
+  });
+
   test('given a candidate missing a query word then a full match outranks it', () => {
     // "employer" is one letter from "employee"; fuzzy scoring alone ranks it first.
     const paths = search('employee national insurance rate');

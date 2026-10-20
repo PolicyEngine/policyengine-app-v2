@@ -26,6 +26,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
 import type { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
+import { regionKindOf, trackReportTabViewed } from '@/utils/analytics';
 import { isUKLocalLevelRegion } from '@/utils/geographyUtils';
 import { isSocietyWideReportNoOp } from '@/utils/isSocietyWideReportNoOp';
 
@@ -182,6 +183,14 @@ export default function ReportView({
   const [activeTab, setActiveTab] = useState('policy');
   const [visitedTabs, setVisitedTabs] = useState(() => new Set(['policy']));
   function selectTab(section: string) {
+    // Sent per tab opened, from the click: the open tab again sends nothing.
+    if (section !== activeTab) {
+      trackReportTabViewed({
+        countryId,
+        tab: section,
+        regionKind: regionKindOf(region, countryId),
+      });
+    }
     setVisitedTabs((visited) => (visited.has(section) ? visited : new Set([...visited, section])));
     setActiveTab(section);
   }

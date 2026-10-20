@@ -4,8 +4,9 @@
  * The flagship shell (Ask / Tracker / Build / Library navigation) is the
  * US app's default: on unless the build sets the flag to "false"
  * (NEXT_PUBLIC_FLAGSHIP_SHELL=false, or VITE_FLAGSHIP_SHELL=false), which
- * brings back the v2 app. The UK stays on v2 until its own flag is "true"
- * (NEXT_PUBLIC_FLAGSHIP_SHELL_UK=true, or VITE_FLAGSHIP_SHELL_UK=true).
+ * brings back the v2 app. The UK has a switch of its own, on by default
+ * too: NEXT_PUBLIC_FLAGSHIP_SHELL_UK=false (or VITE_FLAGSHIP_SHELL_UK=false)
+ * brings back the UK's v2 app alone.
  * The v2 code stays in place until it is removed.
  */
 
@@ -68,16 +69,18 @@ export function isFlagshipShellEnvEnabled(countryId?: string): boolean {
   return true;
 }
 
-/** The UK's own switch: v2 until it is "true". */
+/** The UK's own switch: v3 unless it is "false". */
 function isUkFlagshipEnvEnabled(): boolean {
   const viteValue =
     typeof import.meta !== 'undefined'
       ? (import.meta.env?.VITE_FLAGSHIP_SHELL_UK as string | undefined)
       : undefined;
-  if (viteValue === 'true') {
-    return true;
+  if (viteValue === 'false') {
+    return false;
   }
-  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL_UK === 'true';
+  return !(
+    typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FLAGSHIP_SHELL_UK === 'false'
+  );
 }
 
 /**

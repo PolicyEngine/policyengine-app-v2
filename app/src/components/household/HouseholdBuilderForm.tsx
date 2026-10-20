@@ -42,7 +42,7 @@ import {
 } from '@/utils/VariableResolver';
 import SPMGeographyChoice from './SPMGeographyChoice';
 import { WholeNumberStepper } from './VariableInput';
-import type { CommonInput } from './VariablePickerDialog';
+import type { CommonInput, VariablePickSource } from './VariablePickerDialog';
 import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
 
@@ -93,6 +93,17 @@ export interface HouseholdBuilderFormProps {
   variableGroupIcon?: (group: string) => ReactNode;
   variableNameOf?: (variable: VariableInfo) => string;
   variableDescribe?: (variable: VariableInfo) => string | undefined;
+  /** Told when a variable search opens: a person's, or the household's (its groups). */
+  onVariablePickerOpen?: (entity: 'person' | 'group') => void;
+  /**
+   * Told when a variable is added: its model name, the list it came from,
+   * and the entity it went to. Never its value.
+   */
+  onVariableAdd?: (added: {
+    variable: string;
+    source: VariablePickSource;
+    entity: 'person' | 'group';
+  }) => void;
 }
 
 /**
@@ -243,6 +254,8 @@ export default function HouseholdBuilderForm({
   variableGroupIcon,
   variableNameOf,
   variableDescribe,
+  onVariablePickerOpen,
+  onVariableAdd,
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -451,14 +464,17 @@ export default function HouseholdBuilderForm({
     setActivePersonSearch(person);
     setPersonSearchValue('');
     setIsPersonSearchFocused(true);
+    onVariablePickerOpen?.('person');
   };
 
   // Handle person variable selection
   const handlePersonVariableSelect = (
     variable: { name: string; label: string },
-    person: string
+    person: string,
+    source: VariablePickSource = 'search'
   ) => {
     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+    onVariableAdd?.({ variable: variable.name, source, entity: isPerson ? 'person' : 'group' });
 
     // If non-person variable selected from person context, show warning
     if (!isPerson) {
@@ -490,10 +506,14 @@ export default function HouseholdBuilderForm({
     setIsHouseholdSearchActive(true);
     setHouseholdSearchValue('');
     setIsHouseholdSearchFocused(true);
+    onVariablePickerOpen?.('group');
   };
 
   // Handle household variable selection
-  const handleHouseholdVariableSelect = (variable: { name: string; label: string }) => {
+  const handleHouseholdVariableSelect = (
+    variable: { name: string; label: string },
+    source: VariablePickSource = 'search'
+  ) => {
     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
 
     // If person variable selected from household context, show warning
@@ -530,6 +550,7 @@ export default function HouseholdBuilderForm({
         resolveDefaultGroupInstanceName(variable.name)
       );
     }
+    onVariableAdd?.({ variable: variable.name, source, entity: isPerson ? 'person' : 'group' });
     onChange(newHousehold);
 
     setIsHouseholdSearchActive(false);
@@ -779,7 +800,9 @@ export default function HouseholdBuilderForm({
                             groupIcon={variableGroupIcon}
                             nameOf={variableNameOf}
                             describe={variableDescribe}
-                            onSelect={(variable) => handlePersonVariableSelect(variable, person)}
+                            onSelect={(variable, source) =>
+                              handlePersonVariableSelect(variable, person, source)
+                            }
                             title={`Add a variable to ${getPersonDisplayName(person)}`}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(

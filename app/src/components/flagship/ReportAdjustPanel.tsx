@@ -31,6 +31,7 @@ import { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { regionKindOf, trackReportAdjusted } from '@/utils/analytics';
 import { formatValue } from '@/utils/parameterValues';
 import ProvisionSkeleton from './ProvisionSkeleton';
 import PopulationPicker from './reform/PopulationPicker';
@@ -258,6 +259,22 @@ function AdjustPanel({
   };
 
   const recompute = async () => {
+    // What the reader changed, sent once per click: kinds of change and counts, no values.
+    trackReportAdjusted({
+      countryId,
+      regionKind: regionKindOf(population, countryId),
+      valuesChanged: provisions.some(
+        (provision) =>
+          !removed.has(provision.path) &&
+          (periodsOf(provision)
+            ? periodChanged(provision)
+            : !sameParameterValue(values[provision.path], provision.value))
+      ),
+      yearsChanged: windowYears !== reportWindow,
+      regionChanged: population !== reportRegion,
+      provisionsRemoved: removed.size,
+      renamed,
+    });
     setReconcileError(null);
     setIsReconciling(true);
     try {

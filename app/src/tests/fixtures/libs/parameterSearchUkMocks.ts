@@ -48,6 +48,9 @@ export const UK_PATHS = {
   waKeyed: 'gov.dft.rail.fares.WA',
   ubiCenter: 'gov.contrib.ubi_center.basic_income.amount',
   incomeTaxBasic: 'gov.hmrc.income_tax.rates.uk[0].rate',
+  incomeTaxHigher: 'gov.hmrc.income_tax.rates.uk[1].rate',
+  propertyHigher: 'gov.hmrc.income_tax.rates.property.higher',
+  dividendsHigher: 'gov.hmrc.income_tax.rates.dividends[1].rate',
   cgtHigher: 'gov.hmrc.cgt.higher_rate',
   taxableSources: 'gov.hmrc.income_tax.bases.taxable_income_sources',
   schoolMealsFree: 'gov.dfe.school_meals.free.income_limit',
@@ -99,6 +102,21 @@ export function buildUkParameterCollection(): ParameterMetadataCollection {
     'gov.hmrc.income_tax.rates.uk': node('gov.hmrc.income_tax.rates.uk', 'Income Tax main rates'),
     'gov.hmrc.income_tax.rates.uk[0]': node('gov.hmrc.income_tax.rates.uk[0]', 'bracket 1'),
     [p.incomeTaxBasic]: leaf(p.incomeTaxBasic, 'Basic rate'),
+    // Three income tax schedules with a higher rate each: only the main
+    // one's leaf is labelled with nothing but the rate's name.
+    'gov.hmrc.income_tax.rates.uk[1]': node('gov.hmrc.income_tax.rates.uk[1]', 'bracket 2'),
+    [p.incomeTaxHigher]: leaf(p.incomeTaxHigher, 'Higher rate'),
+    'gov.hmrc.income_tax.rates.property': node(
+      'gov.hmrc.income_tax.rates.property',
+      'Property Income Tax rates'
+    ),
+    [p.propertyHigher]: leaf(p.propertyHigher, 'Property higher rate'),
+    'gov.hmrc.income_tax.rates.dividends': node('gov.hmrc.income_tax.rates.dividends', 'dividends'),
+    'gov.hmrc.income_tax.rates.dividends[1]': node(
+      'gov.hmrc.income_tax.rates.dividends[1]',
+      'bracket 2'
+    ),
+    [p.dividendsHigher]: leaf(p.dividendsHigher, 'Dividends higher rate'),
     'gov.hmrc.income_tax.bases': node('gov.hmrc.income_tax.bases', 'Bases'),
     [p.taxableSources]: leaf(p.taxableSources, 'Taxable income sources'),
     'gov.dfe': node('gov.dfe', 'Department for Education'),

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
@@ -33,6 +33,15 @@ import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
+import {
+  householdErrorCategory,
+  trackHouseholdAdded,
+  trackHouseholdCalculated,
+  trackHouseholdCalculationRetried,
+  trackHouseholdPickerOpened,
+  trackHouseholdRemoved,
+  trackHouseholdVariableAdded,
+} from '@/utils/analytics';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
 
@@ -50,6 +59,67 @@ const EXPECTED_MS = 3 * 60 * 1000;
 function newHousehold(countryId: CountryId, year: string): Household {
   const household = Household.starter(countryId, year);
   return countryId === 'us' ? household.withSPM({ geography_kind: 'national' }) : household;
+}
+
+/** What the builder sets for each person it adds: not an input the reader chose. */
+const ADDED_PERSON_DEFAULTS = new Set(['age', 'is_tax_unit_dependent']);
+
+/**
+ * How many inputs differ from a new household's, for analytics: a count
+ * only, never a name or a value. A person the reader added comes with an
+ * age (and, in the US, a dependent flag) and the new household's own
+ * defaults, such as no earnings: those are not counted.
+ */
+export function nonDefaultInputCount(
+  household: Household,
+  countryId: CountryId,
+  year: string
+): number {
+  const keyOf = (scope: string, name: string, value: unknown) =>
+    `${scope}|${name}|${JSON.stringify(value)}`;
+  const starter = newHousehold(countryId, year);
+  const starterPeople = new Set(starter.personNames);
+  const starterKeys = new Set([
+    ...starter.personNames.flatMap((person) =>
+      starter
+        .getPersonVariableEntries(person)
+        .map((variable) => keyOf(person, variable.name, variable.value))
+    ),
+    ...starter
+      .getConfiguredGroupsWithVariables()
+      .flatMap((group) =>
+        group.variables.map((variable) =>
+          keyOf(`${group.entityName}/${group.groupName}`, variable.name, variable.value)
+        )
+      ),
+  ]);
+  // What any person starts with: the new household's first person's inputs.
+  const personDefaults = new Set(
+    starter
+      .getPersonVariableEntries(starter.personNames[0] ?? '')
+      .map((variable) => keyOf('person', variable.name, variable.value))
+  );
+  const people = household.personNames.flatMap((person) =>
+    household
+      .getPersonVariableEntries(person)
+      .filter((variable) =>
+        starterPeople.has(person)
+          ? !starterKeys.has(keyOf(person, variable.name, variable.value))
+          : !ADDED_PERSON_DEFAULTS.has(variable.name) &&
+            !personDefaults.has(keyOf('person', variable.name, variable.value))
+      )
+  );
+  const groups = household
+    .getConfiguredGroupsWithVariables()
+    .flatMap((group) =>
+      group.variables.filter(
+        (variable) =>
+          !starterKeys.has(
+            keyOf(`${group.entityName}/${group.groupName}`, variable.name, variable.value)
+          )
+      )
+    );
+  return people.length + groups.length;
 }
 
 interface HouseholdImpactSectionProps {
@@ -135,9 +205,16 @@ export default function HouseholdImpactSection({
   // Each household by a key of its own, so removing one keeps the others' inputs.
   const [keys, setKeys] = useState<number[]>([]);
   const [nextKey, setNextKey] = useState(1);
+  // Counted from the list on screen, outside the updaters: strict mode
+  // runs an updater twice, and an event in one would be sent twice.
   const add = () => {
+    trackHouseholdAdded({ countryId, householdCount: keys.length + 1 });
     setKeys((current) => [...current, nextKey]);
     setNextKey((key) => key + 1);
+  };
+  const remove = (key: number) => {
+    trackHouseholdRemoved({ countryId, householdCount: keys.length - 1 });
+    setKeys((current) => current.filter((other) => other !== key));
   };
 
   if (!HOUSEHOLD_COUNTRIES.has(countryId)) {
@@ -185,7 +262,8 @@ export default function HouseholdImpactSection({
           baselinePolicyId={baselinePolicyId}
           reformPolicyId={reformPolicyId}
           suggestedVariables={suggestedVariables}
-          onRemove={() => setKeys((current) => current.filter((other) => other !== key))}
+          householdCount={keys.length}
+          onRemove={() => remove(key)}
         />
       ))}
       <div>
@@ -206,10 +284,13 @@ function HouseholdCard({
   baselinePolicyId,
   reformPolicyId,
   suggestedVariables,
+  householdCount,
   onRemove,
 }: {
   /** "Household 2": its place in the list. */
   label: string;
+  /** How many households the report has: for analytics. */
+  householdCount: number;
   /** The report's country: the household's model, currency and inputs. */
   countryId: CountryId;
   year: string;
@@ -266,7 +347,25 @@ function HouseholdCard({
     [household, countryId, year, metadata]
   );
 
+  // The run on its way, for analytics: when it started and what it holds
+  // (counts only). Cleared once its end is sent, so each run sends once.
+  const pendingRun = useRef<{
+    startedAt: number;
+    peopleCount: number;
+    nonDefaultInputs: number;
+    sawRunning: boolean;
+  } | null>(null);
+  const startRun = () => {
+    pendingRun.current = {
+      startedAt: Date.now(),
+      peopleCount: household.personCount,
+      nonDefaultInputs: nonDefaultInputCount(household, countryId, year),
+      sawRunning: false,
+    };
+  };
+
   const calculate = () => {
+    startRun();
     const payload = household.toV1CreationPayload();
     // The same household again, after a failure, asks once more.
     if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
@@ -287,6 +386,47 @@ function HouseholdCard({
   // until the reader edits them again.
   const [editing, setEditing] = useState(true);
   const showInputs = editing || !requested || failed;
+
+  // A run's end, sent once: a failure only after the run was seen running
+  // (an earlier failure's error can show for a moment on a retry); a
+  // result already held (the same household asked for again) at once.
+  const runData = run.data;
+  const runError = run.error;
+  useEffect(() => {
+    const pending = pendingRun.current;
+    if (!pending) {
+      return;
+    }
+    if (running) {
+      pending.sawRunning = true;
+      return;
+    }
+    const failure = run.isError && pending.sawRunning;
+    if (!failure && !(runData && !run.isError)) {
+      return;
+    }
+    pendingRun.current = null;
+    trackHouseholdCalculated({
+      countryId,
+      householdCount,
+      peopleCount: pending.peopleCount,
+      nonDefaultInputs: pending.nonDefaultInputs,
+      durationMs: Date.now() - pending.startedAt,
+      success: !failure,
+      errorCategory: failure ? householdErrorCategory(runError) : undefined,
+    });
+  }, [running, runData, runError, run.isError, countryId, householdCount]);
+
+  const retry = () => {
+    trackHouseholdCalculationRetried({ countryId });
+    // The household as it is now: an input fixed after the failure counts.
+    if (validation.isValid) {
+      calculate();
+    } else {
+      startRun();
+      void run.refetch();
+    }
+  };
   // The household on screen, or on its way, is the one in the builder.
   const sameAsShown =
     !!requested &&
@@ -387,6 +527,10 @@ function HouseholdCard({
             variableGroupIcon={householdTopicIcon}
             variableNameOf={picker.nameOf}
             variableDescribe={picker.describe}
+            onVariablePickerOpen={(entity) => trackHouseholdPickerOpened({ countryId, entity })}
+            onVariableAdd={({ variable, source, entity }) =>
+              trackHouseholdVariableAdded({ countryId, variable, source, entity })
+            }
           />
           <div
             style={{
@@ -425,8 +569,7 @@ function HouseholdCard({
                   <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
                 )
               }
-              // The household as it is now: an input fixed after the failure counts.
-              onRetry={validation.isValid ? calculate : run.refetch}
+              onRetry={retry}
             />
           )}
 

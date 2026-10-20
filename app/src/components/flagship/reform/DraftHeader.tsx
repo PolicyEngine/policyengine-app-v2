@@ -41,6 +41,7 @@ import type { RunReportBaseline } from '@/libs/flagship/runReport';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
+import { regionKindOf, trackReportRunStarted } from '@/utils/analytics';
 import BaselinePicker, { savedReformName, useDraftBaseline } from './BaselinePicker';
 import PopulationPicker from './PopulationPicker';
 
@@ -506,12 +507,19 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
             {draft.editingReformId ? 'Save changes' : 'Save'}
           </Button>
           <Button
-            onClick={() =>
+            onClick={() => {
+              trackReportRunStarted({
+                countryId: draft.countryId,
+                regionKind: regionKindOf(region, draft.countryId),
+                yearsInWindow: windowYears,
+                provisionCount: adjusted.length,
+                baseline: baseline.forRun ? 'saved_reform' : 'current_law',
+              });
               saveAndRunMutation.mutate({
                 runDraft: structuredClone(draft),
                 runBaseline: baseline.forRun,
-              })
-            }
+              });
+            }}
             disabled={
               adjusted.length === 0 ||
               starting ||

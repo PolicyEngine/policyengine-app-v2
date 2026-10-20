@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { normalizeSocietyWideOutput } from '@/adapters/societyWideOutputNormalizer';
 import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import { LIST_SHAPE_UK_RESULT } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
@@ -24,6 +24,21 @@ describe('UKLocalAreaMaps', () => {
     expect(
       screen.getByText('Absolute household income change by local authority')
     ).toBeInTheDocument();
+  });
+
+  test('given the map switched then one event names the area, and the open one sends nothing', async () => {
+    const user = userEvent.setup();
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    render(<UKLocalAreaMaps output={MOCK_UK_REPORT_OUTPUT_WITH_LA} />, 'uk');
+
+    await user.click(screen.getByRole('tab', { name: 'Constituencies' }));
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    expect(gtag.mock.calls).toEqual([
+      ['event', 'local_area_map_toggled', { country_id: 'uk', area: 'local_authorities' }],
+    ]);
+    delete window.gtag;
   });
 
   test('given a result in the API list shape then both maps have data', async () => {

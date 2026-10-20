@@ -45,13 +45,17 @@ export function inputKind(variable: VariableInfo): string {
   return 'Number';
 }
 
+/** Which list a picked input came from. */
+export type VariablePickSource = 'featured' | 'related' | 'topic' | 'search';
+
 export interface VariablePickerDialogProps {
   title: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
   /** The inputs this picker offers, ranked by the search when there is one. */
   variables: VariableInfo[];
-  onSelect: (variable: VariableInfo) => void;
+  /** Told where the pick came from: the featured or related list, a topic, or the search. */
+  onSelect: (variable: VariableInfo, source: VariablePickSource) => void;
   onClose: () => void;
   groupOf: (variable: VariableInfo) => string;
   groupOrder?: readonly string[];
@@ -170,6 +174,10 @@ export default function VariablePickerDialog({
     inputRef.current?.focus();
   };
 
+  // The list a row belongs to: on the first view, featured rows come first.
+  const sourceOf = (index: number): VariablePickSource =>
+    searching ? 'search' : topic ? 'topic' : index < featured.length ? 'featured' : 'related';
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -179,7 +187,7 @@ export default function VariablePickerDialog({
       setPointed((at) => Math.max(at - 1, 0));
     } else if (e.key === 'Enter' && rows[pointed]) {
       e.preventDefault();
-      onSelect(rows[pointed]);
+      onSelect(rows[pointed], sourceOf(pointed));
     }
   };
 
@@ -196,7 +204,7 @@ export default function VariablePickerDialog({
       onMouseEnter={() => setPointed(index)}
       onMouseDown={(e) => {
         e.preventDefault();
-        onSelect(variable);
+        onSelect(variable, sourceOf(index));
       }}
       className={cn(
         'tw:group tw:flex tw:cursor-pointer tw:items-center tw:justify-between tw:gap-3 tw:border-b tw:border-gray-100 tw:px-1 tw:py-2.5 tw:text-sm tw:text-gray-900',
