@@ -1,11 +1,24 @@
+import { notFound } from 'next/navigation';
+import * as fs from 'fs';
+import * as path from 'path';
+// Not @test-utils: its render wraps a CountryProvider('us') of its own, which
+// would hide a layout that failed to provide the country.
 import { render, screen } from '@testing-library/react';
+import fc from 'fast-check';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { countryIds } from '@/libs/countries';
 import CountryLayout from '../../../../../calculator-app/src/app/[countryId]/layout';
 
-const replace = vi.fn();
+// Next.js's notFound() throws to stop rendering; the mock throws a marker so
+// a 404 can be told apart from any other failure.
+const { NOT_FOUND } = vi.hoisted(() => ({ NOT_FOUND: new Error('notFound()') }));
+
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace, back: vi.fn(), prefetch: vi.fn() }),
+  notFound: vi.fn(() => {
+    throw NOT_FOUND;
+  }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -18,40 +31,109 @@ vi.mock('../../../../../calculator-app/src/app/[countryId]/providers', () => ({
   ),
 }));
 
-/** Route params as Next.js passes them, already resolved so `use()` reads them synchronously. */
-function resolvedParams(countryId: string) {
-  const value = { countryId };
-  return Object.assign(Promise.resolve(value), { status: 'fulfilled', value });
-}
-
 function CountryProbe() {
   return <p>Country: {useCurrentCountry()}</p>;
 }
 
+/** The layout as Next.js calls it for a request whose first path segment is `countryId`. */
+function renderLayout(countryId: string) {
+  return CountryLayout({ params: Promise.resolve({ countryId }), children: <CountryProbe /> });
+}
+
+/** 'rendered' or 'not found'; any other failure is rethrown. */
+async function outcome(countryId: string) {
+  try {
+    await renderLayout(countryId);
+    return 'rendered';
+  } catch (error) {
+    if (error === NOT_FOUND) {
+      return 'not found';
+    }
+    throw error;
+  }
+}
+
 describe('calculator country layout', () => {
   beforeEach(() => {
-    replace.mockClear();
+    vi.mocked(notFound).mockClear();
   });
 
-  test('given a supported country then the page renders with that country', () => {
-    render(
-      <CountryLayout params={resolvedParams('uk')}>
-        <CountryProbe />
-      </CountryLayout>
-    );
-    expect(screen.getByTestId('calculator-providers')).toContainElement(
-      screen.getByText('Country: uk')
-    );
-    expect(replace).not.toHaveBeenCalled();
+  test.each(countryIds)(
+    'given the supported country %s then the calculator renders with that country',
+    async (countryId) => {
+      render(await renderLayout(countryId));
+
+      expect(screen.getByTestId('calculator-providers')).toContainElement(
+        screen.getByText(`Country: ${countryId}`)
+      );
+      expect(notFound).not.toHaveBeenCalled();
+    }
+  );
+
+  test.each([
+    // Files crawlers and browsers ask the calculator host for.
+    'llms.txt',
+    'llms-full.txt',
+    'favicon.ico',
+    'sitemap.xml',
+    'wp-login.php',
+    // Countries the calculator does not serve, or near misses of ones it does.
+    'xx',
+    'gb',
+    'usa',
+    'US',
+    'Uk',
+    ' us',
+    'us ',
+    '',
+  ])('given the first path segment %j then the layout is a 404', async (segment) => {
+    await expect(renderLayout(segment)).rejects.toBe(NOT_FOUND);
+    expect(notFound).toHaveBeenCalledTimes(1);
   });
 
-  test('given an unsupported country then nothing renders and the route is replaced with /', () => {
-    const { container } = render(
-      <CountryLayout params={resolvedParams('xx')}>
-        <CountryProbe />
-      </CountryLayout>
+  test('given any first path segment then the layout is a 404 exactly when it is not a supported country', async () => {
+    const country = fc.constantFrom(...countryIds);
+    const segment = fc.oneof(
+      country,
+      fc.string(),
+      fc.string({ unit: 'binary' }),
+      // A supported country with something around it, or in another case.
+      fc
+        .tuple(fc.string(), country, fc.string())
+        .map(([before, id, after]) => `${before}${id}${after}`),
+      country.map((id) => id.toUpperCase())
     );
-    expect(container).toBeEmptyDOMElement();
-    expect(replace).toHaveBeenCalledWith('/');
+
+    await fc.assert(
+      fc.asyncProperty(segment, async (countryId) => {
+        vi.mocked(notFound).mockClear();
+        const supported = (countryIds as readonly string[]).includes(countryId);
+
+        expect(await outcome(countryId)).toBe(supported ? 'rendered' : 'not found');
+        expect(notFound).toHaveBeenCalledTimes(supported ? 0 : 1);
+      })
+    );
   });
+});
+
+describe('calculator paths outside the country segment', () => {
+  const calculatorApp = path.resolve(__dirname, '../../../../../calculator-app');
+
+  // Next.js serves public files and static route folders before the
+  // [countryId] route, so an entry named exactly after a country would
+  // shadow that country's calculator.
+  test('given the calculator public folder then it is app/public', () => {
+    expect(fs.realpathSync(path.join(calculatorApp, 'public'))).toBe(
+      fs.realpathSync(path.join(calculatorApp, '../app/public'))
+    );
+  });
+
+  test.each(['public', 'src/app'])(
+    'given the top level of calculator-app/%s then no entry is named after a country',
+    (folder) => {
+      const names = fs.readdirSync(path.join(calculatorApp, folder));
+
+      expect(names.filter((name) => (countryIds as readonly string[]).includes(name))).toEqual([]);
+    }
+  );
 });

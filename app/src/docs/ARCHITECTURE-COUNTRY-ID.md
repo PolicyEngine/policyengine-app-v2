@@ -16,12 +16,13 @@ Every country-specific calculator route sits under the country segment, for exam
 
 **Location**: `calculator-app/src/app/[countryId]/layout.tsx`
 
-The entry point for every country route. It:
+The entry point for every country route. It is a server component that checks `countryId` with `isCountryId` (`src/libs/countries.ts`) and calls `notFound()` when it is not a supported country. Any other first path segment, such as `/llms.txt` or `/US`, is therefore an HTTP 404 rendered by `calculator-app/src/app/not-found.tsx`, not a 200 calculator page.
 
-1. Checks `countryId` against `countryIds`, and replaces the route with `/` when it is not supported.
-2. Provides the country through `CountryProvider` (`src/contexts/CountryContext.tsx`).
-3. Provides `NavigationProvider` and `LocationProvider`, which expose Next.js navigation and the current location to shared components through `NavigationContext` and `LocationContext`.
-4. Renders the calculator's provider tree, `CalculatorProviders` (`calculator-app/src/app/[countryId]/providers.tsx`).
+For a supported country it renders `CountryShell` (`calculator-app/src/app/[countryId]/CountryShell.tsx`), a client component that:
+
+1. Provides the country through `CountryProvider` (`src/contexts/CountryContext.tsx`).
+2. Provides `NavigationProvider` and `LocationProvider`, which expose Next.js navigation and the current location to shared components through `NavigationContext` and `LocationContext`.
+3. Renders the calculator's provider tree, `CalculatorProviders` (`calculator-app/src/app/[countryId]/providers.tsx`).
 
 ## useCurrentCountry
 
@@ -54,7 +55,9 @@ When adding a country-dependent feature:
 
 ## Related files
 
-- `calculator-app/src/app/[countryId]/layout.tsx`: validation and context providers
+- `calculator-app/src/app/[countryId]/layout.tsx`: validation (404 for unsupported countries)
+- `calculator-app/src/app/[countryId]/CountryShell.tsx`: context providers
+- `calculator-app/src/app/not-found.tsx`: the 404 page
 - `calculator-app/src/app/[countryId]/providers.tsx`: provider tree and `MetadataBootstrap`
 - `src/contexts/CountryContext.tsx`: `CountryProvider` and `useCountryContext`
 - `src/hooks/useCurrentCountry.ts`: hook that reads the country
