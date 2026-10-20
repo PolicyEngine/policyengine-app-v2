@@ -125,7 +125,7 @@ export default function BracketTable({
                   whiteSpace: 'nowrap',
                 }}
               >
-                Bracket {row.index + 1}
+                {row.name ?? `Bracket ${row.index + 1}`}
               </th>
               {brackets.fields.map((field) => {
                 const path = row.cells[field];

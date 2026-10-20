@@ -63,25 +63,34 @@ export function ValueDisplay({
   const percentage = isPercentageUnit(param.unit);
   const prefix = CURRENCY_UNIT_SYMBOLS[String(param.unit)] ?? '';
   const numeric = typeof value === 'number' && Number.isFinite(value);
-  const digits = numeric
+  // A negative amount reads as formatValue writes it, "−£5", not "£ -5":
+  // the sign goes before the symbol, so the symbol leaves its column.
+  const signedAmount = numeric && Boolean(prefix) && value < 0;
+  const magnitude = numeric
     ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString('en-US', {
         maximumFractionDigits: 6,
       })
-    : isUnlimitedValue(value)
-      ? NO_LIMIT
-      : formatValue(value, param.unit ?? null);
+    : '';
+  const digits = signedAmount
+    ? `−${prefix}${magnitude.replace(/^-/, '')}`
+    : numeric
+      ? magnitude
+      : isUnlimitedValue(value)
+        ? NO_LIMIT
+        : formatValue(value, param.unit ?? null);
+  const prefixed = numeric && Boolean(prefix) && !signedAmount;
   return (
     <div
       className="tw:relative tw:flex tw:items-center tw:text-sm"
       style={{ height: boxed ? 36 : undefined, whiteSpace: 'nowrap', ...style }}
     >
-      {numeric && prefix && (
+      {prefixed && (
         <span className="tw:pointer-events-none tw:absolute tw:left-3 tw:text-gray-500">
           {prefix}
         </span>
       )}
       {/* The box's digits sit inside its 1px border. */}
-      <span className={numeric && prefix ? 'tw:pl-7' : 'tw:pl-3'} style={{ marginLeft: 1 }}>
+      <span className={prefixed ? 'tw:pl-7' : 'tw:pl-3'} style={{ marginLeft: 1 }}>
         {digits}
       </span>
       {numeric && percentage && <span className="tw:ml-1 tw:text-gray-500">%</span>}
