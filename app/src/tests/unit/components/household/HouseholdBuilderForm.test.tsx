@@ -102,6 +102,74 @@ describe('HouseholdBuilderForm', () => {
     }
   });
 
+  describe('input names', () => {
+    const metadata = {
+      entities: {
+        person: { plural: 'people', label: 'Person', is_person: true },
+        household: { plural: 'households', label: 'Household' },
+      },
+      variables: {
+        employment_income: {
+          name: 'employment_income',
+          label: 'employment income',
+          entity: 'person',
+          isInputVariable: true,
+          valueType: 'float',
+          defaultValue: 0,
+        },
+        rent: {
+          name: 'rent',
+          label: 'rent',
+          entity: 'household',
+          isInputVariable: true,
+          valueType: 'float',
+          defaultValue: 0,
+        },
+      },
+    };
+    const props = {
+      metadata,
+      basicPersonFields: ['employment_income'],
+      basicNonPersonFields: ['rent'],
+    };
+
+    test('given labelInputs then each input is named by its label, and whose it is', () => {
+      renderForm({ ...props, labelInputs: true });
+
+      expect(screen.getByRole('textbox', { name: 'Employment income, you' })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: 'Rent' })).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: 'Marital status' })).toBeInTheDocument();
+    });
+
+    test('given no labelInputs then the inputs have no names of their own, as before', () => {
+      renderForm(props);
+
+      for (const input of screen.getAllByRole('textbox')) {
+        expect(input).not.toHaveAttribute('aria-label');
+      }
+    });
+  });
+
+  test('given personDisplayNameOf then a person shows by that name, and keeps their key', () => {
+    const household = Household.starter('uk', YEAR).withBuilderChildCount(YEAR, 1);
+    const onChange = vi.fn();
+    renderForm({
+      household,
+      onChange,
+      personDisplayNameOf: (key) => key.replace('dependent', 'child'),
+    });
+
+    expect(screen.getByText('Your first child')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add variable to your first child/ })).toBeVisible();
+    expect(household.personNames).toContain('your first dependent');
+  });
+
+  test('given no personDisplayNameOf then a dependent keeps the name, as before', () => {
+    renderForm({ household: Household.starter('uk', YEAR).withBuilderChildCount(YEAR, 1) });
+
+    expect(screen.getByText('Your first dependent')).toBeInTheDocument();
+  });
+
   test('given the stacked layout then the people are not laid out as a grid of cards', () => {
     renderForm();
 

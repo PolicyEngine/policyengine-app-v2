@@ -93,6 +93,16 @@ export interface HouseholdBuilderFormProps {
   variableGroupIcon?: (group: string) => ReactNode;
   variableNameOf?: (variable: VariableInfo) => string;
   variableDescribe?: (variable: VariableInfo) => string | undefined;
+  /**
+   * A person's name as the form shows it, from their key ("your first
+   * dependent"); the key itself when unset. The key stays the household's.
+   */
+  personDisplayNameOf?: (personKey: string) => string;
+  /**
+   * Give each input an accessible name from its label (and, for a person's,
+   * whose it is). Off, the inputs have none of their own, as before.
+   */
+  labelInputs?: boolean;
   /** Told when a variable search opens: a person's, or the household's (its groups). */
   onVariablePickerOpen?: (entity: 'person' | 'group') => void;
   /**
@@ -264,6 +274,8 @@ export default function HouseholdBuilderForm({
   variableGroupIcon,
   variableNameOf,
   variableDescribe,
+  personDisplayNameOf,
+  labelInputs = false,
   onVariablePickerOpen,
   onVariableAdd,
   disabled = false,
@@ -316,13 +328,22 @@ export default function HouseholdBuilderForm({
 
   // Helper to get person display name (entirely lowercase)
   const getPersonDisplayName = (personKey: string): string => {
-    return personKey.toLowerCase();
+    return (personDisplayNameOf ? personDisplayNameOf(personKey) : personKey).toLowerCase();
   };
 
   // Helper to get person display name with first letter capitalized
   const getPersonDisplayNameCapitalized = (personKey: string): string => {
-    const lowercase = personKey.toLowerCase();
+    const lowercase = getPersonDisplayName(personKey);
     return lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
+  };
+
+  // An input's accessible name, where the form gives one: its label, and whose it is.
+  const inputLabelOf = (variable: VariableInfo, personKey?: string): string | undefined => {
+    if (!labelInputs) {
+      return undefined;
+    }
+    const label = variable.label.charAt(0).toUpperCase() + variable.label.slice(1);
+    return personKey ? `${label}, ${getPersonDisplayName(personKey)}` : label;
   };
 
   // Maximum number of results to display in dropdown for performance; a
@@ -651,7 +672,10 @@ export default function HouseholdBuilderForm({
               }
               disabled={disabled}
             >
-              <SelectTrigger className={columns ? 'tw:w-40' : undefined}>
+              <SelectTrigger
+                className={columns ? 'tw:w-40' : undefined}
+                aria-label={labelInputs ? 'Marital status' : undefined}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -745,10 +769,11 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
+                          const field = named(variable);
                           return (
                             <VariableRow
                               key={fieldName}
-                              variable={named(variable)}
+                              variable={field}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -757,6 +782,7 @@ export default function HouseholdBuilderForm({
                               disabled={disabled}
                               showRemoveColumn
                               wholeNumbers={columns}
+                              inputLabel={inputLabelOf(field, person)}
                             />
                           );
                         })}
@@ -767,10 +793,12 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
+                          const field = named(variable);
                           return (
                             <VariableRow
                               key={varName}
-                              variable={named(variable)}
+                              variable={field}
+                              inputLabel={inputLabelOf(field, person)}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -879,10 +907,12 @@ export default function HouseholdBuilderForm({
                   return null;
                 }
                 const entityName = resolveDefaultGroupInstanceName(fieldName);
+                const field = named(variable);
                 return (
                   <VariableRow
                     key={fieldName}
-                    variable={named(variable)}
+                    variable={field}
+                    inputLabel={inputLabelOf(field)}
                     household={household}
                     metadata={metadata}
                     year={year}
@@ -903,10 +933,12 @@ export default function HouseholdBuilderForm({
                 if (!variable) {
                   return null;
                 }
+                const field = named(variable);
                 return (
                   <VariableRow
                     key={`${entity}-${entityName}-${varName}`}
-                    variable={named(variable)}
+                    variable={field}
+                    inputLabel={inputLabelOf(field)}
                     household={household}
                     metadata={metadata}
                     year={year}
