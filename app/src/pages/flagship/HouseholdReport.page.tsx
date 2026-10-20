@@ -160,6 +160,13 @@ export default function HouseholdReportPage({
   const [household, setHousehold] = useState<Household>(opening.household);
   const [yearError, setYearError] = useState<string | null>(opening.yearError);
   const [requested, setRequested] = useState<HouseholdRequest | null>(null);
+  // The amounts the calculated household sets, once per calculation: a new
+  // list on every render would make the earnings variation rebuild its
+  // options from every model variable each time the page renders.
+  const householdInputs = useMemo(
+    () => (requested ? householdAmountInputs(requested.household) : []),
+    [requested]
+  );
 
   const run = useFlagshipHouseholdPayload({
     year,
@@ -377,7 +384,7 @@ export default function HouseholdReportPage({
                 baseline: result.baseline,
                 reform: result.reform,
                 gains: Math.round(result.netIncome.change) > 0,
-                householdInputs: householdAmountInputs(requested.household),
+                householdInputs,
               }}
             />
           ) : (
@@ -395,7 +402,7 @@ export default function HouseholdReportPage({
                 baseline: result.baseline,
                 reform: result.baseline,
                 gains: false,
-                householdInputs: householdAmountInputs(requested.household),
+                householdInputs,
               }}
             />
           )}
