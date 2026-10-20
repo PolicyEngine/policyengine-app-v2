@@ -122,6 +122,11 @@ export default function HouseholdReportPage({
   const runsReform = !!reformPolicyId && reformPolicyId !== baselinePolicyId;
   const [year, setYear] = useState(initialYear);
   const [saved, setSaved] = useState<SavedHousehold | null>(initialSaved);
+  // The save form's key: how many saved households the picker has opened.
+  // The form starts again, with the opened household's label, only then; a
+  // save keeps it, so its confirmation, or its warning that both versions
+  // are now saved, stays on screen (an edit's saved household has a new id).
+  const [savedHouseholdOpenings, setSavedHouseholdOpenings] = useState(0);
   const [household, setHousehold] = useState<Household>(
     () => initialSaved?.household ?? initialHousehold ?? newReportHousehold(countryId, initialYear)
   );
@@ -182,6 +187,7 @@ export default function HouseholdReportPage({
     const moved = inYear(next.household, year);
     if (moved) {
       setSaved(next);
+      setSavedHouseholdOpenings((openings) => openings + 1);
       setHousehold(moved);
       setRequested(null);
     }
@@ -292,7 +298,7 @@ export default function HouseholdReportPage({
           </div>
 
           <SaveHouseholdForm
-            key={saved?.id ?? 'new'}
+            key={savedHouseholdOpenings}
             household={household}
             saved={saved}
             onSaved={setSaved}

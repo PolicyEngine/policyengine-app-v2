@@ -7,15 +7,22 @@ import type { Household } from '@/models/Household';
 import HouseholdReportPage from '@/pages/flagship/HouseholdReport.page';
 import metadataReducer from '@/reducers/metadataReducer';
 import {
+  EDITED_FAMILY_HOUSEHOLD,
   FAMILY_HOUSEHOLD,
   FAMILY_LABEL,
   routeRequests,
   SAVED_FAMILY,
+  SAVED_HOUSEHOLD_IDS,
   userHouseholdItem,
   V2_HOUSEHOLD_IDS,
   v2HouseholdItem,
 } from '@/tests/fixtures/api/savedHouseholdMocks';
-import { createTestApiContext, itemResponse, pageResponse } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  createTestApiContext,
+  errorResponse,
+  itemResponse,
+  pageResponse,
+} from '@/tests/fixtures/api/v2UserMocks';
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
@@ -285,15 +292,59 @@ describe('HouseholdReportPage', () => {
   });
 
   describe('saved households', () => {
-    function signedInWithFamily() {
+    /** Signed in, with the family saved; `moreRoutes` answers the saves a test makes. */
+    function signedInWithFamily(moreRoutes: Parameters<typeof routeRequests>[1] = {}) {
       const { fetchMock, context } = createTestApiContext('us');
       mockSavedWork.mockReturnValue({ account: context, scope: 'account:test' });
       routeRequests(fetchMock, {
         'GET /v2/user-households': () => pageResponse([userHouseholdItem()]),
         [`GET /v2/households/${V2_HOUSEHOLD_IDS.FAMILY}`]: () =>
           itemResponse(v2HouseholdItem(FAMILY_HOUSEHOLD, V2_HOUSEHOLD_IDS.FAMILY)),
+        ...moreRoutes,
       });
     }
+
+    test('given a new household saved then the report says it is saved', async () => {
+      const user = userEvent.setup();
+      signedInWithFamily({
+        'POST /v2/households': () =>
+          itemResponse(v2HouseholdItem(FAMILY_HOUSEHOLD, V2_HOUSEHOLD_IDS.FAMILY), 201),
+        'POST /v2/user-households': () => itemResponse(userHouseholdItem(), 201),
+      });
+      renderReport({ household: FAMILY_HOUSEHOLD });
+
+      await user.type(screen.getByRole('textbox', { name: 'Household label' }), FAMILY_LABEL);
+      await user.click(screen.getByRole('button', { name: 'Save household' }));
+
+      expect(await screen.findByText('Saved')).toHaveAttribute('role', 'status');
+    });
+
+    test('given an edit whose earlier version cannot be removed then the report says both are saved', async () => {
+      const user = userEvent.setup();
+      signedInWithFamily({
+        'POST /v2/households': () =>
+          itemResponse(
+            v2HouseholdItem(EDITED_FAMILY_HOUSEHOLD, V2_HOUSEHOLD_IDS.EDITED_FAMILY),
+            201
+          ),
+        'POST /v2/user-households': () =>
+          itemResponse(
+            userHouseholdItem({
+              id: SAVED_HOUSEHOLD_IDS.REPLACEMENT,
+              household_id: V2_HOUSEHOLD_IDS.EDITED_FAMILY,
+            }),
+            201
+          ),
+        [`DELETE /v2/user-households/${SAVED_HOUSEHOLD_IDS.FAMILY}`]: () =>
+          errorResponse(503, 'Saved household deletion is unavailable'),
+      });
+      renderReport({ savedHousehold: SAVED_FAMILY });
+
+      await user.click(screen.getByRole('button', { name: 'Add tip income' }));
+      await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('both are saved now');
+    });
 
     test('given a saved household chosen then the builder holds it, and saving edits it', async () => {
       const user = userEvent.setup();
