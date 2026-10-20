@@ -11,7 +11,8 @@ export interface CountryCapability {
   societyWideEnabled: boolean;
 }
 
-interface CountryItemPayload {
+/** One `GET /v2/countries` item in the Public API's snake_case shape. */
+export interface CountryItemPayload {
   id: string;
   name: string;
   household_enabled: boolean;

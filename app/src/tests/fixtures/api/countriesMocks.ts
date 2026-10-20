@@ -1,13 +1,7 @@
 import { vi } from 'vitest';
-import type { CountryCapability } from '@/api/countries';
+import type { CountryCapability, CountryItemPayload } from '@/api/countries';
 
-/** One `GET /v2/countries` item in the Public API's snake_case shape. */
-export interface CountryItemPayload {
-  id: string;
-  name: string;
-  household_enabled: boolean;
-  society_wide_enabled: boolean;
-}
+export type { CountryItemPayload };
 
 export const UNITED_KINGDOM_PAYLOAD: CountryItemPayload = {
   id: 'uk',

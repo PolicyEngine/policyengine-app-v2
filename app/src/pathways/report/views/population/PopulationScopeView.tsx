@@ -48,7 +48,7 @@ export default function PopulationScopeView({
   onBack,
   onCancel,
 }: PopulationScopeViewProps) {
-  const [chosenScope, setScope] = useState<ScopeType>(US_REGION_TYPES.NATIONAL);
+  const [chosenScope, setChosenScope] = useState<ScopeType>(US_REGION_TYPES.NATIONAL);
   const [selectedRegion, setSelectedRegion] = useState('');
   // A household-only country offers no society-wide (geographic) scope.
   const { societyWideEnabled } = useCountryCapability(countryId);
@@ -63,7 +63,7 @@ export default function PopulationScopeView({
   const usPlaces = countryId === 'us' ? getUSPlaces(regionData) : [];
 
   const handleScopeChange = (value: ScopeType) => {
-    setScope(value);
+    setChosenScope(value);
     setSelectedRegion(''); // Clear selection when scope changes
   };
 

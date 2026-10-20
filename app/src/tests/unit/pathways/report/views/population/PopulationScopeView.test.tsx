@@ -18,7 +18,7 @@ vi.mock('@/hooks/useCountries', async (importOriginal) => ({
 
 const mockUseCountryCapability = vi.mocked(useCountryCapability);
 
-function listCountryCapability(countryId: 'us' | 'uk', societyWideEnabled: boolean) {
+function mockCountryCapability(countryId: 'us' | 'uk', societyWideEnabled: boolean) {
   mockUseCountryCapability.mockReturnValue({
     id: countryId,
     name: countryId === 'us' ? 'United States' : 'United Kingdom',
@@ -31,13 +31,13 @@ describe('PopulationScopeView', () => {
   beforeEach(() => {
     resetAllMocks();
     vi.clearAllMocks();
-    listCountryCapability('us', true);
+    mockCountryCapability('us', true);
   });
 
   describe('Household-only countries', () => {
     test('given a household-only country then offers only the custom household option', () => {
       // Given
-      listCountryCapability('uk', false);
+      mockCountryCapability('uk', false);
 
       // When
       render(
@@ -57,7 +57,7 @@ describe('PopulationScopeView', () => {
     test('given a household-only country when the scope is submitted then a household scope is chosen', async () => {
       // Given
       const user = userEvent.setup();
-      listCountryCapability('uk', false);
+      mockCountryCapability('uk', false);
       render(
         <PopulationScopeView
           countryId="uk"
