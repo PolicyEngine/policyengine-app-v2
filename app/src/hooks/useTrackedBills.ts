@@ -27,6 +27,8 @@ export function useTrackedBills(countryId: CountryId): {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['tracker-bills'],
     queryFn: fetchTrackerBills,
+    // The tracker files US bills only, so another country has none to fetch.
+    enabled: countryId === 'us',
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });

@@ -15,15 +15,18 @@ import { describeCalculationError } from '@/libs/flagship/calculationError';
 export default function ReportCalculationError({
   message,
   onEdit,
+  scope,
 }: {
   message?: string | null;
+  /** Where the reform ran: "nationwide", "UK-wide", "for Wales". */
+  scope?: string;
   /** Puts the report's reform back in the draft; absent, Build opens blank. */
   onEdit?: () => void;
 }) {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const [copied, setCopied] = useState(false);
-  const summary = describeCalculationError(message);
+  const summary = describeCalculationError(message, scope);
 
   const copyReference = async () => {
     if (!summary.reference) {

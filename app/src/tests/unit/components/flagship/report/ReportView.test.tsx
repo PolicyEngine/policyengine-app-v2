@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent, within } from '@test-utils';
+import { act, render, screen, userEvent, waitFor, within } from '@test-utils';
+import { useLocation, useNavigate, type NavigateFunction } from 'react-router-dom';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import ReportView from '@/components/flagship/report/ReportView';
 import { BillExternalEstimates } from '@/components/flagship/ValidationPanel';
+import { LocationProvider } from '@/contexts/LocationContext';
+import { NavigationProvider } from '@/contexts/NavigationContext';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
@@ -370,6 +373,222 @@ describe('ReportView analytics', () => {
     expect(gtag.mock.calls).toEqual([
       ['event', 'report_tab_viewed', { country_id: 'us', tab: 'household', region_kind: 'state' }],
       ['event', 'report_tab_viewed', { country_id: 'us', tab: 'districts', region_kind: 'state' }],
+    ]);
+  });
+});
+
+describe('ReportView section history', () => {
+  let historyNavigate: NavigateFunction;
+
+  /** Shows the address's query, and keeps the router's navigate for Back and Forward. */
+  function AddressProbe() {
+    historyNavigate = useNavigate();
+    const location = useLocation();
+    return <output aria-label="Address query">{location.search}</output>;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete window.gtag;
+  });
+
+  const reportView = (extra: Partial<Parameters<typeof ReportView>[0]> = {}) => (
+    <ReportView
+      title="Smaller refundable CTC"
+      sourceNote="Hand-built"
+      provisions={[]}
+      year="2026"
+      region="state/ca"
+      output={null}
+      calibration={null}
+      trackRecord={null}
+      {...extra}
+    />
+  );
+
+  const renderWithHistory = () => {
+    // Validation asks for its comparisons when it opens.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ built: null, rows: [], unmappedCount: 0 }))
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AddressProbe />
+        {reportView()}
+      </QueryClientProvider>
+    );
+  };
+
+  /** Renders the report at a fixed address, with navigation recorded rather than followed. */
+  const renderAtAddressRecordingNavigation = (
+    search: string,
+    countryId = 'us',
+    region?: string
+  ) => {
+    const push = vi.fn();
+    const replace = vi.fn();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LocationProvider value={{ pathname: '/us/report/3741', search }}>
+          <NavigationProvider value={{ push, replace, back: vi.fn() }}>
+            {reportView({ region })}
+          </NavigationProvider>
+        </LocationProvider>
+      </QueryClientProvider>,
+      countryId
+    );
+    return { push, replace };
+  };
+
+  const renderAtAddress = (search: string, countryId = 'us', region?: string) =>
+    renderAtAddressRecordingNavigation(search, countryId, region).push;
+
+  const selectedTab = () => screen.getByRole('tab', { selected: true });
+  const addressQuery = () => screen.getByLabelText('Address query');
+  const goBack = () =>
+    act(async () => {
+      await historyNavigate(-1);
+    });
+  const goForward = () =>
+    act(async () => {
+      await historyNavigate(1);
+    });
+
+  test('given validation opened from its overview card then Back returns to the overview', async () => {
+    const user = userEvent.setup();
+    renderWithHistory();
+
+    await user.click(screen.getByRole('button', { name: 'Review validation' }));
+
+    expect(selectedTab()).toHaveAccessibleName('Validation');
+    expect(addressQuery()).toHaveTextContent('?tab=validation');
+
+    await goBack();
+
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Overview'));
+    expect(addressQuery()).toBeEmptyDOMElement();
+
+    await goForward();
+
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Validation'));
+  });
+
+  test('given tabs opened in turn then Back steps through each to the overview', async () => {
+    const user = userEvent.setup();
+    renderWithHistory();
+
+    await user.click(screen.getByRole('tab', { name: 'Household' }));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+    await goBack();
+
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Household'));
+
+    await goBack();
+
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Overview'));
+  });
+
+  test('given the open tab clicked again then no history entry is added', async () => {
+    const user = userEvent.setup();
+    const push = renderAtAddress('');
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  test('given the address updating after the click then each section opened adds one entry', async () => {
+    // A tab asks to open on press and again on focus; Next.js can update
+    // the address after both, as this fixed address never does.
+    const user = userEvent.setup();
+    const push = renderAtAddress('?tab=household');
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    await user.click(screen.getByRole('tab', { name: 'Districts' }));
+
+    expect(push.mock.calls).toEqual([['/us/report/3741'], ['/us/report/3741?tab=districts']]);
+  });
+
+  test('given arrow keys moving across several tabs then Back returns to the overview', async () => {
+    const user = userEvent.setup();
+    renderWithHistory();
+
+    // Clicking the open tab only focuses it.
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    for (const tabName of ['Economic impacts', 'Districts', 'Household']) {
+      await user.keyboard('{ArrowRight}');
+      await waitFor(() => expect(selectedTab()).toHaveAccessibleName(tabName));
+    }
+
+    await goBack();
+
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Overview'));
+    expect(addressQuery()).toBeEmptyDOMElement();
+  });
+
+  test('given an arrow key leaving the overview then the section is a new history entry', async () => {
+    const user = userEvent.setup();
+    const { push, replace } = renderAtAddressRecordingNavigation('');
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    await user.keyboard('{ArrowRight}');
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/us/report/3741?tab=economy'));
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  test('given an arrow key moving from one section to another then it replaces the entry', async () => {
+    const user = userEvent.setup();
+    const { push, replace } = renderAtAddressRecordingNavigation('?tab=economy');
+
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    await user.keyboard('{ArrowRight}');
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/us/report/3741?tab=districts'));
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  test('given a click after an arrow key move then the clicked section is a new entry', async () => {
+    const user = userEvent.setup();
+    const { push, replace } = renderAtAddressRecordingNavigation('?tab=economy');
+
+    await user.click(screen.getByRole('tab', { name: 'Economic impacts' }));
+    await user.keyboard('{ArrowRight}');
+    await waitFor(() => expect(replace).toHaveBeenCalledTimes(1));
+    await user.click(screen.getByRole('tab', { name: 'Validation' }));
+
+    expect(push.mock.calls).toEqual([['/us/report/3741?tab=validation']]);
+  });
+
+  test('given an address naming a section then that section opens', () => {
+    renderAtAddress('?tab=economy');
+
+    expect(selectedTab()).toHaveAccessibleName('Economic impacts');
+  });
+
+  test('given an address naming a section the report does not have then the overview opens', () => {
+    renderAtAddress('?tab=districts', 'uk', 'constituency/Bedford');
+
+    expect(selectedTab()).toHaveAccessibleName('Overview');
+  });
+
+  test('given Back and Forward restore sections then no tab events are sent', async () => {
+    const user = userEvent.setup();
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    renderWithHistory();
+
+    await user.click(screen.getByRole('tab', { name: 'Household' }));
+    await goBack();
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Overview'));
+    await goForward();
+    await waitFor(() => expect(selectedTab()).toHaveAccessibleName('Household'));
+
+    expect(gtag.mock.calls).toEqual([
+      ['event', 'report_tab_viewed', { country_id: 'us', tab: 'household', region_kind: 'state' }],
     ]);
   });
 });

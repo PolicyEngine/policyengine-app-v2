@@ -3,13 +3,13 @@
   "country": "uk",
   "suites": {
     "queries": {
-      "cases": 41,
+      "cases": 48,
       "hitRate": {
         "5": 1,
         "10": 1,
         "20": 1
       },
-      "mrr": 0.9004065040650406,
+      "mrr": 0.8836805555555555,
       "medianRank": 1,
       "misses": []
     }

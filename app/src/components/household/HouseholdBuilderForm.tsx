@@ -93,6 +93,16 @@ export interface HouseholdBuilderFormProps {
   variableGroupIcon?: (group: string) => ReactNode;
   variableNameOf?: (variable: VariableInfo) => string;
   variableDescribe?: (variable: VariableInfo) => string | undefined;
+  /**
+   * A person's name as the form shows it, from their key ("your first
+   * dependent"); the key itself when unset. The key stays the household's.
+   */
+  personDisplayNameOf?: (personKey: string) => string;
+  /**
+   * Give each input an accessible name from its label (and, for a person's,
+   * whose it is). Off, the inputs have none of their own, as before.
+   */
+  labelInputs?: boolean;
   /** Told when a variable search opens: a person's, or the household's (its groups). */
   onVariablePickerOpen?: (entity: 'person' | 'group') => void;
   /**
@@ -155,6 +165,16 @@ export function rankVariablesBySearch(variables: VariableInfo[], search: string)
 
 /** The most children the typed count takes. */
 const MAX_TYPED_CHILDREN = 10;
+
+/**
+ * In columns, the people's cards by the width the Individuals section has:
+ * one column, then two, three and at most four. Each step is where one more
+ * card of at least 260px fits, with the 12px gaps. A wider section spreads
+ * four cards out rather than adding a fifth or sixth, so the values typed
+ * into them stay readable.
+ */
+export const PEOPLE_GRID_CLASSES =
+  'tw:grid tw:items-start tw:gap-3 tw:grid-cols-1 tw:@min-[540px]:grid-cols-2 tw:@min-[810px]:grid-cols-3 tw:@min-[1080px]:grid-cols-4';
 
 /**
  * The number of children as a typed whole number, 0 to 10. A partial or
@@ -254,6 +274,8 @@ export default function HouseholdBuilderForm({
   variableGroupIcon,
   variableNameOf,
   variableDescribe,
+  personDisplayNameOf,
+  labelInputs = false,
   onVariablePickerOpen,
   onVariableAdd,
   disabled = false,
@@ -306,13 +328,22 @@ export default function HouseholdBuilderForm({
 
   // Helper to get person display name (entirely lowercase)
   const getPersonDisplayName = (personKey: string): string => {
-    return personKey.toLowerCase();
+    return (personDisplayNameOf ? personDisplayNameOf(personKey) : personKey).toLowerCase();
   };
 
   // Helper to get person display name with first letter capitalized
   const getPersonDisplayNameCapitalized = (personKey: string): string => {
-    const lowercase = personKey.toLowerCase();
+    const lowercase = getPersonDisplayName(personKey);
     return lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
+  };
+
+  // An input's accessible name, where the form gives one: its label, and whose it is.
+  const inputLabelOf = (variable: VariableInfo, personKey?: string): string | undefined => {
+    if (!labelInputs) {
+      return undefined;
+    }
+    const label = variable.label.charAt(0).toUpperCase() + variable.label.slice(1);
+    return personKey ? `${label}, ${getPersonDisplayName(personKey)}` : label;
   };
 
   // Maximum number of results to display in dropdown for performance; a
@@ -569,7 +600,7 @@ export default function HouseholdBuilderForm({
 
   return (
     // In columns, the family and household sections share a row; the people
-    // follow across the full width, one card each, as many to a row as fit.
+    // follow across the full width, one card each, up to four to a row.
     <Stack
       gap="lg"
       className={
@@ -641,7 +672,10 @@ export default function HouseholdBuilderForm({
               }
               disabled={disabled}
             >
-              <SelectTrigger className={columns ? 'tw:w-40' : undefined}>
+              <SelectTrigger
+                className={columns ? 'tw:w-40' : undefined}
+                aria-label={labelInputs ? 'Marital status' : undefined}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -694,7 +728,10 @@ export default function HouseholdBuilderForm({
         {/* Individuals / Members Section */}
         <AccordionItem
           value="individuals"
-          className={columns ? 'tw:lg:order-last tw:lg:w-full tw:border-b-0' : undefined}
+          // The section's own width sets how many people's cards share a row.
+          className={
+            columns ? 'tw:@container tw:lg:order-last tw:lg:w-full tw:border-b-0' : undefined
+          }
         >
           <AccordionTrigger>
             <Text fw={typography.fontWeight.medium}>Individuals</Text>
@@ -704,11 +741,7 @@ export default function HouseholdBuilderForm({
               type="multiple"
               key={people.join(',')}
               defaultValue={people}
-              className={
-                columns
-                  ? 'tw:grid tw:items-start tw:gap-3 tw:sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]'
-                  : undefined
-              }
+              className={columns ? PEOPLE_GRID_CLASSES : undefined}
             >
               {people.map((person) => {
                 const personVars = getPersonVariables(person);
@@ -736,10 +769,11 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
+                          const field = named(variable);
                           return (
                             <VariableRow
                               key={fieldName}
-                              variable={named(variable)}
+                              variable={field}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -748,6 +782,7 @@ export default function HouseholdBuilderForm({
                               disabled={disabled}
                               showRemoveColumn
                               wholeNumbers={columns}
+                              inputLabel={inputLabelOf(field, person)}
                             />
                           );
                         })}
@@ -758,10 +793,12 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
+                          const field = named(variable);
                           return (
                             <VariableRow
                               key={varName}
-                              variable={named(variable)}
+                              variable={field}
+                              inputLabel={inputLabelOf(field, person)}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -870,10 +907,12 @@ export default function HouseholdBuilderForm({
                   return null;
                 }
                 const entityName = resolveDefaultGroupInstanceName(fieldName);
+                const field = named(variable);
                 return (
                   <VariableRow
                     key={fieldName}
-                    variable={named(variable)}
+                    variable={field}
+                    inputLabel={inputLabelOf(field)}
                     household={household}
                     metadata={metadata}
                     year={year}
@@ -894,10 +933,12 @@ export default function HouseholdBuilderForm({
                 if (!variable) {
                   return null;
                 }
+                const field = named(variable);
                 return (
                   <VariableRow
                     key={`${entity}-${entityName}-${varName}`}
-                    variable={named(variable)}
+                    variable={field}
+                    inputLabel={inputLabelOf(field)}
                     household={household}
                     metadata={metadata}
                     year={year}

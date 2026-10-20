@@ -172,7 +172,7 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
 
         {isUK && (
           <ReportChartCard
-            title="Budgetary impact by program"
+            title="Budgetary impact by programme"
             fullWidth
             downloadFilename="budgetary-impact-by-program.svg"
             csvFilename="budgetary-impact-by-program.csv"

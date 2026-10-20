@@ -3,11 +3,7 @@
 import { motion } from "framer-motion";
 const CALCULATOR_URL =
   process.env.NEXT_PUBLIC_CALCULATOR_URL || "https://app.policyengine.org";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 const ctaVariant = {
   hidden: { opacity: 0, y: 20 },

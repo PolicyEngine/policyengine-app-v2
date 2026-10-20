@@ -27,13 +27,33 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check formatting with Prettier
+      - name: Check formatting with Prettier (app)
         working-directory: ./app
         run: bun run prettier
 
-      - name: Run ESLint
+      - name: Run ESLint (app)
         working-directory: ./app
         run: bun run eslint
+
+      - name: Run Stylelint (app)
+        working-directory: ./app
+        run: bun run stylelint
+
+      - name: Check formatting with Prettier (website)
+        working-directory: ./website
+        run: bun run format:check
+
+      - name: Run ESLint (website)
+        working-directory: ./website
+        run: bun run lint
+
+      - name: Check formatting with Prettier (calculator)
+        working-directory: ./calculator-app
+        run: bun run format:check
+
+      - name: Run ESLint (calculator)
+        working-directory: ./calculator-app
+        run: bun run lint
 
   typecheck:
     name: Type checking
@@ -71,6 +91,15 @@ jobs:
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
+
+      # vitest's launcher starts with `#!/usr/bin/env node`, so `bun run test`
+      # runs the tests on this Node rather than on Bun. Pinned so results
+      # don't depend on the runner's preinstalled Node: number formatting
+      # (Intl) differs between Node versions.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "26"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

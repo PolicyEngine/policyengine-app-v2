@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export default function HomeTrackerPreview({
   countryId,

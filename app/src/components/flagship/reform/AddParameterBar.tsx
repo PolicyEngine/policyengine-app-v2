@@ -12,6 +12,7 @@ import { PHONE_QUERY } from '@/libs/flagship/viewport';
 import { getStateLabels } from '@/libs/metadataUtils';
 import {
   ParameterSearchEntry,
+  properNodeLabel,
   selectAddableParameterPaths,
   selectConceptClusters,
   selectParameterEntriesByPath,
@@ -172,7 +173,10 @@ export default function AddParameterBar({
           trackParameterSearchSelected({ countryId, ...searchPick });
           pick(entry);
         }}
-        labelFor={(path) => parameters?.[path]?.label ?? null}
+        labelFor={(path) => {
+          const label = parameters?.[path]?.label;
+          return label ? properNodeLabel(path, label) : null;
+        }}
         backgroundSearch
         autoFocus={autoFocus}
         placeholder={placeholder}

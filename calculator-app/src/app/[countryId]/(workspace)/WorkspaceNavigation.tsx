@@ -13,7 +13,11 @@ import ReformsPage from "@/pages/flagship/Reforms.page";
 import StandardLayout from "@/components/StandardLayout";
 import WorkspaceError from "./error";
 import FlagshipGate from "./FlagshipGate";
-import { isWorkspaceTransition, workspaceRoute } from "./workspaceRoutes";
+import {
+  isSameScreen,
+  isWorkspaceTransition,
+  workspaceRoute,
+} from "./workspaceRoutes";
 
 // Keep the browser-only chart stack out of SSR, as in the direct report
 // routes. Bill reports render the same charts as saved reports.
@@ -43,8 +47,12 @@ export default function WorkspaceNavigation({
       ...router,
       push: (path: string) => {
         if (isWorkspaceTransition(window.location.pathname, path)) {
+          const sameScreen = isSameScreen(window.location.pathname, path);
           window.history.pushState(null, "", path);
-          window.scrollTo(0, 0);
+          // A new screen starts at the top; a report section keeps its place.
+          if (!sameScreen) {
+            window.scrollTo(0, 0);
+          }
         } else {
           router.push(path);
         }

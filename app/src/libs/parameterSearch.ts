@@ -68,6 +68,77 @@ export const SEARCH_KEYWORDS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * The names of a bracket schedule's bands, bracket by bracket, where
+ * the metadata labels each only "rate" and "threshold": Scotland's
+ * Income Tax bands are its starter, basic, … rates. A band's rate reads
+ * "higher rate" and its threshold "higher rate threshold".
+ */
+export const SCHEDULE_BAND_NAMES: Readonly<Record<string, readonly string[]>> = {
+  'gov.hmrc.income_tax.rates.scotland.rates': [
+    'starter',
+    'basic',
+    'intermediate',
+    'higher',
+    'advanced',
+    'top',
+  ],
+};
+
+/**
+ * Everyday names for every parameter under a path, as SEARCH_KEYWORDS
+ * for one: "SDLT" names the whole of Stamp Duty Land Tax.
+ */
+export const SEARCH_KEYWORDS_UNDER: Readonly<Record<string, string>> = {
+  'gov.hmrc.stamp_duty': 'SDLT stamp duty land tax',
+};
+
+/** A bracket member's band name, from SCHEDULE_BAND_NAMES: "higher rate threshold". */
+function bandKeywordsOf(path: string): string | undefined {
+  const member = /^(.+)\[(\d+)\]\.(rate|threshold)$/.exec(path);
+  const band = member ? SCHEDULE_BAND_NAMES[member[1]]?.[Number(member[2])] : undefined;
+  if (!member || !band) {
+    return undefined;
+  }
+  return member[3] === 'rate' ? `${band} rate` : `${band} rate threshold`;
+}
+
+/** An entry's everyday names: its own, its band's, then those under a path above it. */
+function keywordsFor(path: string): string | undefined {
+  const names = [
+    SEARCH_KEYWORDS[path],
+    bandKeywordsOf(path),
+    ...Object.entries(SEARCH_KEYWORDS_UNDER)
+      .filter(([prefix]) => path === prefix || path.startsWith(`${prefix}.`))
+      .map(([, keywords]) => keywords),
+  ].filter(Boolean);
+  return names.length > 0 ? names.join(' ') : undefined;
+}
+
+/**
+ * The parameters a searcher means by a program's name, ahead of their
+ * siblings: their fuzzy scores are multiplied by this (lower ranks
+ * higher). "Pension credit" is first its minimum guarantee, not its
+ * carer addition; "stamp duty" is the tax on buying a home, not on
+ * leases or on non-residential property. Matched by path prefix, the
+ * longest first; fuzzy scoring alone favours the shortest label, which
+ * is rarely the headline one. Last resort, as SEARCH_KEYWORDS.
+ */
+export const SEARCH_PRIORITY: Readonly<Record<string, number>> = {
+  'gov.dwp.pension_credit.guarantee_credit.minimum_guarantee': 0.6,
+  'gov.hmrc.stamp_duty.residential.purchase.main': 0.6,
+};
+
+const PRIORITY_PREFIXES = Object.keys(SEARCH_PRIORITY).sort((a, b) => b.length - a.length);
+
+/** The SEARCH_PRIORITY factor for a path, 1 when none applies. */
+export function searchPriorityOf(path: string): number {
+  const prefix = PRIORITY_PREFIXES.find(
+    (candidate) => path === candidate || path.startsWith(`${candidate}.`)
+  );
+  return prefix ? SEARCH_PRIORITY[prefix] : 1;
+}
+
+/**
  * The postal codes a federal parameter keys its per-jurisdiction values
  * by: the states, DC, the territories, the freely associated states and
  * the military codes. Fixed, not read from the metadata, which names some
@@ -461,12 +532,23 @@ function entryConceptText(entry: ParameterSearchEntry, aliases: Map<string, stri
   return [...phrases].join(' ');
 }
 
+/**
+ * Whether a reform could set the parameter's value: a list of variable
+ * names or a text value is shown as "Can't be changed here", so search
+ * would only lead to a dead end. A parameter with no values at all has
+ * nothing to judge by and stays (selectParameterSearchEntries drops it).
+ */
+function hasDraftableValue(param: any): boolean {
+  return !param.values || isDraftableValue(getCurrentValue(param.values));
+}
+
 function isSearchableParameter(param: any): param is ParameterMetadata {
   return (
     param?.type === 'parameter' &&
     Boolean(param.label) &&
     Boolean(param.economy || param.household) &&
-    !EXCLUDED_PATH_PATTERNS.some((pattern) => param.parameter.includes(pattern))
+    !EXCLUDED_PATH_PATTERNS.some((pattern) => param.parameter.includes(pattern)) &&
+    hasDraftableValue(param)
   );
 }
 
@@ -586,6 +668,21 @@ function memberLabelOf(
 }
 
 /**
+ * Bodies the metadata labels in sentence case ("Hm treasury", "social
+ * security scotland"): proper names, so the breadcrumb spells them as one.
+ */
+const PROPER_NODE_LABELS: Readonly<Record<string, string>> = {
+  'gov.treasury': 'HM Treasury',
+  'gov.social_security_scotland': 'Social Security Scotland',
+  'gov.scottish_government': 'Scottish Government',
+};
+
+/** A tree node's label as breadcrumbs spell it (see PROPER_NODE_LABELS). */
+export function properNodeLabel(path: string, label: string): string {
+  return PROPER_NODE_LABELS[path] ?? label;
+}
+
+/**
  * Breadcrumb labels as the tree shows them, except that a key standing in
  * for a label reads as a name: `vat` → "VAT", `uc_deductions` → "UC
  * deductions", rather than "Vat" and "Uc deductions".
@@ -598,6 +695,9 @@ function breadcrumbLabels(path: string, parameters: ParameterMetadataCollection)
     const label = parameters[nodePath]?.label;
     if (!label) {
       return [];
+    }
+    if (PROPER_NODE_LABELS[nodePath]) {
+      return [PROPER_NODE_LABELS[nodePath]];
     }
     if (isKeyLabel(nodePath, label) && /^[a-z][a-z0-9_]*$/.test(lastKeyOf(nodePath))) {
       return [keyName(lastKeyOf(nodePath))];
@@ -648,7 +748,7 @@ export function buildParameterSearchEntries(
         isContrib: param.parameter.startsWith('gov.contrib.'),
         stateCode: STATE_PATH_PATTERN.exec(param.parameter)?.[1] ?? stateKeyOf(param.parameter),
         scheduleLabel: scheduleLabelOf(param.parameter, parameters),
-        ...(SEARCH_KEYWORDS[param.parameter] ? { keywords: SEARCH_KEYWORDS[param.parameter] } : {}),
+        ...(keywordsFor(param.parameter) ? { keywords: keywordsFor(param.parameter) } : {}),
       };
     });
 }
@@ -699,6 +799,26 @@ const FUSE_OPTIONS: IFuseOptions<ParameterSearchEntry> = {
   minMatchCharLength: 2,
   includeScore: true,
 };
+
+/**
+ * Whether the haystack holds the other side of a role the token names:
+ * "employer" against "employee" or "self-employed". The shared stem
+ * would otherwise credit the employee's rate to a search for the
+ * employer's, and the opposite.
+ */
+function namesOtherRole(haystack: string, token: string): boolean {
+  const role = /^(.{4,})(er|ee)$/.exec(token);
+  if (!role) {
+    return false;
+  }
+  const [, stem, suffix] = role;
+  return ['er', 'ee', 'ed']
+    .filter((other) => other !== suffix)
+    .some((other) => haystack.includes(`${stem}${other}`));
+}
+
+/** Words that say a name is a program's, not which program: scored as structural words. */
+const PROGRAM_WORDS = new Set(['program', 'programs', 'programme', 'programmes']);
 
 /** Coverage credit for a structural word ("and", "for") found as a word: a tie-breaker. */
 const STRUCTURAL_WORD_SCORE = 0.1;
@@ -855,7 +975,10 @@ function adjustedScore(
   namedStates: Set<string>
 ): number {
   const jurisdiction = inQueryJurisdiction(entry, namedStates) ? 1 : OUT_OF_JURISDICTION_FACTOR;
-  return (score ?? 0.5) * priorFactor(entry.path) * jurisdiction + priorOffset(entry.path);
+  return (
+    (score ?? 0.5) * priorFactor(entry.path) * searchPriorityOf(entry.path) * jurisdiction +
+    priorOffset(entry.path)
+  );
 }
 
 /**
@@ -1004,7 +1127,9 @@ export function searchParameters(
     // Structural words carry little meaning ("free and reduced price
     // meals"): as a whole word they only break ties, and their absence
     // never pushes an entry below the coverage floor.
-    if (INITIALISM_SKIP.has(token)) {
+    // "Program" in a program's full name ("Lifeline Program") names no
+    // part of it, so it counts the same way.
+    if (INITIALISM_SKIP.has(token) || PROGRAM_WORDS.has(token)) {
       return wordPattern(token, true).test(haystack) ? STRUCTURAL_WORD_SCORE : 0;
     }
     if (token.length <= 3) {
@@ -1023,6 +1148,9 @@ export function searchParameters(
       return 1;
     }
     if (token.length > 4 && !token.includes(' ')) {
+      if (namesOtherRole(haystack, token)) {
+        return 0;
+      }
       for (let cut = token.length - 1; cut >= 3; cut--) {
         if (haystack.includes(token.slice(0, cut))) {
           return 0.6;

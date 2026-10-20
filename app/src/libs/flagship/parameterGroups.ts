@@ -21,7 +21,11 @@ export interface ParameterGroupMember {
 export interface BracketLayout {
   /** Columns, threshold first, then "amount" or "rate". */
   fields: string[];
-  rows: Array<{ index: number; cells: Record<string, string> }>;
+  /**
+   * `name` is the bracket's own name where its rate or amount has one
+   * ("Basic rate", not "rate"): the row reads as the band, not its number.
+   */
+  rows: Array<{ index: number; cells: Record<string, string>; name?: string }>;
 }
 
 export interface ParameterGroup {
@@ -88,6 +92,15 @@ const UK_PLACE_PHRASES: Array<[RegExp, string]> = [
   [/\bscotland\b/gi, 'Scotland'],
   [/\bwales\b/gi, 'Wales'],
   [/\blondon\b/gi, 'London'],
+  [/\bnorth east\b/gi, 'North East'],
+  [/\bnorth west\b/gi, 'North West'],
+  [/\byorkshire and the humber\b/gi, 'Yorkshire and the Humber'],
+  [/\byorkshire\b/gi, 'Yorkshire'],
+  [/\beast midlands\b/gi, 'East Midlands'],
+  [/\bwest midlands\b/gi, 'West Midlands'],
+  [/\beast of england\b/gi, 'East of England'],
+  [/\bsouth east\b/gi, 'South East'],
+  [/\bsouth west\b/gi, 'South West'],
 ];
 
 function titleCasePlace(lower: string): string {
@@ -169,6 +182,43 @@ function groupLabel(key: string, parameters: ParameterMetadataCollection): strin
   return parent.toLowerCase().split(/\s+/).includes(word) ? parent : `${parent} ${word}`;
 }
 
+/** A UK place segment, or the "unknown region" a place breakdown can hold. */
+function isPlaceOrUnknown(segment: string): boolean {
+  return segment === 'UNKNOWN' || UK_PLACE_SEGMENTS.has(segment);
+}
+
+/** A bracket member's own label where it names more than its field: "Higher rate threshold". */
+function ownBracketLabel(path: string, parameters: ParameterMetadataCollection): string | null {
+  const label = parameters[path]?.label?.trim();
+  if (!label || GENERIC_LABELS.has(label.toLowerCase())) {
+    return null;
+  }
+  const field = path.slice(path.lastIndexOf('.') + 1);
+  return label.replace(/_/g, ' ').toLowerCase() === field.replace(/_/g, ' ')
+    ? null
+    : humanizeSegment(label);
+}
+
+/**
+ * A bracket's own name: its rate's or amount's label, where the model
+ * gives one beyond the field ("Basic rate" on `…uk[0].rate`). Null for
+ * a bracket whose fields say only "rate" or "amount".
+ */
+function bracketName(
+  cells: Record<string, string>,
+  parameters: ParameterMetadataCollection
+): string | null {
+  for (const [field, path] of Object.entries(cells)) {
+    if (field !== 'threshold') {
+      const name = ownBracketLabel(path, parameters);
+      if (name) {
+        return name;
+      }
+    }
+  }
+  return null;
+}
+
 /**
  * The key `path`'s group has, read from the path alone: a bracket
  * field's schedule, a breakdown member's split setting, else the path
@@ -235,6 +285,21 @@ export function parameterGroup(
     for (const member of members) {
       rows.set(member.index, { ...rows.get(member.index), [member.field]: member.path });
     }
+    const names = new Map(
+      [...rows].flatMap(([index, cells]) => {
+        const name = bracketName(cells, parameters);
+        return name ? [[index, name] as const] : [];
+      })
+    );
+    // A named bracket's members read by its name: "Basic rate", "Basic rate · threshold".
+    for (const member of members) {
+      const name = names.get(member.index);
+      if (name) {
+        member.label =
+          ownBracketLabel(member.path, parameters) ??
+          `${name} · ${bracketFieldLabel(member.field, parameters[member.path]?.unit)}`;
+      }
+    }
     const fields = [...new Set(members.map((member) => member.field))];
     return members.length > 1
       ? {
@@ -243,7 +308,10 @@ export function parameterGroup(
           members: members.map(({ path: memberPath, label }) => ({ path: memberPath, label })),
           brackets: {
             fields,
-            rows: [...rows].map(([index, cells]) => ({ index, cells })),
+            rows: [...rows].map(([index, cells]) => {
+              const name = names.get(index);
+              return name ? { index, cells, name } : { index, cells };
+            }),
           },
         }
       : null;
@@ -262,9 +330,15 @@ export function parameterGroup(
       members.push({ path: candidate, label: labelFor(candidate, parameters) });
     }
   }
-  // Sizes in number order; named members in the model's own order.
+  // Sizes in number order; UK places by name, an unknown one last;
+  // other named members in the model's own order.
+  const segmentOf = (member: ParameterGroupMember) => member.path.slice(lastDot + 1);
+  const byPlace = members.every((member) => isPlaceOrUnknown(segmentOf(member)));
   members.sort((a, b) => {
-    const [sa, sb] = [a.path.slice(lastDot + 1), b.path.slice(lastDot + 1)];
+    const [sa, sb] = [segmentOf(a), segmentOf(b)];
+    if (byPlace) {
+      return Number(sa === 'UNKNOWN') - Number(sb === 'UNKNOWN') || a.label.localeCompare(b.label);
+    }
     return /^\d+$/.test(sa) && /^\d+$/.test(sb) ? Number(sa) - Number(sb) : 0;
   });
   return members.length > 1

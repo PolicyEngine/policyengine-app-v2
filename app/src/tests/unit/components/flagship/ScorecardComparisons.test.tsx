@@ -185,7 +185,7 @@ describe('scorecard evidence presentation', () => {
       .getAllByRole('cell')
       .map((cell) => cell.textContent);
     // The published figure shows as published; the gap is +13.1%, not -213%.
-    expect(cells).toEqual(['£1.0B2026', '-£1.1B', '13.1%']);
+    expect(cells).toEqual(['£1B2026', '-£1.1B', '13.1%']);
     expect(screen.getByText(/The gap compares magnitudes\./)).toBeInTheDocument();
   });
 
@@ -201,7 +201,7 @@ describe('scorecard evidence presentation', () => {
     const cells = within(screen.getByRole('row', { name: /^UK claim/ }))
       .getAllByRole('cell')
       .map((cell) => cell.textContent);
-    expect(cells).toEqual(['£2.0B2026', '-£1.8B', '10.0%']);
+    expect(cells).toEqual(['£2B2026', '-£1.8B', '10.0%']);
     expect(
       screen.getByText(/the source counts this change with the opposite sign/)
     ).toBeInTheDocument();

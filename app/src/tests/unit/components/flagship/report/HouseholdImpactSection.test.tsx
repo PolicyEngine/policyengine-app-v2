@@ -43,10 +43,21 @@ vi.mock('@/components/household/HouseholdBuilderForm', () => ({
     onMaritalStatusChange,
     onNumChildrenChange,
     variablePickerCommon,
+    personDisplayNameOf,
+    labelInputs,
   }: any) => (
     <div
       aria-label="Household builder"
       data-featured={variablePickerCommon.map((input: any) => input.name).join(' ')}
+      data-child-name={personDisplayNameOf?.('your first dependent') ?? 'your first dependent'}
+      data-label-inputs={String(!!labelInputs)}
+      data-place={['region', 'local_authority', 'brma']
+        .map(
+          (name) =>
+            (Object.values(household.householdData.households ?? {})[0] as any)?.[name]?.[year] ??
+            ''
+        )
+        .join(' ')}
     >
       <span>{`${maritalStatus} · ${numChildren}`}</span>
       <span data-testid="state">
@@ -502,6 +513,14 @@ describe('HouseholdImpactSection', () => {
     expect(screen.queryByRole('button', { name: 'Add a household' })).not.toBeInTheDocument();
   });
 
+  test('given a US report then a dependent keeps its name', () => {
+    renderSection();
+    expect(screen.getByRole('generic', { name: 'Household builder' })).toHaveAttribute(
+      'data-child-name',
+      'your first dependent'
+    );
+  });
+
   describe('given a UK report', () => {
     beforeEach(() => {
       mockFetchHouseholdCalculation.mockImplementation(
@@ -554,6 +573,36 @@ describe('HouseholdImpactSection', () => {
       expect(featured).toContain('council_tax_band');
       expect(featured).not.toContain('pre_subsidy_rent');
     });
+
+    test('then a dependant is named a child, and each input is labelled', () => {
+      renderSection({ countryId: 'uk' });
+      const builder = screen.getByRole('generic', { name: 'Household builder' });
+      expect(builder).toHaveAttribute('data-child-name', 'your first child');
+      expect(builder).toHaveAttribute('data-label-inputs', 'true');
+    });
+
+    test.each([
+      ['country/scotland', 'SCOTLAND CITY_OF_EDINBURGH LOTHIAN'],
+      ['country/wales', 'WALES CARDIFF CARDIFF'],
+      ['country/ni', 'NORTHERN_IRELAND BELFAST BELFAST'],
+    ])("given the report's region %s then the household starts there", (region, place) => {
+      renderSection({ countryId: 'uk', region });
+      expect(screen.getByRole('generic', { name: 'Household builder' })).toHaveAttribute(
+        'data-place',
+        place
+      );
+    });
+
+    test.each([undefined, 'country/england', 'constituency/Bedford'])(
+      "given the report's region %s then the household keeps the model's place",
+      (region) => {
+        renderSection({ countryId: 'uk', region });
+        expect(screen.getByRole('generic', { name: 'Household builder' })).toHaveAttribute(
+          'data-place',
+          '  '
+        );
+      }
+    );
 
     test("then the breakdowns read the UK household's run", async () => {
       const user = userEvent.setup();

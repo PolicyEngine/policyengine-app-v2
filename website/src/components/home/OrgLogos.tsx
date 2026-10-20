@@ -8,11 +8,7 @@ import {
   getOrgsForCountry,
   Organization,
 } from "@/data/organizations";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 const LOGO_WIDTH = 140;
 const LOGO_GAP = 64;

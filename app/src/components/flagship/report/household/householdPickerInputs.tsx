@@ -304,9 +304,14 @@ export function householdInputNameOf(countryId: string): (variable: VariableInfo
   return (variable) => inputName(variable, names);
 }
 
-/** What to enter for an input: the model's documentation, else ours for a featured one. */
+/**
+ * What to enter for an input: ours for a featured one, else the model's
+ * documentation. Ours come first because the model's often carry notes
+ * for its dataset or its developers ("In dataset mode, …", "currently
+ * supplied by the household dataset"), which a reader does not need.
+ */
 export function householdInputDescription(variable: VariableInfo): string | undefined {
-  return variable.documentation || US_LOOKUPS.descriptions.get(variable.name);
+  return US_LOOKUPS.descriptions.get(variable.name) || variable.documentation;
 }
 
 /** The same for a country's inputs. */
@@ -314,5 +319,5 @@ export function householdInputDescriptionOf(
   countryId: string
 ): (variable: VariableInfo) => string | undefined {
   const { descriptions } = countryId === 'uk' ? UK_LOOKUPS : US_LOOKUPS;
-  return (variable) => variable.documentation || descriptions.get(variable.name);
+  return (variable) => descriptions.get(variable.name) || variable.documentation;
 }

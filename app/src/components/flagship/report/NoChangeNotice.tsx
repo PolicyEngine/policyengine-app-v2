@@ -1,6 +1,7 @@
 import { IconInfoCircle } from '@tabler/icons-react';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { sameParameterValue } from '@/libs/draftReform';
 import { reportProvisionName } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
@@ -45,6 +46,7 @@ export default function NoChangeNotice({
   /** What the report is compared with, by name; current law when unset. */
   baselineLabel?: string | null;
 }) {
+  const countryId = useCurrentCountry();
   const yearNumber = Number(year);
   // The provisions' dates and current-law values explain a match with
   // current law, not with a saved reform.
@@ -68,7 +70,7 @@ export default function NoChangeNotice({
     ...(atCurrentLaw ? [`A changed value is at current law in ${yearText}.`] : []),
     ...(reasons.length === 0
       ? [
-          `A program you changed is not in effect in ${yearText}: some credits start later or expire.`,
+          `A ${countryId === 'uk' ? 'programme' : 'program'} you changed is not in effect in ${yearText}: some credits start later or expire.`,
         ]
       : []),
   ];

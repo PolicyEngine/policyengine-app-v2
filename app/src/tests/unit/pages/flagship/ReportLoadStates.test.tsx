@@ -118,6 +118,25 @@ describe('FlagshipReportPage load states', () => {
     expect(others).toHaveLength(0);
   });
 
+  test('given a UK report is calculating then the run card says UK-wide', () => {
+    mockCalcStatus.mockReturnValue(PENDING_STATUS);
+    mockUseFlagshipReport.mockReturnValue(
+      reportData({
+        report: { ...EXISTING_REPORT, countryId: 'uk' } as typeof EXISTING_REPORT,
+        // The whole of the UK, as its simulations name it.
+        simulations: EXISTING_SIMULATIONS.map((simulation) => ({
+          ...simulation,
+          countryId: 'uk',
+          populationId: 'uk',
+        })) as typeof EXISTING_SIMULATIONS,
+      })
+    );
+
+    renderPage(EXISTING_REPORT_ID);
+
+    expect(screen.getAllByRole('status')[0]).toHaveTextContent('Calculating the UK-wide results');
+  });
+
   test('given the results are in and the parameters failed then the overview says so and asks again', async () => {
     // Given
     const user = userEvent.setup();

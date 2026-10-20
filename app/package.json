@@ -9,7 +9,7 @@
     "build-parameter-dependencies": "python3 scripts/build-parameter-dependency-map.py",
     "typecheck": "tsc --noEmit",
     "lint": "bun run eslint && bun run stylelint",
-    "eslint": "eslint . --cache",
+    "eslint": "eslint . --cache --max-warnings 0",
     "stylelint": "stylelint '**/*.css' --cache",
     "prettier": "prettier --check \"**/*.{ts,tsx}\"",
     "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
