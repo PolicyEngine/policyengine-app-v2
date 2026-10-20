@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconArrowLeft, IconLayoutGrid, IconPlus, IconSearch } from '@tabler/icons-react';
 import { Dialog, DialogContent, DialogTitle, Spinner } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { enteredValuePeriod } from '@/utils/variablePeriod';
 import { VariableInfo } from '@/utils/VariableResolver';
 
 /** An input the picker features on its first view. */
@@ -21,15 +22,13 @@ export interface CommonInput {
 
 /**
  * What kind of value an input takes, from the model's unit, type and
- * period: "Dollars per year", "Yes or no", "Number".
+ * period: "Dollars per year", "Yes or no", "Number". The period is the
+ * one the entered amount covers (see enteredValuePeriod): money defined
+ * per month is still entered for the year.
  */
 export function inputKind(variable: VariableInfo): string {
-  const per =
-    variable.definitionPeriod === 'month'
-      ? ' per month'
-      : variable.definitionPeriod === 'year'
-        ? ' per year'
-        : '';
+  const period = enteredValuePeriod(variable);
+  const per = period ? ` per ${period}` : '';
   if (variable.valueType === 'bool') {
     return 'Yes or no';
   }

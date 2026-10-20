@@ -4,7 +4,10 @@
 
 import { IconX } from '@tabler/icons-react';
 import { Button, Label, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { colors } from '@/designTokens';
 import type { Household } from '@/models/Household';
+import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
+import { enteredValuePeriodLabel } from '@/utils/variablePeriod';
 import { VariableInfo } from '@/utils/VariableResolver';
 import VariableInput from './VariableInput';
 
@@ -59,6 +62,19 @@ export default function VariableRow({
   wholeNumbers = false,
 }: VariableRowProps) {
   const shouldShowColumn = onRemove || showRemoveColumn;
+  // The period the entered value covers ("Annually" under rent). A row's
+  // variable can come without its period (getVariableInfo leaves it out),
+  // so the model's metadata fills in what the variable lacks.
+  const modelVariable = getNormalizedVariableMetadata(metadata?.variables?.[variable.name]);
+  const periodText = enteredValuePeriodLabel({
+    unit: variable.unit ?? modelVariable.unit,
+    definitionPeriod: variable.definitionPeriod ?? modelVariable.definitionPeriod,
+  });
+  const periodNote = periodText ? (
+    <Text size="xs" style={{ color: colors.text.secondary }}>
+      {periodText}
+    </Text>
+  ) : null;
 
   return (
     <div
@@ -82,7 +98,10 @@ export default function VariableRow({
             {sentenceCaseLabel(variable.label)}
           </Label>
         ) : (
-          <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
+          <>
+            <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
+            {periodNote}
+          </>
         )}
       </div>
       <div className={stacked ? 'tw:min-w-0' : 'tw:flex-1'}>
@@ -119,6 +138,8 @@ export default function VariableRow({
           )}
         </div>
       )}
+      {/* Stacked, the period sits under the box, so the boxes in a row stay level. */}
+      {stacked && periodNote && <div className="tw:col-span-2">{periodNote}</div>}
     </div>
   );
 }
