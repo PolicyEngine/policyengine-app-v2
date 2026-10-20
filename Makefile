@@ -1,12 +1,12 @@
-.PHONY: help install dev build test lint format clean deploy
+.PHONY: help install dev build typecheck test-all test lint format clean deploy
 
 help:
 	@echo "Available commands:"
 	@echo "  make install    - Install dependencies"
 	@echo "  make dev        - Start Next.js website + calculator dev servers"
 	@echo "  make build      - Build the website and calculator"
-	@echo "  make typecheck  - Run type checks"
-	@echo "  make test       - Run tests"
+	@echo "  make typecheck  - Run type checks (app, website, calculator)"
+	@echo "  make test       - Run tests (app, website)"
 	@echo "  make lint       - Run linters"
 	@echo "  make format     - Format code"
 	@echo "  make clean      - Clean build artifacts"
@@ -23,12 +23,15 @@ build:
 
 typecheck:
 	cd app && bun run typecheck
+	cd website && bun run typecheck
+	cd calculator-app && bun run typecheck
 
 test-all:
 	cd app && bun run test-all
 
 test:
 	cd app && bun run test
+	cd website && bun run test
 
 lint:
 	cd app && bun run lint

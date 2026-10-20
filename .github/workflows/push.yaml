@@ -28,6 +28,10 @@ jobs:
         working-directory: ./app
         run: bun run eslint
 
+      - name: Run Stylelint (app)
+        working-directory: ./app
+        run: bun run stylelint
+
       - name: Check formatting with Prettier (website)
         working-directory: ./website
         run: bun run format:check
