@@ -52,6 +52,12 @@ Run linters:
 make lint
 ```
 
+Type-check:
+
+```bash
+make typecheck
+```
+
 Format code:
 
 ```bash
@@ -116,7 +122,7 @@ Vercel builds and deploys two projects from this repository: `policyengine-websi
 
 1. Create a new branch from main
 2. Make your changes
-3. Run tests and linting: `make test && make lint`
+3. Format with `make format`, then run `make lint`, `make typecheck` and `make test`. CI checks formatting and runs the same linters, type checks and tests, plus a build (see "Before committing" in `docs/engineering/skills/repository-guidance.md`)
 4. Create a pull request
 5. Once approved and merged, changes deploy automatically
 
