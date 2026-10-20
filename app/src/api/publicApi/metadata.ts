@@ -47,6 +47,19 @@ function v1FallbackLabel(path: string): string {
   return (path.split('.').pop() ?? path).replaceAll('_', ' ');
 }
 
+/** v1 dated a value in force since the earliest date 0000-01-01; Python's earliest is year 1. */
+const V2_EARLIEST_DATE = '0001-01-01';
+const V1_EARLIEST_DATE = '0000-01-01';
+
+function v1Values(values: Record<string, unknown>): ValuesList {
+  return Object.fromEntries(
+    Object.entries(values).map(([date, value]) => [
+      date === V2_EARLIEST_DATE ? V1_EARLIEST_DATE : date,
+      value,
+    ])
+  ) as ValuesList;
+}
+
 function parameterCollection(
   catalog: Schemas['MetadataCatalogResult'],
   hasPresentationMetadata: boolean
@@ -77,7 +90,7 @@ function parameterCollection(
       description: parameter.description,
       unit: parameter.unit,
       period: parameter.period ?? null,
-      values: parameter.values as ValuesList,
+      values: v1Values(parameter.values),
       economy: parameter.economy ?? true,
       household: parameter.household ?? true,
     };

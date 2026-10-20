@@ -171,6 +171,26 @@ describe('fetchV2Metadata', () => {
     expect(parameters['gov.irs.income.bracket.rates[0]'].label).toBe('bracket 1');
   });
 
+  test('given a value in force since the earliest date then v1 dates it 0000-01-01', async () => {
+    // Given: Python's earliest date is year 1, v1 wrote year 0
+    const catalog = modelCatalog();
+    catalog.parameters = catalog.parameters.map((parameter) =>
+      parameter.name === CTC_PHASE_OUT
+        ? { ...parameter, values: { '0001-01-01': 75000, '2018-01-01': 'Infinity' } }
+        : parameter
+    );
+    answer({ catalog });
+
+    // When
+    const { result } = await load();
+
+    // Then
+    expect(result.parameters[CTC_PHASE_OUT].values).toEqual({
+      '0000-01-01': 75000,
+      '2018-01-01': 'Infinity',
+    });
+  });
+
   test('given catalog variables then each has the v1 field names', async () => {
     // Given
     answer();
