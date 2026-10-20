@@ -7,6 +7,7 @@ import { formatPostDate } from "@/lib/postDate";
 import { cn } from "@/lib/utils";
 import { colors, spacing, typography } from "@/designTokens";
 import {
+  getResearchItemKey,
   getResearchItems,
   type ResearchItem,
 } from "@/data/posts/postTransformers";
@@ -263,7 +264,7 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
           <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
             {leftItems.map((item) => (
               <PrimaryCard
-                key={`${item.isApp ? "app" : "post"}-${item.slug}`}
+                key={getResearchItemKey(item)}
                 item={item}
                 countryId={countryId}
                 flex={1}
@@ -275,7 +276,7 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
           <div className="tw:flex tw:flex-col" style={{ gap: spacing["2xl"] }}>
             {rightItems.map((item) => (
               <SecondaryCard
-                key={`${item.isApp ? "app" : "post"}-${item.slug}`}
+                key={getResearchItemKey(item)}
                 item={item}
                 countryId={countryId}
               />
