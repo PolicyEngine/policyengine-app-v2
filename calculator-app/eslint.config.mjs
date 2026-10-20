@@ -6,11 +6,11 @@ import { defineConfig, globalIgnores } from "eslint/config";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // @next/eslint-plugin-next reads settings.next.rootDir as a glob. Brackets
-// make (, ), {, }, | and + literal, so a parent folder named like
+// make (, ), {, }, |, + and [ literal, so a parent folder named like
 // "Projects (1)" doesn't stop the path matching. When rootDir matches
 // nothing, @next/next/no-html-link-for-pages switches itself off without
 // failing lint.
-const rootDir = __dirname.replace(/[(){}|+]/g, "[$&]");
+const rootDir = __dirname.replace(/[(){}|+[]/g, "[$&]");
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
