@@ -43,6 +43,22 @@ describe('enteredValuePeriod', () => {
     expect(enteredValuePeriod({ unit: 'hour', definitionPeriod: 'year' })).toBeNull();
   });
 
+  test('given money the model marks as a stock (a balance or value) then no period applies', () => {
+    // Bank account assets or a home's value is an amount at one point in time, not a yearly total.
+    expect(
+      enteredValuePeriod({ unit: 'currency-USD', definitionPeriod: 'year', quantityType: 'stock' })
+    ).toBeNull();
+    expect(
+      enteredValuePeriod({ unit: 'currency-GBP', definitionPeriod: 'month', quantityType: 'stock' })
+    ).toBeNull();
+  });
+
+  test('given money the model marks as a flow then it is entered for the year', () => {
+    expect(
+      enteredValuePeriod({ unit: 'currency-USD', definitionPeriod: 'year', quantityType: 'flow' })
+    ).toBe('year');
+  });
+
   test('given money with no period, or for all time, then no period applies', () => {
     expect(enteredValuePeriod({ unit: 'currency-USD' })).toBeNull();
     expect(enteredValuePeriod({ unit: 'currency-USD', definitionPeriod: 'eternity' })).toBeNull();

@@ -16,6 +16,12 @@ export interface VariablePeriodFields {
   unit?: string | null;
   /** The model's definition period: "year", "month", "week", "day" or "eternity". */
   definitionPeriod?: string | null;
+  /**
+   * "stock" for a balance or value at one point in time (bank account
+   * assets, a home's value), "flow" for an amount over a period. Money is a
+   * flow unless the model marks it as a stock.
+   */
+  quantityType?: string | null;
 }
 
 /** Periods the builder sends as one yearly value, which core spreads over the year. */
@@ -47,15 +53,22 @@ export function periodLabel(period: string | null | undefined): string | null {
 
 /**
  * The period an entered value covers, or none when a period does not
- * apply. Only money amounts have one: other inputs describe a state (yes
- * or no, one of a list, a count, an age, a rate), which core copies into
- * each month rather than divides, or name their own period ("hours per
- * day"). Money defined per year or per month is entered for the year;
- * money defined over another period (no household input today) is entered
- * for that period.
+ * apply. Only money amounts over a period have one: other inputs describe
+ * a state (yes or no, one of a list, a count, an age, a rate), which core
+ * copies into each month rather than divides, or name their own period
+ * ("hours per day"); a balance or value (a stock) is an amount at one
+ * point in time. Money defined per year or per month is entered for the
+ * year. The builder would send money defined per week or per day under
+ * the year too, which core accepts only for yearly and monthly variables,
+ * so no household input uses those periods; the label then names the
+ * model's period.
  */
 export function enteredValuePeriod(variable: VariablePeriodFields): string | null {
-  if (!isMoneyAmount(variable.unit) || !variable.definitionPeriod) {
+  if (
+    !isMoneyAmount(variable.unit) ||
+    !variable.definitionPeriod ||
+    variable.quantityType === 'stock'
+  ) {
     return null;
   }
   if (variable.definitionPeriod === 'eternity') {

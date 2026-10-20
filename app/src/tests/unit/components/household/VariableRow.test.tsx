@@ -40,6 +40,13 @@ describe('VariableRow', () => {
     expect(screen.queryByText('Monthly')).not.toBeInTheDocument();
   });
 
+  test('given money the model marks as a balance then no period shows', () => {
+    renderRow(variableInfoFor('bank_account_assets'));
+
+    expect(screen.getByText('Bank account assets')).toBeInTheDocument();
+    expect(screen.queryByText('Annually')).not.toBeInTheDocument();
+  });
+
   test('given a yes or no input then no period shows', () => {
     renderRow(variableInfoFor('is_disabled'));
 

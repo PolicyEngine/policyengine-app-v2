@@ -181,4 +181,15 @@ describe('inputKind', () => {
       inputKind({ ...input('x', 'X'), valueType: 'float', ...fields } as VariableInfo);
     expect(kind({ unit: 'currency-USD', definitionPeriod: 'month' })).toBe('Dollars per year');
   });
+
+  test('given money the model marks as a balance then no period is named', () => {
+    const kind = (fields: Partial<VariableInfo>) =>
+      inputKind({ ...input('x', 'X'), valueType: 'float', ...fields } as VariableInfo);
+    expect(kind({ unit: 'currency-USD', definitionPeriod: 'year', quantityType: 'stock' })).toBe(
+      'Dollars'
+    );
+    expect(kind({ unit: 'currency-GBP', definitionPeriod: 'year', quantityType: 'stock' })).toBe(
+      'Pounds'
+    );
+  });
 });

@@ -63,12 +63,13 @@ export default function VariableRow({
 }: VariableRowProps) {
   const shouldShowColumn = onRemove || showRemoveColumn;
   // The period the entered value covers ("Annually" under rent). A row's
-  // variable can come without its period (getVariableInfo leaves it out),
-  // so the model's metadata fills in what the variable lacks.
+  // variable can come without its period or quantity type (getVariableInfo
+  // leaves them out), so the model's metadata fills in what the variable lacks.
   const modelVariable = getNormalizedVariableMetadata(metadata?.variables?.[variable.name]);
   const periodText = enteredValuePeriodLabel({
     unit: variable.unit ?? modelVariable.unit,
     definitionPeriod: variable.definitionPeriod ?? modelVariable.definitionPeriod,
+    quantityType: variable.quantityType ?? modelVariable.quantityType,
   });
   const periodNote = periodText ? (
     <Text size="xs" style={{ color: colors.text.secondary }}>

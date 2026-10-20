@@ -32,6 +32,20 @@ export const VARIABLE_ROW_METADATA = {
       hidden_input: false,
       moduleName: 'person',
     },
+    // A balance the model marks as a stock: an amount at one point in time.
+    bank_account_assets: {
+      name: 'bank_account_assets',
+      label: 'Bank account assets',
+      entity: 'person',
+      valueType: 'float',
+      unit: 'currency-USD',
+      definitionPeriod: 'year',
+      quantityType: 'stock',
+      defaultValue: 0,
+      isInputVariable: true,
+      hidden_input: false,
+      moduleName: 'person',
+    },
     is_disabled: {
       name: 'is_disabled',
       label: 'Is disabled',
