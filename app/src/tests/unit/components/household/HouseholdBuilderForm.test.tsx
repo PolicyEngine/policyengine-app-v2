@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HouseholdBuilderForm, {
+  PEOPLE_GRID_CLASSES,
   rankVariablesBySearch,
 } from '@/components/household/HouseholdBuilderForm';
 import { Household } from '@/models/Household';
@@ -67,6 +68,26 @@ describe('HouseholdBuilderForm', () => {
     expect(screen.queryByRole('separator', { hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('Individuals')).toBeInTheDocument();
     expect(screen.getByText('Household')).toBeInTheDocument();
+  });
+
+  test('given the columns layout then the people sit at most four to a row, fewer as the section narrows', () => {
+    renderForm({ layout: 'columns' });
+
+    const peopleGrid = screen.getByText('You').closest('[data-slot="accordion"]');
+    expect(peopleGrid).toHaveClass(...PEOPLE_GRID_CLASSES.split(' '));
+    expect(peopleGrid?.className).not.toMatch(/auto-fill|grid-cols-[5-9]/);
+    // The column counts follow the Individuals section's width, not the window's.
+    const individualsSection = screen
+      .getByText('Individuals')
+      .closest('[data-slot="accordion-item"]');
+    expect(individualsSection).toHaveClass('tw:@container');
+  });
+
+  test('given the stacked layout then the people are not laid out as a grid of cards', () => {
+    renderForm();
+
+    const peopleList = screen.getByText('You').closest('[data-slot="accordion"]');
+    expect(peopleList?.className ?? '').not.toContain('tw:grid');
   });
 });
 

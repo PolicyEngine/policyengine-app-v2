@@ -157,6 +157,16 @@ export function rankVariablesBySearch(variables: VariableInfo[], search: string)
 const MAX_TYPED_CHILDREN = 10;
 
 /**
+ * In columns, the people's cards by the width the Individuals section has:
+ * one column, then two, three and at most four. Each step is where one more
+ * card of at least 260px fits, with the 12px gaps. A wider section spreads
+ * four cards out rather than adding a fifth or sixth, so the values typed
+ * into them stay readable.
+ */
+export const PEOPLE_GRID_CLASSES =
+  'tw:grid tw:items-start tw:gap-3 tw:grid-cols-1 tw:@min-[540px]:grid-cols-2 tw:@min-[810px]:grid-cols-3 tw:@min-[1080px]:grid-cols-4';
+
+/**
  * The number of children as a typed whole number, 0 to 10. A partial or
  * empty entry waits; the household changes on a whole number in range.
  */
@@ -569,7 +579,7 @@ export default function HouseholdBuilderForm({
 
   return (
     // In columns, the family and household sections share a row; the people
-    // follow across the full width, one card each, as many to a row as fit.
+    // follow across the full width, one card each, up to four to a row.
     <Stack
       gap="lg"
       className={
@@ -694,7 +704,10 @@ export default function HouseholdBuilderForm({
         {/* Individuals / Members Section */}
         <AccordionItem
           value="individuals"
-          className={columns ? 'tw:lg:order-last tw:lg:w-full tw:border-b-0' : undefined}
+          // The section's own width sets how many people's cards share a row.
+          className={
+            columns ? 'tw:@container tw:lg:order-last tw:lg:w-full tw:border-b-0' : undefined
+          }
         >
           <AccordionTrigger>
             <Text fw={typography.fontWeight.medium}>Individuals</Text>
@@ -704,11 +717,7 @@ export default function HouseholdBuilderForm({
               type="multiple"
               key={people.join(',')}
               defaultValue={people}
-              className={
-                columns
-                  ? 'tw:grid tw:items-start tw:gap-3 tw:sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]'
-                  : undefined
-              }
+              className={columns ? PEOPLE_GRID_CLASSES : undefined}
             >
               {people.map((person) => {
                 const personVars = getPersonVariables(person);
