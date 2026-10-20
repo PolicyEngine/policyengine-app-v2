@@ -45,10 +45,7 @@ describe('StandardLayout', () => {
     expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument();
   });
 
-  test('given a UK page with the UK switched back to v2 then the v2 chrome renders', () => {
-    // Given
-    vi.stubEnv('NEXT_PUBLIC_FLAGSHIP_SHELL_UK', 'false');
-
+  test('given a UK page then the v2 chrome renders, while the UK has no flag of its own', () => {
     // When
     renderWithCountry(<StandardLayout>Page content</StandardLayout>, 'uk');
 
