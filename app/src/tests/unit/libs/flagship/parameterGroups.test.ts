@@ -148,6 +148,22 @@ describe('humanizeSegment', () => {
   });
 
   test.each([
+    ['North east private rental prices growth', 'North East private rental prices growth'],
+    ['South west private rental prices growth', 'South West private rental prices growth'],
+    ['East midlands private rental prices growth', 'East Midlands private rental prices growth'],
+    [
+      'Yorkshire and the humber private rental prices growth',
+      'Yorkshire and the Humber private rental prices growth',
+    ],
+    [
+      'East of england private rental prices growth',
+      'East of England private rental prices growth',
+    ],
+  ])('given the English region label %s then it reads %s', (label, expected) => {
+    expect(humanizeSegment(label)).toBe(expected);
+  });
+
+  test.each([
     ['SINGLE', 'Single'],
     ['SURVIVING_SPOUSE', 'Surviving spouse'],
     ['ADAMS_COUNTY_CO', 'Adams county co'],
@@ -199,7 +215,7 @@ describe('parameterGroup for the UK', () => {
     expect(group?.label).toBe('Standard allowance amount');
   });
 
-  test('given Northern Ireland councils then the group and its members read as names', () => {
+  test('given Northern Ireland councils then the group and its members read as names, by name', () => {
     const group = parameterGroup(
       'gov.local_authorities.domestic_rates.rates.BELFAST',
       UK_PARAMETERS,
@@ -207,12 +223,12 @@ describe('parameterGroup for the UK', () => {
     );
     expect(group?.label).toBe('Domestic Rates');
     expect(group?.members.map((member) => member.label)).toEqual([
-      'Belfast',
       'Armagh City Banbridge and Craigavon',
+      'Belfast',
     ]);
   });
 
-  test('given regions then the members keep their capitals', () => {
+  test('given regions then the members keep their capitals and sort by name', () => {
     const group = parameterGroup(
       'gov.dft.bus.boardings_per_trip.LONDON',
       UK_PARAMETERS,
@@ -220,8 +236,84 @@ describe('parameterGroup for the UK', () => {
     );
     expect(group?.label).toBe('Bus boardings per trip');
     expect(group?.members.map((member) => member.label)).toEqual([
-      'London',
       'England outside London',
+      'London',
+    ]);
+  });
+
+  test('given regions with an unknown one then they sort by name, the unknown last', () => {
+    const root = 'gov.simulation.uc_deductions.region_incidence_factor';
+    const parameters: ParameterMetadataCollection = {
+      ...node(root, 'UC deduction regional incidence factors'),
+      ...node(`${root}.UNKNOWN`, 'UC deduction incidence factor, unknown region'),
+      ...node(`${root}.NORTH_EAST`, 'UC deduction incidence factor, North East'),
+      ...node(`${root}.WALES`, 'UC deduction incidence factor, Wales'),
+      ...node(`${root}.LONDON`, 'UC deduction incidence factor, London'),
+    };
+    const draftable = new Set(
+      ['UNKNOWN', 'NORTH_EAST', 'WALES', 'LONDON'].map((key) => `${root}.${key}`)
+    );
+
+    const group = parameterGroup(`${root}.WALES`, parameters, draftable);
+
+    expect(group?.members.map((member) => member.label)).toEqual([
+      'UC deduction incidence factor, London',
+      'UC deduction incidence factor, North East',
+      'UC deduction incidence factor, Wales',
+      'UC deduction incidence factor, unknown region',
+    ]);
+  });
+
+  test('given filing statuses then they keep the model order', () => {
+    const group = parameterGroup(
+      'gov.irs.deductions.standard.amount.SINGLE',
+      PARAMETERS,
+      DRAFTABLE
+    );
+    expect(group?.members.map((member) => member.label)).toEqual(['Single', 'Head of household']);
+  });
+});
+
+describe('parameterGroup for named brackets', () => {
+  const root = 'gov.hmrc.income_tax.rates.uk';
+  const parameters: ParameterMetadataCollection = {
+    ...node(root, 'Income Tax main rates'),
+    ...node(`${root}[0].threshold`, 'threshold'),
+    ...node(`${root}[0].rate`, 'Basic rate'),
+    ...node(`${root}[1].threshold`, 'Higher rate threshold'),
+    ...node(`${root}[1].rate`, 'Higher rate'),
+    ...node('gov.hmrc.income_tax.rates.scotland.rates[0].threshold', 'threshold'),
+    ...node('gov.hmrc.income_tax.rates.scotland.rates[0].rate', 'rate'),
+    ...node('gov.hmrc.income_tax.rates.scotland.rates[1].threshold', 'threshold'),
+    ...node('gov.hmrc.income_tax.rates.scotland.rates[1].rate', 'rate'),
+  };
+  const draftable = new Set(Object.keys(parameters).filter((path) => path.includes('[')));
+
+  test('given rates with their own labels then each bracket is named for its rate', () => {
+    const group = parameterGroup(`${root}[1].rate`, parameters, draftable);
+
+    expect(group?.brackets?.rows.map((row) => row.name)).toEqual(['Basic rate', 'Higher rate']);
+    expect(group?.members.map((member) => member.label)).toEqual([
+      'Basic rate · threshold',
+      'Basic rate',
+      'Higher rate threshold',
+      'Higher rate',
+    ]);
+  });
+
+  test('given rates labelled only "rate" then the brackets stay numbered', () => {
+    const group = parameterGroup(
+      'gov.hmrc.income_tax.rates.scotland.rates[1].rate',
+      parameters,
+      draftable
+    );
+
+    expect(group?.brackets?.rows.map((row) => row.name)).toEqual([undefined, undefined]);
+    expect(group?.members.map((member) => member.label)).toEqual([
+      'Bracket 1 · threshold',
+      'Bracket 1 · rate',
+      'Bracket 2 · threshold',
+      'Bracket 2 · rate',
     ]);
   });
 });

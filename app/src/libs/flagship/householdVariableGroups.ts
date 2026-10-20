@@ -156,10 +156,30 @@ const MICRODATA_INPUT = new RegExp(
 const UK_DEPRECATED_INPUTS = new Set(['pension_income']);
 
 /**
+ * UK inputs the dataset supplies and a reader does not know for a
+ * household: imputed wealth totals, a gain before behavioural response,
+ * VAT and tenancy-lifetime ratios, the Living Costs and Food Survey's
+ * spending categories, NHS visit counts, transport usage series, and an
+ * eligibility flag the model derives.
+ */
+const UK_DATASET_INPUTS = new RegExp(
+  [
+    '^capital_gains_before_response$',
+    '^(gross_financial|net_financial|corporate)_wealth$',
+    '^full_rate_vat_expenditure_rate$',
+    '^cumulative_(residential|non_residential)_rent$',
+    '^(food_and_non_alcoholic_beverages|alcohol_and_tobacco|clothing_and_footwear|housing_water_and_electricity|household_furnishings|health|transport|communication|recreation|education|restaurants_and_hotels|miscellaneous)_consumption$',
+    '^(a_and_e|admitted_patient|outpatient)_visits$',
+    '^(rail_usage|bus_in_london_trips|other_local_bus_trips)$',
+    '^ebr_energy_bills_credit_eligible$',
+  ].join('|')
+);
+
+/**
  * Inputs a reader does not describe a household with: amounts the survey
  * reports for a whole unit, analysts' incidence inputs, inputs the
- * microdata sets (ids, weights, take-up draws), and inputs the model
- * keeps only for old API callers.
+ * microdata sets (ids, weights, take-up draws), inputs only the UK
+ * dataset supplies, and inputs the model keeps only for old API callers.
  */
 export function describesAHousehold(variable: VariableInfo, countryId: string = 'us'): boolean {
   const module = variable.moduleName ?? '';
@@ -168,9 +188,23 @@ export function describesAHousehold(variable: VariableInfo, countryId: string = 
     /(^|_)reported($|_)/.test(variable.name) ||
     MICRODATA_INPUT.test(variable.name) ||
     (countryId === 'uk' && UK_DEPRECATED_INPUTS.has(variable.name)) ||
+    (countryId === 'uk' && UK_DATASET_INPUTS.test(variable.name)) ||
     module.startsWith('household.income.spm_unit') ||
     module.startsWith('household.income.household.cbo')
   );
+}
+
+/**
+ * Whether an input is the "before labour supply responses" twin of a field
+ * the builder always shows: `employment_income_before_lsr` beside the
+ * basic `employment_income`. The builder sets the basic field, which the
+ * model takes in place of its formula, so the twin would change nothing.
+ * A twin without a basic field stays: the US model's
+ * `self_employment_income_before_lsr` is its only self-employment input.
+ */
+export function twinsABasicInput(variable: VariableInfo, basicFields: readonly string[]): boolean {
+  const match = /^(.+)_before_lsr$/.exec(variable.name);
+  return !!match && basicFields.includes(match[1]);
 }
 
 /**

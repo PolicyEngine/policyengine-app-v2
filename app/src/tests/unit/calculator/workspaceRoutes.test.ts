@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  isSameScreen,
   isWorkspaceTransition,
   workspaceRoute,
 } from '../../../../../calculator-app/src/app/[countryId]/(workspace)/workspaceRoutes';
@@ -53,5 +54,24 @@ describe('workspace navigation boundary', () => {
 
   test('given a trailing slash and hash then identifies the matching screen', () => {
     expect(workspaceRoute('/uk/build/#parameters')).toEqual({ country: 'uk', screen: 'build' });
+  });
+});
+
+describe('same-screen navigation', () => {
+  test.each([
+    ['/us/report/3741', '/us/report/3741?tab=validation'],
+    ['/us/report/3741/', '/us/report/3741?tab=economy'],
+    ['/us/report/3741', '/us/report/3741'],
+    ['/uk/build', '/uk/build#parameters'],
+  ])('given a move from %s to %s then it stays on the same screen', (from, to) => {
+    expect(isSameScreen(from, to)).toBe(true);
+  });
+
+  test.each([
+    ['/us/report/3741', '/us/report/3742?tab=validation'],
+    ['/us/report/3741', '/us/build'],
+    ['/us/reforms', '/us/report/3741'],
+  ])('given a move from %s to %s then it opens another screen', (from, to) => {
+    expect(isSameScreen(from, to)).toBe(false);
   });
 });

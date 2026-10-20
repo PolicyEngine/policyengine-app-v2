@@ -15,6 +15,21 @@ describe('describeCalculationError', () => {
     expect(summary.detail).toBe(SERVER_FAILURE);
   });
 
+  test('given no scope then a server failure says nationwide', () => {
+    expect(describeCalculationError(SERVER_FAILURE).body).toContain(
+      'running this reform nationwide'
+    );
+  });
+
+  test('given a UK-wide or a nation scope then a server failure names it', () => {
+    expect(describeCalculationError(SERVER_FAILURE, 'UK-wide').body).toContain(
+      'running this reform UK-wide'
+    );
+    expect(describeCalculationError(SERVER_FAILURE, 'for Wales').body).toContain(
+      'running this reform for Wales'
+    );
+  });
+
   test('given a rejected request then it passes on the API message and points back to the reform', () => {
     const summary = describeCalculationError(
       'Society-wide calculation failed (400): {"status": "error", "message": "Unknown parameter gov.x"}'

@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   BOOLEAN_FALSE_VALUE,
   BOOLEAN_TRUE_VALUE,
+  COMPACT_TICK_VALUES,
   CURRENCY_GBP_VALUE,
   CURRENCY_USD_VALUE,
   EMPTY_VALUES,
+  EXPECTED_COMPACT_TICKS,
   EXPECTED_FORMATS,
   getExpectedBooleanAxisFormat,
   getExpectedDateAxisFormat,
@@ -362,6 +364,61 @@ describe('chartValueUtils', () => {
       it('should format positive USD normally in compact mode', () => {
         const formatter = getRechartsTickFormatter(UNITS.USD, { compact: true });
         expect(formatter(1500)).toBe('$1.5K');
+      });
+
+      it('given a whole number of billions in compact USD mode then the tick has no trailing zero on any runtime', () => {
+        // Given
+        const formatter = getRechartsTickFormatter(UNITS.USD, { compact: true });
+
+        // When
+        const tick = formatter(COMPACT_TICK_VALUES.ONE_BILLION);
+
+        // Then
+        expect(tick).toBe(EXPECTED_COMPACT_TICKS.USD_ONE_BILLION);
+      });
+
+      it('given a whole number of millions in compact GBP mode then the tick has no trailing zero on any runtime', () => {
+        // Given
+        const formatter = getRechartsTickFormatter(UNITS.GBP, { compact: true });
+
+        // When
+        const tick = formatter(COMPACT_TICK_VALUES.TWO_MILLION);
+
+        // Then
+        expect(tick).toBe(EXPECTED_COMPACT_TICKS.GBP_TWO_MILLION);
+      });
+
+      it('given two decimal places in compact USD mode then a one-decimal amount has no trailing zero on any runtime', () => {
+        // Given
+        const formatter = getRechartsTickFormatter(UNITS.USD, { compact: true, decimalPlaces: 2 });
+
+        // When
+        const tick = formatter(COMPACT_TICK_VALUES.ONE_AND_A_HALF_BILLION);
+
+        // Then
+        expect(tick).toBe(EXPECTED_COMPACT_TICKS.USD_ONE_AND_A_HALF_BILLION);
+      });
+
+      it('given two decimal places in compact USD mode then a two-decimal amount keeps both decimals', () => {
+        // Given
+        const formatter = getRechartsTickFormatter(UNITS.USD, { compact: true, decimalPlaces: 2 });
+
+        // When
+        const tick = formatter(COMPACT_TICK_VALUES.ONE_POINT_ZERO_FOUR_BILLION);
+
+        // Then
+        expect(tick).toBe(EXPECTED_COMPACT_TICKS.USD_ONE_POINT_ZERO_FOUR_BILLION);
+      });
+
+      it('given a negative fractional amount in compact GBP mode then the tick keeps its decimal', () => {
+        // Given
+        const formatter = getRechartsTickFormatter(UNITS.GBP, { compact: true });
+
+        // When
+        const tick = formatter(COMPACT_TICK_VALUES.NEGATIVE_TWO_AND_A_HALF_BILLION);
+
+        // Then
+        expect(tick).toBe(EXPECTED_COMPACT_TICKS.GBP_NEGATIVE_TWO_AND_A_HALF_BILLION);
       });
     });
   });

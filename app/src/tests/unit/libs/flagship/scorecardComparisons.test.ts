@@ -69,4 +69,11 @@ describe('scorecard comparison matching', () => {
       claimPeriod(scorecardClaim({ period_start: 2025, period_end: 2034, time_basis: 'total' }))
     ).toBe('2025–2034 · total');
   });
+  test('given a whole number of billions or millions then money shows no trailing zero on any runtime', () => {
+    // Without an explicit minimum, Node 20 and 22 render "£1.0B" and later versions "£1B".
+    expect(claimValue(1_000_000_000, 'gbp')).toBe('£1B');
+    expect(claimValue(2_000_000_000, 'gbp')).toBe('£2B');
+    expect(claimValue(500_000_000, 'usd')).toBe('$500M');
+    expect(claimValue(-1_130_000_000, 'gbp')).toBe('-£1.1B');
+  });
 });

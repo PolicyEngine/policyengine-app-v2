@@ -15,7 +15,7 @@ vi.mock('@/api/billFeed', async (importOriginal) => ({
 
 const FEED_KEY = ['tracker-bills'];
 
-function renderBillsHook() {
+function renderBillsHook(countryId: 'us' | 'uk' = 'us') {
   // No retry delay, so the feed's own retry settles at once.
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, retryDelay: 0 } },
@@ -23,12 +23,21 @@ function renderBillsHook() {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  return { queryClient, ...renderHook(() => useTrackedBills('us'), { wrapper }) };
+  return { queryClient, ...renderHook(() => useTrackedBills(countryId), { wrapper }) };
 }
 
 describe('useTrackedBills', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  test('given a country the tracker does not cover then it fetches nothing and waits for nothing', () => {
+    const { result } = renderBillsHook('uk');
+
+    expect(mockFetchTrackerBills).not.toHaveBeenCalled();
+    expect(result.current.bills).toEqual([]);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isError).toBe(false);
   });
 
   test('given the feed fails before any bills are in then it is an error', async () => {

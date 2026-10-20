@@ -39,6 +39,11 @@ export interface VariableInputProps {
   wholeNumbers?: boolean;
   /** The input's name for its step buttons, when its label is shown elsewhere. */
   stepLabel?: string;
+  /**
+   * The input's accessible name, when its label is shown elsewhere and not
+   * tied to it. Unset, the input has none of its own, as before.
+   */
+  ariaLabel?: string;
 }
 
 export default function VariableInput({
@@ -51,6 +56,7 @@ export default function VariableInput({
   disabled = false,
   wholeNumbers = false,
   stepLabel,
+  ariaLabel,
 }: VariableInputProps) {
   const resolvedVariable = {
     ...variable,
@@ -173,6 +179,7 @@ export default function VariableInput({
             checked={isChecked}
             onCheckedChange={(checked) => handleChange(checked)}
             disabled={disabled}
+            aria-label={ariaLabel}
           />
           <Text
             size="sm"
@@ -196,7 +203,7 @@ export default function VariableInput({
               onValueChange={(val) => handleChange(val)}
               disabled={disabled}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label={ariaLabel}>
                 <SelectValue placeholder={`Select ${resolvedVariable.label}`} />
               </SelectTrigger>
               <SelectContent>
@@ -217,6 +224,7 @@ export default function VariableInput({
             value={currentValue?.toString() || ''}
             onChange={(e) => handleChange(e.currentTarget.value)}
             placeholder={`Enter ${resolvedVariable.label}`}
+            aria-label={ariaLabel}
             disabled={disabled}
           />
         </div>
@@ -256,6 +264,7 @@ export default function VariableInput({
               }}
               onChange={(e) => handleNumericInputChange(e.currentTarget.value)}
               placeholder={`Enter ${resolvedVariable.label}`}
+              aria-label={ariaLabel}
               disabled={disabled}
               className={[
                 numericFormatting.prefix ? 'tw:pl-8' : '',
@@ -301,6 +310,7 @@ export default function VariableInput({
             }}
             onChange={(e) => setTextInputValue(e.currentTarget.value)}
             placeholder={`Enter ${resolvedVariable.label}`}
+            aria-label={ariaLabel}
             disabled={disabled}
           />
         </div>

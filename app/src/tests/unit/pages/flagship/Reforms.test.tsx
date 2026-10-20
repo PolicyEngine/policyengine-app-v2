@@ -301,6 +301,26 @@ describe('ReformsPage', () => {
     expect(screen.queryByRole('link', { name: /bill tracker/i })).not.toBeInTheDocument();
   });
 
+  test('given UK reforms then the library opens with no tracked bills tab and no feed fetch', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithCountry(
+      <QueryClientProvider client={queryClient}>
+        <ReformsPage />
+      </QueryClientProvider>,
+      'uk',
+      '/uk/reforms'
+    );
+
+    expect(await screen.findByText(/no saved reforms yet/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Your library' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.queryByRole('button', { name: 'Tracked bills' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/analyzed/i)).not.toBeInTheDocument();
+    expect(mockFetchTrackerBills).not.toHaveBeenCalled();
+  });
+
   test('given a narrow screen then the header actions can wrap under the title', async () => {
     renderReforms();
 

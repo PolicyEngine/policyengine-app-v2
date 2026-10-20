@@ -386,6 +386,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           </Title>
           <ReportCalculationError
             message={calcStatus.error?.message}
+            scope={
+              regionLabel
+                ? `for ${regionLabel}`
+                : report?.countryId === 'uk'
+                  ? 'UK-wide'
+                  : 'nationwide'
+            }
             // The reform comes back as a draft to edit; without it, Build starts blank.
             onEdit={
               meta?.provisions.length && report
@@ -421,7 +428,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             title={
               regionLabel
                 ? `Calculating the results for ${regionLabel}`
-                : 'Calculating the nationwide results'
+                : report?.countryId === 'uk'
+                  ? 'Calculating the UK-wide results'
+                  : 'Calculating the nationwide results'
             }
             progress={calcStatus.progress}
             runStage={'runStage' in calcStatus ? calcStatus.runStage : undefined}

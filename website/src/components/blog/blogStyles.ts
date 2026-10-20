@@ -4,11 +4,7 @@
  * for markdown rendering in blog posts.
  */
 
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 export const blogColors = {
   primary: colors.primary[600],

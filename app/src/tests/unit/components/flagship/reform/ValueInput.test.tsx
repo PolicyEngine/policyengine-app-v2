@@ -142,4 +142,18 @@ describe('ValueDisplay', () => {
 
     expect(screen.getByText('No limit')).toBeInTheDocument();
   });
+
+  test('given a negative amount then the sign leads the symbol, as formatValue writes it', () => {
+    render(<ValueDisplay param={param('currency-GBP')} value={-5} />);
+
+    expect(screen.getByText('−£5')).toBeInTheDocument();
+    expect(screen.queryByText('£')).not.toBeInTheDocument();
+  });
+
+  test('given a positive amount then the symbol keeps its own column', () => {
+    render(<ValueDisplay param={param('currency-GBP')} value={1250} />);
+
+    expect(screen.getByText('£')).toBeInTheDocument();
+    expect(screen.getByText('1,250')).toBeInTheDocument();
+  });
 });

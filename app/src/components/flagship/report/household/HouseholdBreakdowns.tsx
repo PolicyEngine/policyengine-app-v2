@@ -164,30 +164,32 @@ export default function HouseholdBreakdowns({
       </div>
     );
   } else {
-    const Output =
-      view === 'earnings-variation' ? EarningsVariationSubPage : MarginalTaxRatesSubPage;
-    content = (
-      <Output
-        baseline={baseline}
-        reform={reform}
-        simulations={simulations}
-        policies={policyQuery.policies}
-        // v3 households use national thresholds, so the footnote says nothing new.
-        hideSpmFootnote
-        renderLoading={() => (
-          <RunProgress
-            title={
-              view === 'earnings-variation'
-                ? 'Calculating the household across earnings'
-                : 'Calculating marginal tax rates across earnings'
-            }
-            expectedMs={VARIATION_EXPECTED_MS}
-            startedAt={variationStartedAt ?? undefined}
-            note="Both views use this one calculation, so the other opens at once."
-          />
-        )}
-      />
-    );
+    const outputProps = {
+      baseline,
+      reform,
+      simulations,
+      policies: policyQuery.policies,
+      // v3 households use national thresholds, so the footnote says nothing new.
+      hideSpmFootnote: true,
+      renderLoading: () => (
+        <RunProgress
+          title={
+            view === 'earnings-variation'
+              ? 'Calculating the household across earnings'
+              : 'Calculating marginal tax rates across earnings'
+          }
+          expectedMs={VARIATION_EXPECTED_MS}
+          startedAt={variationStartedAt ?? undefined}
+          note="Both views use this one calculation, so the other opens at once."
+        />
+      ),
+    };
+    content =
+      view === 'earnings-variation' ? (
+        <EarningsVariationSubPage {...outputProps} />
+      ) : (
+        <MarginalTaxRatesSubPage {...outputProps} currencyAwareText />
+      );
   }
 
   return <ReportYearProvider year={year}>{content}</ReportYearProvider>;

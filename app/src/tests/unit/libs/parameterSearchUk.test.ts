@@ -89,10 +89,14 @@ describe('UK ranking signals', () => {
   });
 
   test('given a candidate missing a query word then a full match outranks it', () => {
-    // "employer" is one letter from "employee"; fuzzy scoring alone ranks it first.
+    // "employer" is one letter from "employee"; fuzzy scoring alone ranks it
+    // first. It is the other side of the role, so the stem earns it nothing.
     const paths = search('employee national insurance rate');
 
-    expect(paths.indexOf(UK_PATHS.employeeNiMain)).toBeLessThan(paths.indexOf(UK_PATHS.employerNi));
+    expect(paths[0]).toBe(UK_PATHS.employeeNiMain);
+    expect(
+      paths.indexOf(UK_PATHS.employerNi) === -1 || paths.indexOf(UK_PATHS.employerNi) > 0
+    ).toBe(true);
   });
 });
 

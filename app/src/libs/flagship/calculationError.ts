@@ -50,7 +50,14 @@ function serverUnavailable(raw: string, message: string | null): boolean {
   );
 }
 
-export function describeCalculationError(raw: string | null | undefined): CalculationErrorSummary {
+/**
+ * @param scope Where the reform ran, as it reads after "running this
+ * reform": "nationwide", "UK-wide", "for Wales".
+ */
+export function describeCalculationError(
+  raw: string | null | undefined,
+  scope = 'nationwide'
+): CalculationErrorSummary {
   const detail = (raw ?? '').trim() || 'The calculation failed without a message.';
   const status = Number(detail.match(/\((\d{3})\)/)?.[1]) || null;
   const message = apiMessage(detail);
@@ -69,7 +76,7 @@ export function describeCalculationError(raw: string | null | undefined): Calcul
     return {
       retryable: true,
       title: 'The simulation did not finish',
-      body: "PolicyEngine's servers hit an error while running this reform nationwide. This is usually on our side rather than the reform's. Run the report again in a few minutes.",
+      body: `PolicyEngine's servers hit an error while running this reform ${scope}. This is usually on our side rather than the reform's. Run the report again in a few minutes.`,
       reference,
       detail,
     };

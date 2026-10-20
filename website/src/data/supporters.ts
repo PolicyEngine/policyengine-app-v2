@@ -123,7 +123,7 @@ export const projects: SupportedProjectData[] = [
     currency: "USD",
     awardDate: "2026-10",
     description:
-      "Modelling the revenue and distributional effects of a UK tax on AI inference, for the project \"Token taxes as a mechanism for reducing AI-driven power concentration\". The project is funded through Manifund by grantmaking.ai.",
+      'Modelling the revenue and distributional effects of a UK tax on AI inference, for the project "Token taxes as a mechanism for reducing AI-driven power concentration". The project is funded through Manifund by grantmaking.ai.',
     supporterId: "manifund",
   },
   {
@@ -136,7 +136,8 @@ export const projects: SupportedProjectData[] = [
     supporterId: "ses",
   },
   {
-    title: "Advancing evidence-based policy with AI & tax-benefit microsimulation",
+    title:
+      "Advancing evidence-based policy with AI & tax-benefit microsimulation",
     projectUrl:
       "https://www.nuffieldfoundation.org/project/advancing-evidence-based-policy-with-ai-tax-benefit-microsimulation",
     amount: 300000,

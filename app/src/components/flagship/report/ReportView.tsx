@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
@@ -23,6 +23,7 @@ import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useReportTabHistory } from '@/hooks/useReportTabHistory';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
 import type { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
@@ -180,38 +181,92 @@ export default function ReportView({
   externalEstimatesNote,
 }: ReportViewProps) {
   const countryId = useCurrentCountry();
-  const [activeTab, setActiveTab] = useState('policy');
-  const [visitedTabs, setVisitedTabs] = useState(() => new Set(['policy']));
+  // A UK report on one constituency or local authority has no maps of
+  // them, as in v2: no tab, no overview card.
+  const isUK = countryId === 'uk';
+  const showDistrictsSection = !(isUK && isUKLocalLevelRegion(region));
+  const sections = SECTIONS.filter(
+    (section) => section.id !== 'districts' || showDistrictsSection
+  ).map((section) =>
+    isUK && section.id === 'districts' ? { ...section, label: UK_DISTRICTS_TAB_LABEL } : section
+  );
+  // The open section is in the URL, so Back and Forward move between the
+  // sections opened. One this report doesn't have opens the Overview.
+  const { activeTab, openTab } = useReportTabHistory(sections.map((section) => section.id));
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set([activeTab]));
+  // A section opened by the URL (Back, Forward or a link) draws its
+  // content like one opened by a click, and keeps it.
+  useEffect(() => {
+    setVisitedTabs((visited) =>
+      visited.has(activeTab) ? visited : new Set([...visited, activeTab])
+    );
+  }, [activeTab]);
+  // What to bring into view once a section opened from the overview shows.
+  // The URL can update after the click's frame, so this waits for the tab.
+  const [pendingReveal, setPendingReveal] = useState<{
+    tab: string;
+    reveal: () => void;
+  } | null>(null);
+  useEffect(() => {
+    if (pendingReveal && pendingReveal.tab === activeTab) {
+      setPendingReveal(null);
+      pendingReveal.reveal();
+    }
+  }, [pendingReveal, activeTab]);
+  // Radix Tabs opens the tab that takes focus, which is how the arrow,
+  // Home and End keys move between tabs. A click opens its tab on press,
+  // before focus arrives, so a tab opening on focus was reached by keyboard.
+  const openingOnFocusRef = useRef(false);
+  function markTabFocused() {
+    openingOnFocusRef.current = true;
+    // Radix opens the tab in the same focus event, right after this.
+    queueMicrotask(() => {
+      openingOnFocusRef.current = false;
+    });
+  }
   function selectTab(section: string) {
-    // Sent per tab opened, from the click: the open tab again sends nothing.
-    if (section !== activeTab) {
+    const keyboardMove = openingOnFocusRef.current;
+    openingOnFocusRef.current = false;
+    // Sent per tab opened, from the click: the open tab again sends
+    // nothing and adds no history entry.
+    if (openTab(section, { keyboardMove })) {
       trackReportTabViewed({
         countryId,
         tab: section,
         regionKind: regionKindOf(region, countryId),
       });
     }
-    setVisitedTabs((visited) => (visited.has(section) ? visited : new Set([...visited, section])));
-    setActiveTab(section);
   }
   /** The Economic impacts tab, at its Budget window section. */
   function openBudgetWindow() {
+    setPendingReveal({
+      tab: 'economy',
+      reveal: () => {
+        // The tab draws its content on first visit: scroll once it is there.
+        window.setTimeout(() => {
+          document
+            .getElementById('budget-window-heading')
+            ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }, 60);
+      },
+    });
     selectTab('economy');
-    // The tab draws its content on first visit: scroll once it is there.
-    window.setTimeout(() => {
-      document
-        .getElementById('budget-window-heading')
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    }, 60);
   }
 
   function openReportSection(section: string) {
-    selectTab(section);
-    requestAnimationFrame(() => {
-      const tab = document.querySelector<HTMLButtonElement>('[role="tab"][data-state="active"]');
-      tab?.focus();
-      tab?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    setPendingReveal({
+      tab: section,
+      reveal: () => {
+        requestAnimationFrame(() => {
+          const tab = document.querySelector<HTMLButtonElement>(
+            '[role="tab"][data-state="active"]'
+          );
+          tab?.focus();
+          tab?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        });
+      },
     });
+    selectTab(section);
   }
 
   // Whether the report's scope has districts at all, results loaded or not:
@@ -226,15 +281,6 @@ export default function ReportView({
     year,
     region,
   });
-  // A UK report on one constituency or local authority has no maps of
-  // them, as in v2: no tab, no overview card.
-  const isUK = countryId === 'uk';
-  const showDistrictsSection = !(isUK && isUKLocalLevelRegion(region));
-  const sections = SECTIONS.filter(
-    (section) => section.id !== 'districts' || showDistrictsSection
-  ).map((section) =>
-    isUK && section.id === 'districts' ? { ...section, label: UK_DISTRICTS_TAB_LABEL } : section
-  );
   const metrics = output
     ? reportMetrics(output, countryId, {
         stateRevenue: leadsWithStateRevenue(region, provisions),
@@ -250,7 +296,7 @@ export default function ReportView({
       className="tw:motion-safe:fade-in-soft"
       style={{ display: activeTab === id ? undefined : 'none' }}
     >
-      {visitedTabs.has(id) && content}
+      {(visitedTabs.has(id) || activeTab === id) && content}
     </TabsContent>
   );
 
@@ -329,6 +375,7 @@ export default function ReportView({
                     <TabsTrigger
                       key={section.id}
                       value={section.id}
+                      onFocus={markTabFocused}
                       style={{
                         flex: '0 0 auto',
                         padding: `${spacing.sm} ${spacing.md}`,

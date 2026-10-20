@@ -6,6 +6,7 @@ import {
   householdVariableSubgroup,
   householdVariableSubgroupOf,
   listsForState,
+  twinsABasicInput,
 } from '@/libs/flagship/householdVariableGroups';
 import type { VariableInfo } from '@/utils/VariableResolver';
 
@@ -159,8 +160,46 @@ describe('describesAHousehold', () => {
     'is_disabled_for_benefits',
     'uc_is_in_startup_period',
     'region',
+    'electricity_consumption',
+    'gas_consumption',
+    'domestic_energy_consumption',
   ])('given the UK input %s then it is kept', (name) => {
     expect(describesAHousehold(input(name, ''), 'uk')).toBe(true);
+  });
+
+  test.each([
+    'capital_gains_before_response',
+    'gross_financial_wealth',
+    'net_financial_wealth',
+    'corporate_wealth',
+    'full_rate_vat_expenditure_rate',
+    'cumulative_residential_rent',
+    'cumulative_non_residential_rent',
+    'food_and_non_alcoholic_beverages_consumption',
+    'alcohol_and_tobacco_consumption',
+    'clothing_and_footwear_consumption',
+    'housing_water_and_electricity_consumption',
+    'household_furnishings_consumption',
+    'health_consumption',
+    'transport_consumption',
+    'communication_consumption',
+    'recreation_consumption',
+    'education_consumption',
+    'restaurants_and_hotels_consumption',
+    'miscellaneous_consumption',
+    'a_and_e_visits',
+    'admitted_patient_visits',
+    'outpatient_visits',
+    'rail_usage',
+    'bus_in_london_trips',
+    'other_local_bus_trips',
+    'ebr_energy_bills_credit_eligible',
+  ])('given the UK dataset-only input %s then it is left out', (name) => {
+    expect(describesAHousehold(input(name, ''), 'uk')).toBe(false);
+  });
+
+  test('given a UK dataset-only name in another country then the UK rule does not apply', () => {
+    expect(describesAHousehold(input('health_consumption', ''), 'us')).toBe(true);
   });
 });
 
@@ -206,5 +245,26 @@ describe('UK household variable groups', () => {
     expect(householdVariableGroupOf('us')).toBe(householdVariableGroup);
     expect(householdVariableSubgroupOf('us')).toBe(householdVariableSubgroup);
     expect(householdVariableGroup(uk('rent'))).toBe('Other');
+  });
+});
+
+describe('twinsABasicInput', () => {
+  const named = (name: string) => ({ name, label: name, moduleName: '' }) as VariableInfo;
+
+  test('given the twin of a basic field then it is a twin', () => {
+    expect(
+      twinsABasicInput(named('employment_income_before_lsr'), ['age', 'employment_income'])
+    ).toBe(true);
+  });
+
+  test('given a twin without a basic field then it is kept', () => {
+    // The US model's only self-employment input.
+    expect(
+      twinsABasicInput(named('self_employment_income_before_lsr'), ['age', 'employment_income'])
+    ).toBe(false);
+  });
+
+  test('given the basic field itself then it is not a twin', () => {
+    expect(twinsABasicInput(named('employment_income'), ['employment_income'])).toBe(false);
   });
 });

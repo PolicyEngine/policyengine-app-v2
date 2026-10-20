@@ -10,6 +10,16 @@
     "expectedPaths": ["gov.hmrc.income_tax.allowances.personal_allowance.maximum_ANI"]
   },
   {
+    "id": "income-tax",
+    "query": "income tax",
+    "expectedPaths": [
+      "gov.hmrc.income_tax.rates.uk[0].rate",
+      "gov.hmrc.income_tax.rates.uk[0].threshold",
+      "gov.hmrc.income_tax.rates.uk[1].rate",
+      "gov.hmrc.income_tax.rates.uk[2].rate"
+    ]
+  },
+  {
     "id": "income-tax-basic-rate",
     "query": "income tax basic rate",
     "expectedPaths": ["gov.hmrc.income_tax.rates.uk[0].rate"]
@@ -47,6 +57,11 @@
   {
     "id": "employer-ni",
     "query": "employer national insurance rate",
+    "expectedPaths": ["gov.hmrc.national_insurance.class_1.rates.employer"]
+  },
+  {
+    "id": "employer-national-insurance",
+    "query": "employer national insurance",
     "expectedPaths": ["gov.hmrc.national_insurance.class_1.rates.employer"]
   },
   {
@@ -130,6 +145,14 @@
     "expectedPaths": ["gov.dwp.pension_credit.guarantee_credit.minimum_guarantee.SINGLE"]
   },
   {
+    "id": "pension-credit-plain",
+    "query": "pension credit",
+    "expectedPaths": [
+      "gov.dwp.pension_credit.guarantee_credit.minimum_guarantee.SINGLE",
+      "gov.dwp.pension_credit.guarantee_credit.minimum_guarantee.COUPLE"
+    ]
+  },
+  {
     "id": "state-pension",
     "query": "state pension",
     "expectedPaths": [
@@ -153,6 +176,16 @@
     "expectedPrefixes": ["gov.hmrc.income_tax.rates.scotland"]
   },
   {
+    "id": "scottish-higher-rate",
+    "query": "scottish higher rate",
+    "expectedPaths": ["gov.hmrc.income_tax.rates.scotland.rates[3].rate"]
+  },
+  {
+    "id": "scottish-intermediate-rate",
+    "query": "scottish intermediate rate",
+    "expectedPaths": ["gov.hmrc.income_tax.rates.scotland.rates[2].rate"]
+  },
+  {
     "id": "vat",
     "query": "VAT",
     "expectedPaths": ["gov.hmrc.vat.standard_rate", "gov.hmrc.vat.reduced_rate"]
@@ -165,7 +198,17 @@
   {
     "id": "stamp-duty",
     "query": "stamp duty",
-    "expectedPrefixes": ["gov.hmrc.stamp_duty"]
+    "expectedPrefixes": ["gov.hmrc.stamp_duty.residential.purchase.main"]
+  },
+  {
+    "id": "sdlt",
+    "query": "SDLT",
+    "expectedPrefixes": ["gov.hmrc.stamp_duty.residential.purchase.main"]
+  },
+  {
+    "id": "stamp-duty-land-tax",
+    "query": "stamp duty land tax",
+    "expectedPrefixes": ["gov.hmrc.stamp_duty.residential.purchase.main"]
   },
   {
     "id": "capital-gains",
