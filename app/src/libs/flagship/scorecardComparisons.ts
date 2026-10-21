@@ -65,7 +65,16 @@ export function matchScorecardClaims(
   rows: ScorecardClaim[],
   country: string,
   paths: string[],
-  variables: string[]
+  variables: string[],
+  options: {
+    /**
+     * Link a claim by its `program` only when it measures the programme as it
+     * is (a baseline claim). A policy claim then needs a parameter or variable
+     * match. The UK opts in: its programme names come from parameter folders,
+     * so a policy claim with the same programme can score a different rule.
+     */
+    programBaselineOnly?: boolean;
+  } = {}
 ): Omit<ScorecardComparisonsResult, 'built'> {
   const names = new Set(variables);
   const normalized = new Set(paths.map(normalizeParameterPath));
@@ -89,7 +98,11 @@ export function matchScorecardClaims(
       match = 'variable';
     } else if (receiptPaths.some((path) => normalized.has(normalizeParameterPath(path)))) {
       match = 'parameter';
-    } else if (row.program && names.has(row.program)) {
+    } else if (
+      row.program &&
+      names.has(row.program) &&
+      (!options.programBaselineOnly || row.reform_framework === 'baseline')
+    ) {
       match = 'program';
     }
     if (match) {
