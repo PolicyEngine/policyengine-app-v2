@@ -60,7 +60,7 @@ vi.mock('@/components/household/HouseholdBuilderForm', async () => {
   };
 });
 
-/** The builder's stand-in: the real SPM choice (unless hidden), and the builder's own calls. */
+/** The builder's stand-in: the real SPM choice, as the builder shows it, and the builder's own calls. */
 function HouseholdBuilderStandIn({
   household,
   year,
@@ -72,7 +72,6 @@ function HouseholdBuilderStandIn({
   variablePickerCommon,
   personDisplayNameOf,
   labelInputs,
-  hideSpmGeography,
   SPMGeographyChoice,
   spmMetadata,
 }: any) {
@@ -90,14 +89,12 @@ function HouseholdBuilderStandIn({
         )
         .join(' ')}
     >
-      {!hideSpmGeography && (
-        <SPMGeographyChoice
-          household={household}
-          year={year}
-          metadata={spmMetadata}
-          onChange={onChange}
-        />
-      )}
+      <SPMGeographyChoice
+        household={household}
+        year={year}
+        metadata={spmMetadata}
+        onChange={onChange}
+      />
       <span>{`${maritalStatus} · ${numChildren}`}</span>
       <span data-testid="state">
         {String(
