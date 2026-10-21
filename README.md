@@ -79,6 +79,7 @@ build time (see `calculator-app/.env.example`), alongside
 | `NEXT_PUBLIC_AUTH0_DOMAIN` | Auth0 (custom) domain |
 | `NEXT_PUBLIC_AUTH0_CLIENT_ID` | SPA application for the environment |
 | `NEXT_PUBLIC_AUTH0_AUDIENCE` | PolicyEngine API resource server identifier |
+| `NEXT_PUBLIC_AUTH0_CACHE_LOCATION` | Optional. `localstorage` keeps the session in localStorage, for previews and local builds whose Auth0 domain is on another site than the app. Leave unset in production, where tokens stay in memory. |
 | `NEXT_PUBLIC_API_URL` | PolicyEngine API origin (default `https://api.policyengine.org`); set to the staging API on staging |
 
 - On the US and UK workspace, saved reforms and reports always go to the

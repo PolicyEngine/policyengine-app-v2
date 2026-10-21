@@ -80,6 +80,12 @@ const nextConfig: NextConfig = {
         "import.meta.env.VITE_AUTH0_AUDIENCE": JSON.stringify(
           envValue("NEXT_PUBLIC_AUTH0_AUDIENCE", "VITE_AUTH0_AUDIENCE"),
         ),
+        "import.meta.env.VITE_AUTH0_CACHE_LOCATION": JSON.stringify(
+          envValue(
+            "NEXT_PUBLIC_AUTH0_CACHE_LOCATION",
+            "VITE_AUTH0_CACHE_LOCATION",
+          ),
+        ),
       }),
     );
 

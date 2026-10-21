@@ -185,6 +185,24 @@ describe('AuthProvider', () => {
     );
   });
 
+  test('given the cache location is localstorage then Auth0 keeps tokens in localStorage', () => {
+    // Given
+    stubAuthEnv(true);
+    vi.stubEnv('VITE_AUTH0_CACHE_LOCATION', 'localstorage');
+
+    // When
+    renderProvider();
+
+    // Then
+    expect(auth0.providerProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cacheLocation: 'localstorage',
+        useRefreshTokens: true,
+        useRefreshTokensFallback: true,
+      })
+    );
+  });
+
   test('given Auth0 is restoring the session then a loading state renders instead of the workspace', () => {
     // Given
     stubAuthEnv(true);

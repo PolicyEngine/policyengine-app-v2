@@ -6,6 +6,9 @@
  * - VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID, VITE_AUTH0_AUDIENCE
  *   (calculator-app: NEXT_PUBLIC_AUTH0_*)
  *
+ * VITE_AUTH0_CACHE_LOCATION (calculator-app: NEXT_PUBLIC_AUTH0_CACHE_LOCATION)
+ * is optional; see getAuth0CacheLocation.
+ *
  * calculator-app maps the NEXT_PUBLIC_* names onto import.meta.env.VITE_*
  * in next.config.ts, so shared code reads one set of names. Values are
  * read at call time so tests can stub them.
@@ -41,6 +44,23 @@ export function getAuth0Config(): Auth0Config | null {
     return null;
   }
   return { domain, clientId, audience };
+}
+
+export type Auth0CacheLocation = 'memory' | 'localstorage';
+
+/**
+ * Where the Auth0 SDK keeps tokens. 'memory' (the default) loses them on
+ * reload and restores the session with a hidden iframe on the Auth0
+ * domain, which needs that domain's cookie. That works in production, where
+ * the custom domain is same-site with the app. Preview and local builds use
+ * an Auth0 domain on another site, whose cookie browsers block in iframes,
+ * so they set 'localstorage' to keep the session across reloads. Any other
+ * value means 'memory'; production must leave it unset.
+ */
+export function getAuth0CacheLocation(): Auth0CacheLocation {
+  return trimmed(import.meta.env.VITE_AUTH0_CACHE_LOCATION) === 'localstorage'
+    ? 'localstorage'
+    : 'memory';
 }
 
 /** Where Auth0 sends the browser back to: `/{countryId}/callback`. */

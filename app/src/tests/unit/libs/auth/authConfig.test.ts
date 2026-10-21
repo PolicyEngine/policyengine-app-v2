@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { getAuth0Config, isCallbackPath, safeReturnTo } from '@/libs/auth/authConfig';
+import {
+  getAuth0CacheLocation,
+  getAuth0Config,
+  isCallbackPath,
+  safeReturnTo,
+} from '@/libs/auth/authConfig';
 import { stubAuthEnv, TEST_AUTH0_CONFIG } from '@/tests/fixtures/libs/auth/authMocks';
 
 afterEach(() => {
@@ -21,6 +26,28 @@ describe('getAuth0Config', () => {
     stubAuthEnv(true, { domain: TEST_AUTH0_CONFIG.domain, clientId: TEST_AUTH0_CONFIG.clientId });
     expect(getAuth0Config()).toBeNull();
   });
+});
+
+describe('getAuth0CacheLocation', () => {
+  test('given no cache location setting then tokens stay in memory', () => {
+    stubAuthEnv(true);
+    expect(getAuth0CacheLocation()).toBe('memory');
+  });
+
+  test('given localstorage then tokens are kept in localStorage', () => {
+    stubAuthEnv(true);
+    vi.stubEnv('VITE_AUTH0_CACHE_LOCATION', ' localstorage ');
+    expect(getAuth0CacheLocation()).toBe('localstorage');
+  });
+
+  test.each([['memory'], ['localStorage'], ['cookie']])(
+    'given %s then tokens stay in memory',
+    (cacheLocationSetting) => {
+      stubAuthEnv(true);
+      vi.stubEnv('VITE_AUTH0_CACHE_LOCATION', cacheLocationSetting);
+      expect(getAuth0CacheLocation()).toBe('memory');
+    }
+  );
 });
 
 describe('safeReturnTo', () => {

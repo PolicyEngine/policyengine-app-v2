@@ -25,6 +25,7 @@ export function stubAuthEnv(
   vi.stubEnv('VITE_AUTH0_DOMAIN', config.domain ?? '');
   vi.stubEnv('VITE_AUTH0_CLIENT_ID', config.clientId ?? '');
   vi.stubEnv('VITE_AUTH0_AUDIENCE', config.audience ?? '');
+  vi.stubEnv('VITE_AUTH0_CACHE_LOCATION', '');
 }
 
 /** A signed-out session. */

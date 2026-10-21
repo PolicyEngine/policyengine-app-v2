@@ -7,6 +7,7 @@ import { DEFAULT_COUNTRY } from '@/libs/countries';
 import {
   AUTH_SCOPE,
   callbackPath,
+  getAuth0CacheLocation,
   getAuth0Config,
   isCallbackPath,
   safeReturnTo,
@@ -21,7 +22,8 @@ import { clearSignedInSessionData, endSignedInSession, settleDraftOwner } from '
  * status 'disabled'. Otherwise the browser session is managed by
  * @auth0/auth0-react: tokens stay in memory and are renewed with rotating
  * refresh tokens (falling back to silent re-authentication against the
- * Auth0 custom domain after a reload).
+ * Auth0 custom domain after a reload). Preview and local builds can keep
+ * them in localStorage instead (see getAuth0CacheLocation).
  *
  * While Auth0 restores the session the provider renders a loading state
  * instead of its children, so the workspace only ever sees signed in or
@@ -67,7 +69,7 @@ function Auth0SessionProvider({ config, children }: { config: Auth0Config; child
     <Auth0Provider
       domain={config.domain}
       clientId={config.clientId}
-      cacheLocation="memory"
+      cacheLocation={getAuth0CacheLocation()}
       useRefreshTokens
       useRefreshTokensFallback
       // Only the callback route consumes ?code&state; other pages may carry
