@@ -40,11 +40,11 @@ describe('HouseholdBuilderForm', () => {
     expect(screen.getByRole('separator', { hidden: true })).toBeInTheDocument();
   });
 
-  test('given hideSpmGeography then the SPM choice is left out', () => {
+  test('given a request to hide the SPM choice then there is no such option, and the choice shows', () => {
+    // @ts-expect-error Every builder shows the SPM choice; it cannot be hidden.
     renderForm({ hideSpmGeography: true });
 
-    expect(screen.queryByText('Supplemental Poverty Measure geography')).not.toBeInTheDocument();
-    expect(screen.getByText('Marital status')).toBeInTheDocument();
+    expect(screen.getByText('Supplemental Poverty Measure geography')).toBeInTheDocument();
   });
 
   test('given the columns layout then the number of children is typed, any whole number to 10', () => {
