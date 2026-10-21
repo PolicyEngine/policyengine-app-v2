@@ -45,13 +45,13 @@ const INPUTS = new Set([
 describe('suggestedHouseholdInputs', () => {
   test('given a SNAP parameter then the inputs SNAP reads lead, nearest first', () => {
     expect(
-      suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS)
+      suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS, 'us')
     ).toEqual(['childcare_expenses', 'employment_income', 'rent']);
   });
 
   test('given inputs only downstream of the change then they are not suggested', () => {
     expect(
-      suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS)
+      suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS, 'us')
     ).not.toContain('capital_gains');
   });
 
@@ -59,7 +59,8 @@ describe('suggestedHouseholdInputs', () => {
     const suggested = suggestedHouseholdInputs(
       ['gov.usda.snap.emergency_allotment.allowed'],
       MAP,
-      INPUTS
+      INPUTS,
+      'us'
     );
     expect(suggested).not.toContain('household_weight');
     expect(suggested).not.toContain('snap_reported');
@@ -67,7 +68,7 @@ describe('suggestedHouseholdInputs', () => {
   });
 
   test('given a parameter the map does not trace then nothing is suggested', () => {
-    expect(suggestedHouseholdInputs(['gov.irs.unknown'], MAP, INPUTS)).toEqual([]);
+    expect(suggestedHouseholdInputs(['gov.irs.unknown'], MAP, INPUTS, 'us')).toEqual([]);
   });
 
   test('given a state prefix then it is a US state program only in the US', () => {
@@ -78,16 +79,25 @@ describe('suggestedHouseholdInputs', () => {
     const inputs = new Set([...INPUTS, 'in_FE']);
     const paths = ['gov.usda.snap.emergency_allotment.allowed'];
 
-    expect(suggestedHouseholdInputs(paths, map, inputs)).not.toContain('in_FE');
-    expect(suggestedHouseholdInputs(paths, map, inputs, undefined, new Set(), 'uk')).toContain(
-      'in_FE'
-    );
+    expect(suggestedHouseholdInputs(paths, map, inputs, 'us')).not.toContain('in_FE');
+    expect(suggestedHouseholdInputs(paths, map, inputs, 'uk')).toContain('in_FE');
   });
 
   test('given a limit then only that many are suggested', () => {
     expect(
-      suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS, 1)
+      suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS, 'us', {
+        limit: 1,
+      })
     ).toEqual(['childcare_expenses']);
+  });
+});
+
+describe('suggestedHouseholdInputs without a country', () => {
+  test('given no country then the call does not type-check, so no country is read as the US', () => {
+    expect(
+      // @ts-expect-error Every caller names the household's country.
+      suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS)
+    ).toBeDefined();
   });
 });
 
@@ -99,8 +109,6 @@ describe('suggestedHouseholdInputs for the UK', () => {
       [UK_CHILD_ELEMENT_PATH],
       map,
       UK_HOUSEHOLD_INPUT_NAMES,
-      undefined,
-      new Set(),
       'uk'
     );
 

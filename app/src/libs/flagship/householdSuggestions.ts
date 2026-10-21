@@ -37,10 +37,16 @@ export function suggestedHouseholdInputs(
   paths: string[],
   map: ParameterDependencyMap,
   inputs: Set<string>,
-  limit: number = DEFAULT_LIMIT,
-  /** Inputs a household commonly has, listed ahead of the rest at any distance. */
-  preferred: ReadonlySet<string> = new Set(),
-  countryId: string = 'us'
+  /** The household's country: a US state program's own input is left out only in the US. */
+  countryId: string,
+  {
+    limit = DEFAULT_LIMIT,
+    preferred = new Set(),
+  }: {
+    limit?: number;
+    /** Inputs a household commonly has, listed ahead of the rest at any distance. */
+    preferred?: ReadonlySet<string>;
+  } = {}
 ): string[] {
   // The variables the parameters feed, and the ones one step on.
   const start = variablesReachedByPaths(paths, map, 1).map((entry) => entry.variable);
