@@ -48,8 +48,41 @@ describe('ukScorecardPrograms', () => {
     ];
     const paths = ['gov.dwp.benefit_cap.single.in_london'];
 
-    const result = matchScorecardClaims(rows, 'uk', paths, ukScorecardPrograms(paths));
+    const result = matchScorecardClaims(rows, 'uk', paths, ukScorecardPrograms(paths), {
+      programBaselineOnly: true,
+    });
 
     expect(result.rows.map((row) => [row.claim_id, row.matchBasis])).toEqual([['cap', 'program']]);
+  });
+
+  test('given programBaselineOnly then a policy claim needs a parameter match, not only its programme', () => {
+    const policy = (claim_id: string, construction: string) =>
+      claim({
+        claim_id,
+        name: claim_id,
+        source: 'uk_hmrc',
+        program: 'income_tax',
+        reform_framework: 'policy_ref',
+        reform_key: claim_id,
+        latest: { value: 1, status: 'constructed', construction },
+      });
+    const rows = [
+      policy('basic rate threshold', 'gov.hmrc.income_tax.rates.uk[1].threshold: 37700 -> 38077'),
+      policy('dividend allowance', 'gov.hmrc.income_tax.allowances.dividend_allowance: 500 -> 600'),
+      claim({ claim_id: 'it baseline', name: 'it baseline', program: 'income_tax' }),
+    ];
+    const paths = ['gov.hmrc.income_tax.rates.uk[0].rate'];
+
+    const linked = (programBaselineOnly: boolean) =>
+      matchScorecardClaims(rows, 'uk', paths, ukScorecardPrograms(paths), {
+        programBaselineOnly,
+      }).rows.map((row) => [row.claim_id, row.matchBasis]);
+
+    expect(linked(true)).toEqual([
+      ['basic rate threshold', 'parameter'],
+      ['it baseline', 'program'],
+    ]);
+    // Without the option (the US behaviour), the programme links every policy claim.
+    expect(linked(false)).toContainEqual(['dividend allowance', 'program']);
   });
 });
