@@ -27,11 +27,6 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
   },
   {
-    source: "/uk/childcare-100k-threshold",
-    destination:
-      "https://uk-childcare-100k-threshold.vercel.app/uk/childcare-100k-threshold",
-  },
-  {
     source: "/uk/targeted-energy-discount",
     destination:
       "https://uk-targeted-energy-discount.vercel.app/uk/targeted-energy-discount",
