@@ -258,3 +258,44 @@ export const UK_FAMILY_REFORM_RESULT = ukHouseholdResult({
   universalCredit: 20511.06,
   childBenefit: 2337.4,
 });
+
+/**
+ * Issue #358's UK household, in the report's year: an adult earning £100
+ * and a dependant aged 10 earning £10, in one benefit unit, with a BRMA,
+ * region and local authority that name different places. The Public API
+ * once failed to calculate it; policyengine-uk 2.130.1 calculates it.
+ */
+export const ISSUE_358_HOUSEHOLD = Household.fromV1CreationPayload({
+  country_id: 'uk',
+  data: {
+    people: {
+      you: { age: at(40), employment_income: at(100) },
+      'your first dependent': { age: at(10), employment_income: at(10) },
+    },
+    benunits: { 'your benefit unit': { members: ['you', 'your first dependent'] } },
+    households: {
+      'your household': {
+        members: ['you', 'your first dependent'],
+        brma: at('AYLESBURY'),
+        region: at('NORTH_EAST'),
+        local_authority: at('ABERDEENSHIRE'),
+      },
+    },
+  },
+});
+
+/**
+ * Issue #562's UK household: a couple and a child, built with the
+ * household builder's own controls, with an input set on the benefit unit
+ * (it opts out of Child Benefit) rather than on a person or the household.
+ */
+export const UK_COUPLE_WITH_BENEFIT_UNIT_INPUT = Household.starter('uk', HOUSEHOLD_YEAR)
+  .withBuilderMaritalStatus(HOUSEHOLD_YEAR, 'married')
+  .withBuilderChildCount(HOUSEHOLD_YEAR, 1)
+  .setGroupVariableAtYear(
+    'benunits',
+    'your benefit unit',
+    'child_benefit_opts_out',
+    HOUSEHOLD_YEAR,
+    true
+  );
