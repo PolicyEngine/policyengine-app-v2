@@ -189,6 +189,38 @@ export function householdToV2CreateBody(household: Household): V2HouseholdCreate
   };
 }
 
+/** JSON with every object's keys sorted, so the order keys were set in never reads as a change. */
+function sortedKeyJson(value: unknown): string {
+  return JSON.stringify(value, (_key, nested) =>
+    nested && typeof nested === 'object' && !Array.isArray(nested)
+      ? Object.fromEntries(
+          Object.keys(nested)
+            .sort()
+            .map((name) => [name, (nested as Record<string, unknown>)[name]])
+        )
+      : nested
+  );
+}
+
+/**
+ * Whether two households would be the same stored household: compared as
+ * `POST /v2/households` takes them, whatever their ids, labels and the
+ * order of their people, groups and inputs. A household read back from
+ * the Public API lists its groups in name order, so it can differ in order
+ * alone from the same household as the builder holds it.
+ */
+export function haveSameStoredContent(first: Household, second: Household): boolean {
+  try {
+    return (
+      sortedKeyJson(householdToV2CreateBody(first)) ===
+      sortedKeyJson(householdToV2CreateBody(second))
+    );
+  } catch {
+    // A household that cannot be stored is compared as changed; saving it says why.
+    return false;
+  }
+}
+
 /** A stored v2 household as the app's household model, with the stored id. */
 export function householdFromV2Item(item: V2HouseholdItem): Household {
   const { data, spm } = v1DataFromV2Document(item.country_id, item.household_data);

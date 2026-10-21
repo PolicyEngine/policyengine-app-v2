@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  haveSameStoredContent,
   householdFromV2Item,
   householdToV2CreateBody,
   V2HouseholdDocumentError,
@@ -14,6 +15,7 @@ import {
   US_PERSON_WITHOUT_MARITAL_UNIT,
   US_SINGLE_PARENT,
   US_SINGLE_PARENT_V2_BODY,
+  V2_CODEC_YEAR,
 } from '@/tests/fixtures/models/v2DocumentCodecMocks';
 
 describe('householdToV2CreateBody', () => {
@@ -82,5 +84,40 @@ describe('householdFromV2Item', () => {
     expect(Object.keys(data.people)).toEqual(['adult']);
     expect(data.households).toEqual({ home: { members: ['adult'] } });
     expect(data.benunits).toEqual({ family: { members: ['adult'] } });
+  });
+});
+
+describe('haveSameStoredContent', () => {
+  test('given a household and the same household read back from the Public API then they are the same', () => {
+    const body = householdToV2CreateBody(US_COUPLE_WITH_TWO_CHILDREN);
+    const readBack = householdFromV2Item(storedV2Household(body.country_id, body.household_data));
+
+    expect(haveSameStoredContent(US_COUPLE_WITH_TWO_CHILDREN, readBack)).toBe(true);
+  });
+
+  test('given a different label or id then they are still the same stored household', () => {
+    expect(
+      haveSameStoredContent(
+        US_SINGLE_PARENT,
+        US_SINGLE_PARENT.withLabel('Our family').withId(STORED_V2_HOUSEHOLD_ID)
+      )
+    ).toBe(true);
+  });
+
+  test('given a changed input then they differ', () => {
+    const edited = US_SINGLE_PARENT.setPersonVariableAtYear(
+      'you',
+      'employment_income',
+      V2_CODEC_YEAR,
+      40000
+    );
+
+    expect(haveSameStoredContent(US_SINGLE_PARENT, edited)).toBe(false);
+  });
+
+  test('given a household that cannot be stored then it is compared as changed', () => {
+    expect(
+      haveSameStoredContent(US_PERSON_WITHOUT_MARITAL_UNIT, US_PERSON_WITHOUT_MARITAL_UNIT)
+    ).toBe(false);
   });
 });
