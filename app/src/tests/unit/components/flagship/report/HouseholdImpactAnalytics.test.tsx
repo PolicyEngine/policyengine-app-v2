@@ -9,6 +9,7 @@ import { Household } from '@/models/Household';
 import {
   BASELINE_POLICY_ID,
   BASELINE_RESULT,
+  calculationResponse,
   CREATED_HOUSEHOLD_ID,
   HOUSEHOLD_YEAR,
   REFORM_POLICY_ID,
@@ -22,7 +23,8 @@ vi.mock('@/api/household', () => ({
   createHousehold: (...args: unknown[]) => mockCreateHousehold(...args),
 }));
 vi.mock('@/api/householdCalculation', () => ({
-  fetchHouseholdCalculation: (...args: unknown[]) => mockFetchHouseholdCalculation(...args),
+  fetchHouseholdCalculationWithBundle: async (...args: unknown[]) =>
+    calculationResponse(await mockFetchHouseholdCalculation(...args)),
 }));
 
 /** An input value no event may carry. */
