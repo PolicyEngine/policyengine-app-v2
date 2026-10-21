@@ -20,18 +20,32 @@ import {
   mockReportValidationSnapshot,
   NEWER_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/reportValidationMocks';
+import {
+  mockWalesCalibrationMatches,
+  mockWalesIncomeTaxRow,
+  mockWalesTotalIncomeRow,
+  UK_BASIC_RATE_PATH,
+  UK_RELEASE_ID,
+  WALES_REGION,
+} from '@/tests/fixtures/libs/flagship/ukCalibrationMocks';
 
 const mockCalibrationMatchesForPaths =
   vi.fn<(paths: string[], geography: string) => Promise<CalibrationMatches | null>>();
 
+const mockUkCalibrationMatchesForPaths =
+  vi.fn<(paths: string[], geography: string) => Promise<CalibrationMatches | null>>();
+
 const mockCalibrationFitForGeography =
-  vi.fn<(geography: string) => Promise<GeographyCalibrationFit | null>>();
+  vi.fn<(geography: string, countryId?: string) => Promise<GeographyCalibrationFit | null>>();
 
 vi.mock('@/libs/flagship/calibrationMatching', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/calibrationMatching')>()),
   calibrationMatchesForPaths: (paths: string[], geography: string) =>
     mockCalibrationMatchesForPaths(paths, geography),
-  calibrationFitForGeography: (geography: string) => mockCalibrationFitForGeography(geography),
+  ukCalibrationMatchesForPaths: (paths: string[], geography: string) =>
+    mockUkCalibrationMatchesForPaths(paths, geography),
+  calibrationFitForGeography: (geography: string, countryId?: string) =>
+    mockCalibrationFitForGeography(geography, countryId),
 }));
 
 /** DC's overall fit over its five fixture targets, the three worst listed. */
@@ -162,7 +176,7 @@ describe('CalibrationMatchSection', () => {
     expect(
       await screen.findByRole('heading', { name: 'District of Columbia data fit' })
     ).toBeInTheDocument();
-    expect(mockCalibrationFitForGeography).toHaveBeenCalledWith('DC');
+    expect(mockCalibrationFitForGeography).toHaveBeenCalledWith('DC', 'us');
     expect(
       screen.getByText(
         /How well the data fits District of Columbia overall, whatever the reform changes\./
@@ -340,8 +354,21 @@ describe('useCalibrationMatches', () => {
     mockCalibrationMatchesForPaths.mockResolvedValue(mockCalibrationMatches);
   });
 
-  test('given a UK report then no US calibration target is fetched', async () => {
-    const { result } = renderHook(() => useCalibrationMatches([UK_ELASTICITY_PATH], 'uk', 'uk'));
+  test('given a UK nation report then the UK targets of that nation are fetched, not US ones', async () => {
+    mockUkCalibrationMatchesForPaths.mockReset();
+    mockUkCalibrationMatchesForPaths.mockResolvedValue(mockWalesCalibrationMatches);
+
+    const { result } = renderHook(() =>
+      useCalibrationMatches([UK_BASIC_RATE_PATH], WALES_REGION, 'uk')
+    );
+
+    await waitFor(() => expect(result.current).toEqual(mockWalesCalibrationMatches));
+    expect(mockUkCalibrationMatchesForPaths).toHaveBeenCalledWith([UK_BASIC_RATE_PATH], 'Wales');
+    expect(mockCalibrationMatchesForPaths).not.toHaveBeenCalled();
+  });
+
+  test('given a country without diagnostics then nothing is fetched', async () => {
+    const { result } = renderHook(() => useCalibrationMatches([UK_ELASTICITY_PATH], 'ca', 'ca'));
 
     await waitFor(() => expect(result.current).toBeNull());
     expect(mockCalibrationMatchesForPaths).not.toHaveBeenCalled();
@@ -364,5 +391,80 @@ describe('useCalibrationMatches', () => {
 
     await waitFor(() => expect(result.current).toEqual(mockCalibrationMatches));
     expect(mockCalibrationMatchesForPaths).toHaveBeenCalledWith([UK_ELASTICITY_PATH], 'CA');
+  });
+});
+
+describe('CalibrationMatchSection for a UK report', () => {
+  beforeEach(() => {
+    mockCalibrationFitForGeography.mockResolvedValue(
+      summarizeGeographyFit('Wales', UK_RELEASE_ID, [
+        mockWalesIncomeTaxRow,
+        mockWalesTotalIncomeRow,
+      ])
+    );
+  });
+
+  test('given a Wales Income Tax match then Wales’s and the UK’s targets show in pounds', async () => {
+    render(<CalibrationMatchSection matches={mockWalesCalibrationMatches} />);
+
+    const table = screen.getByRole('table', { name: 'Calibration targets' });
+    expect(within(table).getByText('Income Tax')).toBeInTheDocument();
+    expect(
+      within(table).getByText('HM Revenue and Customs · Wales, United Kingdom')
+    ).toBeInTheDocument();
+    expect(
+      within(table).getByRole('button', {
+        name: 'Income Tax liabilities by region, total income 50,000 to 70,000',
+      })
+    ).toBeInTheDocument();
+    expect(within(table).getByText('£1.2B')).toBeInTheDocument();
+    expect(within(table).getByText('-5.0%')).toBeInTheDocument();
+    // The dashboard opens on its UK view.
+    expect(screen.getByRole('link', { name: /view dashboard/i })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\?country=uk&level=country$/)
+    );
+    expect(within(table).getByRole('link', { name: 'View targets' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\?country=uk&source=hmrc&level=country$/)
+    );
+    // The release names no US model.
+    expect(screen.getByText(UK_RELEASE_ID)).not.toBeVisible();
+    expect(screen.queryByText(/policyengine-us/)).not.toBeInTheDocument();
+    // A nation report follows with the nation's overall fit.
+    expect(await screen.findByRole('heading', { name: 'Wales data fit' })).toBeInTheDocument();
+    expect(mockCalibrationFitForGeography).toHaveBeenCalledWith('Wales', 'uk');
+    // The fit's rows read as their programme, else the dashboard's table name.
+    const fitRows = within(
+      screen.getByRole('table', { name: 'Worst-fit calibration targets in Wales' })
+    )
+      .getAllByRole('row')
+      .slice(1);
+    expect(fitRows[0]).toHaveTextContent('Income Tax');
+    expect(fitRows[1]).toHaveTextContent('Survey of Personal Incomes');
+    expect(screen.getByRole('link', { name: 'View UK targets in dashboard' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\?country=uk&level=country$/)
+    );
+  });
+
+  test('given a UK-wide report with no matched programme then one line says so, in UK wording', () => {
+    render(
+      <CalibrationMatchSection
+        matches={{
+          ...mockWalesCalibrationMatches,
+          geography: 'United Kingdom',
+          reachedCount: 0,
+          matches: [],
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText('No calibration target measures the programmes this reform changes.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/dependency map/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/data fit/)).not.toBeInTheDocument();
+    expect(mockCalibrationFitForGeography).not.toHaveBeenCalledWith('United Kingdom', 'uk');
   });
 });

@@ -14,7 +14,7 @@
  * mechanism is usually the interacted quantity that bounds the data-side
  * bias of the estimate, so ordering is by depth, nearest first.
  */
-import type { CalibrationTargetRow } from '@/libs/flagship/calibrationTargets';
+import type { CalibrationCountry, CalibrationTargetRow } from '@/libs/flagship/calibrationTargets';
 import { relevantComparisons, type ReformScope } from '@/libs/flagship/comparisonRelevance';
 import {
   DEFAULT_MAX_DEPTH,
@@ -23,8 +23,9 @@ import {
   readersOfPath,
   variablesReachedByPaths,
 } from '@/libs/flagship/parameterDependencies';
+import { ukProgramsForPaths } from '@/libs/flagship/ukCalibrationPrograms';
 
-export type { CalibrationTargetRow };
+export type { CalibrationCountry, CalibrationTargetRow };
 
 export type CalibrationRing = 'primary' | 'mechanism' | 'downstream';
 
@@ -59,6 +60,13 @@ export interface CalibrationMatches {
    * measures the change itself.
    */
   related?: CalibrationVariableMatch[];
+  /** The country whose dashboard the targets came from; unset means the US. */
+  countryId?: CalibrationCountry;
+  /**
+   * UK only: every geography the targets were read in, the report's own
+   * first (Wales, then Great Britain and the United Kingdom).
+   */
+  geographies?: string[];
 }
 
 /** How many related groups show when nothing measures the change directly. */
@@ -68,19 +76,25 @@ export const CALIBRATION_DASHBOARD_URL =
   'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets';
 
 /**
- * The dashboard's targets page filtered by source and by level (national
- * or state). These are the only target filters its page reads from the
- * URL (calibration-diagnostics frontend/app/microcosm/targets/page.tsx
- * reads scope, source, level, release, start and country); its geography
- * filter always starts empty, so a state is not passed. It does not
- * address a single target in the URL either, so this is the closest
- * deep link.
+ * The dashboard's targets page filtered by country, source and level
+ * (US: national or state; UK: country or region). These are the only
+ * target filters its page reads from the URL
+ * (calibration-diagnostics frontend/app/microcosm/targets/page.tsx reads
+ * scope, source, level, release, start and country); its geography
+ * filter always starts empty, so a state or nation is not passed. It
+ * does not address a single target in the URL either, so this is the
+ * closest deep link. The US view is the default, so only the UK passes
+ * a country.
  */
 export function dashboardTargetsUrl(filters: {
   source?: string | null;
-  level?: 'national' | 'state' | null;
+  level?: CalibrationTargetRow['level'] | null;
+  country?: CalibrationCountry | null;
 }): string {
   const params = new URLSearchParams();
+  if (filters.country && filters.country !== 'us') {
+    params.set('country', filters.country);
+  }
   if (filters.source) {
     params.set('source', filters.source);
   }
@@ -94,10 +108,10 @@ export function dashboardTargetsUrl(filters: {
 /**
  * What a target's values count. The dashboard serves no unit field; its
  * `measure` says it. Every "total" target in the live release is a
- * dollar sum (SOI amounts, SNAP benefits, TANF funds, SSI payments, tax
- * collections, JCT expenditures) and every "count" target counts
- * returns, claims, enrollees or people. The targets are US-only, so
- * money is USD.
+ * money sum (US: SOI amounts, SNAP benefits, TANF funds, SSI payments,
+ * tax collections, JCT expenditures; UK: the amounts normalization reads
+ * as totals) and every "count" target counts returns, claims, enrollees
+ * or people. Money is USD unless the row says GBP.
  */
 export type CalibrationValueKind = 'money' | 'count' | 'number';
 
@@ -116,7 +130,7 @@ export function calibrationValueKind(
  */
 export function formatCalibrationValue(
   value: number | null,
-  target: Pick<CalibrationTargetRow, 'measure'>,
+  target: Pick<CalibrationTargetRow, 'measure' | 'currency'>,
   style: 'compact' | 'exact' = 'compact'
 ): string {
   if (value === null) {
@@ -124,7 +138,7 @@ export function formatCalibrationValue(
   }
   const money = calibrationValueKind(target) === 'money';
   return value.toLocaleString('en-US', {
-    ...(money ? { style: 'currency', currency: 'USD' } : {}),
+    ...(money ? { style: 'currency', currency: target.currency ?? 'USD' } : {}),
     ...(style === 'compact' ? { notation: 'compact' } : {}),
     minimumFractionDigits: 0,
     maximumFractionDigits: style === 'compact' ? 1 : 2,
@@ -142,13 +156,65 @@ export function ringForDepth(depth: number): CalibrationRing {
   return 'downstream';
 }
 
+/** The UK's nations as the dashboard names them, by the keys a UK region uses. */
+const UK_NATION_NAMES: Record<string, string> = {
+  england: 'England',
+  scotland: 'Scotland',
+  wales: 'Wales',
+  northern_ireland: 'Northern Ireland',
+  ni: 'Northern Ireland',
+};
+
 /**
- * The calibration geography for a report's region. Society-wide reports
- * carry the country as region ("us"); state runs carry "state/ca".
+ * The calibration geography for a report's region. US society-wide
+ * reports carry the country as region ("us"); state runs carry
+ * "state/ca". UK reports carry "uk" or a nation ("country/wales"); a
+ * constituency or local authority names no nation the app can read, so
+ * it falls back to the United Kingdom.
  */
-export function geographyForRegion(region: string | null | undefined): string {
+export function geographyForRegion(
+  region: string | null | undefined,
+  countryId: string | null | undefined = 'us'
+): string {
+  if (countryId === 'uk') {
+    const key = (region ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/^country\//, '')
+      .replace(/[\s-]+/g, '_');
+    return UK_NATION_NAMES[key] ?? 'United Kingdom';
+  }
   const state = /^state\/([a-z]{2})$/i.exec(region ?? '');
   return state ? state[1].toUpperCase() : 'US';
+}
+
+/**
+ * The UK geographies whose targets describe a report on `geography`: the
+ * area's own, then the wider areas that contain it, the way a US state
+ * report reads federal programmes too. Great Britain covers every nation
+ * but Northern Ireland; England and Wales covers those two. A UK-wide
+ * report reads the UK's targets and the Great Britain and England and
+ * Wales ones, which measure programmes that only run there (DWP
+ * benefits are Great Britain's). English regions never show: they are
+ * parts of a nation, like a US state's counties.
+ */
+export function ukCalibrationGeographies(geography: string): string[] {
+  switch (geography) {
+    case 'England':
+    case 'Wales':
+      return [geography, 'England and Wales', 'Great Britain', 'United Kingdom'];
+    case 'Scotland':
+      return [geography, 'Great Britain', 'United Kingdom'];
+    case 'Northern Ireland':
+      return [geography, 'United Kingdom'];
+    default:
+      return ['United Kingdom', 'Great Britain', 'England and Wales'];
+  }
+}
+
+/** Whether a geography is the whole country: "US", "United Kingdom". */
+export function isNationalGeography(geography: string): boolean {
+  return geography === 'US' || geography === 'United Kingdom';
 }
 
 /** |error| weighted by |target|; falls back to the plain mean when targets are missing. */
@@ -296,6 +362,9 @@ const WHOLE_SLICES = new Set(['', 'all', 'total']);
  * The dashboard id stays in the target's details.
  */
 export function calibrationTargetLabel(target: CalibrationTargetRow): string {
+  if (target.targetLabel) {
+    return ukTargetLabel(target.targetLabel, target.breakdown);
+  }
   const id = target.sourceMeasureId ?? '';
   const last = id.split('_').pop() ?? '';
   const quantity = MEASURE_WORDS.has(last)
@@ -314,13 +383,26 @@ export function calibrationTargetLabel(target: CalibrationTargetRow): string {
 }
 
 /**
+ * A UK target as a reader names it: the dashboard's label, and the band
+ * its table row covers when the label names a table by band and not the
+ * band itself ("Income Tax liabilities by total income band · Total
+ * income from GBP 200 000 to GBP 500 000"). A label with its own
+ * numbers ("…, total income 50,000 to 70,000") already names its slice.
+ */
+function ukTargetLabel(label: string, breakdown: string | null | undefined): string {
+  const slice = (breakdown ?? '').split('·')[0].trim();
+  return slice && !/\d/.test(label) && /\d/.test(slice) ? `${label} · ${slice}` : label;
+}
+
+/**
  * Fetches the targets that measure any of `variables` in `geography`.
  * Returns null when the route is unavailable (outside calculator-app, as in
  * Storybook, or the dashboard unreachable) so callers can render an honest note.
  */
 export async function fetchCalibrationTargets(
   variables: string[],
-  geography: string
+  geography: string,
+  uk?: { geographies: string[] }
 ): Promise<{ releaseId: string | null; rows: CalibrationTargetRow[] } | null> {
   if (variables.length === 0) {
     return { releaseId: null, rows: [] };
@@ -329,7 +411,12 @@ export async function fetchCalibrationTargets(
     const response = await fetch('/api/calibration-targets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ variables, geography }),
+      // The US body is the route's original shape; the UK names its country and areas.
+      body: JSON.stringify(
+        uk
+          ? { variables, geography, country: 'uk', geographies: uk.geographies }
+          : { variables, geography }
+      ),
     });
     if (!response.ok) {
       return null;
@@ -349,13 +436,18 @@ export async function fetchCalibrationTargets(
  * first. Null when the route is unavailable.
  */
 export async function fetchGeographyCalibrationTargets(
-  geography: string
+  geography: string,
+  countryId: CalibrationCountry = 'us'
 ): Promise<{ releaseId: string | null; rows: CalibrationTargetRow[] } | null> {
   try {
     const response = await fetch('/api/calibration-targets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ variables: [], geography, all: true }),
+      body: JSON.stringify(
+        countryId === 'us'
+          ? { variables: [], geography, all: true }
+          : { variables: [], geography, all: true, country: countryId }
+      ),
     });
     if (!response.ok) {
       return null;
@@ -415,9 +507,10 @@ export function summarizeGeographyFit(
 
 /** A geography's overall data fit, or null when the route is unavailable. */
 export async function calibrationFitForGeography(
-  geography: string
+  geography: string,
+  countryId: CalibrationCountry = 'us'
 ): Promise<GeographyCalibrationFit | null> {
-  const fetched = await fetchGeographyCalibrationTargets(geography);
+  const fetched = await fetchGeographyCalibrationTargets(geography, countryId);
   return fetched === null
     ? null
     : summarizeGeographyFit(geography, fetched.releaseId, fetched.rows);
@@ -467,4 +560,54 @@ export async function calibrationMatchesForPaths(
     matches: relevant,
     related: all.filter((match) => !direct.has(match.variable)).slice(0, RELATED_LIMIT),
   };
+}
+
+/**
+ * The calibration matches for a UK reform. The UK has no traced
+ * dependency map and its targets list no model variables, so both sides
+ * join through the committed programme table (ukCalibrationPrograms):
+ * the programmes the reform's paths change, and the targets that
+ * measure each programme, in the report's geography and the wider ones
+ * that contain it (ukCalibrationGeographies). Each programme is one
+ * group, its targets ordered from the report's own area outward, worst
+ * fit first within an area. Every match is a programme the reform
+ * changes, so there are no related targets. Null when the dashboard is
+ * unavailable.
+ */
+export async function ukCalibrationMatchesForPaths(
+  paths: string[],
+  geography: string
+): Promise<CalibrationMatches | null> {
+  const programs = ukProgramsForPaths(paths);
+  const geographies = ukCalibrationGeographies(geography);
+  const base = {
+    geography,
+    modelVersion: '',
+    reachedCount: programs.length,
+    countryId: 'uk' as const,
+    geographies,
+  };
+  if (programs.length === 0) {
+    return { ...base, releaseId: null, matches: [] };
+  }
+  const fetched = await fetchCalibrationTargets(
+    programs.map((entry) => entry.program),
+    geography,
+    { geographies }
+  );
+  if (fetched === null) {
+    return null;
+  }
+  const reached = programs.map((entry) => ({ variable: entry.program, depth: 0, via: entry.via }));
+  const rank = (row: CalibrationTargetRow) => {
+    const index = geographies.indexOf(row.geography);
+    return index === -1 ? geographies.length : index;
+  };
+  const matches = summarizeMatches(reached, fetched.rows).map((match) => ({
+    ...match,
+    targets: [...match.targets].sort(
+      (a, b) => rank(a) - rank(b) || Math.abs(b.relativeError!) - Math.abs(a.relativeError!)
+    ),
+  }));
+  return { ...base, releaseId: fetched.releaseId, matches, related: [] };
 }
