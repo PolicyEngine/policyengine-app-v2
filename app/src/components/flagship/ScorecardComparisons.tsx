@@ -15,6 +15,7 @@ import {
   type ScorecardComparisonsResult,
 } from '@/libs/flagship/scorecardComparisons';
 import { comparableValues, revenueSignText, signNote } from '@/libs/flagship/signConvention';
+import { ukScorecardPrograms } from '@/libs/flagship/ukScorecardPrograms';
 import {
   cardStyle,
   CellNote,
@@ -715,6 +716,10 @@ async function fetchScorecardComparisons(
     } catch {
       /* Recorded parameter paths still allow conservative matching. */
     }
+  } else if (countryId === 'uk') {
+    // The UK has no dependency map; its committed table names the scorecard
+    // programmes the paths change, which the route matches as `program`.
+    variables = ukScorecardPrograms(paths);
   }
   const response = await fetch('/api/scorecard-comparisons', {
     method: 'POST',

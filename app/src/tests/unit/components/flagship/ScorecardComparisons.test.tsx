@@ -262,6 +262,27 @@ describe('useScorecardComparisons', () => {
     await waitFor(() => expect(result.current).toEqual(feed));
   });
 
+  test('given a UK reform then it sends the scorecard programmes its paths change', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(Response.json({ built: null, rows: [], unmappedCount: 0 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderHook(() =>
+      useScorecardComparisons('uk', [
+        'gov.hmrc.income_tax.allowances.personal_allowance.amount',
+        'gov.dwp.universal_credit.elements.child.limit.child_count',
+      ])
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).variables).toEqual([
+      'income_tax',
+      'universal_credit',
+      'universal_credit_child_element',
+    ]);
+  });
+
   test('given the feed fails then it resolves to null', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 502 })));
 
