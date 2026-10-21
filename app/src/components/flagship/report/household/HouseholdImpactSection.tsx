@@ -219,14 +219,7 @@ function useSuggestedInputs(paths: string[], countryId: string): string[] {
       .then((map) => {
         if (!cancelled) {
           setSuggested(
-            suggestedHouseholdInputs(
-              pathsKey.split('\n'),
-              map,
-              inputs,
-              undefined,
-              preferred,
-              countryId
-            )
+            suggestedHouseholdInputs(pathsKey.split('\n'), map, inputs, countryId, { preferred })
           );
         }
       })
