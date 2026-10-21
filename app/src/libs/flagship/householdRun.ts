@@ -330,8 +330,10 @@ export interface FlagshipHouseholdRun extends FlagshipHouseholdImpact {
   baseline: HouseholdCalculationData;
   reform: HouseholdCalculationData;
   /**
-   * How each policy's calculation was made, as its response says: the
-   * methodology footnote and Reproduce in Python read it.
+   * How each policy's calculation was made, as its response says. The
+   * SPM methodology footnote reads the SPM settings and receipt; the .py
+   * bundle is kept so Reproduce in Python can name the versions that
+   * calculated the result, which v3 does not offer yet.
    */
   provenance: { baseline: HouseholdCalculationProvenance; reform: HouseholdCalculationProvenance };
 }

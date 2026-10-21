@@ -147,7 +147,8 @@ function renderSection({
   region,
   countryId = 'us',
   added = true,
-}: { region?: string; countryId?: string; added?: boolean } = {}) {
+  reformPolicyId = REFORM_POLICY_ID,
+}: { region?: string; countryId?: string; added?: boolean; reformPolicyId?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const view = render(
     <QueryClientProvider client={queryClient}>
@@ -156,7 +157,7 @@ function renderSection({
         year={HOUSEHOLD_YEAR}
         region={region}
         baselinePolicyId={BASELINE_POLICY_ID}
-        reformPolicyId={REFORM_POLICY_ID}
+        reformPolicyId={reformPolicyId}
       />
     </QueryClientProvider>
   );
@@ -319,6 +320,24 @@ describe('HouseholdImpactSection', () => {
     });
     expect(methodology).toHaveTextContent('Baseline · Point calculation · National thresholds');
     expect(methodology).toHaveTextContent('Reform · Point calculation · National thresholds');
+  });
+
+  test('given the same policy as baseline and reform then its one calculation shows its methodology once', async () => {
+    const user = userEvent.setup();
+    mockCalculationProvenance.mockReturnValue({
+      spm_config: NATIONAL_SPM_CONFIG,
+      spm_provenance: SPM_RECEIPT,
+    });
+    renderSection({ reformPolicyId: BASELINE_POLICY_ID });
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+    const result = await screen.findByRole('region', { name: 'Household impact' });
+    const methodology = within(result).getByRole('region', {
+      name: 'SPM point calculation methodology',
+    });
+    expect(methodology).toHaveTextContent('Baseline · Point calculation · National thresholds');
+    expect(methodology).not.toHaveTextContent('Reform ·');
   });
 
   test('given a calculation without SPM provenance then no methodology shows', async () => {
