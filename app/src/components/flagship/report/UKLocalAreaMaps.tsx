@@ -346,6 +346,7 @@ export default function UKLocalAreaMaps({
               insetWatermark
               zoomable
               centered
+              fillWidth
             />
           </div>
           <div

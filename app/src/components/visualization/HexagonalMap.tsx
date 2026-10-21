@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ChartWatermark } from '@/components/charts';
 import { Button } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
@@ -45,6 +45,13 @@ interface HexagonalMapProps {
    * the UK's leaves the rest of the frame empty and reads as cut off.
    */
   centered?: boolean;
+
+  /**
+   * Opt-in: draw the map at the frame's full width, not in a fixed 600-unit
+   * box. A dragged map then reaches the frame's edges, and the color bar sits
+   * at the right edge, in line with the logo.
+   */
+  fillWidth?: boolean;
 }
 
 /** Zoom limits and button step, the same as the US district map's. */
@@ -189,7 +196,13 @@ function useHexMapZoom(enabled: boolean, centerX: number, centerY: number) {
       }
       if (!current.dragging) {
         current.dragging = true;
-        svg.setPointerCapture?.(event.pointerId);
+        // The pointer can already be gone (e.g. a synthetic or cancelled
+        // pointer); the drag then still works without capture.
+        try {
+          svg.setPointerCapture?.(event.pointerId);
+        } catch {
+          // No active pointer to capture.
+        }
       }
       const unit = svgUnitsPerPixel(svg);
       setView({
@@ -290,6 +303,30 @@ const SELECTED_CORE_WIDTH = 1;
 const COLOR_BAR_WIDTH = 12;
 /** Color bar right margin */
 const COLOR_BAR_MARGIN = 60;
+/** Color bar tick label font size, and its approximate width per character. */
+const TICK_FONT_SIZE = 9;
+const TICK_CHAR_WIDTH = 5.5;
+/** Space between the color bar's labels and the frame's right edge: the logo's inset. */
+const FRAME_INSET = 8;
+/** The SVG's width in viewBox units when it does not fill the frame. */
+const FIXED_SVG_WIDTH = 600;
+
+/** The rendered width of `element`, in CSS pixels, kept up to date; null until measured. */
+function useElementWidth(element: Element | null, enabled: boolean): number | null {
+  const [width, setWidth] = useState<number | null>(null);
+  useEffect(() => {
+    if (!enabled || !element || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const measure = () => setWidth(Math.round(element.getBoundingClientRect().width) || null);
+    // Measure now as well: the observer only reports on a painted frame.
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element, enabled]);
+  return enabled ? width : null;
+}
 
 export function HexagonalMap({
   data,
@@ -300,6 +337,7 @@ export function HexagonalMap({
   insetWatermark = false,
   zoomable = false,
   centered = false,
+  fillWidth = false,
 }: HexagonalMapProps) {
   const clipId = `hex-map-clip-${useId().replace(/:/g, '')}`;
   const [tooltip, setTooltip] = useState<{
@@ -395,7 +433,10 @@ export function HexagonalMap({
   // We map data coordinates to SVG pixels with padding
   const padding = hexSize * 2;
   const colorBarSpace = fullConfig.showColorBar ? COLOR_BAR_MARGIN + COLOR_BAR_WIDTH + 40 : 0;
-  const svgWidth = 600; // Fixed width, responsive via CSS
+  // With fillWidth, one viewBox unit is one CSS pixel, as the SVG's height is `height` pixels.
+  const [svgElement, setSvgElement] = useState<SVGSVGElement | null>(null);
+  const measuredWidth = useElementWidth(svgElement, fillWidth);
+  const svgWidth = measuredWidth ?? FIXED_SVG_WIDTH; // Fixed width, responsive via CSS
 
   const dataWidth = dataBounds.xMax - dataBounds.xMin || 1;
   const dataHeight = dataBounds.yMax - dataBounds.yMin || 1;
@@ -406,9 +447,20 @@ export function HexagonalMap({
   const scale = Math.min(availW / dataWidth, availH / dataHeight);
   const hexPixelSize = Math.min(hexSize * (scale / 20), scale * 0.45);
 
+  const formatTick = fullConfig.formatColorBarTick ?? defaultFormatTick;
+  const ticks = colorBarTicks(colorRange.min, colorRange.max);
+  // At full width, the longest tick label ends at the logo's right edge.
+  const colorBarX = fillWidth
+    ? svgWidth -
+      FRAME_INSET -
+      COLOR_BAR_WIDTH -
+      4 -
+      Math.max(...ticks.map((tick) => formatTick(tick).length)) * TICK_CHAR_WIDTH
+    : svgWidth - COLOR_BAR_MARGIN;
+
   // The map's own area, left of the color bar: the map centres in it, and
   // zoom centres on it and clips to it.
-  const mapAreaWidth = fullConfig.showColorBar ? svgWidth - COLOR_BAR_MARGIN - 8 : svgWidth;
+  const mapAreaWidth = fullConfig.showColorBar ? colorBarX - 8 : svgWidth;
   const fitWidth = (dataBounds.xMax - dataBounds.xMin) * scale;
   const fitHeight = (dataBounds.yMax - dataBounds.yMin) * scale;
   const offsetX = centered ? mapAreaWidth / 2 - padding - fitWidth / 2 : 0;
@@ -418,6 +470,14 @@ export function HexagonalMap({
   // Flip Y so higher grid-y values go upward
   const toSvgY = (y: number) => height - padding + offsetY - (y - dataBounds.yMin) * scale;
   const zoom = useHexMapZoom(zoomable, mapAreaWidth / 2, height / 2);
+  const zoomSvgRef = zoom.svgRef;
+  const svgRefCallback = useCallback(
+    (node: SVGSVGElement | null) => {
+      zoomSvgRef.current = node;
+      setSvgElement(node);
+    },
+    [zoomSvgRef]
+  );
   // The selected outline keeps its width in screen pixels at any zoom.
   const outlineEffect = zoomable ? 'non-scaling-stroke' : undefined;
 
@@ -495,7 +555,7 @@ export function HexagonalMap({
     >
       {zoom.controls}
       <svg
-        ref={zoom.svgRef}
+        ref={svgRefCallback}
         width="100%"
         height={height}
         viewBox={`0 0 ${svgWidth} ${height}`}
@@ -529,14 +589,13 @@ export function HexagonalMap({
         {/* Color bar */}
         {fullConfig.showColorBar && positionedData.length > 0 && (
           <ColorBar
-            x={svgWidth - COLOR_BAR_MARGIN}
+            x={colorBarX}
             y={padding}
             width={COLOR_BAR_WIDTH}
             height={height - padding * 2}
-            min={colorRange.min}
-            max={colorRange.max}
+            ticks={ticks}
             scaleColors={scaleColors}
-            formatTick={fullConfig.formatColorBarTick}
+            formatTick={formatTick}
           />
         )}
       </svg>
@@ -583,27 +642,22 @@ function ColorBar({
   y,
   width,
   height,
-  min,
-  max,
+  ticks,
   scaleColors,
-  formatTick = defaultFormatTick,
+  formatTick,
 }: {
   x: number;
   y: number;
   width: number;
   height: number;
-  min: number;
-  max: number;
+  /** Tick values, lowest first. */
+  ticks: number[];
   scaleColors: string[];
   /** How each tick reads; plain numbers unless the caller opts in. */
-  formatTick?: (value: number) => string;
+  formatTick: (value: number) => string;
 }) {
   const gradientId = 'hex-color-bar-gradient';
-  const tickCount = 5;
-  const ticks: number[] = [];
-  for (let i = 0; i < tickCount; i++) {
-    ticks.push(min + (max - min) * (i / (tickCount - 1)));
-  }
+  const tickCount = ticks.length;
 
   return (
     <g>
@@ -622,7 +676,7 @@ function ColorBar({
             key={i}
             x={x + width + 4}
             y={ty}
-            fontSize={9}
+            fontSize={TICK_FONT_SIZE}
             fill={colors.gray[600]}
             dominantBaseline="central"
           >
@@ -632,6 +686,16 @@ function ColorBar({
       })}
     </g>
   );
+}
+
+/** Five evenly spaced color bar ticks from `min` to `max`. */
+function colorBarTicks(min: number, max: number): number[] {
+  const tickCount = 5;
+  const ticks: number[] = [];
+  for (let i = 0; i < tickCount; i++) {
+    ticks.push(min + (max - min) * (i / (tickCount - 1)));
+  }
+  return ticks;
 }
 
 function defaultFormatTick(value: number): string {

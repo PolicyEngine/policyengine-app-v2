@@ -437,3 +437,40 @@ describe('HexagonalMap default view', () => {
     expect(extent.minY).toBeLessThan(16);
   });
 });
+
+describe('HexagonalMap fillWidth', () => {
+  test('given fillWidth then the map takes the frame width and the legend ends at the logo inset', () => {
+    // Given a frame 1000 pixels wide
+    const original = window.ResizeObserver;
+    window.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+    const widthSpy = vi
+      .spyOn(SVGElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ width: 1000 } as DOMRect);
+
+    try {
+      // When
+      const { container } = render(
+        <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} zoomable centered fillWidth />
+      );
+
+      // Then
+      const svg = container.querySelector('svg')!;
+      expect(svg.getAttribute('viewBox')).toBe('0 0 1000 380');
+      const bar = container.querySelector('rect[fill^="url(#hex-color-bar"]')!;
+      expect(Number(bar.getAttribute('x'))).toBeGreaterThan(900);
+    } finally {
+      window.ResizeObserver = original;
+      widthSpy.mockRestore();
+    }
+  });
+
+  test('given no fillWidth then the map keeps its fixed 600-unit width, as in v2', () => {
+    const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
+
+    expect(container.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 600 380');
+  });
+});
