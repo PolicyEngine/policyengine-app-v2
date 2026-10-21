@@ -18,11 +18,6 @@ const cards = [
     desc: "What households will pay over the next two winters, and seven ways the Chancellor could help",
   },
   {
-    href: "/uk/childcare-100k-threshold",
-    title: "Scrapping the childcare cliff edge",
-    desc: "What it would cost to remove the £100,000 limit on free hours and Tax-Free Childcare",
-  },
-  {
     href: "/uk/targeted-energy-discount",
     title: "A targeted energy bill discount",
     desc: "Who would gain, and at what cost, from the Resolution Foundation's proposal",
