@@ -74,6 +74,14 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/ai-agents",
         permanent: true,
       },
+      // Childcare cliff edge dashboard: taken down temporarily while its
+      // costing is revised (uk-childcare-100k-threshold#8). Temporary so the
+      // URL can come back unchanged.
+      {
+        source: "/uk/childcare-100k-threshold/:path*",
+        destination: "/uk/research",
+        permanent: false,
+      },
       // Retired Citizens' Economic Council simulator, still embedded by
       // citizensecon.org.uk/policymodelling → main UK simulator
       {
