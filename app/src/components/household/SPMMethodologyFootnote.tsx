@@ -1,12 +1,16 @@
 import { Stack, Text } from '@/components/ui';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 
+/** What the footnote reads from a calculation: its SPM settings and receipt. */
+export type SPMMethodologySource = Pick<HouseholdCalculationOutput, 'spmConfig' | 'spmProvenance'>;
+
 /** Display calculation receipts in the results, without claiming certification. */
 export default function SPMMethodologyFootnote({
   output,
   context = 'point',
 }: {
-  output: (HouseholdCalculationOutput | null)[];
+  /** The baseline's calculation first, then the reform's (null when there is none). */
+  output: (HouseholdCalculationOutput | SPMMethodologySource | null)[];
   context?: 'point' | 'variation';
 }) {
   const receipts = output
