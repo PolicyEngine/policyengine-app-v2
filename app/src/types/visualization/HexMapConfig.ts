@@ -51,4 +51,10 @@ export interface HexMapConfig {
 
   /** Function to format hover text values */
   formatValue?: (value: number) => string;
+
+  /**
+   * Opt-in: how the color bar's ticks read, e.g. as pounds or percentages.
+   * Plain numbers (1.2k, 178, 0.02) when unset.
+   */
+  formatColorBarTick?: (value: number) => string;
 }
