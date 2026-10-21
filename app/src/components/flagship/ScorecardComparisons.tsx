@@ -650,8 +650,19 @@ export function ScorecardClaimTable({
   );
 }
 
+/** Related reforms shown before the reader asks for all of them. */
+export const RELATED_REFORM_PREVIEW = 10;
+
 /** Published scorecard estimates of other policies that change the same rules. */
 export function RelatedReformEstimates({ rows }: { rows: RelatedScorecardClaim[] }) {
+  const [showAll, setShowAll] = useState(false);
+  // A broad measure, such as a threshold freeze, has hundreds of published
+  // scores. Show the ones with a PolicyEngine value first.
+  const ordered = [
+    ...rows.filter((row) => typeof row.latest?.value === 'number'),
+    ...rows.filter((row) => typeof row.latest?.value !== 'number'),
+  ];
+  const visible = showAll ? ordered : ordered.slice(0, RELATED_REFORM_PREVIEW);
   return (
     <Stack style={{ gap: spacing.sm }}>
       <ValidationSubheading>Related reforms</ValidationSubheading>
@@ -659,7 +670,19 @@ export function RelatedReformEstimates({ rows }: { rows: RelatedScorecardClaim[]
         Published scores of policies that change the same rules. They do not score this exact
         reform.
       </ValidationNote>
-      <ScorecardClaimTable label="Related reforms" entries={rows.map((row) => ({ row }))} />
+      <ScorecardClaimTable label="Related reforms" entries={visible.map((row) => ({ row }))} />
+      {ordered.length > RELATED_REFORM_PREVIEW && (
+        <button
+          type="button"
+          style={{ ...rowButtonStyle, alignSelf: 'flex-start' }}
+          aria-expanded={showAll}
+          onClick={() => setShowAll((value) => !value)}
+        >
+          {showAll
+            ? `Show the first ${RELATED_REFORM_PREVIEW} related reforms`
+            : `Show all ${ordered.length} related reforms`}
+        </button>
+      )}
     </Stack>
   );
 }
