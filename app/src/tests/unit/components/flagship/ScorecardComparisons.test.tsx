@@ -2,6 +2,7 @@ import { fireEvent, render, renderHook, screen, userEvent, waitFor, within } fro
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   differenceNotes,
+  RELATED_REFORM_PREVIEW,
   RelatedReformEstimates,
   ScorecardClaimTable,
   splitScorecardRows,
@@ -35,6 +36,30 @@ describe('scorecard evidence presentation', () => {
     expect(
       screen.queryByRole('button', { name: /Find external estimates/ })
     ).not.toBeInTheDocument();
+  });
+
+  test('given many related reforms then shows computed ones first and the rest on request', async () => {
+    const rows = Array.from({ length: RELATED_REFORM_PREVIEW + 2 }, (_, index) => ({
+      ...scorecardClaim({
+        claim_id: `claim-${index}`,
+        name: `Claim ${String(index).padStart(2, '0')}`,
+        // Only the last claim has a PolicyEngine value.
+        latest: index === RELATED_REFORM_PREVIEW + 1 ? scorecardClaim().latest : null,
+      }),
+      matchBasis: 'parameter' as const,
+    }));
+    render(<RelatedReformEstimates rows={rows} />);
+    const table = screen.getByRole('table', { name: 'Related reforms' });
+    const titles = () =>
+      within(table)
+        .getAllByRole('rowheader')
+        .map((cell) => cell.textContent);
+    expect(titles()).toHaveLength(RELATED_REFORM_PREVIEW);
+    expect(titles()[0]).toContain(`Claim ${RELATED_REFORM_PREVIEW + 1}`);
+    await userEvent.click(
+      screen.getByRole('button', { name: `Show all ${RELATED_REFORM_PREVIEW + 2} related reforms` })
+    );
+    expect(titles()).toHaveLength(RELATED_REFORM_PREVIEW + 2);
   });
 
   test('given several claims then one table holds them so their numbers line up', () => {

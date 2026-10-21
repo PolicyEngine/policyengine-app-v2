@@ -46,6 +46,14 @@ export interface ScorecardClaim {
     baseline?: string;
     ratio?: number | null;
   } | null;
+  /** UK registry measure that the claim scores; the scorecard exports it from its registries. */
+  measure?: {
+    key: string;
+    program?: string | null;
+    computability?: string;
+    head_variables?: string[];
+    parameter_paths?: string[];
+  } | null;
 }
 export interface RelatedScorecardClaim extends ScorecardClaim {
   matchBasis: 'variable' | 'parameter' | 'program' | 'related-policy';
@@ -56,8 +64,20 @@ export interface ScorecardComparisonsResult {
   unmappedCount: number;
 }
 
+/**
+ * Whether two full parameter paths name the same rule: equal, or one is a
+ * folder or scale that holds the other. Bracket indices count, so the basic
+ * rate (`rates.uk[0].rate`) does not match a threshold (`rates.uk[1].threshold`).
+ */
+function sameRule(a: string, b: string): boolean {
+  const holds = (outer: string, inner: string) =>
+    inner === outer || inner.startsWith(`${outer}.`) || inner.startsWith(`${outer}[`);
+  return holds(a, b) || holds(b, a);
+}
+
 /** No fuzzy title matching and no inference that a related policy equals this reform.
- * Legacy claims sometimes record parameter paths in their construction receipt.
+ * Legacy claims sometimes record parameter paths in their construction receipt;
+ * UK claims carry their measure's parameter paths and programme.
  * A shared reform key carries that policy association to other years of the SAME
  * reform, never from the common baseline key to every baseline claim.
  */
@@ -91,16 +111,22 @@ export function matchScorecardClaims(
       row.metric,
       row.geography,
     ]);
+  const program = (row: ScorecardClaim) => row.program ?? row.measure?.program;
   for (const row of scoped) {
     const receiptPaths = (row.latest?.construction ?? '').match(/gov\.[a-zA-Z0-9_.[\]]+/g) ?? [];
+    const measurePaths = row.measure?.parameter_paths ?? [];
+    const rowProgram = program(row);
     let match: RelatedScorecardClaim['matchBasis'] | undefined;
     if (row.latest?.policyengine_variables?.some((variable) => names.has(variable))) {
       match = 'variable';
-    } else if (receiptPaths.some((path) => normalized.has(normalizeParameterPath(path)))) {
+    } else if (
+      receiptPaths.some((path) => normalized.has(normalizeParameterPath(path))) ||
+      measurePaths.some((measurePath) => paths.some((path) => sameRule(path, measurePath)))
+    ) {
       match = 'parameter';
     } else if (
-      row.program &&
-      names.has(row.program) &&
+      rowProgram &&
+      names.has(rowProgram) &&
       (!options.programBaselineOnly || row.reform_framework === 'baseline')
     ) {
       match = 'program';
@@ -129,9 +155,10 @@ export function matchScorecardClaims(
     ),
     unmappedCount: scoped.filter(
       (row) =>
-        !row.program &&
+        !program(row) &&
         !row.latest?.policyengine_variables?.length &&
         !(row.latest?.construction ?? '').includes('gov.') &&
+        !row.measure?.parameter_paths?.length &&
         !policyKeys.has(policyLine(row))
     ).length,
   };
