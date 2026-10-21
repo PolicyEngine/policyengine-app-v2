@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
-import type { ParameterDependencyMap } from '@/libs/flagship/parameterDependencies';
+import {
+  loadParameterDependencies,
+  type ParameterDependencyMap,
+} from '@/libs/flagship/parameterDependencies';
+import {
+  UK_CHILD_ELEMENT_PATH,
+  UK_HOUSEHOLD_INPUT_NAMES,
+} from '@/tests/fixtures/components/flagship/report/householdSuggestionMocks';
 
 const MAP = {
   generatedAt: '',
@@ -81,5 +88,23 @@ describe('suggestedHouseholdInputs', () => {
     expect(
       suggestedHouseholdInputs(['gov.usda.snap.emergency_allotment.allowed'], MAP, INPUTS, 1)
     ).toEqual(['childcare_expenses']);
+  });
+});
+
+describe('suggestedHouseholdInputs for the UK', () => {
+  test("given a change to Universal Credit's child element then a child's age and childcare lead", async () => {
+    const map = await loadParameterDependencies('uk');
+
+    const suggested = suggestedHouseholdInputs(
+      [UK_CHILD_ELEMENT_PATH],
+      map,
+      UK_HOUSEHOLD_INPUT_NAMES,
+      undefined,
+      new Set(),
+      'uk'
+    );
+
+    expect(suggested).toContain('age');
+    expect(suggested).toContain('childcare_expenses');
   });
 });
