@@ -10,6 +10,10 @@ The `app/` directory holds the calculator code. `calculator-app/` (Next.js) comp
 - `app/public/assets/` holds static assets that the website build copies in. `calculator-app/public` is a symlink to `app/public`, so everything in `app/public` is served on app.policyengine.org.
 - Website pages and components go in `website/src/`. New website rewrites go in `website/next.config.ts`, not `website/vercel.json`.
 
+## Research entries need a comparables record
+
+A research entry (an `apps.json` app with `displayWithResearch`, or a `posts.json` post) dated on or after `COMPARABLES_CUTOVER_DATE` in `website/src/data/comparables.ts` carries a `comparables` block naming the record of its pre-publish comparables search in PolicyEngine/policyengine-scorecard (`docs/COMPARABLES.md` there; the `policyengine-comparables-review` skill runs the search). Merge the scorecard PR first, then paste the block `python -m scorecard_db.comparables record analysis-<country>-<slug>` prints. An entry with no estimate declares `{"status": "no_estimate", "reason": "..."}`; an entry tagged `policy` cannot. The Tests job checks each block's shape, and the `Comparables gate` workflow checks that it resolves against the scorecard's index on main.
+
 ## Visual standards
 
 Detailed visual standards are documented in `docs/engineering/skills/`. Read the relevant document before changing interface code:

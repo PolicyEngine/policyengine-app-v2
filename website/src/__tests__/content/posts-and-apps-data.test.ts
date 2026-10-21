@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest";
 import appsData from "@/data/apps.json";
+import postsData from "@/data/posts/posts.json";
+import {
+  COMPARABLES_CUTOVER_DATE,
+  requiresComparables,
+  researchEntries,
+  validateComparables,
+} from "@/data/comparables";
 import {
   getLocationTags,
   getPostsSorted,
@@ -121,5 +128,34 @@ describe("apps.json", () => {
         app.authors.length === 0,
     );
     expect(incomplete.map((app) => app.slug)).toEqual([]);
+  });
+});
+
+// Pre-publish comparables (website/src/data/comparables.ts): research entries
+// dated on or after the cutover name a complete record in
+// PolicyEngine/policyengine-scorecard. The Comparables gate workflow checks the
+// record against the scorecard's index; these checks need no network.
+describe("comparables", () => {
+  const entries = researchEntries(
+    apps,
+    postsData as Parameters<typeof researchEntries>[1],
+  );
+
+  test("every research entry on or after the cutover has a well-formed comparables block", () => {
+    const errors = entries
+      .filter(requiresComparables)
+      .flatMap((entry) => validateComparables(entry));
+    expect(errors).toEqual([]);
+  });
+
+  test("every comparables block before the cutover is well formed", () => {
+    const errors = entries
+      .filter((entry) => !requiresComparables(entry))
+      .flatMap((entry) => validateComparables(entry));
+    expect(errors).toEqual([]);
+  });
+
+  test("the cutover is a date", () => {
+    expect(COMPARABLES_CUTOVER_DATE).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

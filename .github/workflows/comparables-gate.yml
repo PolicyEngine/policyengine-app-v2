@@ -1,0 +1,67 @@
+name: Comparables gate
+
+# A research entry dated on or after the cutover in
+# website/src/data/comparables.ts must name a complete record of its
+# pre-publish comparables search in PolicyEngine/policyengine-scorecard.
+# The Tests job checks each block's shape without the network; this job
+# downloads the scorecard's published index from its main branch and checks
+# that every block resolves to a search the index lists. The scorecard is
+# public, so the download needs no token. A failed download fails the job:
+# the gate fails closed.
+#
+# It runs on pull requests that touch the registries or the gate itself, on
+# every push to main, and weekly, so a record removed from the scorecard
+# shows up without waiting for the next registry change.
+
+on:
+  pull_request:
+    paths:
+      - "app/src/data/apps/apps.json"
+      - "app/src/data/posts/posts.json"
+      - "website/src/data/comparables.ts"
+      - "website/src/__tests__/content/comparables*.test.ts"
+      - ".github/workflows/comparables-gate.yml"
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resolve:
+    name: Comparables resolve against the scorecard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      # Same Node as the Tests job (pr.yaml): vitest runs on Node.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download the scorecard's comparables index
+        run: |
+          url=$(node -e "const s=require('fs').readFileSync('website/src/data/comparables.ts','utf8');const m=s.match(/SCORECARD_INDEX_URL =\s*\"([^\"]+)\"/);if(!m)process.exit(1);console.log(m[1])")
+          curl --fail --silent --show-error --location --retry 5 --retry-all-errors \
+            --output "$RUNNER_TEMP/comparables-index.json" "$url"
+          node -e "const i=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));console.log(Object.keys(i.analyses).length+' records in the scorecard index ('+i.schema+')')" "$RUNNER_TEMP/comparables-index.json"
+          echo "COMPARABLES_INDEX_PATH=$RUNNER_TEMP/comparables-index.json" >> "$GITHUB_ENV"
+
+      - name: Every comparables block resolves
+        working-directory: ./website
+        run: bun run test src/__tests__/content/comparables.live.test.ts

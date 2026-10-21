@@ -23,7 +23,36 @@
     "displayWithResearch": true,
     "image": "childcare-100k-threshold.jpg",
     "date": "2026-10-12 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": ["vahid-ahmadi"],
+    "comparables": {
+      "status": "reviewed",
+      "scorecardSource": "analysis-uk-childcare-100k-threshold",
+      "searchDate": "2026-10-21",
+      "searchKind": "backfill",
+      "producersSearched": [
+        "academic",
+        "centax",
+        "centre_for_british_progress",
+        "dfe",
+        "dwp",
+        "fabian_society",
+        "hm_treasury",
+        "ifs",
+        "ippr",
+        "jrf",
+        "landman_economics",
+        "lse_case",
+        "niesr",
+        "obr",
+        "open_search",
+        "resolution_foundation",
+        "tax_policy_associates",
+        "uk_hmrc",
+        "ukmod"
+      ],
+      "found": 20,
+      "searchLog": "https://github.com/PolicyEngine/policyengine-scorecard/blob/main/sources/analysis-uk-childcare-100k-threshold/search_log.json"
+    }
   },
   {
     "type": "iframe",
