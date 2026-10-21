@@ -38,6 +38,13 @@ interface HexagonalMapProps {
    * district map does. Without it the map is fixed.
    */
   zoomable?: boolean;
+
+  /**
+   * Opt-in: centre the hexagons in the map's area, left of the color bar.
+   * Without it they sit against the top-left corner, so a narrow map such as
+   * the UK's leaves the rest of the frame empty and reads as cut off.
+   */
+  centered?: boolean;
 }
 
 /** Zoom limits and button step, the same as the US district map's. */
@@ -292,6 +299,7 @@ export function HexagonalMap({
   onSelect,
   insetWatermark = false,
   zoomable = false,
+  centered = false,
 }: HexagonalMapProps) {
   const clipId = `hex-map-clip-${useId().replace(/:/g, '')}`;
   const [tooltip, setTooltip] = useState<{
@@ -398,12 +406,17 @@ export function HexagonalMap({
   const scale = Math.min(availW / dataWidth, availH / dataHeight);
   const hexPixelSize = Math.min(hexSize * (scale / 20), scale * 0.45);
 
-  const toSvgX = (x: number) => padding + (x - dataBounds.xMin) * scale;
-  // Flip Y so higher grid-y values go upward
-  const toSvgY = (y: number) => height - padding - (y - dataBounds.yMin) * scale;
-
-  // The map's own area, left of the color bar: zoom centres on it and clips to it.
+  // The map's own area, left of the color bar: the map centres in it, and
+  // zoom centres on it and clips to it.
   const mapAreaWidth = fullConfig.showColorBar ? svgWidth - COLOR_BAR_MARGIN - 8 : svgWidth;
+  const fitWidth = (dataBounds.xMax - dataBounds.xMin) * scale;
+  const fitHeight = (dataBounds.yMax - dataBounds.yMin) * scale;
+  const offsetX = centered ? mapAreaWidth / 2 - padding - fitWidth / 2 : 0;
+  const offsetY = centered ? padding + fitHeight / 2 - height / 2 : 0;
+
+  const toSvgX = (x: number) => padding + offsetX + (x - dataBounds.xMin) * scale;
+  // Flip Y so higher grid-y values go upward
+  const toSvgY = (y: number) => height - padding + offsetY - (y - dataBounds.yMin) * scale;
   const zoom = useHexMapZoom(zoomable, mapAreaWidth / 2, height / 2);
   // The selected outline keeps its width in screen pixels at any zoom.
   const outlineEffect = zoomable ? 'non-scaling-stroke' : undefined;

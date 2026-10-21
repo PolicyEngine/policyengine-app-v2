@@ -6,6 +6,7 @@ import {
   MOCK_MIXED_VALUES,
   MOCK_NEGATIVE_VALUES,
   MOCK_POSITIVE_VALUES,
+  MOCK_UK_SHAPED_HEX_DATA,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
 
 // jsdom has no PointerEvent; a MouseEvent with a pointer id is enough for the map's drag.
@@ -362,6 +363,25 @@ describe('HexagonalMap', () => {
   });
 });
 
+/** The extent of every hexagon's corners, in SVG units, before any zoom. */
+function hexagonExtent(container: HTMLElement) {
+  const corners = [...container.querySelectorAll('polygon[data-area-id], svg > polygon')].flatMap(
+    (polygon) =>
+      (polygon.getAttribute('points') ?? '')
+        .trim()
+        .split(/\s+/)
+        .map((pair) => pair.split(',').map(Number))
+  );
+  const xs = corners.map(([x]) => x);
+  const ys = corners.map(([, y]) => y);
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
+}
+
 describe('zoomAbout', () => {
   test('given a zoom about a point then that point stays where it is', () => {
     const view = zoomAbout({ k: 1, x: 0, y: 0 }, 2, 100, 50);
@@ -373,5 +393,47 @@ describe('zoomAbout', () => {
   test('given a zoom past the limits then it stops at 0.5 and 20', () => {
     expect(zoomAbout({ k: 1, x: 0, y: 0 }, 100, 0, 0).k).toBe(20);
     expect(zoomAbout({ k: 1, x: 0, y: 0 }, 0.1, 0, 0).k).toBe(0.5);
+  });
+});
+
+describe('HexagonalMap default view', () => {
+  test('given a centred zoomable map then the default view holds the whole map inside the clip area, centred', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} zoomable centered onSelect={vi.fn()} />
+    );
+    const clip = container.querySelector('clipPath rect')!;
+    const clipWidth = Number(clip.getAttribute('width'));
+    const clipHeight = Number(clip.getAttribute('height'));
+
+    const extent = hexagonExtent(container);
+    expect(screen.getByTestId('hex-map-zoom-layer')).toHaveAttribute(
+      'transform',
+      'translate(0 0) scale(1)'
+    );
+    expect(extent.minX).toBeGreaterThan(0);
+    expect(extent.maxX).toBeLessThan(clipWidth);
+    expect(extent.minY).toBeGreaterThan(0);
+    expect(extent.maxY).toBeLessThan(clipHeight);
+    // Equal margins left and right, and top and bottom.
+    expect(extent.minX).toBeCloseTo(clipWidth - extent.maxX, 5);
+    expect(extent.minY).toBeCloseTo(clipHeight - extent.maxY, 5);
+
+    // Reset view returns to that view after a zoom.
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    await user.click(screen.getByRole('button', { name: 'Reset view' }));
+    expect(screen.getByTestId('hex-map-zoom-layer')).toHaveAttribute(
+      'transform',
+      'translate(0 0) scale(1)'
+    );
+  });
+
+  test('given no centered prop then the map keeps its top-left placement, as in v2', () => {
+    const { container } = render(<HexagonalMap data={MOCK_UK_SHAPED_HEX_DATA} />);
+
+    const extent = hexagonExtent(container);
+    // The hexagons start one padding (2 x hex size = 16) in from the left and top.
+    expect(extent.minX).toBeLessThan(16);
+    expect(extent.minY).toBeLessThan(16);
   });
 });

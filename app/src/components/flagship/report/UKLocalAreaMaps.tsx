@@ -345,6 +345,7 @@ export default function UKLocalAreaMaps({
               onSelect={toggleSelected}
               insetWatermark
               zoomable
+              centered
             />
           </div>
           <div
