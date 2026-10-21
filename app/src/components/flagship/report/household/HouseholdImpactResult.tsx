@@ -4,10 +4,15 @@ import HouseholdBreakdowns, {
   type HouseholdBreakdownSource,
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
+import SPMMethodologyFootnote from '@/components/household/SPMMethodologyFootnote';
 import { Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { CountryId } from '@/libs/countries';
-import type { FlagshipHouseholdImpact, HouseholdLineChange } from '@/libs/flagship/householdRun';
+import type {
+  FlagshipHouseholdImpact,
+  HouseholdCalculationProvenance,
+  HouseholdLineChange,
+} from '@/libs/flagship/householdRun';
 import { trackHouseholdOutputViewed, type HouseholdOutputTab } from '@/utils/analytics';
 import { formatCurrency } from '@/utils/formatters';
 
@@ -193,6 +198,7 @@ export default function HouseholdImpactResult({
   summary,
   breakdowns,
   countryId,
+  methodology,
 }: {
   impact: FlagshipHouseholdImpact;
   /** The household the result is for, e.g. "Single · no children · $50,000 earnings · Ohio · 2026". */
@@ -201,6 +207,16 @@ export default function HouseholdImpactResult({
   breakdowns?: HouseholdBreakdownSource;
   /** The household's country: its currency. */
   countryId: CountryId;
+  /**
+   * How each policy's calculation was made: a US calculation's SPM
+   * settings and receipt show as a methodology footnote under the summary
+   * and the net income breakdown. The reform's is null when one
+   * calculation served both policies.
+   */
+  methodology?: {
+    baseline: HouseholdCalculationProvenance;
+    reform: HouseholdCalculationProvenance | null;
+  };
 }) {
   const [view, setView] = useState<'summary' | HouseholdBreakdownView>('summary');
   const { netIncome, components, programs } = impact;
@@ -392,6 +408,11 @@ export default function HouseholdImpactResult({
         </div>
       ) : (
         <SummaryTables impact={impact} noChange={noChange} change={change} countryId={countryId} />
+      )}
+
+      {/* The variation views show their own calculation's methodology. */}
+      {methodology && (view === 'summary' || view === 'net-income') && (
+        <SPMMethodologyFootnote output={[methodology.baseline, methodology.reform]} />
       )}
     </section>
   );
