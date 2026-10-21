@@ -73,8 +73,9 @@ export function ukNationPlace(region: string | undefined): Record<string, string
 
 /**
  * A new household: the household builder's own start, one adult and
- * nothing else set. A US household is measured against national poverty
- * thresholds; only the US model has them. A UK household in a report on
+ * nothing else set. A US household starts on national poverty
+ * thresholds, which the builder's SPM geography choice can change to a
+ * county's; only the US model has them. A UK household in a report on
  * Scotland, Wales or Northern Ireland starts there.
  */
 function newHousehold(countryId: CountryId, year: string, region?: string): Household {
@@ -569,8 +570,6 @@ function HouseholdCard({
               setHousehold(household.withBuilderChildCount(year, count))
             }
             disabled={running}
-            // National poverty thresholds, the model's default, without the choice.
-            hideSpmGeography
             layout="columns"
             suggestedVariables={suggestedVariables}
             suggestedLabel="Related to this reform"
@@ -637,6 +636,11 @@ function HouseholdCard({
             <HouseholdImpactResult
               impact={result}
               countryId={countryId}
+              methodology={{
+                baseline: result.provenance.baseline,
+                // One calculation served both policies: its methodology shows once.
+                reform: baselinePolicyId === reformPolicyId ? null : result.provenance.reform,
+              }}
               summary={`${requested.summary} · ${year}`}
               breakdowns={{
                 countryId,
