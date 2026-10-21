@@ -192,15 +192,15 @@ export default function HouseholdImpactResult({
   impact,
   summary,
   breakdowns,
-  countryId = 'us',
+  countryId,
 }: {
   impact: FlagshipHouseholdImpact;
   /** The household the result is for, e.g. "Single · no children · $50,000 earnings · Ohio · 2026". */
   summary: string;
   /** The household run the v2 breakdowns read; without it, only the summary shows. */
   breakdowns?: HouseholdBreakdownSource;
-  /** The report's country: its currency. */
-  countryId?: CountryId;
+  /** The household's country: its currency. */
+  countryId: CountryId;
 }) {
   const [view, setView] = useState<'summary' | HouseholdBreakdownView>('summary');
   const { netIncome, components, programs } = impact;
