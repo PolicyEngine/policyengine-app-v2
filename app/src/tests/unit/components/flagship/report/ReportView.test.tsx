@@ -7,6 +7,12 @@ import { BillExternalEstimates } from '@/components/flagship/ValidationPanel';
 import { LocationProvider } from '@/contexts/LocationContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
+import {
+  NATIONAL_OUTPUT_WITHOUT_AREAS,
+  STORED_OUTPUT_WITH_AREAS,
+  UK_SECTION_PROPS,
+} from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -338,6 +344,91 @@ describe('ReportView districts by country', () => {
       expect(screen.getByRole('tab', { name: 'Household' })).toBeInTheDocument();
     }
   );
+});
+
+describe('ReportView UK local areas', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const renderUKReport = (output: Parameters<typeof ReportView>[0]['output']) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ status: 'computing', queue_position: 1, result: null }))
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Higher personal allowance"
+          sourceNote="Hand-built"
+          provisions={[]}
+          year={UK_SECTION_PROPS.year}
+          region={UK_SECTION_PROPS.region}
+          reformPolicyId={UK_SECTION_PROPS.reformPolicyId}
+          baselinePolicyId={UK_SECTION_PROPS.baselinePolicyId}
+          output={output}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>,
+      'uk'
+    );
+  };
+
+  const economyRequests = () =>
+    vi
+      .mocked(fetch)
+      .mock.calls.map(([url]) => String(url))
+      .filter((url) => url.includes('/economy/'));
+
+  test('given results without area impacts then the card says they are calculated on request', () => {
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
+      'Calculate income changes across constituencies and local authorities, and compare them on a map.'
+    );
+  });
+
+  test('given results without area impacts then the local areas tab offers to compute them and sends nothing', async () => {
+    const user = userEvent.setup();
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
+  });
+
+  test('given compute clicked then one breakdown request goes for the report region and year', async () => {
+    const user = userEvent.setup();
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    await waitFor(() => expect(economyRequests()).toHaveLength(1));
+    expect(economyRequests()[0]).toContain(
+      `/uk/economy/${UK_SECTION_PROPS.reformPolicyId}/over/${UK_SECTION_PROPS.baselinePolicyId}?region=uk&time_period=${UK_SECTION_PROPS.year}&breakdown=local_areas`
+    );
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('given saved results with area impacts then the tab shows the maps with no button', async () => {
+    const user = userEvent.setup();
+    renderUKReport(STORED_OUTPUT_WITH_AREAS);
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
+      'Compare income changes across constituencies and local authorities on a map.'
+    );
+
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    expect(
+      screen.getByText('Absolute household income change by constituency')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
+  });
 });
 
 describe('ReportView analytics', () => {
