@@ -80,7 +80,10 @@ export function HouseholdOutputTabs<View extends string>({
             role="tab"
             aria-selected={isSelected}
             onClick={() => onSelect(option.value)}
-            className="tw:cursor-pointer tw:hover:text-gray-900"
+            // The text color comes from classes, so the hover color can apply.
+            className={`tw:cursor-pointer ${
+              isSelected ? 'tw:text-text-primary' : 'tw:text-text-secondary tw:hover:text-gray-900'
+            }`}
             style={{
               border: 'none',
               background: 'none',
@@ -93,7 +96,6 @@ export function HouseholdOutputTabs<View extends string>({
               fontWeight: isSelected
                 ? typography.fontWeight.semibold
                 : typography.fontWeight.normal,
-              color: isSelected ? colors.text.primary : colors.text.secondary,
             }}
           >
             {option.label}
