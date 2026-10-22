@@ -2,7 +2,11 @@ import type { vi } from 'vitest';
 import { Household } from '@/models/Household';
 import { householdFromV2Item, householdToV2CreateBody } from '@/models/household/v2DocumentCodec';
 import { PE_USER_ID, TIMESTAMPS } from '@/tests/fixtures/api/v2UserMocks';
-import type { UserHouseholdItem, V2HouseholdItem } from '@/types/v2Households';
+import type {
+  UserHouseholdItem,
+  V2HouseholdCreateBody,
+  V2HouseholdItem,
+} from '@/types/v2Households';
 
 export const SAVED_HOUSEHOLD_YEAR = '2026';
 
@@ -46,7 +50,11 @@ export const RETIRED_HOUSEHOLD = Household.starter('us', SAVED_HOUSEHOLD_YEAR)
 
 /** A household as `/v2/households` returns it. */
 export function v2HouseholdItem(household: Household, id: string): V2HouseholdItem {
-  const body = householdToV2CreateBody(household);
+  return storedV2HouseholdItem(householdToV2CreateBody(household), id);
+}
+
+/** The household `POST /v2/households` was sent, as it returns it stored under `id`. */
+export function storedV2HouseholdItem(body: V2HouseholdCreateBody, id: string): V2HouseholdItem {
   return {
     id,
     country_id: body.country_id,
