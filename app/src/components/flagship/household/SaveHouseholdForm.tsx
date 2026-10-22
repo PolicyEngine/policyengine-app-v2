@@ -91,7 +91,7 @@ export default function SaveHouseholdForm({
           placeholder="For example, our family"
           maxLength={255}
           onChange={(event) => setLabel(event.target.value)}
-          style={{ maxWidth: 320 }}
+          className="tw:max-w-xs"
         />
         <Button size="sm" onClick={save} disabled={saving || nothingToSave}>
           <IconDeviceFloppy size={16} aria-hidden />
