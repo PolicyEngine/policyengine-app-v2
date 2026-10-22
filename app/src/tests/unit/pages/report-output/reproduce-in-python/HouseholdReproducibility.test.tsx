@@ -171,4 +171,26 @@ describe('HouseholdReproducibility', () => {
       expect(screen.getByText(new RegExp(MOCK_REPORT_YEAR))).toBeInTheDocument();
     });
   });
+
+  describe('given the pandas DataFrame option (issue #1095)', () => {
+    test('then a switch adds DataFrame code to each block', async () => {
+      const user = userEvent.setup();
+      render(
+        <HouseholdReproducibility {...DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS} offerDataFrame />
+      );
+
+      expect(screen.queryByText(/pd\.DataFrame/)).not.toBeInTheDocument();
+      await user.click(screen.getByRole('switch', { name: 'Include a pandas DataFrame' }));
+
+      expect(screen.getByText(/pd\.DataFrame/)).toBeInTheDocument();
+    });
+
+    test('then without it there is no DataFrame switch, as before', () => {
+      render(<HouseholdReproducibility {...DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS} />);
+
+      expect(
+        screen.queryByRole('switch', { name: 'Include a pandas DataFrame' })
+      ).not.toBeInTheDocument();
+    });
+  });
 });
