@@ -74,6 +74,28 @@ export interface FlagshipReportStore {
   findByApiReportId: (apiReportId: string) => Promise<FlagshipReportRecord | null>;
   /** Pins the validation snapshot to a record. */
   saveValidation: (id: string, snapshot: ReportValidationSnapshot) => Promise<FlagshipReportRecord>;
+  /**
+   * Renames the record: its title only. The v1 report it points at keeps
+   * its own label, which other records and links may share.
+   */
+  rename: (id: string, title: string) => Promise<FlagshipReportRecord>;
+}
+
+/** Thrown for a rename to an empty (or whitespace-only) name. */
+export class EmptyReportTitleError extends Error {
+  constructor() {
+    super('A report needs a name.');
+    this.name = 'EmptyReportTitleError';
+  }
+}
+
+/** A rename's title: trimmed and shortened like a new record's; an empty one is refused. */
+function renamedTitle(title: string): string {
+  const trimmed = clampStoreText(title.trim());
+  if (!trimmed) {
+    throw new EmptyReportTitleError();
+  }
+  return trimmed;
 }
 
 /** A provision's growth settings on the wire, each only when set. */
@@ -278,6 +300,11 @@ export class ApiFlagshipReportStore implements FlagshipReportStore {
   ): Promise<FlagshipReportRecord> {
     return recordFromItem(await this.routes.patch(id, { validation: validationToWire(snapshot) }));
   }
+
+  async rename(id: string, title: string): Promise<FlagshipReportRecord> {
+    // Only the row's name: the v1 report it points at is never written.
+    return recordFromItem(await this.routes.patch(id, { name: renamedTitle(title) }));
+  }
 }
 
 export const FLAGSHIP_REPORTS_KEY = 'pe-flagship-reports';
@@ -351,18 +378,27 @@ export class LocalStorageFlagshipReportStore implements FlagshipReportStore {
     return this.findStored('apiReportId', apiReportId)?.record ?? null;
   }
 
-  async saveValidation(
-    id: string,
-    snapshot: ReportValidationSnapshot
-  ): Promise<FlagshipReportRecord> {
+  /** Writes `changes` over the record with this ID; throws when there is none. */
+  private update(id: string, changes: Partial<FlagshipReportRecord>): FlagshipReportRecord {
     const found = this.findStored('id', id);
     if (!found) {
       throw new Error('Report not found');
     }
-    const updated = { ...found.record, validation: snapshot };
+    const updated = { ...found.record, ...changes };
     found.entries[found.index] = stampReportRecord(updated);
     this.write(found.entries);
     return updated;
+  }
+
+  async saveValidation(
+    id: string,
+    snapshot: ReportValidationSnapshot
+  ): Promise<FlagshipReportRecord> {
+    return this.update(id, { validation: snapshot });
+  }
+
+  async rename(id: string, title: string): Promise<FlagshipReportRecord> {
+    return this.update(id, { title: renamedTitle(title) });
   }
 }
 
