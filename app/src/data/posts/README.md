@@ -11,8 +11,9 @@ This folder contains the blog posts for PolicyEngine.
 
 ## Comparables
 
-A post dated on or after the comparables cutover needs a `comparables` block in its
-`posts.json` entry: see "Research entries need a comparables record" in
+A new post needs a `comparables` block in its `posts.json` entry, a record of its
+comparables search (or, for an event or announcement, a `no_estimate` declaration): see
+"Research entries need a comparables record" in
 `docs/engineering/skills/repository-guidance.md`.
 
 ## Adding Images to Blog Posts

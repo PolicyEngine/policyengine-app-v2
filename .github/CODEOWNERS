@@ -1,0 +1,8 @@
+# The comparables gate (docs/engineering/skills/repository-guidance.md,
+# "Research entries need a comparables record"): a change to what it checks,
+# or to the list of entries it exempts, asks for Max's review.
+/website/src/data/comparables.ts @MaxGhenis
+/website/src/data/comparablesGrandfathered.json @MaxGhenis
+/website/src/__tests__/content/comparables*.test.ts @MaxGhenis
+/.github/workflows/comparables-gate.yml @MaxGhenis
+/.github/CODEOWNERS @MaxGhenis

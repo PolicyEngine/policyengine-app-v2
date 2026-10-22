@@ -1,27 +1,42 @@
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import {
+  ANALYSIS_TAGS,
+  checkIndex,
   COMPARABLES_CUTOVER_DATE,
+  COUNTRY_TAGS,
   type ComparablesIndex,
+  DEFAULT_COUNTRY,
+  entryKey,
+  type Grandfathered,
+  grandfatherAdditions,
   INDEX_SCHEMA,
   MAX_SEARCH_AGE_DAYS,
+  mayDeclareNoEstimate,
+  NO_ESTIMATE_TAGS,
   postSlug,
   requiresComparables,
   type ResearchEntry,
   resolveComparables,
   type ReviewedComparables,
   researchEntries,
+  routeEntryKey,
+  SEARCH_KINDS,
   searchLogUrl,
   validateComparables,
 } from "@/data/comparables";
 
 // Properties of the comparables gate (website/src/data/comparables.ts):
-// - an entry after the cutover with a well-formed block whose search the
-//   scorecard index lists always resolves;
+// - an entry off the grandfather list with a well-formed block whose search
+//   the scorecard index lists always resolves;
 // - any one disagreement between the block and the index fails resolution;
-// - an entry after the cutover without a block, with a stale or late search,
-//   or a policy entry declared no_estimate, always fails validation;
-// - entries before the cutover never need a block.
+// - any one malformation of a well-formed block fails validation;
+// - an entry off the grandfather list needs a block whatever date it
+//   carries, and one on the list never does;
+// - only a post that is plainly not an analysis may declare no_estimate;
+// - researchEntries lists apps by the research or policy flag and every
+//   post, with the site's slugs, dates and countries;
+// - the grandfather list may grow only before the cutover.
 
 const DAY = 86_400_000;
 
@@ -31,6 +46,12 @@ function addDays(date: string, days: number): string {
     .slice(0, 10);
 }
 
+const NONE: Grandfathered = {
+  snapshotDate: "2026-10-22",
+  entries: [],
+  routes: [],
+};
+
 const slugArb = fc
   .array(fc.stringMatching(/^[a-z0-9]{1,8}$/), { minLength: 1, maxLength: 4 })
   .map((parts) => parts.join("-"));
@@ -39,11 +60,17 @@ const producersArb = fc.uniqueArray(producerArb, {
   minLength: 1,
   maxLength: 20,
 });
-const countryArb = fc.constantFrom("uk", "us");
+const countryArb = fc.constantFrom(...COUNTRY_TAGS);
 const kindArb = fc.constantFrom<"app" | "post">("app", "post");
-// days after the cutover the entry is published, and days before that it was searched
-const afterCutoverArb = fc.integer({ min: 0, max: 900 });
+// days from the cutover the entry is listed (backdated ones too), and days
+// before that it was searched
+const listedArb = fc.integer({ min: -900, max: 900 });
 const searchLeadArb = fc.integer({ min: 0, max: MAX_SEARCH_AGE_DAYS });
+const listedKindArb = fc.constantFrom<ReviewedComparables["searchKind"]>(
+  "prepublish",
+  "reharvest",
+  "prepromotion",
+);
 
 interface Case {
   entry: ResearchEntry;
@@ -51,27 +78,48 @@ interface Case {
   index: ComparablesIndex;
 }
 
+function entryRules() {
+  return {
+    analysis_tags: [...ANALYSIS_TAGS],
+    no_estimate_tags: [...NO_ESTIMATE_TAGS],
+    country_tags: [...COUNTRY_TAGS],
+    default_country: DEFAULT_COUNTRY,
+    search_kinds: [...SEARCH_KINDS],
+  };
+}
+
 const caseArb: fc.Arbitrary<Case> = fc
   .record({
     slug: slugArb,
     country: countryArb,
     kind: kindArb,
-    after: afterCutoverArb,
+    listed: listedArb,
     lead: searchLeadArb,
+    searchKind: listedKindArb,
     producers: producersArb,
     found: fc.nat({ max: 60 }),
     otherSearches: fc.nat({ max: 3 }),
   })
   .map(
-    ({ slug, country, kind, after, lead, producers, found, otherSearches }) => {
-      const date = addDays(COMPARABLES_CUTOVER_DATE, after);
+    ({
+      slug,
+      country,
+      kind,
+      listed,
+      lead,
+      searchKind,
+      producers,
+      found,
+      otherSearches,
+    }) => {
+      const date = addDays(COMPARABLES_CUTOVER_DATE, listed);
       const searchDate = addDays(date, -lead);
       const source = `analysis-${country}-${slug}`;
       const record: ReviewedComparables = {
         status: "reviewed",
         scorecardSource: source,
         searchDate,
-        searchKind: "prepublish",
+        searchKind,
         producersSearched: producers,
         found,
         searchLog: searchLogUrl(source),
@@ -88,7 +136,7 @@ const caseArb: fc.Arbitrary<Case> = fc
       const searches = [
         {
           date: searchDate,
-          kind: "prepublish",
+          kind: searchKind,
           producers_searched: [...producers].sort(),
           found,
         },
@@ -102,6 +150,7 @@ const caseArb: fc.Arbitrary<Case> = fc
       const index: ComparablesIndex = {
         schema: INDEX_SCHEMA,
         gap_threshold: 0.25,
+        entry_rules: entryRules(),
         analyses: {
           [source]: {
             kind,
@@ -116,50 +165,54 @@ const caseArb: fc.Arbitrary<Case> = fc
     },
   );
 
+function withBlock(entry: ResearchEntry, block: unknown): ResearchEntry {
+  return { ...entry, comparables: block };
+}
+
 describe("comparables gate properties", () => {
-  test("every well-formed entry after the cutover resolves against an index that lists its search", () => {
+  test("every well-formed entry off the grandfather list resolves against an index that lists its search", () => {
     fc.assert(
       fc.property(caseArb, ({ entry, index }) => {
-        expect(requiresComparables(entry)).toBe(true);
-        expect(validateComparables(entry)).toEqual([]);
+        expect(requiresComparables(entry, NONE)).toBe(true);
+        expect(validateComparables(entry, NONE)).toEqual([]);
+        expect(checkIndex(index)).toEqual([]);
         expect(resolveComparables(entry, index)).toEqual([]);
       }),
     );
   });
 
   test("any one disagreement with the index fails resolution", () => {
+    const at = (c: Case) => c.index.analyses[c.record.scorecardSource];
     const mutations: Array<(c: Case) => void> = [
       (c) => {
         c.index.analyses = {};
       },
       (c) => {
-        c.index.analyses[c.record.scorecardSource].searches[0].found += 1;
+        at(c).searches[0].found += 1;
       },
       (c) => {
-        c.index.analyses[
-          c.record.scorecardSource
-        ].searches[0].producers_searched.pop();
+        at(c).searches[0].producers_searched.pop();
       },
       (c) => {
-        c.index.analyses[c.record.scorecardSource].searches[0].date = addDays(
-          c.record.searchDate,
-          -1,
-        );
+        at(c).searches[0].producers_searched.push("zzz_extra");
       },
       (c) => {
-        c.index.analyses[c.record.scorecardSource].searches[0].kind =
-          "backfill";
+        at(c).searches[0].date = addDays(c.record.searchDate, -1);
       },
       (c) => {
-        c.index.analyses[c.record.scorecardSource].slug += "-x";
+        at(c).searches[0].kind = "backfill";
       },
       (c) => {
-        c.index.analyses[c.record.scorecardSource].country_id =
-          c.entry.countryIds[0] === "uk" ? "us" : "uk";
+        at(c).slug += "-x";
       },
       (c) => {
-        c.index.analyses[c.record.scorecardSource].kind =
-          c.entry.kind === "app" ? "post" : "app";
+        at(c).country_id = c.entry.countryIds[0] === "uk" ? "us" : "uk";
+      },
+      (c) => {
+        at(c).kind = c.entry.kind === "app" ? "post" : "app";
+      },
+      (c) => {
+        at(c).search_log += "#other";
       },
       (c) => {
         c.index.schema = "comparables/index/0";
@@ -177,172 +230,360 @@ describe("comparables gate properties", () => {
     );
   });
 
-  test("an entry after the cutover without a block fails", () => {
-    fc.assert(
-      fc.property(caseArb, ({ entry }) => {
-        const bare = { ...entry, comparables: undefined };
-        expect(validateComparables(bare).join()).toMatch(
-          /no comparables block/,
-        );
+  test("any one malformation of a well-formed block fails validation", () => {
+    const malformations: Array<
+      (r: Record<string, unknown>, e: ResearchEntry) => unknown
+    > = [
+      (r) => ({ ...r, extra: 1 }),
+      (r) => ({ ...r, searchLog: `${r.searchLog}x` }),
+      (r) => ({ ...r, scorecardSource: "Analysis-UK-x" }),
+      (r, e) => {
+        const source = `analysis-${e.countryIds[0]}-${e.slug}-other`;
+        return {
+          ...r,
+          scorecardSource: source,
+          searchLog: searchLogUrl(source),
+        };
+      },
+      (r) => ({ ...r, searchDate: "2026-02-30" }),
+      (r) => ({ ...r, searchDate: "02/11/2026" }),
+      (r) => ({ ...r, searchKind: "later" }),
+      (r) => ({ ...r, searchKind: "backfill" }),
+      (r, e) => ({ ...r, searchDate: addDays(e.date as string, 1) }),
+      (r, e) => ({
+        ...r,
+        searchDate: addDays(e.date as string, -(MAX_SEARCH_AGE_DAYS + 1)),
       }),
-    );
-  });
-
-  test("a search after publication, or too long before it, fails", () => {
+      (r) => ({ ...r, producersSearched: [] }),
+      (r) => ({ ...r, producersSearched: "obr" }),
+      (r) => ({
+        ...r,
+        producersSearched: [
+          ...(r.producersSearched as string[]),
+          (r.producersSearched as string[])[0],
+        ],
+      }),
+      (r) => ({ ...r, producersSearched: ["Not A Slug"] }),
+      (r) => ({ ...r, found: 1.5 }),
+      (r) => ({ ...r, found: -1 }),
+      (r) => ({ ...r, found: "3" }),
+      (r) => ({ ...r, status: "searched" }),
+      () => "reviewed",
+      () => null,
+      (r) => [r],
+    ];
     fc.assert(
       fc.property(
         caseArb,
-        fc.oneof(
-          fc.integer({ min: 1, max: 365 }),
-          fc.integer({ min: -900, max: -(MAX_SEARCH_AGE_DAYS + 1) }),
-        ),
-        ({ entry, record }, shift) => {
-          const moved = {
-            ...entry,
-            comparables: { ...record, searchDate: addDays(entry.date, shift) },
-          };
-          expect(validateComparables(moved)).not.toEqual([]);
+        fc.integer({ min: 0, max: malformations.length - 1 }),
+        ({ entry, record }, which) => {
+          const broken = withBlock(
+            entry,
+            malformations[which]({ ...record }, entry),
+          );
+          expect(validateComparables(broken, NONE)).not.toEqual([]);
         },
       ),
     );
   });
 
-  test("an entry after the cutover needs a prepublish search", () => {
-    fc.assert(
-      fc.property(caseArb, ({ entry, record }) => {
-        const backfilled = {
-          ...entry,
-          comparables: { ...record, searchKind: "backfill" },
-        };
-        expect(validateComparables(backfilled).join()).toMatch(
-          /needs a prepublish search/,
-        );
-      }),
-    );
-  });
-
-  test("a policy entry cannot declare no estimate; another can, with a reason", () => {
+  test("an entry off the grandfather list needs a block, whatever date it carries", () => {
     fc.assert(
       fc.property(caseArb, ({ entry }) => {
-        const noEstimate = {
-          status: "no_estimate",
-          reason: "An event write-up with no estimate in it.",
-        };
-        expect(
-          validateComparables({ ...entry, comparables: noEstimate }),
-        ).not.toEqual([]);
-        expect(
-          validateComparables({
-            ...entry,
-            tags: entry.countryIds,
-            comparables: noEstimate,
-          }),
-        ).toEqual([]);
-        expect(
-          validateComparables({
-            ...entry,
-            tags: entry.countryIds,
-            comparables: { status: "no_estimate", reason: "none" },
-          }),
-        ).not.toEqual([]);
-      }),
-    );
-  });
-
-  test("a block that names another entry's record fails", () => {
-    fc.assert(
-      fc.property(caseArb, slugArb, ({ entry, record }, other) => {
-        fc.pre(other !== entry.slug);
-        const source = `analysis-${entry.countryIds[0]}-${other}`;
-        const misnamed = {
-          ...entry,
-          comparables: {
-            ...record,
-            scorecardSource: source,
-            searchLog: searchLogUrl(source),
-          },
-        };
-        expect(validateComparables(misnamed).join()).toMatch(
-          /does not name this entry/,
+        const bare = withBlock(entry, undefined);
+        expect(validateComparables(bare, NONE).join()).toMatch(
+          /needs a comparables block/,
         );
       }),
     );
   });
 
-  test("entries before the cutover need no block", () => {
+  test("an entry off the grandfather list needs a real listing date", () => {
     fc.assert(
-      fc.property(caseArb, fc.integer({ min: 1, max: 3000 }), (c, before) => {
-        const early = {
-          ...c.entry,
-          date: addDays(COMPARABLES_CUTOVER_DATE, -before),
-          comparables: undefined,
+      fc.property(
+        caseArb,
+        fc.constantFrom(null, "", "03/11/2026", "2026-13-01"),
+        ({ entry }, date) => {
+          expect(validateComparables({ ...entry, date }, NONE).join()).toMatch(
+            /needs a publication date/,
+          );
+        },
+      ),
+    );
+  });
+
+  test("an entry on the grandfather list needs no block, but a block it carries must be well formed", () => {
+    fc.assert(
+      fc.property(caseArb, ({ entry, record }) => {
+        const listed: Grandfathered = { ...NONE, entries: [entryKey(entry)] };
+        expect(requiresComparables(entry, listed)).toBe(false);
+        expect(
+          validateComparables(withBlock(entry, undefined), listed),
+        ).toEqual([]);
+        // a backfill is fine for an entry that was live before the gate
+        expect(
+          validateComparables(
+            withBlock(entry, { ...record, searchKind: "backfill" }),
+            listed,
+          ),
+        ).toEqual([]);
+        expect(
+          validateComparables(
+            withBlock(entry, { ...record, found: -1 }),
+            listed,
+          ),
+        ).not.toEqual([]);
+      }),
+    );
+  });
+
+  test("only a post that is plainly not an analysis may declare no estimate", () => {
+    const tagArb = fc.uniqueArray(
+      fc.constantFrom(
+        ...ANALYSIS_TAGS,
+        ...NO_ESTIMATE_TAGS,
+        "featured",
+        "impact",
+        "uk",
+        "us",
+      ),
+      { maxLength: 5 },
+    );
+    fc.assert(
+      fc.property(caseArb, tagArb, ({ entry }, tags) => {
+        const declared = {
+          ...entry,
+          tags,
+          comparables: {
+            status: "no_estimate",
+            reason: "An event write-up with no estimate in it.",
+          },
         };
-        expect(requiresComparables(early)).toBe(false);
-        expect(validateComparables(early)).toEqual([]);
+        const allowed =
+          entry.kind === "post" &&
+          tags.some((t) =>
+            (NO_ESTIMATE_TAGS as readonly string[]).includes(t),
+          ) &&
+          !tags.some((t) => (ANALYSIS_TAGS as readonly string[]).includes(t));
+        expect(mayDeclareNoEstimate(declared)).toBe(allowed);
+        expect(validateComparables(declared, NONE).length === 0).toBe(allowed);
+      }),
+    );
+  });
+
+  test("a no_estimate block needs a reason and nothing else", () => {
+    const post: ResearchEntry = {
+      kind: "post",
+      slug: "an-event",
+      countryIds: ["uk"],
+      date: "2026-11-02",
+      tags: ["uk", "event"],
+    };
+    const reason = "An event write-up with no estimate in it.";
+    expect(
+      validateComparables(
+        withBlock(post, { status: "no_estimate", reason }),
+        NONE,
+      ),
+    ).toEqual([]);
+    expect(
+      validateComparables(
+        withBlock(post, { status: "no_estimate", reason: "none" }),
+        NONE,
+      ).join(),
+    ).toMatch(/reason of 20\+/);
+    expect(
+      validateComparables(
+        withBlock(post, { status: "no_estimate", reason, found: 0 }),
+        NONE,
+      ).join(),
+    ).toMatch(/only status and reason/);
+  });
+});
+
+describe("the scorecard index", () => {
+  test("an index of another shape, or with other entry rules, is refused", () => {
+    const good = {
+      schema: INDEX_SCHEMA,
+      gap_threshold: 0.25,
+      entry_rules: entryRules(),
+      analyses: {},
+    };
+    expect(checkIndex(good)).toEqual([]);
+    expect(checkIndex({ ...good, schema: "not-an-index" })).not.toEqual([]);
+    expect(checkIndex({ ...good, analyses: [] })).not.toEqual([]);
+    expect(checkIndex({ ...good, entry_rules: undefined })).not.toEqual([]);
+    expect(
+      checkIndex({
+        ...good,
+        entry_rules: { ...entryRules(), analysis_tags: ["policy"] },
+      }).join(),
+    ).toMatch(/analysis_tags/);
+    expect(
+      checkIndex({
+        ...good,
+        entry_rules: { ...entryRules(), default_country: "uk" },
+      }).join(),
+    ).toMatch(/default_country/);
+    expect(checkIndex(null)).not.toEqual([]);
+  });
+
+  test("a block matches any one of two searches on the same day", () => {
+    fc.assert(
+      fc.property(caseArb, fc.nat({ max: 60 }), (c, otherFound) => {
+        fc.pre(otherFound !== c.record.found);
+        const searches = c.index.analyses[c.record.scorecardSource].searches;
+        searches.unshift({ ...searches[0], found: otherFound });
+        expect(resolveComparables(c.entry, c.index)).toEqual([]);
+      }),
+    );
+  });
+
+  test("a record filed under another country than its name fails", () => {
+    fc.assert(
+      fc.property(caseArb, ({ entry, index, record }) => {
+        const other = entry.countryIds[0] === "uk" ? "us" : "uk";
+        index.analyses[record.scorecardSource].country_id = other;
+        const both = { ...entry, countryIds: [entry.countryIds[0], other] };
+        expect(resolveComparables(both, index).join()).toMatch(/under/);
       }),
     );
   });
 });
 
-describe("comparables helpers", () => {
-  test("post slugs follow the website's rule", () => {
-    expect(postSlug("UK_Two_Child-limit.md")).toBe("uk-two-child-limit");
-    expect(postSlug("2025-spm-poverty-prediction.md")).toBe(
-      "2025-spm-poverty-prediction",
-    );
+describe("research entries", () => {
+  const appArb = fc.record({
+    slug: slugArb,
+    countryId: countryArb,
+    date: fc.option(
+      fc
+        .tuple(
+          fc.integer({ min: -400, max: 400 }),
+          fc.constantFrom("", " 12:00:00", " 09:30"),
+        )
+        .map(([d, time]) => `${addDays(COMPARABLES_CUTOVER_DATE, d)}${time}`),
+      { nil: undefined },
+    ),
+    tags: fc.uniqueArray(
+      fc.constantFrom("policy", "featured", "interactives", "tax", "uk", "us"),
+      { maxLength: 4 },
+    ),
+    displayWithResearch: fc.option(fc.boolean(), { nil: undefined }),
+  });
+  const postArb = fc.record({
+    filename: fc
+      .tuple(
+        fc.stringMatching(/^[A-Za-z0-9]{1,6}(?:[_-][A-Za-z0-9]{1,6}){0,3}$/),
+        fc.constantFrom(".md", ".ipynb", ".v2.md"),
+      )
+      .map(([stem, ext]) => `${stem}${ext}`),
+    date: fc
+      .tuple(
+        fc.integer({ min: -400, max: 400 }),
+        fc.constantFrom("", " 12:00:00"),
+      )
+      .map(([d, time]) => `${addDays(COMPARABLES_CUTOVER_DATE, d)}${time}`),
+    tags: fc.uniqueArray(
+      fc.constantFrom(...COUNTRY_TAGS, "global", "policy", "org", "event"),
+      { maxLength: 4 },
+    ),
   });
 
-  test("research entries are apps listed with research and every post", () => {
-    const entries = researchEntries(
-      [
-        {
-          slug: "listed",
-          countryId: "uk",
-          date: "2026-11-02 12:00:00",
-          tags: ["uk", "policy"],
-          displayWithResearch: true,
+  test("apps are listed when shown with research or tagged policy; every post is", () => {
+    fc.assert(
+      fc.property(
+        fc.array(appArb, { maxLength: 6 }),
+        fc.array(postArb, { maxLength: 6 }),
+        (apps, posts) => {
+          const entries = researchEntries(apps, posts);
+          const listedApps = apps.filter(
+            (a) => a.displayWithResearch || a.tags.includes("policy"),
+          );
+          expect(entries.filter((e) => e.kind === "app")).toHaveLength(
+            listedApps.length,
+          );
+          expect(entries.filter((e) => e.kind === "post")).toHaveLength(
+            posts.length,
+          );
+          for (const [entry, app] of entries
+            .filter((e) => e.kind === "app")
+            .map((e, i) => [e, listedApps[i]] as const)) {
+            expect(entry.countryIds).toEqual([app.countryId]);
+            expect(entry.date).toBe(app.date ? app.date.slice(0, 10) : null);
+            expect(entryKey(entry)).toBe(`app ${app.countryId}/${app.slug}`);
+          }
+          for (const [entry, post] of entries
+            .filter((e) => e.kind === "post")
+            .map((e, i) => [e, posts[i]] as const)) {
+            const countries = post.tags.filter((t) =>
+              (COUNTRY_TAGS as readonly string[]).includes(t),
+            );
+            expect(entry.countryIds).toEqual(
+              countries.length ? countries : [DEFAULT_COUNTRY],
+            );
+            expect(entry.date).toBe(post.date.slice(0, 10));
+            expect(entry.slug).toBe(postSlug(post.filename));
+            expect(entry.slug).toMatch(/^[a-z0-9-]+$/);
+            expect(entry.slug).not.toMatch(/\./);
+          }
         },
-        { slug: "tool", countryId: "us", tags: ["us"] },
-      ],
-      [{ filename: "A_post.md", date: "2026-11-03", tags: ["us", "uk", "x"] }],
+      ),
     );
-    expect(entries).toEqual([
-      {
-        kind: "app",
-        slug: "listed",
-        countryIds: ["uk"],
-        date: "2026-11-02",
-        tags: ["uk", "policy"],
-        comparables: undefined,
-      },
-      {
-        kind: "post",
-        slug: "a-post",
-        countryIds: ["us", "uk"],
-        date: "2026-11-03",
-        tags: ["us", "uk", "x"],
-        comparables: undefined,
-      },
-    ]);
   });
 
-  test("an impossible search date fails", () => {
-    const entry: ResearchEntry = {
-      kind: "app",
-      slug: "x",
-      countryIds: ["uk"],
-      date: addDays(COMPARABLES_CUTOVER_DATE, 5),
-      tags: ["uk"],
-      comparables: {
-        status: "reviewed",
-        scorecardSource: "analysis-uk-x",
-        searchDate: "2026-02-30",
-        searchKind: "prepublish",
-        producersSearched: ["obr"],
-        found: 0,
-        searchLog: searchLogUrl("analysis-uk-x"),
-      },
-    };
-    expect(validateComparables(entry).join()).toMatch(/real YYYY-MM-DD/);
+  test("a registry date that is not one stays as written, so the gate can refuse it", () => {
+    const [entry] = researchEntries(
+      [],
+      [{ filename: "a.md", date: "03/11/2026", tags: ["uk"] }],
+    );
+    expect(entry.date).toBe("03/11/2026");
+    expect(validateComparables(entry, NONE).join()).toMatch(
+      /needs a publication date/,
+    );
+  });
+
+  test("an app route names its entry", () => {
+    expect(routeEntryKey("/uk/triple-lock")).toBe("app uk/triple-lock");
+    expect(routeEntryKey("/:countryId/bill-tracker")).toBeNull();
+    expect(routeEntryKey("/ai-beliefs")).toBeNull();
+    expect(routeEntryKey("/uk/research/some-post")).toBeNull();
+  });
+});
+
+describe("the grandfather list", () => {
+  const base: Grandfathered = {
+    snapshotDate: "2026-10-22",
+    entries: ["app uk/a", "post b"],
+    routes: ["/x"],
+  };
+  const dayArb = fc
+    .integer({ min: -60, max: 400 })
+    .map((d) => addDays(COMPARABLES_CUTOVER_DATE, d));
+
+  test("it may grow before the cutover and only shrink after", () => {
+    fc.assert(
+      fc.property(
+        dayArb,
+        fc.subarray(base.entries),
+        fc.subarray(["app us/new", "post newer"]),
+        fc.boolean(),
+        (today, kept, added, addRoute) => {
+          const head: Grandfathered = {
+            ...base,
+            entries: [...kept, ...added],
+            routes: addRoute ? [...base.routes, "/y"] : base.routes,
+          };
+          const grew = added.length > 0 || addRoute;
+          const errors = grandfatherAdditions(base, head, today);
+          expect(errors.length > 0).toBe(
+            grew && today >= COMPARABLES_CUTOVER_DATE,
+          );
+        },
+      ),
+    );
+  });
+
+  test("a branch with no list yet starts one", () => {
+    expect(grandfatherAdditions(null, base, "2027-01-01")).toEqual([]);
   });
 });

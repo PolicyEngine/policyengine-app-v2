@@ -12,7 +12,13 @@ The `app/` directory holds the calculator code. `calculator-app/` (Next.js) comp
 
 ## Research entries need a comparables record
 
-A research entry (an `apps.json` app with `displayWithResearch`, or a `posts.json` post) dated on or after `COMPARABLES_CUTOVER_DATE` in `website/src/data/comparables.ts` carries a `comparables` block naming the record of its pre-publish comparables search in PolicyEngine/policyengine-scorecard (`docs/COMPARABLES.md` there; the `policyengine-comparables-review` skill runs the search). Merge the scorecard PR first, then paste the block `python -m scorecard_db.comparables record analysis-<country>-<slug>` prints. An entry with no estimate declares `{"status": "no_estimate", "reason": "..."}`; an entry tagged `policy` cannot. The Tests job checks each block's shape, and the `Comparables gate` workflow checks that it resolves against the scorecard's index on main.
+A research entry is an `apps.json` app with `displayWithResearch` or the `policy` tag, or any `posts.json` post. Every research entry needs a `comparables` block naming the record of its comparables search in PolicyEngine/policyengine-scorecard (`docs/COMPARABLES.md` there; the `policyengine-comparables-review` skill runs the search), unless it is on `website/src/data/comparablesGrandfathered.json`, the list of entries live before the gate. The date an entry carries does not exempt it.
+
+- Merge the scorecard PR first, then paste the block `python -m scorecard_db.comparables record analysis-<country>-<slug>` prints. Its search is dated on or before the entry's date and no more than `MAX_SEARCH_AGE_DAYS` before it, and is not a backfill.
+- A post that is plainly not an analysis (tagged `org`, `event`, `giving`, `conferences`, `year-in-review` or `april-fools`, and none of the analysis tags in `comparables.ts`) may declare `{"status": "no_estimate", "reason": "..."}` instead. An app never may.
+- Taking an entry off the site takes it off the grandfather list too, so it comes back only with a record. Entries may join the list only before `COMPARABLES_CUTOVER_DATE`; after it the list only shrinks.
+- A new app route in `website/src/data/appZoneRoutes.ts` needs a research entry in `apps.json`, and a featured research card must link one.
+- The Tests job checks each block's shape and these lists. The `Comparables gate` workflow runs on every pull request, checks that each block resolves against the scorecard's index on main and that the list has not grown after the cutover, and opens an issue when its weekly run fails.
 
 ## Visual standards
 
