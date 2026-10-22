@@ -27,7 +27,6 @@ const UNROUTED_MODULES = [
   '@/components/flagship/household/SaveHouseholdForm',
   '@/components/flagship/household/SavedHouseholdPicker',
   '@/components/flagship/household/SavedHouseholdsList',
-  '@/components/flagship/household/DeleteSavedHouseholdDialog',
   '@/components/flagship/household/savedHouseholdDisplay',
   '@/components/flagship/household/HouseholdNetIncomeResult',
   '@/hooks/useSavedHouseholds',
