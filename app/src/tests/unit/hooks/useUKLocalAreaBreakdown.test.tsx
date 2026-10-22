@@ -21,7 +21,8 @@ import {
   UK_BREAKDOWN_REQUEST,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
-vi.mock('@/api/societyWideCalculation', () => ({
+vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchLocalAreaBreakdown: vi.fn(),
 }));
 

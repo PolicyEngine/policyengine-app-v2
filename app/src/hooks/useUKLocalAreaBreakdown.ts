@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { hashKey, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchLocalAreaBreakdown,
+  isLocalAreaBreakdown,
   type LocalAreaBreakdownResponse,
 } from '@/api/societyWideCalculation';
 import { clockProgress, runProgressValue } from '@/components/flagship/report/RunProgress';
@@ -108,7 +109,7 @@ function toRun(
   }
   if (response.status === 'ok' && response.result) {
     // A deployment that ignores breakdown=local_areas answers with national results.
-    if (response.result.kind !== 'local_areas') {
+    if (!isLocalAreaBreakdown(response.result)) {
       return { status: 'error', startedAt, breakdown: null, error: NOT_A_BREAKDOWN_MESSAGE };
     }
     return { status: 'complete', startedAt, breakdown: response.result };

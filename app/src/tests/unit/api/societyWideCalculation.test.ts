@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
-import { fetchLocalAreaBreakdown, fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import {
+  fetchLocalAreaBreakdown,
+  fetchSocietyWideCalculation,
+  isLocalAreaBreakdown,
+} from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   EXPECTED_BY_CONSTITUENCY,
@@ -34,6 +38,7 @@ import {
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/societyWideMocks';
+import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 
 global.fetch = vi.fn();
 
@@ -575,8 +580,11 @@ describe('societyWide API', () => {
       );
 
       // Then
-      expect(response.result?.constituency_impact).toEqual({ by_constituency: {} });
-      expect(response.result?.local_authority_impact).toEqual({ by_local_authority: {} });
+      const result = response.result!;
+      expect(isLocalAreaBreakdown(result)).toBe(true);
+      const breakdown = result as LocalAreaBreakdown;
+      expect(breakdown.constituency_impact).toEqual({ by_constituency: {} });
+      expect(breakdown.local_authority_impact).toEqual({ by_local_authority: {} });
     });
 
     test('given a failed breakdown then returns the error envelope', async () => {

@@ -58,8 +58,22 @@ export interface EconomyCalculationResponse<Result> {
 
 export type SocietyWideCalculationResponse = EconomyCalculationResponse<SocietyWideReportOutput>;
 
-/** A `breakdown=local_areas` run's envelope; its result is keyed by area name. */
-export type LocalAreaBreakdownResponse = EconomyCalculationResponse<LocalAreaBreakdown>;
+/**
+ * A `breakdown=local_areas` run's envelope; its result is keyed by area
+ * name. A Public API deployment that ignores the parameter answers with
+ * national results instead, so an ok result is either; isLocalAreaBreakdown
+ * tells them apart.
+ */
+export type LocalAreaBreakdownResponse = EconomyCalculationResponse<
+  LocalAreaBreakdown | SocietyWideReportOutput
+>;
+
+/** Whether a breakdown request's result is a breakdown, not national results. */
+export function isLocalAreaBreakdown(
+  result: LocalAreaBreakdown | SocietyWideReportOutput
+): result is LocalAreaBreakdown {
+  return 'kind' in result && result.kind === 'local_areas';
+}
 
 /** The version fields a result carries, which the bundle fills in. */
 interface ResultProvenance {
@@ -118,7 +132,7 @@ export async function fetchLocalAreaBreakdown(
   baselinePolicyId: string,
   params: SocietyWideCalculationParams
 ): Promise<LocalAreaBreakdownResponse> {
-  return fetchEconomyCalculation<LocalAreaBreakdown>(
+  return fetchEconomyCalculation<LocalAreaBreakdown | SocietyWideReportOutput>(
     countryId,
     reformPolicyId,
     baselinePolicyId,
