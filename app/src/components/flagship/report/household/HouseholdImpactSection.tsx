@@ -1,36 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import HouseholdBuilderPanel from '@/components/flagship/household/HouseholdBuilderPanel';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
-import {
-  commonHouseholdInputs,
-  householdInputDescriptionOf,
-  householdInputNameOf,
-  householdTopicIcon,
-} from '@/components/flagship/report/household/householdPickerInputs';
+import { commonHouseholdInputs } from '@/components/flagship/report/household/householdPickerInputs';
 import RunProgress from '@/components/flagship/report/RunProgress';
 import { ErrorState } from '@/components/flagship/states';
-import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
 import type { CountryId } from '@/libs/countries';
-import { describeHousehold, householdState } from '@/libs/flagship/householdDescription';
+import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
-import {
-  describesAHousehold,
-  HOUSEHOLD_INCOME_SUBGROUPS,
-  HOUSEHOLD_VARIABLE_GROUPS,
-  householdVariableGroupOf,
-  householdVariableSubgroupOf,
-  listsForState,
-  twinsABasicInput,
-} from '@/libs/flagship/householdVariableGroups';
+import { describesAHousehold } from '@/libs/flagship/householdVariableGroups';
 import {
   hasParameterDependencies,
   loadParameterDependencies,
 } from '@/libs/flagship/parameterDependencies';
-import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
@@ -44,7 +30,7 @@ import {
   trackHouseholdVariableAdded,
 } from '@/utils/analytics';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
-import { getInputVariables, type VariableInfo } from '@/utils/VariableResolver';
+import { getInputVariables } from '@/utils/VariableResolver';
 
 /** The countries whose results, inputs and currency the section knows. */
 const HOUSEHOLD_COUNTRIES = new Set(['us', 'uk']);
@@ -92,20 +78,6 @@ function newHousehold(countryId: CountryId, year: string, region?: string): Hous
       current.setEntityVariableAtYear('households', group, name, year, value),
     household
   );
-}
-
-/**
- * A person's name as a country's builder shows it: a UK household's
- * dependants are its children ("your first child"), as the UK model's
- * benefits count them; the US keeps "dependent", which a tax unit's
- * dependants are called. Only the name shown changes, never the key.
- */
-export function householdPersonNameOf(
-  countryId: string
-): ((personKey: string) => string) | undefined {
-  return countryId === 'uk'
-    ? (personKey) => personKey.replace(/\bdependent\b/, 'child')
-    : undefined;
 }
 
 /** What the builder sets for each person it adds: not an input the reader chose. */
@@ -355,7 +327,6 @@ function HouseholdCard({
   // The household as the builder edits it: every input the model takes,
   // per person and per household, as in the household builder.
   const metadata = useSelector((state: RootState) => state.metadata);
-  const basicInputFields = useSelector(getBasicInputFields);
   const [household, setHousehold] = useState(() => newHousehold(countryId, year, region));
   const [requested, setRequested] = useState<{
     payload: V1HouseholdCreateEnvelope;
@@ -367,38 +338,6 @@ function HouseholdCard({
     reformPolicyId,
     payload: requested?.payload ?? null,
   });
-  const composition = useMemo(() => household.deriveBuilderComposition(year), [household, year]);
-  const basicNonPersonFields = useMemo(
-    () =>
-      Object.entries(basicInputFields)
-        .filter(([key]) => key !== 'person')
-        .flatMap(([, fields]) => fields),
-    [basicInputFields]
-  );
-  // The variable search lists only the household's own state's programs,
-  // only inputs that describe a household (no survey-reported totals), and
-  // not the twin of a field the builder already shows.
-  const stateCode = householdState(household, year, countryId);
-  const basicPersonFields = basicInputFields.person;
-  const variableFilter = useCallback(
-    (variable: VariableInfo) =>
-      listsForState(variable, stateCode) &&
-      describesAHousehold(variable, countryId) &&
-      !twinsABasicInput(variable, basicPersonFields ?? []),
-    [stateCode, countryId, basicPersonFields]
-  );
-  // The picker's groups, featured inputs and names, for the country's model.
-  const picker = useMemo(
-    () => ({
-      groupOf: householdVariableGroupOf(countryId),
-      subgroupOf: householdVariableSubgroupOf(countryId),
-      common: commonHouseholdInputs(countryId),
-      nameOf: householdInputNameOf(countryId),
-      describe: householdInputDescriptionOf(countryId),
-      personNameOf: householdPersonNameOf(countryId),
-    }),
-    [countryId]
-  );
   // Whether the household can run, as the household builder checks it.
   const validation = useMemo(
     () => HouseholdValidation.isReadyForSimulation(household, countryId, year, metadata),
@@ -553,38 +492,13 @@ function HouseholdCard({
           </div>
         )}
         <div style={{ minWidth: 0, display: showInputs ? undefined : 'none' }}>
-          <HouseholdBuilderForm
+          <HouseholdBuilderPanel
             household={household}
-            metadata={metadata}
+            countryId={countryId}
             year={year}
-            maritalStatus={composition.maritalStatus}
-            numChildren={composition.numChildren}
-            basicPersonFields={basicInputFields.person || []}
-            basicNonPersonFields={basicNonPersonFields}
             onChange={setHousehold}
-            onMaritalStatusChange={(status) =>
-              setHousehold(household.withBuilderMaritalStatus(year, status))
-            }
-            onNumChildrenChange={(count) =>
-              setHousehold(household.withBuilderChildCount(year, count))
-            }
             disabled={running}
-            layout="columns"
             suggestedVariables={suggestedVariables}
-            suggestedLabel="Related to this reform"
-            searchRanking="relevance"
-            variableGroupOf={picker.groupOf}
-            variableGroupOrder={HOUSEHOLD_VARIABLE_GROUPS}
-            variableFilter={variableFilter}
-            variableSubgroupOf={picker.subgroupOf}
-            variableSubgroupOrder={HOUSEHOLD_INCOME_SUBGROUPS}
-            searchByEntity
-            variablePickerCommon={picker.common}
-            variableGroupIcon={householdTopicIcon}
-            variableNameOf={picker.nameOf}
-            variableDescribe={picker.describe}
-            personDisplayNameOf={picker.personNameOf}
-            labelInputs
             onVariablePickerOpen={(entity) => trackHouseholdPickerOpened({ countryId, entity })}
             onVariableAdd={({ variable, source, entity }) =>
               trackHouseholdVariableAdded({ countryId, variable, source, entity })
