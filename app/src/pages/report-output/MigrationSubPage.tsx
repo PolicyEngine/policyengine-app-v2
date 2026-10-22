@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
 import {
   localAreaOutput,
   ukLocalAreaBreakdownRequest,
@@ -20,6 +21,7 @@ import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistr
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUKLocalAreaBreakdown } from '@/hooks/useUKLocalAreaBreakdown';
+import { useUKWithheldAreas } from '@/hooks/useUKWithheldAreas';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -146,13 +148,16 @@ function UKLocalAreaSections({
   report?: Report;
   simulations?: Simulation[];
 }) {
-  const breakdown = useUKLocalAreaBreakdown({
-    countryId: 'uk',
-    ...ukLocalAreaBreakdownRequest({ report, simulations }),
-  });
+  const request = ukLocalAreaBreakdownRequest({ report, simulations });
+  const breakdown = useUKLocalAreaBreakdown({ countryId: 'uk', ...request });
   const areaOutput = useMemo(
     () => localAreaOutput(output, breakdown.breakdown),
     [output, breakdown.breakdown]
+  );
+  // Only a breakdown's areas are disclosure-controlled; saved ones are not.
+  const withheld = useUKWithheldAreas(
+    hasUKLocalAreaImpacts(output) ? null : breakdown.breakdown,
+    request?.region
   );
   const computeButton = areaOutput ? undefined : <UKLocalAreaComputeButton breakdown={breakdown} />;
   const computePanel = <UKLocalAreaComputePanel breakdown={breakdown} showStartButton={false} />;
@@ -160,11 +165,19 @@ function UKLocalAreaSections({
   return (
     <>
       <CollapsibleSection label="Constituency impact" defaultOpen={false} right={computeButton}>
-        {areaOutput ? <ConstituencySubPage output={areaOutput} /> : computePanel}
+        {areaOutput ? (
+          <ConstituencySubPage output={areaOutput} withheld={withheld?.constituency} />
+        ) : (
+          computePanel
+        )}
       </CollapsibleSection>
 
       <CollapsibleSection label="Local authority impact" defaultOpen={false} right={computeButton}>
-        {areaOutput ? <LocalAuthoritySubPage output={areaOutput} /> : computePanel}
+        {areaOutput ? (
+          <LocalAuthoritySubPage output={areaOutput} withheld={withheld?.local_authority} />
+        ) : (
+          computePanel
+        )}
       </CollapsibleSection>
     </>
   );

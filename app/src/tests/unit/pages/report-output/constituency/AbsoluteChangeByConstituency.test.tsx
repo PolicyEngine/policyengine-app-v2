@@ -65,4 +65,25 @@ describe('AbsoluteChangeByConstituency', () => {
     // Then
     expect(screen.getByText('No constituency data available')).toBeInTheDocument();
   });
+
+  test('given withheld constituencies then the chart says how many were not published', () => {
+    // When
+    render(
+      <AbsoluteChangeByConstituency
+        output={MOCK_UK_REPORT_OUTPUT}
+        withheld={{ withheld: 12, total: 650 }}
+      />
+    );
+
+    // Then
+    expect(screen.getByText(/^12 of 650 constituencies are not shown\./)).toBeInTheDocument();
+  });
+
+  test('given a saved result then the chart has no disclosure note', () => {
+    // When
+    render(<AbsoluteChangeByConstituency output={MOCK_UK_REPORT_OUTPUT} />);
+
+    // Then
+    expect(screen.queryByText(/not shown/)).not.toBeInTheDocument();
+  });
 });

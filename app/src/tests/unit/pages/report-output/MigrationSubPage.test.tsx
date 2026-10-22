@@ -38,6 +38,12 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: mockUseCurrentCountry,
 }));
 
+vi.mock('@/hooks/useRegions', async () => {
+  const { UK_METADATA_REGIONS } =
+    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
+  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
+});
+
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchLocalAreaBreakdown: vi.fn(),
@@ -294,5 +300,30 @@ describe('MigrationSubPage UK local areas', () => {
     expect(screen.getByTestId('local-authority-impact')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
     expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given the breakdown complete then each section gets its level of withheld areas', async () => {
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    renderUKMigrationSubPage();
+    await openSection(user, 'Constituency impact');
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    expect(await screen.findByTestId('constituency-impact')).toBeInTheDocument();
+
+    await openSection(user, 'Local authority impact');
+
+    expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0]).toMatchObject({
+      withheld: { withheld: 2, total: 3 },
+    });
+    expect(vi.mocked(LocalAuthoritySubPage).mock.lastCall?.[0]).toMatchObject({ withheld: null });
+  });
+
+  test('given saved area data then the sections get no withheld areas', async () => {
+    const user = userEvent.setup();
+    renderUKMigrationSubPage(MOCK_UK_REPORT_OUTPUT_WITH_LA);
+
+    await openSection(user, 'Constituency impact');
+
+    expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0].withheld).toBeUndefined();
   });
 });

@@ -20,6 +20,12 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   fetchLocalAreaBreakdown: vi.fn(),
 }));
 
+vi.mock('@/hooks/useRegions', async () => {
+  const { UK_METADATA_REGIONS } =
+    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
+  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
+});
+
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 const BREAKDOWN_LOCAL_AUTHORITY_NAME = 'Hartlepool';
 
@@ -127,6 +133,28 @@ describe('LocalAuthoritySubPage', () => {
       await user.hover(hexagons[0]);
       expect(
         screen.getByText(new RegExp(`^${BREAKDOWN_LOCAL_AUTHORITY_NAME}:`))
+      ).toBeInTheDocument();
+    });
+
+    test('given the areas computed then the charts say local authorities may be withheld, with no count', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+      renderWithQueryClient(
+        <LocalAuthoritySubPage
+          output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+          {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+        />
+      );
+
+      // When
+      await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+      // Then
+      expect(
+        await screen.findByText(
+          /^Local authorities whose estimates fail the survey data’s disclosure rules are not shown\./
+        )
       ).toBeInTheDocument();
     });
   });

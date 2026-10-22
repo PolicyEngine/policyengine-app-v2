@@ -12,6 +12,7 @@ import {
   MOCK_CONSTITUENCY_DATA,
   SINGLE_CONSTITUENCY_DATA,
 } from '@/tests/fixtures/adapters/constituency/constituencyMocks';
+import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 describe('constituencyDataAdapter', () => {
   describe('transformConstituencyData', () => {
@@ -204,6 +205,36 @@ describe('constituencyDataAdapter', () => {
       expect(result[0].value).toBeGreaterThan(0); // Westminster North
       expect(result[1].value).toBeLessThan(0); // Edinburgh Central
       expect(result[2].value).toBe(0); // Cardiff South
+    });
+  });
+
+  test('given a breakdown area then its absolute points carry the tier and the 90% range', () => {
+    // When
+    const [point] = transformConstituencyAbsoluteChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: 'East Kilbride and Strathaven',
+      approximate: true,
+      lower: 40,
+      upper: 210,
+    });
+  });
+
+  test('given a breakdown area then its relative points carry the relative 90% range', () => {
+    // When
+    const [point] = transformConstituencyRelativeChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: 'East Kilbride and Strathaven',
+      approximate: true,
+      lower: 0.001,
+      upper: 0.007,
     });
   });
 });

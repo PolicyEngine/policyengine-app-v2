@@ -1,18 +1,21 @@
 import { useMemo } from 'react';
+import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
 import { localAreaOutput } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import UKLocalAreaComputePanel from '@/components/report/UKLocalAreaComputePanel';
 import { colors, spacing } from '@/designTokens';
 import { useUKLocalAreaBreakdown } from '@/hooks/useUKLocalAreaBreakdown';
+import { useUKWithheldAreas } from '@/hooks/useUKWithheldAreas';
 
 /**
  * A UK report's "Local areas" tab content. A result that holds its area
  * impacts (an older saved report) shows them at once. A national result
  * without them (.py 6.10.0 on) shows the compute panel; its button sends one
  * breakdown request for the report's region and year, and the maps replace
- * the panel when the run completes. The hex layout comes with the results,
- * so nothing is drawn before then.
+ * the panel when the run completes, with notes on the areas disclosure
+ * control withheld or published as approximate. The hex layout comes with
+ * the results, so nothing is drawn before then.
  */
 export default function UKLocalAreaSection({
   output,
@@ -39,9 +42,14 @@ export default function UKLocalAreaSection({
     () => localAreaOutput(output, breakdown.breakdown),
     [output, breakdown.breakdown]
   );
+  // Only a breakdown's areas are disclosure-controlled; saved ones are not.
+  const withheld = useUKWithheldAreas(
+    hasUKLocalAreaImpacts(output) ? null : breakdown.breakdown,
+    region
+  );
 
   if (areaOutput) {
-    return <UKLocalAreaMaps output={areaOutput} region={region} />;
+    return <UKLocalAreaMaps output={areaOutput} region={region} withheld={withheld} />;
   }
 
   return (

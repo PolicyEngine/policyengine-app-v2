@@ -1,3 +1,4 @@
+import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
 import type { ReportOutputSocietyWideByLocalAuthority } from '@/types/metadata/ReportOutputSocietyWideByLocalAuthority';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 
@@ -42,6 +43,7 @@ export function transformLocalAuthorityData(
     value: data[valueField],
     x: data.x,
     y: data.y,
+    ...areaEstimateFields(data, valueField),
   }));
 }
 

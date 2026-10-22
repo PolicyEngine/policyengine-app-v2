@@ -1,7 +1,9 @@
 import { useMemo, useRef } from 'react';
 import { transformConstituencyAbsoluteChange } from '@/adapters/constituency/constituencyDataAdapter';
+import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
+import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
 import { Group, Stack, Text, Title } from '@/components/ui';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
@@ -10,6 +12,8 @@ import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface AbsoluteChangeByConstituencyProps {
   output: SocietyWideReportOutput;
+  /** For a disclosure-controlled breakdown: the areas it left out. Undefined for saved results. */
+  withheld?: UKWithheldAreas;
 }
 
 /**
@@ -18,8 +22,12 @@ interface AbsoluteChangeByConstituencyProps {
  * Displays a hexagonal map showing the absolute household income change
  * for each UK parliamentary constituency in currency terms.
  */
-export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstituencyProps) {
+export function AbsoluteChangeByConstituency({
+  output,
+  withheld,
+}: AbsoluteChangeByConstituencyProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const areas = (output as ReportOutputSocietyWideUK).constituency_impact?.by_constituency;
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with constituency data
@@ -38,6 +46,7 @@ export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstit
     return (
       <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">No constituency data available</Text>
+        <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />
       </Stack>
     );
   }
@@ -67,6 +76,7 @@ export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstit
         }}
         exportRef={mapRef}
       />
+      <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />
     </Stack>
   );
 }

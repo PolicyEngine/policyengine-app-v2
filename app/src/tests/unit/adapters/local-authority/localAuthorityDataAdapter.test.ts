@@ -12,6 +12,7 @@ import {
   MOCK_LOCAL_AUTHORITY_DATA,
   SINGLE_LOCAL_AUTHORITY_DATA,
 } from '@/tests/fixtures/adapters/local-authority/localAuthorityMocks';
+import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 describe('localAuthorityDataAdapter', () => {
   describe('transformLocalAuthorityData', () => {
@@ -205,5 +206,35 @@ describe('localAuthorityDataAdapter', () => {
       expect(result[1].value).toBeLessThan(0); // Westminster
       expect(result[2].value).toBe(0); // Edinburgh
     });
+  });
+
+  test('given a breakdown area then its absolute points carry the tier and the 90% range', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: 'Hartlepool', lower: 480, upper: 530 });
+  });
+
+  test('given a breakdown area then its relative points carry the relative 90% range', () => {
+    // When
+    const [point] = transformLocalAuthorityRelativeChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: 'Hartlepool', lower: 0.0125, upper: 0.0139 });
+  });
+
+  test('given a reported area then its points are not marked approximate', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point.approximate).toBeUndefined();
   });
 });

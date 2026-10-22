@@ -20,6 +20,12 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   fetchLocalAreaBreakdown: vi.fn(),
 }));
 
+vi.mock('@/hooks/useRegions', async () => {
+  const { UK_METADATA_REGIONS } =
+    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
+  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
+});
+
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 const NOT_AVAILABLE = 'Constituency analysis not available for this region';
 
@@ -92,5 +98,24 @@ describe('ConstituencySubPage', () => {
 
     // Then
     expect(screen.getByText(NOT_AVAILABLE)).toBeInTheDocument();
+  });
+
+  test('given the areas computed for a UK-wide report then the charts say how many constituencies were not published', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    renderWithQueryClient(
+      <ConstituencySubPage
+        output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+        {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+      />
+    );
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+    expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
   });
 });

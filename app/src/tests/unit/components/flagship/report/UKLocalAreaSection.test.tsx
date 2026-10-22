@@ -26,6 +26,12 @@ vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   fetchLocalAreaBreakdown: vi.fn(),
 }));
 
+vi.mock('@/hooks/useRegions', async () => {
+  const { UK_METADATA_REGIONS } =
+    await import('@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks');
+  return { useRegions: () => ({ data: UK_METADATA_REGIONS }) };
+});
+
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
 
 function renderSection(output = NATIONAL_OUTPUT_WITHOUT_AREAS, props = UK_SECTION_PROPS) {
@@ -129,5 +135,26 @@ describe('UKLocalAreaSection', () => {
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
     expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
     expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given a UK-wide breakdown complete then the map says how many constituencies were not published', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    renderSection();
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+  });
+
+  test('given saved area data then no disclosure note shows', () => {
+    // When
+    renderSection(STORED_OUTPUT_WITH_AREAS);
+
+    // Then
+    expect(screen.queryByText(/not shown/)).not.toBeInTheDocument();
   });
 });

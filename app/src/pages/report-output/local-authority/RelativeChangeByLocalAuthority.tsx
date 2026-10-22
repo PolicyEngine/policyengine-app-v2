@@ -1,7 +1,9 @@
 import { useMemo, useRef } from 'react';
 import { transformLocalAuthorityRelativeChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
+import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
+import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
 import { Group, Stack, Text, Title } from '@/components/ui';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
@@ -10,6 +12,8 @@ import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByLocalAuthorityProps {
   output: SocietyWideReportOutput;
+  /** For a disclosure-controlled breakdown: the areas it left out. Undefined for saved results. */
+  withheld?: UKWithheldAreas;
 }
 
 /**
@@ -18,8 +22,12 @@ interface RelativeChangeByLocalAuthorityProps {
  * Displays a hexagonal map showing the relative household income change
  * for each UK local authority as a percentage.
  */
-export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocalAuthorityProps) {
+export function RelativeChangeByLocalAuthority({
+  output,
+  withheld,
+}: RelativeChangeByLocalAuthorityProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const areas = (output as ReportOutputSocietyWideUK).local_authority_impact?.by_local_authority;
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with local authority data
@@ -38,6 +46,7 @@ export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocal
     return (
       <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">No local authority data available</Text>
+        <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />
       </Stack>
     );
   }
@@ -68,6 +77,7 @@ export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocal
         }}
         exportRef={mapRef}
       />
+      <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />
     </Stack>
   );
 }

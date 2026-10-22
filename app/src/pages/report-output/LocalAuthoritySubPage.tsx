@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { hasLocalAuthorityImpacts } from '@/adapters/societyWideOutputNormalizer';
+import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
 import { Stack, Text } from '@/components/ui';
@@ -17,6 +18,8 @@ interface LocalAuthoritySubPageProps {
   baselinePolicyId?: string;
   region?: string;
   year?: string;
+  /** For areas from a disclosure-controlled breakdown: the areas it left out. */
+  withheld?: UKWithheldAreas;
 }
 
 const LOCAL_AUTHORITY_TABS: SidebarTab[] = [
@@ -24,12 +27,22 @@ const LOCAL_AUTHORITY_TABS: SidebarTab[] = [
   { value: 'relative', label: 'Relative change' },
 ];
 
-function LocalAuthorityCharts({ output }: { output: SocietyWideReportOutput }) {
+function LocalAuthorityCharts({
+  output,
+  withheld,
+}: {
+  output: SocietyWideReportOutput;
+  withheld?: UKWithheldAreas;
+}) {
   const [activeTab, setActiveTab] = useState<string>('average');
   return (
     <SidebarTabs tabs={LOCAL_AUTHORITY_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
-      {activeTab === 'average' && <AbsoluteChangeByLocalAuthority output={output} />}
-      {activeTab === 'relative' && <RelativeChangeByLocalAuthority output={output} />}
+      {activeTab === 'average' && (
+        <AbsoluteChangeByLocalAuthority output={output} withheld={withheld} />
+      )}
+      {activeTab === 'relative' && (
+        <RelativeChangeByLocalAuthority output={output} withheld={withheld} />
+      )}
     </SidebarTabs>
   );
 }
@@ -52,9 +65,10 @@ export function LocalAuthoritySubPage({
   baselinePolicyId,
   region,
   year,
+  withheld,
 }: LocalAuthoritySubPageProps) {
   if (hasLocalAuthorityImpacts(output)) {
-    return <LocalAuthorityCharts output={output} />;
+    return <LocalAuthorityCharts output={output} withheld={withheld} />;
   }
 
   if (reformPolicyId && baselinePolicyId && year) {
@@ -63,7 +77,9 @@ export function LocalAuthoritySubPage({
         output={output}
         request={{ reformPolicyId, baselinePolicyId, region, year }}
       >
-        {(areaOutput) => <LocalAuthorityCharts output={areaOutput} />}
+        {(areaOutput, breakdownWithheld) => (
+          <LocalAuthorityCharts output={areaOutput} withheld={breakdownWithheld?.local_authority} />
+        )}
       </UKLocalAreaBreakdownView>
     );
   }

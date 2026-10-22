@@ -30,4 +30,11 @@ export interface HexMapDataPoint {
 
   /** Y-coordinate on the hexagonal grid (0-based) */
   y: number;
+
+  /** The value is an approximate estimate (UK disclosure control's `approximate` tier). */
+  approximate?: boolean;
+
+  /** The value's 90% interval, when the data gives one. */
+  lower?: number;
+  upper?: number;
 }

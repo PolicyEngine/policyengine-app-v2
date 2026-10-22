@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { hasConstituencyImpacts } from '@/adapters/societyWideOutputNormalizer';
+import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
 import { Stack, Text } from '@/components/ui';
@@ -17,6 +18,8 @@ interface ConstituencySubPageProps {
   baselinePolicyId?: string;
   region?: string;
   year?: string;
+  /** For areas from a disclosure-controlled breakdown: the areas it left out. */
+  withheld?: UKWithheldAreas;
 }
 
 const CONSTITUENCY_TABS: SidebarTab[] = [
@@ -24,12 +27,22 @@ const CONSTITUENCY_TABS: SidebarTab[] = [
   { value: 'relative', label: 'Relative change' },
 ];
 
-function ConstituencyCharts({ output }: { output: SocietyWideReportOutput }) {
+function ConstituencyCharts({
+  output,
+  withheld,
+}: {
+  output: SocietyWideReportOutput;
+  withheld?: UKWithheldAreas;
+}) {
   const [activeTab, setActiveTab] = useState<string>('average');
   return (
     <SidebarTabs tabs={CONSTITUENCY_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
-      {activeTab === 'average' && <AbsoluteChangeByConstituency output={output} />}
-      {activeTab === 'relative' && <RelativeChangeByConstituency output={output} />}
+      {activeTab === 'average' && (
+        <AbsoluteChangeByConstituency output={output} withheld={withheld} />
+      )}
+      {activeTab === 'relative' && (
+        <RelativeChangeByConstituency output={output} withheld={withheld} />
+      )}
     </SidebarTabs>
   );
 }
@@ -52,9 +65,10 @@ export function ConstituencySubPage({
   baselinePolicyId,
   region,
   year,
+  withheld,
 }: ConstituencySubPageProps) {
   if (hasConstituencyImpacts(output)) {
-    return <ConstituencyCharts output={output} />;
+    return <ConstituencyCharts output={output} withheld={withheld} />;
   }
 
   if (reformPolicyId && baselinePolicyId && year) {
@@ -63,7 +77,9 @@ export function ConstituencySubPage({
         output={output}
         request={{ reformPolicyId, baselinePolicyId, region, year }}
       >
-        {(areaOutput) => <ConstituencyCharts output={areaOutput} />}
+        {(areaOutput, breakdownWithheld) => (
+          <ConstituencyCharts output={areaOutput} withheld={breakdownWithheld?.constituency} />
+        )}
       </UKLocalAreaBreakdownView>
     );
   }

@@ -12,6 +12,8 @@ import {
   UK_WIDE_REGION,
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
+import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT_WITH_LA } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 
 function hexagon(container: HTMLElement, name: string): Element {
@@ -258,5 +260,80 @@ describe('ukAreaDetailFigures', () => {
     });
 
     expect(figures.map((figure) => figure.value)).toEqual(['£0', '0.0%']);
+  });
+});
+
+describe('UKLocalAreaMaps disclosure-controlled areas', () => {
+  const breakdownOutput = {
+    ...NATIONAL_OUTPUT_WITHOUT_AREAS,
+    constituency_impact: NORMALIZED_BREAKDOWN.constituency_impact,
+    local_authority_impact: NORMALIZED_BREAKDOWN.local_authority_impact,
+  } as typeof NATIONAL_OUTPUT_WITHOUT_AREAS;
+  const approximateConstituency =
+    NORMALIZED_BREAKDOWN.constituency_impact.by_constituency['East Kilbride and Strathaven'];
+
+  test('given withheld areas then each map says how many of its areas were not published', async () => {
+    const user = userEvent.setup();
+    render(
+      <UKLocalAreaMaps
+        output={breakdownOutput}
+        region={UK_WIDE_REGION}
+        withheld={{ constituency: { withheld: 12, total: 650 }, local_authority: null }}
+      />,
+      'uk'
+    );
+
+    expect(screen.getByText(/^12 of 650 constituencies are not shown\./)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    expect(
+      screen.getByText(/^Local authorities whose estimates fail the survey data’s disclosure rules/)
+    ).toBeInTheDocument();
+  });
+
+  test('given every area withheld then the map says so with its count', () => {
+    render(
+      <UKLocalAreaMaps
+        output={
+          {
+            ...breakdownOutput,
+            constituency_impact: { by_constituency: {} },
+          } as typeof breakdownOutput
+        }
+        region={UK_WIDE_REGION}
+        withheld={{ constituency: { withheld: 650, total: 650 }, local_authority: null }}
+      />,
+      'uk'
+    );
+
+    expect(screen.getByText(/^650 of 650 constituencies are not shown\./)).toBeInTheDocument();
+  });
+
+  test('given an approximate area then the map notes it and its details mark it with its 90% ranges', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <UKLocalAreaMaps output={breakdownOutput} region={UK_WIDE_REGION} />,
+      'uk'
+    );
+    expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
+
+    await user.click(hexagon(container, 'East Kilbride and Strathaven'));
+
+    const details = screen.getByRole('region', { name: 'East Kilbride and Strathaven details' });
+    expect(within(details).getByText('Approximate')).toBeInTheDocument();
+    expect(within(details).getByText('£40 to £210')).toBeInTheDocument();
+  });
+
+  test('given an approximate area then its detail figures add the estimate tier and both 90% ranges', () => {
+    const figures = ukAreaDetailFigures(approximateConstituency);
+
+    expect(figures).toEqual([
+      { label: 'Average household income change', value: '£120' },
+      { label: 'Average household income change, 90% range', value: '£40 to £210' },
+      { label: 'Relative household income change', value: '0.40%' },
+      { label: 'Relative household income change, 90% range', value: '0.10% to 0.70%' },
+      { label: 'Estimate', value: 'Approximate' },
+    ]);
   });
 });

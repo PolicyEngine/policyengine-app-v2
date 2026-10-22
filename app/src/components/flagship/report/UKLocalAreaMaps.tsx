@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IconChevronDown, IconSearch } from '@tabler/icons-react';
+import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
+import type { UKAreaLevel, UKBreakdownWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
   AreaDetails,
@@ -9,6 +11,7 @@ import {
   rankedEnds,
 } from '@/components/flagship/report/DistrictImpactCard';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
+import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
 import {
   Command,
   CommandEmpty,
@@ -44,6 +47,12 @@ const MODE_OPTIONS = [
   { label: 'Absolute', value: 'absolute' as UKChangeMode },
   { label: 'Relative', value: 'relative' as UKChangeMode },
 ];
+
+/** The level each kind of area is, as the breakdown's disclosure notes name it. */
+const AREA_LEVELS: Record<UKAreaKind, UKAreaLevel> = {
+  constituencies: 'constituency',
+  'local-authorities': 'local_authority',
+};
 
 /** Singular and plural names for each kind of area. */
 const AREA_NOUNS: Record<UKAreaKind, { one: string; many: string }> = {
@@ -92,27 +101,41 @@ function formatPounds(value: number): string {
   });
 }
 
-/** One area's figures for its details panel. */
+/**
+ * One area's figures for its details panel. A disclosure-controlled area
+ * adds each change's 90% range, and says when its estimate is approximate.
+ */
 export function ukAreaDetailFigures(area: AreaImpact): { label: string; value: string }[] {
   const average = area.average_household_income_change;
   const relative = area.relative_household_income_change;
   const decimals = percentDecimals([relative]);
-  const relativeRoundsToZero = Number((relative * 100).toFixed(decimals)) === 0;
-  return [
-    {
-      label: 'Average household income change',
-      value: formatCurrency(Math.round(average) === 0 ? 0 : average, 'uk', {
-        maximumFractionDigits: 0,
-      }),
-    },
-    {
-      label: 'Relative household income change',
-      value: formatPercent(relativeRoundsToZero ? 0 : relative, 'uk', {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      }),
-    },
-  ];
+  const pounds = (value: number) =>
+    formatCurrency(Math.round(value) === 0 ? 0 : value, 'uk', { maximumFractionDigits: 0 });
+  const percent = (value: number) =>
+    formatPercent(Number((value * 100).toFixed(decimals)) === 0 ? 0 : value, 'uk', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  const averageRange = areaEstimateFields(area, 'average_household_income_change');
+  const relativeRange = areaEstimateFields(area, 'relative_household_income_change');
+  const figures = [{ label: 'Average household income change', value: pounds(average) }];
+  if (averageRange.lower !== undefined && averageRange.upper !== undefined) {
+    figures.push({
+      label: 'Average household income change, 90% range',
+      value: `${pounds(averageRange.lower)} to ${pounds(averageRange.upper)}`,
+    });
+  }
+  figures.push({ label: 'Relative household income change', value: percent(relative) });
+  if (relativeRange.lower !== undefined && relativeRange.upper !== undefined) {
+    figures.push({
+      label: 'Relative household income change, 90% range',
+      value: `${percent(relativeRange.lower)} to ${percent(relativeRange.upper)}`,
+    });
+  }
+  if (area.disclosure_tier === 'approximate') {
+    figures.push({ label: 'Estimate', value: 'Approximate' });
+  }
+  return figures;
 }
 
 /** A filterable list of every area, so the keyboard can reach any of them. */
@@ -190,16 +213,23 @@ function AreaFinder({
 export default function UKLocalAreaMaps({
   output,
   region,
+  withheld,
 }: {
   output: SocietyWideReportOutput;
   /** The report's region, e.g. "country/wales", which names the areas' nation. */
   region?: string | null;
+  /**
+   * For a disclosure-controlled breakdown: the areas each level left out,
+   * which a note under the map gives. Undefined for a saved result.
+   */
+  withheld?: UKBreakdownWithheldAreas;
 }) {
   const [areaKind, setAreaKind] = useState<UKAreaKind>('constituencies');
   const [mode, setMode] = useState<UKChangeMode>('absolute');
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const noun = AREA_NOUNS[areaKind];
+  const level = AREA_LEVELS[areaKind];
 
   const areas = useMemo((): AreaImpacts | null => {
     const uk = output as ReportOutputSocietyWideUK;
@@ -212,16 +242,20 @@ export default function UKLocalAreaMaps({
 
   const mapData = useMemo(
     () =>
-      Object.entries(areas ?? {}).map(([name, area]) => ({
-        id: name,
-        label: name,
-        value:
+      Object.entries(areas ?? {}).map(([name, area]) => {
+        const field =
           mode === 'absolute'
-            ? area.average_household_income_change
-            : area.relative_household_income_change,
-        x: area.x,
-        y: area.y,
-      })),
+            ? 'average_household_income_change'
+            : 'relative_household_income_change';
+        return {
+          id: name,
+          label: name,
+          value: area[field],
+          x: area.x,
+          y: area.y,
+          ...areaEstimateFields(area, field),
+        };
+      }),
     [areas, mode]
   );
 
@@ -348,6 +382,9 @@ export default function UKLocalAreaMaps({
               centered
               fillWidth
             />
+            <div style={{ marginTop: spacing.sm }}>
+              <UKAreaDisclosureNotes level={level} areas={areas} withheld={withheld?.[level]} />
+            </div>
           </div>
           <div
             style={{
@@ -404,7 +441,10 @@ export default function UKLocalAreaMaps({
           </div>
         </div>
       ) : (
-        <Text c={colors.text.secondary}>No {noun.one} data available</Text>
+        <Stack style={{ gap: spacing.sm }}>
+          <Text c={colors.text.secondary}>No {noun.one} data available</Text>
+          <UKAreaDisclosureNotes level={level} areas={areas} withheld={withheld?.[level]} />
+        </Stack>
       )}
     </Stack>
   );
