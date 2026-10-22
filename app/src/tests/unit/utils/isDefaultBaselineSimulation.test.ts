@@ -12,7 +12,6 @@ import {
   TEST_CURRENT_LAW_ID,
 } from '@/tests/fixtures/utils/isDefaultBaselineSimulationMocks';
 import {
-  countryNames,
   getDefaultBaselineLabel,
   isDefaultBaselineSimulation,
 } from '@/utils/isDefaultBaselineSimulation';
@@ -181,21 +180,5 @@ describe('getDefaultBaselineLabel', () => {
       // Then
       expect(result).toBe(EXPECTED_LABELS.UNKNOWN);
     });
-  });
-});
-
-describe('countryNames', () => {
-  test('given object then contains expected country mappings', () => {
-    // Then
-    expect(countryNames).toEqual({
-      us: 'United States',
-      uk: 'United Kingdom',
-    });
-  });
-
-  test('given known country code then returns full name', () => {
-    // Then
-    expect(countryNames[TEST_COUNTRIES.US]).toBe('United States');
-    expect(countryNames[TEST_COUNTRIES.UK]).toBe('United Kingdom');
   });
 });

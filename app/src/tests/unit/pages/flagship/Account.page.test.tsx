@@ -16,18 +16,11 @@ import {
   makeAuthValue,
   signedInAuthValue,
 } from '@/tests/fixtures/libs/auth/authMocks';
+import { accountStorage } from '@/tests/fixtures/types/v2UserMocks';
 
-// No country the app offers lacks account storage today; switching
-// `withoutAccountStorage` on stands in for one, so the branch for such a
-// country stays covered.
-const accountStorage = vi.hoisted(() => ({ withoutAccountStorage: false }));
 vi.mock('@/types/v2User', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/types/v2User')>();
-  return {
-    ...actual,
-    isAssociationCountry: (countryId: unknown) =>
-      !accountStorage.withoutAccountStorage && actual.isAssociationCountry(countryId),
-  };
+  const { withSwitchableAccountStorage } = await import('@/tests/fixtures/types/v2UserMocks');
+  return withSwitchableAccountStorage(await importOriginal());
 });
 
 const fetchMock = vi.fn();

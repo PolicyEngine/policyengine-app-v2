@@ -1,4 +1,5 @@
-import { isCountryId, type CountryId } from '@/libs/countries';
+import { isCountryId } from '@/libs/countries';
+import { getCountryDisplayName } from '@/models/geography';
 import { getRegionCodeCandidates, normalizeRegionCode } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
@@ -79,13 +80,8 @@ export function isUKLocalLevelRegion(regionCode: string | null | undefined): boo
   });
 }
 
-const countryLabels: Record<CountryId, string> = {
-  us: 'United States',
-  uk: 'United Kingdom',
-};
-
 export function getCountryLabel(countryCode: string): string {
-  return isCountryId(countryCode) ? countryLabels[countryCode] : 'Unknown country';
+  return isCountryId(countryCode) ? getCountryDisplayName(countryCode) : 'Unknown country';
 }
 
 export function getRegionLabel(regionCode: string, metadata: MetadataState): string {

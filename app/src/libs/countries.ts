@@ -1,3 +1,9 @@
+/**
+ * The countries the calculator offers: the one country list in this
+ * repository. The website imports this module by relative path (its
+ * `isCalculatorCountry`), so it must not import anything through the `@/`
+ * alias, which the website resolves against its own source tree.
+ */
 export const countryIds = ['us', 'uk'] as const;
 
 export type CountryId = (typeof countryIds)[number];
