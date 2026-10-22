@@ -20,11 +20,14 @@ export default function SavedHouseholdPicker({
   countryId,
   selectedId,
   onSelect,
+  disabled = false,
 }: {
   countryId: string;
   /** The saved household the builder holds, marked as chosen. */
   selectedId?: string;
   onSelect: (saved: SavedHousehold) => void;
+  /** No saved household can be chosen, as while the builder's household is calculating. */
+  disabled?: boolean;
 }) {
   const variables = useSelector((state: RootState) => state.metadata?.variables);
   const { available, savedHouseholds, isLoading, error } = useSavedHouseholds();
@@ -57,10 +60,10 @@ export default function SavedHouseholdPicker({
           <li key={saved.id}>
             <button
               type="button"
-              disabled={saved.unavailable}
+              disabled={disabled || saved.unavailable}
               aria-pressed={selected}
               onClick={() => {
-                if (!saved.unavailable) {
+                if (!disabled && !saved.unavailable) {
                   onSelect(saved);
                 }
               }}
