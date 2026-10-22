@@ -5,12 +5,13 @@ import { fetchLocalAreaBreakdown } from '@/api/societyWideCalculation';
 import { ConstituencySubPage } from '@/pages/report-output/ConstituencySubPage';
 import {
   BREAKDOWN_CONSTITUENCY_NAME,
+  BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
+  UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
-import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   V2_UK_LOCAL_AREA_REQUEST_PROPS,
   withNullAreaImpacts,
@@ -120,11 +121,11 @@ describe('ConstituencySubPage', () => {
     expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
   });
 
-  test('given saved constituencies but no local authority key then the tab shows them, as the section does', () => {
+  test('given a breakdown release result with constituencies only then the tab shows them, as the section does', () => {
     // When
     renderWithQueryClient(
       <ConstituencySubPage
-        output={MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any}
+        output={BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY}
         {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
       />
     );
@@ -134,5 +135,20 @@ describe('ConstituencySubPage', () => {
       screen.getByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+  });
+
+  test('given a stored result with no version and no area data then the tab says it is not available and offers no compute', () => {
+    // When
+    renderWithQueryClient(
+      <ConstituencySubPage
+        output={UNVERSIONED_OUTPUT_WITHOUT_AREAS}
+        {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+      />
+    );
+
+    // Then
+    expect(screen.getByText(NOT_AVAILABLE)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
   });
 });

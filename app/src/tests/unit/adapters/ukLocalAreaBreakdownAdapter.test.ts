@@ -3,6 +3,8 @@ import {
   breakdownLevelsWithheld,
   countWithheldUKAreas,
   localAreaOutput,
+  outputServesLocalAreaBreakdowns,
+  servesLocalAreaBreakdowns,
   withheldUKAreasOf,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import {
@@ -11,6 +13,11 @@ import {
   UK_METADATA_REGIONS,
   UNLISTED_CONSTITUENCY_NAME,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
+import {
+  NATIONAL_OUTPUT_WITHOUT_AREAS,
+  OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
+  UNVERSIONED_OUTPUT_WITHOUT_AREAS,
+} from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 
@@ -159,5 +166,40 @@ describe('breakdownLevelsWithheld', () => {
     expect(
       breakdownLevelsWithheld(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any, undefined)
     ).toBeUndefined();
+  });
+});
+
+describe('servesLocalAreaBreakdowns', () => {
+  test.each([
+    ['6.10.0', true],
+    ['6.10.1', true],
+    ['6.11.0', true],
+    ['7.0.0', true],
+    ['v6.10.0', true],
+    ['6.9.9', false],
+    ['6.7.5', false],
+    ['5.20.0', false],
+  ])('given .py %s then returns %s', (version, expected) => {
+    // Then
+    expect(servesLocalAreaBreakdowns(version)).toBe(expected);
+  });
+
+  test.each([null, undefined, '', 'latest'])(
+    'given an unreadable version %s then returns false',
+    (version) => {
+      // Then
+      expect(servesLocalAreaBreakdowns(version)).toBe(false);
+    }
+  );
+});
+
+describe('outputServesLocalAreaBreakdowns', () => {
+  test.each([
+    ['a 6.10.0 national result', NATIONAL_OUTPUT_WITHOUT_AREAS, true],
+    ['an older release result', OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES, false],
+    ['a stored result with no version', UNVERSIONED_OUTPUT_WITHOUT_AREAS, false],
+  ])('given %s then returns %s', (_label, output, expected) => {
+    // Then
+    expect(outputServesLocalAreaBreakdowns(output)).toBe(expected);
   });
 });

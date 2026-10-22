@@ -133,8 +133,9 @@ export function canShowCongressionalDistrictImpactCard({
 
 /**
  * The UK constituency and local authority sections. A result that holds
- * its area impacts (an older saved report) shows them. One without them
- * (.py 6.10.0 on) puts the compute button in each opened section's header:
+ * its area impacts (an older saved report), or comes from a release before
+ * .py 6.10.0, shows what it holds. One without them (.py 6.10.0 on) puts
+ * the compute button in each opened section's header:
  * a click in either sends the report's one breakdown request, both
  * sections show its progress, and both show the maps when it completes.
  */
@@ -147,14 +148,16 @@ function UKLocalAreaSections({
   report?: Report;
   simulations?: Simulation[];
 }) {
-  const { breakdown, areaOutput, withheld } = useUKLocalAreaOutput(
+  const { canCompute, breakdown, areaOutput, withheld } = useUKLocalAreaOutput(
     output,
     ukLocalAreaBreakdownRequest({ report, simulations })
   );
-  // Each section decides on its own level: a saved result with one level
-  // offers the breakdown in the other level's section.
-  const hasConstituencies = !!areaOutput && hasConstituencyImpacts(areaOutput);
-  const hasLocalAuthorities = !!areaOutput && hasLocalAuthorityImpacts(areaOutput);
+  // Each section decides on its own level: a missing level offers the
+  // breakdown when the result's release serves one. Otherwise the section
+  // shows its subpage as before.
+  const shownOutput = areaOutput ?? output;
+  const offerConstituencies = canCompute && !hasConstituencyImpacts(shownOutput);
+  const offerLocalAuthorities = canCompute && !hasLocalAuthorityImpacts(shownOutput);
   const computeButton = <UKLocalAreaComputeButton breakdown={breakdown} />;
   const computePanel = <UKLocalAreaComputePanel breakdown={breakdown} showStartButton={false} />;
 
@@ -163,24 +166,24 @@ function UKLocalAreaSections({
       <CollapsibleSection
         label="Constituency impact"
         defaultOpen={false}
-        right={hasConstituencies ? undefined : computeButton}
+        right={offerConstituencies ? computeButton : undefined}
       >
-        {hasConstituencies && areaOutput ? (
-          <ConstituencySubPage output={areaOutput} withheld={withheld?.constituency} />
-        ) : (
+        {offerConstituencies ? (
           computePanel
+        ) : (
+          <ConstituencySubPage output={shownOutput} withheld={withheld?.constituency} />
         )}
       </CollapsibleSection>
 
       <CollapsibleSection
         label="Local authority impact"
         defaultOpen={false}
-        right={hasLocalAuthorities ? undefined : computeButton}
+        right={offerLocalAuthorities ? computeButton : undefined}
       >
-        {hasLocalAuthorities && areaOutput ? (
-          <LocalAuthoritySubPage output={areaOutput} withheld={withheld?.local_authority} />
-        ) : (
+        {offerLocalAuthorities ? (
           computePanel
+        ) : (
+          <LocalAuthoritySubPage output={shownOutput} withheld={withheld?.local_authority} />
         )}
       </CollapsibleSection>
     </>

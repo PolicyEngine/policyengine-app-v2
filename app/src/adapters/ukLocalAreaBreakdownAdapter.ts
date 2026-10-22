@@ -11,6 +11,40 @@ import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { isUKLocalLevelGeography, isUKLocalLevelRegion } from '@/utils/geographyUtils';
 
+/** The first .py release whose bundles serve `breakdown=local_areas`. */
+const FIRST_BREAKDOWN_RELEASE = [6, 10, 0] as const;
+
+/**
+ * Whether a .py version serves local-area breakdowns: 6.10.0 or later.
+ * An empty or unreadable version does not.
+ */
+export function servesLocalAreaBreakdowns(policyengineVersion: string | null | undefined): boolean {
+  const match = policyengineVersion?.trim().match(/^v?(\d+)\.(\d+)(?:\.(\d+))?/);
+  if (!match) {
+    return false;
+  }
+  const version = [Number(match[1]), Number(match[2]), Number(match[3] ?? 0)];
+  for (let index = 0; index < FIRST_BREAKDOWN_RELEASE.length; index++) {
+    if (version[index] !== FIRST_BREAKDOWN_RELEASE[index]) {
+      return version[index] > FIRST_BREAKDOWN_RELEASE[index];
+    }
+  }
+  return true;
+}
+
+/**
+ * Whether a national result came from a .py release that serves
+ * local-area breakdowns. The version is the result's policyengine_version,
+ * which fetchSocietyWideCalculation fills from the response's
+ * policyengine_bundle, and which saved results keep. Results from older
+ * releases (6.7.5 and before) or with no version (saved before the bundle
+ * was recorded) do not: their missing levels are not offered a breakdown,
+ * which those releases would refuse.
+ */
+export function outputServesLocalAreaBreakdowns(output: SocietyWideReportOutput): boolean {
+  return servesLocalAreaBreakdowns(output.policyengine_version);
+}
+
 /**
  * The result whose local-area impacts a UK report shows, level by level:
  * each level the result holds (older saved results) as it is, and each

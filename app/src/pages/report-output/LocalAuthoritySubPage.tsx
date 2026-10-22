@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { hasLocalAuthorityImpacts } from '@/adapters/societyWideOutputNormalizer';
-import type { UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
+import {
+  outputServesLocalAreaBreakdowns,
+  type UKWithheldAreas,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
 import { Stack, Text } from '@/components/ui';
@@ -71,7 +74,8 @@ export function LocalAuthoritySubPage({
     return <LocalAuthorityCharts output={output} withheld={withheld} />;
   }
 
-  if (reformPolicyId && baselinePolicyId && year) {
+  // Offered only for a result from a release that serves breakdowns.
+  if (reformPolicyId && baselinePolicyId && year && outputServesLocalAreaBreakdowns(output)) {
     return (
       <UKLocalAreaBreakdownView
         output={output}

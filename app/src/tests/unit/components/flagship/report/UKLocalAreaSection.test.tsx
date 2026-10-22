@@ -5,10 +5,14 @@ import { fetchLocalAreaBreakdown } from '@/api/societyWideCalculation';
 import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
 import {
   BREAKDOWN_CONSTITUENCY_NAME,
+  BREAKDOWN_LOCAL_AUTHORITY_NAME,
+  BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
+  OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
   STORED_CONSTITUENCY_NAME,
   STORED_OUTPUT_WITH_AREAS,
   UK_SECTION_PROPS,
+  UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import {
   COMPUTE_BUTTON_LABEL,
@@ -20,7 +24,6 @@ import {
   FAILED_RESPONSE,
   QUEUED_RESPONSE,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
-import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
@@ -159,11 +162,11 @@ describe('UKLocalAreaSection', () => {
     expect(screen.queryByText(/not shown/)).not.toBeInTheDocument();
   });
 
-  test('given saved constituencies but no local authority key then the local authority map offers to compute, and the constituency map stays saved', async () => {
+  test('given a breakdown release result with constituencies only then the local authority map offers to compute, and the constituency map stays', async () => {
     // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
-    const { container } = renderSection(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any);
+    const { container } = renderSection(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
     expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
 
@@ -173,10 +176,37 @@ describe('UKLocalAreaSection', () => {
 
     // Then
     await waitFor(() =>
-      expect(container.querySelector('[data-area-id="Hartlepool"]')).not.toBeNull()
+      expect(
+        container.querySelector(`[data-area-id="${BREAKDOWN_LOCAL_AUTHORITY_NAME}"]`)
+      ).not.toBeNull()
     );
     await user.click(screen.getByRole('tab', { name: 'Constituencies' }));
     expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
     expect(screen.queryByText(/constituencies are not shown/)).not.toBeInTheDocument();
+  });
+
+  test('given an older stored result with constituencies but no local authorities then it says there is no local authority data and offers no compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = renderSection(OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES);
+    expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(screen.getByText('No local authority data available')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given a stored result with no version and no area data then it says there is no data and offers no compute', () => {
+    // When
+    renderSection(UNVERSIONED_OUTPUT_WITHOUT_AREAS);
+
+    // Then
+    expect(screen.getByText('No constituency data available')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
   });
 });

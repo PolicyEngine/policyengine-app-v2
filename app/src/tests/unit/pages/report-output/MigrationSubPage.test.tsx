@@ -8,6 +8,12 @@ import MigrationSubPage, {
   canShowCongressionalDistrictImpactCard,
 } from '@/pages/report-output/MigrationSubPage';
 import {
+  BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
+  NATIONAL_OUTPUT_WITHOUT_AREAS,
+  OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
+  UNVERSIONED_OUTPUT_WITHOUT_AREAS,
+} from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import {
   COMPUTE_BUTTON_LABEL,
   COMPUTING_MESSAGE,
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
@@ -15,10 +21,7 @@ import {
   COMPLETE_RESPONSE,
   QUEUED_RESPONSE,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
-import {
-  MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
-  MOCK_UK_REPORT_OUTPUT_WITH_LA,
-} from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+import { MOCK_UK_REPORT_OUTPUT_WITH_LA } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   BREAKDOWN_CONSTITUENCY_IMPACT,
   BREAKDOWN_LOCAL_AUTHORITY_IMPACT,
@@ -212,7 +215,7 @@ describe('MigrationSubPage UK local areas', () => {
     mockUseCurrentCountry.mockReturnValue('uk');
   });
 
-  function renderUKMigrationSubPage(output = createMockSocietyWideOutput() as any) {
+  function renderUKMigrationSubPage(output: any = NATIONAL_OUTPUT_WITHOUT_AREAS) {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
@@ -330,9 +333,9 @@ describe('MigrationSubPage UK local areas', () => {
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0].withheld).toBeUndefined();
   });
 
-  test('given saved constituencies but no local authority key then the constituency section shows them and the local authority section offers to compute', async () => {
+  test('given a breakdown release result with constituencies only then the constituency section shows them and the local authority section offers to compute', async () => {
     const user = userEvent.setup();
-    renderUKMigrationSubPage(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD);
+    renderUKMigrationSubPage(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
 
     await openSection(user, 'Constituency impact');
 
@@ -348,7 +351,7 @@ describe('MigrationSubPage UK local areas', () => {
   test('given saved constituencies and the local authorities computed then each section keeps its own source', async () => {
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
-    renderUKMigrationSubPage(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD);
+    renderUKMigrationSubPage(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
     await openSection(user, 'Local authority impact');
 
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
@@ -360,8 +363,42 @@ describe('MigrationSubPage UK local areas', () => {
     });
     await openSection(user, 'Constituency impact');
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0]).toMatchObject({
-      output: { constituency_impact: MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD.constituency_impact },
+      output: {
+        constituency_impact: (BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY as any)
+          .constituency_impact,
+      },
       withheld: undefined,
     });
+  });
+
+  test('given an older stored result without local authorities then both sections show their subpages and nothing offers to compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKMigrationSubPage(OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES);
+
+    // When
+    await openSection(user, 'Constituency impact');
+    await openSection(user, 'Local authority impact');
+
+    // Then
+    expect(screen.getByTestId('constituency-impact')).toBeInTheDocument();
+    expect(screen.getByTestId('local-authority-impact')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given a stored result with no version and no area data then nothing offers to compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKMigrationSubPage(UNVERSIONED_OUTPUT_WITHOUT_AREAS);
+
+    // When
+    await openSection(user, 'Constituency impact');
+    await openSection(user, 'Local authority impact');
+
+    // Then
+    expect(screen.getByTestId('constituency-impact')).toBeInTheDocument();
+    expect(screen.getByTestId('local-authority-impact')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
   });
 });

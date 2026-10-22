@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import {
   breakdownLevelsWithheld,
   localAreaOutput,
+  outputServesLocalAreaBreakdowns,
   withheldUKAreasOf,
   type ReportLocalAreaRequest,
   type UKBreakdownWithheldAreas,
@@ -14,6 +15,12 @@ import {
 } from '@/hooks/useUKLocalAreaBreakdown';
 
 export interface UKLocalAreaOutput {
+  /**
+   * Whether the views may offer the breakdown: the result came from a .py
+   * release that serves breakdowns (6.10.0 on), and the report's policies
+   * are known. Otherwise views show their level as they did before.
+   */
+  canCompute: boolean;
   /** The report's breakdown run, for the compute panel and button. */
   breakdown: UKLocalAreaBreakdownState;
   /**
@@ -40,7 +47,9 @@ export function useUKLocalAreaOutput(
   output: SocietyWideReportOutput,
   request: ReportLocalAreaRequest | null
 ): UKLocalAreaOutput {
-  const breakdown = useUKLocalAreaBreakdown({ countryId: 'uk', ...request });
+  const canCompute = !!request && outputServesLocalAreaBreakdowns(output);
+  // An older release's result sends no request, even with a cached run.
+  const breakdown = useUKLocalAreaBreakdown({ countryId: 'uk', ...(canCompute ? request : null) });
   const { data: regions } = useRegions('uk');
   const region = request?.region;
   const areaOutput = useMemo(
@@ -57,5 +66,5 @@ export function useUKLocalAreaOutput(
         : undefined,
     [output, breakdown.breakdown, region, regions]
   );
-  return { breakdown, areaOutput, withheld };
+  return { canCompute: canCompute && breakdown.canStart, breakdown, areaOutput, withheld };
 }

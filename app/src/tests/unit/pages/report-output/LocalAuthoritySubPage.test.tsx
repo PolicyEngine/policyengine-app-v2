@@ -3,7 +3,12 @@ import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchLocalAreaBreakdown } from '@/api/societyWideCalculation';
 import { LocalAuthoritySubPage } from '@/pages/report-output/LocalAuthoritySubPage';
-import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import {
+  BREAKDOWN_LOCAL_AUTHORITY_NAME,
+  BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
+  NATIONAL_OUTPUT_WITHOUT_AREAS,
+  OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
+} from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
@@ -27,7 +32,6 @@ vi.mock('@/hooks/useRegions', async () => {
 });
 
 const mockFetchLocalAreaBreakdown = vi.mocked(fetchLocalAreaBreakdown);
-const BREAKDOWN_LOCAL_AUTHORITY_NAME = 'Hartlepool';
 
 function renderWithQueryClient(ui: React.ReactNode) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -158,17 +162,34 @@ describe('LocalAuthoritySubPage', () => {
       ).toBeInTheDocument();
     });
 
-    test('given saved constituencies but no local authority key then the tab offers to compute, as the section does', () => {
+    test('given a breakdown release result with constituencies only then the tab offers to compute, as the section does', () => {
       // When
       renderWithQueryClient(
         <LocalAuthoritySubPage
-          output={MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD}
+          output={BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY}
           {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
         />
       );
 
       // Then
       expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    });
+
+    test('given an older stored result without local authorities then the tab says it is not available and offers no compute', () => {
+      // When
+      renderWithQueryClient(
+        <LocalAuthoritySubPage
+          output={OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES}
+          {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+        />
+      );
+
+      // Then
+      expect(
+        screen.getByText('Local authority analysis not available for this region')
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+      expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
     });
   });
 });

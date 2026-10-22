@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
+import { outputServesLocalAreaBreakdowns } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
@@ -418,7 +419,9 @@ export default function ReportView({
                       districtAvailable={districtScope || isUK}
                       districtsCopy={
                         isUK
-                          ? output && !hasUKLocalAreaImpacts(output)
+                          ? output &&
+                            !hasUKLocalAreaImpacts(output) &&
+                            outputServesLocalAreaBreakdowns(output)
                             ? UK_DISTRICTS_COMPUTE_CARD_COPY
                             : UK_DISTRICTS_CARD_COPY
                           : undefined

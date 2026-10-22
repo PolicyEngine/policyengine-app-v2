@@ -11,6 +11,7 @@ import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   STORED_OUTPUT_WITH_AREAS,
   UK_SECTION_PROPS,
+  UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
@@ -446,6 +447,23 @@ describe('ReportView UK local areas', () => {
 
     expect(await screen.findByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
     expect(economyRequests()).toHaveLength(1);
+  });
+
+  test('given stored results with no version and no area data then the card and the tab read as before, with no compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(UNVERSIONED_OUTPUT_WITHOUT_AREAS);
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
+      'Compare income changes across constituencies and local authorities on a map.'
+    );
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(screen.getByText('No constituency data available')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
   });
 
   test('given saved results with area impacts then the tab shows the maps with no button', async () => {
