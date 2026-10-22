@@ -28,3 +28,9 @@ export const LOADING_DATA_STATE = () =>
 export const ERROR_STATE = () => breakdownState({ status: 'error', error: 'The run failed' });
 export const COMPLETE_STATE = () =>
   breakdownState({ status: 'complete', breakdown: NORMALIZED_BREAKDOWN });
+
+/** Withheld counts for the note's wording: some, and every one of the UK's constituencies. */
+export const SOME_WITHHELD_CONSTITUENCIES = { withheld: 12, total: 650 };
+export const ONE_WITHHELD_CONSTITUENCY = { withheld: 1, total: 650 };
+export const NO_WITHHELD_CONSTITUENCIES = { withheld: 0, total: 650 };
+export const ALL_WITHHELD_CONSTITUENCIES = { withheld: 650, total: 650 };

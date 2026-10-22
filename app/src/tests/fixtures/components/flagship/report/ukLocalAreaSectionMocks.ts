@@ -61,3 +61,7 @@ export const STORED_CONSTITUENCY_NAME = 'Westminster North';
 
 /** The local authority the breakdown fixture holds, by name. */
 export const BREAKDOWN_LOCAL_AUTHORITY_NAME = 'Hartlepool';
+
+/** The UK report ReportView's local-area tests open. */
+export const UK_REPORT_TITLE = 'Higher personal allowance';
+export const UK_REPORT_SOURCE_NOTE = 'Hand-built';

@@ -10,10 +10,13 @@ import type { RunReportProvision } from '@/libs/flagship/runReport';
 import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   STORED_OUTPUT_WITH_AREAS,
+  UK_REPORT_SOURCE_NOTE,
+  UK_REPORT_TITLE,
   UK_SECTION_PROPS,
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
+import { OTHER_BREAKDOWN_YEAR } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -361,8 +364,8 @@ describe('ReportView UK local areas', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <ReportView
-          title="Higher personal allowance"
-          sourceNote="Hand-built"
+          title={UK_REPORT_TITLE}
+          sourceNote={UK_REPORT_SOURCE_NOTE}
           provisions={[]}
           year={UK_SECTION_PROPS.year}
           region={UK_SECTION_PROPS.region}
@@ -384,30 +387,38 @@ describe('ReportView UK local areas', () => {
       .filter((url) => url.includes('/economy/'));
 
   test('given results without area impacts then the card says they are calculated on request', () => {
+    // When
     renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
 
+    // Then
     expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
       'Calculate income changes across constituencies and local authorities, and compare them on a map.'
     );
   });
 
   test('given results without area impacts then the local areas tab offers to compute them and sends nothing', async () => {
+    // Given
     const user = userEvent.setup();
     renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
 
+    // When
     await user.click(screen.getByRole('tab', { name: 'Local areas' }));
 
+    // Then
     expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
     expect(economyRequests()).toEqual([]);
   });
 
   test('given compute clicked then one breakdown request goes for the report region and year', async () => {
+    // Given
     const user = userEvent.setup();
     renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
     await user.click(screen.getByRole('tab', { name: 'Local areas' }));
 
+    // When
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
 
+    // Then
     await waitFor(() => expect(economyRequests()).toHaveLength(1));
     expect(economyRequests()[0]).toContain(
       `/uk/economy/${UK_SECTION_PROPS.reformPolicyId}/over/${UK_SECTION_PROPS.baselinePolicyId}?region=uk&time_period=${UK_SECTION_PROPS.year}&breakdown=local_areas`
@@ -416,6 +427,7 @@ describe('ReportView UK local areas', () => {
   });
 
   test('given compute clicked then switching to another year sends no request until compute is clicked for it', async () => {
+    // Given
     const user = userEvent.setup();
     vi.stubGlobal(
       'fetch',
@@ -425,8 +437,8 @@ describe('ReportView UK local areas', () => {
     const reportForYear = (year: string) => (
       <QueryClientProvider client={queryClient}>
         <ReportView
-          title="Higher personal allowance"
-          sourceNote="Hand-built"
+          title={UK_REPORT_TITLE}
+          sourceNote={UK_REPORT_SOURCE_NOTE}
           provisions={[]}
           year={year}
           region={UK_SECTION_PROPS.region}
@@ -443,8 +455,10 @@ describe('ReportView UK local areas', () => {
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     await waitFor(() => expect(economyRequests()).toHaveLength(1));
 
-    rerender(reportForYear('2027'));
+    // When
+    rerender(reportForYear(OTHER_BREAKDOWN_YEAR));
 
+    // Then
     expect(await screen.findByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
     expect(economyRequests()).toHaveLength(1);
   });
@@ -467,14 +481,17 @@ describe('ReportView UK local areas', () => {
   });
 
   test('given saved results with area impacts then the tab shows the maps with no button', async () => {
+    // Given
     const user = userEvent.setup();
     renderUKReport(STORED_OUTPUT_WITH_AREAS);
     expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
       'Compare income changes across constituencies and local authorities on a map.'
     );
 
+    // When
     await user.click(screen.getByRole('tab', { name: 'Local areas' }));
 
+    // Then
     expect(
       screen.getByText('Absolute household income change by constituency')
     ).toBeInTheDocument();

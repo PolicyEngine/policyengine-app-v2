@@ -319,4 +319,43 @@ describe('useUKLocalAreaBreakdown', () => {
     expect(result.current.error).toBe(NOT_A_BREAKDOWN_MESSAGE);
     expect(result.current.breakdown).toBeNull();
   });
+
+  test('given the run fails while polling then polling stops', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown
+      .mockResolvedValueOnce(QUEUED_RESPONSE)
+      .mockResolvedValueOnce(FAILED_RESPONSE)
+      .mockResolvedValue(QUEUED_RESPONSE);
+    const { result } = renderHook(() => useUKLocalAreaBreakdown(UK_BREAKDOWN_REQUEST), {
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.status).toBe('computing'));
+    await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS));
+    await waitFor(() => expect(result.current.status).toBe('error'));
+
+    // When
+    await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS * 3));
+
+    // Then
+    expect(result.current.status).toBe('error');
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(2);
+  });
+
+  test('given the view unmounted while the run computes then polling stops', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown.mockResolvedValue(QUEUED_RESPONSE);
+    const { result, unmount } = renderHook(() => useUKLocalAreaBreakdown(UK_BREAKDOWN_REQUEST), {
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.status).toBe('computing'));
+
+    // When
+    unmount();
+    await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS * 3));
+
+    // Then
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(1);
+  });
 });

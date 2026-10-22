@@ -13,6 +13,10 @@ import {
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import {
+  ALL_WITHHELD_CONSTITUENCIES,
+  SOME_WITHHELD_CONSTITUENCIES,
+} from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
@@ -281,7 +285,7 @@ describe('UKLocalAreaMaps disclosure-controlled areas', () => {
       <UKLocalAreaMaps
         output={breakdownOutput}
         region={UK_WIDE_REGION}
-        withheld={{ constituency: { withheld: 12, total: 650 }, local_authority: null }}
+        withheld={{ constituency: SOME_WITHHELD_CONSTITUENCIES, local_authority: null }}
       />,
       'uk'
     );
@@ -305,7 +309,7 @@ describe('UKLocalAreaMaps disclosure-controlled areas', () => {
           } as typeof breakdownOutput
         }
         region={UK_WIDE_REGION}
-        withheld={{ constituency: { withheld: 650, total: 650 }, local_authority: null }}
+        withheld={{ constituency: ALL_WITHHELD_CONSTITUENCIES, local_authority: null }}
       />,
       'uk'
     );

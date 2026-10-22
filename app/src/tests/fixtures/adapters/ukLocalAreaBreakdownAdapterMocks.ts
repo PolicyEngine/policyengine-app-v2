@@ -27,3 +27,9 @@ export const PUBLISHED_CONSTITUENCY_NAMES = ['East Kilbride and Strathaven'];
 
 /** A published name the metadata does not list, so the lists disagree. */
 export const UNLISTED_CONSTITUENCY_NAME = 'Ynys Mon';
+
+/** The withheld constituencies a UK-wide breakdown of the fixture's areas leaves. */
+export const UK_WIDE_WITHHELD_CONSTITUENCIES = {
+  withheld: METADATA_CONSTITUENCY_COUNT - PUBLISHED_CONSTITUENCY_NAMES.length,
+  total: METADATA_CONSTITUENCY_COUNT,
+};

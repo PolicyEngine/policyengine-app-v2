@@ -9,8 +9,14 @@ import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
-import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
-import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import {
+  COMPUTE_BUTTON_LABEL,
+  ERROR_MESSAGE,
+} from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
+import {
+  COMPLETE_RESPONSE,
+  FAILED_RESPONSE,
+} from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
@@ -190,6 +196,31 @@ describe('LocalAuthoritySubPage', () => {
       ).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
       expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+    });
+
+    test('given the breakdown failed in the tab then Retry sends the request again and the charts show', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockFetchLocalAreaBreakdown
+        .mockResolvedValueOnce(FAILED_RESPONSE)
+        .mockResolvedValueOnce(COMPLETE_RESPONSE);
+      renderWithQueryClient(
+        <LocalAuthoritySubPage
+          output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+          {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+      expect(await screen.findByText(ERROR_MESSAGE)).toBeInTheDocument();
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Retry' }));
+
+      // Then
+      expect(
+        await screen.findByText('Absolute household income change by local authority')
+      ).toBeInTheDocument();
+      expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(2);
     });
   });
 });

@@ -11,9 +11,11 @@ import {
   METADATA_CONSTITUENCY_COUNT,
   PUBLISHED_CONSTITUENCY_NAMES,
   UK_METADATA_REGIONS,
+  UK_WIDE_WITHHELD_CONSTITUENCIES,
   UNLISTED_CONSTITUENCY_NAME,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
+  BREAKDOWN_LOCAL_AUTHORITY_NAME,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
@@ -56,7 +58,7 @@ describe('countWithheldUKAreas', () => {
     const result = countWithheldUKAreas({
       level: 'local_authority',
       region: 'uk',
-      publishedNames: ['Hartlepool'],
+      publishedNames: [BREAKDOWN_LOCAL_AUTHORITY_NAME],
       regions: UK_METADATA_REGIONS,
     });
 
@@ -153,7 +155,7 @@ describe('breakdownLevelsWithheld', () => {
   test('given a saved level then it gets no withheld count, and only the breakdown levels do', () => {
     // When
     const result = breakdownLevelsWithheld(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any, {
-      constituency: { withheld: 2, total: 3 },
+      constituency: UK_WIDE_WITHHELD_CONSTITUENCIES,
       local_authority: null,
     });
 

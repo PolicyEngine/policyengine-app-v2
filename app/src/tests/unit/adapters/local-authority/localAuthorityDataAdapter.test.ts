@@ -12,6 +12,7 @@ import {
   MOCK_LOCAL_AUTHORITY_DATA,
   SINGLE_LOCAL_AUTHORITY_DATA,
 } from '@/tests/fixtures/adapters/local-authority/localAuthorityMocks';
+import { BREAKDOWN_LOCAL_AUTHORITY_NAME } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 describe('localAuthorityDataAdapter', () => {
@@ -215,7 +216,7 @@ describe('localAuthorityDataAdapter', () => {
     );
 
     // Then
-    expect(point).toMatchObject({ id: 'Hartlepool', lower: 480, upper: 530 });
+    expect(point).toMatchObject({ id: BREAKDOWN_LOCAL_AUTHORITY_NAME, lower: 480, upper: 530 });
   });
 
   test('given a breakdown area then its relative points carry the relative 90% range', () => {
@@ -225,7 +226,11 @@ describe('localAuthorityDataAdapter', () => {
     );
 
     // Then
-    expect(point).toMatchObject({ id: 'Hartlepool', lower: 0.0125, upper: 0.0139 });
+    expect(point).toMatchObject({
+      id: BREAKDOWN_LOCAL_AUTHORITY_NAME,
+      lower: 0.0125,
+      upper: 0.0139,
+    });
   });
 
   test('given a reported area then its points are not marked approximate', () => {

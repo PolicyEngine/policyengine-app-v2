@@ -2,6 +2,7 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import { AbsoluteChangeByConstituency } from '@/pages/report-output/constituency/AbsoluteChangeByConstituency';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { SOME_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
@@ -71,7 +72,7 @@ describe('AbsoluteChangeByConstituency', () => {
     render(
       <AbsoluteChangeByConstituency
         output={MOCK_UK_REPORT_OUTPUT}
-        withheld={{ withheld: 12, total: 650 }}
+        withheld={SOME_WITHHELD_CONSTITUENCIES}
       />
     );
 

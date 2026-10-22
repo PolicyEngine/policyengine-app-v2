@@ -1,6 +1,11 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import UKAreaDisclosureNotes from '@/components/report/UKAreaDisclosureNotes';
+import {
+  NO_WITHHELD_CONSTITUENCIES,
+  ONE_WITHHELD_CONSTITUENCY,
+  SOME_WITHHELD_CONSTITUENCIES,
+} from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 const CONSTITUENCIES = NORMALIZED_BREAKDOWN.constituency_impact.by_constituency;
@@ -13,7 +18,7 @@ describe('UKAreaDisclosureNotes', () => {
       <UKAreaDisclosureNotes
         level="constituency"
         areas={LOCAL_AUTHORITIES}
-        withheld={{ withheld: 12, total: 650 }}
+        withheld={SOME_WITHHELD_CONSTITUENCIES}
       />,
       'uk'
     );
@@ -32,7 +37,7 @@ describe('UKAreaDisclosureNotes', () => {
       <UKAreaDisclosureNotes
         level="constituency"
         areas={LOCAL_AUTHORITIES}
-        withheld={{ withheld: 1, total: 650 }}
+        withheld={ONE_WITHHELD_CONSTITUENCY}
       />,
       'uk'
     );
@@ -62,7 +67,7 @@ describe('UKAreaDisclosureNotes', () => {
       <UKAreaDisclosureNotes
         level="constituency"
         areas={LOCAL_AUTHORITIES}
-        withheld={{ withheld: 0, total: 650 }}
+        withheld={NO_WITHHELD_CONSTITUENCIES}
       />,
       'uk'
     );

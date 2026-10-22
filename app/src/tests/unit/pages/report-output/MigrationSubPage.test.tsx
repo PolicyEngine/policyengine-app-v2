@@ -7,6 +7,7 @@ import { LocalAuthoritySubPage } from '@/pages/report-output/LocalAuthoritySubPa
 import MigrationSubPage, {
   canShowCongressionalDistrictImpactCard,
 } from '@/pages/report-output/MigrationSubPage';
+import { UK_WIDE_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
@@ -16,9 +17,11 @@ import {
 import {
   COMPUTE_BUTTON_LABEL,
   COMPUTING_MESSAGE,
+  ERROR_MESSAGE,
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
   COMPLETE_RESPONSE,
+  FAILED_RESPONSE,
   QUEUED_RESPONSE,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT_WITH_LA } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
@@ -231,11 +234,14 @@ describe('MigrationSubPage UK local areas', () => {
   test.each(['Constituency impact', 'Local authority impact'])(
     'given no area data then the %s header offers to compute and nothing is sent',
     async (label) => {
+      // Given
       const user = userEvent.setup();
       renderUKMigrationSubPage();
 
+      // When
       await openSection(user, label);
 
+      // Then
       expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
       expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
     }
@@ -244,13 +250,16 @@ describe('MigrationSubPage UK local areas', () => {
   test.each(['Constituency impact', 'Local authority impact'])(
     'given compute clicked in %s then one request goes for the report policies, region and year',
     async (label) => {
+      // Given
       const user = userEvent.setup();
       mockFetchLocalAreaBreakdown.mockResolvedValue(QUEUED_RESPONSE);
       renderUKMigrationSubPage();
       await openSection(user, label);
 
+      // When
       await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
 
+      // Then
       await waitFor(() => expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(1));
       expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledWith(
         'uk',
@@ -262,20 +271,24 @@ describe('MigrationSubPage UK local areas', () => {
   );
 
   test('given the breakdown computing then both opened sections show its progress', async () => {
+    // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(QUEUED_RESPONSE);
     renderUKMigrationSubPage();
     await openSection(user, 'Constituency impact');
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
 
+    // When
     await openSection(user, 'Local authority impact');
 
+    // Then
     expect(await screen.findAllByText(COMPUTING_MESSAGE)).toHaveLength(2);
     expect(screen.getAllByRole('progressbar')).toHaveLength(2);
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
   });
 
   test('given the breakdown complete then both sections show its maps with no second request', async () => {
+    // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
     renderUKMigrationSubPage();
@@ -283,8 +296,10 @@ describe('MigrationSubPage UK local areas', () => {
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     expect(await screen.findByTestId('constituency-impact')).toBeInTheDocument();
 
+    // When
     await openSection(user, 'Local authority impact');
 
+    // Then
     expect(screen.getByTestId('local-authority-impact')).toBeInTheDocument();
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0].output).toMatchObject({
       constituency_impact: BREAKDOWN_CONSTITUENCY_IMPACT,
@@ -296,12 +311,15 @@ describe('MigrationSubPage UK local areas', () => {
   });
 
   test('given saved area data then the sections show maps with no compute button', async () => {
+    // Given
     const user = userEvent.setup();
     renderUKMigrationSubPage(MOCK_UK_REPORT_OUTPUT_WITH_LA);
 
+    // When
     await openSection(user, 'Constituency impact');
     await openSection(user, 'Local authority impact');
 
+    // Then
     expect(screen.getByTestId('constituency-impact')).toBeInTheDocument();
     expect(screen.getByTestId('local-authority-impact')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
@@ -309,6 +327,7 @@ describe('MigrationSubPage UK local areas', () => {
   });
 
   test('given the breakdown complete then each section gets its level of withheld areas', async () => {
+    // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
     renderUKMigrationSubPage();
@@ -316,46 +335,59 @@ describe('MigrationSubPage UK local areas', () => {
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
     expect(await screen.findByTestId('constituency-impact')).toBeInTheDocument();
 
+    // When
     await openSection(user, 'Local authority impact');
 
+    // Then
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0]).toMatchObject({
-      withheld: { withheld: 2, total: 3 },
+      withheld: UK_WIDE_WITHHELD_CONSTITUENCIES,
     });
     expect(vi.mocked(LocalAuthoritySubPage).mock.lastCall?.[0]).toMatchObject({ withheld: null });
   });
 
   test('given saved area data then the sections get no withheld areas', async () => {
+    // Given
     const user = userEvent.setup();
     renderUKMigrationSubPage(MOCK_UK_REPORT_OUTPUT_WITH_LA);
 
+    // When
     await openSection(user, 'Constituency impact');
 
+    // Then
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0].withheld).toBeUndefined();
   });
 
   test('given a breakdown release result with constituencies only then the constituency section shows them and the local authority section offers to compute', async () => {
+    // Given
     const user = userEvent.setup();
     renderUKMigrationSubPage(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
 
+    // When
     await openSection(user, 'Constituency impact');
 
+    // Then
     expect(screen.getByTestId('constituency-impact')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
 
+    // When
     await openSection(user, 'Local authority impact');
 
+    // Then
     expect(screen.queryByTestId('local-authority-impact')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
   });
 
   test('given saved constituencies and the local authorities computed then each section keeps its own source', async () => {
+    // Given
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
     renderUKMigrationSubPage(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
     await openSection(user, 'Local authority impact');
 
+    // When
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
 
+    // Then
     expect(await screen.findByTestId('local-authority-impact')).toBeInTheDocument();
     expect(vi.mocked(LocalAuthoritySubPage).mock.lastCall?.[0]).toMatchObject({
       output: { local_authority_impact: BREAKDOWN_LOCAL_AUTHORITY_IMPACT },
@@ -400,5 +432,24 @@ describe('MigrationSubPage UK local areas', () => {
     expect(screen.getByTestId('constituency-impact')).toBeInTheDocument();
     expect(screen.getByTestId('local-authority-impact')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+  });
+
+  test('given the breakdown failed in a section then Retry sends the request again and the maps show', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown
+      .mockResolvedValueOnce(FAILED_RESPONSE)
+      .mockResolvedValueOnce(COMPLETE_RESPONSE);
+    renderUKMigrationSubPage();
+    await openSection(user, 'Constituency impact');
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    expect(await screen.findByText(ERROR_MESSAGE)).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+
+    // Then
+    expect(await screen.findByTestId('constituency-impact')).toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(2);
   });
 });
