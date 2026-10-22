@@ -462,7 +462,9 @@ export default function ReportView({
                           <DistrictImpactCard output={output} />
                         </CongressionalDistrictDataProvider>
                       )}
-                      {output && !showUSDistricts && isUK && <UKLocalAreaMaps output={output} />}
+                      {output && !showUSDistricts && isUK && (
+                        <UKLocalAreaMaps output={output} region={region} />
+                      )}
                       {output && !showUSDistricts && !isUK && (
                         <Text
                           style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}

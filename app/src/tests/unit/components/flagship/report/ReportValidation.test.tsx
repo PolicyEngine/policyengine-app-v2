@@ -19,6 +19,10 @@ import {
   utahBaselineClaim,
 } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
+import {
+  mockWalesCalibrationMatches,
+  UK_BASIC_RATE_PATH,
+} from '@/tests/fixtures/libs/flagship/ukCalibrationMocks';
 
 const mockUseScorecardComparisons =
   vi.fn<(countryId: string, paths: string[]) => ScorecardComparisonsState>();
@@ -233,25 +237,46 @@ describe('ReportValidation', () => {
     expect(screen.queryByText('Not comparable')).not.toBeInTheDocument();
   });
 
-  test('given a UK report then one line says calibration is US-only and no US data shows', async () => {
+  test('given a UK report then its data calibration section shows the UK targets', async () => {
     await renderValidation({
       countryId: 'uk',
       region: 'uk',
+      paths: [UK_BASIC_RATE_PATH],
+      calibration: { ...mockWalesCalibrationMatches, geography: 'United Kingdom' },
+    });
+
+    const calibration = card('Data calibration');
+    expect(within(calibration).queryByText(/available for US/)).not.toBeInTheDocument();
+    const table = within(calibration).getByRole('table', { name: 'Calibration targets' });
+    expect(within(table).getByText('Income Tax')).toBeInTheDocument();
+    expect(within(table).getByText('£40B')).toBeInTheDocument();
+    expect(within(calibration).getByRole('link', { name: /view dashboard/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('country=uk')
+    );
+    expect(
+      within(card('Baseline comparisons')).getByRole('link', { name: /view scorecard/i })
+    ).toHaveAttribute('href', 'https://www.policyengine.org/scorecard?view=scorecard&country=uk');
+  });
+
+  test('given a country without diagnostics then one line says so and no US data shows', async () => {
+    await renderValidation({
+      countryId: 'ca',
+      region: 'ca',
       paths: ['gov.simulation.capital_gains_responses.elasticity'],
-      // Even if a caller hands over US results, a UK report does not show them,
+      // Even if a caller hands over US results, the report does not show them,
       // nor a US state's overall data fit.
       calibration: { ...mockCalibrationMatches, geography: 'DC' },
     });
 
     const calibration = card('Data calibration');
     expect(
-      within(calibration).getByText('Calibration diagnostics are available for US reports for now.')
+      within(calibration).getByText(
+        'Calibration diagnostics are available for US and UK reports for now.'
+      )
     ).toBeInTheDocument();
     expect(within(calibration).queryByText(/data fit/)).not.toBeInTheDocument();
     expect(within(calibration).queryByRole('table')).not.toBeInTheDocument();
     expect(within(calibration).queryByRole('link')).not.toBeInTheDocument();
-    expect(
-      within(card('Baseline comparisons')).getByRole('link', { name: /view scorecard/i })
-    ).toHaveAttribute('href', 'https://www.policyengine.org/scorecard?view=scorecard&country=uk');
   });
 });

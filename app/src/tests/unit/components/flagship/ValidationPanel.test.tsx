@@ -38,6 +38,7 @@ const EMPTY_UK_TRACK_RECORD = { modelVersion: '', reachedCount: 0, programs: [],
 /** The scorecard's registry of published claims, where baseline claims are listed. */
 const SCORECARD_CLAIMS_URL = 'https://www.policyengine.org/scorecard?view=validation';
 const NO_COMPARISON = 'No scorecard comparison measures the programs this reform changes.';
+const NO_COMPARISON_UK = 'No scorecard comparison measures the programmes this reform changes.';
 const EMPTY_TRACK_RECORD: ScorecardMatches = {
   modelVersion: '1.808.0',
   reachedCount: 0,
@@ -371,7 +372,7 @@ describe('BaselineComparisons', () => {
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.queryByText(/SNAP/)).not.toBeInTheDocument();
-    expect(screen.getByText(NO_COMPARISON)).toBeInTheDocument();
+    expect(screen.getByText(NO_COMPARISON_UK)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view scorecard/i })).toHaveAttribute(
       'href',
       'https://www.policyengine.org/scorecard?view=scorecard&country=uk'
@@ -388,7 +389,7 @@ describe('BaselineComparisons', () => {
       />
     );
 
-    expect(screen.getByText(NO_COMPARISON)).toBeInTheDocument();
+    expect(screen.getByText(NO_COMPARISON_UK)).toBeInTheDocument();
   });
 });
 

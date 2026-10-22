@@ -4,7 +4,12 @@ import {
   claimValue,
   matchScorecardClaims,
 } from '@/libs/flagship/scorecardComparisons';
-import { CTC_PATH, scorecardClaim } from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
+import {
+  CTC_PATH,
+  scorecardClaim,
+  UK_PA_PATH,
+  ukMeasureClaim,
+} from '@/tests/fixtures/libs/flagship/scorecardComparisonMocks';
 
 describe('scorecard comparison matching', () => {
   test('given missing variable mappings then recorded paths and the same policy in another year still match', () => {
@@ -59,6 +64,58 @@ describe('scorecard comparison matching', () => {
     expect(
       matchScorecardClaims(rows, 'us', [CTC_PATH], []).rows.map((row) => row.claim_id)
     ).toEqual(['ctc-2026']);
+  });
+  test('given a UK measure that changes the reformed parameter then the policy claim matches by parameter', () => {
+    const rows = [
+      ukMeasureClaim(),
+      ukMeasureClaim({
+        claim_id: 'uk-fuel-duty',
+        name: 'Fuel duty freeze',
+        measure: {
+          key: 'fuel_duty_freeze',
+          program: 'fuel_duty',
+          parameter_paths: ['gov.hmrc.fuel_duty.petrol_and_diesel'],
+        },
+      }),
+    ];
+    expect(
+      matchScorecardClaims(rows, 'uk', [UK_PA_PATH], ['income_tax'], {
+        programBaselineOnly: true,
+      }).rows.map((row) => [row.claim_id, row.matchBasis])
+    ).toEqual([['uk-pa-freeze-2028', 'parameter']]);
+  });
+  test('given a UK policy measure in the same programme but another parameter then it does not match', () => {
+    const row = ukMeasureClaim();
+    expect(
+      matchScorecardClaims([row], 'uk', ['gov.hmrc.income_tax.rates.uk[0].rate'], ['income_tax'], {
+        programBaselineOnly: true,
+      }).rows
+    ).toEqual([]);
+  });
+  test('given a UK measure that changes another band of the same scale then it does not match', () => {
+    const row = ukMeasureClaim({
+      measure: {
+        key: 'thresholds_freeze',
+        parameter_paths: ['gov.hmrc.income_tax.rates.uk[1].threshold'],
+      },
+    });
+    const match = (path: string) =>
+      matchScorecardClaims([row], 'uk', [path], [], { programBaselineOnly: true }).rows.length;
+    expect(match('gov.hmrc.income_tax.rates.uk[0].rate')).toBe(0);
+    expect(match('gov.hmrc.income_tax.rates.uk[1].threshold')).toBe(1);
+    expect(match('gov.hmrc.income_tax.rates.uk')).toBe(1);
+  });
+  test('given a UK baseline claim with only a measure programme then it matches by programme and is mapped', () => {
+    const row = ukMeasureClaim({
+      reform_framework: 'baseline',
+      reform_key: 'baseline',
+      measure: { key: 'child_benefit_baseline', program: 'child_benefit' },
+    });
+    const result = matchScorecardClaims([row], 'uk', [], ['child_benefit'], {
+      programBaselineOnly: true,
+    });
+    expect(result.rows.map((match) => match.matchBasis)).toEqual(['program']);
+    expect(result.unmappedCount).toBe(0);
   });
   test('given different unit and period types then preserve signs and periods without making counts into dollars', () => {
     expect(claimValue(-12_400_000_000, 'usd')).toBe('-$12.4B');

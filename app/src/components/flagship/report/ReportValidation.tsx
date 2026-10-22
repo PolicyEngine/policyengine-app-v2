@@ -131,10 +131,10 @@ export default function ReportValidation({
       {hasCalibrationDiagnostics(countryId) ? (
         <CalibrationMatchSection matches={calibration} pin={calibrationPin} />
       ) : (
-        // The dependency map and calibration targets are the US model's.
+        // Calibration diagnostics cover the US and the UK only.
         <ValidationCard id="data-calibration" title="Data calibration">
           <ValidationNote>
-            Calibration diagnostics are available for US reports for now.
+            Calibration diagnostics are available for US and UK reports for now.
           </ValidationNote>
         </ValidationCard>
       )}
