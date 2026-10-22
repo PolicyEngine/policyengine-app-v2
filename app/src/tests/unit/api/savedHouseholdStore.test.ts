@@ -40,7 +40,62 @@ const editedHouseholdItem = v2HouseholdItem(
   V2_HOUSEHOLD_IDS.EDITED_FAMILY
 );
 
+const householdReads = (requests: { method: string; path: string }[]) =>
+  requests.filter(
+    (request) => request.method === 'GET' && request.path.startsWith('/v2/households/')
+  );
+
 describe('ApiSavedHouseholdStore', () => {
+  test('given the list read again then each stored household is fetched once, as stored households never change', async () => {
+    const { store, fetchMock } = savedHouseholdStore();
+    const requests = routeRequests(fetchMock, {
+      'GET /v2/user-households': () => pageResponse([familyRow]),
+      [`GET /v2/user-households/${SAVED_HOUSEHOLD_IDS.FAMILY}`]: () => itemResponse(familyRow),
+      [`GET /v2/households/${V2_HOUSEHOLD_IDS.FAMILY}`]: () => itemResponse(familyHouseholdItem),
+    });
+
+    await store.list();
+    const [listedAgain] = await store.list();
+    await store.get(SAVED_HOUSEHOLD_IDS.FAMILY);
+
+    expect(householdReads(requests)).toHaveLength(1);
+    expect(listedAgain.unavailable).toBeFalsy();
+  });
+
+  test('given a stored household that failed to load then the next list asks for it again', async () => {
+    const { store, fetchMock } = savedHouseholdStore();
+    let householdAnswers = 0;
+    const requests = routeRequests(fetchMock, {
+      'GET /v2/user-households': () => pageResponse([familyRow]),
+      [`GET /v2/households/${V2_HOUSEHOLD_IDS.FAMILY}`]: () =>
+        householdAnswers++ === 0
+          ? errorResponse(503, 'Households are temporarily unavailable.')
+          : itemResponse(familyHouseholdItem),
+    });
+
+    const [first] = await store.list();
+    const [second] = await store.list();
+
+    expect(first.unavailable).toBe(true);
+    expect(second.unavailable).toBeFalsy();
+    expect(householdReads(requests)).toHaveLength(2);
+  });
+
+  test('given a household just saved then listing it does not fetch it again', async () => {
+    const { store, fetchMock } = savedHouseholdStore();
+    const requests = routeRequests(fetchMock, {
+      'POST /v2/households': () => itemResponse(familyHouseholdItem, 201),
+      'POST /v2/user-households': () => itemResponse(familyRow, 201),
+      'GET /v2/user-households': () => pageResponse([familyRow]),
+    });
+
+    await store.save({ household: FAMILY_HOUSEHOLD, label: FAMILY_LABEL });
+    const [listed] = await store.list();
+
+    expect(householdReads(requests)).toHaveLength(0);
+    expect(listed.unavailable).toBeFalsy();
+  });
+
   test('given a household and a label then its content is stored, and the saved row points at it by its v2 id', async () => {
     const { store, fetchMock } = savedHouseholdStore();
     const requests = routeRequests(fetchMock, {
