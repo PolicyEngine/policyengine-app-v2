@@ -70,6 +70,27 @@ describe('SaveHouseholdForm', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saved');
   });
 
+  test('given a new household saved by a caller that does not pass it back then the form edits it from then on', async () => {
+    const user = userEvent.setup();
+    const requests = routeRequests(signedInSession(), {
+      'POST /v2/households': () =>
+        itemResponse(v2HouseholdItem(FAMILY_HOUSEHOLD, V2_HOUSEHOLD_IDS.FAMILY), 201),
+      'POST /v2/user-households': () => itemResponse(userHouseholdItem(), 201),
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SaveHouseholdForm household={FAMILY_HOUSEHOLD} />
+      </QueryClientProvider>
+    );
+
+    await user.type(screen.getByRole('textbox', { name: 'Household label' }), FAMILY_LABEL);
+    await user.click(screen.getByRole('button', { name: 'Save household' }));
+
+    expect(await screen.findByRole('button', { name: 'Save changes' })).toBeDisabled();
+    expect(routedPaths(requests)).toEqual(['POST /v2/households', 'POST /v2/user-households']);
+  });
+
   test('given the household edited after a save then it no longer says it is saved', async () => {
     const user = userEvent.setup();
     routeRequests(signedInSession(), {
