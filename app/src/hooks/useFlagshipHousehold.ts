@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { fetchPolicyById } from '@/api/policy';
@@ -5,6 +6,7 @@ import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { useParallelQueries } from '@/hooks/utils/queryUtils';
 import { runFlagshipHouseholdPayload } from '@/libs/flagship/householdRun';
 import { policyKeys } from '@/libs/queryKeys';
+import type { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { Policy } from '@/types/ingredients/Policy';
 
@@ -42,6 +44,83 @@ export function useFlagshipHouseholdPayload({
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+}
+
+/** The household a run was asked for, and the payload sent for it. */
+export interface RequestedHousehold {
+  household: Household;
+  payload: V1HouseholdCreateEnvelope;
+}
+
+const samePayload = (first: V1HouseholdCreateEnvelope, second: V1HouseholdCreateEnvelope) =>
+  JSON.stringify(first) === JSON.stringify(second);
+
+/**
+ * A v3 household result's run, asked for when the reader presses
+ * Calculate, for the report section's households and the standalone
+ * household report alike. The household asked for is fixed when asked,
+ * so the result keeps describing it while the reader edits the builder.
+ */
+export function useRequestedHouseholdRun({
+  year,
+  baselinePolicyId,
+  reformPolicyId,
+}: {
+  year: string;
+  baselinePolicyId: string;
+  reformPolicyId: string;
+}) {
+  const [requested, setRequested] = useState<RequestedHousehold | null>(null);
+  const run = useFlagshipHouseholdPayload({
+    year,
+    baselinePolicyId,
+    reformPolicyId,
+    payload: requested?.payload ?? null,
+  });
+  const running = !!requested && run.isFetching;
+  const failed = !!requested && !running && run.isError;
+
+  /**
+   * Asks for a household's run. The same household again is the same
+   * query, which keeps its error until asked again, so it asks once more.
+   */
+  const request = (household: Household) => {
+    const payload = household.toV1CreationPayload();
+    if (requested && samePayload(requested.payload, payload)) {
+      void run.refetch();
+    } else {
+      setRequested({ household, payload });
+    }
+  };
+
+  return {
+    /** The household asked for; null until Calculate. */
+    requested,
+    /** The run's query, for its data and error. */
+    run,
+    running,
+    failed,
+    /** The run's result, once it has one and is not running again. */
+    result: requested && !running ? run.data : undefined,
+    request,
+    /**
+     * After a failure: the household as it is now when it can run, so an
+     * input fixed after the failure counts; otherwise the household that
+     * failed, once more, never one that cannot run.
+     */
+    retry: (household: Household, canRun: boolean) => {
+      if (canRun) {
+        request(household);
+      } else {
+        void run.refetch();
+      }
+    },
+    /** Forgets the request and its result: the next result waits for Calculate. */
+    clear: () => setRequested(null),
+    /** Whether the household on screen, or on its way, is this one. */
+    shows: (household: Household) =>
+      !!requested && !failed && samePayload(requested.payload, household.toV1CreationPayload()),
+  };
 }
 
 /**
