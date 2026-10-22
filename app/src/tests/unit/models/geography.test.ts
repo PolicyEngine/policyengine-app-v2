@@ -7,6 +7,7 @@ import {
   getGeographyRegionTypeLabel,
 } from '@/models/geography';
 import { fromMetadataRegionEntry, type RegionRecord } from '@/models/region';
+import { REMOVED_COUNTRY_AS_COUNTRY_ID } from '@/tests/fixtures/libs/countriesMocks';
 import {
   LEGACY_NORTHERN_IRELAND_REGION_CODE,
   NORTHERN_IRELAND_LABEL,
@@ -105,7 +106,7 @@ describe('geography model helpers', () => {
 
   test('given an unsupported country display name then it falls back to upper-case', () => {
     expect(getCountryDisplayName('us')).toBe('United States');
-    expect(getCountryDisplayName('ca')).toBe('Canada');
+    expect(getCountryDisplayName(REMOVED_COUNTRY_AS_COUNTRY_ID)).toBe('CA');
   });
 });
 
