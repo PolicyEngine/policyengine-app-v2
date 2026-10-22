@@ -6,6 +6,7 @@ import {
   type SavedHousehold,
   type SavedHouseholdChanges,
   type SavedHouseholdStore,
+  type StoredHouseholdCache,
 } from '@/api/savedHouseholdStore';
 import { useV3SavedWork } from '@/hooks/useFlagshipStores';
 import type { Household } from '@/models/Household';
@@ -30,6 +31,14 @@ export const savedHouseholdKeys = {
 
 const STALE_TIME = 5 * 60 * 1000;
 
+/**
+ * A stored household by its country and v2 id. Its content never changes,
+ * so it is the same for every user and kept until unused for a while.
+ */
+const storedHouseholdKey = (countryId: string, householdId: string) =>
+  ['stored-households', countryId, householdId] as const;
+const STORED_HOUSEHOLD_GC_TIME = 30 * 60 * 1000;
+
 /** Saving without accounts: v3 keeps no household in the browser. */
 export class SavedHouseholdsUnavailableError extends Error {
   constructor() {
@@ -45,13 +54,31 @@ export function useSavedHouseholdStore(): {
   countryId: string | null;
 } {
   const { account, scope } = useV3SavedWork();
+  const queryClient = useQueryClient();
+  // Every store this session makes keeps stored households in the query
+  // client, so the list, the picker and the save form fetch each once.
+  const storedHouseholds = useMemo<StoredHouseholdCache>(
+    () => ({
+      get: (countryId, householdId, fetchHousehold) =>
+        queryClient.fetchQuery({
+          queryKey: storedHouseholdKey(countryId, householdId),
+          queryFn: fetchHousehold,
+          staleTime: Infinity,
+          gcTime: STORED_HOUSEHOLD_GC_TIME,
+        }),
+      set: (countryId, householdId, household) => {
+        queryClient.setQueryData(storedHouseholdKey(countryId, householdId), household);
+      },
+    }),
+    [queryClient]
+  );
   return useMemo(
     () => ({
-      store: getSavedHouseholdStore(account),
+      store: getSavedHouseholdStore(account, storedHouseholds),
       scope,
       countryId: account?.countryId ?? null,
     }),
-    [account, scope]
+    [account, scope, storedHouseholds]
   );
 }
 
