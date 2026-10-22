@@ -588,6 +588,28 @@ describe('HouseholdReportPage', () => {
       expect(screen.getByRole('combobox', { name: 'Year' })).toBeDisabled();
     });
 
+    test('given a saved household opened in another year then moving it is not an edit, and a new label only renames it', async () => {
+      const user = userEvent.setup();
+      const requests = signedInWithFamily({
+        [`PATCH /v2/user-households/${SAVED_HOUSEHOLD_IDS.FAMILY}`]: (request) =>
+          itemResponse(userHouseholdItem({ name: request.body.name })),
+      });
+      renderReport({ savedHousehold: SAVED_FAMILY, year: LATER_MODEL_YEAR });
+
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+      const label = screen.getByRole('textbox', { name: 'Household label' });
+      await user.clear(label);
+      await user.type(label, RETIRED_LABEL);
+      await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+      expect(await screen.findByText('Saved')).toHaveAttribute('role', 'status');
+      const writes = requests.filter((request) => request.method !== 'GET');
+      expect(writes.map((request) => `${request.method} ${request.path}`)).toEqual([
+        `PATCH /v2/user-households/${SAVED_HOUSEHOLD_IDS.FAMILY}`,
+      ]);
+      expect(writes[0].body).toEqual({ name: RETIRED_LABEL });
+    });
+
     test('given the report opened from a saved household then it is the one the save form edits', () => {
       signedInWithFamily();
       renderReport({ savedHousehold: SAVED_FAMILY });
