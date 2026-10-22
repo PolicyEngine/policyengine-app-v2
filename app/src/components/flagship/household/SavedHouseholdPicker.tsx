@@ -67,14 +67,18 @@ export default function SavedHouseholdPicker({
                   onSelect(saved);
                 }
               }}
-              className="tw:w-full tw:cursor-pointer tw:rounded-md tw:border tw:text-left tw:transition-colors tw:hover:border-primary-500 tw:disabled:cursor-not-allowed tw:disabled:opacity-60"
+              // The border color comes from classes, so the hover color can apply.
+              className={`tw:w-full tw:cursor-pointer tw:rounded-md tw:border tw:text-left tw:transition-colors tw:disabled:cursor-not-allowed tw:disabled:opacity-60 ${
+                selected
+                  ? 'tw:border-primary-500'
+                  : 'tw:border-border-light tw:hover:border-primary-500'
+              }`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: spacing.sm,
                 padding: `${spacing.sm} ${spacing.md}`,
                 background: selected ? colors.primary[50] : colors.background.primary,
-                borderColor: selected ? colors.primary[500] : colors.border.light,
                 fontFamily: typography.fontFamily.primary,
               }}
             >
