@@ -22,6 +22,7 @@ export const V2_HOUSEHOLD_IDS = {
   FAMILY: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   EDITED_FAMILY: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   RETIRED: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  TWO_YEAR_FAMILY: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
 } as const;
 
 export const FAMILY_LABEL = 'Our family';
@@ -41,6 +42,14 @@ export const EDITED_FAMILY_HOUSEHOLD = FAMILY_HOUSEHOLD.setPersonVariableAtYear(
   'employment_income',
   SAVED_HOUSEHOLD_YEAR,
   65000
+);
+
+/** The family with next year's earnings also set: its inputs are in two years. */
+export const TWO_YEAR_FAMILY_HOUSEHOLD = FAMILY_HOUSEHOLD.setPersonVariableAtYear(
+  'you',
+  'employment_income',
+  String(Number(SAVED_HOUSEHOLD_YEAR) + 1),
+  50000
 );
 
 export const RETIRED_HOUSEHOLD = Household.starter('us', SAVED_HOUSEHOLD_YEAR)

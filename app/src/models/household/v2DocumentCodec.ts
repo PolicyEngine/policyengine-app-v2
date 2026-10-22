@@ -221,12 +221,17 @@ export function haveSameStoredContent(first: Household, second: Household): bool
   }
 }
 
-/** A stored v2 household as the app's household model, with the stored id. */
+/**
+ * A stored v2 household as the app's household model, with the stored id,
+ * in the stored default year: not the latest year its values name, which
+ * differs for inputs in several years, and which values without a year
+ * do not give.
+ */
 export function householdFromV2Item(item: V2HouseholdItem): Household {
   const { data, spm } = v1DataFromV2Document(item.country_id, item.household_data);
   const household = Household.fromV1CreationPayload(
     { country_id: item.country_id as CountryId, data, ...(spm ? { spm } : {}) },
     { id: item.id }
   );
-  return household;
+  return Household.fromAppInput({ ...household.toJSON(), year: item.default_year });
 }

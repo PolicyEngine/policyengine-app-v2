@@ -150,3 +150,31 @@ export const US_PERSON_WITHOUT_MARITAL_UNIT = Household.fromV1CreationPayload({
     marital_units: { 'marital unit': { members: ['you'] } },
   },
 });
+
+/** A UK household stored with inputs in two years: its default year is the earlier one. */
+export const UK_DOCUMENT_WITH_TWO_YEARS: V2HouseholdDocument = {
+  people: [
+    {
+      id: 'person-1',
+      source_name: 'you',
+      values: { age: { 2026: 45 }, employment_income: { 2026: 30000, 2027: 31000 } },
+      memberships: { household: 'household-1', benunit: 'benunit-1' },
+    },
+  ],
+  household: [{ id: 'household-1', source_name: 'your household', values: {} }],
+  benunit: [{ id: 'benunit-1', source_name: 'your benefit unit', values: {} }],
+};
+
+/** A UK household stored with values that name no year, which the v2 document allows. */
+export const UK_DOCUMENT_WITHOUT_YEARS: V2HouseholdDocument = {
+  people: [
+    {
+      id: 'person-1',
+      source_name: 'you',
+      values: { age: 45 },
+      memberships: { household: 'household-1', benunit: 'benunit-1' },
+    },
+  ],
+  household: [{ id: 'household-1', source_name: 'your household', values: {} }],
+  benunit: [{ id: 'benunit-1', source_name: 'your benefit unit', values: {} }],
+};

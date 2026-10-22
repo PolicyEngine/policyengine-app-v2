@@ -14,6 +14,7 @@ import {
   SAVED_FAMILY,
   SAVED_HOUSEHOLD_IDS,
   storedV2HouseholdItem,
+  TWO_YEAR_FAMILY_HOUSEHOLD,
   userHouseholdItem,
   V2_HOUSEHOLD_IDS,
   v2HouseholdItem,
@@ -526,6 +527,25 @@ describe('HouseholdReportPage', () => {
       expect(screen.getByLabelText('Household builder')).toHaveTextContent('married · 2');
       expect(screen.getByRole('textbox', { name: 'Household label' })).toHaveValue(FAMILY_LABEL);
       expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    });
+
+    test('given a saved household with inputs in two years then the picker opens it in its own year, saying why', async () => {
+      const user = userEvent.setup();
+      signedInWithFamily({
+        'GET /v2/user-households': () =>
+          pageResponse([userHouseholdItem({ household_id: V2_HOUSEHOLD_IDS.TWO_YEAR_FAMILY })]),
+        [`GET /v2/households/${V2_HOUSEHOLD_IDS.TWO_YEAR_FAMILY}`]: () =>
+          itemResponse(
+            v2HouseholdItem(TWO_YEAR_FAMILY_HOUSEHOLD, V2_HOUSEHOLD_IDS.TWO_YEAR_FAMILY)
+          ),
+      });
+      renderReport({ year: LATER_MODEL_YEAR });
+
+      await user.click(await screen.findByRole('button', { name: new RegExp(FAMILY_LABEL) }));
+
+      expect(screen.getByLabelText('Household builder')).toHaveTextContent('married · 2');
+      expect(screen.getByRole('combobox', { name: 'Year' })).toHaveValue(HOUSEHOLD_YEAR);
+      expect(screen.getByRole('alert')).toHaveTextContent('inputs for multiple years');
     });
 
     test('given the report opened from a saved household then it is the one the save form edits', () => {
