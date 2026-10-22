@@ -1,4 +1,4 @@
-export const countryIds = ['us', 'uk', 'ca', 'ng', 'il'] as const;
+export const countryIds = ['us', 'uk'] as const;
 
 export type CountryId = (typeof countryIds)[number];
 
