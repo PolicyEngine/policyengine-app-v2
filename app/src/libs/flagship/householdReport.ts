@@ -1,9 +1,55 @@
-import type { Household } from '@/models/Household';
+import type { CountryId } from '@/libs/countries';
+import { Household } from '@/models/Household';
 
 /**
- * Helpers for v3's standalone household report: one household, run under
- * a baseline and, optionally, a reform.
+ * Helpers for v3's household reports: the report section's households and
+ * the standalone household report (one household, run under a baseline
+ * and, optionally, a reform).
  */
+
+/**
+ * Where a household in each UK nation lives unless the reader says
+ * otherwise: the nation's region, with its capital's local authority and
+ * Broad Rental Market Area, so the three name one place. England has no
+ * one region; its households keep the model's defaults.
+ */
+const UK_NATION_PLACES: Record<string, Record<string, string>> = {
+  scotland: { region: 'SCOTLAND', local_authority: 'CITY_OF_EDINBURGH', brma: 'LOTHIAN' },
+  wales: { region: 'WALES', local_authority: 'CARDIFF', brma: 'CARDIFF' },
+  ni: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
+  northern_ireland: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
+};
+
+/** A UK report's nation's place, for "country/scotland"; none for any other region. */
+export function ukNationPlace(region: string | undefined): Record<string, string> | null {
+  const match = /^country\/(.+)$/i.exec(region ?? '');
+  return (match && UK_NATION_PLACES[match[1].toLowerCase()]) || null;
+}
+
+/**
+ * A new household for v3's report section or standalone household report:
+ * the household builder's own start, one adult and nothing else set. A US
+ * household starts on national poverty thresholds, which the builder's SPM
+ * geography choice can change to a county's; only the US model has them.
+ * A UK household in a report on Scotland, Wales or Northern Ireland starts
+ * there.
+ */
+export function newV3Household(countryId: CountryId, year: string, region?: string): Household {
+  const household = Household.starter(countryId, year);
+  if (countryId === 'us') {
+    return household.withSPM({ geography_kind: 'national' });
+  }
+  const place = countryId === 'uk' ? ukNationPlace(region) : null;
+  const group = household.getPreferredGroupName('households');
+  if (!place || !group) {
+    return household;
+  }
+  return Object.entries(place).reduce(
+    (current, [name, value]) =>
+      current.setEntityVariableAtYear('households', group, name, year, value),
+    household
+  );
+}
 
 /**
  * Inputs every household carries that say nothing on a chart against

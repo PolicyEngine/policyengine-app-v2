@@ -11,13 +11,14 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useFlagshipHouseholdPayload } from '@/hooks/useFlagshipHousehold';
 import type { CountryId } from '@/libs/countries';
 import { describeHousehold } from '@/libs/flagship/householdDescription';
+import { newV3Household } from '@/libs/flagship/householdReport';
 import { suggestedHouseholdInputs } from '@/libs/flagship/householdSuggestions';
 import { describesAHousehold } from '@/libs/flagship/householdVariableGroups';
 import {
   hasParameterDependencies,
   loadParameterDependencies,
 } from '@/libs/flagship/parameterDependencies';
-import { Household } from '@/models/Household';
+import type { Household } from '@/models/Household';
 import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
 import {
@@ -38,49 +39,6 @@ const HOUSEHOLD_COUNTRIES = new Set(['us', 'uk']);
 /** Both policies run at once; a household new to the API takes about three minutes. */
 const EXPECTED_MS = 3 * 60 * 1000;
 
-/**
- * Where a household in each UK nation lives unless the reader says
- * otherwise: the nation's region, with its capital's local authority and
- * Broad Rental Market Area, so the three name one place. England has no
- * one region; its households keep the model's defaults.
- */
-const UK_NATION_PLACES: Record<string, Record<string, string>> = {
-  scotland: { region: 'SCOTLAND', local_authority: 'CITY_OF_EDINBURGH', brma: 'LOTHIAN' },
-  wales: { region: 'WALES', local_authority: 'CARDIFF', brma: 'CARDIFF' },
-  ni: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
-  northern_ireland: { region: 'NORTHERN_IRELAND', local_authority: 'BELFAST', brma: 'BELFAST' },
-};
-
-/** A UK report's nation's place, for "country/scotland"; none for any other region. */
-export function ukNationPlace(region: string | undefined): Record<string, string> | null {
-  const match = /^country\/(.+)$/i.exec(region ?? '');
-  return (match && UK_NATION_PLACES[match[1].toLowerCase()]) || null;
-}
-
-/**
- * A new household: the household builder's own start, one adult and
- * nothing else set. A US household starts on national poverty
- * thresholds, which the builder's SPM geography choice can change to a
- * county's; only the US model has them. A UK household in a report on
- * Scotland, Wales or Northern Ireland starts there.
- */
-function newHousehold(countryId: CountryId, year: string, region?: string): Household {
-  const household = Household.starter(countryId, year);
-  if (countryId === 'us') {
-    return household.withSPM({ geography_kind: 'national' });
-  }
-  const place = countryId === 'uk' ? ukNationPlace(region) : null;
-  const group = household.getPreferredGroupName('households');
-  if (!place || !group) {
-    return household;
-  }
-  return Object.entries(place).reduce(
-    (current, [name, value]) =>
-      current.setEntityVariableAtYear('households', group, name, year, value),
-    household
-  );
-}
-
 /** What the builder sets for each person it adds: not an input the reader chose. */
 const ADDED_PERSON_DEFAULTS = new Set(['age', 'is_tax_unit_dependent']);
 
@@ -98,7 +56,7 @@ export function nonDefaultInputCount(
 ): number {
   const keyOf = (scope: string, name: string, value: unknown) =>
     `${scope}|${name}|${JSON.stringify(value)}`;
-  const starter = newHousehold(countryId, year, region);
+  const starter = newV3Household(countryId, year, region);
   const starterPeople = new Set(starter.personNames);
   const starterKeys = new Set([
     ...starter.personNames.flatMap((person) =>
@@ -328,7 +286,7 @@ function HouseholdCard({
   // The household as the builder edits it: every input the model takes,
   // per person and per household, as in the household builder.
   const metadata = useSelector((state: RootState) => state.metadata);
-  const [household, setHousehold] = useState(() => newHousehold(countryId, year, region));
+  const [household, setHousehold] = useState(() => newV3Household(countryId, year, region));
   const [requested, setRequested] = useState<{
     payload: V1HouseholdCreateEnvelope;
     summary: string;
