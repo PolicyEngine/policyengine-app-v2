@@ -8,10 +8,7 @@ import RunProgress from '@/components/flagship/report/RunProgress';
 import { ErrorState } from '@/components/flagship/states';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import {
-  useFlagshipHouseholdPayload,
-  useSaveCalculatedHousehold,
-} from '@/hooks/useFlagshipHousehold';
+import { useRequestedHouseholdRun, useSaveCalculatedHousehold } from '@/hooks/useFlagshipHousehold';
 import type { CountryId } from '@/libs/countries';
 import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { newV3Household } from '@/libs/flagship/householdReport';
@@ -22,7 +19,6 @@ import {
   loadParameterDependencies,
 } from '@/libs/flagship/parameterDependencies';
 import type { Household } from '@/models/Household';
-import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import type { RootState } from '@/store';
 import {
   householdErrorCategory,
@@ -290,16 +286,8 @@ function HouseholdCard({
   // per person and per household, as in the household builder.
   const metadata = useSelector((state: RootState) => state.metadata);
   const [household, setHousehold] = useState(() => newV3Household(countryId, year, region));
-  const [requested, setRequested] = useState<{
-    payload: V1HouseholdCreateEnvelope;
-    summary: string;
-  } | null>(null);
-  const run = useFlagshipHouseholdPayload({
-    year,
-    baselinePolicyId,
-    reformPolicyId,
-    payload: requested?.payload ?? null,
-  });
+  const { requested, run, running, failed, result, request, retry, shows } =
+    useRequestedHouseholdRun({ year, baselinePolicyId, reformPolicyId });
   // Whether the household can run, as the household builder checks it.
   const validation = useMemo(
     () => HouseholdValidation.isReadyForSimulation(household, countryId, year, metadata),
@@ -325,28 +313,21 @@ function HouseholdCard({
 
   const calculate = () => {
     startRun();
-    const payload = household.toV1CreationPayload();
-    // The same household again, after a failure, asks once more.
-    if (requested && JSON.stringify(requested.payload) === JSON.stringify(payload)) {
-      void run.refetch();
-    } else {
-      setRequested({
-        payload,
-        summary: describeHousehold(household, year, countryId, metadata?.variables),
-      });
-    }
+    request(household);
     setEditing(false);
   };
 
-  const running = !!requested && run.isFetching;
-  const failed = !!requested && !running && run.isError;
-  const result = requested && !running ? run.data : undefined;
   // A calculated household is saved to the user in the background; nothing
   // here shows it.
   useSaveCalculatedHousehold({
     countryId,
     household:
-      result && requested ? { id: result.householdId, name: requested.summary } : undefined,
+      result && requested
+        ? {
+            id: result.householdId,
+            name: describeHousehold(requested.household, year, countryId, metadata?.variables),
+          }
+        : undefined,
   });
   // Once a household runs, its result leads: the inputs fold to one line
   // until the reader edits them again.
@@ -383,21 +364,11 @@ function HouseholdCard({
     });
   }, [running, runData, runError, run.isError, countryId, householdCount]);
 
-  const retry = () => {
+  const tryAgain = () => {
     trackHouseholdCalculationRetried({ countryId });
-    // The household as it is now: an input fixed after the failure counts.
-    if (validation.isValid) {
-      calculate();
-    } else {
-      startRun();
-      void run.refetch();
-    }
+    startRun();
+    retry(household, validation.isValid);
   };
-  // The household on screen, or on its way, is the one in the builder.
-  const sameAsShown =
-    !!requested &&
-    !failed &&
-    JSON.stringify(requested.payload) === JSON.stringify(household.toV1CreationPayload());
 
   return (
     <section
@@ -485,7 +456,7 @@ function HouseholdCard({
             <Button
               size="sm"
               onClick={calculate}
-              disabled={running || !validation.isValid || sameAsShown}
+              disabled={running || !validation.isValid || shows(household)}
             >
               Calculate
             </Button>
@@ -510,7 +481,7 @@ function HouseholdCard({
                   <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
                 )
               }
-              onRetry={retry}
+              onRetry={tryAgain}
             />
           )}
 
@@ -523,7 +494,7 @@ function HouseholdCard({
                 // One calculation served both policies: its methodology shows once.
                 reform: baselinePolicyId === reformPolicyId ? null : result.provenance.reform,
               }}
-              summary={`${requested.summary} · ${year}`}
+              summary={`${describeHousehold(requested.household, year, countryId, metadata?.variables)} · ${year}`}
               breakdowns={{
                 countryId,
                 year,
