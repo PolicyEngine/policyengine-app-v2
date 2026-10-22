@@ -368,6 +368,22 @@ describe('ApiSavedHouseholdStore', () => {
       );
     });
 
+    test('given the edited content cannot be stored then the changes are not saved, and it says so the same way', async () => {
+      const { store, fetchMock } = savedHouseholdStore();
+      const saved = await savedFamily(store, fetchMock);
+      const requests = routeRequests(fetchMock, {
+        'POST /v2/households': () => errorResponse(503, 'Households are temporarily unavailable.'),
+      });
+
+      const update = store.saveChanges(saved, { household: EDITED_FAMILY_HOUSEHOLD });
+
+      await expect(update).rejects.toBeInstanceOf(SavedHouseholdChangesNotSavedError);
+      await expect(update).rejects.toThrow(
+        'Your changes were not saved: Households are temporarily unavailable.'
+      );
+      expect(requests.some((request) => request.method === 'PATCH')).toBe(false);
+    });
+
     test('given a household saved only in this browser then nothing is sent', async () => {
       const { store, fetchMock } = savedHouseholdStore();
       const saved = await savedFamily(store, fetchMock);

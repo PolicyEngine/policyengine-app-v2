@@ -250,7 +250,13 @@ export class ApiSavedHouseholdStore implements SavedHouseholdStore {
     if (!isAccountId(saved.id)) {
       throw new BrowserOnlyIdError();
     }
-    const stored = household ? await this.storeHousehold(household) : null;
+    let stored: V2HouseholdItem | null = null;
+    try {
+      stored = household ? await this.storeHousehold(household) : null;
+    } catch (error) {
+      // Nothing has changed: the saved household still points at what it did.
+      throw new SavedHouseholdChangesNotSavedError(error);
+    }
     const body: UserHouseholdPatchBody = {};
     // Identical content is the stored household the saved one already points at.
     if (stored && stored.id !== saved.householdId) {
