@@ -135,6 +135,35 @@ describe('useSavedHouseholds', () => {
     await waitFor(() => expect(result.current.list.savedHouseholds).toHaveLength(1));
   });
 
+  test('given a household saved through one hook then a list in another does not fetch it again', async () => {
+    const fetchMock = signedInSession();
+    let rows: unknown[] = [];
+    const requests = routeRequests(fetchMock, {
+      'GET /v2/user-households': () => pageResponse(rows),
+      'POST /v2/households': () => itemResponse(familyHousehold, 201),
+      'POST /v2/user-households': () => {
+        rows = [familyRow];
+        return itemResponse(familyRow, 201);
+      },
+      [`GET /v2/households/${V2_HOUSEHOLD_IDS.FAMILY}`]: () => itemResponse(familyHousehold),
+    });
+    const { result } = renderWithQueries(() => ({
+      list: useSavedHouseholds(),
+      save: useSaveHousehold(),
+    }));
+    await waitFor(() => expect(result.current.list.isLoading).toBe(false));
+
+    await act(() =>
+      result.current.save.mutateAsync({ household: FAMILY_HOUSEHOLD, label: FAMILY_LABEL })
+    );
+
+    await waitFor(() => expect(result.current.list.savedHouseholds).toHaveLength(1));
+    expect(result.current.list.savedHouseholds[0].unavailable).toBeFalsy();
+    expect(
+      requests.filter((request) => request.path === `/v2/households/${V2_HOUSEHOLD_IDS.FAMILY}`)
+    ).toEqual([]);
+  });
+
   test('given a rename or a delete then the list is read again', async () => {
     const fetchMock = signedInSession();
     let rows: unknown[] = [familyRow];
