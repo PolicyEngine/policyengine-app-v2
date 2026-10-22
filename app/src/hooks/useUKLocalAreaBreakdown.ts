@@ -12,6 +12,9 @@ import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 /** How often a run that is still computing is polled. */
 const POLL_INTERVAL_MS = 2000;
 
+const NOT_A_BREAKDOWN_MESSAGE =
+  'The API returned national results instead of a local-area breakdown. Its deployment may not support breakdown=local_areas yet.';
+
 export interface UKLocalAreaBreakdownRequest {
   countryId: string;
   reformPolicyId?: string | null;
@@ -104,6 +107,10 @@ function toRun(
     };
   }
   if (response.status === 'ok' && response.result) {
+    // A deployment that ignores breakdown=local_areas answers with national results.
+    if (response.result.kind !== 'local_areas') {
+      return { status: 'error', startedAt, breakdown: null, error: NOT_A_BREAKDOWN_MESSAGE };
+    }
     return { status: 'complete', startedAt, breakdown: response.result };
   }
   return {

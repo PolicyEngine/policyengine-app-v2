@@ -12,7 +12,9 @@ import {
   COMPLETE_RESPONSE,
   FAILED_RESPONSE,
   LOADING_DATA_RESPONSE,
+  NATIONAL_RESULT_FOR_BREAKDOWN_RESPONSE,
   NORMALIZED_BREAKDOWN,
+  NOT_A_BREAKDOWN_MESSAGE,
   OTHER_BREAKDOWN_YEAR,
   QUEUED_RESPONSE,
   SCOTLAND_BREAKDOWN_REQUEST,
@@ -299,5 +301,21 @@ describe('useUKLocalAreaBreakdown', () => {
     // Then
     expect(result.current.status).toBe('complete');
     expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(1);
+  });
+
+  test('given an ok response that is not a breakdown then the status is error with a clear message', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown.mockResolvedValue(NATIONAL_RESULT_FOR_BREAKDOWN_RESPONSE);
+    const { result } = renderHook(() => useUKLocalAreaBreakdown(UK_BREAKDOWN_REQUEST), {
+      wrapper: wrapperFor(createQueryClient()),
+    });
+
+    // When
+    act(() => result.current.start());
+
+    // Then
+    await waitFor(() => expect(result.current.status).toBe('error'));
+    expect(result.current.error).toBe(NOT_A_BREAKDOWN_MESSAGE);
+    expect(result.current.breakdown).toBeNull();
   });
 });

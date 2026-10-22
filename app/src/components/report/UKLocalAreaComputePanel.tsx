@@ -86,6 +86,11 @@ export default function UKLocalAreaComputePanel({
         <Text style={{ ...SECONDARY_TEXT_STYLE, color: colors.text.primary }}>
           Local-area impacts could not be calculated.
         </Text>
+        {breakdown.error && (
+          <Text style={{ ...SECONDARY_TEXT_STYLE, fontSize: typography.fontSize.xs }}>
+            {breakdown.error}
+          </Text>
+        )}
         <Button type="button" variant="outline" size="sm" onClick={breakdown.retry}>
           Retry
         </Button>

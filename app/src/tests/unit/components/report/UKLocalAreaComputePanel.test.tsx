@@ -79,6 +79,14 @@ describe('UKLocalAreaComputePanel', () => {
     expect(breakdown.retry).toHaveBeenCalledTimes(1);
   });
 
+  test('given a failed breakdown with a reason then it gives the reason', () => {
+    // When
+    render(<UKLocalAreaComputePanel breakdown={ERROR_STATE()} />, 'uk');
+
+    // Then
+    expect(screen.getByText(ERROR_STATE().error!)).toBeInTheDocument();
+  });
+
   test('given a complete breakdown then the panel shows nothing', () => {
     // When
     const { container } = render(<UKLocalAreaComputePanel breakdown={COMPLETE_STATE()} />, 'uk');

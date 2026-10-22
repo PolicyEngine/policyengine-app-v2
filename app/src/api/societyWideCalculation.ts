@@ -23,11 +23,18 @@ export type SocietyWideBreakdown = 'local_areas';
 export interface SocietyWideCalculationParams {
   region: string; // "us" for US nationwide, "state/ca" for US states, or another API v1 region code
   time_period: string; // Four-digit year
-  /** Sent only when set; national requests carry no breakdown. */
+}
+
+/**
+ * The economy endpoint's query: a national request's parameters, plus a
+ * breakdown only for fetchLocalAreaBreakdown, so a breakdown's result is
+ * never typed as national results.
+ */
+interface EconomyCalculationParams extends SocietyWideCalculationParams {
   breakdown?: SocietyWideBreakdown;
 }
 
-const SOCIETY_WIDE_QUERY_KEYS: ReadonlyArray<keyof SocietyWideCalculationParams> = [
+const SOCIETY_WIDE_QUERY_KEYS: ReadonlyArray<keyof EconomyCalculationParams> = [
   'region',
   'time_period',
   'breakdown',
@@ -90,11 +97,12 @@ export async function fetchSocietyWideCalculation(
   baselinePolicyId: string,
   params: SocietyWideCalculationParams
 ): Promise<SocietyWideCalculationResponse> {
+  // Only the national fields: a breakdown goes through fetchLocalAreaBreakdown.
   return fetchEconomyCalculation<SocietyWideReportOutput>(
     countryId,
     reformPolicyId,
     baselinePolicyId,
-    params
+    { region: params.region, time_period: params.time_period }
   );
 }
 
@@ -107,7 +115,7 @@ export async function fetchLocalAreaBreakdown(
   countryId: string,
   reformPolicyId: string,
   baselinePolicyId: string,
-  params: Pick<SocietyWideCalculationParams, 'region' | 'time_period'>
+  params: SocietyWideCalculationParams
 ): Promise<LocalAreaBreakdownResponse> {
   return fetchEconomyCalculation<LocalAreaBreakdown>(countryId, reformPolicyId, baselinePolicyId, {
     region: params.region,
@@ -120,7 +128,7 @@ async function fetchEconomyCalculation<Result extends ResultProvenance>(
   countryId: string,
   reformPolicyId: string,
   baselinePolicyId: string,
-  params: SocietyWideCalculationParams
+  params: EconomyCalculationParams
 ): Promise<EconomyCalculationResponse<Result>> {
   const queryParams = new URLSearchParams();
 

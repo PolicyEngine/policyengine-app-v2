@@ -393,13 +393,13 @@ describe('societyWide API', () => {
       });
     });
 
-    test('given a breakdown requested then sends breakdown=local_areas after the region and year', async () => {
+    test('given a breakdown passed to the national request anyway then it is not sent', async () => {
       // Given
       const params = {
         region: BREAKDOWN_REGION_UK,
         time_period: BREAKDOWN_YEAR,
-        breakdown: 'local_areas' as const,
-      };
+        breakdown: 'local_areas',
+      } as any;
       (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
 
       // When
@@ -412,7 +412,7 @@ describe('societyWide API', () => {
 
       // Then
       expect((global.fetch as any).mock.calls[0][0]).toBe(
-        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=uk&time_period=${BREAKDOWN_YEAR}&breakdown=local_areas`
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=uk&time_period=${BREAKDOWN_YEAR}`
       );
     });
 
@@ -479,6 +479,24 @@ describe('societyWide API', () => {
   });
 
   describe('fetchLocalAreaBreakdown', () => {
+    test('given a UK-wide report then sends breakdown=local_areas after the region and year', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect((global.fetch as any).mock.calls[0][0]).toBe(
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=uk&time_period=${BREAKDOWN_YEAR}&breakdown=local_areas`
+      );
+    });
+
     test('given a nation report then asks the economy endpoint for its local-area breakdown', async () => {
       // Given
       (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));

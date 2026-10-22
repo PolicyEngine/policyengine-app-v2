@@ -1,4 +1,5 @@
 import type { LocalAreaBreakdownResponse } from '@/api/societyWideCalculation';
+import { EXPECTED_BY_CONSTITUENCY } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
 import {
   BREAKDOWN_ERROR_RESPONSE,
   BREAKDOWN_REGION_SCOTLAND,
@@ -60,3 +61,19 @@ export const FAILED_RESPONSE: LocalAreaBreakdownResponse = {
 
 /** How often the hook polls a run that is still computing. */
 export const BREAKDOWN_POLL_INTERVAL_MS = 2000;
+
+/**
+ * An ok response whose result is a national result, not a breakdown: what
+ * a Public API deployment that ignores breakdown=local_areas returns.
+ */
+export const NATIONAL_RESULT_FOR_BREAKDOWN_RESPONSE = {
+  status: 'ok',
+  result: {
+    budget: { budgetary_impact: -1e9 },
+    constituency_impact: { by_constituency: EXPECTED_BY_CONSTITUENCY },
+  },
+} as unknown as LocalAreaBreakdownResponse;
+
+/** The message the hook gives for such a response. */
+export const NOT_A_BREAKDOWN_MESSAGE =
+  'The API returned national results instead of a local-area breakdown. Its deployment may not support breakdown=local_areas yet.';
