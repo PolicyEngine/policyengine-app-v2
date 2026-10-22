@@ -36,7 +36,10 @@ export default function SaveHouseholdForm({
   const saveHousehold = useSaveHousehold();
   const saveChanges = useSaveHouseholdChanges();
   const [label, setLabel] = useState(saved?.label ?? '');
-  const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saving, setSaving] = useState(false);
+  // What the last save stored: "Saved" shows only while the household and
+  // label on screen are still what it stored.
+  const [lastSaved, setLastSaved] = useState<{ household: Household; label: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!store) {
@@ -50,9 +53,13 @@ export default function SaveHouseholdForm({
   const contentChanged = !saved || !haveSameStoredContent(household, saved.household);
   const labelChanged = !saved || label.trim() !== (saved.label ?? '');
   const nothingToSave = !!saved && !contentChanged && !labelChanged;
+  const showsSaved =
+    !!lastSaved &&
+    lastSaved.label === label.trim() &&
+    haveSameStoredContent(household, lastSaved.household);
 
   const save = async () => {
-    setStatus('saving');
+    setSaving(true);
     setErrorMessage(null);
     try {
       const result = saved
@@ -64,11 +71,13 @@ export default function SaveHouseholdForm({
             },
           })
         : await saveHousehold.mutateAsync({ household, label });
-      setStatus('saved');
+      setLastSaved({ household, label: label.trim() });
       onSaved?.(result);
     } catch (error) {
-      setStatus('idle');
+      setLastSaved(null);
       setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -81,17 +90,14 @@ export default function SaveHouseholdForm({
           value={label}
           placeholder="For example, our family"
           maxLength={255}
-          onChange={(event) => {
-            setLabel(event.target.value);
-            setStatus('idle');
-          }}
+          onChange={(event) => setLabel(event.target.value)}
           style={{ maxWidth: 320 }}
         />
-        <Button size="sm" onClick={save} disabled={status === 'saving' || nothingToSave}>
+        <Button size="sm" onClick={save} disabled={saving || nothingToSave}>
           <IconDeviceFloppy size={16} aria-hidden />
           {saved ? 'Save changes' : 'Save household'}
         </Button>
-        {status === 'saved' && (
+        {showsSaved && (
           <span
             role="status"
             style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
