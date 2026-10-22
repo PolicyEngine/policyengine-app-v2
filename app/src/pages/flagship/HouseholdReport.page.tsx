@@ -13,15 +13,14 @@ import { Button, Label, Spinner, Stack, Text, Title } from '@/components/ui';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing, typography } from '@/designTokens';
 import {
-  useFlagshipHouseholdPayload,
   useFlagshipHouseholdPolicies,
+  useRequestedHouseholdRun,
 } from '@/hooks/useFlagshipHousehold';
 import { describeHousehold } from '@/libs/flagship/householdDescription';
 import { householdAmountInputs, newV3Household } from '@/libs/flagship/householdReport';
 import type { HouseholdCalculationProvenance } from '@/libs/flagship/householdRun';
 import { getTaxYears } from '@/libs/metadataUtils';
 import type { Household } from '@/models/Household';
-import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 import HouseholdSubPage from '@/pages/report-output/HouseholdSubPage';
 import PolicySubPage from '@/pages/report-output/PolicySubPage';
 import HouseholdReproducibility from '@/pages/report-output/reproduce-in-python/HouseholdReproducibility';
@@ -54,12 +53,6 @@ export interface HouseholdReportPageProps {
   /** What the reform is called, for the heading. */
   reformLabel?: string;
   title?: string;
-}
-
-/** The household and the payload sent for it, fixed when Calculate is pressed. */
-interface HouseholdRequest {
-  household: Household;
-  payload: V1HouseholdCreateEnvelope;
 }
 
 /** A calculation's model versions, from its .py bundle, else its SPM receipt. */
@@ -171,17 +164,12 @@ export default function HouseholdReportPage({
   // The form starts again, with the opened household's label, only then; a
   // save keeps it, so its confirmation or its error stays on screen.
   const [savedHouseholdOpenings, setSavedHouseholdOpenings] = useState(0);
-  const [requested, setRequested] = useState<HouseholdRequest | null>(null);
-
-  const run = useFlagshipHouseholdPayload({
-    year,
-    baselinePolicyId,
-    reformPolicyId: runsReform ? reformPolicyId : baselinePolicyId,
-    payload: requested?.payload ?? null,
-  });
-  const running = !!requested && run.isFetching;
-  const failed = !!requested && !running && run.isError;
-  const result = requested && !running ? run.data : undefined;
+  const { requested, run, running, failed, result, request, retry, clear, shows } =
+    useRequestedHouseholdRun({
+      year,
+      baselinePolicyId,
+      reformPolicyId: runsReform ? reformPolicyId : baselinePolicyId,
+    });
 
   const policyIds = useMemo(
     () => (runsReform ? [baselinePolicyId, reformPolicyId] : [baselinePolicyId]),
@@ -204,10 +192,6 @@ export default function HouseholdReportPage({
     () => HouseholdValidation.isReadyForSimulation(household, countryId, year, metadata),
     [household, countryId, year, metadata]
   );
-  const payload = useMemo(() => household.toV1CreationPayload(), [household]);
-  // The household on screen, or on its way, is the one in the builder.
-  const sameAsRequested =
-    !!requested && JSON.stringify(requested.payload) === JSON.stringify(payload);
 
   /** A household moved into the report's year; null, with the reason shown, when it cannot be. */
   const inReportYear = (next: Household, nextYear: string): Household | null => {
@@ -222,7 +206,7 @@ export default function HouseholdReportPage({
       setYear(nextYear);
       setHousehold(moved);
       // A result belongs to its year: the next one waits for Calculate.
-      setRequested(null);
+      clear();
     }
   };
 
@@ -232,18 +216,8 @@ export default function HouseholdReportPage({
       setSaved(next);
       setSavedHouseholdOpenings((openings) => openings + 1);
       setHousehold(moved);
-      setRequested(null);
+      clear();
     }
-  };
-
-  const calculate = () => {
-    // The same household again after a failure is the same query, which
-    // keeps its error until it is asked again, as the report section does.
-    if (sameAsRequested) {
-      void run.refetch();
-      return;
-    }
-    setRequested({ household, payload });
   };
 
   // Who the result is for: the household calculated, not the builder's
@@ -349,8 +323,8 @@ export default function HouseholdReportPage({
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
             <Button
               size="sm"
-              onClick={calculate}
-              disabled={running || !validation.isValid || (sameAsRequested && !failed)}
+              onClick={() => request(household)}
+              disabled={running || !validation.isValid || shows(household)}
             >
               Calculate
             </Button>
@@ -382,7 +356,7 @@ export default function HouseholdReportPage({
               <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
             )
           }
-          onRetry={calculate}
+          onRetry={() => retry(household, validation.isValid)}
         />
       )}
 

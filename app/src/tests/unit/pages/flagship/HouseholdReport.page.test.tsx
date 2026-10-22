@@ -139,9 +139,12 @@ vi.mock('@/components/flagship/report/household/HouseholdBreakdowns', async (imp
     </div>
   ),
 }));
+const mockHouseholdValidation = vi.fn();
 vi.mock('@/utils/HouseholdValidation', () => ({
-  HouseholdValidation: { isReadyForSimulation: () => ({ isValid: true, errors: [] }) },
+  HouseholdValidation: { isReadyForSimulation: () => mockHouseholdValidation() },
 }));
+const READY_TO_RUN = { isValid: true, errors: [] };
+const NOT_READY_TO_RUN = { isValid: false, errors: [{ message: 'Choose a county' }] };
 
 /** The years the model's metadata lists for the report. */
 const MODEL_YEARS = [2026, 2027];
@@ -190,6 +193,7 @@ const createdPayload = (callIndex = 0) => mockCreateHousehold.mock.calls[callInd
 describe('HouseholdReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHouseholdValidation.mockReturnValue(READY_TO_RUN);
     mockSavedWork.mockReturnValue({ account: null, scope: 'browser' });
     mockFetchPolicyById.mockImplementation(async (countryId: string, policyId: string) =>
       policyMetadata(countryId, policyId)
@@ -324,6 +328,23 @@ describe('HouseholdReportPage', () => {
       '$72,000'
     );
     expect(mockFetchHouseholdCalculation).toHaveBeenCalledTimes(2);
+  });
+
+  test('given a failed calculation and the household then edited so it cannot run, trying again asks for the household that failed', async () => {
+    mockFetchHouseholdCalculation.mockRejectedValueOnce(new Error('Household calculation failed'));
+    renderReport({ household: FAMILY_HOUSEHOLD });
+    const user = await calculate();
+    await screen.findByRole('button', { name: 'Try again' });
+
+    mockHouseholdValidation.mockReturnValue(NOT_READY_TO_RUN);
+    await user.click(screen.getByRole('button', { name: 'Add tip income' }));
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    await screen.findByRole('region', { name: 'Household net income' });
+    expect(mockCreateHousehold).toHaveBeenCalledTimes(2);
+    expect(
+      mockCreateHousehold.mock.calls.map((call) => call[0].data.people.you.tip_income)
+    ).toEqual([undefined, undefined]);
   });
 
   test('given the household calculated and unchanged then there is nothing new to calculate', async () => {
