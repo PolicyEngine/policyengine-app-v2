@@ -1,0 +1,19 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, test } from "vitest";
+
+import HeroCTA from "@/components/home/HeroCTA";
+
+describe("HeroCTA", () => {
+  // The calculator's country root sends each country to its current
+  // entry page (app v3's Build for the US, the reports list for the UK).
+  test.each(["us", "uk"])(
+    "links %s to the calculator's country root",
+    (countryId) => {
+      render(<HeroCTA countryId={countryId} />);
+
+      expect(
+        screen.getByRole("link", { name: "Enter PolicyEngine" }),
+      ).toHaveAttribute("href", `https://app.policyengine.org/${countryId}`);
+    },
+  );
+});

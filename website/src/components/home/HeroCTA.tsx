@@ -30,7 +30,7 @@ export default function HeroCTA({ countryId }: { countryId: string }) {
       }}
     >
       <motion.a
-        href={`${CALCULATOR_URL}/${countryId}/reports`}
+        href={`${CALCULATOR_URL}/${countryId}`}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
         style={{
