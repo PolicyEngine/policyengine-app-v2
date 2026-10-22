@@ -85,6 +85,43 @@ export interface SavedHouseholdStore {
   saveChanges: (saved: SavedHousehold, changes: SavedHouseholdChanges) => Promise<SavedHousehold>;
 }
 
+/**
+ * Where a store keeps stored households. A stored household never
+ * changes, so each is fetched once, not on every read of the list.
+ */
+export interface StoredHouseholdCache {
+  /** The stored household; `fetchHousehold` runs only when it is not kept, and a failed fetch is not kept. */
+  get: (
+    countryId: string,
+    householdId: string,
+    fetchHousehold: () => Promise<Household>
+  ) => Promise<Household>;
+  /** Keeps a stored household the store already has, such as one it has just saved. */
+  set: (countryId: string, householdId: string, household: Household) => void;
+}
+
+/** Stored households kept for one store's life: for a store used on its own. */
+export function storeLifetimeHouseholdCache(): StoredHouseholdCache {
+  const kept = new Map<string, Promise<Household>>();
+  const keyOf = (countryId: string, householdId: string) => `${countryId}/${householdId}`;
+  return {
+    get: (countryId, householdId, fetchHousehold) => {
+      const key = keyOf(countryId, householdId);
+      const existing = kept.get(key);
+      if (existing) {
+        return existing;
+      }
+      const fetched = fetchHousehold();
+      kept.set(key, fetched);
+      fetched.catch(() => kept.delete(key));
+      return fetched;
+    },
+    set: (countryId, householdId, household) => {
+      kept.set(keyOf(countryId, householdId), Promise.resolve(household));
+    },
+  };
+}
+
 /** A saved row that names no v2 household cannot be opened in v3. */
 export class SavedHouseholdUnavailableError extends Error {
   constructor() {
@@ -141,14 +178,12 @@ function nameFor(label: string): string | null {
 
 export class ApiSavedHouseholdStore implements SavedHouseholdStore {
   private readonly routes: AccountAssociationRoutes<UserHouseholdItem>;
-  /**
-   * Stored households by v2 id. A stored household never changes, so each
-   * is fetched once for the store's life, not on every read of the list; a
-   * failed fetch is not kept, so the next read asks again.
-   */
-  private readonly storedHouseholds = new Map<string, Promise<Household>>();
 
-  constructor(private readonly context: ApiStoreContext) {
+  constructor(
+    private readonly context: ApiStoreContext,
+    /** Where stored households are kept; the session's, from the hooks. */
+    private readonly storedHouseholds: StoredHouseholdCache = storeLifetimeHouseholdCache()
+  ) {
     this.routes = new AccountAssociationRoutes(context, 'user-households', 'Saved household');
   }
 
@@ -251,29 +286,26 @@ export class ApiSavedHouseholdStore implements SavedHouseholdStore {
   /** A stored household as the app's model, kept for later reads. */
   private remember(item: V2HouseholdItem): Household {
     const household = householdFromV2Item(item);
-    this.storedHouseholds.set(item.id, Promise.resolve(household));
+    this.storedHouseholds.set(item.country_id, item.id, household);
     return household;
   }
 
   private fetchHousehold(countryId: string, householdId: string): Promise<Household> {
-    const kept = this.storedHouseholds.get(householdId);
-    if (kept) {
-      return kept;
-    }
-    const fetched = this.context.client
-      .request<
-        V2ItemResult<V2HouseholdItem>
-      >('GET', `households/${encodeURIComponent(householdId)}`, { query: { country_id: countryId } })
-      .then((result) => householdFromV2Item(result.item));
-    this.storedHouseholds.set(householdId, fetched);
-    fetched.catch(() => this.storedHouseholds.delete(householdId));
-    return fetched;
+    return this.storedHouseholds.get(countryId, householdId, async () => {
+      const result = await this.context.client.request<V2ItemResult<V2HouseholdItem>>(
+        'GET',
+        `households/${encodeURIComponent(householdId)}`,
+        { query: { country_id: countryId } }
+      );
+      return householdFromV2Item(result.item);
+    });
   }
 }
 
 /** The saved-household store for a session: the account's; none without accounts. */
 export function getSavedHouseholdStore(
-  account: ApiStoreContext | null | undefined
+  account: ApiStoreContext | null | undefined,
+  storedHouseholds?: StoredHouseholdCache
 ): SavedHouseholdStore | null {
-  return account ? new ApiSavedHouseholdStore(account) : null;
+  return account ? new ApiSavedHouseholdStore(account, storedHouseholds) : null;
 }
