@@ -1,11 +1,23 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
+import { fetchLocalAreaBreakdown, fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   EXPECTED_BY_CONSTITUENCY,
   EXPECTED_BY_LOCAL_AUTHORITY,
   LIST_SHAPE_UK_RESULT,
 } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
+import {
+  BREAKDOWN_ERROR_RESPONSE,
+  BREAKDOWN_OK_RESPONSE,
+  BREAKDOWN_REGION_SCOTLAND,
+  BREAKDOWN_REGION_UK,
+  BREAKDOWN_YEAR,
+  EMPTY_BREAKDOWN_RESULT,
+  EXPECTED_BREAKDOWN,
+  NATIONAL_UK_RESULT_WITH_NULL_AREAS,
+  NATIONAL_UK_RESULT_WITHOUT_AREA_KEYS,
+} from '@/tests/fixtures/api/localAreaBreakdownMocks';
 import {
   ERROR_MESSAGES,
   HTTP_STATUS,
@@ -379,6 +391,188 @@ describe('societyWide API', () => {
       expect(result.local_authority_impact).toEqual({
         by_local_authority: EXPECTED_BY_LOCAL_AUTHORITY,
       });
+    });
+
+    test('given a breakdown requested then sends breakdown=local_areas after the region and year', async () => {
+      // Given
+      const params = {
+        region: BREAKDOWN_REGION_UK,
+        time_period: BREAKDOWN_YEAR,
+        breakdown: 'local_areas' as const,
+      };
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        params
+      );
+
+      // Then
+      expect((global.fetch as any).mock.calls[0][0]).toBe(
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=uk&time_period=${BREAKDOWN_YEAR}&breakdown=local_areas`
+      );
+    });
+
+    test('given no breakdown requested then the URL has no breakdown parameter', async () => {
+      // Given
+      const params = { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR };
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        params
+      );
+
+      // Then
+      expect((global.fetch as any).mock.calls[0][0]).not.toContain('breakdown');
+    });
+
+    test.each([
+      ['absent', NATIONAL_UK_RESULT_WITHOUT_AREA_KEYS],
+      ['null', NATIONAL_UK_RESULT_WITH_NULL_AREAS],
+    ])(
+      'given a national UK result whose area impacts are %s then it has no area data',
+      async (_label, nationalResult) => {
+        // Given
+        (global.fetch as any).mockResolvedValue(
+          mockSuccessResponse({ status: 'ok', result: nationalResult })
+        );
+
+        // When
+        const response = await fetchSocietyWideCalculation(
+          TEST_COUNTRIES.UK,
+          TEST_POLICY_IDS.REFORM,
+          TEST_POLICY_IDS.BASELINE,
+          { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+        );
+
+        // Then
+        expect(response.status).toBe('ok');
+        expect(response.result?.budget).toEqual(nationalResult.budget);
+        expect(hasUKLocalAreaImpacts(response.result)).toBe(false);
+      }
+    );
+
+    test('given a UK result with area impacts then it has area data', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({ status: 'ok', result: LIST_SHAPE_UK_RESULT })
+      );
+
+      // When
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(hasUKLocalAreaImpacts(response.result)).toBe(true);
+    });
+  });
+
+  describe('fetchLocalAreaBreakdown', () => {
+    test('given a nation report then asks the economy endpoint for its local-area breakdown', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_SCOTLAND, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${TEST_POLICY_IDS.REFORM}/over/${TEST_POLICY_IDS.BASELINE}?region=country%2Fscotland&time_period=${BREAKDOWN_YEAR}&breakdown=local_areas`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+    });
+
+    test('given a breakdown request then never sends dataset or include_district_breakdowns', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(mockPendingResponse));
+
+      // When
+      await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        {
+          region: BREAKDOWN_REGION_UK,
+          time_period: BREAKDOWN_YEAR,
+          dataset: 'microcosm_uk_2024_25_dense',
+          include_district_breakdowns: true,
+        } as any
+      );
+
+      // Then
+      const url = (global.fetch as any).mock.calls[0][0] as string;
+      expect(url).not.toContain('dataset');
+      expect(url).not.toContain('include_district_breakdowns');
+    });
+
+    test('given a completed breakdown then returns its lists keyed by area name', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(BREAKDOWN_OK_RESPONSE));
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(response.status).toBe('ok');
+      expect(response.result).toEqual(EXPECTED_BREAKDOWN);
+    });
+
+    test('given every area withheld then returns empty maps for both levels', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse({ status: 'ok', result: EMPTY_BREAKDOWN_RESULT })
+      );
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(response.result?.constituency_impact).toEqual({ by_constituency: {} });
+      expect(response.result?.local_authority_impact).toEqual({ by_local_authority: {} });
+    });
+
+    test('given a failed breakdown then returns the error envelope', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(BREAKDOWN_ERROR_RESPONSE));
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(response.status).toBe('error');
+      expect(response.error).toBe(BREAKDOWN_ERROR_RESPONSE.error);
+      expect(response.result).toBeNull();
     });
   });
 });

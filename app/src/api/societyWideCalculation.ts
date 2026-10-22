@@ -1,5 +1,6 @@
 import { normalizeSocietyWideOutput } from '@/adapters/societyWideOutputNormalizer';
 import { BASE_URL } from '@/constants';
+import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
@@ -12,22 +13,32 @@ export interface PolicyEngineBundle {
   dataset?: string | null;
 }
 
+/**
+ * A separate run in place of the national results: `local_areas` asks for a
+ * UK report's constituency and local authority impacts alone.
+ */
+export type SocietyWideBreakdown = 'local_areas';
+
 // NOTE: Need to add other params at later point
 export interface SocietyWideCalculationParams {
   region: string; // "us" for US nationwide, "state/ca" for US states, or another API v1 region code
   time_period: string; // Four-digit year
+  /** Sent only when set; national requests carry no breakdown. */
+  breakdown?: SocietyWideBreakdown;
 }
 
 const SOCIETY_WIDE_QUERY_KEYS: ReadonlyArray<keyof SocietyWideCalculationParams> = [
   'region',
   'time_period',
+  'breakdown',
 ];
 
-export interface SocietyWideCalculationResponse {
+/** The economy endpoint's status envelope around a result. */
+export interface EconomyCalculationResponse<Result> {
   status: 'computing' | 'ok' | 'error';
   queue_position?: number;
   average_time?: number;
-  result: SocietyWideReportOutput | null;
+  result: Result | null;
   error?: string;
   policyengine_bundle?: PolicyEngineBundle | null;
   /** Optional stage fields while computing (policyengine-sim-api#781 via the API). */
@@ -38,9 +49,22 @@ export interface SocietyWideCalculationResponse {
   segments?: { completed: number; total: number };
 }
 
-function mergePolicyEngineBundle(
-  response: SocietyWideCalculationResponse
-): SocietyWideCalculationResponse {
+export type SocietyWideCalculationResponse = EconomyCalculationResponse<SocietyWideReportOutput>;
+
+/** A `breakdown=local_areas` run's envelope; its result is keyed by area name. */
+export type LocalAreaBreakdownResponse = EconomyCalculationResponse<LocalAreaBreakdown>;
+
+/** The version fields a result carries, which the bundle fills in. */
+interface ResultProvenance {
+  model_version?: string | null;
+  policyengine_version?: string | null;
+  data_version?: string | null;
+  dataset?: string | null;
+}
+
+function mergePolicyEngineBundle<Result extends ResultProvenance>(
+  response: EconomyCalculationResponse<Result>
+): EconomyCalculationResponse<Result> {
   if (!response.result || !response.policyengine_bundle) {
     return response;
   }
@@ -66,6 +90,38 @@ export async function fetchSocietyWideCalculation(
   baselinePolicyId: string,
   params: SocietyWideCalculationParams
 ): Promise<SocietyWideCalculationResponse> {
+  return fetchEconomyCalculation<SocietyWideReportOutput>(
+    countryId,
+    reformPolicyId,
+    baselinePolicyId,
+    params
+  );
+}
+
+/**
+ * A UK report's local-area breakdown: the same economy endpoint and
+ * policies, for the report's region (`uk` or `country/*`) and year, with
+ * `breakdown=local_areas`. Poll it as the national run is polled.
+ */
+export async function fetchLocalAreaBreakdown(
+  countryId: string,
+  reformPolicyId: string,
+  baselinePolicyId: string,
+  params: Pick<SocietyWideCalculationParams, 'region' | 'time_period'>
+): Promise<LocalAreaBreakdownResponse> {
+  return fetchEconomyCalculation<LocalAreaBreakdown>(countryId, reformPolicyId, baselinePolicyId, {
+    region: params.region,
+    time_period: params.time_period,
+    breakdown: 'local_areas',
+  });
+}
+
+async function fetchEconomyCalculation<Result extends ResultProvenance>(
+  countryId: string,
+  reformPolicyId: string,
+  baselinePolicyId: string,
+  params: SocietyWideCalculationParams
+): Promise<EconomyCalculationResponse<Result>> {
   const queryParams = new URLSearchParams();
 
   SOCIETY_WIDE_QUERY_KEYS.forEach((key) => {
@@ -101,7 +157,7 @@ export async function fetchSocietyWideCalculation(
     );
   }
 
-  const data: SocietyWideCalculationResponse = await response.json();
+  const data: EconomyCalculationResponse<Result> = await response.json();
   // UK geography impacts arrive as lists of areas; the app reads them keyed by name.
   return mergePolicyEngineBundle({ ...data, result: normalizeSocietyWideOutput(data.result) });
 }

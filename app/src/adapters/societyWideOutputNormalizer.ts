@@ -1,10 +1,13 @@
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
 import type { ReportOutputSocietyWideByLocalAuthority } from '@/types/metadata/ReportOutputSocietyWideByLocalAuthority';
+import type { UKAreaDisclosureTier, UKAreaImpact } from '@/types/metadata/UKAreaImpact';
 
 /**
  * One area's row in the society-wide API's list shape for UK geographies:
  * `constituency_impact` and `local_authority_impact` arrive as arrays of
  * these, one per area, rather than as `{ by_constituency: { name: {...} } }`.
+ * Rows from a local-area breakdown also carry disclosure control's tier and
+ * each change's 90% interval.
  */
 interface UKAreaImpactRow {
   constituency_code?: string;
@@ -16,7 +19,25 @@ interface UKAreaImpactRow {
   average_household_income_change: number;
   relative_household_income_change: number;
   population?: number;
+  disclosure_tier?: UKAreaDisclosureTier;
+  average_household_income_change_lower?: number;
+  average_household_income_change_upper?: number;
+  relative_household_income_change_lower?: number;
+  relative_household_income_change_upper?: number;
 }
+
+/** The interval fields a row may carry, copied when they are numbers. */
+const INTERVAL_FIELDS = [
+  'average_household_income_change_lower',
+  'average_household_income_change_upper',
+  'relative_household_income_change_lower',
+  'relative_household_income_change_upper',
+] as const;
+
+const DISCLOSURE_TIERS: ReadonlySet<string> = new Set<UKAreaDisclosureTier>([
+  'reported',
+  'approximate',
+]);
 
 type AreaImpactsByName =
   | ReportOutputSocietyWideByConstituency
@@ -35,15 +56,46 @@ function keyAreaRowsByName(
       continue;
     }
     const code = row?.[codeField];
-    byName[name] = {
+    const area: UKAreaImpact = {
       x: row.x,
       y: row.y,
       average_household_income_change: row.average_household_income_change,
       relative_household_income_change: row.relative_household_income_change,
       ...(code && { code }),
     };
+    if (row.disclosure_tier && DISCLOSURE_TIERS.has(row.disclosure_tier)) {
+      area.disclosure_tier = row.disclosure_tier;
+    }
+    for (const field of INTERVAL_FIELDS) {
+      const bound = row[field];
+      if (typeof bound === 'number' && Number.isFinite(bound)) {
+        area[field] = bound;
+      }
+    }
+    byName[name] = area;
   }
   return byName;
+}
+
+/**
+ * Whether a result holds UK local-area impacts: a constituency or local
+ * authority map. National UK results from .py 6.10.0 on leave both out
+ * (absent or null), so their local areas come from a separate breakdown
+ * run. Older saved results hold them, and show them as they are.
+ */
+export function hasUKLocalAreaImpacts(output: unknown): boolean {
+  if (!output || typeof output !== 'object') {
+    return false;
+  }
+  const record = output as {
+    constituency_impact?: { by_constituency?: unknown } | null;
+    local_authority_impact?: { by_local_authority?: unknown } | null;
+  };
+  const isAreaMap = (areas: unknown) => !!areas && typeof areas === 'object';
+  return (
+    isAreaMap(record.constituency_impact?.by_constituency) ||
+    isAreaMap(record.local_authority_impact?.by_local_authority)
+  );
 }
 
 /**
