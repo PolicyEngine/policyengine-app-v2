@@ -1,13 +1,18 @@
+// @vitest-environment node
+import { readFileSync } from "node:fs";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import {
   ANALYSIS_TAGS,
+  bannerHrefs,
+  changedEntries,
   checkIndex,
   COMPARABLES_CUTOVER_DATE,
   COUNTRY_TAGS,
   type ComparablesIndex,
   DEFAULT_COUNTRY,
   entryKey,
+  freshness,
   type Grandfathered,
   grandfatherAdditions,
   INDEX_SCHEMA,
@@ -15,6 +20,8 @@ import {
   mayDeclareNoEstimate,
   NO_ESTIMATE_TAGS,
   postSlug,
+  promotionProblems,
+  publicationProblems,
   requiresComparables,
   type ResearchEntry,
   resolveComparables,
@@ -585,5 +592,157 @@ describe("the grandfather list", () => {
 
   test("a branch with no list yet starts one", () => {
     expect(grandfatherAdditions(null, base, "2027-01-01")).toEqual([]);
+  });
+});
+
+describe("listing and promotion on the day a change is checked", () => {
+  const PIN = "PolicyEngine/x@" + "b".repeat(40) + ":" + "a".repeat(64);
+  const TODAY = "2026-11-10";
+  const source = "analysis-uk-x";
+  const block: ReviewedComparables = {
+    status: "reviewed",
+    scorecardSource: source,
+    searchDate: "2026-11-02",
+    searchKind: "reharvest",
+    producersSearched: ["obr"],
+    found: 0,
+    searchLog: searchLogUrl(source),
+  };
+  const entry: ResearchEntry = {
+    kind: "app",
+    slug: "x",
+    countryIds: ["uk"],
+    date: "2026-11-10",
+    tags: ["uk", "policy"],
+    comparables: block,
+  };
+  const record = (
+    over: Partial<ComparablesIndex["analyses"][string]> = {},
+  ) => ({
+    kind: "app",
+    country_id: "uk",
+    slug: "x",
+    search_log: searchLogUrl(source),
+    current_pins: [PIN],
+    searches: [
+      {
+        date: "2026-11-02",
+        kind: "reharvest",
+        producers_searched: ["obr"],
+        found: 0,
+        results_pins: [PIN],
+      },
+    ],
+    comparisons: [] as Array<{
+      claim: string;
+      status: string;
+      found_on?: string;
+    }>,
+    ...over,
+  });
+  const index = (over = {}): ComparablesIndex => ({
+    schema: INDEX_SCHEMA,
+    gap_threshold: 0.25,
+    promotion_window_days: 7,
+    entry_rules: entryRules(),
+    analyses: { [source]: record(over) },
+  });
+
+  test("a re-listing with a gap still pending is refused", () => {
+    expect(publicationProblems(entry, index(), TODAY)).toEqual([]);
+    const pending = index({
+      comparisons: [
+        { claim: "centax_static", status: "pending", found_on: "2026-11-02" },
+      ],
+    });
+    expect(resolveComparables(entry, pending)).toEqual([]);
+    expect(publicationProblems(entry, pending, TODAY).join()).toMatch(
+      /gaps still pending/,
+    );
+    // a pending gap with no date counts as found
+    const undated = index({ comparisons: [{ claim: "c", status: "pending" }] });
+    expect(publicationProblems(entry, undated, TODAY)).not.toEqual([]);
+  });
+
+  test("the search's age is judged on the day the change lists the entry, not the date it carries", () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 400 }), (lag) => {
+        const today = addDays("2026-11-02", lag);
+        const problems = publicationProblems(entry, index(), today);
+        expect(problems.some((p) => /more than 30 days/.test(p))).toBe(
+          lag > MAX_SEARCH_AGE_DAYS,
+        );
+      }),
+    );
+  });
+
+  test("a search against old results does not list the entry", () => {
+    const moved = index({ current_pins: [PIN.replace("b", "c")] });
+    expect(publicationProblems(entry, moved, TODAY).join()).toMatch(
+      /did not compare the results/,
+    );
+  });
+
+  test("only new, re-dated or re-blocked entries are judged as listed by the change", () => {
+    const base = [entry, { ...entry, slug: "y", comparables: undefined }];
+    const head = [
+      entry,
+      { ...entry, slug: "y", comparables: undefined },
+      { ...entry, slug: "z" },
+    ];
+    expect(changedEntries(base, head).map((e) => e.slug)).toEqual(["z"]);
+    expect(
+      changedEntries(base, [{ ...entry, date: "2026-11-11" }]).map(
+        (e) => e.slug,
+      ),
+    ).toEqual(["x"]);
+    expect(
+      changedEntries(base, [{ ...entry, comparables: { ...block, found: 1 } }]),
+    ).toHaveLength(1);
+  });
+
+  test("a newly featured card needs a fresh search, grandfathered entries included", () => {
+    const grandfathered: ResearchEntry = {
+      ...entry,
+      slug: "free-childcare-reform",
+      comparables: undefined,
+    };
+    expect(
+      promotionProblems(
+        ["/uk/free-childcare-reform"],
+        [grandfathered],
+        index(),
+        TODAY,
+      ).join(),
+    ).toMatch(/has no comparables record/);
+    // the window counts back seven days from the push, both ends included
+    expect(
+      promotionProblems(["/uk/x"], [entry], index(), "2026-11-09"),
+    ).toEqual([]);
+    expect(
+      promotionProblems(["/uk/x"], [entry], index(), "2026-12-01").join(),
+    ).toMatch(/no comparables search between/);
+    expect(
+      promotionProblems(["/uk/nowhere"], [entry], index(), TODAY).join(),
+    ).toMatch(/links no research entry/);
+  });
+
+  test("banner hrefs are read in any quote style", () => {
+    expect(
+      bannerHrefs(`{ href: "/uk/a" }, { href: '/uk/b' }, { href: \`/uk/c\` }`),
+    ).toEqual(["/uk/a", "/uk/b", "/uk/c"]);
+  });
+
+  test("freshness agrees with the scorecard's on its shared cases", () => {
+    const cases = JSON.parse(
+      readFileSync(
+        new URL("./fixtures/comparables_fresh_cases.json", import.meta.url),
+        "utf8",
+      ),
+    ) as Array<{ entry: never; on: string; window: number; fresh: boolean }>;
+    expect(cases.length).toBeGreaterThan(50);
+    for (const c of cases) {
+      expect(freshness(c.entry, c.on, c.window).length === 0).toBe(c.fresh);
+    }
   });
 });

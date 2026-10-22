@@ -63,19 +63,34 @@ jobs:
           node -e "const i=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));console.log(Object.keys(i.analyses).length+' records in the scorecard index ('+i.schema+')')" "$RUNNER_TEMP/comparables-index.json"
           echo "COMPARABLES_INDEX_PATH=$RUNNER_TEMP/comparables-index.json" >> "$GITHUB_ENV"
 
-      # The grandfather list on the branch this change merges into: the base
-      # of a pull request, or main before a push. Empty when there is no base
-      # (a scheduled run) or the base has no list yet.
-      - name: The grandfather list before this change
+      # The registries, grandfather list and featured banner on the branch this
+      # change merges into: the base of a pull request, or main before a push.
+      # None on a scheduled or manual run. A base the checkout cannot read
+      # fails the job, rather than passing as if there were none.
+      - name: The registries before this change
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          out="$RUNNER_TEMP/grandfathered-base.json"
-          : > "$out"
+          dir="$RUNNER_TEMP/comparables-base"
+          mkdir -p "$dir"
           if [ -n "$BASE_SHA" ] && [ "$BASE_SHA" != "0000000000000000000000000000000000000000" ]; then
-            git show "$BASE_SHA:website/src/data/comparablesGrandfathered.json" > "$out" 2>/dev/null || : > "$out"
+            if ! git cat-file -e "$BASE_SHA^{commit}"; then
+              echo "::error::cannot read the base commit $BASE_SHA"
+              exit 1
+            fi
+            for path in \
+              app/src/data/apps/apps.json \
+              app/src/data/posts/posts.json \
+              website/src/data/comparablesGrandfathered.json \
+              website/src/components/home/FeaturedResearchBanner.tsx; do
+              # a file the base does not have yet is absent, not an error
+              if git cat-file -e "$BASE_SHA:$path" 2>/dev/null; then
+                git show "$BASE_SHA:$path" > "$dir/$(basename "$path")"
+              fi
+            done
           fi
-          echo "COMPARABLES_BASE_GRANDFATHERED=$out" >> "$GITHUB_ENV"
+          ls -la "$dir"
+          echo "COMPARABLES_BASE_DIR=$dir" >> "$GITHUB_ENV"
 
       - name: Every research entry passes the gate
         working-directory: ./website

@@ -1,5 +1,5 @@
 {
-  "_what": "policyengine.org research entries and app routes that were live before the comparables gate (website/src/data/comparables.ts). An entry listed here needs no comparables block; any other needs one that names a complete record in PolicyEngine/policyengine-scorecard, whatever date it carries. An entry or route taken off the site leaves this list, so it comes back only with a record. Entries may be added only before the cutover; after it the list only shrinks (the Comparables gate workflow checks both).",
+  "_what": "policyengine.org research entries and proxied pages that were live before the comparables gate (website/src/data/comparables.ts). An entry listed here needs no comparables block; any other needs one that names a complete record in PolicyEngine/policyengine-scorecard, whatever date it carries. An entry or route taken off the site leaves this list, so it comes back only with a record. Entries may be added only before the cutover; after it the list only shrinks (the Comparables gate workflow checks both).",
   "snapshotDate": "2026-10-22",
   "entries": [
     "app uk/2024-manifestos",
@@ -260,22 +260,32 @@
     "post young-child-exemption-two-child-limit"
   ],
   "routes": [
-    "/2025-year-in-review/:path*",
-    "/:countryId/bill-tracker",
+    "/2025-year-in-review",
     "/ai-beliefs",
     "/uk/2025-year-in-review",
     "/uk/ai-inequality",
-    "/uk/api",
-    "/uk/cliffwatch",
-    "/uk/python",
     "/us/2025-year-in-review",
     "/us/ads-dashboard",
     "/us/ai-inequality",
-    "/us/api",
-    "/us/python",
     "/us/qbi-calculator",
     "/us/refundable-credit-conversion",
     "/us/spm-calculator",
     "/us/taxsim"
+  ],
+  "_infrastructure": "Proxied pages that publish no analysis (API and model documentation, slides, the Belgium model demo, asset paths). They need no comparables record; a new one is added here with the reviewer's agreement that it publishes no estimate.",
+  "infrastructure": [
+    "/_tracker",
+    "/be",
+    "/ca/model",
+    "/il/model",
+    "/ng/model",
+    "/plugin-blog",
+    "/slides",
+    "/uk/api",
+    "/uk/model",
+    "/uk/python",
+    "/us/api",
+    "/us/model",
+    "/us/python"
   ]
 }

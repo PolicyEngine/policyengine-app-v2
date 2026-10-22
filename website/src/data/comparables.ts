@@ -32,9 +32,11 @@
  * list only shrinks.
  *
  * `validateComparables` checks the block on its own (the Tests job).
- * `resolveComparables` checks it against the scorecard's published index
- * (the Comparables gate workflow, which downloads the index from the
- * scorecard's main branch), so the scorecard record merges first.
+ * `resolveComparables` checks it against the scorecard's published index,
+ * and `publicationProblems` and `promotionProblems` check what a change
+ * lists or features against it on the day (the Comparables gate workflow,
+ * which downloads the index from the scorecard's main branch), so the
+ * scorecard record merges first.
  */
 
 import grandfatheredData from "./comparablesGrandfathered.json";
@@ -150,8 +152,10 @@ export interface Grandfathered {
   snapshotDate: string;
   /** entryKey() of each research entry live before the gate. */
   entries: string[];
-  /** App routes live before the gate that are not a research entry's. */
+  /** Proxied pages live before the gate that are not a research entry's. */
   routes: string[];
+  /** Proxied pages that publish no analysis; may grow, with review. */
+  infrastructure?: string[];
 }
 
 export const GRANDFATHERED: Grandfathered = grandfatheredData;
@@ -161,6 +165,14 @@ export interface IndexSearch {
   kind: string;
   producers_searched: string[];
   found: number;
+  /** The results files the search compared (repo@commit:sha256). */
+  results_pins?: string[];
+}
+
+export interface IndexComparison {
+  claim: string;
+  status: string;
+  found_on?: string;
 }
 
 export interface IndexEntry {
@@ -169,6 +181,9 @@ export interface IndexEntry {
   slug: string;
   searches: IndexSearch[];
   search_log: string;
+  /** The results files the analysis's estimates are read from now. */
+  current_pins?: string[];
+  comparisons?: IndexComparison[];
 }
 
 export interface EntryRules {
@@ -182,6 +197,7 @@ export interface EntryRules {
 export interface ComparablesIndex {
   schema: string;
   gap_threshold: number;
+  promotion_window_days?: number;
   entry_rules?: EntryRules;
   analyses: Record<string, IndexEntry>;
 }
@@ -490,7 +506,10 @@ export function checkIndex(index: unknown): string[] {
 /**
  * Every reason a well-formed reviewed block does not resolve to a complete
  * record in the scorecard's published index. The index lists only records
- * that passed the scorecard's gate, so a match is the proof.
+ * that passed the scorecard's gate, so a match proves the record is
+ * complete; whether it is ready for the change that lists the entry (a
+ * search fresh that day, against the current results, with no gap pending)
+ * is publicationProblems's question.
  */
 export function resolveComparables(
   entry: ResearchEntry,
@@ -588,4 +607,198 @@ export function grandfatherAdditions(
 export function routeEntryKey(route: string): string | null {
   const match = route.match(/^\/(us|uk|ca|ng|il)\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
   return match ? `app ${match[1]}/${match[2]}` : null;
+}
+
+/**
+ * Why an analysis may not be published or promoted on ``on``: the
+ * scorecard's ``comparables.fresh``. It needs a search in the window up to
+ * and including ``on`` that compared the results files the analysis reads
+ * now, and no gap found by then still pending (a pending gap with no date
+ * counts as found). Tested against the scorecard's own cases.
+ */
+export function freshness(
+  entry: IndexEntry,
+  on: string,
+  windowDays: number,
+): string[] {
+  const start = addDaysTo(on, -windowDays);
+  const reasons: string[] = [];
+  const pins = [...(entry.current_pins ?? [])].sort();
+  const recent = entry.searches.filter((s) => start <= s.date && s.date <= on);
+  if (recent.length === 0) {
+    const earlier = entry.searches.map((s) => s.date).filter((d) => d <= on);
+    const last = earlier.length ? earlier.sort().at(-1) : "none";
+    reasons.push(
+      `no comparables search between ${start} and ${on} (last: ${last}); run a prepromotion search first`,
+    );
+  } else if (
+    !recent.some((s) => sameList([...(s.results_pins ?? [])].sort(), pins))
+  ) {
+    reasons.push(
+      `no search between ${start} and ${on} compared the results the page reads now; run a prepromotion search against them`,
+    );
+  }
+  const pending = (entry.comparisons ?? []).filter(
+    (c) => c.status === "pending" && (c.found_on ?? "") <= on,
+  );
+  if (pending.length) {
+    reasons.push(
+      `gaps still pending by ${on}: ${pending.map((c) => c.claim).join(", ")}; explain them first`,
+    );
+  }
+  return reasons;
+}
+
+function addDaysTo(date: string, days: number): string {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+}
+
+function sameList(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
+}
+
+/** The index record an entry's block names, or the one its name implies. */
+export function recordFor(
+  entry: ResearchEntry,
+  index: ComparablesIndex,
+): { source: string; record?: IndexEntry } {
+  const block = entry.comparables as Partial<ReviewedComparables> | undefined;
+  const candidates =
+    block?.status === "reviewed" && typeof block.scorecardSource === "string"
+      ? [block.scorecardSource]
+      : entry.countryIds.map((c) => `analysis-${c}-${entry.slug}`);
+  for (const source of candidates) {
+    const record = index.analyses[source];
+    if (record && record.kind === entry.kind && record.slug === entry.slug) {
+      return { source, record };
+    }
+  }
+  return { source: candidates[0] };
+}
+
+/**
+ * Entries a change lists or re-lists: new to the registry, or with a new
+ * date or comparables block. Unchanged entries are not re-judged, so the
+ * archive does not expire as time passes.
+ */
+export function changedEntries(
+  base: ResearchEntry[],
+  head: ResearchEntry[],
+): ResearchEntry[] {
+  const before = new Map(base.map((e) => [entryKey(e), e]));
+  return head.filter((entry) => {
+    const old = before.get(entryKey(entry));
+    return (
+      !old ||
+      old.date !== entry.date ||
+      JSON.stringify(old.comparables) !== JSON.stringify(entry.comparables)
+    );
+  });
+}
+
+/**
+ * Why a change may not list an entry today: the search its block cites must
+ * be no more than MAX_SEARCH_AGE_DAYS old on the day the change is checked
+ * (whatever date the entry carries), must have compared the results files
+ * the analysis reads now, and no gap found by today may still be pending.
+ */
+export function publicationProblems(
+  entry: ResearchEntry,
+  index: ComparablesIndex,
+  today: string,
+): string[] {
+  const label = entryLabel(entry);
+  const block = entry.comparables as ReviewedComparables | undefined;
+  if (!block || block.status !== "reviewed") return [];
+  const record = index.analyses[block.scorecardSource];
+  if (!record) return [];
+  const search = record.searches.find(
+    (s) =>
+      s.date === block.searchDate &&
+      s.kind === block.searchKind &&
+      sameSet(s.producers_searched, block.producersSearched) &&
+      s.found === block.found,
+  );
+  if (!search) return [];
+  const problems: string[] = [];
+  if (search.date > today) {
+    problems.push(
+      `${label}: its search is dated ${search.date}, after today (${today})`,
+    );
+  } else if (daysBetween(search.date, today) > MAX_SEARCH_AGE_DAYS) {
+    problems.push(
+      `${label}: its search (${search.date}) is more than ${MAX_SEARCH_AGE_DAYS} days before today (${today}), when this change lists it; search again`,
+    );
+  }
+  if (
+    !sameList(
+      [...(search.results_pins ?? [])].sort(),
+      [...(record.current_pins ?? [])].sort(),
+    )
+  ) {
+    problems.push(
+      `${label}: its search did not compare the results the analysis reads now; cite the search that did`,
+    );
+  }
+  const pending = (record.comparisons ?? []).filter(
+    (c) => c.status === "pending" && (c.found_on ?? "") <= today,
+  );
+  if (pending.length) {
+    problems.push(
+      `${label}: gaps still pending in ${block.scorecardSource}: ${pending.map((c) => c.claim).join(", ")}; explain them before listing it`,
+    );
+  }
+  return problems;
+}
+
+/** The hrefs a featured research banner links. */
+export function bannerHrefs(source: string): string[] {
+  return [...source.matchAll(/href:\s*["'`]([^"'`]+)["'`]/g)].map((m) => m[1]);
+}
+
+/** The research entry a featured card's href links, if any. */
+export function entryForHref(
+  href: string,
+  entries: ResearchEntry[],
+): ResearchEntry | undefined {
+  const app = routeEntryKey(href);
+  const post = href.match(/^\/[a-z]{2}\/research\/([a-z0-9-]+)$/);
+  return entries.find(
+    (e) =>
+      (app && entryKey(e) === app) ||
+      (post && e.kind === "post" && e.slug === post[1]),
+  );
+}
+
+/**
+ * Why a change may not feature these cards: each card it adds must link a
+ * research entry whose comparables search is fresh today, under the
+ * scorecard's promotion window, grandfathered entries included.
+ */
+export function promotionProblems(
+  added: string[],
+  entries: ResearchEntry[],
+  index: ComparablesIndex,
+  today: string,
+): string[] {
+  const window = index.promotion_window_days;
+  if (typeof window !== "number") {
+    return ["the scorecard index publishes no promotion_window_days"];
+  }
+  return added.flatMap((href) => {
+    const entry = entryForHref(href, entries);
+    if (!entry) return [`featured card ${href} links no research entry`];
+    if (mayDeclareNoEstimate(entry)) return [];
+    const { source, record } = recordFor(entry, index);
+    if (!record) {
+      return [
+        `featured card ${href}: ${source} has no comparables record; run the comparables review (prepromotion) before featuring it`,
+      ];
+    }
+    return freshness(record, today, window).map(
+      (reason) => `featured card ${href}: ${reason}`,
+    );
+  });
 }

@@ -4,8 +4,13 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import appsData from "@/data/apps.json";
 import postsData from "@/data/posts/posts.json";
-import { appZoneRewrites, appZoneRoutes } from "@/data/appZoneRoutes";
 import {
+  buildAnalysisRoutes,
+  pageRewriteProblems,
+  unlistedPagePaths,
+} from "@/data/analysisRoutes";
+import {
+  bannerHrefs,
   COMPARABLES_CUTOVER_DATE,
   entryKey,
   GRANDFATHERED,
@@ -24,6 +29,7 @@ import {
   postSlug,
   topicLabels,
 } from "@/data/posts/postTransformers";
+import { loadRouting } from "./routing";
 
 // posts.json and apps.json live in app/src/data and feed the research pages
 // and the sitemap. These checks came over from the Vite app's tests when its
@@ -154,27 +160,8 @@ describe("comparables", () => {
   );
   const keys = entries.map(entryKey);
   const repoRoot = fileURLToPath(new URL("../../../../", import.meta.url));
-  const deepRoutes = new Set(
-    appZoneRoutes.map((route) => `${route.source}/:path*`),
-  );
-  // every page proxied from another deployment: the zone routes, and any
-  // rewrite in next.config.ts to an external host shaped like an app's path
-  const config = readFileSync(`${repoRoot}website/next.config.ts`, "utf8");
-  const configRoutes = [
-    ...config.matchAll(
-      /source:\s*"([^"]+)",\s*destination:\s*"https:\/\/[^"]+"/g,
-    ),
-  ]
-    .map((m) => m[1])
-    .filter((source) => routeEntryKey(source) !== null);
-  const routes = [
-    ...new Set([
-      ...appZoneRewrites
-        .map((route) => route.source)
-        .filter((source) => !deepRoutes.has(source)),
-      ...configRoutes,
-    ]),
-  ];
+  const appKeys = new Set(keys.filter((key) => key.startsWith("app ")));
+  const infrastructure = GRANDFATHERED.infrastructure ?? [];
 
   test("every research entry passes the gate's own checks", () => {
     expect(entries.flatMap((entry) => validateComparables(entry))).toEqual([]);
@@ -229,23 +216,51 @@ describe("comparables", () => {
     expect(GRANDFATHERED.snapshotDate < COMPARABLES_CUTOVER_DATE).toBe(true);
   });
 
-  test("every app route is a research entry's, or was live before the gate", () => {
-    expect(configRoutes.length).toBeGreaterThan(0);
-    const entryKeys = new Set(keys);
-    const unlisted = routes.filter((route) => {
-      const key = routeEntryKey(route);
-      return !(key && entryKeys.has(key));
-    });
+  test("every proxied page is a research app's, was live before the gate, or publishes no analysis", async () => {
+    // the evaluated rewrites, so any syntax next.config.ts accepts is seen
+    const { rewrites } = await loadRouting();
+    expect(rewrites.length).toBeGreaterThan(50);
     expect(
-      unlisted.filter((route) => !GRANDFATHERED.routes.includes(route)),
+      pageRewriteProblems(
+        rewrites,
+        appKeys,
+        GRANDFATHERED.routes,
+        infrastructure,
+      ),
     ).toEqual([]);
-    // a route taken down, or given a research entry, leaves the list
+    const unlisted = unlistedPagePaths(rewrites, appKeys);
+    // a page taken down, or given a research entry, leaves the lists
     expect(
-      GRANDFATHERED.routes.filter((route) => !unlisted.includes(route)),
+      [...GRANDFATHERED.routes, ...infrastructure].filter(
+        (path) => !unlisted.includes(path),
+      ),
     ).toEqual([]);
-    expect(GRANDFATHERED.routes).toEqual(
-      [...new Set(GRANDFATHERED.routes)].sort(),
+    expect(
+      GRANDFATHERED.routes.filter((p) => infrastructure.includes(p)),
+    ).toEqual([]);
+    for (const list of [GRANDFATHERED.routes, infrastructure]) {
+      expect(list).toEqual([...new Set(list)].sort());
+    }
+  });
+
+  test("the committed analysis route map is the one the site's routing builds", async () => {
+    const { rewrites, redirects } = await loadRouting();
+    const built = buildAnalysisRoutes(rewrites, redirects, apps, appKeys);
+    const committed = JSON.parse(
+      readFileSync(`${repoRoot}website/src/data/analysisRoutes.json`, "utf8"),
     );
+    // run `bun run scripts/build-analysis-routes.ts` in website/ to refresh it
+    expect(committed).toEqual(built);
+    // every research app's own path leads to it, unless a redirect sends
+    // the path to another app
+    const redirected = new Set(
+      redirects.flatMap((r) => (r.source.includes(":") ? [] : [r.source])),
+    );
+    for (const key of appKeys) {
+      const path = `/${key.slice(4)}`;
+      const route = built.paths.find((p) => p.path === path);
+      expect(route?.entry === key || redirected.has(path)).toBe(true);
+    }
   });
 
   test("every featured research card links a research entry", () => {
@@ -253,7 +268,7 @@ describe("comparables", () => {
       `${repoRoot}website/src/components/home/FeaturedResearchBanner.tsx`,
       "utf8",
     );
-    const hrefs = [...banner.matchAll(/href:\s*"([^"]+)"/g)].map((m) => m[1]);
+    const hrefs = bannerHrefs(banner);
     expect(hrefs.length).toBeGreaterThan(0);
     const entryKeys = new Set(keys);
     const postKeys = new Set(

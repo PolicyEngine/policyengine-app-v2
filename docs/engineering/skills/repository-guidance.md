@@ -14,11 +14,14 @@ The `app/` directory holds the calculator code. `calculator-app/` (Next.js) comp
 
 A research entry is an `apps.json` app with `displayWithResearch` or the `policy` tag, or any `posts.json` post. Every research entry needs a `comparables` block naming the record of its comparables search in PolicyEngine/policyengine-scorecard (`docs/COMPARABLES.md` there; the `policyengine-comparables-review` skill runs the search), unless it is on `website/src/data/comparablesGrandfathered.json`, the list of entries live before the gate. The date an entry carries does not exempt it.
 
-- Merge the scorecard PR first, then paste the block `python -m scorecard_db.comparables record analysis-<country>-<slug>` prints. Its search is dated on or before the entry's date and no more than `MAX_SEARCH_AGE_DAYS` before it, and is not a backfill.
+- Merge the scorecard PR first, then paste the block `python -m scorecard_db.comparables record analysis-<country>-<slug>` prints (its latest search). The search is dated on or before the entry's date, no more than `MAX_SEARCH_AGE_DAYS` before it, and is not a backfill.
+- On the day a change lists or re-lists an entry (a new entry, or a new date or block), the `Comparables gate` workflow also requires that the cited search is no more than `MAX_SEARCH_AGE_DAYS` old that day, whatever date the entry carries; that it compared the results files the analysis reads now; and that no gap it found is still pending.
 - A post that is plainly not an analysis (tagged `org`, `event`, `giving`, `conferences`, `year-in-review` or `april-fools`, and none of the analysis tags in `comparables.ts`) may declare `{"status": "no_estimate", "reason": "..."}` instead. An app never may.
 - Taking an entry off the site takes it off the grandfather list too, so it comes back only with a record. Entries may join the list only before `COMPARABLES_CUTOVER_DATE`; after it the list only shrinks.
-- A new app route in `website/src/data/appZoneRoutes.ts` needs a research entry in `apps.json`, and a featured research card must link one.
-- The Tests job checks each block's shape and these lists. The `Comparables gate` workflow runs on every pull request, checks that each block resolves against the scorecard's index on main and that the list has not grown after the cutover, and opens an issue when its weekly run fails.
+- Every page the site proxies to another deployment (a rewrite in `next.config.ts`, most from `website/src/data/appZoneRoutes.ts`, in any form next.config accepts) is a research app's page, a page live before the gate, or on the grandfather file's `infrastructure` list of pages that publish no analysis. Add a dashboard through `appZoneRoutes.ts` with its `apps.json` entry.
+- A card a change adds to the featured research banner must link a research entry whose comparables search is fresh that day under the scorecard's promotion window, grandfathered entries included.
+- `website/src/data/analysisRoutes.json` maps every path and deployment host that leads to a research app, for PolicyEngine/newsletters' check; after a routing or registry change run `bun run scripts/build-analysis-routes.ts` in `website/` (a test fails while it is stale).
+- The Tests job checks each block's shape and these lists. The `Comparables gate` workflow runs on every pull request, checks that each block resolves against the scorecard's index on main, the listing and banner rules above, and that the list has not grown after the cutover, and opens an issue when its weekly run fails.
 
 ## Visual standards
 
