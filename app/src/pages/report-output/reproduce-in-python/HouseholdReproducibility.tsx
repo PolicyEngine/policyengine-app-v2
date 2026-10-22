@@ -29,14 +29,18 @@ interface HouseholdReproducibilityProps {
   countryId: string;
   year: string | null;
   simulations: HouseholdReproduction[];
+  /** Offers a switch that ends each block with a pandas DataFrame of its results. */
+  offerDataFrame?: boolean;
 }
 
 export default function HouseholdReproducibility({
   countryId,
   year: reportYear,
   simulations,
+  offerDataFrame = false,
 }: HouseholdReproducibilityProps) {
   const [earningVariation, setEarningVariation] = useState(false);
+  const [includeDataFrame, setIncludeDataFrame] = useState(false);
   const year = reportYear && /^\d{4}$/.test(reportYear) ? Number(reportYear) : null;
 
   return (
@@ -55,6 +59,16 @@ export default function HouseholdReproducibility({
           onCheckedChange={setEarningVariation}
         />
       </Group>
+      {offerDataFrame && (
+        <Group className="tw:gap-sm tw:items-center">
+          <Text className="tw:text-sm">Include a pandas DataFrame</Text>
+          <Switch
+            aria-label="Include a pandas DataFrame"
+            checked={includeDataFrame}
+            onCheckedChange={setIncludeDataFrame}
+          />
+        </Group>
+      )}
       {simulations.length === 0 ? <Text>No simulations are available to reproduce.</Text> : null}
       {simulations.map((simulation) => (
         <HouseholdSimulationCode
@@ -63,6 +77,7 @@ export default function HouseholdReproducibility({
           simulation={simulation}
           year={year}
           earningVariation={earningVariation}
+          includeDataFrame={offerDataFrame && includeDataFrame}
         />
       ))}
     </Stack>
@@ -74,16 +89,21 @@ function HouseholdSimulationCode({
   simulation,
   year,
   earningVariation,
+  includeDataFrame,
 }: {
   countryId: string;
   simulation: HouseholdReproduction;
   year: number | null;
   earningVariation: boolean;
+  includeDataFrame: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const { policyengineVersion, modelVersion } = simulation;
   const title = simulation.role === 'baseline' ? 'Baseline simulation' : 'Reform simulation';
-  const lines = getHouseholdReproducibilityCode(countryId, simulation, year, earningVariation);
+  const lines = getHouseholdReproducibilityCode(countryId, simulation, year, {
+    earningVariation,
+    includeDataFrame,
+  });
   const unavailableReason = getHouseholdReproductionUnavailableReason(countryId, simulation, year);
 
   const codeText = lines.join('\n');
