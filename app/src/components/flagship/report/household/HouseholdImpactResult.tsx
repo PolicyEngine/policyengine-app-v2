@@ -5,6 +5,8 @@ import HouseholdBreakdowns, {
   type HouseholdBreakdownView,
 } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import {
+  householdHeadlineFigureStyle,
+  householdHeadlineLabelStyle,
   HouseholdOutputTabs,
   householdResultCardStyle,
   householdMoney as money,
@@ -256,25 +258,10 @@ export default function HouseholdImpactResult({
             background: change > 0 ? colors.primary[50] : colors.gray[50],
           }}
         >
-          <span
-            id={`${id}-net`}
-            style={{
-              fontSize: typography.fontSize.xs,
-              fontWeight: typography.fontWeight.medium,
-              color: colors.text.secondary,
-            }}
-          >
+          <span id={`${id}-net`} style={householdHeadlineLabelStyle}>
             Change in annual net income
           </span>
-          <span
-            style={{
-              fontSize: typography.fontSize['4xl'],
-              lineHeight: 1.1,
-              fontWeight: typography.fontWeight.semibold,
-              fontVariantNumeric: 'tabular-nums',
-              color: effectColor(change),
-            }}
-          >
+          <span style={{ ...householdHeadlineFigureStyle, color: effectColor(change) }}>
             {signedMoney(change, countryId)}
           </span>
           <span
