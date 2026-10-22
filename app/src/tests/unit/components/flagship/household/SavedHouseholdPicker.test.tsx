@@ -106,6 +106,14 @@ describe('SavedHouseholdPicker', () => {
     );
   });
 
+  test('given the picker disabled then no saved household can be chosen', async () => {
+    signedInWith([userHouseholdItem(), retiredRow]);
+    renderPicker({ disabled: true });
+
+    expect(await screen.findByRole('button', { name: new RegExp(FAMILY_LABEL) })).toBeDisabled();
+    expect(screen.getByRole('button', { name: new RegExp(RETIRED_LABEL) })).toBeDisabled();
+  });
+
   test('given a saved household that cannot open then it is listed, but cannot be chosen', async () => {
     signedInWith([
       userHouseholdItem({

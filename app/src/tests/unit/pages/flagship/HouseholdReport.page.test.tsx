@@ -575,6 +575,19 @@ describe('HouseholdReportPage', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('inputs for multiple years');
     });
 
+    test('given a calculation running then no saved household can be opened, as the builder and year cannot change', async () => {
+      const user = userEvent.setup();
+      signedInWithFamily();
+      mockFetchHouseholdCalculation.mockReturnValue(new Promise(() => {}));
+      renderReport({ household: RETIRED_HOUSEHOLD });
+      const familyOption = await screen.findByRole('button', { name: new RegExp(FAMILY_LABEL) });
+
+      await user.click(screen.getByRole('button', { name: 'Calculate' }));
+
+      await waitFor(() => expect(familyOption).toBeDisabled());
+      expect(screen.getByRole('combobox', { name: 'Year' })).toBeDisabled();
+    });
+
     test('given the report opened from a saved household then it is the one the save form edits', () => {
       signedInWithFamily();
       renderReport({ savedHousehold: SAVED_FAMILY });
