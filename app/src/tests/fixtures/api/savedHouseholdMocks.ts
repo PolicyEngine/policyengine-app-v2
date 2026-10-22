@@ -22,6 +22,8 @@ export const V2_HOUSEHOLD_IDS = {
 
 export const FAMILY_LABEL = 'Our family';
 export const RETIRED_LABEL = 'Retired couple';
+/** A row saved before households moved to v2: it names only a v1 household. */
+export const V1_ONLY_LABEL = 'Saved long ago';
 
 /** A couple with two children, as the household builder makes it. */
 export const FAMILY_HOUSEHOLD = Household.starter('us', SAVED_HOUSEHOLD_YEAR)
