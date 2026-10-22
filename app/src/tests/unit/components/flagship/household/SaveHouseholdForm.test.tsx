@@ -70,6 +70,29 @@ describe('SaveHouseholdForm', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saved');
   });
 
+  test('given the household edited after a save then it no longer says it is saved', async () => {
+    const user = userEvent.setup();
+    routeRequests(signedInSession(), {
+      'POST /v2/households': () =>
+        itemResponse(v2HouseholdItem(FAMILY_HOUSEHOLD, V2_HOUSEHOLD_IDS.FAMILY), 201),
+      'POST /v2/user-households': () => itemResponse(userHouseholdItem(), 201),
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const formFor = (household: typeof FAMILY_HOUSEHOLD) => (
+      <QueryClientProvider client={queryClient}>
+        <SaveHouseholdForm household={household} />
+      </QueryClientProvider>
+    );
+    const view = render(formFor(FAMILY_HOUSEHOLD));
+    await user.type(screen.getByRole('textbox', { name: 'Household label' }), FAMILY_LABEL);
+    await user.click(screen.getByRole('button', { name: 'Save household' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Saved');
+
+    view.rerender(formFor(EDITED_FAMILY_HOUSEHOLD));
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   test('given an edited saved household then the edit is stored and the saved household points at it, keeping its id', async () => {
     const user = userEvent.setup();
     const requests = routeRequests(signedInSession(), {
