@@ -1,14 +1,5 @@
 import type { MetadataApiPayload } from '@/types/metadata';
 
-export const CANDIDATE_METADATA_PROVENANCE = {
-  model_commit: '1ea81b8af65eff995a3195770b57ce4fe61295e5',
-  API_commit: 'cd4039353dcf79171a6bf39241e4c47576d35242',
-  actual_metadata_sha256: '7f23cb58fc796bc24665ca34bed9ff283ac89aba06ebadfca36bd145b0d0fc7a',
-  prior13_HTTP_probe_sha256: '984f4af4093f1d7e1314f141606c5c0718cd8a595c144003868c9dabb27b0432',
-  qualification:
-    'Exact parameter records copied from actual candidate-bound local API metadata. Unused variables/modules/policies/geographies/datasets removed; no fabricated search options. Prior payload is a literal copy of actual local API persisted request; not a new network assertion.',
-} as const;
-
 export const CANDIDATE_METADATA = {
   status: 'ok',
   message: null,
@@ -641,9 +632,4 @@ export const HIDDEN_SENTINELS = [
   'gov.hmrc.national_insurance.class_1.employee_scale[0].threshold',
   'gov.hmrc.national_insurance.class_1.employer_scale[0].threshold',
 ];
-export const PRIOR_ACTUAL_PERSISTENCE_PAYLOAD = {
-  'gov.hmrc.national_insurance.class_1.employee_scale[1].rate': {
-    '2026-01-01.2026-12-31': 0.1,
-  },
-};
 export const EXPECTED_PAYLOAD = { [CANONICAL_RATE]: { '2026-01-01.2026-12-31': 0.1 } };
