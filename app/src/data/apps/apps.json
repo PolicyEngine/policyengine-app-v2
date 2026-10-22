@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "cgt-reform",
+    "title": "Aligning capital gains tax rates with income tax",
+    "description": "Estimate the revenue and distributional effects of raising capital gains tax rates to match income tax rates from 2026-27, or of a schedule of rates you choose, with a behavioural response, modelled with PolicyEngine UK.",
+    "source": "https://uk-cgt-reform.vercel.app/uk/cgt-reform",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "cgt-reform.jpg",
+    "date": "2026-10-19 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "energy-autumn-budget",
     "title": "Energy bills and the Autumn Budget 2026",
     "description": "Estimate what UK households will pay for energy at forecast prices in 2026-27 and 2027-28, and what Autumn Budget support options would cost and who they would reach, modelled with PolicyEngine UK.",
