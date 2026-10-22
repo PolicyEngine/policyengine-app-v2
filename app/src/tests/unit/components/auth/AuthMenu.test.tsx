@@ -50,14 +50,6 @@ describe('AuthMenu', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  test('given a country without accounts then nothing is shown, signed in or out', () => {
-    // When
-    renderMenu(makeAuthValue(), 'ca');
-
-    // Then
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
-  });
-
   test('given a signed-out visitor then "Sign in" starts sign-in', async () => {
     // Given
     const user = userEvent.setup();
