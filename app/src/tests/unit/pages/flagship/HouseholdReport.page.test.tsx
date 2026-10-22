@@ -37,6 +37,16 @@ import {
   REFORM_RUN_BUNDLE,
   UK_BASELINE_RESULT,
 } from '@/tests/fixtures/libs/flagship/householdRunMocks';
+import {
+  LATER_MODEL_YEAR,
+  MODEL_YEARS,
+  NOT_READY_TO_RUN,
+  policyMetadata,
+  READY_TO_RUN,
+  REFORM_PARAMETER,
+  REFORM_PARAMETER_METADATA,
+  REFORM_POLICY_JSON,
+} from '@/tests/fixtures/pages/flagship/householdReportPageMocks';
 
 /**
  * v3's standalone household report: one household under a baseline and,
@@ -65,28 +75,6 @@ vi.mock('@/api/policy', () => ({
   fetchPolicyById: (...args: unknown[]) => mockFetchPolicyById(...args),
 }));
 
-/** A policy as the Public API returns it: no parameter changes unless given. */
-function policyMetadata(countryId: string, policyId: string, policyJson = {}) {
-  return {
-    id: policyId,
-    country_id: countryId,
-    api_version: '1',
-    label: null,
-    policy_json: policyJson,
-  };
-}
-
-/** A UK reform's parameter change, which only the reform's Python block may set. */
-const REFORM_PARAMETER = 'gov.dwp.universal_credit.elements.child.amount';
-const REFORM_POLICY_JSON = { [REFORM_PARAMETER]: { '2026-01-01.2100-12-31': 3000 } };
-/** The model's metadata for that parameter, which reading the reform's policy needs. */
-const REFORM_PARAMETER_METADATA = {
-  [REFORM_PARAMETER]: {
-    type: 'parameter',
-    parameter: REFORM_PARAMETER,
-    values: { '2026-01-01': 2900 },
-  },
-};
 vi.mock('@/hooks/useParameterMetadata', () => ({
   useParameterMetadata: () => ({ parameters: REFORM_PARAMETER_METADATA, isReady: true }),
 }));
@@ -144,13 +132,6 @@ const mockHouseholdValidation = vi.fn();
 vi.mock('@/utils/HouseholdValidation', () => ({
   HouseholdValidation: { isReadyForSimulation: () => mockHouseholdValidation() },
 }));
-const READY_TO_RUN = { isValid: true, errors: [] };
-const NOT_READY_TO_RUN = { isValid: false, errors: [{ message: 'Choose a county' }] };
-
-/** The years the model's metadata lists for the report. */
-const MODEL_YEARS = [2026, 2027];
-/** A model year after the households' own (they are built in 2026). */
-const LATER_MODEL_YEAR = '2027';
 
 function renderReport(props: Partial<React.ComponentProps<typeof HouseholdReportPage>> = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });

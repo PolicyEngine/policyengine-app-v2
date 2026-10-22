@@ -10,7 +10,7 @@ import { colors, spacing, typography } from '@/designTokens';
  */
 export default function SavedHouseholdsPage() {
   return (
-    <Stack style={{ width: '100%', maxWidth: 880, gap: spacing.xl }}>
+    <Stack className="tw:w-full tw:max-w-4xl" style={{ gap: spacing.xl }}>
       <Stack style={{ gap: spacing.xs }}>
         <Title order={1} style={{ margin: 0 }}>
           Your households

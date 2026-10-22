@@ -46,7 +46,7 @@ export default function HouseholdNetIncomeResult({
 
   return (
     <section aria-labelledby={`${id}-heading`} style={householdResultCardStyle}>
-      <Stack style={{ gap: 2 }}>
+      <Stack style={{ gap: spacing.xs }}>
         <Title id={`${id}-heading`} order={3} style={{ margin: 0 }}>
           Household net income
         </Title>
@@ -63,7 +63,7 @@ export default function HouseholdNetIncomeResult({
           flexDirection: 'column',
           gap: spacing.xs,
           padding: spacing.lg,
-          borderRadius: 10,
+          borderRadius: spacing.radius.feature,
           background: colors.gray[50],
         }}
       >
