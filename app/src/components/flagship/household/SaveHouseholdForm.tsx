@@ -43,7 +43,11 @@ export default function SaveHouseholdForm({
 }: {
   /** The household as the builder holds it. */
   household: Household;
-  /** The saved household the builder is editing; a new one is saved without it. */
+  /**
+   * The saved household the builder is editing; a new one is saved without
+   * it. Once the form saves one, it edits that one, whether or not the
+   * caller passes it back.
+   */
   saved?: SavedHousehold | null;
   /**
    * The saved household after the save. Not called for a save that
@@ -58,13 +62,16 @@ export default function SaveHouseholdForm({
   const saveChanges = useSaveHouseholdChanges();
   const [label, setLabel] = useState(saved?.label ?? '');
   const [saving, setSaving] = useState(false);
+  // The saved household this form's last successful save made or changed.
+  const [savedByThisForm, setSavedByThisForm] = useState<SavedHousehold | null>(null);
+  const editing = saved ?? savedByThisForm;
   // What the last save stored: "Saved" shows only while the household and
   // label on screen are still what it stored.
   const [lastSaved, setLastSaved] = useState<{ household: Household; label: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const savedInBuilderYear = useMemo(
-    () => (saved ? inYear(saved.household, household.year) : null),
-    [saved, household.year]
+    () => (editing ? inYear(editing.household, household.year) : null),
+    [editing, household.year]
   );
   const shown = useRef(true);
   useEffect(() => {
@@ -84,8 +91,8 @@ export default function SaveHouseholdForm({
 
   const contentChanged =
     !savedInBuilderYear || !haveSameStoredContent(household, savedInBuilderYear);
-  const labelChanged = !saved || label.trim() !== (saved.label ?? '');
-  const nothingToSave = !!saved && !contentChanged && !labelChanged;
+  const labelChanged = !editing || label.trim() !== (editing.label ?? '');
+  const nothingToSave = !!editing && !contentChanged && !labelChanged;
   const showsSaved =
     !!lastSaved &&
     lastSaved.label === label.trim() &&
@@ -95,9 +102,9 @@ export default function SaveHouseholdForm({
     setSaving(true);
     setErrorMessage(null);
     try {
-      const result = saved
+      const result = editing
         ? await saveChanges.mutateAsync({
-            saved,
+            saved: editing,
             changes: {
               ...(contentChanged ? { household } : {}),
               ...(labelChanged ? { label } : {}),
@@ -107,6 +114,7 @@ export default function SaveHouseholdForm({
       if (!shown.current) {
         return;
       }
+      setSavedByThisForm(result);
       setLastSaved({ household, label: label.trim() });
       onSaved?.(result);
     } catch (error) {
@@ -131,7 +139,7 @@ export default function SaveHouseholdForm({
         />
         <Button size="sm" onClick={save} disabled={saving || nothingToSave}>
           <IconDeviceFloppy size={16} aria-hidden />
-          {saved ? 'Save changes' : 'Save household'}
+          {editing ? 'Save changes' : 'Save household'}
         </Button>
         {showsSaved && (
           <span
