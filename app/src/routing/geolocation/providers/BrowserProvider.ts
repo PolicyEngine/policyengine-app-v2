@@ -30,8 +30,6 @@ export class BrowserProvider implements GeolocationProvider {
       // This is a simple mapping for common cases
       const languageCountryMap: Record<string, string> = {
         en: 'US', // Default English to US
-        fr: 'CA', // French could be CA (PolicyEngine supports Canada)
-        he: 'IL', // Hebrew to Israel
         // Add more mappings as needed
       };
 

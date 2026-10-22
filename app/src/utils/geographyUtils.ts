@@ -81,9 +81,6 @@ export function isUKLocalLevelRegion(regionCode: string | null | undefined): boo
 const countryLabels: Record<string, string> = {
   us: 'United States',
   uk: 'United Kingdom',
-  ca: 'Canada',
-  ng: 'Nigeria',
-  il: 'Israel',
 };
 
 export function getCountryLabel(countryCode: string): string {

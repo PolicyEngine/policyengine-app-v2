@@ -32,9 +32,6 @@ export function isDefaultBaselineSimulation(
 export const countryNames: Record<string, string> = {
   us: 'United States',
   uk: 'United Kingdom',
-  ca: 'Canada',
-  ng: 'Nigeria',
-  il: 'Israel',
 };
 
 /**
