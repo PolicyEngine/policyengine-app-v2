@@ -3,6 +3,7 @@ import { Household } from '@/models/Household';
 import {
   buildHouseholdVariationAxes,
   getHouseholdVariationIndexForEarnings,
+  getHouseholdVariationMaxEarnings,
   HOUSEHOLD_VARIATION_POINT_COUNT,
 } from '@/utils/householdVariationAxes';
 
@@ -40,5 +41,18 @@ describe('getHouseholdVariationIndexForEarnings', () => {
       HOUSEHOLD_VARIATION_POINT_COUNT - 1
     );
     expect(getHouseholdVariationIndexForEarnings(100000, 200000)).toBe(200);
+  });
+});
+
+describe('getHouseholdVariationMaxEarnings', () => {
+  test.each(['us', 'uk', 'ng'])(
+    'given low earnings in %s then the range reaches the 200,000 floor',
+    (countryId) => {
+      expect(getHouseholdVariationMaxEarnings(50_000, countryId)).toBe(200_000);
+    }
+  );
+
+  test('given earnings above half the floor then the range reaches twice the earnings', () => {
+    expect(getHouseholdVariationMaxEarnings(150_000, 'uk')).toBe(300_000);
   });
 });

@@ -7,9 +7,6 @@ const ISO_TO_ROUTE_MAP: Record<string, string> = {
   US: 'us', // United States
   GB: 'uk', // United Kingdom (Great Britain)
   UK: 'uk', // Alternative code sometimes used
-  CA: 'ca', // Canada
-  NG: 'ng', // Nigeria
-  IL: 'il', // Israel
 };
 
 /**
