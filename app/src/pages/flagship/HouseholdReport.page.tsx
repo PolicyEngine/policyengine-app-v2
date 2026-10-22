@@ -210,14 +210,16 @@ export default function HouseholdReportPage({
     }
   };
 
+  // A saved household opens as the report opens one: in the report's year,
+  // or, when it cannot move, in its own year with the reason.
   const openSaved = (next: SavedHousehold) => {
-    const moved = inReportYear(next.household, year);
-    if (moved) {
-      setSaved(next);
-      setSavedHouseholdOpenings((openings) => openings + 1);
-      setHousehold(moved);
-      clear();
-    }
+    const opened = openingHousehold(next.household, year);
+    setSaved(next);
+    setSavedHouseholdOpenings((openings) => openings + 1);
+    setHousehold(opened.household);
+    setYear(opened.year);
+    setYearError(opened.yearError);
+    clear();
   };
 
   // Who the result is for: the household calculated, not the builder's

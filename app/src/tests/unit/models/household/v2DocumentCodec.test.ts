@@ -8,7 +8,9 @@ import {
 import {
   STORED_V2_HOUSEHOLD_ID,
   storedV2Household,
+  UK_DOCUMENT_WITH_TWO_YEARS,
   UK_DOCUMENT_WITHOUT_SOURCE_NAMES,
+  UK_DOCUMENT_WITHOUT_YEARS,
   UK_SINGLE_PARENT,
   UK_SINGLE_PARENT_V2_BODY,
   US_COUPLE_WITH_TWO_CHILDREN,
@@ -64,6 +66,19 @@ describe('householdFromV2Item', () => {
       expect(household.toV1CreationPayload()).toEqual(original.toV1CreationPayload());
     }
   });
+
+  test.each([
+    ['inputs in two years', UK_DOCUMENT_WITH_TWO_YEARS],
+    ['values that name no year', UK_DOCUMENT_WITHOUT_YEARS],
+  ])(
+    'given a stored household with %s then it reads back in its stored default year',
+    (_case, document) => {
+      const household = householdFromV2Item(storedV2Household('uk', document));
+
+      expect(household.year).toBe(2026);
+      expect(householdToV2CreateBody(household).default_year).toBe(2026);
+    }
+  );
 
   test('given a stored household then it carries the stored id and year', () => {
     const household = householdFromV2Item(
