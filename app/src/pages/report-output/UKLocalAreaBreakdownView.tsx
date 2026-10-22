@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react';
-import type {
-  ReportLocalAreaRequest,
-  UKBreakdownWithheldAreas,
-} from '@/adapters/ukLocalAreaBreakdownAdapter';
+import type { UKBreakdownWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import UKLocalAreaComputePanel from '@/components/report/UKLocalAreaComputePanel';
 import { spacing } from '@/designTokens';
+import type { UKReportLocalAreaRequest } from '@/hooks/useUKLocalAreaBreakdown';
 import { useUKLocalAreaOutput } from '@/hooks/useUKLocalAreaOutput';
 
 /**
@@ -21,7 +19,7 @@ export function UKLocalAreaBreakdownView({
   children,
 }: {
   output: SocietyWideReportOutput;
-  request: ReportLocalAreaRequest;
+  request: UKReportLocalAreaRequest;
   children: (areaOutput: SocietyWideReportOutput, withheld?: UKBreakdownWithheldAreas) => ReactNode;
 }) {
   const { breakdown, areaOutput, withheld } = useUKLocalAreaOutput(output, request);

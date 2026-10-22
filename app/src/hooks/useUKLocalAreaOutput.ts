@@ -4,7 +4,6 @@ import {
   localAreaOutput,
   outputServesLocalAreaBreakdowns,
   withheldUKAreasOf,
-  type ReportLocalAreaRequest,
   type UKBreakdownWithheldAreas,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
@@ -12,6 +11,7 @@ import { useRegions } from '@/hooks/useRegions';
 import {
   useUKLocalAreaBreakdown,
   type UKLocalAreaBreakdownState,
+  type UKReportLocalAreaRequest,
 } from '@/hooks/useUKLocalAreaBreakdown';
 
 export interface UKLocalAreaOutput {
@@ -45,7 +45,7 @@ export interface UKLocalAreaOutput {
  */
 export function useUKLocalAreaOutput(
   output: SocietyWideReportOutput,
-  request: ReportLocalAreaRequest | null
+  request: UKReportLocalAreaRequest | null
 ): UKLocalAreaOutput {
   const canCompute = !!request && outputServesLocalAreaBreakdowns(output);
   // An older release's result sends no request, even with a cached run.

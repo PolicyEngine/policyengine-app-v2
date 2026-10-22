@@ -3,6 +3,7 @@ import {
   hasLocalAuthorityImpacts,
 } from '@/adapters/societyWideOutputNormalizer';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { UKReportLocalAreaRequest } from '@/hooks/useUKLocalAreaBreakdown';
 import type { Region } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
@@ -76,14 +77,6 @@ export function localAreaOutput(
   } as SocietyWideReportOutput;
 }
 
-/** A report's breakdown request, as the v2 local-area views take it. */
-export interface ReportLocalAreaRequest {
-  reformPolicyId?: string;
-  baselinePolicyId?: string;
-  region?: string;
-  year?: string;
-}
-
 /**
  * A v2 report's breakdown request: the reform (simulations[1], else the
  * baseline, as the national run compares it) over the baseline
@@ -99,7 +92,7 @@ export function ukLocalAreaBreakdownRequest({
   report?: Report;
   simulations?: Simulation[];
   geographies?: Geography[];
-}): ReportLocalAreaRequest | null {
+}): UKReportLocalAreaRequest | null {
   const region = simulations?.[0]?.populationId;
   if (
     report?.countryId !== 'uk' ||
@@ -117,6 +110,12 @@ export function ukLocalAreaBreakdownRequest({
 }
 
 export type UKAreaLevel = 'constituency' | 'local_authority';
+
+/** Each level's area names, singular and plural, for the maps and their notes. */
+export const UK_AREA_NOUNS: Record<UKAreaLevel, { one: string; many: string }> = {
+  constituency: { one: 'constituency', many: 'constituencies' },
+  local_authority: { one: 'local authority', many: 'local authorities' },
+};
 
 /**
  * How many of a level's areas a disclosure-controlled breakdown left out,

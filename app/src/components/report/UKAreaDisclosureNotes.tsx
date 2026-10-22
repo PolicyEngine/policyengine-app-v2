@@ -1,12 +1,11 @@
-import type { UKAreaLevel, UKWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
+import {
+  UK_AREA_NOUNS,
+  type UKAreaLevel,
+  type UKWithheldAreas,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { UKAreaImpact } from '@/types/metadata/UKAreaImpact';
-
-const AREA_NOUNS: Record<UKAreaLevel, { one: string; many: string }> = {
-  constituency: { one: 'constituency', many: 'constituencies' },
-  local_authority: { one: 'local authority', many: 'local authorities' },
-};
 
 /** Why disclosure control leaves an area out, from .py's disclosure rules. */
 const WITHHOLDING_RULE =
@@ -18,7 +17,7 @@ function capitalize(text: string): string {
 
 /** The withheld note: a count where the app can count them, else the rule alone. */
 function withheldNote(level: UKAreaLevel, withheld: UKWithheldAreas): string | null {
-  const noun = AREA_NOUNS[level];
+  const noun = UK_AREA_NOUNS[level];
   if (withheld === null) {
     return `${capitalize(noun.many)} whose estimates fail the survey data’s disclosure rules are not shown. The rules ${WITHHOLDING_RULE}`;
   }
@@ -33,7 +32,7 @@ function approximateNote(level: UKAreaLevel, count: number): string | null {
   if (count <= 0) {
     return null;
   }
-  const noun = AREA_NOUNS[level];
+  const noun = UK_AREA_NOUNS[level];
   return count === 1
     ? `1 ${noun.one} is approximate: few surveyed households support its estimate, so its 90% range understates the uncertainty.`
     : `${count} ${noun.many} are approximate: few surveyed households support their estimates, so their 90% ranges understate the uncertainty.`;

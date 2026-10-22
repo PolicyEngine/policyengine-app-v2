@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
-import type { UKAreaLevel, UKBreakdownWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
+import {
+  UK_AREA_NOUNS,
+  type UKAreaLevel,
+  type UKBreakdownWithheldAreas,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
   AreaDetails,
@@ -52,12 +56,6 @@ const MODE_OPTIONS = [
 const AREA_LEVELS: Record<UKAreaKind, UKAreaLevel> = {
   constituencies: 'constituency',
   'local-authorities': 'local_authority',
-};
-
-/** Singular and plural names for each kind of area. */
-const AREA_NOUNS: Record<UKAreaKind, { one: string; many: string }> = {
-  constituencies: { one: 'constituency', many: 'constituencies' },
-  'local-authorities': { one: 'local authority', many: 'local authorities' },
 };
 
 /** The nation each ONS code's first letter stands for. */
@@ -235,8 +233,8 @@ export default function UKLocalAreaMaps({
   const [mode, setMode] = useState<UKChangeMode>('absolute');
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
-  const noun = AREA_NOUNS[areaKind];
   const level = AREA_LEVELS[areaKind];
+  const noun = UK_AREA_NOUNS[level];
 
   const levelAreas = useMemo((): AreaImpacts | undefined => {
     const uk = output as ReportOutputSocietyWideUK;

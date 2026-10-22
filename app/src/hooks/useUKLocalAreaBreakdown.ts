@@ -18,12 +18,15 @@ const NOT_A_BREAKDOWN_MESSAGE =
 
 export interface UKLocalAreaBreakdownRequest {
   countryId: string;
-  reformPolicyId?: string | null;
-  baselinePolicyId?: string | null;
+  reformPolicyId?: string;
+  baselinePolicyId?: string;
   /** The report's region: `uk` (or empty, for the UK) or `country/*`. */
-  region?: string | null;
-  year?: string | null;
+  region?: string;
+  year?: string;
 }
+
+/** A report's breakdown request without its country, which is always the UK's. */
+export type UKReportLocalAreaRequest = Omit<UKLocalAreaBreakdownRequest, 'countryId'>;
 
 export type UKLocalAreaBreakdownStatus = 'idle' | 'computing' | 'error' | 'complete';
 
