@@ -285,6 +285,7 @@ export default function HouseholdReportPage({
               countryId={countryId}
               selectedId={saved?.id}
               onSelect={openSaved}
+              disabled={running}
             />
           </Stack>
 
