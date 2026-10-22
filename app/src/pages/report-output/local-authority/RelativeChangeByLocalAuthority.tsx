@@ -27,26 +27,20 @@ export function RelativeChangeByLocalAuthority({
   withheld,
 }: RelativeChangeByLocalAuthorityProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  // Absent or null outside the UK, and in national UK results from .py 6.10.0 on.
   const areas = (output as ReportOutputSocietyWideUK).local_authority_impact?.by_local_authority;
   // Transform API data to hexagonal map format
-  const hexMapData = useMemo(() => {
-    // Type guard to ensure output is UK report with local authority data
-    if (!('local_authority_impact' in output)) {
-      return [];
-    }
-    const localAuthorityData = (output as ReportOutputSocietyWideUK).local_authority_impact
-      ?.by_local_authority;
-    if (!localAuthorityData) {
-      return [];
-    }
-    return transformLocalAuthorityRelativeChange(localAuthorityData);
-  }, [output]);
+  const hexMapData = useMemo(
+    () => (areas ? transformLocalAuthorityRelativeChange(areas) : []),
+    [areas]
+  );
+  const notes = <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />;
 
   if (!hexMapData.length) {
     return (
       <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">No local authority data available</Text>
-        <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />
+        {notes}
       </Stack>
     );
   }
@@ -77,7 +71,7 @@ export function RelativeChangeByLocalAuthority({
         }}
         exportRef={mapRef}
       />
-      <UKAreaDisclosureNotes level="local_authority" areas={areas} withheld={withheld} />
+      {notes}
     </Stack>
   );
 }

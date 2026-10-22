@@ -27,26 +27,20 @@ export function RelativeChangeByConstituency({
   withheld,
 }: RelativeChangeByConstituencyProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  // Absent or null outside the UK, and in national UK results from .py 6.10.0 on.
   const areas = (output as ReportOutputSocietyWideUK).constituency_impact?.by_constituency;
   // Transform API data to hexagonal map format
-  const hexMapData = useMemo(() => {
-    // Type guard to ensure output is UK report with constituency data
-    if (!('constituency_impact' in output)) {
-      return [];
-    }
-    const constituencyData = (output as ReportOutputSocietyWideUK).constituency_impact
-      ?.by_constituency;
-    if (!constituencyData) {
-      return [];
-    }
-    return transformConstituencyRelativeChange(constituencyData);
-  }, [output]);
+  const hexMapData = useMemo(
+    () => (areas ? transformConstituencyRelativeChange(areas) : []),
+    [areas]
+  );
+  const notes = <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />;
 
   if (!hexMapData.length) {
     return (
       <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">No constituency data available</Text>
-        <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />
+        {notes}
       </Stack>
     );
   }
@@ -76,7 +70,7 @@ export function RelativeChangeByConstituency({
         }}
         exportRef={mapRef}
       />
-      <UKAreaDisclosureNotes level="constituency" areas={areas} withheld={withheld} />
+      {notes}
     </Stack>
   );
 }

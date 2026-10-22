@@ -1,17 +1,12 @@
-import { useMemo, type ReactNode } from 'react';
-import {
-  breakdownLevelsWithheld,
-  localAreaOutput,
-  type UKBreakdownWithheldAreas,
+import type { ReactNode } from 'react';
+import type {
+  ReportLocalAreaRequest,
+  UKBreakdownWithheldAreas,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import UKLocalAreaComputePanel from '@/components/report/UKLocalAreaComputePanel';
 import { spacing } from '@/designTokens';
-import {
-  useUKLocalAreaBreakdown,
-  type UKLocalAreaBreakdownRequest,
-} from '@/hooks/useUKLocalAreaBreakdown';
-import { useUKWithheldAreas } from '@/hooks/useUKWithheldAreas';
+import { useUKLocalAreaOutput } from '@/hooks/useUKLocalAreaOutput';
 
 /**
  * A v2 constituency or local authority tab whose result has no area
@@ -26,21 +21,14 @@ export function UKLocalAreaBreakdownView({
   children,
 }: {
   output: SocietyWideReportOutput;
-  request: Omit<UKLocalAreaBreakdownRequest, 'countryId'>;
+  request: ReportLocalAreaRequest;
   children: (areaOutput: SocietyWideReportOutput, withheld?: UKBreakdownWithheldAreas) => ReactNode;
 }) {
-  const breakdown = useUKLocalAreaBreakdown({ countryId: 'uk', ...request });
-  // Only a breakdown's levels are disclosure-controlled; saved ones are not.
-  const withheld = breakdownLevelsWithheld(
-    output,
-    useUKWithheldAreas(breakdown.breakdown, request.region)
-  );
-  const areaOutput = useMemo(
-    () => (breakdown.breakdown ? localAreaOutput(output, breakdown.breakdown) : null),
-    [output, breakdown.breakdown]
-  );
+  const { breakdown, areaOutput, withheld } = useUKLocalAreaOutput(output, request);
 
-  if (areaOutput) {
+  // The tab's own level is missing from the result (its parent checks), so
+  // it waits for the breakdown even when the result holds the other level.
+  if (breakdown.breakdown && areaOutput) {
     return <>{children(areaOutput, withheld)}</>;
   }
 

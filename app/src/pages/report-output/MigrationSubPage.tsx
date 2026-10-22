@@ -1,14 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import {
   hasConstituencyImpacts,
   hasLocalAuthorityImpacts,
 } from '@/adapters/societyWideOutputNormalizer';
-import {
-  breakdownLevelsWithheld,
-  localAreaOutput,
-  ukLocalAreaBreakdownRequest,
-} from '@/adapters/ukLocalAreaBreakdownAdapter';
+import { ukLocalAreaBreakdownRequest } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import UKLocalAreaComputePanel, {
   UKLocalAreaComputeButton,
@@ -24,8 +20,7 @@ import {
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUKLocalAreaBreakdown } from '@/hooks/useUKLocalAreaBreakdown';
-import { useUKWithheldAreas } from '@/hooks/useUKWithheldAreas';
+import { useUKLocalAreaOutput } from '@/hooks/useUKLocalAreaOutput';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -152,16 +147,9 @@ function UKLocalAreaSections({
   report?: Report;
   simulations?: Simulation[];
 }) {
-  const request = ukLocalAreaBreakdownRequest({ report, simulations });
-  const breakdown = useUKLocalAreaBreakdown({ countryId: 'uk', ...request });
-  const areaOutput = useMemo(
-    () => localAreaOutput(output, breakdown.breakdown),
-    [output, breakdown.breakdown]
-  );
-  // Only a breakdown's levels are disclosure-controlled; saved ones are not.
-  const withheld = breakdownLevelsWithheld(
+  const { breakdown, areaOutput, withheld } = useUKLocalAreaOutput(
     output,
-    useUKWithheldAreas(breakdown.breakdown, request?.region)
+    ukLocalAreaBreakdownRequest({ report, simulations })
   );
   // Each section decides on its own level: a saved result with one level
   // offers the breakdown in the other level's section.

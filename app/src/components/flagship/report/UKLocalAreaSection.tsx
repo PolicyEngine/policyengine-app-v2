@@ -1,11 +1,8 @@
-import { useMemo } from 'react';
-import { breakdownLevelsWithheld, localAreaOutput } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import UKLocalAreaComputePanel from '@/components/report/UKLocalAreaComputePanel';
 import { colors, spacing } from '@/designTokens';
-import { useUKLocalAreaBreakdown } from '@/hooks/useUKLocalAreaBreakdown';
-import { useUKWithheldAreas } from '@/hooks/useUKWithheldAreas';
+import { useUKLocalAreaOutput } from '@/hooks/useUKLocalAreaOutput';
 
 /**
  * A UK report's "Local areas" tab content. A result that holds its area
@@ -30,19 +27,12 @@ export default function UKLocalAreaSection({
   reformPolicyId?: string;
   baselinePolicyId?: string;
 }) {
-  const breakdown = useUKLocalAreaBreakdown({
-    countryId: 'uk',
+  const { breakdown, areaOutput, withheld } = useUKLocalAreaOutput(output, {
     reformPolicyId,
     baselinePolicyId,
     region,
     year,
   });
-  const areaOutput = useMemo(
-    () => localAreaOutput(output, breakdown.breakdown),
-    [output, breakdown.breakdown]
-  );
-  // Only a breakdown's levels are disclosure-controlled; saved ones are not.
-  const withheld = breakdownLevelsWithheld(output, useUKWithheldAreas(breakdown.breakdown, region));
 
   if (areaOutput) {
     // A saved result with one level offers the breakdown for the other.
