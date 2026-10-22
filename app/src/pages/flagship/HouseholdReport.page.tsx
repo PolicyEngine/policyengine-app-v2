@@ -7,6 +7,7 @@ import SavedHouseholdPicker from '@/components/flagship/household/SavedHousehold
 import SaveHouseholdForm from '@/components/flagship/household/SaveHouseholdForm';
 import type { HouseholdBreakdownSource } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
+import { householdResultCardStyle } from '@/components/flagship/report/household/householdResultParts';
 import {
   HouseholdCalculateRow,
   HouseholdRunFailure,
@@ -30,12 +31,13 @@ import PolicySubPage from '@/pages/report-output/PolicySubPage';
 import HouseholdReproducibility from '@/pages/report-output/reproduce-in-python/HouseholdReproducibility';
 import { copyHouseholdToYear } from '@/pages/reportBuilder/utils/changeReportYear';
 import type { RootState } from '@/store';
+import type { AssociationCountryId } from '@/types/v2User';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { convertPoliciesToV1Format, type HouseholdReproduction } from '@/utils/reproducibilityCode';
 
 export interface HouseholdReportPageProps {
   /** The household's country: its model, currency and inputs. */
-  countryId: 'us' | 'uk';
+  countryId: AssociationCountryId;
   /**
    * The year the report opens in; the household it opens with moves to it.
    * The reader can choose another.
@@ -106,16 +108,7 @@ function openingHousehold(
 /** One section of the report, named for assistive technology. */
 function ReportSection({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section
-      aria-label={label}
-      style={{
-        padding: spacing.lg,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.container,
-        background: colors.background.primary,
-        minWidth: 0,
-      }}
-    >
+    <section aria-label={label} style={{ ...householdResultCardStyle, minWidth: 0 }}>
       {children}
     </section>
   );

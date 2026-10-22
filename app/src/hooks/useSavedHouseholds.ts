@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getSavedHouseholdStore,
-  type ListedSavedHousehold,
   type SavedHousehold,
   type SavedHouseholdChanges,
   type SavedHouseholdStore,
@@ -10,6 +9,7 @@ import {
 } from '@/api/savedHouseholdStore';
 import { useV3SavedWork } from '@/hooks/useFlagshipStores';
 import type { Household } from '@/models/Household';
+import type { AssociationCountryId } from '@/types/v2User';
 
 /**
  * v3's saved households for this session: in the account, signed in or
@@ -51,7 +51,7 @@ export function useSavedHouseholdStore(): {
   store: SavedHouseholdStore | null;
   scope: string;
   /** The country the store reads and writes; none without accounts. */
-  countryId: string | null;
+  countryId: AssociationCountryId | null;
 } {
   const { account, scope } = useV3SavedWork();
   const queryClient = useQueryClient();
@@ -101,7 +101,7 @@ export function useSavedHouseholds() {
   return {
     /** Whether saved households exist here: only with accounts. */
     available: !!store,
-    savedHouseholds: (query.data ?? []) as ListedSavedHousehold[],
+    savedHouseholds: query.data ?? [],
     isLoading: !!store && query.isLoading,
     error: query.error,
     refetch: query.refetch,

@@ -9,6 +9,7 @@ import {
 import { colors, spacing, typography } from '@/designTokens';
 import { useSavedHouseholds } from '@/hooks/useSavedHouseholds';
 import type { RootState } from '@/store';
+import type { AssociationCountryId } from '@/types/v2User';
 
 /**
  * The session's saved households in a country, to open one: each by its
@@ -22,7 +23,7 @@ export default function SavedHouseholdPicker({
   onSelect,
   disabled = false,
 }: {
-  countryId: string;
+  countryId: AssociationCountryId;
   /** The saved household the builder holds, marked as chosen. */
   selectedId?: string;
   onSelect: (saved: SavedHousehold) => void;
