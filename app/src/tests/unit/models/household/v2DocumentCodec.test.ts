@@ -18,7 +18,7 @@ import {
   US_SINGLE_PARENT,
   US_SINGLE_PARENT_V2_BODY,
   V2_CODEC_YEAR,
-} from '@/tests/fixtures/models/v2DocumentCodecMocks';
+} from '@/tests/fixtures/models/household/v2DocumentCodecMocks';
 
 describe('householdToV2CreateBody', () => {
   test('given a US household then it is the document the Public API translates its v1 form into', () => {
