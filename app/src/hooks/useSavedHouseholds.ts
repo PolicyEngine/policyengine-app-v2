@@ -16,12 +16,16 @@ import type { Household } from '@/models/Household';
  * there are none, and nothing is saved anywhere else.
  */
 
-/** Cached saved households are scoped to whose they are (see V3SavedWork). */
+/**
+ * Cached saved households are scoped to whose they are (see V3SavedWork)
+ * and to the country, as the store lists one country's saved households.
+ */
 export const savedHouseholdKeys = {
-  all: (scope: string) => ['saved-households', scope] as const,
-  list: (scope: string) => ['saved-households', scope, 'list'] as const,
-  one: (scope: string, savedHouseholdId: string) =>
-    ['saved-households', scope, 'one', savedHouseholdId] as const,
+  all: (scope: string, countryId: string) => ['saved-households', scope, countryId] as const,
+  list: (scope: string, countryId: string) =>
+    ['saved-households', scope, countryId, 'list'] as const,
+  one: (scope: string, countryId: string, savedHouseholdId: string) =>
+    ['saved-households', scope, countryId, 'one', savedHouseholdId] as const,
 };
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -34,9 +38,21 @@ export class SavedHouseholdsUnavailableError extends Error {
   }
 }
 
-export function useSavedHouseholdStore(): { store: SavedHouseholdStore | null; scope: string } {
+export function useSavedHouseholdStore(): {
+  store: SavedHouseholdStore | null;
+  scope: string;
+  /** The country the store reads and writes; none without accounts. */
+  countryId: string | null;
+} {
   const { account, scope } = useV3SavedWork();
-  return useMemo(() => ({ store: getSavedHouseholdStore(account), scope }), [account, scope]);
+  return useMemo(
+    () => ({
+      store: getSavedHouseholdStore(account),
+      scope,
+      countryId: account?.countryId ?? null,
+    }),
+    [account, scope]
+  );
 }
 
 function requireStore(store: SavedHouseholdStore | null): SavedHouseholdStore {
@@ -48,9 +64,9 @@ function requireStore(store: SavedHouseholdStore | null): SavedHouseholdStore {
 
 /** This session's saved households, most recently updated first. */
 export function useSavedHouseholds() {
-  const { store, scope } = useSavedHouseholdStore();
+  const { store, scope, countryId } = useSavedHouseholdStore();
   const query = useQuery({
-    queryKey: savedHouseholdKeys.list(scope),
+    queryKey: savedHouseholdKeys.list(scope, countryId ?? ''),
     queryFn: () => requireStore(store).list(),
     enabled: !!store,
     staleTime: STALE_TIME,
@@ -67,9 +83,9 @@ export function useSavedHouseholds() {
 
 /** One saved household with its household; null when it does not exist. */
 export function useSavedHousehold(savedHouseholdId: string | undefined) {
-  const { store, scope } = useSavedHouseholdStore();
+  const { store, scope, countryId } = useSavedHouseholdStore();
   return useQuery({
-    queryKey: savedHouseholdKeys.one(scope, savedHouseholdId ?? ''),
+    queryKey: savedHouseholdKeys.one(scope, countryId ?? '', savedHouseholdId ?? ''),
     queryFn: () => requireStore(store).get(savedHouseholdId!),
     enabled: !!store && !!savedHouseholdId,
     staleTime: STALE_TIME,
@@ -79,8 +95,9 @@ export function useSavedHousehold(savedHouseholdId: string | undefined) {
 /** Reads the session's saved households, the list and each one opened, again after a change. */
 function useInvalidateSavedHouseholds() {
   const queryClient = useQueryClient();
-  const { scope } = useSavedHouseholdStore();
-  return () => queryClient.invalidateQueries({ queryKey: savedHouseholdKeys.all(scope) });
+  const { scope, countryId } = useSavedHouseholdStore();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: savedHouseholdKeys.all(scope, countryId ?? '') });
 }
 
 export function useSaveHousehold() {

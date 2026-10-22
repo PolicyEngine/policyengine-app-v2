@@ -15,6 +15,7 @@ export const SAVED_HOUSEHOLD_IDS = {
   FAMILY: '22222222-2222-4222-8222-222222222222',
   RETIRED: '66666666-6666-4666-8666-666666666666',
   V1_ONLY: '77777777-7777-4777-8777-777777777777',
+  UK_HOME: '88888888-8888-4888-8888-888888888888',
 } as const;
 
 /** Stored v2 households. */
@@ -23,6 +24,7 @@ export const V2_HOUSEHOLD_IDS = {
   EDITED_FAMILY: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   RETIRED: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
   TWO_YEAR_FAMILY: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  UK_HOME: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
 } as const;
 
 export const FAMILY_LABEL = 'Our family';
@@ -147,3 +149,16 @@ export const SAVED_FAMILY = {
   createdAt: TIMESTAMPS.CREATED,
   updatedAt: TIMESTAMPS.UPDATED,
 };
+
+export const UK_HOME_LABEL = 'Our flat in Leeds';
+
+/** A UK household saved by the same user. */
+export const UK_HOME_HOUSEHOLD = Household.starter('uk', SAVED_HOUSEHOLD_YEAR);
+
+/** The UK household's saved row, as `/v2/user-households?country_id=uk` returns it. */
+export const UK_HOME_ROW = userHouseholdItem({
+  id: SAVED_HOUSEHOLD_IDS.UK_HOME,
+  country_id: 'uk',
+  household_id: V2_HOUSEHOLD_IDS.UK_HOME,
+  name: UK_HOME_LABEL,
+});

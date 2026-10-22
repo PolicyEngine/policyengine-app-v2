@@ -17,6 +17,9 @@ import {
   RETIRED_LABEL,
   routeRequests,
   SAVED_HOUSEHOLD_IDS,
+  UK_HOME_HOUSEHOLD,
+  UK_HOME_LABEL,
+  UK_HOME_ROW,
   userHouseholdItem,
   V2_HOUSEHOLD_IDS,
   v2HouseholdItem,
@@ -80,6 +83,31 @@ describe('useSavedHouseholds', () => {
     await waitFor(() => expect(result.current.savedHouseholds).toHaveLength(1));
     expect(result.current.available).toBe(true);
     expect(result.current.savedHouseholds[0].label).toBe(FAMILY_LABEL);
+  });
+
+  test("given the country changes for the same user then that country's saved households are listed", async () => {
+    const { fetchMock: usFetch, context: usContext } = createTestApiContext('us');
+    const { fetchMock: ukFetch, context: ukContext } = createTestApiContext('uk');
+    routeRequests(usFetch, {
+      'GET /v2/user-households': () => pageResponse([familyRow]),
+      [`GET /v2/households/${V2_HOUSEHOLD_IDS.FAMILY}`]: () => itemResponse(familyHousehold),
+    });
+    const ukRequests = routeRequests(ukFetch, {
+      'GET /v2/user-households': () => pageResponse([UK_HOME_ROW]),
+      [`GET /v2/households/${V2_HOUSEHOLD_IDS.UK_HOME}`]: () =>
+        itemResponse(v2HouseholdItem(UK_HOME_HOUSEHOLD, V2_HOUSEHOLD_IDS.UK_HOME)),
+    });
+    mockSavedWork.mockReturnValue({ account: usContext, scope: SESSION_SCOPE });
+    const { result, rerender } = renderWithQueries(() => useSavedHouseholds());
+    await waitFor(() => expect(result.current.savedHouseholds).toHaveLength(1));
+
+    mockSavedWork.mockReturnValue({ account: ukContext, scope: SESSION_SCOPE });
+    rerender();
+
+    await waitFor(() =>
+      expect(result.current.savedHouseholds.map((saved) => saved.label)).toEqual([UK_HOME_LABEL])
+    );
+    expect(ukRequests[0].query.country_id).toBe('uk');
   });
 
   test('given a household saved then the list shows it', async () => {
