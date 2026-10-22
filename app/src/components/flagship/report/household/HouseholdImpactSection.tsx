@@ -4,8 +4,11 @@ import { useSelector } from 'react-redux';
 import HouseholdBuilderPanel from '@/components/flagship/household/HouseholdBuilderPanel';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
 import { commonHouseholdInputs } from '@/components/flagship/report/household/householdPickerInputs';
-import RunProgress from '@/components/flagship/report/RunProgress';
-import { ErrorState } from '@/components/flagship/states';
+import {
+  HouseholdCalculateRow,
+  HouseholdRunFailure,
+  HouseholdRunProgress,
+} from '@/components/flagship/report/household/householdRunParts';
 import { Button, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useRequestedHouseholdRun } from '@/hooks/useFlagshipHousehold';
@@ -34,9 +37,6 @@ import { getInputVariables } from '@/utils/VariableResolver';
 
 /** The countries whose results, inputs and currency the section knows. */
 const HOUSEHOLD_COUNTRIES = new Set(['us', 'uk']);
-
-/** Both policies run at once; a household new to the API takes about three minutes. */
-const EXPECTED_MS = 3 * 60 * 1000;
 
 /** What the builder sets for each person it adds: not an input the reader chose. */
 const ADDED_PERSON_DEFAULTS = new Set(['age', 'is_tax_unit_dependent']);
@@ -431,46 +431,18 @@ function HouseholdCard({
               trackHouseholdVariableAdded({ countryId, variable, source, entity })
             }
           />
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: spacing.md,
-              marginTop: spacing.lg,
-            }}
-          >
-            <Button
-              size="sm"
-              onClick={calculate}
-              disabled={running || !validation.isValid || shows(household)}
-            >
-              Calculate
-            </Button>
-            {!validation.isValid && validation.errors[0] && (
-              <span style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
-                {validation.errors[0].message}
-              </span>
-            )}
-          </div>
+          <HouseholdCalculateRow
+            onCalculate={calculate}
+            disabled={running || !validation.isValid || shows(household)}
+            validation={validation}
+            style={{ marginTop: spacing.lg }}
+          />
         </div>
 
         <Stack style={{ gap: spacing.md, minWidth: 0 }}>
-          {running && <RunProgress title="Calculating this household" expectedMs={EXPECTED_MS} />}
+          {running && <HouseholdRunProgress />}
 
-          {failed && (
-            <ErrorState
-              compact
-              title="This household could not be calculated"
-              description={
-                // An API message can carry a long unbroken path.
-                run.error?.message && (
-                  <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
-                )
-              }
-              onRetry={tryAgain}
-            />
-          )}
+          {failed && <HouseholdRunFailure error={run.error} onRetry={tryAgain} />}
 
           {result && requested && (
             <HouseholdImpactResult
