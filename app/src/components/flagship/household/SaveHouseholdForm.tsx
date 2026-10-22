@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import type { SavedHousehold } from '@/api/savedHouseholdStore';
 import { SAVED_HOUSEHOLDS_UNAVAILABLE } from '@/components/flagship/household/savedHouseholdDisplay';
@@ -28,7 +28,11 @@ export default function SaveHouseholdForm({
   household: Household;
   /** The saved household the builder is editing; a new one is saved without it. */
   saved?: SavedHousehold | null;
-  /** The saved household after the save. */
+  /**
+   * The saved household after the save. Not called for a save that
+   * finishes after the form has gone, as when the page opens another
+   * saved household (which gives the form a new key) while it runs.
+   */
   onSaved?: (saved: SavedHousehold) => void;
 }) {
   const labelId = useId();
@@ -41,6 +45,13 @@ export default function SaveHouseholdForm({
   // label on screen are still what it stored.
   const [lastSaved, setLastSaved] = useState<{ household: Household; label: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const shown = useRef(true);
+  useEffect(() => {
+    shown.current = true;
+    return () => {
+      shown.current = false;
+    };
+  }, []);
 
   if (!store) {
     return (
@@ -71,6 +82,9 @@ export default function SaveHouseholdForm({
             },
           })
         : await saveHousehold.mutateAsync({ household, label });
+      if (!shown.current) {
+        return;
+      }
       setLastSaved({ household, label: label.trim() });
       onSaved?.(result);
     } catch (error) {

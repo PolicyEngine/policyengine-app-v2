@@ -10,6 +10,8 @@ import {
   EDITED_FAMILY_HOUSEHOLD,
   FAMILY_HOUSEHOLD,
   FAMILY_LABEL,
+  RETIRED_HOUSEHOLD,
+  RETIRED_LABEL,
   routeRequests,
   SAVED_FAMILY,
   SAVED_HOUSEHOLD_IDS,
@@ -455,6 +457,50 @@ describe('HouseholdReportPage', () => {
 
       expect(await screen.findByText('Saved')).toHaveAttribute('role', 'status');
       // The stored household reads back with the same content.
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    });
+
+    test('given a saved household chosen while a save is still running then the finished save does not take its place', async () => {
+      const user = userEvent.setup();
+      let finishStoring: (response: Response) => void = () => {};
+      const requests = signedInWithFamily({
+        'POST /v2/households': () =>
+          new Promise<Response>((resolve) => {
+            finishStoring = resolve;
+          }),
+        'POST /v2/user-households': () =>
+          itemResponse(
+            userHouseholdItem({
+              id: SAVED_HOUSEHOLD_IDS.RETIRED,
+              household_id: V2_HOUSEHOLD_IDS.RETIRED,
+              name: RETIRED_LABEL,
+            }),
+            201
+          ),
+      });
+      renderReport({ household: RETIRED_HOUSEHOLD });
+      await user.type(screen.getByRole('textbox', { name: 'Household label' }), RETIRED_LABEL);
+      await user.click(screen.getByRole('button', { name: 'Save household' }));
+
+      await user.click(await screen.findByRole('button', { name: new RegExp(FAMILY_LABEL) }));
+      finishStoring(
+        itemResponse(v2HouseholdItem(RETIRED_HOUSEHOLD, V2_HOUSEHOLD_IDS.RETIRED), 201)
+      );
+
+      // The finished save's request for its saved row has gone out and been answered.
+      await waitFor(() =>
+        expect(
+          requests.some(
+            (request) => request.method === 'POST' && request.path === '/v2/user-households'
+          )
+        ).toBe(true)
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(screen.getByRole('button', { name: new RegExp(FAMILY_LABEL) })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      expect(screen.getByRole('textbox', { name: 'Household label' })).toHaveValue(FAMILY_LABEL);
       expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     });
 
