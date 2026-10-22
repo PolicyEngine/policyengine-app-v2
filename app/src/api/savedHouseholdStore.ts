@@ -141,6 +141,12 @@ function nameFor(label: string): string | null {
 
 export class ApiSavedHouseholdStore implements SavedHouseholdStore {
   private readonly routes: AccountAssociationRoutes<UserHouseholdItem>;
+  /**
+   * Stored households by v2 id. A stored household never changes, so each
+   * is fetched once for the store's life, not on every read of the list; a
+   * failed fetch is not kept, so the next read asks again.
+   */
+  private readonly storedHouseholds = new Map<string, Promise<Household>>();
 
   constructor(private readonly context: ApiStoreContext) {
     this.routes = new AccountAssociationRoutes(context, 'user-households', 'Saved household');
@@ -188,7 +194,7 @@ export class ApiSavedHouseholdStore implements SavedHouseholdStore {
       household_id: stored.id,
       name: nameFor(label),
     });
-    return savedHouseholdOf(row, stored.id, householdFromV2Item(stored));
+    return savedHouseholdOf(row, stored.id, this.remember(stored));
   }
 
   async rename(savedHouseholdId: string, label: string): Promise<SavedHouseholdRow> {
@@ -218,7 +224,7 @@ export class ApiSavedHouseholdStore implements SavedHouseholdStore {
     if (label !== undefined && nameFor(label) !== saved.label) {
       body.name = nameFor(label);
     }
-    const nextHousehold = stored ? householdFromV2Item(stored) : saved.household;
+    const nextHousehold = stored ? this.remember(stored) : saved.household;
     if (Object.keys(body).length === 0) {
       return { ...saved, household: nextHousehold };
     }
@@ -242,13 +248,26 @@ export class ApiSavedHouseholdStore implements SavedHouseholdStore {
     return result.item;
   }
 
-  private async fetchHousehold(countryId: string, householdId: string): Promise<Household> {
-    const result = await this.context.client.request<V2ItemResult<V2HouseholdItem>>(
-      'GET',
-      `households/${encodeURIComponent(householdId)}`,
-      { query: { country_id: countryId } }
-    );
-    return householdFromV2Item(result.item);
+  /** A stored household as the app's model, kept for later reads. */
+  private remember(item: V2HouseholdItem): Household {
+    const household = householdFromV2Item(item);
+    this.storedHouseholds.set(item.id, Promise.resolve(household));
+    return household;
+  }
+
+  private fetchHousehold(countryId: string, householdId: string): Promise<Household> {
+    const kept = this.storedHouseholds.get(householdId);
+    if (kept) {
+      return kept;
+    }
+    const fetched = this.context.client
+      .request<
+        V2ItemResult<V2HouseholdItem>
+      >('GET', `households/${encodeURIComponent(householdId)}`, { query: { country_id: countryId } })
+      .then((result) => householdFromV2Item(result.item));
+    this.storedHouseholds.set(householdId, fetched);
+    fetched.catch(() => this.storedHouseholds.delete(householdId));
+    return fetched;
   }
 }
 
