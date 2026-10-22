@@ -111,7 +111,11 @@ export function buildPythonPackageHouseholdDataFromAppInput(args: {
   return householdData;
 }
 
-/** The lowest upper end of the earnings variation range, in each country's currency. */
+/**
+ * The lowest upper end of the earnings variation range, in each country's
+ * currency. Every country the app offers uses 200,000; a country whose
+ * currency needs another floor (Nigeria's was 1,200,000) gets its own entry.
+ */
 const VARIATION_EARNINGS_FLOOR: Record<CountryId, number> = {
   us: 200_000,
   uk: 200_000,

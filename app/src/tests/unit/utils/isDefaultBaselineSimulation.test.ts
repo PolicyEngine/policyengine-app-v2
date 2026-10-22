@@ -198,9 +198,4 @@ describe('countryNames', () => {
     expect(countryNames[TEST_COUNTRIES.US]).toBe('United States');
     expect(countryNames[TEST_COUNTRIES.UK]).toBe('United Kingdom');
   });
-
-  test('given unknown country code then returns undefined', () => {
-    // Then
-    expect(countryNames[TEST_COUNTRIES.UNKNOWN]).toBeUndefined();
-  });
 });

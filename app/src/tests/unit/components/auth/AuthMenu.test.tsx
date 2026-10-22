@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import AuthMenu from '@/components/auth/AuthMenu';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import HeaderActionButtons from '@/components/homeHeader/HeaderActionButtons';
@@ -10,6 +10,23 @@ import {
   signedInAuthValue,
   TEST_PROFILE,
 } from '@/tests/fixtures/libs/auth/authMocks';
+
+// No country the app offers lacks account storage today; switching
+// `withoutAccountStorage` on stands in for one, so the branch for such a
+// country stays covered.
+const accountStorage = vi.hoisted(() => ({ withoutAccountStorage: false }));
+vi.mock('@/types/v2User', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/types/v2User')>();
+  return {
+    ...actual,
+    isAssociationCountry: (countryId: unknown) =>
+      !accountStorage.withoutAccountStorage && actual.isAssociationCountry(countryId),
+  };
+});
+
+afterEach(() => {
+  accountStorage.withoutAccountStorage = false;
+});
 
 function renderMenu(auth: AuthContextValue, countryId = 'us') {
   return render(
@@ -45,6 +62,20 @@ describe('AuthMenu', () => {
   test('given sign-in is disabled then nothing is shown', () => {
     // When
     renderMenu(makeAuthValue({ status: 'disabled' }));
+
+    // Then
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  test.each([
+    ['signed out', makeAuthValue()],
+    ['signed in', signedInAuthValue()],
+  ])('given a country without account storage then nothing is shown, %s', (_, auth) => {
+    // Given
+    accountStorage.withoutAccountStorage = true;
+
+    // When
+    renderMenu(auth);
 
     // Then
     expect(screen.queryByRole('button')).not.toBeInTheDocument();

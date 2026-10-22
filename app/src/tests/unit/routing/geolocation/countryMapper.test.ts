@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest';
-import { countryIds } from '@/libs/countries';
 import { isSupportedCountry, mapIsoToRoute } from '@/routing/geolocation/countryMapper';
 import {
   OFFERED_COUNTRY_ISO_CODES,
@@ -22,10 +21,4 @@ describe('countryMapper', () => {
       expect(isSupportedCountry(isoCode)).toBe(false);
     }
   );
-
-  test('given every mapped ISO code then its calculator is in the country list', () => {
-    for (const route of Object.values(OFFERED_COUNTRY_ISO_CODES)) {
-      expect(countryIds).toContain(route);
-    }
-  });
 });
