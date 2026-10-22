@@ -80,6 +80,15 @@ describe('householdFromV2Item', () => {
     }
   );
 
+  test('given a stored household without a default year then it reads back in the year its values name', () => {
+    const household = householdFromV2Item({
+      ...storedV2Household('uk', UK_SINGLE_PARENT_V2_BODY.household_data),
+      default_year: null,
+    });
+
+    expect(household.year).toBe(Number(V2_CODEC_YEAR));
+  });
+
   test('given a stored household then it carries the stored id and year', () => {
     const household = householdFromV2Item(
       storedV2Household('uk', UK_SINGLE_PARENT_V2_BODY.household_data)
