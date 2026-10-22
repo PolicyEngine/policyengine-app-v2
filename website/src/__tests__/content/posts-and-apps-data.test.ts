@@ -157,12 +157,23 @@ describe("comparables", () => {
   const deepRoutes = new Set(
     appZoneRoutes.map((route) => `${route.source}/:path*`),
   );
+  // every page proxied from another deployment: the zone routes, and any
+  // rewrite in next.config.ts to an external host shaped like an app's path
+  const config = readFileSync(`${repoRoot}website/next.config.ts`, "utf8");
+  const configRoutes = [
+    ...config.matchAll(
+      /source:\s*"([^"]+)",\s*destination:\s*"https:\/\/[^"]+"/g,
+    ),
+  ]
+    .map((m) => m[1])
+    .filter((source) => routeEntryKey(source) !== null);
   const routes = [
-    ...new Set(
-      appZoneRewrites
+    ...new Set([
+      ...appZoneRewrites
         .map((route) => route.source)
         .filter((source) => !deepRoutes.has(source)),
-    ),
+      ...configRoutes,
+    ]),
   ];
 
   test("every research entry passes the gate's own checks", () => {
@@ -219,6 +230,7 @@ describe("comparables", () => {
   });
 
   test("every app route is a research entry's, or was live before the gate", () => {
+    expect(configRoutes.length).toBeGreaterThan(0);
     const entryKeys = new Set(keys);
     const unlisted = routes.filter((route) => {
       const key = routeEntryKey(route);

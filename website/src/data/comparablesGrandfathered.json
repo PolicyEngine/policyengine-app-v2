@@ -265,12 +265,17 @@
     "/ai-beliefs",
     "/uk/2025-year-in-review",
     "/uk/ai-inequality",
+    "/uk/api",
     "/uk/cliffwatch",
+    "/uk/python",
     "/us/2025-year-in-review",
     "/us/ads-dashboard",
     "/us/ai-inequality",
+    "/us/api",
+    "/us/python",
     "/us/qbi-calculator",
     "/us/refundable-credit-conversion",
-    "/us/spm-calculator"
+    "/us/spm-calculator",
+    "/us/taxsim"
   ]
 }
