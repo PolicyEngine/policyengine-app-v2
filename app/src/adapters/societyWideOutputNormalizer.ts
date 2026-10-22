@@ -77,6 +77,33 @@ function keyAreaRowsByName(
   return byName;
 }
 
+type UKAreaImpactsRecord = {
+  constituency_impact?: { by_constituency?: unknown } | null;
+  local_authority_impact?: { by_local_authority?: unknown } | null;
+};
+
+function isAreaMap(areas: unknown): boolean {
+  return !!areas && typeof areas === 'object';
+}
+
+/** Whether a result holds a constituency map (absent or null from .py 6.10.0 on). */
+export function hasConstituencyImpacts(output: unknown): boolean {
+  return (
+    !!output &&
+    typeof output === 'object' &&
+    isAreaMap((output as UKAreaImpactsRecord).constituency_impact?.by_constituency)
+  );
+}
+
+/** Whether a result holds a local authority map (absent or null from .py 6.10.0 on). */
+export function hasLocalAuthorityImpacts(output: unknown): boolean {
+  return (
+    !!output &&
+    typeof output === 'object' &&
+    isAreaMap((output as UKAreaImpactsRecord).local_authority_impact?.by_local_authority)
+  );
+}
+
 /**
  * Whether a result holds UK local-area impacts: a constituency or local
  * authority map. National UK results from .py 6.10.0 on leave both out
@@ -84,18 +111,7 @@ function keyAreaRowsByName(
  * run. Older saved results hold them, and show them as they are.
  */
 export function hasUKLocalAreaImpacts(output: unknown): boolean {
-  if (!output || typeof output !== 'object') {
-    return false;
-  }
-  const record = output as {
-    constituency_impact?: { by_constituency?: unknown } | null;
-    local_authority_impact?: { by_local_authority?: unknown } | null;
-  };
-  const isAreaMap = (areas: unknown) => !!areas && typeof areas === 'object';
-  return (
-    isAreaMap(record.constituency_impact?.by_constituency) ||
-    isAreaMap(record.local_authority_impact?.by_local_authority)
-  );
+  return hasConstituencyImpacts(output) || hasLocalAuthorityImpacts(output);
 }
 
 /**

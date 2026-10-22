@@ -1,6 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import {
+  localAreaOutput,
+  ukLocalAreaBreakdownRequest,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import UKLocalAreaComputePanel, {
+  UKLocalAreaComputeButton,
+} from '@/components/report/UKLocalAreaComputePanel';
 import {
   Collapsible,
   CollapsibleContent,
@@ -12,6 +19,7 @@ import {
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUKLocalAreaBreakdown } from '@/hooks/useUKLocalAreaBreakdown';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -122,6 +130,46 @@ export function canShowCongressionalDistrictImpactCard({
   return normalizedRegion === 'us' || normalizedRegion.startsWith('state/');
 }
 
+/**
+ * The UK constituency and local authority sections. A result that holds
+ * its area impacts (an older saved report) shows them. One without them
+ * (.py 6.10.0 on) puts the compute button in each opened section's header:
+ * a click in either sends the report's one breakdown request, both
+ * sections show its progress, and both show the maps when it completes.
+ */
+function UKLocalAreaSections({
+  output,
+  report,
+  simulations,
+}: {
+  output: SocietyWideReportOutput;
+  report?: Report;
+  simulations?: Simulation[];
+}) {
+  const breakdown = useUKLocalAreaBreakdown({
+    countryId: 'uk',
+    ...ukLocalAreaBreakdownRequest({ report, simulations }),
+  });
+  const areaOutput = useMemo(
+    () => localAreaOutput(output, breakdown.breakdown),
+    [output, breakdown.breakdown]
+  );
+  const computeButton = areaOutput ? undefined : <UKLocalAreaComputeButton breakdown={breakdown} />;
+  const computePanel = <UKLocalAreaComputePanel breakdown={breakdown} showStartButton={false} />;
+
+  return (
+    <>
+      <CollapsibleSection label="Constituency impact" defaultOpen={false} right={computeButton}>
+        {areaOutput ? <ConstituencySubPage output={areaOutput} /> : computePanel}
+      </CollapsibleSection>
+
+      <CollapsibleSection label="Local authority impact" defaultOpen={false} right={computeButton}>
+        {areaOutput ? <LocalAuthoritySubPage output={areaOutput} /> : computePanel}
+      </CollapsibleSection>
+    </>
+  );
+}
+
 export default function MigrationSubPage({
   output,
   report,
@@ -182,15 +230,7 @@ export default function MigrationSubPage({
       )}
 
       {showUKGeographySections && (
-        <>
-          <CollapsibleSection label="Constituency impact" defaultOpen={false}>
-            <ConstituencySubPage output={output} />
-          </CollapsibleSection>
-
-          <CollapsibleSection label="Local authority impact" defaultOpen={false}>
-            <LocalAuthoritySubPage output={output} />
-          </CollapsibleSection>
-        </>
+        <UKLocalAreaSections output={output} report={report} simulations={simulations} />
       )}
     </>
   );

@@ -1,10 +1,12 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import { RelativeChangeByConstituency } from '@/pages/report-output/constituency/RelativeChangeByConstituency';
+import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
+import { withNullAreaImpacts } from '@/tests/fixtures/pages/report-output/ukLocalAreaBreakdownPageMocks';
 
 describe('RelativeChangeByConstituency', () => {
   test('given constituency data then renders component', () => {
@@ -51,5 +53,16 @@ describe('RelativeChangeByConstituency', () => {
 
     // Then
     expect(container).toBeInTheDocument();
+  });
+
+  test.each([
+    ['null', withNullAreaImpacts(NATIONAL_OUTPUT_WITHOUT_AREAS)],
+    ['missing', NATIONAL_OUTPUT_WITHOUT_AREAS],
+  ])('given %s constituency impacts then shows no data message', (_label, output) => {
+    // When
+    render(<RelativeChangeByConstituency output={output} />);
+
+    // Then
+    expect(screen.getByText('No constituency data available')).toBeInTheDocument();
   });
 });
