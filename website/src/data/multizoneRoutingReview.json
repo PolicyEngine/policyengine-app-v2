@@ -1,0 +1,290 @@
+{
+  "app:uk:2025-year-in-review": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Static Vite/GitHub Pages app is built for /2025-year-in-review, not /uk/2025-year-in-review; UK metadata also points to the US PolicyEngine URL. Needs zone base-path work plus host rewrites."
+  },
+  "app:uk:2024-manifestos": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Older Vite embed. Public path returns 404 and root HTML emits /assets plus /vite.svg; needs path-scoped Vite base or asset prefix before first-party routing."
+  },
+  "app:uk:autumn-budget-2025": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Vite dashboard. Public path returns 404 and root HTML emits /assets plus /vite.svg; needs path-scoped build and host rewrites."
+  },
+  "app:uk:energy-price-shock": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Vite zone uses root asset paths and origin /uk/energy-price-shock returns 404; needs path-scoped base or dedicated asset prefix before host rewrites."
+  },
+  "app:uk:local-areas-dashboard": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Older Next/pages dashboard. Public path returns 404 and root HTML emits /_next assets; needs basePath/assetPrefix and host rewrites."
+  },
+  "app:uk:marriage": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Duplicate UK row for shared marriage app. Defer with US marriage: current production routing is US-scoped at /us/marriage while UK behavior uses ?country=uk."
+  },
+  "app:uk:public-services-spending": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "CRA/static dashboard serves the public path but emits root /static assets; needs PUBLIC_URL or asset-prefix work before host rewrites."
+  },
+  "app:uk:scotland-income-tax-reform": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Next zone has no basePath/assetPrefix, emits root /_next/static assets, and origin /uk/scotland-income-tax-reform returns 404; zone work needed before host rewrites."
+  },
+  "app:uk:scottish-budget-2026-27": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Vite dashboard. Public path returns 404 and root HTML emits /assets; needs path-scoped Vite base and host rewrites."
+  },
+  "app:uk:spring-statement-2026": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Next static export emits root /_next/static assets, lacks first-party canonical/OG metadata, and origin /uk/spring-statement-2026 returns 404."
+  },
+  "app:uk:student-loan-visualisation": {
+    "recommendation": "rewrite",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Single-file static HTML with external D3/fonts and inline data; a simple rewrite to the root document is likely sufficient if kept as a static article-style interactive."
+  },
+  "app:uk:two-child-limit-comparison": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Vite zone emits root /assets paths, origin /uk/two-child-limit-comparison returns 404, and code fetches root-relative /data/all-results.csv."
+  },
+  "app:uk:uk-land-value-tax": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Next zone has no basePath/assetPrefix, emits root /_next/static assets, and origin /uk/uk-land-value-tax returns 404; zone work needed before host rewrites."
+  },
+  "app:uk:uk-salary-sacrifice-tool": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Vite app currently emits /uk-salary-sacrifice-analysis/assets on GitHub Pages and has no host rewrite. Needs a PolicyEngine public-path build or scoped asset prefix before multizone."
+  },
+  "app:uk:uk-student-loan-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Vite app. Public path returns 404 and root HTML emits /assets plus /vite.svg; needs path-scoped build and host rewrites."
+  },
+  "app:us:2025-year-in-review": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Dedicated website iframe page wraps a Vite/GitHub Pages app built for /2025-year-in-review. Promote by rebuilding for /us/2025-year-in-review or adding scoped asset proxy plus beforeFiles rewrites."
+  },
+  "app:us:cliff-watch": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Vite zone currently emits root /assets paths and origin /us/cliff-watch returns 404; also audit root-relative /api fallbacks before adding host rewrites."
+  },
+  "app:us:california-wealth-tax": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Embed zone is path-scoped and metadata points to /us/california-wealth-tax. Promote by replacing the dedicated iframe page with a first-party route or keeping SyncedAppIframe only if query-sync embedding remains required."
+  },
+  "app:us:2024-election-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Older Vite embed. Public path returns 404 and root HTML emits /assets; needs path-scoped build and host rewrites."
+  },
+  "app:us:aca-calc": {
+    "recommendation": "rewrite",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Duplicate legacy slug for ACA calculator. Same origin as aca-reforms-calculator; prefer redirect/canonicalize to one public route rather than creating a second zone."
+  },
+  "app:us:aca-reforms-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Vite app serves the public path via SPA fallback but emits root /assets; choose this as the canonical ACA route and add path-scoped build plus host rewrites."
+  },
+  "app:us:child-tax-credit-2024-election-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Vite app serves the public path via SPA fallback but emits root /assets; needs path-scoped build before host rewrites."
+  },
+  "app:us:child-tax-credit-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Older static app with script/ relative assets and public path 404. Needs source modernization/path-scoped static build before first-party routing."
+  },
+  "app:us:encode-policy-multi-agent-ai": {
+    "recommendation": "iframe",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Bundled local article artifact under website/public/assets/posts with colocated JS/CSS and no standalone source repo found; note root /vite.svg favicon. Keep iframe/static unless source ownership is reconstructed."
+  },
+  "app:us:givecalc": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Vite app. Public path returns 404 and root HTML emits /assets; needs path-scoped build and host rewrites."
+  },
+  "app:us:keep-your-pay-act": {
+    "recommendation": "multizone",
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "audited",
+    "comment": "Multizone-ready: repo defaults basePath to /us/keep-your-pay-act, live HTML emits path-scoped _next assets, metadata/sitemap use policyengine.org, and API calls go directly to api.policyengine.org."
+  },
+  "app:us:marriage": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Defer migration decision. This is one shared US/UK app: UK logic exists via ?country=uk, but basePath, assets, metadata, and nav are US-scoped at /us/marriage. Handle US and UK marriage routing together."
+  },
+  "app:us:obbba-household-by-household": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "SvelteKit static export already supports BASE_PATH, but live GitHub Pages assets and favicon are scoped to /obbba-household-by-household. Rebuild with BASE_PATH=/us/obbba-household-by-household and add host rewrites."
+  },
+  "app:us:obbba-household-explorer": {
+    "recommendation": "iframe",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Legacy/alias row points to the household-by-household origin but uses a different public slug. Keep iframe or canonicalize/remove rather than making a separate zone."
+  },
+  "app:us:obbba-scatter": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "blocked",
+    "comment": "Current source URL https://policyengine.github.io/obbba-scatter returns 404 and no standalone PolicyEngine repo was found. Need source/deployment ownership before classification can be finalized."
+  },
+  "app:us:oregon-kicker-refund": {
+    "recommendation": "multizone",
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "audited",
+    "comment": "Baseline pilot: zone repo already defaults basePath to /us/oregon-kicker-refund, emits path-scoped assets, and uses policyengine.org metadata."
+  },
+  "app:us:pe84": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Next zone has empty next.config.ts, emits root /_next/static assets, uses root-relative icon metadata, and origin /us/pe84 returns 404."
+  },
+  "app:us:salternative": {
+    "recommendation": "multizone",
+    "auditSession": "Session B - Vercel research interactives",
+    "auditStatus": "audited",
+    "comment": "Vite zone serves /us/salternative via SPA fallback but still emits root /assets paths and has generic title metadata; path-scoped base or asset prefix needed."
+  },
+  "app:us:rhode-island-ctc-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Next app has no basePath and public path returns 404; root HTML emits /_next assets. Needs basePath/assetPrefix and first-party metadata."
+  },
+  "app:us:snap-district-map": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "GitHub Pages deployment appears to serve unbuilt Vite source (/src/main.jsx) even though repo has base /snap-district-map. Fix production build, then add PolicyEngine base-path build and host rewrites."
+  },
+  "app:us:state-legislative-tracker": {
+    "recommendation": "rewrite",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Modal/Vite app works through direct beforeFiles proxy plus /_tracker and root logo rewrites. Keep as direct proxy unless it moves to a first-party static/Next zone."
+  },
+  "app:us:state-eitcs-ctcs": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Vite app. Public path returns 404 and root HTML emits /assets; needs path-scoped build and host rewrites."
+  },
+  "app:us:tanf-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Vite/GitHub Pages app emits /tanf-calculator/assets and host currently uses generic iframe wrapper. Needs /us/tanf-calculator build or scoped asset proxy plus beforeFiles rewrites."
+  },
+  "app:us:taxation-of-benefits-reforms": {
+    "recommendation": "multizone",
+    "auditSession": "Session E - lower-priority/unlisted",
+    "auditStatus": "audited",
+    "comment": "Next static export supports env-driven basePath/assetPrefix, but current deployment has empty base path, root /_next assets, and public path 404. Set NEXT_PUBLIC_BASE_PATH=/us/taxation-of-benefits-reforms and add host rewrites."
+  },
+  "app:us:working-parents-tax-relief-act": {
+    "recommendation": "multizone",
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "audited",
+    "comment": "Multizone-ready with a small polish follow-up: repo defaults basePath to /us/working-parents-tax-relief-act, assets and metadata are path/first-party, but favicon currently renders as /favicon.svg."
+  },
+  "app:us:watca": {
+    "recommendation": "multizone",
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "audited",
+    "comment": "Multizone-ready for routing: repo hardcodes basePath /us/watca and host/assets work. Follow up to add policyengine.org canonical/OG/sitemap metadata and a next-dev basePath escape hatch."
+  },
+  "route:api": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Reference zone: household-api-docs uses production-only assetPrefix /_zones/household-api-docs and disables it during next dev."
+  },
+  "route:ads-dashboard": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Currently a dedicated iframe page. Vite app emits root /assets and /vite.svg, so it needs BASE_URL/public-path work before first-party multizone routing."
+  },
+  "route:ai-inequality": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Currently dedicated iframe pages with country query handling. CRA app emits root /static assets and has subroute /income-shift, so it needs a public-path strategy before host rewrites."
+  },
+  "route:model": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Current afterFiles rewrite injects country query but origin emits root /_next assets and has no basePath. Needs basePath/assetPrefix and first-party metadata before formal multizone."
+  },
+  "route:plugin-blog": {
+    "recommendation": "rewrite",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Static GitHub Pages site is already path-scoped under /plugin-blog/assets and host has afterFiles rewrites. Keep simple rewrite/static hosting."
+  },
+  "route:slides": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Multizone-ready for routing: Next app hardcodes basePath /slides and live HTML emits /slides/_next assets. Follow up with local-dev basePath escape hatch if desired."
+  },
+  "route:taxsim": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Multizone-ready: Next static export uses basePath /us/taxsim, custom data asset helper, first-party metadata, and host rewrites. Minor follow-up: root icon metadata may resolve to host root."
+  }
+}
