@@ -1,26 +1,40 @@
+import type { ReactNode } from 'react';
 import { IconTrash } from '@tabler/icons-react';
 import { AlertDialog } from 'radix-ui';
 import { Button } from '@/components/ui';
 
 /**
- * A saved household's Delete button. A deleted saved household cannot be
- * brought back, so the button asks first. Only the user's saved row goes:
- * the stored household stays, as reports and other users may use it.
+ * A Delete button that asks first, for v3's saved work: a delete cannot be
+ * undone. The dialog names what is deleted and says what the delete does.
  */
-export default function DeleteSavedHouseholdDialog({
+export default function DeleteConfirmationDialog({
   name,
+  description,
+  confirmLabel,
   disabled,
   onConfirm,
+  compact = false,
 }: {
+  /** What is deleted, as the dialog's title names it. */
   name: string;
+  /** What the delete does, under the title. */
+  description: ReactNode;
+  /** The button that deletes, e.g. "Delete reform". */
+  confirmLabel: string;
   disabled?: boolean;
   onConfirm: () => void;
+  /** A small, borderless Delete button, for a row of a list. */
+  compact?: boolean;
 }) {
   return (
     <AlertDialog.Root>
       <AlertDialog.Trigger asChild>
-        <Button size="sm" variant="ghost" disabled={disabled}>
-          <IconTrash size={14} aria-hidden />
+        <Button
+          size={compact ? 'sm' : 'default'}
+          variant={compact ? 'ghost' : 'outline'}
+          disabled={disabled}
+        >
+          <IconTrash size={compact ? 14 : 16} aria-hidden />
           Delete
         </Button>
       </AlertDialog.Trigger>
@@ -31,8 +45,7 @@ export default function DeleteSavedHouseholdDialog({
             Delete “{name}”?
           </AlertDialog.Title>
           <AlertDialog.Description className="tw:text-muted-foreground tw:text-sm">
-            This removes it from your households for good. Reports already run with it are not
-            changed.
+            {description}
           </AlertDialog.Description>
           <div className="tw:flex tw:flex-col-reverse tw:gap-2 tw:sm:flex-row tw:sm:justify-end">
             <AlertDialog.Cancel asChild>
@@ -40,7 +53,7 @@ export default function DeleteSavedHouseholdDialog({
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
               <Button variant="destructive" onClick={onConfirm}>
-                Delete household
+                {confirmLabel}
               </Button>
             </AlertDialog.Action>
           </div>

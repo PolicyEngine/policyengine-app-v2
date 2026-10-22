@@ -3,7 +3,7 @@ import { IconPencil } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import type { ListedSavedHousehold } from '@/api/savedHouseholdStore';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
-import DeleteSavedHouseholdDialog from '@/components/flagship/household/DeleteSavedHouseholdDialog';
+import DeleteConfirmationDialog from '@/components/flagship/DeleteConfirmationDialog';
 import {
   savedHouseholdDescription,
   savedHouseholdName,
@@ -110,8 +110,13 @@ export default function SavedHouseholdsList() {
                   <IconPencil size={14} aria-hidden />
                   Rename
                 </Button>
-                <DeleteSavedHouseholdDialog
+                <DeleteConfirmationDialog
+                  compact
                   name={name}
+                  // Only the saved row goes: the stored household stays, as
+                  // reports and other users may use it.
+                  description="This removes it from your households for good. Reports already run with it are not changed."
+                  confirmLabel="Delete household"
                   disabled={deleteHousehold.isPending}
                   onConfirm={() => remove(saved)}
                 />
