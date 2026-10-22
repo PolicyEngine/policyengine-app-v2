@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import type { SavedHousehold } from '@/api/savedHouseholdStore';
+import { SAVED_HOUSEHOLDS_UNAVAILABLE } from '@/components/flagship/household/savedHouseholdDisplay';
 import { Button, Input, Label, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import {
@@ -10,8 +11,6 @@ import {
 } from '@/hooks/useSavedHouseholds';
 import type { Household } from '@/models/Household';
 import { haveSameStoredContent } from '@/models/household/v2DocumentCodec';
-
-const SAVED_HOUSEHOLDS_UNAVAILABLE = 'Saved households are not available here.';
 
 /**
  * A label field and a Save button for the household in the builder. A new
