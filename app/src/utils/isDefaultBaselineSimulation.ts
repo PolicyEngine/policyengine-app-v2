@@ -1,4 +1,6 @@
 import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
+import { isCountryId } from '@/libs/countries';
+import { getCountryDisplayName } from '@/models/geography';
 
 /**
  * Checks if a simulation matches the default baseline criteria:
@@ -27,20 +29,11 @@ export function isDefaultBaselineSimulation(
 }
 
 /**
- * Country name mapping for display purposes
- */
-export const countryNames: Record<string, string> = {
-  us: 'United States',
-  uk: 'United Kingdom',
-  ca: 'Canada',
-  ng: 'Nigeria',
-  il: 'Israel',
-};
-
-/**
  * Get the label for a default baseline simulation
  */
 export function getDefaultBaselineLabel(countryId: string): string {
-  const countryName = countryNames[countryId] || countryId.toUpperCase();
+  const countryName = isCountryId(countryId)
+    ? getCountryDisplayName(countryId)
+    : countryId.toUpperCase();
   return `${countryName} current law for all households nationwide`;
 }

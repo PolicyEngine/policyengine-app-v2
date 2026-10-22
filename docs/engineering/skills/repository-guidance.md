@@ -6,6 +6,7 @@ The `app/` directory holds the calculator code. `calculator-app/` (Next.js) comp
 
 - Calculator components and pages (report builder, household, charts, sidebar, report output, pathways, etc.) live in `app/src/`.
 - `homeHeader/` and `shared/HomeHeader.tsx` are the calculator's header, rendered by `StandardLayout`. The website's header is `website/src/components/Header.tsx`; keep the calculator header in sync when the website one changes.
+- `app/src/libs/countries.ts` holds the calculator's country list, `countryIds`. The website imports it by relative path to decide which country pages link to the calculator, so the module must not use the `@/` alias.
 - `app/src/data/` holds data the website shares (posts.json and the article files, authors.json, citations.json, apps.json, events.json); `website/src/data/` links to these files.
 - `app/public/assets/` holds static assets that the website build copies in. `calculator-app/public` is a symlink to `app/public`, so everything in `app/public` is served on app.policyengine.org.
 - Website pages and components go in `website/src/`. New website rewrites go in `website/next.config.ts`, not `website/vercel.json`.
