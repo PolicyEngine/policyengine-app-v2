@@ -81,6 +81,9 @@ build time (see `calculator-app/.env.example`), alongside
 | `NEXT_PUBLIC_AUTH0_AUDIENCE` | PolicyEngine API resource server identifier |
 | `NEXT_PUBLIC_API_URL` | PolicyEngine API origin (default `https://api.policyengine.org`); set to the staging API on staging |
 
+To sign in on a local build, use the Auth0 test tenant block in
+`calculator-app/.env.example`.
+
 - On the US and UK workspace, saved reforms and reports always go to the
   PolicyEngine API. Signed in, they belong to the account. Signed out, they
   belong to this browser's unauthenticated user: a random UUID made on the
