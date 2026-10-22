@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import type { SavedHousehold } from '@/api/savedHouseholdStore';
 import { SAVED_HOUSEHOLDS_UNAVAILABLE } from '@/components/flagship/household/savedHouseholdDisplay';
@@ -11,6 +11,23 @@ import {
 } from '@/hooks/useSavedHouseholds';
 import type { Household } from '@/models/Household';
 import { haveSameStoredContent } from '@/models/household/v2DocumentCodec';
+import { copyHouseholdToYear } from '@/pages/reportBuilder/utils/changeReportYear';
+
+/**
+ * A saved household as the builder holds it in `year`: a report moves a
+ * household it opens into its own year, and that move alone is not an
+ * edit. A household that cannot move is compared as it is.
+ */
+function inYear(household: Household, year: number | null): Household {
+  if (year === null || household.year === year) {
+    return household;
+  }
+  try {
+    return copyHouseholdToYear(household, String(year));
+  } catch {
+    return household;
+  }
+}
 
 /**
  * A label field and a Save button for the household in the builder. A new
@@ -45,6 +62,10 @@ export default function SaveHouseholdForm({
   // label on screen are still what it stored.
   const [lastSaved, setLastSaved] = useState<{ household: Household; label: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const savedInBuilderYear = useMemo(
+    () => (saved ? inYear(saved.household, household.year) : null),
+    [saved, household.year]
+  );
   const shown = useRef(true);
   useEffect(() => {
     shown.current = true;
@@ -61,7 +82,8 @@ export default function SaveHouseholdForm({
     );
   }
 
-  const contentChanged = !saved || !haveSameStoredContent(household, saved.household);
+  const contentChanged =
+    !savedInBuilderYear || !haveSameStoredContent(household, savedInBuilderYear);
   const labelChanged = !saved || label.trim() !== (saved.label ?? '');
   const nothingToSave = !!saved && !contentChanged && !labelChanged;
   const showsSaved =
