@@ -13,6 +13,7 @@ import {
   FAILED_RESPONSE,
   LOADING_DATA_RESPONSE,
   NORMALIZED_BREAKDOWN,
+  OTHER_BREAKDOWN_YEAR,
   QUEUED_RESPONSE,
   SCOTLAND_BREAKDOWN_REQUEST,
   UK_BREAKDOWN_REQUEST,
@@ -260,5 +261,43 @@ describe('useUKLocalAreaBreakdown', () => {
     expect(result.current.canStart).toBe(false);
     expect(result.current.status).toBe('idle');
     expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given start for one year then a switch to another year sends nothing until its own start', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    const { result, rerender } = renderHook(({ request }) => useUKLocalAreaBreakdown(request), {
+      initialProps: { request: UK_BREAKDOWN_REQUEST },
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+
+    // When
+    rerender({ request: { ...UK_BREAKDOWN_REQUEST, year: OTHER_BREAKDOWN_YEAR } });
+    await act(() => vi.advanceTimersByTimeAsync(BREAKDOWN_POLL_INTERVAL_MS));
+
+    // Then
+    expect(result.current.status).toBe('idle');
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(1);
+  });
+
+  test('given a switch back to a year already computed then its result shows without start', async () => {
+    // Given
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    const { result, rerender } = renderHook(({ request }) => useUKLocalAreaBreakdown(request), {
+      initialProps: { request: UK_BREAKDOWN_REQUEST },
+      wrapper: wrapperFor(createQueryClient()),
+    });
+    act(() => result.current.start());
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+    rerender({ request: { ...UK_BREAKDOWN_REQUEST, year: OTHER_BREAKDOWN_YEAR } });
+
+    // When
+    rerender({ request: UK_BREAKDOWN_REQUEST });
+
+    // Then
+    expect(result.current.status).toBe('complete');
+    expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(1);
   });
 });

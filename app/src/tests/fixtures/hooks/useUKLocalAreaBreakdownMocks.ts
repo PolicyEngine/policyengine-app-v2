@@ -20,6 +20,9 @@ export const UK_BREAKDOWN_REQUEST = {
   year: BREAKDOWN_YEAR,
 };
 
+/** Another year of the same report's budget window. */
+export const OTHER_BREAKDOWN_YEAR = '2027';
+
 /** The same report for Scotland alone. */
 export const SCOTLAND_BREAKDOWN_REQUEST = {
   ...UK_BREAKDOWN_REQUEST,

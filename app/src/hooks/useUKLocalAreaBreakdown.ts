@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { hashKey, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchLocalAreaBreakdown,
   type LocalAreaBreakdownResponse,
@@ -132,7 +132,12 @@ export function useUKLocalAreaBreakdown(
   const { countryId, reformPolicyId, baselinePolicyId, region, year } = request;
   const queryClient = useQueryClient();
   const queryKey = ukLocalAreaBreakdownQueryKey(request);
-  const [started, setStarted] = useState(false);
+  // Which run start() asked for. A view kept mounted while its report
+  // changes year (a budget window) must not send the new year's request
+  // until it is asked for too.
+  const queryKeyHash = hashKey(queryKey);
+  const [startedKeyHash, setStartedKeyHash] = useState<string | null>(null);
+  const started = startedKeyHash === queryKeyHash;
   const canStart = !!reformPolicyId && !!baselinePolicyId && !!year;
   // A run another view started, or finished, is followed here too.
   const runExists = queryClient.getQueryData<BreakdownRun>(queryKey) !== undefined;
@@ -186,12 +191,12 @@ export function useUKLocalAreaBreakdown(
     canStart,
     start: () => {
       if (canStart) {
-        setStarted(true);
+        setStartedKeyHash(queryKeyHash);
       }
     },
     retry: () => {
       if (canStart) {
-        setStarted(true);
+        setStartedKeyHash(queryKeyHash);
         void query.refetch();
       }
     },

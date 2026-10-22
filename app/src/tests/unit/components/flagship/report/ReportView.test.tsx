@@ -414,6 +414,40 @@ describe('ReportView UK local areas', () => {
     expect(await screen.findByRole('progressbar')).toBeInTheDocument();
   });
 
+  test('given compute clicked then switching to another year sends no request until compute is clicked for it', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ status: 'computing', queue_position: 1, result: null }))
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const reportForYear = (year: string) => (
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Higher personal allowance"
+          sourceNote="Hand-built"
+          provisions={[]}
+          year={year}
+          region={UK_SECTION_PROPS.region}
+          reformPolicyId={UK_SECTION_PROPS.reformPolicyId}
+          baselinePolicyId={UK_SECTION_PROPS.baselinePolicyId}
+          output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(reportForYear(UK_SECTION_PROPS.year), 'uk');
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    await waitFor(() => expect(economyRequests()).toHaveLength(1));
+
+    rerender(reportForYear('2027'));
+
+    expect(await screen.findByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(economyRequests()).toHaveLength(1);
+  });
+
   test('given saved results with area impacts then the tab shows the maps with no button', async () => {
     const user = userEvent.setup();
     renderUKReport(STORED_OUTPUT_WITH_AREAS);
