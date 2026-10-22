@@ -7,9 +7,13 @@ import SavedHouseholdPicker from '@/components/flagship/household/SavedHousehold
 import SaveHouseholdForm from '@/components/flagship/household/SaveHouseholdForm';
 import type { HouseholdBreakdownSource } from '@/components/flagship/report/household/HouseholdBreakdowns';
 import HouseholdImpactResult from '@/components/flagship/report/household/HouseholdImpactResult';
-import RunProgress from '@/components/flagship/report/RunProgress';
+import {
+  HouseholdCalculateRow,
+  HouseholdRunFailure,
+  HouseholdRunProgress,
+} from '@/components/flagship/report/household/householdRunParts';
 import { ErrorState } from '@/components/flagship/states';
-import { Button, Label, Spinner, Stack, Text, Title } from '@/components/ui';
+import { Label, Spinner, Stack, Text, Title } from '@/components/ui';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing, typography } from '@/designTokens';
 import {
@@ -28,9 +32,6 @@ import { copyHouseholdToYear } from '@/pages/reportBuilder/utils/changeReportYea
 import type { RootState } from '@/store';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { convertPoliciesToV1Format, type HouseholdReproduction } from '@/utils/reproducibilityCode';
-
-/** Both policies run at once; a household new to the Public API takes about three minutes. */
-const EXPECTED_MS = 3 * 60 * 1000;
 
 export interface HouseholdReportPageProps {
   /** The household's country: its model, currency and inputs. */
@@ -323,20 +324,11 @@ export default function HouseholdReportPage({
             />
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md }}>
-            <Button
-              size="sm"
-              onClick={() => request(household)}
-              disabled={running || !validation.isValid || shows(household)}
-            >
-              Calculate
-            </Button>
-            {!validation.isValid && validation.errors[0] && (
-              <span style={{ fontSize: typography.fontSize.xs, color: colors.error }}>
-                {validation.errors[0].message}
-              </span>
-            )}
-          </div>
+          <HouseholdCalculateRow
+            onCalculate={() => request(household)}
+            disabled={running || !validation.isValid || shows(household)}
+            validation={validation}
+          />
 
           <SaveHouseholdForm
             key={savedHouseholdOpenings}
@@ -347,18 +339,11 @@ export default function HouseholdReportPage({
         </Stack>
       </ReportSection>
 
-      {running && <RunProgress title="Calculating this household" expectedMs={EXPECTED_MS} />}
+      {running && <HouseholdRunProgress />}
 
       {failed && (
-        <ErrorState
-          compact
-          title="This household could not be calculated"
-          description={
-            // A Public API message can carry a long unbroken path.
-            run.error?.message && (
-              <span style={{ overflowWrap: 'anywhere' }}>{run.error.message}</span>
-            )
-          }
+        <HouseholdRunFailure
+          error={run.error}
           onRetry={() => retry(household, validation.isValid)}
         />
       )}

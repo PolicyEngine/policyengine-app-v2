@@ -35,6 +35,21 @@ export const householdResultCardStyle: CSSProperties = {
   background: colors.background.primary,
 };
 
+/** The headline's caption, e.g. "Annual net income". */
+export const householdHeadlineLabelStyle: CSSProperties = {
+  fontSize: typography.fontSize.xs,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.text.secondary,
+};
+
+/** The headline's amount, in large figures that line up. */
+export const householdHeadlineFigureStyle: CSSProperties = {
+  fontSize: typography.fontSize['4xl'],
+  lineHeight: 1.1,
+  fontWeight: typography.fontWeight.semibold,
+  fontVariantNumeric: 'tabular-nums',
+};
+
 /** A tab per household output, under the result's headline. */
 export function HouseholdOutputTabs<View extends string>({
   options,
