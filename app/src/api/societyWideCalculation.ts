@@ -102,7 +102,8 @@ export async function fetchSocietyWideCalculation(
     countryId,
     reformPolicyId,
     baselinePolicyId,
-    { region: params.region, time_period: params.time_period }
+    { region: params.region, time_period: params.time_period },
+    NATIONAL_REQUEST
   );
 }
 
@@ -117,18 +118,57 @@ export async function fetchLocalAreaBreakdown(
   baselinePolicyId: string,
   params: SocietyWideCalculationParams
 ): Promise<LocalAreaBreakdownResponse> {
-  return fetchEconomyCalculation<LocalAreaBreakdown>(countryId, reformPolicyId, baselinePolicyId, {
-    region: params.region,
-    time_period: params.time_period,
-    breakdown: 'local_areas',
-  });
+  return fetchEconomyCalculation<LocalAreaBreakdown>(
+    countryId,
+    reformPolicyId,
+    baselinePolicyId,
+    { region: params.region, time_period: params.time_period, breakdown: 'local_areas' },
+    BREAKDOWN_REQUEST
+  );
+}
+
+/** How a request names itself in its errors and logs. */
+interface EconomyRequestKind {
+  /** The start of an error's message, e.g. "Local-area breakdown failed". */
+  label: string;
+  /** The log entry's prefix, the calling function's name. */
+  logName: string;
+  /** Give the error body's `message` field, when it has one, rather than the raw body. */
+  readsBodyMessage: boolean;
+}
+
+const NATIONAL_REQUEST: EconomyRequestKind = {
+  label: 'Society-wide calculation',
+  logName: 'fetchSocietyWideCalculation',
+  readsBodyMessage: false,
+};
+
+const BREAKDOWN_REQUEST: EconomyRequestKind = {
+  label: 'Local-area breakdown',
+  logName: 'fetchLocalAreaBreakdown',
+  readsBodyMessage: true,
+};
+
+/** An error body's `message` field, when the body is JSON with one. */
+function bodyMessage(body: string): string | null {
+  try {
+    const parsed: unknown = JSON.parse(body);
+    if (parsed && typeof parsed === 'object') {
+      const message = (parsed as { message?: unknown }).message;
+      return typeof message === 'string' && message ? message : null;
+    }
+  } catch {
+    // Not JSON: the caller gives the body as it is.
+  }
+  return null;
 }
 
 async function fetchEconomyCalculation<Result extends ResultProvenance>(
   countryId: string,
   reformPolicyId: string,
   baselinePolicyId: string,
-  params: EconomyCalculationParams
+  params: EconomyCalculationParams,
+  kind: EconomyRequestKind
 ): Promise<EconomyCalculationResponse<Result>> {
   const queryParams = new URLSearchParams();
 
@@ -155,14 +195,9 @@ async function fetchEconomyCalculation<Result extends ResultProvenance>(
     } catch {
       // ignore
     }
-    console.error(
-      `[fetchSocietyWideCalculation] ${response.status} ${response.statusText}`,
-      url,
-      body
-    );
-    throw new Error(
-      `Society-wide calculation failed (${response.status}): ${body || response.statusText}`
-    );
+    console.error(`[${kind.logName}] ${response.status} ${response.statusText}`, url, body);
+    const detail = (kind.readsBodyMessage && bodyMessage(body)) || body || response.statusText;
+    throw new Error(`${kind.label} failed (${response.status}): ${detail}`);
   }
 
   const data: EconomyCalculationResponse<Result> = await response.json();

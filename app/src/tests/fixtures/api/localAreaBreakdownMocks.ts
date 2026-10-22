@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import {
   LIST_SHAPE_LOCAL_AUTHORITY_IMPACT,
   UK_RESULT_OTHER_FIELDS,
@@ -128,3 +129,20 @@ export const BREAKDOWN_ERROR_RESPONSE = {
   result: null,
   error: 'The local-area run failed',
 };
+
+/** An HTTP error response whose body the test chooses. */
+export function mockErrorResponseWithBody(status: number, statusText: string, body: string) {
+  return { ok: false, status, statusText, text: vi.fn().mockResolvedValue(body) };
+}
+
+/** A Public API error body with a message, as JSON. */
+export const BREAKDOWN_REFUSED_MESSAGE =
+  'breakdown=local_areas needs .py 6.10.0 or later; this bundle runs 6.7.5';
+export const BREAKDOWN_REFUSED_BODY = JSON.stringify({
+  status: 'error',
+  message: BREAKDOWN_REFUSED_MESSAGE,
+  result: null,
+});
+
+/** An error body that is not JSON. */
+export const PLAIN_TEXT_ERROR_BODY = 'upstream request timeout';

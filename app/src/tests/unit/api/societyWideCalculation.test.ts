@@ -10,13 +10,17 @@ import {
 import {
   BREAKDOWN_ERROR_RESPONSE,
   BREAKDOWN_OK_RESPONSE,
+  BREAKDOWN_REFUSED_BODY,
+  BREAKDOWN_REFUSED_MESSAGE,
   BREAKDOWN_REGION_SCOTLAND,
   BREAKDOWN_REGION_UK,
   BREAKDOWN_YEAR,
   EMPTY_BREAKDOWN_RESULT,
   EXPECTED_BREAKDOWN,
+  mockErrorResponseWithBody,
   NATIONAL_UK_RESULT_WITH_NULL_AREAS,
   NATIONAL_UK_RESULT_WITHOUT_AREA_KEYS,
+  PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
 import {
   ERROR_MESSAGES,
@@ -591,6 +595,53 @@ describe('societyWide API', () => {
       expect(response.status).toBe('error');
       expect(response.error).toBe(BREAKDOWN_ERROR_RESPONSE.error);
       expect(response.result).toBeNull();
+    });
+
+    test('given the API refuses the breakdown with a message then the error names the breakdown and gives the message', async () => {
+      // Given
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(
+        mockErrorResponseWithBody(HTTP_STATUS.BAD_REQUEST, 'Bad Request', BREAKDOWN_REFUSED_BODY)
+      );
+
+      // When
+      const request = fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      await expect(request).rejects.toThrow(
+        `Local-area breakdown failed (400): ${BREAKDOWN_REFUSED_MESSAGE}`
+      );
+      expect(consoleError.mock.calls[0][0]).toBe('[fetchLocalAreaBreakdown] 400 Bad Request');
+    });
+
+    test('given an error body that is not JSON then the breakdown error gives the body', async () => {
+      // Given
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue(
+        mockErrorResponseWithBody(
+          HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          'Internal Server Error',
+          PLAIN_TEXT_ERROR_BODY
+        )
+      );
+
+      // When
+      const request = fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      await expect(request).rejects.toThrow(
+        `Local-area breakdown failed (500): ${PLAIN_TEXT_ERROR_BODY}`
+      );
     });
   });
 });
