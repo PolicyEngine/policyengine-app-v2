@@ -1,5 +1,14 @@
 [
   {
+    "title": "High value council tax surcharge: revenue by constituency in 2028-29",
+    "description": "We estimate the surcharge raises \u00a3410 million in 2028-29 from owner-occupied main residences in England before behavioural responses, 39% of it from 10 constituencies.",
+    "date": "2026-10-22 12:00:00",
+    "tags": ["uk", "policy", "tax", "interactives"],
+    "authors": ["maria-juaristi"],
+    "filename": "high-value-council-tax-surcharge-constituency-estimates.md",
+    "image": "high-value-council-tax-surcharge-constituency-estimates/cover.webp"
+  },
+  {
     "title": "PolicyEngine's microsimulation package published in the Journal of Open Source Software",
     "description": "The peer-reviewed paper describing policyengine, the open-source Python package for UK and US tax-benefit microsimulation that powers PolicyEngine, is now published in JOSS.",
     "date": "2026-10-12 12:00:00",
