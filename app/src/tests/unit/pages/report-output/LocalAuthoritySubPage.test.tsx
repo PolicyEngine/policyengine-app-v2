@@ -157,5 +157,18 @@ describe('LocalAuthoritySubPage', () => {
         )
       ).toBeInTheDocument();
     });
+
+    test('given saved constituencies but no local authority key then the tab offers to compute, as the section does', () => {
+      // When
+      renderWithQueryClient(
+        <LocalAuthoritySubPage
+          output={MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD}
+          {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+        />
+      );
+
+      // Then
+      expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    });
   });
 });

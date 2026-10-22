@@ -15,7 +15,10 @@ import {
   COMPLETE_RESPONSE,
   QUEUED_RESPONSE,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
-import { MOCK_UK_REPORT_OUTPUT_WITH_LA } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+import {
+  MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
+  MOCK_UK_REPORT_OUTPUT_WITH_LA,
+} from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   BREAKDOWN_CONSTITUENCY_IMPACT,
   BREAKDOWN_LOCAL_AUTHORITY_IMPACT,
@@ -325,5 +328,40 @@ describe('MigrationSubPage UK local areas', () => {
     await openSection(user, 'Constituency impact');
 
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0].withheld).toBeUndefined();
+  });
+
+  test('given saved constituencies but no local authority key then the constituency section shows them and the local authority section offers to compute', async () => {
+    const user = userEvent.setup();
+    renderUKMigrationSubPage(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD);
+
+    await openSection(user, 'Constituency impact');
+
+    expect(screen.getByTestId('constituency-impact')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+
+    await openSection(user, 'Local authority impact');
+
+    expect(screen.queryByTestId('local-authority-impact')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+  });
+
+  test('given saved constituencies and the local authorities computed then each section keeps its own source', async () => {
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    renderUKMigrationSubPage(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD);
+    await openSection(user, 'Local authority impact');
+
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    expect(await screen.findByTestId('local-authority-impact')).toBeInTheDocument();
+    expect(vi.mocked(LocalAuthoritySubPage).mock.lastCall?.[0]).toMatchObject({
+      output: { local_authority_impact: BREAKDOWN_LOCAL_AUTHORITY_IMPACT },
+      withheld: null,
+    });
+    await openSection(user, 'Constituency impact');
+    expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0]).toMatchObject({
+      output: { constituency_impact: MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD.constituency_impact },
+      withheld: undefined,
+    });
   });
 });

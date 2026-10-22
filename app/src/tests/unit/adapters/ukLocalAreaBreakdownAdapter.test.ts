@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { countWithheldUKAreas, withheldUKAreasOf } from '@/adapters/ukLocalAreaBreakdownAdapter';
+import {
+  breakdownLevelsWithheld,
+  countWithheldUKAreas,
+  localAreaOutput,
+  withheldUKAreasOf,
+} from '@/adapters/ukLocalAreaBreakdownAdapter';
 import {
   METADATA_CONSTITUENCY_COUNT,
   PUBLISHED_CONSTITUENCY_NAMES,
@@ -7,6 +12,7 @@ import {
   UNLISTED_CONSTITUENCY_NAME,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 
 describe('countWithheldUKAreas', () => {
   test('given a UK-wide breakdown then counts the listed constituencies it left out', () => {
@@ -112,5 +118,46 @@ describe('withheldUKAreasOf', () => {
 
     // Then
     expect(result.constituency).toEqual({ withheld: 3, total: METADATA_CONSTITUENCY_COUNT });
+  });
+});
+
+describe('localAreaOutput per level', () => {
+  const savedConstituenciesOnly = MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any;
+
+  test('given saved constituencies and no breakdown then returns the result as it is', () => {
+    // When
+    const result = localAreaOutput(savedConstituenciesOnly, null);
+
+    // Then
+    expect(result).toBe(savedConstituenciesOnly);
+  });
+
+  test('given saved constituencies and a breakdown then keeps them and takes only the local authorities', () => {
+    // When
+    const result = localAreaOutput(savedConstituenciesOnly, NORMALIZED_BREAKDOWN) as any;
+
+    // Then
+    expect(result.constituency_impact).toBe(savedConstituenciesOnly.constituency_impact);
+    expect(result.local_authority_impact).toBe(NORMALIZED_BREAKDOWN.local_authority_impact);
+  });
+});
+
+describe('breakdownLevelsWithheld', () => {
+  test('given a saved level then it gets no withheld count, and only the breakdown levels do', () => {
+    // When
+    const result = breakdownLevelsWithheld(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any, {
+      constituency: { withheld: 2, total: 3 },
+      local_authority: null,
+    });
+
+    // Then
+    expect(result).toEqual({ local_authority: null });
+  });
+
+  test('given no counts then gives none', () => {
+    // Then
+    expect(
+      breakdownLevelsWithheld(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any, undefined)
+    ).toBeUndefined();
   });
 });

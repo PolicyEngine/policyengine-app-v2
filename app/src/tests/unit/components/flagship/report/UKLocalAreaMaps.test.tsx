@@ -14,7 +14,10 @@ import {
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
 import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
-import { MOCK_UK_REPORT_OUTPUT_WITH_LA } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+import {
+  MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
+  MOCK_UK_REPORT_OUTPUT_WITH_LA,
+} from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 
 function hexagon(container: HTMLElement, name: string): Element {
   return container.querySelector(`[data-area-id="${name}"]`)!;
@@ -335,5 +338,43 @@ describe('UKLocalAreaMaps disclosure-controlled areas', () => {
       { label: 'Relative household income change, 90% range', value: '0.10% to 0.70%' },
       { label: 'Estimate', value: 'Approximate' },
     ]);
+  });
+});
+
+describe('UKLocalAreaMaps missing levels', () => {
+  test('given a level the result does not hold then the map shows the content given for it', async () => {
+    const user = userEvent.setup();
+    render(
+      <UKLocalAreaMaps
+        output={MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any}
+        missingLevelContent={<p>Compute these areas</p>}
+      />,
+      'uk'
+    );
+    expect(screen.queryByText('Compute these areas')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    expect(screen.getByText('Compute these areas')).toBeInTheDocument();
+    expect(screen.queryByText('No local authority data available')).not.toBeInTheDocument();
+  });
+
+  test('given a level computed with no areas left then it says there is no data, not the content for a missing level', async () => {
+    const user = userEvent.setup();
+    render(
+      <UKLocalAreaMaps
+        output={{
+          ...MOCK_UK_REPORT_OUTPUT_WITH_LA,
+          local_authority_impact: { by_local_authority: {} },
+        }}
+        missingLevelContent={<p>Compute these areas</p>}
+      />,
+      'uk'
+    );
+
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    expect(screen.getByText('No local authority data available')).toBeInTheDocument();
+    expect(screen.queryByText('Compute these areas')).not.toBeInTheDocument();
   });
 });

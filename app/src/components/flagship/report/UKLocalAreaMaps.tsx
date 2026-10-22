@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconChevronDown, IconSearch } from '@tabler/icons-react';
 import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
 import type { UKAreaLevel, UKBreakdownWithheldAreas } from '@/adapters/ukLocalAreaBreakdownAdapter';
@@ -214,6 +214,7 @@ export default function UKLocalAreaMaps({
   output,
   region,
   withheld,
+  missingLevelContent,
 }: {
   output: SocietyWideReportOutput;
   /** The report's region, e.g. "country/wales", which names the areas' nation. */
@@ -223,6 +224,12 @@ export default function UKLocalAreaMaps({
    * which a note under the map gives. Undefined for a saved result.
    */
   withheld?: UKBreakdownWithheldAreas;
+  /**
+   * Shown in place of a level's map when the result does not hold that
+   * level at all (absent or null), e.g. the panel that computes it. A level
+   * computed with no areas left still says there is no data.
+   */
+  missingLevelContent?: ReactNode;
 }) {
   const [areaKind, setAreaKind] = useState<UKAreaKind>('constituencies');
   const [mode, setMode] = useState<UKChangeMode>('absolute');
@@ -231,14 +238,14 @@ export default function UKLocalAreaMaps({
   const noun = AREA_NOUNS[areaKind];
   const level = AREA_LEVELS[areaKind];
 
-  const areas = useMemo((): AreaImpacts | null => {
+  const levelAreas = useMemo((): AreaImpacts | undefined => {
     const uk = output as ReportOutputSocietyWideUK;
-    const byName =
-      areaKind === 'constituencies'
-        ? uk.constituency_impact?.by_constituency
-        : uk.local_authority_impact?.by_local_authority;
-    return byName && Object.keys(byName).length > 0 ? byName : null;
+    return areaKind === 'constituencies'
+      ? uk.constituency_impact?.by_constituency
+      : uk.local_authority_impact?.by_local_authority;
   }, [areaKind, output]);
+  const areas = levelAreas && Object.keys(levelAreas).length > 0 ? levelAreas : null;
+  const levelMissing = !levelAreas;
 
   const mapData = useMemo(
     () =>
@@ -440,6 +447,8 @@ export default function UKLocalAreaMaps({
             </div>
           </div>
         </div>
+      ) : levelMissing && missingLevelContent ? (
+        missingLevelContent
       ) : (
         <Stack style={{ gap: spacing.sm }}>
           <Text c={colors.text.secondary}>No {noun.one} data available</Text>

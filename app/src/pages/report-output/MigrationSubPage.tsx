@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
 import {
+  hasConstituencyImpacts,
+  hasLocalAuthorityImpacts,
+} from '@/adapters/societyWideOutputNormalizer';
+import {
+  breakdownLevelsWithheld,
   localAreaOutput,
   ukLocalAreaBreakdownRequest,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
@@ -154,26 +158,38 @@ function UKLocalAreaSections({
     () => localAreaOutput(output, breakdown.breakdown),
     [output, breakdown.breakdown]
   );
-  // Only a breakdown's areas are disclosure-controlled; saved ones are not.
-  const withheld = useUKWithheldAreas(
-    hasUKLocalAreaImpacts(output) ? null : breakdown.breakdown,
-    request?.region
+  // Only a breakdown's levels are disclosure-controlled; saved ones are not.
+  const withheld = breakdownLevelsWithheld(
+    output,
+    useUKWithheldAreas(breakdown.breakdown, request?.region)
   );
-  const computeButton = areaOutput ? undefined : <UKLocalAreaComputeButton breakdown={breakdown} />;
+  // Each section decides on its own level: a saved result with one level
+  // offers the breakdown in the other level's section.
+  const hasConstituencies = !!areaOutput && hasConstituencyImpacts(areaOutput);
+  const hasLocalAuthorities = !!areaOutput && hasLocalAuthorityImpacts(areaOutput);
+  const computeButton = <UKLocalAreaComputeButton breakdown={breakdown} />;
   const computePanel = <UKLocalAreaComputePanel breakdown={breakdown} showStartButton={false} />;
 
   return (
     <>
-      <CollapsibleSection label="Constituency impact" defaultOpen={false} right={computeButton}>
-        {areaOutput ? (
+      <CollapsibleSection
+        label="Constituency impact"
+        defaultOpen={false}
+        right={hasConstituencies ? undefined : computeButton}
+      >
+        {hasConstituencies && areaOutput ? (
           <ConstituencySubPage output={areaOutput} withheld={withheld?.constituency} />
         ) : (
           computePanel
         )}
       </CollapsibleSection>
 
-      <CollapsibleSection label="Local authority impact" defaultOpen={false} right={computeButton}>
-        {areaOutput ? (
+      <CollapsibleSection
+        label="Local authority impact"
+        defaultOpen={false}
+        right={hasLocalAuthorities ? undefined : computeButton}
+      >
+        {hasLocalAuthorities && areaOutput ? (
           <LocalAuthoritySubPage output={areaOutput} withheld={withheld?.local_authority} />
         ) : (
           computePanel

@@ -1,37 +1,45 @@
-import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
+import {
+  hasConstituencyImpacts,
+  hasLocalAuthorityImpacts,
+} from '@/adapters/societyWideOutputNormalizer';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { Region } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
+import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { isUKLocalLevelGeography, isUKLocalLevelRegion } from '@/utils/geographyUtils';
 
-/** The result with a completed breakdown's constituency and local authority impacts in it. */
-export function withLocalAreaBreakdown(
-  output: SocietyWideReportOutput,
-  breakdown: LocalAreaBreakdown
-): SocietyWideReportOutput {
-  return {
-    ...output,
-    constituency_impact: breakdown.constituency_impact,
-    local_authority_impact: breakdown.local_authority_impact,
-  } as SocietyWideReportOutput;
-}
-
 /**
- * The result whose local-area impacts a UK report shows: its own when it
- * holds them (older saved results), else the result with a completed
- * breakdown's areas in it. Null until there are areas to show.
+ * The result whose local-area impacts a UK report shows, level by level:
+ * each level the result holds (older saved results) as it is, and each
+ * level it lacks from a completed breakdown. Null until either level has
+ * areas to show; a level still lacking stays absent, for its view to offer
+ * the breakdown.
  */
 export function localAreaOutput(
   output: SocietyWideReportOutput,
   breakdown: LocalAreaBreakdown | null
 ): SocietyWideReportOutput | null {
-  if (hasUKLocalAreaImpacts(output)) {
+  const savedConstituencies = hasConstituencyImpacts(output);
+  const savedLocalAuthorities = hasLocalAuthorityImpacts(output);
+  if (savedConstituencies && savedLocalAuthorities) {
     return output;
   }
-  return breakdown ? withLocalAreaBreakdown(output, breakdown) : null;
+  if (!breakdown) {
+    return savedConstituencies || savedLocalAuthorities ? output : null;
+  }
+  const uk = output as ReportOutputSocietyWideUK;
+  return {
+    ...output,
+    constituency_impact: savedConstituencies
+      ? uk.constituency_impact
+      : breakdown.constituency_impact,
+    local_authority_impact: savedLocalAuthorities
+      ? uk.local_authority_impact
+      : breakdown.local_authority_impact,
+  } as SocietyWideReportOutput;
 }
 
 /** A report's breakdown request, as the v2 local-area views take it. */
@@ -82,7 +90,8 @@ export type UKAreaLevel = 'constituency' | 'local_authority';
  */
 export type UKWithheldAreas = { withheld: number; total: number } | null;
 
-export type UKBreakdownWithheldAreas = Record<UKAreaLevel, UKWithheldAreas>;
+/** Each level's withheld areas; a level absent here gets no withheld note. */
+export type UKBreakdownWithheldAreas = Partial<Record<UKAreaLevel, UKWithheldAreas>>;
 
 /**
  * The areas of a level a breakdown did not publish, counted against the
@@ -143,5 +152,23 @@ export function withheldUKAreasOf(
       publishedNames: Object.keys(breakdown.local_authority_impact?.by_local_authority ?? {}),
       regions,
     }),
+  };
+}
+
+/**
+ * The withheld areas of only the levels a breakdown supplies: a level the
+ * result already holds is saved, not disclosure-controlled, so it gets no
+ * withheld note.
+ */
+export function breakdownLevelsWithheld(
+  output: SocietyWideReportOutput,
+  withheld: UKBreakdownWithheldAreas | undefined
+): UKBreakdownWithheldAreas | undefined {
+  if (!withheld) {
+    return undefined;
+  }
+  return {
+    ...(!hasConstituencyImpacts(output) && { constituency: withheld.constituency }),
+    ...(!hasLocalAuthorityImpacts(output) && { local_authority: withheld.local_authority }),
   };
 }

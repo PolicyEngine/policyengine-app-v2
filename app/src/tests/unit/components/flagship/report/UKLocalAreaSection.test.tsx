@@ -20,6 +20,7 @@ import {
   FAILED_RESPONSE,
   QUEUED_RESPONSE,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
@@ -156,5 +157,26 @@ describe('UKLocalAreaSection', () => {
 
     // Then
     expect(screen.queryByText(/not shown/)).not.toBeInTheDocument();
+  });
+
+  test('given saved constituencies but no local authority key then the local authority map offers to compute, and the constituency map stays saved', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    const { container } = renderSection(MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any);
+    expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    await waitFor(() =>
+      expect(container.querySelector('[data-area-id="Hartlepool"]')).not.toBeNull()
+    );
+    await user.click(screen.getByRole('tab', { name: 'Constituencies' }));
+    expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
+    expect(screen.queryByText(/constituencies are not shown/)).not.toBeInTheDocument();
   });
 });

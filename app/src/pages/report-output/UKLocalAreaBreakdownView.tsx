@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import {
-  withLocalAreaBreakdown,
+  breakdownLevelsWithheld,
+  localAreaOutput,
   type UKBreakdownWithheldAreas,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
@@ -29,9 +30,13 @@ export function UKLocalAreaBreakdownView({
   children: (areaOutput: SocietyWideReportOutput, withheld?: UKBreakdownWithheldAreas) => ReactNode;
 }) {
   const breakdown = useUKLocalAreaBreakdown({ countryId: 'uk', ...request });
-  const withheld = useUKWithheldAreas(breakdown.breakdown, request.region);
+  // Only a breakdown's levels are disclosure-controlled; saved ones are not.
+  const withheld = breakdownLevelsWithheld(
+    output,
+    useUKWithheldAreas(breakdown.breakdown, request.region)
+  );
   const areaOutput = useMemo(
-    () => (breakdown.breakdown ? withLocalAreaBreakdown(output, breakdown.breakdown) : null),
+    () => (breakdown.breakdown ? localAreaOutput(output, breakdown.breakdown) : null),
     [output, breakdown.breakdown]
   );
 

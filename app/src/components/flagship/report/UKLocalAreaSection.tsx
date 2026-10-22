@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
-import { localAreaOutput } from '@/adapters/ukLocalAreaBreakdownAdapter';
+import { breakdownLevelsWithheld, localAreaOutput } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import UKLocalAreaComputePanel from '@/components/report/UKLocalAreaComputePanel';
@@ -42,14 +41,19 @@ export default function UKLocalAreaSection({
     () => localAreaOutput(output, breakdown.breakdown),
     [output, breakdown.breakdown]
   );
-  // Only a breakdown's areas are disclosure-controlled; saved ones are not.
-  const withheld = useUKWithheldAreas(
-    hasUKLocalAreaImpacts(output) ? null : breakdown.breakdown,
-    region
-  );
+  // Only a breakdown's levels are disclosure-controlled; saved ones are not.
+  const withheld = breakdownLevelsWithheld(output, useUKWithheldAreas(breakdown.breakdown, region));
 
   if (areaOutput) {
-    return <UKLocalAreaMaps output={areaOutput} region={region} withheld={withheld} />;
+    // A saved result with one level offers the breakdown for the other.
+    return (
+      <UKLocalAreaMaps
+        output={areaOutput}
+        region={region}
+        withheld={withheld}
+        missingLevelContent={<UKLocalAreaComputePanel breakdown={breakdown} />}
+      />
+    );
   }
 
   return (

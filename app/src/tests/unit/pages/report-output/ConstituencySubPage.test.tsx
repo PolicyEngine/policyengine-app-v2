@@ -10,6 +10,7 @@ import {
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
+import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
 import {
   V2_UK_LOCAL_AREA_REQUEST_PROPS,
   withNullAreaImpacts,
@@ -117,5 +118,21 @@ describe('ConstituencySubPage', () => {
     // Then
     expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
     expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
+  });
+
+  test('given saved constituencies but no local authority key then the tab shows them, as the section does', () => {
+    // When
+    renderWithQueryClient(
+      <ConstituencySubPage
+        output={MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD as any}
+        {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+      />
+    );
+
+    // Then
+    expect(
+      screen.getByText('Absolute household income change by constituency')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
   });
 });
