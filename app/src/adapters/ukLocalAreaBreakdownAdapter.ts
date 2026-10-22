@@ -128,14 +128,19 @@ export type UKBreakdownWithheldAreas = Partial<Record<UKAreaLevel, UKWithheldAre
 
 /**
  * The areas of a level a breakdown did not publish, counted against the
- * region list from the country metadata. A count needs the two lists to
- * name the same areas, so it is given only:
- * - for constituencies, whose 650 names API v1 and .py share. Local
- *   authorities are not counted: API v1 lists 360, .py 361 ("Ards and
- *   North Down" is .py's only);
- * - for a UK-wide report, as the metadata does not say which nation an
- *   area is in;
- * - when every published name is in the list.
+ * level's areas in the region list from the country metadata. Both levels
+ * follow one rule. A count needs the two lists to name the same areas, so
+ * it is given only:
+ * - for a UK-wide report. The metadata gives each area's name, label and
+ *   type, but not its code or nation, so a nation's areas cannot be picked
+ *   out of the list;
+ * - when every published name is in the list. Otherwise the lists
+ *   disagree, and no count is given.
+ *
+ * The Public API lists the same 650 constituencies as .py, and from
+ * PolicyEngine/policyengine-api#4024 on the same 361 local authorities as
+ * .py 6.10.0. An earlier deployment lists 360, without Ards and North Down;
+ * a breakdown that publishes that area then gets no local authority count.
  */
 export function countWithheldUKAreas({
   level,
@@ -148,7 +153,7 @@ export function countWithheldUKAreas({
   publishedNames: string[];
   regions: Region[];
 }): UKWithheldAreas {
-  if (level !== 'constituency' || (region && region.toLowerCase() !== 'uk')) {
+  if (region && region.toLowerCase() !== 'uk') {
     return null;
   }
   const prefix = `${level}/`;

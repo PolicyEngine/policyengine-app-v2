@@ -21,6 +21,7 @@ import {
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
   COMPLETE_RESPONSE,
+  COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   FAILED_RESPONSE,
   QUEUED_RESPONSE,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
@@ -152,6 +153,39 @@ describe('UKLocalAreaSection', () => {
 
     // Then
     expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+  });
+
+  test('given a UK-wide breakdown complete then the local authority map says how many local authorities were not published', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+    renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(screen.getByText(/^2 of 3 local authorities are not shown\./)).toBeInTheDocument();
+  });
+
+  test('given a breakdown that publishes a local authority the region list does not name then that map has no count and the constituency map keeps its own', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY);
+    renderSection();
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    // Then
+    expect(
+      screen.getByText(/^Local authorities whose estimates fail the survey data’s disclosure rules/)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/local authorities are not shown\./)).not.toBeInTheDocument();
   });
 
   test('given saved area data then no disclosure note shows', () => {

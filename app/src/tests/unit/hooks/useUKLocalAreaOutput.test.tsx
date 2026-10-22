@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchLocalAreaBreakdown } from '@/api/societyWideCalculation';
 import { useUKLocalAreaOutput } from '@/hooks/useUKLocalAreaOutput';
+import { UK_WIDE_WITHHELD_LOCAL_AUTHORITIES } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
@@ -69,7 +70,9 @@ describe('useUKLocalAreaOutput', () => {
     const areaOutput = result.current.areaOutput as any;
     expect(areaOutput.constituency_impact).toBe(savedConstituenciesOnly.constituency_impact);
     expect(areaOutput.local_authority_impact).toBe(NORMALIZED_BREAKDOWN.local_authority_impact);
-    expect(result.current.withheld).toEqual({ local_authority: null });
+    expect(result.current.withheld).toEqual({
+      local_authority: UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
+    });
   });
 
   test('given an older release result then it offers no compute and start sends nothing', () => {

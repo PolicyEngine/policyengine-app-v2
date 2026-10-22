@@ -8,20 +8,29 @@ import {
   withheldUKAreasOf,
 } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import {
+  ARDS_AND_NORTH_DOWN,
   METADATA_CONSTITUENCY_COUNT,
+  METADATA_LOCAL_AUTHORITY_COUNT,
   PUBLISHED_CONSTITUENCY_NAMES,
+  PUBLISHED_LOCAL_AUTHORITY_NAMES,
   UK_METADATA_REGIONS,
+  UK_METADATA_REGIONS_WITHOUT_ARDS_AND_NORTH_DOWN,
   UK_WIDE_WITHHELD_CONSTITUENCIES,
+  UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
   UNLISTED_CONSTITUENCY_NAME,
+  UNLISTED_LOCAL_AUTHORITY_NAME,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
-  BREAKDOWN_LOCAL_AUTHORITY_NAME,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
-import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
+import {
+  COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
+  NORMALIZED_BREAKDOWN,
+} from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
+import type { LocalAreaBreakdown } from '@/types/metadata/LocalAreaBreakdown';
 
 describe('countWithheldUKAreas', () => {
   test('given a UK-wide breakdown then counts the listed constituencies it left out', () => {
@@ -53,44 +62,85 @@ describe('countWithheldUKAreas', () => {
     expect(result?.withheld).toBe(2);
   });
 
-  test('given local authorities then gives no count, as the area lists differ', () => {
+  test('given a UK-wide breakdown then counts the listed local authorities it left out, as for constituencies', () => {
     // When
     const result = countWithheldUKAreas({
       level: 'local_authority',
       region: 'uk',
-      publishedNames: [BREAKDOWN_LOCAL_AUTHORITY_NAME],
+      publishedNames: PUBLISHED_LOCAL_AUTHORITY_NAMES,
       regions: UK_METADATA_REGIONS,
     });
 
     // Then
-    expect(result).toBeNull();
-  });
-
-  test('given a nation report then gives no count, as the metadata has no nation per area', () => {
-    // When
-    const result = countWithheldUKAreas({
-      level: 'constituency',
-      region: 'country/scotland',
-      publishedNames: PUBLISHED_CONSTITUENCY_NAMES,
-      regions: UK_METADATA_REGIONS,
+    expect(result).toEqual({
+      withheld: METADATA_LOCAL_AUTHORITY_COUNT - PUBLISHED_LOCAL_AUTHORITY_NAMES.length,
+      total: METADATA_LOCAL_AUTHORITY_COUNT,
     });
-
-    // Then
-    expect(result).toBeNull();
   });
 
-  test('given a published name the metadata does not list then gives no count', () => {
+  test('given a UK-wide breakdown that publishes Ards and North Down then counts it among the listed local authorities', () => {
     // When
     const result = countWithheldUKAreas({
-      level: 'constituency',
+      level: 'local_authority',
       region: 'uk',
-      publishedNames: [...PUBLISHED_CONSTITUENCY_NAMES, UNLISTED_CONSTITUENCY_NAME],
+      publishedNames: [...PUBLISHED_LOCAL_AUTHORITY_NAMES, ARDS_AND_NORTH_DOWN],
       regions: UK_METADATA_REGIONS,
+    });
+
+    // Then
+    expect(result).toEqual({ withheld: 1, total: METADATA_LOCAL_AUTHORITY_COUNT });
+  });
+
+  test('given a region list without Ards and North Down and a breakdown that publishes it then gives no local authority count', () => {
+    // When
+    const result = countWithheldUKAreas({
+      level: 'local_authority',
+      region: 'uk',
+      publishedNames: [...PUBLISHED_LOCAL_AUTHORITY_NAMES, ARDS_AND_NORTH_DOWN],
+      regions: UK_METADATA_REGIONS_WITHOUT_ARDS_AND_NORTH_DOWN,
     });
 
     // Then
     expect(result).toBeNull();
   });
+
+  test.each([
+    ['constituency', PUBLISHED_CONSTITUENCY_NAMES],
+    ['local_authority', PUBLISHED_LOCAL_AUTHORITY_NAMES],
+  ] as const)(
+    'given a nation report then gives no %s count, as the metadata has no code or nation per area',
+    (level, publishedNames) => {
+      // When
+      const result = countWithheldUKAreas({
+        level,
+        region: 'country/scotland',
+        publishedNames,
+        regions: UK_METADATA_REGIONS,
+      });
+
+      // Then
+      expect(result).toBeNull();
+    }
+  );
+
+  test.each([
+    ['constituency', [...PUBLISHED_CONSTITUENCY_NAMES, UNLISTED_CONSTITUENCY_NAME]],
+    ['local_authority', [...PUBLISHED_LOCAL_AUTHORITY_NAMES, UNLISTED_LOCAL_AUTHORITY_NAME]],
+  ] as const)(
+    'given a published %s name the metadata does not list then gives no count',
+    (level, publishedNames) => {
+      // When
+      const result = countWithheldUKAreas({
+        level,
+        region: 'uk',
+        publishedNames: [...publishedNames],
+        regions: UK_METADATA_REGIONS,
+      });
+
+      // Then
+      expect(result).toBeNull();
+    }
+  );
 
   test('given no region metadata then gives no count', () => {
     // When
@@ -107,15 +157,37 @@ describe('countWithheldUKAreas', () => {
 });
 
 describe('withheldUKAreasOf', () => {
-  test('given a UK-wide breakdown then counts constituencies and leaves local authorities uncounted', () => {
+  test('given a UK-wide breakdown then counts constituencies and local authorities by the same rule', () => {
     // When
     const result = withheldUKAreasOf(NORMALIZED_BREAKDOWN, 'uk', UK_METADATA_REGIONS);
 
     // Then
     expect(result).toEqual({
-      constituency: { withheld: 2, total: METADATA_CONSTITUENCY_COUNT },
+      constituency: UK_WIDE_WITHHELD_CONSTITUENCIES,
+      local_authority: UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
+    });
+  });
+
+  test('given a breakdown that publishes an unlisted local authority then only the local authorities lose their count', () => {
+    // Given
+    const breakdown = COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY.result as LocalAreaBreakdown;
+
+    // When
+    const result = withheldUKAreasOf(breakdown, 'uk', UK_METADATA_REGIONS);
+
+    // Then
+    expect(result).toEqual({
+      constituency: UK_WIDE_WITHHELD_CONSTITUENCIES,
       local_authority: null,
     });
+  });
+
+  test('given a nation report then neither level is counted', () => {
+    // When
+    const result = withheldUKAreasOf(NORMALIZED_BREAKDOWN, 'country/scotland', UK_METADATA_REGIONS);
+
+    // Then
+    expect(result).toEqual({ constituency: null, local_authority: null });
   });
 
   test('given a level the API returned as null then counts it as publishing no areas', () => {
@@ -127,6 +199,7 @@ describe('withheldUKAreasOf', () => {
 
     // Then
     expect(result.constituency).toEqual({ withheld: 3, total: METADATA_CONSTITUENCY_COUNT });
+    expect(result.local_authority).toEqual(UK_WIDE_WITHHELD_LOCAL_AUTHORITIES);
   });
 });
 

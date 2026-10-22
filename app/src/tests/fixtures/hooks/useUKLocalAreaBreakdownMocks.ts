@@ -1,5 +1,6 @@
 import type { LocalAreaBreakdownResponse } from '@/api/societyWideCalculation';
 import { EXPECTED_BY_CONSTITUENCY } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
+import { UNLISTED_LOCAL_AUTHORITY_NAME } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   BREAKDOWN_ERROR_RESPONSE,
   BREAKDOWN_REGION_SCOTLAND,
@@ -51,6 +52,30 @@ export const LOADING_DATA_RESPONSE: LocalAreaBreakdownResponse = {
 export const COMPLETE_RESPONSE: LocalAreaBreakdownResponse = {
   status: 'ok',
   result: NORMALIZED_BREAKDOWN,
+};
+
+/**
+ * A completed breakdown that also publishes a local authority the region
+ * metadata does not list, so its local authorities cannot be counted.
+ */
+export const COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY: LocalAreaBreakdownResponse = {
+  status: 'ok',
+  result: {
+    ...NORMALIZED_BREAKDOWN,
+    local_authority_impact: {
+      by_local_authority: {
+        ...NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority,
+        [UNLISTED_LOCAL_AUTHORITY_NAME]: {
+          x: 10,
+          y: 15,
+          average_household_income_change: 310.5,
+          relative_household_income_change: 0.0091,
+          code: 'E06000010',
+          disclosure_tier: 'reported',
+        },
+      },
+    },
+  },
 };
 
 export const FAILED_RESPONSE: LocalAreaBreakdownResponse = {

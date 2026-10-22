@@ -5,6 +5,7 @@ import {
   NO_WITHHELD_CONSTITUENCIES,
   ONE_WITHHELD_CONSTITUENCY,
   SOME_WITHHELD_CONSTITUENCIES,
+  SOME_WITHHELD_LOCAL_AUTHORITIES,
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
@@ -27,6 +28,25 @@ describe('UKAreaDisclosureNotes', () => {
     expect(
       screen.getByText(
         '12 of 650 constituencies are not shown. The survey data’s disclosure rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  test('given counted withheld local authorities then says how many were not published and why, as for constituencies', () => {
+    // When
+    render(
+      <UKAreaDisclosureNotes
+        level="local_authority"
+        areas={LOCAL_AUTHORITIES}
+        withheld={SOME_WITHHELD_LOCAL_AUTHORITIES}
+      />,
+      'uk'
+    );
+
+    // Then
+    expect(
+      screen.getByText(
+        '2 of 361 local authorities are not shown. The survey data’s disclosure rules withhold an area’s estimate when too few surveyed households support it, or when it could reveal a household’s income.'
       )
     ).toBeInTheDocument();
   });

@@ -7,7 +7,10 @@ import { LocalAuthoritySubPage } from '@/pages/report-output/LocalAuthoritySubPa
 import MigrationSubPage, {
   canShowCongressionalDistrictImpactCard,
 } from '@/pages/report-output/MigrationSubPage';
-import { UK_WIDE_WITHHELD_CONSTITUENCIES } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
+import {
+  UK_WIDE_WITHHELD_CONSTITUENCIES,
+  UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
+} from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
   BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
@@ -342,7 +345,9 @@ describe('MigrationSubPage UK local areas', () => {
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0]).toMatchObject({
       withheld: UK_WIDE_WITHHELD_CONSTITUENCIES,
     });
-    expect(vi.mocked(LocalAuthoritySubPage).mock.lastCall?.[0]).toMatchObject({ withheld: null });
+    expect(vi.mocked(LocalAuthoritySubPage).mock.lastCall?.[0]).toMatchObject({
+      withheld: UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
+    });
   });
 
   test('given saved area data then the sections get no withheld areas', async () => {
@@ -391,7 +396,7 @@ describe('MigrationSubPage UK local areas', () => {
     expect(await screen.findByTestId('local-authority-impact')).toBeInTheDocument();
     expect(vi.mocked(LocalAuthoritySubPage).mock.lastCall?.[0]).toMatchObject({
       output: { local_authority_impact: BREAKDOWN_LOCAL_AUTHORITY_IMPACT },
-      withheld: null,
+      withheld: UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
     });
     await openSection(user, 'Constituency impact');
     expect(vi.mocked(ConstituencySubPage).mock.lastCall?.[0]).toMatchObject({

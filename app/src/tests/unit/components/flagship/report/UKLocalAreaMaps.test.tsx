@@ -16,6 +16,7 @@ import { NATIONAL_OUTPUT_WITHOUT_AREAS } from '@/tests/fixtures/components/flags
 import {
   ALL_WITHHELD_CONSTITUENCIES,
   SOME_WITHHELD_CONSTITUENCIES,
+  SOME_WITHHELD_LOCAL_AUTHORITIES,
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
@@ -285,12 +286,31 @@ describe('UKLocalAreaMaps disclosure-controlled areas', () => {
       <UKLocalAreaMaps
         output={breakdownOutput}
         region={UK_WIDE_REGION}
-        withheld={{ constituency: SOME_WITHHELD_CONSTITUENCIES, local_authority: null }}
+        withheld={{
+          constituency: SOME_WITHHELD_CONSTITUENCIES,
+          local_authority: SOME_WITHHELD_LOCAL_AUTHORITIES,
+        }}
       />,
       'uk'
     );
 
     expect(screen.getByText(/^12 of 650 constituencies are not shown\./)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
+
+    expect(screen.getByText(/^2 of 361 local authorities are not shown\./)).toBeInTheDocument();
+  });
+
+  test('given local authorities that cannot be counted then the map says why areas may be missing, with no count', async () => {
+    const user = userEvent.setup();
+    render(
+      <UKLocalAreaMaps
+        output={breakdownOutput}
+        region={UK_WIDE_REGION}
+        withheld={{ constituency: SOME_WITHHELD_CONSTITUENCIES, local_authority: null }}
+      />,
+      'uk'
+    );
 
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
 

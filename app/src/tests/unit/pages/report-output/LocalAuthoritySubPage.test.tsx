@@ -15,6 +15,7 @@ import {
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
   COMPLETE_RESPONSE,
+  COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   FAILED_RESPONSE,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import {
@@ -146,10 +147,32 @@ describe('LocalAuthoritySubPage', () => {
       ).toBeInTheDocument();
     });
 
-    test('given the areas computed then the charts say local authorities may be withheld, with no count', async () => {
+    test('given the areas computed for a UK-wide report then the charts say how many local authorities were not published', async () => {
       // Given
       const user = userEvent.setup();
       mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
+      renderWithQueryClient(
+        <LocalAuthoritySubPage
+          output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+          {...V2_UK_LOCAL_AREA_REQUEST_PROPS}
+        />
+      );
+
+      // When
+      await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+      // Then
+      expect(
+        await screen.findByText(/^2 of 3 local authorities are not shown\./)
+      ).toBeInTheDocument();
+    });
+
+    test('given a computed local authority the region list does not name then the charts say local authorities may be withheld, with no count', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockFetchLocalAreaBreakdown.mockResolvedValue(
+        COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY
+      );
       renderWithQueryClient(
         <LocalAuthoritySubPage
           output={NATIONAL_OUTPUT_WITHOUT_AREAS}
