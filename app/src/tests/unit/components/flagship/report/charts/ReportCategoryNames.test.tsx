@@ -158,7 +158,22 @@ describe('report chart category names', () => {
     );
 
     // Then
-    expectEveryBarNamed(container, ['Children', 'Adults', 'Seniors', 'All']);
+    expectEveryBarNamed(container, ['Children', 'Ages 18–64', 'Ages 65+', 'All']);
+  });
+
+  test('given the full poverty by age chart on a desktop then each group is named by its ages', () => {
+    // Given
+    size.width = DESKTOP_CARD.width;
+    size.height = DESKTOP_CARD.height;
+    phone.matches = false;
+
+    // When
+    const { container } = render(
+      <PovertyImpactByAgeSubPage output={REPORT_4332_OUTPUT} fillHeight />
+    );
+
+    // Then: not "Working-age adults" or "Seniors", which a UK reader takes for pensioners.
+    expectEveryBarNamed(container, ['Children', 'Adults 18 to 64', 'Adults 65 and over', 'All']);
   });
 
   test('given a desktop then the names show in full', () => {
