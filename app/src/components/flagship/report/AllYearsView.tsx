@@ -166,7 +166,10 @@ export default function AllYearsView({
         </div>
         {notRun.length > 0 && (
           <Button size="sm" variant="outline" onClick={onCalculateAll}>
-            Calculate {notRun.length === 1 ? notRun[0] : `the other ${notRun.length} years`}
+            Calculate{' '}
+            {notRun.length === 1
+              ? reportYearLabel(notRun[0], countryId)
+              : `the other ${notRun.length} years`}
           </Button>
         )}
       </div>
