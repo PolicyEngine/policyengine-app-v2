@@ -39,7 +39,11 @@ import { useReportYearEconomies } from '@/hooks/useReportYearEconomy';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUnreadableReportMeta } from '@/hooks/useUnreadableReportMeta';
 import { clearDraftAfterRun, loadProvisionsIntoDraft } from '@/libs/draftReform';
-import { isUntitledReform } from '@/libs/flagship/draftLabels';
+import {
+  isUntitledReform,
+  reportYearLabel,
+  reportYearSpanLabel,
+} from '@/libs/flagship/draftLabels';
 import {
   reportBaselineLabel,
   reportBaselineUnknown,
@@ -503,13 +507,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       yearEconomy?.status === 'error' ? (
         <ErrorState
           compact
-          title={`Could not calculate ${year}`}
+          title={`Could not calculate ${reportYearLabel(year, report?.countryId)}`}
           description={yearEconomy.message}
           onRetry={yearEconomy.retry}
         />
       ) : (
         <RunProgress
-          title={`Calculating ${year}`}
+          title={`Calculating ${reportYearLabel(year, report?.countryId)}`}
           progress={yearEconomy?.progress}
           runStage={yearEconomy?.runStage}
           expectedMs={getDurationForRegion(report?.countryId ?? 'us', region)}
@@ -554,7 +558,15 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       baselinePolicyId={baselinePolicyId}
       output={shownOutput}
       pending={yearPending}
-      coverYear={allYears ? `${windowYears[0]}–${windowYears[windowYears.length - 1]}` : year}
+      coverYear={
+        allYears
+          ? reportYearSpanLabel(
+              windowYears[0],
+              windowYears[windowYears.length - 1],
+              report?.countryId
+            )
+          : reportYearLabel(year, report?.countryId)
+      }
       yearSwitcher={
         windowYears.length > 1 ? (
           <ReportYearSwitcher
@@ -562,6 +574,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
             value={shownView}
             onChange={selectView}
             statusByYear={statusByYear}
+            countryId={report?.countryId}
           />
         ) : undefined
       }

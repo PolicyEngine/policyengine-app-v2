@@ -26,4 +26,21 @@ describe('ReportYearSwitcher', () => {
 
     expect(onChange).toHaveBeenCalledWith('2028');
   });
+
+  test('given a UK window then each year reads as its fiscal year', () => {
+    render(
+      <ReportYearSwitcher
+        years={['2026', '2027']}
+        value="2026"
+        onChange={vi.fn()}
+        statusByYear={{ '2026': 'done' }}
+        countryId="uk"
+      />
+    );
+
+    expect(screen.getByRole('tab', { name: 'All years, 2026-27 to 2027-28' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '2026-27, results ready' })).toHaveTextContent(
+      '2026-27'
+    );
+  });
 });

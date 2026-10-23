@@ -3,6 +3,7 @@ import { winnerShareMetric } from '@/components/flagship/ReportContents';
 import { Button, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useBudgetWindow } from '@/hooks/useBudgetWindow';
+import { reportYearLabel, reportYearSpanLabel } from '@/libs/flagship/draftLabels';
 import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 import type { YearStatus } from './ReportYearSwitcher';
 
@@ -103,7 +104,7 @@ export default function AllYearsView({
     budget?.annualImpacts.find((impact) => String(impact.year) === year)?.budgetaryImpact;
   const budgetPending = !budget && !window.isError && window.data?.status !== 'error';
   const notRun = years.filter((year) => statusByYear[year] === 'not-run');
-  const span = `${years[0]}–${years[years.length - 1]}`;
+  const span = reportYearSpanLabel(years[0], years[years.length - 1], countryId);
 
   const pendingCell = (year: string) =>
     statusByYear[year] === 'computing'
@@ -165,7 +166,10 @@ export default function AllYearsView({
         </div>
         {notRun.length > 0 && (
           <Button size="sm" variant="outline" onClick={onCalculateAll}>
-            Calculate {notRun.length === 1 ? notRun[0] : `the other ${notRun.length} years`}
+            Calculate{' '}
+            {notRun.length === 1
+              ? reportYearLabel(notRun[0], countryId)
+              : `the other ${notRun.length} years`}
           </Button>
         )}
       </div>
@@ -205,7 +209,7 @@ export default function AllYearsView({
                     fontWeight: typography.fontWeight.medium,
                   }}
                 >
-                  {year}
+                  {reportYearLabel(year, countryId)}
                 </th>
               ))}
               <th

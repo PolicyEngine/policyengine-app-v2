@@ -188,6 +188,37 @@ describe('ReportView cover', () => {
     expect(screen.queryByText(/Hand-built/)).not.toBeInTheDocument();
   });
 
+  test('given a UK report then the cover reads the fiscal year and says so', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title="Higher personal allowance"
+          sourceNote="Hand-built"
+          populationLabel="United Kingdom"
+          provisions={[]}
+          year="2026"
+          output={null}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>,
+      'uk'
+    );
+
+    expect(screen.getByText('United Kingdom · 2026-27')).toBeInTheDocument();
+    expect(
+      screen.getByText('UK figures are for fiscal years, April to March.')
+    ).toBeInTheDocument();
+  });
+
+  test('given a US report then the cover reads the calendar year, with no fiscal-year note', () => {
+    renderCover('Delaware');
+
+    expect(screen.getByText('Delaware · 2026')).toBeInTheDocument();
+    expect(screen.queryByText(/fiscal years/)).not.toBeInTheDocument();
+  });
+
   test('given no population then the cover has no line under the title', () => {
     renderCover();
 

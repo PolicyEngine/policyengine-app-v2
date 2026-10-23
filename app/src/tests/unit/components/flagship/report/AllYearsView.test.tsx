@@ -64,6 +64,22 @@ describe('AllYearsView', () => {
     expect(onCalculateAll).toHaveBeenCalled();
   });
 
+  test('given a UK window with one year left then the button names its fiscal year', () => {
+    render(
+      <AllYearsView
+        countryId="uk"
+        reformPolicyId="1"
+        baselinePolicyId="2"
+        years={['2026', '2027']}
+        outputs={{ '2026': OUTPUT_2026, '2027': null }}
+        statusByYear={{ '2026': 'done', '2027': 'not-run' }}
+        onCalculateAll={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Calculate 2027-28' })).toBeInTheDocument();
+  });
+
   test('given a UK window with no budget change then it reads £0', () => {
     budgetWindow.perYear = 0;
     render(
