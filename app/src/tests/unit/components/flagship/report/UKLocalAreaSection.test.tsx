@@ -20,6 +20,11 @@ import {
   ERROR_MESSAGE,
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  HEX_MAP_TAB,
+  MAP_LEGEND_NAME,
+  mockUKBoundaryFetch,
+} from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import {
   COMPLETE_RESPONSE,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   FAILED_RESPONSE,
@@ -51,6 +56,7 @@ function renderSection(output = NATIONAL_OUTPUT_WITHOUT_AREAS, props = UK_SECTIO
 
 describe('UKLocalAreaSection', () => {
   beforeEach(() => {
+    vi.stubGlobal('fetch', mockUKBoundaryFetch());
     vi.clearAllMocks();
   });
 
@@ -109,6 +115,7 @@ describe('UKLocalAreaSection', () => {
     expect(
       await screen.findByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
     expect(
       container.querySelector(`[data-area-id="${BREAKDOWN_CONSTITUENCY_NAME}"]`)
     ).not.toBeNull();
@@ -132,9 +139,11 @@ describe('UKLocalAreaSection', () => {
     await waitFor(() => expect(mockFetchLocalAreaBreakdown).toHaveBeenCalledTimes(2));
   });
 
-  test('given a saved result with area impacts then it shows the maps with no button', () => {
+  test('given a saved result with area impacts then it shows the maps with no button', async () => {
     // When
+    const user = userEvent.setup();
     const { container } = renderSection(STORED_OUTPUT_WITH_AREAS);
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
 
     // Then
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
@@ -152,7 +161,9 @@ describe('UKLocalAreaSection', () => {
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
 
     // Then
-    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/^2 of 3 constituencies are not published\./)
+    ).toBeInTheDocument();
   });
 
   test('given a UK-wide breakdown complete then the local authority map says how many local authorities were not published', async () => {
@@ -161,13 +172,15 @@ describe('UKLocalAreaSection', () => {
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
     renderSection();
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
-    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/^2 of 3 constituencies are not published\./)
+    ).toBeInTheDocument();
 
     // When
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
 
     // Then
-    expect(screen.getByText(/^2 of 3 local authorities are not shown\./)).toBeInTheDocument();
+    expect(screen.getByText(/^2 of 3 local authorities are not published\./)).toBeInTheDocument();
   });
 
   test('given a breakdown that publishes a local authority the region list does not name then that map has no count and the constituency map keeps its own', async () => {
@@ -176,7 +189,9 @@ describe('UKLocalAreaSection', () => {
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY);
     renderSection();
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
-    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/^2 of 3 constituencies are not published\./)
+    ).toBeInTheDocument();
 
     // When
     await user.click(screen.getByRole('tab', { name: 'Local authorities' }));
@@ -185,15 +200,18 @@ describe('UKLocalAreaSection', () => {
     expect(
       screen.getByText(/^Local authorities whose estimates fail the survey data’s disclosure rules/)
     ).toBeInTheDocument();
-    expect(screen.queryByText(/local authorities are not shown\./)).not.toBeInTheDocument();
+    expect(screen.queryByText(/local authorities are not published\./)).not.toBeInTheDocument();
   });
 
-  test('given saved area data then no disclosure note shows', () => {
+  test('given saved area data then no disclosure note shows', async () => {
     // When
     renderSection(STORED_OUTPUT_WITH_AREAS);
 
     // Then
-    expect(screen.queryByText(/not shown/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/not published/)).not.toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
   });
 
   test('given a breakdown release result with constituencies only then the local authority map offers to compute, and the constituency map stays', async () => {
@@ -201,6 +219,7 @@ describe('UKLocalAreaSection', () => {
     const user = userEvent.setup();
     mockFetchLocalAreaBreakdown.mockResolvedValue(COMPLETE_RESPONSE);
     const { container } = renderSection(BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY);
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
     expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
 
@@ -216,13 +235,14 @@ describe('UKLocalAreaSection', () => {
     );
     await user.click(screen.getByRole('tab', { name: 'Constituencies' }));
     expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
-    expect(screen.queryByText(/constituencies are not shown/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/constituencies are not published/)).not.toBeInTheDocument();
   });
 
   test('given an older stored result with constituencies but no local authorities then it says there is no local authority data and offers no compute', async () => {
     // Given
     const user = userEvent.setup();
     const { container } = renderSection(OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES);
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
     expect(container.querySelector(`[data-area-id="${STORED_CONSTITUENCY_NAME}"]`)).not.toBeNull();
 
     // When

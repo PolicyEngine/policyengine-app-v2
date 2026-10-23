@@ -10,6 +10,11 @@ import {
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
+import {
+  HEX_MAP_TAB,
+  MAP_LEGEND_NAME,
+  mockUKBoundaryFetch,
+} from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
 import { COMPLETE_RESPONSE } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { MOCK_UK_REPORT_OUTPUT } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
 import {
@@ -38,10 +43,11 @@ function renderWithQueryClient(ui: React.ReactNode) {
 
 describe('ConstituencySubPage', () => {
   beforeEach(() => {
+    vi.stubGlobal('fetch', mockUKBoundaryFetch());
     vi.clearAllMocks();
   });
 
-  test('given saved constituency data then it shows the absolute change map', () => {
+  test('given saved constituency data then it shows the absolute change map', async () => {
     // When
     render(<ConstituencySubPage output={MOCK_UK_REPORT_OUTPUT} />, 'uk');
 
@@ -49,6 +55,9 @@ describe('ConstituencySubPage', () => {
     expect(
       screen.getByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
   });
 
   test.each([
@@ -88,6 +97,7 @@ describe('ConstituencySubPage', () => {
       await screen.findByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
     // The map's one hexagon is the computed area: hovering it names it.
+    await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
     const hexagons = container.querySelectorAll('svg polygon');
     expect(hexagons).toHaveLength(1);
     await user.hover(hexagons[0]);
@@ -117,11 +127,13 @@ describe('ConstituencySubPage', () => {
     await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
 
     // Then
-    expect(await screen.findByText(/^2 of 3 constituencies are not shown\./)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/^2 of 3 constituencies are not published\./)
+    ).toBeInTheDocument();
     expect(screen.getByText(/^1 constituency is approximate:/)).toBeInTheDocument();
   });
 
-  test('given a breakdown release result with constituencies only then the tab shows them, as the section does', () => {
+  test('given a breakdown release result with constituencies only then the tab shows them, as the section does', async () => {
     // When
     renderWithQueryClient(
       <ConstituencySubPage
@@ -135,6 +147,9 @@ describe('ConstituencySubPage', () => {
       screen.getByText('Absolute household income change by constituency')
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
   });
 
   test('given a stored result with no version and no area data then the tab says it is not available and offers no compute', () => {

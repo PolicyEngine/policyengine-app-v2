@@ -45,12 +45,14 @@ describe('normalizeSocietyWideOutput', () => {
 
     // Then
     expect(points).toHaveLength(LIST_SHAPE_CONSTITUENCY_IMPACT.length);
+    // The point keeps the area's ONS code, which joins it to its boundary on the map.
     expect(points[0]).toEqual({
       id: 'Aldershot',
       label: 'Aldershot',
       value: 571.146162,
       x: 56,
       y: -40,
+      code: 'E14001063',
     });
   });
 

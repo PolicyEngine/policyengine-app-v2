@@ -148,10 +148,8 @@ function UKLocalAreaSections({
   report?: Report;
   simulations?: Simulation[];
 }) {
-  const { canCompute, breakdown, areaOutput, withheld } = useUKLocalAreaOutput(
-    output,
-    ukLocalAreaBreakdownRequest({ report, simulations })
-  );
+  const request = ukLocalAreaBreakdownRequest({ report, simulations });
+  const { canCompute, breakdown, areaOutput, withheld } = useUKLocalAreaOutput(output, request);
   // Each section decides on its own level: a missing level offers the
   // breakdown when the result's release serves one. Otherwise the section
   // shows its subpage as before.
@@ -171,7 +169,11 @@ function UKLocalAreaSections({
         {offerConstituencies ? (
           computePanel
         ) : (
-          <ConstituencySubPage output={shownOutput} withheld={withheld?.constituency} />
+          <ConstituencySubPage
+            output={shownOutput}
+            withheld={withheld?.constituency}
+            region={request?.region}
+          />
         )}
       </CollapsibleSection>
 
@@ -183,7 +185,11 @@ function UKLocalAreaSections({
         {offerLocalAuthorities ? (
           computePanel
         ) : (
-          <LocalAuthoritySubPage output={shownOutput} withheld={withheld?.local_authority} />
+          <LocalAuthoritySubPage
+            output={shownOutput}
+            withheld={withheld?.local_authority}
+            region={request?.region}
+          />
         )}
       </CollapsibleSection>
     </>

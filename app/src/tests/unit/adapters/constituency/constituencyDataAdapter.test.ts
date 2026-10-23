@@ -237,4 +237,22 @@ describe('constituencyDataAdapter', () => {
       upper: 0.007,
     });
   });
+
+  test('given an area with an ONS code then its point carries the code, which joins it to its boundary', () => {
+    // When
+    const [point] = transformConstituencyAbsoluteChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: 'East Kilbride and Strathaven', code: 'S14000021' });
+  });
+
+  test('given areas without codes then their points have none', () => {
+    // When
+    const points = transformConstituencyAbsoluteChange(MOCK_CONSTITUENCY_DATA);
+
+    // Then
+    expect(points.every((point) => !('code' in point))).toBe(true);
+  });
 });

@@ -33,18 +33,21 @@ const LOCAL_AUTHORITY_TABS: SidebarTab[] = [
 function LocalAuthorityCharts({
   output,
   withheld,
+  region,
 }: {
   output: SocietyWideReportOutput;
   withheld?: UKWithheldAreas;
+  /** A nation's report maps that nation alone. */
+  region?: string;
 }) {
   const [activeTab, setActiveTab] = useState<string>('average');
   return (
     <SidebarTabs tabs={LOCAL_AUTHORITY_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
       {activeTab === 'average' && (
-        <AbsoluteChangeByLocalAuthority output={output} withheld={withheld} />
+        <AbsoluteChangeByLocalAuthority output={output} withheld={withheld} region={region} />
       )}
       {activeTab === 'relative' && (
-        <RelativeChangeByLocalAuthority output={output} withheld={withheld} />
+        <RelativeChangeByLocalAuthority output={output} withheld={withheld} region={region} />
       )}
     </SidebarTabs>
   );
@@ -71,7 +74,7 @@ export function LocalAuthoritySubPage({
   withheld,
 }: LocalAuthoritySubPageProps) {
   if (hasLocalAuthorityImpacts(output)) {
-    return <LocalAuthorityCharts output={output} withheld={withheld} />;
+    return <LocalAuthorityCharts output={output} withheld={withheld} region={region} />;
   }
 
   // Offered only for a result from a release that serves breakdowns.
@@ -82,7 +85,11 @@ export function LocalAuthoritySubPage({
         request={{ reformPolicyId, baselinePolicyId, region, year }}
       >
         {(areaOutput, breakdownWithheld) => (
-          <LocalAuthorityCharts output={areaOutput} withheld={breakdownWithheld?.local_authority} />
+          <LocalAuthorityCharts
+            output={areaOutput}
+            withheld={breakdownWithheld?.local_authority}
+            region={region}
+          />
         )}
       </UKLocalAreaBreakdownView>
     );

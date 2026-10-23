@@ -31,6 +31,9 @@ export interface HexMapDataPoint {
   /** Y-coordinate on the hexagonal grid (0-based) */
   y: number;
 
+  /** The area's code, e.g. a UK area's ONS code, when the data gives one. */
+  code?: string;
+
   /** The value is an approximate estimate (UK disclosure control's `approximate` tier). */
   approximate?: boolean;
 

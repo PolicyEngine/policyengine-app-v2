@@ -33,18 +33,21 @@ const CONSTITUENCY_TABS: SidebarTab[] = [
 function ConstituencyCharts({
   output,
   withheld,
+  region,
 }: {
   output: SocietyWideReportOutput;
   withheld?: UKWithheldAreas;
+  /** A nation's report maps that nation alone. */
+  region?: string;
 }) {
   const [activeTab, setActiveTab] = useState<string>('average');
   return (
     <SidebarTabs tabs={CONSTITUENCY_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
       {activeTab === 'average' && (
-        <AbsoluteChangeByConstituency output={output} withheld={withheld} />
+        <AbsoluteChangeByConstituency output={output} withheld={withheld} region={region} />
       )}
       {activeTab === 'relative' && (
-        <RelativeChangeByConstituency output={output} withheld={withheld} />
+        <RelativeChangeByConstituency output={output} withheld={withheld} region={region} />
       )}
     </SidebarTabs>
   );
@@ -71,7 +74,7 @@ export function ConstituencySubPage({
   withheld,
 }: ConstituencySubPageProps) {
   if (hasConstituencyImpacts(output)) {
-    return <ConstituencyCharts output={output} withheld={withheld} />;
+    return <ConstituencyCharts output={output} withheld={withheld} region={region} />;
   }
 
   // Offered only for a result from a release that serves breakdowns.
@@ -82,7 +85,11 @@ export function ConstituencySubPage({
         request={{ reformPolicyId, baselinePolicyId, region, year }}
       >
         {(areaOutput, breakdownWithheld) => (
-          <ConstituencyCharts output={areaOutput} withheld={breakdownWithheld?.constituency} />
+          <ConstituencyCharts
+            output={areaOutput}
+            withheld={breakdownWithheld?.constituency}
+            region={region}
+          />
         )}
       </UKLocalAreaBreakdownView>
     );

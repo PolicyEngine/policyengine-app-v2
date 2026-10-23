@@ -242,4 +242,22 @@ describe('localAuthorityDataAdapter', () => {
     // Then
     expect(point.approximate).toBeUndefined();
   });
+
+  test('given an area with an ONS code then its point carries the code, which joins it to its boundary', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: BREAKDOWN_LOCAL_AUTHORITY_NAME, code: 'E06000001' });
+  });
+
+  test('given areas without codes then their points have none', () => {
+    // When
+    const points = transformLocalAuthorityAbsoluteChange(MOCK_LOCAL_AUTHORITY_DATA);
+
+    // Then
+    expect(points.every((point) => !('code' in point))).toBe(true);
+  });
 });

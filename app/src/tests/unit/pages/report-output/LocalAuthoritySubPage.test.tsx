@@ -14,6 +14,11 @@ import {
   ERROR_MESSAGE,
 } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
 import {
+  HEX_MAP_TAB,
+  MAP_LEGEND_NAME,
+  mockUKBoundaryFetch,
+} from '@/tests/fixtures/components/visualization/choropleth/ukAreaChoroplethMapMocks';
+import {
   COMPLETE_RESPONSE,
   COMPLETE_RESPONSE_WITH_UNLISTED_LOCAL_AUTHORITY,
   FAILED_RESPONSE,
@@ -45,8 +50,12 @@ function renderWithQueryClient(ui: React.ReactNode) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>, 'uk');
 }
 
+beforeEach(() => {
+  vi.stubGlobal('fetch', mockUKBoundaryFetch());
+});
+
 describe('LocalAuthoritySubPage', () => {
-  test('given UK report with local authority data then renders tabs', () => {
+  test('given UK report with local authority data then renders tabs', async () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT_WITH_LA;
 
@@ -56,9 +65,12 @@ describe('LocalAuthoritySubPage', () => {
     // Then
     expect(screen.getByText('Absolute change')).toBeInTheDocument();
     expect(screen.getByText('Relative change')).toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
   });
 
-  test('given UK report with local authority data then renders absolute change by default', () => {
+  test('given UK report with local authority data then renders absolute change by default', async () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT_WITH_LA;
 
@@ -69,6 +81,9 @@ describe('LocalAuthoritySubPage', () => {
     expect(
       screen.getByText('Absolute household income change by local authority')
     ).toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
   });
 
   test('given report without local_authority_impact field then shows not available message', () => {
@@ -84,7 +99,7 @@ describe('LocalAuthoritySubPage', () => {
     ).toBeInTheDocument();
   });
 
-  test('given UK report then component renders without error', () => {
+  test('given UK report then component renders without error', async () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT_WITH_LA;
 
@@ -93,6 +108,9 @@ describe('LocalAuthoritySubPage', () => {
 
     // Then
     expect(container).toBeInTheDocument();
+
+    // The geographic map has loaded its boundaries.
+    expect(await screen.findByRole('img', { name: MAP_LEGEND_NAME })).toBeInTheDocument();
   });
 
   describe('given a report whose result has no local authority data', () => {
@@ -139,6 +157,7 @@ describe('LocalAuthoritySubPage', () => {
         await screen.findByText('Absolute household income change by local authority')
       ).toBeInTheDocument();
       // The map's one hexagon is the computed area: hovering it names it.
+      await user.click(screen.getByRole('tab', { name: HEX_MAP_TAB }));
       const hexagons = container.querySelectorAll('svg polygon');
       expect(hexagons).toHaveLength(1);
       await user.hover(hexagons[0]);
@@ -163,7 +182,7 @@ describe('LocalAuthoritySubPage', () => {
 
       // Then
       expect(
-        await screen.findByText(/^2 of 3 local authorities are not shown\./)
+        await screen.findByText(/^2 of 3 local authorities are not published\./)
       ).toBeInTheDocument();
     });
 
@@ -186,7 +205,7 @@ describe('LocalAuthoritySubPage', () => {
       // Then
       expect(
         await screen.findByText(
-          /^Local authorities whose estimates fail the survey data’s disclosure rules are not shown\./
+          /^Local authorities whose estimates fail the survey data’s disclosure rules are not published\./
         )
       ).toBeInTheDocument();
     });

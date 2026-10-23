@@ -43,6 +43,7 @@ export function transformLocalAuthorityData(
     value: data[valueField],
     x: data.x,
     y: data.y,
+    ...(data.code && { code: data.code }),
     ...areaEstimateFields(data, valueField),
   }));
 }
