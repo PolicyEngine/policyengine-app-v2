@@ -73,8 +73,9 @@ export function ukNationPlace(region: string | undefined): Record<string, string
 
 /**
  * A new household: the household builder's own start, one adult and
- * nothing else set. A US household is measured against national poverty
- * thresholds; only the US model has them. A UK household in a report on
+ * nothing else set. A US household starts on national poverty
+ * thresholds, which the builder's SPM geography choice can change to a
+ * county's; only the US model has them. A UK household in a report on
  * Scotland, Wales or Northern Ireland starts there.
  */
 function newHousehold(countryId: CountryId, year: string, region?: string): Household {
@@ -185,15 +186,22 @@ interface HouseholdImpactSectionProps {
 }
 
 /**
- * The household inputs the reform's parameters read, nearest first; none
- * until the dependency map loads, or when it traces none of them, or for
- * a country without a traced map.
+ * The household inputs the reform's parameters read, nearest first, from
+ * the country's own traced map; none until the map loads, or when it
+ * traces none of them, or for a country without a traced map. Only inputs
+ * a reader describes a household with are suggested, as the builder's
+ * search lists only those.
  */
 function useSuggestedInputs(paths: string[], countryId: string): string[] {
   const metadata = useSelector((state: RootState) => state.metadata);
   const inputs = useMemo(
-    () => new Set(getInputVariables(metadata).map((variable) => variable.name)),
-    [metadata]
+    () =>
+      new Set(
+        getInputVariables(metadata)
+          .filter((variable) => describesAHousehold(variable, countryId))
+          .map((variable) => variable.name)
+      ),
+    [metadata, countryId]
   );
   const preferred = useMemo(
     () => new Set(commonHouseholdInputs(countryId).map((input) => input.name)),
@@ -207,18 +215,11 @@ function useSuggestedInputs(paths: string[], countryId: string): string[] {
       setSuggested([]);
       return;
     }
-    loadParameterDependencies()
+    loadParameterDependencies(countryId)
       .then((map) => {
         if (!cancelled) {
           setSuggested(
-            suggestedHouseholdInputs(
-              pathsKey.split('\n'),
-              map,
-              inputs,
-              undefined,
-              preferred,
-              countryId
-            )
+            suggestedHouseholdInputs(pathsKey.split('\n'), map, inputs, countryId, { preferred })
           );
         }
       })
@@ -569,8 +570,6 @@ function HouseholdCard({
               setHousehold(household.withBuilderChildCount(year, count))
             }
             disabled={running}
-            // National poverty thresholds, the model's default, without the choice.
-            hideSpmGeography
             layout="columns"
             suggestedVariables={suggestedVariables}
             suggestedLabel="Related to this reform"
@@ -637,6 +636,11 @@ function HouseholdCard({
             <HouseholdImpactResult
               impact={result}
               countryId={countryId}
+              methodology={{
+                baseline: result.provenance.baseline,
+                // One calculation served both policies: its methodology shows once.
+                reform: baselinePolicyId === reformPolicyId ? null : result.provenance.reform,
+              }}
               summary={`${requested.summary} · ${year}`}
               breakdowns={{
                 countryId,

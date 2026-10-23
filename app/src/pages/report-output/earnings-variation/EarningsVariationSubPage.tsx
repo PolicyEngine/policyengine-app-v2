@@ -40,8 +40,6 @@ interface Props {
   reformVariation?: HouseholdCalculationOutput | null;
   /** What shows while the variation calculates; a spinner and a line by default. */
   renderLoading?: () => ReactNode;
-  /** Leave out the SPM methodology footnote under the chart; shown by default. */
-  hideSpmFootnote?: boolean;
 }
 
 /**
@@ -59,7 +57,6 @@ export default function EarningsVariationSubPage({
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
   renderLoading,
-  hideSpmFootnote = false,
 }: Props) {
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -387,12 +384,10 @@ export default function EarningsVariationSubPage({
           year={normalizedReportYear}
         />
       )}
-      {!hideSpmFootnote && (
-        <SPMMethodologyFootnote
-          output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
-          context="variation"
-        />
-      )}
+      <SPMMethodologyFootnote
+        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+        context="variation"
+      />
     </Stack>
   );
 }
