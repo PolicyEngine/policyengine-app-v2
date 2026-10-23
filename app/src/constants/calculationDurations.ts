@@ -58,6 +58,14 @@ export const US_DISTRICT_SOCIETY_WIDE_DURATION_MS = 200 * 1000;
 export const UK_REGION_SOCIETY_WIDE_DURATION_MS = 110 * 1000;
 
 /**
+ * Estimate for a UK local-area breakdown run (`breakdown=local_areas`).
+ * No production runs exist yet to measure. Building the area results inside
+ * a national run took about 70–90 s; a separate run also loads the
+ * local-area dataset, which a cold worker downloads first.
+ */
+export const UK_LOCAL_AREA_BREAKDOWN_DURATION_MS = 3 * 60 * 1000;
+
+/**
  * Duration estimate for household calculations
  * These are synchronous API calls that block until complete
  */

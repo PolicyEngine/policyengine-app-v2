@@ -12,6 +12,7 @@ import {
   MOCK_CONSTITUENCY_DATA,
   SINGLE_CONSTITUENCY_DATA,
 } from '@/tests/fixtures/adapters/constituency/constituencyMocks';
+import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 describe('constituencyDataAdapter', () => {
   describe('transformConstituencyData', () => {
@@ -205,5 +206,53 @@ describe('constituencyDataAdapter', () => {
       expect(result[1].value).toBeLessThan(0); // Edinburgh Central
       expect(result[2].value).toBe(0); // Cardiff South
     });
+  });
+
+  test('given a breakdown area then its absolute points carry the tier and the 90% range', () => {
+    // When
+    const [point] = transformConstituencyAbsoluteChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: 'East Kilbride and Strathaven',
+      approximate: true,
+      lower: 40,
+      upper: 210,
+    });
+  });
+
+  test('given a breakdown area then its relative points carry the relative 90% range', () => {
+    // When
+    const [point] = transformConstituencyRelativeChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: 'East Kilbride and Strathaven',
+      approximate: true,
+      lower: 0.001,
+      upper: 0.007,
+    });
+  });
+
+  test('given an area with an ONS code then its point carries the code, which joins it to its boundary', () => {
+    // When
+    const [point] = transformConstituencyAbsoluteChange(
+      NORMALIZED_BREAKDOWN.constituency_impact.by_constituency
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: 'East Kilbride and Strathaven', code: 'S14000021' });
+  });
+
+  test('given areas without codes then their points have none', () => {
+    // When
+    const points = transformConstituencyAbsoluteChange(MOCK_CONSTITUENCY_DATA);
+
+    // Then
+    expect(points.every((point) => !('code' in point))).toBe(true);
   });
 });

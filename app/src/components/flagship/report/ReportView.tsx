@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { hasUKLocalAreaImpacts } from '@/adapters/societyWideOutputNormalizer';
+import { outputServesLocalAreaBreakdowns } from '@/adapters/ukLocalAreaBreakdownAdapter';
 import type { BillChange } from '@/api/billFeed';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { CalibrationPin } from '@/components/flagship/CalibrationMatches';
@@ -10,7 +12,7 @@ import HouseholdImpactSection from '@/components/flagship/report/household/House
 import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
-import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
+import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
   leadsWithStateRevenue,
@@ -46,6 +48,12 @@ const UK_DISTRICTS_CARD_COPY: DistrictsCardCopy = {
   title: 'Local area impacts',
   action: 'Explore local areas',
   preview: 'Compare income changes across constituencies and local authorities on a map.',
+};
+/** The card for results without area impacts, which a separate run calculates on request. */
+const UK_DISTRICTS_COMPUTE_CARD_COPY: DistrictsCardCopy = {
+  ...UK_DISTRICTS_CARD_COPY,
+  preview:
+    'Calculate income changes across constituencies and local authorities, and compare them on a map.',
 };
 
 function SectionHeading({ id, title }: { id: string; title: string }) {
@@ -409,7 +417,15 @@ export default function ReportView({
                       metrics={metrics}
                       metricsNote={output ? undefined : storedMetricsNote}
                       districtAvailable={districtScope || isUK}
-                      districtsCopy={isUK ? UK_DISTRICTS_CARD_COPY : undefined}
+                      districtsCopy={
+                        isUK
+                          ? output &&
+                            !hasUKLocalAreaImpacts(output) &&
+                            outputServesLocalAreaBreakdowns(output)
+                            ? UK_DISTRICTS_COMPUTE_CARD_COPY
+                            : UK_DISTRICTS_CARD_COPY
+                          : undefined
+                      }
                       showDistricts={showDistrictsSection}
                       onOpen={openReportSection}
                     />
@@ -463,7 +479,13 @@ export default function ReportView({
                         </CongressionalDistrictDataProvider>
                       )}
                       {output && !showUSDistricts && isUK && (
-                        <UKLocalAreaMaps output={output} region={region} />
+                        <UKLocalAreaSection
+                          output={output}
+                          region={region}
+                          year={year}
+                          reformPolicyId={reformPolicyId}
+                          baselinePolicyId={baselinePolicyId}
+                        />
                       )}
                       {output && !showUSDistricts && !isUK && (
                         <Text

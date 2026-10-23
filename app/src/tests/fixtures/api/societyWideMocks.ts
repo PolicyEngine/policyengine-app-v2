@@ -1266,6 +1266,35 @@ export const mockCompletedResponse: SocietyWideCalculationResponse = {
   result: mockUSReportOutput,
 };
 
+// A US result's bundle: the .py, model and data versions and the dataset
+export const mockUSPolicyEngineBundle = {
+  model_version: '1.634.4',
+  policyengine_version: '3.4.0',
+  data_version: '1.77.0',
+  dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
+};
+
+// A result with model and data versions of its own, which the bundle replaces
+const mockUSReportOutputWithOwnVersions = {
+  ...mockUSReportOutput,
+  model_version: 'old-model-version',
+  data_version: 'old-data-version',
+};
+
+// Completed response as the Public API returns it: the bundle inside the result
+export const mockCompletedResponseWithBundleInResult = {
+  status: 'ok',
+  message: null,
+  result: { ...mockUSReportOutputWithOwnVersions, policyengine_bundle: mockUSPolicyEngineBundle },
+};
+
+// Completed response with the bundle beside the result, which the app also reads
+export const mockCompletedResponseWithBundleBesideResult = {
+  status: 'ok',
+  result: mockUSReportOutputWithOwnVersions,
+  policyengine_bundle: mockUSPolicyEngineBundle,
+};
+
 // Error response
 export const mockErrorCalculationResponse: SocietyWideCalculationResponse = {
   status: 'error',

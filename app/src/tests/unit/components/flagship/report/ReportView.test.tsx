@@ -7,6 +7,21 @@ import { BillExternalEstimates } from '@/components/flagship/ValidationPanel';
 import { LocationProvider } from '@/contexts/LocationContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
+import {
+  NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
+  nationalResultFromBody,
+} from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import {
+  NATIONAL_OUTPUT_WITHOUT_AREAS,
+  SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
+  STORED_OUTPUT_WITH_AREAS,
+  UK_REPORT_SOURCE_NOTE,
+  UK_REPORT_TITLE,
+  UK_SECTION_PROPS,
+  UNVERSIONED_OUTPUT_WITHOUT_AREAS,
+} from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { COMPUTE_BUTTON_LABEL } from '@/tests/fixtures/components/report/UKLocalAreaComputePanelMocks';
+import { OTHER_BREAKDOWN_YEAR } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 import { mockCalibrationMatches } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import { TRACKED_BILL } from '@/tests/fixtures/libs/flagship/trackedBillMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
@@ -338,6 +353,182 @@ describe('ReportView districts by country', () => {
       expect(screen.getByRole('tab', { name: 'Household' })).toBeInTheDocument();
     }
   );
+});
+
+describe('ReportView UK local areas', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const renderUKReport = (output: Parameters<typeof ReportView>[0]['output']) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ status: 'computing', queue_position: 1, result: null }))
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title={UK_REPORT_TITLE}
+          sourceNote={UK_REPORT_SOURCE_NOTE}
+          provisions={[]}
+          year={UK_SECTION_PROPS.year}
+          region={UK_SECTION_PROPS.region}
+          reformPolicyId={UK_SECTION_PROPS.reformPolicyId}
+          baselinePolicyId={UK_SECTION_PROPS.baselinePolicyId}
+          output={output}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>,
+      'uk'
+    );
+  };
+
+  const economyRequests = () =>
+    vi
+      .mocked(fetch)
+      .mock.calls.map(([url]) => String(url))
+      .filter((url) => url.includes('/economy/'));
+
+  test('given results without area impacts then the card says they are calculated on request', () => {
+    // When
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+
+    // Then
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
+      'Calculate income changes across constituencies and local authorities, and compare them on a map.'
+    );
+  });
+
+  test('given results without area impacts then the local areas tab offers to compute them and sends nothing', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
+  });
+
+  test('given the Public API body for a .py 6.10.0 national result then the local areas tab offers to compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    const output = await nationalResultFromBody(NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE);
+    renderUKReport(output);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(screen.queryByText('No constituency data available')).not.toBeInTheDocument();
+  });
+
+  test('given a saved .py 6.10.0 result with the version only in its bundle then the local areas tab offers to compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+  });
+
+  test('given compute clicked then one breakdown request goes for the report region and year', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(NATIONAL_OUTPUT_WITHOUT_AREAS);
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // When
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+
+    // Then
+    await waitFor(() => expect(economyRequests()).toHaveLength(1));
+    expect(economyRequests()[0]).toContain(
+      `/uk/economy/${UK_SECTION_PROPS.reformPolicyId}/over/${UK_SECTION_PROPS.baselinePolicyId}?region=uk&time_period=${UK_SECTION_PROPS.year}&breakdown=local_areas`
+    );
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('given compute clicked then switching to another year sends no request until compute is clicked for it', async () => {
+    // Given
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ status: 'computing', queue_position: 1, result: null }))
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const reportForYear = (year: string) => (
+      <QueryClientProvider client={queryClient}>
+        <ReportView
+          title={UK_REPORT_TITLE}
+          sourceNote={UK_REPORT_SOURCE_NOTE}
+          provisions={[]}
+          year={year}
+          region={UK_SECTION_PROPS.region}
+          reformPolicyId={UK_SECTION_PROPS.reformPolicyId}
+          baselinePolicyId={UK_SECTION_PROPS.baselinePolicyId}
+          output={NATIONAL_OUTPUT_WITHOUT_AREAS}
+          calibration={null}
+          trackRecord={null}
+        />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(reportForYear(UK_SECTION_PROPS.year), 'uk');
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+    await user.click(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL }));
+    await waitFor(() => expect(economyRequests()).toHaveLength(1));
+
+    // When
+    rerender(reportForYear(OTHER_BREAKDOWN_YEAR));
+
+    // Then
+    expect(await screen.findByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(economyRequests()).toHaveLength(1);
+  });
+
+  test('given stored results with no version and no area data then the card and the tab read as before, with no compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(UNVERSIONED_OUTPUT_WITHOUT_AREAS);
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
+      'Compare income changes across constituencies and local authorities on a map.'
+    );
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(screen.getByText('No constituency data available')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
+  });
+
+  test('given saved results with area impacts then the tab shows the maps with no button', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(STORED_OUTPUT_WITH_AREAS);
+    expect(screen.getByRole('button', { name: 'Explore local areas' })).toHaveTextContent(
+      'Compare income changes across constituencies and local authorities on a map.'
+    );
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(
+      screen.getByText('Absolute household income change by constituency')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: COMPUTE_BUTTON_LABEL })).not.toBeInTheDocument();
+    expect(economyRequests()).toEqual([]);
+  });
 });
 
 describe('ReportView analytics', () => {

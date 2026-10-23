@@ -1,3 +1,4 @@
+import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { USCongressionalDistrictBreakdown } from './ReportOutputSocietyWideByCongressionalDistrict';
 
 export interface ReportOutputSocietyWideUS {
@@ -15,6 +16,11 @@ export interface ReportOutputSocietyWideUS {
   data_version: string;
   dataset?: string | null;
   policyengine_version?: string | null;
+  /**
+   * The versions and dataset the Public API ran the result on, inside the
+   * result as its economy route returns it. Saved results keep it.
+   */
+  policyengine_bundle?: PolicyEngineBundle | null;
   decile: {
     average: Record<string, number>;
     relative: Record<string, number>;
