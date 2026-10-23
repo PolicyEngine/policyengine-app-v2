@@ -10,6 +10,7 @@ import {
   CURRENCY_UNIT_SYMBOLS,
   formatValue,
   isPercentageUnit,
+  moneyDigits,
   SET_BY_FORMULA_SHORT,
 } from '@/utils/parameterValues';
 import { coerceByUnit } from '@/utils/valueCoercion';
@@ -72,9 +73,11 @@ export function ValueDisplay({
   // the sign goes before the symbol, so the symbol leaves its column.
   const signedAmount = numeric && Boolean(prefix) && value < 0;
   const magnitude = numeric
-    ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString('en-US', {
-        maximumFractionDigits: 6,
-      })
+    ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString(
+        'en-US',
+        // Money shows pence or cents, as formatValue does.
+        prefix ? moneyDigits(value) : { maximumFractionDigits: 6 }
+      )
     : '';
   const digits = signedAmount
     ? `−${prefix}${magnitude.replace(/^-/, '')}`

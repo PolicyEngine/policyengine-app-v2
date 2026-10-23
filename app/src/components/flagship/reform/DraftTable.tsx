@@ -182,11 +182,11 @@ export default function DraftTable({
   // then, and the reform's value then — not the values on the day it was added.
   const currentLawInYear = (provision: DraftProvision) => {
     // Null is current law too: an amount it leaves to a formula.
-    const value = currentLawForYear(parameters?.[provision.path]?.values, year);
+    const value = currentLawForYear(parameters?.[provision.path]?.values, year, draft.countryId);
     return value === undefined ? provision.baselineValue : value;
   };
   const valueInYear = (provision: DraftProvision) =>
-    (provisionChanged(provision) ? provisionValueInYear(provision, year) : null) ??
+    (provisionChanged(provision) ? provisionValueInYear(provision, year, draft.countryId) : null) ??
     currentLawInYear(provision);
   // A value with no limit reads as such, not as the text "Infinity".
   const formatRowValue = (value: unknown, unit: string | null) =>

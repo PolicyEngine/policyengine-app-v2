@@ -191,4 +191,10 @@ describe('ValueDisplay', () => {
 
     expect(screen.getByText('Set by formula')).toBeInTheDocument();
   });
+
+  test('given an uprated amount then it shows pence, not the raw float', () => {
+    render(<ValueDisplay param={param('currency-GBP')} value={346.366589511} />);
+
+    expect(screen.getByText('346.37')).toBeInTheDocument();
+  });
 });

@@ -7,7 +7,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { sameParameterValue } from '@/libs/draftReform';
 import { changeNamesPath } from '@/libs/flagship/billProvisions';
-import { dayLabel, describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
+import { changeDateLabel, describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
@@ -113,8 +113,9 @@ export default function ReportChanges({
   beforeLabel?: string;
 }) {
   const countryId = useCurrentCountry();
-  // Dates as the country writes them: "Jan 1, 2026" in the US, "1 Jan 2026" in the UK.
-  const dateText = (date: string) => dayLabel(date, countryId);
+  // Dates as the country writes them: "Jan 1, 2026" in the US; in the UK,
+  // the tax year ("2026-27") for a change from a year's start, else "1 Apr 2026".
+  const dateText = (date: string) => changeDateLabel(date, countryId);
   const endText = (date: string) => (date === FOREVER ? 'No end date' : dateText(date));
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const variables = useSelector((state: RootState) => state.metadata.variables);

@@ -24,6 +24,7 @@ import {
   provisionAdjusts,
   provisionIntervals,
   sameParameterValue,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { isUntitledReform, periodLabel, reportProvisionName } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
@@ -197,7 +198,7 @@ function AdjustPanel({
           value: periodValues[provision.path][index],
         }));
         const inYear = new ValueIntervalCollection(intervals).getValueAtDate(
-          `${runYear ?? CURRENT_YEAR}-01-01`
+          yearReadDate(runYear ?? CURRENT_YEAR, countryId)
         );
         return {
           ...provision,

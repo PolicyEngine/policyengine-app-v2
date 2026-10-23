@@ -62,6 +62,12 @@ describe('formatValue', () => {
     [-500, 'currency-GBP', '−£500'],
     [-500, 'currency-USD', '−$500'],
     [0.5, 'marginal-rate', '50%'],
+    // Money shows pence or cents, not the raw float.
+    [346.366589511, 'currency-GBP', '£346.37'],
+    [424.9, 'currency-GBP', '£424.90'],
+    [-12.5, 'currency-USD', '−$12.50'],
+    // An amount under 1 keeps its third decimal.
+    [0.655, 'currency-USD', '$0.655'],
   ])('given %s with unit %s then renders %s', (value, unit, expected) => {
     expect(formatValue(value, unit as string | null)).toBe(expected);
   });

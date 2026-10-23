@@ -191,7 +191,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
 
   // Null is an amount current law leaves to a formula; undefined, no value.
   const baselineAt = (memberPath: string, at: number) =>
-    currentLawForYear(parameters[memberPath]?.values, at);
+    currentLawForYear(parameters[memberPath]?.values, at, draft.countryId);
   const baselineOn = (memberPath: string, date: string) => {
     const values = parameters[memberPath]?.values;
     return (values ? new ValueIntervalCollection(values).getValueAtDate(date) : null) ?? null;
@@ -210,7 +210,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     if (!provision || !provisionChanged(provision)) {
       return baselineAt(memberPath, at);
     }
-    return provisionValueInYear(provision, at) ?? baselineAt(memberPath, at);
+    return provisionValueInYear(provision, at, draft.countryId) ?? baselineAt(memberPath, at);
   };
 
   /** The provision to write to — the draft's own, or a new one from the search entry. */
