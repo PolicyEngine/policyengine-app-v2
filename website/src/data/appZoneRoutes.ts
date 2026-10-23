@@ -175,6 +175,11 @@ export const appZoneRoutes: AppZoneRoute[] = [
       "https://futa-wage-base-dashboard.vercel.app/us/futa-wage-base-dashboard",
   },
   {
+    source: "/us/ballot-measures-2026",
+    destination:
+      "https://ballot-measures-2026.vercel.app/us/ballot-measures-2026",
+  },
+  {
     source: "/ai-beliefs",
     destination: "https://ai-beliefs.vercel.app/ai-beliefs",
   },
