@@ -6,7 +6,12 @@ import { cn } from '@/lib/utils';
 import { isUnlimitedValue } from '@/libs/draftReform';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { CURRENCY_UNIT_SYMBOLS, formatValue, isPercentageUnit } from '@/utils/parameterValues';
+import {
+  CURRENCY_UNIT_SYMBOLS,
+  formatValue,
+  isPercentageUnit,
+  moneyDigits,
+} from '@/utils/parameterValues';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
 interface ValueInputProps {
@@ -67,9 +72,11 @@ export function ValueDisplay({
   // the sign goes before the symbol, so the symbol leaves its column.
   const signedAmount = numeric && Boolean(prefix) && value < 0;
   const magnitude = numeric
-    ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString('en-US', {
-        maximumFractionDigits: 6,
-      })
+    ? Number((percentage ? value * 100 : value).toPrecision(12)).toLocaleString(
+        'en-US',
+        // Money shows pence or cents, as formatValue does.
+        prefix ? moneyDigits(value) : { maximumFractionDigits: 6 }
+      )
     : '';
   const digits = signedAmount
     ? `−${prefix}${magnitude.replace(/^-/, '')}`

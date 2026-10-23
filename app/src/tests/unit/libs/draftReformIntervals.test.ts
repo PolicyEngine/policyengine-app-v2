@@ -15,12 +15,14 @@ import {
   provisionChanged,
   provisionIntervals,
   provisionsForYear,
+  provisionsToRun,
   provisionValueInYear,
   provisionVariesOverTime,
   setDraftProvisionIntervals,
   setDraftYear,
   startDraftReform,
   updateDraftProvisionValue,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { Reform } from '@/types/ingredients/Reform';
 
@@ -53,6 +55,33 @@ describe('draft provisions over time', () => {
     expect(provisionValueInYear(provision, 2027)).toBe(17000);
     expect(provisionValueInYear(provision, 2026)).toBeNull();
     expect(provisionVariesOverTime(provision)).toBe(true);
+  });
+
+  test('given a country then a year reads on 1 January in the US and 30 April in the UK', () => {
+    expect(yearReadDate(2027)).toBe('2027-01-01');
+    expect(yearReadDate(2027, 'us')).toBe('2027-01-01');
+    expect(yearReadDate(2027, 'uk')).toBe('2027-04-30');
+  });
+
+  test('given a UK rate uprated in April then its year reads the uprated rate', () => {
+    // UC single allowance (25 or over): £400.14 from April 2025, £424.90 from April 2026.
+    const currentLaw = { '2025-04-01': 400.14, '2026-04-01': 424.9 };
+    const provision = {
+      path: 'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD',
+      breadcrumb: 'UC → Standard allowance → Single, 25 or over',
+      unit: 'currency-GBP',
+      baselineValue: 400.14,
+      value: 430,
+      intervals: [{ startDate: '2026-01-01', endDate: FOREVER, value: 430 }],
+    };
+    const parameters = { [provision.path]: { values: currentLaw } } as any;
+
+    const [uk] = provisionsToRun([provision], 2026, parameters, 'uk');
+    const [us] = provisionsToRun([provision], 2026, parameters);
+
+    expect(uk.baselineValue).toBe(424.9);
+    expect(uk.value).toBe(430);
+    expect(us.baselineValue).toBe(400.14);
   });
 
   test('given intervals for a parameter not in the draft then it is added with them', () => {

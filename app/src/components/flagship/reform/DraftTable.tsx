@@ -13,6 +13,7 @@ import {
   provisionValueInYear,
   provisionVariesOverTime,
   removeDraftProvision,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { useProvisionFocus } from '@/libs/flagship/draftEditorFocus';
 import { provisionName, summarizeIntervals } from '@/libs/flagship/draftLabels';
@@ -183,12 +184,12 @@ export default function DraftTable({
   const currentLawInYear = (provision: DraftProvision) => {
     const values = parameters?.[provision.path]?.values;
     const value = values
-      ? new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`)
+      ? new ValueIntervalCollection(values).getValueAtDate(yearReadDate(year, draft.countryId))
       : undefined;
     return value ?? provision.baselineValue;
   };
   const valueInYear = (provision: DraftProvision) =>
-    (provisionChanged(provision) ? provisionValueInYear(provision, year) : null) ??
+    (provisionChanged(provision) ? provisionValueInYear(provision, year, draft.countryId) : null) ??
     currentLawInYear(provision);
   // A value with no limit reads as such, not as the text "Infinity".
   const formatRowValue = (value: unknown, unit: string | null) =>

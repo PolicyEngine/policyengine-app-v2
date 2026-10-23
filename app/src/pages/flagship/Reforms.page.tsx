@@ -44,6 +44,7 @@ import {
   loadProvisionsIntoDraft,
   provisionsToRun,
   reformToProvisions,
+  yearReadDate,
   type ProvisionDetails,
 } from '@/libs/draftReform';
 import { BillFilters, billPlace, filterBills, NO_BILL_FILTERS } from '@/libs/flagship/billFilters';
@@ -440,11 +441,11 @@ export default function ReformsPage() {
     !billAlreadyCurrentLaw(bill.provisions, parameters, billRunYear(bill.provisions)) &&
     billScoresOtherThanWriteUp(bill.provisions, bill.changes);
 
-  /** Current law for a parameter on 1 January of `year`. */
+  /** Current law for a parameter in `year`. */
   const currentLawAt = (path: string, year: number) => {
     const values = parameters?.[path]?.values;
     return values
-      ? (new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`) ??
+      ? (new ValueIntervalCollection(values).getValueAtDate(yearReadDate(year, countryId)) ??
           getCurrentValue(values))
       : undefined;
   };
@@ -727,7 +728,8 @@ export default function ReformsPage() {
     const runProvisions = provisionsToRun(
       reformToProvisions(selectedReform, provisionDetails),
       runYear,
-      parameters
+      parameters,
+      countryId
     );
     const changesNothing = !selectedReform.parametersUnavailable && runProvisions.length === 0;
     return (

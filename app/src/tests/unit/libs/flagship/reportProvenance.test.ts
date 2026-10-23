@@ -101,6 +101,33 @@ describe('provisionsFromPolicy', () => {
   });
 });
 
+describe('provisionsFromPolicy in the UK', () => {
+  test('given a UK report then current law is the rate of its tax year, uprated in April', () => {
+    const path = 'gov.dwp.universal_credit.standard_allowance.amount.SINGLE_OLD';
+    const policy: Policy = {
+      id: '98850',
+      countryId: 'uk',
+      label: 'UC freeze',
+      parameters: [
+        { name: path, values: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 424.9 }] },
+      ],
+    };
+    const parameters = {
+      [path]: {
+        parameter: path,
+        label: 'Single, 25 or over',
+        unit: 'currency-GBP',
+        values: { '2026-04-01': 424.9, '2027-04-01': 434.67 },
+      },
+    };
+
+    const [provision] = provisionsFromPolicy(policy, parameters, '2027', 'uk');
+
+    expect(provision.baselineValue).toBe(434.67);
+    expect(provision.value).toBe(424.9);
+  });
+});
+
 describe('provenanceFromPolicy', () => {
   test('given a policy then the report label leads and the policy label backs it', () => {
     expect(provenanceFromPolicy(reformPolicy, metadataParameters, 'Shared CTC run')?.title).toBe(

@@ -155,7 +155,13 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   const meta =
     readReportMeta(userReportId) ??
     reportMetaFromRecord(shared?.record, report?.year, sharedBaseline) ??
-    provenanceFromPolicy(reformPolicy, parameters, report?.label, report?.year || undefined);
+    provenanceFromPolicy(
+      reformPolicy,
+      parameters,
+      report?.label,
+      report?.year || undefined,
+      report?.countryId
+    );
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.

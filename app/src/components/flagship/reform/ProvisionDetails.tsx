@@ -23,6 +23,7 @@ import {
   provisionVariesOverTime,
   sameParameterValue,
   setDraftProvisionIntervals,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { periodLabel } from '@/libs/flagship/draftLabels';
 import { humanizeSegment, ParameterGroup } from '@/libs/flagship/parameterGroups';
@@ -190,7 +191,9 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
 
   const baselineAt = (memberPath: string, at: number) => {
     const values = parameters[memberPath]?.values;
-    const value = values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : null;
+    const value = values
+      ? new ValueIntervalCollection(values).getValueAtDate(yearReadDate(at, draft.countryId))
+      : null;
     return value ?? null;
   };
   const baselineOn = (memberPath: string, date: string) => {
@@ -211,7 +214,7 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     if (!provision || !provisionChanged(provision)) {
       return baselineAt(memberPath, at);
     }
-    return provisionValueInYear(provision, at) ?? baselineAt(memberPath, at);
+    return provisionValueInYear(provision, at, draft.countryId) ?? baselineAt(memberPath, at);
   };
 
   /** The provision to write to — the draft's own, or a new one from the search entry. */

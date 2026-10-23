@@ -363,7 +363,7 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         runDraft.label.trim() || UNTITLED_REFORM,
         SOURCE_NOTES[runDraft.source] ?? 'Draft reform',
         // Described as they stand in the year the report simulates.
-        provisionsToRun(runDraft.provisions, runYear, parameters),
+        provisionsToRun(runDraft.provisions, runYear, parameters, runDraft.countryId),
         saved.id,
         runYear,
         {
