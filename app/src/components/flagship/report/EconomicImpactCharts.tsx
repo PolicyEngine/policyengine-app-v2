@@ -8,6 +8,7 @@ import DeepPovertyImpactByGenderSubPage from '@/components/flagship/report/chart
 import DistributionalImpactIncomeAverageSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from '@/components/flagship/report/charts/DistributionalImpactIncomeRelativeSubPage';
 import InequalityImpactSubPage from '@/components/flagship/report/charts/InequalityImpactSubPage';
+import { POVERTY_AGE_CSV_LABELS } from '@/components/flagship/report/charts/povertyAgeGroups';
 import PovertyImpactByAgeSubPage from '@/components/flagship/report/charts/PovertyImpactByAgeSubPage';
 import PovertyImpactByGenderSubPage from '@/components/flagship/report/charts/PovertyImpactByGenderSubPage';
 import PovertyImpactByRaceSubPage from '@/components/flagship/report/charts/PovertyImpactByRaceSubPage';
@@ -110,7 +111,7 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
   const povertyCsvData = (() => {
     const variable = povertyDepth === 'deep' ? 'deep_poverty' : undefined;
     if (povertyBreakdown === 'by-age') {
-      return getPovertyByAgeCsvRows(output, variable);
+      return getPovertyByAgeCsvRows(output, variable, POVERTY_AGE_CSV_LABELS);
     }
     if (povertyBreakdown === 'by-gender') {
       return getPovertyByGenderCsvRows(output, variable);
