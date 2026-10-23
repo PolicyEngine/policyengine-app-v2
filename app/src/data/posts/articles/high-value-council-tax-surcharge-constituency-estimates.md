@@ -107,7 +107,7 @@ The [OBR's costing](https://obr.uk/docs/dlm_uploads/Supplementary-forecast-infor
 The government's [consultation](https://www.gov.uk/government/consultations/high-value-council-tax-surcharge/high-value-council-tax-surcharge) proposes deferral for owners with household income of £35,000 or less and savings of £16,000 or less, and for homes that are the main home of a disabled or severely mentally impaired person. We do not model those criteria.
 
 <details>
-<summary style="font-size: clamp(1.75rem, 3vw, 2rem); font-weight: 600; line-height: 1.3; margin: 28px 0 20px; padding-bottom: 6px; border-bottom: 1px solid var(--border-light, #e2e8f0); cursor: pointer;">Methodology and limitations</summary>
+<summary style="font-size: clamp(1.75rem, calc((100vw - 768px) * 1000), 2rem); font-weight: 600; line-height: 1.3; margin: 28px 0 20px; padding-bottom: 6px; border-bottom: 1px solid var(--border-light, #e2e8f0); cursor: pointer;">Methodology and limitations</summary>
 
 ### Data
 
