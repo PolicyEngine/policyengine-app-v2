@@ -6,7 +6,8 @@
     "tags": ["uk", "policy", "tax", "interactives"],
     "authors": ["maria-juaristi"],
     "filename": "high-value-council-tax-surcharge-constituency-estimates.md",
-    "image": "high-value-council-tax-surcharge-constituency-estimates/cover.webp"
+    "image": "high-value-council-tax-surcharge-constituency-estimates/cover.webp",
+    "imageCredit": "Ben Elliott on Unsplash"
   },
   {
     "title": "PolicyEngine's microsimulation package published in the Journal of Open Source Software",
