@@ -651,14 +651,18 @@ export default function ValueGrid({
                           </span>
                         )}
                       </div>
-                      {!lone && changed && (
+                      {/* The line keeps its room when hidden, so a first change
+                          doesn't push the rows below away from the pointer. */}
+                      {!lone && (
                         <span
+                          aria-hidden={!changed}
                           style={{
                             display: 'block',
                             marginTop: 2,
                             fontSize: typography.fontSize.xs,
                             color: colors.text.tertiary,
                             whiteSpace: 'nowrap',
+                            visibility: changed ? undefined : 'hidden',
                           }}
                         >
                           Baseline: {baselineText}

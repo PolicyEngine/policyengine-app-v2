@@ -126,6 +126,11 @@ describe('DraftTable', () => {
     render(<TableHarness />);
 
     await user.click(screen.getByRole('button', { name: 'Open Standard deduction amount' }));
+    // Each member's baseline line holds its room before any change, so a
+    // first change does not move the rows below.
+    const single = screen.getByText('Baseline: $16,100');
+    expect(single).toHaveStyle({ visibility: 'hidden' });
+    expect(single).toHaveAttribute('aria-hidden', 'true');
     fireEvent.change(cell('Joint, 2026'), { target: { value: '35000' } });
 
     // The start leads the grid; no year heads its one column.

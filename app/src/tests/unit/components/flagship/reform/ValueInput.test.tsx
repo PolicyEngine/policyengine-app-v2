@@ -50,6 +50,35 @@ describe('ValueInput', () => {
     expect(onCommit).toHaveBeenLastCalledWith(1);
   });
 
+  test('given a click inside the digits then typing replaces the whole number', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<Harness unit="currency-GBP" initial={346.366589511} onCommit={onCommit} />);
+    const box = screen.getByRole('spinbutton') as HTMLInputElement;
+
+    await user.click(box);
+    expect(box.selectionStart ?? 0).toBe(0);
+    await user.keyboard('338.58');
+
+    expect(box).toHaveValue(338.58);
+    expect(onCommit).toHaveBeenLastCalledWith(338.58);
+  });
+
+  test('given an uprated amount of money then the box shows it to the penny', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<Harness unit="currency-GBP" initial={346.366589511} onCommit={onCommit} />);
+    const box = screen.getByRole('spinbutton');
+
+    expect(box).toHaveValue(346.37);
+    await user.click(box);
+    expect(box).toHaveValue(346.37);
+    await user.tab();
+
+    // Looking at the value does not change it.
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
   test('given an empty field is left then it means 0', async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
