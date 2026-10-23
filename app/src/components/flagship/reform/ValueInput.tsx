@@ -26,12 +26,17 @@ interface ValueInputProps {
 /** What a value with no limit reads as, in place of "Infinity". */
 export const NO_LIMIT = 'No limit';
 
-/** A stored value as the box shows it: rates as percentages, without float noise. */
-function displayText(value: unknown, percentage: boolean): string {
+/**
+ * A stored value as the box shows it: rates as percentages, amounts of
+ * money to the penny, without float noise. An uprated amount such as
+ * 346.366589511 shows as 346.37; the stored value changes only when typed.
+ */
+function displayText(value: unknown, percentage: boolean, money: boolean): string {
   if (typeof value !== 'number') {
     return '';
   }
-  return String(Number((percentage ? value * 100 : value).toPrecision(12)));
+  const shown = Number((percentage ? value * 100 : value).toPrecision(12));
+  return String(money ? Math.round(shown * 100) / 100 : shown);
 }
 
 /**
@@ -122,6 +127,9 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
   // The value when editing began, so finishing can tell whether it changed.
   const startValue = useRef<unknown>(null);
   const [saved, setSaved] = useState(false);
+  // A click's mouseup would put the cursor where the click landed, inside
+  // the digits; the first one after focus keeps the whole number selected.
+  const keepSelection = useRef(false);
   const savedTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(savedTimer.current), []);
 
@@ -150,11 +158,21 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
         min={0}
         aria-label={ariaLabel}
         placeholder={unlimited ? NO_LIMIT : byFormula ? SET_BY_FORMULA_SHORT : undefined}
-        value={typed ?? displayText(value, percentage)}
-        onFocus={() => {
+        value={typed ?? displayText(value, percentage, Boolean(prefix))}
+        onFocus={(event) => {
           startValue.current = value;
           setSaved(false);
-          setTyped(displayText(value, percentage));
+          setTyped(displayText(value, percentage, Boolean(prefix)));
+          // Typing replaces the whole number, not digits inside it.
+          event.currentTarget.select();
+          keepSelection.current = true;
+        }}
+        onMouseUp={(event) => {
+          if (keepSelection.current) {
+            keepSelection.current = false;
+            event.preventDefault();
+            event.currentTarget.select();
+          }
         }}
         onKeyDown={(event) => {
           // Enter finishes the edit, as leaving the box does.
@@ -194,6 +212,7 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
           ) {
             confirmSaved();
           }
+          keepSelection.current = false;
           setTyped(null);
         }}
         className={cn(
