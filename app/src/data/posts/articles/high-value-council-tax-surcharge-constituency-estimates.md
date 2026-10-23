@@ -82,7 +82,7 @@ Our estimates are static, like the OBR's £605 million. They leave out behaviour
 | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | ------- |
 | PolicyEngine: owner-occupied main residences, static                                                                                      | £410m   | £420m   | £430m   |
 | [OBR](https://obr.uk/docs/dlm_uploads/Supplementary-forecast-information-high-value-council-tax-surcharge-costing.pdf#page=7): all liable properties, static | £605m   | £620m   | £635m   |
-| OBR: all liable properties, after behavioural responses                                                                                   | £400m   | £430m   | £435m   |
+| [OBR](https://obr.uk/docs/dlm_uploads/Supplementary-forecast-information-high-value-council-tax-surcharge-costing.pdf#page=7): all liable properties, after behavioural responses | £400m   | £430m   | £435m   |
 
 ## Who pays
 
