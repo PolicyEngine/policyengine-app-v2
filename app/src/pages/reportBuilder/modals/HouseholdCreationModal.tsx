@@ -18,6 +18,7 @@ import { Household as HouseholdModel } from '@/models/Household';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
+import { withSupportedBuilderClaimantRoles } from '@/utils/builderClaimantRoles';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getModelMetadataError } from '@/utils/spmSelection';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
@@ -224,10 +225,15 @@ export function HouseholdCreationModal({
 
       setSaveError(null);
       try {
-        const payload = householdToSave.toV1CreationPayload();
+        const householdWithRoles = withSupportedBuilderClaimantRoles(
+          householdToSave,
+          metadata,
+          reportYear
+        );
+        const payload = householdWithRoles.toV1CreationPayload();
         const result = await createHouseholdWithLabel(payload, householdToSave.label ?? undefined);
         const householdId = String(result.result.household_id);
-        const savedHousehold = householdToSave
+        const savedHousehold = householdWithRoles
           .withId(householdId)
           .withLabel(householdToSave.label ?? null);
         persistCreatedHousehold(savedHousehold);
@@ -281,11 +287,12 @@ export function HouseholdCreationModal({
         return;
       }
 
+      const householdWithRoles = withSupportedBuilderClaimantRoles(household, metadata, reportYear);
       let updatedAssociation = await updateHouseholdAssociation.mutateAsync({
         userHouseholdId: association.id,
         updates: {},
         association,
-        nextHousehold: household,
+        nextHousehold: householdWithRoles,
       });
 
       const desiredLabel = household.label ?? undefined;
@@ -296,7 +303,7 @@ export function HouseholdCreationModal({
         });
       }
 
-      const savedHousehold = household
+      const savedHousehold = householdWithRoles
         .withId(updatedAssociation.householdId)
         .withLabel(updatedAssociation.label ?? desiredLabel ?? null);
 

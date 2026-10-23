@@ -7,6 +7,10 @@ import type { Household } from '@/models/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
 import {
+  withSupportedBuilderClaimantRoles,
+  type ClaimantRoleModelMetadata,
+} from '@/utils/builderClaimantRoles';
+import {
   getReportPopulationError,
   hasRequiredSimulationIngredients,
 } from '@/utils/ingredientAvailability';
@@ -18,6 +22,7 @@ interface CreateReportSimulationsArgs {
   countryId: 'us' | 'uk';
   currentLawId: number;
   reportYear?: string;
+  metadata?: ClaimantRoleModelMetadata;
 }
 
 interface CreatedReportSimulations {
@@ -31,6 +36,7 @@ export async function createReportSimulations({
   countryId,
   currentLawId,
   reportYear,
+  metadata,
 }: CreateReportSimulationsArgs): Promise<CreatedReportSimulations> {
   const populationError = getReportPopulationError(simulationStates);
   if (populationError) {
@@ -67,12 +73,17 @@ export async function createReportSimulations({
     const identity = JSON.stringify(household.toJSON());
     let saved = savedHouseholds.get(identity);
     if (!saved) {
-      const created = await createHousehold(household.toV1CreationPayload());
+      const householdWithRoles = withSupportedBuilderClaimantRoles(
+        household,
+        metadata,
+        reportYear ?? household.year
+      );
+      const created = await createHousehold(householdWithRoles.toV1CreationPayload());
       const id = created.result?.household_id;
       if (!id) {
         throw new Error('Household creation returned no ID. Your report has not been replaced.');
       }
-      saved = household.withId(String(id));
+      saved = householdWithRoles.withId(String(id));
       savedHouseholds.set(identity, saved);
     }
     resolvedStates.push({
