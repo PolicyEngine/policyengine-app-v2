@@ -476,6 +476,8 @@ export function MarkdownFormatter({
     ul: ({ children }) => (
       <ul
         style={{
+          // Tailwind's preflight removes list markers; restore them.
+          listStyleType: "disc",
           paddingLeft: blogSpacing.lg,
           marginBottom: blogSpacing.marginBottom.list,
           marginTop: blogSpacing.marginTop.list,
@@ -494,6 +496,8 @@ export function MarkdownFormatter({
     ol: ({ children }) => (
       <ol
         style={{
+          // Tailwind's preflight removes list markers; restore them.
+          listStyleType: "decimal",
           paddingLeft: blogSpacing.lg,
           marginBottom: blogSpacing.marginBottom.list,
           marginTop: blogSpacing.marginTop.list,
