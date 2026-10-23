@@ -1,5 +1,6 @@
 import { IconCircleCheck, IconCircleDashed, IconLoader2 } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
+import { reportYearLabel, reportYearSpanLabel } from '@/libs/flagship/draftLabels';
 
 /** Where one year's full results stand. */
 export type YearStatus = 'done' | 'computing' | 'not-run' | 'error';
@@ -46,12 +47,15 @@ export default function ReportYearSwitcher({
   value,
   onChange,
   statusByYear,
+  countryId = 'us',
 }: {
   years: string[];
   /** A year, or ALL_YEARS. */
   value: string;
   onChange: (value: string) => void;
   statusByYear: Record<string, YearStatus>;
+  /** A UK year reads as its fiscal year, "2027-28". */
+  countryId?: string;
 }) {
   const options = [ALL_YEARS, ...years];
   return (
@@ -80,8 +84,8 @@ export default function ReportYearSwitcher({
             aria-selected={active}
             aria-label={
               option === ALL_YEARS
-                ? `All years, ${years[0]}–${years[years.length - 1]}`
-                : `${option}, ${STATUS_LABELS[status!]}`
+                ? `All years, ${reportYearSpanLabel(years[0], years[years.length - 1], countryId)}`
+                : `${reportYearLabel(option, countryId)}, ${STATUS_LABELS[status!]}`
             }
             onClick={() => onChange(option)}
             className="tw:cursor-pointer tw:max-sm:min-h-10"
@@ -105,7 +109,7 @@ export default function ReportYearSwitcher({
               'All years'
             ) : (
               <>
-                {option}
+                {reportYearLabel(option, countryId)}
                 <span style={{ display: 'inline-flex', opacity: active ? 0.9 : 1 }}>
                   <StatusMark status={status!} />
                 </span>

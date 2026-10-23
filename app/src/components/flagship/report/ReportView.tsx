@@ -25,6 +25,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportTabHistory } from '@/hooks/useReportTabHistory';
 import type { CalibrationMatches } from '@/libs/flagship/calibrationMatching';
+import { reportYearLabel, UK_FISCAL_YEAR_NOTE } from '@/libs/flagship/draftLabels';
 import type { RunReportBaseline, RunReportProvision } from '@/libs/flagship/runReport';
 import { canShowCongressionalDistrictImpactCard } from '@/pages/report-output/MigrationSubPage';
 import { regionKindOf, trackReportTabViewed } from '@/utils/analytics';
@@ -125,7 +126,7 @@ export interface ReportViewProps {
   yearSwitcher?: ReactNode;
   /** In place of the section tabs, e.g. a budget window's all-years view. */
   sectionsOverride?: ReactNode;
-  /** The cover's year, when it differs from `year` (a window's span). */
+  /** The cover's year as written, when it differs from `year` (a window's span). */
   coverYear?: string;
   /** Content below the overview's section cards, e.g. data provenance. */
   overviewFooter?: ReactNode;
@@ -349,7 +350,20 @@ export default function ReportView({
                       fontSize: typography.fontSize.sm,
                     }}
                   >
-                    {[populationLabel, coverYear ?? year].filter(Boolean).join(' · ')}
+                    {[populationLabel, coverYear ?? reportYearLabel(year, countryId)]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                )}
+                {isUK && (
+                  <Text
+                    style={{
+                      margin: 0,
+                      color: colors.primary[100],
+                      fontSize: typography.fontSize.xs,
+                    }}
+                  >
+                    {UK_FISCAL_YEAR_NOTE}
                   </Text>
                 )}
               </Stack>
