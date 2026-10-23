@@ -1,6 +1,9 @@
+import { useSelector } from 'react-redux';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { formatValue } from '@/utils/parameterValues';
+import { describeChange } from '@/libs/flagship/draftLabels';
+import { RootState } from '@/store';
+import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
 
 export interface ProvisionListItem {
   path: string;
@@ -16,9 +19,18 @@ export interface ProvisionListItem {
  * quiet context underneath, and states the change as current law → new
  * value. When the provision matches current law (enacted bills), the
  * arrow would be meaningless, so the row shows the single value with a
- * "current law" note instead.
+ * "current law" note instead — or, for a bill scored against the law
+ * before it, the value alone (an empty note).
  */
-export default function ProvisionList({ provisions }: { provisions: ProvisionListItem[] }) {
+export default function ProvisionList({
+  provisions,
+  sameValueNote = 'current law',
+}: {
+  provisions: ProvisionListItem[];
+  sameValueNote?: string;
+}) {
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+  const variableLabel = (name: string) => variables?.[name]?.label ?? name;
   return (
     <div
       style={{
@@ -31,9 +43,14 @@ export default function ProvisionList({ provisions }: { provisions: ProvisionLis
         const parts = (provision.breadcrumb || provision.path).split(' → ');
         const name = parts[parts.length - 1] ?? provision.path;
         const context = parts.slice(0, -1).join(' → ');
-        const baseline = formatValue(provision.baselineValue, provision.unit);
+        const baseline = formatCurrentLaw(provision.baselineValue, provision.unit);
         const proposed = formatValue(provision.value, provision.unit);
         const unchanged = baseline === proposed;
+        // A set of variables reads as what it takes out and puts in.
+        const listChange =
+          Array.isArray(provision.value) && !unchanged
+            ? describeChange(provision.baselineValue, provision.value, String, variableLabel)
+            : null;
 
         return (
           <div
@@ -82,7 +99,13 @@ export default function ProvisionList({ provisions }: { provisions: ProvisionLis
                 textAlign: 'right',
               }}
             >
-              {unchanged ? (
+              {listChange ? (
+                <span
+                  style={{ color: colors.primary[700], fontWeight: typography.fontWeight.semibold }}
+                >
+                  {listChange}
+                </span>
+              ) : unchanged ? (
                 <>
                   <span
                     style={{
@@ -93,7 +116,9 @@ export default function ProvisionList({ provisions }: { provisions: ProvisionLis
                   >
                     {proposed}
                   </span>{' '}
-                  <span style={{ fontSize: typography.fontSize.xs }}>current law</span>
+                  {sameValueNote && (
+                    <span style={{ fontSize: typography.fontSize.xs }}>{sameValueNote}</span>
+                  )}
                 </>
               ) : (
                 <>

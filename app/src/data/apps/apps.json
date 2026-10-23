@@ -1,6 +1,45 @@
 [
   {
     "type": "iframe",
+    "slug": "energy-autumn-budget",
+    "title": "Energy bills and the Autumn Budget 2026",
+    "description": "Estimate what UK households will pay for energy at forecast prices in 2026-27 and 2027-28, and what Autumn Budget support options would cost and who they would reach, modelled with PolicyEngine UK.",
+    "source": "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "energy-autumn-budget.jpg",
+    "date": "2026-10-14 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "targeted-energy-discount",
+    "title": "Targeted energy bill discount analysis dashboard",
+    "description": "Estimate the cost, reach and distributional effects of the Resolution Foundation's proposed targeted energy bill discount, modelled with PolicyEngine UK.",
+    "source": "https://uk-targeted-energy-discount.vercel.app/uk/targeted-energy-discount",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "targeted-energy-discount.jpg",
+    "date": "2026-10-05 12:00:00",
+    "authors": ["maria-juaristi", "vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "triple-lock",
+    "title": "The Burnham plan vs the triple lock",
+    "description": "The Burnham plan against the State Pension triple lock to 2039-40: the budget impact and its range, forecast paths, and which households have less income, from full PolicyEngine UK runs.",
+    "source": "https://uk-triple-lock.vercel.app/uk/triple-lock",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-triple-lock.jpg",
+    "date": "2026-10-16 12:00:00",
+    "authors": ["vahid-ahmadi", "max-ghenis"]
+  },
+  {
+    "type": "iframe",
     "slug": "middle-east-war-living-standards",
     "title": "Impact of the Middle East war on UK living standards",
     "description": "Estimate how energy, fuel and food price rises from the Middle East conflict and Strait of Hormuz disruption affect UK households in 2027-28, and compare ten policy responses, modelled with PolicyEngine UK.",

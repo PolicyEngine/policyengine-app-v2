@@ -217,6 +217,44 @@ describe('useSyntheticProgress', () => {
       );
     });
 
+    it('given a region duration estimate then progresses against it', () => {
+      // Given
+      const { result } = renderHook(() =>
+        useSyntheticProgress(true, 'societyWide', { estimatedDurationMs: 110000 })
+      );
+
+      // When - advance 55 seconds (half of 110 seconds)
+      act(() => {
+        vi.advanceTimersByTime(55000);
+      });
+
+      // Then
+      expect(result.current.progress).toBeGreaterThanOrEqual(49);
+      expect(result.current.progress).toBeLessThanOrEqual(51);
+    });
+
+    it('given the estimate arrives after start then the bar does not restart', () => {
+      // Given - no estimate yet, so the 6 minute default applies
+      const { result, rerender } = renderHook(
+        ({ estimate }: { estimate?: number }) =>
+          useSyntheticProgress(true, 'societyWide', { estimatedDurationMs: estimate }),
+        { initialProps: { estimate: undefined as number | undefined } }
+      );
+      act(() => {
+        vi.advanceTimersByTime(60000);
+      });
+
+      // When - the first status brings a 120 second estimate
+      rerender({ estimate: 120000 });
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      // Then - 61 of 120 seconds have passed since the start, not 1
+      expect(result.current.progress).toBeGreaterThanOrEqual(50);
+      expect(result.current.progress).toBeLessThanOrEqual(52);
+    });
+
     it('given full duration then caps at max progress', () => {
       // Given
       const { result } = renderHook(() => useSyntheticProgress(true, 'societyWide'));

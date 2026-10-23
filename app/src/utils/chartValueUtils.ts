@@ -189,6 +189,9 @@ export function getRechartsTickFormatter(
           style: 'currency',
           currency: 'USD',
           notation: 'compact',
+          // Set explicitly: left out, the minimum depends on the JavaScript engine
+          // ("$1.0B" on older V8, "$1B" on newer).
+          minimumFractionDigits: 0,
           maximumFractionDigits: decimalPlaces,
         });
       }
@@ -207,6 +210,9 @@ export function getRechartsTickFormatter(
           style: 'currency',
           currency: 'GBP',
           notation: 'compact',
+          // Set explicitly: left out, the minimum depends on the JavaScript engine
+          // ("£1.0bn" on older V8, "£1bn" on newer).
+          minimumFractionDigits: 0,
           maximumFractionDigits: decimalPlaces,
         });
       }

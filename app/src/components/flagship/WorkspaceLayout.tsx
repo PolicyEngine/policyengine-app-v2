@@ -1,7 +1,4 @@
 import { spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useDraftReform } from '@/libs/draftReform';
-import ReformPreviewCard from './ReformPreviewCard';
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
@@ -10,21 +7,12 @@ interface WorkspaceLayoutProps {
 }
 
 /**
- * Shared layout for the working sections (Ask, Build, Reforms). The
- * content sits in a centered column; the moment a draft exists its
- * panel appears — rendered here, docked by SidePanel into the shell's
- * right plane, so the layout never manages rail geometry itself.
+ * Shared layout for the working sections (Ask, Build, Reforms): the
+ * content in a centered column. The draft reform is Build's own page,
+ * not a panel here — elsewhere the top bar links back to it.
  */
 export default function WorkspaceLayout({ children, wide = false }: WorkspaceLayoutProps) {
-  const draft = useDraftReform();
-  const countryId = useCurrentCountry();
-  const hasDraft = Boolean(draft && draft.countryId === countryId && draft.provisions.length > 0);
   const contentWidth = wide ? 1400 : 760;
 
-  return (
-    <div style={{ maxWidth: contentWidth, margin: `${spacing.md} auto 0` }}>
-      {children}
-      {hasDraft && <ReformPreviewCard draft={draft!} />}
-    </div>
-  );
+  return <div style={{ maxWidth: contentWidth, margin: `${spacing.md} auto 0` }}>{children}</div>;
 }

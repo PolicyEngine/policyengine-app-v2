@@ -15,6 +15,7 @@ import {
   getRegionTypeLabel,
   getUKRegionTypeFromGeography,
   isUKLocalLevelGeography,
+  isUKLocalLevelRegion,
 } from '@/utils/geographyUtils';
 
 describe('geographyUtils', () => {
@@ -389,6 +390,20 @@ describe('geographyUtils', () => {
 
       // Then
       expect(result).toBeNull();
+    });
+  });
+
+  describe('isUKLocalLevelRegion', () => {
+    it('given a constituency or local authority code then returns true', () => {
+      expect(isUKLocalLevelRegion('constituency/Bedford')).toBe(true);
+      expect(isUKLocalLevelRegion('local_authority/Bedford')).toBe(true);
+    });
+
+    it('given the UK, a UK country, or no region then returns false', () => {
+      expect(isUKLocalLevelRegion('uk')).toBe(false);
+      expect(isUKLocalLevelRegion('country/scotland')).toBe(false);
+      expect(isUKLocalLevelRegion(undefined)).toBe(false);
+      expect(isUKLocalLevelRegion('')).toBe(false);
     });
   });
 

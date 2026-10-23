@@ -8,7 +8,7 @@
  * - Inline search for adding custom variables per person or household-level
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import {
   Accordion,
@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   CardContent,
+  Input,
   Label,
   Select,
   SelectContent,
@@ -37,8 +38,11 @@ import {
   getVariableInfo,
   removeVariableFromEntity,
   resolveEntity,
+  VariableInfo,
 } from '@/utils/VariableResolver';
 import SPMGeographyChoice from './SPMGeographyChoice';
+import { WholeNumberStepper } from './VariableInput';
+import type { CommonInput, VariablePickSource } from './VariablePickerDialog';
 import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
 
@@ -55,6 +59,188 @@ export interface HouseholdBuilderFormProps {
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
   isReadOnly?: boolean;
+  /** Leave out the SPM geography choice; the household keeps its own. */
+  hideSpmGeography?: boolean;
+  /** "columns" sets the sections side by side on a wide screen; stacked by default. */
+  layout?: 'stacked' | 'columns';
+  /** Variables to list first in the variable search, in order, under their own heading. */
+  suggestedVariables?: string[];
+  /** The heading over the suggested variables. */
+  suggestedLabel?: string;
+  /**
+   * "relevance" ranks matches (whole words before parts of words, all
+   * words of the search required); "substring", the default, lists every
+   * label containing the text, in metadata order.
+   */
+  searchRanking?: 'substring' | 'relevance';
+  /** Groups the variable search (see VariableSearchDropdown); a plain list when unset. */
+  variableGroupOf?: (variable: VariableInfo) => string;
+  variableGroupOrder?: readonly string[];
+  /** Leaves variables out of the search, e.g. other states' programs. */
+  variableFilter?: (variable: VariableInfo) => boolean;
+  /**
+   * Each search lists only its own entity's inputs: a person's, person
+   * variables; the household's, every group entity's (household, tax
+   * unit, SPM unit, family, marital unit — one of each here). Off, either
+   * search lists every input and routes a pick to its entity, with a note.
+   */
+  searchByEntity?: boolean;
+  /** With `variableGroupOf`: a group's parts, as subheadings when that group is chosen. */
+  variableSubgroupOf?: (variable: VariableInfo) => string | null;
+  variableSubgroupOrder?: readonly string[];
+  /** With `variableGroupOf`: the picker's tiles, topic icons and display names. */
+  variablePickerCommon?: CommonInput[];
+  variableGroupIcon?: (group: string) => ReactNode;
+  variableNameOf?: (variable: VariableInfo) => string;
+  variableDescribe?: (variable: VariableInfo) => string | undefined;
+  /**
+   * A person's name as the form shows it, from their key ("your first
+   * dependent"); the key itself when unset. The key stays the household's.
+   */
+  personDisplayNameOf?: (personKey: string) => string;
+  /**
+   * Give each input an accessible name from its label (and, for a person's,
+   * whose it is). Off, the inputs have none of their own, as before.
+   */
+  labelInputs?: boolean;
+  /** Told when a variable search opens: a person's, or the household's (its groups). */
+  onVariablePickerOpen?: (entity: 'person' | 'group') => void;
+  /**
+   * Told when a variable is added: its model name, the list it came from,
+   * and the entity it went to. Never its value.
+   */
+  onVariableAdd?: (added: {
+    variable: string;
+    source: VariablePickSource;
+    entity: 'person' | 'group';
+  }) => void;
+}
+
+/**
+ * How well one search word matches a variable: its whole label or name
+ * (0), the start of either (1), the start of a word in them (2), or
+ * inside a word (3, so "rent" still finds "parent" but after "Rent").
+ */
+function wordMatchScore(word: string, label: string, name: string): number | null {
+  if (label === word || name === word) {
+    return 0;
+  }
+  if (label.startsWith(word) || name.startsWith(word)) {
+    return 1;
+  }
+  const wordStart = new RegExp(`(^|[^a-z0-9])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+  if (wordStart.test(label) || wordStart.test(name.replaceAll('_', ' '))) {
+    return 2;
+  }
+  if (label.includes(word) || name.includes(word)) {
+    return 3;
+  }
+  return null;
+}
+
+/** Variables matching every word of the search, best matches first, then shorter labels. */
+export function rankVariablesBySearch(variables: VariableInfo[], search: string): VariableInfo[] {
+  const words = search.toLowerCase().split(/\s+/).filter(Boolean);
+  const scored: Array<{ variable: VariableInfo; score: number }> = [];
+  for (const variable of variables) {
+    const label = variable.label.toLowerCase();
+    const name = variable.name.toLowerCase();
+    let score = 0;
+    for (const word of words) {
+      const wordScore = wordMatchScore(word, label, name);
+      if (wordScore === null) {
+        score = -1;
+        break;
+      }
+      score += wordScore;
+    }
+    if (score >= 0) {
+      scored.push({ variable, score });
+    }
+  }
+  return scored
+    .sort((a, b) => a.score - b.score || a.variable.label.length - b.variable.label.length)
+    .map(({ variable }) => variable);
+}
+
+/** The most children the typed count takes. */
+const MAX_TYPED_CHILDREN = 10;
+
+/**
+ * In columns, the people's cards by the width the Individuals section has:
+ * one column, then two, three and at most four. Each step is where one more
+ * card of at least 260px fits, with the 12px gaps. A wider section spreads
+ * four cards out rather than adding a fifth or sixth, so the values typed
+ * into them stay readable.
+ */
+export const PEOPLE_GRID_CLASSES =
+  'tw:grid tw:items-start tw:gap-3 tw:grid-cols-1 tw:@min-[540px]:grid-cols-2 tw:@min-[810px]:grid-cols-3 tw:@min-[1080px]:grid-cols-4';
+
+/**
+ * The number of children as a typed whole number, 0 to 10. A partial or
+ * empty entry waits; the household changes on a whole number in range.
+ */
+function ChildCountInput({
+  id,
+  value,
+  onChange,
+  disabled,
+}: {
+  id: string;
+  value: number;
+  onChange: (count: number) => void;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+  const step = (delta: number) => {
+    const next = Math.min(MAX_TYPED_CHILDREN, Math.max(0, value + delta));
+    if (next !== value) {
+      onChange(next);
+    }
+  };
+  return (
+    <div className="tw:relative tw:w-36">
+      <Input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        value={text}
+        disabled={disabled}
+        // Room for the step buttons; a count has no decimal point to type.
+        className="tw:w-36 tw:bg-white tw:pr-8"
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            step(event.key === 'ArrowUp' ? 1 : -1);
+          }
+        }}
+        onChange={(event) => {
+          const digits = event.target.value.replace(/\D/g, '');
+          setText(digits);
+          const count = Number(digits);
+          if (
+            digits !== '' &&
+            Number.isInteger(count) &&
+            count >= 0 &&
+            count <= MAX_TYPED_CHILDREN
+          ) {
+            onChange(count);
+          }
+        }}
+        onBlur={() => setText(String(value))}
+      />
+      <WholeNumberStepper
+        label="number of children"
+        onStep={step}
+        canDecrease={value > 0}
+        canIncrease={value < MAX_TYPED_CHILDREN}
+        disabled={disabled}
+      />
+    </div>
+  );
 }
 
 interface BuilderWarning {
@@ -73,6 +259,25 @@ export default function HouseholdBuilderForm({
   onChange,
   onMaritalStatusChange,
   onNumChildrenChange,
+  hideSpmGeography = false,
+  layout = 'stacked',
+  suggestedVariables,
+  suggestedLabel = 'Suggested',
+  searchRanking = 'substring',
+  variableGroupOf,
+  variableGroupOrder,
+  variableFilter,
+  searchByEntity = false,
+  variableSubgroupOf,
+  variableSubgroupOrder,
+  variablePickerCommon,
+  variableGroupIcon,
+  variableNameOf,
+  variableDescribe,
+  personDisplayNameOf,
+  labelInputs = false,
+  onVariablePickerOpen,
+  onVariableAdd,
   disabled = false,
   isReadOnly = false,
 }: HouseholdBuilderFormProps) {
@@ -99,58 +304,132 @@ export default function HouseholdBuilderForm({
   }, []);
 
   // Get all input variables from metadata
-  const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
+  const allInputVariables = useMemo(
+    () =>
+      variableFilter
+        ? getInputVariables(metadata).filter(variableFilter)
+        : getInputVariables(metadata),
+    [metadata, variableFilter]
+  );
   const inputVariableLookup = useMemo(
     () => new Map(allInputVariables.map((variable) => [variable.name, variable])),
     [allInputVariables]
   );
+
+  // A field's name as the picker lists it, where the builder is given one.
+  const named = (variable: VariableInfo): VariableInfo => ({
+    ...variable,
+    label: variableNameOf ? variableNameOf(variable) : variable.label,
+    documentation: variableDescribe?.(variable) ?? variable.documentation,
+  });
 
   // Get list of people, sorted in display order (you, partner, dependents)
   const people = useMemo(() => household.getSortedPersonNames(), [household]);
 
   // Helper to get person display name (entirely lowercase)
   const getPersonDisplayName = (personKey: string): string => {
-    return personKey.toLowerCase();
+    return (personDisplayNameOf ? personDisplayNameOf(personKey) : personKey).toLowerCase();
   };
 
   // Helper to get person display name with first letter capitalized
   const getPersonDisplayNameCapitalized = (personKey: string): string => {
-    const lowercase = personKey.toLowerCase();
+    const lowercase = getPersonDisplayName(personKey);
     return lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
   };
 
-  // Maximum number of results to display in dropdown for performance
-  const MAX_DROPDOWN_RESULTS = 100;
+  // An input's accessible name, where the form gives one: its label, and whose it is.
+  const inputLabelOf = (variable: VariableInfo, personKey?: string): string | undefined => {
+    if (!labelInputs) {
+      return undefined;
+    }
+    const label = variable.label.charAt(0).toUpperCase() + variable.label.slice(1);
+    return personKey ? `${label}, ${getPersonDisplayName(personKey)}` : label;
+  };
+
+  // Maximum number of results to display in dropdown for performance; a
+  // grouped list shows a few per group, so it takes every match.
+  const MAX_DROPDOWN_RESULTS = variableGroupOf ? Infinity : 100;
+
+  // Suggested variables lead the list, in their own order; the rest keep theirs.
+  const suggestedOrder = useMemo(
+    () => new Map((suggestedVariables ?? []).map((name, index) => [name, index])),
+    [suggestedVariables]
+  );
+  const leadWithSuggested = (list: VariableInfo[]): VariableInfo[] =>
+    suggestedOrder.size === 0
+      ? list
+      : [
+          ...list
+            .filter((variable) => suggestedOrder.has(variable.name))
+            .sort((a, b) => suggestedOrder.get(a.name)! - suggestedOrder.get(b.name)!),
+          ...list.filter((variable) => !suggestedOrder.has(variable.name)),
+        ];
+
+  // Each entity's own inputs, when each search lists only its own.
+  const scopedInputs = useMemo(() => {
+    if (!searchByEntity) {
+      return { person: allInputVariables, group: allInputVariables };
+    }
+    const person: VariableInfo[] = [];
+    const group: VariableInfo[] = [];
+    for (const variable of allInputVariables) {
+      (resolveEntity(variable.name, metadata)?.isPerson === false ? group : person).push(variable);
+    }
+    return { person, group };
+  }, [allInputVariables, metadata, searchByEntity]);
 
   // Filter variables by search value with result limit for performance
-  const filterVariables = (searchValue: string) => {
+  const filterVariables = (searchValue: string, inputs: VariableInfo[] = allInputVariables) => {
     if (!searchValue.trim()) {
       return {
-        variables: allInputVariables.slice(0, MAX_DROPDOWN_RESULTS),
-        truncated: allInputVariables.length > MAX_DROPDOWN_RESULTS,
+        variables: leadWithSuggested(inputs).slice(0, MAX_DROPDOWN_RESULTS),
+        truncated: inputs.length > MAX_DROPDOWN_RESULTS,
       };
     }
     const search = searchValue.toLowerCase();
-    const filtered = allInputVariables.filter(
-      (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
-    );
+    const filtered =
+      searchRanking === 'relevance'
+        ? rankVariablesBySearch(inputs, searchValue)
+        : inputs.filter(
+            (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
+          );
     return {
+      // A typed search ranks by its own match; suggestions lead only the open list.
       variables: filtered.slice(0, MAX_DROPDOWN_RESULTS),
       truncated: filtered.length > MAX_DROPDOWN_RESULTS,
     };
   };
 
   // Memoized filtered variables for person search
-  const filteredPersonVariables = useMemo(
-    () => filterVariables(personSearchValue),
-    [personSearchValue, allInputVariables]
-  );
+  const filteredPersonVariables = useMemo(() => {
+    // Scoped, the search leaves out what the person already has.
+    const has = new Set(
+      searchByEntity && activePersonSearch
+        ? [...basicPersonFields, ...household.getPersonLevelVariables(activePersonSearch)]
+        : []
+    );
+    return filterVariables(
+      personSearchValue,
+      has.size > 0 ? scopedInputs.person.filter((v) => !has.has(v.name)) : scopedInputs.person
+    );
+  }, [personSearchValue, scopedInputs, suggestedOrder, activePersonSearch, household]);
 
   // Memoized filtered variables for household search
-  const filteredHouseholdVariables = useMemo(
-    () => filterVariables(householdSearchValue),
-    [householdSearchValue, allInputVariables]
-  );
+  const filteredHouseholdVariables = useMemo(() => {
+    // Scoped, the search leaves out what the household already has.
+    const has = new Set(
+      searchByEntity
+        ? [
+            ...basicNonPersonFields,
+            ...household.getHouseholdLevelVariables().map(({ name }) => name),
+          ]
+        : []
+    );
+    return filterVariables(
+      householdSearchValue,
+      has.size > 0 ? scopedInputs.group.filter((v) => !has.has(v.name)) : scopedInputs.group
+    );
+  }, [householdSearchValue, scopedInputs, suggestedOrder, household]);
 
   const resolveDefaultGroupInstanceName = (variableName: string): string | undefined => {
     const entityInfo = resolveEntity(variableName, metadata);
@@ -216,14 +495,17 @@ export default function HouseholdBuilderForm({
     setActivePersonSearch(person);
     setPersonSearchValue('');
     setIsPersonSearchFocused(true);
+    onVariablePickerOpen?.('person');
   };
 
   // Handle person variable selection
   const handlePersonVariableSelect = (
     variable: { name: string; label: string },
-    person: string
+    person: string,
+    source: VariablePickSource = 'search'
   ) => {
     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+    onVariableAdd?.({ variable: variable.name, source, entity: isPerson ? 'person' : 'group' });
 
     // If non-person variable selected from person context, show warning
     if (!isPerson) {
@@ -255,10 +537,14 @@ export default function HouseholdBuilderForm({
     setIsHouseholdSearchActive(true);
     setHouseholdSearchValue('');
     setIsHouseholdSearchFocused(true);
+    onVariablePickerOpen?.('group');
   };
 
   // Handle household variable selection
-  const handleHouseholdVariableSelect = (variable: { name: string; label: string }) => {
+  const handleHouseholdVariableSelect = (
+    variable: { name: string; label: string },
+    source: VariablePickSource = 'search'
+  ) => {
     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
 
     // If person variable selected from household context, show warning
@@ -295,6 +581,7 @@ export default function HouseholdBuilderForm({
         resolveDefaultGroupInstanceName(variable.name)
       );
     }
+    onVariableAdd?.({ variable: variable.name, source, entity: isPerson ? 'person' : 'group' });
     onChange(newHousehold);
 
     setIsHouseholdSearchActive(false);
@@ -308,16 +595,30 @@ export default function HouseholdBuilderForm({
     onChange(newHousehold);
   };
 
+  const columns = layout === 'columns';
+  const childCountId = useId();
+
   return (
-    <Stack gap="lg">
-      <SPMGeographyChoice
-        household={household}
-        year={year}
-        metadata={metadata}
-        onChange={onChange}
-        disabled={disabled}
-        isReadOnly={isReadOnly}
-      />
+    // In columns, the family and household sections share a row; the people
+    // follow across the full width, one card each, up to four to a row.
+    <Stack
+      gap="lg"
+      className={
+        columns
+          ? 'tw:lg:flex-row tw:lg:flex-wrap tw:lg:items-start tw:lg:gap-x-6 tw:lg:gap-y-2'
+          : undefined
+      }
+    >
+      {!hideSpmGeography && (
+        <SPMGeographyChoice
+          household={household}
+          year={year}
+          metadata={metadata}
+          onChange={onChange}
+          disabled={disabled}
+          isReadOnly={isReadOnly}
+        />
+      )}
       {/* Floating notification when variable added to different entity */}
       {warningMessage && (
         <div
@@ -355,7 +656,13 @@ export default function HouseholdBuilderForm({
       {/* Household Information */}
       <Stack gap="md">
         {/* Marital Status and Children - side by side */}
-        <div className="tw:grid tw:grid-cols-2 tw:gap-4">
+        <div
+          className={
+            columns
+              ? 'tw:flex tw:flex-wrap tw:items-end tw:gap-4'
+              : 'tw:grid tw:grid-cols-2 tw:gap-4'
+          }
+        >
           <div className="tw:flex tw:flex-col tw:gap-[6px]">
             <Label>Marital status</Label>
             <Select
@@ -365,7 +672,10 @@ export default function HouseholdBuilderForm({
               }
               disabled={disabled}
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={columns ? 'tw:w-40' : undefined}
+                aria-label={labelInputs ? 'Marital status' : undefined}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -376,44 +686,76 @@ export default function HouseholdBuilderForm({
           </div>
 
           <div className="tw:flex tw:flex-col tw:gap-[6px]">
-            <Label>Number of children</Label>
-            <Select
-              value={numChildren.toString()}
-              onValueChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
-              disabled={disabled}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">0</SelectItem>
-                <SelectItem value="1">1</SelectItem>
-                <SelectItem value="2">2</SelectItem>
-                <SelectItem value="3">3</SelectItem>
-                <SelectItem value="4">4</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor={columns ? childCountId : undefined}>Number of children</Label>
+            {columns ? (
+              <ChildCountInput
+                id={childCountId}
+                value={numChildren}
+                onChange={onNumChildrenChange}
+                disabled={disabled}
+              />
+            ) : (
+              <Select
+                value={numChildren.toString()}
+                onValueChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
+                disabled={disabled}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0</SelectItem>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
       </Stack>
 
-      <hr className="tw:border-border-light" />
+      {!columns && <hr className="tw:border-border-light" />}
 
       {/* Main Accordion Sections - all open by default */}
-      <Accordion type="multiple" defaultValue={['individuals', 'household-vars']}>
+      <Accordion
+        type="multiple"
+        defaultValue={['individuals', 'household-vars']}
+        className={columns ? 'tw:lg:contents' : undefined}
+      >
         {/* Individuals / Members Section */}
-        <AccordionItem value="individuals">
+        <AccordionItem
+          value="individuals"
+          // The section's own width sets how many people's cards share a row.
+          className={
+            columns ? 'tw:@container tw:lg:order-last tw:lg:w-full tw:border-b-0' : undefined
+          }
+        >
           <AccordionTrigger>
             <Text fw={typography.fontWeight.medium}>Individuals</Text>
           </AccordionTrigger>
           <AccordionContent>
-            <Accordion type="multiple" key={people.join(',')} defaultValue={people}>
+            <Accordion
+              type="multiple"
+              key={people.join(',')}
+              defaultValue={people}
+              className={columns ? PEOPLE_GRID_CLASSES : undefined}
+            >
               {people.map((person) => {
                 const personVars = getPersonVariables(person);
 
                 return (
-                  <AccordionItem key={person} value={person}>
+                  <AccordionItem
+                    key={person}
+                    value={person}
+                    className={
+                      columns
+                        ? 'tw:rounded-lg tw:border tw:last:border-b tw:border-border-light tw:px-3'
+                        : undefined
+                    }
+                  >
                     <AccordionTrigger>
                       <Text fw={typography.fontWeight.semibold} size="sm">
                         {getPersonDisplayNameCapitalized(person)}
@@ -427,10 +769,11 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
+                          const field = named(variable);
                           return (
                             <VariableRow
                               key={fieldName}
-                              variable={variable}
+                              variable={field}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -438,6 +781,8 @@ export default function HouseholdBuilderForm({
                               onChange={onChange}
                               disabled={disabled}
                               showRemoveColumn
+                              wholeNumbers={columns}
+                              inputLabel={inputLabelOf(field, person)}
                             />
                           );
                         })}
@@ -448,10 +793,12 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
+                          const field = named(variable);
                           return (
                             <VariableRow
                               key={varName}
-                              variable={variable}
+                              variable={field}
+                              inputLabel={inputLabelOf(field, person)}
                               household={household}
                               metadata={metadata}
                               year={year}
@@ -463,6 +810,7 @@ export default function HouseholdBuilderForm({
                                   : () => handleRemovePersonVariable(varName, person)
                               }
                               disabled={disabled}
+                              wholeNumbers={columns}
                             />
                           );
                         })}
@@ -475,13 +823,30 @@ export default function HouseholdBuilderForm({
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={filteredPersonVariables.variables}
                             truncated={filteredPersonVariables.truncated}
-                            onSelect={(variable) => handlePersonVariableSelect(variable, person)}
+                            suggested={
+                              suggestedOrder.size > 0 && !personSearchValue.trim()
+                                ? suggestedOrder
+                                : undefined
+                            }
+                            suggestedLabel={suggestedLabel}
+                            groupOf={variableGroupOf}
+                            groupOrder={variableGroupOrder}
+                            subgroupOf={variableSubgroupOf}
+                            subgroupOrder={variableSubgroupOrder}
+                            common={variablePickerCommon}
+                            groupIcon={variableGroupIcon}
+                            nameOf={variableNameOf}
+                            describe={variableDescribe}
+                            onSelect={(variable, source) =>
+                              handlePersonVariableSelect(variable, person, source)
+                            }
+                            title={`Add a variable to ${getPersonDisplayName(person)}`}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
                                 variable.name,
                                 metadata
                               );
-                              return { show: !isPerson, label: 'Household' };
+                              return { show: !searchByEntity && !isPerson, label: 'Household' };
                             }}
                             disabled={disabled}
                             onClose={() => {
@@ -511,12 +876,30 @@ export default function HouseholdBuilderForm({
         </AccordionItem>
 
         {/* Household Variables Section */}
-        <AccordionItem value="household-vars">
-          <AccordionTrigger>
+        <AccordionItem
+          value="household-vars"
+          // In columns, the household's fields join the family's row, and its
+          // add link starts the next line at the left.
+          className={columns ? 'tw:lg:contents' : undefined}
+        >
+          {/* In columns, the household's fields sit beside the family's, under their own labels. */}
+          <AccordionTrigger className={columns ? 'tw:lg:hidden' : undefined}>
             <Text fw={typography.fontWeight.medium}>Household</Text>
           </AccordionTrigger>
-          <AccordionContent>
-            <Stack gap="md">
+          <AccordionContent
+            className={
+              columns ? 'tw:lg:contents tw:flex tw:flex-wrap tw:items-end tw:gap-4' : undefined
+            }
+            style={columns ? { display: 'contents' } : undefined}
+          >
+            <div
+              className={
+                // Never wider than the screen: an open search list would widen it.
+                columns
+                  ? 'tw:flex tw:w-full tw:min-w-0 tw:flex-col tw:gap-3 tw:lg:contents'
+                  : 'tw:flex tw:flex-col tw:gap-3'
+              }
+            >
               {/* Basic household inputs (like state_name) */}
               {basicNonPersonFields.map((fieldName) => {
                 const variable = getVariableInfo(fieldName, metadata);
@@ -524,10 +907,12 @@ export default function HouseholdBuilderForm({
                   return null;
                 }
                 const entityName = resolveDefaultGroupInstanceName(fieldName);
+                const field = named(variable);
                 return (
                   <VariableRow
                     key={fieldName}
-                    variable={variable}
+                    variable={field}
+                    inputLabel={inputLabelOf(field)}
                     household={household}
                     metadata={metadata}
                     year={year}
@@ -535,6 +920,9 @@ export default function HouseholdBuilderForm({
                     onChange={onChange}
                     disabled={disabled}
                     showRemoveColumn
+                    stacked={columns}
+                    wholeNumbers={columns}
+                    width={columns ? 208 : undefined}
                   />
                 );
               })}
@@ -545,10 +933,12 @@ export default function HouseholdBuilderForm({
                 if (!variable) {
                   return null;
                 }
+                const field = named(variable);
                 return (
                   <VariableRow
                     key={`${entity}-${entityName}-${varName}`}
-                    variable={variable}
+                    variable={field}
+                    inputLabel={inputLabelOf(field)}
                     household={household}
                     metadata={metadata}
                     year={year}
@@ -560,42 +950,72 @@ export default function HouseholdBuilderForm({
                         : () => handleRemoveHouseholdVariable(varName, entityName)
                     }
                     disabled={disabled}
+                    stacked={columns}
+                    wholeNumbers={columns}
+                    width={columns ? 208 : undefined}
                   />
                 );
               })}
 
               {/* Add variable search or link */}
               {!isReadOnly && isHouseholdSearchActive ? (
-                <VariableSearchDropdown
-                  searchValue={householdSearchValue}
-                  onSearchChange={setHouseholdSearchValue}
-                  onFocusChange={setIsHouseholdSearchFocused}
-                  filteredVariables={filteredHouseholdVariables.variables}
-                  truncated={filteredHouseholdVariables.truncated}
-                  onSelect={handleHouseholdVariableSelect}
-                  getEntityHint={(variable) => {
-                    const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
-                    return { show: isPerson, label: 'Person' };
-                  }}
-                  disabled={disabled}
-                  onClose={() => {
-                    setIsHouseholdSearchActive(false);
-                    setHouseholdSearchValue('');
-                    setIsHouseholdSearchFocused(false);
-                  }}
-                />
+                <>
+                  {/* In columns, the search takes the add link's place: a line of
+                      its own under the fields. A width cap alone keeps it in their
+                      row, where it has no label and sits above their boxes. */}
+                  {columns && <div aria-hidden className="tw:basis-full tw:h-0" />}
+                  <div className={columns ? 'tw:w-full tw:max-w-[42rem]' : undefined}>
+                    <VariableSearchDropdown
+                      searchValue={householdSearchValue}
+                      onSearchChange={setHouseholdSearchValue}
+                      onFocusChange={setIsHouseholdSearchFocused}
+                      filteredVariables={filteredHouseholdVariables.variables}
+                      truncated={filteredHouseholdVariables.truncated}
+                      suggested={
+                        suggestedOrder.size > 0 && !householdSearchValue.trim()
+                          ? suggestedOrder
+                          : undefined
+                      }
+                      suggestedLabel={suggestedLabel}
+                      groupOf={variableGroupOf}
+                      groupOrder={variableGroupOrder}
+                      subgroupOf={variableSubgroupOf}
+                      subgroupOrder={variableSubgroupOrder}
+                      common={variablePickerCommon}
+                      groupIcon={variableGroupIcon}
+                      nameOf={variableNameOf}
+                      describe={variableDescribe}
+                      onSelect={handleHouseholdVariableSelect}
+                      title="Add a variable to your household"
+                      getEntityHint={(variable) => {
+                        const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+                        return { show: !searchByEntity && isPerson, label: 'Person' };
+                      }}
+                      disabled={disabled}
+                      onClose={() => {
+                        setIsHouseholdSearchActive(false);
+                        setHouseholdSearchValue('');
+                        setIsHouseholdSearchFocused(false);
+                      }}
+                    />
+                  </div>
+                </>
               ) : !isReadOnly ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleOpenHouseholdSearch}
-                  className="tw:self-start"
-                >
-                  <IconPlus size={14} />
-                  Add variable to your household
-                </Button>
+                <>
+                  {/* In columns, the add link starts a line of its own, under the fields. */}
+                  {columns && <div aria-hidden className="tw:basis-full tw:h-0" />}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleOpenHouseholdSearch}
+                    className="tw:self-start"
+                  >
+                    <IconPlus size={14} />
+                    Add variable to your household
+                  </Button>
+                </>
               ) : null}
-            </Stack>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

@@ -3,6 +3,7 @@ import HomeBlogPreview from "@/components/home/HomeBlogPreview";
 import HomeTrackerPreview from "@/components/home/HomeTrackerPreview";
 import OrgLogos from "@/components/home/OrgLogos";
 import FeaturedResearchBanner from "@/components/home/FeaturedResearchBanner";
+import AutumnBudgetEventBanner from "@/components/home/AutumnBudgetEventBanner";
 import { typography } from "@/designTokens";
 
 export default async function HomePage({
@@ -14,6 +15,7 @@ export default async function HomePage({
 
   return (
     <>
+      <AutumnBudgetEventBanner countryId={countryId} />
       <HeroSection countryId={countryId} />
       <div style={{ fontFamily: typography.fontFamily.primary }}>
         <OrgLogos countryId={countryId} />

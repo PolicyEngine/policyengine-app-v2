@@ -34,6 +34,27 @@ export function restoreUsageCounts(counts: Map<string, number>): void {
 }
 
 /**
+ * Parameters that configure the simulation rather than the law:
+ * behavioural elasticities, uprating forecasts, microdata calibration,
+ * take-up rates.
+ */
+const MODEL_ASSUMPTION_PATTERN =
+  /^gov\.(?:simulation|economic_assumptions)\.|\.(?:takeup|take_up)(?:_rate)?(?:\.|$)/;
+
+export function isModelAssumption(path: string): boolean {
+  return MODEL_ASSUMPTION_PATTERN.test(path);
+}
+
+/**
+ * Added to a model assumption's fuzzy score (0 best, 1 worst). Additive,
+ * because a multiplier does nothing to an exact match's near-zero score:
+ * "capital gains" matches the capital gains index exactly, and the tax
+ * should still come first. An assumption still ranks when it is the
+ * clearly better match, or when nothing else matches.
+ */
+export const MODEL_ASSUMPTION_OFFSET = 0.25;
+
+/**
  * Multiplier applied to a fuzzy match score (lower is better): deep and
  * bracketed paths drift down, parameters used in real analyses float up.
  */
@@ -48,4 +69,9 @@ export function priorFactor(path: string): number {
   const usage = getUsageCount(path);
   const usageBoost = usage > 0 ? Math.min(0.45, 0.3 + 0.05 * Math.log1p(usage)) : 0;
   return 1 + depthPenalty + bracketPenalty - usageBoost;
+}
+
+/** Added to a fuzzy match score after the multiplier (see MODEL_ASSUMPTION_OFFSET). */
+export function priorOffset(path: string): number {
+  return isModelAssumption(path) ? MODEL_ASSUMPTION_OFFSET : 0;
 }

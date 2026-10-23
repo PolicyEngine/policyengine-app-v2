@@ -2,12 +2,26 @@
 
 ## Test commands
 
-- Run tests: `bun run vitest`
+From the repository root, `make test` runs the `app/` tests and then the `website/` tests, the same two suites as CI's Tests job. `calculator-app/` has no test suite of its own; tests of its code run in the `app/` suite (for example, under `app/src/tests/unit/calculator/`).
+
+In `app/`:
+
+- Run tests: `bun run vitest` (or `bun run test`)
+- Run specific files: `bun run vitest -- <paths relative to app/>`
 - Watch mode: `bun run vitest:watch`
-- With coverage: `bun run vitest -- --coverage`
-- Full check: `bun run check` (includes type checking, linting, and formatting verification)
+- Coverage: `bun run vitest -- --coverage` fails with a missing dependency error, because `@vitest/coverage-v8` isn't installed. Add it as a dev dependency before measuring coverage.
+- Full check: `bun run check` runs the type check, ESLint and the Prettier check. It doesn't run Stylelint or the tests; `make lint` and `make test` do.
+
+In `website/`:
+
+- Run tests: `bun run test`
+- Watch mode: `bun run test:watch`
+
+vitest runs on Node, not Bun, so results can depend on your Node version. See step 3 of "Before committing" in `repository-guidance.md`.
 
 ## Writing tests
+
+Unless an item says otherwise, these conventions are for `app/`. `website/` tests live in `website/src/__tests__/`, import from `@testing-library/react` directly (`website/` has no `@test-utils`) and share the setup in `website/src/__tests__/setup.ts`.
 
 1. **Always use @test-utils**: Import `render` and other utilities from `@test-utils`, not `@testing-library/react`
 
@@ -152,7 +166,7 @@
      };
      ```
 
-7. **Mock LazyPlot when testing blog components**: Plotly is lazy-loaded via `LazyPlot`. Mock it in blog/notebook tests:
+7. **Mock LazyPlot when testing blog components**: Plotly is lazy-loaded via `LazyPlot` (`website/src/components/blog/LazyPlot.tsx`). Mock it in website blog/notebook tests:
 
    ```typescript
    vi.mock('@/components/blog/LazyPlot', () => ({ LazyPlot: vi.fn(() => null) }));

@@ -1,5 +1,17 @@
 [
   {
+    "title": "The new child poverty numbers, and how state reforms would affect them",
+    "date": "2026-09-15",
+    "type": "webinar",
+    "location": "Virtual",
+    "host": "PolicyEngine",
+    "description": "Same-day walkthrough of the Census Bureau's 2025 poverty numbers and the Supplemental Poverty Measure, with reactions from Cynthia Osborne (Prenatal-to-3 Policy Impact Center) and Joshua McCabe (Niskanen Center), and a demo of the Child Poverty Impact Dashboard.",
+    "recordingUrl": "https://www.youtube.com/watch?v=TKf1D13FZiQ",
+    "slidesUrl": "https://policyengine.org/slides/cpid-webinar-2026",
+    "image": "TKf1D13FZiQ.jpg",
+    "tags": ["us"]
+  },
+  {
     "title": "New technologies for evidence-based policy making: a workshop alongside IARIW 2026",
     "date": "2026-08-27",
     "type": "workshop",
@@ -9,7 +21,9 @@
     "registrationUrl": "https://docs.google.com/forms/d/e/1FAIpQLSfpfDAGrAeAD4yG1aupgZnJ6VecBGZIaCHqWuVCYRXxuEDWeA/viewform",
     "url": "https://policyengine.org/us/events/iariw-2026",
     "tags": ["global"],
-    "featured": true
+    "featured": true,
+    "recordingUrl": "https://www.youtube.com/watch?v=ONnT8UFBz-k",
+    "image": "iariw-2026/social-card.png"
   },
   {
     "title": "CliffWatch: where, when, and how benefit cliffs hit US households",
@@ -21,7 +35,9 @@
     "registrationUrl": "https://us06web.zoom.us/meeting/register/nEmrV3a4SvS7kOqkwR_c4Q#/registration",
     "url": "https://policyengine.org/us/cliffwatch",
     "tags": ["us"],
-    "featured": true
+    "featured": true,
+    "recordingUrl": "https://www.youtube.com/watch?v=q_Y0fdCH_Io",
+    "image": "q_Y0fdCH_Io.jpg"
   },
   {
     "title": "PSL Demo Day — PolicyEngine's TAXSIM emulator",

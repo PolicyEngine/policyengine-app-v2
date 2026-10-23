@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { runFlagshipReport, RunReportProvision } from '@/libs/flagship/runReport';
+import { useFlagshipReportStore } from '@/hooks/useFlagshipStores';
+import { markDraftRun } from '@/libs/draftReform';
+import {
+  flagshipReportQueryKeys,
+  runFlagshipReport,
+  RunReportBaseline,
+  RunReportProvision,
+} from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
 
 /**
@@ -13,7 +21,10 @@ import { RootState } from '@/store';
 export function useRunFlagshipReport() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
+  const queryClient = useQueryClient();
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const reportStore = useFlagshipReportStore();
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +42,23 @@ export function useRunFlagshipReport() {
     title: string,
     sourceNote: string,
     provisions: RunReportProvision[],
-    reformId?: string | null
+    reformId?: string | null,
+    year?: number,
+    {
+      fromDraft = false,
+      region,
+      windowYears,
+      baseline,
+    }: {
+      /** A run from the draft hands the draft over: its report clears it. */
+      fromDraft?: boolean;
+      /** A state or congressional district ("state/ca"); the whole country when unset. */
+      region?: string;
+      /** Years of budget to score alongside the report, e.g. 10. */
+      windowYears?: number;
+      /** A saved reform to compare with; current law when unset. */
+      baseline?: RunReportBaseline;
+    } = {}
   ) => {
     if (isRunning) {
       return;
@@ -49,8 +76,22 @@ export function useRunFlagshipReport() {
         sourceNote,
         provisions,
         currentLawId: Number(currentLawId),
+        parameters,
         reformId,
+        year,
+        region,
+        windowYears,
+        baseline,
+        // With accounts, the run's record goes through the API (the account,
+        // or this browser's unauthenticated user); otherwise this browser's.
+        accountReportStore: reportStore.isAccount ? reportStore.store : null,
       });
+      if (fromDraft) {
+        markDraftRun(userReportId);
+      }
+      // Your reforms lists the new report at once, not when its cache goes stale.
+      void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: flagshipReportQueryKeys.statuses });
       nav.push(`/${countryId}/report/${userReportId}`);
     } catch {
       setError('Could not start the report. Try again.');

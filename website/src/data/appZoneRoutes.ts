@@ -22,6 +22,16 @@ function withDeepRoute(route: AppZoneRoute): AppZoneRoute[] {
 
 export const appZoneRoutes: AppZoneRoute[] = [
   {
+    source: "/uk/energy-autumn-budget",
+    destination:
+      "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
+  },
+  {
+    source: "/uk/targeted-energy-discount",
+    destination:
+      "https://uk-targeted-energy-discount.vercel.app/uk/targeted-energy-discount",
+  },
+  {
     source: "/us/taxation-of-benefits-reforms",
     destination:
       "https://crfb-tob-impacts.vercel.app/us/taxation-of-benefits-reforms",
@@ -57,6 +67,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
   {
     source: "/uk/bus-fare-cap",
     destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
+  },
+  {
+    source: "/uk/triple-lock",
+    destination: "https://uk-triple-lock.vercel.app/uk/triple-lock",
   },
   {
     source: "/uk/middle-east-war-living-standards",

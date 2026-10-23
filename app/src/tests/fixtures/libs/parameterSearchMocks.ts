@@ -235,3 +235,92 @@ export function buildCrowdedStateParameterCollection(
   parameters[CROWDED_FEDERAL_PATH] = leaf(CROWDED_FEDERAL_PATH, 'Standard deduction amount');
   return parameters;
 }
+
+/** The federal child tax credit's per-child amount: a bracket member labelled only "amount". */
+export const CTC_BASE_AMOUNT_PATH = 'gov.irs.credits.ctc.amount.base[0].amount';
+
+/**
+ * The federal child tax credit as the live metadata lays it out. Most
+ * leaves restate the program in their own label ("CTC phase-out
+ * amount"); the per-child amount sits in a bracket schedule whose label
+ * ("Child Tax Credit amount") the breadcrumb skips, so its own label is
+ * just "amount".
+ */
+export function buildFederalCtcParameterCollection(): ParameterMetadataCollection {
+  const ctc = 'gov.irs.credits.ctc';
+  const parameters: ParameterMetadataCollection = {
+    'gov.irs': node('gov.irs', 'Internal Revenue Service (IRS)'),
+    'gov.irs.credits': node('gov.irs.credits', 'Credits'),
+    [ctc]: node(ctc, 'Child Tax Credit'),
+    [`${ctc}.amount`]: node(`${ctc}.amount`, 'amount'),
+    [`${ctc}.amount.adult_dependent`]: leaf(
+      `${ctc}.amount.adult_dependent`,
+      'Child tax credit for adult dependents'
+    ),
+    [`${ctc}.adult_ssn_requirement_applies`]: leaf(
+      `${ctc}.adult_ssn_requirement_applies`,
+      'Child Tax Credit adult identification requirement applies'
+    ),
+    [`${ctc}.child_ssn_requirement_applies`]: leaf(
+      `${ctc}.child_ssn_requirement_applies`,
+      'Child Tax Credit child identification requirement applies'
+    ),
+    [`${ctc}.refundable`]: node(`${ctc}.refundable`, 'Refundability'),
+    [`${ctc}.refundable.individual_max`]: leaf(
+      `${ctc}.refundable.individual_max`,
+      'Child tax credit refundable maximum amount'
+    ),
+    [`${ctc}.refundable.fully_refundable`]: leaf(
+      `${ctc}.refundable.fully_refundable`,
+      'Fully refundable CTC'
+    ),
+    [`${ctc}.refundable.phase_in`]: node(`${ctc}.refundable.phase_in`, 'Phase-in'),
+    [`${ctc}.refundable.phase_in.rate`]: leaf(
+      `${ctc}.refundable.phase_in.rate`,
+      'CTC refundable phase-in rate'
+    ),
+    [`${ctc}.refundable.phase_in.threshold`]: leaf(
+      `${ctc}.refundable.phase_in.threshold`,
+      'CTC refundable phase-in threshold'
+    ),
+    [`${ctc}.phase_out`]: node(`${ctc}.phase_out`, 'Phase-out'),
+    [`${ctc}.phase_out.amount`]: leaf(`${ctc}.phase_out.amount`, 'CTC phase-out amount'),
+    [`${ctc}.phase_out.increment`]: leaf(
+      `${ctc}.phase_out.increment`,
+      'CTC phase-out increment (ARPA)'
+    ),
+    [`${ctc}.phase_out.threshold`]: node(`${ctc}.phase_out.threshold`, 'CTC phase-out threshold'),
+    [`${ctc}.phase_out.arpa`]: node(`${ctc}.phase_out.arpa`, 'ARPA'),
+    [`${ctc}.phase_out.arpa.amount`]: leaf(
+      `${ctc}.phase_out.arpa.amount`,
+      'CTC phase-out amount (ARPA)'
+    ),
+    [`${ctc}.phase_out.arpa.increment`]: leaf(
+      `${ctc}.phase_out.arpa.increment`,
+      'CTC phase-out increment'
+    ),
+    [`${ctc}.phase_out.arpa.in_effect`]: leaf(
+      `${ctc}.phase_out.arpa.in_effect`,
+      'CTC ARPA phase-out in effect'
+    ),
+  };
+  for (const status of ['SINGLE', 'JOINT', 'SEPARATE', 'HEAD_OF_HOUSEHOLD', 'SURVIVING_SPOUSE']) {
+    const path = `${ctc}.phase_out.threshold.${status}`;
+    parameters[path] = leaf(path, status.replace(/_/g, ' '));
+  }
+  // The bracket schedules: their own labels name them, their members do not.
+  for (const [schedule, label] of [
+    ['base', 'Child Tax Credit amount'],
+    ['arpa', 'Child Tax Credit ARPA amount'],
+  ]) {
+    const schedulePath = `${ctc}.amount.${schedule}`;
+    parameters[schedulePath] = node(schedulePath, label);
+    for (const index of [0, 1]) {
+      const bracketPath = `${schedulePath}[${index}]`;
+      parameters[bracketPath] = node(bracketPath, `bracket ${index + 1}`);
+      parameters[`${bracketPath}.amount`] = leaf(`${bracketPath}.amount`, 'amount');
+      parameters[`${bracketPath}.threshold`] = leaf(`${bracketPath}.threshold`, 'threshold');
+    }
+  }
+  return parameters;
+}

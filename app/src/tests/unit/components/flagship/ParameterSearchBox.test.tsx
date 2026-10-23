@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen, userEvent, within } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import ParameterSearchBox from '@/components/flagship/ParameterSearchBox';
 import type { ParameterSearchEntry } from '@/libs/parameterSearch';
@@ -93,6 +93,11 @@ const NODE_LABELS: Record<string, string> = {
 
 const labelForNode = (path: string) => NODE_LABELS[path] ?? null;
 
+async function chooseScope(user: ReturnType<typeof userEvent.setup>, option: RegExp) {
+  await user.click(screen.getByRole('button', { name: /state scope/i }));
+  await user.click(await screen.findByRole('option', { name: option }));
+}
+
 describe('ParameterSearchBox', () => {
   test('given a matching query then results show breadcrumb and path', async () => {
     // Given
@@ -122,9 +127,34 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(onSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'gov.irs.credits.ctc.amount' })
+      expect.objectContaining({ path: 'gov.irs.credits.ctc.amount' }),
+      expect.objectContaining({ isBreakdown: false, inFolder: false, queryLength: 9 })
     );
     expect(input).toHaveValue('');
+  });
+
+  test('given results are kept on pick then the query stays and drafted rows are marked', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <ParameterSearchBox
+        entries={ENTRIES}
+        onSelect={onSelect}
+        keepResultsOnSelect
+        inDraft={(path) => path === 'gov.irs.credits.eitc.max'}
+      />
+    );
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+
+    // When
+    await user.click(await screen.findByText('Phase-in rate'));
+
+    // Then
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(input).toHaveValue('eitc');
+    expect(screen.getByText('Maximum').closest('[role=option]')).toHaveTextContent(/in draft/i);
   });
 
   test('given keyboard navigation then enter selects the highlighted result', async () => {
@@ -142,6 +172,38 @@ describe('ParameterSearchBox', () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
+  test('given a folder header then it says in words that it opens', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
+
+    // Then
+    const header = await screen.findByRole('button', { name: 'Browse IRS → Credits → EITC' });
+    expect(header).toHaveTextContent(/open folder/i);
+  });
+
+  test('given a folder header is hovered then no row stays highlighted beneath it', async () => {
+    // Given — typing highlights the first row for Enter
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+    const header = await screen.findByRole('button', { name: 'Browse IRS → Credits → EITC' });
+    expect(screen.getAllByRole('option', { selected: true })).toHaveLength(1);
+
+    // When
+    await user.hover(header);
+
+    // Then — the header alone reads as the target; the keys bring the row back
+    expect(screen.queryAllByRole('option', { selected: true })).toHaveLength(0);
+    await user.click(input);
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getAllByRole('option', { selected: true })).toHaveLength(1);
+  });
+
   test('given results sharing a folder then a folder header shows with indented leaf labels', async () => {
     // Given
     const user = userEvent.setup();
@@ -151,7 +213,9 @@ describe('ParameterSearchBox', () => {
     await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'eitc');
 
     // Then
-    expect(await screen.findByText('IRS → Credits → EITC')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'Browse IRS → Credits → EITC' })
+    ).toBeInTheDocument();
     expect(screen.getByText('Maximum')).toBeInTheDocument();
     expect(screen.getByText('Phase-in rate')).toBeInTheDocument();
     expect(screen.queryByText('IRS → Credits → EITC → Maximum')).not.toBeInTheDocument();
@@ -169,7 +233,8 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(onSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'gov.irs.credits.eitc.max' })
+      expect.objectContaining({ path: 'gov.irs.credits.eitc.max' }),
+      expect.objectContaining({ inFolder: false, queryLength: 4 })
     );
   });
 
@@ -209,7 +274,7 @@ describe('ParameterSearchBox', () => {
     // Given
     const user = userEvent.setup();
     render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
-    await user.selectOptions(screen.getByRole('combobox', { name: /state scope/i }), 'federal');
+    await chooseScope(user, /^federal only/i);
 
     // When
     await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'child tax');
@@ -227,7 +292,7 @@ describe('ParameterSearchBox', () => {
     render(
       <ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} stateLabels={{ ut: 'Utah' }} />
     );
-    await user.selectOptions(screen.getByRole('combobox', { name: /state scope/i }), 'ut');
+    await chooseScope(user, /^utah/i);
 
     // When
     await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'child tax');
@@ -235,28 +300,72 @@ describe('ParameterSearchBox', () => {
     // Then
     expect(screen.getByText('Utah → Income tax → Child tax credit → Amount')).toBeInTheDocument();
     expect(screen.queryByText('IRS → Credits → Child tax credit → Amount')).not.toBeInTheDocument();
-    // The badge keeps the code; only the filter option spells the state out.
-    expect(screen.getByRole('option', { name: 'Utah' })).toBeInTheDocument();
+    // The badge keeps the code; only the scope picker spells the state out.
+    expect(screen.getByRole('button', { name: 'State scope: Utah' })).toBeInTheDocument();
     expect(screen.getAllByText('UT').length).toBeGreaterThan(0);
   });
 
-  test('given state labels then the scope filter names states instead of codes', () => {
-    // Given / When
+  test('given state labels then the scope filter names states instead of codes', async () => {
+    // Given
+    const user = userEvent.setup();
     render(
       <ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} stateLabels={{ ut: 'Utah' }} />
     );
 
+    // When
+    await user.click(screen.getByRole('button', { name: /state scope/i }));
+
     // Then
-    expect(screen.getByRole('option', { name: 'Utah' })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'UT only' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^utah/i })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /ut only/i })).not.toBeInTheDocument();
   });
 
-  test('given no label for a state then the filter falls back to its code', () => {
-    // Given / When
+  test('given no label for a state then the filter falls back to its code', async () => {
+    // Given
+    const user = userEvent.setup();
     render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
 
+    // When
+    await user.click(screen.getByRole('button', { name: /state scope/i }));
+
     // Then
-    expect(screen.getByRole('option', { name: 'UT' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^UT/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /utah/i })).not.toBeInTheDocument();
+  });
+
+  test('given anything is typed then the page is told the search is active', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onActiveChange = vi.fn();
+    render(
+      <ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} onActiveChange={onActiveChange} />
+    );
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+
+    // When
+    await user.type(input, 'eitc');
+    await user.keyboard('{Escape}');
+
+    // Then — idle on mount, active while typed, idle again once cleared
+    expect(onActiveChange.mock.calls.map(([active]) => active)).toEqual([false, true, false]);
+  });
+
+  test('given a page browser then opening a folder hands it off and keeps the query', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onOpenFolder = vi.fn();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} onOpenFolder={onOpenFolder} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+
+    // When
+    await user.click(await screen.findByRole('button', { name: 'Browse IRS → Credits → EITC' }));
+
+    // Then
+    expect(onOpenFolder).toHaveBeenCalledWith('gov.irs.credits.eitc');
+    // Kept, so switching back to search finds the same results.
+    expect(input).toHaveValue('eitc');
+    expect(screen.queryByRole('button', { name: /back to matches/i })).not.toBeInTheDocument();
   });
 
   test('given the contributed filter then its meaning is available to the reader', () => {
@@ -280,6 +389,70 @@ describe('ParameterSearchBox', () => {
 
     // Then
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.getByText(/no parameters match/i)).toHaveTextContent('zzzz quantum flux');
+  });
+
+  test('given a query with no match then clear search empties the box and returns to it', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const search = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(search, 'zzzz quantum flux');
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    // Then
+    expect(search).toHaveValue('');
+    expect(search).toHaveFocus();
+    expect(screen.queryByText(/no parameters match/i)).not.toBeInTheDocument();
+  });
+
+  test('given a scope with no match then other jurisdictions wait until asked for', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(
+      <ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} stateLabels={{ ut: 'Utah' }} />
+    );
+    await chooseScope(user, /^federal only/i);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'utah');
+
+    // Then — the note says so, and the matches elsewhere are not shown yet
+    const note = screen.getByRole('note');
+    expect(note).toHaveTextContent('No matches for “utah” at the federal level.');
+    expect(note).toHaveTextContent('1 found in all jurisdictions');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.queryByText('Utah → Income tax → Child tax credit → Amount')).toBeNull();
+
+    // And the note's action makes the wider scope the filter, and shows them
+    await user.click(screen.getByRole('button', { name: /search all jurisdictions/i }));
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'State scope: All jurisdictions' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Utah → Income tax → Child tax credit → Amount')).toBeInTheDocument();
+  });
+
+  test('given only wider matches then enter widens the search instead of picking one', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <ParameterSearchBox entries={ENTRIES} onSelect={onSelect} stateLabels={{ ut: 'Utah' }} />
+    );
+    await chooseScope(user, /^federal only/i);
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'utah');
+
+    // When
+    await user.keyboard('{Enter}');
+
+    // Then
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: 'State scope: All jurisdictions' })
+    ).toBeInTheDocument();
   });
 
   test('given a folder header is clicked then the folder contents show in place', async () => {
@@ -339,7 +512,8 @@ describe('ParameterSearchBox', () => {
     await user.click(screen.getByText('Phase-in rate'));
 
     expect(onSelectEntry).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'gov.irs.credits.eitc.phase_in_rate' })
+      expect.objectContaining({ path: 'gov.irs.credits.eitc.phase_in_rate' }),
+      expect.objectContaining({ inFolder: true })
     );
   });
 
@@ -351,7 +525,7 @@ describe('ParameterSearchBox', () => {
 
     await user.click(screen.getByRole('button', { name: /back to matches/i }));
 
-    expect(screen.getByText('IRS → Credits → EITC')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Browse IRS → Credits → EITC' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /back to matches/i })).not.toBeInTheDocument();
   });
 
@@ -426,7 +600,7 @@ describe('ParameterSearchBox', () => {
     await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
 
     // When — the list shrinks under it, then Enter
-    await user.selectOptions(screen.getByRole('combobox', { name: /state scope/i }), 'federal');
+    await chooseScope(user, /^federal only/i);
     await user.click(input);
     await user.keyboard('{Enter}');
 
@@ -437,53 +611,133 @@ describe('ParameterSearchBox', () => {
     );
   });
 
-  test('given a group spanning sibling paths then browse opens their shared ancestor', async () => {
-    // Given — two rows whose unlabeled parents (base, actc) fold out of
-    // the breadcrumb, so search groups them under one header
+  test('given members of sibling schedules then each schedule is its own group, by bracket', async () => {
+    // Given — rows whose unlabeled schedules (base, actc) fold out of the
+    // breadcrumb, so their breadcrumbs read alike
     const user = userEvent.setup();
-    const siblings: ParameterSearchEntry[] = [
-      {
-        path: 'gov.irs.credits.ctc.amount.base[0].threshold',
-        label: 'threshold',
-        breadcrumb: 'IRS → Credits → Child tax credit → Amount → Bracket 1 → Threshold',
-        unit: 'currency-USD',
-        description: null,
-        isContrib: false,
-        stateCode: null,
-      },
-      {
-        path: 'gov.irs.credits.ctc.amount.actc[0].threshold',
-        label: 'threshold',
-        breadcrumb: 'IRS → Credits → Child tax credit → Amount → Bracket 1 → Threshold',
-        unit: 'currency-USD',
-        description: null,
-        isContrib: false,
-        stateCode: null,
-      },
-    ];
-    const labels: Record<string, string> = {
-      'gov.irs': 'IRS',
-      'gov.irs.credits': 'Credits',
-      'gov.irs.credits.ctc': 'Child tax credit',
-      'gov.irs.credits.ctc.amount': 'Amount',
-      'gov.irs.credits.ctc.amount.base': 'Base',
-      'gov.irs.credits.ctc.amount.actc': 'ACTC',
-    };
+    const row = (path: string, bracket: number): ParameterSearchEntry => ({
+      path,
+      label: 'threshold',
+      breadcrumb: `IRS → Credits → Child tax credit → Amount → Bracket ${bracket} → Threshold`,
+      unit: 'currency-USD',
+      description: null,
+      isContrib: false,
+      stateCode: null,
+    });
     render(
       <ParameterSearchBox
-        entries={siblings}
+        entries={[
+          row('gov.irs.credits.ctc.amount.base[1].threshold', 2),
+          row('gov.irs.credits.ctc.amount.actc[0].threshold', 1),
+          row('gov.irs.credits.ctc.amount.base[0].threshold', 1),
+        ]}
         onSelect={vi.fn()}
-        labelFor={(path) => labels[path] ?? null}
       />
     );
-    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'bracket');
 
     // When
-    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'threshold');
 
-    // Then — the folder that holds both matched rows, not just the first's
-    expect(screen.getByText('2 parameters')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /open base/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /open actc/i })).toBeInTheDocument();
+    // Then — base's brackets sit together under its own header, in order;
+    // actc's row is not mixed into it
+    const listbox = screen.getByRole('listbox');
+    expect(within(listbox).getByText('Base')).toBeInTheDocument();
+    const options = within(listbox)
+      .getAllByRole('option')
+      .map((option) => option.textContent ?? '');
+    expect(options[0]).toContain('Bracket 1 · Threshold');
+    expect(options[0]).toContain('base[0]');
+    expect(options[1]).toContain('Bracket 2 · Threshold');
+    expect(options[1]).toContain('base[1]');
+    expect(options[2]).toContain('actc[0]');
+  });
+
+  test('given the combobox then it says that typing filters a list', () => {
+    // Given / When
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // Then
+    expect(screen.getByRole('combobox', { name: /search parameters/i })).toHaveAttribute(
+      'aria-autocomplete',
+      'list'
+    );
+  });
+
+  test('given arrow keys in the results then the input points screen readers at the highlighted option', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'credits');
+
+    // When
+    await user.keyboard('{ArrowDown}');
+
+    // Then — focus stays in the input; the active option is the highlighted one
+    const [highlighted] = screen.getAllByRole('option', { selected: true });
+    expect(input).toHaveFocus();
+    expect(highlighted.id).not.toBe('');
+    expect(input).toHaveAttribute('aria-activedescendant', highlighted.id);
+    expect(screen.getAllByRole('option')[1]).toBe(highlighted);
+  });
+
+  test('given every option then each has its own id', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+
+    // When
+    await user.type(screen.getByRole('combobox', { name: /search parameters/i }), 'credits');
+
+    // Then
+    const ids = screen.getAllByRole('option').map((option) => option.id);
+    expect(ids.every(Boolean)).toBe(true);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test('given a folder header is hovered then the input points at no option', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+    const header = await screen.findByRole('button', { name: 'Browse IRS → Credits → EITC' });
+
+    // When
+    await user.hover(header);
+
+    // Then
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+  });
+
+  test('given no results then the input points at no option', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+
+    // When
+    await user.type(input, 'zzzz quantum flux');
+
+    // Then
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+  });
+
+  test('given a folder open in place then the arrow keys move the active option through it', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ParameterSearchBox entries={ENTRIES} onSelect={vi.fn()} />);
+    const input = screen.getByRole('combobox', { name: /search parameters/i });
+    await user.type(input, 'eitc');
+    await user.click(screen.getAllByRole('button', { name: /^browse/i })[0]);
+    await user.click(input);
+
+    // When
+    await user.keyboard('{ArrowDown}');
+
+    // Then
+    const [highlighted] = screen.getAllByRole('option', { selected: true });
+    expect(highlighted).toHaveTextContent('Phase-in rate');
+    expect(input).toHaveAttribute('aria-activedescendant', highlighted.id);
   });
 });

@@ -85,6 +85,9 @@ export async function POST(request: Request): Promise<Response> {
       body.country,
       paths,
       variables,
+      // UK programme names come from parameter folders: link only the
+      // claims that measure the programme as it is.
+      { programBaselineOnly: body.country.toLowerCase() === "uk" },
     );
     // History is available in the scorecard; the report displays each claim's latest receipt.
     const rows = matched.rows.map((row) => {

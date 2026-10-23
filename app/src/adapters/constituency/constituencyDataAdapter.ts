@@ -1,3 +1,4 @@
+import { areaEstimateFields } from '@/adapters/ukAreaEstimateFields';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 
@@ -42,6 +43,8 @@ export function transformConstituencyData(
     value: data[valueField],
     x: data.x,
     y: data.y,
+    ...(data.code && { code: data.code }),
+    ...areaEstimateFields(data, valueField),
   }));
 }
 

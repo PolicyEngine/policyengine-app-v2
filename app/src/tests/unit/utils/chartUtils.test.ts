@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   EXPECTED_LABEL_DEFAULT,
   EXPECTED_LABEL_WITH_DESCRIPTIVE,
@@ -17,6 +17,8 @@ import {
 } from '@/tests/fixtures/utils/chartUtilsMocks';
 import {
   buildCsvContent,
+  CHART_EXPORT_KEEP,
+  downloadChartAsSvg,
   getChartLogoImage,
   getNiceTicks,
   getReformPolicyLabel,
@@ -252,6 +254,85 @@ describe('chartUtils', () => {
 
       // Then
       expect(ticks[ticks.length - 1]).toBeGreaterThanOrEqual(55000);
+    });
+  });
+
+  describe('downloadChartAsSvg', () => {
+    /** A container with one SVG of the given size, marked to keep or not. */
+    function containerWith(size: { width: number; height: number }, keep: boolean) {
+      const container = document.createElement('div');
+      const wrapper = document.createElement('div');
+      if (keep) {
+        Object.entries(CHART_EXPORT_KEEP).forEach(([name, value]) =>
+          wrapper.setAttribute(name, value)
+        );
+      }
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('data-size', `${size.width}x${size.height}`);
+      svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'rect'));
+      wrapper.appendChild(svg);
+      container.appendChild(wrapper);
+      document.body.appendChild(container);
+      return container;
+    }
+
+    /** Whether a download was made, and how many chart SVGs it holds. */
+    function download(container: HTMLElement): number | null {
+      let content: string | null = null;
+      const OriginalBlob = globalThis.Blob;
+      vi.stubGlobal(
+        'Blob',
+        class extends OriginalBlob {
+          constructor(parts: BlobPart[], options?: BlobPropertyBag) {
+            super(parts, options);
+            content = parts.join('');
+          }
+        }
+      );
+      Object.assign(URL, { createObjectURL: () => 'blob:chart', revokeObjectURL: () => undefined });
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+      downloadChartAsSvg(container);
+      vi.unstubAllGlobals();
+      return content === null ? null : ((content as string).match(/<rect\/?/g) ?? []).length - 1;
+    }
+
+    beforeEach(() => {
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+        this: Element
+      ) {
+        const [width, height] = (this.getAttribute('data-size') ?? '0x0').split('x').map(Number);
+        return {
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          right: width,
+          bottom: height,
+          width,
+          height,
+        } as DOMRect;
+      });
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      document.body.innerHTML = '';
+    });
+
+    it('given a chart SVG then it is exported', () => {
+      expect(download(containerWith({ width: 546, height: 153 }, false))).toBe(1);
+    });
+
+    it('given an unmarked SVG under 40px then it is skipped as an icon, as before', () => {
+      expect(download(containerWith({ width: 546, height: 28 }, false))).toBeNull();
+    });
+
+    it('given a marked SVG under 40px then it is kept', () => {
+      expect(download(containerWith({ width: 546, height: 28 }, true))).toBe(1);
+    });
+
+    it('given a marked SVG with no size then it is skipped', () => {
+      expect(download(containerWith({ width: 0, height: 0 }, true))).toBeNull();
     });
   });
 });

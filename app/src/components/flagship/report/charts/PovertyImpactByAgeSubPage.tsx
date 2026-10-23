@@ -13,25 +13,40 @@ import {
 } from 'recharts';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
-import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import { ChartWatermark, ImpactTooltip } from '@/components/charts';
 import ChartExplanation from '@/components/flagship/report/ChartExplanation';
+import {
+  fitAxisTitle,
+  fixedPlotHeight,
+  getValueBarLayout,
+  tickDecimals,
+} from '@/components/flagship/report/charts/barLayout';
+import { categoryAxisProps } from '@/components/flagship/report/charts/categoryAxis';
+import {
+  rateChangeMessage,
+  rateChangeTitle,
+  relativeBar,
+  relativeChange,
+} from '@/components/flagship/report/charts/relativeChange';
+import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
+import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { tooltipText } from '@/libs/flagship/tooltipText';
 import { getPovertyByAgeCsvRows } from '@/pages/report-output/poverty-impact/povertyChartUtils';
 import type { RootState } from '@/store';
-import { relativeChangeMessage } from '@/utils/chartMessages';
-import {
-  getClampedChartHeight,
-  getNiceTicks,
-  getYAxisLayout,
-  RECHARTS_FONT_STYLE,
-} from '@/utils/chartUtils';
-import { formatNumber, formatPercent } from '@/utils/formatters';
+import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+
+/** Margins around the plot; value labels stay inside it, so the top needs little. */
+const CHART_MARGIN = { top: 12, right: 20, bottom: 20 };
+/** The short name a compact card shows, and any chart where the full one does not fit. */
+const AGE_SHORT_NAMES: Record<string, string> = { 'Working-age adults': 'Adults' };
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -55,18 +70,6 @@ export default function PovertyImpactByAgeSubPage({
   // Extract data
   const povertyImpact = output.poverty.poverty;
 
-  // Calculate changes for each age group
-  const childPovertyChange = povertyImpact.child.reform / povertyImpact.child.baseline - 1;
-  const adultPovertyChange = povertyImpact.adult.reform / povertyImpact.adult.baseline - 1;
-  const seniorPovertyChange = povertyImpact.senior.reform / povertyImpact.senior.baseline - 1;
-  const totalPovertyChange = povertyImpact.all.reform / povertyImpact.all.baseline - 1;
-
-  const povertyChanges = [
-    childPovertyChange,
-    adultPovertyChange,
-    seniorPovertyChange,
-    totalPovertyChange,
-  ];
   const povertyLabels = ['Children', 'Working-age adults', 'Seniors', 'All'];
   const labelToKey: Record<string, keyof typeof povertyImpact> = {
     Children: 'child',
@@ -74,6 +77,11 @@ export default function PovertyImpactByAgeSubPage({
     Seniors: 'senior',
     All: 'all',
   };
+  // Each age group's change; none for a group with no one in poverty before.
+  const povertyChanges = povertyLabels.map((label) => {
+    const { baseline, reform } = povertyImpact[labelToKey[label]];
+    return relativeChange(reform, baseline);
+  });
 
   const formatPer = (n: number) =>
     formatPercent(n, countryId, {
@@ -84,54 +92,50 @@ export default function PovertyImpactByAgeSubPage({
   // Generate hover message
   const hoverMessage = (x: string) => {
     const obj = `the percentage of ${x === 'All' ? 'people' : x.toLowerCase()} in poverty`;
-    const baseline = povertyImpact[labelToKey[x]].baseline;
-    const reform = povertyImpact[labelToKey[x]].reform;
-    const change = reform / baseline - 1;
-    return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
-      baseline,
-      reform,
-      formatter: formatPer,
-    });
+    const { baseline, reform } = povertyImpact[labelToKey[x]];
+    return rateChangeMessage(obj, baseline, reform, countryId, formatPer);
   };
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = povertyImpact.all.baseline;
-    const reform = povertyImpact.all.reform;
-    const relativeChange = reform / baseline - 1;
-    const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
-    const objectTerm = 'the poverty rate';
-    const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
-      maximumFractionDigits: 1,
-    });
-    const absTerm = formatNumber(absoluteChange, countryId, {
-      maximumFractionDigits: 2,
-    });
-    const term2 = `${relTerm} (${absTerm}pp)`;
-    const signTerm = relativeChange > 0 ? 'increase' : 'decrease';
     const region = regionName(metadata);
-    const regionPhrase = region ? ` in ${region}` : '';
-
-    if (absTerm === '0') {
-      return `This reform would have no effect on ${objectTerm}${regionPhrase}`;
-    }
-    return `This reform would ${signTerm} ${objectTerm}${regionPhrase} by ${term2}`;
+    const { baseline, reform } = povertyImpact.all;
+    return rateChangeTitle(
+      'the poverty rate',
+      baseline,
+      reform,
+      countryId,
+      region ? ` in ${region}` : ''
+    );
   };
 
   // Recharts data
   const chartData = povertyLabels.map((label, i) => ({
     name: label,
-    value: povertyChanges[i],
-    label: (povertyChanges[i] >= 0 ? '+' : '') + formatPer(povertyChanges[i]),
-    hoverText: hoverMessage(label),
+    ...relativeBar(povertyChanges[i], formatPer),
+    hoverText: tooltipText(hoverMessage(label)),
   }));
 
-  const values = chartData.map((d) => d.value);
-  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
-  const yTicks = getNiceTicks(yDomain);
+  const { plotWidth, plotHeight, probe } = usePlotSize(
+    fillHeight ? undefined : fixedPlotHeight(chartHeight, CHART_MARGIN)
+  );
+  const layout = getValueBarLayout(
+    chartData.map((d) => d.value),
+    chartData.map((d) => d.label),
+    { width: plotWidth, height: plotHeight }
+  );
+  const { domain: yDomain, ticks: yTicks } = layout;
 
-  const yTickFormatter = (v: number) => `${(v * 100).toFixed(1)}%`;
-  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+  // Enough decimals that a 0.25% step does not read as 0.3%.
+  const tickDigits = Math.max(1, tickDecimals(yTicks.map((v) => v * 100)));
+  const yTickFormatter = (v: number) => `${(v * 100).toFixed(tickDigits)}%`;
+  const axisTitle = fitAxisTitle(
+    compact
+      ? ['Poverty change (%)', 'Change (%)']
+      : ['Relative change in poverty rate', 'Poverty change (%)', 'Change (%)'],
+    plotHeight
+  );
+  const yAxis = getYAxisLayout(yTicks, !!axisTitle, yTickFormatter);
 
   // Description text
   const povertyMeasure =
@@ -142,33 +146,37 @@ export default function PovertyImpactByAgeSubPage({
   const description = `PolicyEngine reports the impact to ${povertyMeasure}. The poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below their poverty threshold.`;
 
   const barChart = (
-    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+    <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
+      {probe}
+      <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
       <XAxis
         dataKey="name"
-        tick={RECHARTS_FONT_STYLE}
-        interval={compact ? 0 : undefined}
-        tickFormatter={(value) => (compact && value === 'Working-age adults' ? 'Adults' : value)}
+        {...categoryAxisProps(povertyLabels, plotWidth, {
+          shortNames: AGE_SHORT_NAMES,
+          preferShort: compact,
+        })}
       />
       <YAxis
         ticks={yTicks}
-        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        domain={yDomain}
         tickFormatter={yTickFormatter}
         tick={RECHARTS_FONT_STYLE}
         tickLine={false}
         width={yAxis.yAxisWidth}
       >
-        <Label
-          value={compact ? 'Poverty change (%)' : 'Relative change in poverty rate'}
-          angle={-90}
-          position="center"
-          dx={yAxis.labelDx}
-          style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
-        />
+        {axisTitle && (
+          <Label
+            value={axisTitle}
+            angle={-90}
+            position="center"
+            dx={yAxis.labelDx}
+            style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+          />
+        )}
       </YAxis>
       <ReferenceLine y={0} stroke={colors.gray[600]} strokeWidth={1} />
       <Tooltip content={<ImpactTooltip />} />
-      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+      <Bar dataKey="value" label={<ReportBarLabel data={chartData} layout={layout} />}>
         {chartData.map((entry, index) => (
           <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
         ))}

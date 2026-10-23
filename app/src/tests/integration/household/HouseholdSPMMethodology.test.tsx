@@ -31,7 +31,7 @@ vi.mock('@/pages/report-output/earnings-variation/BaselineAndReformChart', () =>
 }));
 vi.mock('@/api/reformStore', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/reformStore')>()),
-  getReformStore: () => ({ findByUser: async () => [] }),
+  getReformStore: () => ({ findMine: async () => [] }),
 }));
 
 const mockFetch = vi.fn();
@@ -150,7 +150,7 @@ describe('SPM point and axes receipts in app-owned report methodology', () => {
       expect(screen.getByRole('main')).toContainElement(variation);
       expect(screen.getByRole('main')).toContainElement(point);
       const chrome = flagship
-        ? // The brand sits in both the sidebar and the narrow-viewport top bar.
+        ? // The brand sits in the flagship top bar.
           screen
             .getAllByRole('button', { name: 'PolicyEngine' })
             .map((brand) => brand.parentElement!)

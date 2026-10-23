@@ -27,11 +27,7 @@ import {
 import { extractMarkdownFromNotebook } from "@/lib/notebookUtils";
 import { formatPostDate } from "@/lib/postDate";
 import authorsData from "@/data/posts/authors.json";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 const authors = authorsData as AuthorsCollection;
 
@@ -229,11 +225,7 @@ function PostHeading({
       >
         {post.title}
       </Text>
-      <Text
-        size="lg"
-        className="tw:mb-lg"
-        style={{ color: colors.gray[500] }}
-      >
+      <Text size="lg" className="tw:mb-lg" style={{ color: colors.gray[500] }}>
         {post.description}
       </Text>
       <div
@@ -584,8 +576,7 @@ function ShareLinks({
   post: BlogPost;
   displayCategory: string;
 }) {
-  const currentUrl =
-    typeof window !== "undefined" ? window.location.href : "";
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
   const desktop = displayCategory === "desktop";
 
   const links = [
@@ -654,9 +645,7 @@ function ShareLinks({
               justifyContent: "center",
               backgroundColor: desktop ? colors.gray[500] : "transparent",
               color: desktop ? colors.white : colors.gray[600],
-              border: desktop
-                ? "none"
-                : `1px solid ${colors.gray[400]}`,
+              border: desktop ? "none" : `1px solid ${colors.gray[400]}`,
               fontSize: typography.fontSize.xs,
               fontWeight: typography.fontWeight.semibold,
             }}

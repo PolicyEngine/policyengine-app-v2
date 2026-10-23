@@ -52,6 +52,64 @@ export interface ModelledProgram {
   parameter_prefix?: string | null;
 }
 
+export interface ModelledProgramsRead {
+  programs: ModelledProgram[];
+  /** Why there are no programs, when the metadata had something else in their place. */
+  warning: string | null;
+}
+
+/**
+ * The programs a metadata payload lists. The US API inlines them under
+ * `modelled_policies.programs`; the UK API (as of 2.130) sends the
+ * server-side path of its programs.yaml instead, which a client cannot
+ * read. Say so, rather than score an empty suite as if it were measured.
+ */
+export function readModelledPrograms(modelledPolicies: unknown): ModelledProgramsRead {
+  if (modelledPolicies === undefined || modelledPolicies === null) {
+    return { programs: [], warning: null };
+  }
+  const programs = (modelledPolicies as { programs?: unknown }).programs;
+  if (Array.isArray(programs)) {
+    return { programs: programs as ModelledProgram[], warning: null };
+  }
+  if (typeof modelledPolicies === 'string') {
+    return {
+      programs: [],
+      warning:
+        `modelled_policies is a file path (${modelledPolicies}), not a program list; ` +
+        'the programs suite is skipped.',
+    };
+  }
+  return {
+    programs: [],
+    warning: 'modelled_policies has no programs list; the programs suite is skipped.',
+  };
+}
+
+/** When and for which model version the evaluation scripts cached a metadata payload. */
+export interface MetadataCacheStamp {
+  version: string;
+  fetchedAt: string;
+}
+
+/**
+ * Whether a cached payload can still be used. The API reports its model
+ * version only inside the full payload, so freshness is by age: a cache
+ * older than `maxAgeHours`, or with no stamp to date it, is refetched, and
+ * the refetch reports whether the version moved.
+ */
+export function isMetadataCacheFresh(
+  stamp: MetadataCacheStamp | null,
+  maxAgeHours: number,
+  now: number = Date.now()
+): boolean {
+  if (!stamp) {
+    return false;
+  }
+  const fetchedAt = Date.parse(stamp.fetchedAt);
+  return Number.isFinite(fetchedAt) && now - fetchedAt < maxAgeHours * 3_600_000;
+}
+
 export interface ProgramCaseOptions {
   /**
    * Skip programs whose prefix covers more than this share of the index:

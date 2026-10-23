@@ -6,6 +6,7 @@ import {
   createMockManager,
   createTestQueryClient,
   mockCompleteHouseholdStatus,
+  mockErrorSocietyWideStatus,
   mockHouseholdCalcConfig,
   mockHouseholdCalcConfigWithReport,
   mockHouseholdQueryOptions,
@@ -18,6 +19,7 @@ import {
   TEST_POPULATION_IDS,
   TEST_YEARS,
 } from '@/tests/fixtures/libs/calculations/orchestratorMocks';
+import type { CalcStatus } from '@/types/calculation';
 
 // Mock dependencies
 vi.mock('@/libs/queries/calculationQueries');
@@ -275,6 +277,131 @@ describe('CalcOrchestrator', () => {
 
       // Then
       expect(calculationQueries.forReport).toHaveBeenCalled();
+    });
+  });
+
+  describe('duration estimate', () => {
+    const startAndReadParams = async (config: ReturnType<typeof mockSocietyWideCalcConfig>) => {
+      const mockQueryFn = vi.fn().mockResolvedValue(mockPendingSocietyWideStatus());
+      (calculationQueries.forReport as any).mockImplementation((calcId: string) =>
+        mockSocietyWideQueryOptions(calcId, mockQueryFn)
+      );
+      await orchestrator.startCalculation(config);
+      return (calculationQueries.forReport as any).mock.calls[0][2];
+    };
+
+    it('given the default then the params leave the region estimate out', async () => {
+      // When
+      const params = await startAndReadParams(mockSocietyWideCalcConfig());
+
+      // Then - the params stay exactly as before region estimates
+      expect(params).not.toHaveProperty('estimateByRegion');
+    });
+
+    it('given estimateByRegion then the params pass it to the strategy', async () => {
+      // When
+      const params = await startAndReadParams(
+        mockSocietyWideCalcConfig({ estimateByRegion: true })
+      );
+
+      // Then
+      expect(params.estimateByRegion).toBe(true);
+    });
+  });
+
+  describe('failed society-wide run', () => {
+    /** Starts a run whose first answer is `first`, and every later one a failure. */
+    const startRun = async (
+      config: ReturnType<typeof mockSocietyWideCalcConfig>,
+      first: CalcStatus
+    ) => {
+      const mockQueryFn = vi
+        .fn()
+        .mockResolvedValueOnce(first)
+        .mockResolvedValue(mockErrorSocietyWideStatus());
+      (calculationQueries.forReport as any).mockReturnValue(
+        mockSocietyWideQueryOptions(TEST_CALC_IDS.REPORT_1, mockQueryFn)
+      );
+      await orchestrator.startCalculation(config);
+      return mockQueryFn;
+    };
+
+    const failsAtOnce = mockErrorSocietyWideStatus();
+    const failsLater = mockPendingSocietyWideStatus();
+
+    beforeEach(() => {
+      (mockResultPersister.persistReportError as any).mockResolvedValue(undefined);
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    });
+
+    it('given the default and a run that fails later then the failure is not written', async () => {
+      // When
+      const mockQueryFn = await startRun(mockSocietyWideCalcConfig(), failsLater);
+      await vi.waitFor(() => expect(mockQueryFn).toHaveBeenCalledTimes(2));
+      await vi.waitFor(() =>
+        expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.REPORT_1, 'report')
+      );
+
+      // Then - the report record stays as it was before failures were recorded
+      expect(mockResultPersister.persistReportError).not.toHaveBeenCalled();
+      expect(mockResultPersister.persist).not.toHaveBeenCalled();
+    });
+
+    it('given the default and a run that fails at once then the failure is not written', async () => {
+      // When
+      await startRun(mockSocietyWideCalcConfig(), failsAtOnce);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Then
+      expect(mockResultPersister.persistReportError).not.toHaveBeenCalled();
+      expect(mockResultPersister.persist).not.toHaveBeenCalled();
+    });
+
+    it('given recordReportErrors and a run that fails later then the failure is written', async () => {
+      // When
+      await startRun(mockSocietyWideCalcConfig({ recordReportErrors: true }), failsLater);
+
+      // Then
+      await vi.waitFor(() =>
+        expect(mockResultPersister.persistReportError).toHaveBeenCalledWith(
+          expect.objectContaining({ status: 'error' }),
+          TEST_COUNTRIES.US,
+          TEST_YEARS.DEFAULT
+        )
+      );
+    });
+
+    it('given recordReportErrors and a run that fails at once then the failure is written', async () => {
+      // When
+      await startRun(mockSocietyWideCalcConfig({ recordReportErrors: true }), failsAtOnce);
+
+      // Then
+      expect(mockResultPersister.persistReportError).toHaveBeenCalledWith(
+        failsAtOnce,
+        TEST_COUNTRIES.US,
+        TEST_YEARS.DEFAULT
+      );
+    });
+
+    it('given recordReportErrors and a run that fails at once then it is cleaned up', async () => {
+      // When
+      await startRun(mockSocietyWideCalcConfig({ recordReportErrors: true }), failsAtOnce);
+
+      // Then
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.REPORT_1, 'report');
+    });
+
+    it('given recordReportErrors and the write fails then the run is still cleaned up', async () => {
+      // Given
+      (mockResultPersister.persistReportError as any).mockRejectedValue(new Error('500'));
+
+      // When
+      await startRun(mockSocietyWideCalcConfig({ recordReportErrors: true }), failsLater);
+
+      // Then
+      await vi.waitFor(() =>
+        expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.REPORT_1, 'report')
+      );
     });
   });
 

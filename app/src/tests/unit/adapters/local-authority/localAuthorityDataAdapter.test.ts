@@ -12,6 +12,8 @@ import {
   MOCK_LOCAL_AUTHORITY_DATA,
   SINGLE_LOCAL_AUTHORITY_DATA,
 } from '@/tests/fixtures/adapters/local-authority/localAuthorityMocks';
+import { BREAKDOWN_LOCAL_AUTHORITY_NAME } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
+import { NORMALIZED_BREAKDOWN } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
 
 describe('localAuthorityDataAdapter', () => {
   describe('transformLocalAuthorityData', () => {
@@ -205,5 +207,57 @@ describe('localAuthorityDataAdapter', () => {
       expect(result[1].value).toBeLessThan(0); // Westminster
       expect(result[2].value).toBe(0); // Edinburgh
     });
+  });
+
+  test('given a breakdown area then its absolute points carry the tier and the 90% range', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: BREAKDOWN_LOCAL_AUTHORITY_NAME, lower: 480, upper: 530 });
+  });
+
+  test('given a breakdown area then its relative points carry the relative 90% range', () => {
+    // When
+    const [point] = transformLocalAuthorityRelativeChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({
+      id: BREAKDOWN_LOCAL_AUTHORITY_NAME,
+      lower: 0.0125,
+      upper: 0.0139,
+    });
+  });
+
+  test('given a reported area then its points are not marked approximate', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point.approximate).toBeUndefined();
+  });
+
+  test('given an area with an ONS code then its point carries the code, which joins it to its boundary', () => {
+    // When
+    const [point] = transformLocalAuthorityAbsoluteChange(
+      NORMALIZED_BREAKDOWN.local_authority_impact.by_local_authority
+    );
+
+    // Then
+    expect(point).toMatchObject({ id: BREAKDOWN_LOCAL_AUTHORITY_NAME, code: 'E06000001' });
+  });
+
+  test('given areas without codes then their points have none', () => {
+    // When
+    const points = transformLocalAuthorityAbsoluteChange(MOCK_LOCAL_AUTHORITY_DATA);
+
+    // Then
+    expect(points.every((point) => !('code' in point))).toBe(true);
   });
 });
