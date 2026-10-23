@@ -11,6 +11,7 @@ import {
   formatValue,
   isPercentageUnit,
   moneyDigits,
+  SET_BY_FORMULA_SHORT,
 } from '@/utils/parameterValues';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
@@ -89,7 +90,10 @@ export function ValueDisplay({
       ? magnitude
       : isUnlimitedValue(value)
         ? NO_LIMIT
-        : formatValue(value, param.unit ?? null);
+        : // Null: an amount current law leaves to a formula.
+          value === null
+          ? SET_BY_FORMULA_SHORT
+          : formatValue(value, param.unit ?? null);
   const prefixed = numeric && Boolean(prefix) && !signedAmount;
   return (
     <div
@@ -115,6 +119,8 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
   const prefix = CURRENCY_UNIT_SYMBOLS[String(param.unit)] ?? '';
   // No limit reads as an empty box that says so; typing a number sets one.
   const unlimited = isUnlimitedValue(value);
+  // So does an amount current law leaves to a formula (null).
+  const byFormula = value === null;
   // While focused, the box shows what is typed, even an empty field;
   // otherwise, the value it stands for.
   const [typed, setTyped] = useState<string | null>(null);
@@ -151,7 +157,7 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
         type="number"
         min={0}
         aria-label={ariaLabel}
-        placeholder={unlimited ? NO_LIMIT : undefined}
+        placeholder={unlimited ? NO_LIMIT : byFormula ? SET_BY_FORMULA_SHORT : undefined}
         value={typed ?? displayText(value, percentage, Boolean(prefix))}
         onFocus={(event) => {
           startValue.current = value;
@@ -188,8 +194,14 @@ function NumberInput({ param, value, onChange, ariaLabel }: ValueInputProps) {
         onBlur={(event) => {
           let final = value;
           // "1." or "-" reads as empty to a number box but is not. Left
-          // empty, no limit stays no limit; any other box means 0.
-          if (event.target.value === '' && !event.target.validity.badInput && !unlimited) {
+          // empty, no limit stays no limit and a formula stays a formula;
+          // any other box means 0.
+          if (
+            event.target.value === '' &&
+            !event.target.validity.badInput &&
+            !unlimited &&
+            !byFormula
+          ) {
             final = commit('0');
           }
           if (

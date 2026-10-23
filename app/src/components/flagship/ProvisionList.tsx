@@ -3,7 +3,7 @@ import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { describeChange } from '@/libs/flagship/draftLabels';
 import { RootState } from '@/store';
-import { formatValue } from '@/utils/parameterValues';
+import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
 
 export interface ProvisionListItem {
   path: string;
@@ -43,7 +43,7 @@ export default function ProvisionList({
         const parts = (provision.breadcrumb || provision.path).split(' → ');
         const name = parts[parts.length - 1] ?? provision.path;
         const context = parts.slice(0, -1).join(' → ');
-        const baseline = formatValue(provision.baselineValue, provision.unit);
+        const baseline = formatCurrentLaw(provision.baselineValue, provision.unit);
         const proposed = formatValue(provision.value, provision.unit);
         const unchanged = baseline === proposed;
         // A set of variables reads as what it takes out and puts in.

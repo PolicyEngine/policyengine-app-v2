@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   currencySymbolForUnit,
+  formatCurrentLaw,
   formatValue,
   getCurrentValue,
   isPercentageUnit,
@@ -90,5 +91,19 @@ describe('isPercentageUnit', () => {
     expect(isPercentageUnit('/1')).toBe(true);
     expect(isPercentageUnit('marginal-rate')).toBe(true);
     expect(isPercentageUnit('GBP')).toBe(false);
+  });
+});
+
+describe('formatCurrentLaw', () => {
+  it('given null then reads as an amount set by formula', () => {
+    expect(formatCurrentLaw(null, 'currency-GBP')).toBe('Set by formula (not legislated)');
+  });
+
+  it('given a number then formats it as formatValue does', () => {
+    expect(formatCurrentLaw(429.8, 'currency-GBP')).toBe(formatValue(429.8, 'currency-GBP'));
+  });
+
+  it('given no value then reads as a dash', () => {
+    expect(formatCurrentLaw(undefined, 'currency-GBP')).toBe('—');
   });
 });

@@ -3,6 +3,7 @@ import { IconChevronDown, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { colors, spacing, typography } from '@/designTokens';
 import {
+  currentLawForYear,
   DraftProvision,
   DraftReform,
   draftYear,
@@ -13,7 +14,6 @@ import {
   provisionValueInYear,
   provisionVariesOverTime,
   removeDraftProvision,
-  yearReadDate,
 } from '@/libs/draftReform';
 import { useProvisionFocus } from '@/libs/flagship/draftEditorFocus';
 import { provisionName, summarizeIntervals } from '@/libs/flagship/draftLabels';
@@ -22,8 +22,7 @@ import { growthOf, growthPhrase, setValueFromYear } from '@/libs/flagship/uprati
 import { getDateRange } from '@/libs/metadataUtils';
 import { selectAddableParameterPaths } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
-import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
-import { formatValue } from '@/utils/parameterValues';
+import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
 import ProvisionDetails from './ProvisionDetails';
 import ValueInput, { NO_LIMIT } from './ValueInput';
 
@@ -182,18 +181,16 @@ export default function DraftTable({
   // A row reads as the report year stands, as its details do: current law
   // then, and the reform's value then — not the values on the day it was added.
   const currentLawInYear = (provision: DraftProvision) => {
-    const values = parameters?.[provision.path]?.values;
-    const value = values
-      ? new ValueIntervalCollection(values).getValueAtDate(yearReadDate(year, draft.countryId))
-      : undefined;
-    return value ?? provision.baselineValue;
+    // Null is current law too: an amount it leaves to a formula.
+    const value = currentLawForYear(parameters?.[provision.path]?.values, year, draft.countryId);
+    return value === undefined ? provision.baselineValue : value;
   };
   const valueInYear = (provision: DraftProvision) =>
     (provisionChanged(provision) ? provisionValueInYear(provision, year, draft.countryId) : null) ??
     currentLawInYear(provision);
   // A value with no limit reads as such, not as the text "Infinity".
   const formatRowValue = (value: unknown, unit: string | null) =>
-    isUnlimitedValue(value) ? NO_LIMIT : formatValue(value, unit);
+    isUnlimitedValue(value) ? NO_LIMIT : formatCurrentLaw(value, unit);
 
   // Groups depend only on which parameters are in the draft — not on
   // their values — so typing a value never re-scans the index.

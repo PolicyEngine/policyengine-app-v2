@@ -13,6 +13,7 @@ import {
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import {
+  currentLawForYear,
   DraftProvision,
   DraftReform,
   draftYear,
@@ -23,7 +24,6 @@ import {
   provisionVariesOverTime,
   sameParameterValue,
   setDraftProvisionIntervals,
-  yearReadDate,
 } from '@/libs/draftReform';
 import { periodLabel } from '@/libs/flagship/draftLabels';
 import { humanizeSegment, ParameterGroup } from '@/libs/flagship/parameterGroups';
@@ -189,13 +189,9 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     return null;
   }
 
-  const baselineAt = (memberPath: string, at: number) => {
-    const values = parameters[memberPath]?.values;
-    const value = values
-      ? new ValueIntervalCollection(values).getValueAtDate(yearReadDate(at, draft.countryId))
-      : null;
-    return value ?? null;
-  };
+  // Null is an amount current law leaves to a formula; undefined, no value.
+  const baselineAt = (memberPath: string, at: number) =>
+    currentLawForYear(parameters[memberPath]?.values, at, draft.countryId);
   const baselineOn = (memberPath: string, date: string) => {
     const values = parameters[memberPath]?.values;
     return (values ? new ValueIntervalCollection(values).getValueAtDate(date) : null) ?? null;

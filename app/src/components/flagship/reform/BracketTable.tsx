@@ -1,8 +1,8 @@
 import { colors, spacing, typography } from '@/designTokens';
-import { isEditableValue, sameParameterValue } from '@/libs/draftReform';
+import { isEditableCurrentLaw, sameParameterValue } from '@/libs/draftReform';
 import { BracketLayout, ParameterGroupMember } from '@/libs/flagship/parameterGroups';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
-import { formatValue } from '@/utils/parameterValues';
+import { formatCurrentLaw } from '@/utils/parameterValues';
 import ValueInput from './ValueInput';
 
 interface BracketTableProps {
@@ -140,7 +140,7 @@ export default function BracketTable({
                 const value = valueAt(path);
                 const baseline = baselineAt(path);
                 const changed = !sameValue(value, baseline);
-                const baselineText = formatValue(baseline, param.unit ?? null);
+                const baselineText = formatCurrentLaw(baseline, param.unit ?? null);
                 return (
                   <td
                     key={field}
@@ -159,7 +159,7 @@ export default function BracketTable({
                         background: changed ? colors.primary[50] : undefined,
                       }}
                     >
-                      {isEditableValue(baseline) ? (
+                      {isEditableCurrentLaw(baseline) ? (
                         <ValueInput
                           param={param}
                           value={value}
