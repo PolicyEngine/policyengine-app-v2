@@ -745,5 +745,18 @@
     "image": "futa-wage-base-dashboard-adjusted.png",
     "date": "2026-09-17 12:00:00",
     "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
+    "slug": "ballot-measures-2026",
+    "title": "2026 ballot measures: taxes and benefits",
+    "description": "Estimate how six state ballot measures on the November 3, 2026 ballot — in Colorado, California, Washington, North Dakota and South Dakota — would change taxes, benefits, and health coverage for households and state budgets.",
+    "source": "https://ballot-measures-2026.vercel.app/us/ballot-measures-2026",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "ballot-measures-2026.png",
+    "date": "2026-10-29 12:00:00",
+    "authors": ["david-trimmer"]
   }
 ]
