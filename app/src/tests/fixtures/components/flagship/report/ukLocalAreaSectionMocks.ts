@@ -1,5 +1,11 @@
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
+  BUNDLE_WITHOUT_VERSIONS,
+  NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
+  OLDER_RELEASE_BUNDLE,
+  UK_RESOLVED_APP_NAME,
+} from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import {
   BREAKDOWN_BASELINE_POLICY_ID,
   BREAKDOWN_REFORM_POLICY_ID,
 } from '@/tests/fixtures/hooks/useUKLocalAreaBreakdownMocks';
@@ -48,6 +54,27 @@ export const OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES = {
 export const BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY = {
   ...MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
   policyengine_version: BREAKDOWN_RELEASE_VERSION,
+} as unknown as SocietyWideReportOutput;
+
+/**
+ * A saved v3 national result from .py 6.10.0, as the app stored the
+ * Public API's result before it read the bundle from inside it: the .py
+ * version is only in the result's policyengine_bundle.
+ */
+export const SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY =
+  NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE.result as unknown as SocietyWideReportOutput;
+
+/** A saved .py 6.7.5 result without local authorities, its version only in its bundle. */
+export const SAVED_OLDER_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY = {
+  ...MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
+  policyengine_bundle: OLDER_RELEASE_BUNDLE,
+  resolved_app_name: UK_RESOLVED_APP_NAME,
+} as unknown as SocietyWideReportOutput;
+
+/** A saved result whose bundle has no .py version, and which has none of its own. */
+export const SAVED_OUTPUT_WITH_BUNDLE_WITHOUT_VERSIONS = {
+  ...createMockSocietyWideOutput(),
+  policyengine_bundle: BUNDLE_WITHOUT_VERSIONS,
 } as unknown as SocietyWideReportOutput;
 
 /** An older saved UK result that holds its area impacts. */

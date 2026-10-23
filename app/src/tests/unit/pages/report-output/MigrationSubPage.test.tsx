@@ -12,6 +12,10 @@ import {
   UK_WIDE_WITHHELD_LOCAL_AUTHORITIES,
 } from '@/tests/fixtures/adapters/ukLocalAreaBreakdownAdapterMocks';
 import {
+  NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
+  nationalResultFromBody,
+} from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import {
   BREAKDOWN_RELEASE_OUTPUT_WITH_CONSTITUENCIES_ONLY,
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
@@ -240,6 +244,23 @@ describe('MigrationSubPage UK local areas', () => {
       // Given
       const user = userEvent.setup();
       renderUKMigrationSubPage();
+
+      // When
+      await openSection(user, label);
+
+      // Then
+      expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+      expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+    }
+  );
+
+  test.each(['Constituency impact', 'Local authority impact'])(
+    'given the Public API body for a .py 6.10.0 national result then the %s header offers to compute',
+    async (label) => {
+      // Given
+      const user = userEvent.setup();
+      const output = await nationalResultFromBody(NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE);
+      renderUKMigrationSubPage(output);
 
       // When
       await openSection(user, label);

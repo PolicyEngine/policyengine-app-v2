@@ -1,8 +1,15 @@
 import { vi } from 'vitest';
 import {
+  fetchSocietyWideCalculation,
+  type PolicyEngineBundle,
+  type SocietyWideReportOutput,
+} from '@/api/societyWideCalculation';
+import {
+  LIST_SHAPE_CONSTITUENCY_IMPACT,
   LIST_SHAPE_LOCAL_AUTHORITY_IMPACT,
   UK_RESULT_OTHER_FIELDS,
 } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 /** The report's region and year a breakdown is asked for. */
 export const BREAKDOWN_REGION_UK = 'uk';
@@ -122,7 +129,129 @@ export const BREAKDOWN_LOADING_DATA_RESPONSE = {
   result: null,
 };
 
-export const BREAKDOWN_OK_RESPONSE = { status: 'ok', result: LIST_SHAPE_BREAKDOWN_RESULT };
+/**
+ * The name of the simulation API app that ran a result, which the Public
+ * API adds to the result beside its bundle.
+ */
+export const UK_RESOLVED_APP_NAME = 'policyengine-uk-2-88-0';
+
+/** The bundle inside a UK result computed on .py 6.10.0, the first release with breakdowns. */
+export const BREAKDOWN_RELEASE_BUNDLE: PolicyEngineBundle = {
+  model_version: '2.88.0',
+  policyengine_version: '6.10.0',
+  data_version: '1.4.0',
+  dataset: 'hf://policyengine/policyengine-uk-data-private/enhanced_frs_2023_24.h5@1.4.0',
+};
+
+/** The bundle inside a UK result computed on .py 6.7.5, before breakdowns. */
+export const OLDER_RELEASE_BUNDLE: PolicyEngineBundle = {
+  model_version: '2.39.0',
+  policyengine_version: '6.7.5',
+  data_version: '1.2.0',
+  dataset: 'hf://policyengine/policyengine-uk-data-private/enhanced_frs_2023_24.h5@1.2.0',
+};
+
+/**
+ * The bundle the Public API gives a stored result it cannot tie to a
+ * simulation app: no model or .py version, only the data.
+ */
+export const BUNDLE_WITHOUT_VERSIONS: PolicyEngineBundle = {
+  model_version: null,
+  policyengine_version: null,
+  data_version: BREAKDOWN_RELEASE_BUNDLE.data_version,
+  dataset: BREAKDOWN_RELEASE_BUNDLE.dataset,
+};
+
+/** The bundle inside a breakdown result: the breakdown's own versions and dataset. */
+export const BREAKDOWN_BUNDLE: PolicyEngineBundle = {
+  model_version: BREAKDOWN_PROVENANCE.model_version,
+  policyengine_version: BREAKDOWN_PROVENANCE.policyengine_version,
+  data_version: BREAKDOWN_PROVENANCE.data_version,
+  dataset: BREAKDOWN_PROVENANCE.dataset,
+};
+
+/**
+ * An ok economy response body in the Public API's shape. Its economy route
+ * returns `{ status, message, result }`, and its economy service
+ * (`EconomyService._with_policyengine_bundle`) adds `policyengine_bundle`
+ * and `resolved_app_name` inside `result`, not beside it.
+ */
+function publicAPIOkBody<SimulationResult extends object>(
+  simulationResult: SimulationResult,
+  bundle: PolicyEngineBundle
+) {
+  return {
+    status: 'ok' as const,
+    message: null,
+    result: {
+      ...simulationResult,
+      policyengine_bundle: bundle,
+      resolved_app_name: UK_RESOLVED_APP_NAME,
+    },
+  };
+}
+
+/**
+ * The Public API's body for a national UK result from .py 6.10.0. The
+ * simulation API's result has no constituency or local authority keys and
+ * no .py version of its own: the version is only in the bundle.
+ */
+export const NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE = publicAPIOkBody(
+  createMockSocietyWideOutput(),
+  BREAKDOWN_RELEASE_BUNDLE
+);
+
+/** The Public API's body for a .py 6.7.5 UK result, which holds its area impacts as lists. */
+export const OLDER_UK_BODY_WITH_AREAS = publicAPIOkBody(
+  {
+    ...createMockSocietyWideOutput(),
+    constituency_impact: LIST_SHAPE_CONSTITUENCY_IMPACT,
+    local_authority_impact: LIST_SHAPE_LOCAL_AUTHORITY_IMPACT,
+  },
+  OLDER_RELEASE_BUNDLE
+);
+
+/**
+ * The Public API's body for a stored breakdown it cannot tie to a
+ * simulation app: the bundle has no versions, and the result keeps its own.
+ */
+export const BREAKDOWN_BODY_WITHOUT_BUNDLE_VERSIONS = publicAPIOkBody(
+  LIST_SHAPE_BREAKDOWN_RESULT,
+  BUNDLE_WITHOUT_VERSIONS
+);
+
+/** The Public API's body for a completed breakdown. */
+export const BREAKDOWN_OK_RESPONSE = publicAPIOkBody(LIST_SHAPE_BREAKDOWN_RESULT, BREAKDOWN_BUNDLE);
+
+/** The completed breakdown as fetchLocalAreaBreakdown returns it: keyed by name, with the bundle. */
+export const EXPECTED_BREAKDOWN_WITH_BUNDLE = {
+  ...EXPECTED_BREAKDOWN,
+  policyengine_bundle: BREAKDOWN_BUNDLE,
+  resolved_app_name: UK_RESOLVED_APP_NAME,
+};
+
+/** A national request's policies; its result does not depend on them here. */
+const NATIONAL_REQUEST_POLICY_IDS = { reform: '98746', baseline: '1' };
+
+/**
+ * The national result the app keeps from a Public API economy response
+ * body: what fetchSocietyWideCalculation returns for a UK-wide report when
+ * the API answers with the body.
+ */
+export async function nationalResultFromBody(body: unknown): Promise<SocietyWideReportOutput> {
+  const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(body));
+  try {
+    const response = await fetchSocietyWideCalculation(
+      'uk',
+      NATIONAL_REQUEST_POLICY_IDS.reform,
+      NATIONAL_REQUEST_POLICY_IDS.baseline,
+      { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+    );
+    return response.result as SocietyWideReportOutput;
+  } finally {
+    fetchSpy.mockRestore();
+  }
+}
 
 export const BREAKDOWN_ERROR_RESPONSE = {
   status: 'error',

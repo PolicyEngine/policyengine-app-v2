@@ -23,6 +23,9 @@ import {
 import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
   OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES,
+  SAVED_OLDER_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
+  SAVED_OUTPUT_WITH_BUNDLE_WITHOUT_VERSIONS,
+  SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
   UNVERSIONED_OUTPUT_WITHOUT_AREAS,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaSectionMocks';
 import {
@@ -270,10 +273,25 @@ describe('servesLocalAreaBreakdowns', () => {
 
 describe('outputServesLocalAreaBreakdowns', () => {
   test.each([
-    ['a 6.10.0 national result', NATIONAL_OUTPUT_WITHOUT_AREAS, true],
-    ['an older release result', OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES, false],
-    ['a stored result with no version', UNVERSIONED_OUTPUT_WITHOUT_AREAS, false],
-  ])('given %s then returns %s', (_label, output, expected) => {
+    ['a 6.10.0 national result', true, NATIONAL_OUTPUT_WITHOUT_AREAS],
+    ['an older release result', false, OLDER_OUTPUT_WITHOUT_LOCAL_AUTHORITIES],
+    ['a stored result with no version', false, UNVERSIONED_OUTPUT_WITHOUT_AREAS],
+    [
+      'a saved 6.10.0 result with the version only in its bundle',
+      true,
+      SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
+    ],
+    [
+      'a saved 6.7.5 result with the version only in its bundle',
+      false,
+      SAVED_OLDER_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
+    ],
+    [
+      'a saved result whose bundle has no version',
+      false,
+      SAVED_OUTPUT_WITH_BUNDLE_WITHOUT_VERSIONS,
+    ],
+  ])('given %s then returns %s', (_label, expected, output) => {
     // Then
     expect(outputServesLocalAreaBreakdowns(output)).toBe(expected);
   });

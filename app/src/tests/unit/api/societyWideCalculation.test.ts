@@ -12,29 +12,38 @@ import {
   LIST_SHAPE_UK_RESULT,
 } from '@/tests/fixtures/adapters/societyWideOutputNormalizerMocks';
 import {
+  BREAKDOWN_BODY_WITHOUT_BUNDLE_VERSIONS,
   BREAKDOWN_ERROR_RESPONSE,
   BREAKDOWN_OK_RESPONSE,
+  BREAKDOWN_PROVENANCE,
   BREAKDOWN_REFUSED_BODY,
   BREAKDOWN_REFUSED_MESSAGE,
   BREAKDOWN_REGION_SCOTLAND,
   BREAKDOWN_REGION_UK,
+  BREAKDOWN_RELEASE_BUNDLE,
   BREAKDOWN_YEAR,
   EMPTY_BREAKDOWN_RESULT,
-  EXPECTED_BREAKDOWN,
+  EXPECTED_BREAKDOWN_WITH_BUNDLE,
   mockErrorResponseWithBody,
+  NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
   NATIONAL_UK_RESULT_WITH_NULL_AREAS,
   NATIONAL_UK_RESULT_WITHOUT_AREA_KEYS,
+  OLDER_RELEASE_BUNDLE,
+  OLDER_UK_BODY_WITH_AREAS,
   PLAIN_TEXT_ERROR_BODY,
 } from '@/tests/fixtures/api/localAreaBreakdownMocks';
 import {
   ERROR_MESSAGES,
   HTTP_STATUS,
   mockCompletedResponse,
+  mockCompletedResponseWithBundleBesideResult,
+  mockCompletedResponseWithBundleInResult,
   mockErrorCalculationResponse,
   mockErrorResponse,
   mockNetworkError,
   mockPendingResponse,
   mockSuccessResponse,
+  mockUSPolicyEngineBundle,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/societyWideMocks';
@@ -157,43 +166,63 @@ describe('societyWide API', () => {
       expect(result.result?.budget.budgetary_impact).toBe(75000);
     });
 
-    test('given completed status with policyengine bundle then merges bundle into result', async () => {
+    test.each([
+      ['inside the result, as the Public API returns it', mockCompletedResponseWithBundleInResult],
+      ['beside the result', mockCompletedResponseWithBundleBesideResult],
+    ])(
+      'given completed status with the policyengine bundle %s then merges the bundle into the result',
+      async (_label, body) => {
+        // Given
+        (global.fetch as any).mockResolvedValue(mockSuccessResponse(body));
+
+        // When
+        const response = await fetchSocietyWideCalculation(
+          TEST_COUNTRIES.US,
+          TEST_POLICY_IDS.REFORM,
+          TEST_POLICY_IDS.BASELINE,
+          { region: 'us', time_period: CURRENT_YEAR }
+        );
+
+        // Then
+        expect(response.result).toMatchObject(mockUSPolicyEngineBundle);
+      }
+    );
+
+    test('given the Public API body for a .py 6.10.0 national UK result then the result gets the bundle versions and dataset', async () => {
       // Given
-      const countryId = TEST_COUNTRIES.US;
-      const reformPolicyId = TEST_POLICY_IDS.REFORM;
-      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const mockResponse = mockSuccessResponse({
-        ...mockCompletedResponse,
-        result: {
-          ...mockCompletedResponse.result!,
-          model_version: 'old-model-version',
-          data_version: 'old-data-version',
-        },
-        policyengine_bundle: {
-          model_version: '1.634.4',
-          policyengine_version: '3.4.0',
-          data_version: '1.77.0',
-          dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
-        },
-      });
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse(NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE)
+      );
 
       // When
-      const params = { region: 'us', time_period: CURRENT_YEAR };
-      const result = await fetchSocietyWideCalculation(
-        countryId,
-        reformPolicyId,
-        baselinePolicyId,
-        params
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
       );
 
       // Then
-      expect(result.result?.model_version).toBe('1.634.4');
-      expect(result.result?.policyengine_version).toBe('3.4.0');
-      expect(result.result?.data_version).toBe('1.77.0');
-      expect(result.result?.dataset).toBe(
-        'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0'
+      expect(response.result).toMatchObject(BREAKDOWN_RELEASE_BUNDLE);
+      expect(response.result?.policyengine_bundle).toEqual(BREAKDOWN_RELEASE_BUNDLE);
+      expect(hasUKLocalAreaImpacts(response.result)).toBe(false);
+    });
+
+    test('given the Public API body for a .py 6.7.5 UK result with area data then the result gets .py 6.7.5 and keeps its areas', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(mockSuccessResponse(OLDER_UK_BODY_WITH_AREAS));
+
+      // When
+      const response = await fetchSocietyWideCalculation(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
       );
+
+      // Then
+      expect(response.result).toMatchObject(OLDER_RELEASE_BUNDLE);
+      expect(hasUKLocalAreaImpacts(response.result)).toBe(true);
     });
 
     test('given error status then returns error message with null result', async () => {
@@ -562,7 +591,28 @@ describe('societyWide API', () => {
 
       // Then
       expect(response.status).toBe('ok');
-      expect(response.result).toEqual(EXPECTED_BREAKDOWN);
+      expect(response.result).toEqual(EXPECTED_BREAKDOWN_WITH_BUNDLE);
+    });
+
+    test('given a bundle without versions then the breakdown keeps its own versions', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessResponse(BREAKDOWN_BODY_WITHOUT_BUNDLE_VERSIONS)
+      );
+
+      // When
+      const response = await fetchLocalAreaBreakdown(
+        TEST_COUNTRIES.UK,
+        TEST_POLICY_IDS.REFORM,
+        TEST_POLICY_IDS.BASELINE,
+        { region: BREAKDOWN_REGION_UK, time_period: BREAKDOWN_YEAR }
+      );
+
+      // Then
+      expect(response.result).toMatchObject({
+        model_version: BREAKDOWN_PROVENANCE.model_version,
+        policyengine_version: BREAKDOWN_PROVENANCE.policyengine_version,
+      });
     });
 
     test('given every area withheld then returns empty maps for both levels', async () => {

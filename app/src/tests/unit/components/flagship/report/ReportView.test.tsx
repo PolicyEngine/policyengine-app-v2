@@ -8,7 +8,12 @@ import { LocationProvider } from '@/contexts/LocationContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import {
+  NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE,
+  nationalResultFromBody,
+} from '@/tests/fixtures/api/localAreaBreakdownMocks';
+import {
   NATIONAL_OUTPUT_WITHOUT_AREAS,
+  SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY,
   STORED_OUTPUT_WITH_AREAS,
   UK_REPORT_SOURCE_NOTE,
   UK_REPORT_TITLE,
@@ -407,6 +412,32 @@ describe('ReportView UK local areas', () => {
     // Then
     expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
     expect(economyRequests()).toEqual([]);
+  });
+
+  test('given the Public API body for a .py 6.10.0 national result then the local areas tab offers to compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    const output = await nationalResultFromBody(NATIONAL_UK_BODY_FROM_BREAKDOWN_RELEASE);
+    renderUKReport(output);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
+    expect(screen.queryByText('No constituency data available')).not.toBeInTheDocument();
+  });
+
+  test('given a saved .py 6.10.0 result with the version only in its bundle then the local areas tab offers to compute', async () => {
+    // Given
+    const user = userEvent.setup();
+    renderUKReport(SAVED_OUTPUT_WITH_VERSION_IN_BUNDLE_ONLY);
+
+    // When
+    await user.click(screen.getByRole('tab', { name: 'Local areas' }));
+
+    // Then
+    expect(screen.getByRole('button', { name: COMPUTE_BUTTON_LABEL })).toBeInTheDocument();
   });
 
   test('given compute clicked then one breakdown request goes for the report region and year', async () => {

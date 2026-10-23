@@ -47,6 +47,10 @@ export interface EconomyCalculationResponse<Result> {
   average_time?: number;
   result: Result | null;
   error?: string;
+  /**
+   * A bundle beside the result. The Public API puts the bundle inside the
+   * result instead; this one is read only when the result has none.
+   */
   policyengine_bundle?: PolicyEngineBundle | null;
   /** Optional stage fields while computing (policyengine-sim-api#781 via the API). */
   stage?: string;
@@ -75,22 +79,29 @@ export function isLocalAreaBreakdown(
   return 'kind' in result && result.kind === 'local_areas';
 }
 
-/** The version fields a result carries, which the bundle fills in. */
+/** The version fields a result carries, which the bundle fills in, and the bundle itself. */
 interface ResultProvenance {
   model_version?: string | null;
   policyengine_version?: string | null;
   data_version?: string | null;
   dataset?: string | null;
+  policyengine_bundle?: PolicyEngineBundle | null;
 }
 
+/**
+ * Fill a result's version fields and dataset from its policyengine_bundle.
+ * The Public API's economy route returns `{ status, message, result }`, with
+ * the bundle inside `result`; a bundle beside the result is read only when
+ * the result has none. Each field takes the bundle's value, else the
+ * result's own.
+ */
 function mergePolicyEngineBundle<Result extends ResultProvenance>(
   response: EconomyCalculationResponse<Result>
 ): EconomyCalculationResponse<Result> {
-  if (!response.result || !response.policyengine_bundle) {
+  const bundle = response.result?.policyengine_bundle ?? response.policyengine_bundle;
+  if (!response.result || !bundle) {
     return response;
   }
-
-  const { policyengine_bundle: bundle } = response;
 
   return {
     ...response,

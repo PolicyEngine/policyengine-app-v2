@@ -36,14 +36,18 @@ export function servesLocalAreaBreakdowns(policyengineVersion: string | null | u
 /**
  * Whether a national result came from a .py release that serves
  * local-area breakdowns. The version is the result's policyengine_version,
- * which fetchSocietyWideCalculation fills from the response's
- * policyengine_bundle, and which saved results keep. Results from older
- * releases (6.7.5 and before) or with no version (saved before the bundle
- * was recorded) do not: their missing levels are not offered a breakdown,
- * which those releases would refuse.
+ * which fetchSocietyWideCalculation fills from the policyengine_bundle
+ * inside the result. A result saved before the app read that bundle has
+ * the bundle but not the field, so the bundle's version is read when the
+ * field is absent. Results from older releases (6.7.5 and before) or with
+ * no version (saved before the bundle was recorded) do not serve
+ * breakdowns: their missing levels are not offered one, which those
+ * releases would refuse.
  */
 export function outputServesLocalAreaBreakdowns(output: SocietyWideReportOutput): boolean {
-  return servesLocalAreaBreakdowns(output.policyengine_version);
+  return servesLocalAreaBreakdowns(
+    output.policyengine_version ?? output.policyengine_bundle?.policyengine_version
+  );
 }
 
 /**
