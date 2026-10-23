@@ -42,11 +42,14 @@ import type { RootState } from '@/store';
 import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import {
+  POVERTY_AGE_CSV_LABELS,
+  POVERTY_AGE_GROUPS,
+  POVERTY_AGE_SHORT_NAMES,
+} from './povertyAgeGroups';
 
 /** Margins around the plot; value labels stay inside it, so the top needs little. */
 const CHART_MARGIN = { top: 12, right: 20, bottom: 20 };
-/** The short name a compact card shows, and any chart where the full one does not fit. */
-const AGE_SHORT_NAMES: Record<string, string> = { 'Working-age adults': 'Adults' };
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -70,16 +73,11 @@ export default function DeepPovertyImpactByAgeSubPage({
   // Extract data
   const deepPovertyImpact = output.poverty.deep_poverty;
 
-  const povertyLabels = ['Children', 'Working-age adults', 'Seniors', 'All'];
-  const labelToKey: Record<string, keyof typeof deepPovertyImpact> = {
-    Children: 'child',
-    'Working-age adults': 'adult',
-    Seniors: 'senior',
-    All: 'all',
-  };
+  const povertyLabels = POVERTY_AGE_GROUPS.map((group) => group.label);
+  const groupOf = (label: string) => POVERTY_AGE_GROUPS.find((group) => group.label === label)!;
   // Each age group's change; none for a group with no one in deep poverty before.
   const povertyChanges = povertyLabels.map((label) => {
-    const { baseline, reform } = deepPovertyImpact[labelToKey[label]];
+    const { baseline, reform } = deepPovertyImpact[groupOf(label).key];
     return relativeChange(reform, baseline);
   });
 
@@ -91,8 +89,9 @@ export default function DeepPovertyImpactByAgeSubPage({
 
   // Generate hover message
   const hoverMessage = (x: string) => {
-    const obj = `the percentage of ${x === 'All' ? 'people' : x.toLowerCase()} in deep poverty`;
-    const { baseline, reform } = deepPovertyImpact[labelToKey[x]];
+    const group = groupOf(x);
+    const obj = `the percentage of ${group.people} in deep poverty`;
+    const { baseline, reform } = deepPovertyImpact[group.key];
     return rateChangeMessage(obj, baseline, reform, countryId, formatPer);
   };
 
@@ -152,7 +151,7 @@ export default function DeepPovertyImpactByAgeSubPage({
       <XAxis
         dataKey="name"
         {...categoryAxisProps(povertyLabels, plotWidth, {
-          shortNames: AGE_SHORT_NAMES,
+          shortNames: POVERTY_AGE_SHORT_NAMES,
           preferShort: compact,
         })}
       />
@@ -211,7 +210,7 @@ export default function DeepPovertyImpactByAgeSubPage({
       title={getChartTitle()}
       downloadFilename="deep-poverty-impact-by-age.svg"
       csvFilename="deep-poverty-impact-by-age.csv"
-      csvData={getPovertyByAgeCsvRows(output, 'deep_poverty')}
+      csvData={getPovertyByAgeCsvRows(output, 'deep_poverty', POVERTY_AGE_CSV_LABELS)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

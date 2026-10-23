@@ -112,7 +112,7 @@ describe('report bar charts at phone width', () => {
     const { container } = render(<PovertyImpactByAgeSubPage output={REPORT_4332_OUTPUT} />);
 
     await waitFor(() =>
-      expect(categoryLabels(container)).toEqual(['Children', 'Adults', 'Seniors', 'All'])
+      expect(categoryLabels(container)).toEqual(['Children', 'Ages 18–64', 'Ages 65+', 'All'])
     );
   });
 
@@ -120,7 +120,7 @@ describe('report bar charts at phone width', () => {
     const { container } = render(<DeepPovertyImpactByAgeSubPage output={REPORT_4332_OUTPUT} />);
 
     await waitFor(() =>
-      expect(categoryLabels(container)).toEqual(['Children', 'Adults', 'Seniors', 'All'])
+      expect(categoryLabels(container)).toEqual(['Children', 'Ages 18–64', 'Ages 65+', 'All'])
     );
   });
 
@@ -130,7 +130,7 @@ describe('report bar charts at phone width', () => {
     );
 
     await waitFor(() =>
-      expect(categoryLabels(container)).toEqual(['Children', 'Adults', 'Seniors', 'All'])
+      expect(categoryLabels(container)).toEqual(['Children', 'Ages 18–64', 'Ages 65+', 'All'])
     );
   });
 });
