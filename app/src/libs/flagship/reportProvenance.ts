@@ -11,20 +11,25 @@
  * as the run that stashed them described them.
  */
 import { CURRENT_YEAR } from '@/constants';
-import { provisionValueInYear } from '@/libs/draftReform';
+import { provisionValueInYear, yearReadDate } from '@/libs/draftReform';
 import type { FlagshipReportMeta, RunReportProvision } from '@/libs/flagship/runReport';
 import type { Policy } from '@/types/ingredients/Policy';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { getCurrentValue } from '@/utils/parameterValues';
 
-/** Current law for a parameter on 1 January of `year`; today's value before its first date. */
-function currentLawIn(values: Record<string, any> | undefined, year: string): unknown {
+/** Current law for a parameter in `year`; today's value before its first date. */
+function currentLawIn(
+  values: Record<string, any> | undefined,
+  year: string,
+  countryId: string
+): unknown {
   if (!values) {
     return undefined;
   }
   return (
-    new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`) ?? getCurrentValue(values)
+    new ValueIntervalCollection(values).getValueAtDate(yearReadDate(year, countryId)) ??
+    getCurrentValue(values)
   );
 }
 
@@ -37,14 +42,15 @@ function currentLawIn(values: Record<string, any> | undefined, year: string): un
 export function provisionsFromPolicy(
   policy: Policy | null | undefined,
   parameters: Record<string, any> | null | undefined,
-  year: string = CURRENT_YEAR
+  year: string = CURRENT_YEAR,
+  countryId: string = 'us'
 ): RunReportProvision[] {
   return (policy?.parameters ?? []).map((parameter) => {
     const metadata = parameters?.[parameter.name];
-    const baselineValue = currentLawIn(metadata?.values, year);
+    const baselineValue = currentLawIn(metadata?.values, year, countryId);
     const intervals = parameter.values.length > 0 ? parameter.values : undefined;
     const inYear = intervals
-      ? provisionValueInYear({ value: undefined, intervals }, Number(year))
+      ? provisionValueInYear({ value: undefined, intervals }, Number(year), countryId)
       : null;
     return {
       path: parameter.name,
@@ -69,7 +75,8 @@ export function provenanceFromPolicy(
   policy: Policy | null | undefined,
   parameters: Record<string, any> | null | undefined,
   label: string | null | undefined,
-  year: string = CURRENT_YEAR
+  year: string = CURRENT_YEAR,
+  countryId: string = 'us'
 ): FlagshipReportMeta | null {
   if (!policy) {
     return null;
@@ -77,7 +84,7 @@ export function provenanceFromPolicy(
   return {
     title: label || policy.label || '',
     sourceNote: '',
-    provisions: provisionsFromPolicy(policy, parameters, year),
+    provisions: provisionsFromPolicy(policy, parameters, year, countryId),
     createdAt: '',
   };
 }

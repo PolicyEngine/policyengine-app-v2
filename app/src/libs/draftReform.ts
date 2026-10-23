@@ -187,13 +187,24 @@ export function provisionVariesOverTime(provision: Pick<DraftProvision, 'interva
   return intervals.length > 1 || (intervals.length === 1 && intervals[0].endDate !== FOREVER);
 }
 
-/** The proposed value in effect on 1 January of `year`, or null where current law holds. */
+/**
+ * The day a year's law is read on. The US model reads a year on
+ * 1 January. The UK model reads a fiscal year on 30 April, inside the
+ * year that starts in April, so a rate uprated in April counts for the
+ * year it starts in.
+ */
+export function yearReadDate(year: number | string, countryId: string = 'us'): string {
+  return countryId === 'uk' ? `${year}-04-30` : `${year}-01-01`;
+}
+
+/** The proposed value in effect in `year`, or null where current law holds. */
 export function provisionValueInYear(
   provision: Pick<DraftProvision, 'value' | 'intervals'>,
-  year: number
+  year: number,
+  countryId: string = 'us'
 ): any {
   const value = new ValueIntervalCollection(provisionIntervals(provision)).getValueAtDate(
-    `${year}-01-01`
+    yearReadDate(year, countryId)
   );
   return value === undefined ? null : value;
 }
@@ -612,7 +623,9 @@ export function setDraftYear(year: number): void {
     year,
     // Dated provisions mirror the value in effect for the draft's year.
     provisions: draft.provisions.map((p) =>
-      p.intervals?.length ? { ...p, value: provisionValueInYear(p, year) ?? p.baselineValue } : p
+      p.intervals?.length
+        ? { ...p, value: provisionValueInYear(p, year, draft.countryId) ?? p.baselineValue }
+        : p
     ),
   });
 }
@@ -625,18 +638,22 @@ export function setDraftYear(year: number): void {
 export function provisionsToRun(
   provisions: DraftProvision[],
   year: number,
-  parameters: ParameterMetadataCollection | null | undefined
+  parameters: ParameterMetadataCollection | null | undefined,
+  countryId: string = 'us'
 ): DraftProvision[] {
   const currentLawAt = (path: string, at: number) => {
     const values = parameters?.[path]?.values;
-    return values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : undefined;
+    return values
+      ? new ValueIntervalCollection(values).getValueAtDate(yearReadDate(at, countryId))
+      : undefined;
   };
   return provisionsForYear(
     provisions.filter((provision) =>
       provisionAdjusts(provision, parameters?.[provision.path]?.values)
     ),
     year,
-    currentLawAt
+    currentLawAt,
+    countryId
   );
 }
 
@@ -652,7 +669,8 @@ export function provisionsToRun(
 export function provisionsForYear(
   provisions: DraftProvision[],
   year: number,
-  currentLawAt: (path: string, year: number) => any
+  currentLawAt: (path: string, year: number) => any,
+  countryId: string = 'us'
 ): DraftProvision[] {
   return provisions.map((p) => {
     const baseline = currentLawAt(p.path, year) ?? p.baselineValue;
@@ -661,7 +679,7 @@ export function provisionsForYear(
       ...p,
       ...(changed && !p.intervals?.length && { intervals: provisionIntervals(p) }),
       baselineValue: baseline,
-      value: changed ? (provisionValueInYear(p, year) ?? baseline) : baseline,
+      value: changed ? (provisionValueInYear(p, year, countryId) ?? baseline) : baseline,
     };
   });
 }
