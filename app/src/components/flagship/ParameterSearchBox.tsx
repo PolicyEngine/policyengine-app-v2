@@ -62,6 +62,8 @@ interface ParameterSearchBoxProps {
   backgroundSearch?: boolean;
   /** Told whether anything is typed or a folder is open, so the page can make room. */
   onActiveChange?: (active: boolean) => void;
+  /** Told each time the user changes the query by typing. */
+  onQueryChange?: (query: string) => void;
   /**
    * Opens a result's folder somewhere else — the page's own browser —
    * instead of in place. The query stays, so coming back to search
@@ -337,6 +339,7 @@ export default function ParameterSearchBox({
   index: providedIndex,
   labelFor,
   onActiveChange,
+  onQueryChange,
   onOpenFolder,
   keepResultsOnSelect = false,
   inDraft,
@@ -601,6 +604,7 @@ export default function ParameterSearchBox({
             setQuery(event.target.value);
             setBrowsing(null);
             setHighlighted(0);
+            onQueryChange?.(event.target.value);
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}

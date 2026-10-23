@@ -92,3 +92,31 @@ describe('AddParameterBar analytics', () => {
     expect(JSON.stringify(gtag.mock.calls)).not.toContain('exemption');
   });
 });
+
+describe('AddParameterBar policy tree', () => {
+  beforeEach(() => {
+    clearDraftReform();
+    seedDeductionMetadata();
+    mockScreenWidth(SCREEN_WIDTHS.DESKTOP);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    store.dispatch(clearMetadata());
+  });
+
+  test('given the policy tree is open then typing a query closes it and shows the results', async () => {
+    const user = userEvent.setup();
+    render(<AddParameterBar onPick={vi.fn()} autoFocus />);
+
+    await user.click(screen.getByRole('button', { name: /browse the policy tree/i }));
+    expect(screen.getByRole('button', { name: 'Close the policy tree' })).toBeInTheDocument();
+
+    await user.type(search(), 'personal exemption');
+
+    // Every letter stays, the first one too.
+    expect(search()).toHaveValue('personal exemption');
+    expect(screen.queryByRole('button', { name: 'Close the policy tree' })).not.toBeInTheDocument();
+    expect((await screen.findAllByRole('option')).length).toBeGreaterThan(0);
+  });
+});
