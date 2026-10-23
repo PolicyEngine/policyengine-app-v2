@@ -182,6 +182,12 @@ export default function AddParameterBar({
         placeholder={placeholder}
         resultsInFlow={inTable}
         hideResults={!active || browseOpen}
+        // Typing a query puts the policy tree away, so the results show in its place.
+        onQueryChange={(query) => {
+          if (query !== '') {
+            setBrowseOpen(false);
+          }
+        }}
         // A breakdown by state is in the draft once any state's value is.
         inDraft={(path) =>
           draftPaths.has(path) || [...draftPaths].some((p) => p.startsWith(`${path}.`))
