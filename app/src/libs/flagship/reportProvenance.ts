@@ -11,21 +11,23 @@
  * as the run that stashed them described them.
  */
 import { CURRENT_YEAR } from '@/constants';
-import { provisionValueInYear } from '@/libs/draftReform';
+import { currentLawForYear, provisionValueInYear } from '@/libs/draftReform';
 import type { FlagshipReportMeta, RunReportProvision } from '@/libs/flagship/runReport';
 import type { Policy } from '@/types/ingredients/Policy';
-import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { getCurrentValue } from '@/utils/parameterValues';
 
-/** Current law for a parameter on 1 January of `year`; today's value before its first date. */
+/**
+ * Current law for a parameter on 1 January of `year` — null where it
+ * leaves the amount to a formula that year — or today's value before its
+ * first date.
+ */
 function currentLawIn(values: Record<string, any> | undefined, year: string): unknown {
   if (!values) {
     return undefined;
   }
-  return (
-    new ValueIntervalCollection(values).getValueAtDate(`${year}-01-01`) ?? getCurrentValue(values)
-  );
+  const law = currentLawForYear(values, Number(year));
+  return law === undefined ? getCurrentValue(values) : law;
 }
 
 /**

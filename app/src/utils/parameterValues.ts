@@ -96,3 +96,18 @@ export function formatValue(value: any, unit: string | null): string {
   }
   return String(value);
 }
+
+/**
+ * What current law reads as where it leaves an amount to a formula.
+ * Metadata sends null for an amount not legislated yet, which the
+ * country model then sets from a formula.
+ */
+export const SET_BY_FORMULA = 'Set by formula (not legislated)';
+
+/** The same, where a value box or a narrow cell has no room for the rest. */
+export const SET_BY_FORMULA_SHORT = 'Set by formula';
+
+/** Current law as text: null is an amount current law leaves to a formula, not "—". */
+export function formatCurrentLaw(value: unknown, unit: string | null): string {
+  return value === null ? SET_BY_FORMULA : formatValue(value, unit);
+}

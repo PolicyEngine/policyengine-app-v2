@@ -145,3 +145,33 @@ describe('allSimulationsLoaded', () => {
     expect(allSimulationsLoaded({ id: 'x', simulationIds: [] } as any, [])).toBe(false);
   });
 });
+
+describe('provisionsFromPolicy with current law left to a formula', () => {
+  const PROTECTED = 'gov.dwp.universal_credit.rebalancing.protected_health_element';
+  const freeze: Policy = {
+    id: '98851',
+    countryId: 'uk',
+    label: 'Freeze the protected LCWRA element',
+    parameters: [
+      {
+        name: PROTECTED,
+        values: [{ startDate: '2027-01-01', endDate: '2100-12-31', value: 429.8 }],
+      },
+    ],
+  };
+  const parameters = {
+    [PROTECTED]: {
+      parameter: PROTECTED,
+      label: 'Universal Credit protected LCWRA element amount',
+      unit: 'currency-GBP',
+      values: { '2015-01-01': 429.8, '2026-04-01': 429.8, '2027-04-01': null },
+    },
+  };
+
+  test('given a year current law leaves to a formula then current law is null, not the last set value', () => {
+    const [provision] = provisionsFromPolicy(freeze, parameters, '2027');
+
+    expect(provision.baselineValue).toBeNull();
+    expect(provision.value).toBe(429.8);
+  });
+});

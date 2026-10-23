@@ -19,8 +19,8 @@ function Harness({
   onCommit,
 }: {
   unit: string;
-  /** A number, or "Infinity" for no limit, as metadata sends it. */
-  initial: number | string;
+  /** A number, "Infinity" for no limit, or null for a formula, as metadata sends it. */
+  initial: number | string | null;
   onCommit: (v: any) => void;
 }) {
   const [value, setValue] = useState<any>(initial);
@@ -155,5 +155,40 @@ describe('ValueDisplay', () => {
 
     expect(screen.getByText('£')).toBeInTheDocument();
     expect(screen.getByText('1,250')).toBeInTheDocument();
+  });
+
+  test('given an amount current law leaves to a formula then the empty box says so', () => {
+    render(<Harness unit="currency-GBP" initial={null} onCommit={vi.fn()} />);
+
+    const box = screen.getByRole('spinbutton');
+    expect(box).toHaveValue(null);
+    expect(box).toHaveAttribute('placeholder', 'Set by formula');
+  });
+
+  test('given a formula box is left empty then it stays a formula, not 0', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<Harness unit="currency-GBP" initial={null} onCommit={onCommit} />);
+
+    await user.click(screen.getByRole('spinbutton'));
+    await user.tab();
+
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  test('given a number is typed into a formula box then it is set', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<Harness unit="currency-GBP" initial={null} onCommit={onCommit} />);
+
+    await user.type(screen.getByRole('spinbutton'), '429.8');
+
+    expect(onCommit).toHaveBeenLastCalledWith(429.8);
+  });
+
+  test('given a formula value then the read-only display says so', () => {
+    render(<ValueDisplay param={param('currency-GBP')} value={null} />);
+
+    expect(screen.getByText('Set by formula')).toBeInTheDocument();
   });
 });

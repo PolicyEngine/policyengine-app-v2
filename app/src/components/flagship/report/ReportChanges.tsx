@@ -10,7 +10,7 @@ import { changeNamesPath } from '@/libs/flagship/billProvisions';
 import { dayLabel, describeChange, reportProvisionName } from '@/libs/flagship/draftLabels';
 import type { RunReportProvision } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
-import { formatValue } from '@/utils/parameterValues';
+import { formatCurrentLaw, formatValue } from '@/utils/parameterValues';
 
 /** Columns that show from the small breakpoint up; below it the values stack under the name. */
 const WIDE_ONLY = 'tw:hidden tw:sm:table-cell';
@@ -162,7 +162,10 @@ export default function ReportChanges({
             name: reportProvisionName(provision),
             detail: parameters?.[provision.path]?.description ?? undefined,
             // A set of variables reads as what it takes out and puts in.
-            before: currentLaw || list ? undefined : format(provision.baselineValue),
+            before:
+              currentLaw || list
+                ? undefined
+                : formatCurrentLaw(provision.baselineValue, provision.unit),
             after: list
               ? describeChange(provision.baselineValue, provision.value, String, variableLabel)
               : format(provision.value),

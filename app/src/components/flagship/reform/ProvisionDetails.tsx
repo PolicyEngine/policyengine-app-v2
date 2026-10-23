@@ -13,6 +13,7 @@ import {
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import {
+  currentLawForYear,
   DraftProvision,
   DraftReform,
   draftYear,
@@ -188,11 +189,9 @@ export default function ProvisionDetails({ draft, path, group, focusPath }: Prov
     return null;
   }
 
-  const baselineAt = (memberPath: string, at: number) => {
-    const values = parameters[memberPath]?.values;
-    const value = values ? new ValueIntervalCollection(values).getValueAtDate(`${at}-01-01`) : null;
-    return value ?? null;
-  };
+  // Null is an amount current law leaves to a formula; undefined, no value.
+  const baselineAt = (memberPath: string, at: number) =>
+    currentLawForYear(parameters[memberPath]?.values, at);
   const baselineOn = (memberPath: string, date: string) => {
     const values = parameters[memberPath]?.values;
     return (values ? new ValueIntervalCollection(values).getValueAtDate(date) : null) ?? null;
