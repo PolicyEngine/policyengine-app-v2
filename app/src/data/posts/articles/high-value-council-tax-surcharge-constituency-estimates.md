@@ -1,6 +1,6 @@
 At the [November 2025 Budget](https://www.gov.uk/government/collections/budget-2025), the government announced a high value council tax surcharge on homes in England worth £2 million or more. From April 2028, owners pay between £2,500 and £7,500 a year on top of their council tax. The Office for Budget Responsibility (OBR) [estimates](https://obr.uk/docs/dlm_uploads/Supplementary-forecast-information-high-value-council-tax-surcharge-costing.pdf#page=7) that the surcharge raises £605 million in 2028-29 before behavioural responses and £400 million after them.
 
-We estimate the surcharge's revenue in each Westminster constituency with [Microcosm UK](https://github.com/PolicyEngine/microcosm), PolicyEngine's microdata on households and their homes in every local area. Microcosm combines the [Family Resources Survey](https://www.gov.uk/government/collections/family-resources-survey--2), HMRC's [Survey of Personal Incomes](https://www.gov.uk/government/collections/personal-incomes-statistics) and the [Wealth and Assets Survey](https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/debt/methodologies/wealthandassetssurveyqmi), and takes home values from [HM Land Registry sale prices](https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads). These are experimental modelled estimates with wide uncertainty, not official statistics.
+We estimate the surcharge's revenue in each Westminster constituency in 2028-29, and for England to 2030-31, with [Microcosm UK](https://github.com/PolicyEngine/microcosm), PolicyEngine's microdata on households and their homes in every local area. Microcosm combines the [Family Resources Survey](https://www.gov.uk/government/collections/family-resources-survey--2), HMRC's [Survey of Personal Incomes](https://www.gov.uk/government/collections/personal-incomes-statistics) and the [Wealth and Assets Survey](https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/debt/methodologies/wealthandassetssurveyqmi), and takes home values from [HM Land Registry sale prices](https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads). These are experimental modelled estimates with wide uncertainty, not official statistics.
 
 Key findings for 2028-29:
 
@@ -123,13 +123,17 @@ Microcosm UK represents households, their incomes and their homes in every local
 
 PolicyEngine ranks owners in each region by the home value imputed from the Wealth and Assets Survey, and gives each home the [HM Land Registry sale price](https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads) at the same percentile in its constituency. PolicyEngine calibrates the release to Land Registry-based counts of owner-occupied homes worth over £1 million, £1.5 million and £2 million by region and local authority.
 
-We apply the surcharge as PolicyEngine's UK tax-benefit model, [policyengine-uk](https://pypi.org/project/policyengine-uk/2.132.6/) 2.132.6, defines it, and compute household incomes for the income deciles and the support scheme with policyengine-uk 2.122.2. The [policyengine](https://pypi.org/project/policyengine/6.10.0/) Python package, version 6.10.0, loads this release for constituency results with policyengine-uk 2.132.6. PolicyEngine has certified the national release built from the same survey data for national results; the local-area release behind these constituency results is not certified.
+We apply the surcharge as PolicyEngine's UK tax-benefit model, [policyengine-uk](https://pypi.org/project/policyengine-uk/2.132.6/) 2.132.6, defines it, and compute household incomes in 2028-29, for the income deciles and the support scheme, with policyengine-uk 2.122.2. The [policyengine](https://pypi.org/project/policyengine/6.10.0/) Python package, version 6.10.0, loads this release for constituency results with policyengine-uk 2.132.6. PolicyEngine has certified the national release built from the same survey data for national results; the local-area release behind these constituency results is not certified.
 
-### Year and values
+### Years and values
 
-The surcharge applies 2028-29 charges to values in 2026 prices. To reach 2026 prices, policyengine-uk uprates 2024 home values with the OBR's [forecast](https://github.com/PolicyEngine/policyengine-uk/blob/2.132.6/policyengine_uk/parameters/gov/economic_assumptions/yoy_growth.yaml#L655-L736) growth in GDP per capita, 7.4%. The OBR's house price forecast grows 5.3% over the same period, and would put fewer homes over each threshold.
+We estimate revenue by constituency for 2028-29, the surcharge's first year, and for England as a whole for 2028-29 to 2030-31, the years the OBR costs.
 
-We grow household numbers from 2024-25 to 2028-29 with the ONS [projection of UK population](https://github.com/PolicyEngine/policyengine-uk/blob/2.132.6/policyengine_uk/parameters/gov/economic_assumptions/yoy_growth.yaml#L823-L835), 1.9%, as policyengine-uk does. The OBR instead grows the stock of homes over £2 million with [new builds](https://obr.uk/docs/dlm_uploads/Supplementary-forecast-information-high-value-council-tax-surcharge-costing.pdf#page=2), at 0.4% to 0.6% a year. Household growth and uprating with GDP per capita rather than house prices both put more homes over £2 million than the Land Registry-based counts that PolicyEngine calibrates Microcosm to.
+The surcharge charges each home on its value in 2026 prices until the first revaluation in 2033, so we value homes at 2026 prices in every year. To reach 2026 prices, policyengine-uk uprates 2024 home values with the OBR's [forecast](https://github.com/PolicyEngine/policyengine-uk/blob/2.132.6/policyengine_uk/parameters/gov/economic_assumptions/yoy_growth.yaml#L655-L736) growth in GDP per capita, 7.4%. The OBR's house price forecast grows 5.3% over the same period, and would put fewer homes over each threshold.
+
+In policyengine-uk, the [charges](https://github.com/PolicyEngine/policyengine-uk/blob/2.132.6/policyengine_uk/parameters/gov/hmrc/council_tax/high_value_surcharge/amount.yaml) run from £2,500 to £7,500 in 2028-29 and rise with its CPI forecast, 2.0% a year, from 2029-30, while the bands stay at their 2026 values. The same homes therefore pay in every year.
+
+We grow household numbers with the ONS [projection of UK population](https://github.com/PolicyEngine/policyengine-uk/blob/2.132.6/policyengine_uk/parameters/gov/economic_assumptions/yoy_growth.yaml#L823-L835), as policyengine-uk does: by 1.9% from 2024-25 to 2028-29, then by 0.4% in 2029-30 and 0.5% in 2030-31. Together with the CPI uprating, this puts the 2029-30 and 2030-31 estimates about 2% and 5% above 2028-29. The OBR instead grows the stock of homes over £2 million with [new builds](https://obr.uk/docs/dlm_uploads/Supplementary-forecast-information-high-value-council-tax-surcharge-costing.pdf#page=2), at 0.4% to 0.6% a year. Household growth and uprating with GDP per capita rather than house prices both put more homes over £2 million than the Land Registry-based counts that PolicyEngine calibrates Microcosm to.
 
 ### Privacy
 
@@ -137,11 +141,11 @@ PolicyEngine licenses the survey data from the [UK Data Service](https://ukdatas
 
 ### Uncertainty
 
-We measure uncertainty by resampling the survey households 500 times. For a typical constituency shown, the standard error is about 38% of the estimate, and the 90% range for England's revenue in 2028-29 runs from £360 million to £480 million. These measures leave out calibration and modelling error, so the true uncertainty is larger.
+We measure uncertainty by resampling the survey households 500 times. For a typical constituency shown, the standard error is about 38% of the estimate, and the 90% range for England's revenue in 2028-29 runs from £360 million to £480 million. The 2029-30 and 2030-31 estimates scale the same households' charges and weights, so they carry the same uncertainty in proportion. These measures leave out calibration and modelling error, so the true uncertainty is larger.
 
 ### Behavioural responses
 
-The estimates are static. They assume no change in house prices, sales or compliance, and no appeals or deferral beyond the support scheme calculation above.
+The estimates are static in every year. They assume no change in house prices, sales or compliance, and no appeals or deferral beyond the support scheme calculation above.
 
 ### Comparison with our November 2025 analysis
 
