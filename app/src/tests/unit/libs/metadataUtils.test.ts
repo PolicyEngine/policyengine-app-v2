@@ -3,15 +3,22 @@ import {
   getFieldLabel,
   getFieldOptions,
   isDropdownField,
+  selectSearchableParameters,
   transformMetadataPayload,
 } from '@/libs/metadataUtils';
 import type { RootState } from '@/store';
 import {
   EXPECTED_LABELS,
+  INELIGIBLE_SEARCH_PARAMETERS,
   mockMetadataPayload,
   mockMinimalPayload,
   mockStateWithMetadata,
+  SAME_LABEL_SEARCH_PARAMETERS,
+  SEARCH_VISIBILITY_CASES,
+  searchVisibilityState,
+  SORTED_SEARCH_PARAMETERS,
   TEST_FIELD_NAMES,
+  VISIBLE_SEARCH_PARAMETER,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
 
 describe('metadataUtils', () => {
@@ -264,5 +271,51 @@ describe('metadataUtils', () => {
       // Then
       expect(result.parameterTree).toBeNull();
     });
+  });
+});
+
+describe('selectSearchableParameters visibility', () => {
+  it.each(SEARCH_VISIBILITY_CASES)(
+    'given $name visibility flags then search follows tree visibility',
+    ({ flags, visible }) => {
+      const parameter = { ...VISIBLE_SEARCH_PARAMETER };
+      delete parameter.economy;
+      delete parameter.household;
+      Object.assign(parameter, flags);
+      const state = searchVisibilityState({ [parameter.parameter]: parameter });
+      expect(selectSearchableParameters(state)).toEqual(
+        visible ? [{ value: parameter.parameter, label: parameter.label }] : []
+      );
+    }
+  );
+  it('given API default true visibility then the parameter remains searchable', () => {
+    expect(
+      selectSearchableParameters(searchVisibilityState({ rate: VISIBLE_SEARCH_PARAMETER }))
+    ).toEqual([
+      { value: VISIBLE_SEARCH_PARAMETER.parameter, label: VISIBLE_SEARCH_PARAMETER.label },
+    ]);
+  });
+  it('given no parameters then search remains empty', () => {
+    expect(selectSearchableParameters(searchVisibilityState({}))).toEqual([]);
+    expect(selectSearchableParameters(searchVisibilityState(undefined))).toEqual([]);
+  });
+  it('given visible nodes or unlabelled or excluded paths then original filters still exclude them', () => {
+    expect(selectSearchableParameters(searchVisibilityState(INELIGIBLE_SEARCH_PARAMETERS))).toEqual(
+      []
+    );
+  });
+  it('given distinct visible IDs with equal labels then both remain searchable', () => {
+    expect(selectSearchableParameters(searchVisibilityState(SAME_LABEL_SEARCH_PARAMETERS))).toEqual(
+      [
+        { value: 'gov.income_tax.basic_rate', label: 'Basic tax rate' },
+        { value: 'gov.capital_gains.basic_rate', label: 'Basic tax rate' },
+      ]
+    );
+  });
+  it('given labels in reverse order then original alphabetical sort remains', () => {
+    expect(selectSearchableParameters(searchVisibilityState(SORTED_SEARCH_PARAMETERS))).toEqual([
+      { value: 'gov.tax.alpha', label: 'Alpha rate' },
+      { value: 'gov.tax.zulu', label: 'Zulu rate' },
+    ]);
   });
 });
