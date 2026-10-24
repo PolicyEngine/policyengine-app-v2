@@ -224,6 +224,7 @@ export default function AskPage() {
       },
     ]);
 
+    const pendingValidations = new Map<string, ReturnType<typeof provisionsFromChatReform>>();
     streamAskChatTurn(
       {
         messages: [...history, { role: 'user', content: question }],
@@ -234,13 +235,27 @@ export default function AskPage() {
           patchLastChat((chat) => ({ ...chat, answer: chat.answer + text, activity: null })),
         onToolStart: ({ toolName }) =>
           patchLastChat((chat) => ({ ...chat, activity: toolActivityLabel(toolName) })),
-        onToolUse: ({ toolName, toolInput }) => {
+        onToolUse: ({ toolName, toolId, toolInput }) => {
           const reform = reformFromToolInput(toolName, toolInput);
           if (!reform) {
             return;
           }
           const bridge = provisionsFromChatReform(reform, index.entries, parameters);
-          if (bridge.provisions.length > 0) {
+          if (bridge.provisions.length === 0) {
+            return;
+          }
+          // A validation's card waits for its result, so a rejected reform
+          // never offers "add to draft". Simulation inputs show at once.
+          if (toolName === 'validate_reform' && toolId) {
+            pendingValidations.set(toolId, bridge);
+            return;
+          }
+          patchLastChat((chat) => ({ ...chat, bridge }));
+        },
+        onToolResult: ({ toolName, toolId, status }) => {
+          const bridge = toolName === 'validate_reform' ? pendingValidations.get(toolId) : null;
+          pendingValidations.delete(toolId);
+          if (bridge && status === 'success') {
             patchLastChat((chat) => ({ ...chat, bridge }));
           }
         },
