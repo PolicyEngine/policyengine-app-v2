@@ -4,6 +4,7 @@ import { act, renderHook } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiFlagshipReportStore } from '@/api/flagshipReportStore';
+import { V2ApiError } from '@/api/v2UserClient';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
@@ -112,6 +113,32 @@ describe('useRunFlagshipReport', () => {
       await waitFor(() => expect(mockRunFlagshipReport).toHaveBeenCalledTimes(1));
       expect(runArguments().accountReportStore).toBeNull();
       expect(result.current.error).toBeNull();
+    });
+
+    test('given the account is unavailable when the run records its report then the error says so', async () => {
+      // Given: the v1 report ran, but /v2/user-reports answers 503
+      mockRunFlagshipReport.mockRejectedValue(new V2ApiError(503, 'unavailable'));
+      const { result } = renderRunWithAuth(signedInAuthValue());
+
+      // When
+      await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
+
+      // Then
+      expect(result.current.error).toBe(
+        'Could not start the report: your account is unavailable right now, so the report cannot be saved to it. Try again later.'
+      );
+    });
+
+    test('given the account refuses the report record then the usual error shows', async () => {
+      // Given
+      mockRunFlagshipReport.mockRejectedValue(new V2ApiError(422, 'Not valid.'));
+      const { result } = renderRunWithAuth(signedInAuthValue());
+
+      // When
+      await act(() => result.current.run('CTC expansion', 'Hand-built draft', PROVISIONS));
+
+      // Then
+      expect(result.current.error).toBe('Could not start the report. Try again.');
     });
 
     test("given a signed-in run then the report opens at its saved report's link", async () => {

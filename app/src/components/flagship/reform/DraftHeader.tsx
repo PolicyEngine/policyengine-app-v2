@@ -38,6 +38,11 @@ import {
 import { UNTITLED_REFORM } from '@/libs/flagship/draftLabels';
 import { findMatchingReform } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
+import {
+  SAVED_ON_DEVICE_NOTE,
+  SAVED_ON_DEVICE_PARAM,
+  SAVED_ON_DEVICE_VALUE,
+} from '@/libs/flagship/savedOnDevice';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
@@ -340,10 +345,16 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
 
   const saveMutation = useMutation({
     mutationFn: () => saveReform(draft),
-    onSuccess: () => {
+    onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ['reforms'] });
       clearDraftReform();
-      nav.push(`/${draft.countryId}/reforms?filter=yours`);
+      // A save kept on this device while the account is unavailable is
+      // said so in the library, in place of an error.
+      nav.push(
+        `/${draft.countryId}/reforms?filter=yours${
+          saved.pendingSync ? `&${SAVED_ON_DEVICE_PARAM}=${SAVED_ON_DEVICE_VALUE}` : ''
+        }`
+      );
     },
   });
 
@@ -376,6 +387,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
     },
   });
   const saveError = saveMutation.error ?? saveAndRunMutation.error;
+  // The run's reform waits on this device while the account is unavailable.
+  const savedOnDevice = !saveError && !!saveAndRunMutation.data?.reform.pendingSync;
   const starting = saveAndRunMutation.isPending || runReport.isRunning;
 
   const empty = draft.provisions.length === 0;
@@ -569,6 +582,19 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
         </p>
       )}
 
+      {savedOnDevice && (
+        <p
+          role="status"
+          style={{
+            margin: 0,
+            textAlign: 'right',
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+          }}
+        >
+          {SAVED_ON_DEVICE_NOTE}
+        </p>
+      )}
       {(runReport.error || saveError) && (
         <p
           role="alert"

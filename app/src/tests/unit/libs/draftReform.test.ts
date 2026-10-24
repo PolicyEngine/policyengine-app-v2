@@ -9,8 +9,10 @@ import {
   loadReformIntoDraft,
   provisionFromSearchEntry,
   removeDraftProvision,
+  replaceDraftReformId,
   resumeDraftFor,
   setDraftBaseline,
+  setDraftEditingReform,
   setDraftLabel,
   setDraftPopulation,
   setDraftWindowYears,
@@ -320,5 +322,23 @@ describe('draftReform', () => {
     expect(isEditableValue(2200)).toBe(true);
     expect(isEditableValue(['employee_medicare_tax'])).toBe(false);
     expect(isEditableValue('CITIZEN')).toBe(false);
+  });
+
+  it('given a reform kept on this device is added to the account then the draft follows its new ID', () => {
+    // Given
+    startDraftReform('us', 'manual');
+    setDraftEditingReform('rf-device');
+    setDraftBaseline('rf-device-baseline');
+
+    // When
+    replaceDraftReformId('rf-device', 'account-reform');
+    replaceDraftReformId('rf-device-baseline', 'account-baseline');
+    replaceDraftReformId('rf-unrelated', 'account-other');
+
+    // Then
+    expect(getDraftReform()).toMatchObject({
+      editingReformId: 'account-reform',
+      baselineReformId: 'account-baseline',
+    });
   });
 });

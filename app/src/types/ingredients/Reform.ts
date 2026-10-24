@@ -51,6 +51,12 @@ export interface Reform {
    * not be shown, run, matched or saved as the reform's changes.
    */
   parametersUnavailable?: boolean;
+  /**
+   * Set when a signed-in save could not reach the account (it was
+   * unavailable) and the reform is kept on this device until it is added
+   * to the account (see api/resilientReformStore).
+   */
+  pendingSync?: boolean;
   baseline: ReformBaseline;
   provenance: ReformProvenance;
   createdAt?: string;

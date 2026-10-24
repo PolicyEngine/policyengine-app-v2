@@ -836,6 +836,25 @@ describe('DraftHeader', () => {
     expect(mockRun.mock.calls[0][3]).toBe('rf-saved');
   });
 
+  test('given the save is kept on this device then the run goes ahead and says so, with no error', async () => {
+    // Given: the account is unavailable, so the store keeps the reform here
+    const user = userEvent.setup();
+    updateDraftProvisionValue('gov.irs.credits.ctc.amount.base', 2500);
+    mockCreate.mockResolvedValue({ id: 'rf-device', policyId: '95762', pendingSync: true });
+    renderHeader();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Save and run 2026 report' }));
+
+    // Then
+    await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+    expect(mockRun.mock.calls[0][3]).toBe('rf-device');
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      "Saved on this device. Your account is unavailable right now; we'll add this reform to it when it's back."
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   test('given the save fails then no report runs and the error shows', async () => {
     // Given
     const user = userEvent.setup();

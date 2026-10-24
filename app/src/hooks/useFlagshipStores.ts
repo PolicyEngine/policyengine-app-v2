@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import {
@@ -9,6 +9,7 @@ import {
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
 import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
+import { ResilientReformStore, SYNC_INTERVAL_MS } from '@/api/resilientReformStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -16,6 +17,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
+import { replaceDraftReformId } from '@/libs/draftReform';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
@@ -25,8 +27,9 @@ import { isAssociationCountry } from '@/types/v2User';
  * configured, US and UK) it is the PolicyEngine API: as the signed-in
  * account, or signed out as this browser's unauthenticated user. Without
  * sign-in (and outside the US and UK) it stays in this browser. Nothing
- * else decides it, and nothing falls back: a request that fails is an
- * ordinary error.
+ * else decides it. Only a signed-in save falls back, and only while the
+ * account is unavailable (see useReformStore); any other failed request
+ * is an ordinary error.
  */
 export interface V3SavedWork {
   /** The API routes for this session's user; null keeps saved work in this browser. */
@@ -68,30 +71,73 @@ const v1PolicyJsonKey = (countryId: string, policyId: string) =>
 /** How long a fetched v1 policy stays cached without a reader. */
 const V1_POLICY_JSON_GC_TIME = 30 * 60 * 1000;
 
+/** How soon focus or a regained connection retries a waiting queue again. */
+const SYNC_EVENT_GAP_MS = 5 * 1000;
+
+/**
+ * The reform store for this session. Signed in, it keeps saving while the
+ * account is unavailable (see ResilientReformStore): saves wait on this
+ * device, under the account's ID, and are added to the account when it
+ * answers again — on the next call that reaches it, when the window
+ * regains focus or the connection, and at most once a minute meanwhile.
+ */
 export function useReformStore(): ReformStore {
-  const { account } = useV3SavedWork();
+  const { account, scope } = useV3SavedWork();
   const parameters = useSelector((state: RootState) => state.metadata?.parameters);
   // Read through a ref so metadata arriving later does not rebuild the store.
   const parametersRef = useRef(parameters);
   parametersRef.current = parameters;
   const queryClient = useQueryClient();
 
-  return useMemo(
-    () =>
-      getReformStore(account, {
-        getParameterMetadata: () => parametersRef.current,
-        // v1 policies never change, so each is fetched once per session
-        // rather than on every list of the account's reforms.
-        fetchPolicyJson: (countryId, policyId) =>
-          queryClient.fetchQuery({
-            queryKey: v1PolicyJsonKey(countryId, policyId),
-            queryFn: () => fetchV1PolicyJson(countryId, policyId),
-            staleTime: Infinity,
-            gcTime: V1_POLICY_JSON_GC_TIME,
-          }),
-      }),
-    [account, queryClient]
-  );
+  const store = useMemo(() => {
+    const getParameterMetadata = () => parametersRef.current;
+    const reforms = getReformStore(account, {
+      getParameterMetadata,
+      // v1 policies never change, so each is fetched once per session
+      // rather than on every list of the account's reforms.
+      fetchPolicyJson: (countryId, policyId) =>
+        queryClient.fetchQuery({
+          queryKey: v1PolicyJsonKey(countryId, policyId),
+          queryFn: () => fetchV1PolicyJson(countryId, policyId),
+          staleTime: Infinity,
+          gcTime: V1_POLICY_JSON_GC_TIME,
+        }),
+    });
+    // Only a signed-in account: the scope carries its ID (the Auth0 subject).
+    if (!account || !scope.startsWith('account:')) {
+      return reforms;
+    }
+    return new ResilientReformStore(reforms, {
+      accountKey: scope,
+      countryId: account.countryId,
+      getParameterMetadata,
+      onSynced: (synced) => {
+        synced.forEach(({ deviceId, accountId }) => {
+          if (deviceId !== accountId) {
+            replaceDraftReformId(deviceId, accountId);
+          }
+        });
+        void queryClient.invalidateQueries({ queryKey: ['reforms'] });
+      },
+    });
+  }, [account, scope, queryClient]);
+
+  useEffect(() => {
+    if (!(store instanceof ResilientReformStore)) {
+      return undefined;
+    }
+    const retrySoon = () => void store.syncIfDue(SYNC_EVENT_GAP_MS);
+    const timer = window.setInterval(() => void store.syncIfDue(), SYNC_INTERVAL_MS);
+    window.addEventListener('focus', retrySoon);
+    window.addEventListener('online', retrySoon);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', retrySoon);
+      window.removeEventListener('online', retrySoon);
+    };
+  }, [store]);
+
+  return store;
 }
 
 export interface FlagshipReportStoreSelection {
