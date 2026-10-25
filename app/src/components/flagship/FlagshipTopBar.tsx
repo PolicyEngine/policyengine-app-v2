@@ -39,7 +39,8 @@ function MoreLinkItems({
   return (
     <>
       {groups.map((group, index) => (
-        <Fragment key={group[0].href}>
+        // The groups are fixed for a country, so their order is their identity.
+        <Fragment key={index}>
           {index > 0 && <DropdownMenuSeparator />}
           {group.map((link) => (
             <DropdownMenuItem key={link.href} asChild className={className}>
@@ -219,7 +220,7 @@ export default function FlagshipTopBar() {
           </button>
         )}
 
-        {/* A phone's one menu: the sections, then the website links and tools. */}
+        {/* A phone's one menu: the sections, then the website links as in More. */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

@@ -173,6 +173,7 @@ describe('FlagshipTopBar', () => {
     // Then
     expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
   });
+
   describe('interactive tools', () => {
     test('given the US then CliffWatch links its page on the website', async () => {
       // Given
@@ -273,6 +274,22 @@ describe('FlagshipTopBar', () => {
         // Then
         expect(menuRows(phoneMenu).slice(0, 3)).toEqual(['Build', 'Reforms', '—']);
         expect(linkRows(phoneMenu, 3)).toEqual(moreRows);
+      }
+    );
+
+    test.each(countryIds)(
+      "given %s then every row of a phone's menu is a finger's height",
+      async (countryId) => {
+        // Given
+        renderTopBar(countryId);
+
+        // When
+        await openPhoneMenu();
+
+        // Then
+        for (const row of screen.getAllByRole('menuitem')) {
+          expect(row).toHaveClass('tw:min-h-10');
+        }
       }
     );
   });

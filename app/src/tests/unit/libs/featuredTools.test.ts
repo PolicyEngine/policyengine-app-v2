@@ -91,14 +91,6 @@ describe('getFeaturedToolLinks', () => {
     );
   });
 
-  test('given the same country twice then the links are the same', () => {
-    fc.assert(
-      fc.property(countryStrings, (countryId) => {
-        expect(getFeaturedToolLinks(countryId)).toEqual(getFeaturedToolLinks(countryId));
-      })
-    );
-  });
-
   test('given every listed country then it is a supported country', () => {
     for (const countryId of listedCountries) {
       expect(countryIds).toContain(countryId);

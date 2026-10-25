@@ -3,10 +3,14 @@ import { describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 
 // A made-up list, so these cases hold whichever tools are featured: the bar
-// links whatever the list holds, and a country with no tools gets no rows.
+// links whatever the list holds, in its order (not alphabetical, so a sort
+// would show), and a country with no tools gets no rows.
 vi.mock('@/data/featuredTools.json', () => ({
   default: {
-    us: [{ slug: 'made-up-tool', label: 'Made-up tool', description: 'Made-up description.' }],
+    us: [
+      { slug: 'zeta-tool', label: 'Zeta tool', description: 'Zeta description.' },
+      { slug: 'alpha-tool', label: 'Alpha tool', description: 'Alpha description.' },
+    ],
     ng: [],
   },
 }));
@@ -25,7 +29,7 @@ async function openMoreMenuRows(countryId: string) {
 }
 
 describe('FlagshipTopBar with another featured list', () => {
-  test('given a listed tool then the more menu links it after Research', async () => {
+  test('given listed tools then the more menu links them after Research, in list order', async () => {
     // When
     const rows = await openMoreMenuRows('us');
 
@@ -33,14 +37,19 @@ describe('FlagshipTopBar with another featured list', () => {
     expect(rows).toEqual([
       'Research',
       '—',
-      'Made-up tool',
+      'Zeta tool',
+      'Alpha tool',
       'All interactive tools',
       '—',
       ...OTHER_LINK_ROWS,
     ]);
-    expect(screen.getByRole('menuitem', { name: 'Made-up tool' })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: 'Zeta tool' })).toHaveAttribute(
       'href',
-      `${WEBSITE_URL}/us/made-up-tool`
+      `${WEBSITE_URL}/us/zeta-tool`
+    );
+    expect(screen.getByRole('menuitem', { name: 'Alpha tool' })).toHaveAttribute(
+      'href',
+      `${WEBSITE_URL}/us/alpha-tool`
     );
   });
 
