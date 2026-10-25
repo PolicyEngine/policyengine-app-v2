@@ -16,7 +16,7 @@ function ResearchCard({ item }: { item: FeaturedResearchItem }) {
           <img
             src={item.image}
             alt=""
-            className="tw:absolute tw:inset-0 tw:w-full tw:h-full tw:object-cover"
+            className="tw:absolute tw:inset-0 tw:w-full tw:h-full tw:object-cover tw:object-top"
           />
         </div>
         <div className="tw:flex tw:flex-col tw:flex-1 tw:p-3xl">
