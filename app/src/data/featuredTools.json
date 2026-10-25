@@ -1,0 +1,26 @@
+{
+  "us": [
+    {
+      "slug": "cliffwatch",
+      "label": "CliffWatch",
+      "description": "See where benefits, refundable tax credits, and taxes create cliffs as a household's wages rise, in all 50 states and DC."
+    },
+    {
+      "slug": "obbba-households",
+      "label": "OBBBA household explorer",
+      "description": "See how the One Big Beautiful Bill Act changes each modeled household's resources in 2026, and which provisions drive the change."
+    },
+    {
+      "slug": "bill-tracker",
+      "label": "State legislative tracker",
+      "description": "Map 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis."
+    }
+  ],
+  "uk": [
+    {
+      "slug": "uk-cliff-watch",
+      "label": "UK CliffWatch",
+      "description": "See where benefit withdrawal and taxes create cliffs and high marginal rates as a UK household's earnings rise."
+    }
+  ]
+}

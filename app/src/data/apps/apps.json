@@ -693,7 +693,7 @@
     "type": "iframe",
     "slug": "obbba-households",
     "title": "The One Big Beautiful Bill Act, household by household",
-    "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
+    "description": "Explore how the One Big Beautiful Bill Act (OBBBA) changes resources for each modeled US household in 2026, and which provisions drive the change.",
     "source": "https://obbba-household-by-household.vercel.app/us/obbba-households",
     "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
     "countryId": "us",
