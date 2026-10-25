@@ -12,6 +12,7 @@ import {
 import { colors, spacing, typography } from "@/designTokens";
 import OptimisedImage from "@/components/ui/OptimisedImage";
 import { useCountryId } from "@/hooks/useCountryId";
+import { getAllToolsHref, getFeaturedTools } from "@/lib/featuredTools";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
@@ -194,6 +195,9 @@ function DropdownPanel({
       <div
         style={{
           transform: visible ? "translateY(0)" : "translateY(-8px)",
+          // The wrapper is a narrow absolute box, so size the panel to its
+          // longest row instead of wrapping it at the minimum width.
+          width: "max-content",
           minWidth: "220px",
           overflow: "hidden",
           maxHeight: visible ? `${contentHeight}px` : "0px",
@@ -651,6 +655,8 @@ function MobileMenu({
           maxWidth: "100vw",
           boxSizing: "border-box",
           height: "100%",
+          // Scroll when the links outgrow a short phone screen.
+          overflowY: "auto",
           backgroundColor: colors.primary[600],
           padding: spacing.lg,
           display: "flex",
@@ -756,9 +762,34 @@ export default function Header() {
   const countryId = useCountryId();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const featuredTools = getFeaturedTools(countryId);
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
+    // Each tool is a separate zone, so every row is a plain <a>. "All
+    // interactive tools" is too: ResearchClient reads its filters from the
+    // URL only when it mounts, so a client-side transition from /research
+    // can leave the old filters in place.
+    ...(featuredTools.length > 0
+      ? [
+          {
+            label: "Tools",
+            hasDropdown: true,
+            dropdownItems: [
+              ...featuredTools.map((tool) => ({
+                label: tool.label,
+                href: tool.href,
+                external: true,
+              })),
+              {
+                label: "All interactive tools",
+                href: getAllToolsHref(countryId),
+                external: true,
+              },
+            ],
+          },
+        ]
+      : []),
     {
       label: "Model",
       hasDropdown: true,

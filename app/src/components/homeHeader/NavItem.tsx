@@ -197,6 +197,9 @@ function DropdownPanel({
       <div
         style={{
           transform: visible ? 'translateY(0)' : 'translateY(-8px)',
+          // The wrapper is a narrow absolute box, so size the panel to its
+          // longest row instead of wrapping it at the minimum width.
+          width: 'max-content',
           minWidth: '220px',
           overflow: 'hidden',
           maxHeight: visible ? `${contentHeight}px` : '0px',
