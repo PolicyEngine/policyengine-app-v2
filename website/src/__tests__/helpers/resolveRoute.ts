@@ -97,7 +97,7 @@ function compile(
 }
 
 // With trailingSlash off, Next puts this redirect ahead of the config's own
-// (loadRedirects in next/dist/lib/load-custom-routes).
+// (loadCustomRoutes in next/dist/lib/load-custom-routes).
 const STRIP_TRAILING_SLASH: ConfigRoute = {
   source: "/:path+/",
   destination: "/:path+",
