@@ -31,5 +31,6 @@ cd "$WEBSITE_ROOT"
 # packs an older build left, so Vercel doesn't restore and re-upload them.
 rm -rf .next/cache/webpack
 bun run build:next
-# Fail the build if its CSS doesn't match a fresh compile of the source.
+# Fail the build if its CSS lacks a class of a fresh compile of the source, or
+# has a Tailwind utility the fresh compile lacks.
 node ../scripts/check-built-css.mjs . src/app/globals.css

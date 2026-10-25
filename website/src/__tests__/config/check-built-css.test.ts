@@ -9,9 +9,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import fc from "fast-check";
 import postcss from "postcss";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 import {
   checkBuiltCss,
@@ -22,10 +23,11 @@ import {
   UTILITY_PREFIX,
 } from "../../../../scripts/check-built-css.mjs";
 
-// scripts/check-built-css.mjs runs after `next build` in both apps and fails a
-// build whose CSS classes don't match a fresh Tailwind compile's. Tailwind scans this
-// file too, so utility names here are built at runtime from the prefix: a
-// literal one would end up in the website's CSS.
+// scripts/check-built-css.mjs runs after `next build` in both apps. It fails a
+// build whose CSS lacks a class of a fresh Tailwind compile, or has a utility
+// the fresh compile lacks. Tailwind scans this file too, so utility names here
+// are built at runtime from the prefix: a literal one would end up in the
+// website's CSS.
 
 const websiteDir = path.resolve(__dirname, "../../..");
 const repoDir = path.resolve(websiteDir, "..");
@@ -94,13 +96,15 @@ function cssDirWith(files: Record<string, string>): string {
   return dir;
 }
 
-function runScriptAt(file: string, ...args: string[]) {
-  const result = spawnSync(
-    process.execPath,
-    ["--no-deprecation", file, ...args],
-    { encoding: "utf8" },
-  );
+function runNode(...args: string[]) {
+  const result = spawnSync(process.execPath, ["--no-deprecation", ...args], {
+    encoding: "utf8",
+  });
   return { code: result.status, output: result.stdout + result.stderr };
+}
+
+function runScriptAt(file: string, ...args: string[]) {
+  return runNode(file, ...args);
 }
 
 function runScript(...args: string[]) {
@@ -108,9 +112,10 @@ function runScript(...args: string[]) {
 }
 
 describe("selectorClasses", () => {
-  // Any class names, escaped as CSSOM does or as all-hex escapes, in any
-  // selector shape, come back exactly, in order. Dots in strings and escaped
-  // dots, as in IDs and attribute values, aren't classes.
+  // Any class names, escaped as CSSOM does or as all-hex escapes, in the
+  // selector shapes below, come back exactly, in order. Dots in strings and
+  // escaped dots, as in IDs and attribute values, aren't classes. Comments are
+  // covered by the examples after it.
   test("given any selector then it returns exactly the classes it names", () => {
     // Names from any script, and names from the ASCII that class names and
     // their escapes are made of: digits first, a dash then a digit,
@@ -177,12 +182,16 @@ describe("selectorClasses", () => {
     [".a\\\r\nb", ["a"]],
     // One whitespace after a hex escape belongs to it, and CR LF counts as one.
     [".\\31\r\n0", ["10"]],
+    [".\\31\t0", ["10"]],
+    [".\\31\f0", ["10"]],
+    [".a\\3A b", ["a:b"]],
     [".\\0 a", ["\uFFFDa"]],
     ['[x="a\\".b"].c', ["c"]],
     // PostCSS keeps a comment between selector tokens.
     [".a/*.b*/.c", ["a", "c"]],
     [".d/*! .e */.f", ["d", "f"]],
     [".a/*.b", ["a"]],
+    [".a/*x*/*.b", ["a", "b"]],
     [".\\d800", ["\uFFFD"]],
     [".\\110000", ["\uFFFD"]],
     [".x\\", ["x\uFFFD"]],
@@ -243,12 +252,14 @@ describe("compareClasses", () => {
 
 describe("freshClasses", () => {
   test("given an app outside the working directory then Tailwind scans that app", async () => {
-    // Given: a one-utility app; the tests run from website/, which has hundreds
+    // Given: a one-utility app; the tests run from website/, which has hundreds.
+    // Its stylesheet also has a rule Lightning CSS rejects, which the
+    // optimized build drops.
     const app = scratchDir();
     const utility = `${P}mt-[1234.5px]`;
     writeFileSync(
       path.join(app, "globals.css"),
-      `@import "tailwindcss" prefix(tw);\n.fixture-rule { color: red; }\n`,
+      `@import "tailwindcss" prefix(tw);\n.fixture-rule { color: red; }\n.ie-hack { color: red !ie; }\n`,
     );
     writeFileSync(path.join(app, "package.json"), '{ "private": true }');
     mkdirSync(path.join(app, "src"));
@@ -257,11 +268,19 @@ describe("freshClasses", () => {
       `export const page = <div className="${utility}" />;\n`,
     );
 
-    // When
-    const classes = await freshClasses(app, "globals.css");
+    // When: Tailwind's optimizer warns about the rule it drops
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const classes = await freshClasses(app, "globals.css");
 
-    // Then
-    expect([...classes].sort()).toEqual(["fixture-rule", utility]);
+      // Then: compiled as the build does, optimized, whatever NODE_ENV is
+      expect([...classes].sort()).toEqual(["fixture-rule", utility]);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("while optimizing generated CSS"),
+      );
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   test("given the website and the calculator then each compile scans its own app", async () => {
@@ -399,10 +418,20 @@ describe("checkBuiltCss on the website's source", () => {
 
     // When / Then
     expect(runScriptAt(linked).code).toBe(2);
+    expect(runNode("--preserve-symlinks-main", linked).code).toBe(2);
     const run = runScriptAt(linked, websiteDir, "src/app/globals.css", missing);
     expect(run.code).toBe(1);
     expect(run.output).toContain(utility);
   }, 60_000);
+
+  test("given an import from node -e with an argument then it runs nothing and imports cleanly", () => {
+    // Under -e, argv[1] is the first argument after the code, here no file.
+    const code = `await import(${JSON.stringify(pathToFileURL(script).href)});`;
+
+    const run = runNode("--input-type=module", "-e", code, "extra");
+
+    expect(run).toEqual({ code: 0, output: "" });
+  });
 });
 
 describe("build scripts", () => {

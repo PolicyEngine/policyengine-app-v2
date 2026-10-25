@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import type { NextConfig } from "next";
@@ -82,33 +82,84 @@ async function tailwindDirectories(app: string): Promise<string[]> {
     .map((message: { dir: string }) => message.dir);
 }
 
-/** Every symlink to a file under `dir`, relative to the repo. */
-function fileSymlinks(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(dir, entry.name);
-    if (entry.isSymbolicLink()) {
-      return statSync(full).isFile() ? [path.relative(repoDir, full)] : [];
-    }
-    if (entry.isDirectory() && entry.name !== "node_modules") {
-      return fileSymlinks(full);
-    }
-    return [];
+type SnapshotCallback = (error: Error | null, snapshot: unknown) => void;
+
+/**
+ * The directories, of those given, that webpack can't snapshot for a
+ * production build, relative to the repo. It asks the webpack bundled with
+ * Next, with the snapshot options a production build uses and Next's
+ * managedPaths, instead of re-deriving webpack's rules for symlinks. A null
+ * snapshot is the failure: webpack then drops the module's dependencies, so a
+ * restored cache counts as valid whatever changed.
+ */
+async function unsnapshottable(dirs: string[]): Promise<string[]> {
+  const require = createRequire(path.join(repoDir, "website/package.json"));
+  const { webpack } = require("next/dist/compiled/webpack/bundle5")();
+  const compiler = webpack({
+    mode: "production",
+    context: repoDir,
+    entry: "./package.json",
+    cache: false,
+    // Production mode would otherwise load Next's minifier, unused here.
+    optimization: { minimize: false },
+    snapshot: { managedPaths: [/^(.+?[\\/]node_modules[\\/])/] },
   });
+  const { fileSystemInfo } = compiler.newCompilation(
+    compiler.newCompilationParams(),
+  );
+  const options = compiler.options.snapshot.module;
+  const failed = await Promise.all(
+    dirs.map(
+      (dir) =>
+        new Promise<string[]>((resolve, reject) => {
+          const done: SnapshotCallback = (error, snapshot) =>
+            error
+              ? reject(error)
+              : resolve(snapshot === null ? [path.relative(repoDir, dir)] : []);
+          fileSystemInfo.createSnapshot(
+            Date.now(),
+            [],
+            [dir],
+            [],
+            options,
+            done,
+          );
+        }),
+    ),
+  );
+  return failed.flat();
 }
 
-// The calculator keeps webpack's cache, which is safe only while webpack can
-// snapshot every directory Tailwind scans for it.
 describe("Tailwind's source directories", () => {
-  test("given the website then they hold its data symlinks, which is why its cache is off", async () => {
-    const links = (await tailwindDirectories("website")).flatMap(fileSymlinks);
-    expect(links).toContain("website/src/data/apps.json");
+  test("given a production build then webpack snapshots modules by timestamp and hash", async () => {
+    // What unsnapshottable() passes on; a change here would change its verdicts.
+    const require = createRequire(path.join(repoDir, "website/package.json"));
+    const { webpack } = require("next/dist/compiled/webpack/bundle5")();
+    const compiler = webpack({
+      mode: "production",
+      entry: "./package.json",
+      optimization: { minimize: false },
+    });
+    expect(compiler.options.snapshot.module).toEqual({
+      timestamp: true,
+      hash: true,
+    });
+  });
+
+  // The positive control. If a Next upgrade lets webpack snapshot website/src,
+  // this fails, and the website's cache could come back.
+  test("given the website then webpack can't snapshot src, which is why its cache is off", async () => {
+    const directories = await tailwindDirectories("website");
+    expect(await unsnapshottable(directories)).toEqual(["website/src"]);
   }, 30_000);
 
-  test("given the calculator, which keeps webpack's cache, then none holds a symlink to a file", async () => {
+  // The calculator keeps webpack's cache, which is safe only while webpack can
+  // snapshot every directory Tailwind scans for it.
+  test("given the calculator, which keeps webpack's cache, then webpack can snapshot every one", async () => {
     const directories = await tailwindDirectories("calculator-app");
     expect(directories.map((dir) => path.relative(repoDir, dir))).toEqual(
       expect.arrayContaining(["app/src", "calculator-app/src"]),
     );
-    expect(directories.flatMap(fileSymlinks)).toEqual([]);
+    expect(await unsnapshottable(directories)).toEqual([]);
   }, 30_000);
 });

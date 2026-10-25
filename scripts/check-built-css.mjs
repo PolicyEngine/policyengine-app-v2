@@ -2,10 +2,11 @@
 // Checks a Next build's CSS against a fresh Tailwind compile of the same
 // stylesheet: every class the fresh compile has must be in the built CSS, and
 // the built CSS must have no Tailwind utility the fresh compile lacks. So a
-// build that reused CSS from an older compile fails here once the source's
-// classes have changed. It compares class names only: stale CSS that differs
-// only in values, such as a theme colour, passes. The website once shipped
-// stale CSS: see the webpack note in website/next.config.ts.
+// build that reused CSS from an older compile fails here once the source adds
+// a class or drops a Tailwind utility. It compares class names only: stale CSS
+// that differs only in values, such as a theme colour, passes, and so does one
+// that keeps a hand-written class the source dropped. The website once
+// shipped stale CSS: see the webpack note in website/next.config.ts.
 //
 // Usage: node scripts/check-built-css.mjs <appDir> <stylesheet> [cssDir]
 //   appDir      the Next app, where `next build` ran (Tailwind scans from here)
@@ -161,7 +162,11 @@ function appTools(appDir) {
 
 /**
  * Compiles the stylesheet the way the app's production build does: Tailwind
- * scanning from the app's directory, minified.
+ * scanning from the app's directory, optimized. Tailwind's plugin optimizes
+ * when NODE_ENV is production, as it is under `next build`. This process's
+ * NODE_ENV is unset after `next build` and "test" under Vitest, so the option
+ * is explicit: optimizing drops a rule Lightning CSS rejects, such as
+ * `.x { color: red !ie }`, and so does the build.
  */
 export async function freshClasses(appDir, stylesheet) {
   const { postcss, tailwind } = appTools(appDir);
@@ -244,7 +249,7 @@ async function main([appArg, stylesheet, cssArg]) {
     return 0;
   }
   console.error(
-    `Built CSS for ${where} doesn't match a fresh compile of ${stylesheet}.`,
+    `Built CSS for ${where} has different classes from a fresh compile of ${stylesheet}.`,
   );
   if (result.missing.length) {
     const what = count(
@@ -271,12 +276,25 @@ async function main([appArg, stylesheet, cssArg]) {
   return 1;
 }
 
-// Node resolves symlinks in this module's URL but not in argv[1], so compare
-// real paths; otherwise a run through a symlinked path would exit 0 unchecked.
-if (
-  process.argv[1] &&
-  realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
-) {
+/**
+ * Whether Node ran this file as its entry. Node resolves symlinks in this
+ * module's URL, unless --preserve-symlinks-main is set, but never in argv[1],
+ * so this compares real paths; otherwise a run through a symlinked path would
+ * exit 0 unchecked. Under `node -e` or `node -`, argv[1] is the first user
+ * argument, which may name no file.
+ */
+function isEntry() {
+  try {
+    return (
+      realpathSync(process.argv[1]) ===
+      realpathSync(fileURLToPath(import.meta.url))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isEntry()) {
   main(process.argv.slice(2)).then(
     (code) => process.exit(code),
     (error) => {
