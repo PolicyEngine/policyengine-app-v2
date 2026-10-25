@@ -160,10 +160,11 @@ describe('HeaderNavigation', () => {
       const user = userEvent.setup();
       await user.click(screen.getByRole('button', { name: 'Tools' }));
       // row → padding div → panel
-      const panel = screen.getByRole('button', { name: 'PolicyEngine app' }).parentElement!;
+      const panel = screen.getByRole('link', { name: 'PolicyEngine app' }).parentElement!;
+      expect(within(panel).queryAllByRole('button')).toEqual([]);
       return within(panel)
-        .getAllByRole('button')
-        .map((row) => row.textContent);
+        .getAllByRole('link')
+        .map((link) => ({ label: link.textContent, href: link.getAttribute('href') }));
     }
 
     test.each([
@@ -176,7 +177,28 @@ describe('HeaderNavigation', () => {
         renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
 
         // Then
-        expect(await desktopToolsRows()).toEqual(rows);
+        expect((await desktopToolsRows()).map((row) => row.label)).toEqual(rows);
+      }
+    );
+
+    // Each row is a real link, so modifier-clicks and "Open link in new tab"
+    // work, and it goes where the mobile menu's row does.
+    test.each(['us', 'uk'])(
+      'given %s then each desktop tools row is a link to the same URL as its mobile row',
+      async (countryId) => {
+        // Given
+        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
+
+        // When
+        const desktop = await desktopToolsRows();
+        const mobile = await mobileToolsRows();
+
+        // Then
+        expect(desktop[0]).toEqual({
+          label: 'PolicyEngine app',
+          href: `${CALCULATOR_URL}/${countryId}`,
+        });
+        expect(desktop).toEqual(mobile);
       }
     );
 
@@ -252,7 +274,7 @@ describe('HeaderNavigation', () => {
 
       // Then: row → padding div → panel. jsdom has no layout, so this checks
       // the style rather than the wrapping it prevents.
-      const row = screen.getByRole('button', { name: 'SPM threshold calculator' });
+      const row = screen.getByRole('link', { name: 'SPM threshold calculator' });
       expect(row.parentElement!.parentElement).toHaveStyle({
         width: 'max-content',
         minWidth: '220px',

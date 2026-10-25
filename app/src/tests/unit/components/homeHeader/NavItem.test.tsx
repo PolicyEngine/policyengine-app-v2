@@ -1,6 +1,10 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
-import NavItem from '@/components/homeHeader/NavItem';
+import { cleanup, fireEvent, render as renderBare } from '@testing-library/react';
+import fc from 'fast-check';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import NavItem, { DropdownItem, NavItemSetup } from '@/components/homeHeader/NavItem';
+import { LocationProvider } from '@/contexts/LocationContext';
+import { NavigationProvider } from '@/contexts/NavigationContext';
 import {
   MOCK_DROPDOWN_NAV_ITEM,
   MOCK_SIMPLE_NAV_ITEM,
@@ -186,6 +190,121 @@ describe('NavItem', () => {
       // Then
       expect(onTeamClick).toHaveBeenCalledOnce();
       expect(onSupportersClick).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('Dropdown rows', () => {
+    /** Renders the item with a navigation spy, and opens its dropdown. */
+    function renderOpen(dropdownItems: DropdownItem[]) {
+      const push = vi.fn();
+      const setup: NavItemSetup = { label: 'Menu', hasDropdown: true, dropdownItems };
+      renderBare(
+        <NavigationProvider value={{ push, replace: vi.fn(), back: vi.fn() }}>
+          <LocationProvider value={{ pathname: '/us', search: '' }}>
+            <NavItem setup={setup} />
+          </LocationProvider>
+        </NavigationProvider>
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+      return { push };
+    }
+
+    // jsdom can't follow a link; stop the browser default, not React's handler.
+    function preventNavigation(event: Event) {
+      event.preventDefault();
+    }
+
+    afterEach(() => {
+      document.removeEventListener('click', preventNavigation);
+    });
+
+    test('given a row with an absolute href then it is a link to that URL', () => {
+      // Given/When
+      renderOpen([{ label: 'GiveCalc', href: 'https://policyengine.org/us/givecalc' }]);
+
+      // Then
+      expect(screen.getByRole('link', { name: 'GiveCalc' })).toHaveAttribute(
+        'href',
+        'https://policyengine.org/us/givecalc'
+      );
+      expect(screen.queryByRole('button', { name: 'GiveCalc' })).not.toBeInTheDocument();
+    });
+
+    test('given an absolute-link row clicked then the dropdown closes', () => {
+      // Given
+      document.addEventListener('click', preventNavigation);
+      renderOpen([{ label: 'GiveCalc', href: 'https://policyengine.org/us/givecalc' }]);
+      expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'true');
+
+      // When
+      fireEvent.click(screen.getByRole('link', { name: 'GiveCalc' }));
+
+      // Then
+      expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
+        'aria-expanded',
+        'false'
+      );
+    });
+
+    test('given a row with an in-app href then it is a button that navigates in-app', () => {
+      // Given
+      const { push } = renderOpen([{ label: 'Team', href: '/us/team' }]);
+
+      // When
+      fireEvent.click(screen.getByRole('button', { name: 'Team' }));
+
+      // Then
+      expect(push).toHaveBeenCalledWith('/us/team');
+      expect(screen.queryByRole('link', { name: 'Team' })).not.toBeInTheDocument();
+    });
+
+    // For any rows, nested ones included: a row is a link exactly when its href
+    // is absolute, and then it links to that href.
+    test('given any rows then exactly the absolute-link rows are links, each to its own URL', () => {
+      const kind = fc.constantFrom('absolute', 'in-app', 'callback');
+      const slug = fc.constantFrom('givecalc', 'team', 'model/rules', 'a', 'x-y');
+      const row = fc.record({ kind, slug });
+      const tree = fc.array(fc.record({ row, children: fc.array(row, { maxLength: 2 }) }), {
+        minLength: 1,
+        maxLength: 4,
+      });
+
+      fc.assert(
+        fc.property(tree, (shape) => {
+          let n = 0;
+          const toItem = (spec: { kind: string; slug: string }): DropdownItem => {
+            const label = `Row ${n++}`;
+            if (spec.kind === 'absolute') {
+              return { label, href: `https://policyengine.org/us/${spec.slug}` };
+            }
+            if (spec.kind === 'in-app') {
+              return { label, href: `/us/${spec.slug}` };
+            }
+            return { label, onClick: vi.fn() };
+          };
+          const items = shape.map(({ row, children }) => ({
+            ...toItem(row),
+            children: children.map(toItem),
+          }));
+
+          renderOpen(items);
+          try {
+            for (const item of items.flatMap((top) => [top, ...top.children])) {
+              if (item.href?.startsWith('https://')) {
+                expect(screen.getByRole('link', { name: item.label })).toHaveAttribute(
+                  'href',
+                  item.href
+                );
+              } else {
+                expect(screen.getByRole('button', { name: item.label })).toBeInTheDocument();
+              }
+            }
+          } finally {
+            cleanup();
+          }
+        }),
+        { numRuns: 40 }
+      );
     });
   });
 });

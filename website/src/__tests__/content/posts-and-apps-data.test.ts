@@ -111,9 +111,10 @@ describe("apps.json", () => {
     ).toEqual([]);
   });
 
-  // The Tools menus read this flag (website/src/lib/toolsMenu.ts). A label
-  // longer than this would widen the dropdown past its other rows.
-  test("toolsMenu, where set, is exactly a short, trimmed label", () => {
+  // The Tools menus read this flag (website/src/lib/toolsMenu.ts). The label
+  // is the short name a menu row shows, so it is never longer than the title
+  // it stands for.
+  test("toolsMenu, where set, is exactly a trimmed label no longer than the title", () => {
     const invalid = apps.filter((app) => {
       if (app.toolsMenu === undefined) return false;
       const menu = app.toolsMenu as { label?: unknown };
@@ -124,7 +125,7 @@ describe("apps.json", () => {
         typeof menu.label !== "string" ||
         menu.label.trim() !== menu.label ||
         menu.label.length === 0 ||
-        menu.label.length > 28
+        menu.label.length > (app.title ?? "").length
       );
     });
     expect(invalid.map((app) => `${app.countryId}/${app.slug}`)).toEqual([]);
