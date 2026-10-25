@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, test, vi } from "vitest";
 
@@ -19,74 +19,62 @@ vi.mock("next/link", () => ({
 }));
 
 import HomeToolsPreview from "@/components/home/HomeToolsPreview";
-import { getFeaturedTools } from "@/lib/featuredTools";
-
-function linkHrefs(container: HTMLElement): string[] {
-  return Array.from(container.querySelectorAll("a")).map(
-    (link) => link.getAttribute("href") ?? "",
-  );
-}
+import { getToolsMenu } from "@/lib/toolsMenu";
 
 describe("HomeToolsPreview", () => {
-  test("given the US homepage then links CliffWatch and the OBBBA household explorer", () => {
+  test.each(["us", "uk"])(
+    "given %s then shows a card per Tools menu row, in the menu's order",
+    (countryId) => {
+      render(<HomeToolsPreview countryId={countryId} />);
+
+      expect(
+        screen.getByRole("heading", { level: 2, name: "Tools" }),
+      ).toBeInTheDocument();
+      const cards = screen.getAllByRole("link");
+      const menu = getToolsMenu(countryId);
+      expect(cards.map((card) => card.getAttribute("href"))).toEqual(
+        menu.map((tool) => tool.href),
+      );
+      menu.forEach((tool, i) => {
+        expect(within(cards[i]).getByText(tool.label)).toBeInTheDocument();
+        expect(
+          within(cards[i]).getByText(tool.description),
+        ).toBeInTheDocument();
+      });
+    },
+  );
+
+  test.each(["us", "uk"])(
+    "given %s then every card is a full page load",
+    (countryId) => {
+      render(<HomeToolsPreview countryId={countryId} />);
+
+      for (const card of screen.getAllByRole("link")) {
+        expect(card).not.toHaveAttribute("data-next-link");
+      }
+    },
+  );
+
+  test("given the US then the first card opens the main app", () => {
     render(<HomeToolsPreview countryId="us" />);
 
-    expect(screen.getByRole("link", { name: /CliffWatch/ })).toHaveAttribute(
-      "href",
-      "/us/cliffwatch",
-    );
-    expect(
-      screen.getByRole("link", { name: /OBBBA household explorer/ }),
-    ).toHaveAttribute("href", "/us/obbba-households");
-    expect(
-      screen.getByRole("link", { name: /State legislative tracker/ }),
-    ).toHaveAttribute("href", "/us/bill-tracker");
+    const first = screen.getAllByRole("link")[0];
+    expect(first).toHaveAttribute("href", "https://app.policyengine.org/us");
+    expect(within(first).getByText("PolicyEngine app")).toBeInTheDocument();
   });
 
-  test("given the US homepage then links every featured US tool exactly once", () => {
-    const { container } = render(<HomeToolsPreview countryId="us" />);
-    const hrefs = linkHrefs(container);
-
-    for (const tool of getFeaturedTools("us")) {
-      expect(hrefs.filter((href) => href === tool.href)).toHaveLength(1);
-    }
-  });
-
-  test("given the US homepage then tool cards are full page loads", () => {
-    const { container } = render(<HomeToolsPreview countryId="us" />);
-    const toolHrefs = new Set(getFeaturedTools("us").map((tool) => tool.href));
-
-    const toolLinks = Array.from(container.querySelectorAll("a")).filter(
-      (link) => toolHrefs.has(link.getAttribute("href") ?? ""),
-    );
-    expect(toolLinks).toHaveLength(toolHrefs.size);
-    for (const link of toolLinks) {
-      expect(link).not.toHaveAttribute("data-next-link");
-    }
-  });
-
-  test("given the US homepage then the tracker card shows the list's copy", () => {
-    render(<HomeToolsPreview countryId="us" />);
-    const tracker = getFeaturedTools("us").find(
-      (tool) => tool.slug === "bill-tracker",
-    )!;
-
-    expect(
-      screen.getByRole("link", { name: /State legislative tracker/ }),
-    ).toHaveTextContent(tracker.description);
-  });
-
-  test("given the US homepage then links all interactive tools", () => {
+  test("given the US then leaves the OBBBA explorer and the bill tracker to featured research", () => {
     render(<HomeToolsPreview countryId="us" />);
 
-    expect(screen.getByText("Interactive tools")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /View all tools/ }),
-    ).toHaveAttribute("href", "/us/research?types=interactive");
+    const hrefs = screen
+      .getAllByRole("link")
+      .map((card) => card.getAttribute("href"));
+    expect(hrefs).not.toContain("/us/obbba-households");
+    expect(hrefs).not.toContain("/us/bill-tracker");
   });
 
-  test("given the UK homepage then renders nothing", () => {
-    const { container } = render(<HomeToolsPreview countryId="uk" />);
+  test("given a country with no tools then renders nothing", () => {
+    const { container } = render(<HomeToolsPreview countryId="ca" />);
 
     expect(container).toBeEmptyDOMElement();
   });
