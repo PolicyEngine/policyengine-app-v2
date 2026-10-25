@@ -88,7 +88,12 @@ function commentRanges(text: string, file: string): ts.CommentRange[] {
   const visit = (node: ts.Node): void => {
     // A JSDoc node's text is a comment in the next token's trivia.
     if (ts.isJSDoc(node)) return;
-    const children = node.getChildren(source);
+    // The end-of-file token lists a file-final JSDoc as its child, but its own
+    // trivia holds every comment after the last statement.
+    const children =
+      node.kind === ts.SyntaxKind.EndOfFileToken
+        ? []
+        : node.getChildren(source);
     if (children.length > 0) {
       children.forEach(visit);
       return;
@@ -271,6 +276,8 @@ describe("Tailwind theme variables", () => {
     ["x.tsx", "const el = <div>{/* R */}</div>;"],
     ["x.tsx", "const t = `${x /* R */}`;"],
     ["x.tsx", "// under /us/* R"],
+    ["x.tsx", "const d = 1;\n// R\n/** Docs. */"],
+    ["x.ts", "const d = 1;\n/* R */ /** Docs. */\n"],
     ["x.css", "/* R */"],
     ["x.css", ".a { color: red; } /* R */"],
   ];

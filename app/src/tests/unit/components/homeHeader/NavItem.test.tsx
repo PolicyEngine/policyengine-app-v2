@@ -218,11 +218,15 @@ describe('NavItem', () => {
       event.preventDefault();
     }
 
-    /** The navigations jsdom reported: it can't navigate, so it logs an error. */
+    /**
+     * The navigations jsdom reported. It can't navigate or open a window, so it
+     * logs an error for each: location.assign, setting location.href, following
+     * a link, or window.open.
+     */
     function navigationsReported(consoleError: { mock: { calls: unknown[][] } }) {
       return consoleError.mock.calls
         .map(([first]) => String((first as Error | undefined)?.message ?? first))
-        .filter((message) => message.includes('Not implemented: navigation'));
+        .filter((message) => /Not implemented: (navigation|window\.open)/.test(message));
     }
 
     beforeEach(() => {
@@ -265,16 +269,19 @@ describe('NavItem', () => {
         // Added after the menu opens, so the listener sees only the row's click.
         document.addEventListener('click', preventNavigation);
         const consoleError = vi.spyOn(console, 'error');
+        const url = window.location.href;
 
         // When
         fireEvent.click(screen.getByRole('link', { name: 'GiveCalc' }), modifiers);
 
         // Then
         // The click reached the document with its default intact, and nothing
-        // navigated another way.
+        // navigated another way. jsdom does run history.pushState, which would
+        // change the URL.
         expect(defaultPreventedByApp).toBe(false);
         expect(push).not.toHaveBeenCalled();
         expect(navigationsReported(consoleError)).toEqual([]);
+        expect(window.location.href).toBe(url);
         expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
           'aria-expanded',
           'false'

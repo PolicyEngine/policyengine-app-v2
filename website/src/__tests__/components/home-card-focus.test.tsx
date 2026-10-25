@@ -74,14 +74,22 @@ function parseClass(className: string): {
   };
 }
 
+/**
+ * Whether a name in a transition-property list can include the outline. The
+ * property's initial value is `all`, so `initial`, `unset` and `revert` mean
+ * `all`; `inherit` and `revert-layer` take a value from elsewhere.
+ */
+function includesOutline(name: string): boolean {
+  return (
+    /^(all|initial|inherit|unset|revert|revert-layer)$/.test(name) ||
+    name.startsWith("outline") ||
+    name.startsWith("var(")
+  );
+}
+
 /** Whether a transition-property list can include the outline. */
 function listsOutline(list: string): boolean {
-  return list
-    .split(/[\s,_]+/)
-    .some(
-      (name) =>
-        name === "all" || name.startsWith("outline") || name.startsWith("var("),
-    );
+  return list.split(/[\s,_]+/).some(includesOutline);
 }
 
 /**
@@ -114,22 +122,25 @@ function setsTransition(utility: string): "safe" | "unsafe" | undefined {
   return list !== undefined && !listsOutline(list) ? "safe" : "unsafe";
 }
 
-/** Whether a utility sets a transition duration above zero. */
-function setsDuration(utility: string): boolean {
-  const duration =
-    utility.match(/^\[transition-duration:(.*)\]$/)?.[1] ??
-    utility.match(/^duration-(.+)$/)?.[1];
+/**
+ * Whether a utility sets a transition duration or delay other than zero.
+ * Either can start a transition: CSS Transitions starts one when
+ * max(duration, 0s) + delay is above zero, so a delay alone shows the outline
+ * late. A negative delay counts too, which can only over-count.
+ */
+function setsTiming(utility: string): boolean {
+  const time =
+    utility.match(/^\[transition-(?:duration|delay):(.*)\]$/)?.[1] ??
+    utility.match(/^(?:duration|delay)-(.+)$/)?.[1];
   return (
-    duration !== undefined &&
-    duration !== "initial" &&
-    !/^\[?0(m?s)?\]?$/.test(duration)
+    time !== undefined && time !== "initial" && !/^\[?0(m?s)?\]?$/.test(time)
   );
 }
 
 /**
  * Whether a card's classes animate its outline. CSS's initial
- * transition-property is `all`, so a duration animates the outline unless a
- * transition-property utility without a variant leaves it out.
+ * transition-property is `all`, so a duration or a delay animates the outline
+ * unless a transition-property utility without a variant leaves it out.
  */
 function animatesOutline(classes: string[]): boolean {
   const parsed = classes.map(parseClass);
@@ -138,7 +149,7 @@ function animatesOutline(classes: string[]): boolean {
   const baseList = parsed.some(
     ({ variants }, i) => variants.length === 0 && sets[i] === "safe",
   );
-  return !baseList && parsed.some(({ utility }) => setsDuration(utility));
+  return !baseList && parsed.some(({ utility }) => setsTiming(utility));
 }
 
 /**
@@ -154,10 +165,6 @@ function compiledAnimatesOutline(root: Root): boolean {
     });
     return found;
   };
-  const includesOutline = (property: string) =>
-    property === "all" ||
-    property.startsWith("outline") ||
-    property.startsWith("var(");
   const properties = values("transition-property");
   if (properties.length > 0) {
     return properties.some((list) =>
@@ -180,8 +187,8 @@ function compiledAnimatesOutline(root: Root): boolean {
       }),
     );
   }
-  return values("transition-duration").some(
-    (duration) => !/^0m?s$/.test(duration),
+  return [...values("transition-duration"), ...values("transition-delay")].some(
+    (time) => !/^0m?s$/.test(time),
   );
 }
 
@@ -259,6 +266,13 @@ describe("homepage card focus", () => {
       card("duration-300", "ease-out"),
       card("[transition-duration:300ms]"),
       card("hover:transition-shadow", "duration-300"),
+      // A delay starts a transition too, so the outline shows late.
+      card("ease-out", "delay-100"),
+      card("[transition-delay:50ms]"),
+      // These mean the initial value, `all`.
+      card("transition-[initial]"),
+      card("[transition-property:unset]", "duration-300"),
+      card("transition-[revert]", "duration-300"),
       card("transition-shadow", "focus-visible:transition-all"),
     ];
     const still = [
@@ -268,7 +282,9 @@ describe("homepage card focus", () => {
       card("transition-none", "duration-300"),
       card("[transition-property:box-shadow]", "duration-300"),
       card("duration-0"),
-      card("ease-out", "delay-100"),
+      card("duration-0", "delay-0"),
+      card("ease-out"),
+      card("transition-shadow", "delay-100"),
       card("transition-discrete"),
     ];
     expect(animates.filter((classes) => !animatesOutline(classes))).toEqual([]);
@@ -276,8 +292,11 @@ describe("homepage card focus", () => {
   });
 
   // Differential: the rule against Tailwind's own output, one class at a time.
-  // It never misses an animated outline, and it is exact except for transition
-  // shorthands, which it always counts as animating.
+  // This checks how the rule reads each utility against what Tailwind compiles
+  // it to. Which property names include the outline, and which timings start a
+  // transition, are the same CSS rules in both. It never misses a class the
+  // compiled CSS animates, and it is exact except for transition shorthands,
+  // which it always counts as animating.
   test("the transition rule agrees with Tailwind's compiled CSS for each class", async () => {
     const utilities = [
       "transition",
@@ -300,7 +319,11 @@ describe("homepage card focus", () => {
       "duration-[0ms]",
       "duration-initial",
       "ease-out",
+      "delay-0",
       "delay-100",
+      "transition-[initial]",
+      "transition-[inherit]",
+      "[transition-property:unset]",
       "[transition-property:outline-color]",
       "[transition-property:box-shadow]",
       "[transition-duration:300ms]",
