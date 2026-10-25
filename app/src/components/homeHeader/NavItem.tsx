@@ -63,8 +63,9 @@ function NavUnderline({ visible }: { visible: boolean }) {
   );
 }
 
+/** A path in this app: one leading slash. "//host" and "/\host" name another host. */
 function isInternalHref(href: string | undefined): href is string {
-  return !!href && href.startsWith('/');
+  return !!href && /^\/(?![/\\])/.test(href);
 }
 
 function itemMatches(href: string | undefined, pathname: string): boolean {
@@ -136,8 +137,9 @@ function DropdownRow({
     },
   };
 
-  // An absolute link leaves this app, so it is a real anchor: the browser
-  // loads it in full, and modifier-clicks and "Open link in new tab" work.
+  // A row whose href isn't a path in this app (another site, "#top",
+  // "mailto:") is a real anchor: the browser follows it itself, so
+  // modifier-clicks and "Open link in new tab" work.
   if (item.href && !isInternalHref(item.href)) {
     return (
       <a href={item.href} onClick={onNavigate} style={style} {...hoverHandlers}>
@@ -314,8 +316,8 @@ export default function NavItem({ setup }: NavItemProps) {
 
   const underlineVisible = active || hovered || dropdownOpen;
 
-  // Rows with absolute links are anchors (DropdownRow), so only in-app links
-  // and callbacks reach here.
+  // Rows whose href isn't a path in this app are anchors (DropdownRow), so only
+  // in-app paths and callbacks reach here.
   const handleDropdownSelect = (item: DropdownItem) => {
     if (item.href) {
       nav.push(item.href);

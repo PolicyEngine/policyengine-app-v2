@@ -1,7 +1,7 @@
 import { render, screen, userEvent } from '@test-utils';
 import { cleanup, fireEvent, render as renderBare } from '@testing-library/react';
 import fc from 'fast-check';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import NavItem, { DropdownItem, NavItemSetup } from '@/components/homeHeader/NavItem';
 import { LocationProvider } from '@/contexts/LocationContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
@@ -209,16 +209,24 @@ describe('NavItem', () => {
       return { push };
     }
 
-    // jsdom can't follow a link; stop the browser default, not React's handler.
+    // jsdom can't follow a link, so a document listener, which runs after
+    // React's handlers, stops the browser default. It first records whether
+    // the app had already prevented it.
+    let defaultPreventedByApp: boolean | undefined;
     function preventNavigation(event: Event) {
+      defaultPreventedByApp = event.defaultPrevented;
       event.preventDefault();
     }
+
+    beforeEach(() => {
+      defaultPreventedByApp = undefined;
+    });
 
     afterEach(() => {
       document.removeEventListener('click', preventNavigation);
     });
 
-    test('given a row with an absolute href then it is a link to that URL', () => {
+    test('given a row linking to another site then it is a link to that URL', () => {
       // Given/When
       renderOpen([{ label: 'GiveCalc', href: 'https://policyengine.org/us/givecalc' }]);
 
@@ -230,21 +238,36 @@ describe('NavItem', () => {
       expect(screen.queryByRole('button', { name: 'GiveCalc' })).not.toBeInTheDocument();
     });
 
-    test('given an absolute-link row clicked then the dropdown closes', () => {
-      // Given
-      document.addEventListener('click', preventNavigation);
-      renderOpen([{ label: 'GiveCalc', href: 'https://policyengine.org/us/givecalc' }]);
-      expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'true');
+    test.each([
+      ['a plain', {}],
+      ['a Cmd', { metaKey: true }],
+      ['a Ctrl', { ctrlKey: true }],
+      ['a Shift', { shiftKey: true }],
+    ])(
+      'given %s click on a row linking to another site then the browser follows it, not the router',
+      (_, modifiers) => {
+        // Given
+        document.addEventListener('click', preventNavigation);
+        const { push } = renderOpen([
+          { label: 'GiveCalc', href: 'https://policyengine.org/us/givecalc' },
+        ]);
+        expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
+          'aria-expanded',
+          'true'
+        );
 
-      // When
-      fireEvent.click(screen.getByRole('link', { name: 'GiveCalc' }));
+        // When
+        fireEvent.click(screen.getByRole('link', { name: 'GiveCalc' }), modifiers);
 
-      // Then
-      expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
-        'aria-expanded',
-        'false'
-      );
-    });
+        // Then
+        expect(defaultPreventedByApp).toBe(false);
+        expect(push).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
+          'aria-expanded',
+          'false'
+        );
+      }
+    );
 
     test('given a row with an in-app href then it is a button that navigates in-app', () => {
       // Given
@@ -258,10 +281,21 @@ describe('NavItem', () => {
       expect(screen.queryByRole('link', { name: 'Team' })).not.toBeInTheDocument();
     });
 
-    // For any rows, nested ones included: a row is a link exactly when its href
-    // is absolute, and then it links to that href.
-    test('given any rows then exactly the absolute-link rows are links, each to its own URL', () => {
-      const kind = fc.constantFrom('absolute', 'in-app', 'callback');
+    // For any rows, nested ones included: a row is a link exactly when it has an
+    // href that isn't a path in this app, and then it links to that href.
+    test('given any rows then exactly the rows not linking into this app are links, each to its own URL', () => {
+      // Each kind of href, and whether its row should be a link.
+      const kinds: Record<string, { href?: (slug: string) => string; link: boolean }> = {
+        site: { href: (slug) => `https://policyengine.org/us/${slug}`, link: true },
+        schemeRelative: { href: (slug) => `//policyengine.org/us/${slug}`, link: true },
+        backslash: { href: (slug) => `/\\policyengine.org/us/${slug}`, link: true },
+        hash: { href: (slug) => `#${slug}`, link: true },
+        mailto: { href: (slug) => `mailto:${slug}@policyengine.org`, link: true },
+        relative: { href: (slug) => slug, link: true },
+        inApp: { href: (slug) => `/us/${slug}`, link: false },
+        callback: { link: false },
+      };
+      const kind = fc.constantFrom(...Object.keys(kinds));
       const slug = fc.constantFrom('givecalc', 'team', 'model/rules', 'a', 'x-y');
       const row = fc.record({ kind, slug });
       const tree = fc.array(fc.record({ row, children: fc.array(row, { maxLength: 2 }) }), {
@@ -272,15 +306,12 @@ describe('NavItem', () => {
       fc.assert(
         fc.property(tree, (shape) => {
           let n = 0;
+          const expectLink = new Map<string, boolean>();
           const toItem = (spec: { kind: string; slug: string }): DropdownItem => {
             const label = `Row ${n++}`;
-            if (spec.kind === 'absolute') {
-              return { label, href: `https://policyengine.org/us/${spec.slug}` };
-            }
-            if (spec.kind === 'in-app') {
-              return { label, href: `/us/${spec.slug}` };
-            }
-            return { label, onClick: vi.fn() };
+            const { href, link } = kinds[spec.kind];
+            expectLink.set(label, link);
+            return href ? { label, href: href(spec.slug) } : { label, onClick: vi.fn() };
           };
           const items = shape.map(({ row, children }) => ({
             ...toItem(row),
@@ -290,7 +321,7 @@ describe('NavItem', () => {
           renderOpen(items);
           try {
             for (const item of items.flatMap((top) => [top, ...top.children])) {
-              if (item.href?.startsWith('https://')) {
+              if (expectLink.get(item.label)) {
                 expect(screen.getByRole('link', { name: item.label })).toHaveAttribute(
                   'href',
                   item.href
@@ -303,7 +334,7 @@ describe('NavItem', () => {
             cleanup();
           }
         }),
-        { numRuns: 40 }
+        { numRuns: 60 }
       );
     });
   });
