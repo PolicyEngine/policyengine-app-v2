@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 
 // A list without the tracker and with a tool the component has no icon for,
@@ -35,7 +35,7 @@ describe("HomeToolsPreview with another tools list", () => {
 
     const card = screen.getByRole("link", { name: /New tool/ });
     expect(card).toHaveAttribute("href", "/us/new-tool");
-    expect(card).toHaveTextContent("New tool description.");
+    expect(within(card).getByText("New tool description.")).toBeInTheDocument();
   });
 
   test("given the list then the homepage links exactly its tools in order", () => {

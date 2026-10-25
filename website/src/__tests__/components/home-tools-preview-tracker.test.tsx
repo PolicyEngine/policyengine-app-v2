@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 
 // The tracker listed last and with copy unlike the real list's, so the card
@@ -31,9 +31,11 @@ describe("HomeToolsPreview with the tracker in the list", () => {
   test("given the tracker's list entry then its card shows that entry's copy", () => {
     render(<HomeToolsPreview countryId="us" />);
 
-    expect(
-      screen.getByRole("link", { name: /State legislative tracker/ }),
-    ).toHaveTextContent("Mocked tracker copy.");
+    const card = screen.getByRole("link", {
+      name: /State legislative tracker/,
+    });
+    // Exact match: the paragraph is the entry's copy and nothing else.
+    expect(within(card).getByText("Mocked tracker copy.")).toBeInTheDocument();
   });
 
   test("given the tracker anywhere in the list then it gets the first card and the others keep list order", () => {
