@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -22,7 +23,7 @@ import {
 } from "../../../../scripts/check-built-css.mjs";
 
 // scripts/check-built-css.mjs runs after `next build` in both apps and fails a
-// build whose CSS doesn't match a fresh Tailwind compile. Tailwind scans this
+// build whose CSS classes don't match a fresh Tailwind compile's. Tailwind scans this
 // file too, so utility names here are built at runtime from the prefix: a
 // literal one would end up in the website's CSS.
 
@@ -93,13 +94,17 @@ function cssDirWith(files: Record<string, string>): string {
   return dir;
 }
 
-function runScript(...args: string[]) {
+function runScriptAt(file: string, ...args: string[]) {
   const result = spawnSync(
     process.execPath,
-    ["--no-deprecation", script, ...args],
+    ["--no-deprecation", file, ...args],
     { encoding: "utf8" },
   );
   return { code: result.status, output: result.stdout + result.stderr };
+}
+
+function runScript(...args: string[]) {
+  return runScriptAt(script, ...args);
 }
 
 describe("selectorClasses", () => {
@@ -107,11 +112,25 @@ describe("selectorClasses", () => {
   // selector shape, come back exactly, in order. Dots in strings and escaped
   // dots, as in IDs and attribute values, aren't classes.
   test("given any selector then it returns exactly the classes it names", () => {
+    // Names from any script, and names from the ASCII that class names and
+    // their escapes are made of: digits first, a dash then a digit,
+    // backslashes, quotes, control characters.
     const name = fc
-      .string({ unit: "grapheme", minLength: 1, maxLength: 10 })
+      .oneof(
+        fc.string({ unit: "grapheme", minLength: 1, maxLength: 10 }),
+        fc.string({
+          unit: fc.constantFrom(
+            ..."tw:[]()./%#,_'\"=&>*!@-+~0123456789abc\\\t\x01\x7fé",
+          ),
+          minLength: 1,
+          maxLength: 10,
+        }),
+      )
       .filter((text) => !text.includes("\0"));
     const part = fc.record({
-      name,
+      // One class, or two: a compound such as .a.b, or a list inside a
+      // wrapper such as :is(.a, .b).
+      names: fc.array(name, { minLength: 1, maxLength: 2 }),
       escape: fc.constantFrom(cssEscape, hexEscape),
       before: fc.constantFrom("", "div", "#main", "#id\\.x", "*"),
       after: fc.constantFrom(
@@ -125,7 +144,7 @@ describe("selectorClasses", () => {
         ":nth-child(2n+1)",
         ":not(#id\\.y)",
       ),
-      wrap: fc.constantFrom("", ":is", ":not", ":where"),
+      wrap: fc.constantFrom("", ":is", ":not", ":where", ":has"),
       join: fc.constantFrom(" ", " > ", " + ", " ~ ", ", ", ""),
     });
 
@@ -135,13 +154,17 @@ describe("selectorClasses", () => {
           .map((p, i) => {
             // A type or ID selector can't follow a class in one compound.
             const before = i > 0 && parts[i - 1].join === "" ? "" : p.before;
-            const cls = `.${p.escape(p.name)}`;
-            const simple = p.wrap ? `${p.wrap}(${cls})` : cls;
+            const classes = p.names.map((n) => `.${p.escape(n)}`);
+            const simple = p.wrap
+              ? `${p.wrap}(${classes.join(", ")})`
+              : classes.join("");
             return `${before}${simple}${p.after}${i < parts.length - 1 ? p.join : ""}`;
           })
           .join("");
 
-        expect(selectorClasses(selector)).toEqual(parts.map((p) => p.name));
+        expect(selectorClasses(selector)).toEqual(
+          parts.flatMap((p) => p.names),
+        );
       }),
       { numRuns: 500 },
     );
@@ -152,6 +175,14 @@ describe("selectorClasses", () => {
     [".\\31 0", ["10"]],
     [".\\000031x", ["1x"]],
     [".a\\\r\nb", ["a"]],
+    // One whitespace after a hex escape belongs to it, and CR LF counts as one.
+    [".\\31\r\n0", ["10"]],
+    [".\\0 a", ["\uFFFDa"]],
+    ['[x="a\\".b"].c', ["c"]],
+    // PostCSS keeps a comment between selector tokens.
+    [".a/*.b*/.c", ["a", "c"]],
+    [".d/*! .e */.f", ["d", "f"]],
+    [".a/*.b", ["a"]],
     [".\\d800", ["\uFFFD"]],
     [".\\110000", ["\uFFFD"]],
     [".x\\", ["x\uFFFD"]],
@@ -355,6 +386,22 @@ describe("checkBuiltCss on the website's source", () => {
     expect(staleRun.output).toContain(`${P}mt-[4321.5px]`);
 
     expect(runScript().code).toBe(2);
+  }, 60_000);
+
+  test("given the command line through a symlinked path then it still checks", () => {
+    // Given: the script reached through a link to the repo's scripts/
+    const link = path.join(scratchDir(), "scripts");
+    symlinkSync(path.dirname(script), link);
+    const linked = path.join(link, path.basename(script));
+    const missing = cssDirWith({
+      "a.css": stylesheetFor([...fresh].filter((name) => name !== utility)),
+    });
+
+    // When / Then
+    expect(runScriptAt(linked).code).toBe(2);
+    const run = runScriptAt(linked, websiteDir, "src/app/globals.css", missing);
+    expect(run.code).toBe(1);
+    expect(run.output).toContain(utility);
   }, 60_000);
 });
 

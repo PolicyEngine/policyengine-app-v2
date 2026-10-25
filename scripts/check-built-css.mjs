@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // Checks a Next build's CSS against a fresh Tailwind compile of the same
 // stylesheet: every class the fresh compile has must be in the built CSS, and
-// the built CSS must have no Tailwind utility the fresh compile lacks. A build
-// that reused CSS from an older compile fails here instead of shipping. The
-// website once did exactly that: see the webpack note in website/next.config.ts.
+// the built CSS must have no Tailwind utility the fresh compile lacks. So a
+// build that reused CSS from an older compile fails here once the source's
+// classes have changed. It compares class names only: stale CSS that differs
+// only in values, such as a theme colour, passes. The website once shipped
+// stale CSS: see the webpack note in website/next.config.ts.
 //
 // Usage: node scripts/check-built-css.mjs <appDir> <stylesheet> [cssDir]
 //   appDir      the Next app, where `next build` ran (Tailwind scans from here)
@@ -11,7 +13,7 @@
 //   cssDir      the built CSS, by default <appDir>/.next/static/css. Next
 //               empties .next, except .next/cache, before each build, so it
 //               holds only this build's files.
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -58,6 +60,12 @@ function startsEscape(text, i) {
   return text[i] === "\\" && !/[\n\r\f]/.test(text[i + 1] ?? "");
 }
 
+/** The index just past the comment that opens at `start`, or the end. */
+function skipComment(text, start) {
+  const end = text.indexOf("*/", start + 2);
+  return end === -1 ? text.length : end + 2;
+}
+
 /** The index just past the string whose quote is at `start`. */
 function skipString(text, start) {
   let i = start + 1;
@@ -69,8 +77,10 @@ function skipString(text, start) {
 
 /**
  * The class names a selector names, unescaped: `.tw\:mt-\[53px\]` names
- * `tw:mt-[53px]`. A dot inside a string or an escape isn't a class, and an
- * attribute value can only hold a dot in one of those.
+ * `tw:mt-[53px]`. A dot inside a string, an escape or a comment isn't a class,
+ * and an attribute value can only hold a dot in a string or an escape. PostCSS
+ * keeps a comment between selector tokens, and Next's minifier keeps one that
+ * opens with `/*!`.
  */
 export function selectorClasses(selector) {
   const names = [];
@@ -81,6 +91,8 @@ export function selectorClasses(selector) {
       i = readEscape(selector, i)[1];
     } else if (char === '"' || char === "'") {
       i = skipString(selector, i);
+    } else if (char === "/" && selector[i + 1] === "*") {
+      i = skipComment(selector, i);
     } else if (char === ".") {
       let name = "";
       i++;
@@ -134,7 +146,11 @@ export function compareClasses(fresh, built, prefix = UTILITY_PREFIX) {
   };
 }
 
-/** PostCSS and Tailwind's PostCSS plugin, as the app's own build loads them. */
+/**
+ * PostCSS and Tailwind's PostCSS plugin, resolved from the app, as Next
+ * resolves the plugin. Next runs it with its own PostCSS (8.4.31 in Next
+ * 15.5.12); for both apps that gave the same CSS as the app's 8.5.6.
+ */
 function appTools(appDir) {
   const require = createRequire(path.join(appDir, "package.json"));
   return {
@@ -249,12 +265,18 @@ async function main([appArg, stylesheet, cssArg]) {
     );
   }
   console.error(
-    "  The build most likely reused CSS from webpack's persistent cache. See the webpack note in website/next.config.ts.",
+    "  The build most likely reused CSS from webpack's persistent cache. See the webpack note in website/next.config.ts.\n" +
+      "  On Vercel, redeploy without the build cache. If the cache isn't the cause, look for another stylesheet that emits tw: classes.",
   );
   return 1;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Node resolves symlinks in this module's URL but not in argv[1], so compare
+// real paths; otherwise a run through a symlinked path would exit 0 unchecked.
+if (
+  process.argv[1] &&
+  realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   main(process.argv.slice(2)).then(
     (code) => process.exit(code),
     (error) => {

@@ -390,7 +390,8 @@ const nextConfig: NextConfig = {
   // cached with no record of its inputs, so a build that restores the cache,
   // as Vercel's builds do, reuses the old CSS whatever changed, client
   // components and globals.css included. scripts/check-built-css.mjs fails a
-  // build whose CSS differs from a fresh compile.
+  // build whose CSS lacks a class of a fresh compile, or has a Tailwind
+  // utility the fresh compile lacks. It compares class names, not values.
   //
   // A webpack hook also turns off Next's build workers unless they're asked
   // for, hence experimental.webpackBuildWorker. `next dev` runs on Turbopack,
