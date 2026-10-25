@@ -12,14 +12,14 @@ import { resolveRoute } from "../helpers/resolveRoute";
 // the US tool whatever query the website sends upstream. UK CliffWatch is a
 // separate zone. Invariants, for every path and query:
 //   1. no /uk/... path is proxied to the US zone: a /uk/ request reaches it
-//      only by redirecting to a /us/ path, and only with an s param;
+//      only by redirecting to a /us/ path, and only with a state code in s;
 //   2. /uk/cliffwatch and /uk/cliff-watch, with any suffix and query except
 //      a US share link's (3), reach UK CliffWatch in one permanent redirect,
 //      suffix kept (plus Next's own trailing-slash hop first, for a URL
 //      ending in "/");
 //   3. US share links, the bare /uk/cliffwatch or /uk/cliff-watch with
-//      ?s=<state> (UK CliffWatch never uses s), reach /us/cliffwatch in one
-//      permanent redirect, query kept;
+//      ?s=<state code> (UK CliffWatch never uses s), reach /us/cliffwatch in
+//      one permanent redirect, query kept;
 //   4. /us/cliffwatch and /us/cliff-watch, with any suffix, still reach the
 //      US zone (its basePath assets arrive via /us/cliff-watch).
 
@@ -33,13 +33,23 @@ const suffix = fc
   .map((parts) => parts.map((part) => `/${part}`).join(""));
 const toSearch = (pairs: [string, string][]) =>
   pairs.length ? `?${new URLSearchParams(pairs).toString()}` : "";
+const stateCode = fc.stringMatching(/^[A-Za-z]{2}$/);
 const pairsOf = (...keys: string[]) =>
-  fc.array(fc.tuple(fc.constantFrom(...keys), segment), { maxLength: 3 });
+  fc.array(fc.tuple(fc.constantFrom(...keys), fc.oneof(segment, stateCode)), {
+    maxLength: 3,
+  });
 const query = pairsOf("s", "zip", "p", "max", "country").map(toSearch);
-// The US tool always writes s=<state> into its share links.
+// The US tool always writes s=<state code> into its share links.
 const usShareLinkQuery = fc
-  .tuple(segment, pairsOf("s", "zip", "county", "ms", "p", "esi"))
+  .tuple(stateCode, pairsOf("zip", "county", "ms", "p", "esi"))
   .map(([state, pairs]) => toSearch([["s", state], ...pairs]));
+
+// Next matches a has condition against the last value of a repeated key.
+function hasStateCode(search: string) {
+  return /^[A-Za-z]{2}$/.test(
+    new URLSearchParams(search).getAll("s").at(-1) ?? "",
+  );
+}
 
 // Next regroups repeated query keys, so compare params, not their order.
 function sortedQuery(search: string) {
@@ -119,7 +129,7 @@ describe("UK CliffWatch routes", () => {
       const redirects = await nextConfig.redirects!();
       const shareLink = {
         source,
-        has: [{ type: "query", key: "s" }],
+        has: [{ type: "query", key: "s", value: "[A-Za-z]{2}" }],
         destination: "/us/cliffwatch",
         permanent: true,
       };
@@ -186,8 +196,8 @@ describe("UK CliffWatch routes", () => {
         suffix,
         query,
         async (slug, rest, search) => {
-          // Only the bare path is a US share link; s on a subpath is not one.
-          fc.pre(rest !== "" || !new URLSearchParams(search).has("s"));
+          // Only the bare path with a state code is a US share link.
+          fc.pre(rest !== "" || !hasStateCode(search));
           const resolved = await resolveRoute(`${slug}${rest}${search}`);
 
           expect(resolved.hops).toHaveLength(1);
@@ -201,6 +211,28 @@ describe("UK CliffWatch routes", () => {
       ),
       { numRuns: 200 },
     );
+  });
+
+  test.each(["?s=", "?s=G", "?s=GAX", "?s=12", "?s=GA&s=", "?zip=30303"])(
+    "sends /uk/cliffwatch%s, not a US share link, to UK CliffWatch",
+    async (search) => {
+      // Vercel treats an empty s as present, so the rule needs a value.
+      const resolved = await resolveRoute(`/uk/cliffwatch${search}`);
+
+      expect(resolved.hops).toEqual([`/uk/uk-cliff-watch${search}`]);
+      expect(resolved.upstream?.host).toBe(UK_ZONE);
+    },
+  );
+
+  test("sends a state code on a subpath to UK CliffWatch, not the US tool", async () => {
+    const resolved = await resolveRoute(
+      "/uk/cliffwatch/cliffwatch-og.png?s=GA",
+    );
+
+    expect(resolved.hops).toEqual([
+      "/uk/uk-cliff-watch/cliffwatch-og.png?s=GA",
+    ]);
+    expect(resolved.upstream?.host).toBe(UK_ZONE);
   });
 
   test("every US share link on a UK CliffWatch slug reaches /us/cliffwatch in one hop", async () => {
@@ -269,7 +301,7 @@ describe("UK CliffWatch routes", () => {
           if (resolved.upstream?.host === US_ZONE) {
             expect(resolved.hops.length).toBeGreaterThan(0);
             expect(resolved.pathname).toMatch(/^\/us\//);
-            expect(new URLSearchParams(search).has("s")).toBe(true);
+            expect(hasStateCode(search)).toBe(true);
           }
         },
       ),

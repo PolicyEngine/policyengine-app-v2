@@ -192,11 +192,11 @@ const nextConfig: NextConfig = {
       // The CliffWatch zone is US-only, so UK slugs go to UK CliffWatch, ahead
       // of the rename below (one hop), suffix kept for the UK zone's og:image.
       // US share links minted when /uk/cliffwatch proxied the US tool carry
-      // ?s=<state> (UK CliffWatch never uses s), so they go to /us/.
+      // ?s=<state code> (UK CliffWatch never uses s), so they go to /us/.
       ...["/uk/cliffwatch", "/uk/cliff-watch"].flatMap((source) => [
         {
           source,
-          has: [{ type: "query" as const, key: "s" }],
+          has: [{ type: "query" as const, key: "s", value: "[A-Za-z]{2}" }],
           destination: "/us/cliffwatch",
           permanent: true,
         },
