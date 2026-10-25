@@ -63,9 +63,12 @@ function NavUnderline({ visible }: { visible: boolean }) {
   );
 }
 
-/** A path in this app: one leading slash. "//host" and "/\host" name another host. */
+/**
+ * A path in this app: one leading slash. "//host" and "/\host" name another
+ * host, and so does "/<tab>/host": the URL parser drops tabs and line breaks.
+ */
 function isInternalHref(href: string | undefined): href is string {
-  return !!href && /^\/(?![/\\])/.test(href);
+  return !!href && !/[\t\n\r]/.test(href) && /^\/(?![/\\])/.test(href);
 }
 
 function itemMatches(href: string | undefined, pathname: string): boolean {

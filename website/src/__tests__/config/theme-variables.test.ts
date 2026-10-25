@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fc from "fast-check";
+import ts from "typescript";
 import { describe, expect, test } from "vitest";
 
 const srcDir = fileURLToPath(new URL("../..", import.meta.url));
@@ -70,31 +71,78 @@ function definedVariables(css: string): string[] {
   );
 }
 
-/**
- * Source text with its comments blanked out, line breaks kept. In TypeScript a
- * `//` right after a colon, quote, slash or word character is taken as part of
- * a URL or a string, so it stays.
- */
-function withoutComments(text: string, isCss: boolean): string {
-  const blank = (comment: string) => comment.replace(/[^\n]/g, " ");
-  const noBlocks = text.replace(/\/\*[\s\S]*?\*\//g, blank);
-  return isCss ? noBlocks : noBlocks.replace(/(?<![:"'`/\w])\/\/.*/g, blank);
+/** Every comment in a .ts or .tsx file, as TypeScript reads it. */
+function commentRanges(text: string, file: string): ts.CommentRange[] {
+  const kind = file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const source = ts.createSourceFile(
+    file,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    kind,
+  );
+  const ranges = new Map<number, ts.CommentRange>();
+  // Each comment is in the trivia before exactly one token. TypeScript calls
+  // the comments before the trivia's first line break trailing, and the rest
+  // leading.
+  const visit = (node: ts.Node): void => {
+    // A JSDoc node's text is a comment in the next token's trivia.
+    if (ts.isJSDoc(node)) return;
+    const children = node.getChildren(source);
+    if (children.length > 0) {
+      children.forEach(visit);
+      return;
+    }
+    // JSX text has no trivia, though a `//` in it would scan as a comment.
+    if (node.kind === ts.SyntaxKind.JsxText) return;
+    for (const range of [
+      ...(ts.getTrailingCommentRanges(text, node.pos) ?? []),
+      ...(ts.getLeadingCommentRanges(text, node.pos) ?? []),
+    ]) {
+      ranges.set(range.pos, range);
+    }
+  };
+  visit(source);
+  return [...ranges.values()];
 }
 
 /**
- * The line of each read of one of `names` without the tw prefix: `var(--x)`,
- * or Tailwind's `-(--x)` shorthand as in `bg-(--x)`, which compiles to
- * `var(--x)`. Either may span lines.
+ * Source text with its comments blanked out, line breaks kept. TypeScript
+ * finds a .ts or .tsx file's comments, so a `//` or `/*` in a string, a
+ * template literal, a regular expression or JSX text stays. In CSS, a comment
+ * is a `/* … *\/` outside a string.
  */
-function unprefixedReads(text: string, names: string[]): number[] {
-  if (names.length === 0) return [];
+function withoutComments(text: string, file: string): string {
+  const blank = (comment: string) => comment.replace(/[^\n]/g, " ");
+  if (file.endsWith(".css")) {
+    return text.replace(
+      /"(?:\\[\s\S]|[^"\\\n])*"|'(?:\\[\s\S]|[^'\\\n])*'|\/\*[\s\S]*?(?:\*\/|$)/g,
+      (match) => (match.startsWith("/*") ? blank(match) : match),
+    );
+  }
+  return commentRanges(text, file).reduce(
+    (out, { pos, end }) =>
+      out.slice(0, pos) + blank(out.slice(pos, end)) + out.slice(end),
+    text,
+  );
+}
+
+/**
+ * Finds each read of one of `names` without the tw prefix, and returns its
+ * line: `var(--x)`, or Tailwind's shorthand, as in `bg-(--x)` or
+ * `bg-(color:--x)` with a type hint, which compiles to `var(--x)`. Any of them
+ * may span lines.
+ */
+function unprefixedReader(names: string[]): (text: string) => number[] {
+  if (names.length === 0) return () => [];
   const read = new RegExp(
-    `(?:var|-)\\(\\s*(?:${names.join("|")})\\s*[,)]`,
+    `(?:var\\(|-\\((?:[\\w-]+:)?)\\s*(?:${names.join("|")})\\s*[,)]`,
     "g",
   );
-  return [...text.matchAll(read)].map(
-    (match) => text.slice(0, match.index).split("\n").length,
-  );
+  return (text) =>
+    [...text.matchAll(read)].map(
+      (match) => text.slice(0, match.index).split("\n").length,
+    );
 }
 
 function sourceFiles(dir: string): string[] {
@@ -126,6 +174,7 @@ const definedUnprefixed = new Set(
 const prefixOnly = [...themeVariables].filter(
   (name) => !definedUnprefixed.has(name),
 );
+const unprefixedReads = unprefixedReader(prefixOnly);
 
 // globals.css imports Tailwind with prefix(tw), which prefixes the theme's
 // variables too: @theme's --color-primary-500 is emitted as
@@ -149,58 +198,115 @@ describe("Tailwind theme variables", () => {
   });
 
   test("no source reads a prefixed-only theme variable without its tw prefix", () => {
+    // globals.css is scanned whole: Tailwind doesn't prefix a read inside an
+    // @theme value, so `--color-ring: var(--color-primary-500)` there reads
+    // an undefined variable too. Its definitions are never reads.
     const offenders = sourceFiles(srcDir).flatMap((file) => {
-      const isCss = file.endsWith(".css");
-      const raw = readFileSync(file, "utf8");
-      const text = withoutComments(
-        file === globalsPath ? withoutThemeBlocks(raw) : raw,
-        isCss,
-      );
-      return unprefixedReads(text, prefixOnly).map(
+      const text = withoutComments(readFileSync(file, "utf8"), file);
+      return unprefixedReads(text).map(
         (line) => `${path.relative(srcDir, file)}:${line}`,
       );
     });
     expect(offenders).toEqual([]);
   });
 
-  // The scan itself: it must catch every way a read is written, and nothing
-  // that isn't one.
-  test("the scan flags any unprefixed read, and no prefixed read or comment", () => {
-    const name = fc.constantFrom(...prefixOnly);
-    const space = fc.constantFrom("", " ", "\n  ");
-    const close = fc.constantFrom(")", ", #000)");
-    const syntax = fc.constantFrom("var", "tw:bg-");
-    fc.assert(
-      fc.property(name, space, close, syntax, (v, s, end, prefix) => {
-        const read = `${prefix}(${s}${v}${s}${end}`;
-        const reads = [
-          `const b = "${read}";`,
-          `const c = "https://example.org/"; const d = "${read}";`,
-        ].join("\n");
-        // The second read starts on the line after the first one ends.
-        const secondLine = 1 + read.split("\n").length;
-        expect(
-          unprefixedReads(withoutComments(reads, false), prefixOnly),
-        ).toEqual([1, secondLine]);
+  // The scan itself, in two parts: it flags every prefix-only name in every
+  // way a read is written, and it reads comments the way TypeScript and CSS
+  // do.
+  // Class names are built at run time: Tailwind scans this file too, and a
+  // class written out here would ship in the site's CSS.
+  const P = "tw:";
+  const readShapes = (name: string) =>
+    ["var(", `${P}bg-(`, `${P}bg-(color:`, `${P}text-(length:`].flatMap(
+      (open) =>
+        ["", " ", "\n  "].flatMap((space) =>
+          [")", ", #000)"].map(
+            (close) => `${open}${space}${name}${space}${close}`,
+          ),
+        ),
+    );
+  const prefixed = (name: string) => `--tw-${name.slice(2)}`;
 
-        const prefixed = `--tw-${v.slice(2)}`;
-        const harmless = [
-          `const c = "${prefix}(${s}${prefixed}${s}${end}";`,
-          `// ${read}`,
-          `const d = 1; // ${read}`,
-          `/* ${read} */`,
-          `{/* ${read} */}`,
-          `const e = "tw:grid-cols-[${v}(4)_1fr]";`,
-          `const f = "https://example.org/"; const g = "${prefixed})";`,
-        ].join("\n");
+  test("the scan flags every prefix-only name in every read shape, and no prefixed one", () => {
+    const missed = prefixOnly.flatMap((name) =>
+      readShapes(name).filter((read) => unprefixedReads(read).length !== 1),
+    );
+    const flagged = prefixOnly.flatMap((name) =>
+      readShapes(prefixed(name)).filter(
+        (read) => unprefixedReads(read).length !== 0,
+      ),
+    );
+    expect(prefixOnly.length).toBeGreaterThan(400);
+    expect({ missed, flagged }).toEqual({ missed: [], flagged: [] });
+  });
+
+  // Source around a read, `R`. In code, the read must be flagged on the line
+  // it starts on; in a comment, never.
+  const inCode: [string, string][] = [
+    ["x.tsx", "const b = `R`;"],
+    ["x.tsx", 'const c = "https://example.org/"; const d = `R`;'],
+    ["x.tsx", `const u = \`${P}bg-[url(//policyengine.org/a.png)] R\`;`],
+    [
+      "x.tsx",
+      "// Tool zones live under /us/*.\nconst x = `R`;\n/** Docs. */\nconst y = 1;",
+    ],
+    ["x.tsx", "const t = `// R`;"],
+    ["x.tsx", "const r = /[/*]/;\nconst s = `R`;\n/** Docs. */"],
+    // A JSDoc tag's text is no comment of its own.
+    ["x.tsx", "/** @param a {@link b} // c */ const s = `R`;"],
+    ["x.tsx", "const el = <p>// see</p>; const s = `R`;"],
+    ["x.tsx", "const el = <p>/* see</p>; const s = `R`; /* x */"],
+    ["x.tsx", 'const el = <a href="//example.org" className="R" />;'],
+    ["x.ts", "const t = `${x} R`; // x"],
+    ["x.css", ".a {\n  color: R;\n}"],
+    ["x.css", "@theme {\n  --color-ring: R;\n}"],
+    ["x.css", '.b { content: "/*"; color: R; } /* x */'],
+    ["x.css", "a {\n  background: url(//example.org/a.png), R;\n}"],
+  ];
+  const inComments: [string, string][] = [
+    ["x.tsx", "// R"],
+    ["x.tsx", "const d = 1; // R"],
+    ["x.tsx", "/* R */"],
+    ["x.tsx", "/** R */\nconst f = 1;"],
+    ["x.tsx", "const el = <div>{/* R */}</div>;"],
+    ["x.tsx", "const t = `${x /* R */}`;"],
+    ["x.tsx", "// under /us/* R"],
+    ["x.css", "/* R */"],
+    ["x.css", ".a { color: red; } /* R */"],
+  ];
+
+  test("the scan flags reads in code, and none in comments", () => {
+    const name = fc.constantFrom(...prefixOnly);
+    const shape = fc.integer({ min: 0, max: readShapes("--x").length - 1 });
+    const blanked = (text: string, file: string) => {
+      const out = withoutComments(text, file);
+      // Blanking keeps every line break, so line numbers still match.
+      expect(out.replace(/[^\n]/g, "")).toBe(text.replace(/[^\n]/g, ""));
+      expect(out).toHaveLength(text.length);
+      return out;
+    };
+    fc.assert(
+      fc.property(name, shape, (v, i) => {
+        const read = readShapes(v)[i];
+        for (const [file, around] of inCode) {
+          const text = around.replace("R", read);
+          const line = text.slice(0, text.indexOf(read)).split("\n").length;
+          expect(unprefixedReads(blanked(text, file))).toEqual([line]);
+          const safe = around.replace("R", readShapes(prefixed(v))[i]);
+          expect(unprefixedReads(blanked(safe, file))).toEqual([]);
+        }
+        for (const [file, around] of inComments) {
+          // A read spanning lines leaves a line comment, but nothing before
+          // its name is left to read.
+          const text = around.replace("R", read);
+          expect(unprefixedReads(blanked(text, file))).toEqual([]);
+        }
+        // Tailwind's --spacing() function reads the prefixed variable.
         expect(
-          unprefixedReads(withoutComments(harmless, false), prefixOnly),
-        ).toEqual([]);
-        expect(
-          unprefixedReads(withoutComments(`/* ${read} */`, true), prefixOnly),
+          unprefixedReads(`const e = "${P}grid-cols-[${v}(4)_1fr]";`),
         ).toEqual([]);
       }),
-      { numRuns: 200 },
+      { numRuns: 300 },
     );
   });
 });

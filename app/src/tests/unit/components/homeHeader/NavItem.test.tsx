@@ -218,12 +218,20 @@ describe('NavItem', () => {
       event.preventDefault();
     }
 
+    /** The navigations jsdom reported: it can't navigate, so it logs an error. */
+    function navigationsReported(consoleError: { mock: { calls: unknown[][] } }) {
+      return consoleError.mock.calls
+        .map(([first]) => String((first as Error | undefined)?.message ?? first))
+        .filter((message) => message.includes('Not implemented: navigation'));
+    }
+
     beforeEach(() => {
       defaultPreventedByApp = undefined;
     });
 
     afterEach(() => {
       document.removeEventListener('click', preventNavigation);
+      vi.restoreAllMocks();
     });
 
     test('given a row linking to another site then it is a link to that URL', () => {
@@ -247,7 +255,6 @@ describe('NavItem', () => {
       'given %s click on a row linking to another site then the browser follows it, not the router',
       (_, modifiers) => {
         // Given
-        document.addEventListener('click', preventNavigation);
         const { push } = renderOpen([
           { label: 'GiveCalc', href: 'https://policyengine.org/us/givecalc' },
         ]);
@@ -255,13 +262,19 @@ describe('NavItem', () => {
           'aria-expanded',
           'true'
         );
+        // Added after the menu opens, so the listener sees only the row's click.
+        document.addEventListener('click', preventNavigation);
+        const consoleError = vi.spyOn(console, 'error');
 
         // When
         fireEvent.click(screen.getByRole('link', { name: 'GiveCalc' }), modifiers);
 
         // Then
+        // The click reached the document with its default intact, and nothing
+        // navigated another way.
         expect(defaultPreventedByApp).toBe(false);
         expect(push).not.toHaveBeenCalled();
+        expect(navigationsReported(consoleError)).toEqual([]);
         expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
           'aria-expanded',
           'false'
@@ -292,6 +305,12 @@ describe('NavItem', () => {
         hash: { href: (slug) => `#${slug}`, link: true },
         mailto: { href: (slug) => `mailto:${slug}@policyengine.org`, link: true },
         relative: { href: (slug) => slug, link: true },
+        // The URL parser drops tabs and line breaks, so "/<tab>/host" names
+        // another host. Any href with one is left for the browser to parse.
+        tab: { href: (slug) => `/\t/policyengine.org/us/${slug}`, link: true },
+        newline: { href: (slug) => `/\n/policyengine.org/us/${slug}`, link: true },
+        carriageReturn: { href: (slug) => `/\r/policyengine.org/us/${slug}`, link: true },
+        inAppWithTab: { href: (slug) => `/us/\t${slug}`, link: true },
         inApp: { href: (slug) => `/us/${slug}`, link: false },
         callback: { link: false },
       };
