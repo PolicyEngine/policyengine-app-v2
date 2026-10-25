@@ -383,6 +383,19 @@ const nextConfig: NextConfig = {
     };
   },
 
+  // Tailwind builds the CSS from every file it scans, but a production build
+  // that restored webpack's persistent cache kept CSS compiled from older
+  // source when only server-rendered files had changed: classes added to
+  // HomeToolsPreview and SupporterCard never reached production. The client
+  // build's cache has no record of those files. So production builds skip the
+  // cache; dev runs on Turbopack and is unaffected.
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      config.cache = false;
+    }
+    return config;
+  },
+
   async headers() {
     return [
       {
