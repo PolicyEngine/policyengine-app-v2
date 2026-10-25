@@ -34,6 +34,15 @@ vi.mock("@/data/apps.json", () => ({
       description: "Mocked tracker copy.",
       image: "mocked-tracker.webp",
     },
+    // Slugs repeat across countries (both have a "marriage" app), so a UK
+    // entry may share a featured US slug without being featured itself.
+    {
+      slug: "bill-tracker",
+      countryId: "uk",
+      title: "Mocked UK twin",
+      description: "Mocked UK twin copy.",
+      image: "mocked-uk-twin.webp",
+    },
   ],
 }));
 
@@ -72,5 +81,11 @@ describe("homepage sections over mocked apps.json", () => {
       "src",
       "/assets/posts/mocked-tracker.webp",
     );
+  });
+
+  test("features another country's entry only where that country lists its slug", () => {
+    const { container } = render(<HomeFeaturedResearch countryId="uk" />);
+
+    expect(container).toBeEmptyDOMElement();
   });
 });
