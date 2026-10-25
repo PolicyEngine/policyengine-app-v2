@@ -1,22 +1,10 @@
 import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { NavItemSetup } from '@/components/homeHeader/NavItem';
 import { WEBSITE_URL } from '@/constants';
-import featuredToolsData from '@/data/featuredTools.json';
 import { colors, spacing, typography } from '@/designTokens';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
-
-interface FeaturedToolEntry {
-  slug: string;
-  label: string;
-}
-
-const featuredToolsByCountry: Record<string, FeaturedToolEntry[]> = featuredToolsData;
-
-/** The Tools menu shared with the website header (website/src/lib/featuredTools.ts). */
-function getFeaturedTools(countryId: string): FeaturedToolEntry[] {
-  return Object.hasOwn(featuredToolsByCountry, countryId) ? featuredToolsByCountry[countryId] : [];
-}
+import { getFeaturedToolLinks } from '@/libs/featuredTools';
 
 interface HeaderNavigationProps {
   navbarOpened?: boolean;
@@ -31,7 +19,8 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
   // Vercel rewrites — use absolute URLs so the browser performs a full
   // navigation across zones rather than routing client-side.
   const modelBase = `${WEBSITE_URL}/${countryId}/model`;
-  const featuredTools = getFeaturedTools(countryId);
+  // The same Tools links as the website header and the flagship top bar.
+  const toolLinks = getFeaturedToolLinks(countryId);
 
   const navItems: NavItemSetup[] = [
     {
@@ -41,23 +30,8 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
     },
     // Each tool is also a separate app on the website's domain, so its links
     // are absolute too.
-    ...(featuredTools.length > 0
-      ? [
-          {
-            label: 'Tools',
-            hasDropdown: true,
-            dropdownItems: [
-              ...featuredTools.map((tool) => ({
-                label: tool.label,
-                href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
-              })),
-              {
-                label: 'All interactive tools',
-                href: `${WEBSITE_URL}/${countryId}/research?types=interactive`,
-              },
-            ],
-          },
-        ]
+    ...(toolLinks.length > 0
+      ? [{ label: 'Tools', hasDropdown: true, dropdownItems: toolLinks }]
       : []),
     {
       label: 'Model',

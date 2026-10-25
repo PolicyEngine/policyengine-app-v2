@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
   IconAdjustments,
   IconDotsVertical,
@@ -19,6 +19,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDraftReform } from '@/libs/draftReform';
+import { getFeaturedToolLinks } from '@/libs/featuredTools';
 import AuthMenu from '../auth/AuthMenu';
 import FlagshipBrand from './FlagshipBrand';
 
@@ -26,6 +27,32 @@ const NAV_ITEMS = [
   { slug: 'build', label: 'Build', icon: IconAdjustments },
   { slug: 'reforms', label: 'Reforms', icon: IconGavel },
 ];
+
+/** The website links as menu rows, with a separator between groups. */
+function MoreLinkItems({
+  groups,
+  className,
+}: {
+  groups: { label: string; href: string }[][];
+  className?: string;
+}) {
+  return (
+    <>
+      {groups.map((group, index) => (
+        <Fragment key={group[0].href}>
+          {index > 0 && <DropdownMenuSeparator />}
+          {group.map((link) => (
+            <DropdownMenuItem key={link.href} asChild className={className}>
+              <a href={link.href} style={{ cursor: 'pointer' }}>
+                {link.label}
+              </a>
+            </DropdownMenuItem>
+          ))}
+        </Fragment>
+      ))}
+    </>
+  );
+}
 
 /** Height of the bar. */
 export const FLAGSHIP_TOP_BAR_HEIGHT = 56;
@@ -69,14 +96,21 @@ export default function FlagshipTopBar() {
       : 0;
   const parameterWord = draftCount === 1 ? 'parameter' : 'parameters';
 
-  const moreLinks = [
-    { label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
+  const researchLink = { label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` };
+  const otherLinks = [
     { label: 'Model documentation', href: `${WEBSITE_URL}/${countryId}/model` },
     { label: 'API', href: `${WEBSITE_URL}/${countryId}/api` },
     { label: 'About', href: `${WEBSITE_URL}/${countryId}/team` },
     { label: 'Donate', href: `${WEBSITE_URL}/${countryId}/donate` },
     { label: 'GitHub', href: 'https://github.com/PolicyEngine' },
   ];
+  // A country's featured interactive tools sit after Research, set apart
+  // as their own group; a country without any keeps one plain list.
+  const toolLinks = getFeaturedToolLinks(countryId);
+  const moreLinkGroups =
+    toolLinks.length > 0
+      ? [[researchLink], toolLinks, otherLinks]
+      : [[researchLink, ...otherLinks]];
 
   return (
     <header
@@ -148,13 +182,7 @@ export default function FlagshipTopBar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            {moreLinks.map((link) => (
-              <DropdownMenuItem key={link.href} asChild>
-                <a href={link.href} style={{ cursor: 'pointer' }}>
-                  {link.label}
-                </a>
-              </DropdownMenuItem>
-            ))}
+            <MoreLinkItems groups={moreLinkGroups} />
           </DropdownMenuContent>
         </DropdownMenu>
       </nav>
@@ -191,7 +219,7 @@ export default function FlagshipTopBar() {
           </button>
         )}
 
-        {/* A phone's one menu: the sections, then the website links. */}
+        {/* A phone's one menu: the sections, then the website links and tools. */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -224,13 +252,7 @@ export default function FlagshipTopBar() {
               );
             })}
             <DropdownMenuSeparator />
-            {moreLinks.map((link) => (
-              <DropdownMenuItem key={link.href} asChild className="tw:min-h-10">
-                <a href={link.href} style={{ cursor: 'pointer' }}>
-                  {link.label}
-                </a>
-              </DropdownMenuItem>
-            ))}
+            <MoreLinkItems groups={moreLinkGroups} className="tw:min-h-10" />
           </DropdownMenuContent>
         </DropdownMenu>
 

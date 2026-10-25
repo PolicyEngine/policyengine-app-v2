@@ -1,22 +1,58 @@
 import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
+import featuredToolsData from '@/data/featuredTools.json';
+import { countryIds } from '@/libs/countries';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
 
 const mockNavigate = vi.fn();
+let mockPathname = '/us/build';
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useLocation: () => ({ pathname: '/us/build', search: '' }),
-    useParams: () => ({ countryId: 'us' }),
+    useLocation: () => ({ pathname: mockPathname, search: '' }),
+    useParams: () => ({ countryId: mockPathname.split('/')[1] }),
   };
 });
 
-function renderTopBar() {
-  return renderWithCountry(<FlagshipTopBar />, 'us', '/us/build');
+const WEBSITE_URL = 'https://policyengine.org';
+
+/** The website links after the tools group, the same in every country. */
+const OTHER_LINK_ROWS = ['Model documentation', 'API', 'About', 'Donate', 'GitHub'];
+
+function renderTopBar(countryId = 'us') {
+  mockPathname = `/${countryId}/build`;
+  return renderWithCountry(<FlagshipTopBar />, countryId, mockPathname);
+}
+
+async function openMenu(name: string | RegExp) {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name }));
+  return screen.findByRole('menu');
+}
+
+const openMoreMenu = () => openMenu(/more policyengine links/i);
+const openPhoneMenu = () => openMenu('Menu');
+
+/** A menu's rows in order, each separator as '—'. */
+function menuRows(menu: HTMLElement) {
+  return Array.from(menu.children).map((row) =>
+    row.getAttribute('role') === 'separator' ? '—' : row.textContent
+  );
+}
+
+/** A menu's link rows from `from` on, as label and href, each separator as '—'. */
+function linkRows(menu: HTMLElement, from = 0) {
+  return Array.from(menu.children)
+    .slice(from)
+    .map((row) =>
+      row.getAttribute('role') === 'separator'
+        ? '—'
+        : { tag: row.tagName, label: row.textContent, href: row.getAttribute('href') }
+    );
 }
 
 describe('FlagshipTopBar', () => {
@@ -128,5 +164,183 @@ describe('FlagshipTopBar', () => {
 
     // Then
     expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
+  });
+  describe('interactive tools', () => {
+    test('given the US then the more menu lists its tools after Research, as their own group', async () => {
+      // Given
+      renderTopBar('us');
+
+      // When
+      const menu = await openMoreMenu();
+
+      // Then
+      expect(menuRows(menu)).toEqual([
+        'Research',
+        '—',
+        'CliffWatch',
+        'OBBBA household explorer',
+        'State legislative tracker',
+        'All interactive tools',
+        '—',
+        ...OTHER_LINK_ROWS,
+      ]);
+    });
+
+    test('given the US then each tool row links to its page on the website', async () => {
+      // Given
+      renderTopBar('us');
+
+      // When
+      await openMoreMenu();
+
+      // Then
+      expect(screen.getByRole('menuitem', { name: 'CliffWatch' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/us/cliffwatch`
+      );
+      expect(screen.getByRole('menuitem', { name: 'OBBBA household explorer' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/us/obbba-households`
+      );
+      expect(screen.getByRole('menuitem', { name: 'State legislative tracker' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/us/bill-tracker`
+      );
+      expect(screen.getByRole('menuitem', { name: 'All interactive tools' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/us/research?types=interactive`
+      );
+    });
+
+    test("given the US then a phone's menu lists the tools after the sections and Research", async () => {
+      // Given
+      renderTopBar('us');
+
+      // When
+      const menu = await openPhoneMenu();
+
+      // Then
+      expect(menuRows(menu)).toEqual([
+        'Build',
+        'Reforms',
+        '—',
+        'Research',
+        '—',
+        'CliffWatch',
+        'OBBBA household explorer',
+        'State legislative tracker',
+        'All interactive tools',
+        '—',
+        ...OTHER_LINK_ROWS,
+      ]);
+      expect(screen.getByRole('menuitem', { name: 'CliffWatch' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/us/cliffwatch`
+      );
+    });
+
+    // The UK calculator uses this bar once NEXT_PUBLIC_FLAGSHIP_SHELL_UK is "true".
+    test('given the UK then the menus offer UK CliffWatch and no US-only tool', async () => {
+      // Given
+      renderTopBar('uk');
+
+      // When
+      const menu = await openMoreMenu();
+
+      // Then
+      expect(menuRows(menu)).toEqual([
+        'Research',
+        '—',
+        'UK CliffWatch',
+        'All interactive tools',
+        '—',
+        ...OTHER_LINK_ROWS,
+      ]);
+      expect(screen.getByRole('menuitem', { name: 'UK CliffWatch' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/uk/uk-cliff-watch`
+      );
+      expect(screen.getByRole('menuitem', { name: 'All interactive tools' })).toHaveAttribute(
+        'href',
+        `${WEBSITE_URL}/uk/research?types=interactive`
+      );
+      const hrefs = screen.getAllByRole('menuitem').map((row) => row.getAttribute('href'));
+      expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/cliffwatch`);
+      expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/obbba-households`);
+      expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/bill-tracker`);
+    });
+
+    test.each(['ca', 'ng', 'il'])(
+      'given %s, which has no featured tools, then the menus are one plain list with no tool rows',
+      async (countryId) => {
+        expect(Object.hasOwn(featuredToolsData, countryId)).toBe(false);
+
+        // Given
+        const { unmount } = renderTopBar(countryId);
+
+        // When
+        const moreMenu = await openMoreMenu();
+
+        // Then
+        expect(menuRows(moreMenu)).toEqual(['Research', ...OTHER_LINK_ROWS]);
+
+        // And a phone's menu likewise
+        unmount();
+        renderTopBar(countryId);
+        const phoneMenu = await openPhoneMenu();
+        expect(menuRows(phoneMenu)).toEqual([
+          'Build',
+          'Reforms',
+          '—',
+          'Research',
+          ...OTHER_LINK_ROWS,
+        ]);
+      }
+    );
+
+    test.each(Object.entries(featuredToolsData))(
+      "given %s then the more menu's tool group is the shared list, in order, as full-page links",
+      async (countryId, tools) => {
+        // Given
+        renderTopBar(countryId);
+
+        // When
+        const menu = await openMoreMenu();
+
+        // Then: the group between the first two separators
+        const rows = linkRows(menu);
+        const start = rows.indexOf('—') + 1;
+        const end = rows.indexOf('—', start);
+        expect(rows.slice(start, end)).toEqual([
+          ...tools.map((tool) => ({
+            tag: 'A',
+            label: tool.label,
+            href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
+          })),
+          {
+            tag: 'A',
+            label: 'All interactive tools',
+            href: `${WEBSITE_URL}/${countryId}/research?types=interactive`,
+          },
+        ]);
+      }
+    );
+
+    test.each(countryIds)(
+      "given %s then a phone's menu offers the same website links as the more menu, in order",
+      async (countryId) => {
+        // Given
+        const { unmount } = renderTopBar(countryId);
+        const moreRows = linkRows(await openMoreMenu());
+        unmount();
+
+        // When
+        renderTopBar(countryId);
+        const phoneMenu = await openPhoneMenu();
+
+        // Then: everything after the sections and their separator
+        expect(linkRows(phoneMenu, 3)).toEqual(moreRows);
+      }
+    );
   });
 });
