@@ -8,6 +8,13 @@ const WEBSITE_URL = 'https://policyengine.org';
 
 const listedCountries = Object.keys(featuredToolsData);
 
+/** The list's tools for a country: none unless the list has it as its own key. */
+function listedTools(countryId: string) {
+  return Object.hasOwn(featuredToolsData, countryId)
+    ? featuredToolsData[countryId as keyof typeof featuredToolsData]
+    : [];
+}
+
 /** Country strings: the listed and supported ones, keys every object has, and anything else. */
 const countryStrings = fc.oneof(
   fc.constantFrom(...listedCountries, ...countryIds),
@@ -16,31 +23,40 @@ const countryStrings = fc.oneof(
 );
 
 describe('getFeaturedToolLinks', () => {
-  test('given the US then it links its tools in list order, then all interactive tools', () => {
-    expect(getFeaturedToolLinks('us')).toEqual([
-      { label: 'CliffWatch', href: `${WEBSITE_URL}/us/cliffwatch` },
-      { label: 'OBBBA household explorer', href: `${WEBSITE_URL}/us/obbba-households` },
-      { label: 'State legislative tracker', href: `${WEBSITE_URL}/us/bill-tracker` },
-      { label: 'All interactive tools', href: `${WEBSITE_URL}/us/research?types=interactive` },
-    ]);
+  test('given the US then CliffWatch is among its links', () => {
+    expect(getFeaturedToolLinks('us')).toContainEqual({
+      label: 'CliffWatch',
+      href: `${WEBSITE_URL}/us/cliffwatch`,
+    });
   });
 
-  test.each(['ca', 'ng', 'il', '__proto__', 'constructor', 'toString', 'US', ''])(
-    'given %j, which has no featured tools, then there are no links',
-    (countryId) => {
-      expect(getFeaturedToolLinks(countryId)).toEqual([]);
-    }
-  );
+  test('given the UK then UK CliffWatch is among its links', () => {
+    expect(getFeaturedToolLinks('uk')).toContainEqual({
+      label: 'UK CliffWatch',
+      href: `${WEBSITE_URL}/uk/uk-cliff-watch`,
+    });
+  });
+
+  test.each([
+    ...countryIds.filter((countryId) => listedTools(countryId).length === 0),
+    '__proto__',
+    'constructor',
+    'toString',
+    'US',
+    '',
+  ])('given %j, which has no featured tools, then there are no links', (countryId) => {
+    expect(getFeaturedToolLinks(countryId)).toEqual([]);
+  });
 
   test("given any country string then the links are its listed tools' pages, then the interactive filter", () => {
     fc.assert(
       fc.property(countryStrings, (countryId) => {
         const links = getFeaturedToolLinks(countryId);
-        if (!Object.hasOwn(featuredToolsData, countryId)) {
+        const tools = listedTools(countryId);
+        if (tools.length === 0) {
           expect(links).toEqual([]);
           return;
         }
-        const tools = featuredToolsData[countryId as keyof typeof featuredToolsData];
         expect(links).toEqual([
           ...tools.map((tool) => ({
             label: tool.label,

@@ -23,6 +23,14 @@ const WEBSITE_URL = 'https://policyengine.org';
 /** The website links after the tools group, the same in every country. */
 const OTHER_LINK_ROWS = ['Model documentation', 'API', 'About', 'Donate', 'GitHub'];
 
+/** The shared list's countries and their tools, so these tests follow the list. */
+const COUNTRIES_WITH_TOOLS = Object.entries(featuredToolsData).filter(
+  ([, tools]) => tools.length > 0
+);
+const COUNTRIES_WITHOUT_TOOLS = countryIds.filter(
+  (countryId) => !COUNTRIES_WITH_TOOLS.some(([listed]) => listed === countryId)
+);
+
 function renderTopBar(countryId = 'us') {
   mockPathname = `/${countryId}/build`;
   return renderWithCountry(<FlagshipTopBar />, countryId, mockPathname);
@@ -166,27 +174,7 @@ describe('FlagshipTopBar', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
   });
   describe('interactive tools', () => {
-    test('given the US then the more menu lists its tools after Research, as their own group', async () => {
-      // Given
-      renderTopBar('us');
-
-      // When
-      const menu = await openMoreMenu();
-
-      // Then
-      expect(menuRows(menu)).toEqual([
-        'Research',
-        '—',
-        'CliffWatch',
-        'OBBBA household explorer',
-        'State legislative tracker',
-        'All interactive tools',
-        '—',
-        ...OTHER_LINK_ROWS,
-      ]);
-    });
-
-    test('given the US then each tool row links to its page on the website', async () => {
+    test('given the US then CliffWatch links its page on the website', async () => {
       // Given
       renderTopBar('us');
 
@@ -198,83 +186,55 @@ describe('FlagshipTopBar', () => {
         'href',
         `${WEBSITE_URL}/us/cliffwatch`
       );
-      expect(screen.getByRole('menuitem', { name: 'OBBBA household explorer' })).toHaveAttribute(
-        'href',
-        `${WEBSITE_URL}/us/obbba-households`
-      );
-      expect(screen.getByRole('menuitem', { name: 'State legislative tracker' })).toHaveAttribute(
-        'href',
-        `${WEBSITE_URL}/us/bill-tracker`
-      );
-      expect(screen.getByRole('menuitem', { name: 'All interactive tools' })).toHaveAttribute(
-        'href',
-        `${WEBSITE_URL}/us/research?types=interactive`
-      );
-    });
-
-    test("given the US then a phone's menu lists the tools after the sections and Research", async () => {
-      // Given
-      renderTopBar('us');
-
-      // When
-      const menu = await openPhoneMenu();
-
-      // Then
-      expect(menuRows(menu)).toEqual([
-        'Build',
-        'Reforms',
-        '—',
-        'Research',
-        '—',
-        'CliffWatch',
-        'OBBBA household explorer',
-        'State legislative tracker',
-        'All interactive tools',
-        '—',
-        ...OTHER_LINK_ROWS,
-      ]);
-      expect(screen.getByRole('menuitem', { name: 'CliffWatch' })).toHaveAttribute(
-        'href',
-        `${WEBSITE_URL}/us/cliffwatch`
-      );
     });
 
     // The UK calculator uses this bar once NEXT_PUBLIC_FLAGSHIP_SHELL_UK is "true".
-    test('given the UK then the menus offer UK CliffWatch and no US-only tool', async () => {
+    test('given the UK then UK CliffWatch links its page on the website', async () => {
       // Given
       renderTopBar('uk');
 
       // When
-      const menu = await openMoreMenu();
+      await openMoreMenu();
 
       // Then
-      expect(menuRows(menu)).toEqual([
-        'Research',
-        '—',
-        'UK CliffWatch',
-        'All interactive tools',
-        '—',
-        ...OTHER_LINK_ROWS,
-      ]);
       expect(screen.getByRole('menuitem', { name: 'UK CliffWatch' })).toHaveAttribute(
         'href',
         `${WEBSITE_URL}/uk/uk-cliff-watch`
       );
-      expect(screen.getByRole('menuitem', { name: 'All interactive tools' })).toHaveAttribute(
-        'href',
-        `${WEBSITE_URL}/uk/research?types=interactive`
-      );
-      const hrefs = screen.getAllByRole('menuitem').map((row) => row.getAttribute('href'));
-      expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/cliffwatch`);
-      expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/obbba-households`);
-      expect(hrefs).not.toContain(`${WEBSITE_URL}/uk/bill-tracker`);
     });
 
-    test.each(['ca', 'ng', 'il'])(
+    test.each(COUNTRIES_WITH_TOOLS)(
+      'given %s then the more menu lists its tools after Research, as their own group',
+      async (countryId, tools) => {
+        // Given
+        renderTopBar(countryId);
+
+        // When
+        const menu = await openMoreMenu();
+
+        // Then
+        expect(linkRows(menu)).toEqual([
+          { tag: 'A', label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
+          '—',
+          ...tools.map((tool) => ({
+            tag: 'A',
+            label: tool.label,
+            href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
+          })),
+          {
+            tag: 'A',
+            label: 'All interactive tools',
+            href: `${WEBSITE_URL}/${countryId}/research?types=interactive`,
+          },
+          '—',
+          ...OTHER_LINK_ROWS.map((label) => expect.objectContaining({ label })),
+        ]);
+      }
+    );
+
+    test.each(COUNTRIES_WITHOUT_TOOLS)(
       'given %s, which has no featured tools, then the menus are one plain list with no tool rows',
       async (countryId) => {
-        expect(Object.hasOwn(featuredToolsData, countryId)).toBe(false);
-
         // Given
         const { unmount } = renderTopBar(countryId);
 
@@ -298,36 +258,8 @@ describe('FlagshipTopBar', () => {
       }
     );
 
-    test.each(Object.entries(featuredToolsData))(
-      "given %s then the more menu's tool group is the shared list, in order, as full-page links",
-      async (countryId, tools) => {
-        // Given
-        renderTopBar(countryId);
-
-        // When
-        const menu = await openMoreMenu();
-
-        // Then: the group between the first two separators
-        const rows = linkRows(menu);
-        const start = rows.indexOf('—') + 1;
-        const end = rows.indexOf('—', start);
-        expect(rows.slice(start, end)).toEqual([
-          ...tools.map((tool) => ({
-            tag: 'A',
-            label: tool.label,
-            href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
-          })),
-          {
-            tag: 'A',
-            label: 'All interactive tools',
-            href: `${WEBSITE_URL}/${countryId}/research?types=interactive`,
-          },
-        ]);
-      }
-    );
-
     test.each(countryIds)(
-      "given %s then a phone's menu offers the same website links as the more menu, in order",
+      "given %s then a phone's menu offers the sections, then the same website links as the more menu, in order",
       async (countryId) => {
         // Given
         const { unmount } = renderTopBar(countryId);
@@ -338,7 +270,8 @@ describe('FlagshipTopBar', () => {
         renderTopBar(countryId);
         const phoneMenu = await openPhoneMenu();
 
-        // Then: everything after the sections and their separator
+        // Then
+        expect(menuRows(phoneMenu).slice(0, 3)).toEqual(['Build', 'Reforms', '—']);
         expect(linkRows(phoneMenu, 3)).toEqual(moreRows);
       }
     );
