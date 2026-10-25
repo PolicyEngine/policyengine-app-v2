@@ -38,7 +38,7 @@ function cssEscape(value: string): string {
   for (let i = 0; i < value.length; i++) {
     const code = value.charCodeAt(i);
     const digit = code >= 0x30 && code <= 0x39;
-    if (code === 0) out += "�";
+    if (code === 0) out += "\uFFFD";
     else if (
       (code >= 0x1 && code <= 0x1f) ||
       code === 0x7f ||
@@ -104,8 +104,8 @@ function runScript(...args: string[]) {
 
 describe("selectorClasses", () => {
   // Any class names, escaped as CSSOM does or as all-hex escapes, in any
-  // selector shape, come back exactly, in order. Dots in strings, attribute
-  // selectors and escaped IDs aren't classes.
+  // selector shape, come back exactly, in order. Dots in strings and escaped
+  // dots, as in IDs and attribute values, aren't classes.
   test("given any selector then it returns exactly the classes it names", () => {
     const name = fc
       .string({ unit: "grapheme", minLength: 1, maxLength: 10 })
@@ -119,6 +119,7 @@ describe("selectorClasses", () => {
         ":hover",
         "::after",
         '[data-x=".fake"]',
+        "[data-x=a\\.b]",
         "[title='a.b' i]",
         ':lang("en.x")',
         ":nth-child(2n+1)",
@@ -151,9 +152,9 @@ describe("selectorClasses", () => {
     [".\\31 0", ["10"]],
     [".\\000031x", ["1x"]],
     [".a\\\r\nb", ["a"]],
-    [".\\d800", ["�"]],
-    [".\\110000", ["�"]],
-    [".x\\", ["x�"]],
+    [".\\d800", ["\uFFFD"]],
+    [".\\110000", ["\uFFFD"]],
+    [".x\\", ["x\uFFFD"]],
     ["[unclosed='.a", []],
     [".", []],
   ])("given %j then it returns %j", (selector, names) => {

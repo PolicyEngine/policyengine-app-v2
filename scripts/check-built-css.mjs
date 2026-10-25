@@ -34,7 +34,7 @@ function readEscape(text, start) {
   }
   if (!hex) {
     const codePoint = text.codePointAt(i);
-    if (codePoint === undefined) return ["�", i];
+    if (codePoint === undefined) return ["\uFFFD", i];
     const char = String.fromCodePoint(codePoint);
     return [char, i + char.length];
   }
@@ -46,7 +46,7 @@ function readEscape(text, start) {
     codePoint !== 0 &&
     codePoint <= 0x10ffff &&
     !(codePoint >= 0xd800 && codePoint <= 0xdfff);
-  return [valid ? String.fromCodePoint(codePoint) : "�", i];
+  return [valid ? String.fromCodePoint(codePoint) : "\uFFFD", i];
 }
 
 function isNameChar(char) {
@@ -58,28 +58,19 @@ function startsEscape(text, i) {
   return text[i] === "\\" && !/[\n\r\f]/.test(text[i + 1] ?? "");
 }
 
-/** The index just past the string or bracketed part that opens at `start`. */
-function skipPast(text, start, close) {
+/** The index just past the string whose quote is at `start`. */
+function skipString(text, start) {
   let i = start + 1;
-  let quote = null;
-  while (i < text.length) {
-    const char = text[i];
-    if (char === "\\") i += 2;
-    else if (quote) {
-      if (char === quote) quote = null;
-      i++;
-    } else if (char === close) return i + 1;
-    else {
-      if (close === "]" && (char === '"' || char === "'")) quote = char;
-      i++;
-    }
+  while (i < text.length && text[i] !== text[start]) {
+    i += text[i] === "\\" ? 2 : 1;
   }
-  return i;
+  return i + 1;
 }
 
 /**
  * The class names a selector names, unescaped: `.tw\:mt-\[53px\]` names
- * `tw:mt-[53px]`. Dots inside strings and attribute selectors don't count.
+ * `tw:mt-[53px]`. A dot inside a string or an escape isn't a class, and an
+ * attribute value can only hold a dot in one of those.
  */
 export function selectorClasses(selector) {
   const names = [];
@@ -89,9 +80,7 @@ export function selectorClasses(selector) {
     if (startsEscape(selector, i)) {
       i = readEscape(selector, i)[1];
     } else if (char === '"' || char === "'") {
-      i = skipPast(selector, i, char);
-    } else if (char === "[") {
-      i = skipPast(selector, i, "]");
+      i = skipString(selector, i);
     } else if (char === ".") {
       let name = "";
       i++;
@@ -210,7 +199,7 @@ function count(n, one, many) {
 
 function list(names) {
   const shown = names.slice(0, 20).map((name) => `    ${name}`);
-  if (names.length > 20) shown.push(`    … and ${names.length - 20} more`);
+  if (names.length > 20) shown.push(`    and ${names.length - 20} more`);
   return shown.join("\n");
 }
 
