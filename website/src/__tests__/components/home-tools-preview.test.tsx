@@ -65,6 +65,17 @@ describe("HomeToolsPreview", () => {
     }
   });
 
+  test("given the US homepage then the tracker card shows the list's copy", () => {
+    render(<HomeToolsPreview countryId="us" />);
+    const tracker = getFeaturedTools("us").find(
+      (tool) => tool.slug === "bill-tracker",
+    )!;
+
+    expect(
+      screen.getByRole("link", { name: /State legislative tracker/ }),
+    ).toHaveTextContent(tracker.description);
+  });
+
   test("given the US homepage then links all interactive tools", () => {
     render(<HomeToolsPreview countryId="us" />);
 

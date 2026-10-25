@@ -39,7 +39,8 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       href: getWebsitePath('/research'),
       hasDropdown: false,
     },
-    // Each tool is also a separate app behind a Vercel rewrite.
+    // Each tool is also a separate app on the website's domain, so its links
+    // are absolute too.
     ...(featuredTools.length > 0
       ? [
           {

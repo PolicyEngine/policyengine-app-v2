@@ -58,7 +58,9 @@ describe("Header tools menu", () => {
     ]);
   });
 
-  test("sizes the dropdown panel to its longest row", () => {
+  // jsdom has no layout, so these two check the styles that do the work, not
+  // the wrapping or scrolling they cause (checked in a browser on the PR).
+  test("gives the dropdown panel a max-content width over its 220px minimum", () => {
     render(<Header />);
     const desktopNav = openDesktopToolsMenu();
 
@@ -72,7 +74,7 @@ describe("Header tools menu", () => {
     });
   });
 
-  test("lets the mobile menu scroll when its links outgrow the screen", () => {
+  test("lets the mobile menu panel scroll vertically", () => {
     render(<Header />);
 
     expect(mobileMenuPanel()).toHaveStyle({ overflowY: "auto" });
@@ -100,19 +102,33 @@ describe("Header tools menu", () => {
     ).toHaveAttribute("href", "/us/research?types=interactive");
   });
 
-  test("given the US site then every Tools link is a full page load", () => {
+  const US_TOOLS_ROWS = [
+    "CliffWatch",
+    "OBBBA household explorer",
+    "State legislative tracker",
+    "All interactive tools",
+  ];
+
+  test("given the US site then every desktop Tools link is a full page load", () => {
     render(<Header />);
     const desktopNav = openDesktopToolsMenu();
 
-    for (const name of [
-      "CliffWatch",
-      "OBBBA household explorer",
-      "State legislative tracker",
-      "All interactive tools",
-    ]) {
+    for (const name of US_TOOLS_ROWS) {
       expect(
         within(desktopNav).getByRole("link", { name }),
       ).not.toHaveAttribute("data-next-link");
+    }
+  });
+
+  test("given the US site then every mobile Tools link is a full page load", () => {
+    render(<Header />);
+    fireEvent.click(screen.getByRole("button", { name: "Toggle navigation" }));
+    const panel = mobileMenuPanel();
+
+    for (const name of US_TOOLS_ROWS) {
+      expect(within(panel).getByRole("link", { name })).not.toHaveAttribute(
+        "data-next-link",
+      );
     }
   });
 

@@ -40,7 +40,7 @@ function ToolCard({ tool }: { tool: FeaturedTool }) {
         <div className="tw:flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:rounded-container tw:bg-primary-50 tw:mb-lg">
           <ToolIcon size={22} color={colors.primary[600]} aria-hidden="true" />
         </div>
-        <p className="tw:text-xs tw:font-semibold tw:text-primary-600 tw:uppercase tw:tracking-wide tw:mb-sm">
+        <p className="tw:text-xs tw:font-semibold tw:text-primary-600 tw:uppercase tw:tracking-[0.06em] tw:mb-sm">
           Interactive tool
         </p>
         <p className="tw:text-xl tw:font-bold tw:leading-tight tw:text-gray-900 tw:mb-md">
@@ -60,9 +60,9 @@ function ToolCard({ tool }: { tool: FeaturedTool }) {
 export default function HomeToolsPreview({ countryId }: { countryId: string }) {
   if (countryId !== "us") return null;
 
-  const tools = getFeaturedTools(countryId).filter(
-    (tool) => tool.slug !== TRACKER_SLUG,
-  );
+  const featuredTools = getFeaturedTools(countryId);
+  const tracker = featuredTools.find((tool) => tool.slug === TRACKER_SLUG);
+  const tools = featuredTools.filter((tool) => tool.slug !== TRACKER_SLUG);
 
   return (
     <div
@@ -117,89 +117,94 @@ export default function HomeToolsPreview({ countryId }: { countryId: string }) {
         </div>
 
         {/* Tracker card */}
-        <a href={`/${countryId}/${TRACKER_SLUG}`} className={cardClassName}>
-          <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
-            {/* Left: Image */}
-            <div className="tw:relative tw:overflow-hidden tw:min-h-[200px] tw:md:min-h-[280px]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/posts/state-legislative-tracker.webp"
-                alt="2026 State legislative tracker showing US map with state session statuses"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                }}
-              />
-            </div>
+        {tracker && (
+          <a href={tracker.href} className={cardClassName}>
+            <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2">
+              {/* Left: Image */}
+              <div className="tw:relative tw:overflow-hidden tw:min-h-[200px] tw:sm:min-h-[280px]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/posts/state-legislative-tracker.webp"
+                  alt="2026 State legislative tracker showing US map with state session statuses"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                  }}
+                />
+              </div>
 
-            {/* Right: Content */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                padding: spacing["3xl"],
-              }}
-            >
-              <p
+              {/* Right: Content */}
+              <div
                 style={{
-                  color: colors.primary[600],
-                  fontWeight: typography.fontWeight.semibold,
-                  fontSize: typography.fontSize.xs,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  fontFamily: typography.fontFamily.primary,
-                  marginBottom: spacing.sm,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  padding: spacing["3xl"],
                 }}
               >
-                Interactive tool
-              </p>
-              <p
-                style={{
-                  fontWeight: typography.fontWeight.bold,
-                  fontSize: typography.fontSize["2xl"],
-                  lineHeight: typography.lineHeight.tight,
-                  fontFamily: typography.fontFamily.primary,
-                  color: colors.gray[900],
-                  marginBottom: spacing.md,
-                }}
-              >
-                2026 State legislative tracker
-              </p>
-              <p
-                style={{
-                  fontSize: typography.fontSize.base,
-                  color: colors.text.secondary,
-                  lineHeight: typography.lineHeight.relaxed,
-                  fontFamily: typography.fontFamily.primary,
-                  marginBottom: spacing.lg,
-                }}
-              >
-                Monitor tax and benefit legislation across all 50 US states. See
-                which states are in session, track active bills, and explore
-                PolicyEngine&apos;s research on state-level policy reforms.
-              </p>
-              <p
-                style={{
-                  fontWeight: typography.fontWeight.semibold,
-                  fontSize: typography.fontSize.sm,
-                  color: colors.primary[600],
-                  fontFamily: typography.fontFamily.primary,
-                }}
-              >
-                Explore the tracker &rarr;
-              </p>
+                <p
+                  style={{
+                    color: colors.primary[600],
+                    fontWeight: typography.fontWeight.semibold,
+                    fontSize: typography.fontSize.xs,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    fontFamily: typography.fontFamily.primary,
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  Interactive tool
+                </p>
+                <p
+                  style={{
+                    fontWeight: typography.fontWeight.bold,
+                    fontSize: typography.fontSize["2xl"],
+                    lineHeight: typography.lineHeight.tight,
+                    fontFamily: typography.fontFamily.primary,
+                    color: colors.gray[900],
+                    marginBottom: spacing.md,
+                  }}
+                >
+                  2026 State legislative tracker
+                </p>
+                <p
+                  style={{
+                    fontSize: typography.fontSize.base,
+                    color: colors.text.secondary,
+                    lineHeight: typography.lineHeight.relaxed,
+                    fontFamily: typography.fontFamily.primary,
+                    marginBottom: spacing.lg,
+                  }}
+                >
+                  {tracker.description}
+                </p>
+                <p
+                  style={{
+                    fontWeight: typography.fontWeight.semibold,
+                    fontSize: typography.fontSize.sm,
+                    color: colors.primary[600],
+                    fontFamily: typography.fontFamily.primary,
+                  }}
+                >
+                  Explore the tracker &rarr;
+                </p>
+              </div>
             </div>
-          </div>
-        </a>
+          </a>
+        )}
 
         {/* Other tools */}
         {tools.length > 0 && (
-          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-2xl tw:mt-2xl">
+          <div
+            className={cn(
+              "tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-2xl",
+              tracker && "tw:mt-2xl",
+            )}
+          >
             {tools.map((tool) => (
               <ToolCard key={tool.slug} tool={tool} />
             ))}

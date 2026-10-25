@@ -153,7 +153,38 @@ describe('HeaderNavigation', () => {
       }
     );
 
-    test('given the mobile menu then it scrolls when its links outgrow the screen', async () => {
+    test('given the US tools menu then its panel takes a max-content width over its 220px minimum', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US, '/us', 'calculator');
+
+      // When
+      await user.click(screen.getByRole('button', { name: /tools/i }));
+
+      // Then: row → padding div → panel. jsdom has no layout, so this checks
+      // the style rather than the wrapping it prevents.
+      const row = screen.getByRole('button', { name: 'OBBBA household explorer' });
+      expect(row.parentElement!.parentElement).toHaveStyle({
+        width: 'max-content',
+        minWidth: '220px',
+      });
+    });
+
+    test.each(['ca', 'ng', 'il'])(
+      'given %s, which has no featured tools, then there is no tools menu',
+      async (countryId) => {
+        // Given
+        renderWithCountry(<HeaderNavigation />, countryId, `/${countryId}`, 'calculator');
+
+        // Then
+        expect(screen.queryByRole('button', { name: /tools/i })).not.toBeInTheDocument();
+        const menu = await openMobileMenu();
+        expect(menu.queryByText('Tools')).not.toBeInTheDocument();
+        expect(menu.queryByRole('link', { name: 'All interactive tools' })).not.toBeInTheDocument();
+      }
+    );
+
+    test('given the mobile menu then its panel scrolls vertically', async () => {
       // Given
       renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US, '/us', 'calculator');
 
