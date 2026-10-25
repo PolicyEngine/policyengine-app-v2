@@ -4,16 +4,15 @@ import { describe, expect, test } from "vitest";
 
 import nextConfig from "../../../next.config";
 
-// Tailwind builds the CSS from every file it scans, but a production build
-// that restored webpack's persistent cache kept CSS compiled from older source
-// when only a server component had changed, so new classes never shipped.
-// Production builds therefore run without the cache.
+// A production build that restored webpack's persistent cache reused old CSS,
+// because webpack can't snapshot src/ while src/data holds symlinks to files.
+// See the note above `webpack` in next.config.ts.
 
 type WebpackHook = NonNullable<NextConfig["webpack"]>;
 
 /** A webpack config shaped like the one Next passes to the hook. */
 function webpackConfig() {
-  return { cache: { type: "filesystem" }, plugins: [] as unknown[] };
+  return { cache: { type: "filesystem" } };
 }
 
 /** The parts of Next's hook context the hook reads. */
@@ -22,29 +21,38 @@ function context(dev: boolean, isServer: boolean) {
 }
 
 describe("nextConfig webpack cache", () => {
-  test.each([false, true])(
-    "given a production build (server: %s) then webpack runs without its cache",
-    (isServer) => {
-      const out = nextConfig.webpack!(
-        webpackConfig(),
-        context(false, isServer),
-      );
+  test.each([
+    ["the client", false],
+    ["the server", true],
+  ])(
+    "given a production build of %s then webpack runs without its cache",
+    (_, isServer) => {
+      // Given
+      const config = webpackConfig();
 
+      // When
+      const out = nextConfig.webpack!(config, context(false, isServer));
+
+      // Then
+      expect(out).toBe(config);
       expect(out.cache).toBe(false);
     },
   );
 
-  test("given a dev build then webpack keeps its cache", () => {
-    const out = nextConfig.webpack!(webpackConfig(), context(true, false));
+  test("given a webpack dev build then the hook leaves Next's cache in place", () => {
+    // Given: `next dev` without --turbopack, which this repo's scripts don't use
+    const config = webpackConfig();
 
+    // When
+    const out = nextConfig.webpack!(config, context(true, false));
+
+    // Then: rebuilds while editing stay incremental
     expect(out.cache).toEqual({ type: "filesystem" });
   });
 
-  test("leaves the rest of the config alone", () => {
-    const config = webpackConfig();
-    const out = nextConfig.webpack!(config, context(false, false));
-
-    expect(out).toBe(config);
-    expect(out.plugins).toEqual([]);
+  test("given the webpack hook then Next still runs each compilation in a build worker", () => {
+    // Next turns the workers off when a config has a webpack hook, unless
+    // they're asked for.
+    expect(nextConfig.experimental?.webpackBuildWorker).toBe(true);
   });
 });

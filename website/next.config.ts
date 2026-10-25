@@ -383,12 +383,22 @@ const nextConfig: NextConfig = {
     };
   },
 
-  // Tailwind builds the CSS from every file it scans, but a production build
-  // that restored webpack's persistent cache kept CSS compiled from older
-  // source when only server-rendered files had changed: classes added to
-  // HomeToolsPreview and SupporterCard never reached production. The client
-  // build's cache has no record of those files. So production builds skip the
-  // cache; dev runs on Turbopack and is unaffected.
+  // Production builds skip webpack's persistent cache, which served stale CSS.
+  // Tailwind makes src/ a context dependency of globals.css, and the webpack
+  // bundled with Next 15.5 can't snapshot a directory that holds symlinks to
+  // files (src/data/*.json point into app/src/data). The CSS module is then
+  // cached with no record of its inputs, so a build that restores the cache,
+  // as Vercel's builds do, reuses the old CSS whatever changed, client
+  // components and globals.css included. scripts/check-built-css.mjs fails a
+  // build whose CSS differs from a fresh compile.
+  //
+  // A webpack hook also turns off Next's build workers unless they're asked
+  // for, hence experimental.webpackBuildWorker. `next dev` runs on Turbopack,
+  // which ignores the hook; its "Webpack is configured while Turbopack is not"
+  // warning is expected.
+  experimental: {
+    webpackBuildWorker: true,
+  },
   webpack: (config, { dev }) => {
     if (!dev) {
       config.cache = false;
