@@ -149,7 +149,8 @@
     "displayWithResearch": true,
     "image": "uk-cliff-watch.jpg",
     "date": "2026-06-26 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": ["vahid-ahmadi"],
+    "toolsMenu": { "label": "UK CliffWatch" }
   },
   {
     "type": "iframe",
@@ -407,7 +408,8 @@
     "displayWithResearch": true,
     "image": "tanf-calculator.png",
     "date": "2026-03-18 12:00:00",
-    "authors": ["ziming-hua"]
+    "authors": ["ziming-hua"],
+    "toolsMenu": { "label": "TANF calculator" }
   },
   {
     "type": "iframe",
@@ -420,7 +422,8 @@
     "displayWithResearch": true,
     "image": "coverage-compass.png",
     "date": "2026-05-06 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": ["daphne-hansell"],
+    "toolsMenu": { "label": "Coverage Compass" }
   },
   {
     "type": "iframe",
@@ -433,7 +436,8 @@
     "displayWithResearch": true,
     "image": "cliffwatch.png",
     "date": "2026-04-14 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": ["daphne-hansell"],
+    "toolsMenu": { "label": "CliffWatch" }
   },
   {
     "type": "iframe",
@@ -446,7 +450,8 @@
     "displayWithResearch": true,
     "image": "marriage-calculator.webp",
     "date": "2026-02-13 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": ["daphne-hansell"],
+    "toolsMenu": { "label": "Marriage calculator" }
   },
   {
     "type": "iframe",
@@ -459,13 +464,14 @@
     "displayWithResearch": true,
     "image": "marriage-calculator-uk.jpg",
     "date": "2026-09-11 12:00:00",
-    "authors": ["max-ghenis", "vahid-ahmadi"]
+    "authors": ["max-ghenis", "vahid-ahmadi"],
+    "toolsMenu": { "label": "Marriage calculator" }
   },
   {
     "type": "iframe",
     "slug": "bill-tracker",
     "title": "2026 state legislative tracker",
-    "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",
+    "description": "Track federal and state tax and benefit bills, with PolicyEngine's estimates of each scored bill's budget, poverty, and household impacts.",
     "source": "https://policyengine--state-legislative-tracker.modal.run/",
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
@@ -498,7 +504,8 @@
     "displayWithResearch": true,
     "image": "uk-student-loan-calculator.webp",
     "date": "2026-02-06 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": ["vahid-ahmadi"],
+    "toolsMenu": { "label": "Student loan calculator" }
   },
   {
     "type": "iframe",
@@ -608,7 +615,28 @@
     "description": "Calculate charitable giving tax benefits",
     "source": "https://givecalc.vercel.app/?embedded=true",
     "tags": ["us", "policy", "interactives"],
-    "countryId": "us"
+    "countryId": "us",
+    "toolsMenu": { "label": "GiveCalc" }
+  },
+  {
+    "type": "iframe",
+    "slug": "qbi-calculator",
+    "title": "QBI deduction calculator",
+    "description": "Calculate the qualified business income deduction under IRC §199A for any filing status, including the W-2 wage and property limits and the phase-out for specified service businesses.",
+    "source": "https://qbi-visualizer.vercel.app/us/qbi-calculator",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "toolsMenu": { "label": "QBI deduction calculator" }
+  },
+  {
+    "type": "iframe",
+    "slug": "spm-calculator",
+    "title": "SPM threshold calculator",
+    "description": "Calculate Supplemental Poverty Measure thresholds by family composition, housing tenure, and local area.",
+    "source": "https://spm-calculator.vercel.app/us/spm-calculator",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "toolsMenu": { "label": "SPM threshold calculator" }
   },
   {
     "type": "iframe",
