@@ -189,14 +189,17 @@ const nextConfig: NextConfig = {
         destination: "/us/california-wealth-tax/:path*",
         permanent: true,
       },
-      // UK CliffWatch is its own zone at /uk/uk-cliff-watch. The CliffWatch
-      // app behind /us/cliffwatch is US-only (its client ignores the
-      // upstream ?country=uk), so /uk/cliffwatch used to serve the US tool.
-      // Redirects run before the beforeFiles zone rewrites, and these come
-      // before the cliff-watch rename below, so every UK slug reaches the UK
-      // tool in one hop. Subpaths keep their suffix: the UK zone's own
-      // metadata still points at /uk/cliffwatch/cliffwatch-og.png.
+      // The CliffWatch zone is US-only, so UK slugs go to UK CliffWatch, ahead
+      // of the rename below (one hop), suffix kept for the UK zone's og:image.
+      // US share links minted when /uk/cliffwatch proxied the US tool carry
+      // ?s=<state> (UK CliffWatch never uses s), so they go to /us/.
       ...["/uk/cliffwatch", "/uk/cliff-watch"].flatMap((source) => [
+        {
+          source,
+          has: [{ type: "query" as const, key: "s" }],
+          destination: "/us/cliffwatch",
+          permanent: true,
+        },
         { source, destination: "/uk/uk-cliff-watch", permanent: true },
         {
           source: `${source}/:path*`,

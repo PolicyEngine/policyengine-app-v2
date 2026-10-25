@@ -73,7 +73,7 @@ describe("featured tools", () => {
     expect(hrefs).toContain("/us/obbba-households");
   });
 
-  test("offers UK CliffWatch on the UK site, not the US tool at /uk/cliffwatch", () => {
+  test("offers UK CliffWatch directly on the UK site, not the /uk/cliffwatch redirect", () => {
     const hrefs = getFeaturedTools("uk").map((tool) => tool.href);
 
     expect(hrefs).toContain("/uk/uk-cliff-watch");

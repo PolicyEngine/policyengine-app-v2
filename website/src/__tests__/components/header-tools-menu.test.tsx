@@ -161,8 +161,8 @@ describe("Header tools menu", () => {
       within(desktopNav).getByRole("link", { name: "All interactive tools" }),
     ).toHaveAttribute("href", "/uk/research?types=interactive");
 
-    // /uk/cliffwatch serves the US tool; the OBBBA explorer and the state
-    // tracker are US-only.
+    // /uk/cliffwatch only redirects to UK CliffWatch, so link that directly;
+    // the OBBBA explorer and the state tracker are US-only.
     const hrefs = Array.from(container.querySelectorAll("a")).map((link) =>
       link.getAttribute("href"),
     );
