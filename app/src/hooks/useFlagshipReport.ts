@@ -1,16 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
-import { fetchPolicyById } from '@/api/policy';
+import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useParameterMetadata } from '@/hooks/useParameterMetadata';
+import { useV3Policies } from '@/hooks/useV3Policies';
 import { isNotFoundError, retryUnlessNotFound } from '@/libs/flagship/loadError';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
+import { reportKeys, simulationKeys } from '../libs/queryKeys';
 import { extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
@@ -55,8 +54,6 @@ export interface FlagshipReportData {
  */
 export function useFlagshipReport(id: string): FlagshipReportData {
   const country = useCurrentCountry();
-  const { parameters: parameterMetadata, isReady: isParameterMetadataReady } =
-    useParameterMetadata(country);
   const direct = isApiReportId(id);
 
   const {
@@ -87,19 +84,10 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     .filter((s): s is Simulation => !!s);
 
   const policyIds = extractUniqueIds(simulations, 'policyId');
-  const policyResults = useParallelQueries<Policy>(policyIds, {
-    queryKey: policyKeys.byId,
-    queryFn: async (policyId) =>
-      PolicyAdapter.fromMetadata(await fetchPolicyById(country, policyId), parameterMetadata),
-    enabled: direct && isParameterMetadataReady && policyIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-    structuralSharing: false,
-  });
-  const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
-  const failedPolicyIds = policyIds.filter((_, index) => {
-    const query = policyResults.queries[index];
-    return !!query?.error && !query.data;
-  });
+  // Each policy is read as stored, the parameters it names are loaded (on
+  // the v2 routes) or already in (v1), and then it is parsed.
+  const policyResults = useV3Policies(country, policyIds, direct);
+  const { policies, failedPolicyIds } = policyResults;
 
   if (!direct) {
     return {
@@ -133,9 +121,8 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     retry: () =>
       Promise.all([
         reportError ? refetchReport() : null,
-        ...[...simulationResults.queries, ...policyResults.queries]
-          .filter((query) => query.error)
-          .map((query) => query.refetch()),
+        ...simulationResults.queries.filter((query) => query.error).map((query) => query.refetch()),
+        failedPolicyIds.length > 0 ? policyResults.retry() : null,
       ]),
   };
 }
