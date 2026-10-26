@@ -15,11 +15,23 @@ import type { ValuesList } from '@/types/subIngredients/valueInterval';
  * variables (`part_parameter_values`), so the breakdown never needs the
  * whole parameter list.
  *
- * The catalog does not publish a variable's unit, definition period,
- * category or position in its module, so those stay unset.
+ * The catalog does not publish a variable's category or position in its
+ * module, so those stay unset.
  */
 
 type Schemas = components['schemas'];
+
+/**
+ * A catalog variable with its unit and definition period. The Public API
+ * serves both since catalog format 2 (null for versions published earlier),
+ * but the generated client on this branch predates them. This local
+ * extension goes when the client is regenerated from the final Public API
+ * branch, whose `MetadataVariable` carries both fields.
+ */
+type CatalogVariable = Schemas['MetadataVariable'] & {
+  unit?: string | null;
+  definition_period?: string | null;
+};
 
 export interface LoadedCatalogVariables {
   /** Each variable by name, as v1's metadata described it. */
@@ -35,6 +47,10 @@ export interface V1ShapedVariable {
   entity: string;
   documentation: string | null;
   valueType: string | null;
+  /** Such as 'currency-USD' or '/1'; null for a variable without one, as on v1. */
+  unit: string | null;
+  /** 'year', 'month', 'day' or 'eternity'; null for versions before catalog format 2. */
+  definitionPeriod: string | null;
   defaultValue: unknown;
   /** A list of variable names, or the path of a parameter whose value is that list. */
   adds: string[] | string | null;
@@ -58,7 +74,7 @@ export function v1DatedValues(values: Schemas['MetadataDatedValue'][]): ValuesLi
   ) as ValuesList;
 }
 
-export function v1ShapedVariable(variable: Schemas['MetadataVariable']): V1ShapedVariable {
+export function v1ShapedVariable(variable: CatalogVariable): V1ShapedVariable {
   const shaped: V1ShapedVariable = {
     name: variable.name,
     // v1 always had a label; a variable without one reads as its name.
@@ -66,6 +82,8 @@ export function v1ShapedVariable(variable: Schemas['MetadataVariable']): V1Shape
     entity: variable.entity,
     documentation: variable.description,
     valueType: variable.data_type,
+    unit: variable.unit ?? null,
+    definitionPeriod: variable.definition_period ?? null,
     defaultValue: variable.default_value,
     adds: variable.adds_parameter_path ?? variable.adds,
     subtracts: variable.subtracts_parameter_path ?? variable.subtracts,
@@ -100,7 +118,10 @@ export async function fetchCatalogVariables(
   );
   return {
     variables: Object.fromEntries(
-      result.variables.map((variable) => [variable.name, v1ShapedVariable(variable)])
+      (result.variables as CatalogVariable[]).map((variable) => [
+        variable.name,
+        v1ShapedVariable(variable),
+      ])
     ),
     partParameterValues: Object.fromEntries(
       Object.entries(result.part_parameter_values).map(([path, values]) => [
