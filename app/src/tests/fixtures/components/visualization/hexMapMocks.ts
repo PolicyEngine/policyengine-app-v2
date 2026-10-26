@@ -70,3 +70,13 @@ export const MOCK_UK_SHAPED_HEX_DATA: HexMapDataPoint[] = [
   { id: 'camborne', label: 'Camborne and Redruth', value: -20, x: 69, y: -45 },
   { id: 'st-ives', label: 'St Ives', value: 5, x: 43, y: -46 },
 ];
+
+/**
+ * Three areas of an odd-r layout: two side by side in one row, and one in
+ * the next row up, half a column to the side.
+ */
+export const MOCK_TILED_HEX_DATA: HexMapDataPoint[] = [
+  { id: 'west', label: 'West', value: 10, x: 0, y: 0 },
+  { id: 'east', label: 'East', value: 20, x: 1, y: 0 },
+  { id: 'north', label: 'North', value: 30, x: 0, y: 1 },
+];
