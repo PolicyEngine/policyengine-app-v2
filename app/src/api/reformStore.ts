@@ -7,11 +7,12 @@ import {
   isLegacyId,
   type ApiStoreContext,
 } from '@/api/v2Associations';
+import { policyMissingParameters } from '@/libs/flagship/missingParameters';
 import { createReformPolicy } from '@/libs/flagship/runReport';
 import { clampStoreText } from '@/libs/flagship/storeText';
 import { Reform, ReformBaseline, ReformProvenance } from '@/types/ingredients/Reform';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
-import type { PolicyMetadataParams } from '@/types/metadata/policyMetadata';
+import type { PolicyMetadataParams, V1PolicyContent } from '@/types/metadata/policyMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import type {
@@ -60,17 +61,32 @@ export class ReformNotFoundError extends Error {
   }
 }
 
-/** Reforms saved in this browser, each with the ID of its v1 policy. */
+/** The reform with the parameters its v1 policy sets that the model no longer has, if any. */
+function withMissingParameters(reform: Reform, policy: V1PolicyContent): Reform {
+  const missingParameters = policyMissingParameters(policy);
+  return missingParameters.length > 0 ? { ...reform, missingParameters } : reform;
+}
+
+/**
+ * Reforms saved in this browser, each with the ID of its v1 policy. Given
+ * `fetchPolicy`, listing them also reads each v1 policy, for the parameters
+ * the model no longer has; a policy that cannot be read lists as saved.
+ */
 export class LocalStorageReformStore implements ReformStore {
   private readonly STORAGE_KEY = 'reforms';
   private readonly materializePolicy: MaterializeReformPolicy;
   private readonly getParameterMetadata: NonNullable<ApiReformStoreOptions['getParameterMetadata']>;
+  private readonly fetchPolicy: ApiReformStoreOptions['fetchPolicy'];
 
   constructor(
-    options: Pick<ApiReformStoreOptions, 'materializePolicy' | 'getParameterMetadata'> = {}
+    options: Pick<
+      ApiReformStoreOptions,
+      'materializePolicy' | 'getParameterMetadata' | 'fetchPolicy'
+    > = {}
   ) {
     this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
     this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
+    this.fetchPolicy = options.fetchPolicy;
   }
 
   async create(reform: NewReform): Promise<Reform> {
@@ -105,9 +121,25 @@ export class LocalStorageReformStore implements ReformStore {
   }
 
   async findMine(countryId?: string): Promise<Reform[]> {
-    return byRecentUpdate(
-      this.getStoredReforms().filter((reform) => !countryId || reform.countryId === countryId)
+    const reforms = this.getStoredReforms().filter(
+      (reform) => !countryId || reform.countryId === countryId
     );
+    return byRecentUpdate(await Promise.all(reforms.map((reform) => this.checked(reform))));
+  }
+
+  /** The reform as its v1 policy stands now: unchanged when that cannot be read. */
+  private async checked(reform: Reform): Promise<Reform> {
+    if (!this.fetchPolicy || !isLegacyId(reform.policyId)) {
+      return reform;
+    }
+    try {
+      return withMissingParameters(
+        reform,
+        await this.fetchPolicy(reform.countryId, String(reform.policyId))
+      );
+    } catch {
+      return reform;
+    }
   }
 
   async findById(reformId: string): Promise<Reform | null> {
@@ -243,8 +275,8 @@ export interface ApiReformStoreOptions {
    */
   getParameterMetadata?: () => ParameterMetadataCollection | null | undefined;
   materializePolicy?: MaterializeReformPolicy;
-  /** Reads a v1 policy's parameter map. */
-  fetchPolicyJson?: (countryId: string, policyId: string) => Promise<PolicyMetadataParams>;
+  /** Reads a v1 policy's parameter map and the parameters the model no longer has. */
+  fetchPolicy?: (countryId: string, policyId: string) => Promise<V1PolicyContent>;
 }
 
 /**
@@ -270,12 +302,20 @@ export function materializeReformPolicy(
   );
 }
 
-/** A v1 policy's parameter map. v1 policies never change once created. */
-export async function fetchV1PolicyJson(
+/**
+ * A v1 policy's parameter map, and the parameters it sets that the current
+ * model no longer has. v1 policies never change once created; the second
+ * part changes only when the API's model does.
+ */
+export async function fetchV1PolicyContent(
   countryId: string,
   policyId: string
-): Promise<PolicyMetadataParams> {
-  return (await fetchPolicyById(countryId, policyId)).policy_json ?? {};
+): Promise<V1PolicyContent> {
+  const policy = await fetchPolicyById(countryId, policyId);
+  return {
+    policy_json: policy.policy_json ?? {},
+    missing_parameters: policy.missing_parameters,
+  };
 }
 
 /**
@@ -288,7 +328,7 @@ export class ApiReformStore implements ReformStore {
   private readonly routes: AccountAssociationRoutes<UserPolicyItem>;
   private readonly getParameterMetadata: NonNullable<ApiReformStoreOptions['getParameterMetadata']>;
   private readonly materializePolicy: MaterializeReformPolicy;
-  private readonly fetchPolicyJson: NonNullable<ApiReformStoreOptions['fetchPolicyJson']>;
+  private readonly fetchPolicy: NonNullable<ApiReformStoreOptions['fetchPolicy']>;
 
   constructor(
     private readonly context: ApiStoreContext,
@@ -297,7 +337,7 @@ export class ApiReformStore implements ReformStore {
     this.routes = new AccountAssociationRoutes(context, 'user-policies', 'Reform');
     this.getParameterMetadata = options.getParameterMetadata ?? (() => null);
     this.materializePolicy = options.materializePolicy ?? materializeReformPolicy;
-    this.fetchPolicyJson = options.fetchPolicyJson ?? fetchV1PolicyJson;
+    this.fetchPolicy = options.fetchPolicy ?? fetchV1PolicyContent;
   }
 
   /** The row for a reform; its parameters become a v1 policy first when they are not one yet. */
@@ -379,13 +419,17 @@ export class ApiReformStore implements ReformStore {
   }
 
   private async toReform(item: UserPolicyItem, knownParameters?: Parameter[]): Promise<Reform> {
-    const parameters =
-      knownParameters ??
-      parametersFromPolicyJson(
-        await this.fetchPolicyJson(item.country_id, String(item.legacy_policy_id)),
-        this.getParameterMetadata()
-      );
-    return this.reformFromItem(item, parameters);
+    if (knownParameters) {
+      return this.reformFromItem(item, knownParameters);
+    }
+    const policy = await this.fetchPolicy(item.country_id, String(item.legacy_policy_id));
+    return withMissingParameters(
+      this.reformFromItem(
+        item,
+        parametersFromPolicyJson(policy.policy_json, this.getParameterMetadata())
+      ),
+      policy
+    );
   }
 
   private reformFromItem(item: UserPolicyItem, parameters: Parameter[]): Reform {

@@ -51,6 +51,12 @@ export interface Reform {
    * not be shown, run, matched or saved as the reform's changes.
    */
   parametersUnavailable?: boolean;
+  /**
+   * The parameters the reform's v1 policy sets that the current model no
+   * longer has, as the API reports them. Set only when there are some: the
+   * reform must not be run.
+   */
+  missingParameters?: string[];
   baseline: ReformBaseline;
   provenance: ReformProvenance;
   createdAt?: string;
