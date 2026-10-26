@@ -85,6 +85,14 @@ async function tailwindDirectories(app: string): Promise<string[]> {
 type SnapshotCallback = (error: Error | null, snapshot: unknown) => void;
 
 /**
+ * The managedPaths Next gives webpack outside Yarn PnP, copied from
+ * next/dist/build/webpack-config.js. The verdicts depend on them: webpack
+ * snapshots a package under a managed path by its package.json, so it never
+ * reads a link inside one. A test below fails if Next's copy changes.
+ */
+const NEXT_MANAGED_PATHS = [/^(.+?[\\/]node_modules[\\/])/];
+
+/**
  * The directories, of those given, that webpack can't snapshot for a
  * production build, relative to the repo. It asks the webpack bundled with
  * Next, with the snapshot options a production build uses and Next's
@@ -102,7 +110,7 @@ async function unsnapshottable(dirs: string[]): Promise<string[]> {
     cache: false,
     // Production mode would otherwise load Next's minifier, unused here.
     optimization: { minimize: false },
-    snapshot: { managedPaths: [/^(.+?[\\/]node_modules[\\/])/] },
+    snapshot: { managedPaths: NEXT_MANAGED_PATHS },
   });
   const { fileSystemInfo } = compiler.newCompilation(
     compiler.newCompilationParams(),
@@ -131,8 +139,37 @@ async function unsnapshottable(dirs: string[]): Promise<string[]> {
 }
 
 describe("Tailwind's source directories", () => {
+  test("given Next's build config then it sets only the snapshot paths the oracle copies", () => {
+    // Next replaces webpack's snapshot options with this block, whitespace
+    // aside. Outside Yarn PnP it sets only managedPaths, and no snapshot.module,
+    // so a build gets webpack's production default for that (the next test).
+    const require = createRequire(path.join(repoDir, "website/package.json"));
+    const source = readFileSync(
+      require.resolve("next/dist/build/webpack-config.js"),
+      "utf8",
+    );
+    const block = source
+      .match(/webpack5Config\.snapshot = \{\};[\s\S]*?\n\s*if \(dev\) \{/)?.[0]
+      .replace(/\s+/g, " ");
+    expect(block).toBe(
+      [
+        "webpack5Config.snapshot = {};",
+        "if (process.versions.pnp === '3') {",
+        String.raw`webpack5Config.snapshot.managedPaths = [ /^(.+?(?:[\\/]\.yarn[\\/]unplugged[\\/][^\\/]+)?[\\/]node_modules[\\/])/ ];`,
+        "} else {",
+        `webpack5Config.snapshot.managedPaths = [ ${NEXT_MANAGED_PATHS[0]} ];`,
+        "}",
+        "if (process.versions.pnp === '3') {",
+        String.raw`webpack5Config.snapshot.immutablePaths = [ /^(.+?[\\/]cache[\\/][^\\/]+\.zip[\\/]node_modules[\\/])/ ];`,
+        "}",
+        "if (dev) {",
+      ].join(" "),
+    );
+    expect(process.versions.pnp).toBeUndefined();
+  });
+
   test("given a production build then webpack snapshots modules by timestamp and hash", async () => {
-    // What unsnapshottable() passes on; a change here would change its verdicts.
+    // What unsnapshottable() passes on; a change here could change its verdicts.
     const require = createRequire(path.join(repoDir, "website/package.json"));
     const { webpack } = require("next/dist/compiled/webpack/bundle5")();
     const compiler = webpack({

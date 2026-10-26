@@ -268,7 +268,10 @@ describe("freshClasses", () => {
       `export const page = <div className="${utility}" />;\n`,
     );
 
-    // When: Tailwind's optimizer warns about the rule it drops
+    // When: Tailwind's optimizer warns about the rule it drops. Tailwind
+    // optimizes by default only when NODE_ENV is "production", so this pins it
+    // to something else, or the test couldn't tell the check pins optimize.
+    vi.stubEnv("NODE_ENV", "development");
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     try {
       const classes = await freshClasses(app, "globals.css");
@@ -280,6 +283,7 @@ describe("freshClasses", () => {
       );
     } finally {
       warn.mockRestore();
+      vi.unstubAllEnvs();
     }
   });
 

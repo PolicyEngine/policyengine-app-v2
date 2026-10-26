@@ -280,8 +280,9 @@ async function main([appArg, stylesheet, cssArg]) {
  * Whether Node ran this file as its entry. Node resolves symlinks in this
  * module's URL, unless --preserve-symlinks-main is set, but never in argv[1],
  * so this compares real paths; otherwise a run through a symlinked path would
- * exit 0 unchecked. Under `node -e` or `node -`, argv[1] is the first user
- * argument, which may name no file.
+ * exit 0 unchecked. Under `node -e`, argv[1] is the first user argument, which
+ * may name no file; under `node -` it is `-`. Code read from stdin or a pipe
+ * has no path to compare, so it runs nothing.
  */
 function isEntry() {
   try {
