@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconCheck, IconChevronDown, IconScale } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -16,9 +16,11 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
+import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { provisionAdjusts, provisionIntervals, type DraftReform } from '@/libs/draftReform';
 import { sameReformParameters } from '@/libs/flagship/reformMatch';
 import type { RunReportBaseline } from '@/libs/flagship/runReport';
+import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import { RootState } from '@/store';
 import type { Reform } from '@/types/ingredients/Reform';
 
@@ -51,6 +53,10 @@ export function useDraftBaseline(draft: DraftReform) {
   const reform = draft.baselineReformId
     ? options.find((option) => option.id === draft.baselineReformId)
     : undefined;
+  // Current law for the comparison's parameters: on the v2 routes they
+  // load once it is chosen (the draft's own load with the draft).
+  const baselineNames = useMemo(() => (reform ? reformParameterNames([reform]) : []), [reform]);
+  const baselineParameters = useEnsureV3Parameters(baselineNames);
   const forRun: RunReportBaseline | undefined = reform && {
     reformId: reform.id,
     label: savedReformName(reform),
@@ -71,8 +77,11 @@ export function useDraftBaseline(draft: DraftReform) {
     options,
     reform,
     forRun,
-    /** The chosen comparison is not known until the saved reforms load. */
-    pending: !!draft.baselineReformId && isPending,
+    /**
+     * The chosen comparison is not known until the saved reforms load, nor
+     * what it changes until current law for its parameters is in.
+     */
+    pending: (!!draft.baselineReformId && isPending) || (!!reform && baselineParameters.waiting),
     /** The draft changes just what its comparison changes: the report would show no change. */
     matchesDraft:
       !!reform && draftChanges.length > 0 && sameReformParameters(baselineChanges, draftChanges),

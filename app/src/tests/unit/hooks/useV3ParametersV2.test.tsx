@@ -150,11 +150,15 @@ describe('useLoadV3Parameters with v3 on the v2 routes', () => {
 
     // Then
     expect(store.getState().metadata.parameters[STANDARD_DEDUCTION_SINGLE]?.values).toBeDefined();
+  });
 
-    // And loading them again asks for nothing
+  test('given names already loaded then the load answers null, so the caller acts at once', async () => {
+    const { result } = renderHook(() => useLoadV3Parameters(), { wrapper: v3Wrapper() });
     await act(async () => {
       await result.current([STANDARD_DEDUCTION_SINGLE]);
     });
+
+    expect(result.current([STANDARD_DEDUCTION_SINGLE])).toBeNull();
     expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(1);
   });
 });

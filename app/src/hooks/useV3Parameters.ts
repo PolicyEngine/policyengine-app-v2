@@ -21,6 +21,12 @@ import type { AppDispatch, RootState } from '@/store';
  */
 export interface V3ParametersStatus {
   status: 'loading' | 'error' | 'ready';
+  /**
+   * Whether the names are being loaded on demand right now: only ever on
+   * the v2 routes. On v1, 'loading' means the whole metadata is not in
+   * yet, which views that never waited for it before can ignore.
+   */
+  waiting: boolean;
   /** The failure's message, when the status is 'error'. */
   message: string | null;
   retry: () => unknown;
@@ -68,7 +74,12 @@ async function loadIntoStore(
 
 function useV1EnsureParameters(_names: readonly string[]): V3ParametersStatus {
   const metadata = useFlagshipMetadataStatus();
-  return { status: metadata.status, message: metadata.message, retry: metadata.retry };
+  return {
+    status: metadata.status,
+    waiting: false,
+    message: metadata.message,
+    retry: metadata.retry,
+  };
 }
 
 function useV2EnsureParameters(names: readonly string[]): V3ParametersStatus {
@@ -91,19 +102,20 @@ function useV2EnsureParameters(names: readonly string[]): V3ParametersStatus {
   });
 
   if (toLoad.length === 0) {
-    return { status: 'ready', message: null, retry: metadata.retry };
+    return { status: 'ready', waiting: false, message: null, retry: metadata.retry };
   }
   if (metadata.status === 'error') {
-    return { status: 'error', message: metadata.message, retry: metadata.retry };
+    return { status: 'error', waiting: false, message: metadata.message, retry: metadata.retry };
   }
   if (query.isError) {
     return {
       status: 'error',
+      waiting: false,
       message: query.error instanceof Error ? query.error.message : null,
       retry: query.refetch,
     };
   }
-  return { status: 'loading', message: null, retry: query.refetch };
+  return { status: 'loading', waiting: true, message: null, retry: query.refetch };
 }
 
 /**
@@ -114,17 +126,20 @@ function useV2EnsureParameters(names: readonly string[]): V3ParametersStatus {
 export const useEnsureV3Parameters: (names: readonly string[]) => V3ParametersStatus =
   V3_API_ROUTES === 'v2' ? useV2EnsureParameters : useV1EnsureParameters;
 
-function useV1LoadParameters(): (names: readonly string[]) => Promise<void> {
-  return useCallback(async () => {}, []);
+/** Loads names, or answers null when they are all in already (so callers can act at once). */
+export type LoadV3Parameters = (names: readonly string[]) => Promise<void> | null;
+
+function useV1LoadParameters(): LoadV3Parameters {
+  return useCallback(() => null, []);
 }
 
-function useV2LoadParameters(): (names: readonly string[]) => Promise<void> {
+function useV2LoadParameters(): LoadV3Parameters {
   const countryId = useCurrentCountry();
   const dispatch = useDispatch<AppDispatch>();
   const store = useStore<RootState>();
   const queryClient = useQueryClient();
   return useCallback(
-    async (names: readonly string[]) => {
+    (names: readonly string[]) => {
       const state = store.getState();
       const policyengineVersion = selectV2CatalogVersion(state);
       const toLoad = namesToLoad(
@@ -132,15 +147,20 @@ function useV2LoadParameters(): (names: readonly string[]) => Promise<void> {
         state.metadata.v2MissingParameterNames,
         names
       );
-      if (policyengineVersion === null || toLoad.length === 0) {
-        return;
+      if (toLoad.length === 0) {
+        return null;
       }
-      await queryClient.fetchQuery({
-        queryKey: catalogParametersKey(countryId, policyengineVersion, toLoad),
-        queryFn: () => loadIntoStore(dispatch, countryId, policyengineVersion, toLoad),
-        staleTime: Infinity,
-        gcTime: PARAMETER_QUERY_GC_TIME,
-      });
+      if (policyengineVersion === null) {
+        return Promise.reject(new Error('The model catalog has not loaded yet.'));
+      }
+      return queryClient
+        .fetchQuery({
+          queryKey: catalogParametersKey(countryId, policyengineVersion, toLoad),
+          queryFn: () => loadIntoStore(dispatch, countryId, policyengineVersion, toLoad),
+          staleTime: Infinity,
+          gcTime: PARAMETER_QUERY_GC_TIME,
+        })
+        .then(() => undefined);
     },
     [countryId, dispatch, store, queryClient]
   );
@@ -148,8 +168,9 @@ function useV2LoadParameters(): (names: readonly string[]) => Promise<void> {
 
 /**
  * A function that loads the named parameters into the store and resolves
- * once they are in (at once on the v1 routes, where they always are), for
- * actions such as adding a parameter to a draft.
+ * once they are in, for actions such as adding a parameter to a draft. It
+ * answers null when they are in already, always so on the v1 routes, so
+ * the action can go ahead at once.
  */
-export const useLoadV3Parameters: () => (names: readonly string[]) => Promise<void> =
+export const useLoadV3Parameters: () => LoadV3Parameters =
   V3_API_ROUTES === 'v2' ? useV2LoadParameters : useV1LoadParameters;

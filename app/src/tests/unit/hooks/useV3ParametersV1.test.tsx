@@ -28,13 +28,12 @@ describe('useEnsureV3Parameters on the v1 routes (before the switch)', () => {
     expect(fetchStub).not.toHaveBeenCalled();
   });
 
-  test('given the load function then it resolves without a request', async () => {
+  test('given the load function then it answers null at once, with no request', () => {
     const fetchStub = stubPublicApiFetch();
     seedDeductionMetadata();
     const { result } = renderHook(() => useLoadV3Parameters(), { wrapper: v3Wrapper() });
 
-    await result.current(['gov.irs.anything']);
-
+    expect(result.current(['gov.irs.anything'])).toBeNull();
     expect(fetchStub).not.toHaveBeenCalled();
   });
 });

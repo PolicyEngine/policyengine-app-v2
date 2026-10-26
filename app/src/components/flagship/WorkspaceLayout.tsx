@@ -1,4 +1,5 @@
 import { spacing } from '@/designTokens';
+import { useV3SearchFileInBackground } from '@/hooks/useV3SearchCatalog';
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,9 @@ interface WorkspaceLayoutProps {
  */
 export default function WorkspaceLayout({ children, wide = false }: WorkspaceLayoutProps) {
   const contentWidth = wide ? 1400 : 760;
+  // On the v2 routes, the search file starts downloading once the page has
+  // rendered, so it is in by the time someone searches (nothing on v1).
+  useV3SearchFileInBackground();
 
   return <div style={{ maxWidth: contentWidth, margin: `${spacing.md} auto 0` }}>{children}</div>;
 }

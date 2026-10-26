@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useEffect, useMemo, useState } from 'react';
+import { useStore } from 'react-redux';
 import AddParameterBar from '@/components/flagship/reform/AddParameterBar';
 import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import DraftTable from '@/components/flagship/reform/DraftTable';
@@ -8,6 +8,8 @@ import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Title } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useEnsureV3Parameters, useLoadV3Parameters } from '@/hooks/useV3Parameters';
+import { useV3SearchCatalog } from '@/hooks/useV3SearchCatalog';
 import {
   addDraftProvision,
   provisionFromSearchEntry,
@@ -15,7 +17,8 @@ import {
   useDraftReform,
 } from '@/libs/draftReform';
 import { focusProvision } from '@/libs/flagship/draftEditorFocus';
-import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
+import { draftParameterNames, groupMemberPaths } from '@/libs/flagship/v3ParameterNames';
+import { ParameterSearchEntry } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 
 /**
@@ -31,7 +34,7 @@ import { RootState } from '@/store';
  */
 export default function BuildPage() {
   const countryId = useCurrentCountry();
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const store = useStore<RootState>();
   const draft = useDraftReform();
   // Each country keeps its own draft: one set aside while another
   // country's was built comes back on its own country's page.
@@ -41,16 +44,43 @@ export default function BuildPage() {
   const current = draft && draft.countryId === countryId ? draft : null;
   // Until the index is in, the add bar has nothing to search and the
   // table can't group breakdowns (their members would show apart, then
-  // merge), so the page waits on one loader rather than two.
-  const loading = useSelector(selectParameterSearchEntries).length === 0;
+  // merge), so the page waits on one loader rather than two. On the v2
+  // routes it waits for the draft's parameters too (with their groups and
+  // the indexes a value can grow with), which load in one request.
+  const catalog = useV3SearchCatalog();
+  const provisions = current?.provisions;
+  const draftNames = useMemo(
+    () => (provisions ? draftParameterNames(provisions, catalog.addablePaths, countryId) : []),
+    [provisions, catalog.addablePaths, countryId]
+  );
+  const draftParameters = useEnsureV3Parameters(draftNames);
+  const loader =
+    catalog.status !== 'ready'
+      ? catalog
+      : draftParameters.status !== 'ready'
+        ? draftParameters
+        : null;
+  const loadParameters = useLoadV3Parameters();
+  const [pickError, setPickError] = useState<string | null>(null);
 
+  // A picked parameter joins the draft at current law, so on the v2
+  // routes its values (and its group's) load first; on v1 they are in.
   const pick = (entry: ParameterSearchEntry) => {
-    addDraftProvision(
-      countryId,
-      provisionFromSearchEntry(entry, parameters?.[entry.path]?.values),
-      'manual'
-    );
-    focusProvision(entry.path);
+    const add = () => {
+      setPickError(null);
+      addDraftProvision(
+        countryId,
+        provisionFromSearchEntry(entry, store.getState().metadata.parameters?.[entry.path]?.values),
+        'manual'
+      );
+      focusProvision(entry.path);
+    };
+    const pending = loadParameters(groupMemberPaths(entry.path, catalog.addablePaths));
+    if (pending) {
+      pending.then(add, () => setPickError('Could not load that parameter. Try picking it again.'));
+    } else {
+      add();
+    }
   };
 
   return (
@@ -71,8 +101,11 @@ export default function BuildPage() {
         {current ? (
           <>
             <DraftHeader draft={current} />
-            {loading ? (
-              <ParametersStatus paths={current.provisions.map((provision) => provision.path)} />
+            {loader ? (
+              <ParametersStatus
+                paths={current.provisions.map((provision) => provision.path)}
+                loader={loader}
+              />
             ) : (
               // The next parameter is added at the foot of the reform, where
               // the last one ends: a reform takes as many as it needs.
@@ -87,6 +120,11 @@ export default function BuildPage() {
             </Title>
             <AddParameterBar onPick={pick} autoFocus />
           </>
+        )}
+        {pickError && (
+          <p role="alert" style={{ margin: 0, textAlign: 'center' }}>
+            {pickError}
+          </p>
         )}
       </div>
     </WorkspaceLayout>

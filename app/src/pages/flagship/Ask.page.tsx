@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IconAdjustments,
   IconChevronRight,
@@ -7,7 +7,7 @@ import {
   IconPlus,
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
-import { useSelector } from 'react-redux';
+import { useSelector, useStore } from 'react-redux';
 import remarkGfm from 'remark-gfm';
 import {
   askChatEndpoint,
@@ -21,17 +21,16 @@ import { Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useEnsureV3Parameters, useLoadV3Parameters } from '@/hooks/useV3Parameters';
+import { useV3SearchCatalog } from '@/hooks/useV3SearchCatalog';
 import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
 import {
   ChatReformBridge,
   provisionsFromChatReform,
   reformFromToolInput,
 } from '@/libs/flagship/chatDraftBridge';
-import {
-  ParameterSearchEntry,
-  searchParameters,
-  selectParameterSearchIndex,
-} from '@/libs/parameterSearch';
+import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
+import { ParameterSearchEntry, searchParameters } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
 import { formatValue, getCurrentValue, parseValueFromQuestion } from '@/utils/parameterValues';
 
@@ -164,8 +163,21 @@ export default function AskPage() {
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const draft = useDraftReform();
-  const index = useSelector(selectParameterSearchIndex);
+  // From the whole metadata on the v1 routes, the search file on v2.
+  const catalog = useV3SearchCatalog();
+  const index = catalog.index;
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const store = useStore<RootState>();
+  const loadParameters = useLoadV3Parameters();
+  // On the v2 routes the search file loads in the background: until it is
+  // in, nothing can match, so the page says so instead of answering empty.
+  const searchLoading = V3_API_ROUTES === 'v2' && catalog.status !== 'ready';
+  // Current law for the matches shown, which on the v2 routes load once listed.
+  const shownMatchPaths = useMemo(
+    () => turns.flatMap((turn) => (turn.matches ?? []).map((entry) => entry.path)),
+    [turns]
+  );
+  useEnsureV3Parameters(shownMatchPaths);
 
   const examples = EXAMPLES[countryId] ?? EXAMPLES.default;
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
@@ -239,9 +251,23 @@ export default function AskPage() {
           if (!reform) {
             return;
           }
-          const bridge = provisionsFromChatReform(reform, index.entries, parameters);
-          if (bridge.provisions.length > 0) {
-            patchLastChat((chat) => ({ ...chat, bridge }));
+          // The draft's current law comes with the reform's parameters,
+          // which on the v2 routes load first.
+          const bridgeReform = () => {
+            const bridge = provisionsFromChatReform(
+              reform,
+              index.entries,
+              store.getState().metadata.parameters
+            );
+            if (bridge.provisions.length > 0) {
+              patchLastChat((chat) => ({ ...chat, bridge }));
+            }
+          };
+          const pending = loadParameters(Object.keys(reform));
+          if (pending) {
+            pending.then(bridgeReform, bridgeReform);
+          } else {
+            bridgeReform();
           }
         },
         onSuggestions: (suggestions) => patchLastChat((chat) => ({ ...chat, suggestions })),
@@ -287,7 +313,8 @@ export default function AskPage() {
 
   const send = (raw?: string) => {
     const question = (raw ?? input).trim();
-    if (!question) {
+    // Nothing can match until the search file is in; the question waits in the box.
+    if (!question || searchLoading) {
       return;
     }
     setInput('');
@@ -305,14 +332,26 @@ export default function AskPage() {
   };
 
   const addMatch = (entry: ParameterSearchEntry, question: string) => {
-    const provision = provisionFromSearchEntry(entry, parameters?.[entry.path]?.values);
-    const proposed = parseValueFromQuestion(question, entry.unit);
-    addDraftProvision(
-      countryId,
-      proposed === undefined ? provision : { ...provision, value: proposed },
-      'chat',
-      'ask-keyword-v0'
-    );
+    const add = () => {
+      const provision = provisionFromSearchEntry(
+        entry,
+        store.getState().metadata.parameters?.[entry.path]?.values
+      );
+      const proposed = parseValueFromQuestion(question, entry.unit);
+      addDraftProvision(
+        countryId,
+        proposed === undefined ? provision : { ...provision, value: proposed },
+        'chat',
+        'ask-keyword-v0'
+      );
+    };
+    // A match joins the draft at current law, which on the v2 routes loads first.
+    const pending = loadParameters([entry.path]);
+    if (pending) {
+      void pending.then(add);
+    } else {
+      add();
+    }
   };
 
   const renderMatchRow = (entry: ParameterSearchEntry, question: string) => {
@@ -500,20 +539,44 @@ export default function AskPage() {
   };
 
   const composer = (
-    <ChatComposer
-      value={input}
-      onChange={setInput}
-      onSend={() => send()}
-      examples={examples}
-      animatePlaceholder={!hasTurns}
-      note={
-        chatEnabled
-          ? countryId === 'uk'
-            ? 'Answers computed live by the PolicyEngine UK model'
-            : 'AI drafting against the policyengine-us parameters — impacts compute when you run the report'
-          : 'Matches your description to PolicyEngine parameters — pick one to start a draft'
-      }
-    />
+    <>
+      {searchLoading && (
+        <p
+          role="status"
+          style={{
+            margin: 0,
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+            textAlign: 'center',
+          }}
+        >
+          {catalog.status === 'error' ? (
+            <>
+              Could not load the parameters.{' '}
+              <button type="button" onClick={() => catalog.retry()}>
+                Try again
+              </button>
+            </>
+          ) : (
+            'Loading the parameters to match against…'
+          )}
+        </p>
+      )}
+      <ChatComposer
+        value={input}
+        onChange={setInput}
+        onSend={() => send()}
+        examples={examples}
+        animatePlaceholder={!hasTurns}
+        note={
+          chatEnabled
+            ? countryId === 'uk'
+              ? 'Answers computed live by the PolicyEngine UK model'
+              : 'AI drafting against the policyengine-us parameters — impacts compute when you run the report'
+            : 'Matches your description to PolicyEngine parameters — pick one to start a draft'
+        }
+      />
+    </>
   );
 
   if (!hasTurns) {

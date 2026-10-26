@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconCalendar, IconExternalLink } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -20,9 +20,9 @@ import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistr
 import { colors, spacing, typography } from '@/designTokens';
 import { useBillEconomy, type BillEconomy } from '@/hooks/useBillEconomy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { useStoredBillDistricts } from '@/hooks/useStoredBillDistricts';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
+import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { storedBillMetrics } from '@/libs/flagship/billMetrics';
 import {
   billAlreadyCurrentLaw,
@@ -147,17 +147,19 @@ function FullResultsStatus({
   runState,
   economy,
   onStart,
+  onRetryParameters,
 }: {
   runState: RunState;
   economy: BillEconomy;
   onStart: () => void;
+  /** Asks again for the bill's parameters, after they failed to load. */
+  onRetryParameters: () => unknown;
 }) {
   const countryId = useCurrentCountry();
-  const metadata = useFlagshipMetadataStatus();
   if (runState === 'no-metadata') {
     return (
       <Stack style={STATUS_BOX}>
-        <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+        <ErrorState compact title="Could not load the parameters" onRetry={onRetryParameters} />
       </Stack>
     );
   }
@@ -242,8 +244,6 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
   const billId = propId ?? params.billId ?? '';
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const metadataLoaded = useSelector((state: RootState) => state.metadata.version !== null);
-  const metadataError = useSelector((state: RootState) => state.metadata.error);
   const feed = useTrackedBills(countryId);
   const { bills } = feed;
   // The bill whose full run the reader started; another bill starts unrun.
@@ -252,6 +252,15 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
 
   // The tracker links here by its bill id; an encoded or upper-case id finds the same bill.
   const bill: TrackedBill | undefined = findTrackedBill(bills, billId);
+  // Names and current law for the bill's provisions: with the whole
+  // metadata on the v1 routes; on the v2 routes they load in one request.
+  const billNames = useMemo(
+    () => (bill?.provisions ?? []).map((provision) => provision.path),
+    [bill]
+  );
+  const billParameters = useEnsureV3Parameters(billNames);
+  const metadataLoaded = billParameters.status === 'ready';
+  const metadataError = billParameters.status === 'error';
   const { data: storedDistricts } = useStoredBillDistricts(bill?.id);
 
   // A bill from a later year runs, and reads against the law, in its first year.
@@ -339,16 +348,33 @@ export default function BillReportPage({ billId: propId }: BillReportPageProps) 
       output={runState === 'complete' ? economy.output : null}
       storedMetrics={storedBillMetrics(bill, countryId)}
       storedMetricsNote={STORED_NOTE[runState]}
-      pending={<FullResultsStatus runState={runState} economy={economy} onStart={startRun} />}
+      pending={
+        <FullResultsStatus
+          runState={runState}
+          economy={economy}
+          onStart={startRun}
+          onRetryParameters={billParameters.retry}
+        />
+      }
       economyPending={
         <Stack style={{ gap: spacing.lg }}>
-          <FullResultsStatus runState={runState} economy={economy} onStart={startRun} />
+          <FullResultsStatus
+            runState={runState}
+            economy={economy}
+            onStart={startRun}
+            onRetryParameters={billParameters.retry}
+          />
           <StoredImpactCharts bill={bill} countryId={countryId} />
         </Stack>
       }
       districtsPending={
         <Stack style={{ gap: spacing.lg }}>
-          <FullResultsStatus runState={runState} economy={economy} onStart={startRun} />
+          <FullResultsStatus
+            runState={runState}
+            economy={economy}
+            onStart={startRun}
+            onRetryParameters={billParameters.retry}
+          />
           {storedDistricts && storedDistricts.length > 0 && (
             // The tracker's districts, until the full results bring their own.
             <CongressionalDistrictDataProvider
