@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { clearMetadata, fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
 import { store } from '@/store';
+import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   modelCatalogEnvelope,
   TEST_POLICYENGINE_VERSION,
@@ -23,12 +24,16 @@ vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
 }));
 
 const SEARCH_FILE_PATH = '/v2/parameters/search-file';
+const VARIABLES_PATH = '/v2/model-catalog/variables';
 
 describe('WorkspaceLayout with v3 on the v2 routes', () => {
   let fetchStub: ReturnType<typeof stubPublicApiFetch>;
 
   beforeEach(async () => {
-    fetchStub = stubPublicApiFetch({ [SEARCH_FILE_PATH]: () => jsonResponse(US_SEARCH_FILE) });
+    fetchStub = stubPublicApiFetch({
+      [SEARCH_FILE_PATH]: () => jsonResponse(US_SEARCH_FILE),
+      [VARIABLES_PATH]: () => jsonResponse(catalogVariablesEnvelope()),
+    });
     await seedV2ModelCatalog();
   });
 
@@ -53,6 +58,24 @@ describe('WorkspaceLayout with v3 on the v2 routes', () => {
     expect(
       requestsTo(fetchStub, SEARCH_FILE_PATH)[0].searchParams.get('policyengine_version')
     ).toBe(TEST_POLICYENGINE_VERSION);
+  });
+
+  test('given a page renders then the catalog version variables load behind it, once', async () => {
+    // When
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <WorkspaceLayout>
+          <p>Page content</p>
+        </WorkspaceLayout>
+      </QueryClientProvider>
+    );
+
+    // Then
+    expect(screen.getByText('Page content')).toBeInTheDocument();
+    await waitFor(() => expect(requestsTo(fetchStub, VARIABLES_PATH)).toHaveLength(1));
+    expect(requestsTo(fetchStub, VARIABLES_PATH)[0].searchParams.get('policyengine_version')).toBe(
+      TEST_POLICYENGINE_VERSION
+    );
   });
 });
 
