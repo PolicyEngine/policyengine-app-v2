@@ -6,6 +6,7 @@ import FlagshipReportPage from '@/pages/flagship/Report.page';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import { catalogParametersResult } from '@/tests/fixtures/api/publicApi/catalogParametersMocks';
+import { catalogVariablesEnvelope } from '@/tests/fixtures/api/publicApi/catalogVariablesMocks';
 import {
   jsonResponse,
   requestsTo,
@@ -84,6 +85,7 @@ function renderPage(userReportId: string) {
 }
 
 const PARAMETERS_PATH = '/v2/model-catalog/parameters';
+const VARIABLES_PATH = '/v2/model-catalog/variables';
 const COMPLETE_STATUS = {
   status: 'complete',
   isComplete: true,
@@ -156,5 +158,35 @@ describe('FlagshipReportPage with v3 on the v2 routes', () => {
     await waitFor(() =>
       expect(screen.queryByText('Could not load the parameters')).not.toBeInTheDocument()
     );
+  });
+
+  test('given the variables still loading then the household tab waits for them', async () => {
+    // Given
+    const user = userEvent.setup();
+    let answerVariables: () => void = () => {};
+    stubPublicApiFetch({
+      [PARAMETERS_PATH]: answerParameters,
+      [VARIABLES_PATH]: () =>
+        new Promise<Response>((resolve) => {
+          answerVariables = () => resolve(jsonResponse(catalogVariablesEnvelope()));
+        }),
+    });
+    await seedV2ModelCatalog();
+    renderPage(EXISTING_REPORT_ID);
+
+    // When
+    await user.click(await screen.findByRole('tab', { name: 'Household' }));
+
+    // Then
+    expect(
+      await screen.findByRole('status', { name: 'Loading the household builder' })
+    ).toBeInTheDocument();
+    answerVariables();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('status', { name: 'Loading the household builder' })
+      ).not.toBeInTheDocument()
+    );
+    expect(store.getState().metadata.variables.employment_income.label).toBe('Employment income');
   });
 });

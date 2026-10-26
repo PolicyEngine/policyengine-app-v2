@@ -4,6 +4,7 @@ import { STATE_NAMES } from '@/api/billFeed';
 import { Text } from '@/components/ui';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { colors, spacing, typography } from '@/designTokens';
+import { useV3Variables } from '@/hooks/useV3Variables';
 import {
   CalibrationCountry,
   calibrationFitForGeography,
@@ -326,8 +327,18 @@ export function GeographyFitSection({
 }) {
   const fit = useGeographyCalibrationFit(geography, countryId);
   const variables = useSelector((state: RootState) => state.metadata.variables);
+  // On v2 the variables (target names) load in the background; wait for them.
+  const variablesStatus = useV3Variables();
   const name = geographyName(geography);
   const heading = <ValidationSubheading>{name} data fit</ValidationSubheading>;
+  if (variablesStatus.waiting) {
+    return (
+      <>
+        {heading}
+        <ValidationLoading label="Loading variable names" />
+      </>
+    );
+  }
   if (fit === undefined) {
     return (
       <>
@@ -450,6 +461,8 @@ export function CalibrationMatchSection({
   pin?: CalibrationPin;
 }) {
   const variables = useSelector((state: RootState) => state.metadata.variables);
+  // On v2 the variables (target names) load in the background; wait for them.
+  const variablesStatus = useV3Variables();
   const countryId: CalibrationCountry = matches?.countryId ?? 'us';
   const uk = countryId === 'uk';
   // UK nations and the UK itself are the dashboard's "country" level.
@@ -479,6 +492,9 @@ export function CalibrationMatchSection({
   }
   if (matches === undefined) {
     return card(<ValidationLoading label="Checking calibration targets" />);
+  }
+  if (variablesStatus.waiting) {
+    return card(<ValidationLoading label="Loading variable names" />);
   }
   const placeName = geographyName(matches.geography);
   const related = matches.matches.length === 0 ? (matches.related ?? []) : [];
