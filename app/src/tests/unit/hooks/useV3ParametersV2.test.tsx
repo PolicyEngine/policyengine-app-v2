@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useEnsureV3Parameters, useLoadV3Parameters } from '@/hooks/useV3Parameters';
+import { clearMetadata, fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
 import { store } from '@/store';
 import {
   catalogParametersResult,
@@ -16,7 +17,11 @@ import {
   STANDARD_DEDUCTION_JOINT,
   STANDARD_DEDUCTION_SINGLE,
 } from '@/tests/fixtures/api/publicApi/searchFileMocks';
-import { seedV2ModelCatalog, v3Wrapper } from '@/tests/fixtures/hooks/v3MetadataWrapper';
+import {
+  seedV2ModelCatalog,
+  testQueryClient,
+  v3Wrapper,
+} from '@/tests/fixtures/hooks/v3MetadataWrapper';
 
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
@@ -160,5 +165,59 @@ describe('useLoadV3Parameters with v3 on the v2 routes', () => {
 
     expect(result.current([STANDARD_DEDUCTION_SINGLE])).toBeNull();
     expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(1);
+  });
+});
+
+describe('useEnsureV3Parameters after the metadata reloads', () => {
+  let fetchStub: ReturnType<typeof stubPublicApiFetch>;
+
+  beforeEach(async () => {
+    fetchStub = stubPublicApiFetch({ [PARAMETERS_PATH]: answerCatalogParameters });
+    await seedV2ModelCatalog();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('given the store was emptied by a new metadata load then the parameters are asked for again', async () => {
+    // Given — one query client for the session, as the app has
+    const queryClient = testQueryClient();
+    const first = renderHook(() => useEnsureV3Parameters([STANDARD_DEDUCTION_SINGLE]), {
+      wrapper: v3Wrapper(queryClient),
+    });
+    await waitFor(() => expect(first.result.current.status).toBe('ready'));
+    first.unmount();
+
+    // When — another page loads v1's metadata, then v3's again
+    store.dispatch(clearMetadata());
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+    const second = renderHook(() => useEnsureV3Parameters([STANDARD_DEDUCTION_SINGLE]), {
+      wrapper: v3Wrapper(queryClient),
+    });
+
+    // Then
+    await waitFor(() => expect(second.result.current.status).toBe('ready'));
+    expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(2);
+    expect(store.getState().metadata.parameters[STANDARD_DEDUCTION_SINGLE]?.values).toBeDefined();
+  });
+
+  test('given the store was emptied then the load function asks again too', async () => {
+    const queryClient = testQueryClient();
+    const { result } = renderHook(() => useLoadV3Parameters(), { wrapper: v3Wrapper(queryClient) });
+    await act(async () => {
+      await result.current([STANDARD_DEDUCTION_SINGLE]);
+    });
+
+    store.dispatch(clearMetadata());
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+    await act(async () => {
+      await result.current([STANDARD_DEDUCTION_SINGLE]);
+    });
+
+    expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(2);
+    expect(store.getState().metadata.v2ParameterIds?.[STANDARD_DEDUCTION_SINGLE]).toBe(
+      STANDARD_DEDUCTION_SINGLE_ID
+    );
   });
 });

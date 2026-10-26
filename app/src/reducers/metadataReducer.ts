@@ -107,15 +107,18 @@ const metadataSlice = createSlice({
       action: PayloadAction<{
         countryId: string;
         policyengineVersion: string;
+        /** The model catalog load the parameters were asked for under. */
+        loadId: string;
         parameters: ParameterMetadataCollection;
         parameterIds: Record<string, string>;
         missingNames: string[];
       }>
     ) {
-      const { countryId, policyengineVersion, parameters, parameterIds, missingNames } =
+      const { countryId, policyengineVersion, loadId, parameters, parameterIds, missingNames } =
         action.payload;
       if (
         state.routes !== 'v2' ||
+        state.v2LoadId !== loadId ||
         state.currentCountry !== countryId ||
         state.v2Catalog?.policyengineVersion !== policyengineVersion
       ) {
@@ -175,6 +178,7 @@ const metadataSlice = createSlice({
           // v3 reads the tree one level at a time from the v2 routes.
           state.routes = 'v2';
           state.v2Catalog = body.v2Catalog ?? null;
+          state.v2LoadId = action.meta.requestId;
           state.parameterTree = null;
           return;
         }
@@ -202,6 +206,18 @@ const metadataSlice = createSlice({
 });
 
 export const { setCurrentCountry, clearMetadata, catalogParametersLoaded } = metadataSlice.actions;
+
+/** The v2 catalog version the store holds, once its model catalog is in; null otherwise. */
+export function selectV2CatalogVersion(state: { metadata: MetadataState }): string | null {
+  return state.metadata.routes === 'v2'
+    ? (state.metadata.v2Catalog?.policyengineVersion ?? null)
+    : null;
+}
+
+/** The load of the v2 model catalog the store holds; null before one is in. */
+export function selectV2LoadId(state: { metadata: MetadataState }): string | null {
+  return state.metadata.routes === 'v2' ? (state.metadata.v2LoadId ?? null) : null;
+}
 
 // currentCountry identifies both the active request and the metadata used by readiness checks.
 

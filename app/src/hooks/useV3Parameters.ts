@@ -5,7 +5,11 @@ import { fetchCatalogParameters } from '@/api/publicApi/catalogParameters';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipMetadataStatus } from '@/hooks/useFlagshipMetadataStatus';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
-import { catalogParametersLoaded } from '@/reducers/metadataReducer';
+import {
+  catalogParametersLoaded,
+  selectV2CatalogVersion,
+  selectV2LoadId,
+} from '@/reducers/metadataReducer';
 import type { AppDispatch, RootState } from '@/store';
 
 /**
@@ -35,18 +39,18 @@ export interface V3ParametersStatus {
 /** How long a batch's query stays cached without a reader; its parameters stay in the store. */
 const PARAMETER_QUERY_GC_TIME = 5 * 60 * 1000;
 
+/**
+ * A batch's query key. It names the model catalog load as well as the
+ * version: the parameters live in the store, which a new load empties, so
+ * a batch loaded under an earlier load is asked for again.
+ */
 function catalogParametersKey(
   countryId: string,
   policyengineVersion: string | null,
+  loadId: string | null,
   names: readonly string[]
 ) {
-  return ['v2-catalog-parameters', countryId, policyengineVersion, ...names] as const;
-}
-
-function selectV2CatalogVersion(state: RootState): string | null {
-  return state.metadata.routes === 'v2'
-    ? (state.metadata.v2Catalog?.policyengineVersion ?? null)
-    : null;
+  return ['v2-catalog-parameters', countryId, policyengineVersion, loadId, ...names] as const;
 }
 
 /** Which of `names` the store lacks values for, sorted, each once. */
@@ -65,10 +69,11 @@ async function loadIntoStore(
   dispatch: AppDispatch,
   countryId: string,
   policyengineVersion: string,
+  loadId: string,
   names: readonly string[]
 ): Promise<true> {
   const loaded = await fetchCatalogParameters(countryId, policyengineVersion, names);
-  dispatch(catalogParametersLoaded({ countryId, policyengineVersion, ...loaded }));
+  dispatch(catalogParametersLoaded({ countryId, policyengineVersion, loadId, ...loaded }));
   return true;
 }
 
@@ -87,6 +92,7 @@ function useV2EnsureParameters(names: readonly string[]): V3ParametersStatus {
   const dispatch = useDispatch<AppDispatch>();
   const metadata = useFlagshipMetadataStatus();
   const policyengineVersion = useSelector(selectV2CatalogVersion);
+  const loadId = useSelector(selectV2LoadId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const missingNames = useSelector((state: RootState) => state.metadata.v2MissingParameterNames);
   const toLoad = useMemo(
@@ -94,9 +100,9 @@ function useV2EnsureParameters(names: readonly string[]): V3ParametersStatus {
     [names, parameters, missingNames]
   );
   const query = useQuery({
-    queryKey: catalogParametersKey(countryId, policyengineVersion, toLoad),
-    queryFn: () => loadIntoStore(dispatch, countryId, policyengineVersion!, toLoad),
-    enabled: policyengineVersion !== null && toLoad.length > 0,
+    queryKey: catalogParametersKey(countryId, policyengineVersion, loadId, toLoad),
+    queryFn: () => loadIntoStore(dispatch, countryId, policyengineVersion!, loadId!, toLoad),
+    enabled: policyengineVersion !== null && loadId !== null && toLoad.length > 0,
     staleTime: Infinity,
     gcTime: PARAMETER_QUERY_GC_TIME,
   });
@@ -142,6 +148,7 @@ function useV2LoadParameters(): LoadV3Parameters {
     (names: readonly string[]) => {
       const state = store.getState();
       const policyengineVersion = selectV2CatalogVersion(state);
+      const loadId = selectV2LoadId(state);
       const toLoad = namesToLoad(
         state.metadata.parameters,
         state.metadata.v2MissingParameterNames,
@@ -150,13 +157,13 @@ function useV2LoadParameters(): LoadV3Parameters {
       if (toLoad.length === 0) {
         return null;
       }
-      if (policyengineVersion === null) {
+      if (policyengineVersion === null || loadId === null) {
         return Promise.reject(new Error('The model catalog has not loaded yet.'));
       }
       return queryClient
         .fetchQuery({
-          queryKey: catalogParametersKey(countryId, policyengineVersion, toLoad),
-          queryFn: () => loadIntoStore(dispatch, countryId, policyengineVersion, toLoad),
+          queryKey: catalogParametersKey(countryId, policyengineVersion, loadId, toLoad),
+          queryFn: () => loadIntoStore(dispatch, countryId, policyengineVersion, loadId, toLoad),
           staleTime: Infinity,
           gcTime: PARAMETER_QUERY_GC_TIME,
         })

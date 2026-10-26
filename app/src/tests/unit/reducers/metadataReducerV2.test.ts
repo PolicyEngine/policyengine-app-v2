@@ -126,6 +126,7 @@ describe('metadataReducer with the v2 routes', () => {
       catalogParametersLoaded({
         countryId: 'us',
         policyengineVersion: TEST_POLICYENGINE_VERSION,
+        loadId: store.getState().metadata.v2LoadId!,
         parameters: {
           'gov.example.rate': {
             type: 'parameter',
@@ -155,6 +156,7 @@ describe('metadataReducer with the v2 routes', () => {
       catalogParametersLoaded({
         countryId: 'us',
         policyengineVersion: '0.0.1',
+        loadId: store.getState().metadata.v2LoadId!,
         parameters: {
           'gov.example.rate': { type: 'parameter', parameter: 'gov.example.rate', label: 'Rate' },
         },
@@ -163,6 +165,33 @@ describe('metadataReducer with the v2 routes', () => {
       })
     );
 
+    expect(store.getState().metadata.parameters).toEqual({});
+  });
+
+  test('given parameters asked for under an earlier model catalog load then they are dropped', async () => {
+    // Given — the store loaded the model catalog, then loaded it again
+    mockFetchV2ModelCatalogMetadata.mockResolvedValue(v2Payload());
+    const store = testStore();
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+    const earlierLoad = store.getState().metadata.v2LoadId!;
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+
+    // When
+    store.dispatch(
+      catalogParametersLoaded({
+        countryId: 'us',
+        policyengineVersion: TEST_POLICYENGINE_VERSION,
+        loadId: earlierLoad,
+        parameters: {
+          'gov.example.rate': { type: 'parameter', parameter: 'gov.example.rate', label: 'Rate' },
+        },
+        parameterIds: {},
+        missingNames: [],
+      })
+    );
+
+    // Then
+    expect(store.getState().metadata.v2LoadId).not.toBe(earlierLoad);
     expect(store.getState().metadata.parameters).toEqual({});
   });
 });
