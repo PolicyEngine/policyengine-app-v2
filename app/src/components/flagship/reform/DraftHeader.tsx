@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { isV2ApiError } from '@/api/v2UserClient';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import {
   Button,
   Popover,
@@ -525,7 +526,8 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
               starting ||
               saveMutation.isPending ||
               baseline.pending ||
-              baseline.matchesDraft
+              baseline.matchesDraft ||
+              baseline.missingParameters.length > 0
             }
             title={
               !empty && adjusted.length === 0
@@ -567,6 +569,13 @@ export function DraftRunBar({ draft }: { draft: DraftReform }) {
           This reform matches {savedReformName(baseline.reform)}. Change a value or compare with
           something else.
         </p>
+      )}
+
+      {baseline.reform && baseline.missingParameters.length > 0 && (
+        <MissingParametersNotice
+          subject={`The reform it is compared with, ${savedReformName(baseline.reform)},`}
+          parameterPaths={baseline.missingParameters}
+        />
       )}
 
       {(runReport.error || saveError) && (
