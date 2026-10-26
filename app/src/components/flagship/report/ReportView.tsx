@@ -20,6 +20,7 @@ import ReportContents, {
   type DistrictsCardCopy,
   type ReportMetric,
 } from '@/components/flagship/ReportContents';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import type { ModelTrackRecord } from '@/components/flagship/ValidationPanel';
 import { Stack, Tabs, TabsContent, TabsList, TabsTrigger, Text, Title } from '@/components/ui';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
@@ -516,17 +517,20 @@ export default function ReportView({
                     <SectionHeading id="household" title="Household" />
                     {/* A household runs on the report's own policies, once they exist. */}
                     {reformPolicyId && baselinePolicyId ? (
-                      <HouseholdImpactSection
-                        // New policies, year or region start a new form, with nothing run.
-                        key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
-                        countryId={countryId}
-                        year={year}
-                        region={region}
-                        baselinePolicyId={baselinePolicyId}
-                        reformPolicyId={reformPolicyId}
-                        reformPaths={provisions.map((provision) => provision.path)}
-                        reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
-                      />
+                      // The builder and breakdown read every variable (v2 loads them in the background).
+                      <V3VariablesGate label="Loading the household builder">
+                        <HouseholdImpactSection
+                          // New policies, year or region start a new form, with nothing run.
+                          key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
+                          countryId={countryId}
+                          year={year}
+                          region={region}
+                          baselinePolicyId={baselinePolicyId}
+                          reformPolicyId={reformPolicyId}
+                          reformPaths={provisions.map((provision) => provision.path)}
+                          reformChangesNothing={!!output && isSocietyWideReportNoOp(output)}
+                        />
+                      </V3VariablesGate>
                     ) : (
                       <>
                         <Text

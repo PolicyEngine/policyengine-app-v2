@@ -14,6 +14,7 @@ import PovertyImpactByGenderSubPage from '@/components/flagship/report/charts/Po
 import PovertyImpactByRaceSubPage from '@/components/flagship/report/charts/PovertyImpactByRaceSubPage';
 import WinnersLosersIncomeDecileSubPage from '@/components/flagship/report/charts/WinnersLosersIncomeDecileSubPage';
 import ReportChartCard from '@/components/flagship/report/ReportChartCard';
+import V3VariablesGate from '@/components/flagship/V3VariablesGate';
 import { SegmentedControl, Stack } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -179,7 +180,10 @@ export default function EconomicImpactCharts({ output }: { output: SocietyWideRe
             csvFilename="budgetary-impact-by-program.csv"
             csvData={getDetailedBudgetCsvRows(output, metadata)}
           >
-            <BudgetaryImpactByProgramSubPage output={output} fillHeight />
+            {/* Programme names are variable labels (v2 loads them in the background). */}
+            <V3VariablesGate label="Loading programme names">
+              <BudgetaryImpactByProgramSubPage output={output} fillHeight />
+            </V3VariablesGate>
           </ReportChartCard>
         )}
 
