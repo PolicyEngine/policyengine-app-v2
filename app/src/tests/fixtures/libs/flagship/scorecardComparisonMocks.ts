@@ -52,4 +52,27 @@ export const utahBaselineClaim = scorecardClaim({
   reform_framework: 'baseline',
   name: 'Utah Child Tax Credit',
   metric: 'benefit_cost',
+  program: 'ut_ctc',
+  geography: 'UT',
 });
+
+export const UK_PA_PATH = 'gov.hmrc.income_tax.allowances.personal_allowance.amount';
+export const ukMeasureClaim = (overrides: Partial<ScorecardClaim> = {}): ScorecardClaim =>
+  scorecardClaim({
+    claim_id: 'uk-pa-freeze-2028',
+    country: 'UK',
+    source: 'obr',
+    name: 'Personal allowance freeze',
+    unit_concept: 'gbp',
+    reform_framework: 'policy_ref',
+    reform_key: 'ab2025',
+    latest: { value: null, status: 'not_computed' },
+    measure: {
+      key: 'income_tax_threshold_freeze',
+      program: 'income_tax',
+      computability: 'parametric',
+      head_variables: ['income_tax'],
+      parameter_paths: [UK_PA_PATH],
+    },
+    ...overrides,
+  });

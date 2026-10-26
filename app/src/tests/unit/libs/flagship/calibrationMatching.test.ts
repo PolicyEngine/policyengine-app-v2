@@ -1,22 +1,53 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
+  calibrationFitForGeography,
   calibrationMatchesForPaths,
+  calibrationTargetLabel,
+  calibrationValueKind,
+  calibrationVariableLabel,
   dashboardTargetsUrl,
   fetchCalibrationTargets,
+  fetchGeographyCalibrationTargets,
+  formatCalibrationValue,
   geographyForRegion,
+  relevantCalibrationMatches,
   ringForDepth,
+  summarizeGeographyFit,
   summarizeMatches,
+  ukCalibrationGeographies,
+  ukCalibrationMatchesForPaths,
   weightedMeanAbsError,
 } from '@/libs/flagship/calibrationMatching';
 import {
+  mockCalibrationMatches,
   mockCalibrationRows,
+  mockCtcLimitingMatch,
+  mockDcFitRows,
+  mockEitcCalibrationRow,
   POPULACE_RELEASE_ID,
 } from '@/tests/fixtures/libs/flagship/calibrationMatchingMocks';
 import {
+  NATIONWIDE,
+  REPORT_4332_REFORM,
+  usReform,
+} from '@/tests/fixtures/libs/flagship/comparisonRelevanceMocks';
+import {
   CTC_BASE_AMOUNT_PATH,
+  EITC_MAX_PATH,
   mockParameterDependencyMap,
   STANDARD_DEDUCTION_PATH,
 } from '@/tests/fixtures/libs/flagship/parameterDependenciesMocks';
+import {
+  mockGbCarersAllowanceRow,
+  mockScotlandHigherRateRow,
+  mockUkItlRow,
+  mockWalesIncomeTaxRow,
+  UK_BASIC_RATE_PATH,
+  UK_CARERS_EARNINGS_LIMIT_PATH,
+  UK_ELASTICITY_PATH,
+  UK_RELEASE_ID,
+  UK_RELIEF_AGE_PATH,
+} from '@/tests/fixtures/libs/flagship/ukCalibrationMocks';
 
 vi.mock('@/libs/flagship/parameterDependencies', async (importOriginal) => {
   const original = await importOriginal<typeof import('@/libs/flagship/parameterDependencies')>();
@@ -59,6 +90,89 @@ describe('dashboardTargetsUrl', () => {
     expect(dashboardTargetsUrl({})).toBe(
       'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets'
     );
+  });
+
+  test('given only a level then the targets page is filtered to it', () => {
+    expect(dashboardTargetsUrl({ level: 'state' })).toBe(
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?level=state'
+    );
+  });
+});
+
+describe('formatCalibrationValue', () => {
+  test('given a total target then its values read as dollars', () => {
+    expect(formatCalibrationValue(3_048_229_000, { measure: 'total' })).toBe('$3B');
+    expect(formatCalibrationValue(3_245_012_820, { measure: 'total' })).toBe('$3.2B');
+    expect(formatCalibrationValue(279_800_000, { measure: 'total' })).toBe('$279.8M');
+    expect(formatCalibrationValue(3_212_345.678, { measure: 'total' }, 'exact')).toBe(
+      '$3,212,345.68'
+    );
+  });
+
+  test('given a count target then its values stay counts', () => {
+    expect(formatCalibrationValue(20_600, { measure: 'count' })).toBe('20.6K');
+    expect(formatCalibrationValue(20_601, { measure: 'count' }, 'exact')).toBe('20,601');
+  });
+
+  test('given no measure or no value then a plain number or a dash returns', () => {
+    expect(calibrationValueKind({ measure: null })).toBe('number');
+    expect(formatCalibrationValue(1_500, { measure: null })).toBe('1.5K');
+    expect(formatCalibrationValue(null, { measure: 'total' })).toBe('—');
+  });
+});
+
+describe('fetchGeographyCalibrationTargets', () => {
+  test('given a state then the route is asked for all its targets', async () => {
+    const fetchMock = vi.fn(async () =>
+      okResponse({ releaseId: POPULACE_RELEASE_ID, rows: mockDcFitRows })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchGeographyCalibrationTargets('DC');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/calibration-targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variables: [], geography: 'DC', all: true }),
+    });
+    expect(result).toEqual({ releaseId: POPULACE_RELEASE_ID, rows: mockDcFitRows });
+  });
+
+  test('given the route fails then null returns', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false }) as Response)
+    );
+
+    await expect(calibrationFitForGeography('DC')).resolves.toBeNull();
+  });
+});
+
+describe('summarizeGeographyFit', () => {
+  test('given a state’s targets then it counts them, the close fits, the weighted gap and the worst', () => {
+    const fit = summarizeGeographyFit('DC', POPULACE_RELEASE_ID, [...mockDcFitRows].reverse(), 3);
+
+    expect(fit.targetCount).toBe(5);
+    // DC income tax (6.5%), returns (2%) and population (0.1%) are within 10%.
+    expect(fit.closeFitShare).toBeCloseTo(3 / 5);
+    expect(fit.meanAbsRelativeError).toBeCloseTo(weightedMeanAbsError(mockDcFitRows));
+    expect(fit.worst).toEqual(mockDcFitRows.slice(0, 3));
+  });
+
+  test('given targets of other places or without a fit then they are left out', () => {
+    const fit = summarizeGeographyFit('DC', null, [
+      ...mockCalibrationRows,
+      { ...mockDcFitRows[0], relativeError: null },
+    ]);
+
+    expect(fit).toEqual({
+      releaseId: null,
+      geography: 'DC',
+      targetCount: 0,
+      closeFitShare: 0,
+      meanAbsRelativeError: 0,
+      worst: [],
+    });
   });
 });
 
@@ -178,5 +292,279 @@ describe('calibrationMatchesForPaths', () => {
 
     expect(result!.matches).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('given an EITC path echoing into the CTC then only the EITC targets remain', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        okResponse({
+          releaseId: POPULACE_RELEASE_ID,
+          rows: [...mockCalibrationRows, mockEitcCalibrationRow],
+        })
+      )
+    );
+
+    const result = await calibrationMatchesForPaths([EITC_MAX_PATH], 'US');
+
+    expect(result!.reachedCount).toBeGreaterThan(1);
+    expect(result!.matches.map((match) => match.variable)).toEqual(['eitc']);
+    // The CTC targets it echoes into are kept as related context, not as matches.
+    expect(result!.related!.length).toBeGreaterThan(0);
+    expect(result!.related!.map((match) => match.variable)).not.toContain('eitc');
+  });
+});
+
+describe('relevantCalibrationMatches', () => {
+  test('given report 4332 then its CTC targets drop and no match is left', () => {
+    expect(
+      relevantCalibrationMatches(
+        [...mockCalibrationMatches.matches, mockCtcLimitingMatch],
+        REPORT_4332_REFORM
+      )
+    ).toEqual([]);
+  });
+
+  test('given a CTC reform then its CTC targets stay with their fit', () => {
+    const [refundable] = relevantCalibrationMatches(
+      mockCalibrationMatches.matches,
+      usReform([CTC_BASE_AMOUNT_PATH], NATIONWIDE)
+    );
+
+    expect(refundable.variable).toBe('refundable_ctc');
+    expect(refundable.targetCount).toBe(2);
+    expect(refundable.worst).toBe(mockCalibrationRows[1]);
+  });
+
+  test('given a group with targets of another program then only the changed program stays', () => {
+    const [match] = relevantCalibrationMatches(
+      [
+        {
+          ...mockCalibrationMatches.matches[0],
+          targets: [mockCalibrationRows[2], mockEitcCalibrationRow],
+          targetCount: 2,
+          worst: mockCalibrationRows[2],
+        },
+      ],
+      usReform([EITC_MAX_PATH], NATIONWIDE)
+    );
+
+    expect(match.targets).toEqual([mockEitcCalibrationRow]);
+    expect(match.worst).toBe(mockEitcCalibrationRow);
+    expect(match.meanAbsRelativeError).toBeCloseTo(0.08);
+  });
+});
+
+describe('calibrationTargetLabel', () => {
+  test('given a measure id and a whole-table slice then the quantity names the target', () => {
+    expect(calibrationTargetLabel(mockCalibrationRows[0])).toBe('Amount');
+    expect(calibrationTargetLabel(mockCalibrationRows[1])).toBe('Returns');
+  });
+
+  test('given a slice of the table then the slice follows the quantity', () => {
+    expect(calibrationTargetLabel(mockEitcCalibrationRow)).toBe(
+      'Returns · 18k to 19k · no qualifying children'
+    );
+  });
+
+  test('given a measure id without a quantity word then it reads as words', () => {
+    expect(
+      calibrationTargetLabel({
+        ...mockCalibrationRows[0],
+        sourceMeasureId: 'average_monthly_households',
+        breakdown: '',
+      })
+    ).toBe('Average monthly households');
+  });
+
+  test('given no measure id then the measure names the target', () => {
+    expect(
+      calibrationTargetLabel({
+        ...mockCalibrationRows[0],
+        sourceMeasureId: null,
+        breakdown: null,
+        measure: 'count',
+      })
+    ).toBe('Count');
+  });
+});
+
+describe('calibrationVariableLabel', () => {
+  test('given our own copy then it wins over the model label', () => {
+    expect(calibrationVariableLabel('refundable_ctc', 'refundable CTC')).toBe(
+      'Refundable Child Tax Credit'
+    );
+  });
+
+  test('given the model label then it names the variable', () => {
+    expect(
+      calibrationVariableLabel('ctc_limiting_tax_liability', 'CTC-limiting tax liability')
+    ).toBe('CTC-limiting tax liability');
+    expect(calibrationVariableLabel('snap', 'SNAP allotment')).toBe('SNAP allotment');
+  });
+
+  test('given no label then the name reads as words with its acronyms', () => {
+    expect(calibrationVariableLabel('ctc_limiting_tax_liability')).toBe(
+      'CTC limiting tax liability'
+    );
+  });
+});
+
+describe('UK calibration matching', () => {
+  test('given UK report regions then the dashboard’s area names return', () => {
+    expect(geographyForRegion('uk', 'uk')).toBe('United Kingdom');
+    expect(geographyForRegion(undefined, 'uk')).toBe('United Kingdom');
+    expect(geographyForRegion('country/wales', 'uk')).toBe('Wales');
+    expect(geographyForRegion('country/england', 'uk')).toBe('England');
+    expect(geographyForRegion('country/scotland', 'uk')).toBe('Scotland');
+    expect(geographyForRegion('country/northern_ireland', 'uk')).toBe('Northern Ireland');
+    expect(geographyForRegion('country/ni', 'uk')).toBe('Northern Ireland');
+    expect(geographyForRegion('wales', 'uk')).toBe('Wales');
+  });
+
+  test('given a constituency or local authority then the UK returns, its nation unknown', () => {
+    expect(geographyForRegion('constituency/Cardiff West', 'uk')).toBe('United Kingdom');
+    expect(geographyForRegion('local_authority/Cardiff', 'uk')).toBe('United Kingdom');
+  });
+
+  test('given a US region without a country then the US reading is unchanged', () => {
+    expect(geographyForRegion('country/wales')).toBe('US');
+    expect(geographyForRegion('state/ca', 'us')).toBe('CA');
+  });
+
+  test('given a nation then its targets and the wider areas that contain it are read', () => {
+    expect(ukCalibrationGeographies('Wales')).toEqual([
+      'Wales',
+      'England and Wales',
+      'Great Britain',
+      'United Kingdom',
+    ]);
+    expect(ukCalibrationGeographies('Scotland')).toEqual([
+      'Scotland',
+      'Great Britain',
+      'United Kingdom',
+    ]);
+    expect(ukCalibrationGeographies('Northern Ireland')).toEqual([
+      'Northern Ireland',
+      'United Kingdom',
+    ]);
+    expect(ukCalibrationGeographies('United Kingdom')).toEqual([
+      'United Kingdom',
+      'Great Britain',
+      'England and Wales',
+    ]);
+  });
+
+  test('given the UK then the dashboard link opens its UK view', () => {
+    expect(dashboardTargetsUrl({ source: 'hmrc', level: 'country', country: 'uk' })).toBe(
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?country=uk&source=hmrc&level=country'
+    );
+    expect(dashboardTargetsUrl({ level: 'state', country: 'us' })).toBe(
+      'https://calibration-diagnostics.vercel.app/calibration/dashboard/microcosm/targets?level=state'
+    );
+  });
+
+  test('given a sterling target then its values read as pounds', () => {
+    expect(formatCalibrationValue(3_245_012_820, mockUkItlRow)).toBe('£3.2B');
+    expect(formatCalibrationValue(1_000_000, mockUkItlRow, 'exact')).toBe('£1,000,000');
+    expect(formatCalibrationValue(20_600, mockScotlandHigherRateRow)).toBe('20.6K');
+  });
+
+  test('given a UK target then its label is the dashboard’s, with the band when the label names none', () => {
+    expect(calibrationTargetLabel(mockWalesIncomeTaxRow)).toBe(
+      'Income Tax liabilities by region, total income 50,000 to 70,000'
+    );
+    expect(calibrationTargetLabel(mockUkItlRow)).toBe(
+      'Income Tax liabilities by total income band · Total income from GBP 200 000 to GBP 500 000'
+    );
+    expect(calibrationTargetLabel(mockGbCarersAllowanceRow)).toBe('Carers allowance');
+  });
+
+  test('report 4684: a basic-rate change in Wales matches Wales’s and the UK’s Income Tax targets', async () => {
+    const fetchMock = vi.fn(async () =>
+      okResponse({
+        releaseId: UK_RELEASE_ID,
+        // As the route answers: the asked geographies' targets of the asked programmes.
+        rows: [mockUkItlRow, mockWalesIncomeTaxRow],
+      })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await ukCalibrationMatchesForPaths([UK_BASIC_RATE_PATH], 'Wales');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/calibration-targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        variables: ['income_tax'],
+        geography: 'Wales',
+        country: 'uk',
+        geographies: ['Wales', 'England and Wales', 'Great Britain', 'United Kingdom'],
+      }),
+    });
+    expect(result).toMatchObject({
+      releaseId: UK_RELEASE_ID,
+      geography: 'Wales',
+      countryId: 'uk',
+      reachedCount: 1,
+      related: [],
+    });
+    expect(result!.matches.map((match) => match.variable)).toEqual(['income_tax']);
+    // Wales first, then the UK, whatever the fit.
+    expect(result!.matches[0].targets).toEqual([mockWalesIncomeTaxRow, mockUkItlRow]);
+  });
+
+  test('report 4686: a UK-wide change matches Carer’s Allowance and Income Tax', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        okResponse({ releaseId: UK_RELEASE_ID, rows: [mockUkItlRow, mockGbCarersAllowanceRow] })
+      )
+    );
+
+    const result = await ukCalibrationMatchesForPaths(
+      [UK_CARERS_EARNINGS_LIMIT_PATH, UK_RELIEF_AGE_PATH],
+      'United Kingdom'
+    );
+
+    expect(result!.matches.map((match) => match.variable).sort()).toEqual([
+      'carers_allowance',
+      'income_tax',
+    ]);
+  });
+
+  test('given a parameter no programme covers then nothing is fetched and nothing matches', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await ukCalibrationMatchesForPaths([UK_ELASTICITY_PATH], 'United Kingdom');
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ reachedCount: 0, matches: [], countryId: 'uk' });
+  });
+
+  test('given the route fails then null returns', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false }) as Response)
+    );
+
+    await expect(ukCalibrationMatchesForPaths([UK_BASIC_RATE_PATH], 'Wales')).resolves.toBeNull();
+  });
+
+  test('given a nation then its overall fit is asked of the UK dashboard', async () => {
+    const fetchMock = vi.fn(async () =>
+      okResponse({ releaseId: UK_RELEASE_ID, rows: [mockWalesIncomeTaxRow] })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const fit = await calibrationFitForGeography('Wales', 'uk');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/calibration-targets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variables: [], geography: 'Wales', all: true, country: 'uk' }),
+    });
+    expect(fit).toMatchObject({ geography: 'Wales', targetCount: 1 });
   });
 });

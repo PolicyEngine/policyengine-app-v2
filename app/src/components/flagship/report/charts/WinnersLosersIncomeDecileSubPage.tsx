@@ -4,6 +4,7 @@ import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { TOOLTIP_STYLE } from '@/components/charts';
 import ChartExplanation from '@/components/flagship/report/ChartExplanation';
+import { measureTextWidth } from '@/components/flagship/report/charts/barLayout';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -12,9 +13,10 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
   WINNERS_LOSERS_CATEGORIES as CATEGORIES,
   getWinnersLosersCsvRows,
+  type DecileBreakdown,
 } from '@/pages/report-output/distributional-impact/distributionalChartUtils';
 import type { RootState } from '@/store';
-import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { CHART_EXPORT_KEEP, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -23,6 +25,8 @@ interface Props {
   chartHeight?: number;
   fillHeight?: boolean;
   compact?: boolean;
+  /** Households ranked by wealth rather than income: the UK's wealth deciles. */
+  breakdown?: DecileBreakdown;
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -42,6 +46,12 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 };
 
 const BAR_SIZE = 18;
+/** The legend: a 12px swatch, its name 8px on, rows 8px apart. */
+const LEGEND_SWATCH = 12;
+const LEGEND_TEXT_GAP = 8;
+const LEGEND_ROW_GAP = 8;
+const LEGEND_ROW = LEGEND_SWATCH + LEGEND_ROW_GAP;
+const LEGEND_FONT_SIZE = 12;
 const TOOLTIP_POSITION = { x: 72, y: 0 };
 const TOOLTIP_WRAPPER_STYLE = {
   zIndex: 1000,
@@ -49,11 +59,12 @@ const TOOLTIP_WRAPPER_STYLE = {
   maxWidth: 'min(280px, calc(100vw - 32px))',
 };
 
-function WinnersLosersTooltip({ active, payload, label }: any) {
+/** A row's outcome shares on hover. The shares count people, so "All" is everyone. */
+export function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
     return null;
   }
-  const decileLabel = label === 'All' ? 'All households' : `Decile ${label}`;
+  const decileLabel = label === 'All' ? 'All people' : `Decile ${label}`;
   return (
     <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{decileLabel}</p>
@@ -82,25 +93,29 @@ export default function WinnersLosersIncomeDecileSubPage({
   chartHeight: _chartHeight,
   fillHeight = false,
   compact = false,
+  breakdown = 'income',
 }: Props) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // Extract data
-  const deciles = output.intra_decile.deciles;
-  const all = output.intra_decile.all;
+  const wealth = breakdown === 'wealth';
+  // A result without wealth deciles reads as no change rather than failing.
+  const intraDecile = wealth ? output.intra_wealth_decile : output.intra_decile;
+  const deciles = (intraDecile?.deciles ?? {}) as Partial<Record<string, number[]>>;
+  const all = (intraDecile?.all ?? {}) as Partial<Record<string, number>>;
   const decileNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   // Transform data for Recharts
   const decileData = decileNumbers.map((decile) => ({
     name: decile.toString(),
-    ...Object.fromEntries(CATEGORIES.map((cat) => [cat, deciles[cat][decile - 1]])),
+    ...Object.fromEntries(CATEGORIES.map((cat) => [cat, deciles[cat]?.[decile - 1] ?? 0])),
   }));
 
   const allData = [
     {
       name: 'All',
-      ...Object.fromEntries(CATEGORIES.map((cat) => [cat, all[cat]])),
+      ...Object.fromEntries(CATEGORIES.map((cat) => [cat, all[cat] ?? 0])),
     },
   ];
 
@@ -111,8 +126,9 @@ export default function WinnersLosersIncomeDecileSubPage({
 
   // Generate chart title
   const getChartTitle = () => {
-    const totalAhead = all['Gain more than 5%'] + all['Gain less than 5%'];
-    const totalBehind = all['Lose more than 5%'] + all['Lose less than 5%'];
+    const share = (cat: string) => all[cat] ?? 0;
+    const totalAhead = share('Gain more than 5%') + share('Gain less than 5%');
+    const totalBehind = share('Lose more than 5%') + share('Lose less than 5%');
     const percent = (n: number) => formatPercent(n, countryId, { maximumFractionDigits: 0 });
     const totalAheadTerm = percent(totalAhead);
     const totalBehindTerm = percent(totalBehind);
@@ -133,7 +149,12 @@ export default function WinnersLosersIncomeDecileSubPage({
   };
 
   // Description text
-  const description = (
+  const description = wealth ? (
+    <Text size="sm" c="dimmed">
+      The chart shows the distribution of winners and losers from the reform, grouped by wealth
+      decile. Wealth deciles contain an equal number of people (ranked by wealth).
+    </Text>
+  ) : (
     <Text size="sm" c="dimmed">
       PolicyEngine sorts households into ten equally-populated groups according to their baseline{' '}
       {countryId === 'uk' ? 'equivalised' : 'equivalized'} household net income.
@@ -147,7 +168,8 @@ export default function WinnersLosersIncomeDecileSubPage({
         data={allData}
         stackOffset="expand"
         barSize={BAR_SIZE}
-        margin={{ top: 8, right: 10, bottom: 0, left: 40 }}
+        // The same left edge as the deciles below, so "All" lines up with them.
+        margin={{ top: 8, right: 10, bottom: 0, left: compact ? 10 : 40 }}
       >
         <XAxis type="number" hide />
         <YAxis
@@ -182,7 +204,8 @@ export default function WinnersLosersIncomeDecileSubPage({
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
         layout="vertical"
-        data={decileData}
+        // Decile 10 on top, 1 at the bottom: the income ladder reads upward.
+        data={[...decileData].reverse()}
         stackOffset="expand"
         barSize={BAR_SIZE}
         barCategoryGap={1}
@@ -212,7 +235,7 @@ export default function WinnersLosersIncomeDecileSubPage({
           interval={0}
         >
           <Label
-            value="Income decile"
+            value={wealth ? 'Wealth decile' : 'Income decile'}
             angle={-90}
             position="insideLeft"
             style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
@@ -238,41 +261,48 @@ export default function WinnersLosersIncomeDecileSubPage({
     </ResponsiveContainer>
   );
 
+  // Drawn in SVG, so the chart's download keeps the key to its colors. A
+  // few pixels spare keep a name whole if the font loads wider than measured.
+  const legendWidth =
+    LEGEND_SWATCH +
+    LEGEND_TEXT_GAP +
+    4 +
+    Math.ceil(
+      Math.max(...CATEGORIES.map((cat) => measureTextWidth(LEGEND_TEXT_MAP[cat], LEGEND_FONT_SIZE)))
+    );
   const legend = (
     <div
+      {...CHART_EXPORT_KEEP}
       style={{
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        gap: 8,
         paddingLeft: 16,
         paddingRight: 8,
         flexShrink: 0,
       }}
     >
-      {CATEGORIES.map((cat) => (
-        <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 12,
-              height: 12,
-              borderRadius: 2,
-              backgroundColor: COLOR_MAP[cat],
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: typography.fontSize.xs,
-              color: colors.gray[500],
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {LEGEND_TEXT_MAP[cat]}
-          </span>
-        </div>
-      ))}
+      <svg
+        width={legendWidth}
+        height={CATEGORIES.length * LEGEND_ROW - LEGEND_ROW_GAP}
+        aria-label="Legend"
+      >
+        {CATEGORIES.map((cat, index) => (
+          <g key={cat} transform={`translate(0, ${index * LEGEND_ROW})`}>
+            <rect width={LEGEND_SWATCH} height={LEGEND_SWATCH} rx={2} fill={COLOR_MAP[cat]} />
+            <text
+              x={LEGEND_SWATCH + LEGEND_TEXT_GAP}
+              y={LEGEND_SWATCH / 2}
+              dominantBaseline="central"
+              fontSize={LEGEND_FONT_SIZE}
+              fontFamily={typography.fontFamily.primary}
+              fill={colors.gray[500]}
+            >
+              {LEGEND_TEXT_MAP[cat]}
+            </text>
+          </g>
+        ))}
+      </svg>
     </div>
   );
 
@@ -281,7 +311,10 @@ export default function WinnersLosersIncomeDecileSubPage({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ height: allBarHeight, flexShrink: 0 }}>{allBarChart}</div>
+            {/* Kept by the download at its short compact height. */}
+            <div {...CHART_EXPORT_KEEP} style={{ height: allBarHeight, flexShrink: 0 }}>
+              {allBarChart}
+            </div>
             <div style={{ height: gapHeight, flexShrink: 0 }} />
             <div style={{ flex: 1, minHeight: 0 }}>{decileBarChart}</div>
           </div>
@@ -297,14 +330,16 @@ export default function WinnersLosersIncomeDecileSubPage({
   return (
     <ChartContainer
       title={getChartTitle()}
-      downloadFilename="winners-losers-income-decile.svg"
-      csvFilename="winners-losers-income-decile.csv"
-      csvData={getWinnersLosersCsvRows(output)}
+      downloadFilename={`winners-losers-${breakdown}-decile.svg`}
+      csvFilename={`winners-losers-${breakdown}-decile.csv`}
+      csvData={getWinnersLosersCsvRows(output, breakdown)}
     >
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ height: allBarHeight }}>{allBarChart}</div>
+            <div {...CHART_EXPORT_KEEP} style={{ height: allBarHeight }}>
+              {allBarChart}
+            </div>
             <div style={{ height: gapHeight }} />
             <div style={{ height: decileHeight }}>{decileBarChart}</div>
           </div>

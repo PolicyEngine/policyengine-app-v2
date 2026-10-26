@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   claimsFromBillValidation,
   fetchModelValidation,
+  scorecardEntryUrl,
   scorecardMatchesForPaths,
   summarizeScorecardPrograms,
 } from '@/libs/flagship/modelValidation';
@@ -131,7 +132,7 @@ describe('scorecardMatchesForPaths', () => {
     expect(matches?.rows).toHaveLength(2);
   });
 
-  test('given an EITC path echoing into the refundable CTC then both show, EITC nearest', async () => {
+  test('given an EITC path echoing into the refundable CTC then only the EITC is its program', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => okResponse({ rows: mockEitcScorecardRows }))
@@ -139,10 +140,11 @@ describe('scorecardMatchesForPaths', () => {
 
     const matches = await scorecardMatchesForPaths([EITC_MAX_PATH]);
 
+    // The CTC is reached through the tax the EITC reduces; the reform does not change it.
     expect(matches?.programs.map((match) => [match.program, match.ring])).toEqual([
       ['eitc', 'primary'],
-      ['ctc_refund', 'mechanism'],
     ]);
+    expect(matches?.rows.every((row) => row.program === 'eitc')).toBe(true);
   });
 
   test('given a state credit then no federal program is borrowed', async () => {
@@ -200,7 +202,34 @@ describe('claimsFromBillValidation', () => {
     expect(claims[1].source).toBe('GBPI');
   });
 
+  test('given the fiscal note names its source then the claim carries that source', () => {
+    const claims = claimsFromBillValidation('ct-sb78', {
+      fiscalNoteEstimate: -57_500_000,
+      fiscalNoteSource: '  OFA fiscal note for sSB-1 Sec. 6 ',
+      peEstimate: -60_000_000,
+    });
+
+    expect(claims[0].source).toBe('OFA fiscal note for sSB-1 Sec. 6');
+  });
+
   test('given no comparable estimates then no claims return', () => {
     expect(claimsFromBillValidation('x', { peEstimate: -5 })).toEqual([]);
+  });
+});
+
+describe('scorecardEntryUrl', () => {
+  test('given a US entry then the link opens its view with the default country left out', () => {
+    expect(scorecardEntryUrl('validation', 'US')).toBe(
+      'https://www.policyengine.org/scorecard?view=validation'
+    );
+    expect(scorecardEntryUrl('scorecard')).toBe(
+      'https://www.policyengine.org/scorecard?view=scorecard'
+    );
+  });
+
+  test('given another country then the link selects it', () => {
+    expect(scorecardEntryUrl('validation', 'UK')).toBe(
+      'https://www.policyengine.org/scorecard?view=validation&country=uk'
+    );
   });
 });

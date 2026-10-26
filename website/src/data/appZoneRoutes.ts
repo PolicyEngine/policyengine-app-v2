@@ -22,6 +22,11 @@ function withDeepRoute(route: AppZoneRoute): AppZoneRoute[] {
 
 export const appZoneRoutes: AppZoneRoute[] = [
   {
+    source: "/uk/energy-autumn-budget",
+    destination:
+      "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
+  },
+  {
     source: "/uk/targeted-energy-discount",
     destination:
       "https://uk-targeted-energy-discount.vercel.app/uk/targeted-energy-discount",
@@ -62,6 +67,10 @@ export const appZoneRoutes: AppZoneRoute[] = [
   {
     source: "/uk/bus-fare-cap",
     destination: "https://bus-fare-cap.vercel.app/uk/bus-fare-cap",
+  },
+  {
+    source: "/uk/triple-lock",
+    destination: "https://uk-triple-lock.vercel.app/uk/triple-lock",
   },
   {
     source: "/uk/middle-east-war-living-standards",
@@ -179,11 +188,9 @@ export const appZoneRoutes: AppZoneRoute[] = [
     destination: "https://cliff-watch.vercel.app/",
     deepDestination: "https://cliff-watch.vercel.app/:path*",
   },
-  {
-    source: "/uk/cliffwatch",
-    destination: "https://cliff-watch.vercel.app/?country=uk",
-    deepDestination: "https://cliff-watch.vercel.app/:path*?country=uk",
-  },
+  // No /uk/cliffwatch entry: that app is US-only, so next.config.ts 308s
+  // /uk/cliffwatch to UK CliffWatch at /uk/uk-cliff-watch (and old US share
+  // links, which carry ?s=<state>, to /us/cliffwatch).
   {
     source: "/us/marriage",
     destination: "https://marriage-zeta-beryl.vercel.app/us/marriage",

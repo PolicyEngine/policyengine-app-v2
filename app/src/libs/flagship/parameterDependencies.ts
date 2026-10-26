@@ -124,6 +124,15 @@ export function variablesReachedByPaths(
   );
 }
 
+/**
+ * Whether a country has a traced map. The map is traced from
+ * policyengine-us only, so another country's reform paths would match
+ * US variables: such a country gets no map at all.
+ */
+export function hasParameterDependencies(countryId: string): boolean {
+  return countryId === 'us';
+}
+
 let cached: Promise<ParameterDependencyMap> | null = null;
 
 /** The traced map for policyengine-us, loaded once per session. */

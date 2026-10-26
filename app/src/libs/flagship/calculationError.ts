@@ -15,21 +15,49 @@ export interface CalculationErrorSummary {
   detail: string;
 }
 
-/** The API's own message, from the JSON body after the status when there is one. */
-function apiMessage(raw: string): string | null {
+/** The JSON body after the status, when there is one. */
+function apiBody(raw: string): { message?: unknown; errors?: unknown } | null {
   const start = raw.indexOf('{');
   if (start < 0) {
     return null;
   }
   try {
-    const body = JSON.parse(raw.slice(start));
-    return typeof body?.message === 'string' ? body.message : null;
+    return JSON.parse(raw.slice(start));
   } catch {
     return null;
   }
 }
 
-export function describeCalculationError(raw: string | null | undefined): CalculationErrorSummary {
+/** The API's own message, from the JSON body. */
+function apiMessage(raw: string): string | null {
+  const message = apiBody(raw)?.message;
+  return typeof message === 'string' ? message : null;
+}
+
+/**
+ * Whether a 4xx says the API itself could not serve the run, not that the
+ * reform is wrong: an error code for something unavailable
+ * (SPM_CONFIGURATION_UNAVAILABLE), or a message about its worker.
+ */
+function serverUnavailable(raw: string, message: string | null): boolean {
+  const errors = apiBody(raw)?.errors;
+  const codes = Array.isArray(errors)
+    ? errors.map((error) => (typeof error?.code === 'string' ? error.code : ''))
+    : [];
+  return (
+    codes.some((code) => /_UNAVAILABLE$/.test(code)) ||
+    /\bworker\b|unavailable/i.test(message ?? '')
+  );
+}
+
+/**
+ * @param scope Where the reform ran, as it reads after "running this
+ * reform": "nationwide", "UK-wide", "for Wales".
+ */
+export function describeCalculationError(
+  raw: string | null | undefined,
+  scope = 'nationwide'
+): CalculationErrorSummary {
   const detail = (raw ?? '').trim() || 'The calculation failed without a message.';
   const status = Number(detail.match(/\((\d{3})\)/)?.[1]) || null;
   const message = apiMessage(detail);
@@ -48,7 +76,16 @@ export function describeCalculationError(raw: string | null | undefined): Calcul
     return {
       retryable: true,
       title: 'The simulation did not finish',
-      body: "PolicyEngine's servers hit an error while running this reform nationwide. This is usually on our side rather than the reform's. Run the report again in a few minutes.",
+      body: `PolicyEngine's servers hit an error while running this reform ${scope}. This is usually on our side rather than the reform's. Run the report again in a few minutes.`,
+      reference,
+      detail,
+    };
+  }
+  if (status !== null && status >= 400 && serverUnavailable(detail, message)) {
+    return {
+      retryable: true,
+      title: 'The API could not run this right now',
+      body: "PolicyEngine's servers were not ready to run this report. This is on our side, not the reform's. Run the report again in a minute.",
       reference,
       detail,
     };

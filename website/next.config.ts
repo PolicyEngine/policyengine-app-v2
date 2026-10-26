@@ -74,6 +74,14 @@ const nextConfig: NextConfig = {
         destination: "/:countryId/ai-agents",
         permanent: true,
       },
+      // Childcare cliff edge dashboard: taken down temporarily while its
+      // costing is revised (uk-childcare-100k-threshold#8). Temporary so the
+      // URL can come back unchanged.
+      {
+        source: "/uk/childcare-100k-threshold/:path*",
+        destination: "/uk/research",
+        permanent: false,
+      },
       // Retired Citizens' Economic Council simulator, still embedded by
       // citizensecon.org.uk/policymodelling → main UK simulator
       {
@@ -90,6 +98,12 @@ const nextConfig: NextConfig = {
       {
         source: "/:countryId/blog",
         destination: "/:countryId/research",
+        permanent: true,
+      },
+      // Legacy /methodology → the model documentation
+      {
+        source: "/:countryId/methodology",
+        destination: "/:countryId/model",
         permanent: true,
       },
       // OBBBA household explorer: every older slug, and the misspelled or
@@ -175,7 +189,27 @@ const nextConfig: NextConfig = {
         destination: "/us/california-wealth-tax/:path*",
         permanent: true,
       },
-      // CliffWatch renamed from cliff-watch → cliffwatch
+      // The CliffWatch zone is US-only, so UK slugs go to UK CliffWatch, ahead
+      // of the rename below (one hop), suffix kept for the UK zone's og:image.
+      // US share links minted when /uk/cliffwatch proxied the US tool carry
+      // ?s=<state code> (UK CliffWatch never uses s), so they go to /us/.
+      ...["/uk/cliffwatch", "/uk/cliff-watch"].flatMap((source) => [
+        {
+          source,
+          has: [{ type: "query" as const, key: "s", value: "[A-Za-z]{2}" }],
+          destination: "/us/cliffwatch",
+          permanent: true,
+        },
+        { source, destination: "/uk/uk-cliff-watch", permanent: true },
+        {
+          source: `${source}/:path*`,
+          destination: "/uk/uk-cliff-watch/:path*",
+          permanent: true,
+        },
+      ]),
+      // CliffWatch renamed from cliff-watch → cliffwatch. The US zone is
+      // built with basePath /us/cliff-watch, so its _next assets and /api
+      // calls also arrive through this redirect.
       {
         source: "/:countryId/cliff-watch",
         destination: "/:countryId/cliffwatch",
@@ -347,6 +381,30 @@ const nextConfig: NextConfig = {
         },
       ],
     };
+  },
+
+  // Production builds skip webpack's persistent cache, which served stale CSS.
+  // Tailwind makes src/ a context dependency of globals.css, and the webpack
+  // bundled with Next 15.5 can't snapshot a directory that holds symlinks to
+  // files (src/data/*.json point into app/src/data). The CSS module is then
+  // cached with no record of its inputs, so a build that restores the cache,
+  // as Vercel's builds do, reuses the old CSS whatever changed, client
+  // components and globals.css included. scripts/check-built-css.mjs fails a
+  // build whose CSS lacks a class of a fresh compile, or has a Tailwind
+  // utility the fresh compile lacks. It compares class names, not values.
+  //
+  // A webpack hook also turns off Next's build workers unless they're asked
+  // for, hence experimental.webpackBuildWorker. `next dev` runs on Turbopack,
+  // which ignores the hook; its "Webpack is configured while Turbopack is not"
+  // warning is expected.
+  experimental: {
+    webpackBuildWorker: true,
+  },
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      config.cache = false;
+    }
+    return config;
   },
 
   async headers() {

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui';
 import { FOREVER } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { BracketLayout } from '@/libs/flagship/parameterGroups';
 import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import BracketTable from './BracketTable';
@@ -51,6 +52,7 @@ export default function CustomDatesEditor({
   onFocus,
   brackets,
 }: CustomDatesEditorProps) {
+  const countryId = useCurrentCountry();
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(dayjs(defaultStart).endOf('year').format('YYYY-MM-DD'));
   const [typed, setTyped] = useState<Record<string, any>>({});
@@ -59,8 +61,8 @@ export default function CustomDatesEditor({
   const count = Object.keys(typed).length;
   const rangeLabel =
     endDate === FOREVER
-      ? `${formatPolicyDate(startDate)} onward`
-      : `${formatPolicyDate(startDate)} – ${formatPolicyDate(endDate)}`;
+      ? `${formatPolicyDate(startDate, countryId)} onward`
+      : `${formatPolicyDate(startDate, countryId)} – ${formatPolicyDate(endDate, countryId)}`;
 
   const changeStart = (next: string) => {
     setStartDate(next);

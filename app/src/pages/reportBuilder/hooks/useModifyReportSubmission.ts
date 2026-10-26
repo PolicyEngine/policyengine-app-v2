@@ -49,6 +49,7 @@ export function useModifyReportSubmission({
   onSuccess,
 }: UseModifyReportSubmissionArgs): UseModifyReportSubmissionReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const metadata = useSelector((state: RootState) => state.metadata);
   const manager = useCalcOrchestratorManager();
   const updateReportAssociation = useUpdateReportAssociation();
   const queryClient = useQueryClient();
@@ -68,6 +69,7 @@ export function useModifyReportSubmission({
       countryId,
       currentLawId,
       reportYear: reportState.year,
+      metadata,
     });
 
     const reportPayload = ReportAdapter.toCreationPayload({
@@ -78,7 +80,7 @@ export function useModifyReportSubmission({
     } as Report);
 
     return { simulationIds, simulations, simulationStates, reportPayload };
-  }, [reportState, countryId, currentLawId]);
+  }, [reportState, countryId, currentLawId, metadata]);
 
   /**
    * Shared logic: start calculation after a report is created.

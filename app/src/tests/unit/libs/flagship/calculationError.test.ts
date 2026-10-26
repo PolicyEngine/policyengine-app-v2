@@ -15,6 +15,21 @@ describe('describeCalculationError', () => {
     expect(summary.detail).toBe(SERVER_FAILURE);
   });
 
+  test('given no scope then a server failure says nationwide', () => {
+    expect(describeCalculationError(SERVER_FAILURE).body).toContain(
+      'running this reform nationwide'
+    );
+  });
+
+  test('given a UK-wide or a nation scope then a server failure names it', () => {
+    expect(describeCalculationError(SERVER_FAILURE, 'UK-wide').body).toContain(
+      'running this reform UK-wide'
+    );
+    expect(describeCalculationError(SERVER_FAILURE, 'for Wales').body).toContain(
+      'running this reform for Wales'
+    );
+  });
+
   test('given a rejected request then it passes on the API message and points back to the reform', () => {
     const summary = describeCalculationError(
       'Society-wide calculation failed (400): {"status": "error", "message": "Unknown parameter gov.x"}'
@@ -22,6 +37,16 @@ describe('describeCalculationError', () => {
 
     expect(summary.retryable).toBe(false);
     expect(summary.body).toContain('Unknown parameter gov.x');
+  });
+
+  test('given a 400 because the API worker is not ready then it is a retryable server fault', () => {
+    const summary = describeCalculationError(
+      '[SOCIETY_WIDE_CALC_FAILED] Society-wide calculation failed (400): {"status": "error", "message": "Cannot validate the selected worker\'s canonical SPM capability", "result": null, "errors": [{"code": "SPM_CONFIGURATION_UNAVAILABLE", "message": "Cannot validate the selected worker\'s canonical SPM capability"}]}'
+    );
+
+    expect(summary.retryable).toBe(true);
+    expect(summary.title).toBe('The API could not run this right now');
+    expect(summary.body).not.toContain('Edit the reform');
   });
 
   test('given a timeout then it suggests a second try', () => {

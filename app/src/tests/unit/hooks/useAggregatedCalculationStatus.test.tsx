@@ -3,10 +3,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAggregatedCalculationStatus } from '@/hooks/useAggregatedCalculationStatus';
+import { useSyntheticProgress } from '@/hooks/useSyntheticProgress';
 import { calculationKeys } from '@/libs/queryKeys';
-import { createTestMetadata, TEST_SIM_IDS } from '@/tests/fixtures/hooks/aggregatedStatusMocks';
+import {
+  createTestMetadata,
+  TEST_REPORT_IDS,
+  TEST_SIM_IDS,
+} from '@/tests/fixtures/hooks/aggregatedStatusMocks';
+import { TEST_ESTIMATED_DURATIONS_MS } from '@/tests/fixtures/hooks/calculationHookFixtures';
 import {
   mockCalcStatusComplete,
+  mockCalcStatusComputing,
   mockCalcStatusError,
   mockCalcStatusIdle,
   mockHouseholdResult,
@@ -276,5 +283,88 @@ describe.skip('useAggregatedCalculationStatus', () => {
       expect(result.current.calculations[1].status).toBe('idle');
       expect(result.current.calculations[2].status).toBe('error');
     });
+  });
+});
+
+// Outside the skipped suite above: the calculation IDs are one stable array
+// and cached statuses never go stale, so the hook subscribes once and no
+// observer fetches.
+describe('useAggregatedCalculationStatus duration estimate', () => {
+  const CALC_IDS = [TEST_REPORT_IDS.REPORT_1, TEST_REPORT_IDS.REPORT_2];
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0, staleTime: Infinity },
+      },
+    });
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    queryClient.clear();
+  });
+
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  const cachePendingRun = (calcId: string, estimatedDurationMs?: number) => {
+    queryClient.setQueryData(
+      calculationKeys.byReportId(calcId),
+      mockCalcStatusComputing({
+        metadata: createTestMetadata(calcId, 'societyWide', 'report'),
+        ...(estimatedDurationMs !== undefined && { estimatedDurationMs }),
+      })
+    );
+  };
+
+  it('given two pending runs with different estimates then the bar follows the longer', () => {
+    // Given
+    cachePendingRun(TEST_REPORT_IDS.REPORT_1, TEST_ESTIMATED_DURATIONS_MS.US_STATE);
+    cachePendingRun(TEST_REPORT_IDS.REPORT_2, TEST_ESTIMATED_DURATIONS_MS.US_DISTRICT);
+
+    // When
+    renderHook(() => useAggregatedCalculationStatus(CALC_IDS, 'report'), { wrapper });
+
+    // Then
+    expect(useSyntheticProgress).toHaveBeenLastCalledWith(
+      true,
+      'societyWide',
+      expect.objectContaining({ estimatedDurationMs: TEST_ESTIMATED_DURATIONS_MS.US_DISTRICT })
+    );
+  });
+
+  it('given only one pending run has an estimate then the bar follows it', () => {
+    // Given
+    cachePendingRun(TEST_REPORT_IDS.REPORT_1);
+    cachePendingRun(TEST_REPORT_IDS.REPORT_2, TEST_ESTIMATED_DURATIONS_MS.US_STATE);
+
+    // When
+    renderHook(() => useAggregatedCalculationStatus(CALC_IDS, 'report'), { wrapper });
+
+    // Then
+    expect(useSyntheticProgress).toHaveBeenLastCalledWith(
+      true,
+      'societyWide',
+      expect.objectContaining({ estimatedDurationMs: TEST_ESTIMATED_DURATIONS_MS.US_STATE })
+    );
+  });
+
+  it('given no pending run has an estimate then the default applies', () => {
+    // Given
+    cachePendingRun(TEST_REPORT_IDS.REPORT_1);
+    cachePendingRun(TEST_REPORT_IDS.REPORT_2);
+
+    // When
+    renderHook(() => useAggregatedCalculationStatus(CALC_IDS, 'report'), { wrapper });
+
+    // Then
+    expect(useSyntheticProgress).toHaveBeenLastCalledWith(
+      true,
+      'societyWide',
+      expect.objectContaining({ estimatedDurationMs: undefined })
+    );
   });
 });

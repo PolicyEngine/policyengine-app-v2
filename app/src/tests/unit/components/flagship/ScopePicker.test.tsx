@@ -45,6 +45,28 @@ describe('ScopePicker', () => {
     expect(screen.getAllByRole('option')).toHaveLength(2 + STATES.length);
   });
 
+  test('given scopes then they replace the jurisdictions above the states', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <ScopePicker
+        label="State"
+        value="all"
+        onChange={onChange}
+        states={STATES}
+        scopes={[{ code: 'all', label: 'All states' }]}
+        triggerStyle={{}}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'State: All states' }));
+
+    expect(screen.queryByRole('option', { name: /federal only/i })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('option')).toHaveLength(1 + STATES.length);
+    await user.click(screen.getByRole('option', { name: /^all states/i }));
+    expect(onChange).toHaveBeenCalledWith('all');
+  });
+
   test('given a code is typed then enter picks that state', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

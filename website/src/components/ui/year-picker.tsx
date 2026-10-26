@@ -1,10 +1,10 @@
 "use client";
-import * as React from 'react';
-import { useState } from 'react';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { cn } from '@/lib/utils';
-import { Button } from './button';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import * as React from "react";
+import { useState } from "react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
+import { Button } from "./button";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 interface YearPickerProps {
   value: Date | null | undefined;
@@ -20,12 +20,14 @@ function YearPicker({
   onChange,
   minDate,
   maxDate,
-  placeholder = 'Select year',
+  placeholder = "Select year",
   className,
 }: YearPickerProps) {
   const [open, setOpen] = useState(false);
   const currentYear = value ? value.getFullYear() : new Date().getFullYear();
-  const [decadeStart, setDecadeStart] = useState(Math.floor(currentYear / 10) * 10);
+  const [decadeStart, setDecadeStart] = useState(
+    Math.floor(currentYear / 10) * 10,
+  );
 
   const minYear = minDate ? minDate.getFullYear() : 1900;
   const maxYear = maxDate ? maxDate.getFullYear() : 2100;
@@ -45,9 +47,9 @@ function YearPicker({
         <button
           type="button"
           className={cn(
-            'tw:border-input tw:flex tw:h-9 tw:w-full tw:items-center tw:justify-between tw:rounded-md tw:border tw:px-3 tw:py-2 tw:text-sm tw:shadow-xs tw:transition-[color,box-shadow] tw:outline-none',
-            !value && 'tw:text-muted-foreground',
-            className
+            "tw:border-input tw:flex tw:h-9 tw:w-full tw:items-center tw:justify-between tw:rounded-md tw:border tw:px-3 tw:py-2 tw:text-sm tw:shadow-xs tw:transition-[color,box-shadow] tw:outline-none",
+            !value && "tw:text-muted-foreground",
+            className,
           )}
         >
           {displayText}
@@ -90,12 +92,12 @@ function YearPicker({
                 disabled={isDisabled}
                 onClick={() => handleSelect(year)}
                 className={cn(
-                  'tw:h-9 tw:rounded-md tw:text-sm tw:transition-colors',
+                  "tw:h-9 tw:rounded-md tw:text-sm tw:transition-colors",
                   isSelected
-                    ? 'tw:bg-primary tw:text-primary-foreground tw:font-medium'
-                    : 'tw:hover:bg-accent tw:hover:text-accent-foreground',
-                  isOutOfDecade && !isSelected && 'tw:text-muted-foreground',
-                  isDisabled && 'tw:opacity-30 tw:pointer-events-none'
+                    ? "tw:bg-primary tw:text-primary-foreground tw:font-medium"
+                    : "tw:hover:bg-accent tw:hover:text-accent-foreground",
+                  isOutOfDecade && !isSelected && "tw:text-muted-foreground",
+                  isDisabled && "tw:opacity-30 tw:pointer-events-none",
                 )}
               >
                 {year}

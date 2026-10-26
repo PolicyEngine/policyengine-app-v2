@@ -8,11 +8,7 @@ import {
   getOrgsForCountry,
   Organization,
 } from "@/data/organizations";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 
 const LOGO_WIDTH = 140;
 const LOGO_GAP = 64;
@@ -61,6 +57,7 @@ function LogoItem({ org }: { org: Organization }) {
           maxHeight: "70px",
           width: "auto",
           height: "auto",
+          filter: org.darkenLogo ? "brightness(0)" : undefined,
         }}
       />
     </a>
@@ -68,13 +65,22 @@ function LogoItem({ org }: { org: Organization }) {
 }
 
 export default function OrgLogos({ countryId }: { countryId: string }) {
-  // Initialize with stable (unshuffled) order for SSR, then shuffle on client
-  const unshuffled = useMemo(() => getOrgsForCountry(countryId as CountryId), [countryId]);
-  const [orgs, setOrgs] = useState(unshuffled);
+  // Priority orgs lead in a fixed order. The rest keep a stable order for SSR,
+  // then shuffle on client.
+  const [prioritised, rest] = useMemo(() => {
+    const all = getOrgsForCountry(countryId as CountryId);
+    return [
+      all
+        .filter((org) => org.priority !== undefined)
+        .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0)),
+      all.filter((org) => org.priority === undefined),
+    ];
+  }, [countryId]);
+  const [orgs, setOrgs] = useState([...prioritised, ...rest]);
 
   useEffect(() => {
-    setOrgs(shuffle(unshuffled));
-  }, [unshuffled]);
+    setOrgs([...prioritised, ...shuffle(rest)]);
+  }, [prioritised, rest]);
 
   if (orgs.length === 0) {
     return null;

@@ -24,6 +24,8 @@ interface VariableArithmeticProps {
   defaultExpanded?: boolean;
   childrenOnly?: boolean;
   childVisibility?: 'nonzero' | 'all';
+  /** An unchanged line shows its value ("stayed the same at $30,000"), not its change of 0. */
+  unchangedShowsValue?: boolean;
 }
 
 /**
@@ -40,6 +42,7 @@ export default function VariableArithmetic({
   defaultExpanded = false,
   childrenOnly = false,
   childVisibility = 'nonzero',
+  unchangedShowsValue = false,
 }: VariableArithmeticProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const reportYear = useReportYear();
@@ -109,6 +112,7 @@ export default function VariableArithmetic({
       isAdd={isAdd} // Children of additions keep the same sign
       defaultExpanded={false}
       childVisibility="nonzero"
+      unchangedShowsValue={unchangedShowsValue}
     />
   ));
 
@@ -121,6 +125,7 @@ export default function VariableArithmetic({
       isAdd={!isAdd} // Children of subtractions flip the sign
       defaultExpanded={false}
       childVisibility="nonzero"
+      unchangedShowsValue={unchangedShowsValue}
     />
   ));
 
@@ -187,7 +192,13 @@ export default function VariableArithmetic({
               fw={typography.fontWeight.semibold}
               style={{ color: styleConfig.valueColor }}
             >
-              {formatVariableValue(variable, comparison.displayValue, 0)}
+              {formatVariableValue(
+                variable,
+                unchangedShowsValue && comparison.direction === 'no-change'
+                  ? comparison.baselineValue
+                  : comparison.displayValue,
+                0
+              )}
             </Text>
           </div>
           {expandable && (

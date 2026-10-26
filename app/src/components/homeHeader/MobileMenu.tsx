@@ -31,7 +31,8 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
       <Sheet open={opened} onOpenChange={(open) => !open && onClose()}>
         <SheetContent
           side="right"
-          className="tw:w-[300px]"
+          // Scroll when the links outgrow a short phone screen.
+          className="tw:w-[300px] tw:overflow-y-auto"
           style={{ backgroundColor: colors.primary[600] }}
         >
           <SheetHeader>

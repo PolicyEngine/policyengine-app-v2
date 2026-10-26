@@ -6,70 +6,13 @@ on:
       - main
       - master
 
+# A new push to a PR replaces its earlier run: the old one is cancelled
+# rather than left in the org's shared runner queue.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  guard-app-dir:
-    name: Guard app/ directory
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check for website-related changes to app/
-        run: |
-          # Get files changed in this PR (vs base branch)
-          ALL_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-
-          # Website-specific paths in app/ that have been ported to website/
-          # and should no longer be modified in app/.
-          # Calculator components (report builder, household, charts, etc.) are
-          # still legitimately modified in app/ since calculator-app/ imports from there.
-          # Note: HomeHeader.tsx and homeHeader/ were ported to website but
-          # are still actively used by the calculator-app (StandardLayout →
-          # HomeHeader). They are now de facto calculator components, so
-          # they're intentionally NOT in this guard list.
-          WEBSITE_BLOCKED=$(echo "$ALL_CHANGED" | grep -E \
-            -e '^app/src/components/home/' \
-            -e '^app/src/components/shared/static/' \
-            -e '^app/src/components/Footer\.tsx' \
-            -e '^app/src/components/FooterSubscribe\.tsx' \
-            -e '^app/src/components/blog/BlogPostCard\.tsx' \
-            -e '^app/src/components/blog/BlogPostGrid\.tsx' \
-            -e '^app/src/components/blog/ResearchFilters\.tsx' \
-            -e '^app/src/components/blog/blogStyles\.ts' \
-            -e '^app/src/pages/Home\.page\.tsx' \
-            -e '^app/src/pages/Research\.page\.tsx' \
-            -e '^app/src/pages/Blog\.page\.tsx' \
-            -e '^app/src/pages/Team\.page\.tsx' \
-            -e '^app/src/pages/Supporters\.page\.tsx' \
-            -e '^app/src/pages/Donate\.page\.tsx' \
-            -e '^app/src/pages/Privacy\.page\.tsx' \
-            -e '^app/src/pages/Terms\.page\.tsx' \
-            -e '^app/src/pages/Brand' \
-            -e '^app/src/pages/Citations\.page\.tsx' \
-            -e '^app/src/pages/AppPage\.tsx' \
-          || true)
-
-          BLOCKED="$WEBSITE_BLOCKED"
-          BLOCKED=$(echo "$BLOCKED" | sed '/^$/d')
-
-          if [ -n "$BLOCKED" ]; then
-            echo "::error::⚠️ Migration guard: the following files have been ported to the Next.js website."
-            echo "This check is temporary — it will be removed after the Next.js cutover (#817)."
-            echo ""
-            echo "Files flagged:"
-            echo "$BLOCKED"
-            echo ""
-            echo "These files now have Next.js equivalents in website/. Make your changes there instead."
-            echo "Calculator components in app/ (report builder, household, charts, etc.) are fine to modify."
-            echo ""
-            echo "  - Website pages/components → website/src/"
-            echo "  - app/src/data/*, app/public/assets/* → OK (shared data)"
-            echo ""
-            exit 1
-          fi
-
   lint:
     name: Lint and format
     runs-on: ubuntu-latest
@@ -84,13 +27,33 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check formatting with Prettier
+      - name: Check formatting with Prettier (app)
         working-directory: ./app
         run: bun run prettier
 
-      - name: Run ESLint
+      - name: Run ESLint (app)
         working-directory: ./app
         run: bun run eslint
+
+      - name: Run Stylelint (app)
+        working-directory: ./app
+        run: bun run stylelint
+
+      - name: Check formatting with Prettier (website)
+        working-directory: ./website
+        run: bun run format:check
+
+      - name: Run ESLint (website)
+        working-directory: ./website
+        run: bun run lint
+
+      - name: Check formatting with Prettier (calculator)
+        working-directory: ./calculator-app
+        run: bun run format:check
+
+      - name: Run ESLint (calculator)
+        working-directory: ./calculator-app
+        run: bun run lint
 
   typecheck:
     name: Type checking
@@ -129,6 +92,15 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
+      # vitest's launcher starts with `#!/usr/bin/env node`, so `bun run test`
+      # runs the tests on this Node rather than on Bun. Pinned so results
+      # don't depend on the runner's preinstalled Node: number formatting
+      # (Intl) differs between Node versions.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -139,23 +111,6 @@ jobs:
       - name: Run website tests
         working-directory: ./website
         run: bun run test
-
-  check-markdown-drift:
-    name: Check MarkdownFormatter drift
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Verify MarkdownFormatter copies have matching top-level API
-        run: bunx tsx scripts/check-markdown-drift.ts
 
   check-embeds:
     name: Check embedded site URLs
@@ -198,10 +153,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Build application
-        working-directory: ./app
-        run: bun run build
 
       - name: Build website
         working-directory: ./website

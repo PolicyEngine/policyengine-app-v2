@@ -5,6 +5,7 @@ import {
   provisionChanged,
   provisionIntervals,
   setDraftProvisionIntervals,
+  yearReadDate,
 } from '@/libs/draftReform';
 import { ParameterMetadata, ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -91,9 +92,10 @@ export function defaultGrowth(param: ParameterMetadata | undefined): Growth {
 }
 
 /**
- * A provision's indexing: the one chosen; else, for a value already set
- * without one (before indexing existed, or from a bill), none — the fixed
- * value it holds; else, for a value not yet set, its parameter's default.
+ * A provision's indexing: the one chosen, else none. Indexing is a choice
+ * (the Indexed mode), not a default — a new value holds as set, even for
+ * an amount current law indexes. `defaultGrowth` is then what choosing
+ * Indexed starts from.
  */
 export function growthOf(
   provision: Pick<DraftProvision, 'growth' | 'value' | 'baselineValue' | 'intervals'> | undefined,
@@ -102,10 +104,7 @@ export function growthOf(
   if (!canGrow(param)) {
     return 'fixed';
   }
-  if (provision?.growth) {
-    return provision.growth;
-  }
-  return provision && provisionChanged(provision) ? 'fixed' : defaultGrowth(param);
+  return provision?.growth ?? 'fixed';
 }
 
 export function availableIndexes(
@@ -153,8 +152,8 @@ export function growthPhrase(growth: Growth | undefined, countryId: string, shor
   return short ? (index?.short ?? 'indexed') : `indexed to ${index?.label ?? growth}`;
 }
 
-const at = (series: ValueIntervalCollection, year: number) => {
-  const value = series.getValueAtDate(`${year}-01-01`);
+const at = (series: ValueIntervalCollection, year: number, countryId: string) => {
+  const value = series.getValueAtDate(yearReadDate(year, countryId));
   return typeof value === 'number' ? value : null;
 };
 
@@ -255,12 +254,23 @@ export function seriesYears(
   );
 }
 
+/** The last year a series has a value for; 0 when it has none. */
+function lastSeriesYear(values: Record<string, unknown> | undefined): number {
+  return Object.keys(values ?? {}).reduce(
+    (last, date) => Math.max(last, Number(date.slice(0, 4)) || 0),
+    0
+  );
+}
+
 /**
  * The intervals a value from `startYear` on takes under a growth: one
- * open-ended interval when fixed; else a value a year to `lastYear`, held
- * from then on — the amount itself until growth starts, then the amount
- * scaled by the series' level that year over its level in the base year,
- * rounded as chosen.
+ * open-ended interval when fixed; else a value a year — the amount itself
+ * until growth starts, then the amount scaled by the series' level that
+ * year over its level in the base year, rounded as chosen — held from the
+ * last year on. That last year is the model's (`lastYear`) or, when the
+ * series runs further, the series' own: a budget window can reach past
+ * the model's last year, and a value indexed at current law's rate keeps
+ * growing as current law does rather than freezing there.
  */
 export function grownIntervals(
   value: number,
@@ -270,24 +280,29 @@ export function grownIntervals(
   param: ParameterMetadata | undefined,
   parameters: ParameterMetadataCollection,
   timing: GrowthTiming = growthTiming(startYear),
-  rounding: GrowthRounding = defaultRounding(undefined, value)
+  rounding: GrowthRounding = defaultRounding(undefined, value),
+  countryId: string = 'us'
 ): ValueInterval[] {
   const fixed = [{ startDate: `${startYear}-01-01`, endDate: FOREVER, value }];
-  if (growth === 'fixed' || lastYear <= startYear) {
+  if (growth === 'fixed') {
     return fixed;
   }
   const seriesValues = growth === 'current_law' ? param?.values : parameters[growth]?.values;
+  const endYear = Math.max(lastYear, lastSeriesYear(seriesValues));
+  if (endYear <= startYear) {
+    return fixed;
+  }
   const series = new ValueIntervalCollection(seriesValues ?? {});
-  const base = at(series, timing.base);
+  const base = at(series, timing.base, countryId);
   if (!base) {
     return fixed;
   }
   const intervals: ValueInterval[] = [];
-  for (let year = startYear; year <= lastYear; year++) {
-    const level = at(series, year) ?? base;
+  for (let year = startYear; year <= endYear; year++) {
+    const level = at(series, year, countryId) ?? base;
     intervals.push({
       startDate: `${year}-01-01`,
-      endDate: year === lastYear ? FOREVER : `${year}-12-31`,
+      endDate: year === endYear ? FOREVER : `${year}-12-31`,
       value: year < timing.start ? value : roundValue((value * level) / base, rounding),
     });
   }
@@ -344,7 +359,8 @@ export function setValueFromYear({
     param,
     parameters,
     when,
-    rounded
+    rounded,
+    countryId
   )) {
     collection.addInterval(interval);
   }

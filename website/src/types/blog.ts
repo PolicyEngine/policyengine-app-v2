@@ -1,6 +1,6 @@
 /**
  * Blog and research article type definitions.
- * Mirrors the Vite app's types for compatibility with posts.json and authors.json.
+ * Shapes of the entries in posts.json and authors.json.
  */
 
 export interface BlogPost {

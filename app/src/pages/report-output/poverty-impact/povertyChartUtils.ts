@@ -67,17 +67,26 @@ function povertyRow(label: string, rate?: PovertyRate): CsvCell[] {
   return [label, rate?.baseline, rate?.reform, relativeChange(rate)];
 }
 
+const AGE_GROUP_CSV_LABELS = {
+  child: 'Children',
+  adult: 'Working-age adults',
+  senior: 'Seniors',
+  all: 'All',
+};
+
+/** `labels` names the age groups; the default is the v2 report's names. */
 export function getPovertyByAgeCsvRows(
   output: SocietyWideReportOutput,
-  depth: PovertyDepth = 'poverty'
+  depth: PovertyDepth = 'poverty',
+  labels: Record<keyof typeof AGE_GROUP_CSV_LABELS, string> = AGE_GROUP_CSV_LABELS
 ): CsvData {
   const impact = output.poverty[depth];
   return [
     ['Age group', 'Baseline', 'Reform', 'Change'],
-    povertyRow('Children', impact.child),
-    povertyRow('Working-age adults', impact.adult),
-    povertyRow('Seniors', impact.senior),
-    povertyRow('All', impact.all),
+    povertyRow(labels.child, impact.child),
+    povertyRow(labels.adult, impact.adult),
+    povertyRow(labels.senior, impact.senior),
+    povertyRow(labels.all, impact.all),
   ];
 }
 

@@ -1,9 +1,5 @@
 import { Container, Title } from "@/components/ui";
-import {
-  colors,
-  spacing,
-  typography,
-} from "@/designTokens";
+import { colors, spacing, typography } from "@/designTokens";
 import TeamMemberCard, { TeamMember } from "./TeamMemberCard";
 
 export interface TeamSectionProps {

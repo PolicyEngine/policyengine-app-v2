@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "energy-autumn-budget",
+    "title": "Energy bills and the Autumn Budget 2026",
+    "description": "Estimate what UK households will pay for energy at forecast prices in 2026-27 and 2027-28, and what Autumn Budget support options would cost and who they would reach, modelled with PolicyEngine UK.",
+    "source": "https://uk-energy-autumn-budget.vercel.app/uk/energy-autumn-budget",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "energy-autumn-budget.jpg",
+    "date": "2026-10-14 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "targeted-energy-discount",
     "title": "Targeted energy bill discount analysis dashboard",
     "description": "Estimate the cost, reach and distributional effects of the Resolution Foundation's proposed targeted energy bill discount, modelled with PolicyEngine UK.",
@@ -11,6 +24,19 @@
     "image": "targeted-energy-discount.jpg",
     "date": "2026-10-05 12:00:00",
     "authors": ["maria-juaristi", "vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "triple-lock",
+    "title": "The Burnham plan vs the triple lock",
+    "description": "The Burnham plan against the State Pension triple lock to 2039-40: the budget impact and its range, forecast paths, and which households have less income, from full PolicyEngine UK runs.",
+    "source": "https://uk-triple-lock.vercel.app/uk/triple-lock",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-triple-lock.jpg",
+    "date": "2026-10-16 12:00:00",
+    "authors": ["vahid-ahmadi", "max-ghenis"]
   },
   {
     "type": "iframe",
@@ -123,7 +149,8 @@
     "displayWithResearch": true,
     "image": "uk-cliff-watch.jpg",
     "date": "2026-06-26 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": ["vahid-ahmadi"],
+    "toolsMenu": { "label": "UK CliffWatch" }
   },
   {
     "type": "iframe",
@@ -374,53 +401,57 @@
     "type": "iframe",
     "slug": "tanf-calculator",
     "title": "TANF calculator",
-    "description": "Interactive calculator showing TANF benefit eligibility and amounts for US households across all states",
+    "description": "See TANF eligibility and benefit amounts for US households across all states.",
     "source": "https://policyengine.github.io/tanf-calculator/",
     "tags": ["us", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "tanf-calculator.png",
     "date": "2026-03-18 12:00:00",
-    "authors": ["ziming-hua"]
+    "authors": ["ziming-hua"],
+    "toolsMenu": { "label": "TANF calculator" }
   },
   {
     "type": "iframe",
     "slug": "coverage-compass",
     "title": "Coverage Compass",
-    "description": "Model how life events — moving, income changes, pregnancy — affect a household's healthcare coverage and out-of-pocket costs across Medicaid, CHIP, and the ACA marketplace",
+    "description": "Model how life events — moving, income changes, pregnancy — affect a household's healthcare coverage and out-of-pocket costs across Medicaid, CHIP, and the ACA marketplace.",
     "source": "https://coverage-compass-policy-engine.vercel.app/",
     "tags": ["us", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "coverage-compass.png",
     "date": "2026-05-06 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": ["daphne-hansell"],
+    "toolsMenu": { "label": "Coverage Compass" }
   },
   {
     "type": "iframe",
     "slug": "cliffwatch",
     "title": "CliffWatch",
-    "description": "Interactive calculator showing how benefits, refundable tax credits, taxes, and net income change for US households as earnings rise",
+    "description": "See how benefits, refundable tax credits, taxes, and net income change for US households as earnings rise.",
     "source": "https://cliff-watch.vercel.app/",
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
-    "image": "benefit-cliff-calculator.png",
+    "image": "cliffwatch.png",
     "date": "2026-04-14 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": ["daphne-hansell"],
+    "toolsMenu": { "label": "CliffWatch" }
   },
   {
     "type": "iframe",
     "slug": "marriage",
     "title": "Marriage incentive calculator",
-    "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
+    "description": "See how marriage affects taxes, benefits, and net income for US households across all states.",
     "source": "https://marriage-zeta-beryl.vercel.app/us/marriage",
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "marriage-calculator.webp",
     "date": "2026-02-13 12:00:00",
-    "authors": ["daphne-hansell"]
+    "authors": ["daphne-hansell"],
+    "toolsMenu": { "label": "Marriage calculator" }
   },
   {
     "type": "iframe",
@@ -433,13 +464,14 @@
     "displayWithResearch": true,
     "image": "marriage-calculator-uk.jpg",
     "date": "2026-09-11 12:00:00",
-    "authors": ["max-ghenis", "vahid-ahmadi"]
+    "authors": ["max-ghenis", "vahid-ahmadi"],
+    "toolsMenu": { "label": "Marriage calculator" }
   },
   {
     "type": "iframe",
     "slug": "bill-tracker",
     "title": "2026 state legislative tracker",
-    "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",
+    "description": "Track federal and state tax and benefit bills, with PolicyEngine's estimates of each scored bill's budget, poverty, and household impacts.",
     "source": "https://policyengine--state-legislative-tracker.modal.run/",
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
@@ -465,14 +497,15 @@
     "type": "iframe",
     "slug": "uk-student-loan-calculator",
     "title": "Student loan deductions calculator",
-    "description": "Interactive tool to analyse student loan repayments, marginal tax rates, take-home pay, and lifetime costs for UK graduates",
+    "description": "Analyse student loan repayments, marginal tax rates, take-home pay, and lifetime costs for UK graduates.",
     "source": "https://uk-student-loan-calculator.vercel.app/",
     "tags": ["uk", "featured", "policy"],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-student-loan-calculator.webp",
     "date": "2026-02-06 12:00:00",
-    "authors": ["vahid-ahmadi"]
+    "authors": ["vahid-ahmadi"],
+    "toolsMenu": { "label": "Student loan calculator" }
   },
   {
     "type": "iframe",
@@ -579,10 +612,31 @@
     "type": "iframe",
     "slug": "givecalc",
     "title": "GiveCalc",
-    "description": "Calculate charitable giving tax benefits",
+    "description": "Calculate the tax benefits of charitable giving.",
     "source": "https://givecalc.vercel.app/?embedded=true",
     "tags": ["us", "policy", "interactives"],
-    "countryId": "us"
+    "countryId": "us",
+    "toolsMenu": { "label": "GiveCalc" }
+  },
+  {
+    "type": "iframe",
+    "slug": "qbi-calculator",
+    "title": "QBI deduction calculator",
+    "description": "Calculate the qualified business income deduction under IRC §199A for any filing status, including the W-2 wage and property limits and the phase-out for specified service businesses.",
+    "source": "https://qbi-visualizer.vercel.app/us/qbi-calculator",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "toolsMenu": { "label": "QBI deduction calculator" }
+  },
+  {
+    "type": "iframe",
+    "slug": "spm-calculator",
+    "title": "SPM threshold calculator",
+    "description": "Calculate Supplemental Poverty Measure thresholds by family composition, housing tenure, and local area.",
+    "source": "https://spm-calculator.vercel.app/us/spm-calculator",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "toolsMenu": { "label": "SPM threshold calculator" }
   },
   {
     "type": "iframe",
@@ -667,7 +721,7 @@
     "type": "iframe",
     "slug": "obbba-households",
     "title": "The One Big Beautiful Bill Act, household by household",
-    "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
+    "description": "Explore how the One Big Beautiful Bill Act (OBBBA) changes resources for each modeled US household in 2026, and which provisions drive the change.",
     "source": "https://obbba-household-by-household.vercel.app/us/obbba-households",
     "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
     "countryId": "us",

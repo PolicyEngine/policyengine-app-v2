@@ -1,6 +1,6 @@
 /**
  * Helpers for reading and formatting parameter values from metadata.
- * Shared by the flagship Build page and the reform composer.
+ * Used by the flagship (v3) Build page, reform editor and reports.
  */
 
 /** Latest value whose start date is not in the future. */
@@ -48,19 +48,81 @@ export function parseValueFromQuestion(question: string, unit: string | null): n
   return value;
 }
 
+/**
+ * The money symbol for each spelling of a currency unit the country
+ * models use: most UK parameters say "currency-GBP", but a few say
+ * "GBP" or "currency_GBP".
+ */
+export const CURRENCY_UNIT_SYMBOLS: Readonly<Record<string, string>> = {
+  'currency-USD': '$',
+  currency_USD: '$',
+  USD: '$',
+  'currency-GBP': '£',
+  currency_GBP: '£',
+  GBP: '£',
+};
+
+/** The money symbol a unit's values carry, or null for a unit that is not money. */
+export function currencySymbolForUnit(unit: string | null | undefined): string | null {
+  if (!unit) {
+    return null;
+  }
+  return CURRENCY_UNIT_SYMBOLS[unit] ?? (unit.startsWith('currency-') ? '$' : null);
+}
+
+/** Units stored as a fraction of 1 and read as a percentage. */
+export function isPercentageUnit(unit: string | null | undefined): boolean {
+  return unit === '/1' || unit === 'marginal-rate';
+}
+
+/**
+ * How many decimals a money amount shows: whole pounds or dollars stay
+ * whole, and other amounts show pence or cents ("£346.37", not
+ * "£346.367"). An amount under 1, such as a rate a mile, keeps up to 3
+ * decimals so it does not round away.
+ */
+export function moneyDigits(amount: number): Intl.NumberFormatOptions {
+  if (Number.isInteger(amount)) {
+    return { maximumFractionDigits: 0 };
+  }
+  return Math.abs(amount) < 1
+    ? { minimumFractionDigits: 2, maximumFractionDigits: 3 }
+    : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+}
+
+/**
+ * A parameter value as the flagship (v3) pages show it as text. Only
+ * flagship code reads it; legacy pages format values on their own.
+ */
 export function formatValue(value: any, unit: string | null): string {
   if (value === undefined || value === null) {
     return '—';
   }
   if (typeof value === 'boolean') {
-    return value ? 'on' : 'off';
+    return value ? 'true' : 'false';
   }
-  if (typeof value === 'number' && unit?.startsWith('currency-')) {
-    const currency = unit === 'currency-GBP' ? '£' : '$';
-    return `${currency}${value.toLocaleString()}`;
+  const currency = currencySymbolForUnit(unit);
+  if (typeof value === 'number' && currency) {
+    // The sign goes before the symbol: "−£500", not "£-500".
+    return `${value < 0 ? '−' : ''}${currency}${Math.abs(value).toLocaleString(undefined, moneyDigits(value))}`;
   }
-  if (typeof value === 'number' && unit === '/1') {
+  if (typeof value === 'number' && isPercentageUnit(unit)) {
     return `${Math.round(value * 100 * 100) / 100}%`;
   }
   return String(value);
+}
+
+/**
+ * What current law reads as where it leaves an amount to a formula.
+ * Metadata sends null for an amount not legislated yet, which the
+ * country model then sets from a formula.
+ */
+export const SET_BY_FORMULA = 'Set by formula (not legislated)';
+
+/** The same, where a value box or a narrow cell has no room for the rest. */
+export const SET_BY_FORMULA_SHORT = 'Set by formula';
+
+/** Current law as text: null is an amount current law leaves to a formula, not "—". */
+export function formatCurrentLaw(value: unknown, unit: string | null): string {
+  return value === null ? SET_BY_FORMULA : formatValue(value, unit);
 }

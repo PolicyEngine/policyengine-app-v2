@@ -103,8 +103,32 @@ export class CalcOrchestrator {
       return;
     }
 
+    // Opt-in (v3): an economy run that failed at once is over. Its record
+    // says so, and nothing is left to poll.
+    if (
+      config.recordReportErrors &&
+      config.targetType === 'report' &&
+      initialStatus.status === 'error'
+    ) {
+      try {
+        await this.resultPersister.persistReportError(initialStatus, config.countryId, config.year);
+      } catch (error) {
+        console.error('[CalcOrchestrator] Failed to record the error:', error);
+      } finally {
+        this.manager?.cleanup(config.calcId, config.targetType);
+      }
+      return;
+    }
+
     // ECONOMY CASE: Start polling for progress
-    this.startPolling(queryOptions, metadata, config.countryId, config.calcId, config.year);
+    this.startPolling(
+      queryOptions,
+      metadata,
+      config.countryId,
+      config.calcId,
+      config.year,
+      config.recordReportErrors === true
+    );
   }
 
   /**
@@ -118,6 +142,8 @@ export class CalcOrchestrator {
    * @param countryId - Country ID for persistence
    * @param calcId - Calculation ID for cleanup
    * @param year - Report year for persistence
+   * @param recordReportErrors - Opt-in (v3): write a failed report run to its
+   *   record. Off by default: a failure is only logged.
    */
   private startPolling(
     queryOptions: ReturnType<
@@ -126,7 +152,8 @@ export class CalcOrchestrator {
     _metadata: CalcMetadata,
     countryId: string,
     calcId: string,
-    year: string
+    year: string,
+    recordReportErrors = false
   ): void {
     const { queryKey, queryFn, refetchInterval } = queryOptions;
 
@@ -188,9 +215,24 @@ export class CalcOrchestrator {
         this.currentUnsubscribe = null;
 
         // Notify manager to remove this orchestrator
-        if (this.manager) {
-          this.manager.cleanup(calcId, _metadata.targetType);
+        const cleanup = () => {
+          if (this.manager) {
+            this.manager.cleanup(calcId, _metadata.targetType);
+          }
+        };
+
+        // Opt-in (v3): the report's record says the run failed.
+        if (recordReportErrors && _metadata.targetType === 'report') {
+          this.resultPersister
+            .persistReportError(status, countryId, year)
+            .catch((error) => {
+              console.error('[CalcOrchestrator] Failed to record the error:', error);
+            })
+            .finally(cleanup);
+          return;
         }
+
+        cleanup();
       }
     });
 
@@ -263,6 +305,8 @@ export class CalcOrchestrator {
       region,
       year: config.year,
       calcId: config.calcId,
+      // Opt-in (v3): without it the params stay exactly as before.
+      ...(config.estimateByRegion && { estimateByRegion: true }),
     };
   }
 }

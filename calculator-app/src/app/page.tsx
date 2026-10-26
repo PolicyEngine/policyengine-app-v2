@@ -9,7 +9,6 @@ import { geolocationService } from "@/routing/geolocation/GeolocationService";
 /**
  * Root page — redirects to /:countryId based on IP geolocation. The
  * country index route owns the landing decision (ask vs reports).
- * Mirrors app/src/routing/RedirectToCountry.tsx for the Next.js app.
  */
 export default function RootPage() {
   const router = useRouter();

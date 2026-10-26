@@ -1,12 +1,19 @@
+import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import AddParameterBar, { ParametersLoading } from '@/components/flagship/reform/AddParameterBar';
-import DraftHeader from '@/components/flagship/reform/DraftHeader';
+import AddParameterBar from '@/components/flagship/reform/AddParameterBar';
+import DraftHeader, { DraftRunBar } from '@/components/flagship/reform/DraftHeader';
 import DraftTable from '@/components/flagship/reform/DraftTable';
+import ParametersStatus from '@/components/flagship/reform/ParametersStatus';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Title } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { addDraftProvision, provisionFromSearchEntry, useDraftReform } from '@/libs/draftReform';
+import {
+  addDraftProvision,
+  provisionFromSearchEntry,
+  resumeDraftFor,
+  useDraftReform,
+} from '@/libs/draftReform';
 import { focusProvision } from '@/libs/flagship/draftEditorFocus';
 import { ParameterSearchEntry, selectParameterSearchEntries } from '@/libs/parameterSearch';
 import { RootState } from '@/store';
@@ -14,16 +21,23 @@ import { RootState } from '@/store';
 /**
  * Build — the reform is the page.
  *
- * Its name, year, and run sit at the top; one bar adds parameters
- * (search, or browse the policy tree); the reform itself is a table
- * below, each parameter's new value typed in place and opened up for
- * year-by-year and breakdown values. Picking a parameter lands on its
- * value, so finding and setting it are one motion.
+ * Its name sits at the top; the reform itself is a table, each
+ * parameter's new value typed in place and opened up for year-by-year
+ * and breakdown values. The table's last row adds another parameter
+ * (search, or browse the policy tree); an empty draft asks for the first
+ * in the middle of the page. Picking a parameter lands on its value, so
+ * finding and setting it are one motion. The year, who the report runs
+ * on and the run come last, in a bar that stays in view under the reform.
  */
 export default function BuildPage() {
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const draft = useDraftReform();
+  // Each country keeps its own draft: one set aside while another
+  // country's was built comes back on its own country's page.
+  useEffect(() => {
+    resumeDraftFor(countryId);
+  }, [countryId]);
   const current = draft && draft.countryId === countryId ? draft : null;
   // Until the index is in, the add bar has nothing to search and the
   // table can't group breakdowns (their members would show apart, then
@@ -58,13 +72,13 @@ export default function BuildPage() {
           <>
             <DraftHeader draft={current} />
             {loading ? (
-              <ParametersLoading />
+              <ParametersStatus paths={current.provisions.map((provision) => provision.path)} />
             ) : (
-              <>
-                <AddParameterBar onPick={pick} />
-                <DraftTable draft={current} />
-              </>
+              // The next parameter is added at the foot of the reform, where
+              // the last one ends: a reform takes as many as it needs.
+              <DraftTable draft={current} addRow={<AddParameterBar onPick={pick} inTable />} />
             )}
+            <DraftRunBar draft={current} />
           </>
         ) : (
           <>

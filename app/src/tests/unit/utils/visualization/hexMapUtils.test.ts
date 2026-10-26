@@ -231,5 +231,48 @@ describe('hexMapUtils', () => {
       // Then
       expect(result).toBe('Test Area: £0');
     });
+
+    test('given an approximate point with its 90% range then names both', () => {
+      // Given
+      const point: HexMapDataPoint = {
+        id: '5',
+        label: 'East Kilbride and Strathaven',
+        value: 120,
+        x: 0,
+        y: 0,
+        approximate: true,
+        lower: 40,
+        upper: 210,
+      };
+      const formatValue = (val: number) => `£${val.toFixed(0)}`;
+
+      // When
+      const result = generateHoverText(point, formatValue);
+
+      // Then
+      expect(result).toBe(
+        'East Kilbride and Strathaven: £120 (approximate; 90% range £40 to £210)'
+      );
+    });
+
+    test('given a reported point with its 90% range then gives the range alone', () => {
+      // Given
+      const point: HexMapDataPoint = {
+        id: '6',
+        label: 'Hartlepool',
+        value: 504,
+        x: 0,
+        y: 0,
+        lower: 480,
+        upper: 530,
+      };
+      const formatValue = (val: number) => `£${val.toFixed(0)}`;
+
+      // When
+      const result = generateHoverText(point, formatValue);
+
+      // Then
+      expect(result).toBe('Hartlepool: £504 (90% range £480 to £530)');
+    });
   });
 });

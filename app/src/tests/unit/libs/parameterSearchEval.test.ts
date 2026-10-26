@@ -3,6 +3,8 @@ import {
   buildProgramEvalCases,
   compareToBaseline,
   evaluateParameterSearch,
+  isMetadataCacheFresh,
+  readModelledPrograms,
   type ParameterSearchEvalCase,
   type ParameterSearchEvalMetrics,
 } from '@/libs/parameterSearchEval';
@@ -178,5 +180,51 @@ describe('prefix-matched cases', () => {
 
     expect(metrics.hitRate['5']).toBe(0);
     expect(metrics.misses[0].expectedPaths).toEqual(['gov.usda.snap']);
+  });
+});
+
+describe('readModelledPrograms', () => {
+  test('given an inline program list then it is returned without a warning', () => {
+    const programs = [{ id: 'snap', name: 'SNAP', parameter_prefix: 'gov.usda.snap' }];
+
+    expect(readModelledPrograms({ programs })).toEqual({ programs, warning: null });
+  });
+
+  test('given a server-side file path (the UK API) then no programs and a clear warning', () => {
+    const read = readModelledPrograms(
+      '/opt/venv/lib/python3.12/site-packages/policyengine_uk/programs.yaml'
+    );
+
+    expect(read.programs).toEqual([]);
+    expect(read.warning).toMatch(/file path .*programs\.yaml/);
+  });
+
+  test('given no modelled policies then no programs and no warning', () => {
+    expect(readModelledPrograms(undefined)).toEqual({ programs: [], warning: null });
+  });
+
+  test('given an object without a program list then a warning', () => {
+    expect(readModelledPrograms({ other: 1 }).warning).toMatch(/no programs list/);
+  });
+});
+
+describe('isMetadataCacheFresh', () => {
+  const now = Date.parse('2026-10-19T12:00:00Z');
+
+  test('given a cache fetched within the max age then it is fresh', () => {
+    const stamp = { version: '2.130.1', fetchedAt: '2026-10-19T01:00:00Z' };
+
+    expect(isMetadataCacheFresh(stamp, 24, now)).toBe(true);
+  });
+
+  test('given a cache older than the max age then it expires', () => {
+    const stamp = { version: '2.130.1', fetchedAt: '2026-10-17T12:00:00Z' };
+
+    expect(isMetadataCacheFresh(stamp, 24, now)).toBe(false);
+  });
+
+  test('given no stamp or an unreadable date then the cache is not trusted', () => {
+    expect(isMetadataCacheFresh(null, 24, now)).toBe(false);
+    expect(isMetadataCacheFresh({ version: 'x', fetchedAt: 'not a date' }, 24, now)).toBe(false);
   });
 });

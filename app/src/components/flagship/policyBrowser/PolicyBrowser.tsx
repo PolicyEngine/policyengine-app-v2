@@ -93,7 +93,7 @@ export default function PolicyBrowser({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 250px), 1fr))',
             gap: spacing.md,
           }}
         >
@@ -180,7 +180,7 @@ function Crumb({ label, onOpen }: { label: string; onOpen: () => void }) {
       <button
         type="button"
         onClick={onOpen}
-        className="tw:cursor-pointer tw:text-gray-500 tw:underline-offset-2 tw:hover:text-primary-700 tw:hover:underline"
+        className="tw:cursor-pointer tw:text-gray-500 tw:underline-offset-2 tw:hover:text-primary-700 tw:hover:underline tw:max-sm:min-h-10"
         style={{
           padding: 0,
           border: 'none',

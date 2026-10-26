@@ -79,22 +79,40 @@ export default function ReportChartCard({
           {controls}
         </div>
       )}
-      <div
-        style={{
-          height: enlarged
-            ? `min(55dvh, ${focusedChartHeight}px)`
-            : fullWidth
-              ? '280px'
-              : 'clamp(210px, calc((100vh - 620px) / 2), 280px)',
-          minWidth: 0,
-        }}
-      >
-        {enlarged ? (focusedContent ?? children) : children}
-      </div>
+      {enlarged ? (
+        <div style={{ height: `min(55dvh, ${focusedChartHeight}px)`, minWidth: 0 }}>
+          {focusedContent ?? children}
+        </div>
+      ) : (
+        // In the grid, the chart grows into the height its row leaves beyond
+        // this minimum, so cards side by side end at the same height. It sits
+        // in an absolutely positioned box so its measured size never adds to
+        // the row's height, which would keep the row tall after a resize.
+        <div
+          style={{
+            position: 'relative',
+            flex: '1 1 auto',
+            minHeight: fullWidth ? '280px' : 'clamp(210px, calc((100vh - 620px) / 2), 280px)',
+            minWidth: 0,
+          }}
+        >
+          <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}>
+            {children}
+          </div>
+        </div>
+      )}
     </ChartFrame>
   );
   return (
-    <section style={{ minWidth: 0, gridColumn: fullWidth ? '1 / -1' : undefined }}>
+    <section
+      style={{
+        minWidth: 0,
+        gridColumn: fullWidth ? '1 / -1' : undefined,
+        // The grid stretches each card to its row's height; the frame fills it.
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {chart(false)}
       <Dialog open={focused} onOpenChange={setFocused}>
         <DialogContent
@@ -135,7 +153,8 @@ function ChartFrame({
   const hasCsvDownload = !!csvFilename && !!csvData;
 
   return (
-    <Stack gap="sm">
+    // Fills the card, so the bordered body below can take the rest of its height.
+    <Stack gap="sm" className="tw:flex-1">
       <Group justify="space-between" align="start" wrap="nowrap">
         <Text size="lg" fw={typography.fontWeight.medium} className="tw:flex-1 tw:break-words">
           {title}
@@ -190,7 +209,7 @@ function ChartFrame({
 
       <div
         ref={contentRef}
-        className="tw:p-md tw:border tw:border-border-light tw:rounded-container tw:bg-white"
+        className="tw:flex tw:flex-1 tw:flex-col tw:p-md tw:border tw:border-border-light tw:rounded-container tw:bg-white"
       >
         {children}
       </div>

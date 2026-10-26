@@ -105,5 +105,10 @@ export function reportStages(input: ReportStageInput): ReportStage[] {
 export function formatElapsed(ms: number): string {
   const seconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  if (hours > 0) {
+    // Past an hour the seconds say nothing: "23h 22m".
+    return `${hours}h ${minutes % 60}m`;
+  }
   return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
 }

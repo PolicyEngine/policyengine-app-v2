@@ -59,6 +59,25 @@ export function isUKLocalLevelGeography(geography: Geography): boolean {
   );
 }
 
+/**
+ * Checks if a UK region code, e.g. "constituency/Bedford", is a constituency
+ * or local authority: the same rule as isUKLocalLevelGeography, for a code.
+ *
+ * @param regionCode - The region as the API takes it; empty or "uk" for the UK
+ * @returns true if it's a constituency or local authority, false otherwise
+ */
+export function isUKLocalLevelRegion(regionCode: string | null | undefined): boolean {
+  if (!regionCode) {
+    return false;
+  }
+  return isUKLocalLevelGeography({
+    id: `uk-${regionCode}`,
+    countryId: 'uk',
+    scope: 'subnational',
+    geographyId: regionCode,
+  });
+}
+
 const countryLabels: Record<string, string> = {
   us: 'United States',
   uk: 'United Kingdom',

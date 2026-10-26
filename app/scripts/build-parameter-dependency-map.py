@@ -22,6 +22,10 @@ Two core quirks are handled here rather than upstream:
   * core caches the yearly ParameterNodeAtInstant before its own tracing
     recast runs, so the cached node is untraced; we flag the parameter root
     for tracing and clear the at-instant caches before any calculation.
+  * a formula can call a node below the root with its period
+    (parameters.gov.usda.snap.emergency_allotment(period)), which core does
+    not trace at all; we record the call as a read of that node, so a
+    parameter under it maps to the formula through its nearest ancestor.
   * TracingParameterNodeAtInstant only records scalar/array leaves, so
     scale/bracket objects (p.base.calc(age), p.max[children]) are invisible;
     we record every non-node child access.
@@ -45,6 +49,9 @@ OUTPUT = (
     / "flagship"
     / "parameterDependencies.json"
 )
+
+# The simulation's tracer, once tracing is on (see patch_tracer).
+TRACING: dict = {}
 
 # Neutralisation switches mirror every variable 1:1 and carry no reform meaning.
 IGNORED_PARAMETER_PREFIXES = ("gov.abolitions.",)
@@ -73,6 +80,24 @@ def patch_tracer() -> None:
         return original(self, child, key)
 
     tracers.TracingParameterNodeAtInstant.get_traced_child = get_traced_child
+
+    original_at_instant = P.ParameterNode._get_at_instant
+
+    def _get_at_instant(self, instant):
+        tracer = TRACING.get("tracer")
+        # The root's own call is traced by core; any other node's is not.
+        # A node builds its children at the instant too: only the outer
+        # call is the formula's read.
+        outer = not TRACING.get("building")
+        if tracer is not None and outer and not self.trace and "." in (self.name or ""):
+            tracer.record_parameter_access(self.name, str(instant), TRACING["branch"], None)
+        TRACING["building"] = True
+        try:
+            return original_at_instant(self, instant)
+        finally:
+            TRACING["building"] = not outer
+
+    P.ParameterNode._get_at_instant = _get_at_instant
     # Values are never read back; dropping them keeps the trace in memory.
     tracers.FullTracer.record_calculation_result = lambda self, value: None
 
@@ -82,6 +107,8 @@ def enable_parameter_tracing(simulation) -> None:
     root.trace = True
     root.tracer = simulation.tracer
     root.branch_name = simulation.branch_name
+    TRACING["tracer"] = simulation.tracer
+    TRACING["branch"] = simulation.branch_name
 
     def clear(node) -> None:
         cache = getattr(node, "_at_instant_cache", None)

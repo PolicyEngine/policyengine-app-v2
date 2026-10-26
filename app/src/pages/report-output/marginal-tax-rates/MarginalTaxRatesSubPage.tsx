@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Area,
@@ -55,9 +55,24 @@ interface Props {
   households?: HouseholdCalculationOutput[];
   baselineVariation?: HouseholdCalculationOutput | null;
   reformVariation?: HouseholdCalculationOutput | null;
+  /** What shows while the variation calculates; a spinner and a line by default. */
+  renderLoading?: () => ReactNode;
+  /** Leave out the SPM methodology footnote under the chart; shown by default. */
+  hideSpmFootnote?: boolean;
+  /** Name the country's currency in the explainer ("next pound" in the UK); "dollar" by default. */
+  currencyAwareText?: boolean;
 }
 
 type ViewMode = 'both' | 'difference';
+
+/**
+ * The line above the chart. It says "dollar" unless the caller opts in
+ * to the country's currency, which names the pound for the UK.
+ */
+export function marginalTaxRateExplainer(countryId: string, currencyAware = false): string {
+  const unit = currencyAware && countryId === 'uk' ? 'pound' : 'dollar';
+  return `Marginal tax rates show the percentage of the next ${unit} earned that goes to taxes. Values are clipped to the range -200% to +200% for display purposes.`;
+}
 function MTRTooltip({ active, payload, label, symbol }: any) {
   if (!active || !payload?.length) {
     return null;
@@ -94,6 +109,9 @@ export default function MarginalTaxRatesSubPage({
   households: _households,
   baselineVariation: providedBaselineVariation = null,
   reformVariation: providedReformVariation = null,
+  renderLoading,
+  hideSpmFootnote = false,
+  currencyAwareText = false,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
@@ -289,6 +307,9 @@ export default function MarginalTaxRatesSubPage({
   }
 
   if (isLoading) {
+    if (renderLoading) {
+      return <>{renderLoading()}</>;
+    }
     return (
       <Group className="tw:gap-sm tw:items-center">
         <Spinner size="sm" />
@@ -471,8 +492,7 @@ export default function MarginalTaxRatesSubPage({
   return (
     <Stack gap="lg">
       <Text size="sm" c="dimmed">
-        Marginal tax rates show the percentage of the next dollar earned that goes to taxes. Values
-        are clipped to the range -200% to +200% for display purposes.
+        {marginalTaxRateExplainer(countryId, currencyAwareText)}
       </Text>
 
       {reform && (
@@ -494,10 +514,12 @@ export default function MarginalTaxRatesSubPage({
         {renderChart()}
         <ChartWatermark />
       </div>
-      <SPMMethodologyFootnote
-        output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
-        context="variation"
-      />
+      {!hideSpmFootnote && (
+        <SPMMethodologyFootnote
+          output={[resolvedBaselineVariation, reform ? resolvedReformVariation : null]}
+          context="variation"
+        />
+      )}
     </Stack>
   );
 }

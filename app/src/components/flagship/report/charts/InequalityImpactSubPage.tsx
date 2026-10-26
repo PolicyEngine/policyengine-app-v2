@@ -12,25 +12,43 @@ import {
 } from 'recharts';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
-import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
+import { ChartWatermark, ImpactTooltip } from '@/components/charts';
 import ChartExplanation from '@/components/flagship/report/ChartExplanation';
+import {
+  fitAxisTitle,
+  fixedPlotHeight,
+  getValueBarLayout,
+  tickDecimals,
+} from '@/components/flagship/report/charts/barLayout';
+import { categoryAxisProps } from '@/components/flagship/report/charts/categoryAxis';
+import {
+  rateChangeMessage,
+  relativeBar,
+  relativeChange,
+} from '@/components/flagship/report/charts/relativeChange';
+import { ReportBarLabel } from '@/components/flagship/report/charts/ReportBarLabel';
+import { usePlotSize } from '@/components/flagship/report/charts/usePlotSize';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import { tooltipText } from '@/libs/flagship/tooltipText';
 import { getInequalityCsvRows } from '@/pages/report-output/inequality-impact/inequalityChartUtils';
 import type { RootState } from '@/store';
-import { relativeChangeMessage } from '@/utils/chartMessages';
-import {
-  getClampedChartHeight,
-  getNiceTicks,
-  getYAxisLayout,
-  RECHARTS_FONT_STYLE,
-} from '@/utils/chartUtils';
+import { getClampedChartHeight, getYAxisLayout, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+
+/** Margins around the plot; value labels stay inside it, so the top needs little. */
+const CHART_MARGIN = { top: 12, right: 20, bottom: 20 };
+/** The measures' names where the full ones do not fit under their bars. */
+const SHORT_NAMES: Record<string, string> = {
+  'Gini index': 'Gini',
+  'Top 10% share': 'Top 10%',
+  'Top 1% share': 'Top 1%',
+};
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -59,15 +77,19 @@ export default function InequalityImpactSubPage({
   const top1Impact = output.inequality.top_1_pct_share;
 
   const labels = ['Gini index', 'Top 10% share', 'Top 1% share'];
-  const metricChanges = [
-    giniImpact.reform / giniImpact.baseline - 1,
-    top10Impact.reform / top10Impact.baseline - 1,
-    top1Impact.reform / top1Impact.baseline - 1,
-  ];
+  // Each measure's change; none for a measure that is zero before.
+  const metricChanges = [giniImpact, top10Impact, top1Impact].map(({ baseline, reform }) =>
+    relativeChange(reform, baseline)
+  );
 
   // Calculate precision for display
-  const yvaluePrecision = Math.max(1, precision(metricChanges, 100));
-  const ytickPrecision = precision(metricChanges.concat(0), 10);
+  const yvaluePrecision = Math.max(
+    1,
+    precision(
+      metricChanges.filter((change): change is number => change !== null),
+      100
+    )
+  );
 
   const formatPer = (n: number) =>
     formatPercent(n, countryId, {
@@ -98,22 +120,16 @@ export default function InequalityImpactSubPage({
       formatter = formatPer;
     }
 
-    const change = reform / baseline - 1;
-    return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
-      baseline,
-      reform,
-      formatter,
-    });
+    return rateChangeMessage(obj, baseline, reform, countryId, formatter);
   };
 
   // Generate chart title
   const getChartTitle = () => {
-    const signTerm =
-      metricChanges[0] > 0 && metricChanges[1] > 0 && metricChanges[2] > 0
-        ? 'increase'
-        : metricChanges[0] < 0 && metricChanges[1] < 0 && metricChanges[2] < 0
-          ? 'decrease'
-          : 'have an ambiguous effect on';
+    const signTerm = metricChanges.every((change) => change !== null && change > 0)
+      ? 'increase'
+      : metricChanges.every((change) => change !== null && change < 0)
+        ? 'decrease'
+        : 'have an ambiguous effect on';
     const region = regionName(metadata);
     const regionPhrase = region ? ` in ${region}` : '';
     return `This reform would ${signTerm} income inequality${regionPhrase}`;
@@ -122,43 +138,58 @@ export default function InequalityImpactSubPage({
   // Recharts data
   const chartData = labels.map((label, i) => ({
     name: label,
-    value: metricChanges[i],
-    label: (metricChanges[i] >= 0 ? '+' : '') + formatPer(metricChanges[i]),
-    hoverText: hoverMessage(label),
+    ...relativeBar(metricChanges[i], formatPer),
+    hoverText: tooltipText(hoverMessage(label)),
   }));
 
-  const values = chartData.map((d) => d.value);
-  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
-  const yTicks = getNiceTicks(yDomain);
+  const { plotWidth, plotHeight, probe } = usePlotSize(
+    fillHeight ? undefined : fixedPlotHeight(chartHeight, CHART_MARGIN)
+  );
+  const layout = getValueBarLayout(
+    chartData.map((d) => d.value),
+    chartData.map((d) => d.label),
+    { width: plotWidth, height: plotHeight }
+  );
+  const { domain: yDomain, ticks: yTicks } = layout;
+  // Every bar keeps its label on a narrow screen, wrapped to its slot.
 
+  // Enough decimals to write every tick exactly.
+  const tickDigits = tickDecimals(yTicks.map((v) => v * 100));
   const yTickFormatter = (v: number) => {
-    const rounded = (v * 100).toFixed(ytickPrecision);
+    const rounded = (v * 100).toFixed(tickDigits);
     return `${trimAxisZeros ? Number(rounded) : rounded}%`;
   };
-  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+  const axisTitle = fitAxisTitle(['Relative change', 'Change (%)'], plotHeight);
+  const yAxis = getYAxisLayout(yTicks, !!axisTitle, yTickFormatter);
 
   const barChart = (
-    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
-      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+    <BarChart data={chartData} margin={{ ...CHART_MARGIN, left: yAxis.marginLeft }}>
+      {probe}
+      <CartesianGrid strokeDasharray="3 3" vertical={false} syncWithTicks />
+      <XAxis
+        dataKey="name"
+        {...categoryAxisProps(labels, plotWidth, { shortNames: SHORT_NAMES })}
+      />
       <YAxis
         ticks={yTicks}
-        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        domain={yDomain}
         tickFormatter={yTickFormatter}
         tick={RECHARTS_FONT_STYLE}
         tickLine={false}
         width={yAxis.yAxisWidth}
       >
-        <Label
-          value="Relative change"
-          angle={-90}
-          position="center"
-          dx={yAxis.labelDx}
-          style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
-        />
+        {axisTitle && (
+          <Label
+            value={axisTitle}
+            angle={-90}
+            position="center"
+            dx={yAxis.labelDx}
+            style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+          />
+        )}
       </YAxis>
       <Tooltip content={<ImpactTooltip />} />
-      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+      <Bar dataKey="value" label={<ReportBarLabel data={chartData} layout={layout} />}>
         {chartData.map((entry, index) => (
           <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
         ))}

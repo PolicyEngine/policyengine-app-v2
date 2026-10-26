@@ -43,6 +43,14 @@ export interface HexMapConfig {
    */
   coordinateScale?: number;
 
+  /**
+   * Opt-in: draw the positions as a tiled `odd-r` hex grid, with pointy-top
+   * hexagons that touch and rows √3/2 of a column apart, as HexJSON layouts
+   * expect. Off: flat-topped hexagons on a square grid, as the API's
+   * positions expect.
+   */
+  tiled?: boolean;
+
   /** Color scale configuration */
   colorScale?: ColorScaleConfig;
 
@@ -51,4 +59,10 @@ export interface HexMapConfig {
 
   /** Function to format hover text values */
   formatValue?: (value: number) => string;
+
+  /**
+   * Opt-in: how the color bar's ticks read, e.g. as pounds or percentages.
+   * Plain numbers (1.2k, 178, 0.02) when unset.
+   */
+  formatColorBarTick?: (value: number) => string;
 }

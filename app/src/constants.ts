@@ -1,5 +1,12 @@
 export const FOREVER = '2100-12-31';
-export const BASE_URL = 'https://api.policyengine.org';
+// PolicyEngine API origin. Builds set VITE_API_URL (Vite) or
+// NEXT_PUBLIC_API_URL (calculator-app, mapped onto VITE_API_URL in
+// next.config.ts) so staging talks to the staging API; production falls
+// back to the public API.
+export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://api.policyengine.org').replace(
+  /\/+$/,
+  ''
+);
 export const CURRENT_YEAR = '2026';
 
 // Certified default US microdata dataset URI, pinned to the revision that
