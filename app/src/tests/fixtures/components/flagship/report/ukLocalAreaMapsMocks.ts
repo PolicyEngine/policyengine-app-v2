@@ -70,3 +70,22 @@ export const UK_LOCAL_AREAS_OUTPUT_NO_CODES = {
 
 export const WALES_REGION = 'country/wales';
 export const UK_WIDE_REGION = 'uk';
+
+/**
+ * The coded output with every API position at the origin, so the hex map
+ * can place its areas only from their codes.
+ */
+export const UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS = {
+  ...UK_LOCAL_AREAS_OUTPUT,
+  constituency_impact: {
+    by_constituency: Object.fromEntries(
+      Object.entries(
+        (
+          UK_LOCAL_AREAS_OUTPUT as unknown as {
+            constituency_impact: { by_constituency: Record<string, object> };
+          }
+        ).constituency_impact.by_constituency
+      ).map(([name, area]) => [name, { ...area, x: 0, y: 0 }])
+    ),
+  },
+} as unknown as SocietyWideReportOutput;

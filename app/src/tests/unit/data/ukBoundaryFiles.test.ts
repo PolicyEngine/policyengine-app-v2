@@ -5,6 +5,7 @@ import {
   UK_AREA_COUNTS_BY_NATION,
   ukNationFromCode,
 } from '@/components/visualization/choropleth/ukAreaBoundaries';
+import { UK_HEX_LAYOUTS } from '@/components/visualization/choropleth/ukHexLayout';
 import {
   BOUNDARY_FILE_DIRECTORY,
   CONSTITUENCY_BOUNDARY_FILE,
@@ -42,7 +43,7 @@ function signedArea(ring: Ring): number {
 const LEVELS = [
   {
     level: 'constituency',
-    countsLevel: 'constituency' as const,
+    boundaryLevel: 'constituency' as const,
     boundaryFile: CONSTITUENCY_BOUNDARY_FILE,
     referenceFile: PY_CONSTITUENCIES_CSV,
     codeProperty: 'PCON24CD',
@@ -51,7 +52,7 @@ const LEVELS = [
   },
   {
     level: 'local authority',
-    countsLevel: 'local_authority' as const,
+    boundaryLevel: 'local_authority' as const,
     boundaryFile: LOCAL_AUTHORITY_BOUNDARY_FILE,
     referenceFile: PY_LOCAL_AUTHORITIES_CSV,
     codeProperty: 'LAD23CD',
@@ -62,7 +63,7 @@ const LEVELS = [
 
 describe.each(LEVELS)(
   'UK $level boundary file',
-  ({ countsLevel, boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
+  ({ boundaryLevel, boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
     test("given the file's codes then each nation has the area count the withheld notes use", () => {
       // Given
       const counts: Record<string, number> = {};
@@ -74,7 +75,23 @@ describe.each(LEVELS)(
       }
 
       // Then
-      expect(counts).toEqual(UK_AREA_COUNTS_BY_NATION[countsLevel]);
+      expect(counts).toEqual(UK_AREA_COUNTS_BY_NATION[boundaryLevel]);
+    });
+
+    test(`given the hex layout then it places exactly the file's ${expectedCount} codes, each on its own hex`, () => {
+      // Given
+      const layout = UK_HEX_LAYOUTS[boundaryLevel];
+      const boundaryCodes = readBoundaries(boundaryFile).map(
+        (feature) => feature.properties[codeProperty]
+      );
+
+      // When
+      const positions = Object.values(layout).map(([q, r]) => `${q},${r}`);
+
+      // Then
+      expect(Object.keys(layout).sort()).toEqual([...boundaryCodes].sort());
+      expect(Object.values(layout).every((position) => position.length === 2)).toBe(true);
+      expect(new Set(positions).size).toBe(expectedCount);
     });
 
     test(`given .py 6.10.0's list then the file holds exactly its ${expectedCount} codes, once each`, () => {

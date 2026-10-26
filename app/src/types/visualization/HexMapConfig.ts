@@ -43,6 +43,14 @@ export interface HexMapConfig {
    */
   coordinateScale?: number;
 
+  /**
+   * Opt-in: draw the positions as a tiled `odd-r` hex grid, with pointy-top
+   * hexagons that touch and rows √3/2 of a column apart, as HexJSON layouts
+   * expect. Off: flat-topped hexagons on a square grid, as the API's
+   * positions expect.
+   */
+  tiled?: boolean;
+
   /** Color scale configuration */
   colorScale?: ColorScaleConfig;
 
