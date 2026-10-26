@@ -38,6 +38,7 @@ import {
   ukNationFromRegion,
 } from '@/components/visualization/choropleth/ukAreaBoundaries';
 import { UKAreaChoroplethMap } from '@/components/visualization/choropleth/UKAreaChoroplethMap';
+import { ukHexPosition } from '@/components/visualization/choropleth/ukHexLayout';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import { colors, spacing, typography } from '@/designTokens';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
@@ -250,17 +251,27 @@ export default function UKLocalAreaMaps({
           mode === 'absolute'
             ? 'average_household_income_change'
             : 'relative_household_income_change';
+        // The hex map places an area by its code in the app's layout, and
+        // falls back to the API's position for a result without codes.
+        const position = ukHexPosition(level, area.code) ?? { x: area.x, y: area.y };
         return {
           id: name,
           label: name,
           value: area[field],
-          x: area.x,
-          y: area.y,
+          x: position.x,
+          y: position.y,
           ...(area.code && { code: area.code }),
           ...areaEstimateFields(area, field),
         };
       }),
-    [areas, mode]
+    [areas, level, mode]
+  );
+
+  // The layout's positions tile as an odd-r grid; the API's fallback
+  // positions keep the square grid they were made for.
+  const hexLayoutOwned = useMemo(
+    () => Object.values(areas ?? {}).every((area) => ukHexPosition(level, area.code) !== null),
+    [areas, level]
   );
 
   const decimals = useMemo(() => percentDecimals(mapData.map((point) => point.value)), [mapData]);
@@ -399,6 +410,7 @@ export default function UKLocalAreaMaps({
                   ...mapConfig,
                   // The legend reads in the rankings' units: pounds or percentages.
                   formatColorBarTick: formatValue,
+                  tiled: hexLayoutOwned,
                 }}
                 exportRef={mapRef}
                 selectedId={selectedArea ? selectedName : null}

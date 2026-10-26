@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
+import { UK_HEX_LAYOUTS } from '@/components/visualization/choropleth/ukHexLayout';
 import {
   BOUNDARY_FILE_DIRECTORY,
   CONSTITUENCY_BOUNDARY_FILE,
@@ -38,6 +39,7 @@ function signedArea(ring: Ring): number {
 const LEVELS = [
   {
     level: 'constituency',
+    hexLevel: 'constituency' as const,
     boundaryFile: CONSTITUENCY_BOUNDARY_FILE,
     referenceFile: PY_CONSTITUENCIES_CSV,
     codeProperty: 'PCON24CD',
@@ -46,6 +48,7 @@ const LEVELS = [
   },
   {
     level: 'local authority',
+    hexLevel: 'local_authority' as const,
     boundaryFile: LOCAL_AUTHORITY_BOUNDARY_FILE,
     referenceFile: PY_LOCAL_AUTHORITIES_CSV,
     codeProperty: 'LAD23CD',
@@ -56,7 +59,23 @@ const LEVELS = [
 
 describe.each(LEVELS)(
   'UK $level boundary file',
-  ({ boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
+  ({ hexLevel, boundaryFile, referenceFile, codeProperty, nameProperty, expectedCount }) => {
+    test(`given the hex layout then it places exactly the file's ${expectedCount} codes, each on its own hex`, () => {
+      // Given
+      const layout = UK_HEX_LAYOUTS[hexLevel];
+      const boundaryCodes = readBoundaries(boundaryFile).map(
+        (feature) => feature.properties[codeProperty]
+      );
+
+      // When
+      const positions = Object.values(layout).map(([q, r]) => `${q},${r}`);
+
+      // Then
+      expect(Object.keys(layout).sort()).toEqual([...boundaryCodes].sort());
+      expect(Object.values(layout).every((position) => position.length === 2)).toBe(true);
+      expect(new Set(positions).size).toBe(expectedCount);
+    });
+
     test(`given .py 6.10.0's list then the file holds exactly its ${expectedCount} codes, once each`, () => {
       // Given
       const referenceCodes = readPyAreaList(referenceFile).map((area) => area.code);

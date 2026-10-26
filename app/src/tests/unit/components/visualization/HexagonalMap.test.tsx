@@ -6,8 +6,26 @@ import {
   MOCK_MIXED_VALUES,
   MOCK_NEGATIVE_VALUES,
   MOCK_POSITIVE_VALUES,
+  MOCK_TILED_HEX_DATA,
   MOCK_UK_SHAPED_HEX_DATA,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
+
+/** A hexagon polygon's vertices, in drawing order. */
+function vertices(polygon: Element): [number, number][] {
+  return (polygon.getAttribute('points') ?? '')
+    .trim()
+    .split(' ')
+    .map((pair) => pair.split(',').map(Number) as [number, number]);
+}
+
+/** A hexagon polygon's centre. */
+function centre(polygon: Element): [number, number] {
+  const points = vertices(polygon);
+  return [
+    points.reduce((sum, [x]) => sum + x, 0) / points.length,
+    points.reduce((sum, [, y]) => sum + y, 0) / points.length,
+  ];
+}
 
 // jsdom has no PointerEvent; a MouseEvent with a pointer id is enough for the map's drag.
 if (typeof window.PointerEvent === 'undefined') {
@@ -22,6 +40,40 @@ if (typeof window.PointerEvent === 'undefined') {
 }
 
 describe('HexagonalMap', () => {
+  test('given a tiled grid then hexagons are pointy-topped and rows sit √3/2 of a column apart', () => {
+    // When
+    const { container } = render(
+      <HexagonalMap data={MOCK_TILED_HEX_DATA} config={{ tiled: true }} onSelect={vi.fn()} />
+    );
+
+    // Then
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const column = centre(east)[0] - centre(west)[0];
+    const row = centre(west)[1] - centre(north)[1];
+    expect(row / column).toBeCloseTo(Math.sqrt(3) / 2, 5);
+    const points = vertices(west);
+    // A pointy-top hexagon's top and bottom vertices share an x.
+    expect(points[1][0]).toBeCloseTo(points[4][0], 5);
+  });
+
+  test('given the default grid then hexagons stay flat-topped on square rows', () => {
+    // When
+    const { container } = render(<HexagonalMap data={MOCK_TILED_HEX_DATA} onSelect={vi.fn()} />);
+
+    // Then
+    const [west, east, north] = ['west', 'east', 'north'].map(
+      (id) => container.querySelector(`[data-area-id="${id}"]`)!
+    );
+    const column = centre(east)[0] - centre(west)[0];
+    const row = centre(west)[1] - centre(north)[1];
+    expect(row / column).toBeCloseTo(1, 5);
+    const points = vertices(west);
+    // A flat-top hexagon's left and right vertices share a y.
+    expect(points[0][1]).toBeCloseTo(points[3][1], 5);
+  });
+
   test('given minimal data then renders SVG with one hexagon', () => {
     // Given
     const data = [{ id: '1', label: 'Test', value: 100, x: 0, y: 0 }];

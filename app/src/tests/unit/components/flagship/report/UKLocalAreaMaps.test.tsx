@@ -9,6 +9,7 @@ import { LIST_SHAPE_UK_RESULT } from '@/tests/fixtures/adapters/societyWideOutpu
 import {
   UK_LOCAL_AREAS_OUTPUT,
   UK_LOCAL_AREAS_OUTPUT_NO_CODES,
+  UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS,
   UK_WIDE_REGION,
   WALES_REGION,
 } from '@/tests/fixtures/components/flagship/report/ukLocalAreaMapsMocks';
@@ -42,6 +43,14 @@ function hexagon(container: HTMLElement, name: string): Element {
 /** An area's boundary on the geographic map, by its ONS code. */
 function boundary(code: string): Promise<HTMLElement> {
   return screen.findByTestId(`area-${code}`);
+}
+
+/** A hexagon's vertices, in drawing order. */
+function vertices(polygon: Element): [number, number][] {
+  return (polygon.getAttribute('points') ?? '')
+    .trim()
+    .split(' ')
+    .map((pair) => pair.split(',').map(Number) as [number, number]);
 }
 
 async function showHexMap(user: ReturnType<typeof userEvent.setup>) {
@@ -254,6 +263,43 @@ describe('UKLocalAreaMaps geographic map', () => {
     // Then
     expect(hexagon(container, 'Clwyd East')).toBeInTheDocument();
     expect(screen.queryByTestId(`area-${CLWYD_EAST_CODE}`)).not.toBeInTheDocument();
+  });
+
+  test('given areas with codes then the hex map places them from the app’s layout, tiled', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(
+      <UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_WITHOUT_API_POSITIONS} />,
+      'uk'
+    );
+    await boundary(CLWYD_EAST_CODE);
+
+    // When
+    await showHexMap(user);
+
+    // Then: the API put all three at the origin, the layout apart
+    const hexagons = ['Clwyd East', 'Monmouthshire', 'Gower'].map((name) =>
+      hexagon(container, name)
+    );
+    const firstVertices = new Set(hexagons.map((polygon) => vertices(polygon)[0].join(',')));
+    expect(firstVertices.size).toBe(3);
+    const points = vertices(hexagons[0]);
+    // Tiled hexagons are pointy-topped: the top and bottom vertices share an x.
+    expect(points[1][0]).toBeCloseTo(points[4][0], 5);
+  });
+
+  test('given areas without codes then the hex map keeps the API positions on its square grid', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { container } = render(<UKLocalAreaMaps output={UK_LOCAL_AREAS_OUTPUT_NO_CODES} />, 'uk');
+
+    // When
+    await showHexMap(user);
+
+    // Then
+    const points = vertices(hexagon(container, 'Gower'));
+    // Flat-topped hexagons: the left and right vertices share a y.
+    expect(points[0][1]).toBeCloseTo(points[3][1], 5);
   });
 
   test('given the hex map chosen then switching the area kind keeps it', async () => {
