@@ -67,7 +67,7 @@ function parseClass(className: string): {
     if (char === "]" || char === ")") depth--;
     segments[segments.length - 1] += char;
   }
-  const utility = segments.pop() ?? "";
+  const utility = (segments.pop() ?? "").replace(/^!|!$/g, "");
   return {
     variants: segments[0] === "tw" ? segments.slice(1) : segments,
     utility,
@@ -75,21 +75,36 @@ function parseClass(className: string): {
 }
 
 /**
- * Whether a name in a transition-property list can include the outline. The
- * property's initial value is `all`, so `initial`, `unset` and `revert` mean
- * `all`; `inherit` and `revert-layer` take a value from elsewhere.
+ * The transition-property names known to leave the outline out. Any other name
+ * may include it: `all`, an `outline…` property, a variable, a CSS-wide
+ * keyword (the property's initial value is `all`), or a name the browser
+ * rejects, which drops the whole list.
  */
+const SAFE_PROPERTIES = new Set([
+  "box-shadow",
+  "translate",
+  "transform",
+  "scale",
+  "rotate",
+  "opacity",
+]);
+
+/** Whether a name in a transition-property list can include the outline. */
 function includesOutline(name: string): boolean {
-  return (
-    /^(all|initial|inherit|unset|revert|revert-layer)$/.test(name) ||
-    name.startsWith("outline") ||
-    name.startsWith("var(")
-  );
+  return !SAFE_PROPERTIES.has(name.trim().toLowerCase());
 }
 
-/** Whether a transition-property list can include the outline. */
+/**
+ * Whether a transition-property list can include the outline. Only `none`, or
+ * a comma-separated list of known properties, leaves it out: the browser drops
+ * any other value, such as `box-shadow translate`, and keeps the initial `all`.
+ */
 function listsOutline(list: string): boolean {
-  return list.split(/[\s,_]+/).some(includesOutline);
+  const names = list.replace(/_/g, " ").split(",");
+  if (names.length === 1 && names[0].trim().toLowerCase() === "none") {
+    return false;
+  }
+  return names.some(includesOutline);
 }
 
 /**
@@ -97,12 +112,15 @@ function listsOutline(list: string): boolean {
  * one that may include it, or not at all. Tailwind's `transition`,
  * `transition-all` and `transition-colors` include outline-color. A
  * `transition` shorthand counts as unsafe, even one that names a safe
- * property.
+ * property. `-webkit-transition…` are aliases of the unprefixed properties.
+ * An arbitrary property's name is matched as written: Tailwind emits nothing
+ * for one with upper-case letters, which the differential below checks.
  */
 function setsTransition(utility: string): "safe" | "unsafe" | undefined {
   const arbitrary = utility.match(/^\[([\w-]+):(.*)\]$/);
   if (arbitrary) {
-    const [, property, value] = arbitrary;
+    const [, raw, value] = arbitrary;
+    const property = raw.replace(/^-webkit-/, "");
     if (property === "transition-property") {
       return listsOutline(value) ? "unsafe" : "safe";
     }
@@ -130,10 +148,13 @@ function setsTransition(utility: string): "safe" | "unsafe" | undefined {
  */
 function setsTiming(utility: string): boolean {
   const time =
-    utility.match(/^\[transition-(?:duration|delay):(.*)\]$/)?.[1] ??
-    utility.match(/^(?:duration|delay)-(.+)$/)?.[1];
+    utility.match(
+      /^\[(?:-webkit-)?transition-(?:duration|delay):(.*)\]$/,
+    )?.[1] ?? utility.match(/^(?:duration|delay)-(.+)$/)?.[1];
   return (
-    time !== undefined && time !== "initial" && !/^\[?0(m?s)?\]?$/.test(time)
+    time !== undefined &&
+    time.toLowerCase() !== "initial" &&
+    !/^\[?0(m?s)?\]?$/i.test(time)
   );
 }
 
@@ -160,16 +181,16 @@ function animatesOutline(classes: string[]): boolean {
 function compiledAnimatesOutline(root: Root): boolean {
   const values = (property: string) => {
     const found: string[] = [];
-    root.walkDecls(property, (decl) => {
-      found.push(decl.value);
+    root.walkDecls((decl) => {
+      if (decl.prop.toLowerCase().replace(/^-webkit-/, "") === property) {
+        found.push(decl.value);
+      }
     });
     return found;
   };
   const properties = values("transition-property");
   if (properties.length > 0) {
-    return properties.some((list) =>
-      list.split(",").some((property) => includesOutline(property.trim())),
-    );
+    return properties.some(listsOutline);
   }
   const shorthands = values("transition");
   if (shorthands.length > 0) {
@@ -188,7 +209,7 @@ function compiledAnimatesOutline(root: Root): boolean {
     );
   }
   return [...values("transition-duration"), ...values("transition-delay")].some(
-    (time) => !/^0m?s$/.test(time),
+    (time) => !/^0m?s$/i.test(time),
   );
 }
 
@@ -274,6 +295,15 @@ describe("homepage card focus", () => {
       card("[transition-property:unset]", "duration-300"),
       card("transition-[revert]", "duration-300"),
       card("transition-shadow", "focus-visible:transition-all"),
+      card("transition-[box-shadow_translate]", "duration-300"),
+      card("transition-[box-shadow,none]", "duration-300"),
+      card("!transition-all"),
+      card("!delay-100"),
+      card("transition-[ALL]", "duration-300"),
+      card("[-webkit-transition:all_300ms]"),
+      card("[-webkit-transition-delay:100ms]"),
+      // CSS units and property names in a list are case-insensitive.
+      card("delay-[100MS]"),
     ];
     const still = [
       card("transition-[box-shadow,translate]", "duration-300", "ease-out"),
@@ -286,6 +316,8 @@ describe("homepage card focus", () => {
       card("ease-out"),
       card("transition-shadow", "delay-100"),
       card("transition-discrete"),
+      card("transition-[BOX-SHADOW]", "duration-300"),
+      card("[transition-duration:0MS]"),
     ];
     expect(animates.filter((classes) => !animatesOutline(classes))).toEqual([]);
     expect(still.filter(animatesOutline)).toEqual([]);
@@ -325,6 +357,19 @@ describe("homepage card focus", () => {
       "transition-[inherit]",
       "[transition-property:unset]",
       "[transition-property:outline-color]",
+      "transition-[box-shadow_translate]",
+      "transition-[box-shadow,none]",
+      "!transition-all",
+      "!delay-100",
+      "transition-[ALL]",
+      "[-webkit-transition:all_300ms]",
+      "[-webkit-transition-delay:100ms]",
+      "transition-[BOX-SHADOW]",
+      "delay-[100MS]",
+      "[transition-duration:0MS]",
+      "[TRANSITION:all_1s]",
+      "[TRANSITION-DELAY:100ms]",
+      "[Transition-Property:all]",
       "[transition-property:box-shadow]",
       "[transition-duration:300ms]",
       "[transition-delay:1s]",
@@ -338,7 +383,7 @@ describe("homepage card focus", () => {
     const roots = await compileEach(classes);
     const declaresTransition = (root: Root) => {
       let found = false;
-      root.walkDecls(/^transition/, () => {
+      root.walkDecls(/^(-webkit-)?transition/i, () => {
         found = true;
       });
       return found;
@@ -349,10 +394,14 @@ describe("homepage card focus", () => {
       css: compiledAnimatesOutline(roots[i]),
       emitted: declaresTransition(roots[i]),
     }));
-    // Every class but duration-initial, which only sets Tailwind's own
-    // --tw-duration, compiled to a transition declaration.
+    // Every class compiled to a transition declaration but duration-initial,
+    // which only sets Tailwind's own --tw-duration, and the arbitrary
+    // properties with upper-case names, which Tailwind drops.
     expect(compiled.filter((c) => !c.emitted).map((c) => c.name)).toEqual([
       P + "duration-initial",
+      P + "[TRANSITION:all_1s]",
+      P + "[TRANSITION-DELAY:100ms]",
+      P + "[Transition-Property:all]",
     ]);
     expect(compiled.filter((c) => c.css && !c.rule)).toEqual([]);
     expect(compiled.filter((c) => c.rule !== c.css).map((c) => c.name)).toEqual(

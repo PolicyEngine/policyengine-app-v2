@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { cleanup, fireEvent, render as renderBare } from '@testing-library/react';
+import { act, cleanup, fireEvent, render as renderBare } from '@testing-library/react';
 import fc from 'fast-check';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import NavItem, { DropdownItem, NavItemSetup } from '@/components/homeHeader/NavItem';
@@ -213,7 +213,9 @@ describe('NavItem', () => {
     // React's handlers, stops the browser default. It first records whether
     // the app had already prevented it.
     let defaultPreventedByApp: boolean | undefined;
+    let clickTargets: (EventTarget | null)[] = [];
     function preventNavigation(event: Event) {
+      clickTargets.push(event.target);
       defaultPreventedByApp = event.defaultPrevented;
       event.preventDefault();
     }
@@ -226,15 +228,21 @@ describe('NavItem', () => {
     function navigationsReported(consoleError: { mock: { calls: unknown[][] } }) {
       return consoleError.mock.calls
         .map(([first]) => String((first as Error | undefined)?.message ?? first))
-        .filter((message) => /Not implemented: (navigation|window\.open)/.test(message));
+        .filter((message) =>
+          /Not implemented: (navigation|window\.open|HTMLFormElement\.prototype\.(submit|requestSubmit))/.test(
+            message
+          )
+        );
     }
 
     beforeEach(() => {
       defaultPreventedByApp = undefined;
+      clickTargets = [];
     });
 
     afterEach(() => {
       document.removeEventListener('click', preventNavigation);
+      vi.useRealTimers();
       vi.restoreAllMocks();
     });
 
@@ -257,7 +265,7 @@ describe('NavItem', () => {
       ['a Shift', { shiftKey: true }],
     ])(
       'given %s click on a row linking to another site then the browser follows it, not the router',
-      (_, modifiers) => {
+      async (_, modifiers) => {
         // Given
         const { push } = renderOpen([
           { label: 'GiveCalc', href: 'https://policyengine.org/us/givecalc' },
@@ -270,14 +278,20 @@ describe('NavItem', () => {
         document.addEventListener('click', preventNavigation);
         const consoleError = vi.spyOn(console, 'error');
         const url = window.location.href;
+        vi.useFakeTimers();
 
         // When
-        fireEvent.click(screen.getByRole('link', { name: 'GiveCalc' }), modifiers);
+        const row = screen.getByRole('link', { name: 'GiveCalc' });
+        fireEvent.click(row, modifiers);
+        // Whatever the click deferred, to a timer or a microtask, runs now.
+        await act(() => vi.runAllTimersAsync());
 
         // Then
-        // The click reached the document with its default intact, and nothing
-        // navigated another way. jsdom does run history.pushState, which would
-        // change the URL.
+        // The row's click was the only one to reach the document, with its
+        // default intact, and the app navigated no other way jsdom can see: no
+        // router push, no navigation, window.open or form submission reported,
+        // and no change to the URL, which history.pushState would make.
+        expect(clickTargets).toEqual([row]);
         expect(defaultPreventedByApp).toBe(false);
         expect(push).not.toHaveBeenCalled();
         expect(navigationsReported(consoleError)).toEqual([]);
