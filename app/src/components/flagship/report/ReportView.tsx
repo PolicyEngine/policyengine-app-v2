@@ -446,6 +446,7 @@ export default function ReportView({
                       districtsCopy={
                         isUK
                           ? output &&
+                            !runsBlocked &&
                             !hasUKLocalAreaImpacts(output) &&
                             outputServesLocalAreaBreakdowns(output)
                             ? UK_DISTRICTS_COMPUTE_CARD_COPY

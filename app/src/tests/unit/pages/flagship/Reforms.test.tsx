@@ -54,15 +54,21 @@ vi.mock('@/api/flagshipReportStore', async (importOriginal) => ({
   getFlagshipReportStore: () => ({ findMine: mockFindReports }),
 }));
 
+/** Replaces the report reads below for one test; cleared before each re-run test. */
+const mockFetchReportByIdOverride: { current: (() => Promise<unknown>) | null } = {
+  current: null,
+};
+
 vi.mock('@/api/report', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/report')>()),
-  fetchReportById: async (_countryId: string, reportId: string) => ({
-    id: reportId,
-    status: reportId === '901' ? 'complete' : 'pending',
-    year: reportId === '904' ? '2028' : '2026',
-    simulation_1_id: '9',
-    simulation_2_id: '10',
-  }),
+  fetchReportById: async (_countryId: string, reportId: string) =>
+    mockFetchReportByIdOverride.current?.() ?? {
+      id: reportId,
+      status: reportId === '901' ? 'complete' : 'pending',
+      year: reportId === '904' ? '2028' : '2026',
+      simulation_1_id: '9',
+      simulation_2_id: '10',
+    },
 }));
 
 const mockFetchPolicyById = vi.fn();
@@ -1141,6 +1147,7 @@ describe('ReformsPage', () => {
 
     beforeEach(() => {
       mockFetchPolicyById.mockResolvedValue(v1PolicyContent({}, []));
+      mockFetchReportByIdOverride.current = null;
     });
 
     async function openReform(reports: object[]) {
@@ -1176,6 +1183,31 @@ describe('ReformsPage', () => {
 
       // When
       await user.click(within(list).getByRole('button', { name: /re-run/i }));
+
+      // Then
+      const notice = await screen.findByRole('alert');
+      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    test('given the report cannot be read and its saved comparison sets removed parameters then Re-run names them and runs nothing', async () => {
+      // Given: the report is unreadable, so a re-run would compare with Plan B's policy
+      mockFindMine.mockResolvedValue([
+        CHAT_REFORM,
+        {
+          ...PLAN_B_REFORM,
+          parameters: [...CHAT_REFORM.parameters, REMOVED_PARAMETER_CHANGE],
+          missingParameters: [REMOVED_US_PARAMETER],
+        },
+      ]);
+      mockFindReports.mockResolvedValue([ACCOUNT_REPORT]);
+      mockFetchReportByIdOverride.current = () => Promise.reject(new Error('Not found'));
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+      // When
+      await user.click(screen.getByRole('button', { name: /re-run/i }));
 
       // Then
       const notice = await screen.findByRole('alert');
