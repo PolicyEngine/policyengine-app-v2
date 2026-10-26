@@ -5,6 +5,7 @@ import path from "node:path";
 import type { NextConfig } from "next";
 import { describe, expect, test } from "vitest";
 
+import calculatorConfig from "../../../../calculator-app/next.config";
 import nextConfig from "../../../next.config";
 
 // A production build that restored webpack's persistent cache reused old CSS,
@@ -141,16 +142,18 @@ async function unsnapshottable(dirs: string[]): Promise<string[]> {
 describe("Tailwind's source directories", () => {
   test("given Next's build config then it sets only the snapshot paths the oracle copies", () => {
     // Next replaces webpack's snapshot options with this block, whitespace
-    // aside. Outside Yarn PnP it sets only managedPaths, and no snapshot.module,
-    // so a build gets webpack's production default for that (the next test).
+    // aside, and sets them nowhere else. Outside Yarn PnP it sets only
+    // managedPaths, and no snapshot.module, so a build gets webpack's
+    // production default for that (the next test).
     const require = createRequire(path.join(repoDir, "website/package.json"));
     const source = readFileSync(
       require.resolve("next/dist/build/webpack-config.js"),
       "utf8",
     );
-    const block = source
-      .match(/webpack5Config\.snapshot = \{\};[\s\S]*?\n\s*if \(dev\) \{/)?.[0]
-      .replace(/\s+/g, " ");
+    const raw = source.match(
+      /webpack5Config\.snapshot = \{\};[\s\S]*?\n\s*if \(dev\) \{/,
+    )?.[0];
+    const block = raw?.replace(/\s+/g, " ");
     expect(block).toBe(
       [
         "webpack5Config.snapshot = {};",
@@ -165,7 +168,16 @@ describe("Tailwind's source directories", () => {
         "if (dev) {",
       ].join(" "),
     );
+    // Nothing else in Next's config sets snapshot options.
+    expect(source.replace(raw!, "")).not.toMatch(/\bsnapshot\b/);
     expect(process.versions.pnp).toBeUndefined();
+    // The calculator's build reads this same copy of Next.
+    const calculator = createRequire(
+      path.join(repoDir, "calculator-app/package.json"),
+    );
+    expect(calculator.resolve("next/dist/build/webpack-config.js")).toBe(
+      require.resolve("next/dist/build/webpack-config.js"),
+    );
   });
 
   test("given a production build then webpack snapshots modules by timestamp and hash", async () => {
@@ -182,6 +194,39 @@ describe("Tailwind's source directories", () => {
       hash: true,
     });
   });
+
+  // Next calls each app's webpack hook after that block, so a hook could still
+  // change what webpack gets. Each returns the snapshot options it was given,
+  // unchanged (they're frozen, so a change in place throws). Each also keeps
+  // `mode`, which picks webpack's default snapshot.module, and sets no
+  // experiments.futureDefaults, which changes webpack's snapshot defaults.
+  test.each([
+    ["website", nextConfig],
+    ["calculator", calculatorConfig],
+  ])(
+    "given the %s's webpack hook then it leaves the snapshot options alone",
+    (_, config) => {
+      const snapshot = Object.freeze({
+        managedPaths: Object.freeze([...NEXT_MANAGED_PATHS]),
+      });
+      const given = {
+        mode: "production",
+        snapshot,
+        cache: { type: "filesystem" },
+        plugins: [],
+        resolve: {},
+      };
+      const ctx = {
+        dev: false,
+        isServer: false,
+        webpack: { DefinePlugin: class {} },
+      } as unknown as Parameters<WebpackHook>[1];
+      const out = config.webpack!(given, ctx);
+      expect(out.snapshot).toBe(snapshot);
+      expect(out.mode).toBe("production");
+      expect(out.experiments?.futureDefaults).toBeUndefined();
+    },
+  );
 
   // The positive control. If a Next upgrade lets webpack snapshot website/src,
   // this fails, and the website's cache could come back.
