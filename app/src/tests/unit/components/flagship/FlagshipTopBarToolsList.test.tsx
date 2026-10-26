@@ -2,17 +2,17 @@ import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 
-// A made-up list, so these cases hold whichever tools are featured: the bar
-// links whatever the list holds, in its order (not alphabetical, so a sort
-// would show), and a country with no tools gets no rows.
-vi.mock('@/data/featuredTools.json', () => ({
-  default: {
-    us: [
-      { slug: 'zeta-tool', label: 'Zeta tool', description: 'Zeta description.' },
-      { slug: 'alpha-tool', label: 'Alpha tool', description: 'Alpha description.' },
-    ],
-    ng: [],
-  },
+// A made-up Tools menu, so these cases hold whichever tools apps.json marks:
+// the bar links whatever the menu lists, in the menu's order (not alphabetical
+// here, so a re-sort would show), and a country with no tools gets no rows.
+vi.mock('@/utils/toolsMenu', () => ({
+  getToolsMenuEntries: (countryId: string) =>
+    countryId === 'us'
+      ? [
+          { slug: 'zeta-tool', label: 'Zeta tool' },
+          { slug: 'alpha-tool', label: 'Alpha tool' },
+        ]
+      : [],
 }));
 
 const WEBSITE_URL = 'https://policyengine.org';
@@ -28,21 +28,13 @@ async function openMoreMenuRows(countryId: string) {
   );
 }
 
-describe('FlagshipTopBar with another featured list', () => {
-  test('given listed tools then the more menu links them after Research, in list order', async () => {
+describe('FlagshipTopBar with another Tools menu', () => {
+  test('given listed tools then the more menu links them after Research, in the menu order', async () => {
     // When
     const rows = await openMoreMenuRows('us');
 
     // Then
-    expect(rows).toEqual([
-      'Research',
-      '—',
-      'Zeta tool',
-      'Alpha tool',
-      'All interactive tools',
-      '—',
-      ...OTHER_LINK_ROWS,
-    ]);
+    expect(rows).toEqual(['Research', '—', 'Zeta tool', 'Alpha tool', '—', ...OTHER_LINK_ROWS]);
     expect(screen.getByRole('menuitem', { name: 'Zeta tool' })).toHaveAttribute(
       'href',
       `${WEBSITE_URL}/us/zeta-tool`
@@ -54,7 +46,7 @@ describe('FlagshipTopBar with another featured list', () => {
   });
 
   test.each(['uk', 'ca', 'ng'])(
-    'given %s, with no tools in the list, then the more menu has no tool rows',
+    'given %s, with no tools, then the more menu has no tool rows',
     async (countryId) => {
       // When
       const rows = await openMoreMenuRows(countryId);

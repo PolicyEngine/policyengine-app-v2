@@ -1,9 +1,9 @@
 import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
-import featuredToolsData from '@/data/featuredTools.json';
 import { countryIds } from '@/libs/countries';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
+import { getToolsMenuEntries, type ToolsMenuEntry } from '@/utils/toolsMenu';
 
 const mockNavigate = vi.fn();
 let mockPathname = '/us/build';
@@ -23,12 +23,12 @@ const WEBSITE_URL = 'https://policyengine.org';
 /** The website links after the tools group, the same in every country. */
 const OTHER_LINK_ROWS = ['Model documentation', 'API', 'About', 'Donate', 'GitHub'];
 
-/** The shared list's countries and their tools, so these tests follow the list. */
-const COUNTRIES_WITH_TOOLS = Object.entries(featuredToolsData).filter(
-  ([, tools]) => tools.length > 0
-);
+/** Each country's tools, as the headers' Tools menu lists them, so these tests follow apps.json. */
+const COUNTRIES_WITH_TOOLS = countryIds
+  .map((countryId): [string, ToolsMenuEntry[]] => [countryId, getToolsMenuEntries(countryId)])
+  .filter(([, tools]) => tools.length > 0);
 const COUNTRIES_WITHOUT_TOOLS = countryIds.filter(
-  (countryId) => !COUNTRIES_WITH_TOOLS.some(([listed]) => listed === countryId)
+  (countryId) => getToolsMenuEntries(countryId).length === 0
 );
 
 function renderTopBar(countryId = 'us') {
@@ -174,7 +174,7 @@ describe('FlagshipTopBar', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/us/reforms');
   });
 
-  describe('interactive tools', () => {
+  describe('tools menu', () => {
     test('given the US then CliffWatch links its page on the website', async () => {
       // Given
       renderTopBar('us');
@@ -205,7 +205,7 @@ describe('FlagshipTopBar', () => {
     });
 
     test.each(COUNTRIES_WITH_TOOLS)(
-      'given %s then the more menu lists its tools after Research, as their own group',
+      'given %s then the more menu lists its tools after Research, in the Tools menu order, as their own group',
       async (countryId, tools) => {
         // Given
         renderTopBar(countryId);
@@ -217,16 +217,12 @@ describe('FlagshipTopBar', () => {
         expect(linkRows(menu)).toEqual([
           { tag: 'A', label: 'Research', href: `${WEBSITE_URL}/${countryId}/research` },
           '—',
+          // The bar is the main app, so the tools start at the first tool.
           ...tools.map((tool) => ({
             tag: 'A',
             label: tool.label,
             href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
           })),
-          {
-            tag: 'A',
-            label: 'All interactive tools',
-            href: `${WEBSITE_URL}/${countryId}/research?types=interactive`,
-          },
           '—',
           ...OTHER_LINK_ROWS.map((label) => expect.objectContaining({ label })),
         ]);

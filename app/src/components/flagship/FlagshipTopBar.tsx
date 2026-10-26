@@ -19,7 +19,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDraftReform } from '@/libs/draftReform';
-import { getFeaturedToolLinks } from '@/libs/featuredTools';
+import { getToolsMenuEntries } from '@/utils/toolsMenu';
 import AuthMenu from '../auth/AuthMenu';
 import FlagshipBrand from './FlagshipBrand';
 
@@ -105,9 +105,14 @@ export default function FlagshipTopBar() {
     { label: 'Donate', href: `${WEBSITE_URL}/${countryId}/donate` },
     { label: 'GitHub', href: 'https://github.com/PolicyEngine' },
   ];
-  // A country's featured interactive tools sit after Research, set apart
-  // as their own group; a country without any keeps one plain list.
-  const toolLinks = getFeaturedToolLinks(countryId);
+  // The headers' Tools menu, after Research as its own group; a country
+  // without tools keeps one plain list. The headers list the main app first,
+  // but this bar is the main app, so it starts at the first tool. Each tool
+  // is a separate app on the website's domain, so its links are absolute.
+  const toolLinks = getToolsMenuEntries(countryId).map((tool) => ({
+    label: tool.label,
+    href: `${WEBSITE_URL}/${countryId}/${tool.slug}`,
+  }));
   const moreLinkGroups =
     toolLinks.length > 0
       ? [[researchLink], toolLinks, otherLinks]
