@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@test-utils';
+import { render, screen, userEvent, waitFor, within } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CalcOrchestratorProvider } from '@/contexts/CalcOrchestratorContext';
 import type { FlagshipReportData } from '@/hooks/useFlagshipReport';
@@ -10,6 +10,7 @@ import {
   EXISTING_REPORT_ID,
   EXISTING_SIMULATIONS,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
+import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 /**
@@ -19,6 +20,7 @@ import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutput
 
 const mockUseFlagshipReport = vi.fn();
 const mockFetchEconomy = vi.fn();
+const mockFetchLocalAreaBreakdown = vi.fn();
 const mockMarkReportCompleted = vi.fn();
 const mockMarkReportError = vi.fn();
 
@@ -52,6 +54,7 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
 vi.mock('@/api/societyWideCalculation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/societyWideCalculation')>()),
   fetchSocietyWideCalculation: (...args: unknown[]) => mockFetchEconomy(...args),
+  fetchLocalAreaBreakdown: (...args: unknown[]) => mockFetchLocalAreaBreakdown(...args),
 }));
 
 vi.mock('@/api/report', async (importOriginal) => ({
@@ -88,6 +91,8 @@ function reportData(overrides: Partial<FlagshipReportData> = {}): FlagshipReport
     error: null,
     notFound: false,
     failedPolicyIds: [],
+    policiesChecked: true,
+    missingParameters: [],
     retry: vi.fn(),
     ...overrides,
   };
@@ -113,6 +118,11 @@ describe('FlagshipReportPage run lifecycle', () => {
       vi.fn(async () => Response.json({}))
     );
     mockFetchEconomy.mockResolvedValue({ status: 'ok', result: createMockSocietyWideOutput() });
+    mockFetchLocalAreaBreakdown.mockResolvedValue({
+      status: 'computing',
+      queue_position: 1,
+      result: null,
+    });
     mockMarkReportCompleted.mockResolvedValue({});
     mockMarkReportError.mockResolvedValue({});
   });
@@ -166,6 +176,49 @@ describe('FlagshipReportPage run lifecycle', () => {
     expect(mockMarkReportCompleted).not.toHaveBeenCalled();
   });
 
+  test('given a report whose policies are still being checked then it does not run yet', async () => {
+    // Given
+    mockUseFlagshipReport.mockReturnValue(reportData({ policiesChecked: false }));
+
+    // When
+    renderPage();
+
+    // Then
+    expect(await screen.findByText(/loading report/i)).toBeInTheDocument();
+    expect(mockFetchEconomy).not.toHaveBeenCalled();
+  });
+
+  test('given a UK report whose policies are still being checked then its local areas do not start calculating', async () => {
+    // Given
+    mockUseFlagshipReport.mockReturnValue(
+      reportData({ report: { ...EXISTING_REPORT, countryId: 'uk' }, policiesChecked: false })
+    );
+
+    // When
+    renderPage();
+
+    // Then
+    expect(await screen.findByText(/loading report/i)).toBeInTheDocument();
+    expect(mockFetchLocalAreaBreakdown).not.toHaveBeenCalled();
+  });
+
+  test('given a pending report whose policy sets parameters the model no longer has then it names them and runs nothing', async () => {
+    // Given
+    mockUseFlagshipReport.mockReturnValue(
+      reportData({ missingParameters: [REMOVED_US_PARAMETER] })
+    );
+
+    // When
+    renderPage();
+
+    // Then
+    const notice = await screen.findByRole('alert');
+    expect(notice).toHaveTextContent(/this report cannot be run/i);
+    expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+    expect(mockFetchEconomy).not.toHaveBeenCalled();
+    expect(mockMarkReportError).not.toHaveBeenCalled();
+  });
+
   describe('given a report whose record is already complete', () => {
     const completeReport = () =>
       reportData({
@@ -181,6 +234,32 @@ describe('FlagshipReportPage run lifecycle', () => {
 
       // Then
       expect(await screen.findByRole('tab', { name: 'Validation' })).toBeInTheDocument();
+      expect(mockFetchEconomy).not.toHaveBeenCalled();
+    });
+
+    test('then with a policy that sets parameters the model no longer has, its results show with a notice, and nothing more runs', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockUseFlagshipReport.mockReturnValue({
+        ...completeReport(),
+        missingParameters: [REMOVED_US_PARAMETER],
+      });
+
+      // When
+      renderPage();
+
+      // Then: the stored results open, and say why nothing more runs
+      expect(await screen.findByRole('tab', { name: 'Validation' })).toBeInTheDocument();
+      const notice = screen.getByRole('alert');
+      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /open adjust parameters/i }));
+      expect(screen.getByRole('button', { name: /recompute/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /edit in build/i })).toBeDisabled();
+      await user.click(screen.getByRole('tab', { name: 'Household' }));
+      expect(
+        screen.getByText(/households cannot be calculated for this report/i)
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^calculate/i })).not.toBeInTheDocument();
       expect(mockFetchEconomy).not.toHaveBeenCalled();
     });
 

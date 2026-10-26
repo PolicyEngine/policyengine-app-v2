@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { isAccountId } from '@/api/v2Associations';
 import { useCalibrationMatches } from '@/components/flagship/CalibrationMatches';
+import MissingParametersNotice from '@/components/flagship/MissingParametersNotice';
 import {
   nationalPopulationLabel,
   populationLabel,
@@ -125,6 +126,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     error: reportLoadError,
     notFound: reportNotFound,
     failedPolicyIds,
+    policiesChecked,
+    missingParameters,
     retry: retryReport,
   } = useFlagshipReport(
     (sharedLink ? shared?.record.apiReportId : browserLink ? userReportId : undefined) ?? ''
@@ -168,6 +171,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       report?.year || undefined,
       report?.countryId
     );
+
+  // The report's policies set parameters the model no longer has: its
+  // stored results may show, but nothing on the page may calculate.
+  const runsBlocked = missingParameters.length > 0;
 
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
   // Stored provenance that can't be read: readReportMeta answers none for it.
@@ -241,7 +248,8 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   });
 
   useStartCalculationOnLoad({
-    enabled: !!report && !!calcConfigs,
+    // Not before the policies are checked, and never with missing parameters.
+    enabled: !!report && !!calcConfigs && policiesChecked && !runsBlocked,
     configs: calcConfigs || [],
     isComplete: calcStatus.isComplete,
   });
@@ -269,8 +277,9 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       : undefined;
   // A budget window's years. The run scored the first in full; another
   // year runs once it is opened, or with the rest from the All years view.
+  // Blocked, the report shows its own year only: another would need a run.
   const windowYears =
-    meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
+    !runsBlocked && meta?.budgetWindow && meta.budgetWindow.windowSize > 1 && report?.year
       ? Array.from({ length: meta.budgetWindow.windowSize }, (_, index) =>
           String(meta.budgetWindow!.startYear + index)
         )
@@ -312,7 +321,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
     reformPolicyId: reformPolicyId ? String(reformPolicyId) : undefined,
     baselinePolicyId: baselinePolicyId ? String(baselinePolicyId) : undefined,
     region,
-    years: requestedYears.filter((year) => year !== reportYear),
+    years: runsBlocked ? [] : requestedYears.filter((year) => year !== reportYear),
   });
   const provisionPaths = meta?.provisions.map((p) => p.path) ?? [];
   const trackRecord = useModelTrackRecord(provisionPaths, report?.countryId);
@@ -354,6 +363,18 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           {title}
         </Title>
         <ReportNotSocietyWide />
+      </Stack>
+    );
+  }
+
+  // Without stored results there is nothing to show but why.
+  if (runsBlocked && !output) {
+    return layout(
+      <Stack style={{ width: '100%', minWidth: 0, gap: spacing.xl }}>
+        <Title order={1} style={{ margin: 0 }}>
+          {title}
+        </Title>
+        <MissingParametersNotice subject="This report" parameterPaths={missingParameters} />
       </Stack>
     );
   }
@@ -435,8 +456,10 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           alignItems: 'center',
         }}
       >
-        {/* A UK report's local areas calculate alongside its national run. */}
-        {report?.countryId === 'uk' &&
+        {/* A UK report's local areas calculate alongside its national run, once its policies are checked. */}
+        {policiesChecked &&
+          !runsBlocked &&
+          report?.countryId === 'uk' &&
           report.status !== 'complete' &&
           !householdReport &&
           !isUKLocalLevelRegion(region) && (
@@ -544,16 +567,21 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       sourceNote={meta?.sourceNote || ''}
       populationLabel={regionLabel ?? nationalPopulationLabel(report?.countryId)}
       // A window asked for in Build opens running.
-      budgetWindow={meta?.budgetWindow}
+      budgetWindow={runsBlocked ? undefined : meta?.budgetWindow}
       provisions={meta?.provisions ?? []}
       overviewLead={
         <>
+          {runsBlocked && (
+            <MissingParametersNotice subject="This report" parameterPaths={missingParameters}>
+              Its stored results are shown as they were calculated.
+            </MissingParametersNotice>
+          )}
           {!meta && metadata.status === 'error' && (
             <LeadError>
               <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
             </LeadError>
           )}
-          {baselineUnknown && (
+          {baselineUnknown && !runsBlocked && (
             <LeadError>
               <ErrorState
                 compact
@@ -568,6 +596,7 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
       customBaselineLabel={customBaselineLabel}
       baselineUnknown={baselineUnknown}
       baseline={runBaseline}
+      runsBlocked={runsBlocked}
       year={year}
       region={region}
       reformPolicyId={reformPolicyId}

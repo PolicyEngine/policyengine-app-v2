@@ -17,6 +17,7 @@ import { useAuthStatus } from '@/libs/auth/AuthContext';
 import { getBrowserUserId } from '@/libs/auth/browserUser';
 import { useV2UserClient } from '@/libs/auth/useV2UserClient';
 import { unwrapReport } from '@/libs/flagship/reportSchema';
+import { V1_POLICY_CONTENT_GC_TIME, v1PolicyContentKey } from '@/libs/queryKeys';
 import type { RootState } from '@/store';
 import { isAssociationCountry } from '@/types/v2User';
 
@@ -60,16 +61,6 @@ export function useV3SavedWork(): V3SavedWork {
     return { account: null, scope: 'browser' };
   }, [status, subject, browserUserId, countryId, client]);
 }
-
-/**
- * A v1 policy's raw parameter map (`policy_json`) and the parameters the
- * model no longer has (`missing_parameters`), per country.
- */
-export const v1PolicyContentKey = (countryId: string, policyId: string) =>
-  ['v1-policy-content', countryId, policyId] as const;
-
-/** How long a fetched v1 policy stays cached without a reader. */
-export const V1_POLICY_CONTENT_GC_TIME = 30 * 60 * 1000;
 
 export function useReformStore(): ReformStore {
   const { account } = useV3SavedWork();

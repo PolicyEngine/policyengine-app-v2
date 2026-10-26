@@ -21,6 +21,10 @@ import {
   REPORT_UNAVAILABLE_ERROR,
   SIMULATION_UNAVAILABLE_ERROR,
 } from '@/tests/fixtures/hooks/useFlagshipReportMocks';
+import {
+  REMOVED_US_PARAMETER,
+  v1PolicyContent,
+} from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 
 const mockFetchReportById = vi.fn();
 const mockFetchSimulationById = vi.fn();
@@ -167,6 +171,49 @@ describe('useFlagshipReport', () => {
     expect(result.current.error).toBeNull();
     // Each failed policy is named, so a missing baseline reads as unknown.
     await waitFor(() => expect(result.current.failedPolicyIds).toEqual(['2', '98557']));
+  });
+
+  test('given a policy that sets parameters the model no longer has then the report names them, without waiting for the metadata', async () => {
+    // Given: no parameter metadata loaded; the reform policy (98557) sets a removed parameter
+    mockFetchPolicyById.mockImplementation(async (_country: string, policyId: string) =>
+      policyId === '98557'
+        ? v1PolicyContent({ [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 } }, [
+            REMOVED_US_PARAMETER,
+          ])
+        : v1PolicyContent({}, [])
+    );
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true));
+    expect(result.current.missingParameters).toEqual([REMOVED_US_PARAMETER]);
+  });
+
+  test('given policies read without a missing-parameter list then nothing is missing', async () => {
+    // Given: an API that does not report the field
+    mockFetchPolicyById.mockResolvedValue(v1PolicyContent({}));
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then
+    expect(result.current.policiesChecked).toBe(false);
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true));
+    expect(result.current.missingParameters).toEqual([]);
+  });
+
+  test('given a policy that cannot be read then its check settles with nothing missing', async () => {
+    // Given
+    mockFetchPolicyById.mockRejectedValue(POLICY_UNAVAILABLE_ERROR);
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true));
+    expect(result.current.missingParameters).toEqual([]);
   });
 
   test('given a failed simulation then retry asks for it again and the error clears', async () => {

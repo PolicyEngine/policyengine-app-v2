@@ -20,3 +20,10 @@ export function reformMissingParameters(
 ): string[] {
   return reform?.missingParameters ?? [];
 }
+
+/** Every missing parameter of several policies, once each, in order. */
+export function combinedMissingParameters(
+  policies: Array<Pick<V1PolicyContent, 'missing_parameters'> | null | undefined>
+): string[] {
+  return [...new Set(policies.flatMap((policy) => policyMissingParameters(policy)))].sort();
+}

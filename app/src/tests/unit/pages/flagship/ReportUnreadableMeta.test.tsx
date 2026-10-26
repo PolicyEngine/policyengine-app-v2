@@ -26,6 +26,8 @@ vi.mock('@/hooks/useFlagshipReport', () => ({
     policies: [],
     isLoading: false,
     failedPolicyIds: [],
+    policiesChecked: true,
+    missingParameters: [],
   }),
 }));
 
