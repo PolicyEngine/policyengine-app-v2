@@ -3,6 +3,16 @@ import { TEST_POLICYENGINE_VERSION } from '@/tests/fixtures/api/publicApi/modelC
 
 type Schemas = components['schemas'];
 
+/**
+ * A catalog variable with its unit and definition period, which the Public
+ * API serves since catalog format 2 but the generated client on this base
+ * predates (see `CatalogVariable` in api/publicApi/catalogVariables).
+ */
+type CatalogVariableFixture = Schemas['MetadataVariable'] & {
+  unit?: string | null;
+  definition_period?: string | null;
+};
+
 /** A parameter whose value lists the variables `household_benefits` adds. */
 export const BENEFITS_PARAMETER_PATH = 'gov.household.household_benefits';
 /** A parameter `countable_income` subtracts, which the catalog version does not have. */
@@ -10,8 +20,8 @@ export const ABSENT_PARTS_PARAMETER_PATH = 'gov.example.absent_deductions';
 
 function variable(
   name: string,
-  fields: Partial<Schemas['MetadataVariable']> = {}
-): Schemas['MetadataVariable'] {
+  fields: Partial<CatalogVariableFixture> = {}
+): CatalogVariableFixture {
   return {
     id: `variable-${name}`,
     name,
@@ -29,6 +39,8 @@ function variable(
     adds_parameter_path: null,
     subtracts_parameter_path: null,
     enum_values: null,
+    unit: null,
+    definition_period: 'year',
     ...fields,
   };
 }
@@ -46,6 +58,30 @@ export const EMPLOYMENT_INCOME_VARIABLE = variable('employment_income', {
   description: 'Wages and salaries',
   is_input_variable: true,
   module_name: 'household.income.person.employment_income',
+  unit: 'currency-USD',
+});
+
+/** Rent is paid by the month. */
+export const RENT_VARIABLE = variable('rent', {
+  label: 'Rent',
+  entity: 'household',
+  is_input_variable: true,
+  unit: 'currency-USD',
+  definition_period: 'month',
+});
+
+/** A rate, as a share of one. */
+export const TAX_RATE_VARIABLE = variable('marginal_tax_rate', {
+  label: 'Marginal tax rate',
+  unit: '/1',
+});
+
+/** A version published before catalog format 2 has neither a unit nor a period. */
+export const UNDESCRIBED_VARIABLE = variable('undescribed_income', {
+  label: 'Undescribed income',
+  is_input_variable: true,
+  unit: null,
+  definition_period: null,
 });
 
 export const RATING_AREA_VARIABLE = variable('medicaid_rating_area', {
@@ -67,8 +103,12 @@ export const FILING_STATUS_VARIABLE = variable('filing_status', {
   ],
 });
 
-export const SNAP_VARIABLE = variable('snap', { label: 'SNAP', entity: 'household' });
-export const SSI_VARIABLE = variable('ssi', { label: 'SSI' });
+export const SNAP_VARIABLE = variable('snap', {
+  label: 'SNAP',
+  entity: 'household',
+  unit: 'currency-USD',
+});
+export const SSI_VARIABLE = variable('ssi', { label: 'SSI', unit: 'currency-USD' });
 
 export const HOUSEHOLD_BENEFITS_VARIABLE = variable('household_benefits', {
   label: 'Benefits',
@@ -83,7 +123,10 @@ export const COUNTABLE_INCOME_VARIABLE = variable('countable_income', {
 });
 
 /** What `GET /v2/model-catalog/variables` answers for the small US catalog version. */
-export const US_CATALOG_VARIABLES_RESULT: Schemas['MetadataCatalogVariablesResult'] = {
+export const US_CATALOG_VARIABLES_RESULT: Omit<
+  Schemas['MetadataCatalogVariablesResult'],
+  'variables'
+> & { variables: CatalogVariableFixture[] } = {
   policyengine_version: TEST_POLICYENGINE_VERSION,
   catalog_format: 2,
   variables: [
@@ -93,8 +136,11 @@ export const US_CATALOG_VARIABLES_RESULT: Schemas['MetadataCatalogVariablesResul
     FILING_STATUS_VARIABLE,
     HOUSEHOLD_BENEFITS_VARIABLE,
     RATING_AREA_VARIABLE,
+    RENT_VARIABLE,
     SNAP_VARIABLE,
     SSI_VARIABLE,
+    TAX_RATE_VARIABLE,
+    UNDESCRIBED_VARIABLE,
   ],
   part_parameter_values: {
     // Benefits add SNAP until 2025, then SNAP and SSI from 2026.
@@ -107,7 +153,7 @@ export const US_CATALOG_VARIABLES_RESULT: Schemas['MetadataCatalogVariablesResul
 };
 
 export function catalogVariablesEnvelope(
-  result: Schemas['MetadataCatalogVariablesResult'] = US_CATALOG_VARIABLES_RESULT
+  result: typeof US_CATALOG_VARIABLES_RESULT = US_CATALOG_VARIABLES_RESULT
 ) {
   return { status: 'ok', message: null, result };
 }

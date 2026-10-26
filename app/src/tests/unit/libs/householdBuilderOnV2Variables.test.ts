@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchCatalogVariables } from '@/api/publicApi/catalogVariables';
 import { createPublicApiClient } from '@/api/publicApi/client';
+import { inputKind } from '@/components/household/VariablePickerDialog';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { catalogVariablesLoaded, clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
@@ -12,6 +13,7 @@ import {
 } from '@/tests/fixtures/api/publicApi/publicApiFetchStub';
 import { TEST_API_BASE } from '@/tests/fixtures/api/v2UserMocks';
 import { seedV2ModelCatalog } from '@/tests/fixtures/hooks/v3MetadataWrapper';
+import { formatVariableValue } from '@/utils/householdValues';
 import { getInputVariables } from '@/utils/VariableResolver';
 
 /**
@@ -77,5 +79,37 @@ describe('The household builder on the v2 routes', () => {
       { value: 'SINGLE', label: 'Single' },
       { value: 'JOINT', label: 2 },
     ]);
+  });
+
+  test('given units and periods then the picker describes each input as on v1', () => {
+    // Given
+    const inputs = new Map(
+      getInputVariables(store.getState().metadata).map((variable) => [variable.name, variable])
+    );
+
+    // Then
+    expect(inputKind(inputs.get('employment_income')!)).toBe('Dollars per year');
+    expect(inputKind(inputs.get('rent')!)).toBe('Dollars per month');
+    expect(inputKind(inputs.get('age')!)).toBe('Number');
+  });
+
+  test('given no unit or period then the picker describes the input as v1 does a variable without them', () => {
+    // Given
+    const undescribed = getInputVariables(store.getState().metadata).find(
+      (variable) => variable.name === 'undescribed_income'
+    );
+
+    // Then
+    expect(inputKind(undescribed!)).toBe('Number');
+  });
+
+  test('given units then the breakdown formats currencies and rates as on v1', () => {
+    // Given
+    const { variables } = store.getState().metadata;
+
+    // Then
+    expect(formatVariableValue(variables.employment_income, 30000)).toBe('$30,000');
+    expect(formatVariableValue(variables.marginal_tax_rate, 0.25)).toBe('25%');
+    expect(formatVariableValue(variables.undescribed_income, 1200)).toBe('1,200');
   });
 });

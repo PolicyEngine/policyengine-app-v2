@@ -49,6 +49,8 @@ describe('fetchCatalogVariables', () => {
       entity: 'person',
       documentation: 'Wages and salaries',
       valueType: 'float',
+      unit: 'currency-USD',
+      definitionPeriod: 'year',
       defaultValue: 0,
       adds: null,
       subtracts: null,
@@ -60,6 +62,30 @@ describe('fetchCatalogVariables', () => {
       isInputVariable: true,
       hidden_input: true,
     });
+  });
+
+  test('given units and periods then each reads as v1 gave them', async () => {
+    // Given
+    const { client } = variablesClient();
+
+    // When
+    const { variables } = await fetchCatalogVariables('us', TEST_POLICYENGINE_VERSION, client);
+
+    // Then
+    expect(variables.rent).toMatchObject({ unit: 'currency-USD', definitionPeriod: 'month' });
+    expect(variables.marginal_tax_rate).toMatchObject({ unit: '/1', definitionPeriod: 'year' });
+    expect(variables.age).toMatchObject({ unit: null, definitionPeriod: 'year' });
+  });
+
+  test('given a version published before catalog format 2 then the unit and period are null', async () => {
+    // Given
+    const { client } = variablesClient();
+
+    // When
+    const { variables } = await fetchCatalogVariables('us', TEST_POLICYENGINE_VERSION, client);
+
+    // Then
+    expect(variables.undescribed_income).toMatchObject({ unit: null, definitionPeriod: null });
   });
 
   test('given an enum variable then its values keep their labels and declared types', async () => {
