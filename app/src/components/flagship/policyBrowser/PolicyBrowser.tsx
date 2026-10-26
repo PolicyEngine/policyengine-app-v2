@@ -37,6 +37,10 @@ export interface PolicyBrowserViewProps {
   onNavigate: (path: string | null) => void;
   onAdd: (path: string) => void;
   valueFor: (path: string) => string | null;
+  /** The open folder's current-law values are still loading. */
+  valuesLoading?: boolean;
+  /** Above the open folder's list: what is loading, or what failed. */
+  valuesNotice?: React.ReactNode;
 }
 
 /**
@@ -56,6 +60,8 @@ export function PolicyBrowserView({
   onNavigate,
   onAdd,
   valueFor,
+  valuesLoading = false,
+  valuesNotice = null,
 }: PolicyBrowserViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const current = trail[trail.length - 1];
@@ -130,6 +136,8 @@ export function PolicyBrowserView({
             {current.label}
           </h3>
 
+          {valuesNotice && <div style={{ marginBottom: spacing.md }}>{valuesNotice}</div>}
+
           <div
             style={{
               border: `1px solid ${colors.border.light}`,
@@ -152,6 +160,7 @@ export function PolicyBrowserView({
                 key={node.name}
                 node={node}
                 value={valueFor(node.name)}
+                valueLoading={valuesLoading}
                 inDraft={draftPaths.has(node.name)}
                 divided={folders.length > 0 || i > 0}
                 onAdd={() => onAdd(node.name)}

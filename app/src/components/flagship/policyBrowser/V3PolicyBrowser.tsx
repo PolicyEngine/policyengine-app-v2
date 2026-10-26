@@ -139,7 +139,8 @@ function OnDemandPolicyBrowser({
   const parameters = contents.filter(
     (node) => node.type === 'parameter' && addablePaths.has(node.name)
   );
-  useEnsureV3Parameters(parameters.map((node) => node.name));
+  // The listed parameters' current law loads once they show.
+  const parameterValues = useEnsureV3Parameters(parameters.map((node) => node.name));
 
   const failed = levels.find((level) => level.isError);
   // A folder whose trail is still loading waits for it: only once every
@@ -172,6 +173,20 @@ function OnDemandPolicyBrowser({
       onNavigate={onNavigate}
       onAdd={onAdd}
       valueFor={valueFor}
+      valuesLoading={parameterValues.waiting}
+      valuesNotice={
+        parameterValues.status === 'error' ? (
+          <ErrorState
+            compact
+            title="Could not load current law for these parameters"
+            onRetry={parameterValues.retry}
+          />
+        ) : parameterValues.waiting ? (
+          <span role="status" aria-label="Loading current law" className="tw:sr-only">
+            Loading current law
+          </span>
+        ) : null
+      }
     />
   );
 }

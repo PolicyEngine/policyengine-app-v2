@@ -215,4 +215,84 @@ describe('V3PolicyBrowser with v3 on the v2 routes', () => {
 
     expect(await screen.findByRole('button', { name: 'Open IRS' })).toBeInTheDocument();
   });
+
+  describe("given an open folder's parameters", () => {
+    const FOLDER = 'gov.irs.deductions.standard.amount';
+
+    function renderFolder() {
+      releaseFirstLevel();
+      releaseDeepLevel();
+      render(
+        <QueryClientProvider client={testQueryClient()}>
+          <Browser onAdd={vi.fn()} initialPath={FOLDER} />
+        </QueryClientProvider>
+      );
+    }
+
+    function singleRow() {
+      return screen.findByRole('button', { name: 'Add Single to your draft' });
+    }
+
+    test('loading then their rows wait for current law, then show it', async () => {
+      // Given
+      let releaseParameters: () => void = () => {};
+      const held = new Promise<void>((resolve) => {
+        releaseParameters = resolve;
+      });
+      stubPublicApiFetch({
+        [CHILDREN_PATH]: (url) =>
+          jsonResponse(childrenPage(url.searchParams.get('parent_path') ?? '')),
+        [PARAMETERS_PATH]: async (url) => {
+          await held;
+          return jsonResponse({
+            status: 'ok',
+            message: null,
+            result: catalogParametersResult(url.searchParams.getAll('name')),
+          });
+        },
+      });
+
+      // When
+      renderFolder();
+
+      // Then
+      await singleRow();
+      expect(screen.getByRole('status', { name: 'Loading current law' })).toBeInTheDocument();
+      releaseParameters();
+      expect(await within(await singleRow()).findByText('$15,000')).toBeInTheDocument();
+      expect(screen.queryByRole('status', { name: 'Loading current law' })).not.toBeInTheDocument();
+    });
+
+    test('failing to load then the folder says so and try again loads them', async () => {
+      // Given
+      const user = userEvent.setup();
+      let attempts = 0;
+      fetchStub = stubPublicApiFetch({
+        [CHILDREN_PATH]: (url) =>
+          jsonResponse(childrenPage(url.searchParams.get('parent_path') ?? '')),
+        [PARAMETERS_PATH]: (url) => {
+          attempts += 1;
+          return attempts === 1
+            ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
+            : jsonResponse({
+                status: 'ok',
+                message: null,
+                result: catalogParametersResult(url.searchParams.getAll('name')),
+              });
+        },
+      });
+      renderFolder();
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Could not load current law for these parameters'
+      );
+
+      // When
+      await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+      // Then
+      expect(await within(await singleRow()).findByText('$15,000')).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(2);
+    });
+  });
 });
