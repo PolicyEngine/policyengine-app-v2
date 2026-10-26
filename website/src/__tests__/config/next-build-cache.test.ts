@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import type { NextConfig } from "next";
@@ -146,10 +146,8 @@ describe("Tailwind's source directories", () => {
     // managedPaths, and no snapshot.module, so a build gets webpack's
     // production default for that (the next test).
     const require = createRequire(path.join(repoDir, "website/package.json"));
-    const source = readFileSync(
-      require.resolve("next/dist/build/webpack-config.js"),
-      "utf8",
-    );
+    const configFile = require.resolve("next/dist/build/webpack-config.js");
+    const source = readFileSync(configFile, "utf8");
     const raw = source.match(
       /webpack5Config\.snapshot = \{\};[\s\S]*?\n\s*if \(dev\) \{/,
     )?.[0];
@@ -168,15 +166,28 @@ describe("Tailwind's source directories", () => {
         "if (dev) {",
       ].join(" "),
     );
-    // Nothing else in Next's config sets snapshot options.
-    expect(source.replace(raw!, "")).not.toMatch(/\bsnapshot\b/);
+    // No other line of Next's build code mentions `snapshot`, so nothing else
+    // there sets the options.
+    const buildDir = path.dirname(configFile);
+    const mentions = readdirSync(buildDir, {
+      encoding: "utf8",
+      recursive: true,
+    })
+      .filter((file) => file.endsWith(".js"))
+      .filter((file) => {
+        const text = readFileSync(path.join(buildDir, file), "utf8");
+        const rest =
+          file === "webpack-config.js" ? text.replace(raw!, "") : text;
+        return /\bsnapshot\b/.test(rest);
+      });
+    expect(mentions).toEqual([]);
     expect(process.versions.pnp).toBeUndefined();
     // The calculator's build reads this same copy of Next.
     const calculator = createRequire(
       path.join(repoDir, "calculator-app/package.json"),
     );
     expect(calculator.resolve("next/dist/build/webpack-config.js")).toBe(
-      require.resolve("next/dist/build/webpack-config.js"),
+      configFile,
     );
   });
 
