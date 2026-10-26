@@ -90,13 +90,15 @@ function savedBaseline(
       : undefined;
   }
   const reform = savedReform?.(report.baselineReformId);
+  const label = reform?.label || 'Untitled reform';
+  // The saved reform's own v1 policy; one saved only as a v2 policy has
+  // none, so the run makes one from its parameters, as Build's runs do.
   const policyId = baselinePolicyId ?? (Number(reform?.policyId) || undefined);
-  if (!policyId) {
-    throw new Error('The report’s comparison could not be read');
+  if (policyId) {
+    return { reformId: report.baselineReformId, label, policyId };
   }
-  return {
-    reformId: report.baselineReformId,
-    label: reform?.label || 'Untitled reform',
-    policyId,
-  };
+  if (reform && !reform.parametersUnavailable && reform.parameters.length > 0) {
+    return { reformId: report.baselineReformId, label, parameters: reform.parameters };
+  }
+  throw new Error('The report’s comparison could not be read');
 }
