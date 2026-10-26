@@ -40,6 +40,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFlagshipReportStore, useReformStore, useV3SavedWork } from '@/hooks/useFlagshipStores';
 import { useRunFlagshipReport } from '@/hooks/useRunFlagshipReport';
 import { useTrackedBills } from '@/hooks/useTrackedBills';
+import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import {
   loadProvisionsIntoDraft,
   provisionsToRun,
@@ -57,6 +58,7 @@ import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
+import { reformParameterNames } from '@/libs/flagship/v3ParameterNames';
 import { RootState } from '@/store';
 import { Reform, ReformSource } from '@/types/ingredients/Reform';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -501,6 +503,17 @@ export default function ReformsPage() {
   const selectedReform = selectedId
     ? (reforms ?? []).find((reform) => reform.id === selectedId)
     : null;
+  // The detail's names and current law: on the v2 routes the store holds
+  // only what has been loaded, so the reform's (or bill's) parameters load
+  // in one request when it opens.
+  const viewedNames = useMemo(
+    () => [
+      ...(selectedReform ? reformParameterNames([selectedReform]) : []),
+      ...(selectedBill ? selectedBill.provisions.map((provision) => provision.path) : []),
+    ],
+    [selectedReform, selectedBill]
+  );
+  const viewedParameters = useEnsureV3Parameters(viewedNames);
 
   const openReform = (reform: Reform) => {
     // A failed delete or re-run belongs to the reform it was tried on.
@@ -720,7 +733,7 @@ export default function ReformsPage() {
     const reformName = selectedReform.label || 'Untitled reform';
     const count = selectedReform.parameters.length;
     // The store starts with no parameters; names and current law need them.
-    const metadataReady = !!parameters && Object.keys(parameters).length > 0;
+    const metadataReady = viewedParameters.status === 'ready';
     // What the report would run, as Build runs it (dated changes
     // included); a reform that changes nothing has no report to run.
     // Run in the reform's own year: its first change, or this year once that is past.
