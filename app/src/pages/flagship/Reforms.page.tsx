@@ -57,6 +57,7 @@ import {
 import { dayLabel, periodLabel } from '@/libs/flagship/draftLabels';
 import { latestMatchingReport } from '@/libs/flagship/latestReport';
 import { reformMissingParameters } from '@/libs/flagship/missingParameters';
+import { readV1Policy, reportMissingParameters } from '@/libs/flagship/policyChecks';
 import { rerunSettings } from '@/libs/flagship/reportRerun';
 import { flagshipReportQueryKeys } from '@/libs/flagship/runReport';
 import { RootState } from '@/store';
@@ -325,6 +326,8 @@ export default function ReformsPage() {
   const { scope } = useV3SavedWork();
   // A re-run whose settings could not be read; the run's own errors are runReport's.
   const [rerunError, setRerunError] = useState<string | null>(null);
+  // The parameters a report tried for Re-run uses that the model no longer has.
+  const [rerunMissingParameters, setRerunMissingParameters] = useState<string[]>([]);
   const {
     bills,
     isConfigured: billsConfigured,
@@ -508,6 +511,7 @@ export default function ReformsPage() {
     // A failed delete or re-run belongs to the reform it was tried on.
     deleteMutation.reset();
     setRerunError(null);
+    setRerunMissingParameters([]);
     setSelectedId(reform.id!);
   };
 
@@ -961,6 +965,12 @@ export default function ReformsPage() {
               report.
             </Text>
           )}
+          {rerunMissingParameters.length > 0 && (
+            <MissingParametersNotice
+              subject="This report"
+              parameterPaths={rerunMissingParameters}
+            />
+          )}
           {(runReport.error || rerunError) && (
             <Text role="alert" style={{ fontSize: typography.fontSize.sm, color: colors.error }}>
               {runReport.error || rerunError}
@@ -989,6 +999,19 @@ export default function ReformsPage() {
             }
             onRerun={async (report) => {
               setRerunError(null);
+              setRerunMissingParameters([]);
+              // Its own policies, as it ran them: a re-run runs the same
+              // changes against the same baseline. A check that cannot be
+              // made leaves the re-run as it was.
+              const missing = await reportMissingParameters(
+                countryId,
+                report.apiReportId,
+                (policyCountryId, policyId) => readV1Policy(queryClient, policyCountryId, policyId)
+              ).catch(() => []);
+              if (missing.length > 0) {
+                setRerunMissingParameters(missing);
+                return;
+              }
               // The same report on today's model: its reform as it ran, its
               // year, population, budget window and comparison, linked to the
               // same saved reform.

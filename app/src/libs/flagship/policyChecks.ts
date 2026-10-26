@@ -1,7 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { fetchPolicyById } from '@/api/policy';
+import { fetchReportById } from '@/api/report';
+import { fetchSimulationById } from '@/api/simulation';
+import type { CountryId } from '@/libs/countries';
+import { combinedMissingParameters } from '@/libs/flagship/missingParameters';
 import { V1_POLICY_GC_TIME, v1PolicyKey } from '@/libs/queryKeys';
-import type { PolicyMetadata } from '@/types/metadata/policyMetadata';
+import type { PolicyMetadata, V1PolicyContent } from '@/types/metadata/policyMetadata';
 
 /**
  * A v1 policy, with an empty parameter map when it stores none. v1
@@ -28,4 +32,34 @@ export function readV1Policy(
     staleTime: Infinity,
     gcTime: V1_POLICY_GC_TIME,
   });
+}
+
+/**
+ * The parameters an existing v1 report's policies (its reform and its
+ * baseline) set that the model no longer has. A re-run of the report runs
+ * the same changes against the same baseline policy, so it checks these.
+ */
+export async function reportMissingParameters(
+  countryId: CountryId,
+  apiReportId: string,
+  readPolicy: (countryId: string, policyId: string) => Promise<V1PolicyContent>
+): Promise<string[]> {
+  const report = await fetchReportById(countryId, apiReportId);
+  const simulationIds = [report.simulation_1_id, report.simulation_2_id].filter(
+    (simulationId) => simulationId !== null && simulationId !== undefined
+  );
+  const simulations = await Promise.all(
+    simulationIds.map((simulationId) => fetchSimulationById(countryId, String(simulationId)))
+  );
+  const policyIds = [
+    ...new Set(
+      simulations
+        .map((simulation) => simulation.policy_id)
+        .filter((policyId) => policyId !== null && policyId !== undefined)
+        .map(String)
+    ),
+  ];
+  return combinedMissingParameters(
+    await Promise.all(policyIds.map((policyId) => readPolicy(countryId, policyId)))
+  );
 }

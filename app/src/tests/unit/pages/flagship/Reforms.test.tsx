@@ -17,7 +17,10 @@ import {
   UTAH_ENACTED,
   UTAH_PROPOSED,
 } from '@/tests/fixtures/libs/flagship/billFilterMocks';
-import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
+import {
+  REMOVED_US_PARAMETER,
+  v1PolicyContent,
+} from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockFindMine = vi.fn();
@@ -58,7 +61,15 @@ vi.mock('@/api/report', async (importOriginal) => ({
     status: reportId === '901' ? 'complete' : 'pending',
     year: reportId === '904' ? '2028' : '2026',
     simulation_1_id: '9',
+    simulation_2_id: '10',
   }),
+}));
+
+const mockFetchPolicyById = vi.fn();
+
+vi.mock('@/api/policy', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/policy')>()),
+  fetchPolicyById: (...args: unknown[]) => mockFetchPolicyById(...args),
 }));
 
 // Every report's baseline simulation: Maryland, run against policy 88.
@@ -105,6 +116,12 @@ const CHAT_REFORM: Reform = {
   baseline: 'current-law',
   provenance: { source: 'chat', ref: 'session-1' },
   updatedAt: '2026-08-01T00:00:00Z',
+};
+
+/** A change to a parameter the model no longer has, as a saved reform keeps it. */
+const REMOVED_PARAMETER_CHANGE = {
+  name: REMOVED_US_PARAMETER,
+  values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 0 }],
 };
 
 /** A value that starts after the report year, as Build saves "Applies from 2028". */
@@ -996,6 +1013,8 @@ describe('ReformsPage', () => {
         ...CHAT_REFORM,
         id: 'rf-2',
         label: 'Reform with a removed parameter',
+        // As the store reads it: the removed parameter keeps its stored values.
+        parameters: [...CHAT_REFORM.parameters, REMOVED_PARAMETER_CHANGE],
         missingParameters: [REMOVED_US_PARAMETER],
       },
     ]);
@@ -1120,6 +1139,10 @@ describe('ReformsPage', () => {
       reformId: 'rf-1',
     };
 
+    beforeEach(() => {
+      mockFetchPolicyById.mockResolvedValue(v1PolicyContent({}, []));
+    });
+
     async function openReform(reports: object[]) {
       mockFindMine.mockResolvedValue([CHAT_REFORM, PLAN_B_REFORM]);
       mockFindReports.mockResolvedValue(reports);
@@ -1132,7 +1155,11 @@ describe('ReformsPage', () => {
     test('given a reform whose policy sets parameters the model no longer has then its reports offer no Re-run', async () => {
       // Given
       mockFindMine.mockResolvedValue([
-        { ...CHAT_REFORM, missingParameters: [REMOVED_US_PARAMETER] },
+        {
+          ...CHAT_REFORM,
+          parameters: [...CHAT_REFORM.parameters, REMOVED_PARAMETER_CHANGE],
+          missingParameters: [REMOVED_US_PARAMETER],
+        },
         PLAN_B_REFORM,
       ]);
       mockFindReports.mockResolvedValue([BROWSER_REPORT]);
@@ -1152,7 +1179,11 @@ describe('ReformsPage', () => {
       // Given
       mockFindMine.mockResolvedValue([
         CHAT_REFORM,
-        { ...PLAN_B_REFORM, missingParameters: [REMOVED_US_PARAMETER] },
+        {
+          ...PLAN_B_REFORM,
+          parameters: [...CHAT_REFORM.parameters, REMOVED_PARAMETER_CHANGE],
+          missingParameters: [REMOVED_US_PARAMETER],
+        },
       ]);
       mockFindReports.mockResolvedValue([ACCOUNT_REPORT]);
       const user = userEvent.setup();
@@ -1165,6 +1196,25 @@ describe('ReformsPage', () => {
       const list = screen.getByRole('region', { name: 'Reports' });
       expect(within(list).getByText('Compared with Plan B')).toBeInTheDocument();
       expect(within(list).queryByRole('button', { name: /re-run/i })).not.toBeInTheDocument();
+    });
+
+    test('given a report whose own policies set parameters the model no longer has then Re-run names them and runs nothing', async () => {
+      // Given: the saved reforms are fine, but the report ran a policy (88) with a removed parameter
+      mockFetchPolicyById.mockResolvedValue(
+        v1PolicyContent({ [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 } }, [
+          REMOVED_US_PARAMETER,
+        ])
+      );
+      const user = await openReform([BROWSER_REPORT]);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+      // Then
+      const notice = await screen.findByRole('alert');
+      expect(notice).toHaveTextContent(/this report cannot be run/i);
+      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(mockRun).not.toHaveBeenCalled();
     });
 
     test('given an account report then Re-run keeps its year, window and comparison, linked to the same reform', async () => {
