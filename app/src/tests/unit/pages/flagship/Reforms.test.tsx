@@ -17,6 +17,7 @@ import {
   UTAH_ENACTED,
   UTAH_PROPOSED,
 } from '@/tests/fixtures/libs/flagship/billFilterMocks';
+import { REMOVED_US_PARAMETER } from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockFindMine = vi.fn();
@@ -988,6 +989,32 @@ describe('ReformsPage', () => {
     expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled();
   });
 
+  test('given a reform whose policy sets parameters the model no longer has then its card and detail name them, and it cannot run', async () => {
+    mockFindMine.mockResolvedValue([
+      CHAT_REFORM,
+      {
+        ...CHAT_REFORM,
+        id: 'rf-2',
+        label: 'Reform with a removed parameter',
+        missingParameters: [REMOVED_US_PARAMETER],
+      },
+    ]);
+    const user = userEvent.setup();
+    renderReforms('/us/reforms?filter=yours');
+
+    // The other reform still lists normally
+    expect(await screen.findByText('CTC to $3,600 for children under 6')).toBeInTheDocument();
+    expect(screen.getByText('Uses parameters the model no longer has')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Reform with a removed parameter'));
+
+    const notice = screen.getByRole('alert');
+    expect(notice).toHaveTextContent(/cannot be run/i);
+    expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view full impact report/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled();
+  });
+
   test('given a reform whose changes could not load then "Try again" reloads the list', async () => {
     seedDeductionMetadata();
     mockFindMine.mockResolvedValue([
@@ -1101,6 +1128,44 @@ describe('ReformsPage', () => {
       await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
       return user;
     }
+
+    test('given a reform whose policy sets parameters the model no longer has then its reports offer no Re-run', async () => {
+      // Given
+      mockFindMine.mockResolvedValue([
+        { ...CHAT_REFORM, missingParameters: [REMOVED_US_PARAMETER] },
+        PLAN_B_REFORM,
+      ]);
+      mockFindReports.mockResolvedValue([BROWSER_REPORT]);
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+
+      // When
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+      // Then
+      const list = screen.getByRole('region', { name: 'Reports' });
+      expect(within(list).getByRole('button', { name: /open/i })).toBeEnabled();
+      expect(within(list).queryByRole('button', { name: /re-run/i })).not.toBeInTheDocument();
+    });
+
+    test('given a report compared with a reform that sets parameters the model no longer has then it offers no Re-run', async () => {
+      // Given
+      mockFindMine.mockResolvedValue([
+        CHAT_REFORM,
+        { ...PLAN_B_REFORM, missingParameters: [REMOVED_US_PARAMETER] },
+      ]);
+      mockFindReports.mockResolvedValue([ACCOUNT_REPORT]);
+      const user = userEvent.setup();
+      renderReforms('/us/reforms?filter=yours');
+
+      // When
+      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
+
+      // Then
+      const list = screen.getByRole('region', { name: 'Reports' });
+      expect(within(list).getByText('Compared with Plan B')).toBeInTheDocument();
+      expect(within(list).queryByRole('button', { name: /re-run/i })).not.toBeInTheDocument();
+    });
 
     test('given an account report then Re-run keeps its year, window and comparison, linked to the same reform', async () => {
       // Given: no run details in this page session, only the row

@@ -1,3 +1,4 @@
+import type { Reform } from '@/types/ingredients/Reform';
 import type { V1PolicyContent } from '@/types/metadata/policyMetadata';
 
 /**
@@ -11,4 +12,11 @@ export function policyMissingParameters(
 ): string[] {
   const reported = policy?.missing_parameters;
   return Array.isArray(reported) ? reported.filter((path) => typeof path === 'string') : [];
+}
+
+/** The parameters a saved reform's policy sets that the model no longer has. */
+export function reformMissingParameters(
+  reform: Pick<Reform, 'missingParameters'> | null | undefined
+): string[] {
+  return reform?.missingParameters ?? [];
 }
