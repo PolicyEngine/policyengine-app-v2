@@ -35,8 +35,15 @@ const ADDABLE = new Set([
 ]);
 
 /** The browser as the add bar holds it: the open folder is the bar's state. */
-function Browser({ onAdd }: { onAdd: (path: string) => void }) {
-  const [path, setPath] = useState<string | null>(null);
+function Browser({
+  onAdd,
+  initialPath = null,
+}: {
+  onAdd: (path: string) => void;
+  /** A folder opened from search. */
+  initialPath?: string | null;
+}) {
+  const [path, setPath] = useState<string | null>(initialPath);
   const valueFor = (parameterPath: string) => {
     const value = getCurrentValue(store.getState().metadata.parameters[parameterPath]?.values);
     return value === undefined ? null : formatValue(value, 'currency-USD');
@@ -56,16 +63,23 @@ function Browser({ onAdd }: { onAdd: (path: string) => void }) {
 describe('V3PolicyBrowser with v3 on the v2 routes', () => {
   let fetchStub: ReturnType<typeof stubPublicApiFetch>;
   let releaseFirstLevel: () => void;
+  let releaseDeepLevel: () => void;
 
   beforeEach(async () => {
     const firstLevel = new Promise<void>((resolve) => {
       releaseFirstLevel = resolve;
+    });
+    const deepLevel = new Promise<void>((resolve) => {
+      releaseDeepLevel = resolve;
     });
     fetchStub = stubPublicApiFetch({
       [CHILDREN_PATH]: async (url) => {
         const parentPath = url.searchParams.get('parent_path') ?? '';
         if (parentPath === 'gov') {
           await firstLevel;
+        }
+        if (parentPath === 'gov.irs.deductions.standard') {
+          await deepLevel;
         }
         return jsonResponse(childrenPage(parentPath));
       },
@@ -101,6 +115,7 @@ describe('V3PolicyBrowser with v3 on the v2 routes', () => {
     // Given
     const user = userEvent.setup();
     releaseFirstLevel();
+    releaseDeepLevel();
     render(
       <QueryClientProvider client={testQueryClient()}>
         <Browser onAdd={vi.fn()} />
@@ -158,5 +173,46 @@ describe('V3PolicyBrowser with v3 on the v2 routes', () => {
     );
 
     await waitFor(() => expect(onAdd).toHaveBeenCalledWith(CTC_FULLY_REFUNDABLE));
+  });
+
+  test('given a deep folder opened from search then placeholders stand for it until its levels arrive', async () => {
+    // Given — the top level has arrived; a level of the trail is still loading
+    releaseFirstLevel();
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <Browser onAdd={vi.fn()} initialPath="gov.irs.deductions.standard.amount" />
+      </QueryClientProvider>
+    );
+    await waitFor(() =>
+      expect(
+        requestsTo(fetchStub, CHILDREN_PATH).map((url) => url.searchParams.get('parent_path'))
+      ).toContain('gov')
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Then — no top-level grid in the meantime
+    expect(screen.getByRole('status', { name: 'Loading the policy tree' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open IRS' })).not.toBeInTheDocument();
+
+    // When
+    releaseDeepLevel();
+
+    // Then
+    expect(
+      await screen.findByRole('button', { name: 'Add Single to your draft' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open IRS' })).not.toBeInTheDocument();
+  });
+
+  test('given a folder the tree does not hold then the top level shows', async () => {
+    releaseFirstLevel();
+    releaseDeepLevel();
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <Browser onAdd={vi.fn()} initialPath="gov.irs.not_a_folder" />
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByRole('button', { name: 'Open IRS' })).toBeInTheDocument();
   });
 });
