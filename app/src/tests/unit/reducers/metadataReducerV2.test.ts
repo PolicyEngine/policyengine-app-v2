@@ -1,6 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import metadataReducer, { fetchMetadataThunk, metadataRequest } from '@/reducers/metadataReducer';
+import metadataReducer, {
+  catalogParametersLoaded,
+  fetchMetadataThunk,
+  metadataRequest,
+} from '@/reducers/metadataReducer';
 import {
   TEST_POLICYENGINE_VERSION,
   TEST_TAX_BENEFIT_MODEL_ID,
@@ -109,5 +113,56 @@ describe('metadataReducer with the v2 routes', () => {
 
     expect(store.getState().metadata.error).toBe('The catalog is not published');
     expect(store.getState().metadata.loading).toBe(false);
+  });
+
+  test('given parameters loaded for the current catalog version then they join the store', async () => {
+    // Given
+    mockFetchV2ModelCatalogMetadata.mockResolvedValue(v2Payload());
+    const store = testStore();
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+
+    // When
+    store.dispatch(
+      catalogParametersLoaded({
+        countryId: 'us',
+        policyengineVersion: TEST_POLICYENGINE_VERSION,
+        parameters: {
+          'gov.example.rate': {
+            type: 'parameter',
+            parameter: 'gov.example.rate',
+            label: 'Rate',
+            values: { '2025-01-01': 0.1 },
+          },
+        },
+        parameterIds: { 'gov.example.rate': 'parameter-id' },
+        missingNames: ['gov.example.missing'],
+      })
+    );
+
+    // Then
+    const state = store.getState().metadata;
+    expect(state.parameters['gov.example.rate'].values).toEqual({ '2025-01-01': 0.1 });
+    expect(state.v2ParameterIds).toEqual({ 'gov.example.rate': 'parameter-id' });
+    expect(state.v2MissingParameterNames).toEqual(['gov.example.missing']);
+  });
+
+  test('given parameters for another catalog version then they are dropped', async () => {
+    mockFetchV2ModelCatalogMetadata.mockResolvedValue(v2Payload());
+    const store = testStore();
+    await store.dispatch(fetchMetadataThunk(metadataRequest('us', 'v2')));
+
+    store.dispatch(
+      catalogParametersLoaded({
+        countryId: 'us',
+        policyengineVersion: '0.0.1',
+        parameters: {
+          'gov.example.rate': { type: 'parameter', parameter: 'gov.example.rate', label: 'Rate' },
+        },
+        parameterIds: {},
+        missingNames: [],
+      })
+    );
+
+    expect(store.getState().metadata.parameters).toEqual({});
   });
 });
