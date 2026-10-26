@@ -109,6 +109,13 @@ export interface MetadataState {
   routes?: MetadataRoutes;
   /** The v2 catalog version, when the metadata came from the v2 routes. */
   v2Catalog?: V2CatalogReference | null;
+  /**
+   * On the v2 routes, `parameters` holds only what has been loaded on
+   * demand; these are the catalog IDs of those parameters (which
+   * `/v2/policies` takes) and the names the catalog version does not have.
+   */
+  v2ParameterIds?: Record<string, string>;
+  v2MissingParameterNames?: string[];
 
   // Computed parameter tree for policy creation UI (built when metadata is fetched)
   parameterTree: ParameterTreeNode | null;

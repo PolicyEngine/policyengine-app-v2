@@ -4,6 +4,7 @@ import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
 import { fetchV2ModelCatalogMetadata } from '@/api/publicApi/modelCatalog';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { MetadataRoutes, MetadataState } from '@/types/metadata';
+import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
 /**
  * What to load: a country alone reads `GET /{country}/metadata` (v1), as
@@ -96,6 +97,38 @@ const metadataSlice = createSlice({
     clearMetadata(state) {
       return { ...initialState, currentCountry: state.currentCountry };
     },
+    /**
+     * Parameters loaded on demand from the v2 routes join the store, for
+     * the catalog version they came from only: a response for an earlier
+     * country or version is dropped.
+     */
+    catalogParametersLoaded(
+      state,
+      action: PayloadAction<{
+        countryId: string;
+        policyengineVersion: string;
+        parameters: ParameterMetadataCollection;
+        parameterIds: Record<string, string>;
+        missingNames: string[];
+      }>
+    ) {
+      const { countryId, policyengineVersion, parameters, parameterIds, missingNames } =
+        action.payload;
+      if (
+        state.routes !== 'v2' ||
+        state.currentCountry !== countryId ||
+        state.v2Catalog?.policyengineVersion !== policyengineVersion
+      ) {
+        return;
+      }
+      Object.assign(state.parameters, parameters);
+      state.v2ParameterIds = { ...state.v2ParameterIds, ...parameterIds };
+      if (missingNames.length > 0) {
+        state.v2MissingParameterNames = [
+          ...new Set([...(state.v2MissingParameterNames ?? []), ...missingNames]),
+        ];
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -168,7 +201,7 @@ const metadataSlice = createSlice({
   },
 });
 
-export const { setCurrentCountry, clearMetadata } = metadataSlice.actions;
+export const { setCurrentCountry, clearMetadata, catalogParametersLoaded } = metadataSlice.actions;
 
 // currentCountry identifies both the active request and the metadata used by readiness checks.
 
