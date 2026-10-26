@@ -148,7 +148,7 @@ export class LocalStorageReformStore implements ReformStore {
   }
 
   async update(reformId: string, updates: ReformUpdates): Promise<Reform> {
-    const existing = await this.findById(reformId);
+    const existing = this.getStoredReforms().find((reform) => reform.id === reformId);
     if (!existing) {
       throw new ReformNotFoundError();
     }
