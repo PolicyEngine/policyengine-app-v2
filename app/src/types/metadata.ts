@@ -116,6 +116,11 @@ export interface MetadataState {
    */
   v2ParameterIds?: Record<string, string>;
   v2MissingParameterNames?: string[];
+  /**
+   * Which load of the v2 model catalog the store holds: a new load empties
+   * the parameters loaded on demand, so their queries are keyed by it.
+   */
+  v2LoadId?: string;
 
   // Computed parameter tree for policy creation UI (built when metadata is fetched)
   parameterTree: ParameterTreeNode | null;

@@ -16,6 +16,7 @@ import {
   type ParameterSearchEntry,
   type ParameterSearchIndex,
 } from '@/libs/parameterSearch';
+import { selectV2CatalogVersion } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 
 /**
@@ -79,17 +80,10 @@ function useV1SearchCatalog(): V3SearchCatalog {
   };
 }
 
-/** The current catalog version's PolicyEngine.py version, once the model catalog is in. */
-function useV2CatalogVersion(): string | null {
-  return useSelector((state: RootState) =>
-    state.metadata.routes === 'v2' ? (state.metadata.v2Catalog?.policyengineVersion ?? null) : null
-  );
-}
-
 function useV2SearchCatalog(): V3SearchCatalog {
   const countryId = useCurrentCountry();
   const metadata = useFlagshipMetadataStatus();
-  const policyengineVersion = useV2CatalogVersion();
+  const policyengineVersion = useSelector(selectV2CatalogVersion);
   const query = useQuery({
     queryKey: v2SearchFileKey(countryId, policyengineVersion),
     queryFn: () => fetchParameterSearchFile(countryId, policyengineVersion!),
@@ -165,7 +159,7 @@ export const useV3SearchCatalog: () => V3SearchCatalog =
  */
 function useV2SearchFileInBackground(): void {
   const countryId = useCurrentCountry();
-  const policyengineVersion = useV2CatalogVersion();
+  const policyengineVersion = useSelector(selectV2CatalogVersion);
   const queryClient = useQueryClient();
   useEffect(() => {
     if (policyengineVersion === null) {

@@ -7,6 +7,7 @@ import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useEnsureV3Parameters } from '@/hooks/useV3Parameters';
 import { V3_API_ROUTES } from '@/libs/flagship/v3ApiRoutes';
+import { selectV2CatalogVersion } from '@/reducers/metadataReducer';
 import type { RootState } from '@/store';
 import type { ParameterTreeNode } from '@/types/metadata';
 import PolicyBrowser, { PolicyBrowserView } from './PolicyBrowser';
@@ -96,9 +97,7 @@ function OnDemandPolicyBrowser({
   valueFor,
 }: V3PolicyBrowserProps) {
   const countryId = useCurrentCountry();
-  const policyengineVersion = useSelector((state: RootState) =>
-    state.metadata.routes === 'v2' ? (state.metadata.v2Catalog?.policyengineVersion ?? null) : null
-  );
+  const policyengineVersion = useSelector(selectV2CatalogVersion);
   const trailPaths = useMemo(
     () => (path?.startsWith(`${TREE_ROOT}.`) ? trailPathsOf(path) : []),
     [path]
