@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
 import { fetchV2ModelCatalogMetadata } from '@/api/publicApi/modelCatalog';
 import { buildParameterTree } from '@/libs/buildParameterTree';
-import { MetadataRoutes, MetadataState } from '@/types/metadata';
+import { MetadataRoutes, MetadataState, V2CatalogReference } from '@/types/metadata';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
 /**
@@ -207,11 +207,19 @@ const metadataSlice = createSlice({
 
 export const { setCurrentCountry, clearMetadata, catalogParametersLoaded } = metadataSlice.actions;
 
+/** The v2 catalog version and model the store holds, once its model catalog is in; null otherwise. */
+export function selectV2Catalog(state: { metadata: MetadataState }): V2CatalogReference | null {
+  return state.metadata.routes === 'v2' ? (state.metadata.v2Catalog ?? null) : null;
+}
+
 /** The v2 catalog version the store holds, once its model catalog is in; null otherwise. */
 export function selectV2CatalogVersion(state: { metadata: MetadataState }): string | null {
-  return state.metadata.routes === 'v2'
-    ? (state.metadata.v2Catalog?.policyengineVersion ?? null)
-    : null;
+  return selectV2Catalog(state)?.policyengineVersion ?? null;
+}
+
+/** The catalog IDs of the parameters loaded on demand, by name. */
+export function selectV2ParameterIds(state: { metadata: MetadataState }): Record<string, string> {
+  return state.metadata.v2ParameterIds ?? {};
 }
 
 /** The load of the v2 model catalog the store holds; null before one is in. */
