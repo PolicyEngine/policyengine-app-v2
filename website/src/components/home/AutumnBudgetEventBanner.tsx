@@ -55,7 +55,7 @@ export default function AutumnBudgetEventBanner({
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "center",
-          gap: 12,
+          gap: spacing.md,
         }}
       >
         <a
