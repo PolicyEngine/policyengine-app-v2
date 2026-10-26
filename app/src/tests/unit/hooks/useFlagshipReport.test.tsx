@@ -64,11 +64,27 @@ function renderReportHook(id: string) {
 describe('useFlagshipReport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetchPolicyById.mockReset();
     store.dispatch(clearMetadata());
     mockFetchReportById.mockResolvedValue(EXISTING_REPORT_METADATA);
     mockFetchSimulationById.mockImplementation(async (_country: string, id: string) =>
       nationwideSimulationMetadata(id, id === BASELINE_SIMULATION_ID ? '2' : '98557')
     );
+  });
+
+  test('given the whole metadata is not in yet then the report is not held up by its policies', async () => {
+    // Given: v1's metadata has not loaded (beforeEach clears it).
+    mockFetchPolicyById.mockResolvedValue({ id: '98557', country_id: 'us', policy_json: {} });
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then
+    await waitFor(() => expect(result.current.simulations).toHaveLength(2));
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.policies).toEqual([]);
+    // As before v3 loaded parameters on demand, a policy is read once the metadata is in.
+    expect(mockFetchPolicyById).not.toHaveBeenCalled();
   });
 
   test('given a link to a report then it loads with no error', async () => {

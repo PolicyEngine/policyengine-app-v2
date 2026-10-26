@@ -91,7 +91,6 @@ const COMPLETE_STATUS = {
   result: createMockSocietyWideOutput(),
 };
 
-/** The report's reform policy, as v1 stores it: a larger standard deduction. */
 function answerParameters(url: URL) {
   return jsonResponse({
     status: 'ok',

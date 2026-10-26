@@ -122,7 +122,7 @@ export function useFlagshipReport(id: string): FlagshipReportData {
       Promise.all([
         reportError ? refetchReport() : null,
         ...simulationResults.queries.filter((query) => query.error).map((query) => query.refetch()),
-        failedPolicyIds.length > 0 ? policyResults.retry() : null,
+        policyResults.retry(),
       ]),
   };
 }

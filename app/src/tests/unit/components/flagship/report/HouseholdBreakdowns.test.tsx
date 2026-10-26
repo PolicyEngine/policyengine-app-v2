@@ -24,8 +24,8 @@ vi.mock('@/api/policy', () => ({
   fetchPolicyById: (...args: unknown[]) => mockFetchPolicyById(...args),
 }));
 // The model's parameters, loaded: the policies parse at once.
-vi.mock('@/hooks/useV3Parameters', () => ({
-  useEnsureV3Parameters: () => ({ status: 'ready', waiting: false, message: null, retry: vi.fn() }),
+vi.mock('@/hooks/useParameterMetadata', () => ({
+  useParameterMetadata: () => ({ parameters: {}, isReady: true }),
 }));
 // The variation request is the v2 hook's own, tested on its own: here it
 // records what the v2 pages ask for, and stays loading.
