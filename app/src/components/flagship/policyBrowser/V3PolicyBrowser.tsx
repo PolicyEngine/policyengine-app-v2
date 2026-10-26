@@ -142,8 +142,9 @@ function OnDemandPolicyBrowser({
   useEnsureV3Parameters(parameters.map((node) => node.name));
 
   const failed = levels.find((level) => level.isError);
-  const shownLevels = folderFound ? levels : levels.slice(0, 1);
-  const loading = policyengineVersion === null || shownLevels.some((level) => level.isPending);
+  // A folder whose trail is still loading waits for it: only once every
+  // level is in does a path the tree does not hold fall back to the top.
+  const loading = policyengineVersion === null || levels.some((level) => level.isPending);
 
   return (
     <PolicyBrowserView
