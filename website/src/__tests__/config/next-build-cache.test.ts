@@ -188,10 +188,11 @@ describe("Tailwind's source directories", () => {
       );
     });
     expect(mentions).toEqual([]);
-    // Next sets webpack's mode in one place, base.js, to production for
-    // `next build`; the mode picks webpack's default snapshot.module. The other
-    // `.mode` assignments in its build code are a fetch polyfill's and
-    // css-loader's CSS-modules mode.
+    // Every `.mode =` assignment in Next's build code is pinned; base.js's is
+    // the only one that sets webpack's mode, which picks webpack's default
+    // snapshot.module. The others are a fetch polyfill's and css-loader's
+    // CSS-modules mode. A mode set by a spread, `Object.assign` or bracket
+    // access isn't seen here.
     const modeAssignments = Object.fromEntries(
       files
         .map((file) => [
@@ -260,11 +261,22 @@ describe("Tailwind's source directories", () => {
     ),
   )(
     "given the %s's webpack hook for the %s then it leaves the snapshot settings alone",
-    (_, __, config, compilation) => {
+    async (_, __, config, compilation) => {
       const require = createRequire(path.join(repoDir, "website/package.json"));
       const { webpack } = require("next/dist/compiled/webpack/bundle5")();
-      // What webpack's FileSystemInfo gets for a config's compilation.
-      const settings = (webpackConfig: object) => {
+      type AsyncHook = {
+        callAsync(arg: unknown, done: (error?: Error) => void): void;
+      };
+      const callAsync = (hook: AsyncHook, arg: unknown) =>
+        new Promise<void>((resolve, reject) =>
+          hook.callAsync(arg, (error?: Error) =>
+            error ? reject(error) : resolve(),
+          ),
+        );
+      // What webpack's FileSystemInfo gets for a config's compilation. A run
+      // calls these hooks before it creates the compilation, so a plugin's
+      // change in any of them counts.
+      const settings = async (webpackConfig: object) => {
         const compiler = webpack({
           ...webpackConfig,
           context: repoDir,
@@ -272,7 +284,12 @@ describe("Tailwind's source directories", () => {
           cache: false,
           optimization: { minimize: false },
         });
-        compiler.newCompilation(compiler.newCompilationParams());
+        await callAsync(compiler.hooks.beforeRun, compiler);
+        await callAsync(compiler.hooks.run, compiler);
+        const params = compiler.newCompilationParams();
+        await callAsync(compiler.hooks.beforeCompile, params);
+        compiler.hooks.compile.call(params);
+        compiler.newCompilation(params);
         return {
           options: compiler.options.snapshot,
           managedPaths: [...compiler.managedPaths],
@@ -293,8 +310,8 @@ describe("Tailwind's source directories", () => {
         ...compilation,
         webpack,
       } as unknown as Parameters<WebpackHook>[1];
-      expect(settings(config.webpack!(given(), ctx))).toEqual(
-        settings(given()),
+      expect(await settings(config.webpack!(given(), ctx))).toEqual(
+        await settings(given()),
       );
     },
   );
