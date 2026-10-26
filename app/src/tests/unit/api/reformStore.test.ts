@@ -434,6 +434,19 @@ describe('LocalStorageReformStore', () => {
     expect(reform?.missingParameters).toEqual([REMOVED_US_PARAMETER]);
   });
 
+  it('given a saved reform, when renamed, then its v1 policy is not read', async () => {
+    // Given
+    const fetchPolicy = vi.fn().mockResolvedValue(v1PolicyContent(POLICY_JSON));
+    const checkedStore = new LocalStorageReformStore({ materializePolicy, fetchPolicy });
+    const created = await checkedStore.create(mockReformInput);
+
+    // When
+    await checkedStore.update(created.id!, { label: 'Renamed' });
+
+    // Then
+    expect(fetchPolicy).not.toHaveBeenCalled();
+  });
+
   it('given a saved reform whose v1 policy cannot be read, when listed, then it lists as saved', async () => {
     // Given
     const fetchPolicy = vi.fn().mockRejectedValue(new Error('Failed to fetch policy 95762'));

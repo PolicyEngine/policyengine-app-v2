@@ -134,10 +134,14 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     retry: false,
   });
   // Every simulation is in (or failed) and every policy it names was read.
+  // A policy read once stays checked while it is asked for again (a refetch
+  // of a failed read, say), so the page does not go back to loading.
   const policiesChecked =
     simulationIds.length > 0 &&
     simulationResults.queries.every((query) => !query.isPending) &&
-    policyContentResults.queries.every((query) => !query.isPending);
+    policyContentResults.queries.every(
+      (query) => !query.isPending || query.dataUpdatedAt > 0 || query.errorUpdatedAt > 0
+    );
   const missingParameters = combinedMissingParameters(
     policyContentResults.queries.map((query) => query.data)
   );

@@ -249,6 +249,38 @@ describe('useFlagshipReport', () => {
     expect(mockFetchPolicyById).toHaveBeenCalledTimes(2);
   });
 
+  test('given policies whose missing-parameter list is null then nothing is missing', async () => {
+    // Given: an API that could not check
+    mockFetchPolicyById.mockResolvedValue(v1PolicyContent({}, null));
+
+    // When
+    const { result } = renderReportHook(EXISTING_REPORT_ID);
+
+    // Then
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true));
+    expect(result.current.missingParameters).toEqual([]);
+  });
+
+  test('given a policy that could not be read then asking for it again keeps the check settled', async () => {
+    // Given: the metadata is ready, so the policy details ask for the same policy too
+    seedDeductionMetadata();
+    mockFetchPolicyById.mockRejectedValue(POLICY_UNAVAILABLE_ERROR);
+    const { result, queryClient } = renderReportHook(EXISTING_REPORT_ID);
+    await waitFor(() => expect(result.current.policiesChecked).toBe(true));
+    mockFetchPolicyById.mockReturnValue(new Promise(() => {}));
+    const readsBefore = mockFetchPolicyById.mock.calls.length;
+
+    // When: the failed policy is asked for again (a refetch on focus, for example)
+    await act(async () => {
+      void queryClient.refetchQueries({ queryKey: ['v1-policy'] });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    // Then: the request is out again, and the check stays settled meanwhile
+    expect(mockFetchPolicyById.mock.calls.length).toBeGreaterThan(readsBefore);
+    expect(result.current.policiesChecked).toBe(true);
+  });
+
   test('given a failed simulation then retry asks for it again and the error clears', async () => {
     // Given
     mockFetchSimulationById.mockImplementation(async (_country: string, id: string) => {
