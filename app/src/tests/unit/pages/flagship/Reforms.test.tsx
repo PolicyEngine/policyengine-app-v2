@@ -1152,31 +1152,8 @@ describe('ReformsPage', () => {
       return user;
     }
 
-    test('given a reform whose policy sets parameters the model no longer has then its reports offer no Re-run', async () => {
-      // Given
-      mockFindMine.mockResolvedValue([
-        {
-          ...CHAT_REFORM,
-          parameters: [...CHAT_REFORM.parameters, REMOVED_PARAMETER_CHANGE],
-          missingParameters: [REMOVED_US_PARAMETER],
-        },
-        PLAN_B_REFORM,
-      ]);
-      mockFindReports.mockResolvedValue([BROWSER_REPORT]);
-      const user = userEvent.setup();
-      renderReforms('/us/reforms?filter=yours');
-
-      // When
-      await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
-
-      // Then
-      const list = screen.getByRole('region', { name: 'Reports' });
-      expect(within(list).getByRole('button', { name: /open/i })).toBeEnabled();
-      expect(within(list).queryByRole('button', { name: /re-run/i })).not.toBeInTheDocument();
-    });
-
-    test('given a report compared with a reform that sets parameters the model no longer has then it offers no Re-run', async () => {
-      // Given
+    test('given a report compared with a reform that sets parameters the model no longer has then Re-run names them and runs nothing', async () => {
+      // Given: the comparison policy the report ran (88) is the affected one
       mockFindMine.mockResolvedValue([
         CHAT_REFORM,
         {
@@ -1186,16 +1163,49 @@ describe('ReformsPage', () => {
         },
       ]);
       mockFindReports.mockResolvedValue([ACCOUNT_REPORT]);
+      mockFetchPolicyById.mockResolvedValue(
+        v1PolicyContent({ [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 } }, [
+          REMOVED_US_PARAMETER,
+        ])
+      );
       const user = userEvent.setup();
       renderReforms('/us/reforms?filter=yours');
-
-      // When
       await user.click(await screen.findByText('CTC to $3,600 for children under 6'));
-
-      // Then
       const list = screen.getByRole('region', { name: 'Reports' });
       expect(within(list).getByText('Compared with Plan B')).toBeInTheDocument();
-      expect(within(list).queryByRole('button', { name: /re-run/i })).not.toBeInTheDocument();
+
+      // When
+      await user.click(within(list).getByRole('button', { name: /re-run/i }));
+
+      // Then
+      const notice = await screen.findByRole('alert');
+      expect(within(notice).getByText(REMOVED_US_PARAMETER)).toBeInTheDocument();
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    test("given the report's policies cannot be checked then Re-run runs as before", async () => {
+      // Given
+      mockFetchPolicyById.mockRejectedValue(new Error('Failed to fetch policy 88'));
+      const user = await openReform([BROWSER_REPORT]);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+      // Then
+      await waitFor(() => expect(mockRun).toHaveBeenCalledTimes(1));
+    });
+
+    test("given Re-run is checking the report's policies then it cannot be clicked again", async () => {
+      // Given: the check never answers
+      mockFetchPolicyById.mockReturnValue(new Promise(() => {}));
+      const user = await openReform([BROWSER_REPORT]);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /re-run/i }));
+
+      // Then
+      await waitFor(() => expect(screen.getByRole('button', { name: /re-run/i })).toBeDisabled());
+      expect(mockRun).not.toHaveBeenCalled();
     });
 
     test('given a report whose own policies set parameters the model no longer has then Re-run names them and runs nothing', async () => {

@@ -328,6 +328,8 @@ export default function ReformsPage() {
   const [rerunError, setRerunError] = useState<string | null>(null);
   // The parameters a report tried for Re-run uses that the model no longer has.
   const [rerunMissingParameters, setRerunMissingParameters] = useState<string[]>([]);
+  // A Re-run is checking the report's policies: another click waits for it.
+  const [rerunChecking, setRerunChecking] = useState(false);
   const {
     bills,
     isConfigured: billsConfigured,
@@ -985,29 +987,25 @@ export default function ReformsPage() {
           <ReformReports
             countryId={countryId}
             reports={reportsFor(selectedReform.id)}
-            rerunning={runReport.isRunning}
+            rerunning={runReport.isRunning || rerunChecking}
             reformName={(reformId) => {
               const reform = savedReform(reformId);
               return reform ? reform.label || 'Untitled reform' : undefined;
             }}
-            // Neither the reform nor the reform it was compared with may set
-            // parameters the model no longer has.
-            canRerun={(report) =>
-              missingParameters.length === 0 &&
-              (!report.baselineReformId ||
-                reformMissingParameters(savedReform(report.baselineReformId)).length === 0)
-            }
             onRerun={async (report) => {
               setRerunError(null);
               setRerunMissingParameters([]);
               // Its own policies, as it ran them: a re-run runs the same
-              // changes against the same baseline. A check that cannot be
-              // made leaves the re-run as it was.
+              // changes against the same baseline, whatever the saved reforms
+              // say now. A check that cannot be made leaves the re-run as it was.
+              setRerunChecking(true);
               const missing = await reportMissingParameters(
                 countryId,
                 report.apiReportId,
                 (policyCountryId, policyId) => readV1Policy(queryClient, policyCountryId, policyId)
-              ).catch(() => []);
+              )
+                .catch(() => [])
+                .finally(() => setRerunChecking(false));
               if (missing.length > 0) {
                 setRerunMissingParameters(missing);
                 return;
