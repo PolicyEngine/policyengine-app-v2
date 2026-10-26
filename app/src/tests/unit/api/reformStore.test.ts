@@ -16,6 +16,10 @@ import {
   pageResponse,
   policyItem,
 } from '@/tests/fixtures/api/v2UserMocks';
+import {
+  REMOVED_US_PARAMETER,
+  v1PolicyContent,
+} from '@/tests/fixtures/libs/flagship/missingParametersMocks';
 import type { Reform } from '@/types/ingredients/Reform';
 
 const mockReformInput: Omit<Reform, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -41,9 +45,9 @@ const POLICY_JSON = {
 function apiReformStore(countryId: 'us' | 'uk' = 'us') {
   const { fetchMock, context } = createTestApiContext(countryId);
   const materializePolicy = vi.fn().mockResolvedValue(MATERIALIZED_POLICY_ID);
-  const fetchPolicyJson = vi.fn().mockResolvedValue(POLICY_JSON);
-  const store = new ApiReformStore(context, { materializePolicy, fetchPolicyJson });
-  return { store, fetchMock, materializePolicy, fetchPolicyJson };
+  const fetchPolicy = vi.fn().mockResolvedValue(v1PolicyContent(POLICY_JSON));
+  const store = new ApiReformStore(context, { materializePolicy, fetchPolicy });
+  return { store, fetchMock, materializePolicy, fetchPolicy };
 }
 
 const reformRow = policyItem({
@@ -92,7 +96,7 @@ describe('ApiReformStore', () => {
     const metadata = { 'gov.irs.credits.ctc.amount.base[0]': { type: 'parameter' } } as any;
     const store = new ApiReformStore(context, {
       materializePolicy,
-      fetchPolicyJson: vi.fn().mockResolvedValue(POLICY_JSON),
+      fetchPolicy: vi.fn().mockResolvedValue(v1PolicyContent(POLICY_JSON)),
       getParameterMetadata: () => metadata,
     });
     fetchMock.mockResolvedValue(itemResponse(reformRow, 201));
@@ -131,7 +135,7 @@ describe('ApiReformStore', () => {
 
   it('given saved rows, when listed, then parameters are rebuilt from each v1 policy', async () => {
     // Given
-    const { store, fetchMock, fetchPolicyJson } = apiReformStore();
+    const { store, fetchMock, fetchPolicy } = apiReformStore();
     fetchMock.mockResolvedValue(
       pageResponse([
         reformRow,
@@ -144,7 +148,7 @@ describe('ApiReformStore', () => {
     const reforms = await store.findMine('us');
 
     // Then
-    expect(fetchPolicyJson).toHaveBeenCalledWith('us', String(MATERIALIZED_POLICY_ID));
+    expect(fetchPolicy).toHaveBeenCalledWith('us', String(MATERIALIZED_POLICY_ID));
     expect(reforms).toHaveLength(1);
     expect(reforms[0].parameters).toEqual(mockReformInput.parameters);
     expect(reforms[0].provenance).toEqual({
@@ -258,7 +262,7 @@ describe('ApiReformStore', () => {
 
   it('given one reform whose v1 policy fails to load, when listed, then the others still list', async () => {
     // Given
-    const { store, fetchMock, fetchPolicyJson } = apiReformStore();
+    const { store, fetchMock, fetchPolicy } = apiReformStore();
     const unloadable = policyItem({
       ...reformRow,
       id: '66666666-6666-4666-8666-666666666666',
@@ -266,11 +270,11 @@ describe('ApiReformStore', () => {
       name: 'Unloadable',
     });
     fetchMock.mockResolvedValue(pageResponse([reformRow, unloadable]));
-    fetchPolicyJson.mockImplementation(async (_countryId: string, policyId: string) => {
+    fetchPolicy.mockImplementation(async (_countryId: string, policyId: string) => {
       if (policyId === String(REPLACEMENT_POLICY_ID)) {
         throw new Error('Failed to fetch policy 95800');
       }
-      return POLICY_JSON;
+      return v1PolicyContent(POLICY_JSON);
     });
 
     // When
@@ -287,6 +291,45 @@ describe('ApiReformStore', () => {
       parametersUnavailable: true,
     });
   });
+
+  it('given a v1 policy that sets parameters the model no longer has, when listed, then the reform names them', async () => {
+    // Given
+    const { store, fetchMock, fetchPolicy } = apiReformStore();
+    fetchMock.mockResolvedValue(pageResponse([reformRow]));
+    fetchPolicy.mockResolvedValue(
+      v1PolicyContent({ ...POLICY_JSON, [REMOVED_US_PARAMETER]: { '2026-01-01.2100-12-31': 0 } }, [
+        REMOVED_US_PARAMETER,
+      ])
+    );
+
+    // When
+    const [reform] = await store.findMine('us');
+
+    // Then
+    expect(reform.missingParameters).toEqual([REMOVED_US_PARAMETER]);
+    expect(reform.parametersUnavailable).toBeUndefined();
+  });
+
+  it.each([
+    ['absent', undefined],
+    ['null', null],
+    ['empty', []],
+  ])(
+    'given a v1 policy whose missing-parameter list is %s, when read, then the reform names none',
+    async (_description, missingParameters) => {
+      // Given
+      const { store, fetchMock, fetchPolicy } = apiReformStore();
+      fetchMock.mockResolvedValue(itemResponse(reformRow));
+      fetchPolicy.mockResolvedValue(v1PolicyContent(POLICY_JSON, missingParameters));
+
+      // When
+      const reform = await store.findById(ASSOCIATION_IDS.REFORM);
+
+      // Then
+      expect(reform?.parameters).toEqual(mockReformInput.parameters);
+      expect(reform?.missingParameters).toBeUndefined();
+    }
+  );
 
   it('given a UK reform while the page is in the US, when created, then it is written in the UK', async () => {
     // Given
@@ -357,6 +400,37 @@ describe('LocalStorageReformStore', () => {
     materializePolicy = vi.fn().mockResolvedValue(MATERIALIZED_POLICY_ID);
     store = new LocalStorageReformStore({ materializePolicy });
     localStorage.clear();
+  });
+
+  it('given a saved reform whose v1 policy sets parameters the model no longer has, when listed, then it names them', async () => {
+    // Given
+    const fetchPolicy = vi
+      .fn()
+      .mockResolvedValue(v1PolicyContent(POLICY_JSON, [REMOVED_US_PARAMETER]));
+    const checkedStore = new LocalStorageReformStore({ materializePolicy, fetchPolicy });
+    await checkedStore.create(mockReformInput);
+
+    // When
+    const [reform] = await checkedStore.findMine('us');
+
+    // Then
+    expect(fetchPolicy).toHaveBeenCalledWith('us', String(MATERIALIZED_POLICY_ID));
+    expect(reform.missingParameters).toEqual([REMOVED_US_PARAMETER]);
+    expect(reform.parameters).toEqual(mockReformInput.parameters);
+  });
+
+  it('given a saved reform whose v1 policy cannot be read, when listed, then it lists as saved', async () => {
+    // Given
+    const fetchPolicy = vi.fn().mockRejectedValue(new Error('Failed to fetch policy 95762'));
+    const checkedStore = new LocalStorageReformStore({ materializePolicy, fetchPolicy });
+    await checkedStore.create(mockReformInput);
+
+    // When
+    const [reform] = await checkedStore.findMine('us');
+
+    // Then
+    expect(reform.missingParameters).toBeUndefined();
+    expect(reform.parameters).toEqual(mockReformInput.parameters);
   });
 
   it('given a reform, when created, then it is retrievable by user and by id', async () => {

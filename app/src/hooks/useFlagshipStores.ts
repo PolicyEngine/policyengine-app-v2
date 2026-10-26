@@ -8,7 +8,7 @@ import {
   type FlagshipReportRecord,
   type FlagshipReportStore,
 } from '@/api/flagshipReportStore';
-import { fetchV1PolicyJson, getReformStore, type ReformStore } from '@/api/reformStore';
+import { fetchV1PolicyContent, getReformStore, type ReformStore } from '@/api/reformStore';
 import { fetchSharedReport } from '@/api/sharedReport';
 import { isAccountId, type ApiStoreContext } from '@/api/v2Associations';
 import { useCountryContext } from '@/contexts/CountryContext';
@@ -61,12 +61,15 @@ export function useV3SavedWork(): V3SavedWork {
   }, [status, subject, browserUserId, countryId, client]);
 }
 
-/** A v1 policy's raw parameter map (`policy_json`), per country. */
-const v1PolicyJsonKey = (countryId: string, policyId: string) =>
-  ['v1-policy-json', countryId, policyId] as const;
+/**
+ * A v1 policy's raw parameter map (`policy_json`) and the parameters the
+ * model no longer has (`missing_parameters`), per country.
+ */
+export const v1PolicyContentKey = (countryId: string, policyId: string) =>
+  ['v1-policy-content', countryId, policyId] as const;
 
 /** How long a fetched v1 policy stays cached without a reader. */
-const V1_POLICY_JSON_GC_TIME = 30 * 60 * 1000;
+export const V1_POLICY_CONTENT_GC_TIME = 30 * 60 * 1000;
 
 export function useReformStore(): ReformStore {
   const { account } = useV3SavedWork();
@@ -82,12 +85,12 @@ export function useReformStore(): ReformStore {
         getParameterMetadata: () => parametersRef.current,
         // v1 policies never change, so each is fetched once per session
         // rather than on every list of the account's reforms.
-        fetchPolicyJson: (countryId, policyId) =>
+        fetchPolicy: (countryId, policyId) =>
           queryClient.fetchQuery({
-            queryKey: v1PolicyJsonKey(countryId, policyId),
-            queryFn: () => fetchV1PolicyJson(countryId, policyId),
+            queryKey: v1PolicyContentKey(countryId, policyId),
+            queryFn: () => fetchV1PolicyContent(countryId, policyId),
             staleTime: Infinity,
-            gcTime: V1_POLICY_JSON_GC_TIME,
+            gcTime: V1_POLICY_CONTENT_GC_TIME,
           }),
       }),
     [account, queryClient]

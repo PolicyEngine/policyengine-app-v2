@@ -1,0 +1,14 @@
+import type { V1PolicyContent } from '@/types/metadata/policyMetadata';
+
+/**
+ * The parameters a v1 policy sets that the current model no longer has, as
+ * the API reports them. Empty when there are none, and when the API did not
+ * check (an older API, or a check it could not run): only a list the API
+ * returns blocks a run.
+ */
+export function policyMissingParameters(
+  policy: Pick<V1PolicyContent, 'missing_parameters'> | null | undefined
+): string[] {
+  const reported = policy?.missing_parameters;
+  return Array.isArray(reported) ? reported.filter((path) => typeof path === 'string') : [];
+}
