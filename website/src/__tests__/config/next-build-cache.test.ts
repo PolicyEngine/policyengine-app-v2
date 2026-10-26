@@ -274,8 +274,8 @@ describe("Tailwind's source directories", () => {
           ),
         );
       // What webpack's FileSystemInfo gets for a config's compilation. A run
-      // calls these hooks before it creates the compilation, so a plugin's
-      // change in any of them counts.
+      // calls these hooks, and reads records, before it creates the
+      // compilation, so a plugin's change in any of them counts.
       const settings = async (webpackConfig: object) => {
         const compiler = webpack({
           ...webpackConfig,
@@ -286,6 +286,11 @@ describe("Tailwind's source directories", () => {
         });
         await callAsync(compiler.hooks.beforeRun, compiler);
         await callAsync(compiler.hooks.run, compiler);
+        await new Promise<void>((resolve, reject) =>
+          compiler.readRecords((error?: Error) =>
+            error ? reject(error) : resolve(),
+          ),
+        );
         const params = compiler.newCompilationParams();
         await callAsync(compiler.hooks.beforeCompile, params);
         compiler.hooks.compile.call(params);
