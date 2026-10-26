@@ -1,4 +1,9 @@
-import { createPublicApiClient, requireResult, type PublicApiClient } from '@/api/publicApi/client';
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireResult,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
 
 /**
@@ -26,7 +31,7 @@ export async function fetchParameterChildren(
       client.GET('/v2/parameters/children', {
         params: {
           query: {
-            country_id: countryId as 'us' | 'uk',
+            country_id: publicApiCountryId(countryId),
             policyengine_version: policyengineVersion,
             parent_path: parentPath,
             reform_changeable: true,

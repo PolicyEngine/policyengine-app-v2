@@ -1,4 +1,9 @@
-import { createPublicApiClient, requireResult, type PublicApiClient } from '@/api/publicApi/client';
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireResult,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
 import type { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
 
@@ -18,11 +23,20 @@ import type { MetadataApiPayload, MetadataRegionEntry } from '@/types/metadata';
 
 type Schemas = components['schemas'];
 
+type RegionOption = Schemas['MetadataRegionOption'];
+type V1RegionType = MetadataRegionEntry['type'];
+
 /** Region types v1 listed per country; v2 also lists places, which v3 never offered. */
-const V1_REGION_TYPES: Record<string, readonly string[]> = {
+const V1_REGION_TYPES: Record<string, readonly V1RegionType[]> = {
   us: ['national', 'state', 'congressional_district'],
   uk: ['national', 'country', 'constituency', 'local_authority'],
 };
+
+/** Whether v1 listed a region of this option's type, for a country offering `offered`. */
+function offeredByV1(offered: readonly V1RegionType[]) {
+  return (option: RegionOption): option is RegionOption & { type: V1RegionType } =>
+    offered.some((type) => type === option.type);
+}
 
 function regionEntries(
   countryId: string,
@@ -31,8 +45,8 @@ function regionEntries(
   const offered = V1_REGION_TYPES[countryId] ?? ['national'];
   const regionsByCode = new Map(catalog.regions.map((region) => [region.code, region]));
   return catalog.economy_options.region
-    .filter((option) => offered.includes(option.type))
-    .map((option) => {
+    .filter(offeredByV1(offered))
+    .map((option): MetadataRegionEntry => {
       const region = regionsByCode.get(option.name);
       return {
         name: option.name,
@@ -42,11 +56,13 @@ function regionEntries(
         ...(option.type === 'congressional_district' && region?.state_code
           ? { state_abbreviation: region.state_code, state_name: region.state_name ?? '' }
           : {}),
-      } as MetadataRegionEntry;
+      };
     });
 }
 
-function entityCollection(entities: Schemas['MetadataEntity'][]): Record<string, any> {
+function entityCollection(
+  entities: Schemas['MetadataEntity'][]
+): Record<string, Schemas['MetadataEntity']> {
   return Object.fromEntries(
     entities.map((entity) => [
       entity.key,
@@ -62,7 +78,7 @@ export async function fetchV2ModelCatalogMetadata(
 ): Promise<MetadataApiPayload> {
   const catalog = await requireResult(
     client.GET('/v2/model-catalog', {
-      params: { query: { country_id: countryId as 'us' | 'uk' } },
+      params: { query: { country_id: publicApiCountryId(countryId) } },
     })
   );
 

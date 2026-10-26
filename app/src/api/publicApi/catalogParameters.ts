@@ -1,4 +1,9 @@
-import { createPublicApiClient, requireResult, type PublicApiClient } from '@/api/publicApi/client';
+import {
+  createPublicApiClient,
+  publicApiCountryId,
+  requireResult,
+  type PublicApiClient,
+} from '@/api/publicApi/client';
 import type { components } from '@/api/publicApi/schema';
 import { v1FallbackLabel } from '@/libs/flagship/v2ParameterSearch';
 import type { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
@@ -84,7 +89,7 @@ export async function fetchCatalogParameters(
         client.GET('/v2/model-catalog/parameters', {
           params: {
             query: {
-              country_id: countryId as 'us' | 'uk',
+              country_id: publicApiCountryId(countryId),
               policyengine_version: policyengineVersion,
               name: batch,
             },

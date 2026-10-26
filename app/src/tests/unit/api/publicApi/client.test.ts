@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import {
   createPublicApiClient,
+  publicApiCountryId,
   requireResult,
   type CreatePublicApiClientOptions,
 } from '@/api/publicApi/client';
@@ -131,5 +132,18 @@ describe('requireResult', () => {
 
     // Then
     await expect(call).rejects.toSatisfy((error: unknown) => isV2ApiError(error, 0));
+  });
+});
+
+describe('publicApiCountryId', () => {
+  test('given a country the v2 routes serve then it is returned as their country type', () => {
+    expect(publicApiCountryId('us')).toBe('us');
+    expect(publicApiCountryId('uk')).toBe('uk');
+  });
+
+  test('given a country the v2 routes do not serve then it throws before any request', () => {
+    expect(() => publicApiCountryId('ca')).toThrow(
+      'The Public API does not serve the country "ca"'
+    );
   });
 });
