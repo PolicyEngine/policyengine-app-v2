@@ -108,20 +108,37 @@ function listsOutline(list: string): boolean {
 }
 
 /**
- * An arbitrary property as the browser reads it. Tailwind emits one only when
- * its name starts with `-` or a lower-case letter, and keeps the rest of the
- * name as written. The browser compares property names case-insensitively and
- * reads `-webkit-transition…` as `transition…`. A name with a CSS escape, such
- * as `transition\\-delay`, counts as a `transition` shorthand.
+ * An arbitrary property as the browser reads it, from what Tailwind's compiler
+ * emits when it's handed the class directly, as the differential below does.
+ * The compiler emits one only when its name starts with `-` or a lower-case
+ * letter, and keeps the rest of the name as written. The browser compares
+ * property names case-insensitively and reads `-webkit-transition…` as
+ * `transition…`. A name with a CSS escape, such as `transition\\-delay`, counts
+ * as a `transition` shorthand. So does a transition property with a `/`
+ * modifier: the compiler keeps the value as written when the modifier is 100%,
+ * as in `[transition:all_1s]/100`, and otherwise mixes it into a colour the
+ * browser rejects. A custom property is never one.
+ *
+ * On the site, Tailwind's scanner finds the classes in source files, and it
+ * extracts none of the mixed-case or escaped transition names tested here. So
+ * there they compile to nothing, and reading them this way only over-counts.
  */
 function arbitraryProperty(
   utility: string,
 ): { property: string; value: string } | undefined {
-  const match = utility.match(/^\[([^:]+):(.*)\]$/);
+  const match = utility.match(
+    /^\[([^:]+):(.*?)\](\/(?:[^/[\]()]+|\[[^\]]*\]|\([^)]*\)))?$/,
+  );
   if (!match || !/^[-a-z]/.test(match[1])) return undefined;
   const name = match[1].toLowerCase().replace(/^-webkit-/, "");
+  const modified =
+    match[3] !== undefined &&
+    /^transition(-property|-duration|-delay)?$/.test(name);
   return {
-    property: name.includes("\\") ? "transition" : name,
+    property:
+      !name.startsWith("--") && (name.includes("\\") || modified)
+        ? "transition"
+        : name,
     value: match[2],
   };
 }
@@ -231,7 +248,10 @@ function compiledAnimatesOutline(root: Root): boolean {
   );
 }
 
-/** Each class compiled alone by the site's Tailwind, without its other CSS. */
+/**
+ * Each class compiled alone by the site's Tailwind, without its other CSS. The
+ * class is handed to the compiler directly, not found by the scanner.
+ */
 async function compileEach(classes: string[]): Promise<Root[]> {
   const website = path.resolve(__dirname, "../../..");
   return Promise.all(
@@ -322,8 +342,9 @@ describe("homepage card focus", () => {
       card("[-webkit-transition-delay:100ms]"),
       // CSS units and property names in a list are case-insensitive.
       card("delay-[100MS]"),
-      // Tailwind keeps a name that starts lower-case as written, and the
-      // browser reads it case-insensitively.
+      // Handed the class directly, the compiler keeps a name that starts
+      // lower-case as written, and the browser reads it case-insensitively.
+      // The site's scanner extracts none of these.
       card("ease-out", "[transition-Delay:100ms]"),
       card("[transition-Duration:300ms]"),
       card("[transitioN:all_300ms]"),
@@ -334,6 +355,18 @@ describe("homepage card focus", () => {
         "[transition-Property:all]",
       ),
       card("ease-out", "[transition\\-delay:100ms]"),
+      // A `/` modifier of 100% leaves an arbitrary property's value as written.
+      card("[transition:all_1s]/100"),
+      card(
+        "transition-[box-shadow,translate]",
+        "duration-300",
+        "[transition-property:all]/100",
+      ),
+      card("ease-out", "[transition-delay:100ms]/100"),
+      card("ease-out", "[transition-delay:100ms]/[1]"),
+      // Any other modifier mixes the value into a colour, which the browser
+      // rejects, keeping the initial `all`.
+      card("[transition-property:box-shadow]/50", "duration-300"),
     ];
     const still = [
       card("transition-[box-shadow,translate]", "duration-300", "ease-out"),
@@ -348,8 +381,11 @@ describe("homepage card focus", () => {
       card("transition-discrete"),
       card("transition-[BOX-SHADOW]", "duration-300"),
       card("[transition-duration:0MS]"),
-      // Tailwind emits nothing for a name that starts upper-case.
+      // The compiler emits nothing for a name that starts upper-case.
       card("[TRANSITION:all_1s]"),
+      // A modifier on another arbitrary property sets no transition.
+      card("[color:red]/50"),
+      card("[--card\\.gap:1]"),
     ];
     expect(animates.filter((classes) => !animatesOutline(classes))).toEqual([]);
     expect(still.filter(animatesOutline)).toEqual([]);
@@ -411,6 +447,8 @@ describe("homepage card focus", () => {
       "[transition-delay:1s]",
       "[transition:all_1s]",
       "[transition:box-shadow_1s]",
+      "[transition:all_1s]/100",
+      "[transition-property:all]/100",
       "motion-safe:transition-all",
       "hover:duration-300",
       "focus-visible:transition-colors",
@@ -432,7 +470,7 @@ describe("homepage card focus", () => {
     }));
     // Every class compiled to a transition declaration but duration-initial,
     // which only sets Tailwind's own --tw-duration, and the arbitrary
-    // properties whose names start upper-case, which Tailwind drops.
+    // properties whose names start upper-case, which the compiler drops.
     expect(compiled.filter((c) => !c.emitted).map((c) => c.name)).toEqual([
       P + "duration-initial",
       P + "[TRANSITION:all_1s]",

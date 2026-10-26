@@ -284,6 +284,7 @@ describe('NavItem', () => {
         // When
         const row = screen.getByRole('link', { name: 'GiveCalc' });
         fireEvent.click(row, modifiers);
+        const urlAfterClick = window.location.href;
         // Whatever the click deferred, to a timer or a microtask, runs now.
         await act(() => vi.runAllTimersAsync());
 
@@ -296,6 +297,7 @@ describe('NavItem', () => {
         expect(defaultPreventedByApp).toBe(false);
         expect(push).not.toHaveBeenCalled();
         expect(navigationsReported(consoleError)).toEqual([]);
+        expect(urlAfterClick).toBe(url);
         expect(window.location.href).toBe(url);
         expect(window.history.length).toBe(historyLength);
         expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute(
