@@ -59,15 +59,19 @@ export const UK_REGION_SOCIETY_WIDE_DURATION_MS = 110 * 1000;
 
 /**
  * Estimate for a UK local-area breakdown run (`breakdown=local_areas`).
- * No production runs exist yet to measure. Building the area results inside
- * a national run took about 70–90 s; a separate run also loads the
- * local-area dataset, which a cold worker downloads first.
+ * Measured on the Public API on 26 October 2026 (.py 6.10.0), from
+ * submission to completion: UK-wide 267 s on a cold worker (about 90 s of it
+ * loading the local-area dataset) and 154 s on a warm one; Wales 46 s. A
+ * repeated request is served from the cache in about 1.5 s. The estimate
+ * covers the cold UK-wide run; the API's stages keep a faster run's bar
+ * honest.
  */
-export const UK_LOCAL_AREA_BREAKDOWN_DURATION_MS = 3 * 60 * 1000;
+export const UK_LOCAL_AREA_BREAKDOWN_DURATION_MS = 270 * 1000;
 
 /**
  * How long a UK local-area breakdown may compute before the app stops
- * polling it and offers Retry, in case its job is stuck.
+ * polling it and offers Retry, in case its job is stuck: several times the
+ * slowest measured run, to leave room for a queue.
  */
 export const UK_LOCAL_AREA_BREAKDOWN_TIME_LIMIT_MS = 30 * 60 * 1000;
 
