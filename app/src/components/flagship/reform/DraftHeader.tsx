@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { ReformNotFoundError } from '@/api/reformStore';
 import { BrowserOnlyIdError } from '@/api/v2Associations';
 import { isV2ApiError } from '@/api/v2UserClient';
+import { ErrorState } from '@/components/flagship/states';
 import {
   Button,
   Popover,
@@ -536,6 +537,7 @@ export function DraftRunBar({
               starting ||
               saveMutation.isPending ||
               baseline.pending ||
+              baseline.failed ||
               baseline.matchesDraft ||
               currentLawUnavailable
             }
@@ -581,6 +583,13 @@ export function DraftRunBar({
         </p>
       )}
 
+      {baseline.failed && (
+        <ErrorState
+          compact
+          title="Could not load current law for the comparison"
+          onRetry={baseline.retry}
+        />
+      )}
       {(runReport.error || saveError) && (
         <p
           role="alert"

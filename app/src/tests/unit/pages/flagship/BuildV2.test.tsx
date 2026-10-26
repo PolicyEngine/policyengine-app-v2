@@ -5,6 +5,7 @@ import {
   addDraftProvision,
   clearDraftReform,
   getDraftReform,
+  setDraftBaseline,
   startDraftReform,
 } from '@/libs/draftReform';
 import { growthIndexPaths } from '@/libs/flagship/uprating';
@@ -18,16 +19,25 @@ import {
   stubPublicApiFetch,
 } from '@/tests/fixtures/api/publicApi/publicApiFetchStub';
 import {
+  CTC_FIRST_BRACKET_AMOUNT,
   STANDARD_DEDUCTION_JOINT,
   STANDARD_DEDUCTION_SINGLE,
   US_SEARCH_FILE,
 } from '@/tests/fixtures/api/publicApi/searchFileMocks';
 import { seedV2ModelCatalog, testQueryClient } from '@/tests/fixtures/hooks/v3MetadataWrapper';
+import type { Reform } from '@/types/ingredients/Reform';
 
 /** v3 after the switch: V3_API_ROUTES is 'v2'. */
 vi.mock('@/libs/flagship/v3ApiRoutes', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/libs/flagship/v3ApiRoutes')>()),
   V3_API_ROUTES: 'v2',
+}));
+
+/** The saved reforms Build offers as the comparison; none unless a test names them. */
+const mockFindMine = vi.fn(async (): Promise<Reform[]> => []);
+vi.mock('@/api/reformStore', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/reformStore')>()),
+  getReformStore: () => ({ findMine: mockFindMine }),
 }));
 
 const SEARCH_FILE_PATH = '/v2/parameters/search-file';
@@ -177,5 +187,64 @@ describe('BuildPage with v3 on the v2 routes', () => {
     expect(provision.baselineValue).toBe(
       provision.path === STANDARD_DEDUCTION_SINGLE ? 15000 : 30000
     );
+  });
+
+  test("given the comparison's parameters fail to load then the page says so and its run waits for them", async () => {
+    // Given: a draft compared with a saved reform of the child tax credit.
+    const user = userEvent.setup();
+    const comparison: Reform = {
+      id: 'rf-ctc',
+      countryId: 'us',
+      label: 'A larger child tax credit',
+      parameters: [
+        {
+          name: CTC_FIRST_BRACKET_AMOUNT,
+          values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 3000 }],
+        },
+      ],
+      baseline: 'current-law',
+      provenance: { source: 'manual' },
+    };
+    mockFindMine.mockResolvedValue([comparison]);
+    let comparisonAttempts = 0;
+    stubPublicApiFetch({
+      [SEARCH_FILE_PATH]: () => jsonResponse(US_SEARCH_FILE),
+      [PARAMETERS_PATH]: (url) => {
+        const names = url.searchParams.getAll('name');
+        if (names.includes(CTC_FIRST_BRACKET_AMOUNT)) {
+          comparisonAttempts += 1;
+          if (comparisonAttempts === 1) {
+            return jsonResponse({ status: 'error', message: 'Unavailable' }, 503);
+          }
+        }
+        return jsonResponse({
+          status: 'ok',
+          message: null,
+          result: catalogParametersResult(names),
+        });
+      },
+    });
+    await seedV2ModelCatalog();
+    startDraftReform('us', 'manual');
+    addDraftProvision('us', { ...SINGLE_DEDUCTION, value: 20000 });
+    setDraftBaseline(comparison.id);
+    renderPage();
+    const run = () => screen.getByRole('button', { name: /Save and run/ });
+
+    // Then
+    expect(
+      await screen.findByText('Could not load current law for the comparison')
+    ).toBeInTheDocument();
+    expect(run()).toBeDisabled();
+
+    // When
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Then
+    await waitFor(() => expect(run()).toBeEnabled());
+    expect(
+      screen.queryByText('Could not load current law for the comparison')
+    ).not.toBeInTheDocument();
+    expect(comparisonAttempts).toBe(2);
   });
 });
