@@ -1,10 +1,11 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import type { NextConfig } from "next";
 import { describe, expect, test } from "vitest";
 
+import calculatorConfig from "../../../../calculator-app/next.config";
 import nextConfig from "../../../next.config";
 
 // A production build that restored webpack's persistent cache reused old CSS,
@@ -141,16 +142,16 @@ async function unsnapshottable(dirs: string[]): Promise<string[]> {
 describe("Tailwind's source directories", () => {
   test("given Next's build config then it sets only the snapshot paths the oracle copies", () => {
     // Next replaces webpack's snapshot options with this block, whitespace
-    // aside. Outside Yarn PnP it sets only managedPaths, and no snapshot.module,
-    // so a build gets webpack's production default for that (the next test).
+    // aside, and sets them nowhere else. Outside Yarn PnP it sets only
+    // managedPaths, and no snapshot.module, so a build gets webpack's
+    // production default for that (the next test).
     const require = createRequire(path.join(repoDir, "website/package.json"));
-    const source = readFileSync(
-      require.resolve("next/dist/build/webpack-config.js"),
-      "utf8",
-    );
-    const block = source
-      .match(/webpack5Config\.snapshot = \{\};[\s\S]*?\n\s*if \(dev\) \{/)?.[0]
-      .replace(/\s+/g, " ");
+    const configFile = require.resolve("next/dist/build/webpack-config.js");
+    const source = readFileSync(configFile, "utf8");
+    const raw = source.match(
+      /webpack5Config\.snapshot = \{\};[\s\S]*?\n\s*if \(dev\) \{/,
+    )?.[0];
+    const block = raw?.replace(/\s+/g, " ");
     expect(block).toBe(
       [
         "webpack5Config.snapshot = {};",
@@ -165,7 +166,62 @@ describe("Tailwind's source directories", () => {
         "if (dev) {",
       ].join(" "),
     );
+    // No other line of Next's build code mentions `snapshot`, so nothing else
+    // there sets the options. Nor does any mention `.managedPaths`,
+    // `.unmanagedPaths`, `.immutablePaths` or `.fileSystemInfo`: webpack builds
+    // those from the options, and a plugin could change them without naming
+    // the options.
+    const buildDir = path.dirname(configFile);
+    const files = readdirSync(buildDir, {
+      encoding: "utf8",
+      recursive: true,
+    }).filter((file) => file.endsWith(".js"));
+    const read = (file: string) =>
+      readFileSync(path.join(buildDir, file), "utf8");
+    const mentions = files.filter((file) => {
+      const rest =
+        file === "webpack-config.js"
+          ? read(file).replace(raw!, "")
+          : read(file);
+      return /\bsnapshot\b|\.(?:(?:un)?managedPaths|immutablePaths|fileSystemInfo)\b/.test(
+        rest,
+      );
+    });
+    expect(mentions).toEqual([]);
+    // Every `.mode =` assignment in Next's build code is pinned; base.js's is
+    // the only one that sets webpack's mode, which picks webpack's default
+    // snapshot.module. The others are a fetch polyfill's and css-loader's
+    // CSS-modules mode. A mode set by a spread, `Object.assign` or bracket
+    // access isn't seen here.
+    const modeAssignments = Object.fromEntries(
+      files
+        .map((file) => [
+          file,
+          read(file).match(/[\w$.]+\.mode\s*=(?!=)[^,;\n]*/g) ?? [],
+        ])
+        .filter(([, found]) => found.length > 0),
+    );
+    expect(modeAssignments).toEqual({
+      [path.join("polyfills", "polyfill-nomodule.js")]: [
+        "this.mode=t.mode",
+        "this.mode=e.mode||this.mode||null",
+      ],
+      [path.join("webpack", "config", "blocks", "base.js")]: [
+        "config.mode = ctx.isDevelopment ? 'development' : 'production'",
+      ],
+      [path.join("webpack", "loaders", "css-loader", "src", "index.js")]: [
+        "modulesOptions.mode = typeof rawOptions.modules === 'string' ? rawOptions.modules : 'local'",
+        "modulesOptions.mode = modulesOptions.mode(loaderContext.resourcePath)",
+      ],
+    });
     expect(process.versions.pnp).toBeUndefined();
+    // The calculator's build reads this same copy of Next.
+    const calculator = createRequire(
+      path.join(repoDir, "calculator-app/package.json"),
+    );
+    expect(calculator.resolve("next/dist/build/webpack-config.js")).toBe(
+      configFile,
+    );
   });
 
   test("given a production build then webpack snapshots modules by timestamp and hash", async () => {
@@ -182,6 +238,88 @@ describe("Tailwind's source directories", () => {
       hash: true,
     });
   });
+
+  // Next calls each app's webpack hook after that block, once for each of its
+  // compilations, so a hook could still change what webpack gets: the snapshot
+  // options, `mode` (which picks webpack's default snapshot.module), or a
+  // plugin that changes the managed paths. So each hook's config, run through
+  // Next's webpack, must end with the snapshot settings of the config it got.
+  test.each(
+    (
+      [
+        ["website", nextConfig],
+        ["calculator", calculatorConfig],
+      ] as const
+    ).flatMap(([app, config]) =>
+      (
+        [
+          ["client", { isServer: false }],
+          ["server", { isServer: true, nextRuntime: "nodejs" }],
+          ["edge server", { isServer: true, nextRuntime: "edge" }],
+        ] as const
+      ).map(([name, compilation]) => [app, name, config, compilation] as const),
+    ),
+  )(
+    "given the %s's webpack hook for the %s then it leaves the snapshot settings alone",
+    async (_, __, config, compilation) => {
+      const require = createRequire(path.join(repoDir, "website/package.json"));
+      const { webpack } = require("next/dist/compiled/webpack/bundle5")();
+      type AsyncHook = {
+        callAsync(arg: unknown, done: (error?: Error) => void): void;
+      };
+      const callAsync = (hook: AsyncHook, arg: unknown) =>
+        new Promise<void>((resolve, reject) =>
+          hook.callAsync(arg, (error?: Error) =>
+            error ? reject(error) : resolve(),
+          ),
+        );
+      // What webpack's FileSystemInfo gets for a config's compilation. A run
+      // calls these hooks, and reads records, before it creates the
+      // compilation, so a plugin's change in any of them counts.
+      const settings = async (webpackConfig: object) => {
+        const compiler = webpack({
+          ...webpackConfig,
+          context: repoDir,
+          entry: "./package.json",
+          cache: false,
+          optimization: { minimize: false },
+        });
+        await callAsync(compiler.hooks.beforeRun, compiler);
+        await callAsync(compiler.hooks.run, compiler);
+        await new Promise<void>((resolve, reject) =>
+          compiler.readRecords((error?: Error) =>
+            error ? reject(error) : resolve(),
+          ),
+        );
+        const params = compiler.newCompilationParams();
+        await callAsync(compiler.hooks.beforeCompile, params);
+        compiler.hooks.compile.call(params);
+        compiler.newCompilation(params);
+        return {
+          options: compiler.options.snapshot,
+          managedPaths: [...compiler.managedPaths],
+          immutablePaths: [...compiler.immutablePaths],
+          unmanagedPaths: [...compiler.unmanagedPaths],
+        };
+      };
+      const given = () => ({
+        mode: "production",
+        snapshot: { managedPaths: [...NEXT_MANAGED_PATHS] },
+        cache: { type: "filesystem" },
+        module: { rules: [] },
+        plugins: [],
+        resolve: {},
+      });
+      const ctx = {
+        dev: false,
+        ...compilation,
+        webpack,
+      } as unknown as Parameters<WebpackHook>[1];
+      expect(await settings(config.webpack!(given(), ctx))).toEqual(
+        await settings(given()),
+      );
+    },
+  );
 
   // The positive control. If a Next upgrade lets webpack snapshot website/src,
   // this fails, and the website's cache could come back.
