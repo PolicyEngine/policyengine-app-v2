@@ -1,8 +1,17 @@
-import { renderWithCountry, screen, userEvent } from '@test-utils';
+import { renderWithCountry, screen, userEvent, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import { countryIds } from '@/libs/countries';
 import { addDraftProvision, clearDraftReform, startDraftReform } from '@/libs/draftReform';
+import {
+  clickIsCancelled,
+  linkRows,
+  menuRows,
+  openMoreMenu,
+  openPhoneMenu,
+  OTHER_LINK_ROWS,
+  WEBSITE_URL,
+} from '@/tests/fixtures/components/flagship/topBarFixtures';
 import { getToolsMenuEntries, type ToolsMenuEntry } from '@/utils/toolsMenu';
 
 const mockNavigate = vi.fn();
@@ -18,11 +27,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const WEBSITE_URL = 'https://policyengine.org';
-
-/** The website links after the tools group, the same in every country. */
-const OTHER_LINK_ROWS = ['Model documentation', 'API', 'About', 'Donate', 'GitHub'];
-
 /** Each country's tools, as the headers' Tools menu lists them, so these tests follow apps.json. */
 const COUNTRIES_WITH_TOOLS = countryIds
   .map((countryId): [string, ToolsMenuEntry[]] => [countryId, getToolsMenuEntries(countryId)])
@@ -34,33 +38,6 @@ const COUNTRIES_WITHOUT_TOOLS = countryIds.filter(
 function renderTopBar(countryId = 'us') {
   mockPathname = `/${countryId}/build`;
   return renderWithCountry(<FlagshipTopBar />, countryId, mockPathname);
-}
-
-async function openMenu(name: string | RegExp) {
-  const user = userEvent.setup();
-  await user.click(screen.getByRole('button', { name }));
-  return screen.findByRole('menu');
-}
-
-const openMoreMenu = () => openMenu(/more policyengine links/i);
-const openPhoneMenu = () => openMenu('Menu');
-
-/** A menu's rows in order, each separator as '—'. */
-function menuRows(menu: HTMLElement) {
-  return Array.from(menu.children).map((row) =>
-    row.getAttribute('role') === 'separator' ? '—' : row.textContent
-  );
-}
-
-/** A menu's link rows from `from` on, as label and href, each separator as '—'. */
-function linkRows(menu: HTMLElement, from = 0) {
-  return Array.from(menu.children)
-    .slice(from)
-    .map((row) =>
-      row.getAttribute('role') === 'separator'
-        ? '—'
-        : { tag: row.tagName, label: row.textContent, href: row.getAttribute('href') }
-    );
 }
 
 describe('FlagshipTopBar', () => {
@@ -230,7 +207,7 @@ describe('FlagshipTopBar', () => {
     );
 
     test.each(COUNTRIES_WITHOUT_TOOLS)(
-      'given %s, which has no featured tools, then the menus are one plain list with no tool rows',
+      'given %s, which has no tools, then the menus are one plain list with no tool rows',
       async (countryId) => {
         // Given
         const { unmount } = renderTopBar(countryId);
@@ -285,6 +262,46 @@ describe('FlagshipTopBar', () => {
         // Then
         for (const row of screen.getAllByRole('menuitem')) {
           expect(row).toHaveClass('tw:min-h-10');
+        }
+      }
+    );
+
+    test.each(countryIds)(
+      'given %s then the more menu keeps its compact rows, each with a pointer',
+      async (countryId) => {
+        // Given
+        renderTopBar(countryId);
+
+        // When
+        await openMoreMenu();
+
+        // Then
+        for (const row of screen.getAllByRole('menuitem')) {
+          expect(row).not.toHaveClass('tw:min-h-10');
+          expect(row).toHaveStyle({ cursor: 'pointer' });
+        }
+      }
+    );
+
+    test.each(COUNTRIES_WITH_TOOLS)(
+      'given %s then each tool row is a plain link, so a Cmd- or Ctrl-click opens a new tab',
+      async (countryId, tools) => {
+        renderTopBar(countryId);
+
+        for (const tool of tools) {
+          for (const modifier of [{ metaKey: true }, { ctrlKey: true }]) {
+            // Given
+            await openMoreMenu();
+            const row = screen.getByRole('menuitem', { name: tool.label });
+            expect(row).not.toHaveAttribute('target');
+
+            // When
+            const cancelled = clickIsCancelled(row, modifier);
+
+            // Then
+            expect(cancelled).toBe(false);
+            await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+          }
         }
       }
     );
