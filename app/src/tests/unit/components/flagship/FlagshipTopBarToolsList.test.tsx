@@ -25,8 +25,11 @@ const { MOCK_TOOLS } = vi.hoisted(() => ({
   } as Record<string, { slug: string; label: string }[]>,
 }));
 
+// Fresh copies each call, as the real accessor returns, so a bar that sorts or
+// edits what it gets can't change these expectations too.
 vi.mock('@/utils/toolsMenu', () => ({
-  getToolsMenuEntries: (countryId: string) => MOCK_TOOLS[countryId] ?? [],
+  getToolsMenuEntries: (countryId: string) =>
+    (MOCK_TOOLS[countryId] ?? []).map((tool) => ({ ...tool })),
 }));
 
 const COUNTRIES_WITHOUT_TOOLS = countryIds.filter((countryId) => !(countryId in MOCK_TOOLS));

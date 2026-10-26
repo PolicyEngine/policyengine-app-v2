@@ -16,18 +16,17 @@ export const openMoreMenu = () => openMenu(/more policyengine links/i);
 export const openPhoneMenu = () => openMenu('Menu');
 
 /**
- * A menu's items, labels and separators in document order, through any
- * groups that wrap them. Only the dropdown's own parts count, so a bare
- * `role="separator"` element shows up as a missing separator.
+ * A menu's rows in document order: every element in it, or in a group that
+ * wraps them, is one row, whatever it is, and parts nested inside a row are
+ * not rows of their own.
  */
-function rowElements(menu: HTMLElement) {
-  return Array.from(
-    menu.querySelectorAll<HTMLElement>(
-      '[data-slot^="dropdown-menu-"]:not([data-slot="dropdown-menu-group"])'
-    )
+function rowElements(parent: HTMLElement): HTMLElement[] {
+  return Array.from(parent.children as HTMLCollectionOf<HTMLElement>).flatMap((child) =>
+    child.dataset.slot === 'dropdown-menu-group' ? rowElements(child) : [child]
   );
 }
 
+/** Only the dropdown's own separator counts, so a bare `role="separator"` reads as a row. */
 const isSeparator = (row: HTMLElement) => row.dataset.slot === 'dropdown-menu-separator';
 
 /** A menu's rows in order, each separator as '—'. */
@@ -48,21 +47,22 @@ export function linkRows(menu: HTMLElement, from = 0) {
 
 /**
  * Whether the page cancels a click on `row`, which would stop the browser
- * following the link (a Cmd/Ctrl-click opening a new tab, say). The check
- * runs last, on window, and then cancels the click itself, because jsdom
- * cannot follow it.
+ * following the link (a Cmd/Ctrl-click opening a new tab, say). A listener on
+ * window, after every handler on the page, records the answer and then
+ * cancels the click itself, because jsdom cannot follow it. A click the page
+ * stops before it reaches window is answered by the dispatch's own result.
  */
 export function clickIsCancelled(row: HTMLElement, init: MouseEventInit) {
-  let cancelled = false;
+  let cancelledByPage: boolean | undefined;
   const record = (event: Event) => {
-    cancelled = event.defaultPrevented;
+    cancelledByPage = event.defaultPrevented;
     event.preventDefault();
   };
   window.addEventListener('click', record);
   try {
-    fireEvent.click(row, init);
+    const notCancelled = fireEvent.click(row, init);
+    return cancelledByPage ?? !notCancelled;
   } finally {
     window.removeEventListener('click', record);
   }
-  return cancelled;
 }

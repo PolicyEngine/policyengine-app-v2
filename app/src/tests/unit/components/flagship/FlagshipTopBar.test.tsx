@@ -1,4 +1,4 @@
-import { renderWithCountry, screen, userEvent, waitFor } from '@test-utils';
+import { renderWithCountry, screen, userEvent, waitFor, within } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import FlagshipTopBar from '@/components/flagship/FlagshipTopBar';
 import { countryIds } from '@/libs/countries';
@@ -33,6 +33,27 @@ const COUNTRIES_WITH_TOOLS = countryIds
   .filter(([, tools]) => tools.length > 0);
 const COUNTRIES_WITHOUT_TOOLS = countryIds.filter(
   (countryId) => getToolsMenuEntries(countryId).length === 0
+);
+
+/** Every click a link should let through, on every tool row in both menus: one case each. */
+const CLICKS: [string, MouseEventInit][] = [
+  ['plain', {}],
+  ['Shift', { shiftKey: true }],
+  ['Cmd', { metaKey: true }],
+  ['Ctrl', { ctrlKey: true }],
+];
+const MENUS = [
+  ['more', openMoreMenu],
+  ['phone', openPhoneMenu],
+] as const;
+const TOOL_ROW_CLICKS = COUNTRIES_WITH_TOOLS.flatMap(([countryId, tools]) =>
+  MENUS.flatMap(([menu, openToolsMenu]) =>
+    tools.flatMap((tool) =>
+      CLICKS.map(
+        ([click, init]) => [countryId, click, tool.label, menu, init, openToolsMenu] as const
+      )
+    )
+  )
 );
 
 function renderTopBar(countryId = 'us') {
@@ -283,26 +304,20 @@ describe('FlagshipTopBar', () => {
       }
     );
 
-    test.each(COUNTRIES_WITH_TOOLS)(
-      'given %s then each tool row is a plain link, so a Cmd- or Ctrl-click opens a new tab',
-      async (countryId, tools) => {
+    test.each(TOOL_ROW_CLICKS)(
+      'given %s then a %s click on %s in the %s menu is left to the browser, and closes the menu',
+      async (countryId, _click, label, _menu, init, openToolsMenu) => {
+        // Given
         renderTopBar(countryId);
+        const row = within(await openToolsMenu()).getByRole('menuitem', { name: label });
+        expect(row).not.toHaveAttribute('target');
 
-        for (const tool of tools) {
-          for (const modifier of [{ metaKey: true }, { ctrlKey: true }]) {
-            // Given
-            await openMoreMenu();
-            const row = screen.getByRole('menuitem', { name: tool.label });
-            expect(row).not.toHaveAttribute('target');
+        // When
+        const cancelled = clickIsCancelled(row, init);
 
-            // When
-            const cancelled = clickIsCancelled(row, modifier);
-
-            // Then
-            expect(cancelled).toBe(false);
-            await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
-          }
-        }
+        // Then
+        expect(cancelled).toBe(false);
+        await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
       }
     );
   });
