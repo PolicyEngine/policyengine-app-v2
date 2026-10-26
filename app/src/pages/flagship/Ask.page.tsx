@@ -16,6 +16,7 @@ import {
   toolActivityLabel,
 } from '@/api/askChat';
 import ChatComposer from '@/components/flagship/ChatComposer';
+import { ErrorState } from '@/components/flagship/states';
 import WorkspaceLayout from '@/components/flagship/WorkspaceLayout';
 import { Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
@@ -57,6 +58,11 @@ interface ChatTurnState {
   suggestions: string[];
   /** Provisions extracted from the model's validated reform, if any */
   bridge: ChatReformBridge | null;
+  /**
+   * The validated reform while its current law loads (on the v2 routes),
+   * or after that load failed; null once its provisions are in `bridge`.
+   */
+  bridgeLoad: { status: 'loading' | 'error'; reform: Record<string, any> } | null;
 }
 
 interface AskTurn {
@@ -177,7 +183,8 @@ export default function AskPage() {
     () => turns.flatMap((turn) => (turn.matches ?? []).map((entry) => entry.path)),
     [turns]
   );
-  useEnsureV3Parameters(shownMatchPaths);
+  const matchParameters = useEnsureV3Parameters(shownMatchPaths);
+  const [pickError, setPickError] = useState<string | null>(null);
 
   const examples = EXAMPLES[countryId] ?? EXAMPLES.default;
   const draftPaths = new Set(draft?.provisions.map((p) => p.path) ?? []);
@@ -198,6 +205,46 @@ export default function AskPage() {
       }
       return [...prev.slice(0, -1), { ...last, chat: patch(last.chat) }];
     });
+  };
+
+  /** Applies a patch to one turn's chat state. */
+  const patchChatAt = (turnIndex: number) => (patch: (chat: ChatTurnState) => ChatTurnState) =>
+    setTurns((prev) =>
+      prev.map((turn, index) =>
+        index === turnIndex && turn.chat ? { ...turn, chat: patch(turn.chat) } : turn
+      )
+    );
+
+  /**
+   * Turns the chat's validated reform into draft provisions. Their current
+   * law comes with the reform's parameters, which on the v2 routes load
+   * first; a failed load leaves no provisions and says so, with a retry.
+   */
+  const bridgeChatReform = (
+    reform: Record<string, any>,
+    patchChat: (patch: (chat: ChatTurnState) => ChatTurnState) => void
+  ): Promise<void> | undefined => {
+    const bridgeReform = () => {
+      const bridge = provisionsFromChatReform(
+        reform,
+        index.entries,
+        store.getState().metadata.parameters
+      );
+      patchChat((chat) => ({
+        ...chat,
+        bridge: bridge.provisions.length > 0 ? bridge : chat.bridge,
+        bridgeLoad: null,
+      }));
+    };
+    const pending = loadParameters(Object.keys(reform));
+    if (!pending) {
+      bridgeReform();
+      return undefined;
+    }
+    patchChat((chat) => ({ ...chat, bridgeLoad: { status: 'loading', reform } }));
+    return pending.then(bridgeReform, () =>
+      patchChat((chat) => ({ ...chat, bridgeLoad: { status: 'error', reform } }))
+    );
   };
 
   const sendChatTurn = (question: string) => {
@@ -232,7 +279,14 @@ export default function AskPage() {
       {
         question,
         matches: [],
-        chat: { answer: '', status: 'streaming', activity: null, suggestions: [], bridge: null },
+        chat: {
+          answer: '',
+          status: 'streaming',
+          activity: null,
+          suggestions: [],
+          bridge: null,
+          bridgeLoad: null,
+        },
       },
     ]);
 
@@ -248,26 +302,8 @@ export default function AskPage() {
           patchLastChat((chat) => ({ ...chat, activity: toolActivityLabel(toolName) })),
         onToolUse: ({ toolName, toolInput }) => {
           const reform = reformFromToolInput(toolName, toolInput);
-          if (!reform) {
-            return;
-          }
-          // The draft's current law comes with the reform's parameters,
-          // which on the v2 routes load first.
-          const bridgeReform = () => {
-            const bridge = provisionsFromChatReform(
-              reform,
-              index.entries,
-              store.getState().metadata.parameters
-            );
-            if (bridge.provisions.length > 0) {
-              patchLastChat((chat) => ({ ...chat, bridge }));
-            }
-          };
-          const pending = loadParameters(Object.keys(reform));
-          if (pending) {
-            pending.then(bridgeReform, bridgeReform);
-          } else {
-            bridgeReform();
+          if (reform) {
+            void bridgeChatReform(reform, patchLastChat);
           }
         },
         onSuggestions: (suggestions) => patchLastChat((chat) => ({ ...chat, suggestions })),
@@ -333,6 +369,7 @@ export default function AskPage() {
 
   const addMatch = (entry: ParameterSearchEntry, question: string) => {
     const add = () => {
+      setPickError(null);
       const provision = provisionFromSearchEntry(
         entry,
         store.getState().metadata.parameters?.[entry.path]?.values
@@ -348,7 +385,7 @@ export default function AskPage() {
     // A match joins the draft at current law, which on the v2 routes loads first.
     const pending = loadParameters([entry.path]);
     if (pending) {
-      void pending.then(add);
+      pending.then(add, () => setPickError('Could not load that parameter. Try picking it again.'));
     } else {
       add();
     }
@@ -356,7 +393,17 @@ export default function AskPage() {
 
   const renderMatchRow = (entry: ParameterSearchEntry, question: string) => {
     const inDraft = draftPaths.has(entry.path);
-    const baseline = getCurrentValue(parameters?.[entry.path]?.values);
+    const values = parameters?.[entry.path]?.values;
+    const baseline = getCurrentValue(values);
+    // On the v2 routes a listed match's current law loads after it shows.
+    const currentLaw =
+      values !== undefined
+        ? formatValue(baseline, entry.unit)
+        : matchParameters.waiting
+          ? 'loading…'
+          : matchParameters.status === 'error'
+            ? 'could not load'
+            : formatValue(baseline, entry.unit);
     return (
       <button
         key={entry.path}
@@ -388,7 +435,7 @@ export default function AskPage() {
             {entry.breadcrumb || entry.label}
           </Text>
           <Text style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}>
-            current: {formatValue(baseline, entry.unit)}
+            current: {currentLaw}
           </Text>
           <Text
             style={{
@@ -433,7 +480,8 @@ export default function AskPage() {
     lineHeight: 1.4,
   };
 
-  const renderChatReply = (chat: ChatTurnState) => {
+  const renderChatReply = (chat: ChatTurnState, turnIndex: number) => {
+    const bridgeLoad = chat.bridgeLoad;
     const bridgeInDraft =
       chat.bridge !== null && chat.bridge.provisions.every((p) => draftPaths.has(p.path));
     return (
@@ -452,6 +500,21 @@ export default function AskPage() {
               Thinking…
             </Text>
           )
+        )}
+        {bridgeLoad?.status === 'loading' && (
+          <Text
+            role="status"
+            style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary }}
+          >
+            Loading current law for this reform…
+          </Text>
+        )}
+        {bridgeLoad?.status === 'error' && (
+          <ErrorState
+            compact
+            title="Could not load current law for this reform, so it cannot join your draft yet."
+            onRetry={() => bridgeChatReform(bridgeLoad.reform, patchChatAt(turnIndex))}
+          />
         )}
         {chat.bridge && (
           <div
@@ -540,7 +603,10 @@ export default function AskPage() {
 
   const composer = (
     <>
-      {searchLoading && (
+      {searchLoading && catalog.status === 'error' && (
+        <ErrorState compact title="Could not load the parameters." onRetry={catalog.retry} />
+      )}
+      {searchLoading && catalog.status !== 'error' && (
         <p
           role="status"
           style={{
@@ -550,16 +616,19 @@ export default function AskPage() {
             textAlign: 'center',
           }}
         >
-          {catalog.status === 'error' ? (
-            <>
-              Could not load the parameters.{' '}
-              <button type="button" onClick={() => catalog.retry()}>
-                Try again
-              </button>
-            </>
-          ) : (
-            'Loading the parameters to match against…'
-          )}
+          Loading the parameters to match against…
+        </p>
+      )}
+      {shownMatchPaths.length > 0 && matchParameters.status === 'error' && (
+        <ErrorState
+          compact
+          title="Could not load current law for these matches."
+          onRetry={matchParameters.retry}
+        />
+      )}
+      {pickError && (
+        <p role="alert" style={{ margin: 0, textAlign: 'center' }}>
+          {pickError}
         </p>
       )}
       <ChatComposer
@@ -693,7 +762,7 @@ export default function AskPage() {
                 </div>
               </div>
               {turn.chat ? (
-                renderChatReply(turn.chat)
+                renderChatReply(turn.chat, turnIndex)
               ) : (
                 <Stack style={{ gap: spacing.sm }}>
                   {turn.matches.length === 0 ? (
