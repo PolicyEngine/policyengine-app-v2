@@ -1,16 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
+import { fetchV1PolicyContent } from '@/api/reformStore';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useParameterMetadata } from '@/hooks/useParameterMetadata';
 import { isNotFoundError, retryUnlessNotFound } from '@/libs/flagship/loadError';
+import { combinedMissingParameters } from '@/libs/flagship/missingParameters';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
+import type { V1PolicyContent } from '@/types/metadata/policyMetadata';
+import {
+  policyKeys,
+  reportKeys,
+  simulationKeys,
+  V1_POLICY_CONTENT_GC_TIME,
+  v1PolicyContentKey,
+} from '../libs/queryKeys';
 import { extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
@@ -43,6 +52,18 @@ export interface FlagshipReportData {
    * baseline policy leaves what the report compares with unknown.
    */
   failedPolicyIds: string[];
+  /**
+   * Every policy has been read for the parameters it sets that the model
+   * no longer has, or could not be read (nothing is then known to be
+   * missing). Until then nothing may start the report's calculation.
+   */
+  policiesChecked: boolean;
+  /**
+   * The parameters the report's policies set that the current model no
+   * longer has, as the API reports them. While there are any, nothing may
+   * run the report.
+   */
+  missingParameters: string[];
   /** Asks again for whatever failed; settles when the answers are in. */
   retry: () => Promise<unknown>;
 }
@@ -95,6 +116,22 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
   });
+  // Whether each policy sets parameters the model no longer has: read at
+  // once, not after the parameter metadata, because the report's run
+  // waits for it.
+  const policyContentResults = useParallelQueries<V1PolicyContent>(policyIds, {
+    queryKey: (policyId) => v1PolicyContentKey(country, policyId),
+    queryFn: (policyId) => fetchV1PolicyContent(country, policyId),
+    enabled: direct && policyIds.length > 0,
+    staleTime: Infinity,
+    gcTime: V1_POLICY_CONTENT_GC_TIME,
+  });
+  const policiesChecked =
+    policyIds.length > 0 &&
+    policyContentResults.queries.every((query) => query.isSuccess || query.isError);
+  const missingParameters = combinedMissingParameters(
+    policyContentResults.queries.map((query) => query.data)
+  );
   const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
   const failedPolicyIds = policyIds.filter((_, index) => {
     const query = policyResults.queries[index];
@@ -111,6 +148,8 @@ export function useFlagshipReport(id: string): FlagshipReportData {
       error: null,
       notFound: false,
       failedPolicyIds: [],
+      policiesChecked: false,
+      missingParameters: [],
       retry: async () => undefined,
     };
   }
@@ -130,6 +169,8 @@ export function useFlagshipReport(id: string): FlagshipReportData {
     error,
     notFound: !!unloadedReportError && isNotFoundError(unloadedReportError),
     failedPolicyIds,
+    policiesChecked,
+    missingParameters,
     retry: () =>
       Promise.all([
         reportError ? refetchReport() : null,

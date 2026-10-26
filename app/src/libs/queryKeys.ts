@@ -71,6 +71,17 @@ export const policyKeys = {
   byUser: (userId: string) => [...policyKeys.all, 'user_id', userId] as const,
 };
 
+/**
+ * A v1 policy's raw parameter map (`policy_json`) and the parameters the
+ * model no longer has (`missing_parameters`), per country. Saved reforms
+ * and v3 reports read policies through it.
+ */
+export const v1PolicyContentKey = (countryId: string, policyId: string) =>
+  ['v1-policy-content', countryId, policyId] as const;
+
+/** How long a fetched v1 policy stays cached without a reader. */
+export const V1_POLICY_CONTENT_GC_TIME = 30 * 60 * 1000;
+
 export const householdKeys = {
   all: ['households'] as const,
   byId: (householdId: string) => [...householdKeys.all, 'household_id', householdId] as const,

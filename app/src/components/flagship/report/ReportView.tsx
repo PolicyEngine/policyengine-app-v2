@@ -13,6 +13,7 @@ import NoChangeNotice from '@/components/flagship/report/NoChangeNotice';
 import ReportChanges from '@/components/flagship/report/ReportChanges';
 import ReportValidation from '@/components/flagship/report/ReportValidation';
 import UKLocalAreaAutoStart from '@/components/flagship/report/UKLocalAreaAutoStart';
+import UKLocalAreaMaps from '@/components/flagship/report/UKLocalAreaMaps';
 import UKLocalAreaSection from '@/components/flagship/report/UKLocalAreaSection';
 import ReportAdjustPanel from '@/components/flagship/ReportAdjustPanel';
 import ReportContents, {
@@ -117,6 +118,12 @@ export interface ReportViewProps {
   baselineUnknown?: boolean;
   /** What the adjust panel's runs compare with; current law when unset. */
   baseline?: RunReportBaseline;
+  /**
+   * The report's policies set parameters the model no longer has. Its
+   * stored results show, but nothing on the page starts a calculation: no
+   * household, no local-area breakdown, and no recompute.
+   */
+  runsBlocked?: boolean;
   year: string;
   region?: string;
   reformPolicyId?: string;
@@ -172,6 +179,7 @@ export default function ReportView({
   customBaselineLabel,
   baselineUnknown = false,
   baseline,
+  runsBlocked = false,
   year,
   region,
   reformPolicyId,
@@ -461,8 +469,8 @@ export default function ReportView({
                     {overviewFooter}
                   </Stack>
                 )}
-                {/* The local-area run starts with the results, not when its tab opens. */}
-                {output && isUK && showDistrictsSection && !showUSDistricts && (
+                {/* The local-area run starts with the results, not when its tab opens; never when blocked. */}
+                {output && isUK && showDistrictsSection && !showUSDistricts && !runsBlocked && (
                   <UKLocalAreaAutoStart
                     output={output}
                     region={region}
@@ -506,15 +514,21 @@ export default function ReportView({
                           <DistrictImpactCard output={output} />
                         </CongressionalDistrictDataProvider>
                       )}
-                      {output && !showUSDistricts && isUK && (
-                        <UKLocalAreaSection
-                          output={output}
-                          region={region}
-                          year={year}
-                          reformPolicyId={reformPolicyId}
-                          baselinePolicyId={baselinePolicyId}
-                        />
-                      )}
+                      {/* Blocked, the maps show what the stored results hold, with no breakdown to run. */}
+                      {output &&
+                        !showUSDistricts &&
+                        isUK &&
+                        (runsBlocked ? (
+                          <UKLocalAreaMaps output={output} region={region} />
+                        ) : (
+                          <UKLocalAreaSection
+                            output={output}
+                            region={region}
+                            year={year}
+                            reformPolicyId={reformPolicyId}
+                            baselinePolicyId={baselinePolicyId}
+                          />
+                        ))}
                       {output && !showUSDistricts && !isUK && (
                         <Text
                           style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
@@ -529,7 +543,14 @@ export default function ReportView({
                   <Stack style={{ gap: spacing.md }}>
                     <SectionHeading id="household" title="Household" />
                     {/* A household runs on the report's own policies, once they exist. */}
-                    {reformPolicyId && baselinePolicyId ? (
+                    {runsBlocked ? (
+                      <Text
+                        style={{ fontSize: typography.fontSize.sm, color: colors.text.secondary }}
+                      >
+                        Households cannot be calculated for this report, because it uses parameters
+                        the model no longer has.
+                      </Text>
+                    ) : reformPolicyId && baselinePolicyId ? (
                       <HouseholdImpactSection
                         // New policies, year or region start a new form, with nothing run.
                         key={`${year}:${baselinePolicyId}:${reformPolicyId}:${region ?? ''}`}
@@ -583,6 +604,7 @@ export default function ReportView({
           year={year}
           baseline={baseline}
           baselineUnknown={baselineUnknown}
+          runsBlocked={runsBlocked}
           budgetWindow={budgetWindow}
         />
       </div>

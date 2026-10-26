@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -6,6 +7,8 @@ interface MissingParametersNoticeProps {
   subject: string;
   /** The parameter paths the model no longer has, as the API reports them. */
   parameterPaths: string[];
+  /** A sentence after the list, e.g. what still shows. */
+  children?: ReactNode;
 }
 
 /**
@@ -16,6 +19,7 @@ interface MissingParametersNoticeProps {
 export default function MissingParametersNotice({
   subject,
   parameterPaths,
+  children,
 }: MissingParametersNoticeProps) {
   return (
     <Stack role="alert" style={{ gap: spacing.xs, alignItems: 'flex-start' }}>
@@ -40,6 +44,11 @@ export default function MissingParametersNotice({
           </li>
         ))}
       </ul>
+      {children && (
+        <Text style={{ margin: 0, fontSize: typography.fontSize.sm, color: colors.text.secondary }}>
+          {children}
+        </Text>
+      )}
     </Stack>
   );
 }
