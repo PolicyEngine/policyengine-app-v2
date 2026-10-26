@@ -121,6 +121,18 @@ export interface MetadataState {
    * the parameters loaded on demand, so their queries are keyed by it.
    */
   v2LoadId?: string;
+  /**
+   * On the v2 routes, `variables` starts empty and fills once, in the
+   * background, with every variable of the catalog version named here;
+   * absent until they are in.
+   */
+  v2VariablesVersion?: string;
+  /**
+   * On the v2 routes, the dated values of each parameter a variable's adds
+   * or subtracts names (a list of variable names per date), which the
+   * household breakdown reads for the report's year.
+   */
+  v2PartParameterValues?: Record<string, ValuesList>;
 
   // Computed parameter tree for policy creation UI (built when metadata is fetched)
   parameterTree: ParameterTreeNode | null;
