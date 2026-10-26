@@ -235,3 +235,13 @@ describe('useFetchMetadata', () => {
     });
   });
 });
+
+describe('useFetchMetadata for a page that loads none', () => {
+  test('given no routes then nothing is fetched', () => {
+    const { wrapper } = createTestSetup(mockInitialMetadataState);
+
+    renderHook(() => useFetchMetadata(TEST_COUNTRY_US, null), { wrapper });
+
+    expect(dispatchedThunks).toEqual([]);
+  });
+});
