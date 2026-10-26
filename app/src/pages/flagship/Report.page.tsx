@@ -193,11 +193,12 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
   // (it waits for the parameter metadata, so names and current law come
   // with it): the report waits for them rather than show an empty reform
   // to adjust. A policy or metadata that failed lets it show without them.
+  const reformPolicyFailed = !!reformPolicyId && failedPolicyIds.includes(reformPolicyId);
   const awaitingProvisions =
     !meta &&
     !unresolvable &&
     !!reformPolicyId &&
-    !failedPolicyIds.includes(reformPolicyId) &&
+    !reformPolicyFailed &&
     metadata.status !== 'error';
 
   // A household report is the classic calculator's: this page shows
@@ -551,6 +552,16 @@ export default function FlagshipReportPage({ userReportId: propId }: FlagshipRep
           {!meta && metadata.status === 'error' && (
             <LeadError>
               <ErrorState compact title="Could not load the parameters" onRetry={metadata.retry} />
+            </LeadError>
+          )}
+          {!meta && reformPolicyFailed && (
+            <LeadError>
+              <ErrorState
+                compact
+                title="Could not load the reform policy"
+                description="The results show, but the changes it makes are missing."
+                onRetry={retry}
+              />
             </LeadError>
           )}
           {baselineUnknown && (

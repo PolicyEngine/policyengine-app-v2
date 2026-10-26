@@ -1,5 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { useFlagshipHouseholdPolicies } from '@/hooks/useFlagshipHousehold';
 import { useFlagshipReport } from '@/hooks/useFlagshipReport';
 import { clearMetadata } from '@/reducers/metadataReducer';
 import { store } from '@/store';
@@ -58,18 +59,32 @@ vi.mock('@/api/policy', async (importOriginal) => ({
 
 const PARAMETERS_PATH = '/v2/model-catalog/parameters';
 
+function answerParameters(url: URL) {
+  return jsonResponse({
+    status: 'ok',
+    message: null,
+    result: catalogParametersResult(url.searchParams.getAll('name')),
+  });
+}
+
+/** The parameters request fails the first time, then answers. */
+function stubParametersFailingOnce() {
+  let attempts = 0;
+  return stubPublicApiFetch({
+    [PARAMETERS_PATH]: (url) => {
+      attempts += 1;
+      return attempts === 1
+        ? jsonResponse({ status: 'error', message: 'Unavailable' }, 503)
+        : answerParameters(url);
+    },
+  });
+}
+
 describe('useFlagshipReport with v3 on the v2 routes', () => {
   let fetchStub: ReturnType<typeof stubPublicApiFetch>;
 
   beforeEach(async () => {
-    fetchStub = stubPublicApiFetch({
-      [PARAMETERS_PATH]: (url) =>
-        jsonResponse({
-          status: 'ok',
-          message: null,
-          result: catalogParametersResult(url.searchParams.getAll('name')),
-        }),
-    });
+    fetchStub = stubPublicApiFetch({ [PARAMETERS_PATH]: answerParameters });
     await seedV2ModelCatalog();
   });
 
@@ -122,5 +137,72 @@ describe('useFlagshipReport with v3 on the v2 routes', () => {
       (policy) => policy.id === SAVED_BASELINE_POLICY_METADATA.id
     );
     expect(baseline?.parameters?.[0].name).toBe(STANDARD_DEDUCTION_JOINT);
+  });
+
+  test('given the parameters a policy names fail to load then it is failed, not loading, and retry parses it', async () => {
+    // Given
+    fetchStub = stubParametersFailingOnce();
+    const { result } = renderHook(() => useFlagshipReport(EXISTING_REPORT_ID), {
+      wrapper: v3Wrapper(),
+    });
+    await waitFor(() =>
+      expect(result.current.failedPolicyIds).toEqual([REFORM_POLICY_METADATA.id])
+    );
+    expect(result.current.isLoading).toBe(false);
+    // Current law names no parameter, so it parses regardless.
+    expect(result.current.policies.map((policy) => policy.id)).toEqual([
+      CURRENT_LAW_POLICY_METADATA.id,
+    ]);
+
+    // When
+    await act(() => result.current.retry());
+
+    // Then
+    await waitFor(() => expect(result.current.policies).toHaveLength(2));
+    expect(result.current.failedPolicyIds).toEqual([]);
+    expect(requestsTo(fetchStub, PARAMETERS_PATH)).toHaveLength(2);
+  });
+
+  test('given the policies are in then another render keeps the same policies', async () => {
+    // Given
+    const { result, rerender } = renderHook(() => useFlagshipReport(EXISTING_REPORT_ID), {
+      wrapper: v3Wrapper(),
+    });
+    await waitFor(() => expect(result.current.policies).toHaveLength(2));
+    const policies = result.current.policies;
+
+    // When
+    rerender();
+
+    // Then
+    expect(result.current.policies).toBe(policies);
+  });
+});
+
+describe('useFlagshipHouseholdPolicies with v3 on the v2 routes', () => {
+  const policyIds = [CURRENT_LAW_POLICY_METADATA.id, REFORM_POLICY_METADATA.id];
+
+  afterEach(() => {
+    store.dispatch(clearMetadata());
+    vi.unstubAllGlobals();
+  });
+
+  test('given the parameters a policy names fail to load then it reports an error, and retry loads it', async () => {
+    // Given
+    stubParametersFailingOnce();
+    await seedV2ModelCatalog();
+    const { result } = renderHook(
+      () => useFlagshipHouseholdPolicies({ countryId: 'us', policyIds, enabled: true }),
+      { wrapper: v3Wrapper() }
+    );
+    await waitFor(() => expect(result.current.error).not.toBeNull());
+    expect(result.current.isLoading).toBe(false);
+
+    // When
+    await act(() => result.current.retry());
+
+    // Then
+    await waitFor(() => expect(result.current.policies).toHaveLength(2));
+    expect(result.current.error).toBeNull();
   });
 });
