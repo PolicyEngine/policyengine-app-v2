@@ -27,4 +27,10 @@ mkdir -p "$WEBSITE_ROOT/public"
 cp -R "$APP_ASSETS_DIR" "$WEBSITE_ASSETS_DIR"
 
 cd "$WEBSITE_ROOT"
+# Production builds don't read webpack's cache (see next.config.ts). Drop the
+# packs an older build left, so Vercel doesn't restore and re-upload them.
+rm -rf .next/cache/webpack
 bun run build:next
+# Fail the build if its CSS lacks a class of a fresh compile of the source, or
+# has a Tailwind utility the fresh compile lacks.
+node ../scripts/check-built-css.mjs . src/app/globals.css
