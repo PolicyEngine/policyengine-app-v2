@@ -519,7 +519,19 @@ export default function ReportView({
                         !showUSDistricts &&
                         isUK &&
                         (runsBlocked ? (
-                          <UKLocalAreaMaps output={output} region={region} />
+                          <>
+                            <Text
+                              style={{
+                                fontSize: typography.fontSize.sm,
+                                color: colors.text.secondary,
+                              }}
+                            >
+                              Local-area results cannot be calculated for this report, because it
+                              uses parameters the model no longer has. Only results it already holds
+                              are shown.
+                            </Text>
+                            <UKLocalAreaMaps output={output} region={region} />
+                          </>
                         ) : (
                           <UKLocalAreaSection
                             output={output}
