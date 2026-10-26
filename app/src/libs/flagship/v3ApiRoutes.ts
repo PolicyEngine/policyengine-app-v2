@@ -37,10 +37,21 @@ export function metadataRoutesForRouteGroup(
 }
 
 /**
- * Pages that only send the browser on into v3 (the country's index, and
- * the bill tracker's old address), by their segments below `[countryId]`.
+ * Pages that only send the browser on into v3, by their segments below
+ * `[countryId]`: the country's index (to Build, or to the older report
+ * builder when the v3 shell is off, which loads its own metadata), the old
+ * Home launcher (to Build), the old Library and bill tracker (to Reforms),
+ * and the paused Ask page (to Build). A page that redirects elsewhere, such
+ * as `(calculator)/reports/create/[userReportId]` into the older report
+ * builder, is not one of them.
  */
-const REDIRECT_ONLY_PAGES: readonly (readonly string[])[] = [[], ['(calculator)', 'tracker']];
+const REDIRECT_ONLY_PAGES: readonly (readonly string[])[] = [
+  [],
+  ['(calculator)', 'home'],
+  ['(calculator)', 'library'],
+  ['(calculator)', 'tracker'],
+  [V3_WORKSPACE_ROUTE_GROUP, 'ask'],
+];
 
 /**
  * Where model metadata loads from for a page, by its segments below
